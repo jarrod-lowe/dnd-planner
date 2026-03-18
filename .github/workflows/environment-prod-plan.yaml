@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   plan:
     name: Terraform Plan - Prod
@@ -20,6 +24,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Terraform Format Check
+        uses: dflook/terraform-fmt@v1
+        with:
+          path: terraform
+
+      - name: Terraform Validate
+        uses: dflook/terraform-validate@v1
+        with:
+          path: terraform/environment/prod
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
