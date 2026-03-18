@@ -309,3 +309,4 @@ The architecture supports:
 - Using the terraform steps in pipeline
 - Disable merge bypass option
 - Missing lots of checks in pipeline
+- Auto delete branch on merge on github
