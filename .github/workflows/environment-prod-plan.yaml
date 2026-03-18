@@ -9,7 +9,7 @@ jobs:
   plan:
     name: Terraform Plan - Prod
     runs-on: ubuntu-latest
-    environment: prod
+    environment: prod-ro
     permissions:
       contents: read
       id-token: write
@@ -19,52 +19,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.PROD_IAC_RO_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION }}
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.9.8"
-
-      - name: Terraform Init
-        working-directory: terraform/environment/prod
-        run: |
-          terraform init \
-            -backend-config="bucket=${{ vars.STATE_BUCKET }}" \
-            -backend-config="key=dnd-planner/prod/terraform.tfstate" \
-            -backend-config="region=${{ vars.AWS_REGION }}" \
-            -backend-config="dynamodb_table=${{ vars.LOCK_TABLE }}"
-
       - name: Terraform Plan
-        id: plan
-        working-directory: terraform/environment/prod
-        run: terraform plan -out=tfplan -no-color
-
-      - name: Terraform Plan Output
-        working-directory: terraform/environment/prod
-        run: terraform show -no-color tfplan
-
-      - name: Comment PR
-        uses: actions/github-script@v7
-        if: always()
+        uses: dflook/terraform-plan@v1
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const output = `#### Terraform Plan - Prod Environment 📋
-
-            \`\`\`terraform
-            ${{ steps.plan.outputs.stdout }}
-            \`\`\`
-
-            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
+          path: terraform/environment/prod
+          label: prod

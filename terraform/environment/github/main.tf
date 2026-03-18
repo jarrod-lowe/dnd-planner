@@ -78,9 +78,21 @@ resource "github_repository_ruleset" "main" {
 }
 
 # GitHub Environments
-resource "github_repository_environment" "prod" {
+# prod-ro: Used for terraform plan on PRs (read-only access)
+resource "github_repository_environment" "prod_ro" {
   repository  = data.github_repository.main.name
-  environment = "prod"
+  environment = "prod-ro"
+}
+
+# prod-rw: Used for terraform apply on merge (read-write access, restricted to main branch)
+resource "github_repository_environment" "prod_rw" {
+  repository  = data.github_repository.main.name
+  environment = "prod-rw"
+
+  deployment_branch_policy {
+    protected_branches     = true
+    custom_branch_policies = false
+  }
 }
 
 # GitHub Repository Variables
@@ -91,36 +103,78 @@ resource "github_actions_secret" "codacy_api_token" {
   plaintext_value = var.codacy_api_token
 }
 
-resource "github_actions_variable" "aws_account" {
+# Environment variables for prod-ro (terraform plan)
+resource "github_actions_environment_variable" "prod_ro_aws_account" {
   repository    = data.github_repository.main.name
+  environment   = github_repository_environment.prod_ro.environment
   variable_name = "AWS_ACCOUNT"
   value         = data.aws_caller_identity.current.account_id
 }
 
-resource "github_actions_variable" "aws_region" {
+resource "github_actions_environment_variable" "prod_ro_aws_region" {
   repository    = data.github_repository.main.name
+  environment   = github_repository_environment.prod_ro.environment
   variable_name = "AWS_REGION"
   value         = data.aws_region.current.id
 }
 
-resource "github_actions_variable" "state_bucket" {
+resource "github_actions_environment_variable" "prod_ro_state_bucket" {
   repository    = data.github_repository.main.name
+  environment   = github_repository_environment.prod_ro.environment
   variable_name = "STATE_BUCKET"
   value         = local.state_bucket_name
 }
 
-# IAM Role ARN secrets for GitHub Actions OIDC
-resource "github_actions_secret" "prod_iac_ro_role_arn" {
+resource "github_actions_environment_variable" "prod_ro_environment" {
+  repository    = data.github_repository.main.name
+  environment   = github_repository_environment.prod_ro.environment
+  variable_name = "ENVIRONMENT"
+  value         = "prod"
+}
+
+resource "github_actions_environment_secret" "prod_ro_aws_role" {
   repository      = data.github_repository.main.name
-  secret_name     = "PROD_IAC_RO_ROLE_ARN"
+  environment     = github_repository_environment.prod_ro.environment
+  secret_name     = "AWS_ROLE"
   plaintext_value = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/dnd-planner-prod-iac-ro"
 }
 
-resource "github_actions_secret" "prod_iac_rw_role_arn" {
+# Environment variables for prod-rw (terraform apply)
+resource "github_actions_environment_variable" "prod_rw_aws_account" {
+  repository    = data.github_repository.main.name
+  environment   = github_repository_environment.prod_rw.environment
+  variable_name = "AWS_ACCOUNT"
+  value         = data.aws_caller_identity.current.account_id
+}
+
+resource "github_actions_environment_variable" "prod_rw_aws_region" {
+  repository    = data.github_repository.main.name
+  environment   = github_repository_environment.prod_rw.environment
+  variable_name = "AWS_REGION"
+  value         = data.aws_region.current.id
+}
+
+resource "github_actions_environment_variable" "prod_rw_state_bucket" {
+  repository    = data.github_repository.main.name
+  environment   = github_repository_environment.prod_rw.environment
+  variable_name = "STATE_BUCKET"
+  value         = local.state_bucket_name
+}
+
+resource "github_actions_environment_variable" "prod_rw_environment" {
+  repository    = data.github_repository.main.name
+  environment   = github_repository_environment.prod_rw.environment
+  variable_name = "ENVIRONMENT"
+  value         = "prod"
+}
+
+resource "github_actions_environment_secret" "prod_rw_aws_role" {
   repository      = data.github_repository.main.name
-  secret_name     = "PROD_IAC_RW_ROLE_ARN"
+  environment     = github_repository_environment.prod_rw.environment
+  secret_name     = "AWS_ROLE"
   plaintext_value = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/dnd-planner-prod-iac-rw"
 }
+
 
 # Required status checks for ruleset (to be added after workflows are in place)
 resource "github_branch_protection" "main" {
@@ -133,7 +187,7 @@ resource "github_branch_protection" "main" {
   required_status_checks {
     strict = true
     contexts = [
-      "Terraform Plan - Prod"
+      "Environment Prod - Plan"
     ]
   }
   allows_deletions    = false

@@ -23,7 +23,8 @@ variable "oidc_arn" {
 }
 
 locals {
-  oidc_trust_policy = jsonencode({
+  # OIDC trust policy for prod-ro role - only workflows in prod-ro environment
+  oidc_trust_policy_ro = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
@@ -35,9 +36,27 @@ locals {
         Condition = {
           StringEquals = {
             "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+            "token.actions.githubusercontent.com:sub" = "repo:${var.workspace}/${var.repo}:environment:prod-ro"
           }
-          StringLike = {
-            "token.actions.githubusercontent.com:sub" = "repo:${var.workspace}/${var.repo}:*"
+        }
+      }
+    ]
+  })
+
+  # OIDC trust policy for prod-rw role - only workflows in prod-rw environment
+  oidc_trust_policy_rw = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = var.oidc_arn
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+            "token.actions.githubusercontent.com:sub" = "repo:${var.workspace}/${var.repo}:environment:prod-rw"
           }
         }
       }
@@ -52,7 +71,7 @@ locals {
 # Prod role for read-only operations
 resource "aws_iam_role" "prod_ro" {
   name               = "dnd-planner-prod-iac-ro"
-  assume_role_policy = local.oidc_trust_policy
+  assume_role_policy = local.oidc_trust_policy_ro
 
   tags = {
     Project     = "dnd-planner"
@@ -71,7 +90,7 @@ resource "aws_iam_role_policy_attachment" "prod_ro" {
 # Prod role for read-write operations
 resource "aws_iam_role" "prod_rw" {
   name               = "dnd-planner-prod-iac-rw"
-  assume_role_policy = local.oidc_trust_policy
+  assume_role_policy = local.oidc_trust_policy_rw
 
   tags = {
     Project     = "dnd-planner"

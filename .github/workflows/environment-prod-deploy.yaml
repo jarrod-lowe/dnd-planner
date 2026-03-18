@@ -9,7 +9,7 @@ jobs:
   deploy:
     name: Terraform Apply - Prod
     runs-on: ubuntu-latest
-    environment: prod
+    environment: prod-rw
     permissions:
       contents: read
       id-token: write
@@ -18,30 +18,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.PROD_IAC_RW_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION }}
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.9.8"
-
-      - name: Terraform Init
-        working-directory: terraform/environment/prod
-        run: |
-          terraform init \
-            -backend-config="bucket=${{ vars.STATE_BUCKET }}" \
-            -backend-config="key=dnd-planner/prod/terraform.tfstate" \
-            -backend-config="region=${{ vars.AWS_REGION }}" \
-            -backend-config="dynamodb_table=${{ vars.LOCK_TABLE }}"
-
-      - name: Terraform Plan
-        working-directory: terraform/environment/prod
-        run: terraform plan -out=tfplan
-
       - name: Terraform Apply
-        working-directory: terraform/environment/prod
-        run: terraform apply -auto-approve tfplan
+        uses: dflook/terraform-apply@v1
+        with:
+          path: terraform/environment/prod
+          label: prod
