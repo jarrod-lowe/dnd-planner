@@ -302,3 +302,9 @@ The architecture supports:
 - Higher level features
 - Party-wide resource tracking
 - Export/import character data
+
+## TODO
+
+- Squash and merge when ready option in github?
+- Using the terraform steps in pipeline
+- Disable merge bypass option

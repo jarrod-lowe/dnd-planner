@@ -133,7 +133,7 @@ resource "github_branch_protection" "main" {
   required_status_checks {
     strict = true
     contexts = [
-      "Environment Prod - Plan / Terraform Plan - Prod"
+      "Terraform Plan - Prod"
     ]
   }
   allows_deletions    = false
