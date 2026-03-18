@@ -198,7 +198,7 @@ resource "github_branch_protection" "main" {
     strict = true
     contexts = [
       "Terraform Plan - Prod",
-      "trivy"
+      "Terraform Security Scan"
     ]
   }
   allows_deletions    = false
