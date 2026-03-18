@@ -187,23 +187,13 @@ Each **Step** in a plan represents what happens on a turn:
 ## Getting Started
 
 ```bash
-# Install dependencies
-pnpm install
-
 # Start development server
-pnpm dev
-# or
 make dev
 
 # Run tests
-pnpm test
-pnpm test:e2e
-# or
 make test
 
 # Build for production
-pnpm build
-# or
 make build
 
 # Deploy to AWS
@@ -222,6 +212,86 @@ make deploy
 | `make clean` | Clean build artifacts |
 | `make lint` | Run ESLint |
 | `make format` | Run Prettier |
+
+## Deployment
+
+### Setup Overview
+
+The deployment follows this dependency chain:
+
+```plain
+State Infrastructure (S3 bucket with versioning for state locking)
+         │
+         ▼
+      AWS Infrastructure (OIDC provider + IAM roles)
+         │
+         ▼
+     GitHub Configuration (ruleset, environments, secrets)
+         │
+         ▼
+    CI/CD Pipelines (automate test/prod deployments)
+```
+
+**Critical:** Each step depends on the previous step completing successfully. The state bucket must exist first because ALL other environments (test, prod, aws, github) use it to store their Terraform state.
+
+### Initial Setup (One-time)
+
+Run these commands in order:
+
+```bash
+# 1. Set your AWS profile (or override: AWS_PROFILE=your-profile make setup-state)
+# Add a dnd-planner to your ~/.aws/config with suitable permissions
+export AWS_PROFILE=dnd-planner
+
+# 2. Setup state infrastructure (creates S3 bucket with versioning)
+make setup-state
+
+# 3. Deploy AWS infrastructure (OIDC provider + IAM roles)
+make setup-aws
+
+# 4. Setup GitHub configuration (ruleset, environments, secrets)
+#    Optional: Add Codacy API token to terraform/environment/github/terraform.tfvars
+make setup-github
+
+# 5. Deploy to the Test environment
+make deploy-test
+
+# Deploying to the Prod environment is done through CI/CD
+```
+
+### CI/CD Pipeline
+
+| Workflow | Trigger | Action |
+| --- | --- | --- |
+| `environment-test-plan.yaml` | Pull request to main | Runs terraform plan for test environment, comments plan on PR |
+| `environment-test-deploy.yaml` | Push to main | Runs terraform apply for test environment, triggers prod deploy |
+| `environment-prod-deploy.yaml` | Workflow dispatch (manual) | Runs terraform apply for prod environment |
+| `dependabot-automerge.yml` | Dependabot PR with `automerge` label | Auto-merges after status checks pass |
+
+### Environment Configuration
+
+| Environment | Region | State File | State Bucket |
+| --- | --- | --- | --- |
+| test | ap-southeast-2 | `dnd-planner/test/terraform.tfstate` | dnd-planner-iac-state-{account_id} |
+| prod | ap-southeast-2 | `dnd-planner/prod/terraform.tfstate` | dnd-planner-iac-state-{account_id} |
+
+**Note:** State bucket name uses your AWS account ID for deterministic naming. S3 versioning provides state locking.
+
+### Resource Naming Convention
+
+All AWS resources follow: `dnd-planner-{env}-{resource_name}`
+
+Example: `dnd-planner-test-bucket`, `dnd-planner-prod-table`
+
+### Branch Protection
+
+Main branch enforces:
+
+- Linear history required
+- Pull request required with review
+- `Environment Test - Plan` status check must pass
+- No force pushes or deletions
+- Branches automatically deleted after merge
 
 ## Future Expansion
 

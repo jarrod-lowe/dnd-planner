@@ -1,0 +1,5 @@
+.terraform
+tfplan
+.apply
+.stamp
+terraform/environment/github/terraform.tfvars
