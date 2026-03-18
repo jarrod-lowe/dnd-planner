@@ -1,0 +1,42 @@
+name: Dependabot Auto-Merge
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - labeled
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  dependabot-automerge:
+    name: Auto-merge Dependabot PRs
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+
+    steps:
+      - name: Wait for tests
+        run: |
+          echo "Waiting for status checks to pass..."
+          gh pr view ${{ github.event.pull_request.number }} --json statusCheckRollup
+
+      - name: Check for automerge label
+        id: check
+        run: |
+          HAS_LABEL=$(gh pr view ${{ github.event.pull_request.number }} --json labels -q '.labels[] | select(.name == "automerge") | .name')
+          if [ "$HAS_LABEL" = "automerge" ]; then
+            echo "automerge=true" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Auto-merge
+        if: steps.check.outputs.automerge == 'true'
+        run: |
+          gh pr merge ${{ github.event.pull_request.number }} --merge --auto --subject "Auto-merge dependabot PR"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
