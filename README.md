@@ -305,8 +305,5 @@ The architecture supports:
 
 ## TODO
 
-- Squash and merge when ready option in github?
-- Using the terraform steps in pipeline
 - Disable merge bypass option
 - Missing lots of checks in pipeline
-- Auto delete branch on merge on github

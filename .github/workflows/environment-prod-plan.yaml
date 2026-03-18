@@ -25,6 +25,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: ${{ vars.AWS_REGION }}
+
       - name: Terraform Format Check
         uses: dflook/terraform-fmt@v1
         with:
@@ -34,12 +40,6 @@ jobs:
         uses: dflook/terraform-validate@v1
         with:
           path: terraform/environment/prod
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE }}
-          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Terraform Plan
         uses: dflook/terraform-plan@v1
