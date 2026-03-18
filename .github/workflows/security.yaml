@@ -13,24 +13,18 @@ permissions:
   contents: read
 
 jobs:
-  dependency-review:
-    name: Dependency Review
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Dependency Review
-        uses: actions/dependency-review-action@v4
-
-  tfsec:
+  trivy:
     name: Terraform Security Scan
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: tfsec
-        uses: aquasecurity/tfsec-action@v1.0.3
+      - name: Run Trivy vulnerability scanner (IaC)
+        uses: aquasecurity/trivy-action@0.30.0
         with:
-          soft_fail: false
+          scan-type: 'config'
+          scan-ref: 'terraform'
+          format: 'table'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
