@@ -68,7 +68,7 @@ resource "github_repository_ruleset" "main" {
     update                  = false
 
     pull_request {
-      required_approving_review_count   = 1
+      required_approving_review_count   = 0
       require_code_owner_review         = false
       dismiss_stale_reviews_on_push     = true
       require_last_push_approval        = false
@@ -78,22 +78,9 @@ resource "github_repository_ruleset" "main" {
 }
 
 # GitHub Environments
-resource "github_repository_environment" "test" {
-  repository  = data.github_repository.main.name
-  environment = "test"
-  deployment_branch_policy {
-    protected_branches     = true
-    custom_branch_policies = false
-  }
-}
-
 resource "github_repository_environment" "prod" {
   repository  = data.github_repository.main.name
   environment = "prod"
-  deployment_branch_policy {
-    protected_branches     = true
-    custom_branch_policies = false
-  }
 }
 
 # GitHub Repository Variables
@@ -113,7 +100,7 @@ resource "github_actions_variable" "aws_account" {
 resource "github_actions_variable" "aws_region" {
   repository    = data.github_repository.main.name
   variable_name = "AWS_REGION"
-  value         = data.aws_region.current.name
+  value         = data.aws_region.current.id
 }
 
 resource "github_actions_variable" "state_bucket" {
@@ -137,16 +124,16 @@ resource "github_actions_secret" "prod_iac_rw_role_arn" {
 
 # Required status checks for ruleset (to be added after workflows are in place)
 resource "github_branch_protection" "main" {
-  repository_id          = data.github_repository.main.node_id
-  pattern                = "main"
-  enforce_admins         = false
+  repository_id           = data.github_repository.main.node_id
+  pattern                 = "main"
+  enforce_admins          = false
   required_linear_history = true
-  force_push_bypassers   = []
-  require_signed_commits = false
+  force_push_bypassers    = []
+  require_signed_commits  = false
   required_status_checks {
     strict = true
     contexts = [
-      "Environment Test - Plan"
+      "Terraform Plan - Prod"
     ]
   }
   allows_deletions    = false
