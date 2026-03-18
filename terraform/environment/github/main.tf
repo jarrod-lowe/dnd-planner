@@ -100,7 +100,7 @@ resource "github_actions_variable" "aws_account" {
 resource "github_actions_variable" "aws_region" {
   repository    = data.github_repository.main.name
   variable_name = "AWS_REGION"
-  value         = data.aws_region.current.name
+  value         = data.aws_region.current.id
 }
 
 resource "github_actions_variable" "state_bucket" {
@@ -133,7 +133,7 @@ resource "github_branch_protection" "main" {
   required_status_checks {
     strict = true
     contexts = [
-      "Environment Prod - Plan"
+      "Environment Prod - Plan / Terraform Plan - Prod"
     ]
   }
   allows_deletions    = false
