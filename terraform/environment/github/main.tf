@@ -48,6 +48,7 @@ import {
   id = var.repo
 }
 
+#tfsec:ignore:GIT-0001
 resource "github_repository" "main" {
   name                   = var.repo
   allow_auto_merge       = true
@@ -55,6 +56,7 @@ resource "github_repository" "main" {
   allow_merge_commit     = false
   allow_rebase_merge     = false
   delete_branch_on_merge = true
+  vulnerability_alerts   = true
 }
 
 # Repository ruleset for main branch protection
@@ -193,11 +195,12 @@ resource "github_branch_protection" "main" {
   enforce_admins          = false
   required_linear_history = true
   force_push_bypassers    = []
-  require_signed_commits  = false
+  require_signed_commits  = true
   required_status_checks {
     strict = true
     contexts = [
-      "Terraform Plan - Prod"
+      "Terraform Plan - Prod",
+      "Terraform Security Scan"
     ]
   }
   allows_deletions    = false

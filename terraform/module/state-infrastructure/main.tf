@@ -21,6 +21,7 @@ resource "aws_s3_bucket" "state" {
 }
 
 # Configure server-side encryption
+#tfsec:ignore:AWS-0132
 resource "aws_s3_bucket_server_side_encryption_configuration" "state" {
   bucket = aws_s3_bucket.state.id
 

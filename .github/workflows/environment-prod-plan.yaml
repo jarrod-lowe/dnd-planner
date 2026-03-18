@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   plan:
     name: Terraform Plan - Prod
@@ -26,6 +30,16 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE }}
           aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Terraform Format Check
+        uses: dflook/terraform-fmt@v1
+        with:
+          path: terraform
+
+      - name: Terraform Validate
+        uses: dflook/terraform-validate@v1
+        with:
+          path: terraform/environment/prod
 
       - name: Terraform Plan
         uses: dflook/terraform-plan@v1
