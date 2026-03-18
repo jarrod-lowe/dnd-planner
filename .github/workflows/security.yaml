@@ -16,15 +16,12 @@ jobs:
   trivy:
     name: Terraform Security Scan
     runs-on: ubuntu-latest
+    container:
+      image: aquasec/trivy:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Run Trivy vulnerability scanner (IaC)
-        uses: aquasecurity/trivy-action@0.30.0
-        with:
-          scan-type: 'config'
-          scan-ref: 'terraform'
-          format: 'table'
-          exit-code: '1'
-          severity: 'CRITICAL,HIGH'
+      - name: Run Trivy IaC scan
+        run: |
+          trivy config --exit-code 1 --severity CRITICAL,HIGH terraform/
