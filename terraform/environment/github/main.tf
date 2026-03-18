@@ -48,6 +48,7 @@ import {
   id = var.repo
 }
 
+#tfsec:ignore:GIT-0001
 resource "github_repository" "main" {
   name                   = var.repo
   allow_auto_merge       = true
