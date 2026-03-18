@@ -23,3 +23,7 @@ jobs:
         with:
           path: terraform/environment/prod
           label: prod
+          backend_config: >
+            bucket=${{ vars.STATE_BUCKET }},
+            key=dnd-planner/prod/terraform.tfstate,
+            region=${{ vars.AWS_REGION }}
