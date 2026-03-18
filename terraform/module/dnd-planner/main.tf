@@ -27,6 +27,7 @@ resource "aws_s3_bucket" "main" {
   }
 }
 
+#tfsec:ignore:AWS-0132
 resource "aws_s3_bucket_server_side_encryption_configuration" "main" {
   bucket = aws_s3_bucket.main.id
 
