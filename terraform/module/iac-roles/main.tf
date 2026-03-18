@@ -22,46 +22,54 @@ variable "oidc_arn" {
   type        = string
 }
 
-locals {
-  # OIDC trust policy for prod-ro role - only workflows in prod-ro environment
-  oidc_trust_policy_ro = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Federated = var.oidc_arn
-        }
-        Action = "sts:AssumeRoleWithWebIdentity"
-        Condition = {
-          StringEquals = {
-            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-            "token.actions.githubusercontent.com:sub" = "repo:${var.workspace}/${var.repo}:environment:prod-ro"
-          }
-        }
-      }
-    ]
-  })
+# OIDC trust policy for prod-ro role - only workflows in prod-ro environment
+data "aws_iam_policy_document" "prod_ro" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRoleWithWebIdentity"]
 
-  # OIDC trust policy for prod-rw role - only workflows in prod-rw environment
-  oidc_trust_policy_rw = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Federated = var.oidc_arn
-        }
-        Action = "sts:AssumeRoleWithWebIdentity"
-        Condition = {
-          StringEquals = {
-            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-            "token.actions.githubusercontent.com:sub" = "repo:${var.workspace}/${var.repo}:environment:prod-rw"
-          }
-        }
-      }
-    ]
-  })
+    principals {
+      type        = "Federated"
+      identifiers = [var.oidc_arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = ["repo:${var.workspace}/${var.repo}:environment:prod-ro"]
+    }
+  }
+}
+
+# OIDC trust policy for prod-rw role - only workflows in prod-rw environment
+data "aws_iam_policy_document" "prod_rw" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = [var.oidc_arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = ["repo:${var.workspace}/${var.repo}:environment:prod-rw"]
+    }
+  }
 }
 
 # ============================================
@@ -71,7 +79,7 @@ locals {
 # Prod role for read-only operations
 resource "aws_iam_role" "prod_ro" {
   name               = "dnd-planner-prod-iac-ro"
-  assume_role_policy = local.oidc_trust_policy_ro
+  assume_role_policy = data.aws_iam_policy_document.prod_ro.json
 
   tags = {
     Project     = "dnd-planner"
@@ -90,7 +98,7 @@ resource "aws_iam_role_policy_attachment" "prod_ro" {
 # Prod role for read-write operations
 resource "aws_iam_role" "prod_rw" {
   name               = "dnd-planner-prod-iac-rw"
-  assume_role_policy = local.oidc_trust_policy_rw
+  assume_role_policy = data.aws_iam_policy_document.prod_rw.json
 
   tags = {
     Project     = "dnd-planner"
@@ -106,23 +114,21 @@ resource "aws_iam_role_policy_attachment" "prod_rw" {
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
 
+# Policy document for assuming the prod-rw role
+data "aws_iam_policy_document" "prod_ro_to_rw" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    resources = [aws_iam_role.prod_rw.arn]
+  }
+}
+
 # Grant prod read-only role permission to assume the prod read-write role
 resource "aws_iam_role_policy" "prod_ro_to_rw" {
-  name = "assume-rw-role"
-  role = aws_iam_role.prod_ro.name
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "sts:AssumeRole"
-        ]
-        Resource = aws_iam_role.prod_rw.arn
-      }
-    ]
-  })
+  name   = "assume-rw-role"
+  role   = aws_iam_role.prod_ro.name
+  policy = data.aws_iam_policy_document.prod_ro_to_rw.json
 }
 
 # ============================================

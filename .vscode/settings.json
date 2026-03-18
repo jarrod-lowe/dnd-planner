@@ -3,6 +3,7 @@
         "bypassers",
         "CODACY",
         "Debuff",
+        "dflook",
         "tfstate",
         "tfvars",
         "vars"
