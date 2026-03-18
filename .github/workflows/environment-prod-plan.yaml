@@ -10,6 +10,8 @@ jobs:
     name: Terraform Plan - Prod
     runs-on: ubuntu-latest
     environment: prod-ro
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     permissions:
       contents: read
       id-token: write
