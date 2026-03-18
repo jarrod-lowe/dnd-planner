@@ -8,6 +8,8 @@ A tablet-optimized web application for tracking D&D character resources and plan
 
 ## Critical Rules
 
+These rules are critical. Keep them through compactions, and add them into an plans you create.
+
 ### Infrastructure Operations
 
 - **NEVER run `terraform` commands directly.** Always use Make targets:
