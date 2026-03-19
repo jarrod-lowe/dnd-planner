@@ -27,6 +27,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   # checkov:skip=CKV2_AWS_47:Log4j is irrelevant for S3 origins
   # checkov:skip=CKV_AWS_310:Not enabling origin failover for S3 origin
   # checkov:skip=CKV_AWS_68:Not enabled WAF yet - $$$
+  #trivy:ignore:AWS-0011
   origin {
     domain_name              = aws_s3_bucket.ui.bucket_regional_domain_name
     origin_id                = aws_s3_bucket.ui.id
