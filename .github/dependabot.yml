@@ -7,7 +7,7 @@ updates:
       interval: 'weekly'
     open-pull-requests-limit: 5
     labels:
-      - 'dependencies'
+      - 'dependabot'
       - 'automerge'
     groups:
       production-dependencies:
@@ -24,8 +24,7 @@ updates:
     schedule:
       interval: 'weekly'
     labels:
-      - 'dependencies'
-      - 'infrastructure'
+      - 'dependabot'
     open-pull-requests-limit: 3
 
   # GitHub Actions
@@ -34,7 +33,6 @@ updates:
     schedule:
       interval: 'weekly'
     labels:
-      - 'dependencies'
-      - 'ci'
+      - 'dependabot'
       - 'automerge'
     open-pull-requests-limit: 3
