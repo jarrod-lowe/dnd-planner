@@ -28,3 +28,35 @@ test.describe('Home Page', () => {
     await expect(paragraph).toBeVisible();
   });
 });
+
+test.describe('CSS Theming', () => {
+  test('should apply light theme CSS variables', async ({ page }) => {
+    await page.goto('/');
+
+    const primaryColor = await page.evaluate(() =>
+      getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-primary').trim()
+    );
+    expect(primaryColor).toBe('rgb(144 74 72)'); // Light theme primary
+  });
+
+  test('should apply dark theme when preferred', async ({ page }) => {
+    // Emulate dark mode preference
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await page.goto('/');
+
+    const primaryColor = await page.evaluate(() =>
+      getComputedStyle(document.documentElement).getPropertyValue('--md-sys-color-primary').trim()
+    );
+    expect(primaryColor).toBe('rgb(255 179 176)'); // Dark theme primary
+  });
+
+  test('should apply design tokens to page elements', async ({ page }) => {
+    await page.goto('/');
+
+    const heading = page.getByRole('heading', { name: /hello, d&d planner/i });
+    const color = await heading.evaluate((el) => getComputedStyle(el).color);
+
+    // Should use primary color token, not hardcoded #8b0000
+    expect(color).not.toBe('rgb(139, 0, 0)');
+  });
+});
