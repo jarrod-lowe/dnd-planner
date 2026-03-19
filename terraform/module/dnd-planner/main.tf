@@ -152,27 +152,6 @@ resource "aws_s3_bucket_cors_configuration" "ui" {
   }
 }
 
-# Dummy DynamoDB table for validation
-resource "aws_dynamodb_table" "main" {
-  name         = "${local.resource_prefix}-table"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "id"
-  attribute {
-    name = "id"
-    type = "S"
-  }
-
-  point_in_time_recovery {
-    enabled = true
-  }
-
-  tags = {
-    Project     = "dnd-planner"
-    Environment = var.environment
-    ManagedBy   = "terraform"
-  }
-}
-
 output "s3_bucket_name" {
   description = "Name of the S3 bucket"
   value       = aws_s3_bucket.ui.id
@@ -181,16 +160,6 @@ output "s3_bucket_name" {
 output "s3_bucket_arn" {
   description = "ARN of the S3 bucket"
   value       = aws_s3_bucket.ui.arn
-}
-
-output "dynamodb_table_name" {
-  description = "Name of the DynamoDB table"
-  value       = aws_dynamodb_table.main.id
-}
-
-output "dynamodb_table_arn" {
-  description = "ARN of the DynamoDB table"
-  value       = aws_dynamodb_table.main.arn
 }
 
 output "cdn_domain_name" {
