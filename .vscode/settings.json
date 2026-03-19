@@ -1,15 +1,15 @@
 {
-    "cSpell.words": [
-        "aquasec",
-        "behavior",
-        "bypassers",
-        "chdir",
-        "CODACY",
-        "Debuff",
-        "dflook",
-        "tfstate",
-        "tfvars",
-        "vars",
-        "Vitest"
-    ]
+  "cSpell.words": [
+    "aquasec",
+    "behavior",
+    "bypassers",
+    "chdir",
+    "CODACY",
+    "Debuff",
+    "dflook",
+    "tfstate",
+    "tfvars",
+    "vars",
+    "Vitest"
+  ]
 }

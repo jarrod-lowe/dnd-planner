@@ -63,6 +63,7 @@ import {
 #tfsec:ignore:GIT-0001
 resource "github_repository" "main" {
   name                   = var.repo
+  has_issues             = true
   allow_auto_merge       = true
   allow_squash_merge     = true
   allow_merge_commit     = false

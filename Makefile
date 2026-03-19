@@ -154,6 +154,8 @@ security:
 # Run all tests (terraform + frontend)
 test: validate security test-unit test-e2e lint
 
+preflight: fmt format test
+
 # Format
 fmt:
 	terraform fmt -recursive

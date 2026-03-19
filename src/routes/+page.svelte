@@ -8,7 +8,10 @@
 
 <main>
   <h1>Hello, D&D Planner!</h1>
-  <p>A tablet-optimized web application for tracking D&D character resources and planning combat turns.</p>
+  <p>
+    A tablet-optimized web application for tracking D&D character resources and planning combat
+    turns.
+  </p>
 </main>
 
 <style>

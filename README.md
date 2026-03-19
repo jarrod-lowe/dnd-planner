@@ -24,19 +24,19 @@ Running on a tablet during gameplay. One-handed operation. Quick taps. Clear vis
 
 ### Resources to Track
 
-| Resource | Level 3 Details |
-| --- | --- |
-| Spell Slots | Level 1: 2 slots/day (2024 rules grant 1st-level at level 3) |
-| Lay on Hands | 15 HP pool (5 × level) for healing |
-| Channel Divinity | 1 use/short rest |
-| Divine Smite | Costs spell slots for bonus damage |
-| Concentration | Active spell tracking with save DC |
+| Resource         | Level 3 Details                                              |
+| ---------------- | ------------------------------------------------------------ |
+| Spell Slots      | Level 1: 2 slots/day (2024 rules grant 1st-level at level 3) |
+| Lay on Hands     | 15 HP pool (5 × level) for healing                           |
+| Channel Divinity | 1 use/short rest                                             |
+| Divine Smite     | Costs spell slots for bonus damage                           |
+| Concentration    | Active spell tracking with save DC                           |
 
 ### Oath of Redemption Features (Level 3)
 
-| Feature | Description |
-| --- | --- |
-| **Abjure Enemy** | Frighten target - must flee on failed Wisdom save |
+| Feature                | Description                                           |
+| ---------------------- | ----------------------------------------------------- |
+| **Abjure Enemy**       | Frighten target - must flee on failed Wisdom save     |
 | **Rebuke the Violent** | Reflect damage to attacker (same type + CHA modifier) |
 
 ### Always-Prepared Spells (Level 3 Paladin)
@@ -65,12 +65,12 @@ Each plan contains **Steps** that define actions for each turn.
 
 Each **Step** in a plan represents what happens on a turn:
 
-| Step Type | Examples |
-| --- | --- |
-| **Action** | Attack, cast spell, use Channel Divinity |
-| **Bonus Action** | Lay on Hands, certain spells |
-| **Reaction** | Shield, opportunity attacks |
-| **Rest** | Short or long rest (performs all rest operations) |
+| Step Type        | Examples                                          |
+| ---------------- | ------------------------------------------------- |
+| **Action**       | Attack, cast spell, use Channel Divinity          |
+| **Bonus Action** | Lay on Hands, certain spells                      |
+| **Reaction**     | Shield, opportunity attacks                       |
+| **Rest**         | Short or long rest (performs all rest operations) |
 
 **Step Behaviour:**
 
@@ -80,11 +80,11 @@ Each **Step** in a plan represents what happens on a turn:
 
 ### Effects
 
-| Effect Type | Examples |
-| --- | --- |
-| **Concentration** | Active spell requiring concentration |
-| **Buff** | Bless from party member, Paladin aura |
-| **Debuff** | Poison, frightened condition |
+| Effect Type       | Examples                              |
+| ----------------- | ------------------------------------- |
+| **Concentration** | Active spell requiring concentration  |
+| **Buff**          | Bless from party member, Paladin aura |
+| **Debuff**        | Poison, frightened condition          |
 
 **Effect Behaviour:**
 
@@ -94,21 +94,21 @@ Each **Step** in a plan represents what happens on a turn:
 
 ## Technology Stack
 
-| Layer | Technology |
-| --- | --- |
-| UI Framework | SvelteKit + static adapter (`.svelte` components) |
-| Type Definitions | TypeScript (shared types for all code) |
-| Build Tool | Vite |
-| State Management | Svelte 5 stores (`$state`, `$derived`, `$effect`) |
-| Rules Engine | TypeScript module (runs in browser - separate concern) |
-| AWS Integration | Amplify library v6 (library only - NO CLI, NO Amplify Hosting) |
-| Backend | API Gateway + DynamoDB |
-| Authentication | AWS Cognito |
-| Hosting | S3 + CloudFront (prod/staging), Vite dev server |
-| Testing | Vitest (unit/integration), Playwright (E2E) |
-| Package Manager | pnpm |
-| Build/Deploy | Make |
-| CI/CD | GitHub Actions |
+| Layer            | Technology                                                     |
+| ---------------- | -------------------------------------------------------------- |
+| UI Framework     | SvelteKit + static adapter (`.svelte` components)              |
+| Type Definitions | TypeScript (shared types for all code)                         |
+| Build Tool       | Vite                                                           |
+| State Management | Svelte 5 stores (`$state`, `$derived`, `$effect`)              |
+| Rules Engine     | TypeScript module (runs in browser - separate concern)         |
+| AWS Integration  | Amplify library v6 (library only - NO CLI, NO Amplify Hosting) |
+| Backend          | API Gateway + DynamoDB                                         |
+| Authentication   | AWS Cognito                                                    |
+| Hosting          | S3 + CloudFront (prod/staging), Vite dev server                |
+| Testing          | Vitest (unit/integration), Playwright (E2E)                    |
+| Package Manager  | pnpm                                                           |
+| Build/Deploy     | Make                                                           |
+| CI/CD            | GitHub Actions                                                 |
 
 **Constraint:** All code is TypeScript - no direct JavaScript.
 
@@ -157,32 +157,32 @@ Each **Step** in a plan represents what happens on a turn:
 
 ### Key Design Decisions
 
-| Decision | Rationale |
-| --- | --- |
+| Decision                     | Rationale                                                                |
+| ---------------------------- | ------------------------------------------------------------------------ |
 | **Client-side rules engine** | Instant feedback, works offline after initial load, reduces server costs |
-| **Optimistic UI updates** | Responsive feel during gameplay, no waiting for network |
-| **SvelteKit static adapter** | No server costs, CDN delivery, works offline |
-| **Amplify library only** | Full control over architecture, no CLI opinions |
-| **Multi-plan support** | Reusable combat scenarios, flexible planning workflow |
+| **Optimistic UI updates**    | Responsive feel during gameplay, no waiting for network                  |
+| **SvelteKit static adapter** | No server costs, CDN delivery, works offline                             |
+| **Amplify library only**     | Full control over architecture, no CLI opinions                          |
+| **Multi-plan support**       | Reusable combat scenarios, flexible planning workflow                    |
 
 ## Data Model Concepts
 
-| Entity | Contains |
-| --- | --- |
+| Entity        | Contains                                          |
+| ------------- | ------------------------------------------------- |
 | **Character** | Profile, current resources, global active effects |
-| **Plan** | Saved combat scenario, list of steps |
-| **Step** | Action/bonus/reaction/rest with resource costs |
-| **Effect** | Concentration, buff, debuff with duration |
+| **Plan**      | Saved combat scenario, list of steps              |
+| **Step**      | Action/bonus/reaction/rest with resource costs    |
+| **Effect**    | Concentration, buff, debuff with duration         |
 
 ## Design Principles
 
-| Principle | Application |
-| --- | --- |
-| **Touch-Optimized** | Large tap targets, gestures for common actions |
-| **Minimal Friction** | One-tap actions, no confirmation dialogues for common operations |
-| **Visual Clarity** | At-a-glance resource state, clear progress indicators |
-| **Rules as Data** | All D&D rules loaded from API, not hardcoded |
-| **Progressive Enhancement** | Core works, features sync when available |
+| Principle                   | Application                                                      |
+| --------------------------- | ---------------------------------------------------------------- |
+| **Touch-Optimized**         | Large tap targets, gestures for common actions                   |
+| **Minimal Friction**        | One-tap actions, no confirmation dialogues for common operations |
+| **Visual Clarity**          | At-a-glance resource state, clear progress indicators            |
+| **Rules as Data**           | All D&D rules loaded from API, not hardcoded                     |
+| **Progressive Enhancement** | Core works, features sync when available                         |
 
 ## Getting Started
 
@@ -202,16 +202,16 @@ make deploy
 
 ### Make Targets
 
-| Target | Description |
-| --- | --- |
-| `make dev` | Start Vite dev server |
-| `make build` | Build SvelteKit for production |
-| `make test` | Run Vitest unit/integration tests |
-| `make test:e2e` | Run Playwright E2E tests |
-| `make deploy` | Deploy to S3 + CloudFront |
-| `make clean` | Clean build artifacts |
-| `make lint` | Run ESLint |
-| `make format` | Run Prettier |
+| Target          | Description                       |
+| --------------- | --------------------------------- |
+| `make dev`      | Start Vite dev server             |
+| `make build`    | Build SvelteKit for production    |
+| `make test`     | Run Vitest unit/integration tests |
+| `make test:e2e` | Run Playwright E2E tests          |
+| `make deploy`   | Deploy to S3 + CloudFront         |
+| `make clean`    | Clean build artifacts             |
+| `make lint`     | Run ESLint                        |
+| `make format`   | Run Prettier                      |
 
 ## Deployment
 
@@ -261,19 +261,19 @@ make deploy-test
 
 ### CI/CD Pipeline
 
-| Workflow | Trigger | Action |
-| --- | --- | --- |
-| `environment-test-plan.yaml` | Pull request to main | Runs terraform plan for test environment, comments plan on PR |
-| `environment-test-deploy.yaml` | Push to main | Runs terraform apply for test environment, triggers prod deploy |
-| `environment-prod-deploy.yaml` | Workflow dispatch (manual) | Runs terraform apply for prod environment |
-| `dependabot-automerge.yml` | Dependabot PR with `automerge` label | Auto-merges after status checks pass |
+| Workflow                       | Trigger                              | Action                                                          |
+| ------------------------------ | ------------------------------------ | --------------------------------------------------------------- |
+| `environment-test-plan.yaml`   | Pull request to main                 | Runs terraform plan for test environment, comments plan on PR   |
+| `environment-test-deploy.yaml` | Push to main                         | Runs terraform apply for test environment, triggers prod deploy |
+| `environment-prod-deploy.yaml` | Workflow dispatch (manual)           | Runs terraform apply for prod environment                       |
+| `dependabot-automerge.yml`     | Dependabot PR with `automerge` label | Auto-merges after status checks pass                            |
 
 ### Environment Configuration
 
-| Environment | Region | State File | State Bucket |
-| --- | --- | --- | --- |
-| test | ap-southeast-2 | `dnd-planner/test/terraform.tfstate` | dnd-planner-iac-state-{account_id} |
-| prod | ap-southeast-2 | `dnd-planner/prod/terraform.tfstate` | dnd-planner-iac-state-{account_id} |
+| Environment | Region         | State File                           | State Bucket                       |
+| ----------- | -------------- | ------------------------------------ | ---------------------------------- |
+| test        | ap-southeast-2 | `dnd-planner/test/terraform.tfstate` | dnd-planner-iac-state-{account_id} |
+| prod        | ap-southeast-2 | `dnd-planner/prod/terraform.tfstate` | dnd-planner-iac-state-{account_id} |
 
 **Note:** State bucket name uses your AWS account ID for deterministic naming. S3 versioning provides state locking.
 
