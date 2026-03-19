@@ -99,9 +99,6 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
@@ -118,20 +115,20 @@ jobs:
         run: pnpm build
 
       - name: Get terraform outputs
+        uses: dflook/terraform-output@v1
         id: tf-outputs
-        run: |
-          cd terraform/environment/prod
-          terraform init -backend=false
-          BUCKET_NAME=$(terraform output -raw s3_bucket_name)
-          CDN_ID=$(terraform output -raw cloudfront_distribution_id)
-          echo "bucket_name=$BUCKET_NAME" >> $GITHUB_OUTPUT
-          echo "cdn_id=$CDN_ID" >> $GITHUB_OUTPUT
         env:
           TF_VAR_domain: ${{ secrets.TF_VAR_domain }}
           TF_VAR_host: ${{ secrets.TF_VAR_host }}
+        with:
+          path: terraform/environment/prod
+          backend_config: >
+            bucket=${{ vars.STATE_BUCKET }},
+            key=dnd-planner/prod/terraform.tfstate,
+            region=${{ vars.AWS_REGION }}
 
       - name: Sync to S3
-        run: aws s3 sync build/ s3://${{ steps.tf-outputs.outputs.bucket_name }}/ --delete
+        run: aws s3 sync build/ s3://${{ steps.tf-outputs.outputs.s3_bucket_name }}/ --delete
 
       - name: Invalidate CloudFront
-        run: aws cloudfront create-invalidation --distribution-id ${{ steps.tf-outputs.outputs.cdn_id }} --paths "/*"
+        run: aws cloudfront create-invalidation --distribution-id ${{ steps.tf-outputs.outputs.cloudfront_distribution_id }} --paths "/*"
