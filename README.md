@@ -312,3 +312,4 @@ The architecture supports:
 - Setup Cognito
 - Setup API GW
 - UI: Login
+- Better favicon
