@@ -263,12 +263,12 @@ make preflight # prettifies and tests
 
 ### CI/CD Pipeline
 
-| Workflow                       | Trigger                              | Action                                                          |
-| ------------------------------ | ------------------------------------ | --------------------------------------------------------------- |
-| `environment-test-plan.yaml`   | Pull request to main                 | Runs terraform plan for test environment, comments plan on PR   |
-| `environment-test-deploy.yaml` | Push to main                         | Runs terraform apply for test environment, triggers prod deploy |
-| `environment-prod-deploy.yaml` | Workflow dispatch (manual)           | Runs terraform apply for prod environment                       |
-| `dependabot-automerge.yml`     | Dependabot PR opened/synchronized    | Enables auto-merge after status checks pass                     |
+| Workflow                       | Trigger                           | Action                                                          |
+| ------------------------------ | --------------------------------- | --------------------------------------------------------------- |
+| `environment-test-plan.yaml`   | Pull request to main              | Runs terraform plan for test environment, comments plan on PR   |
+| `environment-test-deploy.yaml` | Push to main                      | Runs terraform apply for test environment, triggers prod deploy |
+| `environment-prod-deploy.yaml` | Workflow dispatch (manual)        | Runs terraform apply for prod environment                       |
+| `dependabot-automerge.yml`     | Dependabot PR opened/synchronized | Enables auto-merge after status checks pass                     |
 
 ### Environment Configuration
 
