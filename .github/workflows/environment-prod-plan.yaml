@@ -25,23 +25,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Skip for Dependabot
+        if: github.actor == 'dependabot[bot]'
+        run: echo "Skipping Terraform validation for Dependabot PR (no access to secrets)"
+
       - name: Configure AWS credentials
+        if: github.actor != 'dependabot[bot]'
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE }}
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Terraform Format Check
+        if: github.actor != 'dependabot[bot]'
         uses: dflook/terraform-fmt@v1
         with:
           path: terraform
 
       - name: Terraform Validate
+        if: github.actor != 'dependabot[bot]'
         uses: dflook/terraform-validate@v1
         with:
           path: terraform/environment/prod
 
       - name: Terraform Plan
+        if: github.actor != 'dependabot[bot]'
         uses: dflook/terraform-plan@v1
         env:
           TF_VAR_domain: ${{ secrets.TF_VAR_domain }}
