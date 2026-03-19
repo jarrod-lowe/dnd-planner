@@ -257,6 +257,8 @@ make setup-github
 make deploy-test
 
 # Deploying to the Prod environment is done through CI/CD
+make preflight # prettifies and tests
+# Then commit to github and raise a PR
 ```
 
 ### CI/CD Pipeline
