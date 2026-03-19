@@ -152,7 +152,7 @@ security:
 	docker run --rm -v $(PWD)/terraform:/tf aquasec/trivy:latest config --severity CRITICAL,HIGH /tf
 
 # Run all tests (terraform + frontend)
-test: validate security test-unit test-e2e
+test: validate security test-unit test-e2e lint
 
 # Format
 fmt:
