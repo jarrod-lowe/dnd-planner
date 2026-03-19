@@ -102,10 +102,11 @@ resource "github_repository_ruleset" "main" {
   }
 
   rules {
-    required_linear_history = true
-    deletion                = true
-    non_fast_forward        = true
-    update                  = false
+    required_linear_history   = true
+    deletion                  = true
+    non_fast_forward          = true
+    update                    = false
+    required_signatures       = true
 
     pull_request {
       required_approving_review_count   = 0
