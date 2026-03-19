@@ -1,0 +1,7 @@
+codacy_api_token = ""
+
+# Route53 hosted zone domain name for prod environment
+domain = "example.com"
+
+# Host/subdomain prefix for prod CDN
+host = "www"

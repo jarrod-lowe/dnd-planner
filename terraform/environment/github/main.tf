@@ -43,6 +43,18 @@ variable "codacy_api_token" {
   sensitive   = true
 }
 
+variable "domain" {
+  description = "Route53 hosted zone domain name for prod"
+  type        = string
+  sensitive   = true
+}
+
+variable "host" {
+  description = "Host/subdomain prefix for prod CDN"
+  type        = string
+  sensitive   = true
+}
+
 import {
   to = github_repository.main
   id = var.repo
@@ -151,6 +163,20 @@ resource "github_actions_environment_secret" "prod_ro_aws_role" {
   plaintext_value = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/dnd-planner-prod-iac-ro"
 }
 
+resource "github_actions_environment_secret" "prod_ro_domain" {
+  repository      = github_repository.main.name
+  environment     = github_repository_environment.prod_ro.environment
+  secret_name     = "TF_VAR_domain"
+  plaintext_value = var.domain
+}
+
+resource "github_actions_environment_secret" "prod_ro_host" {
+  repository      = github_repository.main.name
+  environment     = github_repository_environment.prod_ro.environment
+  secret_name     = "TF_VAR_host"
+  plaintext_value = var.host
+}
+
 # Environment variables for prod-rw (terraform apply)
 resource "github_actions_environment_variable" "prod_rw_aws_account" {
   repository    = github_repository.main.name
@@ -185,6 +211,20 @@ resource "github_actions_environment_secret" "prod_rw_aws_role" {
   environment     = github_repository_environment.prod_rw.environment
   secret_name     = "AWS_ROLE"
   plaintext_value = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/dnd-planner-prod-iac-rw"
+}
+
+resource "github_actions_environment_secret" "prod_rw_domain" {
+  repository      = github_repository.main.name
+  environment     = github_repository_environment.prod_rw.environment
+  secret_name     = "TF_VAR_domain"
+  plaintext_value = var.domain
+}
+
+resource "github_actions_environment_secret" "prod_rw_host" {
+  repository      = github_repository.main.name
+  environment     = github_repository_environment.prod_rw.environment
+  secret_name     = "TF_VAR_host"
+  plaintext_value = var.host
 }
 
 

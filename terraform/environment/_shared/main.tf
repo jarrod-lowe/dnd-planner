@@ -23,8 +23,27 @@ provider "aws" {
   }
 }
 
+provider "aws" {
+  alias  = "us-east-1"
+  region = "us-east-1"
+  default_tags {
+    tags = {
+      Project     = "dnd-planner"
+      Environment = local.environment
+      ManagedBy   = "terraform"
+    }
+  }
+}
+
 module "dnd-planner" {
   source = "../../module/dnd-planner"
 
   environment = local.environment
+  domain      = var.domain
+  host        = var.host
+
+  providers = {
+    aws           = aws
+    aws.us-east-1 = aws.us-east-1
+  }
 }

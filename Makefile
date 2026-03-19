@@ -1,4 +1,4 @@
-.PHONY: fmt validate help clean
+.PHONY: fmt validate security test help clean
 
 default: help
 
@@ -92,6 +92,13 @@ validate-%:
 # Validate all environments
 validate: $(addprefix validate-,$(ENVS))
 
+# Security scan
+security:
+	docker run --rm -v $(PWD)/terraform:/tf aquasec/trivy:latest config --severity CRITICAL,HIGH /tf
+
+# Run all tests
+test: validate security
+
 # Format
 fmt:
 	terraform fmt -recursive
@@ -118,4 +125,6 @@ help:
 	@echo "Utility:"
 	@echo "  make fmt                 Format terraform files"
 	@echo "  make validate            Validate all environments (test, prod)"
+	@echo "  make security            Run Trivy security scan (CRITICAL, HIGH)"
+	@echo "  make test                Run validate and security"
 	@echo "  make clean               Remove generated Terraform artifacts"
