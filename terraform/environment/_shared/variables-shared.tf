@@ -1,8 +1,3 @@
-variable "environment" {
-  description = "Environment name (test, prod)"
-  type        = string
-}
-
 # Unused - passed by Makefile for consistency across environments
 variable "workspace" {
   type    = string

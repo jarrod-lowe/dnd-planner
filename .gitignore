@@ -3,3 +3,5 @@ tfplan
 .apply
 .stamp
 terraform/environment/github/terraform.tfvars
+terraform/environment/test/terraform.tfvars
+terraform/environment/prod/terraform.tfvars

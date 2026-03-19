@@ -17,7 +17,7 @@ provider "aws" {
   default_tags {
     tags = {
       Project     = "dnd-planner"
-      Environment = var.environment
+      Environment = local.environment
       ManagedBy   = "terraform"
     }
   }
@@ -26,5 +26,5 @@ provider "aws" {
 module "dnd-planner" {
   source = "../../module/dnd-planner"
 
-  environment = var.environment
+  environment = local.environment
 }
