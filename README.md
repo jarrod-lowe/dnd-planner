@@ -309,4 +309,6 @@ The architecture supports:
 
 - Disable merge bypass option
 - Missing lots of checks in pipeline
-- Setup Svelte (including compilation, vite, make test, pipeline tests, CDN & S3 bucket publishing)
+- Setup Cognito
+- Setup API GW
+- UI: Login
