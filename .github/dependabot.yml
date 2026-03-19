@@ -1,40 +1,40 @@
 version: 2
 updates:
   # JavaScript/TypeScript dependencies (pnpm)
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
     open-pull-requests-limit: 5
     labels:
-      - "dependencies"
-      - "automerge"
+      - 'dependencies'
+      - 'automerge'
     groups:
       production-dependencies:
-        dependency-type: "production"
+        dependency-type: 'production'
       development-dependencies:
-        dependency-type: "development"
+        dependency-type: 'development'
         update-types:
-          - "minor"
-          - "patch"
+          - 'minor'
+          - 'patch'
 
   # Terraform dependencies
-  - package-ecosystem: "terraform"
-    directory: "/"
+  - package-ecosystem: 'terraform'
+    directory: '/'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
     labels:
-      - "dependencies"
-      - "infrastructure"
+      - 'dependencies'
+      - 'infrastructure'
     open-pull-requests-limit: 3
 
   # GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
     labels:
-      - "dependencies"
-      - "ci"
-      - "automerge"
+      - 'dependencies'
+      - 'ci'
+      - 'automerge'
     open-pull-requests-limit: 3
