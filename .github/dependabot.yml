@@ -8,7 +8,6 @@ updates:
     open-pull-requests-limit: 5
     labels:
       - 'dependabot'
-      - 'automerge'
     groups:
       production-dependencies:
         dependency-type: 'production'
@@ -34,5 +33,4 @@ updates:
       interval: 'weekly'
     labels:
       - 'dependabot'
-      - 'automerge'
     open-pull-requests-limit: 3
