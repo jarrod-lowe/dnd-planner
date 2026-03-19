@@ -22,9 +22,9 @@ These rules are critical. Keep them through compactions, and add them into an pl
 
 - **AWS commands** are permitted for read-only operations, but always set the profile:
 
-   ```bash
-   AWS_PROFILE=dnd-planner aws <read-only-command>
-   ```
+  ```bash
+  AWS_PROFILE=dnd-planner aws <read-only-command>
+  ```
 
 ### Plan Execution
 
@@ -32,17 +32,17 @@ These rules are critical. Keep them through compactions, and add them into an pl
 
 ## Technology Stack
 
-| Layer | Technology |
-| --- | --- |
-| Frontend | SvelteKit + TypeScript |
-| Build | Vite |
-| State | Svelte 5 stores |
-| Backend | API Gateway + DynamoDB |
-| Auth | AWS Cognito |
-| Hosting | S3 + CloudFront |
-| Testing | Vitest, Playwright |
-| Package Manager | pnpm |
-| Infrastructure | Terraform |
+| Layer           | Technology             |
+| --------------- | ---------------------- |
+| Frontend        | SvelteKit + TypeScript |
+| Build           | Vite                   |
+| State           | Svelte 5 stores        |
+| Backend         | API Gateway + DynamoDB |
+| Auth            | AWS Cognito            |
+| Hosting         | S3 + CloudFront        |
+| Testing         | Vitest, Playwright     |
+| Package Manager | pnpm                   |
+| Infrastructure  | Terraform              |
 
 ## Repository Structure
 

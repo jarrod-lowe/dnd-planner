@@ -63,6 +63,7 @@ import {
 #tfsec:ignore:GIT-0001
 resource "github_repository" "main" {
   name                   = var.repo
+  has_issues             = true
   allow_auto_merge       = true
   allow_squash_merge     = true
   allow_merge_commit     = false
@@ -240,7 +241,8 @@ resource "github_branch_protection" "main" {
     strict = true
     contexts = [
       "Terraform Plan - Prod",
-      "Terraform Security Scan"
+      "Terraform Security Scan",
+      "Frontend Build & Test",
     ]
   }
   allows_deletions    = false
