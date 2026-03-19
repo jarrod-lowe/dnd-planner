@@ -30,6 +30,9 @@ jobs:
 
       - name: Terraform Apply
         uses: dflook/terraform-apply@v1
+        env:
+          TF_VAR_domain: ${{ secrets.TF_VAR_domain }}
+          TF_VAR_host: ${{ secrets.TF_VAR_host }}
         with:
           path: terraform/environment/prod
           label: prod
