@@ -240,7 +240,8 @@ resource "github_branch_protection" "main" {
     strict = true
     contexts = [
       "Terraform Plan - Prod",
-      "Terraform Security Scan"
+      "Terraform Security Scan",
+      "Frontend Build & Test",
     ]
   }
   allows_deletions    = false
