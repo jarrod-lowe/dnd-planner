@@ -1,0 +1,5 @@
+# Route53 hosted zone domain name (must exist in the AWS account)
+domain = "example.com"
+
+# Host/subdomain prefix for the CDN (e.g., "www" results in www.example.com)
+host = "www"
