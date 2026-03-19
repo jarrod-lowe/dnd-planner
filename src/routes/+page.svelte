@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { getHelloWorld } from '$lib/rules-engine';
+
   const title = 'D&D Planner';
 </script>
 
@@ -8,6 +10,7 @@
 
 <main>
   <h1>Hello, D&D Planner!</h1>
+  <p>{getHelloWorld()}</p>
   <p>
     A tablet-optimized web application for tracking D&D character resources and planning combat
     turns.
