@@ -5,3 +5,21 @@ tfplan
 terraform/environment/github/terraform.tfvars
 terraform/environment/test/terraform.tfvars
 terraform/environment/prod/terraform.tfvars
+
+# Dependencies
+node_modules/
+
+# Build outputs
+build/
+.svelte-kit/
+dist/
+
+# Test outputs
+coverage/
+test-results/
+playwright-report/
+
+# Environment
+.env
+.env.*
+!.env.example

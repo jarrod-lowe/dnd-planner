@@ -10,10 +10,46 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  test:
+    name: Pre-deploy Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
+
+      - name: Run unit tests
+        run: pnpm test
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: pnpm test:e2e
+
   deploy:
     name: Terraform Apply - Prod
     runs-on: ubuntu-latest
     environment: prod-rw
+    needs: test
     permissions:
       contents: read
       id-token: write
@@ -40,3 +76,56 @@ jobs:
             bucket=${{ vars.STATE_BUCKET }},
             key=dnd-planner/prod/terraform.tfstate,
             region=${{ vars.AWS_REGION }}
+
+  frontend:
+    name: Deploy Frontend
+    runs-on: ubuntu-latest
+    environment: prod-rw
+    needs: deploy
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Get terraform outputs
+        id: tf-outputs
+        run: |
+          cd terraform/environment/prod
+          terraform init -backend=false
+          BUCKET_NAME=$(terraform output -raw s3_bucket_name)
+          CDN_ID=$(terraform output -raw cloudfront_distribution_id)
+          echo "bucket_name=$BUCKET_NAME" >> $GITHUB_OUTPUT
+          echo "cdn_id=$CDN_ID" >> $GITHUB_OUTPUT
+        env:
+          TF_VAR_domain: ${{ secrets.TF_VAR_domain }}
+          TF_VAR_host: ${{ secrets.TF_VAR_host }}
+
+      - name: Sync to S3
+        run: aws s3 sync build/ s3://${{ steps.tf-outputs.outputs.bucket_name }}/ --delete
+
+      - name: Invalidate CloudFront
+        run: aws cloudfront create-invalidation --distribution-id ${{ steps.tf-outputs.outputs.cdn_id }} --paths "/*"

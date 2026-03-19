@@ -193,25 +193,6 @@ output "dynamodb_table_arn" {
   value       = aws_dynamodb_table.main.arn
 }
 
-# Test file for CDN validation
-resource "aws_s3_object" "index" {
-  bucket       = aws_s3_bucket.ui.id
-  key          = "index.html"
-  content      = <<HTML
-<!DOCTYPE html>
-<html>
-<head>
-    <title>D&D Planner</title>
-</head>
-<body>
-    <h1>Hello, D&D Planner!</h1>
-    <p>Environment: ${var.environment}</p>
-</body>
-</html>
-HTML
-  content_type = "text/html"
-}
-
 output "cdn_domain_name" {
   description = "CloudFront distribution domain name"
   value       = aws_cloudfront_distribution.cdn.domain_name
