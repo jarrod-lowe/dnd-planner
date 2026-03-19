@@ -19,20 +19,20 @@
 
 <style>
   main {
-    max-width: 800px;
+    max-width: 50rem;
     margin: 0 auto;
-    padding: 2rem;
+    padding: var(--spacing-xl);
   }
 
   h1 {
-    color: #8b0000;
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
+    color: var(--md-sys-color-primary);
+    font-size: var(--font-size-2xl);
+    margin-bottom: var(--spacing-md);
   }
 
   p {
-    color: #333;
-    font-size: 1.2rem;
+    color: var(--md-sys-color-on-surface);
+    font-size: var(--font-size-lg);
     line-height: 1.6;
   }
 </style>
