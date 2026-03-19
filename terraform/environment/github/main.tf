@@ -72,6 +72,21 @@ resource "github_repository" "main" {
   vulnerability_alerts   = true
 }
 
+# Issue labels for Dependabot PRs
+resource "github_issue_label" "dependabot" {
+  repository  = github_repository.main.name
+  name        = "dependabot"
+  color       = "0366d6"
+  description = "Dependabot PRs"
+}
+
+resource "github_issue_label" "automerge" {
+  repository  = github_repository.main.name
+  name        = "automerge"
+  color       = "0e8a16"
+  description = "Safe to auto-merge"
+}
+
 # Repository ruleset for main branch protection
 resource "github_repository_ruleset" "main" {
   name        = "dnd-planner-main-protection"
