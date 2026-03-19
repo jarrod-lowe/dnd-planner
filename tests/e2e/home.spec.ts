@@ -14,6 +14,13 @@ test.describe('Home Page', () => {
     await expect(heading).toBeVisible();
   });
 
+  test('should display the rules engine hello world text', async ({ page }) => {
+    await page.goto('/');
+
+    const helloWorldText = page.getByText('Hello from the rules engine');
+    await expect(helloWorldText).toBeVisible();
+  });
+
   test('should display the description paragraph', async ({ page }) => {
     await page.goto('/');
 
