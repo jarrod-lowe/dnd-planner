@@ -6,7 +6,6 @@ on:
       - opened
       - reopened
       - synchronize
-      - labeled
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -23,26 +22,7 @@ jobs:
     if: github.actor == 'dependabot[bot]'
 
     steps:
-      - name: Wait for tests
-        run: |
-          echo "Waiting for status checks to pass..."
-          gh pr view ${{ github.event.pull_request.number }} --json statusCheckRollup
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Check for automerge label
-        id: check
-        run: |
-          HAS_LABEL=$(gh pr view ${{ github.event.pull_request.number }} --json labels -q '.labels[] | select(.name == "automerge") | .name')
-          if [ "$HAS_LABEL" = "automerge" ]; then
-            echo "automerge=true" >> $GITHUB_OUTPUT
-          fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Auto-merge
-        if: steps.check.outputs.automerge == 'true'
-        run: |
-          gh pr merge ${{ github.event.pull_request.number }} --merge --auto --subject "Auto-merge dependabot PR"
+      - name: Enable automerge
+        run: gh pr merge "${{ github.event.pull_request.number }}" --merge --auto
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

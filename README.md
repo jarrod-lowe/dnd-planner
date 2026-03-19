@@ -268,7 +268,7 @@ make preflight # prettifies and tests
 | `environment-test-plan.yaml`   | Pull request to main                 | Runs terraform plan for test environment, comments plan on PR   |
 | `environment-test-deploy.yaml` | Push to main                         | Runs terraform apply for test environment, triggers prod deploy |
 | `environment-prod-deploy.yaml` | Workflow dispatch (manual)           | Runs terraform apply for prod environment                       |
-| `dependabot-automerge.yml`     | Dependabot PR with `automerge` label | Auto-merges after status checks pass                            |
+| `dependabot-automerge.yml`     | Dependabot PR opened/synchronized    | Enables auto-merge after status checks pass                     |
 
 ### Environment Configuration
 
