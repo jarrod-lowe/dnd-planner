@@ -27,6 +27,8 @@ jobs:
         run: |
           echo "Waiting for status checks to pass..."
           gh pr view ${{ github.event.pull_request.number }} --json statusCheckRollup
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for automerge label
         id: check
