@@ -93,10 +93,7 @@ describe('translation completeness', () => {
       }
     }
 
-    expect(
-      missingKeys,
-      `Missing translation keys: ${missingKeys.join(', ')}`
-    ).toEqual([]);
+    expect(missingKeys, `Missing translation keys: ${missingKeys.join(', ')}`).toEqual([]);
   });
 });
 
