@@ -1,3 +1,5 @@
+import { apiGet } from './client';
+
 interface HealthResponse {
   status: 'ok' | string;
 }
@@ -10,7 +12,7 @@ interface HealthCheckResult {
 
 export async function checkApiHealth(): Promise<HealthCheckResult> {
   try {
-    const response = await fetch('/api/health');
+    const response = await apiGet('/api/health');
 
     if (!response.ok) {
       return {
