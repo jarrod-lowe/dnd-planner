@@ -310,8 +310,10 @@ The architecture supports:
 - Disable merge bypass option
 - Missing lots of checks in pipeline
 - Lambda behind API GW
-- UI: Login
+- Cognito auth for API
 - Better favicon
 - A11y
 - I18n
 - Check CORS
+- Set better password policy for cognito?
+- Can we get rid of the .html/no .html stuff for /auth/callback between dev (SvelteKit) and test/prod (s3)?

@@ -3,6 +3,8 @@
   import { getHelloWorld } from '$lib/rules-engine';
   import { checkApiHealth } from '$lib/api/health';
   import { cognitoConfig } from '$lib/config/cognito';
+  import { authStore } from '$lib/auth/authStore.svelte';
+  import AuthStatus from '$lib/components/AuthStatus.svelte';
 
   const title = 'D&D Planner';
 
@@ -26,6 +28,15 @@
 
 <main>
   <h1>Hello, D&D Planner!</h1>
+
+  <AuthStatus
+    isLoading={authStore.state.isLoading}
+    isAuthenticated={authStore.state.isAuthenticated}
+    userId={authStore.state.userId}
+    onLogin={() => authStore.login()}
+    onLogout={() => authStore.logout()}
+  />
+
   <p>{getHelloWorld()}</p>
   <p>
     A tablet-optimized web application for tracking D&D character resources and planning combat
