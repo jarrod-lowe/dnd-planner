@@ -24,6 +24,7 @@ export default defineConfig(({ mode }) => {
         'tests/unit/**/*.{test,spec}.{js,ts}',
         'tests/integration/**/*.{test,spec}.{js,ts}'
       ],
+      setupFiles: ['./tests/setup.ts'],
       environment: 'jsdom',
       coverage: {
         provider: 'v8',

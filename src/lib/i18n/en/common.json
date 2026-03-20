@@ -1,0 +1,27 @@
+{
+  "app": {
+    "title": "D&D Planner",
+    "description": "A tablet-optimized web application for tracking D&D character resources and planning combat turns."
+  },
+  "layout": {
+    "loading": "Loading..."
+  },
+  "status": {
+    "checking": "Checking API...",
+    "connected": "API Connected",
+    "unavailable": "API Unavailable",
+    "notAuthenticated": "Not authenticated"
+  },
+  "auth": {
+    "loading": "Loading...",
+    "login": "Login",
+    "logout": "Logout",
+    "completingSignIn": "Completing sign in..."
+  },
+  "cognito": {
+    "label": "Cognito:"
+  },
+  "rulesEngine": {
+    "helloWorld": "Hello from the rules engine"
+  }
+}

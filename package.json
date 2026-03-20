@@ -41,6 +41,7 @@
     "vitest": "^3.0.0"
   },
   "dependencies": {
-    "aws-amplify": "^6.16.3"
+    "aws-amplify": "^6.16.3",
+    "sveltekit-i18n": "^2.4.2"
   }
 }

@@ -1,12 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { t } from '$lib/i18n';
   import { getHelloWorld } from '$lib/rules-engine';
   import { checkApiHealth } from '$lib/api/health';
   import { cognitoConfig } from '$lib/config/cognito';
   import { authStore } from '$lib/auth/authStore.svelte';
   import AuthStatus from '$lib/components/AuthStatus.svelte';
-
-  const title = 'D&D Planner';
 
   let healthStatus = $state<'loading' | 'connected' | 'error'>('loading');
   let errorMessage = $state('');
@@ -28,9 +27,11 @@
       }
     } else {
       healthStatus = 'error';
-      errorMessage = 'Not authenticated';
+      errorMessage = $t('status.notAuthenticated');
     }
   });
+
+  const title = $derived($t('app.title'));
 </script>
 
 <svelte:head>
@@ -38,7 +39,7 @@
 </svelte:head>
 
 <main>
-  <h1>Hello, D&D Planner!</h1>
+  <h1>{$t('app.title')}</h1>
 
   <AuthStatus
     isLoading={authStore.state.isLoading}
@@ -48,21 +49,18 @@
     onLogout={() => authStore.logout()}
   />
 
-  <p>{getHelloWorld()}</p>
-  <p>
-    A tablet-optimized web application for tracking D&D character resources and planning combat
-    turns.
-  </p>
+  <p>{$t(getHelloWorld())}</p>
+  <p>{$t('app.description')}</p>
 
   {#if healthStatus === 'loading'}
-    <p class="status-loading">Checking API...</p>
+    <p class="status-loading">{$t('status.checking')}</p>
   {:else if healthStatus === 'connected'}
-    <p class="status-ok">● API Connected</p>
+    <p class="status-ok">● {$t('status.connected')}</p>
   {:else}
-    <p class="status-error">● API Unavailable: {errorMessage}</p>
+    <p class="status-error">● {$t('status.unavailable')}: {errorMessage}</p>
   {/if}
 
-  <p class="status-ok">● Cognito: {cognitoConfig.loginDomain}</p>
+  <p class="status-ok">● {$t('cognito.label')} {cognitoConfig.loginDomain}</p>
 </main>
 
 <style>
