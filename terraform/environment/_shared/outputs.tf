@@ -42,3 +42,8 @@ output "cognito_login_domain" {
   description = "Cognito hosted login domain"
   value       = module.dnd-planner.cognito_login_domain
 }
+
+output "api_endpoint" {
+  description = "API Gateway endpoint URL"
+  value       = module.dnd-planner.api_endpoint
+}
