@@ -311,5 +311,8 @@ The architecture supports:
 - Missing lots of checks in pipeline
 - Setup Cognito
 - Setup API GW
+- Lambda behind API GW
 - UI: Login
 - Better favicon
+- A11y
+- I18n

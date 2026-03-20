@@ -1,0 +1,39 @@
+openapi: 3.0.3
+info:
+  title: D&D Planner API
+  version: 1.0.0
+  description: API for D&D Planner application
+
+x-amazon-apigateway-request-validators:
+  all:
+    validateRequestBody: true
+    validateRequestParameters: true
+
+x-amazon-apigateway-request-validator: all
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns the health status of the API
+      operationId: getHealth
+      responses:
+        '200':
+          description: Successful health check
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: '{"statusCode": 200}'
+        responses:
+          default:
+            statusCode: 200
+            responseTemplates:
+              application/json: '{"status": "ok"}'

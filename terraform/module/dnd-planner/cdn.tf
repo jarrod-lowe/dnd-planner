@@ -2,6 +2,15 @@ locals {
   cdn_name = "${local.resource_prefix}-cdn"
 }
 
+# Managed cache policies for API
+data "aws_cloudfront_cache_policy" "caching_disabled" {
+  name = "Managed-CachingDisabled"
+}
+
+data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
+  name = "Managed-AllViewerExceptHostHeader"
+}
+
 resource "aws_cloudfront_origin_access_control" "cdn" {
   name                              = local.cdn_name
   description                       = "CDN for UI"
@@ -28,10 +37,24 @@ resource "aws_cloudfront_distribution" "cdn" {
   # checkov:skip=CKV2_AWS_47:Log4j is irrelevant for S3 origins
   # checkov:skip=CKV_AWS_310:Not enabling origin failover for S3 origin
   # checkov:skip=CKV_AWS_68:Not enabled WAF yet - $$$
+
+  # S3 origin for static UI
   origin {
     domain_name              = aws_s3_bucket.ui.bucket_regional_domain_name
     origin_id                = aws_s3_bucket.ui.id
     origin_access_control_id = aws_cloudfront_origin_access_control.cdn.id
+  }
+
+  # API Gateway origin
+  origin {
+    domain_name = split("/", replace(aws_api_gateway_stage.default.invoke_url, "https://", ""))[0]
+    origin_id   = aws_api_gateway_rest_api.api.id
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
   }
 
   enabled             = true
@@ -46,6 +69,18 @@ resource "aws_cloudfront_distribution" "cdn" {
     origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.request_policy.id
     viewer_protocol_policy     = "redirect-to-https"
     response_headers_policy_id = data.aws_cloudfront_response_headers_policy.headers_policy.id
+  }
+
+  # API cache behavior - no caching, pass all requests to API Gateway
+  ordered_cache_behavior {
+    path_pattern             = "/api/*"
+    allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods           = ["GET", "HEAD"]
+    target_origin_id         = aws_api_gateway_rest_api.api.id
+    cache_policy_id          = data.aws_cloudfront_cache_policy.caching_disabled.id
+    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
+    viewer_protocol_policy   = "redirect-to-https"
+    compress                 = true
   }
 
   restrictions {

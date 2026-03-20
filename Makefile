@@ -70,12 +70,14 @@ terraform/environment/github/.stamp: terraform/environment/github \
 
 terraform/environment/test/.stamp: terraform/environment/test \
                                 terraform/environment/test/*.tf \
-                                terraform/module/dnd-planner/*.tf
+                                terraform/module/dnd-planner/*.tf \
+                                terraform/module/dnd-planner/openapi.yaml
 	@touch $@
 
 terraform/environment/prod/.stamp: terraform/environment/prod \
                                 terraform/environment/prod/*.tf \
-                                terraform/module/dnd-planner/*.tf
+                                terraform/module/dnd-planner/*.tf \
+                                terraform/module/dnd-planner/openapi.yaml
 	@touch $@
 
 # Combined setup target for any environment
