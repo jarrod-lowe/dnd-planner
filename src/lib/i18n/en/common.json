@@ -3,6 +3,9 @@
     "title": "D&D Planner",
     "description": "A tablet-optimized web application for tracking D&D character resources and planning combat turns."
   },
+  "nav": {
+    "skipToContent": "Skip to main content"
+  },
   "layout": {
     "loading": "Loading..."
   },

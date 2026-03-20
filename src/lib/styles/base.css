@@ -25,11 +25,12 @@
   --font-size-lg: 1.25rem;
   --font-size-xl: 1.5rem;
   --font-size-2xl: 2rem;
+  --line-height-md: 1.5;
 }
 
 body {
   font-family: var(--font-family);
   background-color: var(--md-sys-color-background);
   color: var(--md-sys-color-on-background);
-  line-height: 1.5;
+  line-height: var(--line-height-md);
 }

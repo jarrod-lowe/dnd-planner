@@ -38,7 +38,7 @@
   <title>{title}</title>
 </svelte:head>
 
-<main>
+<main id="main-content">
   <h1>{$t('app.title')}</h1>
 
   <AuthStatus
@@ -53,14 +53,14 @@
   <p>{$t('app.description')}</p>
 
   {#if healthStatus === 'loading'}
-    <p class="status-loading">{$t('status.checking')}</p>
+    <p class="status-loading"><span aria-hidden="true">⋯</span> {$t('status.checking')}</p>
   {:else if healthStatus === 'connected'}
-    <p class="status-ok">● {$t('status.connected')}</p>
+    <p class="status-ok"><span aria-hidden="true">✓</span> {$t('status.connected')}</p>
   {:else}
-    <p class="status-error">● {$t('status.unavailable')}: {errorMessage}</p>
+    <p class="status-error"><span aria-hidden="true">✗</span> {$t('status.unavailable')}: {errorMessage}</p>
   {/if}
 
-  <p class="status-ok">● {$t('cognito.label')} {cognitoConfig.loginDomain}</p>
+  <p class="status-ok"><span aria-hidden="true">✓</span> {$t('cognito.label')} {cognitoConfig.loginDomain}</p>
 </main>
 
 <style>

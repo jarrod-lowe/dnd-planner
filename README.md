@@ -311,6 +311,6 @@ The architecture supports:
 - Missing lots of checks in pipeline
 - Lambda behind API GW
 - Better favicon
-- A11y
+- A11y - periodically recheck
 - Federate Cognito to Google
 - Can we get rid of the .html/no .html stuff for /auth/callback between dev (SvelteKit) and test/prod (s3)?

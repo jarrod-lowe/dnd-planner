@@ -35,6 +35,23 @@ These rules are critical. Keep them through compactions, and add them into an pl
 
 - **All user-facing text must be added to the i18n system.** Do not hardcode strings in the frontend; use the translation files and keys instead. Make sure to explicitly note this in any plans involving front-end (Svelte/Typescript) development.
 
+### A11y
+
+- Always design the frontend with accessibility in mind
+- Use semantic HTML elements and ARIA attributes where appropriate
+- Ensure good color contrast and keyboard navigability
+- Do not forget this when doing frontend work
+
+### The CSS Law
+
+- Do NOT EVER create new colours; all colours exist in the theme files, use those variables only
+- CSS styles should be semantic, and re-used
+- Do not forget this when doing frontend work
+
+### Testing
+
+- Regularly run `make test` to check all tests pass
+
 ## Technology Stack
 
 | Layer           | Technology             |
@@ -79,9 +96,3 @@ make deploy-test  # Deploy to the test environment
 - Client-side rules engine for instant feedback
 - Optimistic UI updates for responsiveness
 - SvelteKit static adapter - no server costs
-
-## The CSS Law
-
-- Do NOT EVER create new colours; all colours exist in the theme files, use those variables only
-- CSS styles should be semantic, and re-used
-- Do not forget this when doing frontend work
