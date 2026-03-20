@@ -1,4 +1,5 @@
 import { sveltekit } from '@sveltejs/kit/vite';
+import devtoolsJson from 'vite-plugin-devtools-json';
 import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
 
@@ -6,7 +7,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
   return {
-    plugins: [sveltekit()],
+    plugins: [sveltekit(), devtoolsJson()],
     ...(mode === 'test' ? { resolve: { conditions: ['browser'] } } : {}),
     server: {
       proxy: env.VITE_API_PROXY_TARGET
