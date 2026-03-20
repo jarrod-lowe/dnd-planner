@@ -104,7 +104,12 @@ terraform/environment/test/output.json: terraform/environment/test/.apply
 	terraform output -json > ../../../$@
 
 .env.local: terraform/environment/test/output.json
-	echo "VITE_API_PROXY_TARGET=https://$$(jq -r '.cdn_nice_domain.value' $<)" > $@
+	@echo "Generating .env.local from terraform outputs..."
+	@echo "VITE_API_PROXY_TARGET=\"https://$$(jq -r '.cdn_nice_domain.value' $<)\"" > $@
+	@echo "VITE_COGNITO_USER_POOL_ID=\"$$(jq -r '.cognito_user_pool_id.value' $<)\"" >> $@
+	@echo "VITE_COGNITO_WEB_CLIENT_ID=\"$$(jq -r '.cognito_web_client_id.value' $<)\"" >> $@
+	@echo "VITE_COGNITO_IDENTITY_POOL_ID=\"$$(jq -r '.cognito_identity_pool_id.value' $<)\"" >> $@
+	@echo "VITE_COGNITO_LOGIN_DOMAIN=\"$$(jq -r '.cognito_login_domain.value' $<)\"" >> $@
 
 setup-dev: .env.local
 

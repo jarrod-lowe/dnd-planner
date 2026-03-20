@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { getHelloWorld } from '$lib/rules-engine';
   import { checkApiHealth } from '$lib/api/health';
+  import { cognitoConfig } from '$lib/config/cognito';
 
   const title = 'D&D Planner';
 
@@ -38,6 +39,8 @@
   {:else}
     <p class="status-error">● API Unavailable: {errorMessage}</p>
   {/if}
+
+  <p class="status-ok">● Cognito: {cognitoConfig.loginDomain}</p>
 </main>
 
 <style>

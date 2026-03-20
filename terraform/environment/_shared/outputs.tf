@@ -22,3 +22,23 @@ output "cloudfront_distribution_id" {
   description = "CloudFront distribution ID"
   value       = module.dnd-planner.cloudfront_distribution_id
 }
+
+output "cognito_user_pool_id" {
+  description = "Cognito User Pool ID"
+  value       = module.dnd-planner.cognito_user_pool_id
+}
+
+output "cognito_web_client_id" {
+  description = "Cognito App Client ID"
+  value       = module.dnd-planner.cognito_web_client_id
+}
+
+output "cognito_identity_pool_id" {
+  description = "Cognito Identity Pool ID"
+  value       = module.dnd-planner.cognito_identity_pool_id
+}
+
+output "cognito_login_domain" {
+  description = "Cognito hosted login domain"
+  value       = module.dnd-planner.cognito_login_domain
+}
