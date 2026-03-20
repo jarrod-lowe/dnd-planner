@@ -167,6 +167,11 @@ output "cdn_domain_name" {
   value       = aws_cloudfront_distribution.cdn.domain_name
 }
 
+output "cdn_nice_domain" {
+  description = "Custom domain name (e.g., dnd-planner-test.example.com)"
+  value       = local.cdn_domain_name
+}
+
 output "cloudfront_distribution_id" {
   description = "CloudFront distribution ID"
   value       = aws_cloudfront_distribution.cdn.id

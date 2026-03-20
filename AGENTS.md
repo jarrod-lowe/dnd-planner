@@ -19,6 +19,7 @@ These rules are critical. Keep them through compactions, and add them into an pl
   - `make deploy-test` - Deploy test environment
   - `make fmt` - Format terraform files
   - `make validate` - Validate all environments
+  - Do not forget this when doing backend work
 
 - **AWS commands** are permitted for read-only operations, but always set the profile:
 
@@ -74,3 +75,9 @@ make format       # Run Prettier
 - Client-side rules engine for instant feedback
 - Optimistic UI updates for responsiveness
 - SvelteKit static adapter - no server costs
+
+## The CSS Law
+
+- Do NOT EVER create new colours; all colours exist in the theme files, use those variables only
+- CSS styles should be semantic, and re-used
+- Do not forget this when doing frontend work

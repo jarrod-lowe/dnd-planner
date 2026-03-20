@@ -13,6 +13,11 @@ output "cdn_domain_name" {
   value       = module.dnd-planner.cdn_domain_name
 }
 
+output "cdn_nice_domain" {
+  description = "Custom domain name"
+  value       = module.dnd-planner.cdn_nice_domain
+}
+
 output "cloudfront_distribution_id" {
   description = "CloudFront distribution ID"
   value       = module.dnd-planner.cloudfront_distribution_id

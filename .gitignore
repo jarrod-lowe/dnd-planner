@@ -4,6 +4,7 @@ tfplan
 .stamp
 terraform/environment/github/terraform.tfvars
 terraform/environment/test/terraform.tfvars
+terraform/environment/test/output.json
 terraform/environment/prod/terraform.tfvars
 
 # Dependencies
