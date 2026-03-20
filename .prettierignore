@@ -6,3 +6,4 @@ coverage/
 test-results/
 playwright-report/
 *.min.js
+pnpm-lock.yaml
