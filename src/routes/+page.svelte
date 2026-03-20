@@ -57,10 +57,17 @@
   {:else if healthStatus === 'connected'}
     <p class="status-ok"><span aria-hidden="true">✓</span> {$t('status.connected')}</p>
   {:else}
-    <p class="status-error"><span aria-hidden="true">✗</span> {$t('status.unavailable')}: {errorMessage}</p>
+    <p class="status-error">
+      <span aria-hidden="true">✗</span>
+      {$t('status.unavailable')}: {errorMessage}
+    </p>
   {/if}
 
-  <p class="status-ok"><span aria-hidden="true">✓</span> {$t('cognito.label')} {cognitoConfig.loginDomain}</p>
+  <p class="status-ok">
+    <span aria-hidden="true">✓</span>
+    {$t('cognito.label')}
+    {cognitoConfig.loginDomain}
+  </p>
 </main>
 
 <style>

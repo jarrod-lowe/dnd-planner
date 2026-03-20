@@ -3,5 +3,5 @@
 # resolve references, so we create some dummy values to make the linters happy.
 # These values are not used in any actual Terraform runs, so they can be safely ignored.
 locals {
-    environment = "none"
+  environment = "none"
 }
