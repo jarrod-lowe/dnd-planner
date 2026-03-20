@@ -7,6 +7,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [sveltekit()],
+    ...(mode === 'test' ? { resolve: { conditions: ['browser'] } } : {}),
     server: {
       proxy: env.VITE_API_PROXY_TARGET
         ? {
@@ -28,6 +29,11 @@ export default defineConfig(({ mode }) => {
         provider: 'v8',
         reporter: ['text', 'html'],
         reportsDirectory: './coverage'
+      },
+      server: {
+        deps: {
+          inline: ['svelte']
+        }
       }
     }
   };

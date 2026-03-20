@@ -111,9 +111,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build
-        run: pnpm build
-
       - name: Get terraform outputs
         uses: dflook/terraform-output@v1
         id: tf-outputs
@@ -126,6 +123,14 @@ jobs:
             bucket=${{ vars.STATE_BUCKET }},
             key=dnd-planner/prod/terraform.tfstate,
             region=${{ vars.AWS_REGION }}
+
+      - name: Build
+        run: pnpm build
+        env:
+          VITE_COGNITO_USER_POOL_ID: ${{ steps.tf-outputs.outputs.cognito_user_pool_id }}
+          VITE_COGNITO_WEB_CLIENT_ID: ${{ steps.tf-outputs.outputs.cognito_web_client_id }}
+          VITE_COGNITO_IDENTITY_POOL_ID: ${{ steps.tf-outputs.outputs.cognito_identity_pool_id }}
+          VITE_COGNITO_LOGIN_DOMAIN: ${{ steps.tf-outputs.outputs.cognito_login_domain }}
 
       - name: Sync to S3
         run: aws s3 sync build/ s3://${{ steps.tf-outputs.outputs.s3_bucket_name }}/ --delete
