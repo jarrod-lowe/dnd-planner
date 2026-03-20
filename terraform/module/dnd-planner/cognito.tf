@@ -13,7 +13,7 @@ resource "aws_cognito_user_pool_client" "cognito" {
   generate_secret                      = false
   explicit_auth_flows                  = ["ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_USER_PASSWORD_AUTH", "ALLOW_USER_SRP_AUTH"]
   allowed_oauth_flows_user_pool_client = true
-  callback_urls                        = ["http://localhost:5173/", "http://localhost:5174/", "https://${local.cdn_domain_name}/"]
+  callback_urls                        = ["http://localhost:5173/auth/callback", "http://localhost:5174/auth/callback", "http://localhost:5173/auth/callback.html", "http://localhost:5174/auth/callback.html", "https://${local.cdn_domain_name}/auth/callback.html"]
   logout_urls                          = ["http://localhost:5173/", "http://localhost:5174/", "https://${local.cdn_domain_name}/"]
   allowed_oauth_flows                  = ["code"]
   allowed_oauth_scopes                 = ["openid", "aws.cognito.signin.user.admin"]
@@ -300,5 +300,5 @@ output "cognito_web_client_id" {
 
 output "cognito_login_domain" {
   description = "Cognito Login Domain"
-  value       = nonsensitive(sensitive("${aws_cognito_user_pool_domain.cognito.domain}.auth.${data.aws_region.current.id}.${data.aws_partition.current.dns_suffix}"))
+  value       = nonsensitive(sensitive("${aws_cognito_user_pool_domain.cognito.domain}.auth.${data.aws_region.current.id}.amazoncognito.com"))
 }
