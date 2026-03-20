@@ -125,15 +125,15 @@ describe('i18n detectLocale', () => {
     expect(detectLocale()).toBe('en');
   });
 
-  it('returns tlh for Klingon match', async () => {
+  it('returns en-x-tlh for Klingon match', async () => {
     vi.stubGlobal('navigator', {
-      languages: ['tlh'],
-      language: 'tlh'
+      languages: ['en-x-tlh'],
+      language: 'en-x-tlh'
     });
 
     vi.resetModules();
     const { detectLocale } = await import('$lib/i18n');
-    expect(detectLocale()).toBe('tlh');
+    expect(detectLocale()).toBe('en-x-tlh');
   });
 
   it('returns en for unsupported languages (fallback)', async () => {
@@ -161,17 +161,17 @@ describe('i18n detectLocale', () => {
   it('uses navigator.language when navigator.languages is undefined', async () => {
     vi.stubGlobal('navigator', {
       languages: undefined,
-      language: 'tlh'
+      language: 'en-x-tlh'
     });
 
     vi.resetModules();
     const { detectLocale } = await import('$lib/i18n');
-    expect(detectLocale()).toBe('tlh');
+    expect(detectLocale()).toBe('en-x-tlh');
   });
 
-  it('locales constant contains en and tlh', async () => {
+  it('locales constant contains en and en-x-tlh', async () => {
     vi.resetModules();
     const { locales } = await import('$lib/i18n');
-    expect(locales).toEqual(['en', 'tlh']);
+    expect(locales).toEqual(['en', 'en-x-tlh']);
   });
 });

@@ -29,7 +29,7 @@ vi.mock('$lib/i18n', () => ({
   isLoading: readable(false),
   initialized: readable(true),
   detectLocale: () => 'en',
-  locales: ['en', 'tlh']
+  locales: ['en', 'en-x-tlh']
 }));
 
 describe('Page', () => {
