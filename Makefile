@@ -1,4 +1,4 @@
-.PHONY: fmt validate security test help clean dev build lint format test-unit test-e2e test-component format-check push-test install pnpm
+.PHONY: fmt validate security test help clean dev build lint format test-unit test-e2e test-component format-check push-test install pnpm setup-dev
 
 default: help
 
@@ -99,8 +99,17 @@ pnpm:
 install: pnpm
 	pnpm install
 
+terraform/environment/test/output.json: terraform/environment/test/.apply
+	cd terraform/environment/test && \
+	terraform output -json > ../../../$@
+
+.env.local: terraform/environment/test/output.json
+	echo "VITE_API_PROXY_TARGET=https://$$(jq -r '.cdn_nice_domain.value' $<)" > $@
+
+setup-dev: .env.local
+
 # Development server
-dev: install
+dev: .env.local install
 	pnpm dev
 
 # Production build
