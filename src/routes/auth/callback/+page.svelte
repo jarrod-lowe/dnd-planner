@@ -42,7 +42,7 @@
   });
 </script>
 
-<div class="callback-container">
+<div id="main-content" class="callback-container">
   <p>{$t('auth.completingSignIn')}</p>
 </div>
 

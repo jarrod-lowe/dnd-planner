@@ -3,6 +3,9 @@
     "title": "D&D chovnatlh",
     "description": "vay' Duj chovnatlh 'ej DujlIj Dalo'meH wo'rIv Duj chovnatlh."
   },
+  "nav": {
+    "skipToContent": "naDevvo' jaH"
+  },
   "layout": {
     "loading": "loS..."
   },

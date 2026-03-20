@@ -27,9 +27,31 @@
   });
 </script>
 
+<svelte:head>
+  <style>
+    .skip-link {
+      position: absolute;
+      top: -100%;
+      left: 0;
+      padding: var(--spacing-sm) var(--spacing-md);
+      z-index: 100;
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+      text-decoration: none;
+      border-radius: 0 0 var(--spacing-xs) 0;
+    }
+    .skip-link:focus {
+      top: 0;
+    }
+  </style>
+</svelte:head>
+
 {#if $isLoading}
-  <div class="loading-screen">{$t('layout.loading')}</div>
+  <div class="loading-screen" aria-live="polite" aria-busy="true">
+    {$t('layout.loading')}
+  </div>
 {:else}
+  <a href="#main-content" class="skip-link">{$t('nav.skipToContent')}</a>
   {@render children()}
 {/if}
 
