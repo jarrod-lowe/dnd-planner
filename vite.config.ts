@@ -19,7 +19,10 @@ export default defineConfig(({ mode }) => {
         : undefined
     },
     test: {
-      include: ['tests/unit/**/*.{test,spec}.{js,ts}', 'tests/integration/**/*.{test,spec}.{js,ts}'],
+      include: [
+        'tests/unit/**/*.{test,spec}.{js,ts}',
+        'tests/integration/**/*.{test,spec}.{js,ts}'
+      ],
       environment: 'jsdom',
       coverage: {
         provider: 'v8',
