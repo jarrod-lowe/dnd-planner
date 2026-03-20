@@ -1,4 +1,4 @@
-.PHONY: fmt validate security test help clean dev build lint format test-unit test-e2e test-component format-check push-test install pnpm setup-dev
+.PHONY: format-terraform validate security test help clean dev build lint format-frontend test-unit test-e2e test-component format-check push-test install pnpm setup-dev format
 
 default: help
 
@@ -126,7 +126,9 @@ lint: install
 	pnpm lint
 
 # Format
-format: install
+format: format-terraform format-frontend
+
+format-frontend: install
 	pnpm format
 
 # Format check (for CI)
@@ -170,10 +172,10 @@ security:
 # Run all tests (terraform + frontend)
 test: validate security test-unit test-e2e lint
 
-preflight: fmt format test
+preflight: format-terraform format test
 
 # Format
-fmt:
+format-terraform:
 	terraform fmt -recursive
 
 # Clean all generated files
@@ -211,8 +213,7 @@ help:
 	@echo ""
 	@echo "Code Quality:"
 	@echo "  make lint                Run ESLint"
-	@echo "  make format              Format code with Prettier"
-	@echo "  make fmt                 Format terraform files"
+	@echo "  make format              Format code (terraform + frontend)"
 	@echo ""
 	@echo "Utility:"
 	@echo "  make validate            Validate all terraform environments"
