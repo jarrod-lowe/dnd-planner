@@ -12,12 +12,23 @@
   let errorMessage = $state('');
 
   onMount(async () => {
-    const result = await checkApiHealth();
-    if (result.success) {
-      healthStatus = 'connected';
+    // Wait for auth to finish initializing
+    while (authStore.state.isLoading) {
+      await new Promise((r) => setTimeout(r, 50));
+    }
+
+    // Only check health if authenticated
+    if (authStore.state.isAuthenticated) {
+      const result = await checkApiHealth();
+      if (result.success) {
+        healthStatus = 'connected';
+      } else {
+        healthStatus = 'error';
+        errorMessage = result.error ?? 'Unknown error';
+      }
     } else {
       healthStatus = 'error';
-      errorMessage = result.error ?? 'Unknown error';
+      errorMessage = 'Not authenticated';
     }
   });
 </script>
