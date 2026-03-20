@@ -34,6 +34,8 @@ data "aws_route53_zone" "zone" {
 
 data "aws_partition" "current" {}
 
+data "aws_region" "current" {}
+
 # S3 bucket for UI hosting
 resource "aws_s3_bucket" "ui" {
   bucket = "${local.resource_prefix}-ui"
