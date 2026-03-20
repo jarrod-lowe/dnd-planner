@@ -145,7 +145,7 @@ TEST_BUCKET := $(shell AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) terra
 TEST_CDN_ID := $(shell AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) terraform -chdir=terraform/environment/test output -raw cloudfront_distribution_id 2>/dev/null)
 
 # Push to test environment (build and sync to S3)
-push-test: build
+push-test: terraform/environment/test/.apply build
 	@echo "Syncing to S3 bucket: $(TEST_BUCKET)"
 	@aws s3 sync build/ s3://$(TEST_BUCKET)/ --delete
 	@echo "Invalidating CloudFront distribution: $(TEST_CDN_ID)"

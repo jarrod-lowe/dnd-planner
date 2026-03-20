@@ -309,7 +309,6 @@ The architecture supports:
 
 - Disable merge bypass option
 - Missing lots of checks in pipeline
-- Setup Cognito
 - Lambda behind API GW
 - UI: Login
 - Better favicon
