@@ -1,6 +1,27 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from 'svelte';
+import { readable } from 'svelte/store';
 import AuthStatus from '$lib/components/AuthStatus.svelte';
+
+// English translations for testing
+const translations: Record<string, string> = {
+  'auth.loading': 'Loading...',
+  'auth.login': 'Login',
+  'auth.logout': 'Logout'
+};
+
+// Mock $lib/i18n module for this test file
+vi.mock('$lib/i18n', () => ({
+  t: readable((key: string) => translations[key] ?? key),
+  locale: {
+    ...readable('en'),
+    set: vi.fn()
+  },
+  isLoading: readable(false),
+  initialized: readable(true),
+  detectLocale: () => 'en',
+  locales: ['en', 'tlh']
+}));
 
 describe('AuthStatus', () => {
   let container: HTMLElement;

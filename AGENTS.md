@@ -31,6 +31,10 @@ These rules are critical. Keep them through compactions, and add them into an pl
 
 - **If you discover a plan won't work, STOP.** Do not change tack or improvise a different approach. Ask the user how to proceed before continuing.
 
+### I18n
+
+- **All user-facing text must be added to the i18n system.** Do not hardcode strings in the frontend; use the translation files and keys instead. Make sure to explicitly note this in any plans involving front-end (Svelte/Typescript) development.
+
 ## Technology Stack
 
 | Layer           | Technology             |
@@ -62,11 +66,11 @@ terraform/
 
 ```bash
 make dev          # Start development server
-make build        # Build for production
-make test         # Run unit/integration tests
-make test:e2e     # Run E2E tests
+make build        # Compile everything
+make test         # Run all tests
 make lint         # Run ESLint
 make format       # Run Prettier
+make deploy-test  # Deploy to the test environment
 ```
 
 ## Design Principles

@@ -3,6 +3,7 @@
    * AuthStatus component - displays login/logout UI based on auth state.
    * Shows loading, login button, or user info + logout button.
    */
+  import { t } from '$lib/i18n';
 
   interface Props {
     isLoading?: boolean;
@@ -23,12 +24,12 @@
 
 <div class="auth-status">
   {#if isLoading}
-    <span class="loading">Loading...</span>
+    <span class="loading">{$t('auth.loading')}</span>
   {:else if isAuthenticated}
     <span class="user-id">{userId}</span>
-    <button onclick={onLogout}>Logout</button>
+    <button onclick={onLogout}>{$t('auth.logout')}</button>
   {:else}
-    <button onclick={onLogin}>Login</button>
+    <button onclick={onLogin}>{$t('auth.login')}</button>
   {/if}
 </div>
 

@@ -1,4 +1,4 @@
-.PHONY: format-terraform validate security test help clean dev build lint format-frontend test-unit test-e2e test-component format-check push-test install pnpm setup-dev format
+.PHONY: format-terraform validate security test help clean dev build lint format-frontend test-unit test-e2e test-e2e-debug test-component format-check push-test install pnpm setup-dev format
 
 default: help
 
@@ -139,8 +139,12 @@ format-check: install
 test-unit: install
 	pnpm test
 
-# E2E tests (Playwright)
+# E2E tests (Playwright) - CI friendly, no browser opening
 test-e2e: build
+	pnpm exec playwright test --reporter=list
+
+# E2E tests with HTML report and browser viewing (for debugging)
+test-e2e-debug: build
 	pnpm test:e2e
 
 # Component tests (Playwright)
@@ -208,7 +212,8 @@ help:
 	@echo "Testing:"
 	@echo "  make test                Run all tests (terraform + frontend)"
 	@echo "  make test-unit           Run Vitest unit tests"
-	@echo "  make test-e2e            Run Playwright E2E tests"
+	@echo "  make test-e2e            Run Playwright E2E tests (CI-friendly)"
+	@echo "  make test-e2e-debug      Run Playwright E2E tests with debug report"
 	@echo "  make test-component      Run Playwright component tests"
 	@echo ""
 	@echo "Code Quality:"
