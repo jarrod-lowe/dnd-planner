@@ -66,7 +66,9 @@ resource "aws_api_gateway_account" "main" {
 resource "aws_api_gateway_rest_api" "api" {
   name        = local.api_name
   description = "REST API for D&D Planner"
-  body        = templatefile("${path.module}/openapi.yaml", {})
+  body = templatefile("${path.module}/openapi.yaml", {
+    cognito_user_pool_arn = aws_cognito_user_pool.cognito.arn
+  })
 
   endpoint_configuration {
     types = ["REGIONAL"]
