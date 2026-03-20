@@ -1,7 +1,7 @@
 import I18n from 'sveltekit-i18n';
 
 /** Supported locales */
-export const locales = ['en', 'tlh'] as const;
+export const locales = ['en', 'en-x-tlh'] as const;
 export type Locale = (typeof locales)[number];
 
 /** Loader configuration for sveltekit-i18n */
@@ -14,9 +14,9 @@ const config = {
       loader: async () => (await import('./en/common.json')).default
     },
     {
-      locale: 'tlh',
+      locale: 'en-x-tlh',
       key: '',
-      loader: async () => (await import('./tlh/common.json')).default
+      loader: async () => (await import('./en-x-tlh/common.json')).default
     }
   ]
 };
@@ -54,6 +54,10 @@ export function detectLocale(): Locale {
 
   // Find first matching locale
   for (const lang of browserLanguages) {
+    // Check for exact match first (e.g., 'en-x-tlh')
+    if (locales.includes(lang as Locale)) {
+      return lang as Locale;
+    }
     // Extract the primary language code (e.g., 'en' from 'en-US')
     const primaryLang = lang.split('-')[0].toLowerCase();
     if (locales.includes(primaryLang as Locale)) {
