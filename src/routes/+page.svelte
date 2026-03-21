@@ -21,10 +21,7 @@
 
     // Only check health if authenticated
     if (authStore.state.isAuthenticated) {
-      const [healthResult, testResult] = await Promise.all([
-        checkApiHealth(),
-        checkApiTest()
-      ]);
+      const [healthResult, testResult] = await Promise.all([checkApiHealth(), checkApiTest()]);
 
       if (healthResult.success) {
         healthStatus = 'connected';
