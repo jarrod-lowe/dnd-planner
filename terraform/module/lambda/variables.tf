@@ -3,8 +3,8 @@ variable "name" {
   type        = string
 }
 
-variable "binary_path" {
-  description = "Path to the compiled Go binary"
+variable "zip_path" {
+  description = "Path to the pre-built zip file"
   type        = string
 }
 
