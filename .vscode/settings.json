@@ -10,6 +10,8 @@
     "dflook",
     "linters",
     "nonsensitive",
+    "Replayability",
+    "replayable",
     "tfstate",
     "tfvars",
     "vars",
