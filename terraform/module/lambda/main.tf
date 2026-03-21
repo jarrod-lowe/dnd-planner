@@ -6,6 +6,10 @@ resource "aws_lambda_function" "this" {
   architectures    = ["arm64"]
   role             = var.execution_role
   source_code_hash = filebase64sha256(var.zip_path)
+
+  lifecycle {
+    ignore_changes = [filename, source_code_hash]
+  }
 }
 
 resource "aws_lambda_permission" "api_gw" {
