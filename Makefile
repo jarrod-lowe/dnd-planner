@@ -99,7 +99,7 @@ deploy-test: validate-test test build go-build push-test
 build/lambdas/%/bootstrap: backend/cmd/%/main.go
 	@echo "Building $*..."
 	@mkdir -p build/lambdas/$*
-	GOOS=linux GOARCH=arm64 go build -o "$@" "./backend/cmd/$*"
+	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o "$@" "./backend/cmd/$*"
 
 # Build all Lambda functions
 go-build: $(LAMBDA_BINARIES)

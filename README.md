@@ -310,6 +310,8 @@ The architecture supports:
 - Disable merge bypass option
 - Missing lots of checks in pipeline
 - Lambda behind API GW - remove test one
+- Restructure deploy pipeline to build in a separate one earlier?
+- Cognito -> go -> seed new user ddb META record
 - Better favicon
 - A11y - periodically recheck
 - Federate Cognito to Google
