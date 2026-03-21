@@ -60,6 +60,7 @@ jobs:
         env:
           TF_VAR_domain: ${{ secrets.TF_VAR_domain }}
           TF_VAR_host: ${{ secrets.TF_VAR_host }}
+          TF_VAR_sns_alarm_topic_arn: ${{ vars.SNS_ALARM_TOPIC_ARN }}
         with:
           path: terraform/environment/prod
           label: prod

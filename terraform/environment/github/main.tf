@@ -55,6 +55,11 @@ variable "host" {
   sensitive   = true
 }
 
+variable "sns_alarm_topic_arn" {
+  description = "SNS topic ARN for CloudWatch alarm notifications"
+  type        = string
+}
+
 import {
   to = github_repository.main
   id = var.repo
@@ -187,6 +192,13 @@ resource "github_actions_environment_secret" "prod_ro_host" {
   plaintext_value = var.host
 }
 
+resource "github_actions_environment_variable" "prod_ro_sns_alarm_topic_arn" {
+  repository    = github_repository.main.name
+  environment   = github_repository_environment.prod_ro.environment
+  variable_name = "SNS_ALARM_TOPIC_ARN"
+  value         = var.sns_alarm_topic_arn
+}
+
 # Environment variables for prod-rw (terraform apply)
 resource "github_actions_environment_variable" "prod_rw_aws_account" {
   repository    = github_repository.main.name
@@ -235,6 +247,13 @@ resource "github_actions_environment_secret" "prod_rw_host" {
   environment     = github_repository_environment.prod_rw.environment
   secret_name     = "TF_VAR_host"
   plaintext_value = var.host
+}
+
+resource "github_actions_environment_variable" "prod_rw_sns_alarm_topic_arn" {
+  repository    = github_repository.main.name
+  environment   = github_repository_environment.prod_rw.environment
+  variable_name = "SNS_ALARM_TOPIC_ARN"
+  value         = var.sns_alarm_topic_arn
 }
 
 

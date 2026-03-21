@@ -5,3 +5,6 @@ domain = "example.com"
 
 # Host/subdomain prefix for prod CDN
 host = "www"
+
+# SNS topic ARN for CloudWatch alarm notifications
+sns_alarm_topic_arn = "arn:aws:sns:region:account-id:topic-name"

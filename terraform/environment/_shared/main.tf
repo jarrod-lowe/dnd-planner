@@ -38,9 +38,11 @@ provider "aws" {
 module "dnd-planner" {
   source = "../../module/dnd-planner"
 
-  environment = local.environment
-  domain      = var.domain
-  host        = var.host
+  environment               = local.environment
+  domain                    = var.domain
+  host                      = var.host
+  lambda_log_retention_days = var.lambda_log_retention_days
+  sns_alarm_topic_arn       = var.sns_alarm_topic_arn
 
   providers = {
     aws           = aws
