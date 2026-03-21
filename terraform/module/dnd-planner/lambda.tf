@@ -19,11 +19,13 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
 }
 
 module "test_handler" {
-  source         = "../lambda"
-  name           = "${local.resource_prefix}-test-handler"
-  zip_path       = "${path.module}/../../../terraform/dummy-lambda.zip"
-  execution_role = aws_iam_role.lambda_exec.arn
-  api_source_arn = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
+  source              = "../lambda"
+  name                = "${local.resource_prefix}-test-handler"
+  zip_path            = "${path.module}/../../../terraform/dummy-lambda.zip"
+  execution_role      = aws_iam_role.lambda_exec.arn
+  api_source_arn      = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
+  log_retention_days  = var.lambda_log_retention_days
+  sns_alarm_topic_arn = var.sns_alarm_topic_arn
 }
 
 # Post-confirmation Lambda for user creation
@@ -54,29 +56,22 @@ resource "aws_iam_role_policy" "post_confirmation_dynamodb" {
   policy = data.aws_iam_policy_document.post_confirmation_dynamodb.json
 }
 
-resource "aws_lambda_function" "post_confirmation" {
-  function_name = "${local.resource_prefix}-post-confirmation"
-  filename      = "${path.module}/../../../terraform/dummy-lambda.zip"
-  handler       = "bootstrap"
-  runtime       = "provided.al2023"
-  architectures = ["arm64"]
-  role          = aws_iam_role.post_confirmation.arn
-
-  environment {
-    variables = {
-      TABLE_NAME = aws_dynamodb_table.data.name
-    }
-  }
-
-  lifecycle {
-    ignore_changes = [filename, source_code_hash]
+module "post_confirmation" {
+  source              = "../lambda"
+  name                = "${local.resource_prefix}-post-confirmation"
+  zip_path            = "${path.module}/../../../terraform/dummy-lambda.zip"
+  execution_role      = aws_iam_role.post_confirmation.arn
+  log_retention_days  = var.lambda_log_retention_days
+  sns_alarm_topic_arn = var.sns_alarm_topic_arn
+  environment_variables = {
+    TABLE_NAME = aws_dynamodb_table.data.name
   }
 }
 
 resource "aws_lambda_permission" "cognito_post_confirmation" {
   statement_id  = "AllowCognitoPostConfirmation"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.post_confirmation.function_name
+  function_name = module.post_confirmation.function_name
   principal     = "cognito-idp.amazonaws.com"
   source_arn    = aws_cognito_user_pool.cognito.arn
 }

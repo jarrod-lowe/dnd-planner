@@ -19,3 +19,14 @@ variable "host" {
   description = "Host/subdomain prefix for the CDN"
   type        = string
 }
+
+variable "lambda_log_retention_days" {
+  description = "Lambda CloudWatch log retention in days"
+  type        = number
+  default     = 7
+}
+
+variable "sns_alarm_topic_arn" {
+  description = "SNS topic ARN for CloudWatch alarm notifications"
+  type        = string
+}

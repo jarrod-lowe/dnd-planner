@@ -14,6 +14,23 @@ variable "execution_role" {
 }
 
 variable "api_source_arn" {
-  description = "Source ARN for API Gateway permissions"
+  description = "Source ARN for API Gateway permissions (optional)"
+  type        = string
+  default     = null
+}
+
+variable "environment_variables" {
+  description = "Environment variables for the Lambda function"
+  type        = map(string)
+  default     = {}
+}
+
+variable "log_retention_days" {
+  description = "CloudWatch log retention period in days"
+  type        = number
+}
+
+variable "sns_alarm_topic_arn" {
+  description = "SNS topic ARN for alarm notifications"
   type        = string
 }

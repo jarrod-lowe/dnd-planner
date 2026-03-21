@@ -23,7 +23,7 @@ resource "aws_cognito_user_pool" "cognito" {
   }
 
   lambda_config {
-    post_confirmation = aws_lambda_function.post_confirmation.arn
+    post_confirmation = module.post_confirmation.arn
   }
 }
 

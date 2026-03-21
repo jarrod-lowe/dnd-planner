@@ -23,6 +23,16 @@ variable "host" {
   type        = string
 }
 
+variable "lambda_log_retention_days" {
+  description = "Lambda CloudWatch log retention in days"
+  type        = number
+}
+
+variable "sns_alarm_topic_arn" {
+  description = "SNS topic ARN for alarm notifications"
+  type        = string
+}
+
 locals {
   resource_prefix = "dnd-planner-${var.environment}"
   cdn_domain_name = "${var.host}.${var.domain}"
