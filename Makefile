@@ -1,4 +1,4 @@
-.PHONY: format-terraform validate security test help clean dev build lint format-frontend test-unit test-e2e test-e2e-debug test-component format-check push-test install pnpm setup-dev format go-build
+.PHONY: format-terraform validate security test help clean dev build lint format-frontend test-unit test-e2e test-e2e-debug test-component format-check push-test install pnpm setup-dev format go-build deploy-lambdas-test deploy-lambdas-prod
 
 default: help
 
@@ -114,6 +114,30 @@ build/archives/%.zip: build/lambdas/%/bootstrap
 # Build all Lambda functions (binaries + zips)
 go-build: $(LAMBDA_BINARIES) $(ARCHIVES)
 
+# Pattern rule for deploying a single lambda to test
+deploy-lambda-test-%: build/archives/%.zip
+	@echo "Deploying $* to test..."
+	aws lambda update-function-code \
+		--function-name "dnd-planner-test-$*" \
+		--zip-file "fileb://$(PWD)/$<" \
+		--no-cli-pager
+
+# Pattern rule for deploying a single lambda to prod
+deploy-lambda-prod-%: build/archives/%.zip
+	@echo "Deploying $* to prod..."
+	aws lambda update-function-code \
+		--function-name "dnd-planner-prod-$*" \
+		--zip-file "fileb://$(PWD)/$<" \
+		--no-cli-pager
+
+# Deploy all lambdas to test
+DEPLOY_LAMBDAS_TEST := $(addprefix deploy-lambda-test-,$(LAMBDAS))
+deploy-lambdas-test: $(DEPLOY_LAMBDAS_TEST)
+
+# Deploy all lambdas to prod
+DEPLOY_LAMBDAS_PROD := $(addprefix deploy-lambda-prod-,$(LAMBDAS))
+deploy-lambdas-prod: $(DEPLOY_LAMBDAS_PROD)
+
 # Ensure pnpm is available
 pnpm:
 	@which pnpm > /dev/null || npm install -g pnpm
@@ -179,7 +203,7 @@ TEST_BUCKET := $(shell AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) terra
 TEST_CDN_ID := $(shell AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) terraform -chdir=terraform/environment/test output -raw cloudfront_distribution_id 2>/dev/null)
 
 # Push to test environment (build and sync to S3)
-push-test: terraform/environment/test/.apply build
+push-test: terraform/environment/test/.apply build go-build deploy-lambdas-test
 	@echo "Syncing to S3 bucket: $(TEST_BUCKET)"
 	@aws s3 sync build/ s3://$(TEST_BUCKET)/ --delete
 	@echo "Invalidating CloudFront distribution: $(TEST_CDN_ID)"
