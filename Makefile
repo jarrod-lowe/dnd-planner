@@ -1,4 +1,4 @@
-.PHONY: format-terraform validate security test help clean dev build lint format-frontend test-unit test-e2e test-e2e-debug test-component format-check push-test install pnpm setup-dev format
+.PHONY: format-terraform validate security test help clean dev build lint format-frontend test-unit test-e2e test-e2e-debug test-component format-check push-test install pnpm setup-dev format go-build
 
 default: help
 
@@ -13,6 +13,10 @@ export AWS_REGION
 STATE_BUCKET ?= $(PROJECT)-iac-state-$(AWS_ACCOUNT)
 GH_WORKSPACE := $(shell gh repo view --json owner -q .owner.login 2>/dev/null)
 GH_REPO := $(PROJECT)
+
+# Lambda build configuration
+LAMBDAS := $(notdir $(wildcard backend/cmd/*))
+LAMBDA_BINARIES := $(addsuffix /bootstrap,$(addprefix build/lambdas/,$(LAMBDAS)))
 
 # Generic init for any environment
 .PRECIOUS: terraform/environment/%/.terraform
@@ -84,12 +88,21 @@ terraform/environment/prod/.stamp: terraform/environment/prod \
 setup-state: terraform/environment/state/.apply
 setup-aws: terraform/environment/aws/.apply
 setup-github: terraform/environment/github/.apply
-deploy-test: validate-test test build push-test
+deploy-test: validate-test test build go-build push-test
 #deploy-prod: terraform/environment/prod/.apply # - this runs in a pipeline instead
 
 # ============================================
 # Frontend targets
 # ============================================
+
+# Pattern rule for building Lambda binaries
+build/lambdas/%/bootstrap: backend/cmd/%/main.go
+	@echo "Building $*..."
+	@mkdir -p build/lambdas/$*
+	GOOS=linux GOARCH=arm64 go build -o "$@" "./backend/cmd/$*"
+
+# Build all Lambda functions
+go-build: $(LAMBDA_BINARIES)
 
 # Ensure pnpm is available
 pnpm:
@@ -163,7 +176,7 @@ push-test: terraform/environment/test/.apply build
 	@aws cloudfront create-invalidation --distribution-id $(TEST_CDN_ID) --paths "/*"
 
 # Validate for any environment
-validate-%:
+validate-%: terraform/environment/%/.terraform
 	cd terraform/environment/$* && terraform validate
 
 # Validate all environments
@@ -189,6 +202,9 @@ clean:
 	rm -f terraform/environment/*/.terraform.lock.hcl
 	rm -f terraform/environment/*/.stamp
 	rm -f terraform/environment/*/tfplan
+	rm -rf terraform/archives
+	@echo "Cleaning Go artifacts..."
+	rm -rf build/lambdas
 	@echo "Cleaning frontend artifacts..."
 	rm -rf build .svelte-kit node_modules coverage test-results playwright-report
 	@echo "Done."
