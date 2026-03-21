@@ -53,3 +53,26 @@ paths:
             statusCode: 200
             responseTemplates:
               application/json: '{"status": "ok"}'
+
+  /test:
+    get:
+      summary: Test endpoint
+      description: Returns a test response to verify Lambda integration
+      operationId: getTest
+      requestBody:
+        content: {}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        uri: '${test_handler_uri}'

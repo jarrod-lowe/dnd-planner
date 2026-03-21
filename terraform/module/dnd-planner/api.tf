@@ -68,6 +68,7 @@ resource "aws_api_gateway_rest_api" "api" {
   description = "REST API for D&D Planner"
   body = templatefile("${path.module}/openapi.yaml", {
     cognito_user_pool_arn = aws_cognito_user_pool.cognito.arn
+    test_handler_uri      = "arn:aws:apigateway:${data.aws_region.current.region}:lambda:path/2015-03-31/functions/${module.test_handler.arn}/invocations"
   })
 
   endpoint_configuration {

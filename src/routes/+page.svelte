@@ -3,12 +3,15 @@
   import { t } from '$lib/i18n';
   import { getHelloWorld } from '$lib/rules-engine';
   import { checkApiHealth } from '$lib/api/health';
+  import { checkApiTest } from '$lib/api/test';
   import { cognitoConfig } from '$lib/config/cognito';
   import { authStore } from '$lib/auth/authStore.svelte';
   import AuthStatus from '$lib/components/AuthStatus.svelte';
 
   let healthStatus = $state<'loading' | 'connected' | 'error'>('loading');
+  let testStatus = $state<'loading' | 'connected' | 'error'>('loading');
   let errorMessage = $state('');
+  let testError = $state('');
 
   onMount(async () => {
     // Wait for auth to finish initializing
@@ -18,16 +21,26 @@
 
     // Only check health if authenticated
     if (authStore.state.isAuthenticated) {
-      const result = await checkApiHealth();
-      if (result.success) {
+      const [healthResult, testResult] = await Promise.all([checkApiHealth(), checkApiTest()]);
+
+      if (healthResult.success) {
         healthStatus = 'connected';
       } else {
         healthStatus = 'error';
-        errorMessage = result.error ?? 'Unknown error';
+        errorMessage = healthResult.error ?? 'Unknown error';
+      }
+
+      if (testResult.success) {
+        testStatus = 'connected';
+      } else {
+        testStatus = 'error';
+        testError = testResult.error ?? 'Unknown error';
       }
     } else {
       healthStatus = 'error';
+      testStatus = 'error';
       errorMessage = $t('status.notAuthenticated');
+      testError = $t('status.notAuthenticated');
     }
   });
 
@@ -60,6 +73,17 @@
     <p class="status-error">
       <span aria-hidden="true">✗</span>
       {$t('status.unavailable')}: {errorMessage}
+    </p>
+  {/if}
+
+  {#if testStatus === 'loading'}
+    <p class="status-loading"><span aria-hidden="true">⋯</span> API Test: checking...</p>
+  {:else if testStatus === 'connected'}
+    <p class="status-ok"><span aria-hidden="true">✓</span> API Test: connected</p>
+  {:else}
+    <p class="status-error">
+      <span aria-hidden="true">✗</span>
+      API Test: {testError}
     </p>
   {/if}
 
