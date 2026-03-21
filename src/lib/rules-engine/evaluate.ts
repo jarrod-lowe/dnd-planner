@@ -22,7 +22,7 @@ import type { EngineInput, EngineOutput } from './types';
  * The output must include a next object that is a complete, valid input document.
  * If the engine is called again using the returned next as input (with no changes), the result must be semantically equivalent to the previous output.
  * next must contain only durable, replayable state (no transient evaluation data).
- * 
+ *
  * ## Evaluation Flow
  *
  * 1. **Initialization**

@@ -125,7 +125,11 @@ export function processRulesInOrder(rules: Rule[], context: RuleContext): void {
       }
 
       // Dependencies satisfied - check if applicable
-      const applicable = isRuleApplicable(rule, context.workingState.facts, context.workingState.events);
+      const applicable = isRuleApplicable(
+        rule,
+        context.workingState.facts,
+        context.workingState.events
+      );
 
       if (applicable) {
         executeRuleActivities(rule.activities, context);
