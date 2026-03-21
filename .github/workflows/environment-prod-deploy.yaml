@@ -72,12 +72,6 @@ jobs:
         with:
           go-version: '1.26.1'
 
-      - name: Download Lambda artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: lambda-zips
-          path: build/archives
-
       - name: Terraform Apply
         uses: dflook/terraform-apply@v1
         env:
