@@ -166,7 +166,7 @@ describe('buildNextInput', () => {
     expect(next.rules.standing).toEqual([standingRule]);
   });
 
-  it('clears planned rules (they do not persist)', () => {
+  it('preserves planned rules', () => {
     const plannedRule: Rule = { id: 'planned-1', activities: [] };
     const input = createEngineInput({
       rules: { standing: [], planned: [plannedRule], effects: [] }
@@ -175,7 +175,7 @@ describe('buildNextInput', () => {
 
     const next = buildNextInput(input, workingState);
 
-    expect(next.rules.planned).toEqual([]);
+    expect(next.rules.planned).toEqual([plannedRule]);
   });
 
   it('uses input facts as base facts (not projected facts)', () => {

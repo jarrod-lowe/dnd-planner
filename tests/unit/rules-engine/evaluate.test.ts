@@ -1,0 +1,242 @@
+import { describe, it, expect } from 'vitest';
+import { evaluate } from '$lib/rules-engine/evaluate';
+import type { EngineInput, Rule } from '$lib/rules-engine/types';
+
+describe('evaluate', () => {
+  it('returns valid output structure for empty input', () => {
+    const input: EngineInput = {
+      schemaVersion: 1,
+      rules: { standing: [], planned: [], effects: [] },
+      state: { facts: {} }
+    };
+
+    const result = evaluate(input);
+
+    expect(result.status).toBeDefined();
+    expect(result.facts).toEqual({});
+    expect(result.collections).toEqual({});
+    expect(result.availableRules).toEqual([]);
+    expect(result.diagnostics).toEqual({ errors: [], warnings: [], notices: [] });
+    expect(result.trace).toBeDefined();
+    expect(result.next).toBeDefined();
+  });
+
+  it('executes a simple rule and updates facts', () => {
+    const rule: Rule = {
+      id: 'test-rule',
+      activities: [{ id: 'act-1', type: 'number_set', target: 'hp.current', number: 30 }]
+    };
+    const input: EngineInput = {
+      schemaVersion: 1,
+      rules: { standing: [rule], planned: [], effects: [] },
+      state: { facts: {} }
+    };
+
+    const result = evaluate(input);
+
+    expect(result.facts['hp.current']).toBe(30);
+    expect(result.trace.appliedRuleIds).toContain('test-rule');
+  });
+
+  it('executes phases in correct order', () => {
+    const earlyRule: Rule = {
+      id: 'early-1',
+      phase: 'early',
+      activities: [{ id: 'a1', type: 'number_set', target: 'order', number: 1 }]
+    };
+    const normalRule: Rule = {
+      id: 'normal-1',
+      phase: 'normal',
+      activities: [{ id: 'a2', type: 'number_increment', target: 'order', number: 10 }]
+    };
+    const safeguardRule: Rule = {
+      id: 'safeguard-1',
+      phase: 'safeguard',
+      activities: [{ id: 'a3', type: 'number_increment', target: 'order', number: 100 }]
+    };
+
+    const input: EngineInput = {
+      schemaVersion: 1,
+      rules: {
+        standing: [earlyRule, normalRule, safeguardRule],
+        planned: [],
+        effects: []
+      },
+      state: { facts: {} }
+    };
+
+    const result = evaluate(input);
+
+    // 1 + 10 + 100 = 111 (proves order: early first, then normal, then safeguard)
+    expect(result.facts['order']).toBe(111);
+  });
+
+  it('handles after dependencies within a phase', () => {
+    const initRule: Rule = {
+      id: 'init',
+      group: ['init-group'],
+      activities: [{ id: 'a1', type: 'number_set', target: 'initialized', number: 1 }]
+    };
+    const dependentRule: Rule = {
+      id: 'dependent',
+      after: [{ group: 'init-group' }],
+      activities: [{ id: 'a2', type: 'number_set', target: 'depends', number: 2 }]
+    };
+
+    const input: EngineInput = {
+      schemaVersion: 1,
+      rules: { standing: [dependentRule, initRule], planned: [], effects: [] },
+      state: { facts: {} }
+    };
+
+    const result = evaluate(input);
+
+    expect(result.facts['initialized']).toBe(1);
+    expect(result.facts['depends']).toBe(2);
+  });
+
+  it('returns replayable next input', () => {
+    const rule: Rule = {
+      id: 'test-rule',
+      activities: [{ id: 'a1', type: 'number_set', target: 'hp.current', number: 30 }]
+    };
+    const input: EngineInput = {
+      schemaVersion: 1,
+      rules: { standing: [rule], planned: [], effects: [] },
+      state: { facts: { 'hp.max': 30 } }
+    };
+
+    const result = evaluate(input);
+
+    expect(result.next.schemaVersion).toBe(1);
+    expect(result.next.rules.standing).toContain(rule);
+    expect(result.next.rules.planned).toEqual([]);
+    expect(result.next.state.facts).toEqual({ 'hp.max': 30 });
+  });
+
+  it('preserves planned rules in next input', () => {
+    const plannedRule: Rule = {
+      id: 'planned-1',
+      activities: [{ id: 'a1', type: 'number_set', target: 'x', number: 5 }]
+    };
+    const input: EngineInput = {
+      schemaVersion: 1,
+      rules: { standing: [], planned: [plannedRule], effects: [] },
+      state: { facts: {} }
+    };
+
+    const result = evaluate(input);
+
+    // Planned rule should execute
+    expect(result.facts['x']).toBe(5);
+    // Planned rule should persist in next input (evaluate is a calculation, not execution)
+    expect(result.next.rules.planned).toEqual([plannedRule]);
+  });
+
+  it('preserves planned rules when re-evaluated with next', () => {
+    const plannedRule: Rule = {
+      id: 'planned-action',
+      activities: [{ id: 'a1', type: 'number_set', target: 'planned_value', number: 42 }]
+    };
+    const input: EngineInput = {
+      schemaVersion: 1,
+      rules: { standing: [], planned: [plannedRule], effects: [] },
+      state: { facts: {} }
+    };
+
+    const result1 = evaluate(input);
+
+    // First evaluation: planned rule executes
+    expect(result1.facts['planned_value']).toBe(42);
+    expect(result1.next.rules.planned).toEqual([plannedRule]);
+
+    // Re-evaluate using the next input
+    const result2 = evaluate(result1.next);
+
+    // Second evaluation: planned rule should still be there and produce same result
+    expect(result2.facts['planned_value']).toBe(42);
+    expect(result2.next.rules.planned).toEqual([plannedRule]);
+  });
+
+  it('includes generated rules in output', () => {
+    const generatorRule: Rule = {
+      id: 'generator',
+      phase: 'early',
+      activities: [
+        {
+          id: 'gen-1',
+          type: 'generate_rule',
+          rule: {
+            id: 'generated-rule',
+            phase: 'normal',
+            activities: [{ id: 'a1', type: 'number_set', target: 'generated', number: 99 }]
+          }
+        }
+      ]
+    };
+
+    const input: EngineInput = {
+      schemaVersion: 1,
+      rules: { standing: [generatorRule], planned: [], effects: [] },
+      state: { facts: {} }
+    };
+
+    const result = evaluate(input);
+
+    expect(result.facts['generated']).toBe(99);
+    expect(result.next.rules.effects).toHaveLength(1);
+    expect(result.next.rules.effects[0].id).toBe('generated-rule');
+  });
+
+  it('includes offered rules in availableRules', () => {
+    const offeredRule: Rule = {
+      id: 'offered-1',
+      activities: [{ id: 'a1', type: 'number_set', target: 'x', number: 1 }]
+    };
+    const offerRule: Rule = {
+      id: 'offer-source',
+      activities: [
+        {
+          id: 'offer-1',
+          type: 'offer_rule',
+          rule: offeredRule
+        }
+      ]
+    };
+
+    const input: EngineInput = {
+      schemaVersion: 1,
+      rules: { standing: [offerRule], planned: [], effects: [] },
+      state: { facts: {} }
+    };
+
+    const result = evaluate(input);
+
+    expect(result.availableRules).toHaveLength(1);
+    expect(result.availableRules[0].rule.id).toBe('offered-1');
+    expect(result.availableRules[0].legal).toBe(true);
+  });
+
+  it('produces equivalent facts when re-evaluated with next', () => {
+    const rule: Rule = {
+      id: 'test-rule',
+      activities: [{ id: 'a1', type: 'number_set', target: 'hp.current', number: 30 }]
+    };
+    const input: EngineInput = {
+      schemaVersion: 1,
+      rules: { standing: [rule], planned: [], effects: [] },
+      state: { facts: { 'hp.max': 30 } }
+    };
+
+    const result1 = evaluate(input);
+
+    // Re-evaluate using the next input
+    const result2 = evaluate(result1.next);
+
+    // Facts should be equivalent (same operations applied)
+    expect(result2.facts['hp.current']).toBe(30);
+    expect(result2.facts['hp.max']).toBe(30);
+    // Standing rules still present
+    expect(result2.next.rules.standing).toHaveLength(1);
+  });
+});

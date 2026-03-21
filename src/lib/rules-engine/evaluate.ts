@@ -1,11 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// TODO: Remove eslint-disable when implementing functions
-import type { EngineInput, EngineOutput } from './types';
-// TODO: Uncomment when implementing
-// import { createBuiltinFunctionRegistry } from './functions';
-// import { buildGroupStates } from './ordering';
-// import { executePhase } from './phases';
-// import { buildOutput } from './output';
+import type { EngineInput, EngineOutput, WorkingState, RuleContext } from './types';
+import { createBuiltinFunctionRegistry } from './functions';
+import { buildGroupStates } from './ordering';
+import { executePhase } from './phases';
+import { buildOutput } from './output';
 
 /**
  * Main entry point for the rules engine.
@@ -54,6 +51,56 @@ import type { EngineInput, EngineOutput } from './types';
  * @calls executePhase (3 times: early, normal, safeguard)
  * @calls buildOutput
  */
-export function evaluate(_input: EngineInput): EngineOutput {
-  throw new Error('Not implemented');
+export function evaluate(input: EngineInput): EngineOutput {
+  // 1. Initialize working state
+  const workingState: WorkingState = {
+    facts: { ...input.state.facts },
+    events: new Set(),
+    generatedRules: { early: [], normal: [], safeguard: [] },
+    offeredRules: [],
+    appliedRuleIds: [],
+    appliedActivityIds: []
+  };
+
+  // 2. Build group states for each phase
+  const allRules = [...input.rules.standing, ...input.rules.planned, ...input.rules.effects];
+
+  // Build groups for each phase (groups are phase-specific)
+  const groups = new Map<string, import('./types').GroupState>();
+  const earlyGroups = buildGroupStates(
+    allRules.filter((r) => (r.phase ?? 'normal') === 'early'),
+    'early'
+  );
+  const normalGroups = buildGroupStates(
+    allRules.filter((r) => (r.phase ?? 'normal') === 'normal'),
+    'normal'
+  );
+  const safeguardGroups = buildGroupStates(
+    allRules.filter((r) => (r.phase ?? 'normal') === 'safeguard'),
+    'safeguard'
+  );
+
+  // Merge all groups into single map
+  for (const [key, value] of earlyGroups) groups.set(key, value);
+  for (const [key, value] of normalGroups) groups.set(key, value);
+  for (const [key, value] of safeguardGroups) groups.set(key, value);
+
+  // 3. Create function registry (unused in v1 but required for completeness)
+  createBuiltinFunctionRegistry();
+
+  // 4. Execute phases in order
+  const context: RuleContext = {
+    input,
+    workingState,
+    groups,
+    currentPhase: 'early',
+    allRules
+  };
+
+  executePhase('early', context);
+  executePhase('normal', context);
+  executePhase('safeguard', context);
+
+  // 5. Build and return output
+  return buildOutput(input, workingState);
 }

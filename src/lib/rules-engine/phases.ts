@@ -134,6 +134,7 @@ export function processRulesInOrder(rules: Rule[], context: RuleContext): void {
       if (applicable) {
         executeRuleActivities(rule.activities, context);
         markRuleExecuted(rule, context.groups);
+        context.workingState.appliedRuleIds.push(rule.id);
       } else {
         markRuleSkipped(rule, context.groups);
       }
