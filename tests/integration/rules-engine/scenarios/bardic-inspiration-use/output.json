@@ -1,0 +1,108 @@
+{
+  "status": {
+    "ok": true,
+    "legal": true,
+    "applicable": true
+  },
+  "facts": {
+    "bardicInspiration.remaining": 0
+  },
+  "collections": {},
+  "availableRules": [
+    {
+      "applicable": true,
+      "diagnostics": [
+        {
+          "code": "resource.bardicInspiration.insufficient",
+          "message": "No Bardic Inspiration uses remaining",
+          "severity": "error"
+        }
+      ],
+      "legal": false,
+      "rule": {
+        "activities": [
+          {
+            "id": "consume-1",
+            "number": -1,
+            "target": "bardicInspiration.remaining",
+            "type": "number_increment"
+          }
+        ],
+        "id": "use-bardic-inspiration"
+      }
+    }
+  ],
+  "diagnostics": {
+    "errors": [],
+    "warnings": [],
+    "notices": []
+  },
+  "trace": {
+    "appliedRuleIds": ["offer-bardic-inspiration", "use-bardic-inspiration"],
+    "appliedActivityIds": [],
+    "providedCapabilities": [],
+    "emittedEvents": []
+  },
+  "next": {
+    "schemaVersion": 1,
+    "rules": {
+      "standing": [
+        {
+          "id": "offer-bardic-inspiration",
+          "activities": [
+            {
+              "id": "offer-1",
+              "type": "offer_rule",
+              "rule": {
+                "id": "use-bardic-inspiration",
+                "activities": [
+                  {
+                    "id": "consume-1",
+                    "type": "number_increment",
+                    "target": "bardicInspiration.remaining",
+                    "number": -1
+                  }
+                ]
+              },
+              "legalWhen": [
+                {
+                  "condition": {
+                    "fact": "bardicInspiration.remaining",
+                    "operator": "greaterThan",
+                    "value": 0
+                  },
+                  "illegalDiagnostics": [
+                    {
+                      "code": "resource.bardicInspiration.insufficient",
+                      "message": "No Bardic Inspiration uses remaining",
+                      "severity": "error"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "planned": [
+        {
+          "id": "use-bardic-inspiration",
+          "activities": [
+            {
+              "id": "consume-1",
+              "type": "number_increment",
+              "target": "bardicInspiration.remaining",
+              "number": -1
+            }
+          ]
+        }
+      ],
+      "effects": []
+    },
+    "state": {
+      "facts": {
+        "bardicInspiration.remaining": 1
+      }
+    }
+  }
+}

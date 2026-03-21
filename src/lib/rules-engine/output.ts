@@ -7,7 +7,7 @@ import type { Diagnostics, EngineInput, EngineOutput, Rule, Status, WorkingState
  * with no modifications. Key properties:
  * - schemaVersion: copied
  * - rules.standing: copied (standing rules persist)
- * - rules.planned: empty (planned rules don't persist)
+ * - rules.planned: copied (planned rules persist until user removes them)
  * - rules.effects: getPersistableEffects() (all generated rules persist)
  * - state.facts: copied from input.state.facts (replay/base facts for replayability)
  *
@@ -23,7 +23,7 @@ export function buildNextInput(input: EngineInput, workingState: WorkingState): 
     schemaVersion: input.schemaVersion,
     rules: {
       standing: input.rules.standing,
-      planned: [],
+      planned: input.rules.planned,
       effects: getPersistableEffects(workingState)
     },
     state: {

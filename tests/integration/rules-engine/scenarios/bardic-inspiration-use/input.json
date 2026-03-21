@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "rules": {
+    "standing": [
+      {
+        "id": "offer-bardic-inspiration",
+        "activities": [
+          {
+            "id": "offer-1",
+            "type": "offer_rule",
+            "rule": {
+              "id": "use-bardic-inspiration",
+              "activities": [
+                {
+                  "id": "consume-1",
+                  "type": "number_increment",
+                  "target": "bardicInspiration.remaining",
+                  "number": -1
+                }
+              ]
+            },
+            "legalWhen": [
+              {
+                "condition": {
+                  "fact": "bardicInspiration.remaining",
+                  "operator": "greaterThan",
+                  "value": 0
+                },
+                "illegalDiagnostics": [
+                  {
+                    "code": "resource.bardicInspiration.insufficient",
+                    "severity": "error",
+                    "message": "No Bardic Inspiration uses remaining"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "planned": [],
+    "effects": []
+  },
+  "state": {
+    "facts": {
+      "bardicInspiration.remaining": 1
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "status": {
+    "ok": true,
+    "legal": true,
+    "applicable": true
+  },
+  "facts": {},
+  "collections": {},
+  "availableRules": [],
+  "diagnostics": {
+    "errors": [],
+    "warnings": [],
+    "notices": []
+  },
+  "trace": {
+    "appliedRuleIds": [],
+    "appliedActivityIds": [],
+    "providedCapabilities": [],
+    "emittedEvents": []
+  },
+  "next": {
+    "schemaVersion": 1,
+    "rules": {
+      "standing": [],
+      "planned": [],
+      "effects": []
+    },
+    "state": {
+      "facts": {}
+    }
+  }
+}
