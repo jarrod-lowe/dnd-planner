@@ -1,10 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// TODO: Remove eslint-disable when implementing functions
 import type {
   Diagnostics,
   EngineInput,
   EngineOutput,
-  GroupState,
   Rule,
   Status,
   WorkingState
@@ -18,8 +15,8 @@ import type {
  * - schemaVersion: copied
  * - rules.standing: copied (standing rules persist)
  * - rules.planned: empty (planned rules don't persist)
- * - rules.effects: getPersistableEffects() (only effects that should persist)
- * - state.facts: copied from workingState.facts (these are replay/base facts, not projected facts)
+ * - rules.effects: getPersistableEffects() (all generated rules persist)
+ * - state.facts: copied from input.state.facts (replay/base facts for replayability)
  *
  * @param input - Original input (for reference)
  * @param workingState - Current working state after evaluation
@@ -29,26 +26,36 @@ import type {
  * @calledBy buildOutput
  */
 export function buildNextInput(input: EngineInput, workingState: WorkingState): EngineInput {
-  throw new Error('Not implemented');
+  return {
+    schemaVersion: input.schemaVersion,
+    rules: {
+      standing: input.rules.standing,
+      planned: [],
+      effects: getPersistableEffects(workingState)
+    },
+    state: {
+      facts: input.state.facts
+    }
+  };
 }
 
 /**
- * Determines which generated rules should persist as effects.
+ * Returns all generated rules to persist as effects.
  *
- * A generated rule should persist if:
- * - It was created by a generate_rule activity
- * - It has a phase of 'safeguard' (normal phase rules with ongoing effects)
- * - It will continue to affect future evaluations
- *
- * Non-persisting generated rules are one-shot effects for the current evaluation only.
+ * All generated rules from the evaluation persist into next.rules.effects.
+ * This includes rules from early, normal, and safeguard phases.
  *
  * @param workingState - Current working state containing generated rules
- * @returns Array of rules to include in next.rules.effects
+ * @returns Array of all generated rules to include in next.rules.effects
  *
  * @calledBy buildNextInput
  */
 export function getPersistableEffects(workingState: WorkingState): Rule[] {
-  throw new Error('Not implemented');
+  return [
+    ...workingState.generatedRules.early,
+    ...workingState.generatedRules.normal,
+    ...workingState.generatedRules.safeguard
+  ];
 }
 
 /**
@@ -65,7 +72,6 @@ export function getPersistableEffects(workingState: WorkingState): Rule[] {
  *
  * @param input - Original input (for reference)
  * @param workingState - Final working state after all phases complete
- * @param groups - All group states (for trace info)
  * @returns Complete output object
  *
  * @calls buildStatus
@@ -74,10 +80,24 @@ export function getPersistableEffects(workingState: WorkingState): Rule[] {
  */
 export function buildOutput(
   input: EngineInput,
-  workingState: WorkingState,
-  groups: Map<string, GroupState>
+  workingState: WorkingState
 ): EngineOutput {
-  throw new Error('Not implemented');
+  const diagnostics: Diagnostics = { errors: [], warnings: [], notices: [] };
+
+  return {
+    status: buildStatus(workingState, diagnostics),
+    facts: workingState.facts,
+    collections: {},
+    availableRules: workingState.offeredRules,
+    diagnostics,
+    trace: {
+      appliedRuleIds: workingState.appliedRuleIds,
+      appliedActivityIds: workingState.appliedActivityIds,
+      providedCapabilities: [],
+      emittedEvents: []
+    },
+    next: buildNextInput(input, workingState)
+  };
 }
 
 /**
@@ -95,6 +115,10 @@ export function buildOutput(
  *
  * @calledBy buildOutput
  */
-export function buildStatus(workingState: WorkingState, diagnostics: Diagnostics): Status {
-  throw new Error('Not implemented');
+export function buildStatus(_workingState: WorkingState, diagnostics: Diagnostics): Status {
+  return {
+    ok: diagnostics.errors.length === 0,
+    legal: true,
+    applicable: true
+  };
 }

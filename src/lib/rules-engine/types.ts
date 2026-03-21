@@ -9,6 +9,24 @@
 export type Phase = 'early' | 'normal' | 'safeguard';
 
 /**
+ * Numeric ordering for phases. Higher values execute later.
+ * Used to validate that generated rules target a later phase.
+ */
+export const PHASE_ORDER: Record<Phase, number> = {
+  early: 0,
+  normal: 1,
+  safeguard: 2
+};
+
+/**
+ * Returns true if target phase executes after current phase.
+ * Used to validate phase transitions in generate_rule activities.
+ */
+export function isPhaseAfter(target: Phase, current: Phase): boolean {
+  return PHASE_ORDER[target] > PHASE_ORDER[current];
+}
+
+/**
  * Comparison operators for FactComparisonCondition.
  * Used in `when` conditions to compare fact values.
  */

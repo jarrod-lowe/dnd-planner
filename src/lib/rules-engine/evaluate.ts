@@ -17,6 +17,12 @@ import type { EngineInput, EngineOutput } from './types';
  * - Trace information (what executed)
  * - Next input (replayable state for subsequent calls)
  *
+ * The engine is deterministic: the same input must produce a semantically equivalent output.
+ * The engine is idempotent: calling it multiple times with the same input must not change the result.
+ * The output must include a next object that is a complete, valid input document.
+ * If the engine is called again using the returned next as input (with no changes), the result must be semantically equivalent to the previous output.
+ * next must contain only durable, replayable state (no transient evaluation data).
+ * 
  * ## Evaluation Flow
  *
  * 1. **Initialization**
