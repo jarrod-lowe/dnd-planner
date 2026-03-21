@@ -17,15 +17,17 @@ These rules are critical. Keep them through compactions, and add them into an pl
   - `make setup-aws` - Setup AWS infrastructure (OIDC, IAM roles)
   - `make setup-github` - Setup GitHub configuration
   - `make deploy-test` - Deploy test environment
-  - `make fmt` - Format terraform files
+  - `make format` - Prettify
   - `make validate` - Validate all environments
   - Do not forget this when doing backend work
 
 - **AWS commands** are permitted for read-only operations, but always set the profile:
 
   ```bash
-  AWS_PROFILE=dnd-planner aws <read-only-command>
+  AWS_PROFILE=dnd-planner-ro aws <read-only-command>
   ```
+
+Avoid `$(...)` in commands, as they trigger security checks that slow you down.
 
 ### Plan Execution
 
