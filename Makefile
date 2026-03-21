@@ -5,7 +5,11 @@ default: help
 PROJECT ?= dnd-planner
 AWS_PROFILE ?= dnd-planner
 ENVS := test prod
+ifneq ($(CI),)
+# In CI, AWS credentials are set via environment variables, not profile
+else
 export AWS_PROFILE
+endif
 AWS_ACCOUNT := $(shell AWS_PROFILE=$(AWS_PROFILE) aws sts get-caller-identity --query Account --output text 2>/dev/null)
 AWS_DEFAULT_REGION ?= ap-southeast-2
 AWS_REGION := $(shell AWS_PROFILE=$(AWS_PROFILE) aws configure get region 2>/dev/null || echo "$(AWS_DEFAULT_REGION)")
