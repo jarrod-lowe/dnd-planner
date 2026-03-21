@@ -1,10 +1,36 @@
 resource "aws_cognito_user_pool" "cognito" {
-  name           = local.resource_prefix
-  user_pool_tier = "ESSENTIALS"
+  name                = local.resource_prefix
+  user_pool_tier      = "ESSENTIALS"
+  username_attributes = ["email"]
+
+  email_configuration {
+    email_sending_account = "COGNITO_DEFAULT"
+  }
 
   admin_create_user_config {
-    allow_admin_create_user_only = true
+    allow_admin_create_user_only = false
   }
+
+  auto_verified_attributes = ["email"]
+
+  password_policy {
+    minimum_length                   = 20
+    require_lowercase                = false
+    require_uppercase                = false
+    require_numbers                  = false
+    require_symbols                  = false
+    temporary_password_validity_days = 7
+  }
+
+  lambda_config {
+    post_confirmation = aws_lambda_function.post_confirmation.arn
+  }
+}
+
+resource "aws_cognito_user_group" "may_create_characters" {
+  user_pool_id = aws_cognito_user_pool.cognito.id
+  name         = "MayCreateCharacters"
+  description  = "Users who can create characters"
 }
 
 resource "aws_cognito_user_pool_client" "cognito" {
