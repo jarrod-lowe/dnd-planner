@@ -101,8 +101,18 @@ build/lambdas/%/bootstrap: backend/cmd/%/main.go
 	@mkdir -p build/lambdas/$*
 	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o "$@" "./backend/cmd/$*"
 
-# Build all Lambda functions
-go-build: $(LAMBDA_BINARIES)
+# Archives for Lambda functions
+ARCHIVES := $(addprefix build/archives/,$(addsuffix .zip,$(LAMBDAS)))
+
+# Create deterministic zip (fixed timestamp for reproducibility)
+build/archives/%.zip: build/lambdas/%/bootstrap
+	@echo "Archiving $*..."
+	@mkdir -p build/archives
+	@touch -t 198001010000 build/lambdas/$*/bootstrap
+	cd build/lambdas/$* && zip -X -q ../../archives/$*.zip bootstrap
+
+# Build all Lambda functions (binaries + zips)
+go-build: $(LAMBDA_BINARIES) $(ARCHIVES)
 
 # Ensure pnpm is available
 pnpm:

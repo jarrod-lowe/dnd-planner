@@ -21,7 +21,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
 module "test_handler" {
   source         = "../lambda"
   name           = "${local.resource_prefix}-test-handler"
-  binary_path    = "${path.module}/../../../build/lambdas/test-handler/bootstrap"
+  zip_path       = "${path.module}/../../../build/archives/test-handler.zip"
   execution_role = aws_iam_role.lambda_exec.arn
   api_source_arn = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
 }
