@@ -309,7 +309,7 @@ The architecture supports:
 
 - Disable merge bypass option
 - Missing lots of checks in pipeline
-- Lambda behind API GW
+- Lambda behind API GW - remove test one
 - Better favicon
 - A11y - periodically recheck
 - Federate Cognito to Google
