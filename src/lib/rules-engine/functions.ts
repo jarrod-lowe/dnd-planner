@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// TODO: Remove eslint-disable when implementing functions
 import type { NamedFunction } from './types';
 
 /**
@@ -31,7 +29,9 @@ export type FunctionRegistry = Map<NamedFunction, NamedFunctionHandler>;
  * @calledBy evaluate (evaluate.ts) - during initialization
  */
 export function createBuiltinFunctionRegistry(): FunctionRegistry {
-  throw new Error('Not implemented');
+  const registry = new Map<NamedFunction, NamedFunctionHandler>();
+  registry.set('statToModifier', statToModifierHandler);
+  return registry;
 }
 
 /**
@@ -49,5 +49,7 @@ export function createBuiltinFunctionRegistry(): FunctionRegistry {
  * @calledBy createBuiltinFunctionRegistry (to register this handler)
  */
 export function statToModifierHandler(args: (number | undefined)[]): number {
-  throw new Error('Not implemented');
+  const stat = args[0];
+  if (stat === undefined) return 0;
+  return Math.floor((stat - 10) / 2);
 }

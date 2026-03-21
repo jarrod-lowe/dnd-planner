@@ -1,6 +1,23 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// TODO: Remove eslint-disable when implementing functions
 import type { Condition, Facts, Rule } from './types';
+
+function compareValues(actual: number, operator: string, expected: number): boolean {
+  switch (operator) {
+    case 'equals':
+      return actual === expected;
+    case 'notEquals':
+      return actual !== expected;
+    case 'greaterThan':
+      return actual > expected;
+    case 'greaterThanOrEqual':
+      return actual >= expected;
+    case 'lessThan':
+      return actual < expected;
+    case 'lessThanOrEqual':
+      return actual <= expected;
+    default:
+      return false;
+  }
+}
 
 /**
  * Evaluates a single condition against the current facts and events.
@@ -22,7 +39,25 @@ export function evaluateCondition(
   facts: Facts,
   events: Set<string>
 ): boolean {
-  throw new Error('Not implemented');
+  // FactExistenceCondition: check if 'fact' key exists but not 'operator'
+  if ('fact' in condition && !('operator' in condition)) {
+    const value = facts[condition.fact];
+    return Boolean(value);
+  }
+
+  // FactComparisonCondition: has 'fact', 'operator', and 'value'
+  if ('operator' in condition) {
+    const actual = facts[condition.fact];
+    if (typeof actual !== 'number') return false;
+    return compareValues(actual, condition.operator, condition.value);
+  }
+
+  // EventCondition: has 'event' key
+  if ('event' in condition) {
+    return events.has(condition.event);
+  }
+
+  throw new Error('Unknown condition type');
 }
 
 /**
@@ -44,7 +79,7 @@ export function evaluateWhenConditions(
   facts: Facts,
   events: Set<string>
 ): boolean {
-  throw new Error('Not implemented');
+  return conditions.every((condition) => evaluateCondition(condition, facts, events));
 }
 
 /**
@@ -66,5 +101,11 @@ export function evaluateWhenConditions(
  * @calledBy processRulesInOrder (phases.ts)
  */
 export function isRuleApplicable(rule: Rule, facts: Facts, events: Set<string>): boolean {
-  throw new Error('Not implemented');
+  // Check if rule is explicitly disabled
+  if (rule.enabled === false) {
+    return false;
+  }
+
+  // Evaluate when conditions (defaults to empty array = vacuously true)
+  return evaluateWhenConditions(rule.when ?? [], facts, events);
 }

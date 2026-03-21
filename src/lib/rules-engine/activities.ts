@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// TODO: Remove eslint-disable when implementing functions
 import type {
   Activity,
+  AvailableRuleEntry,
   EmitEventActivity,
   GenerateRuleActivity,
   NumberCopyActivity,
@@ -10,10 +9,12 @@ import type {
   NumberSetActivity,
   NumberSumActivity,
   OfferRuleActivity,
-  Rule,
   RuleContext,
   WorkingState
 } from './types';
+import { isPhaseAfter } from './types';
+import { createBuiltinFunctionRegistry } from './functions';
+import { evaluateCondition, isRuleApplicable } from './conditions';
 
 /**
  * Executes a single activity by dispatching to the appropriate handler.
@@ -29,7 +30,34 @@ import type {
  * @calledBy executeRuleActivities
  */
 export function executeActivity(activity: Activity, context: RuleContext): void {
-  throw new Error('Not implemented');
+  switch (activity.type) {
+    case 'number_set':
+      executeNumberSet(activity, context.workingState);
+      break;
+    case 'number_increment':
+      executeNumberIncrement(activity, context.workingState);
+      break;
+    case 'number_copy':
+      executeNumberCopy(activity, context.workingState);
+      break;
+    case 'number_sum':
+      executeNumberSum(activity, context.workingState);
+      break;
+    case 'number_function':
+      executeNumberFunction(activity, context.workingState);
+      break;
+    case 'emit_event':
+      executeEmitEvent(activity, context.workingState);
+      break;
+    case 'generate_rule':
+      executeGenerateRule(activity, context);
+      break;
+    case 'offer_rule':
+      executeOfferRule(activity, context);
+      break;
+    default:
+      throw new Error(`Unknown activity type: ${(activity as { type: string }).type}`);
+  }
 }
 
 /**
@@ -45,7 +73,9 @@ export function executeActivity(activity: Activity, context: RuleContext): void 
  * @calledBy processRulesInOrder (phases.ts)
  */
 export function executeRuleActivities(activities: Activity[], context: RuleContext): void {
-  throw new Error('Not implemented');
+  for (const activity of activities) {
+    executeActivity(activity, context);
+  }
 }
 
 /**
@@ -59,7 +89,7 @@ export function executeRuleActivities(activities: Activity[], context: RuleConte
  * @calledBy executeActivity
  */
 export function executeNumberSet(activity: NumberSetActivity, state: WorkingState): void {
-  throw new Error('Not implemented');
+  state.facts[activity.target] = activity.number;
 }
 
 /**
@@ -78,7 +108,15 @@ export function executeNumberIncrement(
   activity: NumberIncrementActivity,
   state: WorkingState
 ): void {
-  throw new Error('Not implemented');
+  const current = (state.facts[activity.target] as number) ?? 0;
+  let result = current + activity.number;
+
+  if (activity.max !== undefined) {
+    const maxValue = (state.facts[activity.max] as number) ?? 0;
+    result = Math.min(result, maxValue);
+  }
+
+  state.facts[activity.target] = result;
 }
 
 /**
@@ -93,7 +131,7 @@ export function executeNumberIncrement(
  * @calledBy executeActivity
  */
 export function executeNumberCopy(activity: NumberCopyActivity, state: WorkingState): void {
-  throw new Error('Not implemented');
+  state.facts[activity.target] = state.facts[activity.source] as number;
 }
 
 /**
@@ -108,7 +146,11 @@ export function executeNumberCopy(activity: NumberCopyActivity, state: WorkingSt
  * @calledBy executeActivity
  */
 export function executeNumberSum(activity: NumberSumActivity, state: WorkingState): void {
-  throw new Error('Not implemented');
+  let sum = 0;
+  for (const arg of activity.args) {
+    sum += (state.facts[arg] as number) ?? 0;
+  }
+  state.facts[activity.target] = sum;
 }
 
 /**
@@ -125,7 +167,16 @@ export function executeNumberSum(activity: NumberSumActivity, state: WorkingStat
  * @calls FunctionRegistry (to look up and execute the named function)
  */
 export function executeNumberFunction(activity: NumberFunctionActivity, state: WorkingState): void {
-  throw new Error('Not implemented');
+  const registry = createBuiltinFunctionRegistry();
+  const handler = registry.get(activity.function);
+
+  if (!handler) {
+    throw new Error(`Unknown function: ${activity.function}`);
+  }
+
+  const args = activity.args.map((arg) => state.facts[arg] as number | undefined);
+  const result = handler(args);
+  state.facts[activity.target] = result;
 }
 
 /**
@@ -141,7 +192,7 @@ export function executeNumberFunction(activity: NumberFunctionActivity, state: W
  * @calledBy executeActivity
  */
 export function executeEmitEvent(activity: EmitEventActivity, state: WorkingState): void {
-  throw new Error('Not implemented');
+  state.events.add(activity.event);
 }
 
 /**
@@ -161,7 +212,16 @@ export function executeEmitEvent(activity: EmitEventActivity, state: WorkingStat
  * @calledBy executeActivity
  */
 export function executeGenerateRule(activity: GenerateRuleActivity, context: RuleContext): void {
-  throw new Error('Not implemented');
+  const rule = activity.rule;
+  const targetPhase = rule.phase ?? 'normal';
+  const currentPhase = context.currentPhase;
+
+  // Can only generate rules for later phases
+  if (!isPhaseAfter(targetPhase, currentPhase)) {
+    throw new Error('Cannot generate rule for earlier or same phase');
+  }
+
+  context.workingState.generatedRules[targetPhase].push(rule);
 }
 
 /**
@@ -180,5 +240,33 @@ export function executeGenerateRule(activity: GenerateRuleActivity, context: Rul
  * @calls evaluateWhenConditions (for legalWhen evaluation)
  */
 export function executeOfferRule(activity: OfferRuleActivity, context: RuleContext): void {
-  throw new Error('Not implemented');
+  const { rule } = activity;
+  const { workingState } = context;
+
+  // Determine if the rule is applicable (its 'when' conditions are satisfied)
+  const applicable = isRuleApplicable(rule, workingState.facts, workingState.events);
+
+  // Determine legality based on legalWhen conditions
+  // legalWhen contains conditions that make the rule ILLEGAL when they pass
+  let legal = true;
+  const diagnostics: AvailableRuleEntry['diagnostics'] = [];
+
+  if (activity.legalWhen) {
+    for (const entry of activity.legalWhen) {
+      if (evaluateCondition(entry.condition, workingState.facts, workingState.events)) {
+        // Condition passed - rule is illegal
+        legal = false;
+        diagnostics.push(...entry.illegalDiagnostics);
+      }
+    }
+  }
+
+  const entry: AvailableRuleEntry = {
+    rule,
+    legal,
+    applicable,
+    diagnostics
+  };
+
+  workingState.offeredRules.push(entry);
 }

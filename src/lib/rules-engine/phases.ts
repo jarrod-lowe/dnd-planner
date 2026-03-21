@@ -1,9 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// TODO: Remove eslint-disable when implementing functions
 import type { Phase, Rule, RuleContext } from './types';
-// TODO: Uncomment when implementing
-// import { isRuleApplicable } from './conditions';
-// import { areDependenciesSatisfied, markRuleExecuted, markRuleSkipped } from './ordering';
+import { isRuleApplicable } from './conditions';
+import { areDependenciesSatisfied, markRuleExecuted, markRuleSkipped } from './ordering';
+import { executeRuleActivities } from './activities';
 
 /**
  * Executes all rules in a single phase.
@@ -22,8 +20,15 @@ import type { Phase, Rule, RuleContext } from './types';
  * @calls getRulesForPhase, processRulesInOrder
  * @calledBy evaluate (evaluate.ts) - once per phase (early, normal, safeguard)
  */
-export function executePhase(_phase: Phase, _context: RuleContext): void {
-  throw new Error('Not implemented');
+export function executePhase(phase: Phase, context: RuleContext): void {
+  // Set the current phase in context
+  context.currentPhase = phase;
+
+  // Get all rules for this phase
+  const rules = getRulesForPhase(context, phase);
+
+  // Process rules in dependency order
+  processRulesInOrder(rules, context);
 }
 
 /**
@@ -42,7 +47,38 @@ export function executePhase(_phase: Phase, _context: RuleContext): void {
  * @calledBy executePhase
  */
 export function getRulesForPhase(context: RuleContext, phase: Phase): Rule[] {
-  throw new Error('Not implemented');
+  const rules: Rule[] = [];
+
+  // Collect from standing rules
+  for (const rule of context.input.rules.standing) {
+    const rulePhase = rule.phase ?? 'normal';
+    if (rulePhase === phase) {
+      rules.push(rule);
+    }
+  }
+
+  // Collect from planned rules
+  for (const rule of context.input.rules.planned) {
+    const rulePhase = rule.phase ?? 'normal';
+    if (rulePhase === phase) {
+      rules.push(rule);
+    }
+  }
+
+  // Collect from effects rules
+  for (const rule of context.input.rules.effects) {
+    const rulePhase = rule.phase ?? 'normal';
+    if (rulePhase === phase) {
+      rules.push(rule);
+    }
+  }
+
+  // Collect from generated rules
+  for (const rule of context.workingState.generatedRules[phase]) {
+    rules.push(rule);
+  }
+
+  return rules;
 }
 
 /**
@@ -70,5 +106,40 @@ export function getRulesForPhase(context: RuleContext, phase: Phase): Rule[] {
  * @calledBy executePhase
  */
 export function processRulesInOrder(rules: Rule[], context: RuleContext): void {
-  throw new Error('Not implemented');
+  if (rules.length === 0) return;
+
+  const processed = new Set<string>();
+
+  // Iterative processing until no more rules can be processed
+  let madeProgress = true;
+  while (madeProgress) {
+    madeProgress = false;
+
+    for (const rule of rules) {
+      // Skip already processed rules
+      if (processed.has(rule.id)) continue;
+
+      // Check if dependencies are satisfied
+      if (!areDependenciesSatisfied(rule, context.groups)) {
+        continue;
+      }
+
+      // Dependencies satisfied - check if applicable
+      const applicable = isRuleApplicable(
+        rule,
+        context.workingState.facts,
+        context.workingState.events
+      );
+
+      if (applicable) {
+        executeRuleActivities(rule.activities, context);
+        markRuleExecuted(rule, context.groups);
+      } else {
+        markRuleSkipped(rule, context.groups);
+      }
+
+      processed.add(rule.id);
+      madeProgress = true;
+    }
+  }
 }
