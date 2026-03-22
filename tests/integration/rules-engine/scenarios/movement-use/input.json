@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "rules": {
+    "standing": [
+      {
+        "id": "offer-move",
+        "activities": [
+          {
+            "id": "offer-move-1",
+            "type": "offerRule",
+            "legalWhen": [
+              {
+                "condition": {
+                  "fact": "character.movement.current",
+                  "operator": "greaterThan",
+                  "value": 0
+                },
+                "illegalDiagnostics": [
+                  {
+                    "code": "rule.offer-move.out_of_movement",
+                    "severity": "error"
+                  }
+                ]
+              }
+            ],
+            "rule": {
+              "id": "move",
+              "activities": [
+                {
+                  "id": "consume-movement",
+                  "type": "numberIncrement",
+                  "target": "character.movement.current",
+                  "source": "planned.move.amount",
+                  "subtract": true
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "planned": [
+      {
+        "id": "move",
+        "activities": [
+          {
+            "id": "consume-movement",
+            "type": "numberIncrement",
+            "target": "character.movement.current",
+            "source": "planned.move.amount",
+            "subtract": true
+          }
+        ]
+      }
+    ],
+    "effects": []
+  },
+  "state": {
+    "facts": {
+      "character.movement.total": 30,
+      "character.movement.current": 30,
+      "planned.move.amount": 10
+    }
+  }
+}

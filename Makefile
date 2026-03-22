@@ -1,4 +1,4 @@
-.PHONY: format-terraform validate security test help clean dev build lint format-frontend test-unit test-e2e test-e2e-debug test-component format-check push-test install pnpm setup-dev format go-build deploy-lambdas-test deploy-lambdas-prod
+.PHONY: format-terraform validate security test help clean dev build lint format-frontend test-unit test-e2e test-e2e-debug test-component format-check push-test install pnpm setup-dev format go-build deploy-lambdas-test deploy-lambdas-prod sync-rule-groups
 
 default: help
 
@@ -94,7 +94,7 @@ terraform/environment/prod/.stamp: terraform/environment/prod \
 setup-state: terraform/environment/state/.apply
 setup-aws: terraform/environment/aws/.apply
 setup-github: terraform/environment/github/.apply
-deploy-test: validate-test test build go-build push-test
+deploy-test: validate-test test build go-build push-test sync-rule-groups
 #deploy-prod: terraform/environment/prod/.apply # - this runs in a pipeline instead
 
 # ============================================
@@ -207,6 +207,7 @@ test-component: install
 # Get terraform outputs for test environment
 TEST_BUCKET := $(shell AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) terraform -chdir=terraform/environment/test output -raw s3_bucket_name 2>/dev/null)
 TEST_CDN_ID := $(shell AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) terraform -chdir=terraform/environment/test output -raw cloudfront_distribution_id 2>/dev/null)
+TEST_DYNAMODB_TABLE := $(shell AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) terraform -chdir=terraform/environment/test output -raw dynamodb_table_name 2>/dev/null)
 
 # Push to test environment (build and sync to S3)
 push-test: terraform/environment/test/.apply build go-build deploy-lambdas-test
@@ -214,6 +215,14 @@ push-test: terraform/environment/test/.apply build go-build deploy-lambdas-test
 	@aws s3 sync build/ s3://$(TEST_BUCKET)/ --delete
 	@echo "Invalidating CloudFront distribution: $(TEST_CDN_ID)"
 	@aws cloudfront create-invalidation --distribution-id $(TEST_CDN_ID) --paths "/*"
+
+# Sync rule groups to DynamoDB
+sync-rule-groups: scripts/sync_rule_groups.py scripts/requirements.txt
+	@echo "Syncing rule groups to DynamoDB..."
+	@PYTHON=$$(which python3 || which python); \
+	if [ ! -d .venv ]; then $$PYTHON -m venv .venv; fi; \
+	.venv/bin/pip install -q -r scripts/requirements.txt; \
+	.venv/bin/python scripts/sync_rule_groups.py --table=$(TEST_DYNAMODB_TABLE)
 
 # Validate for any environment
 validate-%: terraform/environment/%/.terraform
@@ -264,6 +273,7 @@ help:
 	@echo "  make dev                 Start development server"
 	@echo "  make build               Build for production"
 	@echo "  make push-test           Build and sync to test S3 + invalidate CDN"
+	@echo "  make sync-rule-groups      Sync rule groups from YAML files to DynamoDB"
 	@echo ""
 	@echo "Testing:"
 	@echo "  make test                Run all tests (terraform + frontend)"

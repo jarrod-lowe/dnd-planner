@@ -126,7 +126,7 @@ describe('processRulesInOrder', () => {
   it('executes applicable rules', () => {
     const rule: Rule = {
       id: 'rule-1',
-      activities: [{ id: 'act-1', type: 'number_set', target: 'test.value', number: 42 }]
+      activities: [{ id: 'act-1', type: 'numberSet', target: 'test.value', number: 42 }]
     };
 
     const context = createEmptyContext();
@@ -141,7 +141,7 @@ describe('processRulesInOrder', () => {
     const rule: Rule = {
       id: 'rule-1',
       when: [{ fact: 'nonexistent' }],
-      activities: [{ id: 'act-1', type: 'number_set', target: 'test.value', number: 42 }]
+      activities: [{ id: 'act-1', type: 'numberSet', target: 'test.value', number: 42 }]
     };
 
     const context = createEmptyContext();
@@ -156,12 +156,12 @@ describe('processRulesInOrder', () => {
     const initRule: Rule = {
       id: 'init-rule',
       group: ['init'],
-      activities: [{ id: 'act-1', type: 'number_set', target: 'init.done', number: 1 }]
+      activities: [{ id: 'act-1', type: 'numberSet', target: 'init.done', number: 1 }]
     };
     const dependentRule: Rule = {
       id: 'dependent-rule',
       after: [{ group: 'init' }],
-      activities: [{ id: 'act-2', type: 'number_set', target: 'dependent.done', number: 2 }]
+      activities: [{ id: 'act-2', type: 'numberSet', target: 'dependent.done', number: 2 }]
     };
 
     const context = createEmptyContext();
@@ -195,18 +195,18 @@ describe('processRulesInOrder', () => {
     const rule1: Rule = {
       id: 'rule-1',
       group: ['g1'],
-      activities: [{ id: 'a1', type: 'number_set', target: 'v1', number: 1 }]
+      activities: [{ id: 'a1', type: 'numberSet', target: 'v1', number: 1 }]
     };
     const rule2: Rule = {
       id: 'rule-2',
       after: [{ group: 'g1' }],
       group: ['g2'],
-      activities: [{ id: 'a2', type: 'number_set', target: 'v2', number: 2 }]
+      activities: [{ id: 'a2', type: 'numberSet', target: 'v2', number: 2 }]
     };
     const rule3: Rule = {
       id: 'rule-3',
       after: [{ group: 'g2' }],
-      activities: [{ id: 'a3', type: 'number_set', target: 'v3', number: 3 }]
+      activities: [{ id: 'a3', type: 'numberSet', target: 'v3', number: 3 }]
     };
 
     const context = createEmptyContext();
@@ -242,7 +242,7 @@ describe('executePhase', () => {
     const rule: Rule = {
       id: 'rule-1',
       phase: 'normal',
-      activities: [{ id: 'act-1', type: 'number_set', target: 'test.value', number: 42 }]
+      activities: [{ id: 'act-1', type: 'numberSet', target: 'test.value', number: 42 }]
     };
 
     const context = createEmptyContext();
@@ -272,7 +272,7 @@ describe('executePhase', () => {
     const generatedRule: Rule = {
       id: 'generated-1',
       phase: 'normal',
-      activities: [{ id: 'act-1', type: 'number_set', target: 'generated.value', number: 99 }]
+      activities: [{ id: 'act-1', type: 'numberSet', target: 'generated.value', number: 99 }]
     };
 
     const context = createEmptyContext();

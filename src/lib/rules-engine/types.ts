@@ -92,7 +92,6 @@ export type Condition = FactExistenceCondition | FactComparisonCondition | Event
 export interface Diagnostic {
   code: string;
   severity: 'error' | 'warning' | 'notice';
-  message: string;
 }
 
 /**
@@ -133,7 +132,7 @@ export interface ActivityBase {
  * Sets a numeric fact to a specific value. Overwrites existing value.
  */
 export interface NumberSetActivity extends ActivityBase {
-  type: 'number_set';
+  type: 'numberSet';
   target: string;
   number: number;
 }
@@ -141,11 +140,19 @@ export interface NumberSetActivity extends ActivityBase {
 /**
  * Increments a numeric fact by a delta. Can use negative numbers to decrement.
  * If fact doesn't exist, treated as 0. Optional max cap from another fact.
+ *
+ * The increment value can come from either:
+ * - `number`: A literal numeric value
+ * - `source`: A reference to another fact's value (mutually exclusive with number)
+ *
+ * When `subtract` is true, the value is subtracted instead of added.
  */
 export interface NumberIncrementActivity extends ActivityBase {
-  type: 'number_increment';
+  type: 'numberIncrement';
   target: string;
-  number: number;
+  number?: number;
+  source?: string;
+  subtract?: boolean;
   max?: string;
 }
 
@@ -153,7 +160,7 @@ export interface NumberIncrementActivity extends ActivityBase {
  * Copies a value from one fact to another.
  */
 export interface NumberCopyActivity extends ActivityBase {
-  type: 'number_copy';
+  type: 'numberCopy';
   target: string;
   source: string;
 }
@@ -162,7 +169,7 @@ export interface NumberCopyActivity extends ActivityBase {
  * Sets a fact to the sum of multiple other facts. Missing facts treated as 0.
  */
 export interface NumberSumActivity extends ActivityBase {
-  type: 'number_sum';
+  type: 'numberSum';
   target: string;
   args: string[];
 }
@@ -172,7 +179,7 @@ export interface NumberSumActivity extends ActivityBase {
  * Example: statToModifier(str.value) -> str.modifier
  */
 export interface NumberFunctionActivity extends ActivityBase {
-  type: 'number_function';
+  type: 'numberFunction';
   target: string;
   function: NamedFunction;
   args: string[];
@@ -182,7 +189,7 @@ export interface NumberFunctionActivity extends ActivityBase {
  * Emits an event for this evaluation. Events are transient and don't persist in `next`.
  */
 export interface EmitEventActivity extends ActivityBase {
-  type: 'emit_event';
+  type: 'emitEvent';
   event: string;
 }
 
@@ -190,13 +197,13 @@ export interface EmitEventActivity extends ActivityBase {
  * Generates a new rule during evaluation. Generated rules can only target later phases.
  */
 export interface GenerateRuleActivity extends ActivityBase {
-  type: 'generate_rule';
+  type: 'generateRule';
   rule: Rule;
 }
 
 /**
  * Entry in an offer_rule's legalWhen array.
- * If condition fails, the offered rule is still returned but marked illegal.
+ * If condition passes, the rule is legal. If condition fails, the rule is illegal.
  */
 export interface IllegalWhenEntry {
   condition: Condition;
@@ -208,7 +215,7 @@ export interface IllegalWhenEntry {
  * Does not execute the rule. Produces an entry in availableRules.
  */
 export interface OfferRuleActivity extends ActivityBase {
-  type: 'offer_rule';
+  type: 'offerRule';
   rule: Rule;
   legalWhen?: IllegalWhenEntry[];
 }

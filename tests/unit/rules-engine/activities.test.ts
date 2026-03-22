@@ -36,7 +36,7 @@ describe('executeNumberSet', () => {
   it('sets a fact to a number value', () => {
     const activity: NumberSetActivity = {
       id: 'test-1',
-      type: 'number_set',
+      type: 'numberSet',
       target: 'hp.current',
       number: 42
     };
@@ -51,7 +51,7 @@ describe('executeNumberSet', () => {
   it('overwrites an existing value', () => {
     const activity: NumberSetActivity = {
       id: 'test-1',
-      type: 'number_set',
+      type: 'numberSet',
       target: 'hp.current',
       number: 100
     };
@@ -69,7 +69,7 @@ describe('executeNumberIncrement', () => {
   it('increments an existing fact by a positive number', () => {
     const activity: NumberIncrementActivity = {
       id: 'test-1',
-      type: 'number_increment',
+      type: 'numberIncrement',
       target: 'hp.current',
       number: 5
     };
@@ -85,7 +85,7 @@ describe('executeNumberIncrement', () => {
   it('treats missing fact as 0 before incrementing', () => {
     const activity: NumberIncrementActivity = {
       id: 'test-1',
-      type: 'number_increment',
+      type: 'numberIncrement',
       target: 'hp.current',
       number: 5
     };
@@ -100,7 +100,7 @@ describe('executeNumberIncrement', () => {
   it('decrements with a negative number', () => {
     const activity: NumberIncrementActivity = {
       id: 'test-1',
-      type: 'number_increment',
+      type: 'numberIncrement',
       target: 'hp.current',
       number: -3
     };
@@ -116,7 +116,7 @@ describe('executeNumberIncrement', () => {
   it('caps result at max value when max is specified', () => {
     const activity: NumberIncrementActivity = {
       id: 'test-1',
-      type: 'number_increment',
+      type: 'numberIncrement',
       target: 'hp.current',
       number: 10,
       max: 'hp.max'
@@ -136,7 +136,7 @@ describe('executeNumberCopy', () => {
   it('copies a value from source to target', () => {
     const activity: NumberCopyActivity = {
       id: 'test-1',
-      type: 'number_copy',
+      type: 'numberCopy',
       target: 'hp.temp',
       source: 'hp.current'
     };
@@ -154,7 +154,7 @@ describe('executeNumberSum', () => {
   it('sums multiple facts into target', () => {
     const activity: NumberSumActivity = {
       id: 'test-1',
-      type: 'number_sum',
+      type: 'numberSum',
       target: 'hp.max',
       args: ['hp.base', 'hp.bonus']
     };
@@ -171,7 +171,7 @@ describe('executeNumberSum', () => {
   it('treats missing facts as 0', () => {
     const activity: NumberSumActivity = {
       id: 'test-1',
-      type: 'number_sum',
+      type: 'numberSum',
       target: 'hp.max',
       args: ['hp.base', 'hp.bonus']
     };
@@ -190,7 +190,7 @@ describe('executeNumberFunction', () => {
   it('calls statToModifier and stores result in target', () => {
     const activity: NumberFunctionActivity = {
       id: 'test-1',
-      type: 'number_function',
+      type: 'numberFunction',
       target: 'str.modifier',
       function: 'statToModifier',
       args: ['str.value']
@@ -209,7 +209,7 @@ describe('executeEmitEvent', () => {
   it('adds event to state events set', () => {
     const activity: EmitEventActivity = {
       id: 'test-1',
-      type: 'emit_event',
+      type: 'emitEvent',
       event: 'attack'
     };
 
@@ -223,12 +223,12 @@ describe('executeEmitEvent', () => {
   it('can add multiple different events', () => {
     const activity1: EmitEventActivity = {
       id: 'test-1',
-      type: 'emit_event',
+      type: 'emitEvent',
       event: 'attack'
     };
     const activity2: EmitEventActivity = {
       id: 'test-2',
-      type: 'emit_event',
+      type: 'emitEvent',
       event: 'damage'
     };
 
@@ -263,7 +263,7 @@ describe('executeGenerateRule', () => {
 
     const activity: GenerateRuleActivity = {
       id: 'test-1',
-      type: 'generate_rule',
+      type: 'generateRule',
       rule: generatedRule
     };
 
@@ -283,7 +283,7 @@ describe('executeGenerateRule', () => {
 
     const activity: GenerateRuleActivity = {
       id: 'test-1',
-      type: 'generate_rule',
+      type: 'generateRule',
       rule: generatedRule
     };
 
@@ -303,7 +303,7 @@ describe('executeGenerateRule', () => {
 
     const activity: GenerateRuleActivity = {
       id: 'test-1',
-      type: 'generate_rule',
+      type: 'generateRule',
       rule: generatedRule
     };
 
@@ -323,7 +323,7 @@ describe('executeGenerateRule', () => {
 
     const activity: GenerateRuleActivity = {
       id: 'test-1',
-      type: 'generate_rule',
+      type: 'generateRule',
       rule: generatedRule
     };
 
@@ -343,7 +343,7 @@ describe('executeGenerateRule', () => {
 
     const activity: GenerateRuleActivity = {
       id: 'test-1',
-      type: 'generate_rule',
+      type: 'generateRule',
       rule: generatedRule
     };
 
@@ -363,7 +363,7 @@ describe('executeGenerateRule', () => {
 
     const activity: GenerateRuleActivity = {
       id: 'test-1',
-      type: 'generate_rule',
+      type: 'generateRule',
       rule: generatedRule
     };
 
@@ -383,7 +383,7 @@ describe('executeGenerateRule', () => {
 
     const activity: GenerateRuleActivity = {
       id: 'test-1',
-      type: 'generate_rule',
+      type: 'generateRule',
       rule: generatedRule
     };
 
@@ -403,7 +403,7 @@ describe('executeGenerateRule', () => {
 
     const activity: GenerateRuleActivity = {
       id: 'test-1',
-      type: 'generate_rule',
+      type: 'generateRule',
       rule: generatedRule
     };
 

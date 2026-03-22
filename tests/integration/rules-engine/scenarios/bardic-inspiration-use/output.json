@@ -11,21 +11,15 @@
   "availableRules": [
     {
       "applicable": true,
-      "diagnostics": [
-        {
-          "code": "resource.bardicInspiration.insufficient",
-          "message": "No Bardic Inspiration uses remaining",
-          "severity": "error"
-        }
-      ],
-      "legal": false,
+      "diagnostics": [],
+      "legal": true,
       "rule": {
         "activities": [
           {
             "id": "consume-1",
             "number": -1,
             "target": "bardicInspiration.remaining",
-            "type": "number_increment"
+            "type": "numberIncrement"
           }
         ],
         "id": "use-bardic-inspiration"
@@ -52,13 +46,13 @@
           "activities": [
             {
               "id": "offer-1",
-              "type": "offer_rule",
+              "type": "offerRule",
               "rule": {
                 "id": "use-bardic-inspiration",
                 "activities": [
                   {
                     "id": "consume-1",
-                    "type": "number_increment",
+                    "type": "numberIncrement",
                     "target": "bardicInspiration.remaining",
                     "number": -1
                   }
@@ -74,7 +68,6 @@
                   "illegalDiagnostics": [
                     {
                       "code": "resource.bardicInspiration.insufficient",
-                      "message": "No Bardic Inspiration uses remaining",
                       "severity": "error"
                     }
                   ]
@@ -90,7 +83,7 @@
           "activities": [
             {
               "id": "consume-1",
-              "type": "number_increment",
+              "type": "numberIncrement",
               "target": "bardicInspiration.remaining",
               "number": -1
             }
