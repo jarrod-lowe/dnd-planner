@@ -1036,8 +1036,7 @@ This keeps the distinction between preview and execution outside the engine.
                 "illegalDiagnostics": [
                   {
                     "code": "resource.bardicInspiration.insufficient",
-                    "severity": "error",
-                    "message": "No Bardic Inspiration uses remaining under ordinary rules"
+                    "severity": "error"
                   }
                 ]
               }

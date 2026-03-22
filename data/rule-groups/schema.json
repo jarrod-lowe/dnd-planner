@@ -1,0 +1,274 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://dnd-planner.local/rule-groups",
+  "title": "D&D Planner Rule Groups",
+  "description": "Schema for D&D Planner rule group YAML files",
+  "type": "object",
+  "required": ["ruleGroups"],
+  "properties": {
+    "ruleGroups": {
+      "type": "array",
+      "description": "Array of rule groups to sync to DynamoDB",
+      "items": {
+        "$ref": "#/definitions/ruleGroup"
+      }
+    }
+  },
+  "definitions": {
+    "ruleGroup": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for this rule group",
+          "examples": ["paladin-level1-divine-sense", "fighter-champion-improved-critical"]
+        },
+        "name": {
+          "type": "string",
+          "description": "i18n key for display name",
+          "examples": ["ruleGroups.paladin.divineSense.name"]
+        },
+        "description": {
+          "type": "string",
+          "description": "i18n key for description",
+          "examples": ["ruleGroups.paladin.divineSense.description"]
+        },
+        "rules": {
+          "type": "array",
+          "description": "Array of rules in this rule group",
+          "items": {
+            "$ref": "#/definitions/rule"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "rule": {
+      "type": "object",
+      "required": ["id", "activities"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for this rule"
+        },
+        "description": {
+          "type": "string",
+          "description": "i18n key for rule description"
+        },
+        "ui": {
+          "type": "object",
+          "description": "UI-specific configuration",
+          "additionalProperties": true
+        },
+        "phase": {
+          "$ref": "#/definitions/phase",
+          "default": "normal"
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether this rule is enabled",
+          "default": true
+        },
+        "when": {
+          "type": "array",
+          "description": "Conditions that must be satisfied",
+          "items": {
+            "$ref": "#/definitions/condition"
+          }
+        },
+        "after": {
+          "type": "array",
+          "description": "Groups that must settle first",
+          "items": {
+            "$ref": "#/definitions/groupReference"
+          }
+        },
+        "group": {
+          "type": "array",
+          "description": "Groups this rule belongs to",
+          "items": {
+            "type": "string"
+          }
+        },
+        "activities": {
+          "type": "array",
+          "description": "Actions to perform",
+          "items": {
+            "$ref": "#/definitions/activity"
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "phase": {
+      "type": "string",
+      "enum": ["early", "normal", "safeguard"],
+      "default": "normal"
+    },
+    "condition": {
+      "type": "object",
+      "oneOf": [
+        { "$ref": "#/definitions/factExistenceCondition" },
+        { "$ref": "#/definitions/factComparisonCondition" },
+        { "$ref": "#/definitions/eventCondition" }
+      ]
+    },
+    "factExistenceCondition": {
+      "type": "object",
+      "required": ["fact"],
+      "properties": {
+        "fact": {
+          "type": "string",
+          "description": "Fact path to check"
+        }
+      },
+      "additionalProperties": false
+    },
+    "factComparisonCondition": {
+      "type": "object",
+      "required": ["fact", "operator", "value"],
+      "properties": {
+        "fact": {
+          "type": "string",
+          "description": "Fact path to compare"
+        },
+        "operator": {
+          "$ref": "#/definitions/comparisonOperator"
+        },
+        "value": {
+          "type": ["number", "string"],
+          "description": "Value to compare against"
+        }
+      },
+      "additionalProperties": false
+    },
+    "comparisonOperator": {
+      "type": "string",
+      "enum": [
+        "equals",
+        "notEquals",
+        "greaterThan",
+        "greaterThanOrEqual",
+        "lessThan",
+        "lessThanOrEqual"
+      ]
+    },
+    "eventCondition": {
+      "type": "object",
+      "required": ["event"],
+      "properties": {
+        "event": {
+          "type": "string",
+          "description": "Event name to check for"
+        }
+      },
+      "additionalProperties": false
+    },
+    "groupReference": {
+      "type": "object",
+      "required": ["group"],
+      "properties": {
+        "group": {
+          "type": "string",
+          "description": "Group name"
+        }
+      },
+      "additionalProperties": false
+    },
+    "activity": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "numberSet",
+            "numberIncrement",
+            "numberCopy",
+            "numberSum",
+            "numberFunction",
+            "emitEvent",
+            "generateRule",
+            "offerRule"
+          ]
+        },
+        "target": {
+          "type": "string",
+          "description": "Target fact path"
+        },
+        "number": {
+          "type": "number",
+          "description": "Numeric value"
+        },
+        "max": {
+          "type": "string",
+          "description": "Maximum value fact path"
+        },
+        "source": {
+          "type": "string",
+          "description": "Source fact path"
+        },
+        "subtract": {
+          "type": "boolean",
+          "description": "For numberIncrement: subtract the value instead of adding",
+          "default": false
+        },
+        "args": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Fact path arguments"
+        },
+        "function": {
+          "type": "string",
+          "enum": ["statToModifier"],
+          "description": "Named function"
+        },
+        "event": {
+          "type": "string",
+          "description": "Event name"
+        },
+        "rule": {
+          "$ref": "#/definitions/rule",
+          "description": "Rule to generate"
+        },
+        "legalWhen": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/illegalWhenEntry"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "illegalWhenEntry": {
+      "type": "object",
+      "required": ["condition"],
+      "properties": {
+        "condition": {
+          "$ref": "#/definitions/condition"
+        },
+        "illegalDiagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/diagnostic"
+          }
+        }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "required": ["code", "severity"],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["error", "warning", "notice"]
+        }
+      }
+    }
+  }
+}

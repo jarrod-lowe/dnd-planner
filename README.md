@@ -316,3 +316,4 @@ The architecture supports:
 - Federate Cognito to Google
 - Can we get rid of the .html/no .html stuff for /auth/callback between dev (SvelteKit) and test/prod (s3)?
 - Sans Serif Font?
+- POST /api/characters

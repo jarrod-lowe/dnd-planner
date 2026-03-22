@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: base
+    name: rule.dnd-5e-2024-base.name
+    description: rule.dnd-5e-2024-base.description
+    rules:
+      # Movement Action
+      - id: action-move-reset
+        phase: early
+        activities:
+          - type: numberCopy
+            source: character.movement.total
+            target: character.movement.current
+      - id: action-move-offer
+        ui:
+          class: actionMove
+          section: actions
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: character.movement.current
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024-base.action-move-offer.out_of_movement
+                    severity: error
+            rule:
+              id: move
+              activities:
+                # Consume remaining movement
+                - type: numberIncrement
+                  target: character.movement.current
+                  source: character.movement.current
+                  subtract: true

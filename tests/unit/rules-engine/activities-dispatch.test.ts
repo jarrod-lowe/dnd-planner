@@ -34,7 +34,7 @@ describe('executeActivity', () => {
   it('dispatches number_set activity to executeNumberSet', () => {
     const activity: NumberSetActivity = {
       id: 'test-1',
-      type: 'number_set',
+      type: 'numberSet',
       target: 'hp.current',
       number: 42
     };
@@ -49,7 +49,7 @@ describe('executeActivity', () => {
   it('dispatches number_increment activity', () => {
     const activity: NumberIncrementActivity = {
       id: 'test-1',
-      type: 'number_increment',
+      type: 'numberIncrement',
       target: 'hp.current',
       number: 5
     };
@@ -64,7 +64,7 @@ describe('executeActivity', () => {
   it('dispatches number_copy activity', () => {
     const activity: NumberCopyActivity = {
       id: 'test-1',
-      type: 'number_copy',
+      type: 'numberCopy',
       target: 'hp.temp',
       source: 'hp.current'
     };
@@ -79,7 +79,7 @@ describe('executeActivity', () => {
   it('dispatches number_sum activity', () => {
     const activity: NumberSumActivity = {
       id: 'test-1',
-      type: 'number_sum',
+      type: 'numberSum',
       target: 'hp.max',
       args: ['hp.base', 'hp.bonus']
     };
@@ -95,7 +95,7 @@ describe('executeActivity', () => {
   it('dispatches number_function activity', () => {
     const activity: NumberFunctionActivity = {
       id: 'test-1',
-      type: 'number_function',
+      type: 'numberFunction',
       target: 'str.modifier',
       function: 'statToModifier',
       args: ['str.value']
@@ -111,7 +111,7 @@ describe('executeActivity', () => {
   it('dispatches emit_event activity', () => {
     const activity: EmitEventActivity = {
       id: 'test-1',
-      type: 'emit_event',
+      type: 'emitEvent',
       event: 'attack'
     };
     const context = createEmptyContext();
@@ -129,7 +129,7 @@ describe('executeActivity', () => {
     };
     const activity: GenerateRuleActivity = {
       id: 'test-1',
-      type: 'generate_rule',
+      type: 'generateRule',
       rule: generatedRule
     };
     const context = createEmptyContext();
@@ -147,7 +147,7 @@ describe('executeActivity', () => {
     };
     const activity: OfferRuleActivity = {
       id: 'test-1',
-      type: 'offer_rule',
+      type: 'offerRule',
       rule
     };
     const context = createEmptyContext();

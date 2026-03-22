@@ -25,3 +25,7 @@ playwright-report/
 .env
 .env.*
 !.env.example
+
+# Python virtual environment
+.venv/
+scripts/__pycache__/

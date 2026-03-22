@@ -14,6 +14,7 @@
     "linters",
     "nonsensitive",
     "Persistable",
+    "pycache",
     "Replayability",
     "replayable",
     "RULEGROUP",
@@ -21,7 +22,11 @@
     "tfvars",
     "trimpath",
     "vars",
+    "venv",
     "VITE",
     "Vitest"
-  ]
+  ],
+  "yaml.schemas": {
+    "./data/rule-groups/schema.json": "data/rule-groups/**/*.yaml"
+  }
 }

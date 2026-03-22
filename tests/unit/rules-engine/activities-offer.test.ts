@@ -28,7 +28,7 @@ describe('executeOfferRule', () => {
 
     const activity: OfferRuleActivity = {
       id: 'test-1',
-      type: 'offer_rule',
+      type: 'offerRule',
       rule
     };
 
@@ -48,7 +48,7 @@ describe('executeOfferRule', () => {
 
     const activity: OfferRuleActivity = {
       id: 'test-1',
-      type: 'offer_rule',
+      type: 'offerRule',
       rule
     };
 
@@ -59,7 +59,7 @@ describe('executeOfferRule', () => {
     expect(context.workingState.offeredRules[0].legal).toBe(true);
   });
 
-  it('sets legal to false when legalWhen condition passes', () => {
+  it('sets legal to true when legalWhen condition passes', () => {
     const rule: Rule = {
       id: 'offered-rule',
       activities: []
@@ -67,12 +67,12 @@ describe('executeOfferRule', () => {
 
     const activity: OfferRuleActivity = {
       id: 'test-1',
-      type: 'offer_rule',
+      type: 'offerRule',
       rule,
       legalWhen: [
         {
           condition: { fact: 'hp.current' },
-          illegalDiagnostics: [{ code: 'HP_EXISTS', severity: 'error', message: 'HP exists' }]
+          illegalDiagnostics: [{ code: 'HP_MISSING', severity: 'error' }]
         }
       ]
     };
@@ -82,10 +82,10 @@ describe('executeOfferRule', () => {
 
     executeOfferRule(activity, context);
 
-    expect(context.workingState.offeredRules[0].legal).toBe(false);
+    expect(context.workingState.offeredRules[0].legal).toBe(true);
   });
 
-  it('sets legal to true when legalWhen condition fails', () => {
+  it('sets legal to false when legalWhen condition fails', () => {
     const rule: Rule = {
       id: 'offered-rule',
       activities: []
@@ -93,12 +93,12 @@ describe('executeOfferRule', () => {
 
     const activity: OfferRuleActivity = {
       id: 'test-1',
-      type: 'offer_rule',
+      type: 'offerRule',
       rule,
       legalWhen: [
         {
           condition: { fact: 'hp.current' },
-          illegalDiagnostics: [{ code: 'HP_EXISTS', severity: 'error', message: 'HP exists' }]
+          illegalDiagnostics: [{ code: 'HP_MISSING', severity: 'error' }]
         }
       ]
     };
@@ -108,10 +108,10 @@ describe('executeOfferRule', () => {
 
     executeOfferRule(activity, context);
 
-    expect(context.workingState.offeredRules[0].legal).toBe(true);
+    expect(context.workingState.offeredRules[0].legal).toBe(false);
   });
 
-  it('collects diagnostics from illegal conditions', () => {
+  it('collects diagnostics when legalWhen condition fails', () => {
     const rule: Rule = {
       id: 'offered-rule',
       activities: []
@@ -119,23 +119,23 @@ describe('executeOfferRule', () => {
 
     const activity: OfferRuleActivity = {
       id: 'test-1',
-      type: 'offer_rule',
+      type: 'offerRule',
       rule,
       legalWhen: [
         {
           condition: { fact: 'hp.current' },
-          illegalDiagnostics: [{ code: 'HP_EXISTS', severity: 'error', message: 'HP exists' }]
+          illegalDiagnostics: [{ code: 'HP_MISSING', severity: 'error' }]
         }
       ]
     };
 
     const context = createEmptyContext();
-    context.workingState.facts['hp.current'] = 10;
+    // hp.current does not exist, so condition fails
 
     executeOfferRule(activity, context);
 
     expect(context.workingState.offeredRules[0].diagnostics).toHaveLength(1);
-    expect(context.workingState.offeredRules[0].diagnostics[0].code).toBe('HP_EXISTS');
+    expect(context.workingState.offeredRules[0].diagnostics[0].code).toBe('HP_MISSING');
   });
 
   it('sets applicable to true when rule when conditions pass', () => {
@@ -147,7 +147,7 @@ describe('executeOfferRule', () => {
 
     const activity: OfferRuleActivity = {
       id: 'test-1',
-      type: 'offer_rule',
+      type: 'offerRule',
       rule
     };
 
@@ -168,7 +168,7 @@ describe('executeOfferRule', () => {
 
     const activity: OfferRuleActivity = {
       id: 'test-1',
-      type: 'offer_rule',
+      type: 'offerRule',
       rule
     };
 

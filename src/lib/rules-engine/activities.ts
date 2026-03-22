@@ -31,28 +31,28 @@ import { evaluateCondition, isRuleApplicable } from './conditions';
  */
 export function executeActivity(activity: Activity, context: RuleContext): void {
   switch (activity.type) {
-    case 'number_set':
+    case 'numberSet':
       executeNumberSet(activity, context.workingState);
       break;
-    case 'number_increment':
+    case 'numberIncrement':
       executeNumberIncrement(activity, context.workingState);
       break;
-    case 'number_copy':
+    case 'numberCopy':
       executeNumberCopy(activity, context.workingState);
       break;
-    case 'number_sum':
+    case 'numberSum':
       executeNumberSum(activity, context.workingState);
       break;
-    case 'number_function':
+    case 'numberFunction':
       executeNumberFunction(activity, context.workingState);
       break;
-    case 'emit_event':
+    case 'emitEvent':
       executeEmitEvent(activity, context.workingState);
       break;
-    case 'generate_rule':
+    case 'generateRule':
       executeGenerateRule(activity, context);
       break;
-    case 'offer_rule':
+    case 'offerRule':
       executeOfferRule(activity, context);
       break;
     default:
@@ -99,6 +99,9 @@ export function executeNumberSet(activity: NumberSetActivity, state: WorkingStat
  * Optional `max` parameter caps the result using another fact's value.
  * Can use negative numbers to decrement.
  *
+ * The increment value can come from either `number` (literal) or `source` (fact reference).
+ * When `subtract` is true, the value is negated before applying.
+ *
  * @param activity - The number_increment activity
  * @param state - Working state to mutate
  *
@@ -109,7 +112,23 @@ export function executeNumberIncrement(
   state: WorkingState
 ): void {
   const current = (state.facts[activity.target] as number) ?? 0;
-  let result = current + activity.number;
+
+  // Get the increment value from either `number` or `source`
+  let delta: number;
+  if (activity.source !== undefined) {
+    delta = (state.facts[activity.source] as number) ?? 0;
+  } else if (activity.number !== undefined) {
+    delta = activity.number;
+  } else {
+    throw new Error('numberIncrement activity requires either number or source');
+  }
+
+  // Apply subtract flag
+  if (activity.subtract === true) {
+    delta = -delta;
+  }
+
+  let result = current + delta;
 
   if (activity.max !== undefined) {
     const maxValue = (state.facts[activity.max] as number) ?? 0;
@@ -247,14 +266,15 @@ export function executeOfferRule(activity: OfferRuleActivity, context: RuleConte
   const applicable = isRuleApplicable(rule, workingState.facts, workingState.events);
 
   // Determine legality based on legalWhen conditions
-  // legalWhen contains conditions that make the rule ILLEGAL when they pass
+  // legalWhen contains conditions that make the rule LEGAL when they pass
+  // If ANY condition fails, the rule is illegal with that entry's diagnostics
   let legal = true;
   const diagnostics: AvailableRuleEntry['diagnostics'] = [];
 
   if (activity.legalWhen) {
     for (const entry of activity.legalWhen) {
-      if (evaluateCondition(entry.condition, workingState.facts, workingState.events)) {
-        // Condition passed - rule is illegal
+      if (!evaluateCondition(entry.condition, workingState.facts, workingState.events)) {
+        // Condition failed - rule is illegal
         legal = false;
         diagnostics.push(...entry.illegalDiagnostics);
       }

@@ -22,8 +22,8 @@ function createEmptyContext(): RuleContext {
 describe('executeRuleActivities', () => {
   it('executes activities in order', () => {
     const activities: Activity[] = [
-      { id: 'act-1', type: 'number_set', target: 'hp.current', number: 10 },
-      { id: 'act-2', type: 'number_increment', target: 'hp.current', number: 5 }
+      { id: 'act-1', type: 'numberSet', target: 'hp.current', number: 10 },
+      { id: 'act-2', type: 'numberIncrement', target: 'hp.current', number: 5 }
     ];
 
     const context = createEmptyContext();
@@ -35,8 +35,8 @@ describe('executeRuleActivities', () => {
 
   it('each activity sees state mutations from previous activities', () => {
     const activities: Activity[] = [
-      { id: 'act-1', type: 'number_set', target: 'hp.base', number: 10 },
-      { id: 'act-2', type: 'number_copy', target: 'hp.current', source: 'hp.base' }
+      { id: 'act-1', type: 'numberSet', target: 'hp.base', number: 10 },
+      { id: 'act-2', type: 'numberCopy', target: 'hp.current', source: 'hp.base' }
     ];
 
     const context = createEmptyContext();

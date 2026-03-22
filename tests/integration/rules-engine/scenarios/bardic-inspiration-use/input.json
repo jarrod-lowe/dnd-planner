@@ -7,13 +7,13 @@
         "activities": [
           {
             "id": "offer-1",
-            "type": "offer_rule",
+            "type": "offerRule",
             "rule": {
               "id": "use-bardic-inspiration",
               "activities": [
                 {
                   "id": "consume-1",
-                  "type": "number_increment",
+                  "type": "numberIncrement",
                   "target": "bardicInspiration.remaining",
                   "number": -1
                 }
@@ -29,8 +29,7 @@
                 "illegalDiagnostics": [
                   {
                     "code": "resource.bardicInspiration.insufficient",
-                    "severity": "error",
-                    "message": "No Bardic Inspiration uses remaining"
+                    "severity": "error"
                   }
                 ]
               }
