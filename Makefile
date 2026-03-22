@@ -14,6 +14,8 @@ AWS_ACCOUNT := $(shell AWS_PROFILE=$(AWS_PROFILE) aws sts get-caller-identity --
 AWS_DEFAULT_REGION ?= ap-southeast-2
 AWS_REGION := $(shell AWS_PROFILE=$(AWS_PROFILE) aws configure get region 2>/dev/null || echo "$(AWS_DEFAULT_REGION)")
 export AWS_REGION
+AWS_PAGER :=
+export AWS_PAGER
 STATE_BUCKET ?= $(PROJECT)-iac-state-$(AWS_ACCOUNT)
 GH_WORKSPACE := $(shell gh repo view --json owner -q .owner.login 2>/dev/null)
 GH_REPO := $(PROJECT)

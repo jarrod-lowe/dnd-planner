@@ -4,14 +4,18 @@
   import { getHelloWorld } from '$lib/rules-engine';
   import { checkApiHealth } from '$lib/api/health';
   import { checkApiTest } from '$lib/api/test';
+  import { apiGet } from '$lib/api/client';
   import { cognitoConfig } from '$lib/config/cognito';
   import { authStore } from '$lib/auth/authStore.svelte';
   import AuthStatus from '$lib/components/AuthStatus.svelte';
 
   let healthStatus = $state<'loading' | 'connected' | 'error'>('loading');
   let testStatus = $state<'loading' | 'connected' | 'error'>('loading');
+  let userStatus = $state<'loading' | 'connected' | 'error'>('loading');
   let errorMessage = $state('');
   let testError = $state('');
+  let userError = $state('');
+  let userData = $state<string>('');
 
   onMount(async () => {
     // Wait for auth to finish initializing
@@ -21,7 +25,11 @@
 
     // Only check health if authenticated
     if (authStore.state.isAuthenticated) {
-      const [healthResult, testResult] = await Promise.all([checkApiHealth(), checkApiTest()]);
+      const [healthResult, testResult, userResponse] = await Promise.all([
+        checkApiHealth(),
+        checkApiTest(),
+        apiGet('/api/user')
+      ]);
 
       if (healthResult.success) {
         healthStatus = 'connected';
@@ -36,11 +44,22 @@
         testStatus = 'error';
         testError = testResult.error ?? 'Unknown error';
       }
+
+      if (userResponse.ok) {
+        const data = await userResponse.json();
+        userData = JSON.stringify(data, null, 2);
+        userStatus = 'connected';
+      } else {
+        userStatus = 'error';
+        userError = `HTTP ${userResponse.status}`;
+      }
     } else {
       healthStatus = 'error';
       testStatus = 'error';
+      userStatus = 'error';
       errorMessage = $t('status.notAuthenticated');
       testError = $t('status.notAuthenticated');
+      userError = $t('status.notAuthenticated');
     }
   });
 
@@ -87,6 +106,18 @@
     </p>
   {/if}
 
+  {#if userStatus === 'loading'}
+    <p class="status-loading"><span aria-hidden="true">⋯</span> API User: checking...</p>
+  {:else if userStatus === 'connected'}
+    <p class="status-ok"><span aria-hidden="true">✓</span> API User: connected</p>
+    <pre class="user-data">{userData}</pre>
+  {:else}
+    <p class="status-error">
+      <span aria-hidden="true">✗</span>
+      API User: {userError}
+    </p>
+  {/if}
+
   <p class="status-ok">
     <span aria-hidden="true">✓</span>
     {$t('cognito.label')}
@@ -119,5 +150,15 @@
 
   .status-error {
     color: var(--md-sys-color-error);
+  }
+
+  .user-data {
+    background: var(--md-sys-color-surface-container);
+    color: var(--md-sys-color-on-surface);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+    font-size: var(--font-size-sm);
+    margin-top: var(--spacing-sm);
   }
 </style>
