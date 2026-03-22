@@ -430,6 +430,49 @@ describe('validateOrdering', () => {
     expect(diagnostics).toHaveLength(1);
     expect(diagnostics[0].code).toBe('CYCLE');
   });
+
+  it('returns error for transitive cycle between two groups', () => {
+    const rules: Rule[] = [
+      { id: 'rule-1', group: ['group-a'], after: [{ group: 'group-b' }], activities: [] },
+      { id: 'rule-2', group: ['group-b'], after: [{ group: 'group-a' }], activities: [] }
+    ];
+
+    const diagnostics = validateOrdering(rules, 'normal');
+
+    expect(diagnostics).toHaveLength(1);
+    expect(diagnostics[0].code).toBe('CYCLE');
+    expect(diagnostics[0].message).toContain('group-a');
+    expect(diagnostics[0].message).toContain('group-b');
+  });
+
+  it('returns error for longer transitive cycle chain', () => {
+    const rules: Rule[] = [
+      { id: 'rule-1', group: ['group-a'], after: [{ group: 'group-b' }], activities: [] },
+      { id: 'rule-2', group: ['group-b'], after: [{ group: 'group-c' }], activities: [] },
+      { id: 'rule-3', group: ['group-c'], after: [{ group: 'group-a' }], activities: [] }
+    ];
+
+    const diagnostics = validateOrdering(rules, 'normal');
+
+    expect(diagnostics).toHaveLength(1);
+    expect(diagnostics[0].code).toBe('CYCLE');
+    expect(diagnostics[0].message).toContain('group-a');
+    expect(diagnostics[0].message).toContain('group-b');
+    expect(diagnostics[0].message).toContain('group-c');
+  });
+
+  it('returns no error for valid diamond dependency', () => {
+    const rules: Rule[] = [
+      { id: 'rule-a', group: ['group-a'], after: [{ group: 'group-b' }, { group: 'group-c' }], activities: [] },
+      { id: 'rule-b', group: ['group-b'], after: [{ group: 'group-d' }], activities: [] },
+      { id: 'rule-c', group: ['group-c'], after: [{ group: 'group-d' }], activities: [] },
+      { id: 'rule-d', group: ['group-d'], activities: [] }
+    ];
+
+    const diagnostics = validateOrdering(rules, 'normal');
+
+    expect(diagnostics).toHaveLength(0);
+  });
 });
 
 describe('validateCrossPhaseOrdering', () => {
