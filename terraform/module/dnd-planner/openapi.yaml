@@ -246,3 +246,114 @@ paths:
                   ]
                 }
                 #end
+
+  /rule-groups/batch:
+    post:
+      summary: Get rule groups by IDs
+      description: Batch fetch rule groups by their IDs (max 100)
+      operationId: getRuleGroups
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ids
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: string
+                  minItems: 1
+                  maxItems: 100
+            example:
+              ids: ['uuid-1', 'uuid-2', 'uuid-3']
+      responses:
+        '200':
+          description: Rule groups retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ruleGroups:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        ruleGroupId:
+                          type: string
+                        type:
+                          type: string
+                        name:
+                          type: string
+                        rules:
+                          type: array
+                        createdAt:
+                          type: string
+                        updatedAt:
+                          type: string
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+      x-amazon-apigateway-integration:
+        type: aws
+        credentials: '${api_gateway_role_arn}'
+        uri: 'arn:aws:apigateway:${aws_region}:dynamodb:action/BatchGetItem'
+        httpMethod: POST
+        requestTemplates:
+          application/json: |
+            #set($body = $input.path('$'))
+            #set($ids = $body.ids)
+            {
+              "RequestItems": {
+                "${dynamodb_table_name}": {
+                  "Keys": [
+            #set($first = true)
+            #foreach($id in $ids)
+              #if($first)
+                #set($first = false)
+              #else
+                ,
+              #end
+                {"PK": {"S": "RULEGROUP#$id"}, "SK": {"S": "META#"}}
+            #end
+                  ]
+                }
+              }
+            }
+        responses:
+          default:
+            statusCode: 200
+            responseTemplates:
+              application/json: |
+                #set($responses = $input.path('$.Responses'))
+                #set($tableName = "${dynamodb_table_name}")
+                #set($items = $responses.get($tableName))
+                {
+                  "ruleGroups": [
+                #set($itemFirst = true)
+                #foreach($item in $items)
+                  #if($itemFirst)
+                  #set($itemFirst = false)
+                  #else
+                  ,
+                  #end
+                    {
+                      "ruleGroupId": "$item.get('ruleGroupId').get('S')",
+                      "type": "$item.get('type').get('S')",
+                      "name": "$item.get('name').get('S')",
+                      "rules": "$item.get('rules').get('S')",
+                      "createdAt": "$item.get('createdAt').get('S')",
+                      "updatedAt": "$item.get('updatedAt').get('S')"
+                    }
+                #end
+                  ]
+                }
