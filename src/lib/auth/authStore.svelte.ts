@@ -7,6 +7,7 @@ import { getCurrentUser, fetchAuthSession, signInWithRedirect, signOut } from 'a
 export interface AuthState {
   isAuthenticated: boolean;
   userId: string | null;
+  email: string | null;
   isLoading: boolean;
 }
 
@@ -14,6 +15,7 @@ export interface AuthState {
 const initialState: AuthState = {
   isAuthenticated: false,
   userId: null,
+  email: null,
   isLoading: true
 };
 
@@ -28,17 +30,28 @@ let state = $state<AuthState>({ ...initialState });
 async function initialize(): Promise<void> {
   try {
     // Force token exchange if OAuth code is present in URL
-    await fetchAuthSession();
+    const session = await fetchAuthSession();
     const user = await getCurrentUser();
+
+    // Extract email from ID token claims or signInDetails
+    let email: string | null = null;
+    if (session.tokens?.idToken?.payload?.email) {
+      email = session.tokens.idToken.payload.email as string;
+    } else if (user.signInDetails?.loginId) {
+      email = user.signInDetails.loginId;
+    }
+
     state = {
       isAuthenticated: true,
       userId: user.userId,
+      email,
       isLoading: false
     };
   } catch {
     state = {
       isAuthenticated: false,
       userId: null,
+      email: null,
       isLoading: false
     };
   }
@@ -61,6 +74,7 @@ async function logout(): Promise<void> {
   state = {
     isAuthenticated: false,
     userId: null,
+    email: null,
     isLoading: false
   };
 }

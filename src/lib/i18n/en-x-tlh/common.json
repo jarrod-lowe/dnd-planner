@@ -1,7 +1,9 @@
 {
   "app": {
     "title": "D&D chovnatlh",
-    "description": "vay' Duj chovnatlh 'ej DujlIj Dalo'meH wo'rIv Duj chovnatlh."
+    "description": "vay' Duj chovnatlh 'ej DujlIj Dalo'meH wo'rIv Duj chovnatlh.",
+    "tagline": "DIvI' Duj, DIvI' Duj, DIvI' Duj",
+    "welcomeBack": "DuvwlI' DangeH, DIvI'"
   },
   "nav": {
     "skipToContent": "naDevvo' jaH"
@@ -19,12 +21,26 @@
     "loading": "loS...",
     "login": "DugeH",
     "logout": "mev",
-    "completingSignIn": "DugeHtaH..."
+    "completingSignIn": "DugeHtaH...",
+    "userMenu": "DuvwlI' DIvI'",
+    "version": "DIvI'"
   },
   "cognito": {
     "label": "Cognito:"
   },
   "rulesEngine": {
     "helloWorld": "qach chargh'a' vo' DIvI' motlh"
+  },
+  "landing": {
+    "hero": "DujlIj Dalo'meH",
+    "heroSubtitle": "DIvI' DujlIj Dalo'meH 'ej DujlIj Dalo'meH wo'rIv Duj.",
+    "tagline": "DIvI' Duj, DIvI' Duj, DIvI' Duj",
+    "getStarted": "Dalo'meH",
+    "feature1Title": "DIvI' Duj",
+    "feature1Desc": "DIvI' DujlIj Dalo'meH 'ej DIvI' Duj Dalo'meH.",
+    "feature2Title": "DIvI' Duj",
+    "feature2Desc": "DujlIj Dalo'meH 'ej DujlIj Dalo'meH.",
+    "feature3Title": "DIvI' Duj",
+    "feature3Desc": "DIvI' DujlIj Dalo'meH 'ej DujlIj Dalo'meH."
   }
 }
