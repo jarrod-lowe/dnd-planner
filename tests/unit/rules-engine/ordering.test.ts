@@ -463,7 +463,12 @@ describe('validateOrdering', () => {
 
   it('returns no error for valid diamond dependency', () => {
     const rules: Rule[] = [
-      { id: 'rule-a', group: ['group-a'], after: [{ group: 'group-b' }, { group: 'group-c' }], activities: [] },
+      {
+        id: 'rule-a',
+        group: ['group-a'],
+        after: [{ group: 'group-b' }, { group: 'group-c' }],
+        activities: []
+      },
       { id: 'rule-b', group: ['group-b'], after: [{ group: 'group-d' }], activities: [] },
       { id: 'rule-c', group: ['group-c'], after: [{ group: 'group-d' }], activities: [] },
       { id: 'rule-d', group: ['group-d'], activities: [] }
