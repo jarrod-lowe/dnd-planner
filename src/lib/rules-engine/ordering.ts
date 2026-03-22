@@ -155,10 +155,59 @@ export function markRuleSkipped(rule: Rule, groups: Map<string, GroupState>): vo
 }
 
 /**
+ * Detects cycles in the group dependency graph using DFS.
+ *
+ * @param graph - Map of group -> groups it must come after
+ * @param group - Current group being visited
+ * @param visiting - Set of groups currently being visited (in current path)
+ * @param visited - Set of groups already fully processed
+ * @param path - Current path of groups being visited
+ * @returns The cycle path if found, null otherwise
+ */
+function detectCycle(
+  graph: Map<string, Set<string>>,
+  group: string,
+  visiting: Set<string>,
+  visited: Set<string>,
+  path: string[]
+): string[] | null {
+  // Already fully processed - no cycle through this node
+  if (visited.has(group)) {
+    return null;
+  }
+
+  // Currently visiting - found a cycle
+  if (visiting.has(group)) {
+    // Return the cycle portion of the path
+    const cycleStart = path.indexOf(group);
+    return path.slice(cycleStart);
+  }
+
+  visiting.add(group);
+  path.push(group);
+
+  const dependencies = graph.get(group);
+  if (dependencies) {
+    for (const dep of dependencies) {
+      const cycle = detectCycle(graph, dep, visiting, visited, path);
+      if (cycle) {
+        return cycle;
+      }
+    }
+  }
+
+  visiting.delete(group);
+  path.pop();
+  visited.add(group);
+
+  return null;
+}
+
+/**
  * Validates ordering constraints within a single phase.
  *
  * Checks for:
- * - Dependency cycles (A waiting on B -> B -> A ->'t wait on C)
+ * - Dependency cycles (direct self-dependency or transitive A -> B -> A)
  * - Rules waiting on groups that don't exist
  * - Rules waiting on groups that no rule belongs to
  *
@@ -204,6 +253,45 @@ export function validateOrdering(rules: Rule[], phase: Phase): Diagnostic[] {
           severity: 'error',
           message: `Rule "${rule.id}" creates a cycle by waiting on group "${dep.group}" it belongs to`
         });
+      }
+    }
+  }
+
+  // Build dependency graph: group -> set of groups it must come after
+  // Edge from G1 to G2 means "G1 must come after G2" (G1 depends on G2)
+  const graph = new Map<string, Set<string>>();
+
+  for (const rule of rules) {
+    const ruleGroups = rule.group ?? [];
+    const afterDeps = rule.after ?? [];
+
+    for (const ruleGroup of ruleGroups) {
+      if (!graph.has(ruleGroup)) {
+        graph.set(ruleGroup, new Set());
+      }
+      for (const dep of afterDeps) {
+        if (existingGroups.has(dep.group)) {
+          graph.get(ruleGroup)!.add(dep.group);
+        }
+      }
+    }
+  }
+
+  // Detect cycles using DFS (only for transitive cycles of length > 1)
+  const visited = new Set<string>();
+  const visiting = new Set<string>();
+
+  for (const group of graph.keys()) {
+    if (!visited.has(group)) {
+      const cycle = detectCycle(graph, group, visiting, visited, []);
+      if (cycle && cycle.length > 1) {
+        // Only report transitive cycles (length > 1), self-dependencies already caught above
+        diagnostics.push({
+          code: 'CYCLE',
+          severity: 'error',
+          message: `Dependency cycle detected: ${cycle.join(' -> ')} -> ${cycle[0]}`
+        });
+        break; // Report only one cycle to avoid noise
       }
     }
   }
