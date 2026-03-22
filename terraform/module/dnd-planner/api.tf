@@ -75,7 +75,8 @@ resource "aws_iam_role_policy" "api_dynamodb" {
       {
         Effect = "Allow"
         Action = [
-          "dynamodb:Query"
+          "dynamodb:Query",
+          "dynamodb:BatchGetItem"
         ]
         Resource = aws_dynamodb_table.data.arn
       }
