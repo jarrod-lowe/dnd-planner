@@ -1,7 +1,9 @@
 {
   "app": {
     "title": "D&D Planner",
-    "description": "A tablet-optimized web application for tracking D&D character resources and planning combat turns."
+    "description": "A tablet-optimized web application for tracking D&D character resources and planning combat turns.",
+    "tagline": "Track resources. Plan turns. Master combat.",
+    "welcomeBack": "Welcome back, adventurer."
   },
   "nav": {
     "skipToContent": "Skip to main content"
@@ -19,12 +21,26 @@
     "loading": "Loading...",
     "login": "Login",
     "logout": "Logout",
-    "completingSignIn": "Completing sign in..."
+    "completingSignIn": "Completing sign in...",
+    "userMenu": "User menu",
+    "version": "Version"
   },
   "cognito": {
     "label": "Cognito:"
   },
   "rulesEngine": {
     "helloWorld": "Hello from the rules engine"
+  },
+  "landing": {
+    "hero": "Your adventure awaits",
+    "heroSubtitle": "A companion for tracking character resources and planning combat turns at your tabletop.",
+    "tagline": "Track resources. Plan turns. Master combat.",
+    "getStarted": "Begin Your Journey",
+    "feature1Title": "Resource Tracking",
+    "feature1Desc": "Monitor spell slots, abilities, and consumables at a glance.",
+    "feature2Title": "Turn Planning",
+    "feature2Desc": "Plan your actions before initiative rolls around.",
+    "feature3Title": "Tablet Optimized",
+    "feature3Desc": "Touch-friendly interface designed for use at the gaming table."
   }
 }

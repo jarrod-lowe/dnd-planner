@@ -34,7 +34,7 @@
       top: -100%;
       left: 0;
       padding: var(--spacing-sm) var(--spacing-md);
-      z-index: 100;
+      z-index: var(--z-modal);
       background: var(--md-sys-color-primary);
       color: var(--md-sys-color-on-primary);
       text-decoration: none;
