@@ -32,7 +32,16 @@ const translations: Record<string, string> = {
   'landing.feature2Title': 'Turn Planning',
   'landing.feature2Desc': 'Plan your actions before initiative rolls around.',
   'landing.feature3Title': 'Tablet Optimized',
-  'landing.feature3Desc': 'Touch-friendly interface designed for use at the gaming table.'
+  'landing.feature3Desc': 'Touch-friendly interface designed for use at the gaming table.',
+  'character.selectTitle': 'Select Your Character',
+  'character.createNew': 'Create New Character',
+  'character.noCharacters': "You don't have any characters yet.",
+  'character.loading': 'Loading characters...',
+  'character.enterName': 'Enter character name',
+  'character.create': 'Create',
+  'character.cancel': 'Cancel',
+  'character.creating': 'Creating...',
+  'play.backToSelection': 'Back to Character Selection'
 };
 
 // Mock $lib/i18n module for this test file
@@ -55,11 +64,29 @@ vi.mock('$lib/auth/authStore.svelte', () => ({
       isAuthenticated: false,
       isLoading: false,
       userId: null,
-      email: null
+      email: null,
+      groups: []
     },
     login: vi.fn(),
     logout: vi.fn(),
-    initialize: vi.fn()
+    initialize: vi.fn(),
+    hasGroup: vi.fn(() => false)
+  }
+}));
+
+// Mock characterStore
+vi.mock('$lib/character/characterStore.svelte', () => ({
+  characterStore: {
+    state: {
+      selectedCharacter: null,
+      characters: [],
+      isLoading: false,
+      error: null
+    },
+    loadCharacters: vi.fn(),
+    selectCharacter: vi.fn(),
+    clearSelection: vi.fn(),
+    createCharacter: vi.fn()
   }
 }));
 

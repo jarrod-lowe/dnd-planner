@@ -82,29 +82,7 @@ Represents a reusable set of rules.
 - SK = META#
 - type = RULEGROUP
 - ruleGroupId = unique ID (GUID)
-- name = short display name
-- description = longer description
-- ui = object (UI metadata)
-- icon = string
-- category = string
-  ... other UI hints ...
-
-rules = array of rule objects
-
-id = GUID
-
-description = string
-
-ui = object
-
-phase = string (e.g. attack, damage, rest)
-
-when = object (condition definition)
-
-activities = array of objects
-
-version = number (monotonically increasing)
-
-createdAt = ISO timestamp
-
-updatedAt = ISO timestamp
+- name = short display name (translation id)
+- createdAt = ISO timestamp
+- updatedAt = ISO timestamp
+- rules = list of rule objects (complex)

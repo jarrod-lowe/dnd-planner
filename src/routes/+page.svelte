@@ -1,10 +1,44 @@
 <script lang="ts">
   import { authStore } from '$lib/auth/authStore.svelte';
+  import { characterStore } from '$lib/character/characterStore.svelte';
   import LandingPage from '$lib/components/LandingPage.svelte';
   import TopBar from '$lib/components/TopBar.svelte';
+  import SelectCharacterMode from '$lib/components/character/SelectCharacterMode.svelte';
+  import PlayCharacterMode from '$lib/components/character/PlayCharacterMode.svelte';
+  import CreateCharacterDialog from '$lib/components/character/CreateCharacterDialog.svelte';
   import { t } from '$lib/i18n';
-
   const title = $derived($t('app.title'));
+  let showDialog = $state(false);
+  let isCreating = $state(false);
+  let createError = $state<string | null>(null);
+  let hasLoadedCharacters = $state(false);
+
+  // Load characters when authentication state changes to authenticated
+  $effect(() => {
+    if (authStore.state.isAuthenticated && !hasLoadedCharacters) {
+      hasLoadedCharacters = true;
+      characterStore.loadCharacters();
+    }
+  });
+
+  async function handleCreateCharacter(name: string) {
+    isCreating = true;
+    createError = null;
+    try {
+      await characterStore.createCharacter(name);
+      showDialog = false;
+    } catch {
+      createError = $t('character.createError');
+    } finally {
+      isCreating = false;
+    }
+  }
+
+  function handleClearCreateError() {
+    createError = null;
+  }
+
+  const canCreateCharacter = $derived(authStore.hasGroup('MayCreateCharacters'));
 </script>
 
 <svelte:head>
@@ -22,10 +56,34 @@
   <div class="app-layout">
     <TopBar email={authStore.state.email} onLogout={() => authStore.logout()} version="v0.0.0" />
     <main id="main-content" class="app-layout__body">
-      <p class="welcome-message">{$t('app.welcomeBack')}</p>
-      <p class="todo-placeholder">TODO</p>
+      {#if characterStore.state.selectedCharacter}
+        <PlayCharacterMode
+          character={characterStore.state.selectedCharacter}
+          onBack={() => characterStore.clearSelection()}
+        />
+      {:else}
+        <SelectCharacterMode
+          characters={characterStore.state.characters}
+          isLoading={characterStore.state.isLoading}
+          {canCreateCharacter}
+          onSelect={(char) => characterStore.selectCharacter(char)}
+          onCreateCharacter={() => (showDialog = true)}
+        />
+      {/if}
     </main>
   </div>
+
+  <CreateCharacterDialog
+    isOpen={showDialog}
+    {isCreating}
+    onCreate={handleCreateCharacter}
+    onClose={() => {
+      showDialog = false;
+      createError = null;
+    }}
+    errorMessage={createError}
+    onClearError={handleClearCreateError}
+  />
 {/if}
 
 <style>
@@ -69,21 +127,5 @@
     justify-content: center;
     padding: var(--spacing-xl);
     background: var(--md-sys-color-background);
-  }
-
-  .welcome-message {
-    font-family: var(--font-display);
-    font-size: var(--font-size-2xl);
-    color: var(--md-sys-color-primary);
-    margin-bottom: var(--spacing-lg);
-  }
-
-  .todo-placeholder {
-    font-family: var(--font-display);
-    font-size: var(--font-size-4xl);
-    font-weight: 700;
-    color: var(--md-sys-color-outline);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
   }
 </style>
