@@ -42,5 +42,19 @@
     "feature2Desc": "DujlIj Dalo'meH 'ej DujlIj Dalo'meH.",
     "feature3Title": "DIvI' Duj",
     "feature3Desc": "DIvI' DujlIj Dalo'meH 'ej DujlIj Dalo'meH."
+  },
+  "character": {
+    "selectTitle": "nuv Dangu' ",
+    "createNew": "chu' nuv chenmoH",
+    "enterName": "nuv pong yIngu' ",
+    "create": "chenmoH",
+    "cancel": "qIl",
+    "creating": "chenmoHlI'...",
+    "noCharacters": "nuv DaDajbe' ",
+    "loading": "nuv DIvI'...",
+    "createError": "nuv chenmoHlaHbe'. yInIDqa'."
+  },
+  "play": {
+    "backToSelection": "nuv DIvI' HI'egh"
   }
 }

@@ -9,6 +9,7 @@ export interface AuthState {
   userId: string | null;
   email: string | null;
   isLoading: boolean;
+  groups: string[];
 }
 
 // Initial state
@@ -16,7 +17,8 @@ const initialState: AuthState = {
   isAuthenticated: false,
   userId: null,
   email: null,
-  isLoading: true
+  isLoading: true,
+  groups: []
 };
 
 // Reactive state using Svelte 5 $state rune
@@ -41,18 +43,23 @@ async function initialize(): Promise<void> {
       email = user.signInDetails.loginId;
     }
 
+    // Extract groups from cognito:groups claim
+    const groups = (session.tokens?.idToken?.payload?.['cognito:groups'] as string[]) ?? [];
+
     state = {
       isAuthenticated: true,
       userId: user.userId,
       email,
-      isLoading: false
+      isLoading: false,
+      groups
     };
   } catch {
     state = {
       isAuthenticated: false,
       userId: null,
       email: null,
-      isLoading: false
+      isLoading: false,
+      groups: []
     };
   }
 }
@@ -75,7 +82,8 @@ async function logout(): Promise<void> {
     isAuthenticated: false,
     userId: null,
     email: null,
-    isLoading: false
+    isLoading: false,
+    groups: []
   };
 }
 
@@ -86,6 +94,13 @@ function reset(): void {
   state = { ...initialState };
 }
 
+/**
+ * Check if the current user has a specific Cognito group.
+ */
+function hasGroup(groupName: string): boolean {
+  return state.groups.includes(groupName);
+}
+
 export const authStore = {
   get state() {
     return state;
@@ -93,5 +108,6 @@ export const authStore = {
   initialize,
   login,
   logout,
-  reset
+  reset,
+  hasGroup
 };

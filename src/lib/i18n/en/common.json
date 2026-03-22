@@ -42,5 +42,19 @@
     "feature2Desc": "Plan your actions before initiative rolls around.",
     "feature3Title": "Tablet Optimized",
     "feature3Desc": "Touch-friendly interface designed for use at the gaming table."
+  },
+  "character": {
+    "selectTitle": "Select Your Character",
+    "createNew": "Create New Character",
+    "enterName": "Enter character name",
+    "create": "Create",
+    "cancel": "Cancel",
+    "creating": "Creating...",
+    "noCharacters": "You don't have any characters yet.",
+    "loading": "Loading characters...",
+    "createError": "Failed to create character. Please try again."
+  },
+  "play": {
+    "backToSelection": "Back to Character Selection"
   }
 }
