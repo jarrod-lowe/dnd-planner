@@ -166,3 +166,83 @@ paths:
                 #end
                 ]
                 #end
+
+  /characters/{characterId}/rule-groups:
+    get:
+      summary: Get rule groups for a character
+      description: Returns all rule group IDs assigned to a character (must be owned by authenticated user)
+      operationId: getCharacterRuleGroups
+      parameters:
+        - name: characterId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Rule groups retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: string
+                  characterId:
+                    type: string
+                  ruleGroups:
+                    type: array
+                    items:
+                      type: string
+        '403':
+          description: Forbidden - character not found or not owned by user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+      x-amazon-apigateway-integration:
+        type: aws
+        credentials: '${api_gateway_role_arn}'
+        uri: 'arn:aws:apigateway:${aws_region}:dynamodb:action/Query'
+        httpMethod: POST
+        requestTemplates:
+          application/json: |
+            {
+              "TableName": "${dynamodb_table_name}",
+              "KeyConditionExpression": "PK = :pk AND begins_with(SK, :skPrefix)",
+              "FilterExpression": "userId = :userId",
+              "ExpressionAttributeValues": {
+                ":pk": {"S": "CHAR#$input.params('characterId')"},
+                ":skPrefix": {"S": "RULEGROUP#"},
+                ":userId": {"S": "$context.authorizer.claims.sub"}
+              }
+            }
+        responses:
+          default:
+            statusCode: 200
+            responseTemplates:
+              application/json: |
+                #set($items = $input.path('$.Items'))
+                #if($items.size() == 0)
+                #set($context.responseOverride.status = 403)
+                {"error": "Forbidden"}
+                #else
+                {
+                  "userId": "$context.authorizer.claims.sub",
+                  "characterId": "$input.params('characterId')",
+                  "ruleGroups": [
+                #set($first = true)
+                #foreach($item in $items)
+                  #if($first)
+                  #set($first = false)
+                  #else
+                  ,
+                  #end
+                  "$item.get('ruleGroupId').get('S')"
+                #end
+                  ]
+                }
+                #end
