@@ -75,7 +75,7 @@
 
   <CreateCharacterDialog
     isOpen={showDialog}
-    isCreating={isCreating}
+    {isCreating}
     onCreate={handleCreateCharacter}
     onClose={() => {
       showDialog = false;

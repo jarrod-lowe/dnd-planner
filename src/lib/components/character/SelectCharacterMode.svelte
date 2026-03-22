@@ -92,7 +92,9 @@
     border-radius: var(--radius-lg);
     cursor: pointer;
     min-height: 3rem;
-    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+    transition:
+      background-color var(--transition-fast),
+      border-color var(--transition-fast);
   }
 
   .select-character-mode__create-button:hover {

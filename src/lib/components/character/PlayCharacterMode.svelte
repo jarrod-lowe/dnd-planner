@@ -11,7 +11,11 @@
 </script>
 
 <div class="play-character">
-  <button class="play-character__back" onclick={() => onBack()} aria-label={$t('play.backToSelection')}>
+  <button
+    class="play-character__back"
+    onclick={() => onBack()}
+    aria-label={$t('play.backToSelection')}
+  >
     {$t('play.backToSelection')}
   </button>
   <h1 class="play-character__name">{character.name}</h1>

@@ -192,8 +192,8 @@ describe('SelectCharacterMode', () => {
       }
     });
 
-    const createButton = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent?.includes('Create New Character')
+    const createButton = Array.from(container.querySelectorAll('button')).find((b) =>
+      b.textContent?.includes('Create New Character')
     );
     createButton?.click();
 

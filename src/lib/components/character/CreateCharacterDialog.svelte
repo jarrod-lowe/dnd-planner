@@ -10,7 +10,14 @@
     onClearError?: () => void;
   }
 
-  let { isOpen, isCreating, onCreate, onClose, errorMessage = null, onClearError }: Props = $props();
+  let {
+    isOpen,
+    isCreating,
+    onCreate,
+    onClose,
+    errorMessage = null,
+    onClearError
+  }: Props = $props();
   let characterName = $state('');
 
   function handleSubmit() {
@@ -36,11 +43,7 @@
 
 {#if isOpen}
   <!-- svelte-ignore a11y_click_events_have_key_events -->
-  <div
-    class="dialog-overlay"
-    onclick={handleCancel}
-    role="presentation"
-  >
+  <div class="dialog-overlay" onclick={handleCancel} role="presentation">
     <div
       class="dialog"
       role="dialog"

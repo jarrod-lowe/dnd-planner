@@ -137,8 +137,8 @@ describe('CreateCharacterDialog', () => {
     // Force Svelte to process the binding
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    const createButton = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent?.includes('Create')
+    const createButton = Array.from(container.querySelectorAll('button')).find((b) =>
+      b.textContent?.includes('Create')
     );
     createButton?.click();
 
@@ -158,8 +158,8 @@ describe('CreateCharacterDialog', () => {
       }
     });
 
-    const cancelButton = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent?.includes('Cancel')
+    const cancelButton = Array.from(container.querySelectorAll('button')).find((b) =>
+      b.textContent?.includes('Cancel')
     );
     cancelButton?.click();
 
@@ -177,8 +177,8 @@ describe('CreateCharacterDialog', () => {
       }
     });
 
-    const createButton = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent?.includes('Create')
+    const createButton = Array.from(container.querySelectorAll('button')).find((b) =>
+      b.textContent?.includes('Create')
     );
 
     expect(createButton?.disabled).toBe(true);
