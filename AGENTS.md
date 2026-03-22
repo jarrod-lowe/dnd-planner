@@ -54,6 +54,14 @@ Avoid `$(...)` in commands, as they trigger security checks that slow you down.
 
 - Regularly run `make test` to check all tests pass
 
+### Forbidden commands
+
+- **DO NOT USE** `find ... -exec grep`; use `rg` instead
+- **DO NOT USE** `$(...)` wherever possible (consider running interior commands separately and remembering their output)
+- **DO NOT USER** `terraform`, use the make targets for it
+- Avoid `find`
+- Avoid redirections (`>`, `2>`, `<`, `|`) and chaining (`&&`, `||`)
+
 ## Technology Stack
 
 | Layer           | Technology             |

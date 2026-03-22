@@ -76,3 +76,93 @@ paths:
         type: aws_proxy
         httpMethod: POST
         uri: '${test_handler_uri}'
+
+  /user:
+    get:
+      summary: Get current user data
+      description: Returns all data (META and characters) for the authenticated user
+      operationId: getUser
+      responses:
+        '200':
+          description: User data retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+      x-amazon-apigateway-integration:
+        type: aws
+        credentials: '${api_gateway_role_arn}'
+        uri: 'arn:aws:apigateway:${aws_region}:dynamodb:action/Query'
+        httpMethod: POST
+        requestTemplates:
+          application/json: |
+            {
+              "TableName": "${dynamodb_table_name}",
+              "KeyConditionExpression": "PK = :pk",
+              "ExpressionAttributeValues": {
+                ":pk": {"S": "USER#$context.authorizer.claims.sub"}
+              }
+            }
+        responses:
+          default:
+            statusCode: 200
+            responseTemplates:
+              application/json: |
+                #set($items = $input.path('$.Items'))
+                #if($items.size() == 0)
+                #set($context.responseOverride.status = 404)
+                {"error": "User not found"}
+                #else
+                [
+                #set($itemHasNext = false)
+                #foreach($item in $items)
+                  #if($itemHasNext), #end
+                  #set($itemHasNext = true)
+                  {
+                  #set($first = true)
+                  #foreach($key in $item.keySet())
+                    #if($key != "PK" && $key != "SK")
+                      #if($first)
+                      #set($first = false)
+                      #else
+                      ,
+                      #end
+                      #set($typed = $item.get($key))
+                      #set($val = "")
+                      #if($typed.containsKey("S"))
+                      #set($val = $typed.get("S"))
+                      "$key": "$val"
+                      #elseif($typed.containsKey("N"))
+                      #set($val = $typed.get("N"))
+                      "$key": $val
+                      #elseif($typed.containsKey("BOOL"))
+                      #set($val = $typed.get("BOOL"))
+                      "$key": $val
+                      #elseif($typed.containsKey("NULL"))
+                      "$key": null
+                      #elseif($typed.containsKey("L"))
+                      #set($val = $typed.get("L"))
+                      "$key": $val
+                      #elseif($typed.containsKey("M"))
+                      #set($val = $typed.get("M"))
+                      "$key": $val
+                      #else
+                      "$key": $util.toJson($typed)
+                      #end
+                    #end
+                  #end
+                  }
+                #end
+                ]
+                #end
