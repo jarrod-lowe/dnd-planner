@@ -8,6 +8,8 @@ const translations: Record<string, string> = {
   'app.title': 'D&D Planner',
   'app.description':
     'A tablet-optimized web application for tracking D&D character resources and planning combat turns.',
+  'app.tagline': 'Track resources. Plan turns. Master combat.',
+  'app.welcomeBack': 'Welcome back, adventurer.',
   'status.checking': 'Checking API...',
   'status.connected': 'API Connected',
   'status.unavailable': 'API Unavailable',
@@ -16,7 +18,21 @@ const translations: Record<string, string> = {
   'auth.login': 'Login',
   'auth.logout': 'Logout',
   'auth.completingSignIn': 'Completing sign in...',
-  'cognito.label': 'Cognito:'
+  'auth.userMenu': 'User menu',
+  'auth.version': 'Version',
+  'layout.loading': 'Loading...',
+  'cognito.label': 'Cognito:',
+  'landing.hero': 'Your adventure awaits',
+  'landing.heroSubtitle':
+    'A companion for tracking character resources and planning combat turns at your tabletop.',
+  'landing.tagline': 'Track resources. Plan turns. Master combat.',
+  'landing.getStarted': 'Begin Your Journey',
+  'landing.feature1Title': 'Resource Tracking',
+  'landing.feature1Desc': 'Monitor spell slots, abilities, and consumables at a glance.',
+  'landing.feature2Title': 'Turn Planning',
+  'landing.feature2Desc': 'Plan your actions before initiative rolls around.',
+  'landing.feature3Title': 'Tablet Optimized',
+  'landing.feature3Desc': 'Touch-friendly interface designed for use at the gaming table.'
 };
 
 // Mock $lib/i18n module for this test file
@@ -32,6 +48,21 @@ vi.mock('$lib/i18n', () => ({
   locales: ['en', 'en-x-tlh']
 }));
 
+// Mock authStore
+vi.mock('$lib/auth/authStore.svelte', () => ({
+  authStore: {
+    state: {
+      isAuthenticated: false,
+      isLoading: false,
+      userId: null,
+      email: null
+    },
+    login: vi.fn(),
+    logout: vi.fn(),
+    initialize: vi.fn()
+  }
+}));
+
 describe('Page', () => {
   let container: HTMLElement;
 
@@ -45,8 +76,18 @@ describe('Page', () => {
     document.body.appendChild(container);
   });
 
-  it('displays cognito login domain', () => {
+  it('displays landing page with title when not authenticated', () => {
     mount(Page, { target: container });
-    expect(container.textContent).toContain('Cognito:');
+    expect(container.textContent).toContain('D&D Planner');
+  });
+
+  it('displays the hero text', () => {
+    mount(Page, { target: container });
+    expect(container.textContent).toContain('Your adventure awaits');
+  });
+
+  it('displays the get started button', () => {
+    mount(Page, { target: container });
+    expect(container.textContent).toContain('Begin Your Journey');
   });
 });

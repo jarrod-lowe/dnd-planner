@@ -1,67 +1,8 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { t } from '$lib/i18n';
-  import { getHelloWorld } from '$lib/rules-engine';
-  import { checkApiHealth } from '$lib/api/health';
-  import { checkApiTest } from '$lib/api/test';
-  import { apiGet } from '$lib/api/client';
-  import { cognitoConfig } from '$lib/config/cognito';
   import { authStore } from '$lib/auth/authStore.svelte';
-  import AuthStatus from '$lib/components/AuthStatus.svelte';
-
-  let healthStatus = $state<'loading' | 'connected' | 'error'>('loading');
-  let testStatus = $state<'loading' | 'connected' | 'error'>('loading');
-  let userStatus = $state<'loading' | 'connected' | 'error'>('loading');
-  let errorMessage = $state('');
-  let testError = $state('');
-  let userError = $state('');
-  let userData = $state<string>('');
-
-  onMount(async () => {
-    // Wait for auth to finish initializing
-    while (authStore.state.isLoading) {
-      await new Promise((r) => setTimeout(r, 50));
-    }
-
-    // Only check health if authenticated
-    if (authStore.state.isAuthenticated) {
-      const [healthResult, testResult, userResponse] = await Promise.all([
-        checkApiHealth(),
-        checkApiTest(),
-        apiGet('/api/user')
-      ]);
-
-      if (healthResult.success) {
-        healthStatus = 'connected';
-      } else {
-        healthStatus = 'error';
-        errorMessage = healthResult.error ?? 'Unknown error';
-      }
-
-      if (testResult.success) {
-        testStatus = 'connected';
-      } else {
-        testStatus = 'error';
-        testError = testResult.error ?? 'Unknown error';
-      }
-
-      if (userResponse.ok) {
-        const data = await userResponse.json();
-        userData = JSON.stringify(data, null, 2);
-        userStatus = 'connected';
-      } else {
-        userStatus = 'error';
-        userError = `HTTP ${userResponse.status}`;
-      }
-    } else {
-      healthStatus = 'error';
-      testStatus = 'error';
-      userStatus = 'error';
-      errorMessage = $t('status.notAuthenticated');
-      testError = $t('status.notAuthenticated');
-      userError = $t('status.notAuthenticated');
-    }
-  });
+  import LandingPage from '$lib/components/LandingPage.svelte';
+  import TopBar from '$lib/components/TopBar.svelte';
+  import { t } from '$lib/i18n';
 
   const title = $derived($t('app.title'));
 </script>
@@ -70,95 +11,79 @@
   <title>{title}</title>
 </svelte:head>
 
-<main id="main-content">
-  <h1>{$t('app.title')}</h1>
-
-  <AuthStatus
-    isLoading={authStore.state.isLoading}
-    isAuthenticated={authStore.state.isAuthenticated}
-    userId={authStore.state.userId}
-    onLogin={() => authStore.login()}
-    onLogout={() => authStore.logout()}
-  />
-
-  <p>{$t(getHelloWorld())}</p>
-  <p>{$t('app.description')}</p>
-
-  {#if healthStatus === 'loading'}
-    <p class="status-loading"><span aria-hidden="true">⋯</span> {$t('status.checking')}</p>
-  {:else if healthStatus === 'connected'}
-    <p class="status-ok"><span aria-hidden="true">✓</span> {$t('status.connected')}</p>
-  {:else}
-    <p class="status-error">
-      <span aria-hidden="true">✗</span>
-      {$t('status.unavailable')}: {errorMessage}
-    </p>
-  {/if}
-
-  {#if testStatus === 'loading'}
-    <p class="status-loading"><span aria-hidden="true">⋯</span> API Test: checking...</p>
-  {:else if testStatus === 'connected'}
-    <p class="status-ok"><span aria-hidden="true">✓</span> API Test: connected</p>
-  {:else}
-    <p class="status-error">
-      <span aria-hidden="true">✗</span>
-      API Test: {testError}
-    </p>
-  {/if}
-
-  {#if userStatus === 'loading'}
-    <p class="status-loading"><span aria-hidden="true">⋯</span> API User: checking...</p>
-  {:else if userStatus === 'connected'}
-    <p class="status-ok"><span aria-hidden="true">✓</span> API User: connected</p>
-    <pre class="user-data">{userData}</pre>
-  {:else}
-    <p class="status-error">
-      <span aria-hidden="true">✗</span>
-      API User: {userError}
-    </p>
-  {/if}
-
-  <p class="status-ok">
-    <span aria-hidden="true">✓</span>
-    {$t('cognito.label')}
-    {cognitoConfig.loginDomain}
-  </p>
-</main>
+{#if authStore.state.isLoading}
+  <div id="main-content" class="loading-screen" aria-live="polite" aria-busy="true">
+    <div class="loading-spinner" aria-hidden="true"></div>
+    <span>{$t('layout.loading')}</span>
+  </div>
+{:else if !authStore.state.isAuthenticated}
+  <LandingPage onLogin={() => authStore.login()} />
+{:else}
+  <div class="app-layout">
+    <TopBar email={authStore.state.email} onLogout={() => authStore.logout()} version="v0.0.0" />
+    <main id="main-content" class="app-layout__body">
+      <p class="welcome-message">{$t('app.welcomeBack')}</p>
+      <p class="todo-placeholder">TODO</p>
+    </main>
+  </div>
+{/if}
 
 <style>
-  main {
-    max-width: 50rem;
-    margin: 0 auto;
+  .loading-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    gap: var(--spacing-lg);
+    color: var(--md-sys-color-on-surface);
+    font-family: var(--font-body);
+  }
+
+  .loading-spinner {
+    width: 3rem;
+    height: 3rem;
+    border: 3px solid var(--md-sys-color-outline-variant);
+    border-top-color: var(--md-sys-color-primary);
+    border-radius: var(--radius-full);
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .app-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .app-layout__body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     padding: var(--spacing-xl);
+    background: var(--md-sys-color-background);
   }
 
-  h1 {
-    color: var(--md-sys-color-primary);
+  .welcome-message {
+    font-family: var(--font-display);
     font-size: var(--font-size-2xl);
-    margin-bottom: var(--spacing-md);
-  }
-
-  p {
-    color: var(--md-sys-color-on-surface);
-    font-size: var(--font-size-lg);
-    line-height: 1.6;
-  }
-
-  .status-ok {
     color: var(--md-sys-color-primary);
+    margin-bottom: var(--spacing-lg);
   }
 
-  .status-error {
-    color: var(--md-sys-color-error);
-  }
-
-  .user-data {
-    background: var(--md-sys-color-surface-container);
-    color: var(--md-sys-color-on-surface);
-    padding: var(--spacing-md);
-    border-radius: var(--radius-md);
-    overflow-x: auto;
-    font-size: var(--font-size-sm);
-    margin-top: var(--spacing-sm);
+  .todo-placeholder {
+    font-family: var(--font-display);
+    font-size: var(--font-size-4xl);
+    font-weight: 700;
+    color: var(--md-sys-color-outline);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
   }
 </style>

@@ -15,18 +15,33 @@ test.describe('Home Page', () => {
     await expect(heading).toBeVisible({ timeout: 10000 });
   });
 
-  test('should display the rules engine hello world text', async ({ page }) => {
+  test('should display the hero text on landing page', async ({ page }) => {
     await page.goto('/');
 
-    const helloWorldText = page.getByText('Hello from the rules engine');
-    await expect(helloWorldText).toBeVisible({ timeout: 10000 });
+    // The landing page shows "Your adventure awaits"
+    const heroText = page.getByText('Your adventure awaits');
+    await expect(heroText).toBeVisible({ timeout: 10000 });
   });
 
-  test('should display the description paragraph', async ({ page }) => {
+  test('should display the get started button', async ({ page }) => {
     await page.goto('/');
 
-    const paragraph = page.getByText(/tablet-optimized web application/);
-    await expect(paragraph).toBeVisible({ timeout: 10000 });
+    const ctaButton = page.getByRole('button', { name: /begin your journey/i });
+    await expect(ctaButton).toBeVisible({ timeout: 10000 });
+  });
+
+  test('should display feature cards', async ({ page }) => {
+    await page.goto('/');
+
+    // Check for feature titles
+    const resourceTracking = page.getByText('Resource Tracking');
+    await expect(resourceTracking).toBeVisible({ timeout: 10000 });
+
+    const turnPlanning = page.getByText('Turn Planning');
+    await expect(turnPlanning).toBeVisible({ timeout: 10000 });
+
+    const tabletOptimized = page.getByText('Tablet Optimized');
+    await expect(tabletOptimized).toBeVisible({ timeout: 10000 });
   });
 });
 
