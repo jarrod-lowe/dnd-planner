@@ -69,7 +69,7 @@ func TestInstantiate_StripsSeedPrefix(t *testing.T) {
 	ctx := context.Background()
 	seedRecords := []map[string]any{
 		{
-			"PK":          "SEED#USER#test-user/CHAR#test-char",
+			"PK":          "SEED#USER#test-user",
 			"SK":          "CHAR#test-char",
 			"gsiSeedPK":   "SEED#CHAR",
 			"characterId": "test-char",
@@ -98,8 +98,8 @@ func TestInstantiate_StripsSeedPrefix(t *testing.T) {
 	}
 
 	// PK should have SEED# prefix stripped
-	if records[0]["PK"] != "USER#test-user/CHAR#test-char" {
-		t.Errorf("expected PK to be USER#test-user/CHAR#test-char (SEED# stripped), got %v", records[0]["PK"])
+	if records[0]["PK"] != "USER#test-user" {
+		t.Errorf("expected PK to be USER#test-user (SEED# stripped), got %v", records[0]["PK"])
 	}
 }
 
@@ -108,7 +108,7 @@ func TestInstantiate_RemovesGsiSeedPK(t *testing.T) {
 	ctx := context.Background()
 	seedRecords := []map[string]any{
 		{
-			"PK":          "SEED#USER#test-user/CHAR#test-char",
+			"PK":          "SEED#USER#test-user",
 			"SK":          "CHAR#test-char",
 			"gsiSeedPK":   "SEED#CHAR",
 			"characterId": "test-char",
@@ -147,7 +147,7 @@ func TestInstantiate_SubstitutesVariables(t *testing.T) {
 	ctx := context.Background()
 	seedRecords := []map[string]any{
 		{
-			"PK":          "SEED#USER#$(userId)/CHAR#$(characterId)",
+			"PK":          "SEED#USER#$(userId)",
 			"SK":          "CHAR#$(characterId)",
 			"gsiSeedPK":   "SEED#CHAR",
 			"characterId": "$(characterId)",
@@ -182,8 +182,8 @@ func TestInstantiate_SubstitutesVariables(t *testing.T) {
 	}
 
 	// Verify variable substitution in PK (after SEED# stripped)
-	if records[0]["PK"] != "USER#user-123/CHAR#char-456" {
-		t.Errorf("expected PK to be USER#user-123/CHAR#char-456, got %v", records[0]["PK"])
+	if records[0]["PK"] != "USER#user-123" {
+		t.Errorf("expected PK to be USER#user-123, got %v", records[0]["PK"])
 	}
 
 	// Verify variable substitution in SK
@@ -213,7 +213,7 @@ func TestInstantiate_CopiesAllFields(t *testing.T) {
 	ctx := context.Background()
 	seedRecords := []map[string]any{
 		{
-			"PK":          "SEED#USER#$(userId)/CHAR#$(characterId)",
+			"PK":          "SEED#USER#$(userId)",
 			"SK":          "CHAR#$(characterId)",
 			"gsiSeedPK":   "SEED#CHAR",
 			"characterId": "$(characterId)",
@@ -271,7 +271,7 @@ func TestInstantiate_PreservesNonStringTypes(t *testing.T) {
 	ctx := context.Background()
 	seedRecords := []map[string]any{
 		{
-			"PK":                "SEED#USER#$(userId)/CHAR#$(characterId)",
+			"PK":                "SEED#USER#$(userId)",
 			"SK":                "CHAR#$(characterId)",
 			"gsiSeedPK":         "SEED#CHAR",
 			"characterId":       "$(characterId)",
@@ -328,7 +328,7 @@ func TestInstantiate_WritesToDynamoDB(t *testing.T) {
 	ctx := context.Background()
 	seedRecords := []map[string]any{
 		{
-			"PK":          "SEED#USER#$(userId)/CHAR#$(characterId)",
+			"PK":          "SEED#USER#$(userId)",
 			"SK":          "CHAR#$(characterId)",
 			"gsiSeedPK":   "SEED#CHAR",
 			"characterId": "$(characterId)",
@@ -400,7 +400,7 @@ func TestInstantiate_WriteFails_ReturnsError(t *testing.T) {
 	ctx := context.Background()
 	seedRecords := []map[string]any{
 		{
-			"PK":        "SEED#USER#$(userId)/CHAR#$(characterId)",
+			"PK":        "SEED#USER#$(userId)",
 			"SK":        "CHAR#$(characterId)",
 			"gsiSeedPK": "SEED#CHAR",
 		},

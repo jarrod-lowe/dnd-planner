@@ -46,7 +46,7 @@ Templates for new character creation. Both have `gsiSeedPK = "SEED#CHAR"` so the
 
 #### CHAR Record Seed
 
-- PK = `SEED#USER#$(userId)/CHAR#$(characterId)`
+- PK = `SEED#USER#$(userId)`
 - SK = `CHAR#$(characterId)`
 - gsiSeedPK = `SEED#CHAR`
 - type = `CHAR`

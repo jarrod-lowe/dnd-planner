@@ -49,7 +49,7 @@ func TestHandle_ValidRequest_Returns201(t *testing.T) {
 
 	seedRecords := []map[string]any{
 		{
-			"PK":          "SEED#USER#$(userId)/CHAR#$(characterId)",
+			"PK":          "SEED#USER#$(userId)",
 			"SK":          "CHAR#$(characterId)",
 			"gsiSeedPK":   "SEED#CHAR",
 			"type":        "CHAR",
@@ -128,7 +128,7 @@ func TestHandle_ValidRequest_ReturnsCharacterFields(t *testing.T) {
 
 	seedRecords := []map[string]any{
 		{
-			"PK":          "SEED#USER#$(userId)/CHAR#$(characterId)",
+			"PK":          "SEED#USER#$(userId)",
 			"SK":          "CHAR#$(characterId)",
 			"gsiSeedPK":   "SEED#CHAR",
 			"type":        "CHAR",
@@ -369,7 +369,7 @@ func TestHandle_ExtractsUserIdFromJWT(t *testing.T) {
 
 	seedRecords := []map[string]any{
 		{
-			"PK":          "SEED#USER#$(userId)/CHAR#$(characterId)",
+			"PK":          "SEED#USER#$(userId)",
 			"SK":          "CHAR#$(characterId)",
 			"gsiSeedPK":   "SEED#CHAR",
 			"characterId": "$(characterId)",
@@ -430,7 +430,7 @@ func TestHandle_QueriesCharSeeds(t *testing.T) {
 
 	seedRecords := []map[string]any{
 		{
-			"PK":        "SEED#USER#$(userId)/CHAR#$(characterId)",
+			"PK":        "SEED#USER#$(userId)",
 			"SK":        "CHAR#$(characterId)",
 			"gsiSeedPK": "SEED#CHAR",
 			"species":   "$(species)",
@@ -482,7 +482,7 @@ func TestHandle_GeneratesValidUUID(t *testing.T) {
 
 	seedRecords := []map[string]any{
 		{
-			"PK":          "SEED#USER#$(userId)/CHAR#$(characterId)",
+			"PK":          "SEED#USER#$(userId)",
 			"SK":          "CHAR#$(characterId)",
 			"gsiSeedPK":   "SEED#CHAR",
 			"characterId": "$(characterId)",
@@ -545,7 +545,7 @@ func TestBuildCharacterResponse_FieldAgnostic(t *testing.T) {
 	characterID := "char-123"
 	records := []map[string]any{
 		{
-			"PK":          "USER#user-123/CHAR#" + characterID,
+			"PK":          "USER#user-123",
 			"SK":          "CHAR#" + characterID,
 			"type":        "CHAR",
 			"characterId": characterID,
@@ -679,7 +679,7 @@ func TestHandle_WriteFails_Returns500(t *testing.T) {
 
 	seedRecords := []map[string]any{
 		{
-			"PK":        "SEED#USER#$(userId)/CHAR#$(characterId)",
+			"PK":        "SEED#USER#$(userId)",
 			"SK":        "CHAR#$(characterId)",
 			"gsiSeedPK": "SEED#CHAR",
 			"species":   "$(species)",
