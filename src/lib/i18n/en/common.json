@@ -54,6 +54,10 @@
     "loading": "Loading characters...",
     "createError": "Failed to create character. Please try again."
   },
+  "species": {
+    "label": "Species",
+    "human": "Human"
+  },
   "play": {
     "backToSelection": "Back to Character Selection"
   }

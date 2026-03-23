@@ -21,11 +21,11 @@
     }
   });
 
-  async function handleCreateCharacter(name: string) {
+  async function handleCreateCharacter(name: string, species: string) {
     isCreating = true;
     createError = null;
     try {
-      await characterStore.createCharacter(name);
+      await characterStore.createCharacter(name, species);
       showDialog = false;
     } catch {
       createError = $t('character.createError');

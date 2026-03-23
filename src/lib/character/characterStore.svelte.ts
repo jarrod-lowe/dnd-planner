@@ -88,11 +88,11 @@ function clearSelection(): void {
  * Create a new character.
  * POSTs to /api/characters and auto-selects the new character.
  */
-async function createCharacter(name: string): Promise<void> {
+async function createCharacter(name: string, species: string): Promise<void> {
   state = { ...state, isLoading: true, error: null };
 
   try {
-    const response = await apiPost('/api/characters', { name });
+    const response = await apiPost('/api/characters', { name, species });
 
     if (!response.ok) {
       throw new Error(`Failed to create character: ${response.status}`);
