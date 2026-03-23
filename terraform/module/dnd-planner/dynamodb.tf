@@ -12,8 +12,24 @@ resource "aws_dynamodb_table" "data" {
     type = "S"
   }
 
+  attribute {
+    name = "gsiSeedPK"
+    type = "S"
+  }
+
   hash_key  = "PK"
   range_key = "SK"
+
+  global_secondary_index {
+    name = "gsiSeed"
+
+    key_schema {
+      attribute_name = "gsiSeedPK"
+      key_type       = "HASH"
+    }
+
+    projection_type = "ALL"
+  }
 
   tags = {
     Name = "${local.resource_prefix}-data"

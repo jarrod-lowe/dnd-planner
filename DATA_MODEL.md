@@ -7,23 +7,77 @@
 - PK=CHAR#{characterId}, SK=RULEGROUP#{ruleGroupId}
 - PK=RULEGROUP#{ruleGroupId}, SK=META#
 
-## Defaults Record
+## Global Secondary Indexes
 
-Defaults information.
+### gsiSeed
 
-- PK = `SEED#<type>`
-- SK = based on what the record the default will be copied into
-- type = `SEED` or type of the record the default will be copied into
-- ... records to duplicate ...
+Enables querying seed records by trigger type. Used by instantiation processes to find all seeds for a given trigger.
+
+- **Index Name:** `gsiSeed`
+- **Partition Key:** `gsiSeedPK` (String)
+- **Query Pattern:** `Query gsiSeed WHERE gsiSeedPK = "SEED#<trigger>"`
+
+| gsiSeedPK Value | Purpose                          |
+| --------------- | -------------------------------- |
+| `SEED#USER`     | Seeds for new user creation      |
+| `SEED#CHAR`     | Seeds for new character creation |
+
+## Seed Records
+
+Template records used for creating new entities. Each seed contains placeholder variables (e.g., `$(userId)`, `$(now)`) that are substituted during creation.
 
 ### User Seed Record
 
-Template for new user creation. Managed by Terraform.
+Template for new user creation. Managed by Terraform. Triggered by Cognito post-confirmation.
 
-- PK = `SEED#USER`
+- PK = `SEED#USER#$(userId)`
 - SK = `META#`
-- type = `SEED`
+- gsiSeedPK = `SEED#USER`
+- type = `USER`
+- userId = `$(userId)`
+- email = `$(email)`
 - charQuotaRemaining = default character quota for new users (e.g., 10)
+- createdAt = `$(now)`
+- updatedAt = `$(now)`
+
+### Character Seed Records
+
+Templates for new character creation. Both have `gsiSeedPK = "SEED#CHAR"` so they're queried together.
+
+#### CHAR Record Seed
+
+- PK = `SEED#USER#$(userId)/CHAR#$(characterId)`
+- SK = `CHAR#$(characterId)`
+- gsiSeedPK = `SEED#CHAR`
+- type = `CHAR`
+- characterId = `$(characterId)`
+- userId = `$(userId)`
+- name = `$(name)`
+- createdAt = `$(now)`
+- updatedAt = `$(now)`
+
+#### CHAR_RULEGROUP Record Seed
+
+- PK = `SEED#CHAR#$(characterId)/RULEGROUP#base`
+- SK = `RULEGROUP#base`
+- gsiSeedPK = `SEED#CHAR`
+- type = `CHAR`
+- characterId = `$(characterId)`
+- ruleGroupId = `base` (fixed, points to the base rule group)
+- userId = `$(userId)`
+- enabled = `true`
+- createdAt = `$(now)`
+- updatedAt = `$(now)`
+
+### Variable Placeholders
+
+| Placeholder      | Description       | Source                |
+| ---------------- | ----------------- | --------------------- |
+| `$(userId)`      | User ID           | Cognito or request    |
+| `$(characterId)` | Character ID      | Generated GUID        |
+| `$(name)`        | Character name    | Request body          |
+| `$(email)`       | User email        | Cognito               |
+| `$(now)`         | Current timestamp | System time (RFC3339) |
 
 ## User Record
 
