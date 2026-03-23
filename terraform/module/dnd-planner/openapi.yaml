@@ -176,6 +176,104 @@ paths:
         httpMethod: POST
         uri: '${create_character_uri}'
 
+  /characters/{characterId}:
+    get:
+      summary: Get a character by ID
+      description: Returns a character if owned by the authenticated user
+      operationId: getCharacter
+      parameters:
+        - name: characterId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Character retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  characterId:
+                    type: string
+                  userId:
+                    type: string
+                  name:
+                    type: string
+                  species:
+                    type: string
+                  vars:
+                    type: string
+                  createdAt:
+                    type: string
+                  updatedAt:
+                    type: string
+        '403':
+          description: Forbidden - character not found or not owned by user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+      x-amazon-apigateway-integration:
+        type: aws
+        credentials: '${api_gateway_role_arn}'
+        uri: 'arn:aws:apigateway:${aws_region}:dynamodb:action/Query'
+        httpMethod: POST
+        requestTemplates:
+          application/json: |
+            {
+              "TableName": "${dynamodb_table_name}",
+              "KeyConditionExpression": "PK = :pk AND SK = :sk",
+              "ExpressionAttributeValues": {
+                ":pk": {"S": "USER#$context.authorizer.claims.sub"},
+                ":sk": {"S": "CHAR#$input.params('characterId')"}
+              }
+            }
+        responses:
+          default:
+            statusCode: 200
+            responseTemplates:
+              application/json: |
+                #set($items = $input.path('$.Items'))
+                #if($items.size() == 0)
+                #set($context.responseOverride.status = 403)
+                {"error": "Forbidden"}
+                #else
+                #set($item = $items.get(0))
+                {
+                #set($first = true)
+                #foreach($key in $item.keySet())
+                  #if($key != "PK" && $key != "SK")
+                    #if($first)
+                    #set($first = false)
+                    #else
+                    ,
+                    #end
+                    #set($typed = $item.get($key))
+                    #if($typed.containsKey("S"))
+                    "$key": "$util.escapeJavaScript($typed.get('S')).replaceAll("\\'","'")"
+                    #elseif($typed.containsKey("N"))
+                    "$key": $typed.get('N')
+                    #elseif($typed.containsKey("BOOL"))
+                    "$key": $typed.get('BOOL')
+                    #elseif($typed.containsKey("L"))
+                    "$key": $util.toJson($typed.get('L'))
+                    #elseif($typed.containsKey("NULL"))
+                    "$key": null
+                    #else
+                    "$key": $util.toJson($typed)
+                    #end
+                  #end
+                #end
+                }
+                #end
+
   /user:
     get:
       summary: Get current user data
