@@ -13,6 +13,7 @@ These rules are critical. Keep them through compactions, and add them into an pl
 ### Infrastructure Operations
 
 - **NEVER run `terraform` commands directly.** Always use Make targets:
+  - `make clean` - clean up state (useful if .terraform is in an inconsistent state)
   - `make setup-state` - Setup state infrastructure
   - `make setup-aws` - Setup AWS infrastructure (OIDC, IAM roles)
   - `make setup-github` - Setup GitHub configuration
@@ -24,7 +25,7 @@ These rules are critical. Keep them through compactions, and add them into an pl
 - **AWS commands** are permitted for read-only operations, but always set the profile:
 
   ```bash
-  AWS_PROFILE=dnd-planner-ro aws <read-only-command>
+  aws <read-only-command> --profile dnd-planner-ro --region ap-southeast-2
   ```
 
 Avoid `$(...)` in commands, as they trigger security checks that slow you down.

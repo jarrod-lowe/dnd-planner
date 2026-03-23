@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: species-human
+    name: rule.species-human.constants.name
+    description: rule.species-human.constants.description
+    rules:
+      # Max Distance
+      - id: set-base-distance
+        phase: early
+        group:
+          - species-constants
+        activities:
+          - type: numberSet
+            target: character.movement.total
+            number: 30

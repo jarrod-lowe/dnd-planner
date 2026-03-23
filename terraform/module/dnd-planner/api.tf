@@ -98,6 +98,7 @@ resource "aws_api_gateway_rest_api" "api" {
   body = templatefile("${path.module}/openapi.yaml", {
     cognito_user_pool_arn = aws_cognito_user_pool.cognito.arn
     test_handler_uri      = "arn:aws:apigateway:${data.aws_region.current.region}:lambda:path/2015-03-31/functions/${module.test_handler.arn}/invocations"
+    create_character_uri  = "arn:aws:apigateway:${data.aws_region.current.region}:lambda:path/2015-03-31/functions/${module.create_character.arn}/invocations"
     dynamodb_table_name   = aws_dynamodb_table.data.name
     api_gateway_role_arn  = aws_iam_role.api_dynamodb.arn
     aws_region            = data.aws_region.current.region

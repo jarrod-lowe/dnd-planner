@@ -53,12 +53,14 @@ Templates for new character creation. Both have `gsiSeedPK = "SEED#CHAR"` so the
 - characterId = `$(characterId)`
 - userId = `$(userId)`
 - name = `$(name)`
+- species = `$(species)`
+- vars = JSON of the default base variables
 - createdAt = `$(now)`
 - updatedAt = `$(now)`
 
 #### CHAR_RULEGROUP Record Seed
 
-- PK = `SEED#CHAR#$(characterId)/RULEGROUP#base`
+- PK = `SEED#CHAR#$(characterId)`
 - SK = `RULEGROUP#base`
 - gsiSeedPK = `SEED#CHAR`
 - type = `CHAR`
@@ -104,15 +106,8 @@ Represents a character user is playing (a PC).
 - characterId = unique ID for the character (GUID)
 - userId = owner of the character
 - name = character name
-- race = D&D race (e.g. `elf`, `human`)
-- baseStats = object containing base attributes
-  - str = number
-  - dex = number
-  - con = number
-  - int = number
-  - wis = number
-  - cha = number
-- ... additional character metadata as needed ...
+- species = the species code
+- vars = JSON of the default base variables
 
 ## Character Rule Group Assignment Record
 
