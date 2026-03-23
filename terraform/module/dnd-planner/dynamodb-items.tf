@@ -68,6 +68,20 @@ resource "aws_dynamodb_table_item" "char_seed" {
     name = {
       S = "$(name)"
     }
+    species = {
+      S = "$(species)"
+    }
+    vars = {
+      S = jsonencode({
+        # default character config goes here
+        "stats.str.start" : 10,
+        "stats.dex.start" : 10,
+        "stats.con.start" : 10,
+        "stats.int.start" : 10,
+        "stats.wis.start" : 10,
+        "stats.cha.start" : 10,
+      })
+    }
     createdAt = {
       S = "$(now)"
     }
@@ -85,7 +99,7 @@ resource "aws_dynamodb_table_item" "char_rulegroup_seed" {
 
   item = jsonencode({
     PK = {
-      S = "SEED#CHAR#$(characterId)/RULEGROUP#base"
+      S = "SEED#CHAR#$(characterId)"
     }
     SK = {
       S = "RULEGROUP#base"
@@ -101,6 +115,46 @@ resource "aws_dynamodb_table_item" "char_rulegroup_seed" {
     }
     ruleGroupId = {
       S = "base"
+    }
+    userId = {
+      S = "$(userId)"
+    }
+    enabled = {
+      BOOL = true
+    }
+    createdAt = {
+      S = "$(now)"
+    }
+    updatedAt = {
+      S = "$(now)"
+    }
+  })
+}
+
+# Species rule group seed - creates the species-specific rule group assignment
+resource "aws_dynamodb_table_item" "char_species_rulegroup_seed" {
+  table_name = aws_dynamodb_table.data.name
+  hash_key   = "PK"
+  range_key  = "SK"
+
+  item = jsonencode({
+    PK = {
+      S = "SEED#CHAR#$(characterId)"
+    }
+    SK = {
+      S = "RULEGROUP#species-$(species)"
+    }
+    gsiSeedPK = {
+      S = "SEED#CHAR"
+    }
+    type = {
+      S = "CHAR"
+    }
+    characterId = {
+      S = "$(characterId)"
+    }
+    ruleGroupId = {
+      S = "species-$(species)"
     }
     userId = {
       S = "$(userId)"

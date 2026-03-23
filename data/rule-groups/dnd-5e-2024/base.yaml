@@ -1,12 +1,14 @@
 # yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: base
-    name: rule.dnd-5e-2024-base.name
-    description: rule.dnd-5e-2024-base.description
+    name: rule.dnd-5e-2024.base.name
+    description: rule.dnd-5e-2024.base.description
     rules:
       # Movement Action
       - id: action-move-reset
         phase: early
+        after:
+          - group: species-constants
         activities:
           - type: numberCopy
             source: character.movement.total
@@ -23,7 +25,7 @@ ruleGroups:
                   operator: greaterThan
                   value: 0
                 illegalDiagnostics:
-                  - code: rule.dnd-5e-2024-base.action-move-offer.out_of_movement
+                  - code: rule.dnd-5e-2024.base.action-move-offer.out_of_movement
                     severity: error
             rule:
               id: move
