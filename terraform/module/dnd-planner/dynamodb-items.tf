@@ -48,7 +48,7 @@ resource "aws_dynamodb_table_item" "char_seed" {
 
   item = jsonencode({
     PK = {
-      S = "SEED#USER#$(userId)/CHAR#$(characterId)"
+      S = "SEED#USER#$(userId)"
     }
     SK = {
       S = "CHAR#$(characterId)"
