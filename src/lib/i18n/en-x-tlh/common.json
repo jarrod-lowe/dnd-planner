@@ -54,6 +54,10 @@
     "loading": "nuv DIvI'...",
     "createError": "nuv chenmoHlaHbe'. yInIDqa'."
   },
+  "species": {
+    "label": "Segh",
+    "human": "Human"
+  },
   "play": {
     "backToSelection": "nuv DIvI' HI'egh"
   }

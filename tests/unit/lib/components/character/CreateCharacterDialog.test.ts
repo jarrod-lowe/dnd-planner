@@ -9,7 +9,9 @@ const translations: Record<string, string> = {
   'character.create': 'Create',
   'character.cancel': 'Cancel',
   'character.creating': 'Creating...',
-  'character.createError': 'Failed to create character. Please try again.'
+  'character.createError': 'Failed to create character. Please try again.',
+  'species.label': 'Species',
+  'species.human': 'Human'
 };
 
 // Mock $lib/i18n module for this test file
@@ -142,7 +144,7 @@ describe('CreateCharacterDialog', () => {
     );
     createButton?.click();
 
-    expect(onCreate).toHaveBeenCalledWith('Gandalf');
+    expect(onCreate).toHaveBeenCalledWith('Gandalf', 'human');
   });
 
   it('calls onClose when Cancel is clicked', () => {
@@ -293,5 +295,87 @@ describe('CreateCharacterDialog', () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(onClearError).toHaveBeenCalledOnce();
+  });
+
+  // Species Selection Tests
+  describe('Species Selection', () => {
+    it('renders a species dropdown', () => {
+      mount(CreateCharacterDialog, {
+        target: container,
+        props: {
+          isOpen: true,
+          isCreating: false,
+          onCreate: vi.fn(),
+          onClose: vi.fn()
+        }
+      });
+
+      const select = container.querySelector('select');
+      expect(select).toBeTruthy();
+    });
+
+    it('includes Human as an option in the species dropdown', () => {
+      mount(CreateCharacterDialog, {
+        target: container,
+        props: {
+          isOpen: true,
+          isCreating: false,
+          onCreate: vi.fn(),
+          onClose: vi.fn()
+        }
+      });
+
+      const select = container.querySelector('select');
+      const options = Array.from(select?.options ?? []);
+      const humanOption = options.find((opt) => opt.value === 'human');
+
+      expect(humanOption).toBeTruthy();
+      expect(humanOption?.textContent).toBe('Human');
+    });
+
+    it('defaults species to human', () => {
+      mount(CreateCharacterDialog, {
+        target: container,
+        props: {
+          isOpen: true,
+          isCreating: false,
+          onCreate: vi.fn(),
+          onClose: vi.fn()
+        }
+      });
+
+      const select = container.querySelector('select') as HTMLSelectElement;
+      expect(select?.value).toBe('human');
+    });
+
+    it('calls onCreate with name and species when Create is clicked', async () => {
+      const onCreate = vi.fn();
+
+      mount(CreateCharacterDialog, {
+        target: container,
+        props: {
+          isOpen: true,
+          isCreating: false,
+          onCreate,
+          onClose: vi.fn()
+        }
+      });
+
+      // Fill in the name
+      const input = container.querySelector('input[type="text"]') as HTMLInputElement;
+      input.focus();
+      input.value = 'Legolas';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Click Create
+      const createButton = Array.from(container.querySelectorAll('button')).find((b) =>
+        b.textContent?.includes('Create')
+      );
+      createButton?.click();
+
+      expect(onCreate).toHaveBeenCalledWith('Legolas', 'human');
+    });
   });
 });

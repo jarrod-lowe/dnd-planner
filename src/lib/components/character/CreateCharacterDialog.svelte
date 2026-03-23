@@ -1,10 +1,14 @@
 <script lang="ts">
   import { t } from '$lib/i18n';
 
+  // Available species options (hardcoded for now, will expand later)
+  const SPECIES_OPTIONS = ['human'] as const;
+  type Species = (typeof SPECIES_OPTIONS)[number];
+
   interface Props {
     isOpen: boolean;
     isCreating: boolean;
-    onCreate: (name: string) => void;
+    onCreate: (name: string, species: Species) => void;
     onClose: () => void;
     errorMessage?: string | null;
     onClearError?: () => void;
@@ -19,11 +23,12 @@
     onClearError
   }: Props = $props();
   let characterName = $state('');
+  let selectedSpecies = $state<Species>('human');
 
   function handleSubmit() {
     const trimmedName = characterName.trim();
     if (trimmedName) {
-      onCreate(trimmedName);
+      onCreate(trimmedName, selectedSpecies);
     }
   }
 
@@ -63,6 +68,20 @@
         aria-label={$t('character.enterName')}
         oninput={() => onClearError?.()}
       />
+
+      <label class="dialog__label">
+        {$t('species.label')}
+        <select
+          class="dialog__select"
+          bind:value={selectedSpecies}
+          disabled={isCreating}
+          aria-label={$t('species.label')}
+        >
+          {#each SPECIES_OPTIONS as species (species)}
+            <option value={species}>{$t(`species.${species}`)}</option>
+          {/each}
+        </select>
+      </label>
 
       {#if errorMessage}
         <p class="dialog__error" role="alert" aria-live="polite">
@@ -146,6 +165,39 @@
 
   .dialog__input::placeholder {
     color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .dialog__label {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .dialog__select {
+    width: 100%;
+    padding: var(--spacing-md);
+    font-family: var(--font-body);
+    font-size: var(--font-size-md);
+    color: var(--md-sys-color-on-surface);
+    background: var(--md-sys-color-surface);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    min-height: 2.75rem;
+    transition: border-color var(--transition-fast);
+  }
+
+  .dialog__select:focus {
+    outline: none;
+    border-color: var(--md-sys-color-primary);
+  }
+
+  .dialog__select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   .dialog__error {
