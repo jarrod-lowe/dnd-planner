@@ -233,7 +233,7 @@ validate: $(addprefix validate-,$(ENVS))
 
 # Security scan
 security:
-	docker run --rm -v $(PWD)/terraform:/tf aquasec/trivy:latest config --severity CRITICAL,HIGH /tf
+	docker run --rm -v $(PWD)/terraform:/tf aquasec/trivy:0.69.3 config --severity CRITICAL,HIGH /tf
 
 # Run all tests (terraform + frontend)
 test: validate security test-unit test-e2e lint
