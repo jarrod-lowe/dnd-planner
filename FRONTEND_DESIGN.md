@@ -34,13 +34,13 @@ The top bar should be the same height in both modes.
 
 #### Top-bar (select character mode)
 
-On the left, "Select your character" or similar.
+On the left, "Select your character" or similar. - DONE
 
 On the right, a user dropdown menu with a Gravatar icon. When opened, it should show the user email, a logout button, and the version (v0.0.0 for now; versioning isn't done). It should behave in a properly a11y way. - DONE
 
 #### Top-bar (play character mode)
 
-On the left, the character name and species.
+On the left, the character name and species. - DONE
 
 On the right, the same user dropdown men as in select character mode. - DONE
 
@@ -56,13 +56,15 @@ To create a new character, the user must be part of the MayCreateCharacters cogn
 
 #### Main body (play character mode)
 
-Not yet designed - it should just say the character name, and TODO
-
 The main body is split into four parts, from the left to right:
 
-- Stats column, intended to contain a quick view of resource and statistic information. Shows movement current/max and TODO for now. (narrow)
+- Stats column, intended to contain a quick view of resource and statistic information. (narrow)
 - Possible choices column, a vertical list of small "choice" panels, one for each availableRules entry. (wide)
 - Plan column, where the choices the user has selected are shown. (wide)
 - Journal column, which will just have a TODO for now. (narrow)
 
+The stats column will eventually be dynamic, but for now just shows the movement current/max and a "TODO".
+
 Users can add entries from the possible choices column into the plan, and remove choices from the plan. Every change results in a re-run of the rules engine, which will update the possible choices and resources and stats shown around the display.
+
+On startup, the system will need to pull the users rule groups from the API. GET `/api/characters/{id}/rule-groups` returns the ids of the rule groups that are relevant. POST `/api/rule-groups/batch` returns all the requested rule groups (max 100, so multiple request might be necessary).

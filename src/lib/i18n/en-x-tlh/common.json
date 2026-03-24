@@ -60,6 +60,35 @@
     "human": "Human"
   },
   "play": {
-    "backToSelection": "nuv DIvI' HI'egh"
+    "backToSelection": "nuv DIvI' HI'egh",
+    "stats": {
+      "title": "DIvI'",
+      "movement": "vIH",
+      "currentMax": "{current} / {max}",
+      "todo": "TODO"
+    },
+    "choices": {
+      "title": "DuH DIvI'",
+      "loading": "DuH DIvI'...",
+      "empty": "DuH DIvI'be'",
+      "illegal": "DuH DIvI'be'",
+      "inapplicable": "DuH lo'laHbe'",
+      "addToPlan": "DIvI' chel",
+      "removeFromPlan": "DIvI' teq"
+    },
+    "plan": {
+      "title": "DIvI'lIj",
+      "empty": "DIvI'be'",
+      "moveUp": "Dung jaH",
+      "moveDown": "bIng jaH",
+      "remove": "teq"
+    },
+    "journal": {
+      "title": "DIvI' teywI'",
+      "todo": "TODO"
+    },
+    "error": {
+      "loadRuleGroups": "nuv DIvI' laHbe'"
+    }
   }
 }
