@@ -45,8 +45,17 @@ vi.mock('$lib/play/playStore.svelte', () => ({
           collections: {},
           availableRules: [],
           diagnostics: { errors: [], warnings: [], notices: [] },
-          trace: { appliedRuleIds: [], appliedActivityIds: [], providedCapabilities: [], emittedEvents: [] },
-          next: { schemaVersion: 1, rules: { standing: [], planned: [], effects: [] }, state: { facts: {} } }
+          trace: {
+            appliedRuleIds: [],
+            appliedActivityIds: [],
+            providedCapabilities: [],
+            emittedEvents: []
+          },
+          next: {
+            schemaVersion: 1,
+            rules: { standing: [], planned: [], effects: [] },
+            state: { facts: {} }
+          }
         },
         isEvaluating: false,
         plannedItems: [],

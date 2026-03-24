@@ -12,10 +12,7 @@ const createMockEntry = (id: string, description?: string): AvailableRuleEntry =
 
 describe('ChoicesColumn', () => {
   it('renders list of choice panels', () => {
-    const entries = [
-      createMockEntry('rule-1', 'Attack'),
-      createMockEntry('rule-2', 'Move')
-    ];
+    const entries = [createMockEntry('rule-1', 'Attack'), createMockEntry('rule-2', 'Move')];
 
     const { getByText } = render(ChoicesColumn, {
       props: { entries, onChoiceTap: vi.fn() }
@@ -56,10 +53,7 @@ describe('ChoicesColumn', () => {
   });
 
   it('has accessible list structure', () => {
-    const entries = [
-      createMockEntry('rule-1'),
-      createMockEntry('rule-2')
-    ];
+    const entries = [createMockEntry('rule-1'), createMockEntry('rule-2')];
 
     const { container } = render(ChoicesColumn, {
       props: { entries, onChoiceTap: vi.fn() }

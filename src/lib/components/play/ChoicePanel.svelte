@@ -21,9 +21,7 @@
     return ` (${$t(key)})`;
   });
 
-  const ariaLabel = $derived(
-    `${entry.rule.description || entry.rule.id}${warningLabel()}`
-  );
+  const ariaLabel = $derived(`${entry.rule.description || entry.rule.id}${warningLabel()}`);
 </script>
 
 <button
@@ -54,7 +52,9 @@
     border-radius: var(--radius-md);
     cursor: pointer;
     text-align: left;
-    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+    transition:
+      background-color var(--transition-fast),
+      border-color var(--transition-fast);
   }
 
   .choice-panel:hover {

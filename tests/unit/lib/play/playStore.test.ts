@@ -53,8 +53,17 @@ describe('playStore', () => {
         collections: {},
         availableRules: [],
         diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: { appliedRuleIds: [], appliedActivityIds: [], providedCapabilities: [], emittedEvents: [] },
-        next: { schemaVersion: 1, rules: { standing: [], planned: [], effects: [] }, state: { facts: {} } }
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
       } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
@@ -62,7 +71,9 @@ describe('playStore', () => {
       await playStore.loadRuleGroups('char-123');
 
       expect(mockApiGet).toHaveBeenCalledWith('/api/characters/char-123/rule-groups');
-      expect(mockApiPost).toHaveBeenCalledWith('/api/rule-groups/batch', { ids: ['group-1', 'group-2'] });
+      expect(mockApiPost).toHaveBeenCalledWith('/api/rule-groups/batch', {
+        ids: ['group-1', 'group-2']
+      });
       expect(playStore.state.ruleGroups).toEqual(mockRules);
     });
 
@@ -79,8 +90,14 @@ describe('playStore', () => {
       } as Response);
 
       // Mock two batch responses
-      const batch1Rules: Rule[] = Array.from({ length: 100 }, (_, i) => ({ id: `rule-${i}`, activities: [] }));
-      const batch2Rules: Rule[] = Array.from({ length: 50 }, (_, i) => ({ id: `rule-${i + 100}`, activities: [] }));
+      const batch1Rules: Rule[] = Array.from({ length: 100 }, (_, i) => ({
+        id: `rule-${i}`,
+        activities: []
+      }));
+      const batch2Rules: Rule[] = Array.from({ length: 50 }, (_, i) => ({
+        id: `rule-${i + 100}`,
+        activities: []
+      }));
 
       mockApiPost
         .mockResolvedValueOnce({ ok: true, json: async () => batch1Rules } as Response)
@@ -92,8 +109,17 @@ describe('playStore', () => {
         collections: {},
         availableRules: [],
         diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: { appliedRuleIds: [], appliedActivityIds: [], providedCapabilities: [], emittedEvents: [] },
-        next: { schemaVersion: 1, rules: { standing: [], planned: [], effects: [] }, state: { facts: {} } }
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
       } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
@@ -101,8 +127,12 @@ describe('playStore', () => {
       await playStore.loadRuleGroups('char-123');
 
       expect(mockApiPost).toHaveBeenCalledTimes(2);
-      expect(mockApiPost).toHaveBeenNthCalledWith(1, '/api/rule-groups/batch', { ids: groupIds.slice(0, 100) });
-      expect(mockApiPost).toHaveBeenNthCalledWith(2, '/api/rule-groups/batch', { ids: groupIds.slice(100) });
+      expect(mockApiPost).toHaveBeenNthCalledWith(1, '/api/rule-groups/batch', {
+        ids: groupIds.slice(0, 100)
+      });
+      expect(mockApiPost).toHaveBeenNthCalledWith(2, '/api/rule-groups/batch', {
+        ids: groupIds.slice(100)
+      });
       expect(playStore.state.ruleGroups).toHaveLength(150);
     });
 
@@ -131,8 +161,17 @@ describe('playStore', () => {
         collections: {},
         availableRules: [],
         diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: { appliedRuleIds: [], appliedActivityIds: [], providedCapabilities: [], emittedEvents: [] },
-        next: { schemaVersion: 1, rules: { standing: [], planned: [], effects: [] }, state: { facts: {} } }
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
       } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
@@ -155,8 +194,17 @@ describe('playStore', () => {
         collections: {},
         availableRules: [],
         diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: { appliedRuleIds: [], appliedActivityIds: [], providedCapabilities: [], emittedEvents: [] },
-        next: { schemaVersion: 1, rules: { standing: [], planned: [], effects: [] }, state: { facts: {} } }
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
       } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
@@ -167,7 +215,9 @@ describe('playStore', () => {
       playStore.addToPlan(rule);
 
       expect(playStore.state.plannedItems).toHaveLength(2);
-      expect(playStore.state.plannedItems[0].instanceId).not.toBe(playStore.state.plannedItems[1].instanceId);
+      expect(playStore.state.plannedItems[0].instanceId).not.toBe(
+        playStore.state.plannedItems[1].instanceId
+      );
     });
   });
 
@@ -180,8 +230,17 @@ describe('playStore', () => {
         collections: {},
         availableRules: [],
         diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: { appliedRuleIds: [], appliedActivityIds: [], providedCapabilities: [], emittedEvents: [] },
-        next: { schemaVersion: 1, rules: { standing: [], planned: [], effects: [] }, state: { facts: {} } }
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
       } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
@@ -201,7 +260,9 @@ describe('playStore', () => {
       expect(playStore.state.plannedItems).toHaveLength(2);
       expect(playStore.state.plannedItems[0].order).toBe(0);
       expect(playStore.state.plannedItems[1].order).toBe(1);
-      expect(playStore.state.plannedItems.find(i => i.instanceId === middleInstanceId)).toBeUndefined();
+      expect(
+        playStore.state.plannedItems.find((i) => i.instanceId === middleInstanceId)
+      ).toBeUndefined();
     });
   });
 
@@ -214,8 +275,17 @@ describe('playStore', () => {
         collections: {},
         availableRules: [],
         diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: { appliedRuleIds: [], appliedActivityIds: [], providedCapabilities: [], emittedEvents: [] },
-        next: { schemaVersion: 1, rules: { standing: [], planned: [], effects: [] }, state: { facts: {} } }
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
       } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
@@ -243,8 +313,17 @@ describe('playStore', () => {
         collections: {},
         availableRules: [],
         diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: { appliedRuleIds: [], appliedActivityIds: [], providedCapabilities: [], emittedEvents: [] },
-        next: { schemaVersion: 1, rules: { standing: [], planned: [], effects: [] }, state: { facts: {} } }
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
       } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
@@ -272,8 +351,17 @@ describe('playStore', () => {
         collections: {},
         availableRules: [],
         diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: { appliedRuleIds: [], appliedActivityIds: [], providedCapabilities: [], emittedEvents: [] },
-        next: { schemaVersion: 1, rules: { standing: [], planned: [], effects: [] }, state: { facts: {} } }
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
       } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
@@ -301,8 +389,17 @@ describe('playStore', () => {
         collections: {},
         availableRules: [],
         diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: { appliedRuleIds: [], appliedActivityIds: [], providedCapabilities: [], emittedEvents: [] },
-        next: { schemaVersion: 1, rules: { standing: [], planned: [], effects: [] }, state: { facts: {} } }
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
       } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
@@ -332,8 +429,17 @@ describe('playStore', () => {
         collections: {},
         availableRules: [],
         diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: { appliedRuleIds: [], appliedActivityIds: [], providedCapabilities: [], emittedEvents: [] },
-        next: { schemaVersion: 1, rules: { standing: [], planned: [], effects: [] }, state: { facts: {} } }
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
       } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');

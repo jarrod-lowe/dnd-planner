@@ -18,7 +18,9 @@
     <div class="stats-column__item">
       <span class="stats-column__label">{$t('play.stats.movement')}</span>
       <span class="stats-column__value"
-        >{$t('play.stats.currentMax', { values: { current: movement.current, max: movement.max } })}</span
+        >{$t('play.stats.currentMax', {
+          values: { current: movement.current, max: movement.max }
+        })}</span
       >
     </div>
   {:else}

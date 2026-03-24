@@ -18,34 +18,22 @@
 </script>
 
 <div class="play-layout">
-  <section
-    class="play-layout__column play-layout__stats"
-    aria-labelledby={statsId}
-  >
+  <section class="play-layout__column play-layout__stats" aria-labelledby={statsId}>
     <h2 id={statsId} class="play-layout__header">{$t('play.stats.title')}</h2>
     {@render stats()}
   </section>
 
-  <section
-    class="play-layout__column play-layout__choices"
-    aria-labelledby={choicesId}
-  >
+  <section class="play-layout__column play-layout__choices" aria-labelledby={choicesId}>
     <h2 id={choicesId} class="play-layout__header">{$t('play.choices.title')}</h2>
     {@render choices()}
   </section>
 
-  <section
-    class="play-layout__column play-layout__plan"
-    aria-labelledby={planId}
-  >
+  <section class="play-layout__column play-layout__plan" aria-labelledby={planId}>
     <h2 id={planId} class="play-layout__header">{$t('play.plan.title')}</h2>
     {@render plan()}
   </section>
 
-  <section
-    class="play-layout__column play-layout__journal"
-    aria-labelledby={journalId}
-  >
+  <section class="play-layout__column play-layout__journal" aria-labelledby={journalId}>
     <h2 id={journalId} class="play-layout__header">{$t('play.journal.title')}</h2>
     {@render journal()}
   </section>
@@ -54,7 +42,10 @@
 <style>
   .play-layout {
     display: grid;
-    grid-template-columns: minmax(180px, 1fr) minmax(280px, 2fr) minmax(280px, 2fr) minmax(180px, 1fr);
+    grid-template-columns: minmax(180px, 1fr) minmax(280px, 2fr) minmax(280px, 2fr) minmax(
+        180px,
+        1fr
+      );
     gap: var(--spacing-md);
     height: calc(100vh - 4rem);
     padding: var(--spacing-md);
