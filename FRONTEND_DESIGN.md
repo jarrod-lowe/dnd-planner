@@ -63,8 +63,8 @@ The main body is split into four parts, from the left to right:
 - Plan column, where the choices the user has selected are shown. (wide)
 - Journal column, which will just have a TODO for now. (narrow)
 
-The stats column will eventually be dynamic, but for now just shows the movement current/max and a "TODO".
+The stats column will eventually be dynamic, but for now just shows the movement current/max and a "TODO". - DONE
 
-Users can add entries from the possible choices column into the plan, and remove choices from the plan. Every change results in a re-run of the rules engine, which will update the possible choices and resources and stats shown around the display.
+Users can add entries from the possible choices column into the plan, and remove choices from the plan. Every change results in a re-run of the rules engine, which will update the possible choices and resources and stats shown around the display. - DONE
 
-On startup, the system will need to pull the users rule groups from the API. GET `/api/characters/{id}/rule-groups` returns the ids of the rule groups that are relevant. POST `/api/rule-groups/batch` returns all the requested rule groups (max 100, so multiple request might be necessary).
+On startup, the system will need to pull the users rule groups from the API. GET `/api/characters/{id}/rule-groups` returns the ids of the rule groups that are relevant. POST `/api/rule-groups/batch` returns all the requested rule groups (max 100, so multiple request might be necessary). - DONE

@@ -30,20 +30,22 @@ describe('playStore', () => {
       const mockApiPost = vi.mocked(apiPost);
       const mockEvaluate = vi.mocked(evaluate);
 
-      // Mock rule group IDs response
+      // Mock rule group IDs response - API returns { ruleGroups: string[] }
       mockApiGet.mockResolvedValueOnce({
         ok: true,
-        json: async () => ['group-1', 'group-2']
+        json: async () => ({ ruleGroups: ['group-1', 'group-2'] })
       } as Response);
 
-      // Mock batch rules response
+      // Mock batch rules response - API returns { ruleGroups: [{ rules: "JSON string" }] }
       const mockRules: Rule[] = [
         { id: 'rule-1', activities: [] },
         { id: 'rule-2', activities: [] }
       ];
       mockApiPost.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockRules
+        json: async () => ({
+          ruleGroups: [{ ruleGroupId: 'group-1', rules: JSON.stringify(mockRules) }]
+        })
       } as Response);
 
       // Mock evaluate
@@ -86,7 +88,7 @@ describe('playStore', () => {
       const groupIds = Array.from({ length: 150 }, (_, i) => `group-${i}`);
       mockApiGet.mockResolvedValueOnce({
         ok: true,
-        json: async () => groupIds
+        json: async () => ({ ruleGroups: groupIds })
       } as Response);
 
       // Mock two batch responses
@@ -100,8 +102,18 @@ describe('playStore', () => {
       }));
 
       mockApiPost
-        .mockResolvedValueOnce({ ok: true, json: async () => batch1Rules } as Response)
-        .mockResolvedValueOnce({ ok: true, json: async () => batch2Rules } as Response);
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            ruleGroups: [{ ruleGroupId: 'batch-1', rules: JSON.stringify(batch1Rules) }]
+          })
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            ruleGroups: [{ ruleGroupId: 'batch-2', rules: JSON.stringify(batch2Rules) }]
+          })
+        } as Response);
 
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },

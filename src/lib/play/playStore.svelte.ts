@@ -65,7 +65,7 @@ async function loadRuleGroups(characterId: string): Promise<void> {
       throw new Error(`Failed to fetch rule groups: ${idsResponse.status}`);
     }
 
-    const groupIds: string[] = await idsResponse.json();
+    const { ruleGroups: groupIds } = await idsResponse.json();
 
     // Step 2: Batch fetch rule groups (max 100 per request)
     const allRules: Rule[] = [];
@@ -78,7 +78,10 @@ async function loadRuleGroups(characterId: string): Promise<void> {
         throw new Error(`Failed to fetch rule group batch: ${batchResponse.status}`);
       }
 
-      const batchRules: Rule[] = await batchResponse.json();
+      const { ruleGroups: batchGroups } = await batchResponse.json();
+      const batchRules: Rule[] = batchGroups.flatMap((rg: { rules: string }) =>
+        JSON.parse(rg.rules)
+      );
       allRules.push(...batchRules);
     }
 

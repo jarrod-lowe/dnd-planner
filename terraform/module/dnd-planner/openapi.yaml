@@ -548,7 +548,7 @@ paths:
                       "ruleGroupId": "$item.get('ruleGroupId').get('S')",
                       "type": "$item.get('type').get('S')",
                       "name": "$item.get('name').get('S')",
-                      "rules": "$item.get('rules').get('S')",
+                      "rules": "$util.escapeJavaScript($item.get('rules').get('S'))",
                       "createdAt": "$item.get('createdAt').get('S')",
                       "updatedAt": "$item.get('updatedAt').get('S')"
                     }
