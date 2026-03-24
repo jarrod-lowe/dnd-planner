@@ -407,8 +407,9 @@ Rules may declare engine-facing variables using vars.
 ```
 
 - `vars` define parameters that influence rule execution
-- `defaults` are used unless overridden by the UI
+- `default` is used if there is no matching value in `selections`
 - vars must not contain UI-only data
+- `vars[].default` uses the same structure as activity `source` values
 
 #### Selections
 
@@ -417,9 +418,7 @@ Planned rules may include:
 ```json
 {
   "selections": {
-    "distance": {
-      "number": 15
-    }
+    "distance": 15
   }
 }
 ```
@@ -520,6 +519,12 @@ source:
 
 In the case of a varName, it will look up the value in `selections` first, and
 if not present, then `vars[].default`. These will then need to be resolved.
+
+E.g.
+
+```plain
+resolved(x) = selections[x] ?? vars[x].default
+```
 
 ### `number_set`
 
@@ -1217,6 +1222,8 @@ From the engine's point of view, all three are simply combined into the evaluate
 
 ## A note on UI state
 
+FOR INFORMATIONAL PURPOSES ONLY:
+
 The rules engine does not engage with the `ui` field, it is for the user interface. The rules engine just returns it unchanged. However, for completeness:
 
 ```json
@@ -1225,7 +1232,7 @@ The rules engine does not engage with the `ui` field, it is for the user interfa
     "model": "uiModelName",
     "name": "rule.group.file.object.name", # A i18n key for the name in the UI
     "state": {
-      "note": "towards enemy #1"
+      "note": "towards enemy #1" # for example
     },
   }
 }
