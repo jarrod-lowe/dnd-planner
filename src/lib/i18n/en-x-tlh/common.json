@@ -63,8 +63,8 @@
     "backToSelection": "nuv DIvI' HI'egh",
     "stats": {
       "title": "DIvI'",
-      "movement": "vIH",
-      "currentMax": "{current} / {max}",
+      "movement": "Do",
+      "currentMax": "{{current}} / {{max}}",
       "todo": "TODO"
     },
     "choices": {

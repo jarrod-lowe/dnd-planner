@@ -41,7 +41,10 @@ vi.mock('$lib/play/playStore.svelte', () => ({
         ruleGroups: [],
         engineOutput: {
           status: { ok: true, legal: true, applicable: true },
-          facts: {},
+          facts: {
+            'character.movement.current': 25,
+            'character.movement.total': 30
+          },
           collections: {},
           availableRules: [],
           diagnostics: { errors: [], warnings: [], notices: [] },
@@ -59,7 +62,10 @@ vi.mock('$lib/play/playStore.svelte', () => ({
         },
         isEvaluating: false,
         plannedItems: [],
-        facts: {}
+        facts: {
+          'character.movement.current': 25,
+          'character.movement.total': 30
+        }
       };
     },
     loadRuleGroups: mockFns.loadRuleGroups,
@@ -71,13 +77,15 @@ vi.mock('$lib/play/playStore.svelte', () => ({
 }));
 
 // Mock child components to avoid complex rendering
-vi.mock('$lib/components/play/PlayLayout.svelte', () => ({
-  default: vi.fn().mockImplementation(() => class MockPlayLayout {})
-}));
+// Don't mock PlayLayout - we need it to render the snippets for integration testing
+// vi.mock('$lib/components/play/PlayLayout.svelte', () => ({
+//   default: vi.fn().mockImplementation(() => class MockPlayLayout {})
+// }));
 
-vi.mock('$lib/components/play/StatsColumn.svelte', () => ({
-  default: vi.fn()
-}));
+// Don't mock StatsColumn - we want to test the actual integration
+// vi.mock('$lib/components/play/StatsColumn.svelte', () => ({
+//   default: vi.fn()
+// }));
 
 vi.mock('$lib/components/play/ChoicesColumn.svelte', () => ({
   default: vi.fn()
@@ -166,5 +174,35 @@ describe('PlayCharacterMode', () => {
     });
 
     expect(container.querySelector('.play-character')).toBeTruthy();
+  });
+
+  it('extracts movement from facts with correct fact names', () => {
+    // The playStore mock provides:
+    // - character.movement.current: 25
+    // - character.movement.total: 30
+    // This test verifies that PlayCharacterMode correctly extracts these
+    // and passes them to StatsColumn
+
+    mount(PlayCharacterMode, {
+      target: container,
+      props: {
+        character: mockCharacter,
+        onBack: vi.fn()
+      }
+    });
+
+    // StatsColumn should receive movement prop with current: 25, max: 30
+    // If the component uses wrong fact names (movement.current, movement.max),
+    // it won't find the facts and will show TODO instead
+    const statsColumn = container.querySelector('.stats-column');
+    expect(statsColumn).toBeTruthy();
+
+    // Should NOT show TODO - should show actual movement values
+    const todoElement = container.querySelector('.stats-column__todo');
+    expect(todoElement).toBeFalsy();
+
+    // Should show movement stat item
+    const statItem = container.querySelector('.stats-column__item');
+    expect(statItem).toBeTruthy();
   });
 });
