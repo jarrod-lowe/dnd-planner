@@ -19,10 +19,10 @@
 
   // Extract movement from facts
   const movement = $derived(
-    playStore.state.facts['movement.current'] !== undefined
+    playStore.state.facts['character.movement.current'] !== undefined
       ? {
-          current: playStore.state.facts['movement.current'] as number,
-          max: playStore.state.facts['movement.max'] as number
+          current: playStore.state.facts['character.movement.current'] as number,
+          max: playStore.state.facts['character.movement.total'] as number
         }
       : undefined
   );

@@ -63,7 +63,7 @@ The main body is split into four parts, from the left to right:
 - Plan column, where the choices the user has selected are shown. (wide)
 - Journal column, which will just have a TODO for now. (narrow)
 
-The stats column will eventually be dynamic, but for now just shows the movement current/max and a "TODO". - DONE
+The stats column will eventually be dynamic, but for now just shows the movement current/max and a "TODO".
 
 Users can add entries from the possible choices column into the plan, and remove choices from the plan. Every change results in a re-run of the rules engine, which will update the possible choices and resources and stats shown around the display. - DONE
 

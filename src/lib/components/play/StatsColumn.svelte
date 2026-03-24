@@ -18,9 +18,7 @@
     <div class="stats-column__item">
       <span class="stats-column__label">{$t('play.stats.movement')}</span>
       <span class="stats-column__value"
-        >{$t('play.stats.currentMax', {
-          values: { current: movement.current, max: movement.max }
-        })}</span
+        >{$t('play.stats.currentMax', { current: movement.current, max: movement.max })}</span
       >
     </div>
   {:else}
@@ -37,8 +35,10 @@
 
   .stats-column__item {
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
   }
 
   .stats-column__label {
@@ -52,7 +52,7 @@
 
   .stats-column__value {
     font-family: var(--font-body);
-    font-size: var(--font-size-xl);
+    font-size: var(--font-size-sm);
     font-weight: 500;
     color: var(--md-sys-color-on-surface);
   }

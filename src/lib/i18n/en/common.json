@@ -63,8 +63,8 @@
     "backToSelection": "Back to Character Selection",
     "stats": {
       "title": "Stats",
-      "movement": "Movement",
-      "currentMax": "{current} / {max}",
+      "movement": "Speed",
+      "currentMax": "{{current}} / {{max}}",
       "todo": "TODO"
     },
     "choices": {
