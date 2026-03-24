@@ -45,6 +45,7 @@
   },
   "character": {
     "selectTitle": "Select Your Character",
+    "selectSubtitle": "Select from your characters below",
     "createNew": "Create New Character",
     "enterName": "Enter character name",
     "create": "Create",

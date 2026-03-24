@@ -54,7 +54,12 @@
   <LandingPage onLogin={() => authStore.login()} />
 {:else}
   <div class="app-layout">
-    <TopBar email={authStore.state.email} onLogout={() => authStore.logout()} version="v0.0.0" />
+    <TopBar
+      email={authStore.state.email}
+      onLogout={() => authStore.logout()}
+      version="v0.0.0"
+      selectedCharacter={characterStore.state.selectedCharacter}
+    />
     <main id="main-content" class="app-layout__body">
       {#if characterStore.state.selectedCharacter}
         <PlayCharacterMode

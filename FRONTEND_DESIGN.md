@@ -30,22 +30,39 @@ This should be a minimalist page introducing the site, with a login button. - DO
 
 Two parts: The top-bar, and the main body (in select character mode, or play character mode).
 
-#### Top-bar
+The top bar should be the same height in both modes.
 
-On the left through the middle: nothing yet.
+#### Top-bar (select character mode)
+
+On the left, "Select your character" or similar.
 
 On the right, a user dropdown menu with a Gravatar icon. When opened, it should show the user email, a logout button, and the version (v0.0.0 for now; versioning isn't done). It should behave in a properly a11y way. - DONE
 
+#### Top-bar (play character mode)
+
+On the left, the character name and species.
+
+On the right, the same user dropdown men as in select character mode. - DONE
+
 #### Main body (select character mode)
 
-In this mode, the user has the option of selecting a character, or creating a new one (if permitted).
+In this mode, the user has the option of selecting a character, or creating a new one (if permitted). - DONE
 
-Characters are available along with the user data received from `/api/user`. Selecting one should take us to play character mode with that character.
+Characters are available along with the user data received from `/api/user`. Selecting one should take us to play character mode with that character. - DONE
 
-If permitted, there should be an option to create a new character. A new character will need a name to be created. Behind the scenes, it will be a POST to `/api/characters`, and expect an accepted response, and wait a little before going to play character mode with that character.
+If permitted, there should be an option to create a new character. A new character will need a name to be created. Behind the scenes, it will be a POST to `/api/characters`, and expect an accepted response, and wait a little before going to play character mode with that character. - DONE
 
-To create a new character, the user must be part of the MayCreateCharacters cognito group.
+To create a new character, the user must be part of the MayCreateCharacters cognito group. - DONE
 
 #### Main body (play character mode)
 
 Not yet designed - it should just say the character name, and TODO
+
+The main body is split into four parts, from the left to right:
+
+- Stats column, intended to contain a quick view of resource and statistic information. Shows movement current/max and TODO for now. (narrow)
+- Possible choices column, a vertical list of small "choice" panels, one for each availableRules entry. (wide)
+- Plan column, where the choices the user has selected are shown. (wide)
+- Journal column, which will just have a TODO for now. (narrow)
+
+Users can add entries from the possible choices column into the plan, and remove choices from the plan. Every change results in a re-run of the rules engine, which will update the possible choices and resources and stats shown around the display.
