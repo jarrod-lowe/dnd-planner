@@ -60,6 +60,35 @@
     "human": "Human"
   },
   "play": {
-    "backToSelection": "Back to Character Selection"
+    "backToSelection": "Back to Character Selection",
+    "stats": {
+      "title": "Stats",
+      "movement": "Movement",
+      "currentMax": "{current} / {max}",
+      "todo": "TODO"
+    },
+    "choices": {
+      "title": "Available Choices",
+      "loading": "Loading choices...",
+      "empty": "No choices available",
+      "illegal": "Illegal choice",
+      "inapplicable": "Inapplicable choice",
+      "addToPlan": "Add to plan",
+      "removeFromPlan": "Remove from plan"
+    },
+    "plan": {
+      "title": "Your Plan",
+      "empty": "No actions planned",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "remove": "Remove"
+    },
+    "journal": {
+      "title": "Journal",
+      "todo": "TODO"
+    },
+    "error": {
+      "loadRuleGroups": "Failed to load character data"
+    }
   }
 }

@@ -1,6 +1,14 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { t } from '$lib/i18n';
+  import { playStore } from '$lib/play/playStore.svelte';
+  import PlayLayout from '../play/PlayLayout.svelte';
+  import StatsColumn from '../play/StatsColumn.svelte';
+  import ChoicesColumn from '../play/ChoicesColumn.svelte';
+  import PlanColumn from '../play/PlanColumn.svelte';
+  import JournalColumn from '../play/JournalColumn.svelte';
   import type { Character } from '$lib/character/types';
+  import type { AvailableRuleEntry } from '$lib/rules-engine';
 
   interface Props {
     character: Character;
@@ -8,6 +16,46 @@
   }
 
   let { character, onBack }: Props = $props();
+
+  // Extract movement from facts
+  const movement = $derived(
+    playStore.state.facts['movement.current'] !== undefined
+      ? {
+          current: playStore.state.facts['movement.current'] as number,
+          max: playStore.state.facts['movement.max'] as number
+        }
+      : undefined
+  );
+
+  // Get available rules from engine output
+  const availableRules = $derived(playStore.state.engineOutput?.availableRules ?? []);
+
+  // Handle choice tap - add to plan
+  function handleChoiceTap(entry: AvailableRuleEntry): void {
+    playStore.addToPlan(entry.rule);
+  }
+
+  // Handle plan item controls
+  function handleMoveUp(instanceId: string): void {
+    playStore.movePlanItem(instanceId, 'up');
+  }
+
+  function handleMoveDown(instanceId: string): void {
+    playStore.movePlanItem(instanceId, 'down');
+  }
+
+  function handleRemove(instanceId: string): void {
+    playStore.removeFromPlan(instanceId);
+  }
+
+  // Load rule groups on mount
+  onMount(() => {
+    playStore.loadRuleGroups(character.characterId);
+
+    return () => {
+      playStore.reset();
+    };
+  });
 </script>
 
 <div class="play-character">
@@ -18,18 +66,44 @@
   >
     {$t('play.backToSelection')}
   </button>
-  <h1 class="play-character__name">{character.name}</h1>
-  <p class="play-character__todo">TODO</p>
+
+  {#if playStore.state.isLoadingRuleGroups}
+    <div class="play-character__loading">{$t('play.choices.loading')}</div>
+  {:else if playStore.state.ruleGroupError}
+    <div class="play-character__error">{$t('play.error.loadRuleGroups')}</div>
+  {:else}
+    <PlayLayout>
+      {#snippet stats()}
+        <StatsColumn {movement} />
+      {/snippet}
+      {#snippet choices()}
+        <ChoicesColumn
+          entries={availableRules}
+          isLoading={playStore.state.isEvaluating}
+          onChoiceTap={handleChoiceTap}
+        />
+      {/snippet}
+      {#snippet plan()}
+        <PlanColumn
+          items={playStore.state.plannedItems}
+          onMoveUp={handleMoveUp}
+          onMoveDown={handleMoveDown}
+          onRemove={handleRemove}
+        />
+      {/snippet}
+      {#snippet journal()}
+        <JournalColumn />
+      {/snippet}
+    </PlayLayout>
+  {/if}
 </div>
 
 <style>
   .play-character {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-xl);
     width: 100%;
-    max-width: 40rem;
+    height: 100%;
   }
 
   .play-character__back {
@@ -42,6 +116,7 @@
     font-family: var(--font-body);
     font-size: var(--font-size-sm);
     padding: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: var(--spacing-md);
     min-height: 2.5rem;
     transition: background-color var(--transition-fast);
   }
@@ -55,21 +130,19 @@
     outline-offset: 2px;
   }
 
-  .play-character__name {
-    font-family: var(--font-display);
-    font-size: var(--font-size-3xl);
-    color: var(--md-sys-color-primary);
-    margin: 0;
+  .play-character__loading,
+  .play-character__error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    font-family: var(--font-body);
+    font-size: var(--font-size-lg);
+    color: var(--md-sys-color-on-surface-variant);
     text-align: center;
   }
 
-  .play-character__todo {
-    font-family: var(--font-display);
-    font-size: var(--font-size-4xl);
-    font-weight: 700;
-    color: var(--md-sys-color-outline);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    margin: 0;
+  .play-character__error {
+    color: var(--md-sys-color-error);
   }
 </style>
