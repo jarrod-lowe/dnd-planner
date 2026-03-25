@@ -4,6 +4,9 @@ export { evaluate } from './evaluate';
 // Temporary placeholder - remove when calling code is updated
 export { getHelloWorld } from './hello-world';
 
+// Source resolution
+export { validateSource, resolveSource } from './sources';
+
 // Public types
 export type {
   // Primitives
@@ -11,6 +14,9 @@ export type {
   ComparisonOperator,
   Facts,
   NamedFunction,
+  // Source
+  Source,
+  VarDefinition,
   // Conditions
   Condition,
   FactExistenceCondition,
@@ -43,5 +49,8 @@ export type {
   // Output
   EngineOutput,
   AvailableRuleEntry,
-  Trace
+  Trace,
+  // Internal (for testing)
+  WorkingState,
+  RuleContext
 } from './types';

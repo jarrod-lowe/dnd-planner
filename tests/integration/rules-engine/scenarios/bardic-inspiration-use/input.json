@@ -15,7 +15,7 @@
                   "id": "consume-1",
                   "type": "numberIncrement",
                   "target": "bardicInspiration.remaining",
-                  "number": -1
+                  "source": { "number": -1 }
                 }
               ]
             },

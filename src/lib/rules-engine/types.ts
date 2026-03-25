@@ -51,6 +51,29 @@ export type Facts = Record<string, number | string | boolean | object>;
  */
 export type NamedFunction = 'statToModifier';
 
+// === SOURCE ===
+
+/**
+ * A unified value reference used in activities.
+ * Exactly one of fact, number, or var must be present.
+ *
+ * - fact: Reference to a fact in working state
+ * - number: A literal numeric value
+ * - var: Reference to a rule var (resolved via selections or vars.default)
+ */
+export interface Source {
+  fact?: string;
+  number?: number;
+  var?: string;
+}
+
+/**
+ * Definition of a rule variable with a default value.
+ */
+export interface VarDefinition {
+  default: Source;
+}
+
 // === CONDITIONS ===
 
 /**
@@ -134,24 +157,19 @@ export interface ActivityBase {
 export interface NumberSetActivity extends ActivityBase {
   type: 'numberSet';
   target: string;
-  number: number;
+  source: Source;
 }
 
 /**
  * Increments a numeric fact by a delta. Can use negative numbers to decrement.
  * If fact doesn't exist, treated as 0. Optional max cap from another fact.
  *
- * The increment value can come from either:
- * - `number`: A literal numeric value
- * - `source`: A reference to another fact's value (mutually exclusive with number)
- *
  * When `subtract` is true, the value is subtracted instead of added.
  */
 export interface NumberIncrementActivity extends ActivityBase {
   type: 'numberIncrement';
   target: string;
-  number?: number;
-  source?: string;
+  source: Source;
   subtract?: boolean;
   max?: string;
 }
@@ -162,27 +180,27 @@ export interface NumberIncrementActivity extends ActivityBase {
 export interface NumberCopyActivity extends ActivityBase {
   type: 'numberCopy';
   target: string;
-  source: string;
+  source: Source;
 }
 
 /**
- * Sets a fact to the sum of multiple other facts. Missing facts treated as 0.
+ * Sets a fact to the sum of multiple sources. Missing values treated as 0.
  */
 export interface NumberSumActivity extends ActivityBase {
   type: 'numberSum';
   target: string;
-  args: string[];
+  sources: Source[];
 }
 
 /**
- * Sets a fact using a named function with fact arguments.
+ * Sets a fact using a named function with source arguments.
  * Example: statToModifier(str.value) -> str.modifier
  */
 export interface NumberFunctionActivity extends ActivityBase {
   type: 'numberFunction';
   target: string;
   function: NamedFunction;
-  args: string[];
+  sources: Source[];
 }
 
 /**
@@ -255,6 +273,8 @@ export interface Rule {
   id: string;
   description?: string;
   ui?: Record<string, unknown>;
+  vars?: Record<string, VarDefinition>;
+  selections?: Record<string, unknown>;
   phase?: Phase;
   enabled?: boolean;
   when?: Condition[];
@@ -372,4 +392,5 @@ export interface RuleContext {
   groups: Map<string, GroupState>;
   currentPhase: Phase;
   allRules: Rule[];
+  currentRule?: Rule;
 }

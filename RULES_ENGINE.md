@@ -409,11 +409,11 @@ Rules may declare engine-facing variables using vars.
 - `vars` define parameters that influence rule execution
 - `default` is used if there is no matching value in `selections`
 - vars must not contain UI-only data
-- `vars[].default` uses the same structure as activity `source` values
+- `vars[].default` uses the same structure as activity `source` values, except they cannot reference other vars
 
 #### Selections
 
-Planned rules may include:
+Rules may include:
 
 ```json
 {
@@ -425,6 +425,7 @@ Planned rules may include:
 
 - `selections` is a sparse map of user-selected values
 - only values differing from defaults should be stored
+- `selections` do not come from the database, they will be added by the UI during execution
 
 #### Separation of concerns
 

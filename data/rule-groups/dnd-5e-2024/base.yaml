@@ -11,7 +11,8 @@ ruleGroups:
           - group: species-constants
         activities:
           - type: numberCopy
-            source: character.movement.total
+            source:
+              fact: character.movement.total
             target: character.movement.current
       - id: action-move-offer
         ui:
@@ -33,5 +34,6 @@ ruleGroups:
                 # Consume remaining movement
                 - type: numberIncrement
                   target: character.movement.current
-                  source: character.movement.current
+                  source:
+                    fact: character.movement.current
                   subtract: true

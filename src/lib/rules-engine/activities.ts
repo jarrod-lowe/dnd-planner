@@ -9,12 +9,12 @@ import type {
   NumberSetActivity,
   NumberSumActivity,
   OfferRuleActivity,
-  RuleContext,
-  WorkingState
+  RuleContext
 } from './types';
 import { isPhaseAfter } from './types';
 import { createBuiltinFunctionRegistry } from './functions';
 import { evaluateCondition, isRuleApplicable } from './conditions';
+import { resolveSource } from './sources';
 
 /**
  * Executes a single activity by dispatching to the appropriate handler.
@@ -32,22 +32,22 @@ import { evaluateCondition, isRuleApplicable } from './conditions';
 export function executeActivity(activity: Activity, context: RuleContext): void {
   switch (activity.type) {
     case 'numberSet':
-      executeNumberSet(activity, context.workingState);
+      executeNumberSet(activity, context);
       break;
     case 'numberIncrement':
-      executeNumberIncrement(activity, context.workingState);
+      executeNumberIncrement(activity, context);
       break;
     case 'numberCopy':
-      executeNumberCopy(activity, context.workingState);
+      executeNumberCopy(activity, context);
       break;
     case 'numberSum':
-      executeNumberSum(activity, context.workingState);
+      executeNumberSum(activity, context);
       break;
     case 'numberFunction':
-      executeNumberFunction(activity, context.workingState);
+      executeNumberFunction(activity, context);
       break;
     case 'emitEvent':
-      executeEmitEvent(activity, context.workingState);
+      executeEmitEvent(activity, context);
       break;
     case 'generateRule':
       executeGenerateRule(activity, context);
@@ -84,12 +84,17 @@ export function executeRuleActivities(activities: Activity[], context: RuleConte
  * Overwrites any existing value at the target fact path.
  *
  * @param activity - The number_set activity
- * @param state - Working state to mutate
+ * @param context - Rule context containing working state and current rule
  *
  * @calledBy executeActivity
  */
-export function executeNumberSet(activity: NumberSetActivity, state: WorkingState): void {
-  state.facts[activity.target] = activity.number;
+export function executeNumberSet(activity: NumberSetActivity, context: RuleContext): void {
+  const rule = context.currentRule;
+  if (!rule) {
+    throw new Error('executeNumberSet requires currentRule in context');
+  }
+  const value = resolveSource(activity.source, context.workingState, rule);
+  context.workingState.facts[activity.target] = value ?? 0;
 }
 
 /**
@@ -97,95 +102,103 @@ export function executeNumberSet(activity: NumberSetActivity, state: WorkingStat
  *
  * If the fact doesn't exist, it's treated as 0 before incrementing.
  * Optional `max` parameter caps the result using another fact's value.
- * Can use negative numbers to decrement.
- *
- * The increment value can come from either `number` (literal) or `source` (fact reference).
  * When `subtract` is true, the value is negated before applying.
  *
  * @param activity - The number_increment activity
- * @param state - Working state to mutate
+ * @param context - Rule context containing working state and current rule
  *
  * @calledBy executeActivity
  */
 export function executeNumberIncrement(
   activity: NumberIncrementActivity,
-  state: WorkingState
+  context: RuleContext
 ): void {
-  const current = (state.facts[activity.target] as number) ?? 0;
-
-  // Get the increment value from either `number` or `source`
-  let delta: number;
-  if (activity.source !== undefined) {
-    delta = (state.facts[activity.source] as number) ?? 0;
-  } else if (activity.number !== undefined) {
-    delta = activity.number;
-  } else {
-    throw new Error('numberIncrement activity requires either number or source');
+  const rule = context.currentRule;
+  if (!rule) {
+    throw new Error('executeNumberIncrement requires currentRule in context');
   }
+
+  const current = (context.workingState.facts[activity.target] as number) ?? 0;
+  const delta = resolveSource(activity.source, context.workingState, rule) ?? 0;
 
   // Apply subtract flag
-  if (activity.subtract === true) {
-    delta = -delta;
-  }
+  const effectiveDelta = activity.subtract === true ? -delta : delta;
 
-  let result = current + delta;
+  let result = current + effectiveDelta;
 
   if (activity.max !== undefined) {
-    const maxValue = (state.facts[activity.max] as number) ?? 0;
+    const maxValue = (context.workingState.facts[activity.max] as number) ?? 0;
     result = Math.min(result, maxValue);
   }
 
-  state.facts[activity.target] = result;
+  context.workingState.facts[activity.target] = result;
 }
 
 /**
  * Copies a value from one fact to another.
  *
- * Reads the source fact and writes to the target fact.
+ * Reads the source and writes to the target fact.
  * If source doesn't exist, behavior depends on implementation (likely undefined/0).
  *
  * @param activity - The number_copy activity
- * @param state - Working state to mutate
+ * @param context - Rule context containing working state and current rule
  *
  * @calledBy executeActivity
  */
-export function executeNumberCopy(activity: NumberCopyActivity, state: WorkingState): void {
-  state.facts[activity.target] = state.facts[activity.source] as number;
+export function executeNumberCopy(activity: NumberCopyActivity, context: RuleContext): void {
+  const rule = context.currentRule;
+  if (!rule) {
+    throw new Error('executeNumberCopy requires currentRule in context');
+  }
+  const value = resolveSource(activity.source, context.workingState, rule);
+  if (value !== undefined) {
+    context.workingState.facts[activity.target] = value;
+  }
 }
 
 /**
- * Sets a fact to the sum of multiple other facts.
+ * Sets a fact to the sum of multiple sources.
  *
- * Missing facts are treated as 0.
+ * Missing values are treated as 0.
  * Useful for derived stats like hp.max = hp.base + hp.bonus.
  *
  * @param activity - The number_sum activity
- * @param state - Working state to mutate
+ * @param context - Rule context containing working state and current rule
  *
  * @calledBy executeActivity
  */
-export function executeNumberSum(activity: NumberSumActivity, state: WorkingState): void {
-  let sum = 0;
-  for (const arg of activity.args) {
-    sum += (state.facts[arg] as number) ?? 0;
+export function executeNumberSum(activity: NumberSumActivity, context: RuleContext): void {
+  const rule = context.currentRule;
+  if (!rule) {
+    throw new Error('executeNumberSum requires currentRule in context');
   }
-  state.facts[activity.target] = sum;
+
+  let sum = 0;
+  for (const source of activity.sources) {
+    sum += resolveSource(source, context.workingState, rule) ?? 0;
+  }
+  context.workingState.facts[activity.target] = sum;
 }
 
 /**
- * Sets a fact using a named function with fact arguments.
+ * Sets a fact using a named function with source arguments.
  *
- * Looks up the function in the registry, resolves fact references to values,
+ * Looks up the function in the registry, resolves sources to values,
  * and stores the result in the target fact.
  * Example: statToModifier(str.value) -> str.modifier
  *
  * @param activity - The number_function activity
- * @param state - Working state to mutate
+ * @param context - Rule context containing working state and current rule
  *
  * @calledBy executeActivity
  * @calls FunctionRegistry (to look up and execute the named function)
  */
-export function executeNumberFunction(activity: NumberFunctionActivity, state: WorkingState): void {
+export function executeNumberFunction(activity: NumberFunctionActivity, context: RuleContext): void {
+  const rule = context.currentRule;
+  if (!rule) {
+    throw new Error('executeNumberFunction requires currentRule in context');
+  }
+
   const registry = createBuiltinFunctionRegistry();
   const handler = registry.get(activity.function);
 
@@ -193,9 +206,11 @@ export function executeNumberFunction(activity: NumberFunctionActivity, state: W
     throw new Error(`Unknown function: ${activity.function}`);
   }
 
-  const args = activity.args.map((arg) => state.facts[arg] as number | undefined);
+  const args = activity.sources.map((source) =>
+    resolveSource(source, context.workingState, rule)
+  );
   const result = handler(args);
-  state.facts[activity.target] = result;
+  context.workingState.facts[activity.target] = result;
 }
 
 /**
@@ -206,12 +221,12 @@ export function executeNumberFunction(activity: NumberFunctionActivity, state: W
  * Events do not appear in the output `next` object.
  *
  * @param activity - The emit_event activity
- * @param state - Working state to mutate (adds to events Set)
+ * @param context - Rule context containing working state
  *
  * @calledBy executeActivity
  */
-export function executeEmitEvent(activity: EmitEventActivity, state: WorkingState): void {
-  state.events.add(activity.event);
+export function executeEmitEvent(activity: EmitEventActivity, context: RuleContext): void {
+  context.workingState.events.add(activity.event);
 }
 
 /**

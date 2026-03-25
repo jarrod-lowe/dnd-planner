@@ -61,6 +61,18 @@
           "description": "UI-specific configuration",
           "additionalProperties": true
         },
+        "vars": {
+          "type": "object",
+          "description": "Rule variables with default values",
+          "additionalProperties": {
+            "$ref": "#/definitions/varDefinition"
+          }
+        },
+        "selections": {
+          "type": "object",
+          "description": "User-selected values for vars",
+          "additionalProperties": true
+        },
         "phase": {
           "$ref": "#/definitions/phase",
           "default": "normal"
@@ -177,6 +189,38 @@
       },
       "additionalProperties": false
     },
+    "varDefinition": {
+      "type": "object",
+      "required": ["default"],
+      "properties": {
+        "default": {
+          "$ref": "#/definitions/source",
+          "description": "Default value for the variable"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "description": "A unified value reference - exactly one of number, fact, or var",
+      "minProperties": 1,
+      "maxProperties": 1,
+      "properties": {
+        "number": {
+          "type": "number",
+          "description": "A literal numeric value"
+        },
+        "fact": {
+          "type": "string",
+          "description": "Reference to a fact in working state"
+        },
+        "var": {
+          "type": "string",
+          "description": "Reference to a rule variable"
+        }
+      },
+      "additionalProperties": false
+    },
     "activity": {
       "type": "object",
       "required": ["type"],
@@ -198,46 +242,43 @@
           "type": "string",
           "description": "Target fact path"
         },
-        "number": {
-          "type": "number",
-          "description": "Numeric value"
+        "source": {
+          "$ref": "#/definitions/source",
+          "description": "Source value reference (for numberSet, numberIncrement, numberCopy)"
+        },
+        "sources": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/source" },
+          "description": "Array of source value references (for numberSum, numberFunction)"
         },
         "max": {
           "type": "string",
-          "description": "Maximum value fact path"
-        },
-        "source": {
-          "type": "string",
-          "description": "Source fact path"
+          "description": "Maximum value fact path (for numberIncrement)"
         },
         "subtract": {
           "type": "boolean",
           "description": "For numberIncrement: subtract the value instead of adding",
           "default": false
         },
-        "args": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Fact path arguments"
-        },
         "function": {
           "type": "string",
           "enum": ["statToModifier"],
-          "description": "Named function"
+          "description": "Named function (for numberFunction)"
         },
         "event": {
           "type": "string",
-          "description": "Event name"
+          "description": "Event name (for emitEvent)"
         },
         "rule": {
           "$ref": "#/definitions/rule",
-          "description": "Rule to generate"
+          "description": "Rule to generate or offer"
         },
         "legalWhen": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/illegalWhenEntry"
-          }
+          },
+          "description": "Conditions for rule legality (for offerRule)"
         }
       },
       "additionalProperties": false
