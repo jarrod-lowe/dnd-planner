@@ -37,8 +37,17 @@
     !entry.legal ? 'illegal' : !entry.applicable ? 'inapplicable' : null
   );
 
+  // Get specific diagnostic message from entry.diagnostics
+  const warningMessage = $derived.by(() => {
+    if (!hasWarning || entry.diagnostics.length === 0) return undefined;
+    const code = entry.diagnostics[0].code;
+    return $t(code);
+  });
+
   const warningLabel = $derived.by(() => {
     if (!hasWarning || !warningType) return '';
+    // Use specific message if available, otherwise generic
+    if (warningMessage) return ` (${warningMessage})`;
     const key = warningType === 'illegal' ? 'play.choices.illegal' : 'play.choices.inapplicable';
     return ` (${$t(key)})`;
   });
@@ -102,6 +111,9 @@
     aria-label={ariaLabel}
     role="group"
   >
+    {#if hasWarning && warningType}
+      <WarningIndicator type={warningType} message={warningMessage} />
+    {/if}
     {#if uiSection}
       <div class="choice-panel__header">
         <span class="choice-panel__type">{$t(`play.choices.sections.${uiSection}`)}</span>
@@ -132,9 +144,6 @@
         </div>
       {/if}
     </div>
-    {#if hasWarning && warningType}
-      <WarningIndicator type={warningType} />
-    {/if}
     {#if showControls}
       <div class="choice-panel__actions" role="group" aria-label="Item controls">
         <button
@@ -186,6 +195,9 @@
     onclick={onTap}
     aria-label={ariaLabel}
   >
+    {#if hasWarning && warningType}
+      <WarningIndicator type={warningType} message={warningMessage} />
+    {/if}
     {#if uiSection}
       <div class="choice-panel__header">
         <span class="choice-panel__type">{$t(`play.choices.sections.${uiSection}`)}</span>
@@ -216,9 +228,6 @@
         </div>
       {/if}
     </div>
-    {#if hasWarning && warningType}
-      <WarningIndicator type={warningType} />
-    {/if}
   </button>
 {/if}
 
@@ -389,5 +398,13 @@
     background: var(--md-sys-color-error-container);
     color: var(--md-sys-color-on-error-container);
     border-color: var(--md-sys-color-error);
+  }
+
+  /* Warning indicator positioned at top-left as overlay */
+  .choice-panel :global(.warning-indicator) {
+    position: absolute;
+    top: var(--spacing-xs);
+    left: var(--spacing-xs);
+    z-index: 2;
   }
 </style>
