@@ -46,3 +46,13 @@ ruleGroups:
                   source:
                     var: distance
                   subtract: true
+      - id: action-free-offer
+        activities:
+          - type: offerRule
+            rule:
+              id: free-action
+              ui:
+                model: free
+                section: free
+                name: rule.dnd-5e-2024.base.free-action.name
+              activities: []

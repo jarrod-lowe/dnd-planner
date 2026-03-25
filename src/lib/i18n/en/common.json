@@ -4,6 +4,9 @@
       "base": {
         "move-walk": {
           "name": "Walk"
+        },
+        "free-action": {
+          "name": "Free Action"
         }
       }
     }
@@ -85,7 +88,8 @@
       "addToPlan": "Add to plan",
       "removeFromPlan": "Remove from plan",
       "sections": {
-        "move": "Move"
+        "move": "Move",
+        "free": "Free"
       },
       "move": {
         "distance": "Movement distance in feet"
