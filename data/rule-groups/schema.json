@@ -265,8 +265,13 @@
         },
         "function": {
           "type": "string",
-          "enum": ["statToModifier"],
+          "enum": ["statToModifier", "multiply"],
           "description": "Named function (for numberFunction)"
+        },
+        "args": {
+          "type": "object",
+          "description": "Additional arguments for the function (for numberFunction)",
+          "additionalProperties": true
         },
         "event": {
           "type": "string",

@@ -299,6 +299,24 @@ describe('executeNumberFunction', () => {
 
     expect(context.workingState.facts['str.modifier']).toBe(4);
   });
+
+  it('calls multiply with args and stores result in target', () => {
+    const activity: NumberFunctionActivity = {
+      id: 'test-1',
+      type: 'numberFunction',
+      target: 'movement.half',
+      function: 'multiply',
+      sources: [{ fact: 'movement.current' }],
+      args: { multiplier: 0.5 }
+    };
+
+    const context = createEmptyContext();
+    context.workingState.facts['movement.current'] = 30;
+
+    executeNumberFunction(activity, context);
+
+    expect(context.workingState.facts['movement.half']).toBe(15);
+  });
 });
 
 describe('executeEmitEvent', () => {

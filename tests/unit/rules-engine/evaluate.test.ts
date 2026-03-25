@@ -241,4 +241,140 @@ describe('evaluate', () => {
     // Standing rules still present
     expect(result2.next.rules.standing).toHaveLength(1);
   });
+
+  it('computes half movement using multiply function', () => {
+    const halfMovementRule: Rule = {
+      id: 'compute-half-movement',
+      phase: 'early',
+      activities: [
+        {
+          id: 'half-1',
+          type: 'numberFunction',
+          function: 'multiply',
+          sources: [{ fact: 'character.movement.current' }],
+          target: 'character.movement.half',
+          args: { multiplier: 0.5 }
+        }
+      ]
+    };
+
+    const input: EngineInput = {
+      schemaVersion: 1,
+      rules: { standing: [halfMovementRule], planned: [], effects: [] },
+      state: { facts: { 'character.movement.current': 30 } }
+    };
+
+    const result = evaluate(input);
+
+    expect(result.facts['character.movement.half']).toBe(15);
+  });
+
+  it('rough terrain walk consumes double movement', () => {
+    // Rule that offers rough terrain walk
+    const offerRoughTerrainRule: Rule = {
+      id: 'offer-rough-terrain',
+      activities: [
+        {
+          id: 'offer-1',
+          type: 'offerRule',
+          legalWhen: [
+            {
+              condition: {
+                fact: 'character.movement.current',
+                operator: 'greaterThan',
+                value: 0
+              },
+              illegalDiagnostics: [{ code: 'out_of_movement', severity: 'error' }]
+            }
+          ],
+          rule: {
+            id: 'move-rough-terrain',
+            vars: {
+              distance: {
+                capture: true,
+                default: { fact: 'character.movement.half' }
+              }
+            },
+            activities: [
+              {
+                id: 'consume-1',
+                type: 'numberIncrement',
+                target: 'character.movement.current',
+                source: { var: 'distance' },
+                subtract: true
+              },
+              {
+                id: 'consume-2',
+                type: 'numberIncrement',
+                target: 'character.movement.current',
+                source: { var: 'distance' },
+                subtract: true
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    // Half movement computation rule
+    const halfMovementRule: Rule = {
+      id: 'compute-half-movement',
+      phase: 'early',
+      activities: [
+        {
+          id: 'half-1',
+          type: 'numberFunction',
+          function: 'multiply',
+          sources: [{ fact: 'character.movement.current' }],
+          target: 'character.movement.half',
+          args: { multiplier: 0.5 }
+        }
+      ]
+    };
+
+    // Planned rough terrain walk with 10ft distance
+    const plannedRoughTerrain: Rule = {
+      id: 'move-rough-terrain',
+      vars: {
+        distance: {
+          capture: true,
+          default: { fact: 'character.movement.half' }
+        }
+      },
+      selections: { distance: 10 },
+      activities: [
+        {
+          id: 'consume-1',
+          type: 'numberIncrement',
+          target: 'character.movement.current',
+          source: { var: 'distance' },
+          subtract: true
+        },
+        {
+          id: 'consume-2',
+          type: 'numberIncrement',
+          target: 'character.movement.current',
+          source: { var: 'distance' },
+          subtract: true
+        }
+      ]
+    };
+
+    const input: EngineInput = {
+      schemaVersion: 1,
+      rules: {
+        standing: [halfMovementRule, offerRoughTerrainRule],
+        planned: [plannedRoughTerrain],
+        effects: []
+      },
+      state: { facts: { 'character.movement.current': 30 } }
+    };
+
+    const result = evaluate(input);
+
+    // 30 - 10 - 10 = 10 (double consumption)
+    expect(result.facts['character.movement.current']).toBe(10);
+    // Half movement should be 15 (from early phase computation)
+    expect(result.facts['character.movement.half']).toBe(15);
+  });
 });

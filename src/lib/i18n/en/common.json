@@ -5,10 +5,16 @@
         "move-walk": {
           "name": "Walk"
         },
+        "move-rough-terrain": {
+          "name": "Walk (Rough Terrain)"
+        },
         "free-action": {
           "name": "Free Action"
         },
         "action-move-walk-offer": {
+          "out_of_movement": "Out of movement"
+        },
+        "action-move-rough-terrain-offer": {
           "out_of_movement": "Out of movement"
         }
       }

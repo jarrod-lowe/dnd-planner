@@ -5,10 +5,16 @@
         "move-walk": {
           "name": "Do"
         },
+        "move-rough-terrain": {
+          "name": "Do (qIb)"
+        },
         "free-action": {
           "name": "Free Action"
         },
         "action-move-walk-offer": {
+          "out_of_movement": "Do tu'lu'be'"
+        },
+        "action-move-rough-terrain-offer": {
           "out_of_movement": "Do tu'lu'be'"
         }
       }
