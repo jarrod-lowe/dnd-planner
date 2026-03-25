@@ -179,7 +179,7 @@ describe('ChoicePanel', () => {
     expect(onSelectionChange).toHaveBeenCalledWith({ distance: 15 });
   });
 
-  it('calls onSelectionChange with empty object when slider is at max (default applies)', async () => {
+  it('calls onSelectionChange with distance even when slider is at max', async () => {
     const entry = createMockMoveEntry();
     const facts = {
       'character.movement.current': 25,
@@ -195,7 +195,7 @@ describe('ChoicePanel', () => {
     slider.value = '30'; // max distance
     await fireEvent.input(slider);
 
-    expect(onSelectionChange).toHaveBeenCalledWith({});
+    expect(onSelectionChange).toHaveBeenCalledWith({ distance: 30 });
   });
 
   // === Header/Body layout tests ===

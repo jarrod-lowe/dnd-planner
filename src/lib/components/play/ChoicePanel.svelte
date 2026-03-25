@@ -89,12 +89,7 @@
     const value = parseInt(target.value, 10);
 
     if (onSelectionChange) {
-      // If at max, don't set selection (default applies)
-      if (moveMaxDistance !== undefined && value === moveMaxDistance) {
-        onSelectionChange({});
-      } else {
-        onSelectionChange({ distance: value });
-      }
+      onSelectionChange({ distance: value });
     }
   }
 </script>

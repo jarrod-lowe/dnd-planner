@@ -33,6 +33,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.base.move-walk.name
               vars:
                 distance:
+                  capture: true
                   default:
                     fact: character.movement.current
                 maxDistance:
