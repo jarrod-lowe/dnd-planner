@@ -68,3 +68,15 @@ The stats column will eventually be dynamic, but for now just shows the movement
 Users can add entries from the possible choices column into the plan, and remove choices from the plan. Every change results in a re-run of the rules engine, which will update the possible choices and resources and stats shown around the display. - DONE
 
 On startup, the system will need to pull the users rule groups from the API. GET `/api/characters/{id}/rule-groups` returns the ids of the rule groups that are relevant. POST `/api/rule-groups/batch` returns all the requested rule groups (max 100, so multiple request might be necessary). - DONE
+
+## Choices Panels
+
+The Choices panels are the UI for the rules shown in the available choices and plan columns.
+
+They have an "section" from ui.section ("Move", "Action -> Attack", etc) above a part of the panel with a title (ui.name, after i18n) and any ui.model-specific implementation.
+
+In the available choices, not of the mutable elements of the panel UI are active, but they are still visible. In the planned column, they are active. After any change to the mutable elements, re-run the rules engine (with a debounce).
+
+### Model: move
+
+The `move` model has a slider for selecting the distance, with a slider between 0 and `maxDistance` ft. This would set the selection `distance`. If the slider is at the max, it does not provide a `selection` value (so the default will apply).

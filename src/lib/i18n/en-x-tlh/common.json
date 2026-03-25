@@ -1,4 +1,13 @@
 {
+  "rule": {
+    "dnd-5e-2024": {
+      "base": {
+        "move-walk": {
+          "name": "Do"
+        }
+      }
+    }
+  },
   "app": {
     "title": "D&D chovnatlh",
     "description": "vay' Duj chovnatlh 'ej DujlIj Dalo'meH wo'rIv Duj chovnatlh.",
@@ -74,7 +83,13 @@
       "illegal": "DuH DIvI'be'",
       "inapplicable": "DuH lo'laHbe'",
       "addToPlan": "DIvI' chel",
-      "removeFromPlan": "DIvI' teq"
+      "removeFromPlan": "DIvI' teq",
+      "sections": {
+        "move": "Do"
+      },
+      "move": {
+        "distance": "Do chu'"
+      }
     },
     "plan": {
       "title": "DIvI'lIj",

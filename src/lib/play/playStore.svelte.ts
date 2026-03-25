@@ -161,6 +161,28 @@ function movePlanItem(instanceId: string, direction: 'up' | 'down'): void {
   debouncedEvaluate();
 }
 
+function updateSelections(instanceId: string, selections: Record<string, unknown>): void {
+  const itemIndex = state.plannedItems.findIndex((item) => item.instanceId === instanceId);
+
+  if (itemIndex === -1) return;
+
+  const updatedItems = [...state.plannedItems];
+  updatedItems[itemIndex] = {
+    ...updatedItems[itemIndex],
+    rule: {
+      ...updatedItems[itemIndex].rule,
+      selections
+    }
+  };
+
+  state = {
+    ...state,
+    plannedItems: updatedItems
+  };
+
+  debouncedEvaluate();
+}
+
 function reset(): void {
   state = { ...initialState };
 }
@@ -173,5 +195,6 @@ export const playStore = {
   addToPlan,
   removeFromPlan,
   movePlanItem,
+  updateSelections,
   reset
 };

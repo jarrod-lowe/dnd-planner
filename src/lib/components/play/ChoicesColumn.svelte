@@ -1,15 +1,16 @@
 <script lang="ts">
   import { t } from '$lib/i18n';
   import ChoicePanel from './ChoicePanel.svelte';
-  import type { AvailableRuleEntry } from '$lib/rules-engine';
+  import type { AvailableRuleEntry, Facts } from '$lib/rules-engine';
 
   interface Props {
     entries: AvailableRuleEntry[];
+    facts?: Facts;
     isLoading?: boolean;
     onChoiceTap: (entry: AvailableRuleEntry) => void;
   }
 
-  let { entries, isLoading = false, onChoiceTap }: Props = $props();
+  let { entries, facts = {}, isLoading = false, onChoiceTap }: Props = $props();
 </script>
 
 <div class="choices-column">
@@ -24,7 +25,7 @@
   {:else}
     <div class="choices-column__list">
       {#each entries as entry (entry.rule.id)}
-        <ChoicePanel {entry} onTap={() => onChoiceTap(entry)} />
+        <ChoicePanel {entry} {facts} editable={false} onTap={() => onChoiceTap(entry)} />
       {/each}
     </div>
   {/if}
