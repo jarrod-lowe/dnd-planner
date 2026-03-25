@@ -4,6 +4,9 @@
       "base": {
         "move-walk": {
           "name": "Do"
+        },
+        "free-action": {
+          "name": "Free Action"
         }
       }
     }
@@ -85,7 +88,8 @@
       "addToPlan": "DIvI' chel",
       "removeFromPlan": "DIvI' teq",
       "sections": {
-        "move": "Do"
+        "move": "Do",
+        "free": "Free"
       },
       "move": {
         "distance": "Do chu'"

@@ -108,8 +108,7 @@
           "description": "Actions to perform",
           "items": {
             "$ref": "#/definitions/activity"
-          },
-          "minItems": 1
+          }
         }
       },
       "additionalProperties": false
