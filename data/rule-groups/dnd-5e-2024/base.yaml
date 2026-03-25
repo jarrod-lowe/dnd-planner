@@ -4,7 +4,7 @@ ruleGroups:
     name: rule.dnd-5e-2024.base.name
     description: rule.dnd-5e-2024.base.description
     rules:
-      # Movement Action
+      # Movement Actions
       - id: action-move-reset
         phase: early
         after:
@@ -14,10 +14,7 @@ ruleGroups:
             source:
               fact: character.movement.total
             target: character.movement.current
-      - id: action-move-offer
-        ui:
-          class: actionMove
-          section: actions
+      - id: action-move-walk-offer
         activities:
           - type: offerRule
             legalWhen:
@@ -26,14 +23,25 @@ ruleGroups:
                   operator: greaterThan
                   value: 0
                 illegalDiagnostics:
-                  - code: rule.dnd-5e-2024.base.action-move-offer.out_of_movement
+                  - code: rule.dnd-5e-2024.base.action-move-walk-offer.out_of_movement
                     severity: error
             rule:
-              id: move
+              id: move-walk
+              ui:
+                model: move
+                section: move
+                name: rule.dnd-5e-2024.base.move-walk.name
+              vars:
+                distance:
+                  default:
+                    fact: character.movement.current
+                maxDistance:
+                  default:
+                    fact: character.movement.total
               activities:
                 # Consume remaining movement
                 - type: numberIncrement
                   target: character.movement.current
                   source:
-                    fact: character.movement.current
+                    var: distance
                   subtract: true

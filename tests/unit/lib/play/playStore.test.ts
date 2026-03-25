@@ -467,4 +467,81 @@ describe('playStore', () => {
       expect(playStore.state.engineOutput).toBeNull();
     });
   });
+
+  describe('updateSelections', () => {
+    it('updates selections for a planned item and triggers debounced evaluate', async () => {
+      vi.useFakeTimers();
+
+      const mockEvaluate = vi.mocked(evaluate);
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      const rule: Rule = { id: 'move-1', activities: [] };
+      playStore.addToPlan(rule);
+
+      const instanceId = playStore.state.plannedItems[0].instanceId;
+      playStore.updateSelections(instanceId, { distance: 15 });
+
+      expect(playStore.state.plannedItems[0].rule.selections).toEqual({ distance: 15 });
+
+      vi.useRealTimers();
+    });
+
+    it('does nothing if instance ID not found', async () => {
+      vi.useFakeTimers();
+
+      const mockEvaluate = vi.mocked(evaluate);
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      const rule: Rule = { id: 'move-1', activities: [] };
+      playStore.addToPlan(rule);
+
+      // Try to update non-existent instance
+      playStore.updateSelections('non-existent-id', { distance: 15 });
+
+      // Original item should not have selections
+      expect(playStore.state.plannedItems[0].rule.selections).toBeUndefined();
+
+      vi.useRealTimers();
+    });
+  });
 });

@@ -1,4 +1,13 @@
 {
+  "rule": {
+    "dnd-5e-2024": {
+      "base": {
+        "move-walk": {
+          "name": "Walk"
+        }
+      }
+    }
+  },
   "app": {
     "title": "D&D Planner",
     "description": "A tablet-optimized web application for tracking D&D character resources and planning combat turns.",
@@ -74,7 +83,13 @@
       "illegal": "Illegal choice",
       "inapplicable": "Inapplicable choice",
       "addToPlan": "Add to plan",
-      "removeFromPlan": "Remove from plan"
+      "removeFromPlan": "Remove from plan",
+      "sections": {
+        "move": "Move"
+      },
+      "move": {
+        "distance": "Movement distance in feet"
+      }
     },
     "plan": {
       "title": "Your Plan",

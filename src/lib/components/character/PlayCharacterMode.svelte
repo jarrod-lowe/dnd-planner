@@ -48,6 +48,11 @@
     playStore.removeFromPlan(instanceId);
   }
 
+  // Handle selection changes from planned items
+  function handleSelectionChange(instanceId: string, selections: Record<string, unknown>): void {
+    playStore.updateSelections(instanceId, selections);
+  }
+
   // Load rule groups on mount
   onMount(() => {
     playStore.loadRuleGroups(character.characterId);
@@ -79,6 +84,7 @@
       {#snippet choices()}
         <ChoicesColumn
           entries={availableRules}
+          facts={playStore.state.facts}
           isLoading={playStore.state.isEvaluating}
           onChoiceTap={handleChoiceTap}
         />
@@ -86,6 +92,8 @@
       {#snippet plan()}
         <PlanColumn
           items={playStore.state.plannedItems}
+          facts={playStore.state.facts}
+          onSelectionChange={handleSelectionChange}
           onMoveUp={handleMoveUp}
           onMoveDown={handleMoveDown}
           onRemove={handleRemove}

@@ -2,15 +2,18 @@
   import { t } from '$lib/i18n';
   import PlanItem from './PlanItem.svelte';
   import type { PlannedItem } from '$lib/play/types';
+  import type { Facts } from '$lib/rules-engine';
 
   interface Props {
     items: PlannedItem[];
+    facts?: Facts;
+    onSelectionChange?: (instanceId: string, selections: Record<string, unknown>) => void;
     onMoveUp: (instanceId: string) => void;
     onMoveDown: (instanceId: string) => void;
     onRemove: (instanceId: string) => void;
   }
 
-  let { items, onMoveUp, onMoveDown, onRemove }: Props = $props();
+  let { items, facts = {}, onSelectionChange, onMoveUp, onMoveDown, onRemove }: Props = $props();
 </script>
 
 <div class="plan-column">
@@ -23,8 +26,12 @@
       {#each items as item, index (item.instanceId)}
         <PlanItem
           {item}
+          {facts}
           canMoveUp={index > 0}
           canMoveDown={index < items.length - 1}
+          onSelectionChange={onSelectionChange
+            ? (selections) => onSelectionChange(item.instanceId, selections)
+            : undefined}
           onMoveUp={() => onMoveUp(item.instanceId)}
           onMoveDown={() => onMoveDown(item.instanceId)}
           onRemove={() => onRemove(item.instanceId)}
