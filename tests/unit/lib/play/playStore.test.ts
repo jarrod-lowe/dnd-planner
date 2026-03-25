@@ -193,9 +193,122 @@ describe('playStore', () => {
       playStore.addToPlan(rule);
 
       expect(playStore.state.plannedItems).toHaveLength(1);
-      expect(playStore.state.plannedItems[0].rule).toEqual(rule);
-      expect(playStore.state.plannedItems[0].instanceId).toBeDefined();
-      expect(playStore.state.plannedItems[0].order).toBe(0);
+      // rule.id is now set to instanceId for unique engine processing
+      const item = playStore.state.plannedItems[0];
+      expect(item.rule.description).toBe('Attack');
+      expect(item.rule.activities).toEqual([]);
+      expect(item.instanceId).toBeDefined();
+      expect(item.rule.id).toBe(item.instanceId); // id is now the instanceId
+      expect(item.order).toBe(0);
+    });
+
+    it('resolves capture vars from facts when adding to plan', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      const mockEvaluate = vi.mocked(evaluate);
+
+      // Mock rule group IDs response
+      mockApiGet.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: [] })
+      } as Response);
+
+      // Mock evaluate to return facts
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {
+          'character.movement.current': 25,
+          'character.movement.total': 30
+        },
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      // Load rule groups triggers evaluation which populates facts
+      await playStore.loadRuleGroups('char-123');
+
+      // Verify facts are populated
+      expect(playStore.state.facts['character.movement.current']).toBe(25);
+
+      // Rule with a capture var
+      const rule: Rule = {
+        id: 'move-walk',
+        description: 'Walk',
+        activities: [],
+        vars: {
+          distance: {
+            default: { fact: 'character.movement.current' },
+            capture: true
+          }
+        }
+      };
+
+      playStore.addToPlan(rule);
+
+      expect(playStore.state.plannedItems).toHaveLength(1);
+      expect(playStore.state.plannedItems[0].rule.selections).toEqual({
+        distance: 25
+      });
+    });
+
+    it('does not resolve vars without capture property', async () => {
+      const mockEvaluate = vi.mocked(evaluate);
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {
+          'character.movement.current': 25
+        },
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      // Rule without capture var (capture not set or false)
+      const rule: Rule = {
+        id: 'move-walk',
+        description: 'Walk',
+        activities: [],
+        vars: {
+          distance: {
+            default: { fact: 'character.movement.current' }
+            // capture not set
+          }
+        }
+      };
+
+      playStore.addToPlan(rule);
+
+      expect(playStore.state.plannedItems).toHaveLength(1);
+      // selections should be empty or undefined since capture is not set
+      expect(playStore.state.plannedItems[0].rule.selections).toBeUndefined();
     });
 
     it('allows adding the same rule multiple times (duplicates)', async () => {
@@ -310,11 +423,12 @@ describe('playStore', () => {
       playStore.addToPlan(rule2);
 
       // Move second item up
-      const instanceId = playStore.state.plannedItems[1].instanceId;
-      playStore.movePlanItem(instanceId, 'up');
+      const moveItemInstanceId = playStore.state.plannedItems[1].instanceId;
+      const attackItemInstanceId = playStore.state.plannedItems[0].instanceId;
+      playStore.movePlanItem(moveItemInstanceId, 'up');
 
-      expect(playStore.state.plannedItems[0].rule.id).toBe('move-1');
-      expect(playStore.state.plannedItems[1].rule.id).toBe('attack-1');
+      expect(playStore.state.plannedItems[0].instanceId).toBe(moveItemInstanceId);
+      expect(playStore.state.plannedItems[1].instanceId).toBe(attackItemInstanceId);
     });
 
     it('moves an item down in the plan order', async () => {
@@ -348,11 +462,12 @@ describe('playStore', () => {
       playStore.addToPlan(rule2);
 
       // Move first item down
-      const instanceId = playStore.state.plannedItems[0].instanceId;
-      playStore.movePlanItem(instanceId, 'down');
+      const attackItemInstanceId = playStore.state.plannedItems[0].instanceId;
+      const moveItemInstanceId = playStore.state.plannedItems[1].instanceId;
+      playStore.movePlanItem(attackItemInstanceId, 'down');
 
-      expect(playStore.state.plannedItems[0].rule.id).toBe('move-1');
-      expect(playStore.state.plannedItems[1].rule.id).toBe('attack-1');
+      expect(playStore.state.plannedItems[0].instanceId).toBe(moveItemInstanceId);
+      expect(playStore.state.plannedItems[1].instanceId).toBe(attackItemInstanceId);
     });
 
     it('does nothing when trying to move first item up', async () => {
@@ -385,12 +500,13 @@ describe('playStore', () => {
       playStore.addToPlan(rule1);
       playStore.addToPlan(rule2);
 
-      const instanceId = playStore.state.plannedItems[0].instanceId;
-      playStore.movePlanItem(instanceId, 'up');
+      const attackItemInstanceId = playStore.state.plannedItems[0].instanceId;
+      const moveItemInstanceId = playStore.state.plannedItems[1].instanceId;
+      playStore.movePlanItem(attackItemInstanceId, 'up');
 
       // Order should remain unchanged
-      expect(playStore.state.plannedItems[0].rule.id).toBe('attack-1');
-      expect(playStore.state.plannedItems[1].rule.id).toBe('move-1');
+      expect(playStore.state.plannedItems[0].instanceId).toBe(attackItemInstanceId);
+      expect(playStore.state.plannedItems[1].instanceId).toBe(moveItemInstanceId);
     });
 
     it('does nothing when trying to move last item down', async () => {
@@ -423,12 +539,13 @@ describe('playStore', () => {
       playStore.addToPlan(rule1);
       playStore.addToPlan(rule2);
 
-      const instanceId = playStore.state.plannedItems[1].instanceId;
-      playStore.movePlanItem(instanceId, 'down');
+      const attackItemInstanceId = playStore.state.plannedItems[0].instanceId;
+      const moveItemInstanceId = playStore.state.plannedItems[1].instanceId;
+      playStore.movePlanItem(moveItemInstanceId, 'down');
 
       // Order should remain unchanged
-      expect(playStore.state.plannedItems[0].rule.id).toBe('attack-1');
-      expect(playStore.state.plannedItems[1].rule.id).toBe('move-1');
+      expect(playStore.state.plannedItems[0].instanceId).toBe(attackItemInstanceId);
+      expect(playStore.state.plannedItems[1].instanceId).toBe(moveItemInstanceId);
     });
   });
 

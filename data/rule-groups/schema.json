@@ -196,6 +196,10 @@
         "default": {
           "$ref": "#/definitions/source",
           "description": "Default value for the variable"
+        },
+        "capture": {
+          "type": "boolean",
+          "description": "When true, resolve the default value from facts and store as selection when the rule is added to the plan"
         }
       },
       "additionalProperties": false

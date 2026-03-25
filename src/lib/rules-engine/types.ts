@@ -69,9 +69,11 @@ export interface Source {
 
 /**
  * Definition of a rule variable with a default value.
+ * @property capture - When true, the default value is resolved from facts and stored as a selection when the rule is added to the plan
  */
 export interface VarDefinition {
   default: Source;
+  capture?: boolean;
 }
 
 // === CONDITIONS ===

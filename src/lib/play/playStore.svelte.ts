@@ -3,6 +3,7 @@ import { evaluate } from '$lib/rules-engine';
 import type { Rule } from '$lib/rules-engine';
 import type { PlannedItem, PlayState } from './types';
 import { debounce } from './debounce';
+import { resolveInitialSelections } from './resolveInitialSelections';
 
 const DEBOUNCE_MS = 300;
 const BATCH_SIZE = 100;
@@ -103,9 +104,18 @@ async function loadRuleGroups(characterId: string): Promise<void> {
 }
 
 function addToPlan(rule: Rule): void {
+  const instanceId = generateInstanceId();
+  // Resolve capture vars from current facts
+  const initialSelections = resolveInitialSelections(rule, state.facts);
+
   const newItem: PlannedItem = {
-    instanceId: generateInstanceId(),
-    rule,
+    instanceId,
+    rule: {
+      ...rule,
+      id: instanceId, // Unique ID so engine processes each instance separately
+      // Only set selections if there are any to set
+      ...(Object.keys(initialSelections).length > 0 && { selections: initialSelections })
+    },
     order: state.plannedItems.length
   };
 
