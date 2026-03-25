@@ -33,7 +33,7 @@ ruleGroups:
                 model: move
                 section: move
                 name: rule.dnd-5e-2024.base.move-walk.name
-              groups:
+              group:
                 - move
               vars:
                 distance:
