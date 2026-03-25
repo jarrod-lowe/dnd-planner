@@ -12,4 +12,5 @@ ruleGroups:
         activities:
           - type: numberSet
             target: character.movement.total
-            number: 30
+            source:
+              number: 30

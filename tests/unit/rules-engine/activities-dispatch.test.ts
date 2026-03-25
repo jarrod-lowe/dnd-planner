@@ -26,7 +26,8 @@ function createEmptyContext(): RuleContext {
     },
     groups: new Map(),
     currentPhase: 'normal',
-    allRules: []
+    allRules: [],
+    currentRule: { id: 'test-rule', activities: [] }
   };
 }
 
@@ -36,7 +37,7 @@ describe('executeActivity', () => {
       id: 'test-1',
       type: 'numberSet',
       target: 'hp.current',
-      number: 42
+      source: { number: 42 }
     };
 
     const context = createEmptyContext();
@@ -51,7 +52,7 @@ describe('executeActivity', () => {
       id: 'test-1',
       type: 'numberIncrement',
       target: 'hp.current',
-      number: 5
+      source: { number: 5 }
     };
     const context = createEmptyContext();
     context.workingState.facts['hp.current'] = 10;
@@ -66,7 +67,7 @@ describe('executeActivity', () => {
       id: 'test-1',
       type: 'numberCopy',
       target: 'hp.temp',
-      source: 'hp.current'
+      source: { fact: 'hp.current' }
     };
     const context = createEmptyContext();
     context.workingState.facts['hp.current'] = 25;
@@ -81,7 +82,7 @@ describe('executeActivity', () => {
       id: 'test-1',
       type: 'numberSum',
       target: 'hp.max',
-      args: ['hp.base', 'hp.bonus']
+      sources: [{ fact: 'hp.base' }, { fact: 'hp.bonus' }]
     };
     const context = createEmptyContext();
     context.workingState.facts['hp.base'] = 10;
@@ -98,7 +99,7 @@ describe('executeActivity', () => {
       type: 'numberFunction',
       target: 'str.modifier',
       function: 'statToModifier',
-      args: ['str.value']
+      sources: [{ fact: 'str.value' }]
     };
     const context = createEmptyContext();
     context.workingState.facts['str.value'] = 18;

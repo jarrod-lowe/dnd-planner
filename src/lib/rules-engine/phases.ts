@@ -132,7 +132,9 @@ export function processRulesInOrder(rules: Rule[], context: RuleContext): void {
       );
 
       if (applicable) {
-        executeRuleActivities(rule.activities, context);
+        // Set current rule in context for source resolution
+        const contextWithRule = { ...context, currentRule: rule };
+        executeRuleActivities(rule.activities, contextWithRule);
         markRuleExecuted(rule, context.groups);
         context.workingState.appliedRuleIds.push(rule.id);
       } else {

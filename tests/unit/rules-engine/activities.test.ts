@@ -32,20 +32,31 @@ function createEmptyState(): WorkingState {
   };
 }
 
+function createEmptyContext(phase: 'early' | 'normal' | 'safeguard' = 'normal'): RuleContext {
+  return {
+    input: {} as never,
+    workingState: createEmptyState(),
+    groups: new Map(),
+    currentPhase: phase,
+    allRules: [],
+    currentRule: { id: 'test-rule', activities: [] }
+  };
+}
+
 describe('executeNumberSet', () => {
   it('sets a fact to a number value', () => {
     const activity: NumberSetActivity = {
       id: 'test-1',
       type: 'numberSet',
       target: 'hp.current',
-      number: 42
+      source: { number: 42 }
     };
 
-    const state = createEmptyState();
+    const context = createEmptyContext();
 
-    executeNumberSet(activity, state);
+    executeNumberSet(activity, context);
 
-    expect(state.facts['hp.current']).toBe(42);
+    expect(context.workingState.facts['hp.current']).toBe(42);
   });
 
   it('overwrites an existing value', () => {
@@ -53,15 +64,51 @@ describe('executeNumberSet', () => {
       id: 'test-1',
       type: 'numberSet',
       target: 'hp.current',
-      number: 100
+      source: { number: 100 }
     };
 
-    const state = createEmptyState();
-    state.facts['hp.current'] = 50;
+    const context = createEmptyContext();
+    context.workingState.facts['hp.current'] = 50;
 
-    executeNumberSet(activity, state);
+    executeNumberSet(activity, context);
 
-    expect(state.facts['hp.current']).toBe(100);
+    expect(context.workingState.facts['hp.current']).toBe(100);
+  });
+
+  it('sets a fact from another fact', () => {
+    const activity: NumberSetActivity = {
+      id: 'test-1',
+      type: 'numberSet',
+      target: 'hp.current',
+      source: { fact: 'hp.max' }
+    };
+
+    const context = createEmptyContext();
+    context.workingState.facts['hp.max'] = 30;
+
+    executeNumberSet(activity, context);
+
+    expect(context.workingState.facts['hp.current']).toBe(30);
+  });
+
+  it('sets a fact from a var with selection', () => {
+    const activity: NumberSetActivity = {
+      id: 'test-1',
+      type: 'numberSet',
+      target: 'distance',
+      source: { var: 'moveDistance' }
+    };
+
+    const context = createEmptyContext();
+    context.currentRule = {
+      id: 'test-rule',
+      activities: [],
+      selections: { moveDistance: 15 }
+    };
+
+    executeNumberSet(activity, context);
+
+    expect(context.workingState.facts['distance']).toBe(15);
   });
 });
 
@@ -71,15 +118,15 @@ describe('executeNumberIncrement', () => {
       id: 'test-1',
       type: 'numberIncrement',
       target: 'hp.current',
-      number: 5
+      source: { number: 5 }
     };
 
-    const state = createEmptyState();
-    state.facts['hp.current'] = 10;
+    const context = createEmptyContext();
+    context.workingState.facts['hp.current'] = 10;
 
-    executeNumberIncrement(activity, state);
+    executeNumberIncrement(activity, context);
 
-    expect(state.facts['hp.current']).toBe(15);
+    expect(context.workingState.facts['hp.current']).toBe(15);
   });
 
   it('treats missing fact as 0 before incrementing', () => {
@@ -87,30 +134,31 @@ describe('executeNumberIncrement', () => {
       id: 'test-1',
       type: 'numberIncrement',
       target: 'hp.current',
-      number: 5
+      source: { number: 5 }
     };
 
-    const state = createEmptyState();
+    const context = createEmptyContext();
 
-    executeNumberIncrement(activity, state);
+    executeNumberIncrement(activity, context);
 
-    expect(state.facts['hp.current']).toBe(5);
+    expect(context.workingState.facts['hp.current']).toBe(5);
   });
 
-  it('decrements with a negative number', () => {
+  it('decrements with subtract flag', () => {
     const activity: NumberIncrementActivity = {
       id: 'test-1',
       type: 'numberIncrement',
       target: 'hp.current',
-      number: -3
+      source: { number: 3 },
+      subtract: true
     };
 
-    const state = createEmptyState();
-    state.facts['hp.current'] = 10;
+    const context = createEmptyContext();
+    context.workingState.facts['hp.current'] = 10;
 
-    executeNumberIncrement(activity, state);
+    executeNumberIncrement(activity, context);
 
-    expect(state.facts['hp.current']).toBe(7);
+    expect(context.workingState.facts['hp.current']).toBe(7);
   });
 
   it('caps result at max value when max is specified', () => {
@@ -118,35 +166,67 @@ describe('executeNumberIncrement', () => {
       id: 'test-1',
       type: 'numberIncrement',
       target: 'hp.current',
-      number: 10,
+      source: { number: 10 },
       max: 'hp.max'
     };
 
-    const state = createEmptyState();
-    state.facts['hp.current'] = 5;
-    state.facts['hp.max'] = 12;
+    const context = createEmptyContext();
+    context.workingState.facts['hp.current'] = 5;
+    context.workingState.facts['hp.max'] = 12;
 
-    executeNumberIncrement(activity, state);
+    executeNumberIncrement(activity, context);
 
-    expect(state.facts['hp.current']).toBe(12);
+    expect(context.workingState.facts['hp.current']).toBe(12);
+  });
+
+  it('increments by a fact value', () => {
+    const activity: NumberIncrementActivity = {
+      id: 'test-1',
+      type: 'numberIncrement',
+      target: 'hp.current',
+      source: { fact: 'healing.amount' }
+    };
+
+    const context = createEmptyContext();
+    context.workingState.facts['hp.current'] = 10;
+    context.workingState.facts['healing.amount'] = 8;
+
+    executeNumberIncrement(activity, context);
+
+    expect(context.workingState.facts['hp.current']).toBe(18);
   });
 });
 
 describe('executeNumberCopy', () => {
-  it('copies a value from source to target', () => {
+  it('copies a value from source fact to target', () => {
     const activity: NumberCopyActivity = {
       id: 'test-1',
       type: 'numberCopy',
       target: 'hp.temp',
-      source: 'hp.current'
+      source: { fact: 'hp.current' }
     };
 
-    const state = createEmptyState();
-    state.facts['hp.current'] = 25;
+    const context = createEmptyContext();
+    context.workingState.facts['hp.current'] = 25;
 
-    executeNumberCopy(activity, state);
+    executeNumberCopy(activity, context);
 
-    expect(state.facts['hp.temp']).toBe(25);
+    expect(context.workingState.facts['hp.temp']).toBe(25);
+  });
+
+  it('copies a literal number', () => {
+    const activity: NumberCopyActivity = {
+      id: 'test-1',
+      type: 'numberCopy',
+      target: 'counter',
+      source: { number: 42 }
+    };
+
+    const context = createEmptyContext();
+
+    executeNumberCopy(activity, context);
+
+    expect(context.workingState.facts['counter']).toBe(42);
   });
 });
 
@@ -156,16 +236,16 @@ describe('executeNumberSum', () => {
       id: 'test-1',
       type: 'numberSum',
       target: 'hp.max',
-      args: ['hp.base', 'hp.bonus']
+      sources: [{ fact: 'hp.base' }, { fact: 'hp.bonus' }]
     };
 
-    const state = createEmptyState();
-    state.facts['hp.base'] = 10;
-    state.facts['hp.bonus'] = 3;
+    const context = createEmptyContext();
+    context.workingState.facts['hp.base'] = 10;
+    context.workingState.facts['hp.bonus'] = 3;
 
-    executeNumberSum(activity, state);
+    executeNumberSum(activity, context);
 
-    expect(state.facts['hp.max']).toBe(13);
+    expect(context.workingState.facts['hp.max']).toBe(13);
   });
 
   it('treats missing facts as 0', () => {
@@ -173,16 +253,32 @@ describe('executeNumberSum', () => {
       id: 'test-1',
       type: 'numberSum',
       target: 'hp.max',
-      args: ['hp.base', 'hp.bonus']
+      sources: [{ fact: 'hp.base' }, { fact: 'hp.bonus' }]
     };
 
-    const state = createEmptyState();
-    state.facts['hp.base'] = 10;
+    const context = createEmptyContext();
+    context.workingState.facts['hp.base'] = 10;
     // hp.bonus is missing
 
-    executeNumberSum(activity, state);
+    executeNumberSum(activity, context);
 
-    expect(state.facts['hp.max']).toBe(10);
+    expect(context.workingState.facts['hp.max']).toBe(10);
+  });
+
+  it('can mix facts and literal numbers', () => {
+    const activity: NumberSumActivity = {
+      id: 'test-1',
+      type: 'numberSum',
+      target: 'total',
+      sources: [{ fact: 'base' }, { number: 5 }]
+    };
+
+    const context = createEmptyContext();
+    context.workingState.facts['base'] = 10;
+
+    executeNumberSum(activity, context);
+
+    expect(context.workingState.facts['total']).toBe(15);
   });
 });
 
@@ -193,15 +289,15 @@ describe('executeNumberFunction', () => {
       type: 'numberFunction',
       target: 'str.modifier',
       function: 'statToModifier',
-      args: ['str.value']
+      sources: [{ fact: 'str.value' }]
     };
 
-    const state = createEmptyState();
-    state.facts['str.value'] = 18;
+    const context = createEmptyContext();
+    context.workingState.facts['str.value'] = 18;
 
-    executeNumberFunction(activity, state);
+    executeNumberFunction(activity, context);
 
-    expect(state.facts['str.modifier']).toBe(4);
+    expect(context.workingState.facts['str.modifier']).toBe(4);
   });
 });
 
@@ -213,11 +309,11 @@ describe('executeEmitEvent', () => {
       event: 'attack'
     };
 
-    const state = createEmptyState();
+    const context = createEmptyContext();
 
-    executeEmitEvent(activity, state);
+    executeEmitEvent(activity, context);
 
-    expect(state.events.has('attack')).toBe(true);
+    expect(context.workingState.events.has('attack')).toBe(true);
   });
 
   it('can add multiple different events', () => {
@@ -232,26 +328,16 @@ describe('executeEmitEvent', () => {
       event: 'damage'
     };
 
-    const state = createEmptyState();
+    const context = createEmptyContext();
 
-    executeEmitEvent(activity1, state);
-    executeEmitEvent(activity2, state);
+    executeEmitEvent(activity1, context);
+    executeEmitEvent(activity2, context);
 
-    expect(state.events.has('attack')).toBe(true);
-    expect(state.events.has('damage')).toBe(true);
-    expect(state.events.size).toBe(2);
+    expect(context.workingState.events.has('attack')).toBe(true);
+    expect(context.workingState.events.has('damage')).toBe(true);
+    expect(context.workingState.events.size).toBe(2);
   });
 });
-
-function createEmptyContext(phase: 'early' | 'normal' | 'safeguard' = 'normal'): RuleContext {
-  return {
-    input: {} as never,
-    workingState: createEmptyState(),
-    groups: new Map(),
-    currentPhase: phase,
-    allRules: []
-  };
-}
 
 describe('executeGenerateRule', () => {
   it('adds generated rule to the appropriate phase array', () => {
