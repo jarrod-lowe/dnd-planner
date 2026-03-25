@@ -14,16 +14,42 @@ ruleGroups:
             source:
               fact: character.movement.total
             target: character.movement.current
-      - id: action-move-walk-offer
+      - id: compute-half-movement-total
+        phase: normal
+        group:
+          - half-movement-total
+        activities:
+          - type: numberFunction
+            function: multiply
+            sources:
+              - fact: character.movement.total
+            target: character.movement.half_total
+            args:
+              multiplier: 0.5
+      - id: compute-half-movement-remaining
+        phase: normal
         after:
           - group: move
+        group:
+          - half-movement-remaining
+        activities:
+          - type: numberFunction
+            function: multiply
+            sources:
+              - fact: character.movement.current
+            target: character.movement.half_remaining
+            args:
+              multiplier: 0.5
+      - id: action-move-walk-offer
+        after:
+          - group: half-movement-remaining
         activities:
           - type: offerRule
             legalWhen:
               - condition:
                   fact: character.movement.current
-                  operator: greaterThan
-                  value: 0
+                  operator: greaterThanOrEqual
+                  value: 5
                 illegalDiagnostics:
                   - code: rule.dnd-5e-2024.base.action-move-walk-offer.out_of_movement
                     severity: error
@@ -45,6 +71,50 @@ ruleGroups:
                     fact: character.movement.total
               activities:
                 # Consume remaining movement
+                - type: numberIncrement
+                  target: character.movement.current
+                  source:
+                    var: distance
+                  subtract: true
+
+      - id: action-move-rough-terrain-offer
+        after:
+          - group: half-movement-total
+          - group: half-movement-remaining
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: character.movement.current
+                  operator: greaterThanOrEqual
+                  value: 10
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.base.action-move-rough-terrain-offer.out_of_movement
+                    severity: error
+            rule:
+              id: move-rough-terrain
+              ui:
+                model: move
+                section: move
+                name: rule.dnd-5e-2024.base.move-rough-terrain.name
+              group:
+                - move
+              vars:
+                distance:
+                  capture: true
+                  default:
+                    fact: character.movement.half_remaining
+                maxDistance:
+                  capture: true
+                  default:
+                    fact: character.movement.half_total
+              activities:
+                # Consume double movement (rough terrain costs 2x)
+                - type: numberIncrement
+                  target: character.movement.current
+                  source:
+                    var: distance
+                  subtract: true
                 - type: numberIncrement
                   target: character.movement.current
                   source:

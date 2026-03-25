@@ -79,4 +79,4 @@ In the available choices, not of the mutable elements of the panel UI are active
 
 ### Model: move
 
-The `move` model has a slider for selecting the distance, with a slider between 0 and `maxDistance` ft. This would set the selection `distance`. If the slider is at the max, it does not provide a `selection` value (so the default will apply).
+The `move` model has a slider for selecting the distance, with a slider between 0 and `maxDistance` ft. This would set the selection `distance`.

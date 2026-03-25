@@ -47,9 +47,9 @@ export type Facts = Record<string, number | string | boolean | object>;
 
 /**
  * Named functions available for number_function activities.
- * Closed set for v1 - only statToModifier.
+ * Closed set for v1 - statToModifier and multiply.
  */
-export type NamedFunction = 'statToModifier';
+export type NamedFunction = 'statToModifier' | 'multiply';
 
 // === SOURCE ===
 
@@ -197,12 +197,14 @@ export interface NumberSumActivity extends ActivityBase {
 /**
  * Sets a fact using a named function with source arguments.
  * Example: statToModifier(str.value) -> str.modifier
+ * Example: multiply(movement.current, { multiplier: 0.5 }) -> movement.half
  */
 export interface NumberFunctionActivity extends ActivityBase {
   type: 'numberFunction';
   target: string;
   function: NamedFunction;
   sources: Source[];
+  args?: Record<string, unknown>;
 }
 
 /**

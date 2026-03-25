@@ -61,6 +61,11 @@
 
   // Helper to resolve a var's default value from facts
   function resolveVarDefault(varName: string): number | undefined {
+    // Check for captured value first (for planned rules with capture: true)
+    if (entry.rule.selections?.[varName] !== undefined) {
+      return entry.rule.selections[varName] as number;
+    }
+
     const varDef = entry.rule.vars?.[varName];
     if (!varDef) return undefined;
 

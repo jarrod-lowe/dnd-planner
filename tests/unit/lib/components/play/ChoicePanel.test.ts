@@ -463,4 +463,87 @@ describe('ChoicePanel', () => {
     ) as HTMLButtonElement;
     expect(moveDownButton?.disabled).toBe(true);
   });
+
+  // === Captured selections tests ===
+
+  it('uses captured maxDistance from selections for slider max', () => {
+    // Simulates a planned rough terrain rule with captured values
+    // maxDistance is based on half_total (constant), distance is based on half_remaining (captured)
+    const entry: AvailableRuleEntry = {
+      rule: {
+        id: 'move-rough-terrain',
+        activities: [],
+        ui: {
+          model: 'move',
+          section: 'move',
+          name: 'rule.dnd-5e-2024.base.move-rough-terrain.name'
+        },
+        vars: {
+          distance: { default: { fact: 'character.movement.half_remaining' }, capture: true },
+          maxDistance: { default: { fact: 'character.movement.half_total' }, capture: true }
+        },
+        selections: {
+          distance: 10,
+          maxDistance: 15 // captured value (half of 30 total), different from what facts would resolve to
+        }
+      } as Rule,
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    };
+
+    // Facts show different values than selections (e.g., after movement was consumed)
+    const facts = {
+      'character.movement.current': 5,
+      'character.movement.half_remaining': 2.5, // remaining is now less
+      'character.movement.half_total': 15 // total is constant
+    };
+
+    const { container } = render(ChoicePanel, {
+      props: { entry, editable: true, facts }
+    });
+
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+    // Slider max should use captured maxDistance (15), not re-resolved fact
+    expect(slider.max).toBe('15');
+    // Slider value should use captured distance (10)
+    expect(slider.value).toBe('10');
+  });
+
+  it('uses captured distance from selections for slider value', () => {
+    const entry: AvailableRuleEntry = {
+      rule: {
+        id: 'move-walk',
+        activities: [],
+        ui: {
+          model: 'move',
+          section: 'move',
+          name: 'rule.dnd-5e-2024.base.move-walk.name'
+        },
+        vars: {
+          distance: { default: { fact: 'character.movement.current' }, capture: true },
+          maxDistance: { default: { fact: 'character.movement.total' } }
+        },
+        selections: {
+          distance: 20 // captured distance, different from current fact
+        }
+      } as Rule,
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    };
+
+    const facts = {
+      'character.movement.current': 5, // different from captured distance
+      'character.movement.total': 30
+    };
+
+    const { container } = render(ChoicePanel, {
+      props: { entry, editable: true, facts }
+    });
+
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+    // Slider value should use captured distance (20), not fact value (5)
+    expect(slider.value).toBe('20');
+  });
 });

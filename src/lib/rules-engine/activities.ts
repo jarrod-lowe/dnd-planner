@@ -186,6 +186,7 @@ export function executeNumberSum(activity: NumberSumActivity, context: RuleConte
  * Looks up the function in the registry, resolves sources to values,
  * and stores the result in the target fact.
  * Example: statToModifier(str.value) -> str.modifier
+ * Example: multiply(movement.current, { multiplier: 0.5 }) -> movement.half
  *
  * @param activity - The number_function activity
  * @param context - Rule context containing working state and current rule
@@ -209,8 +210,10 @@ export function executeNumberFunction(
     throw new Error(`Unknown function: ${activity.function}`);
   }
 
-  const args = activity.sources.map((source) => resolveSource(source, context.workingState, rule));
-  const result = handler(args);
+  const sourceArgs = activity.sources.map((source) =>
+    resolveSource(source, context.workingState, rule)
+  );
+  const result = handler(sourceArgs, activity.args);
   context.workingState.facts[activity.target] = result;
 }
 
