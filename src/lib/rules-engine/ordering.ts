@@ -89,7 +89,8 @@ export function areDependenciesSatisfied(rule: Rule, groups: Map<string, GroupSt
   // Check each group in after dependencies
   for (const groupRef of rule.after) {
     const groupState = groups.get(groupRef.group);
-    if (!groupState || !isGroupSettled(groupState)) {
+    // If group doesn't exist, ignore it (treat as satisfied)
+    if (groupState && !isGroupSettled(groupState)) {
       return false;
     }
   }
@@ -240,7 +241,7 @@ export function validateOrdering(rules: Rule[], phase: Phase): Diagnostic[] {
       if (!existingGroups.has(dep.group)) {
         diagnostics.push({
           code: 'MISSING_GROUP',
-          severity: 'error',
+          severity: 'warning',
           message: `Rule "${rule.id}" depends on non-existent group "${dep.group}"`
         });
         continue;

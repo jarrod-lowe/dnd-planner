@@ -134,7 +134,7 @@ describe('areDependenciesSatisfied', () => {
     expect(areDependenciesSatisfied(rule, groups)).toBe(false);
   });
 
-  it('returns false when an after group does not exist', () => {
+  it('returns true when an after group does not exist (ignored)', () => {
     const rule: Rule = {
       id: 'rule-1',
       after: [{ group: 'nonexistent' }],
@@ -142,7 +142,7 @@ describe('areDependenciesSatisfied', () => {
     };
     const groups = new Map<string, GroupState>();
 
-    expect(areDependenciesSatisfied(rule, groups)).toBe(false);
+    expect(areDependenciesSatisfied(rule, groups)).toBe(true);
   });
 
   it('returns true when all multiple after groups are settled', () => {
@@ -411,13 +411,14 @@ describe('validateOrdering', () => {
     expect(diagnostics).toHaveLength(0);
   });
 
-  it('returns error for dependency on non-existent group', () => {
+  it('returns warning for dependency on non-existent group', () => {
     const rules: Rule[] = [{ id: 'rule-1', after: [{ group: 'nonexistent' }], activities: [] }];
 
     const diagnostics = validateOrdering(rules, 'normal');
 
     expect(diagnostics).toHaveLength(1);
     expect(diagnostics[0].code).toBe('MISSING_GROUP');
+    expect(diagnostics[0].severity).toBe('warning');
   });
 
   it('returns error for self-dependency in same group', () => {
