@@ -116,6 +116,7 @@ PlayCharacterMode.svelte
 ## ChoicePanel Slider Behavior
 
 The `ChoicePanel` component handles both:
+
 - **Available choices** (disabled slider, shows available amount)
 - **Planned items** (enabled slider, shows selected amount)
 
@@ -143,10 +144,12 @@ The `ChoicePanel` component handles both:
 ### Why Capture Vars Fix the Slider Bug
 
 Without capture vars:
+
 1. Add Walk → no selections → slider uses `moveCurrentDistance` (remaining after ALL items)
 2. After evaluation, remaining is 0 → slider shows 0
 
 With capture vars:
+
 1. Add Walk → selections captured: `{ distance: 25 }` → slider shows 25
 2. Slider always shows the captured value, not the computed remaining
 
@@ -175,12 +178,18 @@ All colors use semantic CSS variables defined in the theme:
 Components use scoped styles with BEM-like naming:
 
 ```css
-.choice-panel { }
-.choice-panel--editable { }
-.choice-panel--warning { }
-.choice-panel__header { }
-.choice-panel__body { }
-.choice-panel__model { }
+.choice-panel {
+}
+.choice-panel--editable {
+}
+.choice-panel--warning {
+}
+.choice-panel__header {
+}
+.choice-panel__body {
+}
+.choice-panel__model {
+}
 ```
 
 ## Internationalization (i18n)

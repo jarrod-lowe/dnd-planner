@@ -15,9 +15,9 @@ interface Rule {
   id: string;
   description?: string;
   ui?: {
-    model?: string;    // UI component to use (e.g., 'move')
-    section?: string;  // Section category (e.g., 'move', 'action')
-    name?: string;     // i18n key for display name
+    model?: string; // UI component to use (e.g., 'move')
+    section?: string; // Section category (e.g., 'move', 'action')
+    name?: string; // i18n key for display name
   };
   vars?: Record<string, VarDefinition>;
   selections?: Record<string, unknown>;
@@ -36,8 +36,8 @@ Defines a variable that can be customized when a rule is executed.
 
 ```typescript
 interface VarDefinition {
-  default: Source;    // Default value source
-  capture?: boolean;  // When true, resolve default from facts at add time
+  default: Source; // Default value source
+  capture?: boolean; // When true, resolve default from facts at add time
 }
 ```
 
@@ -46,6 +46,7 @@ interface VarDefinition {
 When `capture: true` is set on a var, the default value is resolved from the current facts and stored as a selection when the rule is added to the plan. This is useful for vars that reference facts which change during evaluation.
 
 **Example:**
+
 ```yaml
 vars:
   distance:
@@ -55,6 +56,7 @@ vars:
 ```
 
 When a Walk action is added to the plan:
+
 1. The `distance` var's default is resolved from `character.movement.current` (e.g., 30)
 2. The value 30 is stored as `selections.distance` on the planned item
 3. The slider shows 30ft, even after evaluation changes `character.movement.current`
@@ -67,9 +69,9 @@ A unified value reference used in activities.
 
 ```typescript
 interface Source {
-  fact?: string;    // Reference to a fact in working state
-  number?: number;  // A literal numeric value
-  var?: string;     // Reference to a rule variable
+  fact?: string; // Reference to a fact in working state
+  number?: number; // A literal numeric value
+  var?: string; // Reference to a rule variable
 }
 ```
 
@@ -91,9 +93,9 @@ Represents a single item in the user's action plan.
 
 ```typescript
 interface PlannedItem {
-  instanceId: string;  // Unique identifier for this instance
-  rule: Rule;          // The rule being planned (with selections)
-  order: number;       // Position in the plan (0-indexed)
+  instanceId: string; // Unique identifier for this instance
+  rule: Rule; // The rule being planned (with selections)
+  order: number; // Position in the plan (0-indexed)
 }
 ```
 

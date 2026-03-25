@@ -11,10 +11,7 @@
  */
 import type { Rule, Facts } from '$lib/rules-engine';
 
-export function resolveInitialSelections(
-  rule: Rule,
-  facts: Facts
-): Record<string, unknown> {
+export function resolveInitialSelections(rule: Rule, facts: Facts): Record<string, unknown> {
   const selections: Record<string, unknown> = {};
 
   if (!rule.vars) {

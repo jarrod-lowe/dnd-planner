@@ -16,12 +16,12 @@ The rules engine is the heart of the D&D Planner application. It evaluates game 
 interface EngineInput {
   schemaVersion: 1;
   rules: {
-    standing: Rule[];  // Always-active rules
-    planned: Rule[];   // User-planned actions
-    effects: Rule[];   // Result of planned actions
+    standing: Rule[]; // Always-active rules
+    planned: Rule[]; // User-planned actions
+    effects: Rule[]; // Result of planned actions
   };
   state: {
-    facts: Facts;      // Current character state
+    facts: Facts; // Current character state
   };
 }
 ```
@@ -31,12 +31,12 @@ interface EngineInput {
 ```typescript
 interface EngineOutput {
   status: Status;
-  facts: Facts;                    // Projected state after evaluation
+  facts: Facts; // Projected state after evaluation
   collections: Record<string, unknown>;
   availableRules: AvailableRuleEntry[];
   diagnostics: Diagnostics;
   trace: Trace;
-  next: EngineInput;               // Replayable input for subsequent calls
+  next: EngineInput; // Replayable input for subsequent calls
 }
 ```
 
@@ -72,11 +72,13 @@ vars:
 **Why use capture?**
 
 The `character.movement.current` fact changes during evaluation. Without capture:
+
 1. Add Walk (remaining = 30ft)
 2. Engine evaluates: uses 30ft, sets remaining to 0
 3. Slider shows 0ft (derived from final remaining)
 
 With `capture: true`:
+
 1. Add Walk (remaining = 30ft)
 2. Selection is captured: `{ distance: 30 }`
 3. Slider shows 30ft (from selection, not facts)
@@ -84,11 +86,13 @@ With `capture: true`:
 **When to use capture:**
 
 Use `capture: true` when:
+
 - The var's default references a fact
 - That fact changes during evaluation (e.g., consumed resources)
 - The user should see/adjust the value they selected
 
 Don't use capture when:
+
 - The var represents a constant or calculation
 - The value should always reflect current state
 
@@ -150,6 +154,7 @@ Offers a choice to the user.
 ## Idempotency
 
 The engine is deterministic and idempotent:
+
 - Same input → equivalent output
 - Calling `evaluate(output.next)` produces equivalent output
 
