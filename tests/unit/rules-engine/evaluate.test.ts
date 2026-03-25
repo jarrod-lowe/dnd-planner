@@ -169,7 +169,9 @@ describe('evaluate', () => {
           rule: {
             id: 'generated-rule',
             phase: 'normal',
-            activities: [{ id: 'a1', type: 'numberSet', target: 'generated', source: { number: 99 } }]
+            activities: [
+              { id: 'a1', type: 'numberSet', target: 'generated', source: { number: 99 } }
+            ]
           }
         }
       ]

@@ -193,7 +193,10 @@ export function executeNumberSum(activity: NumberSumActivity, context: RuleConte
  * @calledBy executeActivity
  * @calls FunctionRegistry (to look up and execute the named function)
  */
-export function executeNumberFunction(activity: NumberFunctionActivity, context: RuleContext): void {
+export function executeNumberFunction(
+  activity: NumberFunctionActivity,
+  context: RuleContext
+): void {
   const rule = context.currentRule;
   if (!rule) {
     throw new Error('executeNumberFunction requires currentRule in context');
@@ -206,9 +209,7 @@ export function executeNumberFunction(activity: NumberFunctionActivity, context:
     throw new Error(`Unknown function: ${activity.function}`);
   }
 
-  const args = activity.sources.map((source) =>
-    resolveSource(source, context.workingState, rule)
-  );
+  const args = activity.sources.map((source) => resolveSource(source, context.workingState, rule));
   const result = handler(args);
   context.workingState.facts[activity.target] = result;
 }

@@ -429,12 +429,12 @@ Rules may include:
 
 #### Separation of concerns
 
-| Concern | Field |
-| ------- | ----- |
-| Rule mechanics | activities |
-| Engine parameters | vars |
+| Concern              | Field      |
+| -------------------- | ---------- |
+| Rule mechanics       | activities |
+| Engine parameters    | vars       |
 | User-selected values | selections |
-| UI-only data | ui.state |
+| UI-only data         | ui.state   |
 
 ### Ordering and applicability
 
@@ -588,10 +588,7 @@ Copies the value from one fact to another.
 {
   "type": "number_sum",
   "target": "hp.max",
-  "sources": [
-    {"fact": "hp.base"},
-    {"fact": "hp.bonus"}
-  ]
+  "sources": [{ "fact": "hp.base" }, { "fact": "hp.bonus" }]
 }
 ```
 
@@ -608,9 +605,7 @@ Sets a numeric fact to the sum of multiple other facts.
   "type": "number_function",
   "target": "str.modifier",
   "function": "modifier_value",
-  "sources": [
-    {"fact": "str.value"},
-  ]
+  "sources": [{ "fact": "str.value" }]
 }
 ```
 

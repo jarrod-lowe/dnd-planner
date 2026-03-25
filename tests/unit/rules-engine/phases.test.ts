@@ -162,7 +162,9 @@ describe('processRulesInOrder', () => {
     const dependentRule: Rule = {
       id: 'dependent-rule',
       after: [{ group: 'init' }],
-      activities: [{ id: 'act-2', type: 'numberSet', target: 'dependent.done', source: { number: 2 } }]
+      activities: [
+        { id: 'act-2', type: 'numberSet', target: 'dependent.done', source: { number: 2 } }
+      ]
     };
 
     const context = createEmptyContext();
@@ -273,7 +275,9 @@ describe('executePhase', () => {
     const generatedRule: Rule = {
       id: 'generated-1',
       phase: 'normal',
-      activities: [{ id: 'act-1', type: 'numberSet', target: 'generated.value', source: { number: 99 } }]
+      activities: [
+        { id: 'act-1', type: 'numberSet', target: 'generated.value', source: { number: 99 } }
+      ]
     };
 
     const context = createEmptyContext();
