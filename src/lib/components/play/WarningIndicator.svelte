@@ -3,13 +3,16 @@
 
   interface Props {
     type: 'illegal' | 'inapplicable';
+    message?: string;
   }
 
-  let { type }: Props = $props();
+  let { type, message }: Props = $props();
 
-  const label = $derived(
+  const fallbackLabel = $derived(
     type === 'illegal' ? $t('play.choices.illegal') : $t('play.choices.inapplicable')
   );
+
+  const label = $derived(message ?? fallbackLabel);
 </script>
 
 <span
