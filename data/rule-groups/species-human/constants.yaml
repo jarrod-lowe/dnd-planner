@@ -25,3 +25,8 @@ ruleGroups:
               fact: character.movement.swim.cost
             source:
               number: 2
+          - type: numberSet
+            target:
+              fact: character.movement.fly.can
+            source:
+              number: 0

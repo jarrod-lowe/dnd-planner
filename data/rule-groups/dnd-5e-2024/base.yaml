@@ -219,6 +219,15 @@ ruleGroups:
                     fact: character.movement.current
                     operator: lessThan
                     value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.base.action-move-swim-offer.cannot_swim
+                  when:
+                    fact: character.movement.swim.can
+                    operator: equals
+                    value: 0
 
       # Swim with costly movement (cost >= 2)
       - id: action-move-swim-costly-offer
@@ -290,6 +299,15 @@ ruleGroups:
                     fact: character.movement.current
                     operator: lessThan
                     value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.base.action-move-swim-offer.cannot_swim
+                  when:
+                    fact: character.movement.swim.can
+                    operator: equals
+                    value: 0
 
       # Fly (1x cost)
       - id: action-move-fly-offer
@@ -347,6 +365,15 @@ ruleGroups:
                     fact: character.movement.current
                     operator: lessThan
                     value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.base.action-move-fly-offer.cannot_fly
+                  when:
+                    fact: character.movement.fly.can
+                    operator: lessThanOrEqual
+                    value: 1
 
       # Free Action
       - id: action-free-offer
