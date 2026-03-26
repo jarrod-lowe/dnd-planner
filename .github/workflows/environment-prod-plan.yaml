@@ -44,7 +44,7 @@ jobs:
 
       - name: Terraform Format Check
         if: github.actor != 'dependabot[bot]'
-        uses: dflook/terraform-fmt@v1
+        uses: dflook/terraform-fmt@v2
         with:
           path: terraform
 
