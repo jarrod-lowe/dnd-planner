@@ -1,6 +1,8 @@
 <script lang="ts">
   import { t } from '$lib/i18n';
   import ChoicePanel from './ChoicePanel.svelte';
+  import PackedChoiceGroup from './PackedChoiceGroup.svelte';
+  import { groupPackedChoices } from '$lib/play/groupPackedChoices';
   import type { AvailableRuleEntry, Facts } from '$lib/rules-engine';
 
   interface Props {
@@ -11,6 +13,9 @@
   }
 
   let { entries, facts = {}, isLoading = false, onChoiceTap }: Props = $props();
+
+  // Group entries by packBehind
+  const choiceGroups = $derived(groupPackedChoices(entries));
 </script>
 
 <div class="choices-column">
@@ -24,8 +29,22 @@
     </div>
   {:else}
     <div class="choices-column__list">
-      {#each entries as entry (entry.rule.id)}
-        <ChoicePanel {entry} {facts} editable={false} onTap={() => onChoiceTap(entry)} />
+      {#each choiceGroups as group (group.type === 'packed' ? group.leader.rule.id : group.entry.rule.id)}
+        {#if group.type === 'single'}
+          <ChoicePanel
+            entry={group.entry}
+            {facts}
+            editable={false}
+            onTap={() => onChoiceTap(group.entry)}
+          />
+        {:else if group.type === 'packed'}
+          <PackedChoiceGroup
+            leader={group.leader}
+            followers={group.followers}
+            {facts}
+            onAddToPlan={onChoiceTap}
+          />
+        {/if}
       {/each}
     </div>
   {/if}
