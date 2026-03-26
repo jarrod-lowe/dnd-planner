@@ -23,6 +23,13 @@
         "action-move-swim-offer": {
           "cannot_swim": "bIQ DaDolaHbe'",
           "out_of_movement": "Do tu'lu'be'"
+        },
+        "move-fly": {
+          "name": "Do (peng)"
+        },
+        "action-move-fly-offer": {
+          "cannot_fly": "peng DaDolaHbe'",
+          "out_of_movement": "Do tu'lu'be'"
         }
       }
     }

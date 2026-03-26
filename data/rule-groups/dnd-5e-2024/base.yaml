@@ -291,6 +291,63 @@ ruleGroups:
                     operator: lessThan
                     value: 0
 
+      # Fly (1x cost)
+      - id: action-move-fly-offer
+        after:
+          - group: half-movement-remaining
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: character.movement.fly.can
+                  operator: greaterThanOrEqual
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.base.action-move-fly-offer.cannot_fly
+                    severity: error
+              - condition:
+                  fact: character.movement.current
+                  operator: greaterThanOrEqual
+                  value: 5
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.base.action-move-fly-offer.out_of_movement
+                    severity: error
+            rule:
+              id: move-fly
+              ui:
+                model: move
+                section: move
+                name: rule.dnd-5e-2024.base.move-fly.name
+              group:
+                - move
+              vars:
+                distance:
+                  capture: true
+                  default:
+                    fact: character.movement.current
+                maxDistance:
+                  default:
+                    fact: character.movement.total
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: character.movement.current
+                  source:
+                    var: distance
+                  subtract: true
+                - type: setClear
+                  target:
+                    var: errors
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.base.action-move-fly-offer.out_of_movement
+                  when:
+                    fact: character.movement.current
+                    operator: lessThan
+                    value: 0
+
       # Free Action
       - id: action-free-offer
         activities:

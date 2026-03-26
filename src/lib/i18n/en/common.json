@@ -23,6 +23,13 @@
         "action-move-swim-offer": {
           "cannot_swim": "You cannot swim",
           "out_of_movement": "Out of movement"
+        },
+        "move-fly": {
+          "name": "Fly"
+        },
+        "action-move-fly-offer": {
+          "cannot_fly": "You cannot fly",
+          "out_of_movement": "Out of movement"
         }
       }
     }
