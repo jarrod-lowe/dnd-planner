@@ -258,8 +258,9 @@
       border-color var(--transition-fast);
   }
 
-  /* Eliminate top gap - first child doesn't need it */
-  .choice-panel > :first-child {
+  /* Eliminate top gap - first content element doesn't need it */
+  .choice-panel > .choice-panel__header:first-of-type,
+  .choice-panel > .choice-panel__body:first-of-type {
     margin-top: calc(-1 * var(--spacing-xs));
   }
 
