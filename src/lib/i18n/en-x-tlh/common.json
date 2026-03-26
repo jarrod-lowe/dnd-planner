@@ -116,6 +116,12 @@
       },
       "move": {
         "distance": "Do chu'"
+      },
+      "pack": {
+        "expand": "DuH chel",
+        "collapse": "DuH SoQmoH",
+        "expandAria": "DuH poSmoH",
+        "collapseAria": "DuH SoQmoH"
       }
     },
     "plan": {

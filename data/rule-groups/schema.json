@@ -59,7 +59,25 @@
         "ui": {
           "type": "object",
           "description": "UI-specific configuration",
-          "additionalProperties": true
+          "properties": {
+            "model": {
+              "type": "string",
+              "description": "UI model type (e.g., 'move')"
+            },
+            "section": {
+              "type": "string",
+              "description": "UI section label"
+            },
+            "name": {
+              "type": "string",
+              "description": "i18n key for display name"
+            },
+            "packBehind": {
+              "type": "string",
+              "description": "Rule ID to pack this choice behind (collapsible group)"
+            }
+          },
+          "additionalProperties": false
         },
         "vars": {
           "type": "object",

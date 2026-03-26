@@ -6,7 +6,7 @@
           "name": "Walk"
         },
         "move-rough-terrain": {
-          "name": "Walk (Rough Terrain)"
+          "name": "Trudge"
         },
         "free-action": {
           "name": "Free Action"
@@ -116,6 +116,12 @@
       },
       "move": {
         "distance": "Movement distance in feet"
+      },
+      "pack": {
+        "expand": "Show more options",
+        "collapse": "Hide options",
+        "expandAria": "Expand packed choices",
+        "collapseAria": "Collapse packed choices"
       }
     },
     "plan": {
