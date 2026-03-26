@@ -22,11 +22,7 @@ import { resolveSource } from './sources';
  * For fact targets: writes to workingState.facts
  * For var targets: writes to currentRule's runtime vars
  */
-function setTargetValue(
-  target: Target,
-  value: number,
-  context: RuleContext
-): void {
+function setTargetValue(target: Target, value: number, context: RuleContext): void {
   if (target.fact !== undefined) {
     context.workingState.facts[target.fact] = value;
   } else if (target.var !== undefined) {

@@ -37,10 +37,7 @@
     "notices": []
   },
   "trace": {
-    "appliedRuleIds": [
-      "offer-move",
-      "move"
-    ],
+    "appliedRuleIds": ["offer-move", "move"],
     "appliedActivityIds": [],
     "providedCapabilities": [],
     "emittedEvents": []

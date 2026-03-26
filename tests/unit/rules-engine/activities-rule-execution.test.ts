@@ -24,7 +24,12 @@ describe('executeRuleActivities', () => {
   it('executes activities in order', () => {
     const activities: Activity[] = [
       { id: 'act-1', type: 'numberSet', target: { fact: 'hp.current' }, source: { number: 10 } },
-      { id: 'act-2', type: 'numberIncrement', target: { fact: 'hp.current' }, source: { number: 5 } }
+      {
+        id: 'act-2',
+        type: 'numberIncrement',
+        target: { fact: 'hp.current' },
+        source: { number: 5 }
+      }
     ];
 
     const context = createEmptyContext();
@@ -37,7 +42,12 @@ describe('executeRuleActivities', () => {
   it('each activity sees state mutations from previous activities', () => {
     const activities: Activity[] = [
       { id: 'act-1', type: 'numberSet', target: { fact: 'hp.base' }, source: { number: 10 } },
-      { id: 'act-2', type: 'numberCopy', target: { fact: 'hp.current' }, source: { fact: 'hp.base' } }
+      {
+        id: 'act-2',
+        type: 'numberCopy',
+        target: { fact: 'hp.current' },
+        source: { fact: 'hp.base' }
+      }
     ];
 
     const context = createEmptyContext();

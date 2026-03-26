@@ -24,7 +24,9 @@ describe('evaluate', () => {
   it('executes a simple rule and updates facts', () => {
     const rule: Rule = {
       id: 'test-rule',
-      activities: [{ id: 'act-1', type: 'numberSet', target: { fact: 'hp.current' }, source: { number: 30 } }]
+      activities: [
+        { id: 'act-1', type: 'numberSet', target: { fact: 'hp.current' }, source: { number: 30 } }
+      ]
     };
     const input: EngineInput = {
       schemaVersion: 1,
@@ -42,17 +44,23 @@ describe('evaluate', () => {
     const earlyRule: Rule = {
       id: 'early-1',
       phase: 'early',
-      activities: [{ id: 'a1', type: 'numberSet', target: { fact: 'order' }, source: { number: 1 } }]
+      activities: [
+        { id: 'a1', type: 'numberSet', target: { fact: 'order' }, source: { number: 1 } }
+      ]
     };
     const normalRule: Rule = {
       id: 'normal-1',
       phase: 'normal',
-      activities: [{ id: 'a2', type: 'numberIncrement', target: { fact: 'order' }, source: { number: 10 } }]
+      activities: [
+        { id: 'a2', type: 'numberIncrement', target: { fact: 'order' }, source: { number: 10 } }
+      ]
     };
     const safeguardRule: Rule = {
       id: 'safeguard-1',
       phase: 'safeguard',
-      activities: [{ id: 'a3', type: 'numberIncrement', target: { fact: 'order' }, source: { number: 100 } }]
+      activities: [
+        { id: 'a3', type: 'numberIncrement', target: { fact: 'order' }, source: { number: 100 } }
+      ]
     };
 
     const input: EngineInput = {
@@ -75,12 +83,16 @@ describe('evaluate', () => {
     const initRule: Rule = {
       id: 'init',
       group: ['init-group'],
-      activities: [{ id: 'a1', type: 'numberSet', target: { fact: 'initialized' }, source: { number: 1 } }]
+      activities: [
+        { id: 'a1', type: 'numberSet', target: { fact: 'initialized' }, source: { number: 1 } }
+      ]
     };
     const dependentRule: Rule = {
       id: 'dependent',
       after: [{ group: 'init-group' }],
-      activities: [{ id: 'a2', type: 'numberSet', target: { fact: 'depends' }, source: { number: 2 } }]
+      activities: [
+        { id: 'a2', type: 'numberSet', target: { fact: 'depends' }, source: { number: 2 } }
+      ]
     };
 
     const input: EngineInput = {
@@ -98,7 +110,9 @@ describe('evaluate', () => {
   it('returns replayable next input', () => {
     const rule: Rule = {
       id: 'test-rule',
-      activities: [{ id: 'a1', type: 'numberSet', target: { fact: 'hp.current' }, source: { number: 30 } }]
+      activities: [
+        { id: 'a1', type: 'numberSet', target: { fact: 'hp.current' }, source: { number: 30 } }
+      ]
     };
     const input: EngineInput = {
       schemaVersion: 1,
@@ -136,7 +150,9 @@ describe('evaluate', () => {
   it('preserves planned rules when re-evaluated with next', () => {
     const plannedRule: Rule = {
       id: 'planned-action',
-      activities: [{ id: 'a1', type: 'numberSet', target: { fact: 'planned_value' }, source: { number: 42 } }]
+      activities: [
+        { id: 'a1', type: 'numberSet', target: { fact: 'planned_value' }, source: { number: 42 } }
+      ]
     };
     const input: EngineInput = {
       schemaVersion: 1,
@@ -222,7 +238,9 @@ describe('evaluate', () => {
   it('produces equivalent facts when re-evaluated with next', () => {
     const rule: Rule = {
       id: 'test-rule',
-      activities: [{ id: 'a1', type: 'numberSet', target: { fact: 'hp.current' }, source: { number: 30 } }]
+      activities: [
+        { id: 'a1', type: 'numberSet', target: { fact: 'hp.current' }, source: { number: 30 } }
+      ]
     };
     const input: EngineInput = {
       schemaVersion: 1,

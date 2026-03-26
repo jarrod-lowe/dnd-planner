@@ -128,7 +128,9 @@ describe('processRulesInOrder', () => {
     const rule: Rule = {
       id: 'disabled-rule',
       enabled: false,
-      activities: [{ id: 'a1', type: 'numberSet', target: { fact: 'test.value' }, source: { number: 42 } }]
+      activities: [
+        { id: 'a1', type: 'numberSet', target: { fact: 'test.value' }, source: { number: 42 } }
+      ]
     };
 
     const context = createEmptyContext();
@@ -143,7 +145,9 @@ describe('processRulesInOrder', () => {
     const rule: Rule = {
       id: 'conditional-rule',
       when: [{ fact: 'enabled', operator: 'equals', value: 1 }],
-      activities: [{ id: 'a1', type: 'numberSet', target: { fact: 'test.value' }, source: { number: 42 } }]
+      activities: [
+        { id: 'a1', type: 'numberSet', target: { fact: 'test.value' }, source: { number: 42 } }
+      ]
     };
 
     const context = createEmptyContext();
@@ -157,7 +161,9 @@ describe('processRulesInOrder', () => {
     const rule: Rule = {
       id: 'conditional-rule',
       when: [{ fact: 'enabled', operator: 'equals', value: 1 }],
-      activities: [{ id: 'a1', type: 'numberSet', target: { fact: 'test.value' }, source: { number: 42 } }]
+      activities: [
+        { id: 'a1', type: 'numberSet', target: { fact: 'test.value' }, source: { number: 42 } }
+      ]
     };
 
     const context = createEmptyContext();
@@ -227,7 +233,9 @@ describe('executePhase', () => {
     const rule: Rule = {
       id: 'rule-1',
       phase: 'normal',
-      activities: [{ id: 'act-1', type: 'numberSet', target: { fact: 'test.value' }, source: { number: 42 } }]
+      activities: [
+        { id: 'act-1', type: 'numberSet', target: { fact: 'test.value' }, source: { number: 42 } }
+      ]
     };
 
     const context = createEmptyContext();
@@ -258,7 +266,12 @@ describe('executePhase', () => {
       id: 'generated-1',
       phase: 'normal',
       activities: [
-        { id: 'act-1', type: 'numberSet', target: { fact: 'generated.value' }, source: { number: 99 } }
+        {
+          id: 'act-1',
+          type: 'numberSet',
+          target: { fact: 'generated.value' },
+          source: { number: 99 }
+        }
       ]
     };
 

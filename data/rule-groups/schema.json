@@ -219,7 +219,14 @@
     },
     "comparisonOperator": {
       "type": "string",
-      "enum": ["equals", "notEquals", "greaterThan", "greaterThanOrEqual", "lessThan", "lessThanOrEqual"],
+      "enum": [
+        "equals",
+        "notEquals",
+        "greaterThan",
+        "greaterThanOrEqual",
+        "lessThan",
+        "lessThanOrEqual"
+      ],
       "description": "Comparison operator for fact conditions"
     },
     "activity": {
@@ -232,7 +239,16 @@
         },
         "type": {
           "type": "string",
-          "enum": ["numberSet", "numberIncrement", "numberCopy", "numberSum", "numberFunction", "emitEvent", "generateRule", "offerRule"],
+          "enum": [
+            "numberSet",
+            "numberIncrement",
+            "numberCopy",
+            "numberSum",
+            "numberFunction",
+            "emitEvent",
+            "generateRule",
+            "offerRule"
+          ],
           "description": "Activity type"
         },
         "target": {
