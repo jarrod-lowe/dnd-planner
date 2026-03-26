@@ -13,7 +13,8 @@ ruleGroups:
           - type: numberCopy
             source:
               fact: character.movement.total
-            target: character.movement.current
+            target:
+              fact: character.movement.current
       - id: compute-half-movement-total
         phase: normal
         group:
@@ -23,7 +24,8 @@ ruleGroups:
             function: multiply
             sources:
               - fact: character.movement.total
-            target: character.movement.half_total
+            target:
+              fact: character.movement.half_total
             args:
               multiplier: 0.5
       - id: compute-half-movement-remaining
@@ -37,7 +39,8 @@ ruleGroups:
             function: multiply
             sources:
               - fact: character.movement.current
-            target: character.movement.half_remaining
+            target:
+              fact: character.movement.half_remaining
             args:
               multiplier: 0.5
       - id: action-move-walk-offer
@@ -72,10 +75,20 @@ ruleGroups:
               activities:
                 # Consume remaining movement
                 - type: numberIncrement
-                  target: character.movement.current
+                  target:
+                    fact: character.movement.current
                   source:
                     var: distance
                   subtract: true
+                # Track illegal state (movement went negative)
+                - type: numberSet
+                  target:
+                    var: illegal
+                  source:
+                    condition:
+                      fact: character.movement.current
+                      operator: lessThan
+                      value: 0
 
       - id: action-move-rough-terrain-offer
         after:
@@ -111,15 +124,26 @@ ruleGroups:
               activities:
                 # Consume double movement (rough terrain costs 2x)
                 - type: numberIncrement
-                  target: character.movement.current
+                  target:
+                    fact: character.movement.current
                   source:
                     var: distance
                   subtract: true
                 - type: numberIncrement
-                  target: character.movement.current
+                  target:
+                    fact: character.movement.current
                   source:
                     var: distance
                   subtract: true
+                # Track illegal state (movement went negative)
+                - type: numberSet
+                  target:
+                    var: illegal
+                  source:
+                    condition:
+                      fact: character.movement.current
+                      operator: lessThan
+                      value: 0
 
       # Free Action
       - id: action-free-offer

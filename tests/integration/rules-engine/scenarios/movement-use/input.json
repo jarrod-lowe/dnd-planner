@@ -29,7 +29,7 @@
                 {
                   "id": "consume-movement",
                   "type": "numberIncrement",
-                  "target": "character.movement.current",
+                  "target": { "fact": "character.movement.current" },
                   "source": { "fact": "planned.move.amount" },
                   "subtract": true
                 }
@@ -46,7 +46,7 @@
           {
             "id": "consume-movement",
             "type": "numberIncrement",
-            "target": "character.movement.current",
+            "target": { "fact": "character.movement.current" },
             "source": { "fact": "planned.move.amount" },
             "subtract": true
           }

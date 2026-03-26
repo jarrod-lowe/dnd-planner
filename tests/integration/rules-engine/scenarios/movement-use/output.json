@@ -21,8 +21,10 @@
           {
             "id": "consume-movement",
             "type": "numberIncrement",
-            "target": "character.movement.current",
-            "source": { "fact": "planned.move.amount" },
+            "target": { "fact": "character.movement.current" },
+            "source": {
+              "fact": "planned.move.amount"
+            },
             "subtract": true
           }
         ]
@@ -35,7 +37,10 @@
     "notices": []
   },
   "trace": {
-    "appliedRuleIds": ["offer-move", "move"],
+    "appliedRuleIds": [
+      "offer-move",
+      "move"
+    ],
     "appliedActivityIds": [],
     "providedCapabilities": [],
     "emittedEvents": []
@@ -71,8 +76,10 @@
                   {
                     "id": "consume-movement",
                     "type": "numberIncrement",
-                    "target": "character.movement.current",
-                    "source": { "fact": "planned.move.amount" },
+                    "target": { "fact": "character.movement.current" },
+                    "source": {
+                      "fact": "planned.move.amount"
+                    },
                     "subtract": true
                   }
                 ]
@@ -88,8 +95,10 @@
             {
               "id": "consume-movement",
               "type": "numberIncrement",
-              "target": "character.movement.current",
-              "source": { "fact": "planned.move.amount" },
+              "target": { "fact": "character.movement.current" },
+              "source": {
+                "fact": "planned.move.amount"
+              },
               "subtract": true
             }
           ]

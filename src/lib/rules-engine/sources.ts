@@ -9,6 +9,7 @@
  */
 
 import type { Source, WorkingState, Rule } from './types';
+import { evaluateCondition } from './conditions';
 
 /**
  * Validates that a Source has exactly one of fact, number, or var.
@@ -16,12 +17,12 @@ import type { Source, WorkingState, Rule } from './types';
  */
 export function validateSource(source: Source): void {
   const keys = Object.keys(source);
-  const validKeys = ['fact', 'number', 'var'];
+  const validKeys = ['fact', 'number', 'var', 'condition'];
   const presentKeys = keys.filter((k) => validKeys.includes(k));
 
   if (presentKeys.length !== 1) {
     throw new Error(
-      `Invalid source: must have exactly one of fact, number, or var. Got: ${JSON.stringify(source)}`
+      `Invalid source: must have exactly one of fact, number, var, or condition. Got: ${JSON.stringify(source)}`
     );
   }
 }
@@ -63,6 +64,11 @@ export function resolveSource(
       return rule.selections[varName] as number;
     }
 
+    // Check varsRuntime (activity-set values)
+    if (rule.varsRuntime && varName in rule.varsRuntime) {
+      return rule.varsRuntime[varName];
+    }
+
     // Fall back to vars.default
     const varDef = rule.vars?.[varName];
     if (!varDef) {
@@ -81,6 +87,12 @@ export function resolveSource(
     }
 
     return undefined;
+  }
+
+  // { condition: {...} } - evaluate condition, return 1 if true, 0 if false
+  if (source.condition !== undefined) {
+    const result = evaluateCondition(source.condition, workingState.facts, workingState.events);
+    return result ? 1 : 0;
   }
 
   return undefined;

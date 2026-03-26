@@ -11,6 +11,7 @@ ruleGroups:
           - species-constants
         activities:
           - type: numberSet
-            target: character.movement.total
+            target:
+              fact: character.movement.total
             source:
               number: 30

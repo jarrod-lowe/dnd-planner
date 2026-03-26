@@ -18,6 +18,14 @@ describe('validateSource', () => {
     expect(() => validateSource({ var: 'distance' })).not.toThrow();
   });
 
+  it('accepts a valid condition source', () => {
+    expect(() =>
+      validateSource({
+        condition: { fact: 'hp.current', operator: 'greaterThan', value: 0 }
+      })
+    ).not.toThrow();
+  });
+
   it('rejects an empty source', () => {
     expect(() => validateSource({})).toThrow();
   });
@@ -185,6 +193,167 @@ describe('resolveSource', () => {
       const result = resolveSource(source, workingState, rule);
 
       expect(result).toBeUndefined();
+    });
+  });
+
+  describe('condition source', () => {
+    it('returns 1 when fact comparison is true (greaterThanOrEqual)', () => {
+      const source: Source = {
+        condition: {
+          fact: 'character.movement.current',
+          operator: 'greaterThanOrEqual',
+          value: 5
+        }
+      };
+      const workingState = createWorkingState({ 'character.movement.current': 10 });
+      const rule = createRule();
+
+      expect(resolveSource(source, workingState, rule)).toBe(1);
+    });
+
+    it('returns 0 when fact comparison is false (greaterThanOrEqual)', () => {
+      const source: Source = {
+        condition: {
+          fact: 'character.movement.current',
+          operator: 'greaterThanOrEqual',
+          value: 5
+        }
+      };
+      const workingState = createWorkingState({ 'character.movement.current': 2 });
+      const rule = createRule();
+
+      expect(resolveSource(source, workingState, rule)).toBe(0);
+    });
+
+    it('returns 1 when fact exists (fact existence condition)', () => {
+      const source: Source = {
+        condition: { fact: 'character.movement.current' }
+      };
+      const workingState = createWorkingState({ 'character.movement.current': 10 });
+      const rule = createRule();
+
+      expect(resolveSource(source, workingState, rule)).toBe(1);
+    });
+
+    it('returns 0 when fact does not exist (fact existence condition)', () => {
+      const source: Source = {
+        condition: { fact: 'character.movement.nonexistent' }
+      };
+      const workingState = createWorkingState({});
+      const rule = createRule();
+
+      expect(resolveSource(source, workingState, rule)).toBe(0);
+    });
+
+    it('returns 1 when event was emitted', () => {
+      const source: Source = {
+        condition: { event: 'some-event' }
+      };
+      const workingState: WorkingState = {
+        facts: {},
+        events: new Set(['some-event']),
+        generatedRules: { early: [], normal: [], safeguard: [] },
+        offeredRules: [],
+        appliedRuleIds: [],
+        appliedActivityIds: []
+      };
+      const rule = createRule();
+
+      expect(resolveSource(source, workingState, rule)).toBe(1);
+    });
+
+    it('returns 0 when event was not emitted', () => {
+      const source: Source = {
+        condition: { event: 'some-event' }
+      };
+      const workingState = createWorkingState({});
+      const rule = createRule();
+
+      expect(resolveSource(source, workingState, rule)).toBe(0);
+    });
+
+    it('returns 1 when equals comparison is true', () => {
+      const source: Source = {
+        condition: {
+          fact: 'hp.current',
+          operator: 'equals',
+          value: 10
+        }
+      };
+      const workingState = createWorkingState({ 'hp.current': 10 });
+      const rule = createRule();
+
+      expect(resolveSource(source, workingState, rule)).toBe(1);
+    });
+
+    it('returns 0 when equals comparison is false', () => {
+      const source: Source = {
+        condition: {
+          fact: 'hp.current',
+          operator: 'equals',
+          value: 10
+        }
+      };
+      const workingState = createWorkingState({ 'hp.current': 5 });
+      const rule = createRule();
+
+      expect(resolveSource(source, workingState, rule)).toBe(0);
+    });
+
+    it('returns 1 when notEquals comparison is true', () => {
+      const source: Source = {
+        condition: {
+          fact: 'hp.current',
+          operator: 'notEquals',
+          value: 10
+        }
+      };
+      const workingState = createWorkingState({ 'hp.current': 5 });
+      const rule = createRule();
+
+      expect(resolveSource(source, workingState, rule)).toBe(1);
+    });
+
+    it('returns 1 when lessThan comparison is true', () => {
+      const source: Source = {
+        condition: {
+          fact: 'hp.current',
+          operator: 'lessThan',
+          value: 10
+        }
+      };
+      const workingState = createWorkingState({ 'hp.current': 5 });
+      const rule = createRule();
+
+      expect(resolveSource(source, workingState, rule)).toBe(1);
+    });
+
+    it('returns 1 when lessThanOrEqual comparison is true', () => {
+      const source: Source = {
+        condition: {
+          fact: 'hp.current',
+          operator: 'lessThanOrEqual',
+          value: 10
+        }
+      };
+      const workingState = createWorkingState({ 'hp.current': 10 });
+      const rule = createRule();
+
+      expect(resolveSource(source, workingState, rule)).toBe(1);
+    });
+
+    it('returns 1 when greaterThan comparison is true', () => {
+      const source: Source = {
+        condition: {
+          fact: 'hp.current',
+          operator: 'greaterThan',
+          value: 5
+        }
+      };
+      const workingState = createWorkingState({ 'hp.current': 10 });
+      const rule = createRule();
+
+      expect(resolveSource(source, workingState, rule)).toBe(1);
     });
   });
 });

@@ -48,7 +48,7 @@ describe('executeNumberSet', () => {
     const activity: NumberSetActivity = {
       id: 'test-1',
       type: 'numberSet',
-      target: 'hp.current',
+      target: { fact: 'hp.current' },
       source: { number: 42 }
     };
 
@@ -63,7 +63,7 @@ describe('executeNumberSet', () => {
     const activity: NumberSetActivity = {
       id: 'test-1',
       type: 'numberSet',
-      target: 'hp.current',
+      target: { fact: 'hp.current' },
       source: { number: 100 }
     };
 
@@ -79,7 +79,7 @@ describe('executeNumberSet', () => {
     const activity: NumberSetActivity = {
       id: 'test-1',
       type: 'numberSet',
-      target: 'hp.current',
+      target: { fact: 'hp.current' },
       source: { fact: 'hp.max' }
     };
 
@@ -95,7 +95,7 @@ describe('executeNumberSet', () => {
     const activity: NumberSetActivity = {
       id: 'test-1',
       type: 'numberSet',
-      target: 'distance',
+      target: { fact: 'distance' },
       source: { var: 'moveDistance' }
     };
 
@@ -110,6 +110,85 @@ describe('executeNumberSet', () => {
 
     expect(context.workingState.facts['distance']).toBe(15);
   });
+
+  it('sets a var target to a number value', () => {
+    const activity: NumberSetActivity = {
+      id: 'test-1',
+      type: 'numberSet',
+      target: { var: 'legal' },
+      source: { number: 1 }
+    };
+
+    const context = createEmptyContext();
+
+    executeNumberSet(activity, context);
+
+    expect(context.currentRule?.varsRuntime?.['legal']).toBe(1);
+  });
+
+  it('overwrites an existing var value', () => {
+    const activity: NumberSetActivity = {
+      id: 'test-1',
+      type: 'numberSet',
+      target: { var: 'counter' },
+      source: { number: 100 }
+    };
+
+    const context = createEmptyContext();
+    context.currentRule = {
+      id: 'test-rule',
+      activities: [],
+      varsRuntime: { counter: 50 }
+    };
+
+    executeNumberSet(activity, context);
+
+    expect(context.currentRule?.varsRuntime?.['counter']).toBe(100);
+  });
+
+  it('sets a var from a condition source', () => {
+    const activity: NumberSetActivity = {
+      id: 'test-1',
+      type: 'numberSet',
+      target: { var: 'legal' },
+      source: {
+        condition: {
+          fact: 'movement.current',
+          operator: 'greaterThanOrEqual',
+          value: 5
+        }
+      }
+    };
+
+    const context = createEmptyContext();
+    context.workingState.facts['movement.current'] = 10;
+
+    executeNumberSet(activity, context);
+
+    expect(context.currentRule?.varsRuntime?.['legal']).toBe(1);
+  });
+
+  it('sets a var to 0 when condition is false', () => {
+    const activity: NumberSetActivity = {
+      id: 'test-1',
+      type: 'numberSet',
+      target: { var: 'legal' },
+      source: {
+        condition: {
+          fact: 'movement.current',
+          operator: 'greaterThanOrEqual',
+          value: 5
+        }
+      }
+    };
+
+    const context = createEmptyContext();
+    context.workingState.facts['movement.current'] = 2;
+
+    executeNumberSet(activity, context);
+
+    expect(context.currentRule?.varsRuntime?.['legal']).toBe(0);
+  });
 });
 
 describe('executeNumberIncrement', () => {
@@ -117,7 +196,7 @@ describe('executeNumberIncrement', () => {
     const activity: NumberIncrementActivity = {
       id: 'test-1',
       type: 'numberIncrement',
-      target: 'hp.current',
+      target: { fact: 'hp.current' },
       source: { number: 5 }
     };
 
@@ -133,7 +212,7 @@ describe('executeNumberIncrement', () => {
     const activity: NumberIncrementActivity = {
       id: 'test-1',
       type: 'numberIncrement',
-      target: 'hp.current',
+      target: { fact: 'hp.current' },
       source: { number: 5 }
     };
 
@@ -148,7 +227,7 @@ describe('executeNumberIncrement', () => {
     const activity: NumberIncrementActivity = {
       id: 'test-1',
       type: 'numberIncrement',
-      target: 'hp.current',
+      target: { fact: 'hp.current' },
       source: { number: 3 },
       subtract: true
     };
@@ -165,7 +244,7 @@ describe('executeNumberIncrement', () => {
     const activity: NumberIncrementActivity = {
       id: 'test-1',
       type: 'numberIncrement',
-      target: 'hp.current',
+      target: { fact: 'hp.current' },
       source: { number: 10 },
       max: 'hp.max'
     };
@@ -183,7 +262,7 @@ describe('executeNumberIncrement', () => {
     const activity: NumberIncrementActivity = {
       id: 'test-1',
       type: 'numberIncrement',
-      target: 'hp.current',
+      target: { fact: 'hp.current' },
       source: { fact: 'healing.amount' }
     };
 
@@ -195,6 +274,41 @@ describe('executeNumberIncrement', () => {
 
     expect(context.workingState.facts['hp.current']).toBe(18);
   });
+
+  it('increments a var target', () => {
+    const activity: NumberIncrementActivity = {
+      id: 'test-1',
+      type: 'numberIncrement',
+      target: { var: 'counter' },
+      source: { number: 5 }
+    };
+
+    const context = createEmptyContext();
+    context.currentRule = {
+      id: 'test-rule',
+      activities: [],
+      varsRuntime: { counter: 10 }
+    };
+
+    executeNumberIncrement(activity, context);
+
+    expect(context.currentRule?.varsRuntime?.['counter']).toBe(15);
+  });
+
+  it('treats missing var as 0 before incrementing', () => {
+    const activity: NumberIncrementActivity = {
+      id: 'test-1',
+      type: 'numberIncrement',
+      target: { var: 'counter' },
+      source: { number: 5 }
+    };
+
+    const context = createEmptyContext();
+
+    executeNumberIncrement(activity, context);
+
+    expect(context.currentRule?.varsRuntime?.['counter']).toBe(5);
+  });
 });
 
 describe('executeNumberCopy', () => {
@@ -202,7 +316,7 @@ describe('executeNumberCopy', () => {
     const activity: NumberCopyActivity = {
       id: 'test-1',
       type: 'numberCopy',
-      target: 'hp.temp',
+      target: { fact: 'hp.temp' },
       source: { fact: 'hp.current' }
     };
 
@@ -218,7 +332,7 @@ describe('executeNumberCopy', () => {
     const activity: NumberCopyActivity = {
       id: 'test-1',
       type: 'numberCopy',
-      target: 'counter',
+      target: { fact: 'counter' },
       source: { number: 42 }
     };
 
@@ -228,6 +342,22 @@ describe('executeNumberCopy', () => {
 
     expect(context.workingState.facts['counter']).toBe(42);
   });
+
+  it('copies a value to a var target', () => {
+    const activity: NumberCopyActivity = {
+      id: 'test-1',
+      type: 'numberCopy',
+      target: { var: 'copied' },
+      source: { fact: 'hp.current' }
+    };
+
+    const context = createEmptyContext();
+    context.workingState.facts['hp.current'] = 25;
+
+    executeNumberCopy(activity, context);
+
+    expect(context.currentRule?.varsRuntime?.['copied']).toBe(25);
+  });
 });
 
 describe('executeNumberSum', () => {
@@ -235,7 +365,7 @@ describe('executeNumberSum', () => {
     const activity: NumberSumActivity = {
       id: 'test-1',
       type: 'numberSum',
-      target: 'hp.max',
+      target: { fact: 'hp.max' },
       sources: [{ fact: 'hp.base' }, { fact: 'hp.bonus' }]
     };
 
@@ -252,7 +382,7 @@ describe('executeNumberSum', () => {
     const activity: NumberSumActivity = {
       id: 'test-1',
       type: 'numberSum',
-      target: 'hp.max',
+      target: { fact: 'hp.max' },
       sources: [{ fact: 'hp.base' }, { fact: 'hp.bonus' }]
     };
 
@@ -269,7 +399,7 @@ describe('executeNumberSum', () => {
     const activity: NumberSumActivity = {
       id: 'test-1',
       type: 'numberSum',
-      target: 'total',
+      target: { fact: 'total' },
       sources: [{ fact: 'base' }, { number: 5 }]
     };
 
@@ -280,6 +410,21 @@ describe('executeNumberSum', () => {
 
     expect(context.workingState.facts['total']).toBe(15);
   });
+
+  it('sums into a var target', () => {
+    const activity: NumberSumActivity = {
+      id: 'test-1',
+      type: 'numberSum',
+      target: { var: 'total' },
+      sources: [{ number: 10 }, { number: 5 }]
+    };
+
+    const context = createEmptyContext();
+
+    executeNumberSum(activity, context);
+
+    expect(context.currentRule?.varsRuntime?.['total']).toBe(15);
+  });
 });
 
 describe('executeNumberFunction', () => {
@@ -287,7 +432,7 @@ describe('executeNumberFunction', () => {
     const activity: NumberFunctionActivity = {
       id: 'test-1',
       type: 'numberFunction',
-      target: 'str.modifier',
+      target: { fact: 'str.modifier' },
       function: 'statToModifier',
       sources: [{ fact: 'str.value' }]
     };
@@ -304,7 +449,7 @@ describe('executeNumberFunction', () => {
     const activity: NumberFunctionActivity = {
       id: 'test-1',
       type: 'numberFunction',
-      target: 'movement.half',
+      target: { fact: 'movement.half' },
       function: 'multiply',
       sources: [{ fact: 'movement.current' }],
       args: { multiplier: 0.5 }
@@ -316,6 +461,23 @@ describe('executeNumberFunction', () => {
     executeNumberFunction(activity, context);
 
     expect(context.workingState.facts['movement.half']).toBe(15);
+  });
+
+  it('stores result in a var target', () => {
+    const activity: NumberFunctionActivity = {
+      id: 'test-1',
+      type: 'numberFunction',
+      target: { var: 'modifier' },
+      function: 'statToModifier',
+      sources: [{ fact: 'str.value' }]
+    };
+
+    const context = createEmptyContext();
+    context.workingState.facts['str.value'] = 18;
+
+    executeNumberFunction(activity, context);
+
+    expect(context.currentRule?.varsRuntime?.['modifier']).toBe(4);
   });
 });
 

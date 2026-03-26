@@ -14,7 +14,7 @@
                 {
                   "id": "consume-1",
                   "type": "numberIncrement",
-                  "target": "bardicInspiration.remaining",
+                  "target": { "fact": "bardicInspiration.remaining" },
                   "source": { "number": -1 }
                 }
               ]

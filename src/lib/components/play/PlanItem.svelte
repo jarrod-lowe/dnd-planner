@@ -24,11 +24,19 @@
     onMoveDown,
     onRemove
   }: Props = $props();
+
+  // Check if rule has illegal state set by activities
+  const isIllegal = $derived(item.rule.varsRuntime?.illegal === 1);
+
+  // Build diagnostics for illegal state
+  const diagnostics = $derived(
+    isIllegal ? [{ code: 'play.choices.illegal', severity: 'error' as const }] : []
+  );
 </script>
 
 <div class="plan-item">
   <ChoicePanel
-    entry={{ rule: item.rule, legal: true, applicable: true, diagnostics: [] }}
+    entry={{ rule: item.rule, legal: !isIllegal, applicable: true, diagnostics }}
     editable={true}
     {facts}
     {onSelectionChange}
