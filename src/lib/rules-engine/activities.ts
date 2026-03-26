@@ -9,12 +9,54 @@ import type {
   NumberSetActivity,
   NumberSumActivity,
   OfferRuleActivity,
-  RuleContext
+  RuleContext,
+  Target
 } from './types';
 import { isPhaseAfter } from './types';
 import { createBuiltinFunctionRegistry } from './functions';
 import { evaluateCondition, isRuleApplicable } from './conditions';
 import { resolveSource } from './sources';
+
+/**
+ * Sets a value at the target location.
+ * For fact targets: writes to workingState.facts
+ * For var targets: writes to currentRule's runtime vars
+ */
+function setTargetValue(target: Target, value: number, context: RuleContext): void {
+  if (target.fact !== undefined) {
+    context.workingState.facts[target.fact] = value;
+  } else if (target.var !== undefined) {
+    const rule = context.currentRule;
+    if (!rule) {
+      throw new Error('Cannot set var target without currentRule in context');
+    }
+    // Initialize vars runtime store if needed
+    if (!rule.varsRuntime) {
+      rule.varsRuntime = {};
+    }
+    rule.varsRuntime[target.var] = value;
+  } else {
+    throw new Error('Target must have either fact or var');
+  }
+}
+
+/**
+ * Gets a value from the target location for increment operations.
+ * For fact targets: reads from workingState.facts
+ * For var targets: reads from currentRule's runtime vars
+ */
+function getTargetValue(target: Target, context: RuleContext): number {
+  if (target.fact !== undefined) {
+    return (context.workingState.facts[target.fact] as number) ?? 0;
+  } else if (target.var !== undefined) {
+    const rule = context.currentRule;
+    if (!rule) {
+      throw new Error('Cannot get var target without currentRule in context');
+    }
+    return (rule.varsRuntime?.[target.var] as number) ?? 0;
+  }
+  return 0;
+}
 
 /**
  * Executes a single activity by dispatching to the appropriate handler.
@@ -94,7 +136,7 @@ export function executeNumberSet(activity: NumberSetActivity, context: RuleConte
     throw new Error('executeNumberSet requires currentRule in context');
   }
   const value = resolveSource(activity.source, context.workingState, rule);
-  context.workingState.facts[activity.target] = value ?? 0;
+  setTargetValue(activity.target, value ?? 0, context);
 }
 
 /**
@@ -118,7 +160,7 @@ export function executeNumberIncrement(
     throw new Error('executeNumberIncrement requires currentRule in context');
   }
 
-  const current = (context.workingState.facts[activity.target] as number) ?? 0;
+  const current = getTargetValue(activity.target, context);
   const delta = resolveSource(activity.source, context.workingState, rule) ?? 0;
 
   // Apply subtract flag
@@ -131,7 +173,7 @@ export function executeNumberIncrement(
     result = Math.min(result, maxValue);
   }
 
-  context.workingState.facts[activity.target] = result;
+  setTargetValue(activity.target, result, context);
 }
 
 /**
@@ -152,7 +194,7 @@ export function executeNumberCopy(activity: NumberCopyActivity, context: RuleCon
   }
   const value = resolveSource(activity.source, context.workingState, rule);
   if (value !== undefined) {
-    context.workingState.facts[activity.target] = value;
+    setTargetValue(activity.target, value, context);
   }
 }
 
@@ -177,7 +219,7 @@ export function executeNumberSum(activity: NumberSumActivity, context: RuleConte
   for (const source of activity.sources) {
     sum += resolveSource(source, context.workingState, rule) ?? 0;
   }
-  context.workingState.facts[activity.target] = sum;
+  setTargetValue(activity.target, sum, context);
 }
 
 /**
@@ -214,7 +256,7 @@ export function executeNumberFunction(
     resolveSource(source, context.workingState, rule)
   );
   const result = handler(sourceArgs, activity.args);
-  context.workingState.facts[activity.target] = result;
+  setTargetValue(activity.target, result, context);
 }
 
 /**

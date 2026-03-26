@@ -79,36 +79,35 @@
         },
         "enabled": {
           "type": "boolean",
-          "description": "Whether this rule is enabled",
           "default": true
         },
         "when": {
           "type": "array",
-          "description": "Conditions that must be satisfied",
           "items": {
             "$ref": "#/definitions/condition"
-          }
+          },
+          "description": "Conditions that must be satisfied for rule execution"
         },
         "after": {
           "type": "array",
-          "description": "Groups that must settle first",
           "items": {
             "$ref": "#/definitions/groupReference"
-          }
+          },
+          "description": "Group dependencies that must settle first"
         },
         "group": {
           "type": "array",
-          "description": "Groups this rule belongs to",
           "items": {
             "type": "string"
-          }
+          },
+          "description": "Groups this rule belongs to"
         },
         "activities": {
           "type": "array",
-          "description": "Actions to perform",
           "items": {
             "$ref": "#/definitions/activity"
-          }
+          },
+          "description": "Activities to execute when rule runs"
         }
       },
       "additionalProperties": false
@@ -116,66 +115,7 @@
     "phase": {
       "type": "string",
       "enum": ["early", "normal", "safeguard"],
-      "default": "normal"
-    },
-    "condition": {
-      "type": "object",
-      "oneOf": [
-        { "$ref": "#/definitions/factExistenceCondition" },
-        { "$ref": "#/definitions/factComparisonCondition" },
-        { "$ref": "#/definitions/eventCondition" }
-      ]
-    },
-    "factExistenceCondition": {
-      "type": "object",
-      "required": ["fact"],
-      "properties": {
-        "fact": {
-          "type": "string",
-          "description": "Fact path to check"
-        }
-      },
-      "additionalProperties": false
-    },
-    "factComparisonCondition": {
-      "type": "object",
-      "required": ["fact", "operator", "value"],
-      "properties": {
-        "fact": {
-          "type": "string",
-          "description": "Fact path to compare"
-        },
-        "operator": {
-          "$ref": "#/definitions/comparisonOperator"
-        },
-        "value": {
-          "type": ["number", "string"],
-          "description": "Value to compare against"
-        }
-      },
-      "additionalProperties": false
-    },
-    "comparisonOperator": {
-      "type": "string",
-      "enum": [
-        "equals",
-        "notEquals",
-        "greaterThan",
-        "greaterThanOrEqual",
-        "lessThan",
-        "lessThanOrEqual"
-      ]
-    },
-    "eventCondition": {
-      "type": "object",
-      "required": ["event"],
-      "properties": {
-        "event": {
-          "type": "string",
-          "description": "Event name to check for"
-        }
-      },
-      "additionalProperties": false
+      "description": "Execution phase"
     },
     "groupReference": {
       "type": "object",
@@ -183,7 +123,7 @@
       "properties": {
         "group": {
           "type": "string",
-          "description": "Group name"
+          "description": "Group name to depend on"
         }
       },
       "additionalProperties": false
@@ -194,24 +134,42 @@
       "properties": {
         "default": {
           "$ref": "#/definitions/source",
-          "description": "Default value for the variable"
+          "description": "Default value source"
         },
         "capture": {
           "type": "boolean",
-          "description": "When true, resolve the default value from facts and store as selection when the rule is added to the plan"
+          "description": "When true, capture fact value as selection when added to plan",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "target": {
+      "type": "object",
+      "description": "Target for activity operations - exactly one of fact or var must be present",
+      "minProperties": 1,
+      "maxProperties": 1,
+      "properties": {
+        "fact": {
+          "type": "string",
+          "description": "Fact path to target"
+        },
+        "var": {
+          "type": "string",
+          "description": "Variable name to target"
         }
       },
       "additionalProperties": false
     },
     "source": {
       "type": "object",
-      "description": "A unified value reference - exactly one of number, fact, or var",
+      "description": "Value source - exactly one of number, fact, var, or condition must be present",
       "minProperties": 1,
       "maxProperties": 1,
       "properties": {
         "number": {
           "type": "number",
-          "description": "A literal numeric value"
+          "description": "Literal numeric value"
         },
         "fact": {
           "type": "string",
@@ -220,14 +178,65 @@
         "var": {
           "type": "string",
           "description": "Reference to a rule variable"
+        },
+        "condition": {
+          "$ref": "#/definitions/condition",
+          "description": "Condition to evaluate, returns 1 if true, 0 if false"
         }
       },
       "additionalProperties": false
+    },
+    "condition": {
+      "type": "object",
+      "description": "Condition for when/legalWhen clauses",
+      "oneOf": [
+        {
+          "required": ["fact"],
+          "properties": {
+            "fact": {
+              "type": "string",
+              "description": "Fact path to check"
+            },
+            "operator": {
+              "$ref": "#/definitions/comparisonOperator"
+            },
+            "value": {
+              "type": "number",
+              "description": "Value to compare against (required when operator is present)"
+            }
+          }
+        },
+        {
+          "required": ["event"],
+          "properties": {
+            "event": {
+              "type": "string",
+              "description": "Event name to check"
+            }
+          }
+        }
+      ]
+    },
+    "comparisonOperator": {
+      "type": "string",
+      "enum": [
+        "equals",
+        "notEquals",
+        "greaterThan",
+        "greaterThanOrEqual",
+        "lessThan",
+        "lessThanOrEqual"
+      ],
+      "description": "Comparison operator for fact conditions"
     },
     "activity": {
       "type": "object",
       "required": ["type"],
       "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for this activity"
+        },
         "type": {
           "type": "string",
           "enum": [
@@ -239,11 +248,12 @@
             "emitEvent",
             "generateRule",
             "offerRule"
-          ]
+          ],
+          "description": "Activity type"
         },
         "target": {
-          "type": "string",
-          "description": "Target fact path"
+          "$ref": "#/definitions/target",
+          "description": "Target for the activity (for numberSet, numberIncrement, numberCopy, numberSum, numberFunction)"
         },
         "source": {
           "$ref": "#/definitions/source",

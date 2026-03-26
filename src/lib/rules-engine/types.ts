@@ -54,17 +54,31 @@ export type NamedFunction = 'statToModifier' | 'multiply';
 // === SOURCE ===
 
 /**
+ * A target for activity operations.
+ * Exactly one of fact or var must be present.
+ *
+ * - fact: Reference to a fact in working state
+ * - var: Reference to a rule var (engine→UI communication)
+ */
+export interface Target {
+  fact?: string;
+  var?: string;
+}
+
+/**
  * A unified value reference used in activities.
- * Exactly one of fact, number, or var must be present.
+ * Exactly one of fact, number, var, or condition must be present.
  *
  * - fact: Reference to a fact in working state
  * - number: A literal numeric value
  * - var: Reference to a rule var (resolved via selections or vars.default)
+ * - condition: Evaluates a condition to 0 (false) or 1 (true)
  */
 export interface Source {
   fact?: string;
   number?: number;
   var?: string;
+  condition?: Condition;
 }
 
 /**
@@ -158,7 +172,7 @@ export interface ActivityBase {
  */
 export interface NumberSetActivity extends ActivityBase {
   type: 'numberSet';
-  target: string;
+  target: Target;
   source: Source;
 }
 
@@ -170,7 +184,7 @@ export interface NumberSetActivity extends ActivityBase {
  */
 export interface NumberIncrementActivity extends ActivityBase {
   type: 'numberIncrement';
-  target: string;
+  target: Target;
   source: Source;
   subtract?: boolean;
   max?: string;
@@ -181,7 +195,7 @@ export interface NumberIncrementActivity extends ActivityBase {
  */
 export interface NumberCopyActivity extends ActivityBase {
   type: 'numberCopy';
-  target: string;
+  target: Target;
   source: Source;
 }
 
@@ -190,7 +204,7 @@ export interface NumberCopyActivity extends ActivityBase {
  */
 export interface NumberSumActivity extends ActivityBase {
   type: 'numberSum';
-  target: string;
+  target: Target;
   sources: Source[];
 }
 
@@ -201,7 +215,7 @@ export interface NumberSumActivity extends ActivityBase {
  */
 export interface NumberFunctionActivity extends ActivityBase {
   type: 'numberFunction';
-  target: string;
+  target: Target;
   function: NamedFunction;
   sources: Source[];
   args?: Record<string, unknown>;
@@ -278,6 +292,8 @@ export interface Rule {
   description?: string;
   ui?: Record<string, unknown>;
   vars?: Record<string, VarDefinition>;
+  /** Runtime var values set by activities (engine→UI communication) */
+  varsRuntime?: Record<string, number>;
   selections?: Record<string, unknown>;
   phase?: Phase;
   enabled?: boolean;

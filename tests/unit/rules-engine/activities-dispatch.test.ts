@@ -36,7 +36,7 @@ describe('executeActivity', () => {
     const activity: NumberSetActivity = {
       id: 'test-1',
       type: 'numberSet',
-      target: 'hp.current',
+      target: { fact: 'hp.current' },
       source: { number: 42 }
     };
 
@@ -51,7 +51,7 @@ describe('executeActivity', () => {
     const activity: NumberIncrementActivity = {
       id: 'test-1',
       type: 'numberIncrement',
-      target: 'hp.current',
+      target: { fact: 'hp.current' },
       source: { number: 5 }
     };
     const context = createEmptyContext();
@@ -66,7 +66,7 @@ describe('executeActivity', () => {
     const activity: NumberCopyActivity = {
       id: 'test-1',
       type: 'numberCopy',
-      target: 'hp.temp',
+      target: { fact: 'hp.temp' },
       source: { fact: 'hp.current' }
     };
     const context = createEmptyContext();
@@ -81,7 +81,7 @@ describe('executeActivity', () => {
     const activity: NumberSumActivity = {
       id: 'test-1',
       type: 'numberSum',
-      target: 'hp.max',
+      target: { fact: 'hp.max' },
       sources: [{ fact: 'hp.base' }, { fact: 'hp.bonus' }]
     };
     const context = createEmptyContext();
@@ -97,7 +97,7 @@ describe('executeActivity', () => {
     const activity: NumberFunctionActivity = {
       id: 'test-1',
       type: 'numberFunction',
-      target: 'str.modifier',
+      target: { fact: 'str.modifier' },
       function: 'statToModifier',
       sources: [{ fact: 'str.value' }]
     };

@@ -124,66 +124,54 @@ describe('getRulesForPhase', () => {
 });
 
 describe('processRulesInOrder', () => {
-  it('executes applicable rules', () => {
+  it('skips disabled rules', () => {
     const rule: Rule = {
-      id: 'rule-1',
-      activities: [{ id: 'act-1', type: 'numberSet', target: 'test.value', source: { number: 42 } }]
-    };
-
-    const context = createEmptyContext();
-    const rules = [rule];
-
-    processRulesInOrder(rules, context);
-
-    expect(context.workingState.facts['test.value']).toBe(42);
-  });
-
-  it('skips rules with failing when conditions', () => {
-    const rule: Rule = {
-      id: 'rule-1',
-      when: [{ fact: 'nonexistent' }],
-      activities: [{ id: 'act-1', type: 'numberSet', target: 'test.value', source: { number: 42 } }]
-    };
-
-    const context = createEmptyContext();
-    const rules = [rule];
-
-    processRulesInOrder(rules, context);
-
-    expect(context.workingState.facts['test.value']).toBeUndefined();
-  });
-
-  it('waits for after dependencies before executing', () => {
-    const initRule: Rule = {
-      id: 'init-rule',
-      group: ['init'],
-      activities: [{ id: 'act-1', type: 'numberSet', target: 'init.done', source: { number: 1 } }]
-    };
-    const dependentRule: Rule = {
-      id: 'dependent-rule',
-      after: [{ group: 'init' }],
+      id: 'disabled-rule',
+      enabled: false,
       activities: [
-        { id: 'act-2', type: 'numberSet', target: 'dependent.done', source: { number: 2 } }
+        { id: 'a1', type: 'numberSet', target: { fact: 'test.value' }, source: { number: 42 } }
       ]
     };
 
     const context = createEmptyContext();
-    context.groups.set('init', {
-      name: 'init',
-      phase: 'normal',
-      ruleIds: ['init-rule'],
-      settled: false,
-      executedRuleIds: [],
-      skippedRuleIds: []
-    });
 
-    const rules = [dependentRule, initRule];
+    processRulesInOrder([rule], context);
 
-    processRulesInOrder(rules, context);
+    expect(context.workingState.facts['test.value']).toBeUndefined();
+    expect(context.workingState.appliedRuleIds).not.toContain('disabled-rule');
+  });
 
-    // Both should execute
-    expect(context.workingState.facts['init.done']).toBe(1);
-    expect(context.workingState.facts['dependent.done']).toBe(2);
+  it('skips rules with failing when conditions', () => {
+    const rule: Rule = {
+      id: 'conditional-rule',
+      when: [{ fact: 'enabled', operator: 'equals', value: 1 }],
+      activities: [
+        { id: 'a1', type: 'numberSet', target: { fact: 'test.value' }, source: { number: 42 } }
+      ]
+    };
+
+    const context = createEmptyContext();
+
+    processRulesInOrder([rule], context);
+
+    expect(context.workingState.facts['test.value']).toBeUndefined();
+  });
+
+  it('executes rules with passing when conditions', () => {
+    const rule: Rule = {
+      id: 'conditional-rule',
+      when: [{ fact: 'enabled', operator: 'equals', value: 1 }],
+      activities: [
+        { id: 'a1', type: 'numberSet', target: { fact: 'test.value' }, source: { number: 42 } }
+      ]
+    };
+
+    const context = createEmptyContext();
+    context.workingState.facts['enabled'] = 1;
+
+    processRulesInOrder([rule], context);
+
+    expect(context.workingState.facts['test.value']).toBe(42);
   });
 
   it('handles empty rules array', () => {
@@ -198,18 +186,18 @@ describe('processRulesInOrder', () => {
     const rule1: Rule = {
       id: 'rule-1',
       group: ['g1'],
-      activities: [{ id: 'a1', type: 'numberSet', target: 'v1', source: { number: 1 } }]
+      activities: [{ id: 'a1', type: 'numberSet', target: { fact: 'v1' }, source: { number: 1 } }]
     };
     const rule2: Rule = {
       id: 'rule-2',
       after: [{ group: 'g1' }],
       group: ['g2'],
-      activities: [{ id: 'a2', type: 'numberSet', target: 'v2', source: { number: 2 } }]
+      activities: [{ id: 'a2', type: 'numberSet', target: { fact: 'v2' }, source: { number: 2 } }]
     };
     const rule3: Rule = {
       id: 'rule-3',
       after: [{ group: 'g2' }],
-      activities: [{ id: 'a3', type: 'numberSet', target: 'v3', source: { number: 3 } }]
+      activities: [{ id: 'a3', type: 'numberSet', target: { fact: 'v3' }, source: { number: 3 } }]
     };
 
     const context = createEmptyContext();
@@ -245,7 +233,9 @@ describe('executePhase', () => {
     const rule: Rule = {
       id: 'rule-1',
       phase: 'normal',
-      activities: [{ id: 'act-1', type: 'numberSet', target: 'test.value', source: { number: 42 } }]
+      activities: [
+        { id: 'act-1', type: 'numberSet', target: { fact: 'test.value' }, source: { number: 42 } }
+      ]
     };
 
     const context = createEmptyContext();
@@ -276,7 +266,12 @@ describe('executePhase', () => {
       id: 'generated-1',
       phase: 'normal',
       activities: [
-        { id: 'act-1', type: 'numberSet', target: 'generated.value', source: { number: 99 } }
+        {
+          id: 'act-1',
+          type: 'numberSet',
+          target: { fact: 'generated.value' },
+          source: { number: 99 }
+        }
       ]
     };
 
