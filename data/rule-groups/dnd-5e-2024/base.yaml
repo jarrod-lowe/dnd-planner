@@ -80,15 +80,20 @@ ruleGroups:
                   source:
                     var: distance
                   subtract: true
-                # Track illegal state (movement went negative)
-                - type: numberSet
+                # Clear errors before checking
+                - type: setClear
                   target:
-                    var: illegal
+                    var: errors
+                # Track illegal state (movement went negative)
+                - type: setAdd
+                  target:
+                    var: errors
                   source:
-                    condition:
-                      fact: character.movement.current
-                      operator: lessThan
-                      value: 0
+                    string: rule.dnd-5e-2024.base.action-move-walk-offer.out_of_movement
+                  when:
+                    fact: character.movement.current
+                    operator: lessThan
+                    value: 0
 
       - id: action-move-rough-terrain-offer
         after:
@@ -135,15 +140,156 @@ ruleGroups:
                   source:
                     var: distance
                   subtract: true
-                # Track illegal state (movement went negative)
-                - type: numberSet
+                # Clear errors before checking
+                - type: setClear
                   target:
-                    var: illegal
+                    var: errors
+                # Track illegal state (movement went negative)
+                - type: setAdd
+                  target:
+                    var: errors
                   source:
-                    condition:
-                      fact: character.movement.current
-                      operator: lessThan
-                      value: 0
+                    string: rule.dnd-5e-2024.base.action-move-walk-offer.out_of_movement
+                  when:
+                    fact: character.movement.current
+                    operator: lessThan
+                    value: 0
+
+      # Swim with normal cost (cost < 2)
+      - id: action-move-swim-offer
+        when:
+          - fact: character.movement.swim.cost
+            operator: equals
+            value: 1
+        after:
+          - group: half-movement-remaining
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: character.movement.swim.can
+                  operator: greaterThanOrEqual
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.base.action-move-swim-offer.cannot_swim
+                    severity: error
+              - condition:
+                  fact: character.movement.swim.cost
+                  operator: lessThan
+                  value: 2
+              - condition:
+                  fact: character.movement.current
+                  operator: greaterThanOrEqual
+                  value: 5
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.base.action-move-swim-offer.out_of_movement
+                    severity: error
+            rule:
+              id: move-swim
+              ui:
+                model: move
+                section: move
+                name: rule.dnd-5e-2024.base.move-swim.name
+              group:
+                - move
+              vars:
+                distance:
+                  capture: true
+                  default:
+                    fact: character.movement.current
+                maxDistance:
+                  default:
+                    fact: character.movement.total
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: character.movement.current
+                  source:
+                    var: distance
+                  subtract: true
+                - type: setClear
+                  target:
+                    var: errors
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.base.action-move-swim-offer.out_of_movement
+                  when:
+                    fact: character.movement.current
+                    operator: lessThan
+                    value: 0
+
+      # Swim with costly movement (cost >= 2)
+      - id: action-move-swim-costly-offer
+        when:
+          - fact: character.movement.swim.cost
+            operator: equals
+            value: 2
+        after:
+          - group: half-movement-remaining
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: character.movement.swim.can
+                  operator: greaterThanOrEqual
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.base.action-move-swim-offer.cannot_swim
+                    severity: error
+              - condition:
+                  fact: character.movement.swim.cost
+                  operator: greaterThanOrEqual
+                  value: 2
+              - condition:
+                  fact: character.movement.current
+                  operator: greaterThanOrEqual
+                  value: 10
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.base.action-move-swim-offer.out_of_movement
+                    severity: error
+            rule:
+              id: move-swim-costly
+              ui:
+                model: move
+                section: move
+                name: rule.dnd-5e-2024.base.move-swim.name
+              group:
+                - move
+              vars:
+                distance:
+                  capture: true
+                  default:
+                    fact: character.movement.half_remaining
+                maxDistance:
+                  default:
+                    fact: character.movement.half_total
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: character.movement.current
+                  source:
+                    var: distance
+                  subtract: true
+                - type: numberIncrement
+                  target:
+                    fact: character.movement.current
+                  source:
+                    var: distance
+                  subtract: true
+                - type: setClear
+                  target:
+                    var: errors
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.base.action-move-swim-offer.out_of_movement
+                  when:
+                    fact: character.movement.current
+                    operator: lessThan
+                    value: 0
 
       # Free Action
       - id: action-free-offer

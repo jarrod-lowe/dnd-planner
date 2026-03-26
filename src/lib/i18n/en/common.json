@@ -16,6 +16,13 @@
         },
         "action-move-rough-terrain-offer": {
           "out_of_movement": "Out of movement"
+        },
+        "move-swim": {
+          "name": "Swim"
+        },
+        "action-move-swim-offer": {
+          "cannot_swim": "You cannot swim",
+          "out_of_movement": "Out of movement"
         }
       }
     }

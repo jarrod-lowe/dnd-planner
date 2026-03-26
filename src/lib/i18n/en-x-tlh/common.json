@@ -16,6 +16,13 @@
         },
         "action-move-rough-terrain-offer": {
           "out_of_movement": "Do tu'lu'be'"
+        },
+        "move-swim": {
+          "name": "Do (bIQ)"
+        },
+        "action-move-swim-offer": {
+          "cannot_swim": "bIQ DaDolaHbe'",
+          "out_of_movement": "Do tu'lu'be'"
         }
       }
     }

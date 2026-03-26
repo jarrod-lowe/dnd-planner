@@ -25,13 +25,14 @@
     onRemove
   }: Props = $props();
 
-  // Check if rule has illegal state set by activities
-  const isIllegal = $derived(item.rule.varsRuntime?.illegal === 1);
+  // Get errors array from varsRuntime
+  const errors = $derived((item.rule.varsRuntime?.errors as string[] | undefined) || []);
 
-  // Build diagnostics for illegal state
-  const diagnostics = $derived(
-    isIllegal ? [{ code: 'play.choices.illegal', severity: 'error' as const }] : []
-  );
+  // Check if rule has errors (illegal state)
+  const isIllegal = $derived(errors.length > 0);
+
+  // Build diagnostics from error strings
+  const diagnostics = $derived(errors.map((code) => ({ code, severity: 'error' as const })));
 </script>
 
 <div class="plan-item">

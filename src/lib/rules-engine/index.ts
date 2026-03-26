@@ -5,7 +5,7 @@ export { evaluate } from './evaluate';
 export { getHelloWorld } from './hello-world';
 
 // Source resolution
-export { validateSource, resolveSource } from './sources';
+export { validateSource, resolveSource, resolveStringSource } from './sources';
 
 // Public types
 export type {
@@ -38,6 +38,8 @@ export type {
   EmitEventActivity,
   GenerateRuleActivity,
   OfferRuleActivity,
+  SetClearActivity,
+  SetAddActivity,
   IllegalWhenEntry,
   // Rule
   Rule,

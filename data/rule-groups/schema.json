@@ -163,7 +163,7 @@
     },
     "source": {
       "type": "object",
-      "description": "Value source - exactly one of number, fact, var, or condition must be present",
+      "description": "Value source - exactly one of number, fact, var, condition, or string must be present",
       "minProperties": 1,
       "maxProperties": 1,
       "properties": {
@@ -182,6 +182,10 @@
         "condition": {
           "$ref": "#/definitions/condition",
           "description": "Condition to evaluate, returns 1 if true, 0 if false"
+        },
+        "string": {
+          "type": "string",
+          "description": "Literal string value (typically an i18n key)"
         }
       },
       "additionalProperties": false
@@ -247,17 +251,23 @@
             "numberFunction",
             "emitEvent",
             "generateRule",
-            "offerRule"
+            "offerRule",
+            "setClear",
+            "setAdd"
           ],
           "description": "Activity type"
         },
+        "when": {
+          "$ref": "#/definitions/condition",
+          "description": "Condition that must be true for this activity to execute"
+        },
         "target": {
           "$ref": "#/definitions/target",
-          "description": "Target for the activity (for numberSet, numberIncrement, numberCopy, numberSum, numberFunction)"
+          "description": "Target for the activity (for numberSet, numberIncrement, numberCopy, numberSum, numberFunction, setClear, setAdd)"
         },
         "source": {
           "$ref": "#/definitions/source",
-          "description": "Source value reference (for numberSet, numberIncrement, numberCopy)"
+          "description": "Source value reference (for numberSet, numberIncrement, numberCopy, setAdd)"
         },
         "sources": {
           "type": "array",

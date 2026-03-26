@@ -510,6 +510,8 @@ Multiple activity types reference a `source` field. `source` fields may contain 
 - `fact`: takes the name of a fact
 - `number`: takes a constant number
 - `var`: `varName`
+- `condition`: evaluates a condition, returns 1 if true, 0 if false
+- `string`: takes a literal string value (typically an i18n key)
 
 e.g.
 
@@ -526,6 +528,31 @@ E.g.
 ```plain
 resolved(x) = selections[x] ?? vars[x].default
 ```
+
+### Activity `when` condition
+
+All activities may include an optional `when` condition that gates execution:
+
+```json
+{
+  "type": "number_set",
+  "target": { "fact": "hp.current" },
+  "source": { "number": 10 },
+  "when": {
+    "fact": "hp.max",
+    "operator": "greaterThan",
+    "value": 0
+  }
+}
+```
+
+If the `when` condition evaluates to false, the activity is skipped entirely.
+
+The `when` field uses the same condition format as rule-level `when` conditions:
+
+- Fact existence: `{ "fact": "hp.max" }`
+- Fact comparison: `{ "fact": "hp.current", "operator": "lessThan", "value": 0 }`
+- Event condition: `{ "event": "longRest" }`
 
 ### `number_set`
 
@@ -697,6 +724,72 @@ Conditions are the same as `when` conditions. If a condition is not satisfied:
 - diagnostics are attached
 
 `illegalDiagnostics` has the same shape as `diagnostics` documented elsewhere in this document.
+
+---
+
+### `setClear`
+
+```json
+{
+  "type": "setClear",
+  "target": { "var": "errors" }
+}
+```
+
+Clears a var target, initializing it to an empty array.
+
+- used for managing collection vars like error message lists
+- typically used at the start of a rule to reset before conditionally adding items
+- only supports var targets (not fact targets)
+
+---
+
+### `setAdd`
+
+```json
+{
+  "type": "setAdd",
+  "target": { "var": "errors" },
+  "source": { "string": "rule.dnd-5e-2024.base.action-move-walk-offer.out_of_movement" },
+  "when": {
+    "fact": "character.movement.current",
+    "operator": "lessThan",
+    "value": 0
+  }
+}
+```
+
+Adds a string to a var target array.
+
+- only supports string sources (literal i18n keys)
+- only supports var targets (not fact targets)
+- deduplicates: adding the same string twice has no effect
+- typically used with a `when` condition to conditionally add error messages
+- auto-initializes the array if it doesn't exist
+
+Common pattern for collecting illegal choice reasons:
+
+```json
+{
+  "activities": [
+    { "type": "setClear", "target": { "var": "errors" } },
+    {
+      "type": "setAdd",
+      "target": { "var": "errors" },
+      "source": { "string": "rule.dnd-5e-2024.base.action-move-walk-offer.out_of_movement" },
+      "when": { "fact": "character.movement.current", "operator": "lessThan", "value": 0 }
+    },
+    {
+      "type": "setAdd",
+      "target": { "var": "errors" },
+      "source": { "string": "rule.dnd-5e-2024.base.action-attack-offer.no_action" },
+      "when": { "fact": "actions.remaining", "operator": "equals", "value": 0 }
+    }
+  ]
+}
+```
+
+The UI can then display the collected errors as a multi-line popup.
 
 ---
 

@@ -54,6 +54,7 @@ Avoid `$(...)` in commands, as they trigger security checks that slow you down.
 ### Testing
 
 - Regularly run `make test` to check all tests pass
+- Run `make test` before you declare yourself done
 
 ### Forbidden commands
 

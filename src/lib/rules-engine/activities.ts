@@ -10,12 +10,14 @@ import type {
   NumberSumActivity,
   OfferRuleActivity,
   RuleContext,
+  SetClearActivity,
+  SetAddActivity,
   Target
 } from './types';
 import { isPhaseAfter } from './types';
 import { createBuiltinFunctionRegistry } from './functions';
 import { evaluateCondition, isRuleApplicable } from './conditions';
-import { resolveSource } from './sources';
+import { resolveSource, resolveStringSource } from './sources';
 
 /**
  * Sets a value at the target location.
@@ -64,6 +66,8 @@ function getTargetValue(target: Target, context: RuleContext): number {
  * Uses the activity's `type` field to determine which handler to invoke.
  * Mutates the working state (facts, events, generated rules, etc.).
  *
+ * If the activity has a `when` condition that evaluates to false, the activity is skipped.
+ *
  * @param activity - The activity to execute
  * @param context - The rule execution context containing working state and all rules
  *
@@ -72,6 +76,18 @@ function getTargetValue(target: Target, context: RuleContext): number {
  * @calledBy executeRuleActivities
  */
 export function executeActivity(activity: Activity, context: RuleContext): void {
+  // Check if activity has a when condition that gates execution
+  if (activity.when !== undefined) {
+    const conditionMet = evaluateCondition(
+      activity.when,
+      context.workingState.facts,
+      context.workingState.events
+    );
+    if (!conditionMet) {
+      return; // Skip this activity
+    }
+  }
+
   switch (activity.type) {
     case 'numberSet':
       executeNumberSet(activity, context);
@@ -96,6 +112,12 @@ export function executeActivity(activity: Activity, context: RuleContext): void 
       break;
     case 'offerRule':
       executeOfferRule(activity, context);
+      break;
+    case 'setClear':
+      executeSetClear(activity, context);
+      break;
+    case 'setAdd':
+      executeSetAdd(activity, context);
       break;
     default:
       throw new Error(`Unknown activity type: ${(activity as { type: string }).type}`);
@@ -337,7 +359,9 @@ export function executeOfferRule(activity: OfferRuleActivity, context: RuleConte
       if (!evaluateCondition(entry.condition, workingState.facts, workingState.events)) {
         // Condition failed - rule is illegal
         legal = false;
-        diagnostics.push(...entry.illegalDiagnostics);
+        if (entry.illegalDiagnostics) {
+          diagnostics.push(...entry.illegalDiagnostics);
+        }
       }
     }
   }
@@ -350,4 +374,72 @@ export function executeOfferRule(activity: OfferRuleActivity, context: RuleConte
   };
 
   workingState.offeredRules.push(entry);
+}
+
+/**
+ * Clears a var target, initializing it to an empty array.
+ *
+ * Used to reset collection vars like error message lists before
+ * conditionally adding items with setAdd.
+ *
+ * @param activity - The setClear activity
+ * @param context - Rule context containing current rule with varsRuntime
+ *
+ * @calledBy executeActivity
+ */
+export function executeSetClear(activity: SetClearActivity, context: RuleContext): void {
+  if (activity.target.var !== undefined) {
+    const rule = context.currentRule;
+    if (!rule) {
+      throw new Error('executeSetClear requires currentRule in context');
+    }
+    if (!rule.varsRuntime) {
+      rule.varsRuntime = {};
+    }
+    rule.varsRuntime[activity.target.var] = [];
+  } else {
+    throw new Error('setClear activity requires a var target');
+  }
+}
+
+/**
+ * Adds a string to a var target array (deduplicates).
+ *
+ * Used for collecting error message i18n keys. If the string is already
+ * present in the array, it will not be added again.
+ *
+ * @param activity - The setAdd activity
+ * @param context - Rule context containing current rule with varsRuntime
+ *
+ * @calledBy executeActivity
+ */
+export function executeSetAdd(activity: SetAddActivity, context: RuleContext): void {
+  if (activity.target.var !== undefined) {
+    const rule = context.currentRule;
+    if (!rule) {
+      throw new Error('executeSetAdd requires currentRule in context');
+    }
+
+    const value = resolveStringSource(activity.source);
+    if (value === undefined) {
+      return; // No string value to add
+    }
+
+    if (!rule.varsRuntime) {
+      rule.varsRuntime = {};
+    }
+
+    // Get existing array or initialize empty
+    const existing = rule.varsRuntime[activity.target.var];
+    const arr: unknown[] = Array.isArray(existing) ? existing : [];
+
+    // Deduplicate - only add if not already present
+    if (!arr.includes(value)) {
+      arr.push(value);
+    }
+
+    rule.varsRuntime[activity.target.var] = arr;
+  } else {
+    throw new Error('setAdd activity requires a var target');
+  }
 }

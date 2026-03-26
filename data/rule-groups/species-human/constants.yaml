@@ -15,3 +15,13 @@ ruleGroups:
               fact: character.movement.total
             source:
               number: 30
+          - type: numberSet
+            target:
+              fact: character.movement.swim.can
+            source:
+              number: 1
+          - type: numberSet
+            target:
+              fact: character.movement.swim.cost
+            source:
+              number: 2
