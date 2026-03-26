@@ -549,6 +549,7 @@ All activities may include an optional `when` condition that gates execution:
 If the `when` condition evaluates to false, the activity is skipped entirely.
 
 The `when` field uses the same condition format as rule-level `when` conditions:
+
 - Fact existence: `{ "fact": "hp.max" }`
 - Fact comparison: `{ "fact": "hp.current", "operator": "lessThan", "value": 0 }`
 - Event condition: `{ "event": "longRest" }`

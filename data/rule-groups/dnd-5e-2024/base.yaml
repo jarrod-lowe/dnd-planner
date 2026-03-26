@@ -158,9 +158,9 @@ ruleGroups:
       # Swim with normal cost (cost < 2)
       - id: action-move-swim-offer
         when:
-        - fact: character.movement.swim.cost
-          operator: equals
-          value: 1
+          - fact: character.movement.swim.cost
+            operator: equals
+            value: 1
         after:
           - group: half-movement-remaining
         activities:
@@ -223,9 +223,9 @@ ruleGroups:
       # Swim with costly movement (cost >= 2)
       - id: action-move-swim-costly-offer
         when:
-        - fact: character.movement.swim.cost
-          operator: equals
-          value: 2
+          - fact: character.movement.swim.cost
+            operator: equals
+            value: 2
         after:
           - group: half-movement-remaining
         activities:

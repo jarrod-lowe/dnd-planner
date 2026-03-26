@@ -26,17 +26,13 @@
   }: Props = $props();
 
   // Get errors array from varsRuntime
-  const errors = $derived(
-    (item.rule.varsRuntime?.errors as string[] | undefined) || []
-  );
+  const errors = $derived((item.rule.varsRuntime?.errors as string[] | undefined) || []);
 
   // Check if rule has errors (illegal state)
   const isIllegal = $derived(errors.length > 0);
 
   // Build diagnostics from error strings
-  const diagnostics = $derived(
-    errors.map(code => ({ code, severity: 'error' as const }))
-  );
+  const diagnostics = $derived(errors.map((code) => ({ code, severity: 'error' as const })));
 </script>
 
 <div class="plan-item">

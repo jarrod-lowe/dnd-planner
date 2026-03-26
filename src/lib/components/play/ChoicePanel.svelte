@@ -41,7 +41,7 @@
   // Multiple diagnostics are joined with newlines for multi-line display
   const warningMessage = $derived.by(() => {
     if (!hasWarning || entry.diagnostics.length === 0) return undefined;
-    const messages = entry.diagnostics.map(d => $t(d.code));
+    const messages = entry.diagnostics.map((d) => $t(d.code));
     return messages.join('\n');
   });
 
