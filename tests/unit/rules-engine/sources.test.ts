@@ -2,7 +2,7 @@
  * Tests for source resolution in the rules engine.
  */
 import { describe, it, expect } from 'vitest';
-import { resolveSource, validateSource } from '$lib/rules-engine';
+import { resolveSource, resolveStringSource, validateSource } from '$lib/rules-engine';
 import type { Source, WorkingState, Rule } from '$lib/rules-engine';
 
 describe('validateSource', () => {
@@ -24,6 +24,10 @@ describe('validateSource', () => {
         condition: { fact: 'hp.current', operator: 'greaterThan', value: 0 }
       })
     ).not.toThrow();
+  });
+
+  it('accepts a valid string source', () => {
+    expect(() => validateSource({ string: 'play.choices.illegal.movement' })).not.toThrow();
   });
 
   it('rejects an empty source', () => {
@@ -355,5 +359,31 @@ describe('resolveSource', () => {
 
       expect(resolveSource(source, workingState, rule)).toBe(1);
     });
+  });
+});
+
+describe('resolveStringSource', () => {
+  it('returns the literal string value', () => {
+    const source: Source = { string: 'play.choices.illegal.movement' };
+
+    const result = resolveStringSource(source);
+
+    expect(result).toBe('play.choices.illegal.movement');
+  });
+
+  it('returns empty string', () => {
+    const source: Source = { string: '' };
+
+    const result = resolveStringSource(source);
+
+    expect(result).toBe('');
+  });
+
+  it('returns undefined for non-string sources', () => {
+    const source: Source = { number: 42 };
+
+    const result = resolveStringSource(source);
+
+    expect(result).toBeUndefined();
   });
 });

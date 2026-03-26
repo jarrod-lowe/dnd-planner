@@ -12,17 +12,17 @@ import type { Source, WorkingState, Rule } from './types';
 import { evaluateCondition } from './conditions';
 
 /**
- * Validates that a Source has exactly one of fact, number, or var.
+ * Validates that a Source has exactly one of fact, number, var, condition, or string.
  * Throws an error if the source is invalid.
  */
 export function validateSource(source: Source): void {
   const keys = Object.keys(source);
-  const validKeys = ['fact', 'number', 'var', 'condition'];
+  const validKeys = ['fact', 'number', 'var', 'condition', 'string'];
   const presentKeys = keys.filter((k) => validKeys.includes(k));
 
   if (presentKeys.length !== 1) {
     throw new Error(
-      `Invalid source: must have exactly one of fact, number, var, or condition. Got: ${JSON.stringify(source)}`
+      `Invalid source: must have exactly one of fact, number, var, condition, or string. Got: ${JSON.stringify(source)}`
     );
   }
 }
@@ -93,6 +93,22 @@ export function resolveSource(
   if (source.condition !== undefined) {
     const result = evaluateCondition(source.condition, workingState.facts, workingState.events);
     return result ? 1 : 0;
+  }
+
+  return undefined;
+}
+
+/**
+ * Resolves a Source to a string value.
+ * Only handles string sources - use resolveSource for numeric values.
+ *
+ * @param source - The source to resolve
+ * @returns The string value, or undefined if not a string source
+ */
+export function resolveStringSource(source: Source): string | undefined {
+  // { string: "value" } - literal string value
+  if (source.string !== undefined) {
+    return source.string;
   }
 
   return undefined;

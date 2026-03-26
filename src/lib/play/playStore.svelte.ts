@@ -95,6 +95,7 @@ async function loadRuleGroups(characterId: string): Promise<void> {
     // Initial evaluation
     performEvaluation();
   } catch (error) {
+    console.error('[loadRuleGroups] Error:', error);
     state = {
       ...state,
       isLoadingRuleGroups: false,

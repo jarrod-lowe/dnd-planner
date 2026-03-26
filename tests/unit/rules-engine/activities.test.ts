@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  executeActivity,
   executeNumberSet,
   executeNumberIncrement,
   executeNumberCopy,
@@ -18,7 +19,9 @@ import type {
   EmitEventActivity,
   GenerateRuleActivity,
   RuleContext,
-  Rule
+  Rule,
+  SetClearActivity,
+  SetAddActivity
 } from '$lib/rules-engine/types';
 
 function createEmptyState(): WorkingState {
@@ -678,5 +681,301 @@ describe('executeGenerateRule', () => {
     expect(() => executeGenerateRule(activity, context)).toThrow(
       'Cannot generate rule for earlier or same phase'
     );
+  });
+});
+
+describe('activity when condition', () => {
+  it('executes activity when when condition is true', () => {
+    const activity: NumberSetActivity = {
+      id: 'test-1',
+      type: 'numberSet',
+      target: { fact: 'hp.current' },
+      source: { number: 42 },
+      when: {
+        fact: 'hp.max',
+        operator: 'greaterThan',
+        value: 0
+      }
+    };
+
+    const context = createEmptyContext();
+    context.workingState.facts['hp.max'] = 10;
+
+    executeActivity(activity, context);
+
+    expect(context.workingState.facts['hp.current']).toBe(42);
+  });
+
+  it('skips activity when when condition is false', () => {
+    const activity: NumberSetActivity = {
+      id: 'test-1',
+      type: 'numberSet',
+      target: { fact: 'hp.current' },
+      source: { number: 42 },
+      when: {
+        fact: 'hp.max',
+        operator: 'greaterThan',
+        value: 100
+      }
+    };
+
+    const context = createEmptyContext();
+    context.workingState.facts['hp.max'] = 10;
+
+    executeActivity(activity, context);
+
+    expect(context.workingState.facts['hp.current']).toBeUndefined();
+  });
+
+  it('executes activity without when condition (backward compatible)', () => {
+    const activity: NumberSetActivity = {
+      id: 'test-1',
+      type: 'numberSet',
+      target: { fact: 'hp.current' },
+      source: { number: 42 }
+    };
+
+    const context = createEmptyContext();
+
+    executeActivity(activity, context);
+
+    expect(context.workingState.facts['hp.current']).toBe(42);
+  });
+
+  it('skips activity when event condition in when is not met', () => {
+    const activity: NumberSetActivity = {
+      id: 'test-1',
+      type: 'numberSet',
+      target: { fact: 'hp.current' },
+      source: { number: 42 },
+      when: {
+        event: 'attack'
+      }
+    };
+
+    const context = createEmptyContext();
+    // No event emitted
+
+    executeActivity(activity, context);
+
+    expect(context.workingState.facts['hp.current']).toBeUndefined();
+  });
+
+  it('executes activity when event condition in when is met', () => {
+    const activity: NumberSetActivity = {
+      id: 'test-1',
+      type: 'numberSet',
+      target: { fact: 'hp.current' },
+      source: { number: 42 },
+      when: {
+        event: 'attack'
+      }
+    };
+
+    const context = createEmptyContext();
+    context.workingState.events.add('attack');
+
+    executeActivity(activity, context);
+
+    expect(context.workingState.facts['hp.current']).toBe(42);
+  });
+});
+
+describe('executeSetClear', () => {
+  it('initializes a var to an empty array', () => {
+    const activity: SetClearActivity = {
+      id: 'test-1',
+      type: 'setClear',
+      target: { var: 'errors' }
+    };
+
+    const context = createEmptyContext();
+
+    executeActivity(activity, context);
+
+    expect(context.currentRule?.varsRuntime?.['errors']).toEqual([]);
+  });
+
+  it('clears an existing array to empty', () => {
+    const activity: SetClearActivity = {
+      id: 'test-1',
+      type: 'setClear',
+      target: { var: 'errors' }
+    };
+
+    const context = createEmptyContext();
+    context.currentRule = {
+      id: 'test-rule',
+      activities: [],
+      varsRuntime: { errors: ['error1', 'error2'] }
+    };
+
+    executeActivity(activity, context);
+
+    expect(context.currentRule?.varsRuntime?.['errors']).toEqual([]);
+  });
+
+  it('skips when when condition is false', () => {
+    const activity: SetClearActivity = {
+      id: 'test-1',
+      type: 'setClear',
+      target: { var: 'errors' },
+      when: {
+        fact: 'some.fact',
+        operator: 'equals',
+        value: 1
+      }
+    };
+
+    const context = createEmptyContext();
+    context.currentRule = {
+      id: 'test-rule',
+      activities: [],
+      varsRuntime: { errors: ['existing-error'] }
+    };
+
+    executeActivity(activity, context);
+
+    // Should not clear because when condition is false
+    expect(context.currentRule?.varsRuntime?.['errors']).toEqual(['existing-error']);
+  });
+});
+
+describe('executeSetAdd', () => {
+  it('adds a string to an empty array', () => {
+    const activity: SetAddActivity = {
+      id: 'test-1',
+      type: 'setAdd',
+      target: { var: 'errors' },
+      source: { string: 'play.choices.illegal.movement' }
+    };
+
+    const context = createEmptyContext();
+    context.currentRule = {
+      id: 'test-rule',
+      activities: [],
+      varsRuntime: { errors: [] }
+    };
+
+    executeActivity(activity, context);
+
+    expect(context.currentRule?.varsRuntime?.['errors']).toEqual(['play.choices.illegal.movement']);
+  });
+
+  it('adds a string to an existing array', () => {
+    const activity: SetAddActivity = {
+      id: 'test-1',
+      type: 'setAdd',
+      target: { var: 'errors' },
+      source: { string: 'play.choices.illegal.action' }
+    };
+
+    const context = createEmptyContext();
+    context.currentRule = {
+      id: 'test-rule',
+      activities: [],
+      varsRuntime: { errors: ['play.choices.illegal.movement'] }
+    };
+
+    executeActivity(activity, context);
+
+    expect(context.currentRule?.varsRuntime?.['errors']).toEqual([
+      'play.choices.illegal.movement',
+      'play.choices.illegal.action'
+    ]);
+  });
+
+  it('deduplicates same string', () => {
+    const activity: SetAddActivity = {
+      id: 'test-1',
+      type: 'setAdd',
+      target: { var: 'errors' },
+      source: { string: 'play.choices.illegal.movement' }
+    };
+
+    const context = createEmptyContext();
+    context.currentRule = {
+      id: 'test-rule',
+      activities: [],
+      varsRuntime: { errors: ['play.choices.illegal.movement'] }
+    };
+
+    executeActivity(activity, context);
+
+    // Should not add duplicate
+    expect(context.currentRule?.varsRuntime?.['errors']).toEqual(['play.choices.illegal.movement']);
+  });
+
+  it('initializes array if it does not exist', () => {
+    const activity: SetAddActivity = {
+      id: 'test-1',
+      type: 'setAdd',
+      target: { var: 'errors' },
+      source: { string: 'play.choices.illegal.movement' }
+    };
+
+    const context = createEmptyContext();
+    context.currentRule = {
+      id: 'test-rule',
+      activities: [],
+      varsRuntime: {}
+    };
+
+    executeActivity(activity, context);
+
+    expect(context.currentRule?.varsRuntime?.['errors']).toEqual(['play.choices.illegal.movement']);
+  });
+
+  it('skips when when condition is false', () => {
+    const activity: SetAddActivity = {
+      id: 'test-1',
+      type: 'setAdd',
+      target: { var: 'errors' },
+      source: { string: 'play.choices.illegal.movement' },
+      when: {
+        fact: 'movement.current',
+        operator: 'lessThan',
+        value: 0
+      }
+    };
+
+    const context = createEmptyContext();
+    context.workingState.facts['movement.current'] = 10; // condition is false
+    context.currentRule = {
+      id: 'test-rule',
+      activities: [],
+      varsRuntime: { errors: [] }
+    };
+
+    executeActivity(activity, context);
+
+    // Should not add because when condition is false
+    expect(context.currentRule?.varsRuntime?.['errors']).toEqual([]);
+  });
+
+  it('adds when when condition is true', () => {
+    const activity: SetAddActivity = {
+      id: 'test-1',
+      type: 'setAdd',
+      target: { var: 'errors' },
+      source: { string: 'play.choices.illegal.movement' },
+      when: {
+        fact: 'movement.current',
+        operator: 'lessThan',
+        value: 0
+      }
+    };
+
+    const context = createEmptyContext();
+    context.workingState.facts['movement.current'] = -5; // condition is true
+    context.currentRule = {
+      id: 'test-rule',
+      activities: [],
+      varsRuntime: { errors: [] }
+    };
+
+    executeActivity(activity, context);
+
+    expect(context.currentRule?.varsRuntime?.['errors']).toEqual(['play.choices.illegal.movement']);
   });
 });

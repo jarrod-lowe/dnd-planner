@@ -37,11 +37,12 @@
     !entry.legal ? 'illegal' : !entry.applicable ? 'inapplicable' : null
   );
 
-  // Get specific diagnostic message from entry.diagnostics
+  // Get specific diagnostic messages from entry.diagnostics
+  // Multiple diagnostics are joined with newlines for multi-line display
   const warningMessage = $derived.by(() => {
     if (!hasWarning || entry.diagnostics.length === 0) return undefined;
-    const code = entry.diagnostics[0].code;
-    return $t(code);
+    const messages = entry.diagnostics.map(d => $t(d.code));
+    return messages.join('\n');
   });
 
   const warningLabel = $derived.by(() => {

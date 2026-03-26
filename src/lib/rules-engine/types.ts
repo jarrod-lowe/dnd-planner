@@ -67,18 +67,20 @@ export interface Target {
 
 /**
  * A unified value reference used in activities.
- * Exactly one of fact, number, var, or condition must be present.
+ * Exactly one of fact, number, var, condition, or string must be present.
  *
  * - fact: Reference to a fact in working state
  * - number: A literal numeric value
  * - var: Reference to a rule var (resolved via selections or vars.default)
  * - condition: Evaluates a condition to 0 (false) or 1 (true)
+ * - string: A literal string value (typically an i18n key)
  */
 export interface Source {
   fact?: string;
   number?: number;
   var?: string;
   condition?: Condition;
+  string?: string;
 }
 
 /**
@@ -165,6 +167,8 @@ export interface Status {
 export interface ActivityBase {
   id: string;
   type: string;
+  /** Optional condition that gates execution - if false, activity is skipped */
+  when?: Condition;
 }
 
 /**
@@ -257,6 +261,25 @@ export interface OfferRuleActivity extends ActivityBase {
 }
 
 /**
+ * Clears a var target, initializing it to an empty array.
+ * Used for managing collection vars like error message lists.
+ */
+export interface SetClearActivity extends ActivityBase {
+  type: 'setClear';
+  target: Target;
+}
+
+/**
+ * Adds a string to a var target array (deduplicates).
+ * Used for collecting error message i18n keys.
+ */
+export interface SetAddActivity extends ActivityBase {
+  type: 'setAdd';
+  target: Target;
+  source: { string: string };
+}
+
+/**
  * Union of all activity types.
  */
 export type Activity =
@@ -267,7 +290,9 @@ export type Activity =
   | NumberFunctionActivity
   | EmitEventActivity
   | GenerateRuleActivity
-  | OfferRuleActivity;
+  | OfferRuleActivity
+  | SetClearActivity
+  | SetAddActivity;
 
 // === RULE ===
 
