@@ -1,8 +1,8 @@
 <script lang="ts">
   import { t } from '$lib/i18n';
-  import ChoicePanel from './ChoicePanel.svelte';
-  import PackedChoiceGroup from './PackedChoiceGroup.svelte';
-  import { groupPackedChoices } from '$lib/play/groupPackedChoices';
+  import SectionCollapsible from './SectionCollapsible.svelte';
+  import { groupChoicesBySection } from '$lib/play/groupChoicesBySection';
+  import { SECTION_ORDER } from '$lib/play/sectionConfig';
   import type { AvailableRuleEntry, Facts } from '$lib/rules-engine';
 
   interface Props {
@@ -14,8 +14,8 @@
 
   let { entries, facts = {}, isLoading = false, onChoiceTap }: Props = $props();
 
-  // Group entries by packBehind
-  const choiceGroups = $derived(groupPackedChoices(entries));
+  // Group entries by section, then by packBehind within each section
+  const sectionGroups = $derived(groupChoicesBySection(entries, SECTION_ORDER));
 </script>
 
 <div class="choices-column">
@@ -29,22 +29,14 @@
     </div>
   {:else}
     <div class="choices-column__list">
-      {#each choiceGroups as group (group.type === 'packed' ? group.leader.rule.id : group.entry.rule.id)}
-        {#if group.type === 'single'}
-          <ChoicePanel
-            entry={group.entry}
-            {facts}
-            editable={false}
-            onTap={() => onChoiceTap(group.entry)}
-          />
-        {:else if group.type === 'packed'}
-          <PackedChoiceGroup
-            leader={group.leader}
-            followers={group.followers}
-            {facts}
-            onAddToPlan={onChoiceTap}
-          />
-        {/if}
+      {#each sectionGroups as sectionGroup (sectionGroup.section ?? 'other')}
+        <SectionCollapsible
+          section={sectionGroup.section}
+          packedGroups={sectionGroup.packedGroups}
+          hasLegalEntries={sectionGroup.hasLegalEntries}
+          {facts}
+          onChoiceTap={onChoiceTap}
+        />
       {/each}
     </div>
   {/if}
@@ -61,7 +53,6 @@
   .choices-column__list {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-sm);
     flex: 1;
     overflow-y: auto;
   }

@@ -58,7 +58,6 @@
     background: var(--md-sys-color-surface-container);
     border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: var(--radius-lg);
-    padding: var(--spacing-md);
     overflow-y: auto;
     min-height: 0;
   }
@@ -69,7 +68,7 @@
     font-weight: 600;
     color: var(--md-sys-color-on-surface);
     margin: 0;
-    padding-bottom: var(--spacing-sm);
+    padding: var(--spacing-md);
     border-bottom: 1px solid var(--md-sys-color-outline-variant);
     flex-shrink: 0;
   }

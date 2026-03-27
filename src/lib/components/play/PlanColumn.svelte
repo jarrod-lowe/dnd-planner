@@ -53,6 +53,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
+    padding: var(--spacing-md);
     flex: 1;
     overflow-y: auto;
   }

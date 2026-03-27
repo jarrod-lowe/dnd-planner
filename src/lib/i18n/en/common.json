@@ -112,7 +112,8 @@
       "removeFromPlan": "Remove from plan",
       "sections": {
         "move": "Move",
-        "free": "Free"
+        "free": "Flavour",
+        "other": "Other"
       },
       "move": {
         "distance": "Movement distance in feet"
