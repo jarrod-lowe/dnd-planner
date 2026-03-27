@@ -31,6 +31,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-md);
+    padding: var(--spacing-md);
   }
 
   .stats-column__item {
