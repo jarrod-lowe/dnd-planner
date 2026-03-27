@@ -11,8 +11,35 @@ vi.mock('$lib/rules-engine', () => ({
   evaluate: vi.fn()
 }));
 
+// Mock $lib/i18n with a proper mock store
+vi.mock('$lib/i18n', () => {
+  let currentValue = 'en';
+  const subscribers = new Set<(value: string) => void>();
+
+  const mockLocale = {
+    subscribe: (callback: (value: string) => void) => {
+      subscribers.add(callback);
+      callback(currentValue);
+      return { unsubscribe: () => subscribers.delete(callback) };
+    },
+    set: (value: string) => {
+      currentValue = value;
+      subscribers.forEach(callback => callback(value));
+    },
+    update: (fn: (value: string) => string) => {
+      mockLocale.set(fn(currentValue));
+    }
+  };
+
+  return {
+    locale: mockLocale,
+    locales: ['en', 'en-x-tlh']
+  };
+});
+
 import { apiGet, apiPost } from '$lib/api/client';
 import { evaluate } from '$lib/rules-engine';
+import { locale } from '$lib/i18n';
 import type { Rule, EngineOutput } from '$lib/rules-engine';
 
 describe('playStore', () => {
@@ -73,7 +100,7 @@ describe('playStore', () => {
       await playStore.loadRuleGroups('char-123');
 
       expect(mockApiGet).toHaveBeenCalledWith('/api/characters/char-123/rule-groups');
-      expect(mockApiPost).toHaveBeenCalledWith('/api/rule-groups/batch', {
+      expect(mockApiPost).toHaveBeenCalledWith('/api/rule-groups/batch?lang=en', {
         ids: ['group-1', 'group-2']
       });
       expect(playStore.state.ruleGroups).toEqual(mockRules);
@@ -139,10 +166,10 @@ describe('playStore', () => {
       await playStore.loadRuleGroups('char-123');
 
       expect(mockApiPost).toHaveBeenCalledTimes(2);
-      expect(mockApiPost).toHaveBeenNthCalledWith(1, '/api/rule-groups/batch', {
+      expect(mockApiPost).toHaveBeenNthCalledWith(1, '/api/rule-groups/batch?lang=en', {
         ids: groupIds.slice(0, 100)
       });
-      expect(mockApiPost).toHaveBeenNthCalledWith(2, '/api/rule-groups/batch', {
+      expect(mockApiPost).toHaveBeenNthCalledWith(2, '/api/rule-groups/batch?lang=en', {
         ids: groupIds.slice(100)
       });
       expect(playStore.state.ruleGroups).toHaveLength(150);
@@ -161,6 +188,62 @@ describe('playStore', () => {
 
       expect(playStore.state.ruleGroupError).toBeTruthy();
       expect(playStore.state.isLoadingRuleGroups).toBe(false);
+    });
+
+    it('passes current locale to API', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      const mockApiPost = vi.mocked(apiPost);
+      const mockEvaluate = vi.mocked(evaluate);
+
+      // Mock rule group IDs response
+      mockApiGet.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: ['group-1'] })
+      } as Response);
+
+      // Mock batch rules response
+      const mockRules: Rule[] = [{ id: 'rule-1', activities: [] }];
+      mockApiPost.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          ruleGroups: [{ ruleGroupId: 'group-1', rules: JSON.stringify(mockRules) }]
+        })
+      } as Response);
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      // Set locale to Klingon
+      locale.set('en-x-tlh');
+
+      await playStore.loadRuleGroups('char-123');
+
+      // Should pass lang parameter to API
+      expect(mockApiPost).toHaveBeenCalledWith('/api/rule-groups/batch?lang=en-x-tlh', {
+        ids: ['group-1']
+      });
+
+      // Reset locale
+      locale.set('en');
     });
   });
 

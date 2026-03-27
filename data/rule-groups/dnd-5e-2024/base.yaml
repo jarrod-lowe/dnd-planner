@@ -1,8 +1,15 @@
 # yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: base
-    name: rule.dnd-5e-2024.base.name
-    description: rule.dnd-5e-2024.base.description
+    translations:
+      en:
+        name: Base Rules
+        description: Core D&D 5e 2024 rules for movement and actions
+        keywords: [basic, core, movement, actions, walk, swim, fly]
+      en-x-tlh:
+        name: raD naQ
+        description: DIvI' Hol D&D 5e 2024 raD naQ
+        keywords: [ratlh, rutlh, Do, DIvI']
     rules:
       # Movement Actions
       - id: action-move-reset

@@ -15,24 +15,55 @@
     }
   },
   "definitions": {
+    "supportedLocale": {
+      "type": "string",
+      "enum": ["en", "en-x-tlh"],
+      "description": "Supported locales for rule group translations"
+    },
+    "translation": {
+      "type": "object",
+      "required": ["name", "description", "keywords"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Display name for this rule group in this locale"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description for this rule group in this locale"
+        },
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Search/filter keywords for this rule group in this locale"
+        }
+      },
+      "additionalProperties": false
+    },
     "ruleGroup": {
       "type": "object",
-      "required": ["id"],
+      "required": ["id", "translations"],
       "properties": {
         "id": {
           "type": "string",
           "description": "Unique identifier for this rule group",
           "examples": ["paladin-level1-divine-sense", "fighter-champion-improved-critical"]
         },
-        "name": {
-          "type": "string",
-          "description": "i18n key for display name",
-          "examples": ["ruleGroups.paladin.divineSense.name"]
-        },
-        "description": {
-          "type": "string",
-          "description": "i18n key for description",
-          "examples": ["ruleGroups.paladin.divineSense.description"]
+        "translations": {
+          "type": "object",
+          "description": "Translations keyed by locale code",
+          "properties": {
+            "en": {
+              "$ref": "#/definitions/translation"
+            },
+            "en-x-tlh": {
+              "$ref": "#/definitions/translation"
+            }
+          },
+          "required": ["en", "en-x-tlh"],
+          "additionalProperties": false
         },
         "rules": {
           "type": "array",

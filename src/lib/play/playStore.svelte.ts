@@ -4,6 +4,8 @@ import type { Rule } from '$lib/rules-engine';
 import type { PlannedItem, PlayState } from './types';
 import { debounce } from './debounce';
 import { resolveInitialSelections } from './resolveInitialSelections';
+import { locale } from '$lib/i18n';
+import { get } from 'svelte/store';
 
 const DEBOUNCE_MS = 300;
 const BATCH_SIZE = 100;
@@ -59,6 +61,9 @@ async function loadRuleGroups(characterId: string): Promise<void> {
   state = { ...state, isLoadingRuleGroups: true, ruleGroupError: null };
 
   try {
+    // Get current locale for translations
+    const currentLocale = get(locale);
+
     // Step 1: Get rule group IDs
     const idsResponse = await apiGet(`/api/characters/${characterId}/rule-groups`);
 
@@ -73,7 +78,7 @@ async function loadRuleGroups(characterId: string): Promise<void> {
 
     for (let i = 0; i < groupIds.length; i += BATCH_SIZE) {
       const batch = groupIds.slice(i, i + BATCH_SIZE);
-      const batchResponse = await apiPost('/api/rule-groups/batch', { ids: batch });
+      const batchResponse = await apiPost(`/api/rule-groups/batch?lang=${currentLocale}`, { ids: batch });
 
       if (!batchResponse.ok) {
         throw new Error(`Failed to fetch rule group batch: ${batchResponse.status}`);

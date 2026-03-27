@@ -26,6 +26,41 @@ DIRECTORY_PK = "RULEGROUPDIRECTORY#"
 DIRECTORY_SK_PREFIX = "CATEGORY#"
 BATCH_WRITE_SIZE = 25
 
+# Supported locales for translations - must match schema.json
+SUPPORTED_LOCALES = ["en", "en-x-tlh"]
+
+
+def build_rule_group_item(rg: dict[str, Any], now: str) -> dict[str, Any]:
+    """
+    Build a DynamoDB item from a rule group.
+
+    Args:
+        rg: Rule group dictionary from YAML
+        now: Current timestamp for updatedAt
+
+    Returns:
+        DynamoDB item dictionary
+
+    Raises:
+        KeyError: If required fields are missing
+    """
+    # Validate required fields
+    if "translations" not in rg:
+        raise KeyError(f"Rule group {rg.get('id', 'unknown')} missing required 'translations' field")
+
+    item = {
+        "PK": f"{RULEGROUP_PK_PREFIX}{rg['id']}",
+        "SK": RULEGROUP_SK,
+        "type": "RULEGROUP",
+        "ruleGroupId": rg["id"],
+        "translations": rg["translations"],
+        "rules": json.dumps(rg.get("rules", [])),
+        "createdAt": rg.get("createdAt", now),
+        "updatedAt": now,
+    }
+
+    return item
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Sync rule groups to DynamoDB")
@@ -128,21 +163,7 @@ def batch_write_rule_groups(
 
         batch_items = []
         for rg in batch:
-            item = {
-                "PK": f"{RULEGROUP_PK_PREFIX}{rg['id']}",
-                "SK": RULEGROUP_SK,
-                "type": "RULEGROUP",
-                "ruleGroupId": rg["id"],
-                "name": rg.get("name", ""),
-                "rules": json.dumps(rg.get("rules", [])),
-                "createdAt": rg.get("createdAt", now),
-                "updatedAt": now,
-            }
-
-            # Preserve createdAt if it exists in the rule group
-            if "createdAt" in rg:
-                item["createdAt"] = rg["createdAt"]
-
+            item = build_rule_group_item(rg, now)
             batch_items.append({"PutRequest": {"Item": item}})
 
         if batch_items:

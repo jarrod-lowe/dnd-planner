@@ -1,8 +1,15 @@
 # yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: species-human
-    name: rule.species-human.constants.name
-    description: rule.species-human.constants.description
+    translations:
+      en:
+        name: Human
+        description: Human species constants and movement rules
+        keywords: [human, species, race, movement]
+      en-x-tlh:
+        name: Human
+        description: Human Segh
+        keywords: [Human, Segh, Do]
     rules:
       # Max Distance
       - id: set-base-distance
