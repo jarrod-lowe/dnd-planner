@@ -45,9 +45,12 @@ import type { Rule, EngineOutput } from '$lib/rules-engine';
 describe('playStore', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
+    vi.runAllTimers();
+    vi.useRealTimers();
     vi.resetModules();
   });
 
@@ -670,8 +673,6 @@ describe('playStore', () => {
 
   describe('updateSelections', () => {
     it('updates selections for a planned item and triggers debounced evaluate', async () => {
-      vi.useFakeTimers();
-
       const mockEvaluate = vi.mocked(evaluate);
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
@@ -702,13 +703,9 @@ describe('playStore', () => {
       playStore.updateSelections(instanceId, { distance: 15 });
 
       expect(playStore.state.plannedItems[0].rule.selections).toEqual({ distance: 15 });
-
-      vi.useRealTimers();
     });
 
     it('does nothing if instance ID not found', async () => {
-      vi.useFakeTimers();
-
       const mockEvaluate = vi.mocked(evaluate);
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
@@ -740,8 +737,6 @@ describe('playStore', () => {
 
       // Original item should not have selections
       expect(playStore.state.plannedItems[0].rule.selections).toBeUndefined();
-
-      vi.useRealTimers();
     });
   });
 });
