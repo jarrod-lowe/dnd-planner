@@ -35,7 +35,7 @@
           packedGroups={sectionGroup.packedGroups}
           hasLegalEntries={sectionGroup.hasLegalEntries}
           {facts}
-          onChoiceTap={onChoiceTap}
+          {onChoiceTap}
         />
       {/each}
     </div>

@@ -21,9 +21,7 @@
 
   // Compute section title with i18n fallback
   const sectionTitle = $derived.by(() => {
-    const key = section
-      ? `play.choices.sections.${section}`
-      : 'play.choices.sections.other';
+    const key = section ? `play.choices.sections.${section}` : 'play.choices.sections.other';
     const translated = $t(key);
     // If translation key doesn't exist, capitalize the section name
     if (translated === key && section) {
@@ -46,7 +44,10 @@
     aria-label={sectionTitle}
   >
     <span class="section-collapsible__title">{sectionTitle}</span>
-    <span class="section-collapsible__chevron" class:section-collapsible__chevron--expanded={expanded}>
+    <span
+      class="section-collapsible__chevron"
+      class:section-collapsible__chevron--expanded={expanded}
+    >
       {#if expanded}
         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />

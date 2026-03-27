@@ -54,9 +54,7 @@ export function groupChoicesBySection(
   }
 
   // Then, add unknown sections (excluding undefined)
-  const unknownSections = Array.from(sectionMap.keys()).filter(
-    (s): s is string => s !== undefined
-  );
+  const unknownSections = Array.from(sectionMap.keys()).filter((s): s is string => s !== undefined);
   for (const section of unknownSections) {
     const sectionEntries = sectionMap.get(section)!;
     const hasLegalEntries = sectionEntries.some((e) => e.legal);
