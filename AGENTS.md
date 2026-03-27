@@ -55,14 +55,19 @@ Avoid `$(...)` in commands, as they trigger security checks that slow you down.
 
 - Regularly run `make test` to check all tests pass
 - Run `make test` before you declare yourself done
+- To update the test environment seed data and rule groups, run `make sync-rule-groups`
+- To fully update the test environment, run `make deploy-test`
+- To run the dev vite server run `make dev` - but check it isn't already running first `pgrep -f vite.js`
 
 ### Forbidden commands
 
 - **DO NOT USE** `find ... -exec grep`; use `rg` instead
 - **DO NOT USE** `$(...)` wherever possible (consider running interior commands separately and remembering their output)
-- **DO NOT USER** `terraform`, use the make targets for it
+- **DO NOT USE** `terraform`, use the make targets for it
+- **DO NOT USE** python or node, etc, to validate JSON or YAML - use `jq` and `yq` (WITHOUT redirections!)
 - Avoid `find`
-- Avoid redirections (`>`, `2>`, `<`, `|`) and chaining (`&&`, `||`)
+- Avoid redirections (`>`, `2>`, `<`, `|`) and chaining (`&&`, `||`) and `sed` - they trigger sandbox restrictions
+- Avoid `cd DIR; command` where possible - it triggers sandbox restrictions
 
 ## Technology Stack
 

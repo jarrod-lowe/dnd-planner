@@ -447,8 +447,19 @@ paths:
   /rule-groups/batch:
     post:
       summary: Get rule groups by IDs
-      description: Batch fetch rule groups by their IDs (max 100)
+      description: Batch fetch rule groups by their IDs (max 100). Returns translations for the specified language.
       operationId: getRuleGroups
+      parameters:
+        - name: lang
+          in: query
+          required: false
+          description: 'Language code for translations (default: en)'
+          schema:
+            type: string
+            enum:
+              - en
+              - en-x-tlh
+            default: en
       requestBody:
         required: true
         content:
@@ -485,6 +496,15 @@ paths:
                           type: string
                         name:
                           type: string
+                          description: Display name in requested language
+                        description:
+                          type: string
+                          description: Description in requested language
+                        keywords:
+                          type: array
+                          items:
+                            type: string
+                          description: Search keywords in requested language
                         rules:
                           type: string
                           description: JSON-encoded array of rules
@@ -493,7 +513,7 @@ paths:
                         updatedAt:
                           type: string
         '400':
-          description: Bad request - invalid input
+          description: Bad request - invalid input or unsupported language
           content:
             application/json:
               schema:
@@ -531,10 +551,20 @@ paths:
           default:
             statusCode: 200
             responseTemplates:
+              # Note: We do not emit keywords
               application/json: |
                 #set($responses = $input.path('$.Responses'))
                 #set($tableName = "${dynamodb_table_name}")
                 #set($items = $responses.get($tableName))
+                #set($lang = $input.params('lang'))
+                #if(!$lang || $lang == '')
+                  #set($lang = 'en')
+                #end
+                #if($lang != 'en' && $lang != 'en-x-tlh')
+                  {
+                    "error": "Unsupported language: '$lang'. Supported languages: en, en-x-tlh"
+                  }
+                #else
                 {
                   "ruleGroups": [
                 #set($itemFirst = true)
@@ -547,7 +577,9 @@ paths:
                     {
                       "ruleGroupId": "$item.get('ruleGroupId').get('S')",
                       "type": "$item.get('type').get('S')",
-                      "name": "$item.get('name').get('S')",
+                      "name": "$item.get('translations').get('M').get($lang).get('M').get('name').get('S')",
+                      "lang": "$lang",
+                      "description": "$item.get('translations').get('M').get($lang).get('M').get('description').get('S')",
                       "rules": "$util.escapeJavaScript($item.get('rules').get('S'))",
                       "createdAt": "$item.get('createdAt').get('S')",
                       "updatedAt": "$item.get('updatedAt').get('S')"
@@ -555,3 +587,4 @@ paths:
                 #end
                   ]
                 }
+                #end

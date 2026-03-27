@@ -131,7 +131,34 @@ Represents a reusable set of rules.
 - SK = META#
 - type = RULEGROUP
 - ruleGroupId = unique ID (GUID)
-- name = short display name (translation id)
+- translations = JSON object keyed by locale code (e.g., "en", "en-x-tlh")
+  - Each locale contains: name, description, keywords
 - createdAt = ISO timestamp
 - updatedAt = ISO timestamp
-- rules = list of rule objects (complex)
+- rules = list of rule objects (complex, stored as JSON string)
+
+### Translations Structure
+
+The `translations` field contains localized metadata for each supported locale:
+
+```json
+{
+  "en": {
+    "name": "Base Rules",
+    "description": "Core D&D 5e 2024 rules",
+    "keywords": ["basic", "core", "movement", "actions"]
+  },
+  "en-x-tlh": {
+    "name": "raD naQ",
+    "description": "DIvI' Hol",
+    "keywords": ["ratlh", "rutlh"]
+  }
+}
+```
+
+### API Response Transformation
+
+When rule groups are fetched via the API, the `lang` query parameter determines which locale's translations are returned at the top level:
+
+- Request: `GET /api/rule-groups/batch?lang=en`
+- Response includes: `name`, `description`, `keywords` extracted from `translations.en`
