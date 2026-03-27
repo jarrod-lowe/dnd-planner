@@ -112,7 +112,8 @@
       "removeFromPlan": "DIvI' teq",
       "sections": {
         "move": "Do",
-        "free": "Free"
+        "free": "Free",
+        "other": "latlh"
       },
       "move": {
         "distance": "Do chu'"

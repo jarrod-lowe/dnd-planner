@@ -111,8 +111,9 @@
       "addToPlan": "Add to plan",
       "removeFromPlan": "Remove from plan",
       "sections": {
-        "move": "Move",
-        "free": "Free"
+        "move": "Moves",
+        "free": "Free Actions",
+        "other": "Other"
       },
       "move": {
         "distance": "Movement distance in feet"
