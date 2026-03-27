@@ -89,6 +89,31 @@ jobs:
       - name: Deploy Lambda code
         run: make deploy-lambdas-prod
 
+      - name: Get terraform outputs
+        uses: dflook/terraform-output@v1
+        id: tf-outputs
+        env:
+          TF_VAR_domain: ${{ secrets.TF_VAR_domain }}
+          TF_VAR_host: ${{ secrets.TF_VAR_host }}
+          TF_VAR_sns_alarm_topic_arn: ${{ vars.SNS_ALARM_TOPIC_ARN }}
+        with:
+          path: terraform/environment/prod
+          backend_config: >
+            bucket=${{ vars.STATE_BUCKET }},
+            key=dnd-planner/prod/terraform.tfstate,
+            region=${{ vars.AWS_REGION }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Sync rule groups
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -q -r scripts/requirements.txt
+          .venv/bin/python scripts/sync_rule_groups.py --table=${{ steps.tf-outputs.outputs.dynamodb_table_name }}
+
   frontend:
     name: Deploy Frontend
     runs-on: ubuntu-latest
