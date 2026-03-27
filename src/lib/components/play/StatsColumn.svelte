@@ -6,11 +6,17 @@
     max: number;
   }
 
-  interface Props {
-    movement?: Movement;
+  interface Actions {
+    remaining: number;
+    max: number;
   }
 
-  let { movement }: Props = $props();
+  interface Props {
+    movement?: Movement;
+    actions?: Actions;
+  }
+
+  let { movement, actions }: Props = $props();
 </script>
 
 <div class="stats-column">
@@ -21,7 +27,16 @@
         >{$t('play.stats.currentMax', { current: movement.current, max: movement.max })}</span
       >
     </div>
-  {:else}
+  {/if}
+  {#if actions}
+    <div class="stats-column__item">
+      <span class="stats-column__label">{$t('play.stats.actions')}</span>
+      <span class="stats-column__value"
+        >{$t('play.stats.currentMax', { current: actions.remaining, max: actions.max })}</span
+      >
+    </div>
+  {/if}
+  {#if !movement && !actions}
     <div class="stats-column__todo">{$t('play.stats.todo')}</div>
   {/if}
 </div>

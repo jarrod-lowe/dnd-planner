@@ -15,6 +15,30 @@ ruleGroups:
               fact: character.movement.total
             target:
               fact: character.movement.current
+
+      # Action Resources - set max actions (base rule: 1 action per turn)
+      - id: action-max
+        phase: early
+        group:
+          - action-max
+        activities:
+          - type: numberSet
+            source:
+              number: 1
+            target:
+              fact: actions.max
+
+      # Action Resources - reset remaining at start of turn
+      - id: action-reset
+        phase: early
+        after:
+          - group: action-max
+        activities:
+          - type: numberCopy
+            source:
+              fact: actions.max
+            target:
+              fact: actions.remaining
       - id: compute-half-movement-total
         phase: normal
         group:
@@ -390,3 +414,45 @@ ruleGroups:
                 section: free
                 name: rule.dnd-5e-2024.base.free-action.name
               activities: []
+
+      # Help Action
+      - id: action-help-offer
+        after:
+          - group: action
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: actions.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.base.action-help-offer.no_action
+                    severity: error
+            rule:
+              id: help-action
+              ui:
+                model: help
+                section: action-other
+                name: rule.dnd-5e-2024.base.help-action.name
+              group:
+                - action
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: actions.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                - type: setClear
+                  target:
+                    var: errors
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.base.action-help-offer.no_action
+                  when:
+                    fact: actions.remaining
+                    operator: lessThan
+                    value: 0

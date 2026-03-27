@@ -27,6 +27,16 @@
       : undefined
   );
 
+  // Extract actions from facts
+  const actions = $derived(
+    playStore.state.facts['actions.remaining'] !== undefined
+      ? {
+          remaining: playStore.state.facts['actions.remaining'] as number,
+          max: playStore.state.facts['actions.max'] as number
+        }
+      : undefined
+  );
+
   // Get available rules from engine output
   const availableRules = $derived(playStore.state.engineOutput?.availableRules ?? []);
 
@@ -79,7 +89,7 @@
   {:else}
     <PlayLayout>
       {#snippet stats()}
-        <StatsColumn {movement} />
+        <StatsColumn {movement} {actions} />
       {/snippet}
       {#snippet choices()}
         <ChoicesColumn
