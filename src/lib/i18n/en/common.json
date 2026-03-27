@@ -30,6 +30,12 @@
         "action-move-fly-offer": {
           "cannot_fly": "You cannot fly",
           "out_of_movement": "Out of movement"
+        },
+        "help-action": {
+          "name": "Help"
+        },
+        "action-help-offer": {
+          "no_action": "No action available"
         }
       }
     }
@@ -99,6 +105,7 @@
     "stats": {
       "title": "Stats",
       "movement": "Speed",
+      "actions": "Actions",
       "currentMax": "{{current}} / {{max}}",
       "todo": "TODO"
     },
@@ -112,6 +119,7 @@
       "removeFromPlan": "Remove from plan",
       "sections": {
         "move": "Move",
+        "action-other": "Action → Other",
         "free": "Flavour",
         "other": "Other"
       },

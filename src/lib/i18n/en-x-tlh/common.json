@@ -30,6 +30,12 @@
         "action-move-fly-offer": {
           "cannot_fly": "peng DaDolaHbe'",
           "out_of_movement": "Do tu'lu'be'"
+        },
+        "help-action": {
+          "name": "QaH"
+        },
+        "action-help-offer": {
+          "no_action": "DIvI' tu'lu'be'"
         }
       }
     }
@@ -99,6 +105,7 @@
     "stats": {
       "title": "DIvI'",
       "movement": "Do",
+      "actions": "DIvI'",
       "currentMax": "{{current}} / {{max}}",
       "todo": "TODO"
     },
@@ -112,6 +119,7 @@
       "removeFromPlan": "DIvI' teq",
       "sections": {
         "move": "Do",
+        "action-other": "DIvI' → latlh",
         "free": "Flavour",
         "other": "latlh"
       },
