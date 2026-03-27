@@ -27,7 +27,6 @@ components:
 security:
   - CognitoAuthorizer: []
 
-
 paths:
   /health:
     get:
@@ -454,7 +453,7 @@ paths:
         - name: lang
           in: query
           required: false
-          description: "Language code for translations (default: en)"
+          description: 'Language code for translations (default: en)'
           schema:
             type: string
             enum:

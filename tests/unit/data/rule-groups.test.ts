@@ -97,10 +97,7 @@ describe('rule groups translations', () => {
       }
     }
 
-    expect(
-      missing,
-      `Rule groups missing locale translations: ${missing.join(', ')}`
-    ).toEqual([]);
+    expect(missing, `Rule groups missing locale translations: ${missing.join(', ')}`).toEqual([]);
   });
 
   it('all translations have required fields (name, description, keywords)', () => {

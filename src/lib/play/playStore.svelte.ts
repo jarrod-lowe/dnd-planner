@@ -78,7 +78,9 @@ async function loadRuleGroups(characterId: string): Promise<void> {
 
     for (let i = 0; i < groupIds.length; i += BATCH_SIZE) {
       const batch = groupIds.slice(i, i + BATCH_SIZE);
-      const batchResponse = await apiPost(`/api/rule-groups/batch?lang=${currentLocale}`, { ids: batch });
+      const batchResponse = await apiPost(`/api/rule-groups/batch?lang=${currentLocale}`, {
+        ids: batch
+      });
 
       if (!batchResponse.ok) {
         throw new Error(`Failed to fetch rule group batch: ${batchResponse.status}`);

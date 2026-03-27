@@ -24,7 +24,7 @@ vi.mock('$lib/i18n', () => {
     },
     set: (value: string) => {
       currentValue = value;
-      subscribers.forEach(callback => callback(value));
+      subscribers.forEach((callback) => callback(value));
     },
     update: (fn: (value: string) => string) => {
       mockLocale.set(fn(currentValue));
