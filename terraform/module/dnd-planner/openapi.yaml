@@ -443,6 +443,139 @@ paths:
                   ]
                 }
                 #end
+    post:
+      summary: Add a rule group to a character
+      description: Assigns a rule group to a character (user must own the character)
+      operationId: addCharacterRuleGroup
+      parameters:
+        - name: characterId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ruleGroupId
+              properties:
+                ruleGroupId:
+                  type: string
+                  minLength: 1
+                  description: The rule group ID to add
+            example:
+              ruleGroupId: 'fireball'
+      responses:
+        '201':
+          description: Rule group added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: string
+                  characterId:
+                    type: string
+                  ruleGroupId:
+                    type: string
+                  createdAt:
+                    type: string
+                    format: date-time
+        '400':
+          description: Bad request - invalid or missing ruleGroupId
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - character not owned by user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '409':
+          description: Conflict - rule group already assigned to character
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        uri: '${character_rule_groups_uri}'
+
+  /characters/{characterId}/rule-groups/{ruleGroupId}:
+    delete:
+      summary: Remove a rule group from a character
+      description: Removes a rule group assignment from a character (user must own the character)
+      operationId: removeCharacterRuleGroup
+      parameters:
+        - name: characterId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: ruleGroupId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Rule group removed successfully
+        '401':
+          description: Unauthorized - authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - character not owned by user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '404':
+          description: Not found - rule group not assigned to character
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+      x-amazon-apigateway-integration:
+        type: aws_proxy
+        httpMethod: POST
+        uri: '${character_rule_groups_uri}'
 
   /rule-groups:
     get:
