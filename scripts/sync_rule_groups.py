@@ -180,11 +180,20 @@ def write_search_index(
     if not entries:
         return 0
 
+    # Deduplicate by PK+SK to avoid BatchWriteItem validation errors
+    seen: set[tuple[str, str]] = set()
+    unique_entries: list[dict[str, Any]] = []
+    for entry in entries:
+        key = (entry["PK"], entry["SK"])
+        if key not in seen:
+            seen.add(key)
+            unique_entries.append(entry)
+
     written = 0
 
     # Process in batches of 25
-    for i in range(0, len(entries), BATCH_WRITE_SIZE):
-        batch = entries[i : i + BATCH_WRITE_SIZE]
+    for i in range(0, len(unique_entries), BATCH_WRITE_SIZE):
+        batch = unique_entries[i : i + BATCH_WRITE_SIZE]
 
         if dry_run:
             for entry in batch:
