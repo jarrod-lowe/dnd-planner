@@ -6,12 +6,14 @@
   import SelectCharacterMode from '$lib/components/character/SelectCharacterMode.svelte';
   import PlayCharacterMode from '$lib/components/character/PlayCharacterMode.svelte';
   import CreateCharacterDialog from '$lib/components/character/CreateCharacterDialog.svelte';
+  import ManageRulesMode from '$lib/components/character/ManageRulesMode.svelte';
   import { t } from '$lib/i18n';
   const title = $derived($t('app.title'));
   let showDialog = $state(false);
   let isCreating = $state(false);
   let createError = $state<string | null>(null);
   let hasLoadedCharacters = $state(false);
+  let manageRulesActive = $state(false);
 
   // Load characters when authentication state changes to authenticated
   $effect(() => {
@@ -59,13 +61,26 @@
       onLogout={() => authStore.logout()}
       version="v0.0.0"
       selectedCharacter={characterStore.state.selectedCharacter}
+      showManageRules={!!characterStore.state.selectedCharacter && !manageRulesActive}
+      onManageRules={() => {
+        manageRulesActive = true;
+      }}
     />
     <main id="main-content" class="app-layout__body">
       {#if characterStore.state.selectedCharacter}
-        <PlayCharacterMode
-          character={characterStore.state.selectedCharacter}
-          onBack={() => characterStore.clearSelection()}
-        />
+        {#if manageRulesActive}
+          <ManageRulesMode
+            character={characterStore.state.selectedCharacter}
+            onBack={() => {
+              manageRulesActive = false;
+            }}
+          />
+        {:else}
+          <PlayCharacterMode
+            character={characterStore.state.selectedCharacter}
+            onBack={() => characterStore.clearSelection()}
+          />
+        {/if}
       {:else}
         <SelectCharacterMode
           characters={characterStore.state.characters}

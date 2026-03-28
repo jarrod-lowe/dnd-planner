@@ -11,9 +11,17 @@
     email: string | null;
     onLogout: () => void;
     version?: string;
+    onManageRules?: () => void;
+    showManageRules?: boolean;
   }
 
-  let { email, onLogout, version = 'v0.0.0' }: Props = $props();
+  let {
+    email,
+    onLogout,
+    version = 'v0.0.0',
+    onManageRules,
+    showManageRules = false
+  }: Props = $props();
 
   // Generate Gravatar URL with MD5 hash of email
   const gravatarUrl = $derived(
@@ -32,6 +40,11 @@
 
   function handleLogout() {
     onLogout();
+    closeMenu();
+  }
+
+  function handleManageRules() {
+    onManageRules?.();
     closeMenu();
   }
 
@@ -84,6 +97,27 @@
     </div>
 
     <div class="user-dropdown__divider" aria-hidden="true"></div>
+
+    {#if showManageRules && onManageRules}
+      <button type="button" class="user-dropdown__menu-item" onclick={handleManageRules}>
+        <svg
+          class="user-dropdown__menu-item-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path
+            d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
+          />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+        {$t('rules.manageTitle')}
+      </button>
+
+      <div class="user-dropdown__divider" aria-hidden="true"></div>
+    {/if}
 
     <button type="button" class="user-dropdown__logout" onclick={handleLogout}>
       <svg
@@ -230,7 +264,8 @@
     margin: var(--spacing-xs) var(--spacing-md);
   }
 
-  .user-dropdown__logout {
+  .user-dropdown__logout,
+  .user-dropdown__menu-item {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
@@ -248,17 +283,20 @@
     min-height: 2.5rem;
   }
 
-  .user-dropdown__logout:hover {
+  .user-dropdown__logout:hover,
+  .user-dropdown__menu-item:hover {
     background: var(--md-sys-color-surface-container-highest);
     border-color: var(--md-sys-color-outline);
   }
 
-  .user-dropdown__logout:focus-visible {
+  .user-dropdown__logout:focus-visible,
+  .user-dropdown__menu-item:focus-visible {
     outline: 2px solid var(--md-sys-color-primary);
     outline-offset: -2px;
   }
 
-  .user-dropdown__logout-icon {
+  .user-dropdown__logout-icon,
+  .user-dropdown__menu-item-icon {
     width: 1.25rem;
     height: 1.25rem;
     color: var(--md-sys-color-on-surface-variant);
