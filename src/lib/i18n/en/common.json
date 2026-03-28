@@ -108,7 +108,9 @@
     "searchError": "Search failed. Please try again.",
     "noResults": "No results found.",
     "loadingDetails": "Loading details...",
-    "ruleGroupAssigned": "{name} assigned"
+    "ruleGroupAssigned": "{name} assigned",
+    "ruleGroupUnassigned": "{name} not assigned",
+    "toggleError": "Failed to update rule group. Please try again."
   },
   "play": {
     "backToSelection": "Back to Character Selection",
