@@ -444,6 +444,115 @@ paths:
                 }
                 #end
 
+  /rule-groups:
+    get:
+      summary: Search rule groups
+      description: Search for rule groups by prefix. Returns matching rule group IDs sorted by relevance (name matches before keyword matches).
+      operationId: searchRuleGroups
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Search term (min 3 characters, pre-standardized by client)
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 6
+        - name: lang
+          in: query
+          required: false
+          description: 'Language code (default: en)'
+          schema:
+            type: string
+            enum:
+              - en
+              - en-x-tlh
+            default: en
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                example: ['fireball', 'fire-bolt', 'flame-strike']
+        '400':
+          description: Bad request - missing or invalid query parameter
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+      x-amazon-apigateway-integration:
+        type: aws
+        credentials: '${api_gateway_role_arn}'
+        uri: 'arn:aws:apigateway:${aws_region}:dynamodb:action/Query'
+        httpMethod: POST
+        requestTemplates:
+          application/json: |
+            #set($q = $input.params('q'))
+            #set($lang = $input.params('lang'))
+            #if(!$lang || $lang == '')
+              #set($lang = 'en')
+            #end
+            #if(!$q || $q.length() < 3)
+              #set($context.responseOverride.status = 400)
+              {"error": "Query parameter 'q' is required and must be at least 3 characters"}
+            #else
+              #set($qLen = $q.length())
+              #if($qLen > 6)
+                #set($prefix = $q.substring(0, 6))
+              #else
+                #set($prefix = $q)
+              #end
+              {
+                "TableName": "${dynamodb_table_name}",
+                "KeyConditionExpression": "PK = :pk",
+                "ExpressionAttributeValues": {
+                  ":pk": {"S": "LANG#$lang#PREFIX#$prefix"}
+                },
+                "ScanIndexForward": false,
+                "Limit": 20
+              }
+            #end
+        responses:
+          default:
+            statusCode: 200
+            responseTemplates:
+              application/json: |
+                #if($context.responseOverride.status == 400)
+                  $input.path('$')
+                #else
+                  #set($items = $input.path('$.Items'))
+                  #set($seen = {})
+                  #set($results = [])
+                  #foreach($item in $items)
+                    #set($sk = $item.get('SK').get('S'))
+                    #set($parts = $sk.split('#'))
+                    #if($parts.size() >= 4)
+                      #set($ruleGroupId = $parts.get(3))
+                      #if(!$seen.containsKey($ruleGroupId))
+                        #set($dummy = $seen.put($ruleGroupId, true))
+                        #set($dummy = $results.add($ruleGroupId))
+                      #end
+                    #end
+                  #end
+                  {
+                    "ruleGroupsId": [
+                    #foreach($id in $results)
+                      "$util.escapeJavaScript($id).replaceAll("\\'","'")"
+                      #if($foreach.hasNext)
+                      ,
+                      #end
+                    #end
+                  ]
+                }
+                #end
+
   /rule-groups/batch:
     post:
       summary: Get rule groups by IDs
