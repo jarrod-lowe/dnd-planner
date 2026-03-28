@@ -7,6 +7,7 @@
   }
 
   interface Props {
+    turnCounter?: number;
     movement?: UsedMax;
     actions?: UsedMax;
     proficiency?: number;
@@ -14,10 +15,16 @@
     spellSlots?: Record<number, UsedMax>;
   }
 
-  let { movement, actions, proficiency, spellcasting, spellSlots }: Props = $props();
+  let { turnCounter, movement, actions, proficiency, spellcasting, spellSlots }: Props = $props();
 </script>
 
 <div class="stats-column">
+  {#if turnCounter != null}
+    <div class="stats-column__item">
+      <span class="stats-column__label">{$t('play.stats.turnCounter')}</span>
+      <span class="stats-column__value">{turnCounter}</span>
+    </div>
+  {/if}
   {#if movement}
     <div class="stats-column__item">
       <span class="stats-column__label">{$t('play.stats.movement')}</span>
@@ -58,7 +65,7 @@
       </div>
     {/each}
   {/if}
-  {#if !movement && !actions && proficiency == null && !spellcasting && (!spellSlots || Object.keys(spellSlots).length === 0)}
+  {#if turnCounter == null && !movement && !actions && proficiency == null && !spellcasting && (!spellSlots || Object.keys(spellSlots).length === 0)}
     <div class="stats-column__todo">{$t('play.stats.todo')}</div>
   {/if}
 </div>

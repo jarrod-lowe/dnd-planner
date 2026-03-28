@@ -11,6 +11,18 @@ ruleGroups:
         description: DIvI' Hol D&D 5e 2024 raD naQ
         keywords: [ratlh, rutlh, Do, DIvI']
     rules:
+      # Turn Counter - increments each turn, never resets
+      - id: turn-counter-increment
+        phase: early
+        group:
+          - turn-counter
+        activities:
+          - type: numberIncrement
+            target:
+              fact: turn.counter
+            source:
+              number: 1
+
       # Proficiency Bonus - reset to base (classes add to this)
       - id: proficiency-reset
         phase: early
