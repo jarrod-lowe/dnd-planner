@@ -1,0 +1,103 @@
+# yaml-language-server: $schema=../../schema.json
+ruleGroups:
+  - id: spell-create-and-destroy-water
+    requires:
+      - spellcasting
+    translations:
+      en:
+        name: Create and Destroy Water
+        description: >
+          Create up to 10 gallons of clean water, or destroy the same amount.
+          Costs 1 action and 1 level 1 spell slot.
+        keywords: [spell, level1, water, create, destroy, utility]
+      en-x-tlh:
+        name: bIQ chenmoH 'ej HochHom
+        description: wa'maH DIS pIm bIQ chenmoH pagh Qaw'. wa' DIvI' 'ej wa' mugh laH.
+        keywords: [mugh, bIQ, DIvI', laH]
+    rules:
+      - id: offer-create-and-destroy-water
+        after:
+          - group: action
+          - group: spellcasting
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: actions.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-create-and-destroy-water.offer-create-and-destroy-water.no_action
+                    severity: error
+              - condition:
+                  fact: spellcasting.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-create-and-destroy-water.offer-create-and-destroy-water.no_spellcasting
+                    severity: error
+              - condition:
+                  fact: spellcasting.slots.level1.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-create-and-destroy-water.offer-create-and-destroy-water.no_slots
+                    severity: error
+            rule:
+              id: cast-create-and-destroy-water
+              ui:
+                model: spell
+                section: action-spell
+                name: rule.spell-create-and-destroy-water.cast-create-and-destroy-water.name
+              group:
+                - action
+                - spellcasting
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: actions.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level1.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                - type: setClear
+                  target:
+                    var: errors
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-create-and-destroy-water.offer-create-and-destroy-water.no_action
+                  when:
+                    fact: actions.remaining
+                    operator: lessThan
+                    value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-create-and-destroy-water.offer-create-and-destroy-water.no_spellcasting
+                  when:
+                    fact: spellcasting.remaining
+                    operator: lessThan
+                    value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-create-and-destroy-water.offer-create-and-destroy-water.no_slots
+                  when:
+                    fact: spellcasting.slots.level1.remaining
+                    operator: lessThan
+                    value: 0

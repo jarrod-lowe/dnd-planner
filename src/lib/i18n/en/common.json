@@ -1,5 +1,15 @@
 {
   "rule": {
+    "spell-create-and-destroy-water": {
+      "cast-create-and-destroy-water": {
+        "name": "Create and Destroy Water"
+      },
+      "offer-create-and-destroy-water": {
+        "no_action": "No action available",
+        "no_spellcasting": "Already cast a spell this turn",
+        "no_slots": "No level 1 spell slots remaining"
+      }
+    },
     "dnd-5e-2024": {
       "base": {
         "move-walk": {
@@ -135,6 +145,7 @@
       "removeFromPlan": "Remove from plan",
       "sections": {
         "move": "Move",
+        "action-spell": "Action → Spell",
         "action-other": "Action → Other",
         "free": "Flavour",
         "other": "Other"

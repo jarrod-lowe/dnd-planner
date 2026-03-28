@@ -824,10 +824,10 @@ paths:
                     {
                       "ruleGroupId": "$item.get('ruleGroupId').get('S')",
                       "type": "$item.get('type').get('S')",
-                      "name": "$item.get('translations').get('M').get($lang).get('M').get('name').get('S')",
+                      "name": "$util.escapeJavaScript($item.get('translations').get('M').get($lang).get('M').get('name').get('S')).replaceAll("\\'","'")",
                       "lang": "$lang",
-                      "description": "$item.get('translations').get('M').get($lang).get('M').get('description').get('S')",
-                      "rules": "$util.escapeJavaScript($item.get('rules').get('S'))",
+                      "description": "$util.escapeJavaScript($item.get('translations').get('M').get($lang).get('M').get('description').get('S')).replaceAll("\\'","'")",
+                      "rules": "$util.escapeJavaScript($item.get('rules').get('S')).replaceAll("\\'","'")",
                       #set($requiresList = $item.get('requires'))
                       #if($requiresList && $requiresList.get('L'))
                       "requires": [#foreach($r in $requiresList.get('L'))"$r.get('S')"#if($foreach.hasNext),#end#end],
