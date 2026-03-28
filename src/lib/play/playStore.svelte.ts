@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from '$lib/api/client';
+import { apiGet, apiPost, apiDelete } from '$lib/api/client';
 import { evaluate } from '$lib/rules-engine';
 import type { Rule } from '$lib/rules-engine';
 import type { PlannedItem, PlayState } from './types';
@@ -13,6 +13,7 @@ const BATCH_SIZE = 100;
 const initialState: PlayState = {
   ruleGroups: [],
   ruleGroupIds: [],
+  ruleGroupRulesMap: {},
   isLoadingRuleGroups: false,
   ruleGroupError: null,
   engineOutput: null,
@@ -76,6 +77,7 @@ async function loadRuleGroups(characterId: string): Promise<void> {
 
     // Step 2: Batch fetch rule groups (max 100 per request)
     const allRules: Rule[] = [];
+    const allGroupsMap: Record<string, Rule[]> = {};
 
     for (let i = 0; i < groupIds.length; i += BATCH_SIZE) {
       const batch = groupIds.slice(i, i + BATCH_SIZE);
@@ -88,8 +90,12 @@ async function loadRuleGroups(characterId: string): Promise<void> {
       }
 
       const { ruleGroups: batchGroups } = await batchResponse.json();
-      const batchRules: Rule[] = batchGroups.flatMap((rg: { rules: string }) =>
-        JSON.parse(rg.rules)
+      const batchRules: Rule[] = batchGroups.flatMap(
+        (rg: { ruleGroupId: string; rules: string }) => {
+          const rules: Rule[] = JSON.parse(rg.rules);
+          allGroupsMap[rg.ruleGroupId] = rules;
+          return rules;
+        }
       );
       allRules.push(...batchRules);
     }
@@ -98,6 +104,7 @@ async function loadRuleGroups(characterId: string): Promise<void> {
       ...state,
       ruleGroups: allRules,
       ruleGroupIds: groupIds,
+      ruleGroupRulesMap: allGroupsMap,
       isLoadingRuleGroups: false
     };
 
@@ -203,6 +210,100 @@ function updateSelections(instanceId: string, selections: Record<string, unknown
   debouncedEvaluate();
 }
 
+async function assignRuleGroup(characterId: string, ruleGroupId: string): Promise<void> {
+  // Snapshot for revert
+  const prevIds = [...state.ruleGroupIds];
+
+  // Optimistic: add ID
+  state = {
+    ...state,
+    ruleGroupIds: [...state.ruleGroupIds, ruleGroupId]
+  };
+
+  try {
+    const response = await apiPost(`/api/characters/${characterId}/rule-groups`, {
+      ruleGroupId
+    });
+
+    if (!response.ok) {
+      throw new Error(`Assign failed: ${response.status}`);
+    }
+
+    // Fetch rules for the newly assigned group
+    const currentLocale = get(locale);
+    const batchResponse = await apiPost(`/api/rule-groups/batch?lang=${currentLocale}`, {
+      ids: [ruleGroupId]
+    });
+
+    if (!batchResponse.ok) {
+      throw new Error(`Fetch rules failed: ${batchResponse.status}`);
+    }
+
+    const { ruleGroups: batchGroups } = await batchResponse.json();
+    const newRules: Rule[] = batchGroups.flatMap((rg: { rules: string }) => JSON.parse(rg.rules));
+
+    state = {
+      ...state,
+      ruleGroups: [...state.ruleGroups, ...newRules],
+      ruleGroupRulesMap: {
+        ...state.ruleGroupRulesMap,
+        [ruleGroupId]: newRules
+      }
+    };
+
+    debouncedEvaluate();
+  } catch (error) {
+    console.error('[assignRuleGroup] Error:', error);
+    // Revert
+    state = {
+      ...state,
+      ruleGroupIds: prevIds
+    };
+    throw error;
+  }
+}
+
+async function unassignRuleGroup(characterId: string, ruleGroupId: string): Promise<void> {
+  // Snapshot for revert
+  const prevIds = [...state.ruleGroupIds];
+  const prevRules = [...state.ruleGroups];
+  const prevMap = { ...state.ruleGroupRulesMap };
+  const rulesToRemove = state.ruleGroupRulesMap[ruleGroupId] ?? [];
+  const ruleIdsToRemove = new Set(rulesToRemove.map((r) => r.id));
+
+  // Optimistic: remove ID, rules, and map entry
+  state = {
+    ...state,
+    ruleGroupIds: state.ruleGroupIds.filter((id) => id !== ruleGroupId),
+    ruleGroups: state.ruleGroups.filter((r) => !ruleIdsToRemove.has(r.id)),
+    ruleGroupRulesMap: Object.fromEntries(
+      Object.entries(state.ruleGroupRulesMap).filter(([id]) => id !== ruleGroupId)
+    )
+  };
+
+  // Re-evaluate immediately for responsive UI
+  performEvaluation();
+
+  try {
+    const response = await apiDelete(`/api/characters/${characterId}/rule-groups/${ruleGroupId}`);
+
+    if (!response.ok && response.status !== 204) {
+      throw new Error(`Unassign failed: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('[unassignRuleGroup] Error:', error);
+    // Revert
+    state = {
+      ...state,
+      ruleGroupIds: prevIds,
+      ruleGroups: prevRules,
+      ruleGroupRulesMap: prevMap
+    };
+    performEvaluation();
+    throw error;
+  }
+}
+
 function reset(): void {
   state = { ...initialState };
 }
@@ -212,6 +313,8 @@ export const playStore = {
     return state;
   },
   loadRuleGroups,
+  assignRuleGroup,
+  unassignRuleGroup,
   addToPlan,
   removeFromPlan,
   movePlanItem,

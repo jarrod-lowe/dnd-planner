@@ -13,11 +13,12 @@
   interface Props {
     character: Character;
     assignedRuleGroupIds?: string[];
+    onToggle: (ruleGroupId: string, isAssigned: boolean) => Promise<void>;
     onBack: () => void;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  let { character, assignedRuleGroupIds = [], onBack }: Props = $props();
+  let { character, assignedRuleGroupIds = [], onToggle, onBack }: Props = $props();
 
   let assignedSet = $derived(new Set(assignedRuleGroupIds));
 
@@ -26,6 +27,8 @@
   let resultMeta = $state<Map<string, RuleGroupMeta>>(new Map());
   let isSearching = $state(false);
   let searchError = $state<string | null>(null);
+  let togglingIds = $state<Set<string>>(new Set());
+  let toggleErrorId = $state<string | null>(null);
 
   /**
    * Normalize text for search querying.
@@ -82,6 +85,30 @@
     searchQuery = (e.target as HTMLInputElement).value;
     debouncedSearch(searchQuery);
   }
+
+  async function handleToggle(ruleGroupId: string, isAssigned: boolean): Promise<void> {
+    togglingIds = new Set([...togglingIds, ruleGroupId]);
+    toggleErrorId = null;
+
+    try {
+      await onToggle(ruleGroupId, isAssigned);
+    } catch {
+      toggleErrorId = ruleGroupId;
+    } finally {
+      togglingIds = new Set([...togglingIds].filter((id) => id !== ruleGroupId));
+    }
+  }
+
+  function handleIndicatorKeydown(
+    e: KeyboardEvent,
+    ruleGroupId: string,
+    isAssigned: boolean
+  ): void {
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      handleToggle(ruleGroupId, isAssigned);
+    }
+  }
 </script>
 
 <div class="manage-rules">
@@ -117,9 +144,16 @@
               <span
                 class="manage-rules__indicator"
                 class:manage-rules__indicator--checked={isAssigned}
+                class:manage-rules__indicator--disabled={togglingIds.has(id)}
                 role="checkbox"
                 aria-checked={isAssigned}
-                aria-label={$t('rules.ruleGroupAssigned', { name: meta?.name ?? id })}
+                aria-busy={togglingIds.has(id)}
+                aria-label={isAssigned
+                  ? $t('rules.ruleGroupAssigned', { name: meta?.name ?? id })
+                  : $t('rules.ruleGroupUnassigned', { name: meta?.name ?? id })}
+                tabindex="0"
+                onclick={() => handleToggle(id, isAssigned)}
+                onkeydown={(e) => handleIndicatorKeydown(e, id, isAssigned)}
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -153,6 +187,11 @@
                 <span class="manage-rules__panel-name">{meta?.name ?? id}</span>
                 {#if meta?.description}
                   <span class="manage-rules__panel-desc">{meta.description}</span>
+                {/if}
+                {#if toggleErrorId === id}
+                  <span class="manage-rules__toggle-error" role="alert">
+                    {$t('rules.toggleError')}
+                  </span>
                 {/if}
               </div>
             </div>
@@ -276,10 +315,24 @@
     height: 2.5rem;
     padding: 0.25rem;
     color: var(--md-sys-color-outline-variant);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: opacity var(--transition-fast);
   }
 
   .manage-rules__indicator--checked {
     color: var(--md-sys-color-primary);
+  }
+
+  .manage-rules__indicator--disabled {
+    opacity: 0.5;
+    cursor: wait;
+    pointer-events: none;
+  }
+
+  .manage-rules__indicator:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: 2px;
   }
 
   .manage-rules__indicator-check {
@@ -309,5 +362,11 @@
     font-family: var(--font-body);
     font-size: var(--font-size-sm);
     color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .manage-rules__toggle-error {
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    color: var(--md-sys-color-error);
   }
 </style>

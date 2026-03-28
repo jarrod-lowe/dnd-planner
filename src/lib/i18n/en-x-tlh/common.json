@@ -108,7 +108,9 @@
     "searchError": "DIvI' mugh DIvI'be'.",
     "noResults": "DIvI' mughbe'.",
     "loadingDetails": "DIvI' DIvI'...",
-    "ruleGroupAssigned": "{name} DIvI'"
+    "ruleGroupAssigned": "{name} DIvI'",
+    "ruleGroupUnassigned": "{name} DIvI'be'",
+    "toggleError": "DIvI' DIvI' laHbe'. yInIDqa'."
   },
   "play": {
     "backToSelection": "nuv DIvI' HI'egh",

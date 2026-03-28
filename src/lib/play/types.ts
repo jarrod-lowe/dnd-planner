@@ -21,6 +21,8 @@ export interface PlayState {
   ruleGroups: Rule[];
   /** Rule group IDs assigned to the character */
   ruleGroupIds: string[];
+  /** Rules organized by rule group ID for selective removal */
+  ruleGroupRulesMap: Record<string, Rule[]>;
   /** Loading state for rule groups */
   isLoadingRuleGroups: boolean;
   /** Error message if rule group loading failed */

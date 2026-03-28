@@ -3,7 +3,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // Mock $lib/api/client
 vi.mock('$lib/api/client', () => ({
   apiGet: vi.fn(),
-  apiPost: vi.fn()
+  apiPost: vi.fn(),
+  apiDelete: vi.fn()
 }));
 
 // Mock the rules engine evaluate function
@@ -37,7 +38,7 @@ vi.mock('$lib/i18n', () => {
   };
 });
 
-import { apiGet, apiPost } from '$lib/api/client';
+import { apiGet, apiPost, apiDelete } from '$lib/api/client';
 import { evaluate } from '$lib/rules-engine';
 import { locale } from '$lib/i18n';
 import type { Rule, EngineOutput } from '$lib/rules-engine';
@@ -250,6 +251,58 @@ describe('playStore', () => {
 
       // Reset locale
       locale.set('en');
+    });
+
+    it('populates ruleGroupRulesMap from batch response', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      const mockApiPost = vi.mocked(apiPost);
+      const mockEvaluate = vi.mocked(evaluate);
+
+      const group1Rules: Rule[] = [{ id: 'rule-1', activities: [] }];
+      const group2Rules: Rule[] = [{ id: 'rule-2', activities: [] }];
+
+      mockApiGet.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: ['group-1', 'group-2'] })
+      } as Response);
+
+      mockApiPost.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          ruleGroups: [
+            { ruleGroupId: 'group-1', rules: JSON.stringify(group1Rules) },
+            { ruleGroupId: 'group-2', rules: JSON.stringify(group2Rules) }
+          ]
+        })
+      } as Response);
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      await playStore.loadRuleGroups('char-123');
+
+      expect(playStore.state.ruleGroupRulesMap).toEqual({
+        'group-1': group1Rules,
+        'group-2': group2Rules
+      });
     });
   });
 
@@ -741,6 +794,277 @@ describe('playStore', () => {
 
       // Original item should not have selections
       expect(playStore.state.plannedItems[0].rule.selections).toBeUndefined();
+    });
+  });
+
+  describe('assignRuleGroup', () => {
+    it('optimistically adds ruleGroupId before API resolves', async () => {
+      const mockApiPost = vi.mocked(apiPost);
+      const mockEvaluate = vi.mocked(evaluate);
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      // Pending POST so we can check optimistic state before it resolves
+      let resolvePost: (value: unknown) => void;
+      mockApiPost
+        .mockImplementationOnce(
+          () =>
+            new Promise((resolve) => {
+              resolvePost = resolve;
+            })
+        )
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ ruleGroups: [] })
+        });
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      const promise = playStore.assignRuleGroup?.('char-1', 'group-new');
+
+      // Optimistic: ID should appear before API resolves
+      expect(playStore.state.ruleGroupIds).toContain('group-new');
+
+      // Clean up: resolve the assign call
+      resolvePost!({ ok: true, json: async () => ({}) });
+      await promise;
+    });
+
+    it('fetches rules and updates standing on success', async () => {
+      const mockApiPost = vi.mocked(apiPost);
+      const mockEvaluate = vi.mocked(evaluate);
+
+      const newRules: Rule[] = [{ id: 'new-rule-1', activities: [] }];
+
+      // Mock POST assign call
+      mockApiPost.mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        json: async () => ({})
+      } as Response);
+
+      // Mock batch fetch call
+      mockApiPost.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          ruleGroups: [{ ruleGroupId: 'group-new', rules: JSON.stringify(newRules) }]
+        })
+      } as Response);
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      await playStore.assignRuleGroup?.('char-1', 'group-new');
+
+      expect(playStore.state.ruleGroupIds).toContain('group-new');
+      expect(playStore.state.ruleGroups).toEqual(expect.arrayContaining(newRules));
+    });
+
+    it('reverts ruleGroupIds on API failure', async () => {
+      const mockApiPost = vi.mocked(apiPost);
+      const mockEvaluate = vi.mocked(evaluate);
+
+      mockApiPost.mockResolvedValueOnce({
+        ok: false,
+        status: 500
+      } as Response);
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      expect(typeof playStore.assignRuleGroup).toBe('function');
+
+      await expect(playStore.assignRuleGroup('char-1', 'group-new')).rejects.toThrow();
+
+      // Should be reverted after failure
+      expect(playStore.state.ruleGroupIds).not.toContain('group-new');
+    });
+  });
+
+  describe('unassignRuleGroup', () => {
+    it('optimistically removes ruleGroupId and rules from state', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      const mockApiPost = vi.mocked(apiPost);
+      const mockApiDeleteFn = vi.mocked(apiDelete);
+      const mockEvaluate = vi.mocked(evaluate);
+
+      const group1Rules: Rule[] = [{ id: 'rule-1', activities: [] }];
+
+      // Set up loadRuleGroups
+      mockApiGet.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: ['group-1'] })
+      } as Response);
+
+      mockApiPost.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          ruleGroups: [{ ruleGroupId: 'group-1', rules: JSON.stringify(group1Rules) }]
+        })
+      } as Response);
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      await playStore.loadRuleGroups('char-123');
+
+      expect(playStore.state.ruleGroupIds).toContain('group-1');
+
+      // Pending DELETE to check optimistic state
+      let resolveDelete: (value: unknown) => void;
+      mockApiDeleteFn.mockReturnValue(
+        new Promise((resolve) => {
+          resolveDelete = resolve;
+        })
+      );
+
+      const promise = playStore.unassignRuleGroup?.('char-123', 'group-1');
+
+      // Optimistic: ID should be removed before API resolves
+      expect(playStore.state.ruleGroupIds).not.toContain('group-1');
+
+      // Clean up
+      resolveDelete!({ ok: true, status: 204 });
+      await promise;
+    });
+
+    it('removes optimistically then reverts on API failure', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      const mockApiPost = vi.mocked(apiPost);
+      const mockApiDeleteFn = vi.mocked(apiDelete);
+      const mockEvaluate = vi.mocked(evaluate);
+
+      const group1Rules: Rule[] = [{ id: 'rule-1', activities: [] }];
+
+      // Set up loadRuleGroups
+      mockApiGet.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: ['group-1'] })
+      } as Response);
+
+      mockApiPost.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          ruleGroups: [{ ruleGroupId: 'group-1', rules: JSON.stringify(group1Rules) }]
+        })
+      } as Response);
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      await playStore.loadRuleGroups('char-123');
+
+      // Pending DELETE so we can check optimistic then revert
+      let resolveDelete: (value: unknown) => void;
+      mockApiDeleteFn.mockReturnValue(
+        new Promise((resolve) => {
+          resolveDelete = resolve;
+        })
+      );
+
+      const promise = playStore.unassignRuleGroup?.('char-123', 'group-1');
+
+      // Step 1: Optimistic removal
+      expect(playStore.state.ruleGroupIds).not.toContain('group-1');
+
+      // Step 2: Fail the DELETE
+      resolveDelete!({ ok: false, status: 500 });
+      await expect(promise).rejects.toThrow();
+
+      // Step 3: Reverted
+      expect(playStore.state.ruleGroupIds).toContain('group-1');
     });
   });
 });

@@ -73,6 +73,12 @@
           <ManageRulesMode
             character={characterStore.state.selectedCharacter}
             assignedRuleGroupIds={playStore.state.ruleGroupIds}
+            onToggle={(ruleGroupId, isAssigned) => {
+              const charId = characterStore.state.selectedCharacter!.characterId;
+              return isAssigned
+                ? playStore.unassignRuleGroup(charId, ruleGroupId)
+                : playStore.assignRuleGroup(charId, ruleGroupId);
+            }}
             onBack={() => {
               manageRulesActive = false;
             }}
