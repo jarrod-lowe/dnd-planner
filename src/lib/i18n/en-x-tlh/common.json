@@ -1,5 +1,15 @@
 {
   "rule": {
+    "spell-create-and-destroy-water": {
+      "cast-create-and-destroy-water": {
+        "name": "bIQ chenmoH 'ej HochHom"
+      },
+      "offer-create-and-destroy-water": {
+        "no_action": "DIvI' tu'lu'be'",
+        "no_spellcasting": "mugh DIvI' tu'lu'be'",
+        "no_slots": "mugh laH tu'lu'be'"
+      }
+    },
     "dnd-5e-2024": {
       "base": {
         "move-walk": {
@@ -135,6 +145,7 @@
       "removeFromPlan": "DIvI' teq",
       "sections": {
         "move": "Do",
+        "action-spell": "DIvI' → mugh",
         "action-other": "DIvI' → latlh",
         "free": "Flavour",
         "other": "latlh"
