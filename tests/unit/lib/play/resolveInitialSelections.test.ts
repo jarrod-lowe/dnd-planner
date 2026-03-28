@@ -10,13 +10,13 @@ describe('resolveInitialSelections', () => {
         activities: [],
         vars: {
           distance: {
-            default: { fact: 'character.movement.current' },
+            default: { fact: 'character.movement.remaining' },
             capture: true
           }
         }
       };
       const facts: Facts = {
-        'character.movement.current': 25,
+        'character.movement.remaining': 25,
         'character.movement.total': 30
       };
 
@@ -49,7 +49,7 @@ describe('resolveInitialSelections', () => {
         activities: [],
         vars: {
           distance: {
-            default: { fact: 'character.movement.current' },
+            default: { fact: 'character.movement.remaining' },
             capture: true
           }
         }
@@ -67,13 +67,13 @@ describe('resolveInitialSelections', () => {
         activities: [],
         vars: {
           distance: {
-            default: { fact: 'character.movement.current' },
+            default: { fact: 'character.movement.remaining' },
             capture: true
           }
         }
       };
       const facts: Facts = {
-        'character.movement.current': null
+        'character.movement.remaining': null
       };
 
       const selections = resolveInitialSelections(rule, facts);
@@ -89,12 +89,12 @@ describe('resolveInitialSelections', () => {
         activities: [],
         vars: {
           distance: {
-            default: { fact: 'character.movement.current' }
+            default: { fact: 'character.movement.remaining' }
           }
         }
       };
       const facts: Facts = {
-        'character.movement.current': 25
+        'character.movement.remaining': 25
       };
 
       const selections = resolveInitialSelections(rule, facts);
@@ -108,13 +108,13 @@ describe('resolveInitialSelections', () => {
         activities: [],
         vars: {
           distance: {
-            default: { fact: 'character.movement.current' },
+            default: { fact: 'character.movement.remaining' },
             capture: false
           }
         }
       };
       const facts: Facts = {
-        'character.movement.current': 25
+        'character.movement.remaining': 25
       };
 
       const selections = resolveInitialSelections(rule, facts);
@@ -130,7 +130,7 @@ describe('resolveInitialSelections', () => {
         activities: [],
         vars: {
           distance: {
-            default: { fact: 'character.movement.current' },
+            default: { fact: 'character.movement.remaining' },
             capture: true
           },
           maxDistance: {
@@ -144,7 +144,7 @@ describe('resolveInitialSelections', () => {
         }
       };
       const facts: Facts = {
-        'character.movement.current': 20,
+        'character.movement.remaining': 20,
         'character.movement.total': 30
       };
 
@@ -189,7 +189,7 @@ describe('resolveInitialSelections', () => {
         activities: [],
         vars: {
           distance: {
-            default: { fact: 'character.movement.current' },
+            default: { fact: 'character.movement.remaining' },
             capture: true
           }
         },
@@ -198,7 +198,7 @@ describe('resolveInitialSelections', () => {
         }
       };
       const facts: Facts = {
-        'character.movement.current': 25
+        'character.movement.remaining': 25
       };
 
       // The utility should capture from facts, not preserve existing selections

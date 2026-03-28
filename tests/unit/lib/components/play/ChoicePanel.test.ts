@@ -22,7 +22,7 @@ const createMockMoveEntry = (overrides?: Partial<AvailableRuleEntry>): Available
       name: 'rule.dnd-5e-2024.base.move.name'
     },
     vars: {
-      distance: { default: { fact: 'character.movement.current' } },
+      distance: { default: { fact: 'character.movement.remaining' } },
       maxDistance: { default: { fact: 'character.movement.total' } }
     }
   } as Rule,
@@ -131,7 +131,7 @@ describe('ChoicePanel', () => {
   it('renders move model with disabled slider when editable is false', () => {
     const entry = createMockMoveEntry();
     const facts = {
-      'character.movement.current': 25,
+      'character.movement.remaining': 25,
       'character.movement.total': 30
     };
 
@@ -147,7 +147,7 @@ describe('ChoicePanel', () => {
   it('renders move model with enabled slider when editable is true', () => {
     const entry = createMockMoveEntry();
     const facts = {
-      'character.movement.current': 25,
+      'character.movement.remaining': 25,
       'character.movement.total': 30
     };
 
@@ -163,7 +163,7 @@ describe('ChoicePanel', () => {
   it('calls onSelectionChange when slider value changes in editable mode', async () => {
     const entry = createMockMoveEntry();
     const facts = {
-      'character.movement.current': 25,
+      'character.movement.remaining': 25,
       'character.movement.total': 30
     };
     const onSelectionChange = vi.fn();
@@ -182,7 +182,7 @@ describe('ChoicePanel', () => {
   it('calls onSelectionChange with distance even when slider is at max', async () => {
     const entry = createMockMoveEntry();
     const facts = {
-      'character.movement.current': 25,
+      'character.movement.remaining': 25,
       'character.movement.total': 30
     };
     const onSelectionChange = vi.fn();
@@ -234,7 +234,7 @@ describe('ChoicePanel', () => {
   it('renders move slider inside body section', () => {
     const entry = createMockMoveEntry();
     const facts = {
-      'character.movement.current': 25,
+      'character.movement.remaining': 25,
       'character.movement.total': 30
     };
 
@@ -271,7 +271,7 @@ describe('ChoicePanel', () => {
   it('does not render control buttons by default', () => {
     const entry = createMockMoveEntry();
     const facts = {
-      'character.movement.current': 25,
+      'character.movement.remaining': 25,
       'character.movement.total': 30
     };
 
@@ -285,7 +285,7 @@ describe('ChoicePanel', () => {
   it('renders control buttons when showControls is true', () => {
     const entry = createMockMoveEntry();
     const facts = {
-      'character.movement.current': 25,
+      'character.movement.remaining': 25,
       'character.movement.total': 30
     };
 
@@ -308,7 +308,7 @@ describe('ChoicePanel', () => {
   it('renders three control buttons: move up, move down, remove', () => {
     const entry = createMockMoveEntry();
     const facts = {
-      'character.movement.current': 25,
+      'character.movement.remaining': 25,
       'character.movement.total': 30
     };
 
@@ -331,7 +331,7 @@ describe('ChoicePanel', () => {
   it('calls onMoveUp when move up button is clicked', async () => {
     const entry = createMockMoveEntry();
     const facts = {
-      'character.movement.current': 25,
+      'character.movement.remaining': 25,
       'character.movement.total': 30
     };
     const onMoveUp = vi.fn();
@@ -359,7 +359,7 @@ describe('ChoicePanel', () => {
   it('calls onMoveDown when move down button is clicked', async () => {
     const entry = createMockMoveEntry();
     const facts = {
-      'character.movement.current': 25,
+      'character.movement.remaining': 25,
       'character.movement.total': 30
     };
     const onMoveDown = vi.fn();
@@ -387,7 +387,7 @@ describe('ChoicePanel', () => {
   it('calls onRemove when remove button is clicked', async () => {
     const entry = createMockMoveEntry();
     const facts = {
-      'character.movement.current': 25,
+      'character.movement.remaining': 25,
       'character.movement.total': 30
     };
     const onRemove = vi.fn();
@@ -415,7 +415,7 @@ describe('ChoicePanel', () => {
   it('disables move up button when canMoveUp is false', () => {
     const entry = createMockMoveEntry();
     const facts = {
-      'character.movement.current': 25,
+      'character.movement.remaining': 25,
       'character.movement.total': 30
     };
 
@@ -441,7 +441,7 @@ describe('ChoicePanel', () => {
   it('disables move down button when canMoveDown is false', () => {
     const entry = createMockMoveEntry();
     const facts = {
-      'character.movement.current': 25,
+      'character.movement.remaining': 25,
       'character.movement.total': 30
     };
 
@@ -494,7 +494,7 @@ describe('ChoicePanel', () => {
 
     // Facts show different values than selections (e.g., after movement was consumed)
     const facts = {
-      'character.movement.current': 5,
+      'character.movement.remaining': 5,
       'character.movement.half_remaining': 2.5, // remaining is now less
       'character.movement.half_total': 15 // total is constant
     };
@@ -521,7 +521,7 @@ describe('ChoicePanel', () => {
           name: 'rule.dnd-5e-2024.base.move-walk.name'
         },
         vars: {
-          distance: { default: { fact: 'character.movement.current' }, capture: true },
+          distance: { default: { fact: 'character.movement.remaining' }, capture: true },
           maxDistance: { default: { fact: 'character.movement.total' } }
         },
         selections: {
@@ -534,7 +534,7 @@ describe('ChoicePanel', () => {
     };
 
     const facts = {
-      'character.movement.current': 5, // different from captured distance
+      'character.movement.remaining': 5, // different from captured distance
       'character.movement.total': 30
     };
 

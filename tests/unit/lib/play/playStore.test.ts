@@ -358,7 +358,7 @@ describe('playStore', () => {
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
         facts: {
-          'character.movement.current': 25,
+          'character.movement.remaining': 25,
           'character.movement.total': 30
         },
         collections: {},
@@ -384,7 +384,7 @@ describe('playStore', () => {
       await playStore.loadRuleGroups('char-123');
 
       // Verify facts are populated
-      expect(playStore.state.facts['character.movement.current']).toBe(25);
+      expect(playStore.state.facts['character.movement.remaining']).toBe(25);
 
       // Rule with a capture var
       const rule: Rule = {
@@ -393,7 +393,7 @@ describe('playStore', () => {
         activities: [],
         vars: {
           distance: {
-            default: { fact: 'character.movement.current' },
+            default: { fact: 'character.movement.remaining' },
             capture: true
           }
         }
@@ -412,7 +412,7 @@ describe('playStore', () => {
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
         facts: {
-          'character.movement.current': 25
+          'character.movement.remaining': 25
         },
         collections: {},
         availableRules: [],
@@ -440,7 +440,7 @@ describe('playStore', () => {
         activities: [],
         vars: {
           distance: {
-            default: { fact: 'character.movement.current' }
+            default: { fact: 'character.movement.remaining' }
             // capture not set
           }
         }

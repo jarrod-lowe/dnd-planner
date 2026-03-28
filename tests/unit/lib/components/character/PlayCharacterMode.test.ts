@@ -42,7 +42,7 @@ vi.mock('$lib/play/playStore.svelte', () => ({
         engineOutput: {
           status: { ok: true, legal: true, applicable: true },
           facts: {
-            'character.movement.current': 25,
+            'character.movement.remaining': 25,
             'character.movement.total': 30
           },
           collections: {},
@@ -63,7 +63,7 @@ vi.mock('$lib/play/playStore.svelte', () => ({
         isEvaluating: false,
         plannedItems: [],
         facts: {
-          'character.movement.current': 25,
+          'character.movement.remaining': 25,
           'character.movement.total': 30
         }
       };
@@ -178,7 +178,7 @@ describe('PlayCharacterMode', () => {
 
   it('extracts movement from facts with correct fact names', () => {
     // The playStore mock provides:
-    // - character.movement.current: 25
+    // - character.movement.remaining: 25
     // - character.movement.total: 30
     // This test verifies that PlayCharacterMode correctly extracts these
     // and passes them to StatsColumn

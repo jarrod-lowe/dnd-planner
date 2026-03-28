@@ -204,12 +204,12 @@ describe('resolveSource', () => {
     it('returns 1 when fact comparison is true (greaterThanOrEqual)', () => {
       const source: Source = {
         condition: {
-          fact: 'character.movement.current',
+          fact: 'character.movement.remaining',
           operator: 'greaterThanOrEqual',
           value: 5
         }
       };
-      const workingState = createWorkingState({ 'character.movement.current': 10 });
+      const workingState = createWorkingState({ 'character.movement.remaining': 10 });
       const rule = createRule();
 
       expect(resolveSource(source, workingState, rule)).toBe(1);
@@ -218,12 +218,12 @@ describe('resolveSource', () => {
     it('returns 0 when fact comparison is false (greaterThanOrEqual)', () => {
       const source: Source = {
         condition: {
-          fact: 'character.movement.current',
+          fact: 'character.movement.remaining',
           operator: 'greaterThanOrEqual',
           value: 5
         }
       };
-      const workingState = createWorkingState({ 'character.movement.current': 2 });
+      const workingState = createWorkingState({ 'character.movement.remaining': 2 });
       const rule = createRule();
 
       expect(resolveSource(source, workingState, rule)).toBe(0);
@@ -231,9 +231,9 @@ describe('resolveSource', () => {
 
     it('returns 1 when fact exists (fact existence condition)', () => {
       const source: Source = {
-        condition: { fact: 'character.movement.current' }
+        condition: { fact: 'character.movement.remaining' }
       };
-      const workingState = createWorkingState({ 'character.movement.current': 10 });
+      const workingState = createWorkingState({ 'character.movement.remaining': 10 });
       const rule = createRule();
 
       expect(resolveSource(source, workingState, rule)).toBe(1);
