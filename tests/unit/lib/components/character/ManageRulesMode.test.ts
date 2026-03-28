@@ -777,7 +777,13 @@ describe('ManageRulesMode', () => {
         ok: true,
         json: () =>
           Promise.resolve({
-            ruleGroups: [{ ruleGroupId: 'spellcasting', name: 'Spellcasting', description: 'Base spellcasting' }]
+            ruleGroups: [
+              {
+                ruleGroupId: 'spellcasting',
+                name: 'Spellcasting',
+                description: 'Base spellcasting'
+              }
+            ]
           })
       });
 
@@ -814,7 +820,13 @@ describe('ManageRulesMode', () => {
         ok: true,
         json: () =>
           Promise.resolve({
-            ruleGroups: [{ ruleGroupId: 'spellcasting', name: 'Spellcasting', description: 'Base spellcasting' }]
+            ruleGroups: [
+              {
+                ruleGroupId: 'spellcasting',
+                name: 'Spellcasting',
+                description: 'Base spellcasting'
+              }
+            ]
           })
       });
 
@@ -896,7 +908,13 @@ describe('ManageRulesMode', () => {
         ok: true,
         json: () =>
           Promise.resolve({
-            ruleGroups: [{ ruleGroupId: 'spellcasting', name: 'Spellcasting', description: 'Base spellcasting' }]
+            ruleGroups: [
+              {
+                ruleGroupId: 'spellcasting',
+                name: 'Spellcasting',
+                description: 'Base spellcasting'
+              }
+            ]
           })
       });
 
@@ -934,7 +952,13 @@ describe('ManageRulesMode', () => {
         ok: true,
         json: () =>
           Promise.resolve({
-            ruleGroups: [{ ruleGroupId: 'spellcasting', name: 'Spellcasting', description: 'Base spellcasting' }]
+            ruleGroups: [
+              {
+                ruleGroupId: 'spellcasting',
+                name: 'Spellcasting',
+                description: 'Base spellcasting'
+              }
+            ]
           })
       });
 

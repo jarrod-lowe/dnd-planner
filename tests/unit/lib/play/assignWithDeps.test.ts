@@ -102,7 +102,11 @@ describe('assignRuleGroup with dependencies', () => {
         ok: true,
         json: async () => ({
           ruleGroups: [
-            { ruleGroupId: 'paladin-1', rules: JSON.stringify(targetRules), requires: ['spellcasting'] }
+            {
+              ruleGroupId: 'paladin-1',
+              rules: JSON.stringify(targetRules),
+              requires: ['spellcasting']
+            }
           ]
         })
       } as Response);
@@ -114,7 +118,7 @@ describe('assignRuleGroup with dependencies', () => {
     const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
     seedCache({
       'paladin-1': { name: 'Paladin L1', description: '', requires: ['spellcasting'] },
-      'spellcasting': { name: 'Spellcasting', description: '', requires: [] }
+      spellcasting: { name: 'Spellcasting', description: '', requires: [] }
     });
 
     await playStore.assignRuleGroup('char-1', 'paladin-1');
@@ -171,9 +175,9 @@ describe('assignRuleGroup with dependencies', () => {
 
     const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
     seedCache({
-      'a': { name: 'A', description: '', requires: ['b'] },
-      'b': { name: 'B', description: '', requires: ['c'] },
-      'c': { name: 'C', description: '', requires: [] }
+      a: { name: 'A', description: '', requires: ['b'] },
+      b: { name: 'B', description: '', requires: ['c'] },
+      c: { name: 'C', description: '', requires: [] }
     });
 
     await playStore.assignRuleGroup('char-1', 'a');
@@ -199,7 +203,13 @@ describe('assignRuleGroup with dependencies', () => {
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          ruleGroups: [{ ruleGroupId: 'paladin-1', rules: JSON.stringify(targetRules), requires: ['spellcasting'] }]
+          ruleGroups: [
+            {
+              ruleGroupId: 'paladin-1',
+              rules: JSON.stringify(targetRules),
+              requires: ['spellcasting']
+            }
+          ]
         })
       } as Response);
 
@@ -209,7 +219,7 @@ describe('assignRuleGroup with dependencies', () => {
     const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
     seedCache({
       'paladin-1': { name: 'Paladin L1', description: '', requires: ['spellcasting'] },
-      'spellcasting': { name: 'Spellcasting', description: '', requires: [] }
+      spellcasting: { name: 'Spellcasting', description: '', requires: [] }
     });
 
     // Pre-assign spellcasting
@@ -230,7 +240,13 @@ describe('assignRuleGroup with dependencies', () => {
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          ruleGroups: [{ ruleGroupId: 'paladin-1', rules: JSON.stringify(targetRules), requires: ['spellcasting'] }]
+          ruleGroups: [
+            {
+              ruleGroupId: 'paladin-1',
+              rules: JSON.stringify(targetRules),
+              requires: ['spellcasting']
+            }
+          ]
         })
       } as Response);
 
@@ -240,7 +256,7 @@ describe('assignRuleGroup with dependencies', () => {
     const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
     seedCache({
       'paladin-1': { name: 'Paladin L1', description: '', requires: ['spellcasting'] },
-      'spellcasting': { name: 'Spellcasting', description: '', requires: [] }
+      spellcasting: { name: 'Spellcasting', description: '', requires: [] }
     });
 
     playStore.state.ruleGroupIds = ['spellcasting'];
@@ -260,7 +276,9 @@ describe('assignRuleGroup with dependencies', () => {
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          ruleGroups: [{ ruleGroupId: 'spellcasting', rules: JSON.stringify(depRules), requires: [] }]
+          ruleGroups: [
+            { ruleGroupId: 'spellcasting', rules: JSON.stringify(depRules), requires: [] }
+          ]
         })
       } as Response)
       .mockResolvedValueOnce({ ok: false, status: 500 } as Response); // target assign fails
@@ -271,7 +289,7 @@ describe('assignRuleGroup with dependencies', () => {
     const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
     seedCache({
       'paladin-1': { name: 'Paladin L1', description: '', requires: ['spellcasting'] },
-      'spellcasting': { name: 'Spellcasting', description: '', requires: [] }
+      spellcasting: { name: 'Spellcasting', description: '', requires: [] }
     });
 
     await expect(playStore.assignRuleGroup('char-1', 'paladin-1')).rejects.toThrow();

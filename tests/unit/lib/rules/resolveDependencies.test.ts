@@ -28,7 +28,7 @@ describe('resolveDependencies', () => {
   it('returns missing dependencies in depth-first order', () => {
     const cache = makeCache({
       'paladin-1': { requires: ['spellcasting'] },
-      'spellcasting': { name: 'Spellcasting' }
+      spellcasting: { name: 'Spellcasting' }
     });
     const result = resolveDependencies('paladin-1', cache, []);
     expect(result).toEqual(['spellcasting']);
@@ -37,7 +37,7 @@ describe('resolveDependencies', () => {
   it('skips already-assigned dependencies', () => {
     const cache = makeCache({
       'paladin-1': { requires: ['spellcasting'] },
-      'spellcasting': { name: 'Spellcasting' }
+      spellcasting: { name: 'Spellcasting' }
     });
     const result = resolveDependencies('paladin-1', cache, ['spellcasting']);
     expect(result).toEqual([]);
@@ -46,7 +46,7 @@ describe('resolveDependencies', () => {
   it('handles recursive dependencies (A requires B requires C)', () => {
     const cache = makeCache({
       'paladin-1': { requires: ['spellcasting'] },
-      'spellcasting': { requires: ['core-actions'] },
+      spellcasting: { requires: ['core-actions'] },
       'core-actions': { name: 'Core Actions' }
     });
     const result = resolveDependencies('paladin-1', cache, []);
@@ -57,8 +57,8 @@ describe('resolveDependencies', () => {
   it('handles diamond dependencies (A requires B and C, both require D)', () => {
     const cache = makeCache({
       'paladin-1': { requires: ['spellcasting', 'martial'] },
-      'spellcasting': { requires: ['core-actions'] },
-      'martial': { requires: ['core-actions'] },
+      spellcasting: { requires: ['core-actions'] },
+      martial: { requires: ['core-actions'] },
       'core-actions': { name: 'Core Actions' }
     });
     const result = resolveDependencies('paladin-1', cache, []);
@@ -75,8 +75,8 @@ describe('resolveDependencies', () => {
 
   it('handles cycles gracefully without infinite loop', () => {
     const cache = makeCache({
-      'a': { requires: ['b'] },
-      'b': { requires: ['a'] }
+      a: { requires: ['b'] },
+      b: { requires: ['a'] }
     });
     // Should not throw or infinite loop
     const result = resolveDependencies('a', cache, []);
@@ -86,9 +86,9 @@ describe('resolveDependencies', () => {
 
   it('returns deps deepest-first (C, B for A requires B requires C)', () => {
     const cache = makeCache({
-      'a': { requires: ['b'] },
-      'b': { requires: ['c'] },
-      'c': { name: 'C' }
+      a: { requires: ['b'] },
+      b: { requires: ['c'] },
+      c: { name: 'C' }
     });
     const result = resolveDependencies('a', cache, []);
     expect(result).toEqual(['c', 'b']);

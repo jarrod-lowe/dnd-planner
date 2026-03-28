@@ -19,7 +19,13 @@
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  let { character, assignedRuleGroupIds = [], lockedRuleGroups = new Map<string, string[]>(), onToggle, onBack }: Props = $props();
+  let {
+    character,
+    assignedRuleGroupIds = [],
+    lockedRuleGroups = new Map<string, string[]>(),
+    onToggle,
+    onBack
+  }: Props = $props();
 
   let assignedSet = $derived(new Set(assignedRuleGroupIds));
   let lockedSet = $derived(new Set(lockedRuleGroups.keys()));
@@ -160,7 +166,9 @@
                 aria-label={isAssigned
                   ? $t('rules.ruleGroupAssigned', { name: meta?.name ?? id })
                   : $t('rules.ruleGroupUnassigned', { name: meta?.name ?? id })}
-                title={isLocked ? $t('rules.requiredBy', { names: dependents.join(', ') }) : undefined}
+                title={isLocked
+                  ? $t('rules.requiredBy', { names: dependents.join(', ') })
+                  : undefined}
                 tabindex="0"
                 onclick={() => handleToggle(id, isAssigned)}
                 onkeydown={(e) => handleIndicatorKeydown(e, id, isAssigned)}

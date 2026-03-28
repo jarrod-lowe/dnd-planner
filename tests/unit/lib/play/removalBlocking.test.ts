@@ -83,7 +83,7 @@ describe('unassignRuleGroup blocking', () => {
 
     const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
     seedCache({
-      'spellcasting': { name: 'Spellcasting', description: '', requires: [] },
+      spellcasting: { name: 'Spellcasting', description: '', requires: [] },
       'paladin-1': { name: 'Paladin L1', description: '', requires: ['spellcasting'] }
     });
 
@@ -98,7 +98,7 @@ describe('unassignRuleGroup blocking', () => {
 
     const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
     seedCache({
-      'spellcasting': { name: 'Spellcasting', description: '', requires: [] },
+      spellcasting: { name: 'Spellcasting', description: '', requires: [] },
       'paladin-1': { name: 'Paladin L1', description: '', requires: ['spellcasting'] }
     });
 
@@ -114,7 +114,7 @@ describe('unassignRuleGroup blocking', () => {
 
     const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
     seedCache({
-      'spellcasting': { name: 'Spellcasting', description: '', requires: [] },
+      spellcasting: { name: 'Spellcasting', description: '', requires: [] },
       'paladin-1': { name: 'Paladin L1', description: '', requires: ['spellcasting'] }
     });
 
@@ -130,7 +130,7 @@ describe('unassignRuleGroup blocking', () => {
 
     const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
     seedCache({
-      'spellcasting': { name: 'Spellcasting', description: '', requires: [] },
+      spellcasting: { name: 'Spellcasting', description: '', requires: [] },
       'paladin-1': { name: 'Paladin L1', description: '', requires: ['spellcasting'] },
       'sorcerer-1': { name: 'Sorcerer L1', description: '', requires: ['spellcasting'] }
     });
@@ -149,7 +149,7 @@ describe('unassignRuleGroup blocking', () => {
 
     const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
     seedCache({
-      'spellcasting': { name: 'Spellcasting', description: '', requires: [] },
+      spellcasting: { name: 'Spellcasting', description: '', requires: [] },
       'paladin-1': { name: 'Paladin L1', description: '', requires: ['spellcasting'] }
     });
 

@@ -24,14 +24,25 @@ describe('ruleGroupCache', () => {
       const result = await ensureCached(['rg-1'], 'en');
 
       expect(mockApiPost).not.toHaveBeenCalled();
-      expect(result.get('rg-1')).toEqual({ name: 'Fireball', description: 'A fire spell', requires: [] });
+      expect(result.get('rg-1')).toEqual({
+        name: 'Fireball',
+        description: 'A fire spell',
+        requires: []
+      });
     });
 
     it('caches requires field from batch API response', async () => {
       mockApiPost.mockResolvedValue({
         ok: true,
         json: async () => ({
-          ruleGroups: [{ ruleGroupId: 'paladin-1', name: 'Paladin L1', description: 'Divine warrior', requires: ['spellcasting'] }]
+          ruleGroups: [
+            {
+              ruleGroupId: 'paladin-1',
+              name: 'Paladin L1',
+              description: 'Divine warrior',
+              requires: ['spellcasting']
+            }
+          ]
         })
       } as Response);
 
@@ -53,7 +64,9 @@ describe('ruleGroupCache', () => {
       mockApiPost.mockResolvedValue({
         ok: true,
         json: async () => ({
-          ruleGroups: [{ ruleGroupId: 'base', name: 'Base', description: 'Base rules', requires: [] }]
+          ruleGroups: [
+            { ruleGroupId: 'base', name: 'Base', description: 'Base rules', requires: [] }
+          ]
         })
       } as Response);
 
@@ -70,7 +83,9 @@ describe('ruleGroupCache', () => {
       mockApiPost.mockResolvedValue({
         ok: true,
         json: async () => ({
-          ruleGroups: [{ ruleGroupId: 'rg-2', name: 'Shield', description: 'A shield spell', requires: [] }]
+          ruleGroups: [
+            { ruleGroupId: 'rg-2', name: 'Shield', description: 'A shield spell', requires: [] }
+          ]
         })
       } as Response);
 
@@ -81,13 +96,25 @@ describe('ruleGroupCache', () => {
       expect(mockApiPost).toHaveBeenCalledWith('/api/rule-groups/batch?lang=en', { ids: ['rg-2'] });
 
       // Both entries should be in the result
-      expect(result.get('rg-1')).toEqual({ name: 'Fireball', description: 'A fire spell', requires: [] });
-      expect(result.get('rg-2')).toEqual({ name: 'Shield', description: 'A shield spell', requires: [] });
+      expect(result.get('rg-1')).toEqual({
+        name: 'Fireball',
+        description: 'A fire spell',
+        requires: []
+      });
+      expect(result.get('rg-2')).toEqual({
+        name: 'Shield',
+        description: 'A shield spell',
+        requires: []
+      });
 
       // rg-2 should now be cached
       const cachedResult = await ensureCached(['rg-2'], 'en');
       expect(mockApiPost).toHaveBeenCalledOnce(); // no additional call
-      expect(cachedResult.get('rg-2')).toEqual({ name: 'Shield', description: 'A shield spell', requires: [] });
+      expect(cachedResult.get('rg-2')).toEqual({
+        name: 'Shield',
+        description: 'A shield spell',
+        requires: []
+      });
     });
 
     it('batches requests when more than 100 uncached IDs', async () => {
@@ -141,7 +168,11 @@ describe('ruleGroupCache', () => {
       const result = await ensureCached(['rg-1', 'rg-2'], 'en');
 
       // Should still return the cached entry
-      expect(result.get('rg-1')).toEqual({ name: 'Fireball', description: 'A fire spell', requires: [] });
+      expect(result.get('rg-1')).toEqual({
+        name: 'Fireball',
+        description: 'A fire spell',
+        requires: []
+      });
       // Failed entry should not be in result
       expect(result.get('rg-2')).toBeUndefined();
     });
