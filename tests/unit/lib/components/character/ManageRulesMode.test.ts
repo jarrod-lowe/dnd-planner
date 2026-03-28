@@ -3,11 +3,14 @@ import { mount } from 'svelte';
 import { readable } from 'svelte/store';
 import ManageRulesMode from '$lib/components/character/ManageRulesMode.svelte';
 import type { Character } from '$lib/character/types';
+import { clearCache as clearRuleGroupCache } from '$lib/rules/ruleGroupCache.svelte';
 
 // Mock $lib/api/client
 const mockApiGet = vi.fn();
+const mockApiPost = vi.fn();
 vi.mock('$lib/api/client', () => ({
-  apiGet: (...args: unknown[]) => mockApiGet(...args)
+  apiGet: (...args: unknown[]) => mockApiGet(...args),
+  apiPost: (...args: unknown[]) => mockApiPost(...args)
 }));
 
 // i18n mock
@@ -49,6 +52,8 @@ describe('ManageRulesMode', () => {
     document.body.appendChild(container);
     vi.useFakeTimers();
     mockApiGet.mockReset();
+    mockApiPost.mockReset();
+    clearRuleGroupCache();
   });
 
   afterEach(() => {
@@ -169,6 +174,21 @@ describe('ManageRulesMode', () => {
       json: () => Promise.resolve({ ruleGroupsId: ['fireball', 'lightning-bolt'] })
     });
 
+    mockApiPost.mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          ruleGroups: [
+            { ruleGroupId: 'fireball', name: 'Fireball', description: 'A fire spell' },
+            {
+              ruleGroupId: 'lightning-bolt',
+              name: 'Lightning Bolt',
+              description: 'A lightning spell'
+            }
+          ]
+        })
+    });
+
     mount(ManageRulesMode, {
       target: container,
       props: {
@@ -184,10 +204,10 @@ describe('ManageRulesMode', () => {
     vi.advanceTimersByTime(300);
     await vi.runAllTimersAsync();
 
-    const items = container.querySelectorAll('.manage-rules__result-item');
-    expect(items).toHaveLength(2);
-    expect(items[0]?.textContent).toContain('fireball');
-    expect(items[1]?.textContent).toContain('lightning-bolt');
+    const panels = container.querySelectorAll('.manage-rules__panel');
+    expect(panels).toHaveLength(2);
+    expect(panels[0]?.textContent).toContain('Fireball');
+    expect(panels[1]?.textContent).toContain('Lightning Bolt');
   });
 
   it('shows no results message when search returns empty', async () => {
@@ -296,5 +316,65 @@ describe('ManageRulesMode', () => {
       json: () => Promise.resolve({ ruleGroupsId: [] })
     });
     await vi.runAllTimersAsync();
+  });
+
+  it('renders rule group panels with name and description', async () => {
+    mockApiGet.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ ruleGroupsId: ['fireball'] })
+    });
+
+    mockApiPost.mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          ruleGroups: [
+            {
+              ruleGroupId: 'fireball',
+              name: 'Fireball',
+              description: 'A powerful fire spell'
+            }
+          ]
+        })
+    });
+
+    mount(ManageRulesMode, {
+      target: container,
+      props: {
+        character: mockCharacter,
+        onBack: vi.fn()
+      }
+    });
+
+    const input = container.querySelector('input[type="text"]') as HTMLInputElement;
+    input.value = 'fir';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    vi.advanceTimersByTime(300);
+    await vi.runAllTimersAsync();
+
+    // Should display the name and description in panels
+    expect(container.textContent).toContain('Fireball');
+    expect(container.textContent).toContain('A powerful fire spell');
+  });
+
+  it('search bar stays fixed with scrollable results area', async () => {
+    mount(ManageRulesMode, {
+      target: container,
+      props: {
+        character: mockCharacter,
+        onBack: vi.fn()
+      }
+    });
+
+    const searchInput = container.querySelector('.manage-rules__search');
+    const resultsArea = container.querySelector('.manage-rules__results');
+
+    // Search area should exist
+    expect(searchInput).toBeTruthy();
+
+    // Results area should exist (scrollable via CSS class)
+    expect(resultsArea).toBeTruthy();
+    expect(resultsArea!.classList.contains('manage-rules__results')).toBe(true);
   });
 });

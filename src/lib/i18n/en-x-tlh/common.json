@@ -106,7 +106,8 @@
     "backToPlay": "DIvI' HI'egh",
     "searching": "DIvI' mugh...",
     "searchError": "DIvI' mugh DIvI'be'.",
-    "noResults": "DIvI' mughbe'."
+    "noResults": "DIvI' mughbe'.",
+    "loadingDetails": "DIvI' DIvI'..."
   },
   "play": {
     "backToSelection": "nuv DIvI' HI'egh",
