@@ -22,6 +22,16 @@ Enables querying seed records by trigger type. Used by instantiation processes t
 | `SEED#USER`     | Seeds for new user creation      |
 | `SEED#CHAR`     | Seeds for new character creation |
 
+### gsi1
+
+Enables cleanup of stale search index entries during sync. Used by `sync_rule_groups.py` to find and delete search entries older than the current sync timestamp for a category.
+
+- **Index Name:** `gsi1`
+- **Partition Key:** `GSI1PK` (String) - `RULEGROUPDIRECTORY#{category}`
+- **Sort Key:** `GSI1SK` (String) - `UPDATEDAT#{timestamp}#LANG#{locale}#PREFIX#{term}`
+- **Projection:** KEYS_ONLY
+- **Query Pattern:** `Query gsi1 WHERE GSI1PK = "RULEGROUPDIRECTORY#<category>" AND GSI1SK < "UPDATEDAT#<timestamp>"`
+
 ## Seed Records
 
 Template records used for creating new entities. Each seed contains placeholder variables (e.g., `$(userId)`, `$(now)`) that are substituted during creation.
@@ -155,6 +165,46 @@ The `translations` field contains localized metadata for each supported locale:
   }
 }
 ```
+
+## Search Index Records
+
+Enable prefix search (3-6 characters) for rule group names and keywords, per locale.
+
+### Search Index Entry
+
+- PK = `LANG#{locale}#PREFIX#{standardized-term}`
+- SK = `SCORE#{score}#RULEGROUP#{ruleGroupId}`
+- type = `SEARCHINDEX`
+- category = category name (e.g., "dnd-5e-2024")
+- updatedAt = ISO timestamp
+- GSI1PK = `RULEGROUPDIRECTORY#{category}`
+- GSI1SK = `UPDATEDAT#{timestamp}#LANG#{locale}#PREFIX#{term}`
+
+**Scoring:**
+
+- `SCORE#0002` = name match
+- `SCORE#0001` = keyword match
+
+**Example entries for "Fireball" (category: spells, id: fireball):**
+
+```
+PK=LANG#en#PREFIX#fir,  SK=SCORE#0002#RULEGROUP#fireball, GSI1PK=RULEGROUPDIRECTORY#spells, GSI1SK=UPDATEDAT#2024-03-28T10:00:00Z#LANG#en#PREFIX#fir
+PK=LANG#en#PREFIX#fire, SK=SCORE#0002#RULEGROUP#fireball, GSI1PK=RULEGROUPDIRECTORY#spells, GSI1SK=UPDATEDAT#2024-03-28T10:00:00Z#LANG#en#PREFIX#fire
+PK=LANG#en#PREFIX#fireb, SK=SCORE#0002#RULEGROUP#fireball, GSI1PK=RULEGROUPDIRECTORY#spells, GSI1SK=UPDATEDAT#2024-03-28T10:00:00Z#LANG#en#PREFIX#fireb
+PK=LANG#en#PREFIX#fireba, SK=SCORE#0002#RULEGROUP#fireball, GSI1PK=RULEGROUPDIRECTORY#spells, GSI1SK=UPDATEDAT#2024-03-28T10:00:00Z#LANG#en#PREFIX#fireba
+PK=LANG#en#PREFIX#firebal, SK=SCORE#0002#RULEGROUP#fireball, GSI1PK=RULEGROUPDIRECTORY#spells, GSI1SK=UPDATEDAT#2024-03-28T10:00:00Z#LANG#en#PREFIX#firebal
+```
+
+**Term Standardization:**
+
+Terms are standardized before indexing:
+
+1. Normalize to NFD (separate base characters from diacritics)
+2. Remove combining characters (diacritics)
+3. Convert to lowercase
+4. Remove non-alphanumeric characters
+
+Examples: `"Fire-Ball!"` → `"fireball"`, `"Éléphant"` → `"elephant"`
 
 ### API Response Transformation
 
