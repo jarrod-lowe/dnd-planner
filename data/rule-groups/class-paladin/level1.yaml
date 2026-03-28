@@ -4,8 +4,8 @@ ruleGroups:
     translations:
       en:
         name: Paladin Level 1
-        description: Paladin class features at level 1, including proficiency bonus
-        keywords: [paladin, class, level1]
+        description: Paladin class features at level 1, including proficiency bonus and spellcasting
+        keywords: [paladin, class, level1, spellcasting]
       en-x-tlh:
         name: Paladin Level 1
         description: Paladin Segh level 1, proficient chel
@@ -20,5 +20,17 @@ ruleGroups:
           - type: numberIncrement
             target:
               fact: proficiency.bonus
+            source:
+              number: 2
+
+      # Spell Slots - Level 1 Paladin gets 2 level 1 slots
+      - id: paladin-level1-spell-slots
+        phase: early
+        after:
+          - group: spellcasting-slots-total
+        activities:
+          - type: numberIncrement
+            target:
+              fact: spellcasting.slots.level1.total
             source:
               number: 2

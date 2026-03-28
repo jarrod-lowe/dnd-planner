@@ -11,13 +11,20 @@
     max: number;
   }
 
+  interface SpellSlots {
+    current: number;
+    max: number;
+  }
+
   interface Props {
     movement?: Movement;
     actions?: Actions;
     proficiency?: number;
+    spellcasting?: { remaining: number; max: number };
+    spellSlots?: Record<number, SpellSlots>;
   }
 
-  let { movement, actions, proficiency }: Props = $props();
+  let { movement, actions, proficiency, spellcasting, spellSlots }: Props = $props();
 </script>
 
 <div class="stats-column">
@@ -43,7 +50,28 @@
       <span class="stats-column__value">{proficiency >= 0 ? '+' : ''}{proficiency}</span>
     </div>
   {/if}
-  {#if !movement && !actions && proficiency == null}
+  {#if spellcasting}
+    <div class="stats-column__item">
+      <span class="stats-column__label">{$t('play.stats.spellcasting')}</span>
+      <span class="stats-column__value"
+        >{$t('play.stats.currentMax', {
+          current: spellcasting.remaining,
+          max: spellcasting.max
+        })}</span
+      >
+    </div>
+  {/if}
+  {#if spellSlots && Object.keys(spellSlots).length > 0}
+    {#each Object.entries(spellSlots).sort(([a], [b]) => Number(a) - Number(b)) as [level, slots] (level)}
+      <div class="stats-column__item">
+        <span class="stats-column__label">{$t('play.stats.spellLevel', { level })}</span>
+        <span class="stats-column__value"
+          >{$t('play.stats.currentMax', { current: slots.current, max: slots.max })}</span
+        >
+      </div>
+    {/each}
+  {/if}
+  {#if !movement && !actions && proficiency == null && !spellcasting && (!spellSlots || Object.keys(spellSlots).length === 0)}
     <div class="stats-column__todo">{$t('play.stats.todo')}</div>
   {/if}
 </div>

@@ -119,6 +119,8 @@
       "movement": "Speed",
       "proficiency": "Proficiency",
       "actions": "Actions",
+      "spellcasting": "Spellcast",
+      "spellLevel": "Spell L{{level}}",
       "currentMax": "{{current}} / {{max}}",
       "todo": "TODO"
     },

@@ -44,6 +44,31 @@
       : undefined
   );
 
+  // Extract spellcasting from facts
+  const spellcasting = $derived(
+    playStore.state.facts['spellcasting.remaining'] !== undefined
+      ? {
+          remaining: playStore.state.facts['spellcasting.remaining'] as number,
+          max: playStore.state.facts['spellcasting.max'] as number
+        }
+      : undefined
+  );
+
+  // Extract spell slots from facts (only levels with max > 0)
+  const spellSlots = $derived.by(() => {
+    const slots: Record<number, { current: number; max: number }> = {};
+    for (let level = 1; level <= 9; level++) {
+      const max = playStore.state.facts[`spellcasting.slots.level${level}.total`];
+      if (max !== undefined && (max as number) > 0) {
+        slots[level] = {
+          current: playStore.state.facts[`spellcasting.slots.level${level}.current`] as number,
+          max: max as number
+        };
+      }
+    }
+    return Object.keys(slots).length > 0 ? slots : undefined;
+  });
+
   // Get available rules from engine output
   const availableRules = $derived(playStore.state.engineOutput?.availableRules ?? []);
 
@@ -92,7 +117,7 @@
   {:else}
     <PlayLayout>
       {#snippet stats()}
-        <StatsColumn {movement} {actions} {proficiency} />
+        <StatsColumn {movement} {actions} {proficiency} {spellcasting} {spellSlots} />
       {/snippet}
       {#snippet choices()}
         <ChoicesColumn

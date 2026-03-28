@@ -1,0 +1,140 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: spellcasting
+    translations:
+      en:
+        name: Spellcasting
+        description: Core spellcasting rules for spell slots and spell actions per turn
+        keywords: [spellcasting, spell, magic, slots]
+      en-x-tlh:
+        name: mugh DIvI'
+        description: mugh DIvI' 'ej mugh DIvI' naQ
+        keywords: [mugh, DIvI', laH]
+    rules:
+      # Spellcasting Resources - set max spells per turn (base rule: 1 per turn)
+      - id: spellcasting-max
+        phase: early
+        group:
+          - spellcasting-max
+        activities:
+          - type: numberSet
+            source:
+              number: 1
+            target:
+              fact: spellcasting.max
+
+      # Spellcasting Resources - reset remaining at start of turn
+      - id: spellcasting-reset
+        phase: early
+        after:
+          - group: spellcasting-max
+        activities:
+          - type: numberCopy
+            source:
+              fact: spellcasting.max
+            target:
+              fact: spellcasting.remaining
+
+      # Spell Slots - initialize all slot totals to 0 (classes add to these)
+      - id: spellcasting-slots-total
+        phase: early
+        group:
+          - spellcasting-slots-total
+        activities:
+          - type: numberSet
+            source:
+              number: 0
+            target:
+              fact: spellcasting.slots.level1.total
+          - type: numberSet
+            source:
+              number: 0
+            target:
+              fact: spellcasting.slots.level2.total
+          - type: numberSet
+            source:
+              number: 0
+            target:
+              fact: spellcasting.slots.level3.total
+          - type: numberSet
+            source:
+              number: 0
+            target:
+              fact: spellcasting.slots.level4.total
+          - type: numberSet
+            source:
+              number: 0
+            target:
+              fact: spellcasting.slots.level5.total
+          - type: numberSet
+            source:
+              number: 0
+            target:
+              fact: spellcasting.slots.level6.total
+          - type: numberSet
+            source:
+              number: 0
+            target:
+              fact: spellcasting.slots.level7.total
+          - type: numberSet
+            source:
+              number: 0
+            target:
+              fact: spellcasting.slots.level8.total
+          - type: numberSet
+            source:
+              number: 0
+            target:
+              fact: spellcasting.slots.level9.total
+
+      # Spell Slots - reset all current to totals at start of turn
+      - id: spellcasting-slots-reset
+        phase: early
+        after:
+          - group: spellcasting-slots-total
+        activities:
+          - type: numberCopy
+            source:
+              fact: spellcasting.slots.level1.total
+            target:
+              fact: spellcasting.slots.level1.current
+          - type: numberCopy
+            source:
+              fact: spellcasting.slots.level2.total
+            target:
+              fact: spellcasting.slots.level2.current
+          - type: numberCopy
+            source:
+              fact: spellcasting.slots.level3.total
+            target:
+              fact: spellcasting.slots.level3.current
+          - type: numberCopy
+            source:
+              fact: spellcasting.slots.level4.total
+            target:
+              fact: spellcasting.slots.level4.current
+          - type: numberCopy
+            source:
+              fact: spellcasting.slots.level5.total
+            target:
+              fact: spellcasting.slots.level5.current
+          - type: numberCopy
+            source:
+              fact: spellcasting.slots.level6.total
+            target:
+              fact: spellcasting.slots.level6.current
+          - type: numberCopy
+            source:
+              fact: spellcasting.slots.level7.total
+            target:
+              fact: spellcasting.slots.level7.current
+          - type: numberCopy
+            source:
+              fact: spellcasting.slots.level8.total
+            target:
+              fact: spellcasting.slots.level8.current
+          - type: numberCopy
+            source:
+              fact: spellcasting.slots.level9.total
+            target:
+              fact: spellcasting.slots.level9.current
