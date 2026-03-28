@@ -14,8 +14,15 @@
     onEndTurn: () => void;
   }
 
-  let { items, facts = {}, onSelectionChange, onMoveUp, onMoveDown, onRemove, onEndTurn }: Props =
-    $props();
+  let {
+    items,
+    facts = {},
+    onSelectionChange,
+    onMoveUp,
+    onMoveDown,
+    onRemove,
+    onEndTurn
+  }: Props = $props();
 </script>
 
 <div class="plan-column">
