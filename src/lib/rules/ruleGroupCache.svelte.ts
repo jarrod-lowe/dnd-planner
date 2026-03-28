@@ -9,6 +9,7 @@ import { SvelteMap } from 'svelte/reactivity';
 export interface RuleGroupMeta {
   name: string;
   description: string;
+  requires: string[];
 }
 
 let cache = new SvelteMap<string, RuleGroupMeta>();
@@ -21,6 +22,10 @@ export function seedCache(entries: Record<string, RuleGroupMeta>): void {
   for (const [id, meta] of Object.entries(entries)) {
     cache.set(id, meta);
   }
+}
+
+export function getCache(): Map<string, RuleGroupMeta> {
+  return cache;
 }
 
 export async function ensureCached(
@@ -50,7 +55,11 @@ export async function ensureCached(
       if (response.ok) {
         const data = await response.json();
         for (const rg of data.ruleGroups) {
-          const meta: RuleGroupMeta = { name: rg.name, description: rg.description };
+          const meta: RuleGroupMeta = {
+            name: rg.name,
+            description: rg.description,
+            requires: rg.requires ?? []
+          };
           cache.set(rg.ruleGroupId, meta);
           result.set(rg.ruleGroupId, meta);
         }

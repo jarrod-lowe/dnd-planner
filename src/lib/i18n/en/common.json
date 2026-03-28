@@ -110,7 +110,8 @@
     "loadingDetails": "Loading details...",
     "ruleGroupAssigned": "{name} assigned",
     "ruleGroupUnassigned": "{name} not assigned",
-    "toggleError": "Failed to update rule group. Please try again."
+    "toggleError": "Failed to update rule group. Please try again.",
+    "requiredBy": "Required by: {{names}}"
   },
   "play": {
     "backToSelection": "Back to Character Selection",

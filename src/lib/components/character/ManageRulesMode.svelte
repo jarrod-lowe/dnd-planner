@@ -13,14 +13,22 @@
   interface Props {
     character: Character;
     assignedRuleGroupIds?: string[];
+    lockedRuleGroups?: Map<string, string[]>;
     onToggle: (ruleGroupId: string, isAssigned: boolean) => Promise<void>;
     onBack: () => void;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  let { character, assignedRuleGroupIds = [], onToggle, onBack }: Props = $props();
+  let {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    character: _character,
+    assignedRuleGroupIds = [],
+    lockedRuleGroups = new Map<string, string[]>(),
+    onToggle,
+    onBack
+  }: Props = $props();
 
   let assignedSet = $derived(new Set(assignedRuleGroupIds));
+  let lockedSet = $derived(new Set(lockedRuleGroups.keys()));
 
   let searchQuery = $state('');
   let searchResults = $state<string[]>([]);
@@ -87,6 +95,9 @@
   }
 
   async function handleToggle(ruleGroupId: string, isAssigned: boolean): Promise<void> {
+    // Block removal of locked rule groups
+    if (isAssigned && lockedSet.has(ruleGroupId)) return;
+
     togglingIds = new Set([...togglingIds, ruleGroupId]);
     toggleErrorId = null;
 
@@ -139,18 +150,25 @@
         {#each searchResults as id (id)}
           {@const meta = resultMeta.get(id)}
           {@const isAssigned = assignedSet.has(id)}
+          {@const isLocked = isAssigned && lockedSet.has(id)}
+          {@const dependents = lockedRuleGroups.get(id) ?? []}
           <div class="manage-rules__panel" role="article">
             <div class="manage-rules__panel-row">
               <span
                 class="manage-rules__indicator"
                 class:manage-rules__indicator--checked={isAssigned}
                 class:manage-rules__indicator--disabled={togglingIds.has(id)}
+                class:manage-rules__indicator--locked={isLocked}
                 role="checkbox"
                 aria-checked={isAssigned}
                 aria-busy={togglingIds.has(id)}
+                aria-disabled={isLocked || undefined}
                 aria-label={isAssigned
                   ? $t('rules.ruleGroupAssigned', { name: meta?.name ?? id })
                   : $t('rules.ruleGroupUnassigned', { name: meta?.name ?? id })}
+                title={isLocked
+                  ? $t('rules.requiredBy', { names: dependents.join(', ') })
+                  : undefined}
                 tabindex="0"
                 onclick={() => handleToggle(id, isAssigned)}
                 onkeydown={(e) => handleIndicatorKeydown(e, id, isAssigned)}
@@ -328,6 +346,11 @@
     opacity: 0.5;
     cursor: wait;
     pointer-events: none;
+  }
+
+  .manage-rules__indicator--locked {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   .manage-rules__indicator:focus-visible {

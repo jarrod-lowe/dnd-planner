@@ -8,6 +8,8 @@
   import CreateCharacterDialog from '$lib/components/character/CreateCharacterDialog.svelte';
   import ManageRulesMode from '$lib/components/character/ManageRulesMode.svelte';
   import { playStore } from '$lib/play/playStore.svelte';
+  import { getCache } from '$lib/rules/ruleGroupCache.svelte';
+  import { SvelteMap } from 'svelte/reactivity';
   import { t } from '$lib/i18n';
   const title = $derived($t('app.title'));
   let showDialog = $state(false);
@@ -15,6 +17,28 @@
   let createError = $state<string | null>(null);
   let hasLoadedCharacters = $state(false);
   let manageRulesActive = $state(false);
+
+  // Compute locked rule groups: assigned groups that are required by other assigned groups
+  let lockedRuleGroups = $derived.by(() => {
+    const cache = getCache();
+    const assigned = playStore.state.ruleGroupIds;
+    const result = new SvelteMap<string, string[]>();
+
+    for (const assignedId of assigned) {
+      const meta = cache.get(assignedId);
+      if (meta?.requires) {
+        for (const depId of meta.requires) {
+          if (assigned.includes(depId)) {
+            const existing = result.get(depId) ?? [];
+            existing.push(meta.name);
+            result.set(depId, existing);
+          }
+        }
+      }
+    }
+
+    return result;
+  });
 
   // Load characters when authentication state changes to authenticated
   $effect(() => {
@@ -73,6 +97,7 @@
           <ManageRulesMode
             character={characterStore.state.selectedCharacter}
             assignedRuleGroupIds={playStore.state.ruleGroupIds}
+            {lockedRuleGroups}
             onToggle={(ruleGroupId, isAssigned) => {
               const charId = characterStore.state.selectedCharacter!.characterId;
               return isAssigned

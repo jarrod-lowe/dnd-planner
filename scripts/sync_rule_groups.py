@@ -102,6 +102,7 @@ def build_rule_group_item(rg: dict[str, Any], now: str) -> dict[str, Any]:
         "type": "RULEGROUP",
         "ruleGroupId": rg["id"],
         "translations": rg["translations"],
+        "requires": rg.get("requires", []),
         "rules": json.dumps(rg.get("rules", [])),
         "createdAt": rg.get("createdAt", now),
         "updatedAt": now,

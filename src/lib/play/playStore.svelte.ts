@@ -6,6 +6,8 @@ import { debounce } from './debounce';
 import { resolveInitialSelections } from './resolveInitialSelections';
 import { locale } from '$lib/i18n';
 import { get } from 'svelte/store';
+import { getCache } from '$lib/rules/ruleGroupCache.svelte';
+import { resolveDependencies } from '$lib/rules/resolveDependencies';
 
 const DEBOUNCE_MS = 300;
 const BATCH_SIZE = 100;
@@ -211,6 +213,58 @@ function updateSelections(instanceId: string, selections: Record<string, unknown
 }
 
 async function assignRuleGroup(characterId: string, ruleGroupId: string): Promise<void> {
+  // Resolve transitive dependencies
+  const cache = getCache();
+  const deps = resolveDependencies(ruleGroupId, cache, state.ruleGroupIds);
+
+  // Assign dependencies first (deepest-first order)
+  const assignedDeps: string[] = [];
+  for (const depId of deps) {
+    try {
+      await assignSingleGroup(characterId, depId);
+      assignedDeps.push(depId);
+    } catch (error) {
+      // Roll back any deps already assigned on API
+      await rollbackDeps(characterId, assignedDeps);
+      throw error;
+    }
+  }
+
+  // Assign the target group
+  try {
+    await assignSingleGroup(characterId, ruleGroupId);
+  } catch (error) {
+    // Roll back all deps on API
+    await rollbackDeps(characterId, assignedDeps);
+    throw error;
+  }
+}
+
+async function rollbackDeps(characterId: string, depIds: string[]): Promise<void> {
+  for (const depId of [...depIds].reverse()) {
+    const rulesToRemove = state.ruleGroupRulesMap[depId] ?? [];
+    const ruleIdsToRemove = new Set(rulesToRemove.map((r) => r.id));
+
+    // Remove from local state
+    state = {
+      ...state,
+      ruleGroupIds: state.ruleGroupIds.filter((id) => id !== depId),
+      ruleGroups: state.ruleGroups.filter((r) => !ruleIdsToRemove.has(r.id)),
+      ruleGroupRulesMap: Object.fromEntries(
+        Object.entries(state.ruleGroupRulesMap).filter(([id]) => id !== depId)
+      )
+    };
+
+    // Remove from API
+    try {
+      await apiDelete(`/api/characters/${characterId}/rule-groups/${depId}`);
+    } catch {
+      // Best-effort API cleanup
+    }
+  }
+}
+
+async function assignSingleGroup(characterId: string, ruleGroupId: string): Promise<void> {
   // Snapshot for revert
   const prevIds = [...state.ruleGroupIds];
 
@@ -304,6 +358,25 @@ async function unassignRuleGroup(characterId: string, ruleGroupId: string): Prom
   }
 }
 
+function isLocked(ruleGroupId: string): boolean {
+  return getDependents(ruleGroupId).length > 0;
+}
+
+function getDependents(ruleGroupId: string): string[] {
+  const cache = getCache();
+  const assigned = new Set(state.ruleGroupIds);
+  const dependents: string[] = [];
+
+  for (const assignedId of assigned) {
+    const meta = cache.get(assignedId);
+    if (meta?.requires?.includes(ruleGroupId)) {
+      dependents.push(assignedId);
+    }
+  }
+
+  return dependents;
+}
+
 function reset(): void {
   state = { ...initialState };
 }
@@ -315,6 +388,8 @@ export const playStore = {
   loadRuleGroups,
   assignRuleGroup,
   unassignRuleGroup,
+  isLocked,
+  getDependents,
   addToPlan,
   removeFromPlan,
   movePlanItem,

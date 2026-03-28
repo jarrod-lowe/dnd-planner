@@ -110,7 +110,8 @@
     "loadingDetails": "DIvI' DIvI'...",
     "ruleGroupAssigned": "{name} DIvI'",
     "ruleGroupUnassigned": "{name} DIvI'be'",
-    "toggleError": "DIvI' DIvI' laHbe'. yInIDqa'."
+    "toggleError": "DIvI' DIvI' laHbe'. yInIDqa'.",
+    "requiredBy": "DIvI': {{names}}"
   },
   "play": {
     "backToSelection": "nuv DIvI' HI'egh",
