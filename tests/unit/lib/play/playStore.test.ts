@@ -107,6 +107,7 @@ describe('playStore', () => {
         ids: ['group-1', 'group-2']
       });
       expect(playStore.state.ruleGroups).toEqual(mockRules);
+      expect(playStore.state.ruleGroupIds).toEqual(['group-1', 'group-2']);
     });
 
     it('splits large rule group lists into batches of 100', async () => {
@@ -176,6 +177,7 @@ describe('playStore', () => {
         ids: groupIds.slice(100)
       });
       expect(playStore.state.ruleGroups).toHaveLength(150);
+      expect(playStore.state.ruleGroupIds).toEqual(groupIds);
     });
 
     it('sets error state on API failure', async () => {
@@ -191,6 +193,7 @@ describe('playStore', () => {
 
       expect(playStore.state.ruleGroupError).toBeTruthy();
       expect(playStore.state.isLoadingRuleGroups).toBe(false);
+      expect(playStore.state.ruleGroupIds).toEqual([]);
     });
 
     it('passes current locale to API', async () => {
@@ -667,6 +670,7 @@ describe('playStore', () => {
 
       expect(playStore.state.plannedItems).toEqual([]);
       expect(playStore.state.ruleGroups).toEqual([]);
+      expect(playStore.state.ruleGroupIds).toEqual([]);
       expect(playStore.state.engineOutput).toBeNull();
     });
   });

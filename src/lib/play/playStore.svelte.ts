@@ -12,6 +12,7 @@ const BATCH_SIZE = 100;
 
 const initialState: PlayState = {
   ruleGroups: [],
+  ruleGroupIds: [],
   isLoadingRuleGroups: false,
   ruleGroupError: null,
   engineOutput: null,
@@ -96,6 +97,7 @@ async function loadRuleGroups(characterId: string): Promise<void> {
     state = {
       ...state,
       ruleGroups: allRules,
+      ruleGroupIds: groupIds,
       isLoadingRuleGroups: false
     };
 

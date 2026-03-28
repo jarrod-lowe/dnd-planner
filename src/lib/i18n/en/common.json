@@ -107,7 +107,8 @@
     "searching": "Searching...",
     "searchError": "Search failed. Please try again.",
     "noResults": "No results found.",
-    "loadingDetails": "Loading details..."
+    "loadingDetails": "Loading details...",
+    "ruleGroupAssigned": "{name} assigned"
   },
   "play": {
     "backToSelection": "Back to Character Selection",

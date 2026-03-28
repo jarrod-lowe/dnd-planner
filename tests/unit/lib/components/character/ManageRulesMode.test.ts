@@ -20,7 +20,8 @@ const translations: Record<string, string> = {
   'rules.backToPlay': 'Back to Play',
   'rules.searching': 'Searching...',
   'rules.searchError': 'Search failed. Please try again.',
-  'rules.noResults': 'No results found.'
+  'rules.noResults': 'No results found.',
+  'rules.ruleGroupAssigned': '{name} assigned'
 };
 
 vi.mock('$lib/i18n', () => ({
@@ -376,5 +377,112 @@ describe('ManageRulesMode', () => {
     // Results area should exist (scrollable via CSS class)
     expect(resultsArea).toBeTruthy();
     expect(resultsArea!.classList.contains('manage-rules__results')).toBe(true);
+  });
+
+  it('renders checked indicator for assigned rule groups', async () => {
+    mockApiGet.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ ruleGroupsId: ['fireball'] })
+    });
+
+    mockApiPost.mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          ruleGroups: [{ ruleGroupId: 'fireball', name: 'Fireball', description: 'A fire spell' }]
+        })
+    });
+
+    mount(ManageRulesMode, {
+      target: container,
+      props: {
+        character: mockCharacter,
+        assignedRuleGroupIds: ['fireball'],
+        onBack: vi.fn()
+      }
+    });
+
+    const input = container.querySelector('input[type="text"]') as HTMLInputElement;
+    input.value = 'fir';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    vi.advanceTimersByTime(300);
+    await vi.runAllTimersAsync();
+
+    const indicator = container.querySelector('.manage-rules__indicator--checked');
+    expect(indicator).toBeTruthy();
+    expect(indicator?.getAttribute('aria-checked')).toBe('true');
+  });
+
+  it('renders unchecked indicator for unassigned rule groups', async () => {
+    mockApiGet.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ ruleGroupsId: ['fireball'] })
+    });
+
+    mockApiPost.mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          ruleGroups: [{ ruleGroupId: 'fireball', name: 'Fireball', description: 'A fire spell' }]
+        })
+    });
+
+    mount(ManageRulesMode, {
+      target: container,
+      props: {
+        character: mockCharacter,
+        assignedRuleGroupIds: ['some-other-group'],
+        onBack: vi.fn()
+      }
+    });
+
+    const input = container.querySelector('input[type="text"]') as HTMLInputElement;
+    input.value = 'fir';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    vi.advanceTimersByTime(300);
+    await vi.runAllTimersAsync();
+
+    const indicators = container.querySelectorAll('.manage-rules__indicator');
+    expect(indicators).toHaveLength(1);
+    expect(indicators[0]?.getAttribute('aria-checked')).toBe('false');
+    expect(indicators[0]?.classList.contains('manage-rules__indicator--checked')).toBe(false);
+  });
+
+  it('indicator has proper ARIA attributes for accessibility', async () => {
+    mockApiGet.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ ruleGroupsId: ['fireball'] })
+    });
+
+    mockApiPost.mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          ruleGroups: [{ ruleGroupId: 'fireball', name: 'Fireball', description: 'A fire spell' }]
+        })
+    });
+
+    mount(ManageRulesMode, {
+      target: container,
+      props: {
+        character: mockCharacter,
+        assignedRuleGroupIds: [],
+        onBack: vi.fn()
+      }
+    });
+
+    const input = container.querySelector('input[type="text"]') as HTMLInputElement;
+    input.value = 'fir';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    vi.advanceTimersByTime(300);
+    await vi.runAllTimersAsync();
+
+    const indicator = container.querySelector('.manage-rules__indicator');
+    expect(indicator?.getAttribute('role')).toBe('checkbox');
+    expect(indicator?.getAttribute('aria-checked')).toBe('false');
+    expect(indicator?.getAttribute('aria-label')).toBeTruthy();
   });
 });

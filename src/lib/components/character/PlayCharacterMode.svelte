@@ -73,10 +73,6 @@
   // Load rule groups on mount
   onMount(() => {
     playStore.loadRuleGroups(character.characterId);
-
-    return () => {
-      playStore.reset();
-    };
   });
 </script>
 
