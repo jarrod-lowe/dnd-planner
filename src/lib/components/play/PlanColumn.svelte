@@ -11,9 +11,18 @@
     onMoveUp: (instanceId: string) => void;
     onMoveDown: (instanceId: string) => void;
     onRemove: (instanceId: string) => void;
+    onEndTurn: () => void;
   }
 
-  let { items, facts = {}, onSelectionChange, onMoveUp, onMoveDown, onRemove }: Props = $props();
+  let {
+    items,
+    facts = {},
+    onSelectionChange,
+    onMoveUp,
+    onMoveDown,
+    onRemove,
+    onEndTurn
+  }: Props = $props();
 </script>
 
 <div class="plan-column">
@@ -39,6 +48,11 @@
       {/each}
     </div>
   {/if}
+  <div class="plan-column__footer">
+    <button class="plan-column__end-turn" onclick={onEndTurn}>
+      {$t('play.plan.endTurn')}
+    </button>
+  </div>
 </div>
 
 <style>
@@ -68,5 +82,33 @@
     color: var(--md-sys-color-on-surface-variant);
     text-align: center;
     padding: var(--spacing-xl);
+  }
+
+  .plan-column__footer {
+    padding: var(--spacing-md);
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  .plan-column__end-turn {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+  }
+
+  .plan-column__end-turn:hover {
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+  }
+
+  .plan-column__end-turn:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: 2px;
   }
 </style>

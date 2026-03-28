@@ -41,6 +41,13 @@
       : undefined
   );
 
+  // Extract turn counter from facts
+  const turnCounter = $derived(
+    playStore.state.facts['turn.counter'] !== undefined
+      ? (playStore.state.facts['turn.counter'] as number)
+      : undefined
+  );
+
   // Extract proficiency bonus from facts
   const proficiency = $derived(
     playStore.state.facts['proficiency.bonus'] !== undefined
@@ -125,7 +132,7 @@
   {:else}
     <PlayLayout>
       {#snippet stats()}
-        <StatsColumn {movement} {actions} {proficiency} {spellcasting} {spellSlots} />
+        <StatsColumn {turnCounter} {movement} {actions} {proficiency} {spellcasting} {spellSlots} />
       {/snippet}
       {#snippet choices()}
         <ChoicesColumn
@@ -143,6 +150,7 @@
           onMoveUp={handleMoveUp}
           onMoveDown={handleMoveDown}
           onRemove={handleRemove}
+          onEndTurn={() => playStore.endTurn()}
         />
       {/snippet}
       {#snippet journal()}

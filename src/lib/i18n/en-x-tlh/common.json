@@ -127,6 +127,7 @@
     "backToSelection": "nuv DIvI' HI'egh",
     "stats": {
       "title": "DIvI'",
+      "turnCounter": "wa'DIch",
       "movement": "Do",
       "proficiency": "valwI'",
       "actions": "DIvI'",
@@ -165,7 +166,8 @@
       "empty": "DIvI'be'",
       "moveUp": "Dung jaH",
       "moveDown": "bIng jaH",
-      "remove": "teq"
+      "remove": "teq",
+      "endTurn": "turna'ghach"
     },
     "journal": {
       "title": "DIvI' teywI'",

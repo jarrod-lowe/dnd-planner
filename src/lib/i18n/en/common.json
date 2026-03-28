@@ -127,6 +127,7 @@
     "backToSelection": "Back to Character Selection",
     "stats": {
       "title": "Stats",
+      "turnCounter": "Turn",
       "movement": "Speed",
       "proficiency": "Proficiency",
       "actions": "Actions",
@@ -165,7 +166,8 @@
       "empty": "No actions planned",
       "moveUp": "Move up",
       "moveDown": "Move down",
-      "remove": "Remove"
+      "remove": "Remove",
+      "endTurn": "End Turn"
     },
     "journal": {
       "title": "Journal",

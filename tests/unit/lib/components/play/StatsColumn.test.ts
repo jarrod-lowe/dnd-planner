@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render } from '@testing-library/svelte';
+import { render, within } from '@testing-library/svelte';
 import StatsColumn from '$lib/components/play/StatsColumn.svelte';
 
 describe('StatsColumn', () => {
@@ -32,6 +32,26 @@ describe('StatsColumn', () => {
 
     // The i18n mock returns keys, so just check the key is used
     expect(container.textContent).toContain('play.stats.usedMax');
+  });
+
+  it('renders turn counter when turnCounter prop is provided', () => {
+    const { getByText } = render(StatsColumn, {
+      props: {
+        turnCounter: 1
+      }
+    });
+
+    expect(getByText('play.stats.turnCounter')).toBeTruthy();
+  });
+
+  it('does not show TODO when only turnCounter is provided', () => {
+    const { container } = render(StatsColumn, {
+      props: {
+        turnCounter: 1
+      }
+    });
+
+    expect(within(container).queryByText('play.stats.todo')).toBeNull();
   });
 
   it('has proper accessibility structure', () => {

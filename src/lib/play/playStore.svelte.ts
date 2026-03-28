@@ -377,6 +377,16 @@ function getDependents(ruleGroupId: string): string[] {
   return dependents;
 }
 
+function endTurn(): void {
+  // state.facts is already the projected facts from the last evaluation.
+  // Clearing the plan and re-evaluating commits those facts as the new base.
+  state = {
+    ...state,
+    plannedItems: []
+  };
+  performEvaluation();
+}
+
 function reset(): void {
   state = { ...initialState };
 }
@@ -394,5 +404,6 @@ export const playStore = {
   removeFromPlan,
   movePlanItem,
   updateSelections,
+  endTurn,
   reset
 };
