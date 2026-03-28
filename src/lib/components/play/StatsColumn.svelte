@@ -1,27 +1,17 @@
 <script lang="ts">
   import { t } from '$lib/i18n';
 
-  interface Movement {
-    current: number;
-    max: number;
-  }
-
-  interface Actions {
-    remaining: number;
-    max: number;
-  }
-
-  interface SpellSlots {
-    current: number;
+  interface UsedMax {
+    used: number;
     max: number;
   }
 
   interface Props {
-    movement?: Movement;
-    actions?: Actions;
+    movement?: UsedMax;
+    actions?: UsedMax;
     proficiency?: number;
-    spellcasting?: { remaining: number; max: number };
-    spellSlots?: Record<number, SpellSlots>;
+    spellcasting?: UsedMax;
+    spellSlots?: Record<number, UsedMax>;
   }
 
   let { movement, actions, proficiency, spellcasting, spellSlots }: Props = $props();
@@ -32,7 +22,7 @@
     <div class="stats-column__item">
       <span class="stats-column__label">{$t('play.stats.movement')}</span>
       <span class="stats-column__value"
-        >{$t('play.stats.currentMax', { current: movement.current, max: movement.max })}</span
+        >{$t('play.stats.usedMax', { used: movement.used, max: movement.max })}</span
       >
     </div>
   {/if}
@@ -40,7 +30,7 @@
     <div class="stats-column__item">
       <span class="stats-column__label">{$t('play.stats.actions')}</span>
       <span class="stats-column__value"
-        >{$t('play.stats.currentMax', { current: actions.remaining, max: actions.max })}</span
+        >{$t('play.stats.usedMax', { used: actions.used, max: actions.max })}</span
       >
     </div>
   {/if}
@@ -54,10 +44,7 @@
     <div class="stats-column__item">
       <span class="stats-column__label">{$t('play.stats.spellcasting')}</span>
       <span class="stats-column__value"
-        >{$t('play.stats.currentMax', {
-          current: spellcasting.remaining,
-          max: spellcasting.max
-        })}</span
+        >{$t('play.stats.usedMax', { used: spellcasting.used, max: spellcasting.max })}</span
       >
     </div>
   {/if}
@@ -66,7 +53,7 @@
       <div class="stats-column__item">
         <span class="stats-column__label">{$t('play.stats.spellLevel', { level })}</span>
         <span class="stats-column__value"
-          >{$t('play.stats.currentMax', { current: slots.current, max: slots.max })}</span
+          >{$t('play.stats.usedMax', { used: slots.used, max: slots.max })}</span
         >
       </div>
     {/each}
