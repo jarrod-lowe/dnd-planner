@@ -103,7 +103,10 @@
   "rules": {
     "manageTitle": "DIvI' SeH",
     "searchPlaceholder": "DIvI' mugh...",
-    "backToPlay": "DIvI' HI'egh"
+    "backToPlay": "DIvI' HI'egh",
+    "searching": "DIvI' mugh...",
+    "searchError": "DIvI' mugh DIvI'be'.",
+    "noResults": "DIvI' mughbe'."
   },
   "play": {
     "backToSelection": "nuv DIvI' HI'egh",
