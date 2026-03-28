@@ -40,6 +40,7 @@ ruleGroups:
         phase: early
         group:
           - spellcasting-slots-total
+          - spellcasting-slots-set
         activities:
           - type: numberSet
             source:
@@ -91,50 +92,50 @@ ruleGroups:
       - id: spellcasting-slots-reset
         phase: early
         after:
-          - group: spellcasting-slots-total
+          - group: spellcasting-slots-set
         activities:
           - type: numberCopy
             source:
               fact: spellcasting.slots.level1.total
             target:
-              fact: spellcasting.slots.level1.current
+              fact: spellcasting.slots.level1.remaining
           - type: numberCopy
             source:
               fact: spellcasting.slots.level2.total
             target:
-              fact: spellcasting.slots.level2.current
+              fact: spellcasting.slots.level2.remaining
           - type: numberCopy
             source:
               fact: spellcasting.slots.level3.total
             target:
-              fact: spellcasting.slots.level3.current
+              fact: spellcasting.slots.level3.remaining
           - type: numberCopy
             source:
               fact: spellcasting.slots.level4.total
             target:
-              fact: spellcasting.slots.level4.current
+              fact: spellcasting.slots.level4.remaining
           - type: numberCopy
             source:
               fact: spellcasting.slots.level5.total
             target:
-              fact: spellcasting.slots.level5.current
+              fact: spellcasting.slots.level5.remaining
           - type: numberCopy
             source:
               fact: spellcasting.slots.level6.total
             target:
-              fact: spellcasting.slots.level6.current
+              fact: spellcasting.slots.level6.remaining
           - type: numberCopy
             source:
               fact: spellcasting.slots.level7.total
             target:
-              fact: spellcasting.slots.level7.current
+              fact: spellcasting.slots.level7.remaining
           - type: numberCopy
             source:
               fact: spellcasting.slots.level8.total
             target:
-              fact: spellcasting.slots.level8.current
+              fact: spellcasting.slots.level8.remaining
           - type: numberCopy
             source:
               fact: spellcasting.slots.level9.total
             target:
-              fact: spellcasting.slots.level9.current
+              fact: spellcasting.slots.level9.remaining

@@ -33,7 +33,7 @@ ruleGroups:
             source:
               fact: character.movement.total
             target:
-              fact: character.movement.current
+              fact: character.movement.remaining
 
       # Action Resources - set max actions (base rule: 1 action per turn)
       - id: action-max
@@ -81,7 +81,7 @@ ruleGroups:
           - type: numberFunction
             function: multiply
             sources:
-              - fact: character.movement.current
+              - fact: character.movement.remaining
             target:
               fact: character.movement.half_remaining
             args:
@@ -93,7 +93,7 @@ ruleGroups:
           - type: offerRule
             legalWhen:
               - condition:
-                  fact: character.movement.current
+                  fact: character.movement.remaining
                   operator: greaterThanOrEqual
                   value: 5
                 illegalDiagnostics:
@@ -111,7 +111,7 @@ ruleGroups:
                 distance:
                   capture: true
                   default:
-                    fact: character.movement.current
+                    fact: character.movement.remaining
                 maxDistance:
                   default:
                     fact: character.movement.total
@@ -119,7 +119,7 @@ ruleGroups:
                 # Consume remaining movement
                 - type: numberIncrement
                   target:
-                    fact: character.movement.current
+                    fact: character.movement.remaining
                   source:
                     var: distance
                   subtract: true
@@ -134,7 +134,7 @@ ruleGroups:
                   source:
                     string: rule.dnd-5e-2024.base.action-move-walk-offer.out_of_movement
                   when:
-                    fact: character.movement.current
+                    fact: character.movement.remaining
                     operator: lessThan
                     value: 0
 
@@ -146,7 +146,7 @@ ruleGroups:
           - type: offerRule
             legalWhen:
               - condition:
-                  fact: character.movement.current
+                  fact: character.movement.remaining
                   operator: greaterThanOrEqual
                   value: 10
                 illegalDiagnostics:
@@ -174,13 +174,13 @@ ruleGroups:
                 # Consume double movement (rough terrain costs 2x)
                 - type: numberIncrement
                   target:
-                    fact: character.movement.current
+                    fact: character.movement.remaining
                   source:
                     var: distance
                   subtract: true
                 - type: numberIncrement
                   target:
-                    fact: character.movement.current
+                    fact: character.movement.remaining
                   source:
                     var: distance
                   subtract: true
@@ -195,7 +195,7 @@ ruleGroups:
                   source:
                     string: rule.dnd-5e-2024.base.action-move-walk-offer.out_of_movement
                   when:
-                    fact: character.movement.current
+                    fact: character.movement.remaining
                     operator: lessThan
                     value: 0
 
@@ -222,7 +222,7 @@ ruleGroups:
                   operator: lessThan
                   value: 2
               - condition:
-                  fact: character.movement.current
+                  fact: character.movement.remaining
                   operator: greaterThanOrEqual
                   value: 5
                 illegalDiagnostics:
@@ -241,14 +241,14 @@ ruleGroups:
                 distance:
                   capture: true
                   default:
-                    fact: character.movement.current
+                    fact: character.movement.remaining
                 maxDistance:
                   default:
                     fact: character.movement.total
               activities:
                 - type: numberIncrement
                   target:
-                    fact: character.movement.current
+                    fact: character.movement.remaining
                   source:
                     var: distance
                   subtract: true
@@ -261,7 +261,7 @@ ruleGroups:
                   source:
                     string: rule.dnd-5e-2024.base.action-move-swim-offer.out_of_movement
                   when:
-                    fact: character.movement.current
+                    fact: character.movement.remaining
                     operator: lessThan
                     value: 0
                 - type: setAdd
@@ -297,7 +297,7 @@ ruleGroups:
                   operator: greaterThanOrEqual
                   value: 2
               - condition:
-                  fact: character.movement.current
+                  fact: character.movement.remaining
                   operator: greaterThanOrEqual
                   value: 10
                 illegalDiagnostics:
@@ -323,13 +323,13 @@ ruleGroups:
               activities:
                 - type: numberIncrement
                   target:
-                    fact: character.movement.current
+                    fact: character.movement.remaining
                   source:
                     var: distance
                   subtract: true
                 - type: numberIncrement
                   target:
-                    fact: character.movement.current
+                    fact: character.movement.remaining
                   source:
                     var: distance
                   subtract: true
@@ -342,7 +342,7 @@ ruleGroups:
                   source:
                     string: rule.dnd-5e-2024.base.action-move-swim-offer.out_of_movement
                   when:
-                    fact: character.movement.current
+                    fact: character.movement.remaining
                     operator: lessThan
                     value: 0
                 - type: setAdd
@@ -370,7 +370,7 @@ ruleGroups:
                   - code: rule.dnd-5e-2024.base.action-move-fly-offer.cannot_fly
                     severity: error
               - condition:
-                  fact: character.movement.current
+                  fact: character.movement.remaining
                   operator: greaterThanOrEqual
                   value: 5
                 illegalDiagnostics:
@@ -389,14 +389,14 @@ ruleGroups:
                 distance:
                   capture: true
                   default:
-                    fact: character.movement.current
+                    fact: character.movement.remaining
                 maxDistance:
                   default:
                     fact: character.movement.total
               activities:
                 - type: numberIncrement
                   target:
-                    fact: character.movement.current
+                    fact: character.movement.remaining
                   source:
                     var: distance
                   subtract: true
@@ -409,7 +409,7 @@ ruleGroups:
                   source:
                     string: rule.dnd-5e-2024.base.action-move-fly-offer.out_of_movement
                   when:
-                    fact: character.movement.current
+                    fact: character.movement.remaining
                     operator: lessThan
                     value: 0
                 - type: setAdd

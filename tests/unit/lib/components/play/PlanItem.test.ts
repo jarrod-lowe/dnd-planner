@@ -22,7 +22,7 @@ const createMockMovePlanItem = (): PlannedItem => ({
       name: 'rule.dnd-5e-2024.base.move.name'
     },
     vars: {
-      distance: { default: { fact: 'character.movement.current' } },
+      distance: { default: { fact: 'character.movement.remaining' } },
       maxDistance: { default: { fact: 'character.movement.total' } }
     }
   } as Rule,
@@ -150,7 +150,7 @@ describe('PlanItem', () => {
   it('renders ChoicePanel with editable mode for move rules', () => {
     const item = createMockMovePlanItem();
     const facts: Facts = {
-      'character.movement.current': 25,
+      'character.movement.remaining': 25,
       'character.movement.total': 30
     };
 
@@ -167,7 +167,7 @@ describe('PlanItem', () => {
   it('calls onSelectionChange when ChoicePanel slider changes', async () => {
     const item = createMockMovePlanItem();
     const facts: Facts = {
-      'character.movement.current': 25,
+      'character.movement.remaining': 25,
       'character.movement.total': 30
     };
     const onSelectionChange = vi.fn();

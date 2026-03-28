@@ -269,7 +269,7 @@ describe('evaluate', () => {
           id: 'half-1',
           type: 'numberFunction',
           function: 'multiply',
-          sources: [{ fact: 'character.movement.current' }],
+          sources: [{ fact: 'character.movement.remaining' }],
           target: { fact: 'character.movement.half' },
           args: { multiplier: 0.5 }
         }
@@ -279,7 +279,7 @@ describe('evaluate', () => {
     const input: EngineInput = {
       schemaVersion: 1,
       rules: { standing: [halfMovementRule], planned: [], effects: [] },
-      state: { facts: { 'character.movement.current': 30 } }
+      state: { facts: { 'character.movement.remaining': 30 } }
     };
 
     const result = evaluate(input);
@@ -298,7 +298,7 @@ describe('evaluate', () => {
           legalWhen: [
             {
               condition: {
-                fact: 'character.movement.current',
+                fact: 'character.movement.remaining',
                 operator: 'greaterThan',
                 value: 0
               },
@@ -317,14 +317,14 @@ describe('evaluate', () => {
               {
                 id: 'consume-1',
                 type: 'numberIncrement',
-                target: { fact: 'character.movement.current' },
+                target: { fact: 'character.movement.remaining' },
                 source: { var: 'distance' },
                 subtract: true
               },
               {
                 id: 'consume-2',
                 type: 'numberIncrement',
-                target: { fact: 'character.movement.current' },
+                target: { fact: 'character.movement.remaining' },
                 source: { var: 'distance' },
                 subtract: true
               }
@@ -343,7 +343,7 @@ describe('evaluate', () => {
           id: 'half-1',
           type: 'numberFunction',
           function: 'multiply',
-          sources: [{ fact: 'character.movement.current' }],
+          sources: [{ fact: 'character.movement.remaining' }],
           target: { fact: 'character.movement.half' },
           args: { multiplier: 0.5 }
         }
@@ -364,14 +364,14 @@ describe('evaluate', () => {
         {
           id: 'consume-1',
           type: 'numberIncrement',
-          target: { fact: 'character.movement.current' },
+          target: { fact: 'character.movement.remaining' },
           source: { var: 'distance' },
           subtract: true
         },
         {
           id: 'consume-2',
           type: 'numberIncrement',
-          target: { fact: 'character.movement.current' },
+          target: { fact: 'character.movement.remaining' },
           source: { var: 'distance' },
           subtract: true
         }
@@ -385,13 +385,13 @@ describe('evaluate', () => {
         planned: [plannedRoughTerrain],
         effects: []
       },
-      state: { facts: { 'character.movement.current': 30 } }
+      state: { facts: { 'character.movement.remaining': 30 } }
     };
 
     const result = evaluate(input);
 
     // 30 - 10 - 10 = 10 (double consumption)
-    expect(result.facts['character.movement.current']).toBe(10);
+    expect(result.facts['character.movement.remaining']).toBe(10);
     // Half movement should be 15 (from early phase computation)
     expect(result.facts['character.movement.half']).toBe(15);
   });

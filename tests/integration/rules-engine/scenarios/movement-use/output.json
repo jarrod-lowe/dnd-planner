@@ -5,7 +5,7 @@
     "applicable": true
   },
   "facts": {
-    "character.movement.current": 20,
+    "character.movement.remaining": 20,
     "character.movement.total": 30,
     "planned.move.amount": 10
   },
@@ -21,7 +21,7 @@
           {
             "id": "consume-movement",
             "type": "numberIncrement",
-            "target": { "fact": "character.movement.current" },
+            "target": { "fact": "character.movement.remaining" },
             "source": {
               "fact": "planned.move.amount"
             },
@@ -55,7 +55,7 @@
               "legalWhen": [
                 {
                   "condition": {
-                    "fact": "character.movement.current",
+                    "fact": "character.movement.remaining",
                     "operator": "greaterThan",
                     "value": 0
                   },
@@ -73,7 +73,7 @@
                   {
                     "id": "consume-movement",
                     "type": "numberIncrement",
-                    "target": { "fact": "character.movement.current" },
+                    "target": { "fact": "character.movement.remaining" },
                     "source": {
                       "fact": "planned.move.amount"
                     },
@@ -92,7 +92,7 @@
             {
               "id": "consume-movement",
               "type": "numberIncrement",
-              "target": { "fact": "character.movement.current" },
+              "target": { "fact": "character.movement.remaining" },
               "source": {
                 "fact": "planned.move.amount"
               },
@@ -105,7 +105,7 @@
     },
     "state": {
       "facts": {
-        "character.movement.current": 30,
+        "character.movement.remaining": 30,
         "character.movement.total": 30,
         "planned.move.amount": 10
       }

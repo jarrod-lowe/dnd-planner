@@ -215,7 +215,7 @@ export interface NumberSumActivity extends ActivityBase {
 /**
  * Sets a fact using a named function with source arguments.
  * Example: statToModifier(str.value) -> str.modifier
- * Example: multiply(movement.current, { multiplier: 0.5 }) -> movement.half
+ * Example: multiply(movement.remaining, { multiplier: 0.5 }) -> movement.half
  */
 export interface NumberFunctionActivity extends ActivityBase {
   type: 'numberFunction';

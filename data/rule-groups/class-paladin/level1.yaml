@@ -30,6 +30,8 @@ ruleGroups:
         phase: early
         after:
           - group: spellcasting-slots-total
+        group:
+          - spellcasting-slots-set
         activities:
           - type: numberIncrement
             target:

@@ -19,11 +19,11 @@
 
   // Extract movement from facts
   const movement = $derived(
-    playStore.state.facts['character.movement.current'] !== undefined
+    playStore.state.facts['character.movement.remaining'] !== undefined
       ? {
           used:
             (playStore.state.facts['character.movement.total'] as number) -
-            (playStore.state.facts['character.movement.current'] as number),
+            (playStore.state.facts['character.movement.remaining'] as number),
           max: playStore.state.facts['character.movement.total'] as number
         }
       : undefined
@@ -67,7 +67,9 @@
       const max = playStore.state.facts[`spellcasting.slots.level${level}.total`];
       if (max !== undefined && (max as number) > 0) {
         slots[level] = {
-          used: playStore.state.facts[`spellcasting.slots.level${level}.current`] as number,
+          used:
+            (max as number) -
+            (playStore.state.facts[`spellcasting.slots.level${level}.remaining`] as number),
           max: max as number
         };
       }
