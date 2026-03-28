@@ -139,7 +139,7 @@ def build_search_index_entries(
                 for prefix in generate_prefixes(standardized_name):
                     pk = f"{SEARCHINDEX_PK_PREFIX}{locale}{SEARCHINDEX_PK_PREFIX_SUFFIX}{prefix}"
                     sk = f"{SEARCHINDEX_SK_PREFIX}{SCORE_NAME_MATCH}{SEARCHINDEX_SK_RULEGROUP_PREFIX}{rg_id}"
-                    gsi1sk = f"{SEARCHINDEX_GSI1SK_PREFIX}{now}#{pk}"
+                    gsi1sk = f"{SEARCHINDEX_GSI1SK_PREFIX}{now}"
 
                     entries.append({
                         "PK": pk,
@@ -158,7 +158,7 @@ def build_search_index_entries(
                     for prefix in generate_prefixes(standardized_keyword):
                         pk = f"{SEARCHINDEX_PK_PREFIX}{locale}{SEARCHINDEX_PK_PREFIX_SUFFIX}{prefix}"
                         sk = f"{SEARCHINDEX_SK_PREFIX}{SCORE_KEYWORD_MATCH}{SEARCHINDEX_SK_RULEGROUP_PREFIX}{rg_id}"
-                        gsi1sk = f"{SEARCHINDEX_GSI1SK_PREFIX}{now}#{pk}"
+                        gsi1sk = f"{SEARCHINDEX_GSI1SK_PREFIX}{now}"
 
                         entries.append({
                             "PK": pk,
