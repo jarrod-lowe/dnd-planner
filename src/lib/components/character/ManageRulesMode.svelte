@@ -18,9 +18,9 @@
     onBack: () => void;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let {
-    character,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    character: _character,
     assignedRuleGroupIds = [],
     lockedRuleGroups = new Map<string, string[]>(),
     onToggle,
