@@ -103,7 +103,10 @@
   "rules": {
     "manageTitle": "Manage Rules",
     "searchPlaceholder": "Search rule groups...",
-    "backToPlay": "Back to Play"
+    "backToPlay": "Back to Play",
+    "searching": "Searching...",
+    "searchError": "Search failed. Please try again.",
+    "noResults": "No results found."
   },
   "play": {
     "backToSelection": "Back to Character Selection",
