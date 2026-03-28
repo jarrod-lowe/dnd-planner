@@ -6,7 +6,7 @@ describe('StatsColumn', () => {
   it('renders movement stat when provided', () => {
     const { getByText } = render(StatsColumn, {
       props: {
-        movement: { current: 25, max: 30 }
+        movement: { used: 5, max: 30 }
       }
     });
 
@@ -23,21 +23,21 @@ describe('StatsColumn', () => {
     expect(getByText('play.stats.todo')).toBeTruthy();
   });
 
-  it('displays current/max format for movement', () => {
+  it('displays used/max format for movement', () => {
     const { container } = render(StatsColumn, {
       props: {
-        movement: { current: 25, max: 30 }
+        movement: { used: 5, max: 30 }
       }
     });
 
     // The i18n mock returns keys, so just check the key is used
-    expect(container.textContent).toContain('play.stats.currentMax');
+    expect(container.textContent).toContain('play.stats.usedMax');
   });
 
   it('has proper accessibility structure', () => {
     const { container } = render(StatsColumn, {
       props: {
-        movement: { current: 25, max: 30 }
+        movement: { used: 5, max: 30 }
       }
     });
 

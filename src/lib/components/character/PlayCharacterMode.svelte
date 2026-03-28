@@ -21,7 +21,9 @@
   const movement = $derived(
     playStore.state.facts['character.movement.current'] !== undefined
       ? {
-          current: playStore.state.facts['character.movement.current'] as number,
+          used:
+            (playStore.state.facts['character.movement.total'] as number) -
+            (playStore.state.facts['character.movement.current'] as number),
           max: playStore.state.facts['character.movement.total'] as number
         }
       : undefined
@@ -31,7 +33,9 @@
   const actions = $derived(
     playStore.state.facts['actions.remaining'] !== undefined
       ? {
-          remaining: playStore.state.facts['actions.remaining'] as number,
+          used:
+            (playStore.state.facts['actions.max'] as number) -
+            (playStore.state.facts['actions.remaining'] as number),
           max: playStore.state.facts['actions.max'] as number
         }
       : undefined
@@ -48,7 +52,9 @@
   const spellcasting = $derived(
     playStore.state.facts['spellcasting.remaining'] !== undefined
       ? {
-          remaining: playStore.state.facts['spellcasting.remaining'] as number,
+          used:
+            (playStore.state.facts['spellcasting.max'] as number) -
+            (playStore.state.facts['spellcasting.remaining'] as number),
           max: playStore.state.facts['spellcasting.max'] as number
         }
       : undefined
@@ -56,12 +62,12 @@
 
   // Extract spell slots from facts (only levels with max > 0)
   const spellSlots = $derived.by(() => {
-    const slots: Record<number, { current: number; max: number }> = {};
+    const slots: Record<number, { used: number; max: number }> = {};
     for (let level = 1; level <= 9; level++) {
       const max = playStore.state.facts[`spellcasting.slots.level${level}.total`];
       if (max !== undefined && (max as number) > 0) {
         slots[level] = {
-          current: playStore.state.facts[`spellcasting.slots.level${level}.current`] as number,
+          used: playStore.state.facts[`spellcasting.slots.level${level}.current`] as number,
           max: max as number
         };
       }
