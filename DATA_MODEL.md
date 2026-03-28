@@ -28,7 +28,7 @@ Enables cleanup of stale search index entries during sync. Used by `sync_rule_gr
 
 - **Index Name:** `gsi1`
 - **Partition Key:** `GSI1PK` (String) - `RULEGROUPDIRECTORY#{category}`
-- **Sort Key:** `GSI1SK` (String) - `UPDATEDAT#{timestamp}#LANG#{locale}#PREFIX#{term}`
+- **Sort Key:** `GSI1SK` (String) - `UPDATEDAT#{timestamp}`
 - **Projection:** KEYS_ONLY
 - **Query Pattern:** `Query gsi1 WHERE GSI1PK = "RULEGROUPDIRECTORY#<category>" AND GSI1SK < "UPDATEDAT#<timestamp>"`
 
@@ -178,7 +178,7 @@ Enable prefix search (3-6 characters) for rule group names and keywords, per loc
 - category = category name (e.g., "dnd-5e-2024")
 - updatedAt = ISO timestamp
 - GSI1PK = `RULEGROUPDIRECTORY#{category}`
-- GSI1SK = `UPDATEDAT#{timestamp}#LANG#{locale}#PREFIX#{term}`
+- GSI1SK = `UPDATEDAT#{timestamp}`
 
 **Scoring:**
 
@@ -188,11 +188,11 @@ Enable prefix search (3-6 characters) for rule group names and keywords, per loc
 **Example entries for "Fireball" (category: spells, id: fireball):**
 
 ```
-PK=LANG#en#PREFIX#fir,  SK=SCORE#0002#RULEGROUP#fireball, GSI1PK=RULEGROUPDIRECTORY#spells, GSI1SK=UPDATEDAT#2024-03-28T10:00:00Z#LANG#en#PREFIX#fir
-PK=LANG#en#PREFIX#fire, SK=SCORE#0002#RULEGROUP#fireball, GSI1PK=RULEGROUPDIRECTORY#spells, GSI1SK=UPDATEDAT#2024-03-28T10:00:00Z#LANG#en#PREFIX#fire
-PK=LANG#en#PREFIX#fireb, SK=SCORE#0002#RULEGROUP#fireball, GSI1PK=RULEGROUPDIRECTORY#spells, GSI1SK=UPDATEDAT#2024-03-28T10:00:00Z#LANG#en#PREFIX#fireb
-PK=LANG#en#PREFIX#fireba, SK=SCORE#0002#RULEGROUP#fireball, GSI1PK=RULEGROUPDIRECTORY#spells, GSI1SK=UPDATEDAT#2024-03-28T10:00:00Z#LANG#en#PREFIX#fireba
-PK=LANG#en#PREFIX#firebal, SK=SCORE#0002#RULEGROUP#fireball, GSI1PK=RULEGROUPDIRECTORY#spells, GSI1SK=UPDATEDAT#2024-03-28T10:00:00Z#LANG#en#PREFIX#firebal
+PK=LANG#en#PREFIX#fir,  SK=SCORE#0002#RULEGROUP#fireball, GSI1PK=RULEGROUPDIRECTORY#spells, GSI1SK=UPDATEDAT#2024-03-28T10:00:00Z
+PK=LANG#en#PREFIX#fire, SK=SCORE#0002#RULEGROUP#fireball, GSI1PK=RULEGROUPDIRECTORY#spells, GSI1SK=UPDATEDAT#2024-03-28T10:00:00Z
+PK=LANG#en#PREFIX#fireb, SK=SCORE#0002#RULEGROUP#fireball, GSI1PK=RULEGROUPDIRECTORY#spells, GSI1SK=UPDATEDAT#2024-03-28T10:00:00Z
+PK=LANG#en#PREFIX#fireba, SK=SCORE#0002#RULEGROUP#fireball, GSI1PK=RULEGROUPDIRECTORY#spells, GSI1SK=UPDATEDAT#2024-03-28T10:00:00Z
+PK=LANG#en#PREFIX#firebal, SK=SCORE#0002#RULEGROUP#fireball, GSI1PK=RULEGROUPDIRECTORY#spells, GSI1SK=UPDATEDAT#2024-03-28T10:00:00Z
 ```
 
 **Term Standardization:**
