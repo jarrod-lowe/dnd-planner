@@ -106,7 +106,8 @@
     "backToPlay": "Back to Play",
     "searching": "Searching...",
     "searchError": "Search failed. Please try again.",
-    "noResults": "No results found."
+    "noResults": "No results found.",
+    "loadingDetails": "Loading details..."
   },
   "play": {
     "backToSelection": "Back to Character Selection",

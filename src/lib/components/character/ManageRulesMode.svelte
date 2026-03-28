@@ -8,6 +8,7 @@
   import type { Character } from '$lib/character/types';
   import { apiGet } from '$lib/api/client';
   import { debounce } from '$lib/play/debounce';
+  import { ensureCached, type RuleGroupMeta } from '$lib/rules/ruleGroupCache.svelte';
 
   interface Props {
     character: Character;
@@ -19,6 +20,7 @@
 
   let searchQuery = $state('');
   let searchResults = $state<string[]>([]);
+  let resultMeta = $state<Map<string, RuleGroupMeta>>(new Map());
   let isSearching = $state(false);
   let searchError = $state<string | null>(null);
 
@@ -40,6 +42,7 @@
     const standardized = standardizeTerm(query);
     if (standardized.length < 3) {
       searchResults = [];
+      resultMeta = new Map();
       isSearching = false;
       searchError = null;
       return;
@@ -60,9 +63,11 @@
 
       const data = await response.json();
       searchResults = data.ruleGroupsId ?? [];
+      resultMeta = await ensureCached(searchResults, currentLocale);
     } catch {
       searchError = 'searchError';
       searchResults = [];
+      resultMeta = new Map();
     } finally {
       isSearching = false;
     }
@@ -100,11 +105,17 @@
     {:else if searchError}
       <p class="manage-rules__status manage-rules__status--error">{$t(`rules.${searchError}`)}</p>
     {:else if searchResults.length > 0}
-      <ul class="manage-rules__result-list">
+      <div class="manage-rules__result-list">
         {#each searchResults as id (id)}
-          <li class="manage-rules__result-item">{id}</li>
+          {@const meta = resultMeta.get(id)}
+          <div class="manage-rules__panel" role="article">
+            <span class="manage-rules__panel-name">{meta?.name ?? id}</span>
+            {#if meta?.description}
+              <span class="manage-rules__panel-desc">{meta.description}</span>
+            {/if}
+          </div>
         {/each}
-      </ul>
+      </div>
     {:else if searchQuery && standardizeTerm(searchQuery).length >= 3}
       <p class="manage-rules__status">{$t('rules.noResults')}</p>
     {/if}
@@ -178,6 +189,8 @@
 
   .manage-rules__results {
     flex: 1;
+    min-height: 0;
+    overflow-y: auto;
   }
 
   .manage-rules__status {
@@ -192,16 +205,30 @@
   }
 
   .manage-rules__result-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
   }
 
-  .manage-rules__result-item {
-    font-family: var(--font-body);
+  .manage-rules__panel {
+    background: var(--md-sys-color-surface-container-high);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
+  .manage-rules__panel-name {
+    font-family: var(--font-display);
     font-size: var(--font-size-md);
     color: var(--md-sys-color-on-surface);
-    padding: var(--spacing-sm) var(--spacing-md);
-    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  .manage-rules__panel-desc {
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    color: var(--md-sys-color-on-surface-variant);
   }
 </style>
