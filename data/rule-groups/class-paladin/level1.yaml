@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: class-paladin-level1
+    translations:
+      en:
+        name: Paladin Level 1
+        description: Paladin class features at level 1, including proficiency bonus
+        keywords: [paladin, class, level1]
+      en-x-tlh:
+        name: Paladin Level 1
+        description: Paladin Segh level 1, proficient chel
+        keywords: [paladin, segh, level1]
+    rules:
+      # Proficiency Bonus - Level 1 Paladin adds +2
+      - id: paladin-level1-proficiency
+        phase: early
+        after:
+          - group: proficiency-base
+        activities:
+          - type: numberIncrement
+            target:
+              fact: proficiency.bonus
+            source:
+              number: 2

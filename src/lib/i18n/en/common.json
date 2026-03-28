@@ -105,6 +105,7 @@
     "stats": {
       "title": "Stats",
       "movement": "Speed",
+      "proficiency": "Proficiency",
       "actions": "Actions",
       "currentMax": "{{current}} / {{max}}",
       "todo": "TODO"

@@ -14,9 +14,10 @@
   interface Props {
     movement?: Movement;
     actions?: Actions;
+    proficiency?: number;
   }
 
-  let { movement, actions }: Props = $props();
+  let { movement, actions, proficiency }: Props = $props();
 </script>
 
 <div class="stats-column">
@@ -36,7 +37,13 @@
       >
     </div>
   {/if}
-  {#if !movement && !actions}
+  {#if proficiency != null}
+    <div class="stats-column__item">
+      <span class="stats-column__label">{$t('play.stats.proficiency')}</span>
+      <span class="stats-column__value">{proficiency >= 0 ? '+' : ''}{proficiency}</span>
+    </div>
+  {/if}
+  {#if !movement && !actions && proficiency == null}
     <div class="stats-column__todo">{$t('play.stats.todo')}</div>
   {/if}
 </div>

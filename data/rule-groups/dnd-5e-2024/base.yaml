@@ -11,6 +11,18 @@ ruleGroups:
         description: DIvI' Hol D&D 5e 2024 raD naQ
         keywords: [ratlh, rutlh, Do, DIvI']
     rules:
+      # Proficiency Bonus - reset to base (classes add to this)
+      - id: proficiency-reset
+        phase: early
+        group:
+          - proficiency-base
+        activities:
+          - type: numberSet
+            target:
+              fact: proficiency.bonus
+            source:
+              number: 0
+
       # Movement Actions
       - id: action-move-reset
         phase: early
