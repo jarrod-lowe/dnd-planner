@@ -3,38 +3,37 @@ package main
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 )
 
-// mockDB is a mock DynamoDB client for testing
+// mockDB implements seed.DynamoDBClient for testing
 type mockDB struct {
-	getItemFunc    func(ctx context.Context, pk, sk string) (map[string]any, error)
-	putItemFunc    func(ctx context.Context, item map[string]any) error
-	getItemCalled  bool
-	putItemCalled  bool
-	getItemPK      string
-	getItemSK      string
-	putItemPayload map[string]any
+	queryByGsiSeedPKFunc      func(ctx context.Context, gsiSeedPK string) ([]map[string]any, error)
+	batchWriteItemsFunc       func(ctx context.Context, items []map[string]any) error
+	queryByGsiSeedPKCalled    bool
+	batchWriteItemsCalled     bool
+	queryByGsiSeedPKParam     string
+	batchWriteItemsPayloads   []map[string]any
 }
 
-func (m *mockDB) getItem(ctx context.Context, pk, sk string) (map[string]any, error) {
-	m.getItemCalled = true
-	m.getItemPK = pk
-	m.getItemSK = sk
-	if m.getItemFunc != nil {
-		return m.getItemFunc(ctx, pk, sk)
+func (m *mockDB) QueryByGsiSeedPK(ctx context.Context, gsiSeedPK string) ([]map[string]any, error) {
+	m.queryByGsiSeedPKCalled = true
+	m.queryByGsiSeedPKParam = gsiSeedPK
+	if m.queryByGsiSeedPKFunc != nil {
+		return m.queryByGsiSeedPKFunc(ctx, gsiSeedPK)
 	}
 	return nil, errors.New("not implemented")
 }
 
-func (m *mockDB) putItem(ctx context.Context, item map[string]any) error {
-	m.putItemCalled = true
-	m.putItemPayload = item
-	if m.putItemFunc != nil {
-		return m.putItemFunc(ctx, item)
+func (m *mockDB) BatchWriteItems(ctx context.Context, items []map[string]any) error {
+	m.batchWriteItemsCalled = true
+	m.batchWriteItemsPayloads = items
+	if m.batchWriteItemsFunc != nil {
+		return m.batchWriteItemsFunc(ctx, items)
 	}
 	return errors.New("not implemented")
 }
@@ -44,27 +43,30 @@ func TestHandlePostConfirmation_CreatesUserRecord(t *testing.T) {
 	ctx := context.Background()
 	userID := "test-user-123"
 
-	seedRecord := map[string]any{
-		"PK":                 "SEED#USER#$(userId)",
-		"SK":                 "META#",
-		"type":               "USER",
-		"userId":             "$(userId)",
-		"charQuotaRemaining": 10,
-		"createdAt":          "$(now)",
-		"updatedAt":          "$(now)",
-		"customField":        "copied-from-seed", // proves we copy from seed, not hardcode
+	seedRecords := []map[string]any{
+		{
+			"PK":                 "SEED#USER#$(userId)",
+			"SK":                 "META#",
+			"gsiSeedPK":          "SEED#USER",
+			"type":               "USER",
+			"userId":             "$(userId)",
+			"charQuotaRemaining": 10,
+			"createdAt":          "$(now)",
+			"updatedAt":          "$(now)",
+			"customField":        "copied-from-seed",
+		},
 	}
 
 	db := &mockDB{
-		getItemFunc: func(ctx context.Context, pk, sk string) (map[string]any, error) {
-			return seedRecord, nil
+		queryByGsiSeedPKFunc: func(ctx context.Context, gsiSeedPK string) ([]map[string]any, error) {
+			return seedRecords, nil
 		},
-		putItemFunc: func(ctx context.Context, item map[string]any) error {
+		batchWriteItemsFunc: func(ctx context.Context, items []map[string]any) error {
 			return nil
 		},
 	}
 
-	handler := newHandler(db, "test-table")
+	handler := newHandler(db, slog.Default())
 
 	event := events.CognitoEventUserPoolsPostConfirmation{
 		CognitoEventUserPoolsHeader: events.CognitoEventUserPoolsHeader{
@@ -86,62 +88,71 @@ func TestHandlePostConfirmation_CreatesUserRecord(t *testing.T) {
 		t.Fatalf("expected no error, got: %v", err)
 	}
 
-	if !db.getItemCalled {
-		t.Error("expected GetItem to be called")
+	if !db.queryByGsiSeedPKCalled {
+		t.Error("expected QueryByGsiSeedPK to be called")
 	}
 
-	if db.getItemPK != "SEED#USER" || db.getItemSK != "META#" {
-		t.Errorf("expected GetItem with SEED#USER/META#, got %s/%s", db.getItemPK, db.getItemSK)
+	if db.queryByGsiSeedPKParam != "SEED#USER" {
+		t.Errorf("expected QueryByGsiSeedPK with SEED#USER, got %s", db.queryByGsiSeedPKParam)
 	}
 
-	if !db.putItemCalled {
-		t.Error("expected PutItem to be called")
+	if !db.batchWriteItemsCalled {
+		t.Error("expected BatchWriteItems to be called")
 	}
+
+	if len(db.batchWriteItemsPayloads) != 1 {
+		t.Fatalf("expected 1 item to be written, got %d", len(db.batchWriteItemsPayloads))
+	}
+
+	written := db.batchWriteItemsPayloads[0]
 
 	// Verify the user record has correct PK (SEED# stripped, userId substituted)
-	if db.putItemPayload["PK"] != "USER#"+userID {
-		t.Errorf("expected PK to be USER#%s, got %v", userID, db.putItemPayload["PK"])
+	if written["PK"] != "USER#"+userID {
+		t.Errorf("expected PK to be USER#%s, got %v", userID, written["PK"])
 	}
 
-	if db.putItemPayload["SK"] != "META#" {
-		t.Errorf("expected SK to be META#, got %v", db.putItemPayload["SK"])
+	if written["SK"] != "META#" {
+		t.Errorf("expected SK to be META#, got %v", written["SK"])
 	}
 
-	if db.putItemPayload["type"] != "USER" {
-		t.Errorf("expected type to be USER, got %v", db.putItemPayload["type"])
+	if written["type"] != "USER" {
+		t.Errorf("expected type to be USER, got %v", written["type"])
 	}
 
-	if db.putItemPayload["charQuotaRemaining"] != 10 {
-		t.Errorf("expected charQuotaRemaining to be 10, got %v", db.putItemPayload["charQuotaRemaining"])
+	if written["charQuotaRemaining"] != 10 {
+		t.Errorf("expected charQuotaRemaining to be 10, got %v", written["charQuotaRemaining"])
 	}
 
-	if db.putItemPayload["userId"] != userID {
-		t.Errorf("expected userId to be %s, got %v", userID, db.putItemPayload["userId"])
+	if written["userId"] != userID {
+		t.Errorf("expected userId to be %s, got %v", userID, written["userId"])
 	}
-	// Verify userId was substituted, not literal "$(userId)"
-	if db.putItemPayload["userId"] == "$(userId)" {
+	if written["userId"] == "$(userId)" {
 		t.Error("expected userId to be substituted, got literal $(userId)")
 	}
 
 	// Verify customField was copied from seed (proves generic copy, not hardcoded)
-	if db.putItemPayload["customField"] != "copied-from-seed" {
-		t.Errorf("expected customField to be copied-from-seed, got %v", db.putItemPayload["customField"])
+	if written["customField"] != "copied-from-seed" {
+		t.Errorf("expected customField to be copied-from-seed, got %v", written["customField"])
+	}
+
+	// Verify gsiSeedPK is NOT in the written record
+	if _, exists := written["gsiSeedPK"]; exists {
+		t.Error("expected gsiSeedPK to NOT be in written record")
 	}
 
 	// Verify createdAt and updatedAt are RFC3339 timestamps (not literal "$(now)")
-	createdAt, ok := db.putItemPayload["createdAt"].(string)
+	createdAt, ok := written["createdAt"].(string)
 	if !ok {
 		t.Fatal("expected createdAt to be a string")
 	}
 	if createdAt == "$(now)" {
 		t.Error("expected createdAt to be substituted, got literal $(now)")
 	}
-	// Verify it's a valid RFC3339 timestamp
 	if _, err := time.Parse(time.RFC3339, createdAt); err != nil {
 		t.Errorf("expected createdAt to be RFC3339, got: %s (err: %v)", createdAt, err)
 	}
 
-	updatedAt, ok := db.putItemPayload["updatedAt"].(string)
+	updatedAt, ok := written["updatedAt"].(string)
 	if !ok {
 		t.Fatal("expected updatedAt to be a string")
 	}
@@ -159,12 +170,12 @@ func TestHandlePostConfirmation_SeedRecordMissing_ReturnsError(t *testing.T) {
 	userID := "test-user-456"
 
 	db := &mockDB{
-		getItemFunc: func(ctx context.Context, pk, sk string) (map[string]any, error) {
+		queryByGsiSeedPKFunc: func(ctx context.Context, gsiSeedPK string) ([]map[string]any, error) {
 			return nil, errors.New("item not found")
 		},
 	}
 
-	handler := newHandler(db, "test-table")
+	handler := newHandler(db, slog.Default())
 
 	event := events.CognitoEventUserPoolsPostConfirmation{
 		CognitoEventUserPoolsHeader: events.CognitoEventUserPoolsHeader{
@@ -186,8 +197,8 @@ func TestHandlePostConfirmation_SeedRecordMissing_ReturnsError(t *testing.T) {
 		t.Fatal("expected error when seed record is missing, got nil")
 	}
 
-	if db.putItemCalled {
-		t.Error("expected PutItem NOT to be called when seed is missing")
+	if db.batchWriteItemsCalled {
+		t.Error("expected BatchWriteItems NOT to be called when seed query fails")
 	}
 }
 
@@ -197,23 +208,26 @@ func TestHandlePostConfirmation_SubstitutesEmail(t *testing.T) {
 	userID := "test-user-email"
 	userEmail := "test@example.com"
 
-	seedRecord := map[string]any{
-		"PK":     "SEED#USER#$(userId)",
-		"SK":     "META#",
-		"userId": "$(userId)",
-		"email":  "$(email)",
+	seedRecords := []map[string]any{
+		{
+			"PK":        "SEED#USER#$(userId)",
+			"SK":        "META#",
+			"gsiSeedPK": "SEED#USER",
+			"userId":    "$(userId)",
+			"email":     "$(email)",
+		},
 	}
 
 	db := &mockDB{
-		getItemFunc: func(ctx context.Context, pk, sk string) (map[string]any, error) {
-			return seedRecord, nil
+		queryByGsiSeedPKFunc: func(ctx context.Context, gsiSeedPK string) ([]map[string]any, error) {
+			return seedRecords, nil
 		},
-		putItemFunc: func(ctx context.Context, item map[string]any) error {
+		batchWriteItemsFunc: func(ctx context.Context, items []map[string]any) error {
 			return nil
 		},
 	}
 
-	handler := newHandler(db, "test-table")
+	handler := newHandler(db, slog.Default())
 
 	event := events.CognitoEventUserPoolsPostConfirmation{
 		CognitoEventUserPoolsHeader: events.CognitoEventUserPoolsHeader{
@@ -236,10 +250,11 @@ func TestHandlePostConfirmation_SubstitutesEmail(t *testing.T) {
 		t.Fatalf("expected no error, got: %v", err)
 	}
 
-	if db.putItemPayload["email"] != userEmail {
-		t.Errorf("expected email to be %s, got %v", userEmail, db.putItemPayload["email"])
+	written := db.batchWriteItemsPayloads[0]
+	if written["email"] != userEmail {
+		t.Errorf("expected email to be %s, got %v", userEmail, written["email"])
 	}
-	if db.putItemPayload["email"] == "$(email)" {
+	if written["email"] == "$(email)" {
 		t.Error("expected email to be substituted, got literal $(email)")
 	}
 }
@@ -249,26 +264,29 @@ func TestHandlePostConfirmation_DynamoDBPutFails_ReturnsError(t *testing.T) {
 	ctx := context.Background()
 	userID := "test-user-789"
 
-	seedRecord := map[string]any{
-		"PK":                 "SEED#USER#$(userId)",
-		"SK":                 "META#",
-		"type":               "USER",
-		"userId":             "$(userId)",
-		"charQuotaRemaining": 10,
-		"createdAt":          "$(now)",
-		"updatedAt":          "$(now)",
+	seedRecords := []map[string]any{
+		{
+			"PK":                 "SEED#USER#$(userId)",
+			"SK":                 "META#",
+			"gsiSeedPK":          "SEED#USER",
+			"type":               "USER",
+			"userId":             "$(userId)",
+			"charQuotaRemaining": 10,
+			"createdAt":          "$(now)",
+			"updatedAt":          "$(now)",
+		},
 	}
 
 	db := &mockDB{
-		getItemFunc: func(ctx context.Context, pk, sk string) (map[string]any, error) {
-			return seedRecord, nil
+		queryByGsiSeedPKFunc: func(ctx context.Context, gsiSeedPK string) ([]map[string]any, error) {
+			return seedRecords, nil
 		},
-		putItemFunc: func(ctx context.Context, item map[string]any) error {
+		batchWriteItemsFunc: func(ctx context.Context, items []map[string]any) error {
 			return errors.New("dynamoDB unavailable")
 		},
 	}
 
-	handler := newHandler(db, "test-table")
+	handler := newHandler(db, slog.Default())
 
 	event := events.CognitoEventUserPoolsPostConfirmation{
 		CognitoEventUserPoolsHeader: events.CognitoEventUserPoolsHeader{
@@ -287,6 +305,6 @@ func TestHandlePostConfirmation_DynamoDBPutFails_ReturnsError(t *testing.T) {
 
 	// Assert
 	if err == nil {
-		t.Fatal("expected error when DynamoDB put fails, got nil")
+		t.Fatal("expected error when DynamoDB write fails, got nil")
 	}
 }
