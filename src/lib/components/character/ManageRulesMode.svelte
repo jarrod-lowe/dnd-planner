@@ -12,11 +12,14 @@
 
   interface Props {
     character: Character;
+    assignedRuleGroupIds?: string[];
     onBack: () => void;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  let { character, onBack }: Props = $props();
+  let { character, assignedRuleGroupIds = [], onBack }: Props = $props();
+
+  let assignedSet = $derived(new Set(assignedRuleGroupIds));
 
   let searchQuery = $state('');
   let searchResults = $state<string[]>([]);
@@ -108,11 +111,51 @@
       <div class="manage-rules__result-list">
         {#each searchResults as id (id)}
           {@const meta = resultMeta.get(id)}
+          {@const isAssigned = assignedSet.has(id)}
           <div class="manage-rules__panel" role="article">
-            <span class="manage-rules__panel-name">{meta?.name ?? id}</span>
-            {#if meta?.description}
-              <span class="manage-rules__panel-desc">{meta.description}</span>
-            {/if}
+            <div class="manage-rules__panel-row">
+              <span
+                class="manage-rules__indicator"
+                class:manage-rules__indicator--checked={isAssigned}
+                role="checkbox"
+                aria-checked={isAssigned}
+                aria-label={$t('rules.ruleGroupAssigned', { name: meta?.name ?? id })}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                  class="manage-rules__indicator-icon"
+                >
+                  {#if isAssigned}
+                    <circle cx="12" cy="12" r="10" fill="currentColor" />
+                    <path
+                      class="manage-rules__indicator-check"
+                      d="M9 12l2 2 4-4"
+                      stroke-width="2"
+                      fill="none"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  {:else}
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="9.5"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      fill="none"
+                    />
+                  {/if}
+                </svg>
+              </span>
+              <div class="manage-rules__panel-content">
+                <span class="manage-rules__panel-name">{meta?.name ?? id}</span>
+                {#if meta?.description}
+                  <span class="manage-rules__panel-desc">{meta.description}</span>
+                {/if}
+              </div>
+            </div>
           </div>
         {/each}
       </div>
@@ -215,9 +258,45 @@
     border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: var(--radius-md);
     padding: var(--spacing-md);
+  }
+
+  .manage-rules__panel-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-md);
+  }
+
+  .manage-rules__indicator {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0.25rem;
+    color: var(--md-sys-color-outline-variant);
+  }
+
+  .manage-rules__indicator--checked {
+    color: var(--md-sys-color-primary);
+  }
+
+  .manage-rules__indicator-check {
+    stroke: var(--md-sys-color-on-primary);
+  }
+
+  .manage-rules__indicator-icon {
+    width: 100%;
+    height: 100%;
+  }
+
+  .manage-rules__panel-content {
+    flex: 1;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xs);
+    min-width: 0;
   }
 
   .manage-rules__panel-name {

@@ -7,6 +7,7 @@
   import PlayCharacterMode from '$lib/components/character/PlayCharacterMode.svelte';
   import CreateCharacterDialog from '$lib/components/character/CreateCharacterDialog.svelte';
   import ManageRulesMode from '$lib/components/character/ManageRulesMode.svelte';
+  import { playStore } from '$lib/play/playStore.svelte';
   import { t } from '$lib/i18n';
   const title = $derived($t('app.title'));
   let showDialog = $state(false);
@@ -71,6 +72,7 @@
         {#if manageRulesActive}
           <ManageRulesMode
             character={characterStore.state.selectedCharacter}
+            assignedRuleGroupIds={playStore.state.ruleGroupIds}
             onBack={() => {
               manageRulesActive = false;
             }}
@@ -78,7 +80,10 @@
         {:else}
           <PlayCharacterMode
             character={characterStore.state.selectedCharacter}
-            onBack={() => characterStore.clearSelection()}
+            onBack={() => {
+              playStore.reset();
+              characterStore.clearSelection();
+            }}
           />
         {/if}
       {:else}

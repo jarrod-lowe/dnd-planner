@@ -107,7 +107,8 @@
     "searching": "DIvI' mugh...",
     "searchError": "DIvI' mugh DIvI'be'.",
     "noResults": "DIvI' mughbe'.",
-    "loadingDetails": "DIvI' DIvI'..."
+    "loadingDetails": "DIvI' DIvI'...",
+    "ruleGroupAssigned": "{name} DIvI'"
   },
   "play": {
     "backToSelection": "nuv DIvI' HI'egh",

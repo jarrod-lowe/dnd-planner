@@ -19,6 +19,8 @@ export interface PlannedItem {
 export interface PlayState {
   /** Standing rules loaded from API */
   ruleGroups: Rule[];
+  /** Rule group IDs assigned to the character */
+  ruleGroupIds: string[];
   /** Loading state for rule groups */
   isLoadingRuleGroups: boolean;
   /** Error message if rule group loading failed */
