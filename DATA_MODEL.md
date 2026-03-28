@@ -181,6 +181,7 @@ Enable prefix search (3-6 characters) for rule group names and keywords, per loc
 - GSI1SK = `UPDATEDAT#{timestamp}#LANG#{locale}#PREFIX#{term}`
 
 **Scoring:**
+
 - `SCORE#0002` = name match
 - `SCORE#0001` = keyword match
 
@@ -197,6 +198,7 @@ PK=LANG#en#PREFIX#firebal, SK=SCORE#0002#RULEGROUP#fireball, GSI1PK=RULEGROUPDIR
 **Term Standardization:**
 
 Terms are standardized before indexing:
+
 1. Normalize to NFD (separate base characters from diacritics)
 2. Remove combining characters (diacritics)
 3. Convert to lowercase
