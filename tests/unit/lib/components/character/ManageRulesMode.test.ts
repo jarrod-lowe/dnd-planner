@@ -23,11 +23,20 @@ const translations: Record<string, string> = {
   'rules.noResults': 'No results found.',
   'rules.ruleGroupAssigned': '{name} assigned',
   'rules.ruleGroupUnassigned': '{name} not assigned',
-  'rules.toggleError': 'Failed to update rule group. Please try again.'
+  'rules.toggleError': 'Failed to update rule group. Please try again.',
+  'rules.requiredBy': 'Required by: {{names}}'
 };
 
 vi.mock('$lib/i18n', () => ({
-  t: readable((key: string) => translations[key] ?? key),
+  t: readable((key: string, params?: Record<string, unknown>) => {
+    let result = translations[key] ?? key;
+    if (params) {
+      for (const [k, v] of Object.entries(params)) {
+        result = result.replace(`{${k}}`, String(v));
+      }
+    }
+    return result;
+  }),
   locale: {
     ...readable('en'),
     set: vi.fn()
@@ -755,5 +764,200 @@ describe('ManageRulesMode', () => {
 
     const indicator = container.querySelector('.manage-rules__indicator') as HTMLElement;
     expect(indicator.hasAttribute('aria-busy')).toBe(true);
+  });
+
+  describe('dependency locking', () => {
+    it('disables checkbox for a locked rule group', async () => {
+      mockApiGet.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ ruleGroupsId: ['spellcasting'] })
+      });
+
+      mockApiPost.mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            ruleGroups: [{ ruleGroupId: 'spellcasting', name: 'Spellcasting', description: 'Base spellcasting' }]
+          })
+      });
+
+      mount(ManageRulesMode, {
+        target: container,
+        props: {
+          character: mockCharacter,
+          assignedRuleGroupIds: ['spellcasting'],
+          lockedRuleGroups: new Map([['spellcasting', ['Paladin L1']]]),
+          onBack: vi.fn()
+        }
+      });
+
+      const input = container.querySelector('input[type="text"]') as HTMLInputElement;
+      input.value = 'spell';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+
+      vi.advanceTimersByTime(300);
+      await vi.runAllTimersAsync();
+
+      const indicator = container.querySelector('.manage-rules__indicator') as HTMLElement;
+      expect(indicator).toBeTruthy();
+      expect(indicator.classList.contains('manage-rules__indicator--locked')).toBe(true);
+      expect(indicator.getAttribute('aria-disabled')).toBe('true');
+    });
+
+    it('shows tooltip with dependent names on locked checkbox', async () => {
+      mockApiGet.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ ruleGroupsId: ['spellcasting'] })
+      });
+
+      mockApiPost.mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            ruleGroups: [{ ruleGroupId: 'spellcasting', name: 'Spellcasting', description: 'Base spellcasting' }]
+          })
+      });
+
+      mount(ManageRulesMode, {
+        target: container,
+        props: {
+          character: mockCharacter,
+          assignedRuleGroupIds: ['spellcasting'],
+          lockedRuleGroups: new Map([['spellcasting', ['Paladin L1', 'Sorcerer L1']]]),
+          onBack: vi.fn()
+        }
+      });
+
+      const input = container.querySelector('input[type="text"]') as HTMLInputElement;
+      input.value = 'spell';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+
+      vi.advanceTimersByTime(300);
+      await vi.runAllTimersAsync();
+
+      const indicator = container.querySelector('.manage-rules__indicator') as HTMLElement;
+      const title = indicator.getAttribute('title');
+      expect(title).toContain('Paladin L1');
+      expect(title).toContain('Sorcerer L1');
+    });
+
+    it('allows unchecking a non-locked assigned rule group', async () => {
+      const onToggle = vi.fn().mockResolvedValue(undefined);
+
+      mockApiGet.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ ruleGroupsId: ['fireball'] })
+      });
+
+      mockApiPost.mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            ruleGroups: [{ ruleGroupId: 'fireball', name: 'Fireball', description: 'A fire spell' }]
+          })
+      });
+
+      mount(ManageRulesMode, {
+        target: container,
+        props: {
+          character: mockCharacter,
+          assignedRuleGroupIds: ['fireball'],
+          lockedRuleGroups: new Map(),
+          onBack: vi.fn(),
+          onToggle
+        }
+      });
+
+      const input = container.querySelector('input[type="text"]') as HTMLInputElement;
+      input.value = 'fir';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+
+      vi.advanceTimersByTime(300);
+      await vi.runAllTimersAsync();
+
+      const indicator = container.querySelector('.manage-rules__indicator') as HTMLElement;
+      expect(indicator.classList.contains('manage-rules__indicator--locked')).toBe(false);
+      expect(indicator.getAttribute('aria-disabled')).toBeNull();
+
+      // Clicking should trigger onToggle
+      indicator.click();
+      expect(onToggle).toHaveBeenCalledWith('fireball', true);
+    });
+
+    it('does not call onToggle when clicking a locked checkbox', async () => {
+      const onToggle = vi.fn().mockResolvedValue(undefined);
+
+      mockApiGet.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ ruleGroupsId: ['spellcasting'] })
+      });
+
+      mockApiPost.mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            ruleGroups: [{ ruleGroupId: 'spellcasting', name: 'Spellcasting', description: 'Base spellcasting' }]
+          })
+      });
+
+      mount(ManageRulesMode, {
+        target: container,
+        props: {
+          character: mockCharacter,
+          assignedRuleGroupIds: ['spellcasting'],
+          lockedRuleGroups: new Map([['spellcasting', ['Paladin L1']]]),
+          onBack: vi.fn(),
+          onToggle
+        }
+      });
+
+      const input = container.querySelector('input[type="text"]') as HTMLInputElement;
+      input.value = 'spell';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+
+      vi.advanceTimersByTime(300);
+      await vi.runAllTimersAsync();
+
+      const indicator = container.querySelector('.manage-rules__indicator') as HTMLElement;
+      indicator.click();
+
+      expect(onToggle).not.toHaveBeenCalled();
+    });
+
+    it('unlocks checkbox after dependent is removed', async () => {
+      mockApiGet.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ ruleGroupsId: ['spellcasting'] })
+      });
+
+      mockApiPost.mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            ruleGroups: [{ ruleGroupId: 'spellcasting', name: 'Spellcasting', description: 'Base spellcasting' }]
+          })
+      });
+
+      // No locked groups (paladin was removed)
+      mount(ManageRulesMode, {
+        target: container,
+        props: {
+          character: mockCharacter,
+          assignedRuleGroupIds: ['spellcasting'],
+          lockedRuleGroups: new Map(),
+          onBack: vi.fn()
+        }
+      });
+
+      const input = container.querySelector('input[type="text"]') as HTMLInputElement;
+      input.value = 'spell';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+
+      vi.advanceTimersByTime(300);
+      await vi.runAllTimersAsync();
+
+      const indicator = container.querySelector('.manage-rules__indicator') as HTMLElement;
+      expect(indicator.classList.contains('manage-rules__indicator--locked')).toBe(false);
+    });
   });
 });

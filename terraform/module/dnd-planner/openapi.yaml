@@ -750,6 +750,11 @@ paths:
                         rules:
                           type: string
                           description: JSON-encoded array of rules
+                        requires:
+                          type: array
+                          items:
+                            type: string
+                          description: IDs of required rule groups
                         createdAt:
                           type: string
                         updatedAt:
@@ -823,6 +828,12 @@ paths:
                       "lang": "$lang",
                       "description": "$item.get('translations').get('M').get($lang).get('M').get('description').get('S')",
                       "rules": "$util.escapeJavaScript($item.get('rules').get('S'))",
+                      #set($requiresList = $item.get('requires'))
+                      #if($requiresList && $requiresList.get('L'))
+                      "requires": [#foreach($r in $requiresList.get('L'))"$r.get('S')"#if($foreach.hasNext),#end#end],
+                      #else
+                      "requires": [],
+                      #end
                       "createdAt": "$item.get('createdAt').get('S')",
                       "updatedAt": "$item.get('updatedAt').get('S')"
                     }

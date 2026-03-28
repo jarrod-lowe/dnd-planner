@@ -65,6 +65,13 @@
           "required": ["en", "en-x-tlh"],
           "additionalProperties": false
         },
+        "requires": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "IDs of rule groups that must also be assigned when this group is assigned"
+        },
         "rules": {
           "type": "array",
           "description": "Array of rules in this rule group",

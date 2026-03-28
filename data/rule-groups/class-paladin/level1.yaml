@@ -1,6 +1,8 @@
 # yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: class-paladin-level1
+    requires:
+      - spellcasting
     translations:
       en:
         name: Paladin Level 1
