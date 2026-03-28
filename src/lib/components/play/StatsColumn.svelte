@@ -54,7 +54,10 @@
     <div class="stats-column__item">
       <span class="stats-column__label">{$t('play.stats.spellcasting')}</span>
       <span class="stats-column__value"
-        >{$t('play.stats.currentMax', { current: spellcasting.remaining, max: spellcasting.max })}</span
+        >{$t('play.stats.currentMax', {
+          current: spellcasting.remaining,
+          max: spellcasting.max
+        })}</span
       >
     </div>
   {/if}
