@@ -37,6 +37,13 @@
       : undefined
   );
 
+  // Extract proficiency bonus from facts
+  const proficiency = $derived(
+    playStore.state.facts['proficiency.bonus'] !== undefined
+      ? (playStore.state.facts['proficiency.bonus'] as number)
+      : undefined
+  );
+
   // Get available rules from engine output
   const availableRules = $derived(playStore.state.engineOutput?.availableRules ?? []);
 
@@ -89,7 +96,7 @@
   {:else}
     <PlayLayout>
       {#snippet stats()}
-        <StatsColumn {movement} {actions} />
+        <StatsColumn {movement} {actions} {proficiency} />
       {/snippet}
       {#snippet choices()}
         <ChoicesColumn

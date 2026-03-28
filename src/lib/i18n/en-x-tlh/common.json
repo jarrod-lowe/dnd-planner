@@ -105,6 +105,7 @@
     "stats": {
       "title": "DIvI'",
       "movement": "Do",
+      "proficiency": "valwI'",
       "actions": "DIvI'",
       "currentMax": "{{current}} / {{max}}",
       "todo": "TODO"
