@@ -241,6 +241,38 @@ async function assignRuleGroup(characterId: string, ruleGroupId: string): Promis
   }
 }
 
+async function updateCustomRules(characterId: string, newRules: Rule[]): Promise<void> {
+  const customGroupId = `custom-${characterId}`;
+  const prevRules = [...state.ruleGroups];
+  const prevMap = { ...state.ruleGroupRulesMap };
+  const oldCustomRules = state.ruleGroupRulesMap[customGroupId] ?? [];
+  const oldRuleIds = new Set(oldCustomRules.map((r) => r.id));
+
+  // Optimistic: replace custom rules in state
+  state = {
+    ...state,
+    ruleGroups: [...state.ruleGroups.filter((r) => !oldRuleIds.has(r.id)), ...newRules],
+    ruleGroupRulesMap: {
+      ...state.ruleGroupRulesMap,
+      [customGroupId]: newRules
+    }
+  };
+
+  performEvaluation();
+
+  try {
+    const response = await apiPost(`/api/rule-groups/${customGroupId}`, {
+      rules: newRules
+    });
+    if (!response.ok) throw new Error(`Save failed: ${response.status}`);
+  } catch (error) {
+    // Rollback
+    state = { ...state, ruleGroups: prevRules, ruleGroupRulesMap: prevMap };
+    performEvaluation();
+    throw error;
+  }
+}
+
 async function rollbackDeps(characterId: string, depIds: string[]): Promise<void> {
   for (const depId of [...depIds].reverse()) {
     const rulesToRemove = state.ruleGroupRulesMap[depId] ?? [];
@@ -409,6 +441,7 @@ export const playStore = {
   removeFromPlan,
   movePlanItem,
   updateSelections,
+  updateCustomRules,
   endTurn,
   reset
 };

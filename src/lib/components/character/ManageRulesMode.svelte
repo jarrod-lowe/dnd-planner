@@ -16,20 +16,19 @@
     lockedRuleGroups?: Map<string, string[]>;
     onToggle: (ruleGroupId: string, isAssigned: boolean) => Promise<void>;
     onBack: () => void;
+    onEditCustomRules?: () => void;
   }
-
   let {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     character: _character,
     assignedRuleGroupIds = [],
     lockedRuleGroups = new Map<string, string[]>(),
     onToggle,
-    onBack
+    onBack,
+    onEditCustomRules
   }: Props = $props();
-
   let assignedSet = $derived(new Set(assignedRuleGroupIds));
   let lockedSet = $derived(new Set(lockedRuleGroups.keys()));
-
   let searchQuery = $state('');
   let searchResults = $state<string[]>([]);
   let resultMeta = $state<Map<string, RuleGroupMeta>>(new Map());
@@ -37,7 +36,6 @@
   let searchError = $state<string | null>(null);
   let togglingIds = $state<Set<string>>(new Set());
   let toggleErrorId = $state<string | null>(null);
-
   /**
    * Normalize text for search querying.
    * Must match the Python standardize_term() in sync_rule_groups.py exactly.
@@ -49,9 +47,7 @@
       .toLowerCase()
       .replace(/[^a-z0-9]/g, '');
   }
-
   const DEBOUNCE_MS = 300;
-
   async function performSearch(query: string): Promise<void> {
     const standardized = standardizeTerm(query);
     if (standardized.length < 3) {
@@ -61,20 +57,16 @@
       searchError = null;
       return;
     }
-
     isSearching = true;
     searchError = null;
-
     try {
       const currentLocale = get(locale);
       const response = await apiGet(
         `/api/rule-groups?q=${encodeURIComponent(standardized)}&lang=${currentLocale}`
       );
-
       if (!response.ok) {
         throw new Error(`Search failed: ${response.status}`);
       }
-
       const data = await response.json();
       searchResults = data.ruleGroupsId ?? [];
       resultMeta = await ensureCached(searchResults, currentLocale);
@@ -86,21 +78,16 @@
       isSearching = false;
     }
   }
-
   const debouncedSearch = debounce((query: string) => performSearch(query), DEBOUNCE_MS);
-
   function handleInput(e: Event): void {
     searchQuery = (e.target as HTMLInputElement).value;
     debouncedSearch(searchQuery);
   }
-
   async function handleToggle(ruleGroupId: string, isAssigned: boolean): Promise<void> {
     // Block removal of locked rule groups
     if (isAssigned && lockedSet.has(ruleGroupId)) return;
-
     togglingIds = new Set([...togglingIds, ruleGroupId]);
     toggleErrorId = null;
-
     try {
       await onToggle(ruleGroupId, isAssigned);
     } catch {
@@ -109,7 +96,6 @@
       togglingIds = new Set([...togglingIds].filter((id) => id !== ruleGroupId));
     }
   }
-
   function handleIndicatorKeydown(
     e: KeyboardEvent,
     ruleGroupId: string,
@@ -126,9 +112,12 @@
   <button class="manage-rules__back" onclick={() => onBack()} aria-label={$t('rules.backToPlay')}>
     {$t('rules.backToPlay')}
   </button>
-
   <h1 class="manage-rules__title">{$t('rules.manageTitle')}</h1>
-
+  {#if onEditCustomRules}
+    <button class="manage-rules__edit-custom-btn" onclick={onEditCustomRules}>
+      {$t('rules.editCustomRules')}
+    </button>
+  {/if}
   <div class="manage-rules__search">
     <input
       type="text"
@@ -139,7 +128,6 @@
       value={searchQuery}
     />
   </div>
-
   <div class="manage-rules__results" role="region" aria-live="polite" aria-label="Search results">
     {#if isSearching}
       <p class="manage-rules__status">{$t('rules.searching')}</p>
@@ -230,7 +218,6 @@
     height: 100%;
     gap: var(--spacing-md);
   }
-
   .manage-rules__back {
     align-self: flex-start;
     background: transparent;
@@ -244,16 +231,13 @@
     min-height: 2.5rem;
     transition: background-color var(--transition-fast);
   }
-
   .manage-rules__back:hover {
     background: var(--md-sys-color-surface-container);
   }
-
   .manage-rules__back:focus-visible {
     outline: 2px solid var(--md-sys-color-primary);
     outline-offset: 2px;
   }
-
   .manage-rules__title {
     font-family: var(--font-display);
     font-size: var(--font-size-xl);
@@ -261,7 +245,26 @@
     letter-spacing: var(--letter-spacing-wide);
     margin: 0;
   }
-
+  .manage-rules__edit-custom-btn {
+    align-self: flex-start;
+    background: transparent;
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: var(--radius-md);
+    color: var(--md-sys-color-on-surface);
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    min-height: 2.5rem;
+    transition: background-color var(--transition-fast);
+  }
+  .manage-rules__edit-custom-btn:hover {
+    background: var(--md-sys-color-surface-container);
+  }
+  .manage-rules__edit-custom-btn:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: 2px;
+  }
   .manage-rules__search-input {
     width: 100%;
     padding: var(--spacing-sm) var(--spacing-md);
@@ -276,54 +279,45 @@
       border-color var(--transition-fast),
       box-shadow var(--transition-fast);
   }
-
   .manage-rules__search-input::placeholder {
     color: var(--md-sys-color-on-surface-variant);
   }
-
   .manage-rules__search-input:focus {
     outline: none;
     border-color: var(--md-sys-color-primary);
     box-shadow: 0 0 0 1px var(--md-sys-color-primary);
   }
-
   .manage-rules__results {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
   }
-
   .manage-rules__status {
     font-family: var(--font-body);
     font-size: var(--font-size-md);
     color: var(--md-sys-color-on-surface-variant);
     padding: var(--spacing-md) 0;
   }
-
   .manage-rules__status--error {
     color: var(--md-sys-color-error);
   }
-
   .manage-rules__result-list {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
   }
-
   .manage-rules__panel {
     background: var(--md-sys-color-surface-container-high);
     border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: var(--radius-md);
     padding: var(--spacing-md);
   }
-
   .manage-rules__panel-row {
     display: flex;
     flex-direction: row;
     align-items: center;
     gap: var(--spacing-md);
   }
-
   .manage-rules__indicator {
     flex-shrink: 0;
     display: flex;
@@ -337,36 +331,29 @@
     border-radius: var(--radius-sm);
     transition: opacity var(--transition-fast);
   }
-
   .manage-rules__indicator--checked {
     color: var(--md-sys-color-primary);
   }
-
   .manage-rules__indicator--disabled {
     opacity: 0.5;
     cursor: wait;
     pointer-events: none;
   }
-
   .manage-rules__indicator--locked {
     opacity: 0.5;
     cursor: not-allowed;
   }
-
   .manage-rules__indicator:focus-visible {
     outline: 2px solid var(--md-sys-color-primary);
     outline-offset: 2px;
   }
-
   .manage-rules__indicator-check {
     stroke: var(--md-sys-color-on-primary);
   }
-
   .manage-rules__indicator-icon {
     width: 100%;
     height: 100%;
   }
-
   .manage-rules__panel-content {
     flex: 1;
     display: flex;
@@ -374,19 +361,16 @@
     gap: var(--spacing-xs);
     min-width: 0;
   }
-
   .manage-rules__panel-name {
     font-family: var(--font-display);
     font-size: var(--font-size-md);
     color: var(--md-sys-color-on-surface);
   }
-
   .manage-rules__panel-desc {
     font-family: var(--font-body);
     font-size: var(--font-size-sm);
     color: var(--md-sys-color-on-surface-variant);
   }
-
   .manage-rules__toggle-error {
     font-family: var(--font-body);
     font-size: var(--font-size-xs);

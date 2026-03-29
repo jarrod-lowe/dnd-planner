@@ -166,12 +166,17 @@ terraform/environment/test/output.json: terraform/environment/test/.apply
 
 setup-dev: .env.local
 
+# Schema derived artifact (copied to static/ for runtime fetch)
+static/data/rule-groups/schema.json: data/rule-groups/schema.json
+	@mkdir -p static/data/rule-groups
+	cp $< $@
+
 # Development server
-dev: .env.local install
+dev: .env.local install static/data/rule-groups/schema.json
 	pnpm dev
 
 # Production build
-build: install
+build: install static/data/rule-groups/schema.json
 	pnpm build
 
 # Linting
