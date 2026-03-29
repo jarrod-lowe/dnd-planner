@@ -1,72 +1,16 @@
 # yaml-language-server: $schema=../schema.json
 ruleGroups:
-  - id: base
+  - id: movement
     translations:
       en:
-        name: Base Rules
-        description: Core D&D 5e 2024 rules for movement and actions
-        keywords: [basic, core, movement, actions, walk, swim, fly]
+        name: Movement
+        description: Core movement rules for walking, swimming, and flying
+        keywords: [movement, walk, swim, fly, speed, terrain]
       en-x-tlh:
-        name: raD naQ
-        description: DIvI' Hol D&D 5e 2024 raD naQ
-        keywords: [ratlh, rutlh, Do, DIvI']
+        name: Do
+        description: Do DIvI' naQ 'ej Do DIvI'
+        keywords: [Do, bIQ, peng]
     rules:
-      # Long Rest - reset flag to 0 each turn
-      - id: rest-long-reset
-        phase: early
-        group:
-          - rest-reset
-        activities:
-          - type: numberSet
-            target:
-              fact: rest.long
-            source:
-              number: 0
-
-      # Long Rest - offer the long rest action
-      - id: offer-long-rest
-        activities:
-          - type: offerRule
-            rule:
-              id: long-rest
-              ui:
-                model: rest
-                section: rest
-                name: rule.dnd-5e-2024.base.long-rest.name
-              phase: early
-              after:
-                - group: rest-reset
-              activities:
-                - type: numberSet
-                  target:
-                    fact: rest.long
-                  source:
-                    number: 1
-
-      # Turn Counter - increments each turn, never resets
-      - id: turn-counter-increment
-        phase: early
-        group:
-          - turn-counter
-        activities:
-          - type: numberIncrement
-            target:
-              fact: turn.counter
-            source:
-              number: 1
-
-      # Proficiency Bonus - reset to base (classes add to this)
-      - id: proficiency-reset
-        phase: early
-        group:
-          - proficiency-base
-        activities:
-          - type: numberSet
-            target:
-              fact: proficiency.bonus
-            source:
-              number: 0
-
       # Movement Actions
       - id: action-move-reset
         phase: early
@@ -79,29 +23,6 @@ ruleGroups:
             target:
               fact: character.movement.remaining
 
-      # Action Resources - set max actions (base rule: 1 action per turn)
-      - id: action-max
-        phase: early
-        group:
-          - action-max
-        activities:
-          - type: numberSet
-            source:
-              number: 1
-            target:
-              fact: actions.max
-
-      # Action Resources - reset remaining at start of turn
-      - id: action-reset
-        phase: early
-        after:
-          - group: action-max
-        activities:
-          - type: numberCopy
-            source:
-              fact: actions.max
-            target:
-              fact: actions.remaining
       - id: compute-half-movement-total
         phase: normal
         group:
@@ -141,14 +62,14 @@ ruleGroups:
                   operator: greaterThanOrEqual
                   value: 5
                 illegalDiagnostics:
-                  - code: rule.dnd-5e-2024.base.action-move-walk-offer.out_of_movement
+                  - code: rule.dnd-5e-2024.movement.action-move-walk-offer.out_of_movement
                     severity: error
             rule:
               id: move-walk
               ui:
                 model: move
                 section: move
-                name: rule.dnd-5e-2024.base.move-walk.name
+                name: rule.dnd-5e-2024.movement.move-walk.name
               group:
                 - move
               vars:
@@ -176,7 +97,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.dnd-5e-2024.base.action-move-walk-offer.out_of_movement
+                    string: rule.dnd-5e-2024.movement.action-move-walk-offer.out_of_movement
                   when:
                     fact: character.movement.remaining
                     operator: lessThan
@@ -194,14 +115,14 @@ ruleGroups:
                   operator: greaterThanOrEqual
                   value: 10
                 illegalDiagnostics:
-                  - code: rule.dnd-5e-2024.base.action-move-rough-terrain-offer.out_of_movement
+                  - code: rule.dnd-5e-2024.movement.action-move-rough-terrain-offer.out_of_movement
                     severity: error
             rule:
               id: move-rough-terrain
               ui:
                 model: move
                 section: move
-                name: rule.dnd-5e-2024.base.move-rough-terrain.name
+                name: rule.dnd-5e-2024.movement.move-rough-terrain.name
                 packBehind: move-walk
               group:
                 - move
@@ -237,7 +158,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.dnd-5e-2024.base.action-move-walk-offer.out_of_movement
+                    string: rule.dnd-5e-2024.movement.action-move-walk-offer.out_of_movement
                   when:
                     fact: character.movement.remaining
                     operator: lessThan
@@ -259,7 +180,7 @@ ruleGroups:
                   operator: greaterThanOrEqual
                   value: 1
                 illegalDiagnostics:
-                  - code: rule.dnd-5e-2024.base.action-move-swim-offer.cannot_swim
+                  - code: rule.dnd-5e-2024.movement.action-move-swim-offer.cannot_swim
                     severity: error
               - condition:
                   fact: character.movement.swim.cost
@@ -270,14 +191,14 @@ ruleGroups:
                   operator: greaterThanOrEqual
                   value: 5
                 illegalDiagnostics:
-                  - code: rule.dnd-5e-2024.base.action-move-swim-offer.out_of_movement
+                  - code: rule.dnd-5e-2024.movement.action-move-swim-offer.out_of_movement
                     severity: error
             rule:
               id: move-swim
               ui:
                 model: move
                 section: move
-                name: rule.dnd-5e-2024.base.move-swim.name
+                name: rule.dnd-5e-2024.movement.move-swim.name
                 packBehind: move-walk
               group:
                 - move
@@ -303,7 +224,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.dnd-5e-2024.base.action-move-swim-offer.out_of_movement
+                    string: rule.dnd-5e-2024.movement.action-move-swim-offer.out_of_movement
                   when:
                     fact: character.movement.remaining
                     operator: lessThan
@@ -312,7 +233,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.dnd-5e-2024.base.action-move-swim-offer.cannot_swim
+                    string: rule.dnd-5e-2024.movement.action-move-swim-offer.cannot_swim
                   when:
                     fact: character.movement.swim.can
                     operator: equals
@@ -334,7 +255,7 @@ ruleGroups:
                   operator: greaterThanOrEqual
                   value: 1
                 illegalDiagnostics:
-                  - code: rule.dnd-5e-2024.base.action-move-swim-offer.cannot_swim
+                  - code: rule.dnd-5e-2024.movement.action-move-swim-offer.cannot_swim
                     severity: error
               - condition:
                   fact: character.movement.swim.cost
@@ -345,14 +266,14 @@ ruleGroups:
                   operator: greaterThanOrEqual
                   value: 10
                 illegalDiagnostics:
-                  - code: rule.dnd-5e-2024.base.action-move-swim-offer.out_of_movement
+                  - code: rule.dnd-5e-2024.movement.action-move-swim-offer.out_of_movement
                     severity: error
             rule:
               id: move-swim-costly
               ui:
                 model: move
                 section: move
-                name: rule.dnd-5e-2024.base.move-swim.name
+                name: rule.dnd-5e-2024.movement.move-swim.name
                 packBehind: move-walk
               group:
                 - move
@@ -384,7 +305,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.dnd-5e-2024.base.action-move-swim-offer.out_of_movement
+                    string: rule.dnd-5e-2024.movement.action-move-swim-offer.out_of_movement
                   when:
                     fact: character.movement.remaining
                     operator: lessThan
@@ -393,7 +314,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.dnd-5e-2024.base.action-move-swim-offer.cannot_swim
+                    string: rule.dnd-5e-2024.movement.action-move-swim-offer.cannot_swim
                   when:
                     fact: character.movement.swim.can
                     operator: equals
@@ -411,21 +332,21 @@ ruleGroups:
                   operator: greaterThanOrEqual
                   value: 1
                 illegalDiagnostics:
-                  - code: rule.dnd-5e-2024.base.action-move-fly-offer.cannot_fly
+                  - code: rule.dnd-5e-2024.movement.action-move-fly-offer.cannot_fly
                     severity: error
               - condition:
                   fact: character.movement.remaining
                   operator: greaterThanOrEqual
                   value: 5
                 illegalDiagnostics:
-                  - code: rule.dnd-5e-2024.base.action-move-fly-offer.out_of_movement
+                  - code: rule.dnd-5e-2024.movement.action-move-fly-offer.out_of_movement
                     severity: error
             rule:
               id: move-fly
               ui:
                 model: move
                 section: move
-                name: rule.dnd-5e-2024.base.move-fly.name
+                name: rule.dnd-5e-2024.movement.move-fly.name
                 packBehind: move-walk
               group:
                 - move
@@ -451,7 +372,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.dnd-5e-2024.base.action-move-fly-offer.out_of_movement
+                    string: rule.dnd-5e-2024.movement.action-move-fly-offer.out_of_movement
                   when:
                     fact: character.movement.remaining
                     operator: lessThan
@@ -460,62 +381,8 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.dnd-5e-2024.base.action-move-fly-offer.cannot_fly
+                    string: rule.dnd-5e-2024.movement.action-move-fly-offer.cannot_fly
                   when:
                     fact: character.movement.fly.can
                     operator: lessThanOrEqual
                     value: 1
-
-      # Free Action
-      - id: action-free-offer
-        activities:
-          - type: offerRule
-            rule:
-              id: free-action
-              ui:
-                model: free
-                section: free
-                name: rule.dnd-5e-2024.base.free-action.name
-              activities: []
-
-      # Help Action
-      - id: action-help-offer
-        after:
-          - group: action
-        activities:
-          - type: offerRule
-            legalWhen:
-              - condition:
-                  fact: actions.remaining
-                  operator: greaterThan
-                  value: 0
-                illegalDiagnostics:
-                  - code: rule.dnd-5e-2024.base.action-help-offer.no_action
-                    severity: error
-            rule:
-              id: help-action
-              ui:
-                model: help
-                section: action-other
-                name: rule.dnd-5e-2024.base.help-action.name
-              group:
-                - action
-              activities:
-                - type: numberIncrement
-                  target:
-                    fact: actions.remaining
-                  source:
-                    number: 1
-                  subtract: true
-                - type: setClear
-                  target:
-                    var: errors
-                - type: setAdd
-                  target:
-                    var: errors
-                  source:
-                    string: rule.dnd-5e-2024.base.action-help-offer.no_action
-                  when:
-                    fact: actions.remaining
-                    operator: lessThan
-                    value: 0

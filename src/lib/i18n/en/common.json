@@ -14,18 +14,19 @@
       }
     },
     "dnd-5e-2024": {
-      "base": {
+      "turn-rest": {
+        "long-rest": {
+          "name": "Long Rest"
+        }
+      },
+      "action-economy": {},
+      "proficiency": {},
+      "movement": {
         "move-walk": {
           "name": "Walk"
         },
         "move-rough-terrain": {
           "name": "Trudge"
-        },
-        "free-action": {
-          "name": "Free Action"
-        },
-        "long-rest": {
-          "name": "Long Rest"
         },
         "action-move-walk-offer": {
           "out_of_movement": "Out of movement"
@@ -46,6 +47,11 @@
         "action-move-fly-offer": {
           "cannot_fly": "You cannot fly",
           "out_of_movement": "Out of movement"
+        }
+      },
+      "free-actions": {
+        "free-action": {
+          "name": "Free Action"
         },
         "help-action": {
           "name": "Help"

@@ -91,8 +91,9 @@ resource "aws_dynamodb_table_item" "char_seed" {
   })
 }
 
-# Character rule group seed - creates the base rule group assignment
-resource "aws_dynamodb_table_item" "char_rulegroup_seed" {
+# Character rule group seeds - create rule group assignments for new characters
+
+resource "aws_dynamodb_table_item" "char_turn_rest_rulegroup_seed" {
   table_name = aws_dynamodb_table.data.name
   hash_key   = "PK"
   range_key  = "SK"
@@ -102,7 +103,7 @@ resource "aws_dynamodb_table_item" "char_rulegroup_seed" {
       S = "SEED#CHAR#$(characterId)"
     }
     SK = {
-      S = "RULEGROUP#base"
+      S = "RULEGROUP#turn-rest"
     }
     gsiSeedPK = {
       S = "SEED#CHAR"
@@ -114,7 +115,163 @@ resource "aws_dynamodb_table_item" "char_rulegroup_seed" {
       S = "$(characterId)"
     }
     ruleGroupId = {
-      S = "base"
+      S = "turn-rest"
+    }
+    userId = {
+      S = "$(userId)"
+    }
+    enabled = {
+      BOOL = true
+    }
+    createdAt = {
+      S = "$(now)"
+    }
+    updatedAt = {
+      S = "$(now)"
+    }
+  })
+}
+
+resource "aws_dynamodb_table_item" "char_action_economy_rulegroup_seed" {
+  table_name = aws_dynamodb_table.data.name
+  hash_key   = "PK"
+  range_key  = "SK"
+
+  item = jsonencode({
+    PK = {
+      S = "SEED#CHAR#$(characterId)"
+    }
+    SK = {
+      S = "RULEGROUP#action-economy"
+    }
+    gsiSeedPK = {
+      S = "SEED#CHAR"
+    }
+    type = {
+      S = "CHAR"
+    }
+    characterId = {
+      S = "$(characterId)"
+    }
+    ruleGroupId = {
+      S = "action-economy"
+    }
+    userId = {
+      S = "$(userId)"
+    }
+    enabled = {
+      BOOL = true
+    }
+    createdAt = {
+      S = "$(now)"
+    }
+    updatedAt = {
+      S = "$(now)"
+    }
+  })
+}
+
+resource "aws_dynamodb_table_item" "char_proficiency_rulegroup_seed" {
+  table_name = aws_dynamodb_table.data.name
+  hash_key   = "PK"
+  range_key  = "SK"
+
+  item = jsonencode({
+    PK = {
+      S = "SEED#CHAR#$(characterId)"
+    }
+    SK = {
+      S = "RULEGROUP#proficiency"
+    }
+    gsiSeedPK = {
+      S = "SEED#CHAR"
+    }
+    type = {
+      S = "CHAR"
+    }
+    characterId = {
+      S = "$(characterId)"
+    }
+    ruleGroupId = {
+      S = "proficiency"
+    }
+    userId = {
+      S = "$(userId)"
+    }
+    enabled = {
+      BOOL = true
+    }
+    createdAt = {
+      S = "$(now)"
+    }
+    updatedAt = {
+      S = "$(now)"
+    }
+  })
+}
+
+resource "aws_dynamodb_table_item" "char_movement_rulegroup_seed" {
+  table_name = aws_dynamodb_table.data.name
+  hash_key   = "PK"
+  range_key  = "SK"
+
+  item = jsonencode({
+    PK = {
+      S = "SEED#CHAR#$(characterId)"
+    }
+    SK = {
+      S = "RULEGROUP#movement"
+    }
+    gsiSeedPK = {
+      S = "SEED#CHAR"
+    }
+    type = {
+      S = "CHAR"
+    }
+    characterId = {
+      S = "$(characterId)"
+    }
+    ruleGroupId = {
+      S = "movement"
+    }
+    userId = {
+      S = "$(userId)"
+    }
+    enabled = {
+      BOOL = true
+    }
+    createdAt = {
+      S = "$(now)"
+    }
+    updatedAt = {
+      S = "$(now)"
+    }
+  })
+}
+
+resource "aws_dynamodb_table_item" "char_free_actions_rulegroup_seed" {
+  table_name = aws_dynamodb_table.data.name
+  hash_key   = "PK"
+  range_key  = "SK"
+
+  item = jsonencode({
+    PK = {
+      S = "SEED#CHAR#$(characterId)"
+    }
+    SK = {
+      S = "RULEGROUP#free-actions"
+    }
+    gsiSeedPK = {
+      S = "SEED#CHAR"
+    }
+    type = {
+      S = "CHAR"
+    }
+    characterId = {
+      S = "$(characterId)"
+    }
+    ruleGroupId = {
+      S = "free-actions"
     }
     userId = {
       S = "$(userId)"

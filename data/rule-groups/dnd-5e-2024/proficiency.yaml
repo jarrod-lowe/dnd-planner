@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: proficiency
+    translations:
+      en:
+        name: Proficiency
+        description: Base proficiency bonus reset rule
+        keywords: [proficiency, bonus]
+      en-x-tlh:
+        name: valwI'
+        description: valwI' DIvI' naQ
+        keywords: [valwI']
+    rules:
+      # Proficiency Bonus - reset to base (classes add to this)
+      - id: proficiency-reset
+        phase: early
+        group:
+          - proficiency-base
+        activities:
+          - type: numberSet
+            target:
+              fact: proficiency.bonus
+            source:
+              number: 0

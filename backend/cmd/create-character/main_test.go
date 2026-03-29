@@ -62,9 +62,37 @@ func TestHandle_ValidRequest_Returns201(t *testing.T) {
 		},
 		{
 			"PK":          "SEED#CHAR#$(characterId)",
-			"SK":          "RULEGROUP#base",
+			"SK":          "RULEGROUP#turn-rest",
 			"gsiSeedPK":   "SEED#CHAR",
-			"ruleGroupId": "base",
+			"ruleGroupId": "turn-rest",
+			"enabled":     true,
+		},
+		{
+			"PK":          "SEED#CHAR#$(characterId)",
+			"SK":          "RULEGROUP#action-economy",
+			"gsiSeedPK":   "SEED#CHAR",
+			"ruleGroupId": "action-economy",
+			"enabled":     true,
+		},
+		{
+			"PK":          "SEED#CHAR#$(characterId)",
+			"SK":          "RULEGROUP#proficiency",
+			"gsiSeedPK":   "SEED#CHAR",
+			"ruleGroupId": "proficiency",
+			"enabled":     true,
+		},
+		{
+			"PK":          "SEED#CHAR#$(characterId)",
+			"SK":          "RULEGROUP#movement",
+			"gsiSeedPK":   "SEED#CHAR",
+			"ruleGroupId": "movement",
+			"enabled":     true,
+		},
+		{
+			"PK":          "SEED#CHAR#$(characterId)",
+			"SK":          "RULEGROUP#free-actions",
+			"gsiSeedPK":   "SEED#CHAR",
+			"ruleGroupId": "free-actions",
 			"enabled":     true,
 		},
 	}
@@ -141,9 +169,37 @@ func TestHandle_ValidRequest_ReturnsCharacterFields(t *testing.T) {
 		},
 		{
 			"PK":          "SEED#CHAR#$(characterId)",
-			"SK":          "RULEGROUP#base",
+			"SK":          "RULEGROUP#turn-rest",
 			"gsiSeedPK":   "SEED#CHAR",
-			"ruleGroupId": "base",
+			"ruleGroupId": "turn-rest",
+			"enabled":     true,
+		},
+		{
+			"PK":          "SEED#CHAR#$(characterId)",
+			"SK":          "RULEGROUP#action-economy",
+			"gsiSeedPK":   "SEED#CHAR",
+			"ruleGroupId": "action-economy",
+			"enabled":     true,
+		},
+		{
+			"PK":          "SEED#CHAR#$(characterId)",
+			"SK":          "RULEGROUP#proficiency",
+			"gsiSeedPK":   "SEED#CHAR",
+			"ruleGroupId": "proficiency",
+			"enabled":     true,
+		},
+		{
+			"PK":          "SEED#CHAR#$(characterId)",
+			"SK":          "RULEGROUP#movement",
+			"gsiSeedPK":   "SEED#CHAR",
+			"ruleGroupId": "movement",
+			"enabled":     true,
+		},
+		{
+			"PK":          "SEED#CHAR#$(characterId)",
+			"SK":          "RULEGROUP#free-actions",
+			"gsiSeedPK":   "SEED#CHAR",
+			"ruleGroupId": "free-actions",
 			"enabled":     true,
 		},
 	}
@@ -212,8 +268,30 @@ func TestHandle_ValidRequest_ReturnsCharacterFields(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected ruleGroupIds to be an array, got %v", responseBody["ruleGroupIds"])
 	}
-	if len(ruleGroupIds) != 1 || ruleGroupIds[0] != "base" {
-		t.Errorf("expected ruleGroupIds [base], got %v", ruleGroupIds)
+	if len(ruleGroupIds) != 5 {
+		t.Errorf("expected ruleGroupIds to have 5 entries, got %d", len(ruleGroupIds))
+	}
+	expectedGroups := map[string]bool{
+		"turn-rest":      false,
+		"action-economy": false,
+		"proficiency":    false,
+		"movement":       false,
+		"free-actions":   false,
+	}
+	for _, id := range ruleGroupIds {
+		idStr, ok := id.(string)
+		if !ok {
+			t.Errorf("expected ruleGroupId to be string, got %v", id)
+			continue
+		}
+		if _, exists := expectedGroups[idStr]; exists {
+			expectedGroups[idStr] = true
+		}
+	}
+	for group, found := range expectedGroups {
+		if !found {
+			t.Errorf("expected ruleGroupIds to contain '%s'", group)
+		}
 	}
 
 	// Verify internal fields NOT present
@@ -560,8 +638,8 @@ func TestBuildCharacterResponse_FieldAgnostic(t *testing.T) {
 		},
 		{
 			"PK":          "CHAR#" + characterID,
-			"SK":          "RULEGROUP#base",
-			"ruleGroupId": "base",
+			"SK":          "RULEGROUP#movement",
+			"ruleGroupId": "movement",
 			"enabled":     true,
 		},
 		{
@@ -614,18 +692,18 @@ func TestBuildCharacterResponse_FieldAgnostic(t *testing.T) {
 		t.Errorf("expected 2 ruleGroupIds, got %d", len(ruleGroupIds))
 	}
 	// Verify both rule groups are present (order may vary)
-	foundBase := false
+	foundMovement := false
 	foundPhb := false
 	for _, id := range ruleGroupIds {
-		if id == "base" {
-			foundBase = true
+		if id == "movement" {
+			foundMovement = true
 		}
 		if id == "phb" {
 			foundPhb = true
 		}
 	}
-	if !foundBase {
-		t.Error("expected ruleGroupIds to contain 'base'")
+	if !foundMovement {
+		t.Error("expected ruleGroupIds to contain 'movement'")
 	}
 	if !foundPhb {
 		t.Error("expected ruleGroupIds to contain 'phb'")

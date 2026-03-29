@@ -1,0 +1,66 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: free-actions
+    translations:
+      en:
+        name: Free Actions
+        description: Core rules for free actions and the help action
+        keywords: [free, action, help, flavour]
+      en-x-tlh:
+        name: Free DIvI'
+        description: Free DIvI' 'ej QaH DIvI' naQ
+        keywords: [free, DIvI', QaH]
+    rules:
+      # Free Action
+      - id: action-free-offer
+        activities:
+          - type: offerRule
+            rule:
+              id: free-action
+              ui:
+                model: free
+                section: free
+                name: rule.dnd-5e-2024.free-actions.free-action.name
+              activities: []
+
+      # Help Action
+      - id: action-help-offer
+        after:
+          - group: action
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: actions.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.free-actions.action-help-offer.no_action
+                    severity: error
+            rule:
+              id: help-action
+              ui:
+                model: help
+                section: action-other
+                name: rule.dnd-5e-2024.free-actions.help-action.name
+              group:
+                - action
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: actions.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                - type: setClear
+                  target:
+                    var: errors
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.free-actions.action-help-offer.no_action
+                  when:
+                    fact: actions.remaining
+                    operator: lessThan
+                    value: 0

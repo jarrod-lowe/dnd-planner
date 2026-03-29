@@ -19,7 +19,7 @@ const createMockMovePlanItem = (): PlannedItem => ({
     ui: {
       model: 'move',
       section: 'move',
-      name: 'rule.dnd-5e-2024.base.move.name'
+      name: 'rule.dnd-5e-2024.movement.move-walk.name'
     },
     vars: {
       distance: { default: { fact: 'character.movement.remaining' } },

@@ -320,3 +320,6 @@ The architecture supports:
 - Allow stacking effects
 - Visibility of effects
 - Fix main page length
+- Custom rule editor
+- Rule generator AI prompt
+- RG YAML anchors cross-file
