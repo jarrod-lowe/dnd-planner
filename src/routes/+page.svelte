@@ -7,6 +7,7 @@
   import PlayCharacterMode from '$lib/components/character/PlayCharacterMode.svelte';
   import CreateCharacterDialog from '$lib/components/character/CreateCharacterDialog.svelte';
   import ManageRulesMode from '$lib/components/character/ManageRulesMode.svelte';
+  import EditCustomRules from '$lib/components/character/EditCustomRules.svelte';
   import { playStore } from '$lib/play/playStore.svelte';
   import { getCache } from '$lib/rules/ruleGroupCache.svelte';
   import { SvelteMap } from 'svelte/reactivity';
@@ -17,6 +18,7 @@
   let createError = $state<string | null>(null);
   let hasLoadedCharacters = $state(false);
   let manageRulesActive = $state(false);
+  let editCustomRulesActive = $state(false);
 
   // Compute locked rule groups: assigned groups that are required by other assigned groups
   let lockedRuleGroups = $derived.by(() => {
@@ -86,14 +88,23 @@
       onLogout={() => authStore.logout()}
       version="v0.0.0"
       selectedCharacter={characterStore.state.selectedCharacter}
-      showManageRules={!!characterStore.state.selectedCharacter && !manageRulesActive}
+      showManageRules={!!characterStore.state.selectedCharacter &&
+        !manageRulesActive &&
+        !editCustomRulesActive}
       onManageRules={() => {
         manageRulesActive = true;
       }}
     />
     <main id="main-content" class="app-layout__body">
       {#if characterStore.state.selectedCharacter}
-        {#if manageRulesActive}
+        {#if editCustomRulesActive}
+          <EditCustomRules
+            character={characterStore.state.selectedCharacter}
+            onBack={() => {
+              editCustomRulesActive = false;
+            }}
+          />
+        {:else if manageRulesActive}
           <ManageRulesMode
             character={characterStore.state.selectedCharacter}
             assignedRuleGroupIds={playStore.state.ruleGroupIds}
@@ -106,6 +117,9 @@
             }}
             onBack={() => {
               manageRulesActive = false;
+            }}
+            onEditCustomRules={() => {
+              editCustomRulesActive = true;
             }}
           />
         {:else}

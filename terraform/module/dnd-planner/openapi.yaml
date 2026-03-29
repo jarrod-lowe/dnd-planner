@@ -842,3 +842,104 @@ paths:
                   ]
                 }
                 #end
+
+  /rule-groups/{ruleGroupId}:
+    post:
+      summary: Update rules in a rule group
+      description: Replace the rules array of a rule group owned by the authenticated user
+      operationId: updateRuleGroupRules
+      parameters:
+        - name: ruleGroupId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - rules
+              properties:
+                rules:
+                  type: array
+                  description: The replacement rules array
+      responses:
+        '204':
+          description: Rules updated successfully
+        '400':
+          description: Bad request - missing rules field
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized - authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '403':
+          description: Forbidden - rule group not found or not owned by user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+      x-amazon-apigateway-integration:
+        type: aws
+        credentials: '${api_gateway_role_arn}'
+        uri: 'arn:aws:apigateway:${aws_region}:dynamodb:action/UpdateItem'
+        httpMethod: POST
+        requestTemplates:
+          application/json: |
+            #set($body = $input.path('$'))
+            #set($rules = $body.rules)
+            #if(!$rules)
+              #set($context.responseOverride.status = 400)
+              {"error": "rules field is required"}
+            #else
+              #set($userId = $context.authorizer.claims.sub)
+              #set($ruleGroupId = $input.params('ruleGroupId'))
+              {
+                "TableName": "${dynamodb_table_name}",
+                "Key": {
+                  "PK": {"S": "RULEGROUP#$ruleGroupId"},
+                  "SK": {"S": "META#"}
+                },
+                "UpdateExpression": "SET #r = :rules, #u = :updatedAt",
+                "ConditionExpression": "attribute_exists(PK) AND #u2 = :userId",
+                "ExpressionAttributeNames": {
+                  "#r": "rules",
+                  "#u": "updatedAt",
+                  "#u2": "userId"
+                },
+                "ExpressionAttributeValues": {
+                  ":rules": {"S": "$util.escapeJavaScript($input.json('$.rules')).replaceAll("\\'","'")"},
+                  ":updatedAt": {"S": "$context.requestTime"},
+                  ":userId": {"S": "$userId"}
+                }
+              }
+            #end
+        responses:
+          default:
+            statusCode: '204'
+            responseTemplates:
+              application/json: |
+                #if($context.responseOverride.status == 400)
+                $input.path('$')
+                #end
+          '.*ConditionalCheckFailedException.*':
+            statusCode: '403'
+            responseTemplates:
+              application/json: '{"error": "Forbidden"}'

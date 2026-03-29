@@ -133,7 +133,17 @@
     "ruleGroupAssigned": "{name} DIvI'",
     "ruleGroupUnassigned": "{name} DIvI'be'",
     "toggleError": "DIvI' DIvI' laHbe'. yInIDqa'.",
-    "requiredBy": "DIvI': {{names}}"
+    "requiredBy": "DIvI': {{names}}",
+    "editCustomRules": "DIvI' chu' DIvI'",
+    "customRulesTitle": "DIvI' chu'",
+    "backToManageRules": "DIvI' SeH HI'egh",
+    "saveRules": "pol",
+    "resetRules": "chID",
+    "saving": "pollI'...",
+    "saveError": "DIvI' pol laHbe'. yInIDqa'.",
+    "validationErrors": "DIvI' DIvI'be'",
+    "yamlSyntaxError": "YAML DIvI'be'",
+    "noErrors": "DIvI'be'"
   },
   "play": {
     "backToSelection": "nuv DIvI' HI'egh",

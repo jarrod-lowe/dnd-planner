@@ -29,3 +29,6 @@ playwright-report/
 # Python virtual environment
 .venv/
 scripts/__pycache__/
+
+# Derived static assets
+static/data/

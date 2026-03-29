@@ -133,7 +133,17 @@
     "ruleGroupAssigned": "{name} assigned",
     "ruleGroupUnassigned": "{name} not assigned",
     "toggleError": "Failed to update rule group. Please try again.",
-    "requiredBy": "Required by: {{names}}"
+    "requiredBy": "Required by: {{names}}",
+    "editCustomRules": "Edit Custom Rules",
+    "customRulesTitle": "Custom Rules",
+    "backToManageRules": "Back to Manage Rules",
+    "saveRules": "Save",
+    "resetRules": "Reset",
+    "saving": "Saving...",
+    "saveError": "Failed to save rules. Please try again.",
+    "validationErrors": "Validation Errors",
+    "yamlSyntaxError": "YAML Syntax Error",
+    "noErrors": "No errors"
   },
   "play": {
     "backToSelection": "Back to Character Selection",
