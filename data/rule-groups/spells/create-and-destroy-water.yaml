@@ -91,6 +91,10 @@ ruleGroups:
                         subtract: true
                       - type: advertiseEffect
                         self: true
+                        when:
+                          fact: rest.long
+                          operator: equals
+                          value: 0
                 - type: setClear
                   target:
                     var: errors

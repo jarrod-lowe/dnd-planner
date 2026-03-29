@@ -11,6 +11,38 @@ ruleGroups:
         description: DIvI' Hol D&D 5e 2024 raD naQ
         keywords: [ratlh, rutlh, Do, DIvI']
     rules:
+      # Long Rest - reset flag to 0 each turn
+      - id: rest-long-reset
+        phase: early
+        group:
+          - rest-reset
+        activities:
+          - type: numberSet
+            target:
+              fact: rest.long
+            source:
+              number: 0
+
+      # Long Rest - offer the long rest action
+      - id: offer-long-rest
+        activities:
+          - type: offerRule
+            rule:
+              id: long-rest
+              ui:
+                model: rest
+                section: rest
+                name: rule.dnd-5e-2024.base.long-rest.name
+              phase: early
+              after:
+                - group: rest-reset
+              activities:
+                - type: numberSet
+                  target:
+                    fact: rest.long
+                  source:
+                    number: 1
+
       # Turn Counter - increments each turn, never resets
       - id: turn-counter-increment
         phase: early

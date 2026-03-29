@@ -748,5 +748,233 @@ describe('evaluate', () => {
       expect(result.availableRules).toHaveLength(1);
       expect(result.availableRules[0].legal).toBe(false);
     });
+
+    it('self-sustaining effect expires when long rest is planned', () => {
+      // Early phase: reset rest.long to 0
+      const restResetRule: Rule = {
+        id: 'rest-long-reset',
+        phase: 'early',
+        group: ['rest-reset'],
+        activities: [
+          {
+            id: 'reset-rest',
+            type: 'numberSet',
+            target: { fact: 'rest.long' },
+            source: { number: 0 }
+          }
+        ]
+      };
+
+      // Early phase: long rest action sets rest.long to 1 (when planned)
+      const longRestRule: Rule = {
+        id: 'long-rest',
+        phase: 'early',
+        after: [{ group: 'rest-reset' }],
+        activities: [
+          {
+            id: 'set-rest',
+            type: 'numberSet',
+            target: { fact: 'rest.long' },
+            source: { number: 1 }
+          }
+        ]
+      };
+
+      // Early phase: self-sustaining effect that only re-advertises if NOT long resting
+      const effect: Rule = {
+        id: 'effect-slot',
+        phase: 'early',
+        after: [{ group: 'slots-set' }],
+        activities: [
+          {
+            id: 'consume',
+            type: 'numberIncrement',
+            target: { fact: 'slots.remaining' },
+            source: { number: 1 },
+            subtract: true
+          },
+          {
+            id: 'sustain',
+            type: 'advertiseEffect',
+            self: true,
+            when: { fact: 'rest.long', operator: 'equals', value: 0 }
+          }
+        ]
+      };
+
+      // Early phase: reset slots
+      const resetRule: Rule = {
+        id: 'reset-slots',
+        phase: 'early',
+        group: ['slots-set'],
+        activities: [
+          {
+            id: 'copy',
+            type: 'numberCopy',
+            target: { fact: 'slots.remaining' },
+            source: { fact: 'slots.total' }
+          }
+        ]
+      };
+
+      // Long rest turn: effect should NOT re-advertise
+      const result = evaluate({
+        schemaVersion: 1,
+        rules: {
+          standing: [resetRule, restResetRule],
+          planned: [longRestRule],
+          effects: [effect]
+        },
+        state: { facts: { 'slots.total': 4, 'slots.remaining': 3 } }
+      });
+
+      // Effect ran (subtracted 1 from slots) but did NOT re-advertise
+      expect(result.effects).toHaveLength(0);
+    });
+
+    it('multi-turn long rest restores spell slots', () => {
+      // Simulates: cast spell → effect persists → long rest → slots restored
+
+      // --- Shared rules ---
+      const resetRule: Rule = {
+        id: 'reset-slots',
+        phase: 'early',
+        group: ['slots-set'],
+        activities: [
+          {
+            id: 'copy',
+            type: 'numberCopy',
+            target: { fact: 'slots.remaining' },
+            source: { fact: 'slots.total' }
+          }
+        ]
+      };
+
+      const restResetRule: Rule = {
+        id: 'rest-long-reset',
+        phase: 'early',
+        group: ['rest-reset'],
+        activities: [
+          {
+            id: 'reset-rest',
+            type: 'numberSet',
+            target: { fact: 'rest.long' },
+            source: { number: 0 }
+          }
+        ]
+      };
+
+      const longRestRule: Rule = {
+        id: 'long-rest',
+        phase: 'early',
+        after: [{ group: 'rest-reset' }],
+        activities: [
+          {
+            id: 'set-rest',
+            type: 'numberSet',
+            target: { fact: 'rest.long' },
+            source: { number: 1 }
+          }
+        ]
+      };
+
+      const spellRule: Rule = {
+        id: 'cast-spell',
+        activities: [
+          {
+            id: 'consume-slot',
+            type: 'numberIncrement',
+            target: { fact: 'slots.remaining' },
+            source: { number: 1 },
+            subtract: true
+          },
+          {
+            id: 'advertise',
+            type: 'advertiseEffect',
+            rule: {
+              id: 'effect-slot',
+              phase: 'early',
+              after: [{ group: 'slots-set' }],
+              activities: [
+                {
+                  id: 'consume',
+                  type: 'numberIncrement',
+                  target: { fact: 'slots.remaining' },
+                  source: { number: 1 },
+                  subtract: true
+                },
+                {
+                  id: 'sustain',
+                  type: 'advertiseEffect',
+                  self: true,
+                  when: { fact: 'rest.long', operator: 'equals', value: 0 }
+                }
+              ]
+            }
+          }
+        ]
+      };
+
+      // === Turn 1: Cast spell ===
+      const result1 = evaluate({
+        schemaVersion: 1,
+        rules: {
+          standing: [resetRule, restResetRule],
+          planned: [spellRule],
+          effects: []
+        },
+        state: { facts: { 'slots.total': 2, 'slots.remaining': 2 } }
+      });
+
+      // Reset to 2, spell -1 = 1
+      expect(result1.facts['slots.remaining']).toBe(1);
+      expect(result1.effects).toHaveLength(1);
+
+      // === Turn 2: Effect persists ===
+      const result2 = evaluate({
+        schemaVersion: 1,
+        rules: {
+          standing: [resetRule, restResetRule],
+          planned: [],
+          effects: result1.effects
+        },
+        state: { facts: result1.facts }
+      });
+
+      // Reset to 2, effect -1 = 1
+      expect(result2.facts['slots.remaining']).toBe(1);
+      expect(result2.effects).toHaveLength(1);
+
+      // === Turn 3: Long Rest — effect should NOT re-advertise ===
+      const result3 = evaluate({
+        schemaVersion: 1,
+        rules: {
+          standing: [resetRule, restResetRule],
+          planned: [longRestRule],
+          effects: result2.effects
+        },
+        state: { facts: result2.facts }
+      });
+
+      // Reset to 2, effect -1 = 1 (effect still ran this turn)
+      expect(result3.facts['slots.remaining']).toBe(1);
+      // But effect did NOT re-advertise
+      expect(result3.effects).toHaveLength(0);
+
+      // === Turn 4: After long rest — slots fully restored ===
+      const result4 = evaluate({
+        schemaVersion: 1,
+        rules: {
+          standing: [resetRule, restResetRule],
+          planned: [],
+          effects: result3.effects
+        },
+        state: { facts: result3.facts }
+      });
+
+      // Reset to 2, no effects to subtract = 2
+      expect(result4.facts['slots.remaining']).toBe(2);
+      expect(result4.effects).toHaveLength(0);
+    });
   });
 });
