@@ -89,9 +89,7 @@ ruleGroups:
                     var: distance
                   subtract: true
                 # Clear errors before checking
-                - type: setClear
-                  target:
-                    var: errors
+                - *error-clear
                 # Track illegal state (movement went negative)
                 - type: setAdd
                   target:
@@ -150,9 +148,7 @@ ruleGroups:
                     var: distance
                   subtract: true
                 # Clear errors before checking
-                - type: setClear
-                  target:
-                    var: errors
+                - *error-clear
                 # Track illegal state (movement went negative)
                 - type: setAdd
                   target:
@@ -217,9 +213,7 @@ ruleGroups:
                   source:
                     var: distance
                   subtract: true
-                - type: setClear
-                  target:
-                    var: errors
+                - *error-clear
                 - type: setAdd
                   target:
                     var: errors
@@ -298,9 +292,7 @@ ruleGroups:
                   source:
                     var: distance
                   subtract: true
-                - type: setClear
-                  target:
-                    var: errors
+                - *error-clear
                 - type: setAdd
                   target:
                     var: errors
@@ -365,9 +357,7 @@ ruleGroups:
                   source:
                     var: distance
                   subtract: true
-                - type: setClear
-                  target:
-                    var: errors
+                - *error-clear
                 - type: setAdd
                   target:
                     var: errors

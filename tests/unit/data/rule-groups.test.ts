@@ -28,13 +28,14 @@ interface RuleGroupsFile {
 }
 
 /**
- * Find all YAML files recursively in a directory
+ * Find all YAML files recursively in a directory, excluding _shared directories
  */
 function findYamlFiles(dir: string): string[] {
   const files: string[] = [];
   const entries = fs.readdirSync(dir, { withFileTypes: true });
 
   for (const entry of entries) {
+    if (entry.name === '_shared') continue;
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       files.push(...findYamlFiles(fullPath));
@@ -47,11 +48,23 @@ function findYamlFiles(dir: string): string[] {
 }
 
 /**
- * Load and parse a YAML file
+ * Load shared anchor definitions from _shared/definitions.yaml
  */
-function loadYamlFile(filePath: string): RuleGroupsFile {
+function loadSharedDefinitions(dataDir: string): string {
+  const sharedFile = path.join(dataDir, '_shared', 'definitions.yaml');
+  if (fs.existsSync(sharedFile)) {
+    return fs.readFileSync(sharedFile, 'utf-8');
+  }
+  return '';
+}
+
+/**
+ * Load and parse a YAML file, prepending shared definitions for anchor resolution
+ */
+function loadYamlFile(filePath: string, sharedDefs: string): RuleGroupsFile {
   const content = fs.readFileSync(filePath, 'utf-8');
-  return yaml.load(content) as RuleGroupsFile;
+  const combined = sharedDefs ? sharedDefs + '\n' + content : content;
+  return yaml.load(combined) as RuleGroupsFile;
 }
 
 describe('rule groups translations', () => {
@@ -59,11 +72,14 @@ describe('rule groups translations', () => {
   let yamlFiles: string[];
   const allRuleGroups: { file: string; ruleGroup: RuleGroup }[] = [];
 
+  let sharedDefs: string;
+
   beforeAll(() => {
     yamlFiles = findYamlFiles(dataDir);
+    sharedDefs = loadSharedDefinitions(dataDir);
 
     for (const file of yamlFiles) {
-      const data = loadYamlFile(file);
+      const data = loadYamlFile(file, sharedDefs);
       if (data.ruleGroups) {
         for (const ruleGroup of data.ruleGroups) {
           allRuleGroups.push({ file: path.relative(process.cwd(), file), ruleGroup });
