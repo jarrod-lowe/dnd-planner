@@ -271,12 +271,27 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def load_shared_definitions(category_path: Path) -> str:
+    """Load shared YAML anchor definitions for a category."""
+    shared_file = category_path.parent / "_shared" / "definitions.yaml"
+    if shared_file.exists():
+        return shared_file.read_text()
+    return ""
+
+
 def compute_category_hash(category_path: Path) -> str:
     """Compute a combined hash of all YAML files in a category."""
     hasher = hashlib.sha256()
 
+    shared_defs = load_shared_definitions(category_path)
+    if shared_defs:
+        hasher.update(b"__shared__")
+        hasher.update(shared_defs.encode())
+
     yaml_files = sorted(category_path.rglob("*.yaml"))
     for yaml_file in yaml_files:
+        if "_shared" in yaml_file.parts:
+            continue
         with open(yaml_file, "rb") as f:
             content = f.read()
             hasher.update(yaml_file.name.encode())
@@ -288,14 +303,23 @@ def compute_category_hash(category_path: Path) -> str:
 def parse_rule_groups(category_path: Path, verbose: bool = False) -> list[dict[str, Any]]:
     """Parse all rule groups from YAML files in a category."""
     rule_groups = []
+    shared_defs = load_shared_definitions(category_path)
 
     yaml_files = sorted(category_path.rglob("*.yaml"))
     for yaml_file in yaml_files:
+        if "_shared" in yaml_file.parts:
+            continue
+
         if verbose:
             print(f"  Parsing {yaml_file.relative_to(category_path.parent)}")
 
         with open(yaml_file) as f:
-            data = yaml.safe_load(f)
+            content = f.read()
+
+        if shared_defs:
+            data = yaml.safe_load(shared_defs + "\n" + content)
+        else:
+            data = yaml.safe_load(content)
 
         if not data:
             continue

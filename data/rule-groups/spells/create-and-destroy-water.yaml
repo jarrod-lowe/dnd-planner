@@ -95,9 +95,7 @@ ruleGroups:
                           fact: rest.long
                           operator: equals
                           value: 0
-                - type: setClear
-                  target:
-                    var: errors
+                - *error-clear
                 - type: setAdd
                   target:
                     var: errors

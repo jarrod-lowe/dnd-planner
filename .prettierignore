@@ -7,3 +7,4 @@ test-results/
 playwright-report/
 *.min.js
 pnpm-lock.yaml
+data/rule-groups/
