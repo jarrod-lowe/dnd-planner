@@ -2,6 +2,7 @@
   import { slide } from 'svelte/transition';
   import { t } from '$lib/i18n';
   import ChoicePanel from './ChoicePanel.svelte';
+  import EffectPanel from './EffectPanel.svelte';
   import WarningIndicator from './WarningIndicator.svelte';
   import type { AvailableRuleEntry, Facts } from '$lib/rules-engine';
 
@@ -10,9 +11,10 @@
     followers: AvailableRuleEntry[];
     facts?: Facts;
     onAddToPlan: (entry: AvailableRuleEntry) => void;
+    readOnly?: boolean;
   }
 
-  let { leader, followers, facts = {}, onAddToPlan }: Props = $props();
+  let { leader, followers, facts = {}, onAddToPlan, readOnly = false }: Props = $props();
 
   let expanded = $state(false);
 
@@ -79,7 +81,11 @@
 
 <div class="packed-group">
   <!-- Leader panel -->
-  <ChoicePanel entry={leader} {facts} onTap={() => onAddToPlan(leader)} />
+  {#if readOnly}
+    <EffectPanel entry={leader} />
+  {:else}
+    <ChoicePanel entry={leader} {facts} onTap={() => onAddToPlan(leader)} />
+  {/if}
 
   <!-- Compact row for followers -->
   <button
@@ -110,52 +116,61 @@
       {#each followers as entry (entry.rule.id)}
         {@const uiModel = entry.rule.ui?.model as string | undefined}
         {@const warningInfo = getWarningInfo(entry)}
-        {@const moveMaxDistance =
-          uiModel === 'move' ? resolveVarDefault(entry, 'maxDistance') : undefined}
-        {@const moveCurrentDistance =
-          uiModel === 'move' ? resolveVarDefault(entry, 'distance') : undefined}
-        {@const sliderValue =
-          entry.rule.selections?.distance !== undefined
-            ? (entry.rule.selections.distance as number)
-            : (moveCurrentDistance ?? moveMaxDistance ?? 1)}
-        <button
-          type="button"
-          class="packed-group__slim-panel"
-          class:packed-group__slim-panel--warning={warningInfo.hasWarning}
-          onclick={() => handleFollowerTap(entry)}
-          aria-label={entry.rule.ui?.name
-            ? $t(entry.rule.ui.name as string)
-            : entry.rule.description || entry.rule.id}
-        >
-          {#if warningInfo.hasWarning && warningInfo.type}
-            <WarningIndicator type={warningInfo.type} message={warningInfo.message} />
-          {/if}
-
-          <div class="packed-group__slim-body">
-            {#if entry.rule.ui?.name}
-              <span class="packed-group__slim-title">{$t(entry.rule.ui.name as string)}</span>
-            {:else}
-              <span class="packed-group__slim-title">{entry.rule.description || entry.rule.id}</span
-              >
-            {/if}
-
-            {#if uiModel === 'move' && moveMaxDistance !== undefined}
-              <div class="packed-group__slim-model">
-                <input
-                  type="range"
-                  class="move-slider"
-                  min="0"
-                  max={moveMaxDistance}
-                  step="5"
-                  value={sliderValue}
-                  disabled
-                  aria-label={$t('play.choices.move.distance')}
-                />
-                <span class="move-value">{sliderValue} ft</span>
-              </div>
-            {/if}
+        {@const displayName = entry.rule.ui?.name ? $t(entry.rule.ui.name as string) : entry.rule.description || entry.rule.id}
+        {#if readOnly}
+          <div class="packed-group__slim-panel" aria-label={displayName}>
+            <div class="packed-group__slim-body">
+              <span class="packed-group__slim-title">{displayName}</span>
+            </div>
           </div>
-        </button>
+        {:else}
+          {@const moveMaxDistance =
+            uiModel === 'move' ? resolveVarDefault(entry, 'maxDistance') : undefined}
+          {@const moveCurrentDistance =
+            uiModel === 'move' ? resolveVarDefault(entry, 'distance') : undefined}
+          {@const sliderValue =
+            entry.rule.selections?.distance !== undefined
+              ? (entry.rule.selections.distance as number)
+              : (moveCurrentDistance ?? moveMaxDistance ?? 1)}
+          <button
+            type="button"
+            class="packed-group__slim-panel"
+            class:packed-group__slim-panel--warning={warningInfo.hasWarning}
+            onclick={() => handleFollowerTap(entry)}
+            aria-label={entry.rule.ui?.name
+              ? $t(entry.rule.ui.name as string)
+              : entry.rule.description || entry.rule.id}
+          >
+            {#if warningInfo.hasWarning && warningInfo.type}
+              <WarningIndicator type={warningInfo.type} message={warningInfo.message} />
+            {/if}
+
+            <div class="packed-group__slim-body">
+              {#if entry.rule.ui?.name}
+                <span class="packed-group__slim-title">{$t(entry.rule.ui.name as string)}</span>
+              {:else}
+                <span class="packed-group__slim-title">{entry.rule.description || entry.rule.id}</span
+                >
+              {/if}
+
+              {#if uiModel === 'move' && moveMaxDistance !== undefined}
+                <div class="packed-group__slim-model">
+                  <input
+                    type="range"
+                    class="move-slider"
+                    min="0"
+                    max={moveMaxDistance}
+                    step="5"
+                    value={sliderValue}
+                    disabled
+                    aria-label={$t('play.choices.move.distance')}
+                  />
+                  <span class="move-value">{sliderValue} ft</span>
+                </div>
+              {/if}
+            </div>
+          </button>
+        {/if}
       {/each}
     </div>
   {/if}

@@ -470,6 +470,50 @@ describe('evaluate', () => {
       expect(result.effects[0].id).toBe('effect-slot-consumed-1');
     });
 
+    it('new effects get unique IDs across turns (counter seeded from existing)', () => {
+      // Regression: advertisedEffectCounter used to reset to 0 each evaluation,
+      // causing new effects to get the same ID as committed effects from prior turns.
+      // The fix seeds the counter from the max numeric suffix in input.effects.
+
+      const spellRule: Rule = {
+        id: 'cast-spell',
+        activities: [
+          {
+            id: 'advertise',
+            type: 'advertiseEffect',
+            rule: {
+              id: 'effect-slot',
+              phase: 'normal',
+              activities: [{ id: 'sustain', type: 'advertiseEffect', self: true }]
+            }
+          }
+        ]
+      };
+
+      // === Turn 1: Cast spell → get effect with id effect-slot-1 ===
+      const result1 = evaluate({
+        schemaVersion: 1,
+        rules: { standing: [], planned: [spellRule], effects: [] },
+        state: { facts: {} }
+      });
+      expect(result1.effects).toHaveLength(1);
+      expect(result1.effects[0].id).toBe('effect-slot-1');
+
+      // === Turn 2: Cast spell again → should get a NEW effect with unique ID ===
+      const result2 = evaluate({
+        schemaVersion: 1,
+        rules: { standing: [], planned: [spellRule], effects: result1.effects },
+        state: { facts: result1.facts }
+      });
+
+      // Self-sustaining old effect + newly advertised effect = 2
+      expect(result2.effects).toHaveLength(2);
+      // New effect gets a unique ID (not colliding with existing -1)
+      const effectIds = result2.effects.map((e) => e.id).sort();
+      expect(effectIds).toContain('effect-slot-1');
+      expect(effectIds).toContain('effect-slot-2');
+    });
+
     it('self-sustaining effect re-advertises itself in output.effects', () => {
       const effectRule: Rule = {
         id: 'effect-slot-1',
@@ -600,6 +644,91 @@ describe('evaluate', () => {
       expect(result3.facts['slots.remaining']).toBe(2);
       // Old effect re-advertised + new effect advertised = 2
       expect(result3.effects).toHaveLength(2);
+    });
+
+    it('early-phase effects consume slots before normal-phase offer checks legality', () => {
+      // Regression: effects in normal phase ran concurrently with offer rules,
+      // so the offer saw pre-consumption slot values and incorrectly marked
+      // the spell as legal. Moving effects to early phase (after slot reset)
+      // ensures offers see the actual remaining slots.
+
+      // Early phase: reset remaining = total
+      const resetRule: Rule = {
+        id: 'reset-slots',
+        phase: 'early',
+        group: ['slots-set'],
+        activities: [
+          {
+            id: 'copy',
+            type: 'numberCopy',
+            target: { fact: 'slots.remaining' },
+            source: { fact: 'slots.total' }
+          }
+        ]
+      };
+
+      // Normal phase: offer checks if slots available
+      const offerRule: Rule = {
+        id: 'offer-spell',
+        after: [{ group: 'slots-set' }],
+        activities: [
+          {
+            id: 'offer',
+            type: 'offerRule',
+            legalWhen: [
+              {
+                condition: { fact: 'slots.remaining', operator: 'greaterThan', value: 0 },
+                illegalDiagnostics: [{ code: 'no_slots', severity: 'error' }]
+              }
+            ],
+            rule: {
+              id: 'cast-spell',
+              activities: [
+                { id: 'consume', type: 'numberIncrement', target: { fact: 'slots.remaining' }, source: { number: 1 }, subtract: true }
+              ]
+            }
+          }
+        ]
+      };
+
+      // Two committed effects, each consuming 1 slot — must run in early phase
+      // after the reset so the offer sees post-consumption values.
+      const effect1: Rule = {
+        id: 'effect-slot-1',
+        phase: 'early',
+        after: [{ group: 'slots-set' }],
+        activities: [
+          { id: 'consume', type: 'numberIncrement', target: { fact: 'slots.remaining' }, source: { number: 1 }, subtract: true },
+          { id: 'sustain', type: 'advertiseEffect', self: true }
+        ]
+      };
+      const effect2: Rule = {
+        id: 'effect-slot-2',
+        phase: 'early',
+        after: [{ group: 'slots-set' }],
+        activities: [
+          { id: 'consume', type: 'numberIncrement', target: { fact: 'slots.remaining' }, source: { number: 1 }, subtract: true },
+          { id: 'sustain', type: 'advertiseEffect', self: true }
+        ]
+      };
+
+      const result = evaluate({
+        schemaVersion: 1,
+        rules: {
+          standing: [resetRule, offerRule],
+          planned: [],
+          effects: [effect1, effect2]
+        },
+        state: { facts: { 'slots.total': 2, 'slots.remaining': 0 } }
+      });
+
+      // After reset: remaining = total = 2
+      // After effects: remaining = 2 - 1 - 1 = 0
+      expect(result.facts['slots.remaining']).toBe(0);
+
+      // Offer should see 0 remaining and mark spell as ILLEGAL
+      expect(result.availableRules).toHaveLength(1);
+      expect(result.availableRules[0].legal).toBe(false);
     });
   });
 });

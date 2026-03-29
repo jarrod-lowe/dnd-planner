@@ -12,7 +12,7 @@ describe('PlayLayout', () => {
         stats: emptySnippet,
         choices: emptySnippet,
         plan: emptySnippet,
-        journal: emptySnippet
+        effects: emptySnippet
       }
     });
 
@@ -26,7 +26,7 @@ describe('PlayLayout', () => {
         stats: emptySnippet,
         choices: emptySnippet,
         plan: emptySnippet,
-        journal: emptySnippet
+        effects: emptySnippet
       }
     });
 
@@ -34,7 +34,7 @@ describe('PlayLayout', () => {
     expect(container.querySelector('.play-layout__stats')).toBeTruthy();
     expect(container.querySelector('.play-layout__choices')).toBeTruthy();
     expect(container.querySelector('.play-layout__plan')).toBeTruthy();
-    expect(container.querySelector('.play-layout__journal')).toBeTruthy();
+    expect(container.querySelector('.play-layout__effects')).toBeTruthy();
   });
 
   it('uses semantic section elements for columns', () => {
@@ -43,7 +43,7 @@ describe('PlayLayout', () => {
         stats: emptySnippet,
         choices: emptySnippet,
         plan: emptySnippet,
-        journal: emptySnippet
+        effects: emptySnippet
       }
     });
 
@@ -57,7 +57,7 @@ describe('PlayLayout', () => {
         stats: emptySnippet,
         choices: emptySnippet,
         plan: emptySnippet,
-        journal: emptySnippet
+        effects: emptySnippet
       }
     });
 

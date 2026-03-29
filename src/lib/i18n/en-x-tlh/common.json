@@ -4,6 +4,9 @@
       "cast-create-and-destroy-water": {
         "name": "bIQ chenmoH 'ej HochHom"
       },
+      "effect-create-and-destroy-water-l1": {
+        "name": "wa' DIvI' mugh loS"
+      },
       "offer-create-and-destroy-water": {
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
@@ -169,9 +172,9 @@
       "remove": "teq",
       "endTurn": "turna'ghach"
     },
-    "journal": {
-      "title": "DIvI' teywI'",
-      "todo": "TODO"
+    "effects": {
+      "title": "DIvI' SeH",
+      "empty": "SeHbe'"
     },
     "error": {
       "loadRuleGroups": "nuv DIvI' laHbe'"

@@ -95,7 +95,7 @@ vi.mock('$lib/components/play/PlanColumn.svelte', () => ({
   default: vi.fn()
 }));
 
-vi.mock('$lib/components/play/JournalColumn.svelte', () => ({
+vi.mock('$lib/components/play/EffectsColumn.svelte', () => ({
   default: vi.fn()
 }));
 
