@@ -57,18 +57,18 @@ ruleGroups:
 
 ### Key Fields
 
-| Field | Level | Required | Description |
-|-------|-------|----------|-------------|
-| `id` | ruleGroup | yes | Unique identifier (e.g., `spellcasting`, `class-paladin-level1`) |
-| `translations` | ruleGroup | yes | Must include both `en` and `en-x-tlh` locales |
-| `requires` | ruleGroup | no | IDs of other rule groups that must also be assigned |
-| `rules` | ruleGroup | no | Array of rules |
-| `id` | rule | yes | Unique rule identifier |
-| `phase` | rule | no | `early`, `normal` (default), or `safeguard` |
-| `group` | rule | no | Groups this rule belongs to (for ordering) |
-| `after` | rule | no | Groups this rule must wait for before executing |
-| `when` | rule | no | Conditions that must be true for the rule to execute |
-| `activities` | rule | yes | Operations to perform when the rule executes |
+| Field          | Level     | Required | Description                                                      |
+| -------------- | --------- | -------- | ---------------------------------------------------------------- |
+| `id`           | ruleGroup | yes      | Unique identifier (e.g., `spellcasting`, `class-paladin-level1`) |
+| `translations` | ruleGroup | yes      | Must include both `en` and `en-x-tlh` locales                    |
+| `requires`     | ruleGroup | no       | IDs of other rule groups that must also be assigned              |
+| `rules`        | ruleGroup | no       | Array of rules                                                   |
+| `id`           | rule      | yes      | Unique rule identifier                                           |
+| `phase`        | rule      | no       | `early`, `normal` (default), or `safeguard`                      |
+| `group`        | rule      | no       | Groups this rule belongs to (for ordering)                       |
+| `after`        | rule      | no       | Groups this rule must wait for before executing                  |
+| `when`         | rule      | no       | Conditions that must be true for the rule to execute             |
+| `activities`   | rule      | yes      | Operations to perform when the rule executes                     |
 
 ---
 
@@ -127,7 +127,7 @@ File order does not matter. Rule order within a file does not matter. Only `grou
 - id: proficiency-reset
   phase: early
   group:
-    - proficiency-base          # This rule DECLARES the group
+    - proficiency-base # This rule DECLARES the group
   activities:
     - type: numberSet
       target:
@@ -143,7 +143,7 @@ File order does not matter. Rule order within a file does not matter. Only `grou
 - id: paladin-level1-proficiency
   phase: early
   after:
-    - group: proficiency-base   # Wait for the reset to complete
+    - group: proficiency-base # Wait for the reset to complete
   activities:
     - type: numberIncrement
       target:
@@ -174,8 +174,8 @@ When you need other rule groups to both **contribute to** a value AND have a sub
 - id: spellcasting-slots-total
   phase: early
   group:
-    - spellcasting-slots-total   # Group A: for modifiers to depend on
-    - spellcasting-slots-set     # Group B: for modifiers to join
+    - spellcasting-slots-total # Group A: for modifiers to depend on
+    - spellcasting-slots-set # Group B: for modifiers to join
   activities:
     - type: numberSet
       target:
@@ -187,9 +187,9 @@ When you need other rule groups to both **contribute to** a value AND have a sub
 - id: paladin-level1-spell-slots
   phase: early
   after:
-    - group: spellcasting-slots-total  # Wait for the reset
+    - group: spellcasting-slots-total # Wait for the reset
   group:
-    - spellcasting-slots-set           # Join this group (so others can wait for it)
+    - spellcasting-slots-set # Join this group (so others can wait for it)
   activities:
     - type: numberIncrement
       target:
@@ -201,7 +201,7 @@ When you need other rule groups to both **contribute to** a value AND have a sub
 - id: spellcasting-slots-reset
   phase: early
   after:
-    - group: spellcasting-slots-set    # Wait for ALL modifiers to settle
+    - group: spellcasting-slots-set # Wait for ALL modifiers to settle
   activities:
     - type: numberCopy
       source:
@@ -225,12 +225,12 @@ This creates the chain: reset(0) -> modify(+2) -> copy(2 to remaining). The two 
 
 These are two different dependency mechanisms at different levels:
 
-| | `requires` (ruleGroup level) | `after` (rule level) |
-|---|---|---|
-| **Purpose** | Ensure another rule group is assigned | Control execution order within a phase |
-| **Scope** | Character assignment (composition) | Single evaluation cycle |
-| **Mechanism** | Auto-assigns dependency when parent is assigned | Waits for group settlement |
-| **Example** | Paladin requires spellcasting | Proficiency increment waits for proficiency reset |
+|               | `requires` (ruleGroup level)                    | `after` (rule level)                              |
+| ------------- | ----------------------------------------------- | ------------------------------------------------- |
+| **Purpose**   | Ensure another rule group is assigned           | Control execution order within a phase            |
+| **Scope**     | Character assignment (composition)              | Single evaluation cycle                           |
+| **Mechanism** | Auto-assigns dependency when parent is assigned | Waits for group settlement                        |
+| **Example**   | Paladin requires spellcasting                   | Proficiency increment waits for proficiency reset |
 
 ### `requires` — Composition Dependency
 
@@ -241,11 +241,11 @@ When a user assigns a rule group with `requires`, the system automatically assig
 ruleGroups:
   - id: class-paladin-level1
     requires:
-      - spellcasting           # Spellcasting must also be assigned
+      - spellcasting # Spellcasting must also be assigned
     rules:
       - id: paladin-level1-spell-slots
         after:
-          - group: spellcasting-slots-total  # Fine-grained ordering
+          - group: spellcasting-slots-total # Fine-grained ordering
         group:
           - spellcasting-slots-set
         activities:
@@ -271,6 +271,7 @@ See Section 3. This controls the order rules execute within a single phase.
 **Use when:** Multiple rule groups contribute to a single value (e.g., proficiency bonus, HP).
 
 **Base rule group** (reset to base value):
+
 ```yaml
 - id: proficiency-reset
   phase: early
@@ -285,6 +286,7 @@ See Section 3. This controls the order rules execute within a single phase.
 ```
 
 **Contributing rule group** (add to the value):
+
 ```yaml
 - id: paladin-level1-proficiency
   phase: early
@@ -344,12 +346,12 @@ Chain: `reset total to 0` -> `modifiers increment total` -> `copy total to remai
     - group: half-movement-remaining
   activities:
     - type: offerRule
-      legalWhen:                          # All conditions must pass for legality
+      legalWhen: # All conditions must pass for legality
         - condition:
             fact: character.movement.remaining
             operator: greaterThanOrEqual
             value: 5
-          illegalDiagnostics:             # Shown when this condition fails
+          illegalDiagnostics: # Shown when this condition fails
             - code: rule.dnd-5e-2024.movement.action-move-walk-offer.out_of_movement
               severity: error
       rule:
@@ -359,10 +361,10 @@ Chain: `reset total to 0` -> `modifiers increment total` -> `copy total to remai
           section: move
           name: rule.dnd-5e-2024.movement.move-walk.name
         group:
-          - move                          # Consume this group so others can wait
+          - move # Consume this group so others can wait
         vars:
           distance:
-            capture: true                 # Snapshot value when added to plan
+            capture: true # Snapshot value when added to plan
             default:
               fact: character.movement.remaining
         activities:
@@ -370,11 +372,12 @@ Chain: `reset total to 0` -> `modifiers increment total` -> `copy total to remai
             target:
               fact: character.movement.remaining
             source:
-              var: distance               # Uses captured or default value
+              var: distance # Uses captured or default value
             subtract: true
 ```
 
 Key points:
+
 - `offerRule` does NOT execute the inner rule. It offers it as a UI choice.
 - `legalWhen` is an array — every entry's condition must pass.
 - `illegalDiagnostics` provides i18n error keys for failed conditions.
@@ -388,7 +391,7 @@ Key points:
 ```yaml
 # Only offer swim when swim cost equals 1
 - id: action-move-swim-offer
-  when:                                   # Applicability gate — rule doesn't execute at all
+  when: # Applicability gate — rule doesn't execute at all
     - fact: character.movement.swim.cost
       operator: equals
       value: 1
@@ -435,7 +438,7 @@ The `*error-clear` anchor is defined in `_shared/definitions.yaml`. Always clear
 - id: compute-half-movement-total
   phase: normal
   group:
-    - half-movement-total                 # Others can wait on this
+    - half-movement-total # Others can wait on this
   activities:
     - type: numberFunction
       function: multiply
@@ -457,7 +460,7 @@ By declaring a `group`, other rules can use `after: [{group: half-movement-total
 - id: set-base-distance
   phase: early
   group:
-    - species-constants                   # Movement rules wait for this
+    - species-constants # Movement rules wait for this
   activities:
     - type: numberSet
       target:
@@ -526,6 +529,7 @@ activities:
 ```
 
 Key points:
+
 - `advertiseEffect` creates a rule that persists in `effects` across evaluations.
 - `self: true` re-advertises the effect each turn (self-sustaining).
 - The effect expires when its `when` condition is false (omitting `advertiseEffect self: true` also removes it).
@@ -572,11 +576,13 @@ i18n keys follow the pattern: `rule.{rule-group-id}.{rule-id}.{field}`
 Place reusable YAML anchors in `data/rule-groups/_shared/definitions.yaml`. This file is prepended before parsing, so anchors are available in all rule group files.
 
 Currently available:
+
 - `*error-clear` — Clears the `errors` var
 
 ### Group Naming
 
 Group names should describe what they gate:
+
 - `proficiency-base` — The base proficiency reset
 - `spellcasting-slots-total` — When slot totals are ready
 - `spellcasting-slots-set` — When all slot modifications are done
@@ -586,6 +592,7 @@ Group names should describe what they gate:
 ### Rule ID Naming
 
 Rule IDs should be descriptive and namespaced:
+
 - `{category}-{feature}-{action}`: `action-move-walk-offer`
 - `{category}-{feature}-{modifier}`: `paladin-level1-proficiency`
 - `{category}-{reset}`: `proficiency-reset`, `spellcasting-slots-reset`
@@ -619,29 +626,29 @@ Rule IDs should be descriptive and namespaced:
 
 ## 8. Activity Types Reference
 
-| Type | Description | Key Fields |
-|------|-------------|------------|
-| `numberSet` | Set fact to value (overwrite) | `target.fact`, `source` |
-| `numberIncrement` | Add/subtract from fact | `target.fact`, `source`, `subtract?: true` |
-| `numberCopy` | Copy value between facts | `source.fact`, `target.fact` |
-| `numberSum` | Sum multiple sources | `target.fact`, `sources[]` |
-| `numberFunction` | Apply named function | `function`, `sources[]`, `target.fact`, `args` |
-| `emitEvent` | Emit transient event | `event` |
-| `generateRule` | Create rule for later phase | `rule` |
-| `offerRule` | Offer choice to UI | `rule`, `legalWhen[]` |
-| `setClear` | Clear var array | `target.var` |
-| `setAdd` | Add string to var array | `target.var`, `source.string` |
-| `advertiseEffect` | Persistent cross-turn effect | `rule` or `self: true` |
+| Type              | Description                   | Key Fields                                     |
+| ----------------- | ----------------------------- | ---------------------------------------------- |
+| `numberSet`       | Set fact to value (overwrite) | `target.fact`, `source`                        |
+| `numberIncrement` | Add/subtract from fact        | `target.fact`, `source`, `subtract?: true`     |
+| `numberCopy`      | Copy value between facts      | `source.fact`, `target.fact`                   |
+| `numberSum`       | Sum multiple sources          | `target.fact`, `sources[]`                     |
+| `numberFunction`  | Apply named function          | `function`, `sources[]`, `target.fact`, `args` |
+| `emitEvent`       | Emit transient event          | `event`                                        |
+| `generateRule`    | Create rule for later phase   | `rule`                                         |
+| `offerRule`       | Offer choice to UI            | `rule`, `legalWhen[]`                          |
+| `setClear`        | Clear var array               | `target.var`                                   |
+| `setAdd`          | Add string to var array       | `target.var`, `source.string`                  |
+| `advertiseEffect` | Persistent cross-turn effect  | `rule` or `self: true`                         |
 
 ### Source Types
 
-| Type | Example | Description |
-|------|---------|-------------|
-| `number` | `{number: 5}` | Literal numeric value |
-| `fact` | `{fact: proficiency.bonus}` | Reference to a fact |
-| `var` | `{var: distance}` | Reference to a rule variable |
-| `condition` | `{condition: {fact: x, operator: equals, value: 0}}` | Evaluates to 1 or 0 |
-| `string` | `{string: rule.error.key}` | Literal string (i18n key) |
+| Type        | Example                                              | Description                  |
+| ----------- | ---------------------------------------------------- | ---------------------------- |
+| `number`    | `{number: 5}`                                        | Literal numeric value        |
+| `fact`      | `{fact: proficiency.bonus}`                          | Reference to a fact          |
+| `var`       | `{var: distance}`                                    | Reference to a rule variable |
+| `condition` | `{condition: {fact: x, operator: equals, value: 0}}` | Evaluates to 1 or 0          |
+| `string`    | `{string: rule.error.key}`                           | Literal string (i18n key)    |
 
 ### Comparison Operators
 
