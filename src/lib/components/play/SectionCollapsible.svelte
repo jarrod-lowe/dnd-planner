@@ -16,7 +16,14 @@
     mode?: 'choice' | 'effect';
   }
 
-  let { section, packedGroups, hasLegalEntries, facts, onChoiceTap, mode = 'choice' }: Props = $props();
+  let {
+    section,
+    packedGroups,
+    hasLegalEntries,
+    facts,
+    onChoiceTap,
+    mode = 'choice'
+  }: Props = $props();
 
   // Expanded by default if there are legal entries (captures initial value intentionally)
   let expanded = $state(() => hasLegalEntries);

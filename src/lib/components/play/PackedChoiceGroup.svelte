@@ -116,7 +116,9 @@
       {#each followers as entry (entry.rule.id)}
         {@const uiModel = entry.rule.ui?.model as string | undefined}
         {@const warningInfo = getWarningInfo(entry)}
-        {@const displayName = entry.rule.ui?.name ? $t(entry.rule.ui.name as string) : entry.rule.description || entry.rule.id}
+        {@const displayName = entry.rule.ui?.name
+          ? $t(entry.rule.ui.name as string)
+          : entry.rule.description || entry.rule.id}
         {#if readOnly}
           <div class="packed-group__slim-panel" aria-label={displayName}>
             <div class="packed-group__slim-body">
@@ -149,7 +151,8 @@
               {#if entry.rule.ui?.name}
                 <span class="packed-group__slim-title">{$t(entry.rule.ui.name as string)}</span>
               {:else}
-                <span class="packed-group__slim-title">{entry.rule.description || entry.rule.id}</span
+                <span class="packed-group__slim-title"
+                  >{entry.rule.description || entry.rule.id}</span
                 >
               {/if}
 

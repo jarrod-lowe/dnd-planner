@@ -22,7 +22,10 @@ beforeAll(() => {
   });
 });
 
-const createMockRule = (id: string, options?: { section?: string; description?: string }): Rule => ({
+const createMockRule = (
+  id: string,
+  options?: { section?: string; description?: string }
+): Rule => ({
   id,
   description: options?.description,
   activities: [],
@@ -68,9 +71,7 @@ describe('EffectsColumn', () => {
   });
 
   it('renders effects without section in "Other" group', () => {
-    const effects = [
-      createMockRule('effect-no-section', { description: 'Mystery effect' })
-    ];
+    const effects = [createMockRule('effect-no-section', { description: 'Mystery effect' })];
     const { container } = render(EffectsColumn, { props: { effects } });
 
     // Should still render the effect

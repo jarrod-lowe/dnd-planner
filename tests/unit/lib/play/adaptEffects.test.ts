@@ -35,7 +35,11 @@ describe('adaptEffectsAsEntries', () => {
   });
 
   it('wraps multiple rules', () => {
-    const rules = [createMockRule('effect-1'), createMockRule('effect-2'), createMockRule('effect-3')];
+    const rules = [
+      createMockRule('effect-1'),
+      createMockRule('effect-2'),
+      createMockRule('effect-3')
+    ];
     const result = adaptEffectsAsEntries(rules);
 
     expect(result).toHaveLength(3);

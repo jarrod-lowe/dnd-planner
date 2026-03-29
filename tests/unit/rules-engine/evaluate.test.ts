@@ -684,7 +684,13 @@ describe('evaluate', () => {
             rule: {
               id: 'cast-spell',
               activities: [
-                { id: 'consume', type: 'numberIncrement', target: { fact: 'slots.remaining' }, source: { number: 1 }, subtract: true }
+                {
+                  id: 'consume',
+                  type: 'numberIncrement',
+                  target: { fact: 'slots.remaining' },
+                  source: { number: 1 },
+                  subtract: true
+                }
               ]
             }
           }
@@ -698,7 +704,13 @@ describe('evaluate', () => {
         phase: 'early',
         after: [{ group: 'slots-set' }],
         activities: [
-          { id: 'consume', type: 'numberIncrement', target: { fact: 'slots.remaining' }, source: { number: 1 }, subtract: true },
+          {
+            id: 'consume',
+            type: 'numberIncrement',
+            target: { fact: 'slots.remaining' },
+            source: { number: 1 },
+            subtract: true
+          },
           { id: 'sustain', type: 'advertiseEffect', self: true }
         ]
       };
@@ -707,7 +719,13 @@ describe('evaluate', () => {
         phase: 'early',
         after: [{ group: 'slots-set' }],
         activities: [
-          { id: 'consume', type: 'numberIncrement', target: { fact: 'slots.remaining' }, source: { number: 1 }, subtract: true },
+          {
+            id: 'consume',
+            type: 'numberIncrement',
+            target: { fact: 'slots.remaining' },
+            source: { number: 1 },
+            subtract: true
+          },
           { id: 'sustain', type: 'advertiseEffect', self: true }
         ]
       };
