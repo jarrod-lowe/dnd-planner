@@ -74,7 +74,12 @@ ruleGroups:
                 - type: advertiseEffect
                   rule:
                     id: effect-create-and-destroy-water-l1
-                    phase: normal
+                    ui:
+                      section: action-spell
+                      name: rule.spell-create-and-destroy-water.effect-create-and-destroy-water-l1.name
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
                     group:
                       - spell-slot-effect
                     activities:

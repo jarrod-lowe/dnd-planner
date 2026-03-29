@@ -202,4 +202,52 @@ describe('PackedChoiceGroup', () => {
       expect(ariaLabel).toBeTruthy();
     });
   });
+
+  describe('readOnly mode (effects)', () => {
+    it('renders leader as EffectPanel instead of ChoicePanel when readOnly=true', () => {
+      const { container } = render(PackedChoiceGroup, {
+        props: { leader, followers: [swim], onAddToPlan: vi.fn(), readOnly: true }
+      });
+
+      // Should render an EffectPanel for the leader, not a ChoicePanel button
+      const effectPanel = container.querySelector('.effect-panel');
+      expect(effectPanel).toBeTruthy();
+      const choiceButton = container.querySelector('button.choice-panel');
+      expect(choiceButton).toBeFalsy();
+    });
+
+    it('renders followers as divs not buttons when readOnly=true and expanded', async () => {
+      const { container } = render(PackedChoiceGroup, {
+        props: { leader, followers: [swim], onAddToPlan: vi.fn(), readOnly: true }
+      });
+
+      // Expand
+      const compactRow = container.querySelector('.packed-group__compact-row');
+      await fireEvent.click(compactRow!);
+
+      // Followers should be divs, not buttons
+      const slimPanels = container.querySelectorAll('.packed-group__slim-panel');
+      expect(slimPanels).toHaveLength(1);
+      expect(slimPanels[0].tagName).toBe('DIV');
+    });
+
+    it('still allows expand/collapse when readOnly=true', async () => {
+      const { container } = render(PackedChoiceGroup, {
+        props: { leader, followers: [swim], onAddToPlan: vi.fn(), readOnly: true }
+      });
+
+      const compactRow = container.querySelector('.packed-group__compact-row');
+
+      // Expand
+      await fireEvent.click(compactRow!);
+      expect(compactRow!.classList.contains('packed-group__compact-row--expanded')).toBe(true);
+
+      // Collapse
+      await fireEvent.click(compactRow!);
+      await vi.waitFor(() => {
+        const panels = container.querySelectorAll('.packed-group__slim-panel');
+        expect(panels).toHaveLength(0);
+      });
+    });
+  });
 });

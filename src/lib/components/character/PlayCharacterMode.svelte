@@ -6,7 +6,7 @@
   import StatsColumn from '../play/StatsColumn.svelte';
   import ChoicesColumn from '../play/ChoicesColumn.svelte';
   import PlanColumn from '../play/PlanColumn.svelte';
-  import JournalColumn from '../play/JournalColumn.svelte';
+  import EffectsColumn from '../play/EffectsColumn.svelte';
   import type { Character } from '$lib/character/types';
   import type { AvailableRuleEntry } from '$lib/rules-engine';
 
@@ -87,6 +87,12 @@
   // Get available rules from engine output
   const availableRules = $derived(playStore.state.engineOutput?.availableRules ?? []);
 
+  // Get current effects (committed + newly advertised)
+  const currentEffects = $derived([
+    ...playStore.state.effects,
+    ...(playStore.state.engineOutput?.effects ?? [])
+  ]);
+
   // Handle choice tap - add to plan
   function handleChoiceTap(entry: AvailableRuleEntry): void {
     playStore.addToPlan(entry.rule);
@@ -153,8 +159,8 @@
           onEndTurn={() => playStore.endTurn()}
         />
       {/snippet}
-      {#snippet journal()}
-        <JournalColumn />
+      {#snippet effects()}
+        <EffectsColumn effects={currentEffects} />
       {/snippet}
     </PlayLayout>
   {/if}

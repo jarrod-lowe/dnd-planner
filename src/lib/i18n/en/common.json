@@ -4,6 +4,9 @@
       "cast-create-and-destroy-water": {
         "name": "Create and Destroy Water"
       },
+      "effect-create-and-destroy-water-l1": {
+        "name": "L1 Spell Slot Expended"
+      },
       "offer-create-and-destroy-water": {
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
@@ -169,9 +172,9 @@
       "remove": "Remove",
       "endTurn": "End Turn"
     },
-    "journal": {
-      "title": "Journal",
-      "todo": "TODO"
+    "effects": {
+      "title": "Active Effects",
+      "empty": "No active effects"
     },
     "error": {
       "loadRuleGroups": "Failed to load character data"

@@ -2,6 +2,7 @@
   import { slide } from 'svelte/transition';
   import { t } from '$lib/i18n';
   import ChoicePanel from './ChoicePanel.svelte';
+  import EffectPanel from './EffectPanel.svelte';
   import PackedChoiceGroup from './PackedChoiceGroup.svelte';
   import type { Facts, AvailableRuleEntry } from '$lib/rules-engine';
   import type { ChoiceGroup } from '$lib/play/groupPackedChoices';
@@ -12,9 +13,17 @@
     hasLegalEntries: boolean;
     facts: Facts;
     onChoiceTap: (entry: AvailableRuleEntry) => void;
+    mode?: 'choice' | 'effect';
   }
 
-  let { section, packedGroups, hasLegalEntries, facts, onChoiceTap }: Props = $props();
+  let {
+    section,
+    packedGroups,
+    hasLegalEntries,
+    facts,
+    onChoiceTap,
+    mode = 'choice'
+  }: Props = $props();
 
   // Expanded by default if there are legal entries (captures initial value intentionally)
   let expanded = $state(() => hasLegalEntries);
@@ -64,18 +73,23 @@
     <div class="section-collapsible__content" transition:slide={{ duration: 200 }}>
       {#each packedGroups as group (group.type === 'packed' ? group.leader.rule.id : group.entry.rule.id)}
         {#if group.type === 'single'}
-          <ChoicePanel
-            entry={group.entry}
-            {facts}
-            editable={false}
-            onTap={() => onChoiceTap(group.entry)}
-          />
+          {#if mode === 'effect'}
+            <EffectPanel entry={group.entry} />
+          {:else}
+            <ChoicePanel
+              entry={group.entry}
+              {facts}
+              editable={false}
+              onTap={() => onChoiceTap(group.entry)}
+            />
+          {/if}
         {:else if group.type === 'packed'}
           <PackedChoiceGroup
             leader={group.leader}
             followers={group.followers}
             {facts}
             onAddToPlan={onChoiceTap}
+            readOnly={mode === 'effect'}
           />
         {/if}
       {/each}

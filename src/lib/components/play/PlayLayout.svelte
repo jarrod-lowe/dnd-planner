@@ -6,15 +6,15 @@
     stats: Snippet;
     choices: Snippet;
     plan: Snippet;
-    journal: Snippet;
+    effects: Snippet;
   }
 
-  let { stats, choices, plan, journal }: Props = $props();
+  let { stats, choices, plan, effects }: Props = $props();
 
   const statsId = 'stats-column';
   const choicesId = 'choices-column';
   const planId = 'plan-column';
-  const journalId = 'journal-column';
+  const effectsId = 'effects-column';
 </script>
 
 <div class="play-layout">
@@ -33,9 +33,9 @@
     {@render plan()}
   </section>
 
-  <section class="play-layout__column play-layout__journal" aria-labelledby={journalId}>
-    <h2 id={journalId} class="play-layout__header">{$t('play.journal.title')}</h2>
-    {@render journal()}
+  <section class="play-layout__column play-layout__effects" aria-labelledby={effectsId}>
+    <h2 id={effectsId} class="play-layout__header">{$t('play.effects.title')}</h2>
+    {@render effects()}
   </section>
 </div>
 
@@ -43,8 +43,8 @@
   .play-layout {
     display: grid;
     grid-template-columns: minmax(180px, 1fr) minmax(280px, 2fr) minmax(280px, 2fr) minmax(
-        180px,
-        1fr
+        280px,
+        2fr
       );
     gap: var(--spacing-md);
     height: calc(100vh - 4rem);
@@ -95,7 +95,7 @@
       grid-row: 2;
     }
 
-    .play-layout__journal {
+    .play-layout__effects {
       grid-column: 2;
       grid-row: 1;
     }
@@ -124,7 +124,7 @@
       grid-row: 3;
     }
 
-    .play-layout__journal {
+    .play-layout__effects {
       grid-column: 1;
       grid-row: 4;
     }

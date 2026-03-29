@@ -319,3 +319,4 @@ The architecture supports:
 - Effect on End Turn, to make it being actioned is obvious
 - Allow stacking effects
 - Visibility of effects
+- Fix main page length

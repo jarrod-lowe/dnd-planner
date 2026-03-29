@@ -53,12 +53,23 @@ import { buildOutput } from './output';
  */
 export function evaluate(input: EngineInput): EngineOutput {
   // 1. Initialize working state
+  // Seed the effect counter from existing effects to avoid ID collisions.
+  // When effects persist across turns (e.g. self-sustaining effects), their IDs
+  // contain a numeric suffix like "effect-foo-1". If the counter resets to 0,
+  // newly advertised effects would produce colliding IDs (e.g. "effect-foo-1" again).
+  // By scanning existing effect IDs for their max numeric suffix, we ensure new
+  // effects always get unique IDs.
+  const existingEffectCounter = input.rules.effects.reduce((max, rule) => {
+    const match = rule.id.match(/-(\d+)$/);
+    return match ? Math.max(max, parseInt(match[1], 10)) : max;
+  }, 0);
+
   const workingState: WorkingState = {
     facts: { ...input.state.facts },
     events: new Set(),
     generatedRules: { early: [], normal: [], safeguard: [] },
     advertisedEffects: [],
-    advertisedEffectCounter: 0,
+    advertisedEffectCounter: existingEffectCounter,
     offeredRules: [],
     appliedRuleIds: [],
     appliedActivityIds: []
