@@ -1067,4 +1067,183 @@ describe('playStore', () => {
       expect(playStore.state.ruleGroupIds).toContain('group-1');
     });
   });
+
+  describe('effects persistence', () => {
+    it('passes committed effects to engine during evaluation', async () => {
+      const mockEvaluate = vi.mocked(evaluate);
+      const committedEffect: Rule = { id: 'effect-slot-1', activities: [] };
+
+      // First call: spell cast returns an effect
+      mockEvaluate.mockReturnValueOnce({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        effects: [committedEffect],
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [committedEffect] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      // Second call: after endTurn, should receive committed effects
+      mockEvaluate.mockReturnValueOnce({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        effects: [committedEffect],
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [committedEffect] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      // Cast a spell that advertises an effect
+      const spellRule: Rule = { id: 'cast-spell', activities: [] };
+      playStore.addToPlan(spellRule);
+      vi.advanceTimersByTime(300);
+
+      // End turn to commit effects
+      playStore.endTurn();
+
+      // Now add another action - the committed effects should be passed to engine
+      mockEvaluate.mockClear();
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        effects: [committedEffect],
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [committedEffect] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      const rule: Rule = { id: 'test-rule', activities: [] };
+      playStore.addToPlan(rule);
+      vi.advanceTimersByTime(300);
+
+      // Verify evaluate was called with the committed effects
+      expect(mockEvaluate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          rules: expect.objectContaining({
+            effects: [committedEffect]
+          })
+        })
+      );
+    });
+
+    it('commits output effects to state on endTurn', async () => {
+      const mockEvaluate = vi.mocked(evaluate);
+      const committedEffect: Rule = {
+        id: 'effect-slot-1',
+        phase: 'normal',
+        activities: []
+      };
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: { 'slots.remaining': 3 },
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        effects: [committedEffect],
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [committedEffect] },
+          state: { facts: { 'slots.remaining': 3 } }
+        }
+      } as EngineOutput);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      // Add something to plan to make it non-trivial
+      playStore.addToPlan({ id: 'test-rule', activities: [] });
+      vi.advanceTimersByTime(300);
+
+      // End turn
+      playStore.endTurn();
+
+      // Verify effects from output were committed to state
+      expect(playStore.state.effects).toEqual([committedEffect]);
+      // Verify plan was cleared
+      expect(playStore.state.plannedItems).toEqual([]);
+    });
+
+    it('clears effects on reset', async () => {
+      const committedEffect: Rule = { id: 'effect-1', activities: [] };
+      const mockEvaluate = vi.mocked(evaluate);
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        effects: [committedEffect],
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [committedEffect] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      // End turn to commit effects
+      playStore.addToPlan({ id: 'test-rule', activities: [] });
+      vi.advanceTimersByTime(300);
+      playStore.endTurn();
+
+      // Verify effects were committed
+      expect(playStore.state.effects).toEqual([committedEffect]);
+
+      // Reset should clear effects
+      playStore.reset();
+
+      expect(playStore.state.effects).toEqual([]);
+    });
+  });
 });

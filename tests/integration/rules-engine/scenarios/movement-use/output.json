@@ -42,6 +42,7 @@
     "providedCapabilities": [],
     "emittedEvents": []
   },
+  "effects": [],
   "next": {
     "schemaVersion": 1,
     "rules": {

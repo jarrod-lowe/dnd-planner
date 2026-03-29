@@ -24,7 +24,7 @@ export function buildNextInput(input: EngineInput, workingState: WorkingState): 
     rules: {
       standing: input.rules.standing,
       planned: input.rules.planned,
-      effects: getPersistableEffects(workingState)
+      effects: [...getPersistableEffects(workingState), ...workingState.advertisedEffects]
     },
     state: {
       facts: input.state.facts
@@ -86,6 +86,7 @@ export function buildOutput(input: EngineInput, workingState: WorkingState): Eng
       providedCapabilities: [],
       emittedEvents: []
     },
+    effects: workingState.advertisedEffects,
     next: buildNextInput(input, workingState)
   };
 }

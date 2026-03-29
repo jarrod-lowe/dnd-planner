@@ -12,6 +12,8 @@ function createEmptyWorkingState(): WorkingState {
     facts: {},
     events: new Set(),
     generatedRules: { early: [], normal: [], safeguard: [] },
+    advertisedEffects: [],
+    advertisedEffectCounter: 0,
     offeredRules: [],
     appliedRuleIds: [],
     appliedActivityIds: []
@@ -254,5 +256,41 @@ describe('buildOutput', () => {
 
     expect(output.next.schemaVersion).toBe(1);
     expect(output.next.state.facts).toEqual({ 'hp.max': 10 });
+  });
+
+  it('includes advertisedEffects in output.effects', () => {
+    const input = createEngineInput();
+    const workingState = createEmptyWorkingState();
+    const effect: Rule = { id: 'effect-spell-l1-1', activities: [] };
+    workingState.advertisedEffects = [effect];
+
+    const output = buildOutput(input, workingState);
+
+    expect(output.effects).toHaveLength(1);
+    expect(output.effects[0]).toEqual(effect);
+  });
+
+  it('includes advertisedEffects in next.rules.effects alongside generated rules', () => {
+    const input = createEngineInput();
+    const workingState = createEmptyWorkingState();
+    const generatedRule: Rule = { id: 'gen-1', phase: 'safeguard', activities: [] };
+    const effect: Rule = { id: 'effect-spell-l1-1', activities: [] };
+    workingState.generatedRules.safeguard = [generatedRule];
+    workingState.advertisedEffects = [effect];
+
+    const output = buildOutput(input, workingState);
+
+    expect(output.next.rules.effects).toHaveLength(2);
+    expect(output.next.rules.effects).toContain(generatedRule);
+    expect(output.next.rules.effects).toContain(effect);
+  });
+
+  it('returns empty effects array when no effects advertised', () => {
+    const input = createEngineInput();
+    const workingState = createEmptyWorkingState();
+
+    const output = buildOutput(input, workingState);
+
+    expect(output.effects).toEqual([]);
   });
 });

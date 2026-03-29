@@ -395,4 +395,211 @@ describe('evaluate', () => {
     // Half movement should be 15 (from early phase computation)
     expect(result.facts['character.movement.half']).toBe(15);
   });
+
+  describe('effects system', () => {
+    it('processes effects from input.rules.effects', () => {
+      const effectRule: Rule = {
+        id: 'effect-consume-slot',
+        phase: 'normal',
+        activities: [
+          {
+            id: 'consume',
+            type: 'numberIncrement',
+            target: { fact: 'slots.remaining' },
+            source: { number: 1 },
+            subtract: true
+          }
+        ]
+      };
+
+      const input: EngineInput = {
+        schemaVersion: 1,
+        rules: { standing: [], planned: [], effects: [effectRule] },
+        state: { facts: { 'slots.remaining': 3 } }
+      };
+
+      const result = evaluate(input);
+
+      expect(result.facts['slots.remaining']).toBe(2);
+    });
+
+    it('spell advertises an effect that appears in output.effects', () => {
+      const spellRule: Rule = {
+        id: 'cast-spell',
+        activities: [
+          {
+            id: 'consume-slot',
+            type: 'numberIncrement',
+            target: { fact: 'slots.remaining' },
+            source: { number: 1 },
+            subtract: true
+          },
+          {
+            id: 'advertise',
+            type: 'advertiseEffect',
+            rule: {
+              id: 'effect-slot-consumed',
+              phase: 'normal',
+              activities: [
+                {
+                  id: 'reconsume',
+                  type: 'numberIncrement',
+                  target: { fact: 'slots.remaining' },
+                  source: { number: 1 },
+                  subtract: true
+                },
+                { id: 'sustain', type: 'advertiseEffect', self: true }
+              ]
+            }
+          }
+        ]
+      };
+
+      const input: EngineInput = {
+        schemaVersion: 1,
+        rules: { standing: [], planned: [spellRule], effects: [] },
+        state: { facts: { 'slots.remaining': 3 } }
+      };
+
+      const result = evaluate(input);
+
+      // Spell consumed 1 slot
+      expect(result.facts['slots.remaining']).toBe(2);
+      // Effect was advertised
+      expect(result.effects).toHaveLength(1);
+      expect(result.effects[0].id).toBe('effect-slot-consumed-1');
+    });
+
+    it('self-sustaining effect re-advertises itself in output.effects', () => {
+      const effectRule: Rule = {
+        id: 'effect-slot-1',
+        phase: 'normal',
+        activities: [
+          {
+            id: 'consume',
+            type: 'numberIncrement',
+            target: { fact: 'slots.remaining' },
+            source: { number: 1 },
+            subtract: true
+          },
+          { id: 'sustain', type: 'advertiseEffect', self: true }
+        ]
+      };
+
+      const input: EngineInput = {
+        schemaVersion: 1,
+        rules: { standing: [], planned: [], effects: [effectRule] },
+        state: { facts: { 'slots.remaining': 3 } }
+      };
+
+      const result = evaluate(input);
+
+      // Effect consumed 1 slot
+      expect(result.facts['slots.remaining']).toBe(2);
+      // Effect re-advertised itself
+      expect(result.effects).toHaveLength(1);
+      expect(result.effects[0].id).toBe('effect-slot-1');
+    });
+
+    it('simulates multi-turn spell slot consumption', () => {
+      // Turn 1: Spell with effect advertisement
+      const spellRule: Rule = {
+        id: 'cast-spell',
+        activities: [
+          {
+            id: 'consume-slot',
+            type: 'numberIncrement',
+            target: { fact: 'slots.remaining' },
+            source: { number: 1 },
+            subtract: true
+          },
+          {
+            id: 'advertise',
+            type: 'advertiseEffect',
+            rule: {
+              id: 'effect-slot',
+              phase: 'normal',
+              activities: [
+                {
+                  id: 'consume',
+                  type: 'numberIncrement',
+                  target: { fact: 'slots.remaining' },
+                  source: { number: 1 },
+                  subtract: true
+                },
+                { id: 'sustain', type: 'advertiseEffect', self: true }
+              ]
+            }
+          }
+        ]
+      };
+
+      // Early phase: reset slots to total
+      const resetRule: Rule = {
+        id: 'reset-slots',
+        phase: 'early',
+        activities: [
+          {
+            id: 'copy',
+            type: 'numberCopy',
+            target: { fact: 'slots.remaining' },
+            source: { fact: 'slots.total' }
+          }
+        ]
+      };
+
+      // === Turn 1 ===
+      const turn1: EngineInput = {
+        schemaVersion: 1,
+        rules: { standing: [resetRule], planned: [spellRule], effects: [] },
+        state: { facts: { 'slots.total': 4, 'slots.remaining': 4 } }
+      };
+
+      const result1 = evaluate(turn1);
+
+      // Spell consumed 1 slot: reset to 4, then spell -1 = 3
+      expect(result1.facts['slots.remaining']).toBe(3);
+      expect(result1.effects).toHaveLength(1);
+
+      // === Turn 2: commit effects, clear plan ===
+      const turn2: EngineInput = {
+        schemaVersion: 1,
+        rules: {
+          standing: [resetRule],
+          planned: [],
+          effects: result1.effects
+        },
+        state: { facts: result1.facts }
+      };
+
+      const result2 = evaluate(turn2);
+
+      // Reset to total (4), then effect -1 = 3
+      // Wait - the state.facts are the projected facts from turn 1 (slots.remaining = 3)
+      // But the early phase reset copies total (4) to remaining
+      // Then the effect consumes 1: 4 - 1 = 3
+      expect(result2.facts['slots.remaining']).toBe(3);
+      // Effect re-advertised itself
+      expect(result2.effects).toHaveLength(1);
+      expect(result2.effects[0].id).toBe('effect-slot-1');
+
+      // === Turn 3: cast another spell ===
+      const turn3: EngineInput = {
+        schemaVersion: 1,
+        rules: {
+          standing: [resetRule],
+          planned: [spellRule],
+          effects: result2.effects
+        },
+        state: { facts: result2.facts }
+      };
+
+      const result3 = evaluate(turn3);
+
+      // Reset to total (4), effect -1, spell -1 = 2
+      expect(result3.facts['slots.remaining']).toBe(2);
+      // Old effect re-advertised + new effect advertised = 2
+      expect(result3.effects).toHaveLength(2);
+    });
+  });
 });

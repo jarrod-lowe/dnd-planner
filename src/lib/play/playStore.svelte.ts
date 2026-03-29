@@ -21,7 +21,8 @@ const initialState: PlayState = {
   engineOutput: null,
   isEvaluating: false,
   plannedItems: [],
-  facts: {}
+  facts: {},
+  effects: []
 };
 
 // Reactive state
@@ -39,7 +40,7 @@ function performEvaluation(): void {
     rules: {
       standing: state.ruleGroups,
       planned: state.plannedItems.map((item) => item.rule),
-      effects: []
+      effects: state.effects
     },
     state: {
       facts: state.facts
@@ -378,11 +379,15 @@ function getDependents(ruleGroupId: string): string[] {
 }
 
 function endTurn(): void {
-  // state.facts is already the projected facts from the last evaluation.
-  // Clearing the plan and re-evaluating commits those facts as the new base.
+  // Commit effects from the last evaluation output before clearing the plan.
+  // This moves advertised effects into the committed effects array so they
+  // persist across turns.
+  const effects = state.engineOutput?.effects ?? state.effects;
+
   state = {
     ...state,
-    plannedItems: []
+    plannedItems: [],
+    effects
   };
   performEvaluation();
 }

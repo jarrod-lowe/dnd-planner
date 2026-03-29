@@ -51,7 +51,9 @@ describe('resolveSource', () => {
     generatedRules: { early: [], normal: [], safeguard: [] },
     offeredRules: [],
     appliedRuleIds: [],
-    appliedActivityIds: []
+    appliedActivityIds: [],
+    advertisedEffects: [],
+    advertisedEffectCounter: 0
   });
 
   // Helper to create minimal rule
@@ -259,7 +261,9 @@ describe('resolveSource', () => {
         generatedRules: { early: [], normal: [], safeguard: [] },
         offeredRules: [],
         appliedRuleIds: [],
-        appliedActivityIds: []
+        appliedActivityIds: [],
+        advertisedEffects: [],
+        advertisedEffectCounter: 0
       };
       const rule = createRule();
 

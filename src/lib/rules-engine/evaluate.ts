@@ -57,6 +57,8 @@ export function evaluate(input: EngineInput): EngineOutput {
     facts: { ...input.state.facts },
     events: new Set(),
     generatedRules: { early: [], normal: [], safeguard: [] },
+    advertisedEffects: [],
+    advertisedEffectCounter: 0,
     offeredRules: [],
     appliedRuleIds: [],
     appliedActivityIds: []

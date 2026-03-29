@@ -31,7 +31,9 @@ function createEmptyState(): WorkingState {
     generatedRules: { early: [], normal: [], safeguard: [] },
     offeredRules: [],
     appliedRuleIds: [],
-    appliedActivityIds: []
+    appliedActivityIds: [],
+    advertisedEffects: [],
+    advertisedEffectCounter: 0
   };
 }
 
