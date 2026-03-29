@@ -24,6 +24,9 @@
         "free-action": {
           "name": "Free Action"
         },
+        "long-rest": {
+          "name": "Long Rest"
+        },
         "action-move-walk-offer": {
           "out_of_movement": "Out of movement"
         },
@@ -152,6 +155,7 @@
         "action-spell": "Action → Spell",
         "action-other": "Action → Other",
         "free": "Flavour",
+        "rest": "Rest",
         "other": "Other"
       },
       "move": {

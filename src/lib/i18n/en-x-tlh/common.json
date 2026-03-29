@@ -24,6 +24,9 @@
         "free-action": {
           "name": "Free Action"
         },
+        "long-rest": {
+          "name": "nIb poH"
+        },
         "action-move-walk-offer": {
           "out_of_movement": "Do tu'lu'be'"
         },
@@ -152,6 +155,7 @@
         "action-spell": "DIvI' → mugh",
         "action-other": "DIvI' → latlh",
         "free": "Flavour",
+        "rest": "nIb poH",
         "other": "latlh"
       },
       "move": {
