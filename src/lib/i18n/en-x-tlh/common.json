@@ -14,18 +14,19 @@
       }
     },
     "dnd-5e-2024": {
-      "base": {
+      "turn-rest": {
+        "long-rest": {
+          "name": "nIb poH"
+        }
+      },
+      "action-economy": {},
+      "proficiency": {},
+      "movement": {
         "move-walk": {
           "name": "Do"
         },
         "move-rough-terrain": {
           "name": "Do (qIb)"
-        },
-        "free-action": {
-          "name": "Free Action"
-        },
-        "long-rest": {
-          "name": "nIb poH"
         },
         "action-move-walk-offer": {
           "out_of_movement": "Do tu'lu'be'"
@@ -46,6 +47,11 @@
         "action-move-fly-offer": {
           "cannot_fly": "peng DaDolaHbe'",
           "out_of_movement": "Do tu'lu'be'"
+        }
+      },
+      "free-actions": {
+        "free-action": {
+          "name": "Free Action"
         },
         "help-action": {
           "name": "QaH"

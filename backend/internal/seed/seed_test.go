@@ -335,9 +335,37 @@ func TestInstantiate_WritesToDynamoDB(t *testing.T) {
 		},
 		{
 			"PK":          "SEED#CHAR#$(characterId)",
-			"SK":          "RULEGROUP#base",
+			"SK":          "RULEGROUP#turn-rest",
 			"gsiSeedPK":   "SEED#CHAR",
-			"ruleGroupId": "base",
+			"ruleGroupId": "turn-rest",
+			"enabled":     true,
+		},
+		{
+			"PK":          "SEED#CHAR#$(characterId)",
+			"SK":          "RULEGROUP#action-economy",
+			"gsiSeedPK":   "SEED#CHAR",
+			"ruleGroupId": "action-economy",
+			"enabled":     true,
+		},
+		{
+			"PK":          "SEED#CHAR#$(characterId)",
+			"SK":          "RULEGROUP#proficiency",
+			"gsiSeedPK":   "SEED#CHAR",
+			"ruleGroupId": "proficiency",
+			"enabled":     true,
+		},
+		{
+			"PK":          "SEED#CHAR#$(characterId)",
+			"SK":          "RULEGROUP#movement",
+			"gsiSeedPK":   "SEED#CHAR",
+			"ruleGroupId": "movement",
+			"enabled":     true,
+		},
+		{
+			"PK":          "SEED#CHAR#$(characterId)",
+			"SK":          "RULEGROUP#free-actions",
+			"gsiSeedPK":   "SEED#CHAR",
+			"ruleGroupId": "free-actions",
 			"enabled":     true,
 		},
 	}
@@ -366,9 +394,9 @@ func TestInstantiate_WritesToDynamoDB(t *testing.T) {
 		t.Error("expected batchWriteItems to be called")
 	}
 
-	// Verify both records were written
-	if len(db.batchWriteItemsPayloads) != 2 {
-		t.Errorf("expected 2 records to be written, got %d", len(db.batchWriteItemsPayloads))
+	// Verify all 6 records were written (1 CHAR + 5 RULEGROUP)
+	if len(db.batchWriteItemsPayloads) != 6 {
+		t.Errorf("expected 6 records to be written, got %d", len(db.batchWriteItemsPayloads))
 	}
 }
 

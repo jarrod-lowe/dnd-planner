@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: action-economy
+    translations:
+      en:
+        name: Action Economy
+        description: Core rules for action points per turn
+        keywords: [actions, action, economy]
+      en-x-tlh:
+        name: DIvI' DIvI'
+        description: DIvI' DIvI' naQ wa'DIch
+        keywords: [DIvI']
+    rules:
+      # Action Resources - set max actions (base rule: 1 action per turn)
+      - id: action-max
+        phase: early
+        group:
+          - action-max
+        activities:
+          - type: numberSet
+            source:
+              number: 1
+            target:
+              fact: actions.max
+
+      # Action Resources - reset remaining at start of turn
+      - id: action-reset
+        phase: early
+        after:
+          - group: action-max
+        activities:
+          - type: numberCopy
+            source:
+              fact: actions.max
+            target:
+              fact: actions.remaining

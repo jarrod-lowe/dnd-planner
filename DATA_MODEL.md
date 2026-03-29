@@ -68,14 +68,16 @@ Templates for new character creation. Both have `gsiSeedPK = "SEED#CHAR"` so the
 - createdAt = `$(now)`
 - updatedAt = `$(now)`
 
-#### CHAR_RULEGROUP Record Seed
+#### CHAR_RULEGROUP Record Seeds
+
+Five rule group seeds are created per character (turn-rest, action-economy, proficiency, movement, free-actions):
 
 - PK = `SEED#CHAR#$(characterId)`
-- SK = `RULEGROUP#base`
+- SK = `RULEGROUP#<group-id>`
 - gsiSeedPK = `SEED#CHAR`
 - type = `CHAR`
 - characterId = `$(characterId)`
-- ruleGroupId = `base` (fixed, points to the base rule group)
+- ruleGroupId = `<group-id>` (one of: turn-rest, action-economy, proficiency, movement, free-actions)
 - userId = `$(userId)`
 - enabled = `true`
 - createdAt = `$(now)`

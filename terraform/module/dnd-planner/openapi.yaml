@@ -143,7 +143,8 @@ paths:
                     type: array
                     items:
                       type: string
-                    example: ['base']
+                    example:
+                      ['turn-rest', 'action-economy', 'proficiency', 'movement', 'free-actions']
         '400':
           description: Invalid request - name is required
           content:

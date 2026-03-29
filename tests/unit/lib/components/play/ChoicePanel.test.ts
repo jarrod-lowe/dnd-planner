@@ -19,7 +19,7 @@ const createMockMoveEntry = (overrides?: Partial<AvailableRuleEntry>): Available
     ui: {
       model: 'move',
       section: 'move',
-      name: 'rule.dnd-5e-2024.base.move.name'
+      name: 'rule.dnd-5e-2024.movement.move-walk.name'
     },
     vars: {
       distance: { default: { fact: 'character.movement.remaining' } },
@@ -124,7 +124,7 @@ describe('ChoicePanel', () => {
     });
 
     const title = container.querySelector('.choice-panel__title');
-    // i18n key is rule.dnd-5e-2024.base.move.name
+    // i18n key is rule.dnd-5e-2024.movement.move-walk.name
     expect(title).toBeTruthy();
   });
 
@@ -476,7 +476,7 @@ describe('ChoicePanel', () => {
         ui: {
           model: 'move',
           section: 'move',
-          name: 'rule.dnd-5e-2024.base.move-rough-terrain.name'
+          name: 'rule.dnd-5e-2024.movement.move-rough-terrain.name'
         },
         vars: {
           distance: { default: { fact: 'character.movement.half_remaining' }, capture: true },
@@ -518,7 +518,7 @@ describe('ChoicePanel', () => {
         ui: {
           model: 'move',
           section: 'move',
-          name: 'rule.dnd-5e-2024.base.move-walk.name'
+          name: 'rule.dnd-5e-2024.movement.move-walk.name'
         },
         vars: {
           distance: { default: { fact: 'character.movement.remaining' }, capture: true },
