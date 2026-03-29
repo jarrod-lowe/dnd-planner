@@ -1,5 +1,6 @@
 import type {
   Activity,
+  AdvertiseEffectActivity,
   AvailableRuleEntry,
   EmitEventActivity,
   GenerateRuleActivity,
@@ -18,6 +19,14 @@ import { isPhaseAfter } from './types';
 import { createBuiltinFunctionRegistry } from './functions';
 import { evaluateCondition, isRuleApplicable } from './conditions';
 import { resolveSource, resolveStringSource } from './sources';
+
+/**
+ * Deep clones an object, stripping any reactive proxies (e.g. Svelte 5 $state).
+ * Rule objects are purely JSON-serializable so this is safe.
+ */
+function deepClone<T>(obj: T): T {
+  return JSON.parse(JSON.stringify(obj));
+}
 
 /**
  * Sets a value at the target location.
@@ -118,6 +127,9 @@ export function executeActivity(activity: Activity, context: RuleContext): void 
       break;
     case 'setAdd':
       executeSetAdd(activity, context);
+      break;
+    case 'advertiseEffect':
+      executeAdvertiseEffect(activity, context);
       break;
     default:
       throw new Error(`Unknown activity type: ${(activity as { type: string }).type}`);
@@ -441,5 +453,39 @@ export function executeSetAdd(activity: SetAddActivity, context: RuleContext): v
     rule.varsRuntime[activity.target.var] = arr;
   } else {
     throw new Error('setAdd activity requires a var target');
+  }
+}
+
+/**
+ * Advertises a persistent effect that survives across turns.
+ *
+ * Effects are rules that get committed at end of turn and run in subsequent turns.
+ * Two modes:
+ * - rule: Advertises a new effect (gets unique ID suffix)
+ * - self: Re-advertises the current rule (self-sustaining effect)
+ *
+ * To make an effect expire, omit the advertiseEffect self:true activity.
+ *
+ * @param activity - The advertiseEffect activity
+ * @param context - Rule context containing working state and current rule
+ *
+ * @calledBy executeActivity
+ */
+export function executeAdvertiseEffect(
+  activity: AdvertiseEffectActivity,
+  context: RuleContext
+): void {
+  if (activity.self) {
+    if (!context.currentRule) {
+      throw new Error('advertiseEffect with self=true requires currentRule in context');
+    }
+    context.workingState.advertisedEffects.push(deepClone(context.currentRule));
+  } else if (activity.rule) {
+    context.workingState.advertisedEffectCounter++;
+    const effectRule = deepClone(activity.rule);
+    effectRule.id = `${effectRule.id}-${context.workingState.advertisedEffectCounter}`;
+    context.workingState.advertisedEffects.push(effectRule);
+  } else {
+    throw new Error('advertiseEffect requires either rule or self=true');
   }
 }

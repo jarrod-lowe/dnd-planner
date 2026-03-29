@@ -40,6 +40,7 @@ export type {
   OfferRuleActivity,
   SetClearActivity,
   SetAddActivity,
+  AdvertiseEffectActivity,
   IllegalWhenEntry,
   // Rule
   Rule,

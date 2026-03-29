@@ -22,7 +22,9 @@ function createEmptyContext(): RuleContext {
       generatedRules: { early: [], normal: [], safeguard: [] },
       offeredRules: [],
       appliedRuleIds: [],
-      appliedActivityIds: []
+      appliedActivityIds: [],
+      advertisedEffects: [],
+      advertisedEffectCounter: 0
     },
     groups: new Map(),
     currentPhase: 'normal',

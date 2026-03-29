@@ -71,6 +71,21 @@ ruleGroups:
                   source:
                     number: 1
                   subtract: true
+                - type: advertiseEffect
+                  rule:
+                    id: effect-create-and-destroy-water-l1
+                    phase: normal
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level1.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
                 - type: setClear
                   target:
                     var: errors

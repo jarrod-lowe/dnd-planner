@@ -35,4 +35,6 @@ export interface PlayState {
   plannedItems: PlannedItem[];
   /** Current facts from engine evaluation */
   facts: Facts;
+  /** Committed effects from previous turns. Passed to engine as rules.effects. */
+  effects: Rule[];
 }

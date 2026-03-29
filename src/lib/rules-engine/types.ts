@@ -280,6 +280,24 @@ export interface SetAddActivity extends ActivityBase {
 }
 
 /**
+ * Advertises a persistent effect that survives across turns.
+ * Exactly one of `rule` or `self` must be provided.
+ *
+ * - rule: Advertises a new effect rule (gets a unique ID)
+ * - self: Re-advertises the current rule (self-sustaining effect)
+ *
+ * Effects are returned in output.effects and committed by the UI at end of turn.
+ * To make an effect expire, omit the advertiseEffect self: true activity.
+ */
+export interface AdvertiseEffectActivity extends ActivityBase {
+  type: 'advertiseEffect';
+  /** A new rule to advertise as a persistent effect */
+  rule?: Rule;
+  /** Re-advertise the current rule (self-sustaining). Mutually exclusive with rule. */
+  self?: boolean;
+}
+
+/**
  * Union of all activity types.
  */
 export type Activity =
@@ -292,7 +310,8 @@ export type Activity =
   | GenerateRuleActivity
   | OfferRuleActivity
   | SetClearActivity
-  | SetAddActivity;
+  | SetAddActivity
+  | AdvertiseEffectActivity;
 
 // === RULE ===
 
@@ -391,6 +410,8 @@ export interface EngineOutput {
   availableRules: AvailableRuleEntry[];
   diagnostics: Diagnostics;
   trace: Trace;
+  /** Advertised effects that should persist across turns. UI commits these at end of turn. */
+  effects: Rule[];
   next: EngineInput;
 }
 
@@ -408,6 +429,8 @@ export interface WorkingState {
     normal: Rule[];
     safeguard: Rule[];
   };
+  advertisedEffects: Rule[];
+  advertisedEffectCounter: number;
   offeredRules: AvailableRuleEntry[];
   appliedRuleIds: string[];
   appliedActivityIds: string[];
