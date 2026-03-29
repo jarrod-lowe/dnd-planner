@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  executeActivity,
-  executeAdvertiseEffect
-} from '$lib/rules-engine/activities';
+import { executeActivity, executeAdvertiseEffect } from '$lib/rules-engine/activities';
 import type {
   WorkingState,
   AdvertiseEffectActivity,
