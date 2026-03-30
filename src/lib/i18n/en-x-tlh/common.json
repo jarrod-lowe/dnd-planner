@@ -197,7 +197,9 @@
       "empty": "SeHbe'"
     },
     "error": {
-      "loadRuleGroups": "nuv DIvI' laHbe'"
+      "loadRuleGroups": "nuv DIvI' laHbe'",
+      "loadEffects": "DIvI' DIvI' laHbe'",
+      "saveEffects": "DIvI' pol laHbe'"
     }
   }
 }

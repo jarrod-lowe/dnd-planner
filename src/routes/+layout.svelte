@@ -6,6 +6,7 @@
   import { configureAmplify } from '$lib/auth/cognito';
   import { authStore } from '$lib/auth/authStore.svelte';
   import { locale, isLoading, detectLocale, t } from '$lib/i18n';
+  import { Toaster } from 'svelte-sonner';
 
   interface Props {
     children: import('svelte').Snippet;
@@ -52,6 +53,7 @@
   </div>
 {:else}
   <a href="#main-content" class="skip-link">{$t('nav.skipToContent')}</a>
+  <Toaster />
   {@render children()}
 {/if}
 
