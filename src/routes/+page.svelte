@@ -7,6 +7,7 @@
   import PlayCharacterMode from '$lib/components/character/PlayCharacterMode.svelte';
   import CreateCharacterDialog from '$lib/components/character/CreateCharacterDialog.svelte';
   import ManageRulesMode from '$lib/components/character/ManageRulesMode.svelte';
+  import ViewFactsMode from '$lib/components/character/ViewFactsMode.svelte';
   import EditCustomRules from '$lib/components/character/EditCustomRules.svelte';
   import { playStore } from '$lib/play/playStore.svelte';
   import { getCache } from '$lib/rules/ruleGroupCache.svelte';
@@ -19,6 +20,7 @@
   let hasLoadedCharacters = $state(false);
   let manageRulesActive = $state(false);
   let editCustomRulesActive = $state(false);
+  let viewFactsActive = $state(false);
 
   // Compute locked rule groups: assigned groups that are required by other assigned groups
   let lockedRuleGroups = $derived.by(() => {
@@ -90,9 +92,17 @@
       selectedCharacter={characterStore.state.selectedCharacter}
       showManageRules={!!characterStore.state.selectedCharacter &&
         !manageRulesActive &&
-        !editCustomRulesActive}
+        !editCustomRulesActive &&
+        !viewFactsActive}
       onManageRules={() => {
         manageRulesActive = true;
+      }}
+      showViewFacts={!!characterStore.state.selectedCharacter &&
+        !manageRulesActive &&
+        !editCustomRulesActive &&
+        !viewFactsActive}
+      onViewFacts={() => {
+        viewFactsActive = true;
       }}
     />
     <main id="main-content" class="app-layout__body">
@@ -120,6 +130,12 @@
             }}
             onEditCustomRules={() => {
               editCustomRulesActive = true;
+            }}
+          />
+        {:else if viewFactsActive}
+          <ViewFactsMode
+            onBack={() => {
+              viewFactsActive = false;
             }}
           />
         {:else}

@@ -145,6 +145,12 @@
     "yamlSyntaxError": "YAML Syntax Error",
     "noErrors": "No errors"
   },
+  "facts": {
+    "viewTitle": "View Facts",
+    "backToPlay": "Back to Play",
+    "empty": "No facts available",
+    "ariaLabel": "Character facts in YAML format"
+  },
   "play": {
     "backToSelection": "Back to Character Selection",
     "stats": {

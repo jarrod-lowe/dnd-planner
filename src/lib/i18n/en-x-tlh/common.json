@@ -145,6 +145,12 @@
     "yamlSyntaxError": "YAML DIvI'be'",
     "noErrors": "DIvI'be'"
   },
+  "facts": {
+    "viewTitle": "DIvI' DIvI'",
+    "backToPlay": "DIvI' HI'egh",
+    "empty": "DIvI' tu'lu'be'",
+    "ariaLabel": "nuv DIvI' YAML"
+  },
   "play": {
     "backToSelection": "nuv DIvI' HI'egh",
     "stats": {
