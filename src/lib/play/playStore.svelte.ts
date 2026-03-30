@@ -4,10 +4,11 @@ import type { Rule } from '$lib/rules-engine';
 import type { PlannedItem, PlayState } from './types';
 import { debounce } from './debounce';
 import { resolveInitialSelections } from './resolveInitialSelections';
-import { locale } from '$lib/i18n';
+import { locale, t } from '$lib/i18n';
 import { get } from 'svelte/store';
 import { getCache } from '$lib/rules/ruleGroupCache.svelte';
 import { resolveDependencies } from '$lib/rules/resolveDependencies';
+import { toast } from 'svelte-sonner';
 
 const DEBOUNCE_MS = 300;
 const BATCH_SIZE = 100;
@@ -22,7 +23,8 @@ const initialState: PlayState = {
   isEvaluating: false,
   plannedItems: [],
   facts: {},
-  effects: []
+  effects: [],
+  currentCharacterId: null
 };
 
 // Reactive state
@@ -108,8 +110,24 @@ async function loadRuleGroups(characterId: string): Promise<void> {
       ruleGroups: allRules,
       ruleGroupIds: groupIds,
       ruleGroupRulesMap: allGroupsMap,
-      isLoadingRuleGroups: false
+      isLoadingRuleGroups: false,
+      currentCharacterId: characterId
     };
+
+    // Load persisted effects (graceful fallback on failure)
+    try {
+      const effectsResponse = await apiGet(`/api/characters/${characterId}/effects`);
+      if (effectsResponse?.ok) {
+        const { effects: effectsJson } = await effectsResponse.json();
+        if (effectsJson) {
+          state = { ...state, effects: JSON.parse(effectsJson) as Rule[] };
+        }
+      } else {
+        toast.error(get(t)('play.error.loadEffects'));
+      }
+    } catch {
+      toast.error(get(t)('play.error.loadEffects'));
+    }
 
     // Initial evaluation
     performEvaluation();
@@ -415,6 +433,7 @@ function endTurn(): void {
   // This moves advertised effects into the committed effects array so they
   // persist across turns.
   const effects = state.engineOutput?.effects ?? state.effects;
+  const characterId = state.currentCharacterId;
 
   state = {
     ...state,
@@ -422,6 +441,21 @@ function endTurn(): void {
     effects
   };
   performEvaluation();
+
+  // Fire-and-forget save to backend
+  if (characterId) {
+    apiPost(`/api/characters/${characterId}/effects`, {
+      effects: JSON.stringify(effects)
+    })
+      .then((response) => {
+        if (!response.ok) {
+          toast.error(get(t)('play.error.saveEffects'));
+        }
+      })
+      .catch(() => {
+        toast.error(get(t)('play.error.saveEffects'));
+      });
+  }
 }
 
 function reset(): void {

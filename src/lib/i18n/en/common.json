@@ -197,7 +197,9 @@
       "empty": "No active effects"
     },
     "error": {
-      "loadRuleGroups": "Failed to load character data"
+      "loadRuleGroups": "Failed to load character data",
+      "loadEffects": "Failed to load effects",
+      "saveEffects": "Failed to save effects"
     }
   }
 }

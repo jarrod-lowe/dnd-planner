@@ -37,4 +37,6 @@ export interface PlayState {
   facts: Facts;
   /** Committed effects from previous turns. Passed to engine as rules.effects. */
   effects: Rule[];
+  /** ID of the currently loaded character, set during loadRuleGroups */
+  currentCharacterId: string | null;
 }
