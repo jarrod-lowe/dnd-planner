@@ -150,9 +150,7 @@ describe('UserDropdown', () => {
     if (details) details.open = true;
 
     const buttons = container.querySelectorAll('button');
-    const viewFactsButton = Array.from(buttons).find((b) =>
-      b.textContent?.includes('View Facts')
-    );
+    const viewFactsButton = Array.from(buttons).find((b) => b.textContent?.includes('View Facts'));
     viewFactsButton?.click();
 
     expect(onViewFacts).toHaveBeenCalledOnce();

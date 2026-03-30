@@ -50,7 +50,15 @@
   </div>
 
   <nav class="top-bar__right" aria-label={$t('auth.userMenu')}>
-    <UserDropdown {email} {onLogout} {version} {onManageRules} {showManageRules} {onViewFacts} {showViewFacts} />
+    <UserDropdown
+      {email}
+      {onLogout}
+      {version}
+      {onManageRules}
+      {showManageRules}
+      {onViewFacts}
+      {showViewFacts}
+    />
   </nav>
 </header>
 

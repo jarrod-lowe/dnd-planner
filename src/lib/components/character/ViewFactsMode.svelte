@@ -48,7 +48,7 @@
     <button
       type="button"
       class="view-facts__back"
-      aria-label="{$t('facts.backToPlay')}"
+      aria-label={$t('facts.backToPlay')}
       onclick={onBack}
     >
       <svg
@@ -68,12 +68,7 @@
 
   <div class="view-facts__content">
     {#if hasFacts}
-      <div
-        class="view-facts__pre"
-        role="region"
-        tabindex="0"
-        aria-label="{$t('facts.ariaLabel')}"
-      >
+      <div class="view-facts__pre" role="region" tabindex="0" aria-label={$t('facts.ariaLabel')}>
         {yamlText}
       </div>
     {:else}
