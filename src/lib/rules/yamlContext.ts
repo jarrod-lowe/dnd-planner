@@ -149,10 +149,7 @@ function getLineAndCol(lines: string[], pos: number): { lineIndex: number; col: 
  * Determine if the cursor is at a key-position within a rule or activity.
  * Returns 'rule', 'activity', or null.
  */
-function getKeyContext(
-  lines: string[],
-  lineIndex: number
-): 'rule' | 'activity' | null {
+function getKeyContext(lines: string[], lineIndex: number): 'rule' | 'activity' | null {
   const currentLine = lines[lineIndex];
   if (!currentLine) return null;
 
