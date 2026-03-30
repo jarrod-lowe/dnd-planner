@@ -14,6 +14,8 @@
     selectedCharacter?: Character | null;
     onManageRules?: () => void;
     showManageRules?: boolean;
+    onViewFacts?: () => void;
+    showViewFacts?: boolean;
   }
 
   let {
@@ -22,7 +24,9 @@
     version = 'v0.0.0',
     selectedCharacter,
     onManageRules,
-    showManageRules = false
+    showManageRules = false,
+    onViewFacts,
+    showViewFacts = false
   }: Props = $props();
 </script>
 
@@ -46,7 +50,15 @@
   </div>
 
   <nav class="top-bar__right" aria-label={$t('auth.userMenu')}>
-    <UserDropdown {email} {onLogout} {version} {onManageRules} {showManageRules} />
+    <UserDropdown
+      {email}
+      {onLogout}
+      {version}
+      {onManageRules}
+      {showManageRules}
+      {onViewFacts}
+      {showViewFacts}
+    />
   </nav>
 </header>
 

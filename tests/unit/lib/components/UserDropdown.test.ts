@@ -8,7 +8,8 @@ const translations: Record<string, string> = {
   'auth.userMenu': 'User menu',
   'auth.logout': 'Logout',
   'auth.version': 'Version',
-  'rules.manageTitle': 'Manage Rules'
+  'rules.manageTitle': 'Manage Rules',
+  'facts.viewTitle': 'View Facts'
 };
 
 vi.mock('$lib/i18n', () => ({
@@ -94,5 +95,64 @@ describe('UserDropdown', () => {
     manageRulesButton?.click();
 
     expect(onManageRules).toHaveBeenCalledOnce();
+  });
+
+  it('shows View Facts when showViewFacts is true', () => {
+    mount(UserDropdown, {
+      target: container,
+      props: {
+        email: 'test@example.com',
+        onLogout: vi.fn(),
+        version: 'v1.0.0',
+        showViewFacts: true,
+        onViewFacts: vi.fn()
+      }
+    });
+
+    const details = container.querySelector('details') as HTMLDetailsElement;
+    if (details) details.open = true;
+
+    expect(container.textContent).toContain('View Facts');
+  });
+
+  it('hides View Facts when showViewFacts is false', () => {
+    mount(UserDropdown, {
+      target: container,
+      props: {
+        email: 'test@example.com',
+        onLogout: vi.fn(),
+        version: 'v1.0.0',
+        showViewFacts: false
+      }
+    });
+
+    const details = container.querySelector('details') as HTMLDetailsElement;
+    if (details) details.open = true;
+
+    expect(container.textContent).not.toContain('View Facts');
+  });
+
+  it('calls onViewFacts when View Facts is clicked', () => {
+    const onViewFacts = vi.fn();
+
+    mount(UserDropdown, {
+      target: container,
+      props: {
+        email: 'test@example.com',
+        onLogout: vi.fn(),
+        version: 'v1.0.0',
+        showViewFacts: true,
+        onViewFacts
+      }
+    });
+
+    const details = container.querySelector('details') as HTMLDetailsElement;
+    if (details) details.open = true;
+
+    const buttons = container.querySelectorAll('button');
+    const viewFactsButton = Array.from(buttons).find((b) => b.textContent?.includes('View Facts'));
+    viewFactsButton?.click();
+
+    expect(onViewFacts).toHaveBeenCalledOnce();
   });
 });
