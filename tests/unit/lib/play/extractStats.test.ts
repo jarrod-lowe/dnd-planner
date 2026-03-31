@@ -146,7 +146,9 @@ describe('extractStats', () => {
       {
         id: 'r1',
         activities: [],
-        ui: { stats: [{ bad: 'entry' }, { name: 'valid', type: 'value', fact: 'x', section: 'turn' }] }
+        ui: {
+          stats: [{ bad: 'entry' }, { name: 'valid', type: 'value', fact: 'x', section: 'turn' }]
+        }
       }
     ];
     const result = extractStats(rules);

@@ -226,10 +226,10 @@ Each stat entry in `ui.stats[]` has a `type` field that determines the display f
 #### `value` — Plain number display
 
 ```yaml
-- name: play.stats.turnCounter    # i18n key for label
+- name: play.stats.turnCounter # i18n key for label
   type: value
-  fact: turn.counter              # fact path for the value
-  section: turn                   # section grouping
+  fact: turn.counter # fact path for the value
+  section: turn # section grouping
 ```
 
 #### `modifier` — Signed number display (+/-X)
@@ -246,8 +246,8 @@ Each stat entry in `ui.stats[]` has a `type` field that determines the display f
 ```yaml
 - name: play.stats.actions
   type: usedMax
-  total: actions.max              # fact path for capacity
-  remaining: actions.remaining    # fact path for remaining
+  total: actions.max # fact path for capacity
+  remaining: actions.remaining # fact path for remaining
   section: resources
 ```
 

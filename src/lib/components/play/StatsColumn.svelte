@@ -133,7 +133,10 @@
           <span class="stats-column__section-title">{sectionTitle(sectionGroup.section)}</span>
           <span
             class="stats-column__section-chevron"
-            class:stats-column__section-chevron--expanded={isExpanded(sectionGroup.section, sectionGroup.stats)}
+            class:stats-column__section-chevron--expanded={isExpanded(
+              sectionGroup.section,
+              sectionGroup.stats
+            )}
           >
             {#if isExpanded(sectionGroup.section, sectionGroup.stats)}
               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

@@ -94,7 +94,12 @@ describe('validateRules', () => {
           activities: [{ type: 'numberSet', target: { fact: 'x' }, source: { number: 1 } }],
           ui: {
             stats: [
-              { name: 'play.stats.turnCounter', type: 'value', fact: 'turn.counter', section: 'turn' }
+              {
+                name: 'play.stats.turnCounter',
+                type: 'value',
+                fact: 'turn.counter',
+                section: 'turn'
+              }
             ]
           }
         }

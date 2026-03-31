@@ -1647,7 +1647,12 @@ describe('playStore', () => {
           activities: [],
           ui: {
             stats: [
-              { name: 'play.stats.turnCounter', type: 'value', fact: 'turn.counter', section: 'turn' }
+              {
+                name: 'play.stats.turnCounter',
+                type: 'value',
+                fact: 'turn.counter',
+                section: 'turn'
+              }
             ]
           }
         }
