@@ -84,4 +84,201 @@ describe('validateRules', () => {
     expect(result.valid).toBe(false);
     expect(result.errors.some((e) => e.path.includes('1'))).toBe(true);
   });
+
+  describe('ui.stats', () => {
+    test('valid ui.stats value entry passes validation', async () => {
+      const { validateRules } = await import('$lib/rules/validateRules');
+      const rules = [
+        {
+          id: 'stat-rule',
+          activities: [{ type: 'numberSet', target: { fact: 'x' }, source: { number: 1 } }],
+          ui: {
+            stats: [
+              {
+                name: 'play.stats.turnCounter',
+                type: 'value',
+                fact: 'turn.counter',
+                section: 'turn'
+              }
+            ]
+          }
+        }
+      ];
+      const result = await validateRules(rules);
+      expect(result.valid).toBe(true);
+    });
+
+    test('valid ui.stats modifier entry passes validation', async () => {
+      const { validateRules } = await import('$lib/rules/validateRules');
+      const rules = [
+        {
+          id: 'stat-rule',
+          activities: [{ type: 'numberSet', target: { fact: 'x' }, source: { number: 1 } }],
+          ui: {
+            stats: [
+              {
+                name: 'play.stats.proficiency',
+                type: 'modifier',
+                fact: 'proficiency.bonus',
+                section: 'abilities'
+              }
+            ]
+          }
+        }
+      ];
+      const result = await validateRules(rules);
+      expect(result.valid).toBe(true);
+    });
+
+    test('valid ui.stats usedMax entry passes validation', async () => {
+      const { validateRules } = await import('$lib/rules/validateRules');
+      const rules = [
+        {
+          id: 'stat-rule',
+          activities: [{ type: 'numberSet', target: { fact: 'x' }, source: { number: 1 } }],
+          ui: {
+            stats: [
+              {
+                name: 'play.stats.actions',
+                type: 'usedMax',
+                total: 'actions.max',
+                remaining: 'actions.remaining',
+                section: 'resources'
+              }
+            ]
+          }
+        }
+      ];
+      const result = await validateRules(rules);
+      expect(result.valid).toBe(true);
+    });
+
+    test('ui.stats value entry without fact fails validation', async () => {
+      const { validateRules } = await import('$lib/rules/validateRules');
+      const rules = [
+        {
+          id: 'stat-rule',
+          activities: [{ type: 'numberSet', target: { fact: 'x' }, source: { number: 1 } }],
+          ui: {
+            stats: [{ name: 'play.stats.turn', type: 'value', section: 'turn' }]
+          }
+        }
+      ];
+      const result = await validateRules(rules);
+      expect(result.valid).toBe(false);
+    });
+
+    test('ui.stats usedMax entry without total fails validation', async () => {
+      const { validateRules } = await import('$lib/rules/validateRules');
+      const rules = [
+        {
+          id: 'stat-rule',
+          activities: [{ type: 'numberSet', target: { fact: 'x' }, source: { number: 1 } }],
+          ui: {
+            stats: [
+              {
+                name: 'play.stats.actions',
+                type: 'usedMax',
+                remaining: 'actions.remaining',
+                section: 'resources'
+              }
+            ]
+          }
+        }
+      ];
+      const result = await validateRules(rules);
+      expect(result.valid).toBe(false);
+    });
+
+    test('ui.stats usedMax entry without remaining fails validation', async () => {
+      const { validateRules } = await import('$lib/rules/validateRules');
+      const rules = [
+        {
+          id: 'stat-rule',
+          activities: [{ type: 'numberSet', target: { fact: 'x' }, source: { number: 1 } }],
+          ui: {
+            stats: [
+              {
+                name: 'play.stats.actions',
+                type: 'usedMax',
+                total: 'actions.max',
+                section: 'resources'
+              }
+            ]
+          }
+        }
+      ];
+      const result = await validateRules(rules);
+      expect(result.valid).toBe(false);
+    });
+
+    test('ui.stats with invalid type value fails validation', async () => {
+      const { validateRules } = await import('$lib/rules/validateRules');
+      const rules = [
+        {
+          id: 'stat-rule',
+          activities: [{ type: 'numberSet', target: { fact: 'x' }, source: { number: 1 } }],
+          ui: {
+            stats: [{ name: 'x', type: 'badType', fact: 'y', section: 'z' }]
+          }
+        }
+      ];
+      const result = await validateRules(rules);
+      expect(result.valid).toBe(false);
+    });
+
+    test('ui.stats entry without section fails validation', async () => {
+      const { validateRules } = await import('$lib/rules/validateRules');
+      const rules = [
+        {
+          id: 'stat-rule',
+          activities: [{ type: 'numberSet', target: { fact: 'x' }, source: { number: 1 } }],
+          ui: {
+            stats: [{ name: 'x', type: 'value', fact: 'y' }]
+          }
+        }
+      ];
+      const result = await validateRules(rules);
+      expect(result.valid).toBe(false);
+    });
+
+    test('ui.stats entry without name fails validation', async () => {
+      const { validateRules } = await import('$lib/rules/validateRules');
+      const rules = [
+        {
+          id: 'stat-rule',
+          activities: [{ type: 'numberSet', target: { fact: 'x' }, source: { number: 1 } }],
+          ui: {
+            stats: [{ type: 'value', fact: 'y', section: 'turn' }]
+          }
+        }
+      ];
+      const result = await validateRules(rules);
+      expect(result.valid).toBe(false);
+    });
+
+    test('ui.stats with nameParams passes validation', async () => {
+      const { validateRules } = await import('$lib/rules/validateRules');
+      const rules = [
+        {
+          id: 'stat-rule',
+          activities: [{ type: 'numberSet', target: { fact: 'x' }, source: { number: 1 } }],
+          ui: {
+            stats: [
+              {
+                name: 'play.stats.spellLevel',
+                nameParams: { level: 1 },
+                type: 'usedMax',
+                total: 'spellcasting.slots.level1.total',
+                remaining: 'spellcasting.slots.level1.remaining',
+                section: 'magic'
+              }
+            ]
+          }
+        }
+      ];
+      const result = await validateRules(rules);
+      expect(result.valid).toBe(true);
+    });
+  });
 });

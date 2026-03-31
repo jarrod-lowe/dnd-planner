@@ -16,6 +16,13 @@ ruleGroups:
         phase: early
         group:
           - action-max
+        ui:
+          stats:
+            - name: play.stats.actions
+              type: usedMax
+              total: actions.max
+              remaining: actions.remaining
+              section: resources
         activities:
           - type: numberSet
             source:

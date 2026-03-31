@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=../../schema.json
+# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: spell-create-and-destroy-water
     requires:

@@ -162,7 +162,14 @@
       "spellcasting": "Spellcast",
       "spellLevel": "Spell L{{level}}",
       "usedMax": "{{used}} / {{max}}",
-      "todo": "TODO"
+      "todo": "TODO",
+      "sections": {
+        "turn": "Turn",
+        "resources": "Resources",
+        "abilities": "Abilities",
+        "magic": "Magic",
+        "other": "Other"
+      }
     },
     "choices": {
       "title": "Available Choices",
