@@ -10,7 +10,7 @@ For the full engine specification, see [RULES_ENGINE.md](RULES_ENGINE.md).
 
 ### File Locations
 
-```
+```plain
 data/rule-groups/
   _shared/definitions.yaml       # Shared YAML anchors (prepended before parsing)
   dnd-5e-2024/                   # Core D&D 5e 2024 rules
@@ -25,9 +25,11 @@ data/rule-groups/
 - Path: `data/rule-groups/{category}/{name}.yaml`
 - The category directory becomes a DynamoDB search index key
 - Every file **must** start with the schema comment:
+
   ```yaml
   # yaml-language-server: $schema=../schema.json
   ```
+
   Adjust the relative path for nesting depth (e.g., `spells/` uses `$schema=../../schema.json`).
 
 ### Minimal Valid Rule Group
@@ -78,7 +80,7 @@ ruleGroups:
 
 The engine runs three phases **in strict order**:
 
-```
+```plain
 early  ->  normal  ->  safeguard
 ```
 
@@ -539,6 +541,84 @@ Key points:
 
 ## 6. Conventions
 
+### Stats Declarations (`ui.stats[]`)
+
+Rules can declare stats to display in the play mode stats column via `ui.stats[]`. The rules engine ignores these — they are a UI concern only.
+
+**Convention:** Place `ui.stats[]` on the rule that establishes/defines the fact being displayed.
+
+Three stat types are supported:
+
+```yaml
+# Plain number (e.g., Turn Counter)
+- id: turn-counter-increment
+  activities:
+    - type: numberIncrement
+      target: { fact: turn.counter }
+      source: { number: 1 }
+  ui:
+    stats:
+      - name: play.stats.turnCounter
+        type: value
+        fact: turn.counter
+        section: turn
+
+# Signed modifier (e.g., Proficiency +2)
+- id: proficiency-reset
+  activities:
+    - type: numberSet
+      target: { fact: proficiency.bonus }
+      source: { number: 0 }
+  ui:
+    stats:
+      - name: play.stats.proficiency
+        type: modifier
+        fact: proficiency.bonus
+        section: abilities
+
+# Resource with capacity (e.g., Actions 1/1)
+- id: action-max
+  activities:
+    - type: numberSet
+      target: { fact: actions.max }
+      source: { number: 1 }
+  ui:
+    stats:
+      - name: play.stats.actions
+        type: usedMax
+        total: actions.max
+        remaining: actions.remaining
+        section: resources
+
+# With i18n parameters (e.g., Spell L1)
+- id: spellcasting-slots-total
+  activities:
+    - type: numberSet
+      target: { fact: spellcasting.slots.level1.total }
+      source: { number: 0 }
+  ui:
+    stats:
+      - name: play.stats.spellLevel
+        nameParams: { level: 1 }
+        type: usedMax
+        total: spellcasting.slots.level1.total
+        remaining: spellcasting.slots.level1.remaining
+        section: magic
+```
+
+**Sections** group stats visually. Known sections (in display order):
+
+- `turn` — Turn counter
+- `resources` — Speed, Actions, Spellcasting
+- `abilities` — Proficiency
+- `magic` — Spell slots
+
+**Display rules:**
+
+- `value`: shows plain number; hidden if fact is undefined
+- `modifier`: shows `+X` or `-X`; hidden if fact is undefined
+- `usedMax`: shows `X / Y`; hidden if total is 0 or undefined
+
 ### Translations
 
 Every rule group must have translations for both supported locales:
@@ -660,7 +740,7 @@ Rule IDs should be descriptive and namespaced:
 
 Here is the dependency graph for the base D&D 5e 2024 rule groups with a Paladin:
 
-```
+```plain
 Phase: early
   species-constants ──────────────────> action-move-reset
   (species-human)                       (movement)

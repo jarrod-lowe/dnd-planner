@@ -4,6 +4,7 @@ import type { Rule } from '$lib/rules-engine';
 import type { PlannedItem, PlayState } from './types';
 import { debounce } from './debounce';
 import { resolveInitialSelections } from './resolveInitialSelections';
+import { extractStats } from './extractStats';
 import { locale, t } from '$lib/i18n';
 import { get } from 'svelte/store';
 import { getCache } from '$lib/rules/ruleGroupCache.svelte';
@@ -24,7 +25,8 @@ const initialState: PlayState = {
   plannedItems: [],
   facts: {},
   effects: [],
-  currentCharacterId: null
+  currentCharacterId: null,
+  stats: []
 };
 
 // Reactive state
@@ -32,6 +34,10 @@ let state = $state<PlayState>({ ...initialState });
 
 function generateInstanceId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+}
+
+function recalculateStats(): void {
+  state = { ...state, stats: extractStats(state.ruleGroups) };
 }
 
 function performEvaluation(): void {
@@ -131,6 +137,9 @@ async function loadRuleGroups(characterId: string): Promise<void> {
 
     // Initial evaluation
     performEvaluation();
+
+    // Extract stats declarations from all standing rules
+    recalculateStats();
   } catch (error) {
     console.error('[loadRuleGroups] Error:', error);
     state = {
@@ -276,6 +285,7 @@ async function updateCustomRules(characterId: string, newRules: Rule[]): Promise
     }
   };
 
+  recalculateStats();
   performEvaluation();
 
   try {
@@ -286,6 +296,7 @@ async function updateCustomRules(characterId: string, newRules: Rule[]): Promise
   } catch (error) {
     // Rollback
     state = { ...state, ruleGroups: prevRules, ruleGroupRulesMap: prevMap };
+    recalculateStats();
     performEvaluation();
     throw error;
   }
@@ -356,6 +367,7 @@ async function assignSingleGroup(characterId: string, ruleGroupId: string): Prom
       }
     };
 
+    recalculateStats();
     debouncedEvaluate();
   } catch (error) {
     console.error('[assignRuleGroup] Error:', error);
@@ -387,6 +399,7 @@ async function unassignRuleGroup(characterId: string, ruleGroupId: string): Prom
   };
 
   // Re-evaluate immediately for responsive UI
+  recalculateStats();
   performEvaluation();
 
   try {
@@ -404,6 +417,7 @@ async function unassignRuleGroup(characterId: string, ruleGroupId: string): Prom
       ruleGroups: prevRules,
       ruleGroupRulesMap: prevMap
     };
+    recalculateStats();
     performEvaluation();
     throw error;
   }

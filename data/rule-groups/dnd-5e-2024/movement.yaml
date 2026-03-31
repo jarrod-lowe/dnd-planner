@@ -16,6 +16,13 @@ ruleGroups:
         phase: early
         after:
           - group: species-constants
+        ui:
+          stats:
+            - name: play.stats.movement
+              type: usedMax
+              total: character.movement.total
+              remaining: character.movement.remaining
+              section: resources
         activities:
           - type: numberCopy
             source:

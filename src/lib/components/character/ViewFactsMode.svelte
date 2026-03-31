@@ -68,7 +68,7 @@
 
   <div class="view-facts__content">
     {#if hasFacts}
-      <div class="view-facts__pre" role="region" tabindex="0" aria-label={$t('facts.ariaLabel')}>
+      <div class="view-facts__pre" role="textbox" aria-readonly="true" tabindex="0" aria-label={$t('facts.ariaLabel')}>
         {yamlText}
       </div>
     {:else}

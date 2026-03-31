@@ -80,7 +80,7 @@ describe('ViewFactsMode', () => {
       }
     });
 
-    const factsRegion = container.querySelector('[role="region"]');
+    const factsRegion = container.querySelector('[role="textbox"]');
     expect(factsRegion).toBeTruthy();
     expect(factsRegion?.textContent).toContain('actions.max: 1');
     expect(factsRegion?.textContent).toContain('hp.current: 12');
@@ -95,7 +95,7 @@ describe('ViewFactsMode', () => {
       }
     });
 
-    const factsRegion = container.querySelector('[role="region"]');
+    const factsRegion = container.querySelector('[role="textbox"]');
     const text = factsRegion?.textContent ?? '';
     const actionsMaxIdx = text.indexOf('actions.max');
     const characterIdx = text.indexOf('character.movement');
@@ -129,7 +129,7 @@ describe('ViewFactsMode', () => {
       }
     });
 
-    const factsRegion = container.querySelector('[role="region"]');
+    const factsRegion = container.querySelector('[role="textbox"]');
     expect(factsRegion?.getAttribute('aria-label')).toBeTruthy();
     expect(factsRegion?.getAttribute('aria-label')).toContain('Character facts');
   });
@@ -142,7 +142,7 @@ describe('ViewFactsMode', () => {
       }
     });
 
-    const factsRegion = container.querySelector('[role="region"]');
+    const factsRegion = container.querySelector('[role="textbox"]');
     expect(factsRegion?.getAttribute('tabindex')).toBe('0');
   });
 });

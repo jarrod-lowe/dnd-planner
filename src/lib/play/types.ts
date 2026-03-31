@@ -1,4 +1,5 @@
 import type { Rule, EngineOutput, Facts } from '$lib/rules-engine';
+import type { StatEntry } from '$lib/play/extractStats';
 
 /**
  * Represents a single item in the user's plan.
@@ -39,4 +40,6 @@ export interface PlayState {
   effects: Rule[];
   /** ID of the currently loaded character, set during loadRuleGroups */
   currentCharacterId: string | null;
+  /** Stats declarations extracted from standing rules for display in stats column */
+  stats: StatEntry[];
 }

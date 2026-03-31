@@ -162,7 +162,14 @@
       "spellcasting": "mugh DIvI'",
       "spellLevel": "mugh DIvI' L{{level}}",
       "usedMax": "{{used}} / {{max}}",
-      "todo": "TODO"
+      "todo": "TODO",
+      "sections": {
+        "turn": "wa'DIch",
+        "resources": "DIvI' Duj",
+        "abilities": "laH",
+        "magic": "mugh",
+        "other": "latlh"
+      }
     },
     "choices": {
       "title": "DuH DIvI'",

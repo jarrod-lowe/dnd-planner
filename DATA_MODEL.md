@@ -189,7 +189,7 @@ Enable prefix search (3-6 characters) for rule group names and keywords, per loc
 
 **Example entries for "Fireball" (category: spells, id: fireball):**
 
-```
+```plain
 PK=LANG#en#PREFIX#fir,  SK=SCORE#0002#RULEGROUP#fireball, GSI1PK=RULEGROUPDIRECTORY#spells, GSI1SK=UPDATEDAT#2024-03-28T10:00:00Z
 PK=LANG#en#PREFIX#fire, SK=SCORE#0002#RULEGROUP#fireball, GSI1PK=RULEGROUPDIRECTORY#spells, GSI1SK=UPDATEDAT#2024-03-28T10:00:00Z
 PK=LANG#en#PREFIX#fireb, SK=SCORE#0002#RULEGROUP#fireball, GSI1PK=RULEGROUPDIRECTORY#spells, GSI1SK=UPDATEDAT#2024-03-28T10:00:00Z
@@ -214,3 +214,69 @@ When rule groups are fetched via the API, the `lang` query parameter determines 
 
 - Request: `GET /api/rule-groups/batch?lang=en`
 - Response includes: `name`, `description`, `keywords` extracted from `translations.en`
+
+## Stats Configuration
+
+Rules can declare stats to display in the stats column via `ui.stats[]`. The rules engine ignores these declarations and passes them through. The UI collects them from all standing rules and renders them dynamically.
+
+### Stat Entry Types
+
+Each stat entry in `ui.stats[]` has a `type` field that determines the display format:
+
+#### `value` — Plain number display
+
+```yaml
+- name: play.stats.turnCounter    # i18n key for label
+  type: value
+  fact: turn.counter              # fact path for the value
+  section: turn                   # section grouping
+```
+
+#### `modifier` — Signed number display (+/-X)
+
+```yaml
+- name: play.stats.proficiency
+  type: modifier
+  fact: proficiency.bonus
+  section: abilities
+```
+
+#### `usedMax` — Resource with capacity (X / Y)
+
+```yaml
+- name: play.stats.actions
+  type: usedMax
+  total: actions.max              # fact path for capacity
+  remaining: actions.remaining    # fact path for remaining
+  section: resources
+```
+
+Hidden when `total` fact is 0 or undefined.
+
+### Optional Fields
+
+- `nameParams` — Parameters for i18n template interpolation:
+
+```yaml
+- name: play.stats.spellLevel
+  nameParams: { level: 1 }
+  type: usedMax
+  total: spellcasting.slots.level1.total
+  remaining: spellcasting.slots.level1.remaining
+  section: magic
+```
+
+### Sections
+
+Stats are grouped by `section` and displayed in this order:
+
+1. `turn` — Turn counter
+2. `resources` — Speed, Actions, Spellcasting
+3. `abilities` — Proficiency bonus
+4. `magic` — Spell slots
+
+Unknown sections appear after known ones, sorted alphabetically. Stats within each section are sorted alphabetically by name.
+
+### Convention
+
+Place `ui.stats[]` on the rule that establishes/defines the fact being displayed. For example, the `action-max` rule (which sets `actions.max`) should declare the actions stat.

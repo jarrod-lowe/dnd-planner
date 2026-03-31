@@ -16,6 +16,12 @@ ruleGroups:
         phase: early
         group:
           - proficiency-base
+        ui:
+          stats:
+            - name: play.stats.proficiency
+              type: modifier
+              fact: proficiency.bonus
+              section: abilities
         activities:
           - type: numberSet
             target:

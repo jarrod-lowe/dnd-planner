@@ -1623,4 +1623,67 @@ describe('playStore', () => {
       );
     });
   });
+
+  describe('stats extraction', () => {
+    it('state.stats is empty after reset', async () => {
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      expect(playStore.state.stats).toEqual([]);
+    });
+
+    it('state.stats contains stats from loaded rule groups', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      const mockApiPost = vi.mocked(apiPost);
+      const mockEvaluate = vi.mocked(evaluate);
+
+      mockApiGet.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: ['group-1'] })
+      } as Response);
+
+      const mockRules: Rule[] = [
+        {
+          id: 'rule-with-stats',
+          activities: [],
+          ui: {
+            stats: [
+              { name: 'play.stats.turnCounter', type: 'value', fact: 'turn.counter', section: 'turn' }
+            ]
+          }
+        }
+      ];
+      mockApiPost.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          ruleGroups: [{ ruleGroupId: 'group-1', rules: JSON.stringify(mockRules) }]
+        })
+      } as Response);
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      await playStore.loadRuleGroups('char-stats-1');
+
+      expect(playStore.state.stats).toHaveLength(1);
+      expect(playStore.state.stats[0].name).toBe('play.stats.turnCounter');
+    });
+  });
 });

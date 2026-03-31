@@ -65,7 +65,8 @@ vi.mock('$lib/play/playStore.svelte', () => ({
         facts: {
           'character.movement.remaining': 25,
           'character.movement.total': 30
-        }
+        },
+        stats: []
       };
     },
     loadRuleGroups: mockFns.loadRuleGroups,
@@ -176,12 +177,9 @@ describe('PlayCharacterMode', () => {
     expect(container.querySelector('.play-character')).toBeTruthy();
   });
 
-  it('extracts movement from facts with correct fact names', () => {
-    // The playStore mock provides:
-    // - character.movement.remaining: 25
-    // - character.movement.total: 30
-    // This test verifies that PlayCharacterMode correctly extracts these
-    // and passes them to StatsColumn
+  it('passes stats and facts from playStore to StatsColumn', () => {
+    // PlayCharacterMode should pass playStore.state.stats and playStore.state.facts
+    // to StatsColumn, not compute them manually
 
     mount(PlayCharacterMode, {
       target: container,
@@ -191,18 +189,13 @@ describe('PlayCharacterMode', () => {
       }
     });
 
-    // StatsColumn should receive movement prop with current: 25, max: 30
-    // If the component uses wrong fact names (movement.current, movement.max),
-    // it won't find the facts and will show TODO instead
+    // StatsColumn receives stats=[] and facts from playStore
+    // With empty stats, it shows TODO
     const statsColumn = container.querySelector('.stats-column');
     expect(statsColumn).toBeTruthy();
 
-    // Should NOT show TODO - should show actual movement values
+    // With empty stats array, TODO should show
     const todoElement = container.querySelector('.stats-column__todo');
-    expect(todoElement).toBeFalsy();
-
-    // Should show movement stat item
-    const statItem = container.querySelector('.stats-column__item');
-    expect(statItem).toBeTruthy();
+    expect(todoElement).toBeTruthy();
   });
 });

@@ -16,6 +16,13 @@ ruleGroups:
         phase: early
         group:
           - spellcasting-max
+        ui:
+          stats:
+            - name: play.stats.spellcasting
+              type: usedMax
+              total: spellcasting.max
+              remaining: spellcasting.remaining
+              section: resources
         activities:
           - type: numberSet
             source:
@@ -41,6 +48,62 @@ ruleGroups:
         group:
           - spellcasting-slots-total
           - spellcasting-slots-set
+        ui:
+          stats:
+            - name: play.stats.spellLevel
+              nameParams: { level: 1 }
+              type: usedMax
+              total: spellcasting.slots.level1.total
+              remaining: spellcasting.slots.level1.remaining
+              section: magic
+            - name: play.stats.spellLevel
+              nameParams: { level: 2 }
+              type: usedMax
+              total: spellcasting.slots.level2.total
+              remaining: spellcasting.slots.level2.remaining
+              section: magic
+            - name: play.stats.spellLevel
+              nameParams: { level: 3 }
+              type: usedMax
+              total: spellcasting.slots.level3.total
+              remaining: spellcasting.slots.level3.remaining
+              section: magic
+            - name: play.stats.spellLevel
+              nameParams: { level: 4 }
+              type: usedMax
+              total: spellcasting.slots.level4.total
+              remaining: spellcasting.slots.level4.remaining
+              section: magic
+            - name: play.stats.spellLevel
+              nameParams: { level: 5 }
+              type: usedMax
+              total: spellcasting.slots.level5.total
+              remaining: spellcasting.slots.level5.remaining
+              section: magic
+            - name: play.stats.spellLevel
+              nameParams: { level: 6 }
+              type: usedMax
+              total: spellcasting.slots.level6.total
+              remaining: spellcasting.slots.level6.remaining
+              section: magic
+            - name: play.stats.spellLevel
+              nameParams: { level: 7 }
+              type: usedMax
+              total: spellcasting.slots.level7.total
+              remaining: spellcasting.slots.level7.remaining
+              section: magic
+            - name: play.stats.spellLevel
+              nameParams: { level: 8 }
+              type: usedMax
+              total: spellcasting.slots.level8.total
+              remaining: spellcasting.slots.level8.remaining
+              section: magic
+            - name: play.stats.spellLevel
+              nameParams: { level: 9 }
+              type: usedMax
+              total: spellcasting.slots.level9.total
+              remaining: spellcasting.slots.level9.remaining
+              section: magic
         activities:
           - type: numberSet
             source:

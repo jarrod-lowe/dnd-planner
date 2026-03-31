@@ -48,6 +48,12 @@ ruleGroups:
         phase: early
         group:
           - turn-counter
+        ui:
+          stats:
+            - name: play.stats.turnCounter
+              type: value
+              fact: turn.counter
+              section: turn
         activities:
           - type: numberIncrement
             target:
