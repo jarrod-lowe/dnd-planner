@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render } from '@testing-library/svelte';
+import { render, fireEvent } from '@testing-library/svelte';
 import SectionCollapsible from '$lib/components/play/SectionCollapsible.svelte';
 import type { AvailableRuleEntry } from '$lib/rules-engine';
 import type { ChoiceGroup } from '$lib/play/groupPackedChoices';
@@ -57,5 +57,46 @@ describe('SectionCollapsible', () => {
     const effectPanel = container.querySelector('.effect-panel');
     expect(effectPanel).toBeTruthy();
     expect(effectPanel?.tagName).toBe('DIV');
+  });
+
+  it('passes deletable and onRemoveEffect to EffectPanel in effect mode', () => {
+    const onRemoveEffect = vi.fn();
+    const { container } = render(SectionCollapsible, {
+      props: {
+        section: 'action-spell',
+        packedGroups: [singleGroup],
+        hasLegalEntries: true,
+        facts: {},
+        onChoiceTap: vi.fn(),
+        mode: 'effect',
+        deletableRuleIds: new Set(['rule-1']),
+        onRemoveEffect
+      }
+    });
+
+    // Should render delete button from EffectPanel
+    const deleteButton = container.querySelector('.effect-panel__button--remove');
+    expect(deleteButton).toBeTruthy();
+  });
+
+  it('calls onRemoveEffect with rule ID when effect delete is clicked', async () => {
+    const onRemoveEffect = vi.fn();
+    const { container } = render(SectionCollapsible, {
+      props: {
+        section: 'action-spell',
+        packedGroups: [singleGroup],
+        hasLegalEntries: true,
+        facts: {},
+        onChoiceTap: vi.fn(),
+        mode: 'effect',
+        deletableRuleIds: new Set(['rule-1']),
+        onRemoveEffect
+      }
+    });
+
+    const deleteButton = container.querySelector('.effect-panel__button--remove');
+    await fireEvent.click(deleteButton!);
+
+    expect(onRemoveEffect).toHaveBeenCalledWith('rule-1');
   });
 });

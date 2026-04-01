@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { render } from '@testing-library/svelte';
+import { describe, it, expect, vi } from 'vitest';
+import { render, fireEvent } from '@testing-library/svelte';
 import EffectPanel from '$lib/components/play/EffectPanel.svelte';
 import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
 
@@ -77,5 +77,44 @@ describe('EffectPanel', () => {
 
     // In test env, $t() returns the key; selections are passed for interpolation in production
     expect(container.textContent).toContain('rule.dnd-5e-2024.ability-scores.effect-strength.name');
+  });
+
+  it('does not render delete button by default', () => {
+    const entry = createMockEntry('effect-1', { description: 'Test Effect' });
+    const { container } = render(EffectPanel, { props: { entry } });
+
+    expect(container.querySelector('.effect-panel__button--remove')).toBeNull();
+  });
+
+  it('renders delete button when deletable is true', () => {
+    const entry = createMockEntry('effect-1', { description: 'Test Effect' });
+    const { container } = render(EffectPanel, {
+      props: { entry, deletable: true, onRemove: vi.fn() }
+    });
+
+    expect(container.querySelector('.effect-panel__button--remove')).toBeTruthy();
+  });
+
+  it('delete button has accessible aria-label', () => {
+    const entry = createMockEntry('effect-1', { description: 'Test Effect' });
+    const { container } = render(EffectPanel, {
+      props: { entry, deletable: true, onRemove: vi.fn() }
+    });
+
+    const button = container.querySelector('.effect-panel__button--remove');
+    expect(button?.getAttribute('aria-label')).toBeTruthy();
+  });
+
+  it('calls onRemove when delete button is clicked', async () => {
+    const entry = createMockEntry('effect-1', { description: 'Test Effect' });
+    const onRemove = vi.fn();
+    const { container } = render(EffectPanel, {
+      props: { entry, deletable: true, onRemove }
+    });
+
+    const button = container.querySelector('.effect-panel__button--remove');
+    await fireEvent.click(button!);
+
+    expect(onRemove).toHaveBeenCalledTimes(1);
   });
 });

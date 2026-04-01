@@ -44,6 +44,10 @@
     playStore.removeFromPlan(instanceId);
   }
 
+  function handleRemoveEffect(ruleId: string): void {
+    playStore.removeEffect(ruleId);
+  }
+
   // Handle selection changes from planned items
   function handleSelectionChange(instanceId: string, selections: Record<string, unknown>): void {
     playStore.updateSelections(instanceId, selections);
@@ -93,7 +97,11 @@
         />
       {/snippet}
       {#snippet effects()}
-        <EffectsColumn effects={currentEffects} />
+        <EffectsColumn
+          effects={currentEffects}
+          committedCount={playStore.state.effects.length}
+          onRemoveEffect={handleRemoveEffect}
+        />
       {/snippet}
     </PlayLayout>
   {/if}

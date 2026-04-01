@@ -442,6 +442,26 @@ function getDependents(ruleGroupId: string): string[] {
   return dependents;
 }
 
+function removeEffect(ruleId: string): void {
+  const updated = state.effects.filter((rule) => rule.id !== ruleId);
+  state = { ...state, effects: updated };
+  performEvaluation();
+
+  if (state.currentCharacterId) {
+    apiPost(`/api/characters/${state.currentCharacterId}/effects`, {
+      effects: JSON.stringify(updated)
+    })
+      .then((response) => {
+        if (!response.ok) {
+          toast.error(get(t)('play.error.saveEffects'));
+        }
+      })
+      .catch(() => {
+        toast.error(get(t)('play.error.saveEffects'));
+      });
+  }
+}
+
 function endTurn(): void {
   // Commit effects from the last evaluation output before clearing the plan.
   // This moves advertised effects into the committed effects array so they
@@ -490,6 +510,7 @@ export const playStore = {
   movePlanItem,
   updateSelections,
   updateCustomRules,
+  removeEffect,
   endTurn,
   reset
 };

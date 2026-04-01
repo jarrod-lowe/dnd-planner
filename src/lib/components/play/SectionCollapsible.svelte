@@ -14,6 +14,8 @@
     facts: Facts;
     onChoiceTap: (entry: AvailableRuleEntry) => void;
     mode?: 'choice' | 'effect';
+    deletableRuleIds?: Set<string>;
+    onRemoveEffect?: (ruleId: string) => void;
   }
 
   let {
@@ -22,7 +24,9 @@
     hasLegalEntries,
     facts,
     onChoiceTap,
-    mode = 'choice'
+    mode = 'choice',
+    deletableRuleIds,
+    onRemoveEffect
   }: Props = $props();
 
   // Expanded by default if there are legal entries (captures initial value intentionally)
@@ -74,7 +78,11 @@
       {#each packedGroups as group (group.type === 'packed' ? group.leader.rule.id : group.entry.rule.id)}
         {#if group.type === 'single'}
           {#if mode === 'effect'}
-            <EffectPanel entry={group.entry} />
+            <EffectPanel
+              entry={group.entry}
+              deletable={deletableRuleIds?.has(group.entry.rule.id) ?? false}
+              onRemove={() => onRemoveEffect?.(group.entry.rule.id)}
+            />
           {:else}
             <ChoicePanel
               entry={group.entry}

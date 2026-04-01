@@ -1624,6 +1624,254 @@ describe('playStore', () => {
     });
   });
 
+  describe('removeEffect', () => {
+    it('removes an effect by rule ID from state.effects', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      const mockApiPost = vi.mocked(apiPost);
+      const mockEvaluate = vi.mocked(evaluate);
+
+      const effect1: Rule = { id: 'effect-1', activities: [] };
+      const effect2: Rule = { id: 'effect-2', activities: [] };
+
+      // Setup: load character with committed effects
+      mockApiGet
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ ruleGroups: [] })
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ effects: JSON.stringify([effect1, effect2]) })
+        } as Response);
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      mockApiPost.mockResolvedValue({ ok: true, status: 204 } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      await playStore.loadRuleGroups('char-1');
+
+      expect(playStore.state.effects).toHaveLength(2);
+
+      // Remove effect-1
+      playStore.removeEffect('effect-1');
+
+      // Should only have effect-2 remaining
+      expect(playStore.state.effects).toHaveLength(1);
+      expect(playStore.state.effects[0].id).toBe('effect-2');
+    });
+
+    it('triggers re-evaluation after removing an effect', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      const mockApiPost = vi.mocked(apiPost);
+      const mockEvaluate = vi.mocked(evaluate);
+
+      const effect: Rule = { id: 'effect-1', activities: [] };
+
+      mockApiGet
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ ruleGroups: [] })
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ effects: JSON.stringify([effect]) })
+        } as Response);
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      mockApiPost.mockResolvedValue({ ok: true, status: 204 } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      await playStore.loadRuleGroups('char-1');
+
+      mockEvaluate.mockClear();
+
+      playStore.removeEffect('effect-1');
+
+      // Should have called evaluate (performEvaluation, not debounced)
+      expect(mockEvaluate).toHaveBeenCalled();
+    });
+
+    it('POSTs updated effects to API for persistence', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      const mockApiPost = vi.mocked(apiPost);
+      const mockEvaluate = vi.mocked(evaluate);
+
+      const effect1: Rule = { id: 'effect-1', activities: [] };
+      const effect2: Rule = { id: 'effect-2', activities: [] };
+
+      mockApiGet
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ ruleGroups: [] })
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ effects: JSON.stringify([effect1, effect2]) })
+        } as Response);
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      mockApiPost.mockResolvedValue({ ok: true, status: 204 } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      await playStore.loadRuleGroups('char-42');
+
+      // Clear to isolate the removeEffect POST
+      mockApiPost.mockClear();
+
+      playStore.removeEffect('effect-1');
+
+      expect(mockApiPost).toHaveBeenCalledWith('/api/characters/char-42/effects', {
+        effects: JSON.stringify([effect2])
+      });
+    });
+
+    it('does not POST when no character is loaded', async () => {
+      const mockApiPost = vi.mocked(apiPost);
+      const mockEvaluate = vi.mocked(evaluate);
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      mockApiPost.mockClear();
+
+      // No character loaded - should not POST
+      playStore.removeEffect('effect-1');
+
+      expect(mockApiPost).not.toHaveBeenCalledWith(
+        expect.stringContaining('/effects'),
+        expect.anything()
+      );
+    });
+
+    it('shows toast when effects save fails', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      const mockApiPost = vi.mocked(apiPost);
+      const mockEvaluate = vi.mocked(evaluate);
+      vi.mocked(toast.error).mockClear();
+
+      const effect: Rule = { id: 'effect-1', activities: [] };
+
+      mockApiGet
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ ruleGroups: [] })
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ effects: JSON.stringify([effect]) })
+        } as Response);
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      // POST returns failure
+      mockApiPost.mockResolvedValue({ ok: false, status: 500 } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      await playStore.loadRuleGroups('char-42');
+
+      playStore.removeEffect('effect-1');
+
+      // Flush microtasks so the .then() callback runs
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(toast.error).toHaveBeenCalledWith('play.error.saveEffects');
+    });
+  });
+
   describe('stats extraction', () => {
     it('state.stats is empty after reset', async () => {
       const { playStore } = await import('$lib/play/playStore.svelte');
