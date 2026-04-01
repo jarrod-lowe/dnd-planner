@@ -67,4 +67,15 @@ describe('EffectPanel', () => {
     // Should render the translation key (since no translations are loaded in test)
     expect(container.textContent).toContain('rule.effect.test-name');
   });
+
+  it('renders without error when rule has ui.name and selections', () => {
+    const entry = createMockEntry('effect-strength-1', {
+      uiName: 'rule.dnd-5e-2024.ability-scores.effect-strength.name'
+    });
+    entry.rule.selections = { score: 15 };
+    const { container } = render(EffectPanel, { props: { entry } });
+
+    // In test env, $t() returns the key; selections are passed for interpolation in production
+    expect(container.textContent).toContain('rule.dnd-5e-2024.ability-scores.effect-strength.name');
+  });
 });

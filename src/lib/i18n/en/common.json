@@ -49,6 +49,17 @@
           "out_of_movement": "Out of movement"
         }
       },
+      "ability-scores": {
+        "set-strength": {
+          "name": "Set Strength"
+        },
+        "set-strength-offer": {
+          "already_set": "Strength already set"
+        },
+        "effect-strength": {
+          "name": "Strength {{score}}"
+        }
+      },
       "free-actions": {
         "free-action": {
           "name": "Free Action"
@@ -158,6 +169,7 @@
       "turnCounter": "Turn",
       "movement": "Speed",
       "proficiency": "Proficiency",
+      "strength": "Strength",
       "actions": "Actions",
       "spellcasting": "Spellcast",
       "spellLevel": "Spell L{{level}}",
@@ -166,6 +178,7 @@
       "sections": {
         "turn": "Turn",
         "resources": "Resources",
+        "stats": "Stats",
         "abilities": "Abilities",
         "magic": "Magic",
         "other": "Other"
@@ -180,6 +193,7 @@
       "addToPlan": "Add to plan",
       "removeFromPlan": "Remove from plan",
       "sections": {
+        "abilities": "Abilities",
         "move": "Move",
         "action-spell": "Action → Spell",
         "action-other": "Action → Other",

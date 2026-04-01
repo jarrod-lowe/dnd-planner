@@ -185,6 +185,99 @@ describe('executeAdvertiseEffect', () => {
     });
   });
 
+  describe('selections inheritance', () => {
+    it('copies selections from the current rule into the new effect', () => {
+      const currentRule: Rule = {
+        id: 'planned-set-strength',
+        activities: [],
+        selections: { score: 15 }
+      };
+
+      const effectRule: Rule = {
+        id: 'effect-strength',
+        vars: {
+          score: {
+            capture: true,
+            default: { number: 10 }
+          }
+        },
+        activities: []
+      };
+
+      const activity: AdvertiseEffectActivity = {
+        id: 'adv-1',
+        type: 'advertiseEffect',
+        rule: effectRule
+      };
+
+      const context = createEmptyContext();
+      context.currentRule = currentRule;
+
+      executeAdvertiseEffect(activity, context);
+
+      expect(context.workingState.advertisedEffects).toHaveLength(1);
+      expect(context.workingState.advertisedEffects[0].selections).toEqual({
+        score: 15
+      });
+    });
+
+    it('does not copy selections when current rule has none', () => {
+      const currentRule: Rule = {
+        id: 'planned-no-selections',
+        activities: []
+      };
+
+      const effectRule: Rule = {
+        id: 'effect-test',
+        activities: []
+      };
+
+      const activity: AdvertiseEffectActivity = {
+        id: 'adv-1',
+        type: 'advertiseEffect',
+        rule: effectRule
+      };
+
+      const context = createEmptyContext();
+      context.currentRule = currentRule;
+
+      executeAdvertiseEffect(activity, context);
+
+      expect(context.workingState.advertisedEffects).toHaveLength(1);
+      expect(context.workingState.advertisedEffects[0].selections).toBeUndefined();
+    });
+
+    it('deep clones selections so mutations do not affect original', () => {
+      const currentRule: Rule = {
+        id: 'planned-set-strength',
+        activities: [],
+        selections: { score: 15 }
+      };
+
+      const effectRule: Rule = {
+        id: 'effect-strength',
+        activities: []
+      };
+
+      const activity: AdvertiseEffectActivity = {
+        id: 'adv-1',
+        type: 'advertiseEffect',
+        rule: effectRule
+      };
+
+      const context = createEmptyContext();
+      context.currentRule = currentRule;
+
+      executeAdvertiseEffect(activity, context);
+
+      // Mutate the effect's selections
+      (context.workingState.advertisedEffects[0].selections as Record<string, unknown>).score = 99;
+
+      // Original unaffected
+      expect(currentRule.selections?.score).toBe(15);
+    });
+  });
+
   describe('validation', () => {
     it('throws when neither rule nor self is provided', () => {
       const activity: AdvertiseEffectActivity = {

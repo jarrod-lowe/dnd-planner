@@ -88,9 +88,20 @@
     uiModel === 'move' ? resolveVarDefault('distance') : undefined
   );
 
+  // Ability score model specific values
+  const abilityScoreValue = $derived(
+    uiModel === 'ability-score' ? resolveVarDefault('score') : undefined
+  );
+
   // Slider state - initialized from current/max distance, controlled by user
   // Using writable derived pattern for slider value
   let sliderValue = $derived.by(() => {
+    if (uiModel === 'ability-score') {
+      if (entry.rule.selections?.score !== undefined) {
+        return entry.rule.selections.score as number;
+      }
+      return abilityScoreValue ?? 10;
+    }
     // For display, use the selection from the rule if it exists
     if (entry.rule.selections?.distance !== undefined) {
       return entry.rule.selections.distance as number;
@@ -104,7 +115,11 @@
     const value = parseInt(target.value, 10);
 
     if (onSelectionChange) {
-      onSelectionChange({ distance: value });
+      if (uiModel === 'ability-score') {
+        onSelectionChange({ score: value });
+      } else {
+        onSelectionChange({ distance: value });
+      }
     }
   }
 </script>
@@ -147,6 +162,21 @@
             oninput={handleSliderChange}
           />
           <span class="move-value">{sliderValue} ft</span>
+        </div>
+      {/if}
+      {#if uiModel === 'ability-score'}
+        <div class="choice-panel__model">
+          <input
+            type="range"
+            class="move-slider"
+            min="1"
+            max="30"
+            step="1"
+            value={sliderValue}
+            aria-label={$t(uiName ?? '')}
+            oninput={handleSliderChange}
+          />
+          <span class="ability-score-value">{sliderValue}</span>
         </div>
       {/if}
     </div>
@@ -231,6 +261,21 @@
             aria-label={$t('play.choices.move.distance')}
           />
           <span class="move-value">{sliderValue} ft</span>
+        </div>
+      {/if}
+      {#if uiModel === 'ability-score'}
+        <div class="choice-panel__model">
+          <input
+            type="range"
+            class="move-slider"
+            min="1"
+            max="30"
+            step="1"
+            value={sliderValue}
+            disabled
+            aria-label={$t(uiName ?? '')}
+          />
+          <span class="ability-score-value">{sliderValue}</span>
         </div>
       {/if}
     </div>
@@ -346,6 +391,14 @@
     font-size: var(--font-size-sm);
     color: var(--md-sys-color-on-surface-variant);
     min-width: 3rem;
+    text-align: right;
+  }
+
+  .ability-score-value {
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    color: var(--md-sys-color-on-surface-variant);
+    min-width: 2rem;
     text-align: right;
   }
 
