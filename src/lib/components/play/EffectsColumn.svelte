@@ -8,9 +8,17 @@
 
   interface Props {
     effects: Rule[];
+    committedCount?: number;
+    onRemoveEffect?: (ruleId: string) => void;
   }
 
-  let { effects }: Props = $props();
+  let { effects, committedCount, onRemoveEffect }: Props = $props();
+
+  const deletableRuleIds = $derived(
+    committedCount && onRemoveEffect
+      ? new Set(effects.slice(0, committedCount).map((e) => e.id))
+      : new Set<string>()
+  );
 
   // Adapt effects into entries, then group by section
   const sectionGroups = $derived(
@@ -33,6 +41,8 @@
           facts={{}}
           onChoiceTap={() => {}}
           mode="effect"
+          {deletableRuleIds}
+          {onRemoveEffect}
         />
       {/each}
     </div>

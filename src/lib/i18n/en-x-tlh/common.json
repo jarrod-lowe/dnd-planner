@@ -221,7 +221,8 @@
     },
     "effects": {
       "title": "DIvI' SeH",
-      "empty": "SeHbe'"
+      "empty": "SeHbe'",
+      "remove": "teq"
     },
     "error": {
       "loadRuleGroups": "nuv DIvI' laHbe'",

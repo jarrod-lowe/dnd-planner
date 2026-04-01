@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
-import { render } from '@testing-library/svelte';
+import { render, fireEvent } from '@testing-library/svelte';
 import EffectsColumn from '$lib/components/play/EffectsColumn.svelte';
 import type { Rule } from '$lib/rules-engine';
 
@@ -77,5 +77,43 @@ describe('EffectsColumn', () => {
     // Should still render the effect
     const panels = container.querySelectorAll('.effect-panel');
     expect(panels).toHaveLength(1);
+  });
+
+  it('renders delete buttons on committed effects when committedCount and onRemoveEffect provided', () => {
+    const committed = createMockRule('effect-1', { description: 'Committed' });
+    const advertised = createMockRule('effect-2', { description: 'Advertised' });
+    const onRemoveEffect = vi.fn();
+
+    const { container } = render(EffectsColumn, {
+      props: { effects: [committed, advertised], committedCount: 1, onRemoveEffect }
+    });
+
+    // Only the committed effect should have a delete button
+    const deleteButtons = container.querySelectorAll('.effect-panel__button--remove');
+    expect(deleteButtons).toHaveLength(1);
+  });
+
+  it('calls onRemoveEffect with rule ID when delete button clicked', async () => {
+    const committed = createMockRule('effect-1', { description: 'Committed' });
+    const onRemoveEffect = vi.fn();
+
+    const { container } = render(EffectsColumn, {
+      props: { effects: [committed], committedCount: 1, onRemoveEffect }
+    });
+
+    const deleteButton = container.querySelector('.effect-panel__button--remove');
+    await fireEvent.click(deleteButton!);
+
+    expect(onRemoveEffect).toHaveBeenCalledWith('effect-1');
+  });
+
+  it('does not render delete buttons without onRemoveEffect', () => {
+    const effects = [createMockRule('effect-1', { description: 'Test' })];
+
+    const { container } = render(EffectsColumn, {
+      props: { effects, committedCount: 1 }
+    });
+
+    expect(container.querySelector('.effect-panel__button--remove')).toBeNull();
   });
 });
