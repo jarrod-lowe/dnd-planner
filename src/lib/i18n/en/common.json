@@ -58,6 +58,51 @@
         },
         "effect-strength": {
           "name": "Strength {{score}}"
+        },
+        "set-dexterity": {
+          "name": "Set Dexterity"
+        },
+        "set-dexterity-offer": {
+          "already_set": "Dexterity already set"
+        },
+        "effect-dexterity": {
+          "name": "Dexterity {{score}}"
+        },
+        "set-constitution": {
+          "name": "Set Constitution"
+        },
+        "set-constitution-offer": {
+          "already_set": "Constitution already set"
+        },
+        "effect-constitution": {
+          "name": "Constitution {{score}}"
+        },
+        "set-intelligence": {
+          "name": "Set Intelligence"
+        },
+        "set-intelligence-offer": {
+          "already_set": "Intelligence already set"
+        },
+        "effect-intelligence": {
+          "name": "Intelligence {{score}}"
+        },
+        "set-wisdom": {
+          "name": "Set Wisdom"
+        },
+        "set-wisdom-offer": {
+          "already_set": "Wisdom already set"
+        },
+        "effect-wisdom": {
+          "name": "Wisdom {{score}}"
+        },
+        "set-charisma": {
+          "name": "Set Charisma"
+        },
+        "set-charisma-offer": {
+          "already_set": "Charisma already set"
+        },
+        "effect-charisma": {
+          "name": "Charisma {{score}}"
         }
       },
       "free-actions": {
@@ -170,6 +215,11 @@
       "movement": "Speed",
       "proficiency": "Proficiency",
       "strength": "Strength",
+      "dexterity": "Dexterity",
+      "constitution": "Constitution",
+      "intelligence": "Intelligence",
+      "wisdom": "Wisdom",
+      "charisma": "Charisma",
       "actions": "Actions",
       "spellcasting": "Spellcast",
       "spellLevel": "Spell L{{level}}",

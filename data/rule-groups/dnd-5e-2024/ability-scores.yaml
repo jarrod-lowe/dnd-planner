@@ -5,11 +5,11 @@ ruleGroups:
       en:
         name: Ability Scores
         description: Set ability scores for your character
-        keywords: [ability, score, strength, stats]
+        keywords: [ability, score, strength, dexterity, constitution, intelligence, wisdom, charisma, stats]
       en-x-tlh:
         name: laH
         description: laHlIj Dangu'
-        keywords: [laH, HoS]
+        keywords: [laH, HoS, Do, "'et", val, Sov, Quv]
     rules:
       # Reset str.value to 0 each turn (before effect overrides it)
       - id: str-value-reset
@@ -93,6 +93,446 @@ ruleGroups:
                           - var: score
                         target:
                           fact: str.modifier
+                      # Self-sustain forever (no when condition)
+                      - type: advertiseEffect
+                        self: true
+
+      # === DEXTERITY ===
+      # Reset dex.value to 0 each turn (before effect overrides it)
+      - id: dex-value-reset
+        phase: early
+        group:
+          - dex-base
+        ui:
+          stats:
+            - name: play.stats.dexterity
+              type: value
+              fact: dex.value
+              section: stats
+        activities:
+          - type: numberSet
+            target:
+              fact: dex.value
+            source:
+              number: 0
+
+      - id: set-dexterity-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: dex.value
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.set-dexterity-offer.already_set
+                    severity: error
+            rule:
+              id: set-dexterity
+              ui:
+                model: ability-score
+                section: abilities
+                name: rule.dnd-5e-2024.ability-scores.set-dexterity.name
+                packBehind: set-strength
+              vars:
+                score:
+                  capture: true
+                  default:
+                    number: 10
+              activities:
+                # Set dex.value from the slider
+                - type: numberSet
+                  target:
+                    fact: dex.value
+                  source:
+                    var: score
+                # Compute dex.modifier from the score
+                - type: numberFunction
+                  function: statToModifier
+                  sources:
+                    - var: score
+                  target:
+                    fact: dex.modifier
+                # Create a persistent effect that sustains forever
+                - type: advertiseEffect
+                  rule:
+                    id: effect-dexterity
+                    phase: early
+                    after:
+                      - group: dex-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-dexterity.name
+                    vars:
+                      score:
+                        capture: true
+                        default:
+                          number: 10
+                    activities:
+                      # Re-set dex.value from the stored score
+                      - type: numberSet
+                        target:
+                          fact: dex.value
+                        source:
+                          var: score
+                      # Re-compute dex.modifier
+                      - type: numberFunction
+                        function: statToModifier
+                        sources:
+                          - var: score
+                        target:
+                          fact: dex.modifier
+                      # Self-sustain forever (no when condition)
+                      - type: advertiseEffect
+                        self: true
+
+      # === CONSTITUTION ===
+      # Reset con.value to 0 each turn (before effect overrides it)
+      - id: con-value-reset
+        phase: early
+        group:
+          - con-base
+        ui:
+          stats:
+            - name: play.stats.constitution
+              type: value
+              fact: con.value
+              section: stats
+        activities:
+          - type: numberSet
+            target:
+              fact: con.value
+            source:
+              number: 0
+
+      - id: set-constitution-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: con.value
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.set-constitution-offer.already_set
+                    severity: error
+            rule:
+              id: set-constitution
+              ui:
+                model: ability-score
+                section: abilities
+                name: rule.dnd-5e-2024.ability-scores.set-constitution.name
+                packBehind: set-strength
+              vars:
+                score:
+                  capture: true
+                  default:
+                    number: 10
+              activities:
+                # Set con.value from the slider
+                - type: numberSet
+                  target:
+                    fact: con.value
+                  source:
+                    var: score
+                # Compute con.modifier from the score
+                - type: numberFunction
+                  function: statToModifier
+                  sources:
+                    - var: score
+                  target:
+                    fact: con.modifier
+                # Create a persistent effect that sustains forever
+                - type: advertiseEffect
+                  rule:
+                    id: effect-constitution
+                    phase: early
+                    after:
+                      - group: con-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-constitution.name
+                    vars:
+                      score:
+                        capture: true
+                        default:
+                          number: 10
+                    activities:
+                      # Re-set con.value from the stored score
+                      - type: numberSet
+                        target:
+                          fact: con.value
+                        source:
+                          var: score
+                      # Re-compute con.modifier
+                      - type: numberFunction
+                        function: statToModifier
+                        sources:
+                          - var: score
+                        target:
+                          fact: con.modifier
+                      # Self-sustain forever (no when condition)
+                      - type: advertiseEffect
+                        self: true
+
+      # === INTELLIGENCE ===
+      # Reset int.value to 0 each turn (before effect overrides it)
+      - id: int-value-reset
+        phase: early
+        group:
+          - int-base
+        ui:
+          stats:
+            - name: play.stats.intelligence
+              type: value
+              fact: int.value
+              section: stats
+        activities:
+          - type: numberSet
+            target:
+              fact: int.value
+            source:
+              number: 0
+
+      - id: set-intelligence-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: int.value
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.set-intelligence-offer.already_set
+                    severity: error
+            rule:
+              id: set-intelligence
+              ui:
+                model: ability-score
+                section: abilities
+                name: rule.dnd-5e-2024.ability-scores.set-intelligence.name
+                packBehind: set-strength
+              vars:
+                score:
+                  capture: true
+                  default:
+                    number: 10
+              activities:
+                # Set int.value from the slider
+                - type: numberSet
+                  target:
+                    fact: int.value
+                  source:
+                    var: score
+                # Compute int.modifier from the score
+                - type: numberFunction
+                  function: statToModifier
+                  sources:
+                    - var: score
+                  target:
+                    fact: int.modifier
+                # Create a persistent effect that sustains forever
+                - type: advertiseEffect
+                  rule:
+                    id: effect-intelligence
+                    phase: early
+                    after:
+                      - group: int-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-intelligence.name
+                    vars:
+                      score:
+                        capture: true
+                        default:
+                          number: 10
+                    activities:
+                      # Re-set int.value from the stored score
+                      - type: numberSet
+                        target:
+                          fact: int.value
+                        source:
+                          var: score
+                      # Re-compute int.modifier
+                      - type: numberFunction
+                        function: statToModifier
+                        sources:
+                          - var: score
+                        target:
+                          fact: int.modifier
+                      # Self-sustain forever (no when condition)
+                      - type: advertiseEffect
+                        self: true
+
+      # === WISDOM ===
+      # Reset wis.value to 0 each turn (before effect overrides it)
+      - id: wis-value-reset
+        phase: early
+        group:
+          - wis-base
+        ui:
+          stats:
+            - name: play.stats.wisdom
+              type: value
+              fact: wis.value
+              section: stats
+        activities:
+          - type: numberSet
+            target:
+              fact: wis.value
+            source:
+              number: 0
+
+      - id: set-wisdom-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: wis.value
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.set-wisdom-offer.already_set
+                    severity: error
+            rule:
+              id: set-wisdom
+              ui:
+                model: ability-score
+                section: abilities
+                name: rule.dnd-5e-2024.ability-scores.set-wisdom.name
+                packBehind: set-strength
+              vars:
+                score:
+                  capture: true
+                  default:
+                    number: 10
+              activities:
+                # Set wis.value from the slider
+                - type: numberSet
+                  target:
+                    fact: wis.value
+                  source:
+                    var: score
+                # Compute wis.modifier from the score
+                - type: numberFunction
+                  function: statToModifier
+                  sources:
+                    - var: score
+                  target:
+                    fact: wis.modifier
+                # Create a persistent effect that sustains forever
+                - type: advertiseEffect
+                  rule:
+                    id: effect-wisdom
+                    phase: early
+                    after:
+                      - group: wis-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-wisdom.name
+                    vars:
+                      score:
+                        capture: true
+                        default:
+                          number: 10
+                    activities:
+                      # Re-set wis.value from the stored score
+                      - type: numberSet
+                        target:
+                          fact: wis.value
+                        source:
+                          var: score
+                      # Re-compute wis.modifier
+                      - type: numberFunction
+                        function: statToModifier
+                        sources:
+                          - var: score
+                        target:
+                          fact: wis.modifier
+                      # Self-sustain forever (no when condition)
+                      - type: advertiseEffect
+                        self: true
+
+      # === CHARISMA ===
+      # Reset cha.value to 0 each turn (before effect overrides it)
+      - id: cha-value-reset
+        phase: early
+        group:
+          - cha-base
+        ui:
+          stats:
+            - name: play.stats.charisma
+              type: value
+              fact: cha.value
+              section: stats
+        activities:
+          - type: numberSet
+            target:
+              fact: cha.value
+            source:
+              number: 0
+
+      - id: set-charisma-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: cha.value
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.set-charisma-offer.already_set
+                    severity: error
+            rule:
+              id: set-charisma
+              ui:
+                model: ability-score
+                section: abilities
+                name: rule.dnd-5e-2024.ability-scores.set-charisma.name
+                packBehind: set-strength
+              vars:
+                score:
+                  capture: true
+                  default:
+                    number: 10
+              activities:
+                # Set cha.value from the slider
+                - type: numberSet
+                  target:
+                    fact: cha.value
+                  source:
+                    var: score
+                # Compute cha.modifier from the score
+                - type: numberFunction
+                  function: statToModifier
+                  sources:
+                    - var: score
+                  target:
+                    fact: cha.modifier
+                # Create a persistent effect that sustains forever
+                - type: advertiseEffect
+                  rule:
+                    id: effect-charisma
+                    phase: early
+                    after:
+                      - group: cha-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-charisma.name
+                    vars:
+                      score:
+                        capture: true
+                        default:
+                          number: 10
+                    activities:
+                      # Re-set cha.value from the stored score
+                      - type: numberSet
+                        target:
+                          fact: cha.value
+                        source:
+                          var: score
+                      # Re-compute cha.modifier
+                      - type: numberFunction
+                        function: statToModifier
+                        sources:
+                          - var: score
+                        target:
+                          fact: cha.modifier
                       # Self-sustain forever (no when condition)
                       - type: advertiseEffect
                         self: true
