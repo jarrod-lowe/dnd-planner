@@ -103,6 +103,60 @@
         },
         "effect-charisma": {
           "name": "Quv {{score}}"
+        },
+        "proficiency-str": {
+          "name": "valwI' - HoS toDval"
+        },
+        "proficiency-str-offer": {
+          "already_proficient": "HoS toDval already"
+        },
+        "effect-str-save-proficiency": {
+          "name": "HoS toDval valwI'"
+        },
+        "proficiency-dex": {
+          "name": "valwI' - Do toDval"
+        },
+        "proficiency-dex-offer": {
+          "already_proficient": "Do toDval already"
+        },
+        "effect-dex-save-proficiency": {
+          "name": "Do toDval valwI'"
+        },
+        "proficiency-con": {
+          "name": "valwI' - 'et toDval"
+        },
+        "proficiency-con-offer": {
+          "already_proficient": "'et toDval already"
+        },
+        "effect-con-save-proficiency": {
+          "name": "'et toDval valwI'"
+        },
+        "proficiency-int": {
+          "name": "valwI' - val toDval"
+        },
+        "proficiency-int-offer": {
+          "already_proficient": "val toDval already"
+        },
+        "effect-int-save-proficiency": {
+          "name": "val toDval valwI'"
+        },
+        "proficiency-wis": {
+          "name": "valwI' - Sov toDval"
+        },
+        "proficiency-wis-offer": {
+          "already_proficient": "Sov toDval already"
+        },
+        "effect-wis-save-proficiency": {
+          "name": "Sov toDval valwI'"
+        },
+        "proficiency-cha": {
+          "name": "valwI' - Quv toDval"
+        },
+        "proficiency-cha-offer": {
+          "already_proficient": "Quv toDval already"
+        },
+        "effect-cha-save-proficiency": {
+          "name": "Quv toDval valwI'"
         }
       },
       "free-actions": {
@@ -249,7 +303,7 @@
       "addToPlan": "DIvI' chel",
       "removeFromPlan": "DIvI' teq",
       "sections": {
-        "abilities": "laH",
+        "configuration": "SeHna'",
         "move": "Do",
         "action-spell": "DIvI' → mugh",
         "action-other": "DIvI' → latlh",

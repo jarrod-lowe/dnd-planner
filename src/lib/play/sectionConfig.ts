@@ -4,7 +4,7 @@
  * Unknown sections appear after these, "Other" (undefined) always last.
  */
 export const SECTION_ORDER: string[] = [
-  'abilities',
+  'configuration',
   'move',
   'action-spell',
   'action-other',

@@ -556,7 +556,7 @@ describe('ChoicePanel', () => {
         activities: [],
         ui: {
           model: 'ability-score',
-          section: 'abilities',
+          section: 'configuration',
           name: 'rule.dnd-5e-2024.ability-scores.set-strength.name'
         },
         vars: {
@@ -588,7 +588,7 @@ describe('ChoicePanel', () => {
         activities: [],
         ui: {
           model: 'ability-score',
-          section: 'abilities',
+          section: 'configuration',
           name: 'rule.dnd-5e-2024.ability-scores.set-strength.name'
         },
         vars: {
@@ -618,7 +618,7 @@ describe('ChoicePanel', () => {
         activities: [],
         ui: {
           model: 'ability-score',
-          section: 'abilities',
+          section: 'configuration',
           name: 'rule.dnd-5e-2024.ability-scores.set-strength.name'
         },
         vars: {
@@ -649,7 +649,7 @@ describe('ChoicePanel', () => {
         activities: [],
         ui: {
           model: 'ability-score',
-          section: 'abilities',
+          section: 'configuration',
           name: 'rule.dnd-5e-2024.ability-scores.set-strength.name'
         },
         vars: {
