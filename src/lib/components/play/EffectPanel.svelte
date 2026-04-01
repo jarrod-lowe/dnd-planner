@@ -10,7 +10,11 @@
 
   const uiName = $derived(entry.rule.ui?.name as string | undefined);
 
-  const displayName = $derived(uiName ? $t(uiName) : entry.rule.description || entry.rule.id);
+  const displayName = $derived(
+    uiName
+      ? $t(uiName, (entry.rule.selections as Record<string, unknown>) ?? {})
+      : entry.rule.description || entry.rule.id
+  );
 </script>
 
 <div class="effect-panel" role="status" aria-label={displayName}>

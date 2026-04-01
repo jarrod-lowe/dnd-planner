@@ -1,0 +1,98 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: ability-scores
+    translations:
+      en:
+        name: Ability Scores
+        description: Set ability scores for your character
+        keywords: [ability, score, strength, stats]
+      en-x-tlh:
+        name: laH
+        description: laHlIj Dangu'
+        keywords: [laH, HoS]
+    rules:
+      # Reset str.value to 0 each turn (before effect overrides it)
+      - id: str-value-reset
+        phase: early
+        group:
+          - str-base
+        ui:
+          stats:
+            - name: play.stats.strength
+              type: value
+              fact: str.value
+              section: stats
+        activities:
+          - type: numberSet
+            target:
+              fact: str.value
+            source:
+              number: 0
+
+      - id: set-strength-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: str.value
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.set-strength-offer.already_set
+                    severity: error
+            rule:
+              id: set-strength
+              ui:
+                model: ability-score
+                section: abilities
+                name: rule.dnd-5e-2024.ability-scores.set-strength.name
+              vars:
+                score:
+                  capture: true
+                  default:
+                    number: 10
+              activities:
+                # Set str.value from the slider
+                - type: numberSet
+                  target:
+                    fact: str.value
+                  source:
+                    var: score
+                # Compute str.modifier from the score
+                - type: numberFunction
+                  function: statToModifier
+                  sources:
+                    - var: score
+                  target:
+                    fact: str.modifier
+                # Create a persistent effect that sustains forever
+                - type: advertiseEffect
+                  rule:
+                    id: effect-strength
+                    phase: early
+                    after:
+                      - group: str-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-strength.name
+                    vars:
+                      score:
+                        capture: true
+                        default:
+                          number: 10
+                    activities:
+                      # Re-set str.value from the stored score
+                      - type: numberSet
+                        target:
+                          fact: str.value
+                        source:
+                          var: score
+                      # Re-compute str.modifier
+                      - type: numberFunction
+                        function: statToModifier
+                        sources:
+                          - var: score
+                        target:
+                          fact: str.modifier
+                      # Self-sustain forever (no when condition)
+                      - type: advertiseEffect
+                        self: true

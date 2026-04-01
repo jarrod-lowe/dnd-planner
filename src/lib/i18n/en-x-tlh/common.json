@@ -49,6 +49,17 @@
           "out_of_movement": "Do tu'lu'be'"
         }
       },
+      "ability-scores": {
+        "set-strength": {
+          "name": "HoS"
+        },
+        "set-strength-offer": {
+          "already_set": "HoS DIvI'"
+        },
+        "effect-strength": {
+          "name": "HoS {{score}}"
+        }
+      },
       "free-actions": {
         "free-action": {
           "name": "Free Action"
@@ -158,6 +169,7 @@
       "turnCounter": "wa'DIch",
       "movement": "Do",
       "proficiency": "valwI'",
+      "strength": "HoS",
       "actions": "DIvI'",
       "spellcasting": "mugh DIvI'",
       "spellLevel": "mugh DIvI' L{{level}}",
@@ -166,6 +178,7 @@
       "sections": {
         "turn": "wa'DIch",
         "resources": "DIvI' Duj",
+        "stats": "DIvI'",
         "abilities": "laH",
         "magic": "mugh",
         "other": "latlh"
@@ -180,6 +193,7 @@
       "addToPlan": "DIvI' chel",
       "removeFromPlan": "DIvI' teq",
       "sections": {
+        "abilities": "laH",
         "move": "Do",
         "action-spell": "DIvI' → mugh",
         "action-other": "DIvI' → latlh",

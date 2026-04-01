@@ -71,17 +71,6 @@ resource "aws_dynamodb_table_item" "char_seed" {
     species = {
       S = "$(species)"
     }
-    vars = {
-      S = jsonencode({
-        # default character config goes here
-        "stats.str.start" : 10,
-        "stats.dex.start" : 10,
-        "stats.con.start" : 10,
-        "stats.int.start" : 10,
-        "stats.wis.start" : 10,
-        "stats.cha.start" : 10,
-      })
-    }
     createdAt = {
       S = "$(now)"
     }
@@ -272,6 +261,45 @@ resource "aws_dynamodb_table_item" "char_free_actions_rulegroup_seed" {
     }
     ruleGroupId = {
       S = "free-actions"
+    }
+    userId = {
+      S = "$(userId)"
+    }
+    enabled = {
+      BOOL = true
+    }
+    createdAt = {
+      S = "$(now)"
+    }
+    updatedAt = {
+      S = "$(now)"
+    }
+  })
+}
+
+resource "aws_dynamodb_table_item" "char_ability_scores_rulegroup_seed" {
+  table_name = aws_dynamodb_table.data.name
+  hash_key   = "PK"
+  range_key  = "SK"
+
+  item = jsonencode({
+    PK = {
+      S = "SEED#CHAR#$(characterId)"
+    }
+    SK = {
+      S = "RULEGROUP#ability-scores"
+    }
+    gsiSeedPK = {
+      S = "SEED#CHAR"
+    }
+    type = {
+      S = "CHAR"
+    }
+    characterId = {
+      S = "$(characterId)"
+    }
+    ruleGroupId = {
+      S = "ability-scores"
     }
     userId = {
       S = "$(userId)"

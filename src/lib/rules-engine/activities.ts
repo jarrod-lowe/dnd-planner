@@ -484,6 +484,9 @@ export function executeAdvertiseEffect(
     context.workingState.advertisedEffectCounter++;
     const effectRule = deepClone(activity.rule);
     effectRule.id = `${effectRule.id}-${context.workingState.advertisedEffectCounter}`;
+    if (context.currentRule?.selections) {
+      effectRule.selections = deepClone(context.currentRule.selections);
+    }
     context.workingState.advertisedEffects.push(effectRule);
   } else {
     throw new Error('advertiseEffect requires either rule or self=true');

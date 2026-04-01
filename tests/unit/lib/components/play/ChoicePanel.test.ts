@@ -546,4 +546,127 @@ describe('ChoicePanel', () => {
     // Slider value should use captured distance (20), not fact value (5)
     expect(slider.value).toBe('20');
   });
+
+  // === Ability score model tests ===
+
+  it('renders ability-score model with disabled slider in read-only mode', () => {
+    const entry: AvailableRuleEntry = {
+      rule: {
+        id: 'set-strength',
+        activities: [],
+        ui: {
+          model: 'ability-score',
+          section: 'abilities',
+          name: 'rule.dnd-5e-2024.ability-scores.set-strength.name'
+        },
+        vars: {
+          score: { capture: true, default: { number: 10 } }
+        }
+      } as Rule,
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    };
+
+    const { container } = render(ChoicePanel, {
+      props: { entry, onTap: vi.fn(), editable: false }
+    });
+
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+    expect(slider).toBeTruthy();
+    expect(slider.disabled).toBe(true);
+    expect(slider.min).toBe('1');
+    expect(slider.max).toBe('30');
+    expect(slider.step).toBe('1');
+    expect(slider.value).toBe('10');
+  });
+
+  it('renders ability-score model with enabled slider in editable mode', () => {
+    const entry: AvailableRuleEntry = {
+      rule: {
+        id: 'set-strength',
+        activities: [],
+        ui: {
+          model: 'ability-score',
+          section: 'abilities',
+          name: 'rule.dnd-5e-2024.ability-scores.set-strength.name'
+        },
+        vars: {
+          score: { capture: true, default: { number: 10 } }
+        },
+        selections: { score: 15 }
+      } as Rule,
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    };
+
+    const { container } = render(ChoicePanel, {
+      props: { entry, editable: true }
+    });
+
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+    expect(slider).toBeTruthy();
+    expect(slider.disabled).toBe(false);
+    expect(slider.value).toBe('15');
+  });
+
+  it('calls onSelectionChange with score when ability-score slider changes', async () => {
+    const entry: AvailableRuleEntry = {
+      rule: {
+        id: 'set-strength',
+        activities: [],
+        ui: {
+          model: 'ability-score',
+          section: 'abilities',
+          name: 'rule.dnd-5e-2024.ability-scores.set-strength.name'
+        },
+        vars: {
+          score: { capture: true, default: { number: 10 } }
+        }
+      } as Rule,
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    };
+    const onSelectionChange = vi.fn();
+
+    const { container } = render(ChoicePanel, {
+      props: { entry, editable: true, onSelectionChange }
+    });
+
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+    slider.value = '18';
+    await fireEvent.input(slider);
+
+    expect(onSelectionChange).toHaveBeenCalledWith({ score: 18 });
+  });
+
+  it('shows ability score value without ft suffix', () => {
+    const entry: AvailableRuleEntry = {
+      rule: {
+        id: 'set-strength',
+        activities: [],
+        ui: {
+          model: 'ability-score',
+          section: 'abilities',
+          name: 'rule.dnd-5e-2024.ability-scores.set-strength.name'
+        },
+        vars: {
+          score: { capture: true, default: { number: 10 } }
+        },
+        selections: { score: 16 }
+      } as Rule,
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    };
+
+    const { container } = render(ChoicePanel, {
+      props: { entry, editable: true }
+    });
+
+    const valueSpan = container.querySelector('.ability-score-value');
+    expect(valueSpan?.textContent).toBe('16');
+  });
 });
