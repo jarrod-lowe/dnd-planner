@@ -316,7 +316,8 @@
             "generateRule",
             "offerRule",
             "setClear",
-            "setAdd"
+            "setAdd",
+            "advertiseEffect"
           ],
           "description": "Activity type"
         },
@@ -362,7 +363,11 @@
         },
         "rule": {
           "$ref": "#/definitions/rule",
-          "description": "Rule to generate or offer"
+          "description": "Rule to generate, offer, or advertise"
+        },
+        "self": {
+          "type": "boolean",
+          "description": "Re-advertise the current rule as a persistent effect (for advertiseEffect, mutually exclusive with rule)"
         },
         "legalWhen": {
           "type": "array",
