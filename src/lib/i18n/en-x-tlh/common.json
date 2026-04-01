@@ -58,6 +58,51 @@
         },
         "effect-strength": {
           "name": "HoS {{score}}"
+        },
+        "set-dexterity": {
+          "name": "Do"
+        },
+        "set-dexterity-offer": {
+          "already_set": "Do DIvI'"
+        },
+        "effect-dexterity": {
+          "name": "Do {{score}}"
+        },
+        "set-constitution": {
+          "name": "'et"
+        },
+        "set-constitution-offer": {
+          "already_set": "'et DIvI'"
+        },
+        "effect-constitution": {
+          "name": "'et {{score}}"
+        },
+        "set-intelligence": {
+          "name": "val"
+        },
+        "set-intelligence-offer": {
+          "already_set": "val DIvI'"
+        },
+        "effect-intelligence": {
+          "name": "val {{score}}"
+        },
+        "set-wisdom": {
+          "name": "Sov"
+        },
+        "set-wisdom-offer": {
+          "already_set": "Sov DIvI'"
+        },
+        "effect-wisdom": {
+          "name": "Sov {{score}}"
+        },
+        "set-charisma": {
+          "name": "Quv"
+        },
+        "set-charisma-offer": {
+          "already_set": "Quv DIvI'"
+        },
+        "effect-charisma": {
+          "name": "Quv {{score}}"
         }
       },
       "free-actions": {
@@ -170,6 +215,11 @@
       "movement": "Do",
       "proficiency": "valwI'",
       "strength": "HoS",
+      "dexterity": "Do",
+      "constitution": "'et",
+      "intelligence": "val",
+      "wisdom": "Sov",
+      "charisma": "Quv",
       "actions": "DIvI'",
       "spellcasting": "mugh DIvI'",
       "spellLevel": "mugh DIvI' L{{level}}",
