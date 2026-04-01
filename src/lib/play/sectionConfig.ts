@@ -3,7 +3,14 @@
  * Sections in this array appear first, in this order.
  * Unknown sections appear after these, "Other" (undefined) always last.
  */
-export const SECTION_ORDER: string[] = ['abilities', 'move', 'action-spell', 'action-other', 'free', 'rest'];
+export const SECTION_ORDER: string[] = [
+  'abilities',
+  'move',
+  'action-spell',
+  'action-other',
+  'free',
+  'rest'
+];
 
 /**
  * Defines the order of stat sections in the stats column.
