@@ -35,6 +35,22 @@ ruleGroups:
               fact: str.save
             source:
               number: 0
+          - type: numberSet
+            target:
+              fact: str.save.proficient
+            source:
+              number: 0
+
+      - id: str-save-modifier
+        phase: early
+        after:
+          - group: str-values
+        activities:
+          - type: numberIncrement
+            target:
+              fact: str.save
+            source:
+              fact: str.modifier
 
       - id: set-strength-offer
         activities:
@@ -51,7 +67,7 @@ ruleGroups:
               id: set-strength
               ui:
                 model: ability-score
-                section: abilities
+                section: configuration
                 name: rule.dnd-5e-2024.ability-scores.set-strength.name
               vars:
                 score:
@@ -77,6 +93,8 @@ ruleGroups:
                   rule:
                     id: effect-strength
                     phase: early
+                    group:
+                      - str-values
                     after:
                       - group: str-base
                     ui:
@@ -100,12 +118,6 @@ ruleGroups:
                           - var: score
                         target:
                           fact: str.modifier
-                      # Copy modifier to save (proficiency added later)
-                      - type: numberCopy
-                        source:
-                          fact: str.modifier
-                        target:
-                          fact: str.save
                       # Self-sustain forever (no when condition)
                       - type: advertiseEffect
                         self: true
@@ -135,6 +147,22 @@ ruleGroups:
               fact: dex.save
             source:
               number: 0
+          - type: numberSet
+            target:
+              fact: dex.save.proficient
+            source:
+              number: 0
+
+      - id: dex-save-modifier
+        phase: early
+        after:
+          - group: dex-values
+        activities:
+          - type: numberIncrement
+            target:
+              fact: dex.save
+            source:
+              fact: dex.modifier
 
       - id: set-dexterity-offer
         activities:
@@ -151,7 +179,7 @@ ruleGroups:
               id: set-dexterity
               ui:
                 model: ability-score
-                section: abilities
+                section: configuration
                 name: rule.dnd-5e-2024.ability-scores.set-dexterity.name
                 packBehind: set-strength
               vars:
@@ -178,6 +206,8 @@ ruleGroups:
                   rule:
                     id: effect-dexterity
                     phase: early
+                    group:
+                      - dex-values
                     after:
                       - group: dex-base
                     ui:
@@ -201,12 +231,6 @@ ruleGroups:
                           - var: score
                         target:
                           fact: dex.modifier
-                      # Copy modifier to save (proficiency added later)
-                      - type: numberCopy
-                        source:
-                          fact: dex.modifier
-                        target:
-                          fact: dex.save
                       # Self-sustain forever (no when condition)
                       - type: advertiseEffect
                         self: true
@@ -236,6 +260,22 @@ ruleGroups:
               fact: con.save
             source:
               number: 0
+          - type: numberSet
+            target:
+              fact: con.save.proficient
+            source:
+              number: 0
+
+      - id: con-save-modifier
+        phase: early
+        after:
+          - group: con-values
+        activities:
+          - type: numberIncrement
+            target:
+              fact: con.save
+            source:
+              fact: con.modifier
 
       - id: set-constitution-offer
         activities:
@@ -252,7 +292,7 @@ ruleGroups:
               id: set-constitution
               ui:
                 model: ability-score
-                section: abilities
+                section: configuration
                 name: rule.dnd-5e-2024.ability-scores.set-constitution.name
                 packBehind: set-strength
               vars:
@@ -279,6 +319,8 @@ ruleGroups:
                   rule:
                     id: effect-constitution
                     phase: early
+                    group:
+                      - con-values
                     after:
                       - group: con-base
                     ui:
@@ -302,12 +344,6 @@ ruleGroups:
                           - var: score
                         target:
                           fact: con.modifier
-                      # Copy modifier to save (proficiency added later)
-                      - type: numberCopy
-                        source:
-                          fact: con.modifier
-                        target:
-                          fact: con.save
                       # Self-sustain forever (no when condition)
                       - type: advertiseEffect
                         self: true
@@ -337,6 +373,22 @@ ruleGroups:
               fact: int.save
             source:
               number: 0
+          - type: numberSet
+            target:
+              fact: int.save.proficient
+            source:
+              number: 0
+
+      - id: int-save-modifier
+        phase: early
+        after:
+          - group: int-values
+        activities:
+          - type: numberIncrement
+            target:
+              fact: int.save
+            source:
+              fact: int.modifier
 
       - id: set-intelligence-offer
         activities:
@@ -353,7 +405,7 @@ ruleGroups:
               id: set-intelligence
               ui:
                 model: ability-score
-                section: abilities
+                section: configuration
                 name: rule.dnd-5e-2024.ability-scores.set-intelligence.name
                 packBehind: set-strength
               vars:
@@ -380,8 +432,9 @@ ruleGroups:
                   rule:
                     id: effect-intelligence
                     phase: early
+                    group:
+                      - int-values
                     after:
-                      - group: int-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-intelligence.name
                     vars:
@@ -403,12 +456,6 @@ ruleGroups:
                           - var: score
                         target:
                           fact: int.modifier
-                      # Copy modifier to save (proficiency added later)
-                      - type: numberCopy
-                        source:
-                          fact: int.modifier
-                        target:
-                          fact: int.save
                       # Self-sustain forever (no when condition)
                       - type: advertiseEffect
                         self: true
@@ -438,6 +485,22 @@ ruleGroups:
               fact: wis.save
             source:
               number: 0
+          - type: numberSet
+            target:
+              fact: wis.save.proficient
+            source:
+              number: 0
+
+      - id: wis-save-modifier
+        phase: early
+        after:
+          - group: wis-values
+        activities:
+          - type: numberIncrement
+            target:
+              fact: wis.save
+            source:
+              fact: wis.modifier
 
       - id: set-wisdom-offer
         activities:
@@ -454,7 +517,7 @@ ruleGroups:
               id: set-wisdom
               ui:
                 model: ability-score
-                section: abilities
+                section: configuration
                 name: rule.dnd-5e-2024.ability-scores.set-wisdom.name
                 packBehind: set-strength
               vars:
@@ -481,6 +544,8 @@ ruleGroups:
                   rule:
                     id: effect-wisdom
                     phase: early
+                    group:
+                      - wis-values
                     after:
                       - group: wis-base
                     ui:
@@ -504,12 +569,6 @@ ruleGroups:
                           - var: score
                         target:
                           fact: wis.modifier
-                      # Copy modifier to save (proficiency added later)
-                      - type: numberCopy
-                        source:
-                          fact: wis.modifier
-                        target:
-                          fact: wis.save
                       # Self-sustain forever (no when condition)
                       - type: advertiseEffect
                         self: true
@@ -539,6 +598,22 @@ ruleGroups:
               fact: cha.save
             source:
               number: 0
+          - type: numberSet
+            target:
+              fact: cha.save.proficient
+            source:
+              number: 0
+
+      - id: cha-save-modifier
+        phase: early
+        after:
+          - group: cha-values
+        activities:
+          - type: numberIncrement
+            target:
+              fact: cha.save
+            source:
+              fact: cha.modifier
 
       - id: set-charisma-offer
         activities:
@@ -555,7 +630,7 @@ ruleGroups:
               id: set-charisma
               ui:
                 model: ability-score
-                section: abilities
+                section: configuration
                 name: rule.dnd-5e-2024.ability-scores.set-charisma.name
                 packBehind: set-strength
               vars:
@@ -582,8 +657,9 @@ ruleGroups:
                   rule:
                     id: effect-charisma
                     phase: early
+                    group:
+                      - cha-values
                     after:
-                      - group: cha-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-charisma.name
                     vars:
@@ -605,12 +681,261 @@ ruleGroups:
                           - var: score
                         target:
                           fact: cha.modifier
-                      # Copy modifier to save (proficiency added later)
-                      - type: numberCopy
+                      # Self-sustain forever (no when condition)
+                      - type: advertiseEffect
+                        self: true
+
+      # =========================================================
+      # PROFICIENCY CHOICES
+      # =========================================================
+
+      # === STR SAVE PROFICIENCY (pack leader) ===
+      - id: proficiency-str-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: str.save.proficient
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.proficiency-str-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-str
+              ui:
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-str.name
+              activities:
+                - type: advertiseEffect
+                  rule:
+                    id: effect-str-save-proficiency
+                    phase: early
+                    after:
+                      - group: str-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-str-save-proficiency.name
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: str.save.proficient
                         source:
-                          fact: cha.modifier
+                          number: 1
+                      - type: numberIncrement
+                        target:
+                          fact: str.save
+                        source:
+                          fact: proficiency.bonus
+                      - type: advertiseEffect
+                        self: true
+
+      # === DEX SAVE PROFICIENCY ===
+      - id: proficiency-dex-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: dex.save.proficient
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.proficiency-dex-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-dex
+              ui:
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-dex.name
+                packBehind: proficiency-str
+              activities:
+                - type: advertiseEffect
+                  rule:
+                    id: effect-dex-save-proficiency
+                    phase: early
+                    after:
+                      - group: dex-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-dex-save-proficiency.name
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: dex.save.proficient
+                        source:
+                          number: 1
+                      - type: numberIncrement
+                        target:
+                          fact: dex.save
+                        source:
+                          fact: proficiency.bonus
+                      - type: advertiseEffect
+                        self: true
+
+      # === CON SAVE PROFICIENCY ===
+      - id: proficiency-con-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: con.save.proficient
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.proficiency-con-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-con
+              ui:
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-con.name
+                packBehind: proficiency-str
+              activities:
+                - type: advertiseEffect
+                  rule:
+                    id: effect-con-save-proficiency
+                    phase: early
+                    after:
+                      - group: con-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-con-save-proficiency.name
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: con.save.proficient
+                        source:
+                          number: 1
+                      - type: numberIncrement
+                        target:
+                          fact: con.save
+                        source:
+                          fact: proficiency.bonus
+                      - type: advertiseEffect
+                        self: true
+
+      # === INT SAVE PROFICIENCY ===
+      - id: proficiency-int-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: int.save.proficient
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.proficiency-int-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-int
+              ui:
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-int.name
+                packBehind: proficiency-str
+              activities:
+                - type: advertiseEffect
+                  rule:
+                    id: effect-int-save-proficiency
+                    phase: early
+                    after:
+                      - group: int-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-int-save-proficiency.name
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: int.save.proficient
+                        source:
+                          number: 1
+                      - type: numberIncrement
+                        target:
+                          fact: int.save
+                        source:
+                          fact: proficiency.bonus
+                      - type: advertiseEffect
+                        self: true
+
+      # === WIS SAVE PROFICIENCY ===
+      - id: proficiency-wis-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: wis.save.proficient
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.proficiency-wis-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-wis
+              ui:
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-wis.name
+                packBehind: proficiency-str
+              activities:
+                - type: advertiseEffect
+                  rule:
+                    id: effect-wis-save-proficiency
+                    phase: early
+                    after:
+                      - group: wis-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-wis-save-proficiency.name
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: wis.save.proficient
+                        source:
+                          number: 1
+                      - type: numberIncrement
+                        target:
+                          fact: wis.save
+                        source:
+                          fact: proficiency.bonus
+                      - type: advertiseEffect
+                        self: true
+
+      # === CHA SAVE PROFICIENCY ===
+      - id: proficiency-cha-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: cha.save.proficient
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.proficiency-cha-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-cha
+              ui:
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-cha.name
+                packBehind: proficiency-str
+              activities:
+                - type: advertiseEffect
+                  rule:
+                    id: effect-cha-save-proficiency
+                    phase: early
+                    after:
+                      - group: cha-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-cha-save-proficiency.name
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: cha.save.proficient
+                        source:
+                          number: 1
+                      - type: numberIncrement
                         target:
                           fact: cha.save
-                      # Self-sustain forever (no when condition)
+                        source:
+                          fact: proficiency.bonus
                       - type: advertiseEffect
                         self: true

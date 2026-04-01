@@ -103,6 +103,60 @@
         },
         "effect-charisma": {
           "name": "Charisma {{score}}"
+        },
+        "proficiency-str": {
+          "name": "Proficiency - STR Save"
+        },
+        "proficiency-str-offer": {
+          "already_proficient": "Already proficient in STR saves"
+        },
+        "effect-str-save-proficiency": {
+          "name": "STR Save Proficiency"
+        },
+        "proficiency-dex": {
+          "name": "Proficiency - DEX Save"
+        },
+        "proficiency-dex-offer": {
+          "already_proficient": "Already proficient in DEX saves"
+        },
+        "effect-dex-save-proficiency": {
+          "name": "DEX Save Proficiency"
+        },
+        "proficiency-con": {
+          "name": "Proficiency - CON Save"
+        },
+        "proficiency-con-offer": {
+          "already_proficient": "Already proficient in CON saves"
+        },
+        "effect-con-save-proficiency": {
+          "name": "CON Save Proficiency"
+        },
+        "proficiency-int": {
+          "name": "Proficiency - INT Save"
+        },
+        "proficiency-int-offer": {
+          "already_proficient": "Already proficient in INT saves"
+        },
+        "effect-int-save-proficiency": {
+          "name": "INT Save Proficiency"
+        },
+        "proficiency-wis": {
+          "name": "Proficiency - WIS Save"
+        },
+        "proficiency-wis-offer": {
+          "already_proficient": "Already proficient in WIS saves"
+        },
+        "effect-wis-save-proficiency": {
+          "name": "WIS Save Proficiency"
+        },
+        "proficiency-cha": {
+          "name": "Proficiency - CHA Save"
+        },
+        "proficiency-cha-offer": {
+          "already_proficient": "Already proficient in CHA saves"
+        },
+        "effect-cha-save-proficiency": {
+          "name": "CHA Save Proficiency"
         }
       },
       "free-actions": {
@@ -249,7 +303,7 @@
       "addToPlan": "Add to plan",
       "removeFromPlan": "Remove from plan",
       "sections": {
-        "abilities": "Abilities",
+        "configuration": "Configuration",
         "move": "Move",
         "action-spell": "Action → Spell",
         "action-other": "Action → Other",
