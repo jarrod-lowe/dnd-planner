@@ -75,7 +75,15 @@
   // Resolve the display value for a stat entry (only called when visible)
   function valueFor(stat: StatEntry): string {
     if (stat.type === 'value') {
-      return String(facts[stat.fact]);
+      const raw = String(facts[stat.fact]);
+      if (stat.modifierFact && stat.saveFact) {
+        const mod = Number(facts[stat.modifierFact]);
+        const save = Number(facts[stat.saveFact]);
+        const modStr = mod >= 0 ? `+${mod}` : `${mod}`;
+        const saveStr = save >= 0 ? `+${save}` : `${save}`;
+        return `${raw}/${modStr}/${saveStr}`;
+      }
+      return raw;
     }
     if (stat.type === 'modifier') {
       const n = Number(facts[stat.fact]);

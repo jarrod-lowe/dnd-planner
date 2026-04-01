@@ -94,6 +94,46 @@ describe('isStatEntry', () => {
     const { isStatEntry } = await import('$lib/play/extractStats');
     expect(isStatEntry({ name: 'x', type: 'unknown', fact: 'y', section: 'z' })).toBe(false);
   });
+
+  it('accepts value type with modifierFact and saveFact', async () => {
+    const { isStatEntry } = await import('$lib/play/extractStats');
+    expect(
+      isStatEntry({
+        name: 'play.stats.str',
+        type: 'value',
+        fact: 'str.value',
+        modifierFact: 'str.modifier',
+        saveFact: 'str.save',
+        section: 'stats'
+      })
+    ).toBe(true);
+  });
+
+  it('rejects value type with non-string modifierFact', async () => {
+    const { isStatEntry } = await import('$lib/play/extractStats');
+    expect(
+      isStatEntry({
+        name: 'play.stats.str',
+        type: 'value',
+        fact: 'str.value',
+        modifierFact: 42,
+        section: 'stats'
+      })
+    ).toBe(false);
+  });
+
+  it('rejects value type with non-string saveFact', async () => {
+    const { isStatEntry } = await import('$lib/play/extractStats');
+    expect(
+      isStatEntry({
+        name: 'play.stats.str',
+        type: 'value',
+        fact: 'str.value',
+        saveFact: true,
+        section: 'stats'
+      })
+    ).toBe(false);
+  });
 });
 
 describe('extractStats', () => {
@@ -171,5 +211,34 @@ describe('extractStats', () => {
       }
     ];
     expect(extractStats(rules)).toHaveLength(2);
+  });
+
+  it('preserves modifierFact and saveFact from rule UI declarations', async () => {
+    const { extractStats } = await import('$lib/play/extractStats');
+    const rules: Rule[] = [
+      {
+        id: 'r1',
+        activities: [],
+        ui: {
+          stats: [
+            {
+              name: 'play.stats.str',
+              type: 'value',
+              fact: 'str.value',
+              modifierFact: 'str.modifier',
+              saveFact: 'str.save',
+              section: 'stats'
+            }
+          ]
+        }
+      }
+    ];
+    const result = extractStats(rules);
+    expect(result).toHaveLength(1);
+    expect(result[0].type).toBe('value');
+    if (result[0].type === 'value') {
+      expect(result[0].modifierFact).toBe('str.modifier');
+      expect(result[0].saveFact).toBe('str.save');
+    }
   });
 });

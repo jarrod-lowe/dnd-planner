@@ -220,4 +220,51 @@ describe('StatsColumn (config-driven)', () => {
     await fireEvent.click(button!);
     expect(button?.getAttribute('aria-expanded')).toBe('false');
   });
+
+  it('renders ability score with score/modifier/save format', () => {
+    const abilityStat: StatEntry = {
+      name: 'play.stats.str',
+      type: 'value',
+      fact: 'str.value',
+      modifierFact: 'str.modifier',
+      saveFact: 'str.save',
+      section: 'stats'
+    };
+    const facts: Facts = { 'str.value': 15, 'str.modifier': 2, 'str.save': 2 };
+    const { getByText } = render(StatsColumn, {
+      props: { stats: [abilityStat], facts }
+    });
+    expect(getByText('play.stats.str')).toBeTruthy();
+    expect(getByText('15/+2/+2')).toBeTruthy();
+  });
+
+  it('renders ability score with negative modifier and save', () => {
+    const abilityStat: StatEntry = {
+      name: 'play.stats.int',
+      type: 'value',
+      fact: 'int.value',
+      modifierFact: 'int.modifier',
+      saveFact: 'int.save',
+      section: 'stats'
+    };
+    const facts: Facts = { 'int.value': 8, 'int.modifier': -1, 'int.save': -1 };
+    const { getByText } = render(StatsColumn, {
+      props: { stats: [abilityStat], facts }
+    });
+    expect(getByText('8/-1/-1')).toBeTruthy();
+  });
+
+  it('renders plain value stat unchanged when modifierFact absent', () => {
+    const plainStat: StatEntry = {
+      name: 'play.stats.turnCounter',
+      type: 'value',
+      fact: 'turn.counter',
+      section: 'turn'
+    };
+    const facts: Facts = { 'turn.counter': 5 };
+    const { container } = render(StatsColumn, {
+      props: { stats: [plainStat], facts }
+    });
+    expect(container.querySelector('.stats-column__value')?.textContent).toBe('5');
+  });
 });
