@@ -11,6 +11,8 @@ export interface StatEntryBase {
 export interface StatEntryValue extends StatEntryBase {
   type: 'value';
   fact: string;
+  modifierFact?: string;
+  saveFact?: string;
 }
 
 export interface StatEntryModifier extends StatEntryBase {
@@ -33,7 +35,12 @@ export function isStatEntry(entry: unknown): entry is StatEntry {
   if (typeof obj.section !== 'string') return false;
 
   if (obj.type === 'value' || obj.type === 'modifier') {
-    return typeof obj.fact === 'string';
+    if (typeof obj.fact !== 'string') return false;
+    if (obj.type === 'value') {
+      if (obj.modifierFact !== undefined && typeof obj.modifierFact !== 'string') return false;
+      if (obj.saveFact !== undefined && typeof obj.saveFact !== 'string') return false;
+    }
+    return true;
   }
   if (obj.type === 'usedMax') {
     return typeof obj.total === 'string' && typeof obj.remaining === 'string';

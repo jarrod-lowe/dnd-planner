@@ -18,14 +18,21 @@ ruleGroups:
           - str-base
         ui:
           stats:
-            - name: play.stats.strength
+            - name: play.stats.str
               type: value
               fact: str.value
+              modifierFact: str.modifier
+              saveFact: str.save
               section: stats
         activities:
           - type: numberSet
             target:
               fact: str.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: str.save
             source:
               number: 0
 
@@ -93,6 +100,12 @@ ruleGroups:
                           - var: score
                         target:
                           fact: str.modifier
+                      # Copy modifier to save (proficiency added later)
+                      - type: numberCopy
+                        source:
+                          fact: str.modifier
+                        target:
+                          fact: str.save
                       # Self-sustain forever (no when condition)
                       - type: advertiseEffect
                         self: true
@@ -105,14 +118,21 @@ ruleGroups:
           - dex-base
         ui:
           stats:
-            - name: play.stats.dexterity
+            - name: play.stats.dex
               type: value
               fact: dex.value
+              modifierFact: dex.modifier
+              saveFact: dex.save
               section: stats
         activities:
           - type: numberSet
             target:
               fact: dex.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: dex.save
             source:
               number: 0
 
@@ -181,6 +201,12 @@ ruleGroups:
                           - var: score
                         target:
                           fact: dex.modifier
+                      # Copy modifier to save (proficiency added later)
+                      - type: numberCopy
+                        source:
+                          fact: dex.modifier
+                        target:
+                          fact: dex.save
                       # Self-sustain forever (no when condition)
                       - type: advertiseEffect
                         self: true
@@ -193,14 +219,21 @@ ruleGroups:
           - con-base
         ui:
           stats:
-            - name: play.stats.constitution
+            - name: play.stats.con
               type: value
               fact: con.value
+              modifierFact: con.modifier
+              saveFact: con.save
               section: stats
         activities:
           - type: numberSet
             target:
               fact: con.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: con.save
             source:
               number: 0
 
@@ -269,6 +302,12 @@ ruleGroups:
                           - var: score
                         target:
                           fact: con.modifier
+                      # Copy modifier to save (proficiency added later)
+                      - type: numberCopy
+                        source:
+                          fact: con.modifier
+                        target:
+                          fact: con.save
                       # Self-sustain forever (no when condition)
                       - type: advertiseEffect
                         self: true
@@ -281,14 +320,21 @@ ruleGroups:
           - int-base
         ui:
           stats:
-            - name: play.stats.intelligence
+            - name: play.stats.int
               type: value
               fact: int.value
+              modifierFact: int.modifier
+              saveFact: int.save
               section: stats
         activities:
           - type: numberSet
             target:
               fact: int.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: int.save
             source:
               number: 0
 
@@ -357,6 +403,12 @@ ruleGroups:
                           - var: score
                         target:
                           fact: int.modifier
+                      # Copy modifier to save (proficiency added later)
+                      - type: numberCopy
+                        source:
+                          fact: int.modifier
+                        target:
+                          fact: int.save
                       # Self-sustain forever (no when condition)
                       - type: advertiseEffect
                         self: true
@@ -369,14 +421,21 @@ ruleGroups:
           - wis-base
         ui:
           stats:
-            - name: play.stats.wisdom
+            - name: play.stats.wis
               type: value
               fact: wis.value
+              modifierFact: wis.modifier
+              saveFact: wis.save
               section: stats
         activities:
           - type: numberSet
             target:
               fact: wis.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: wis.save
             source:
               number: 0
 
@@ -445,6 +504,12 @@ ruleGroups:
                           - var: score
                         target:
                           fact: wis.modifier
+                      # Copy modifier to save (proficiency added later)
+                      - type: numberCopy
+                        source:
+                          fact: wis.modifier
+                        target:
+                          fact: wis.save
                       # Self-sustain forever (no when condition)
                       - type: advertiseEffect
                         self: true
@@ -457,14 +522,21 @@ ruleGroups:
           - cha-base
         ui:
           stats:
-            - name: play.stats.charisma
+            - name: play.stats.cha
               type: value
               fact: cha.value
+              modifierFact: cha.modifier
+              saveFact: cha.save
               section: stats
         activities:
           - type: numberSet
             target:
               fact: cha.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: cha.save
             source:
               number: 0
 
@@ -533,6 +605,12 @@ ruleGroups:
                           - var: score
                         target:
                           fact: cha.modifier
+                      # Copy modifier to save (proficiency added later)
+                      - type: numberCopy
+                        source:
+                          fact: cha.modifier
+                        target:
+                          fact: cha.save
                       # Self-sustain forever (no when condition)
                       - type: advertiseEffect
                         self: true

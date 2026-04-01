@@ -435,6 +435,14 @@
         "section": {
           "type": "string",
           "description": "Section name for grouping stats in the UI"
+        },
+        "modifierFact": {
+          "type": "string",
+          "description": "Fact path for the modifier display (value type only). When present with saveFact, value renders as score/modifier/save."
+        },
+        "saveFact": {
+          "type": "string",
+          "description": "Fact path for the saving throw modifier (value type only). When present with modifierFact, value renders as score/modifier/save."
         }
       },
       "additionalProperties": false,
