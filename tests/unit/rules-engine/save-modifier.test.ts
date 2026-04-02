@@ -27,8 +27,7 @@ describe('save modifier calculation', () => {
           },
           {
             id: 'str-save-modifier',
-            phase: 'early',
-            after: [{ group: 'str-values' }],
+            phase: 'normal',
             activities: [
               {
                 type: 'numberIncrement',
@@ -114,8 +113,7 @@ describe('save modifier calculation', () => {
           },
           {
             id: 'str-save-modifier',
-            phase: 'early',
-            after: [{ group: 'str-values' }],
+            phase: 'normal',
             activities: [
               {
                 type: 'numberIncrement',
