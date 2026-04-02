@@ -32,6 +32,11 @@ ruleGroups:
               number: 0
           - type: numberSet
             target:
+              fact: str.modifier
+            source:
+              number: 0
+          - type: numberSet
+            target:
               fact: str.save
             source:
               number: 0
@@ -42,9 +47,7 @@ ruleGroups:
               number: 0
 
       - id: str-save-modifier
-        phase: early
-        after:
-          - group: str-values
+        phase: normal
         activities:
           - type: numberIncrement
             target:
@@ -144,6 +147,11 @@ ruleGroups:
               number: 0
           - type: numberSet
             target:
+              fact: dex.modifier
+            source:
+              number: 0
+          - type: numberSet
+            target:
               fact: dex.save
             source:
               number: 0
@@ -154,9 +162,7 @@ ruleGroups:
               number: 0
 
       - id: dex-save-modifier
-        phase: early
-        after:
-          - group: dex-values
+        phase: normal
         activities:
           - type: numberIncrement
             target:
@@ -257,6 +263,11 @@ ruleGroups:
               number: 0
           - type: numberSet
             target:
+              fact: con.modifier
+            source:
+              number: 0
+          - type: numberSet
+            target:
               fact: con.save
             source:
               number: 0
@@ -267,9 +278,7 @@ ruleGroups:
               number: 0
 
       - id: con-save-modifier
-        phase: early
-        after:
-          - group: con-values
+        phase: normal
         activities:
           - type: numberIncrement
             target:
@@ -370,6 +379,11 @@ ruleGroups:
               number: 0
           - type: numberSet
             target:
+              fact: int.modifier
+            source:
+              number: 0
+          - type: numberSet
+            target:
               fact: int.save
             source:
               number: 0
@@ -380,9 +394,7 @@ ruleGroups:
               number: 0
 
       - id: int-save-modifier
-        phase: early
-        after:
-          - group: int-values
+        phase: normal
         activities:
           - type: numberIncrement
             target:
@@ -482,6 +494,11 @@ ruleGroups:
               number: 0
           - type: numberSet
             target:
+              fact: wis.modifier
+            source:
+              number: 0
+          - type: numberSet
+            target:
               fact: wis.save
             source:
               number: 0
@@ -492,9 +509,7 @@ ruleGroups:
               number: 0
 
       - id: wis-save-modifier
-        phase: early
-        after:
-          - group: wis-values
+        phase: normal
         activities:
           - type: numberIncrement
             target:
@@ -595,6 +610,11 @@ ruleGroups:
               number: 0
           - type: numberSet
             target:
+              fact: cha.modifier
+            source:
+              number: 0
+          - type: numberSet
+            target:
               fact: cha.save
             source:
               number: 0
@@ -605,9 +625,7 @@ ruleGroups:
               number: 0
 
       - id: cha-save-modifier
-        phase: early
-        after:
-          - group: cha-values
+        phase: normal
         activities:
           - type: numberIncrement
             target:
@@ -707,6 +725,18 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-str.name
               activities:
+                # Immediate: apply proficiency in current evaluation
+                - type: numberSet
+                  target:
+                    fact: str.save.proficient
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: str.save
+                  source:
+                    fact: proficiency.bonus
+                # Persistent: for future turns
                 - type: advertiseEffect
                   rule:
                     id: effect-str-save-proficiency
@@ -749,6 +779,18 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-dex.name
                 packBehind: proficiency-str
               activities:
+                # Immediate: apply proficiency in current evaluation
+                - type: numberSet
+                  target:
+                    fact: dex.save.proficient
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: dex.save
+                  source:
+                    fact: proficiency.bonus
+                # Persistent: for future turns
                 - type: advertiseEffect
                   rule:
                     id: effect-dex-save-proficiency
@@ -791,6 +833,18 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-con.name
                 packBehind: proficiency-str
               activities:
+                # Immediate: apply proficiency in current evaluation
+                - type: numberSet
+                  target:
+                    fact: con.save.proficient
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: con.save
+                  source:
+                    fact: proficiency.bonus
+                # Persistent: for future turns
                 - type: advertiseEffect
                   rule:
                     id: effect-con-save-proficiency
@@ -833,6 +887,18 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-int.name
                 packBehind: proficiency-str
               activities:
+                # Immediate: apply proficiency in current evaluation
+                - type: numberSet
+                  target:
+                    fact: int.save.proficient
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: int.save
+                  source:
+                    fact: proficiency.bonus
+                # Persistent: for future turns
                 - type: advertiseEffect
                   rule:
                     id: effect-int-save-proficiency
@@ -875,6 +941,18 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-wis.name
                 packBehind: proficiency-str
               activities:
+                # Immediate: apply proficiency in current evaluation
+                - type: numberSet
+                  target:
+                    fact: wis.save.proficient
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: wis.save
+                  source:
+                    fact: proficiency.bonus
+                # Persistent: for future turns
                 - type: advertiseEffect
                   rule:
                     id: effect-wis-save-proficiency
@@ -917,6 +995,18 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-cha.name
                 packBehind: proficiency-str
               activities:
+                # Immediate: apply proficiency in current evaluation
+                - type: numberSet
+                  target:
+                    fact: cha.save.proficient
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: cha.save
+                  source:
+                    fact: proficiency.bonus
+                # Persistent: for future turns
                 - type: advertiseEffect
                   rule:
                     id: effect-cha-save-proficiency
