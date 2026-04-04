@@ -517,3 +517,43 @@ describe('validateCrossPhaseOrdering', () => {
     expect(diagnostics[0].code).toBe('CROSS_PHASE_DEPENDENCY');
   });
 });
+
+describe('validateOrdering auto-group suppression', () => {
+  it('suppresses MISSING_GROUP warnings for _auto.* groups', () => {
+    const rules: Rule[] = [
+      { id: 'rule-1', after: [{ group: '_auto.fact.str.modifier' }], activities: [] }
+    ];
+
+    const diagnostics = validateOrdering(rules, 'normal');
+
+    expect(diagnostics).toHaveLength(0);
+  });
+
+  it('still warns for non-auto missing groups', () => {
+    const rules: Rule[] = [
+      { id: 'rule-1', after: [{ group: 'nonexistent' }], activities: [] }
+    ];
+
+    const diagnostics = validateOrdering(rules, 'normal');
+
+    expect(diagnostics).toHaveLength(1);
+    expect(diagnostics[0].code).toBe('MISSING_GROUP');
+  });
+
+  it('suppresses only _auto.* when mixed with regular missing groups', () => {
+    const rules: Rule[] = [
+      {
+        id: 'rule-1',
+        after: [{ group: '_auto.fact.str.value' }, { group: 'nonexistent' }],
+        activities: []
+      }
+    ];
+
+    const diagnostics = validateOrdering(rules, 'normal');
+
+    expect(diagnostics).toHaveLength(1);
+    expect(diagnostics[0].code).toBe('MISSING_GROUP');
+    expect(diagnostics[0].message).toContain('nonexistent');
+    expect(diagnostics[0].message).not.toContain('_auto.');
+  });
+});
