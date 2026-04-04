@@ -56,6 +56,8 @@ ruleGroups:
               fact: str.modifier
 
       - id: set-strength-offer
+        after:
+          - group: __planned__
         activities:
           - type: offerRule
             legalWhen:
@@ -68,6 +70,8 @@ ruleGroups:
                     severity: error
             rule:
               id: set-strength
+              group:
+                - __planned__
               ui:
                 model: ability-score
                 section: configuration
@@ -171,6 +175,8 @@ ruleGroups:
               fact: dex.modifier
 
       - id: set-dexterity-offer
+        after:
+          - group: __planned__
         activities:
           - type: offerRule
             legalWhen:
@@ -183,6 +189,8 @@ ruleGroups:
                     severity: error
             rule:
               id: set-dexterity
+              group:
+                - __planned__
               ui:
                 model: ability-score
                 section: configuration
@@ -287,6 +295,8 @@ ruleGroups:
               fact: con.modifier
 
       - id: set-constitution-offer
+        after:
+          - group: __planned__
         activities:
           - type: offerRule
             legalWhen:
@@ -299,6 +309,8 @@ ruleGroups:
                     severity: error
             rule:
               id: set-constitution
+              group:
+                - __planned__
               ui:
                 model: ability-score
                 section: configuration
@@ -403,6 +415,8 @@ ruleGroups:
               fact: int.modifier
 
       - id: set-intelligence-offer
+        after:
+          - group: __planned__
         activities:
           - type: offerRule
             legalWhen:
@@ -415,6 +429,8 @@ ruleGroups:
                     severity: error
             rule:
               id: set-intelligence
+              group:
+                - __planned__
               ui:
                 model: ability-score
                 section: configuration
@@ -518,6 +534,8 @@ ruleGroups:
               fact: wis.modifier
 
       - id: set-wisdom-offer
+        after:
+          - group: __planned__
         activities:
           - type: offerRule
             legalWhen:
@@ -530,6 +548,8 @@ ruleGroups:
                     severity: error
             rule:
               id: set-wisdom
+              group:
+                - __planned__
               ui:
                 model: ability-score
                 section: configuration
@@ -634,6 +654,8 @@ ruleGroups:
               fact: cha.modifier
 
       - id: set-charisma-offer
+        after:
+          - group: __planned__
         activities:
           - type: offerRule
             legalWhen:
@@ -646,6 +668,8 @@ ruleGroups:
                     severity: error
             rule:
               id: set-charisma
+              group:
+                - __planned__
               ui:
                 model: ability-score
                 section: configuration
@@ -709,6 +733,8 @@ ruleGroups:
 
       # === STR SAVE PROFICIENCY (pack leader) ===
       - id: proficiency-str-offer
+        after:
+          - group: __planned__
         activities:
           - type: offerRule
             legalWhen:
@@ -721,6 +747,8 @@ ruleGroups:
                     severity: error
             rule:
               id: proficiency-str
+              group:
+                - __planned__
               ui:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-str.name
@@ -762,6 +790,8 @@ ruleGroups:
 
       # === DEX SAVE PROFICIENCY ===
       - id: proficiency-dex-offer
+        after:
+          - group: __planned__
         activities:
           - type: offerRule
             legalWhen:
@@ -774,6 +804,8 @@ ruleGroups:
                     severity: error
             rule:
               id: proficiency-dex
+              group:
+                - __planned__
               ui:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-dex.name
@@ -816,6 +848,8 @@ ruleGroups:
 
       # === CON SAVE PROFICIENCY ===
       - id: proficiency-con-offer
+        after:
+          - group: __planned__
         activities:
           - type: offerRule
             legalWhen:
@@ -828,6 +862,8 @@ ruleGroups:
                     severity: error
             rule:
               id: proficiency-con
+              group:
+                - __planned__
               ui:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-con.name
@@ -870,6 +906,8 @@ ruleGroups:
 
       # === INT SAVE PROFICIENCY ===
       - id: proficiency-int-offer
+        after:
+          - group: __planned__
         activities:
           - type: offerRule
             legalWhen:
@@ -882,6 +920,8 @@ ruleGroups:
                     severity: error
             rule:
               id: proficiency-int
+              group:
+                - __planned__
               ui:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-int.name
@@ -924,6 +964,8 @@ ruleGroups:
 
       # === WIS SAVE PROFICIENCY ===
       - id: proficiency-wis-offer
+        after:
+          - group: __planned__
         activities:
           - type: offerRule
             legalWhen:
@@ -936,6 +978,8 @@ ruleGroups:
                     severity: error
             rule:
               id: proficiency-wis
+              group:
+                - __planned__
               ui:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-wis.name
@@ -978,6 +1022,8 @@ ruleGroups:
 
       # === CHA SAVE PROFICIENCY ===
       - id: proficiency-cha-offer
+        after:
+          - group: __planned__
         activities:
           - type: offerRule
             legalWhen:
@@ -990,6 +1036,8 @@ ruleGroups:
                     severity: error
             rule:
               id: proficiency-cha
+              group:
+                - __planned__
               ui:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-cha.name
@@ -1068,6 +1116,8 @@ ruleGroups:
               fact: str.modifier
 
       - id: athletics-proficiency-offer
+        after:
+          - group: __planned__
         activities:
           - type: offerRule
             legalWhen:
@@ -1080,6 +1130,8 @@ ruleGroups:
                     severity: error
             rule:
               id: proficiency-athletics
+              group:
+                - __planned__
               ui:
                 model: skill-proficiency
                 section: configuration

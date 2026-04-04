@@ -394,6 +394,71 @@ describe('evaluate', () => {
     expect(result.facts['character.movement.half']).toBe(15);
   });
 
+  it('marks offer as illegal when planned rule modifies the checked fact (regression)', () => {
+    // Regression: standing offerRule evaluated legalWhen before planned rules ran,
+    // so planned fact mutations weren't visible. Using __planned__ group/after
+    // ensures standing offerRules wait for planned rules to complete.
+
+    // Early phase: reset proficiency to 0
+    const resetRule: Rule = {
+      id: 'proficiency-reset',
+      phase: 'early',
+      group: ['prof-base'],
+      activities: [
+        { id: 'r1', type: 'numberSet', target: { fact: 'skill.proficiency' }, source: { number: 0 } }
+      ]
+    };
+
+    // Normal phase: offer checks skill.proficiency == 0 (legal when not proficient)
+    const offerRule: Rule = {
+      id: 'proficiency-offer',
+      after: [{ group: '__planned__' }],
+      activities: [
+        {
+          id: 'offer',
+          type: 'offerRule',
+          legalWhen: [
+            {
+              condition: { fact: 'skill.proficiency', operator: 'equals', value: 0 },
+              illegalDiagnostics: [{ code: 'already_proficient', severity: 'error' }]
+            }
+          ],
+          rule: {
+            id: 'proficiency-pick',
+            group: ['__planned__'],
+            activities: [
+              { id: 'set', type: 'numberSet', target: { fact: 'skill.proficiency' }, source: { number: 1 } }
+            ]
+          }
+        }
+      ]
+    };
+
+    // Planned: user already added proficiency to plan
+    const plannedProficiency: Rule = {
+      id: 'planned-proficiency',
+      group: ['__planned__'],
+      activities: [
+        { id: 'set', type: 'numberSet', target: { fact: 'skill.proficiency' }, source: { number: 1 } }
+      ]
+    };
+
+    const result = evaluate({
+      schemaVersion: 1,
+      rules: {
+        standing: [resetRule, offerRule],
+        planned: [plannedProficiency],
+        effects: []
+      },
+      state: { facts: {} }
+    });
+
+    // Planned rule set proficiency to 1, offer should see it and mark as illegal
+    expect(result.facts['skill.proficiency']).toBe(1);
+    expect(result.availableRules).toHaveLength(1);
+    expect(result.availableRules[0].legal).toBe(false);
+  });
+
   describe('effects system', () => {
     it('processes effects from input.rules.effects', () => {
       const effectRule: Rule = {
