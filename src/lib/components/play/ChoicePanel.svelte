@@ -325,7 +325,7 @@
         <div class="choice-panel__model" role="radiogroup" aria-label={$t(uiName ?? '')}>
           {#each proficiencyOptions as option (option.value)}
             <span
-              class="choice-panel__radio"
+              class="choice-panel__radio choice-panel__radio--readonly"
               class:choice-panel__radio--active={proficiencyLevel === option.value}
               role="radio"
               aria-checked={proficiencyLevel === option.value}
@@ -478,7 +478,7 @@
       color var(--transition-fast);
   }
 
-  .choice-panel__radio:hover:not(:disabled) {
+  .choice-panel__radio:hover:not(:disabled):not(.choice-panel__radio--readonly) {
     background: var(--md-sys-color-surface-container-high);
   }
 
@@ -493,9 +493,10 @@
     color: var(--md-sys-color-on-primary-container);
   }
 
-  .choice-panel__radio:disabled {
+  .choice-panel__radio:disabled,
+  .choice-panel__radio--readonly {
     opacity: 0.6;
-    cursor: not-allowed;
+    cursor: default;
   }
 
   /* Actions positioned at top-right inside panel */
