@@ -1,0 +1,16 @@
+name: 'Spellcasting - Base Reset'
+description: 'Spellcasting starts with 1 max/remaining and no spell slots'
+ruleGroups:
+  - dnd-5e-2024/spellcasting
+steps:
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.max: 1
+          spellcasting.remaining: 1
+          spellcasting.slots.level1.total: 0
+          spellcasting.slots.level1.remaining: 0
+          spellcasting.slots.level2.total: 0
+          spellcasting.slots.level2.remaining: 0
+          spellcasting.slots.level3.total: 0
+          spellcasting.slots.level3.remaining: 0

@@ -1,0 +1,72 @@
+name: 'Ability Scores All Six'
+description: 'Set all six ability scores and verify they persist across turns'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+steps:
+  - evaluate:
+      assert:
+        facts:
+          str.value: 0
+          dex.value: 0
+          con.value: 0
+          int.value: 0
+          wis.value: 0
+          cha.value: 0
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 16
+      assert:
+        facts:
+          str.value: 16
+          str.modifier: 3
+  - addOffer:
+      id: set-dexterity
+      selections:
+        score: 14
+      assert:
+        facts:
+          dex.value: 14
+          dex.modifier: 2
+  - addOffer:
+      id: set-constitution
+      selections:
+        score: 15
+      assert:
+        facts:
+          con.value: 15
+          con.modifier: 2
+  - addOffer:
+      id: set-intelligence
+      selections:
+        score: 8
+      assert:
+        facts:
+          int.value: 8
+          int.modifier: -1
+  - addOffer:
+      id: set-wisdom
+      selections:
+        score: 12
+      assert:
+        facts:
+          wis.value: 12
+          wis.modifier: 1
+  - addOffer:
+      id: set-charisma
+      selections:
+        score: 13
+      assert:
+        facts:
+          cha.value: 13
+          cha.modifier: 1
+  - endTurn:
+      assert:
+        facts:
+          str.value: 16
+          dex.value: 14
+          con.value: 15
+          int.value: 8
+          wis.value: 12
+          cha.value: 13

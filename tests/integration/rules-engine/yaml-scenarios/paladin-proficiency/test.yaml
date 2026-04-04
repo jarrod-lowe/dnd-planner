@@ -1,0 +1,10 @@
+name: 'Paladin: Proficiency bonus at level 1'
+description: 'A level 1 paladin has a proficiency bonus of 2'
+ruleGroups:
+  - dnd-5e-2024/proficiency
+  - class-paladin/class-paladin-level1
+steps:
+  - evaluate:
+      assert:
+        facts:
+          proficiency.bonus: 2

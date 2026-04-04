@@ -1,0 +1,29 @@
+name: 'Action Economy - Free Action'
+description: 'Free actions do not consume action economy resources'
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+steps:
+  - evaluate:
+      assert:
+        facts:
+          actions.max: 1
+          actions.remaining: 1
+        offers:
+          exists:
+            - free-action
+            - help-action
+  - addOffer:
+      id: free-action
+      assert:
+        facts:
+          actions.remaining: 1
+        offers:
+          exists:
+            - free-action
+            - help-action
+  - endTurn:
+      assert:
+        facts:
+          actions.max: 1
+          actions.remaining: 1

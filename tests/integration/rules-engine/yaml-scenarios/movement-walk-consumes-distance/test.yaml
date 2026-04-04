@@ -1,0 +1,26 @@
+name: 'Movement: Walk consumes full remaining distance'
+description: 'Walking uses up all remaining movement distance and removing it restores it'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+steps:
+  - evaluate:
+      assert:
+        facts:
+          character.movement.total: 30
+          character.movement.remaining: 30
+        offers:
+          exists:
+            - move-walk
+  - addOffer:
+      id: move-walk
+      assert:
+        facts:
+          character.movement.remaining: 0
+  - removeFromPlan:
+      id: move-walk
+      assert:
+        facts:
+          character.movement.remaining: 30

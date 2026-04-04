@@ -114,6 +114,8 @@ make deploy-test  # Deploy to the test environment
 - Optimistic UI updates for responsiveness
 - SvelteKit static adapter - no server costs
 - The rules engine handles rules, the UI handles the interface; keep the clear interface between them
+- Use TDD strictly
+- When writing new rules, add to the yaml scenarios runner
 
 ## Notable Code Features
 

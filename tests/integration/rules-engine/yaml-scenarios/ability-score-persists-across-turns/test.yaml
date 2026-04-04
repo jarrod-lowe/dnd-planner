@@ -1,0 +1,28 @@
+name: 'Ability Score Persists Across Turns'
+description: 'Ability score effect persists across turns via advertiseEffect self:true'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+steps:
+  - evaluate:
+      assert:
+        facts:
+          str.value: 0
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 16
+      assert:
+        facts:
+          str.value: 16
+          str.modifier: 3
+  - endTurn:
+      assert:
+        facts:
+          str.value: 16
+          str.modifier: 3
+  - endTurn:
+      assert:
+        facts:
+          str.value: 16
+          str.modifier: 3

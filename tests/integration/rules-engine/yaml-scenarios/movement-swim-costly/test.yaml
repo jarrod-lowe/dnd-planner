@@ -1,0 +1,20 @@
+name: 'Movement: Costly swim for human'
+description: 'Human has swim cost 2, so only the costly swim offer is available, not regular swim'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+steps:
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - move-swim-costly
+          notExists:
+            - move-swim
+  - addOffer:
+      id: move-swim-costly
+      assert:
+        facts:
+          character.movement.remaining: 0

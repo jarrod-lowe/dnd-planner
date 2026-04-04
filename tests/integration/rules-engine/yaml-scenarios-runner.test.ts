@@ -20,6 +20,7 @@ interface AssertConfig {
   offers?: {
     exists?: string[];
     notExists?: string[];
+    illegal?: string[];
   };
   status?: {
     ok?: boolean;
@@ -85,13 +86,18 @@ function assertOffers(
   expected: NonNullable<AssertConfig['offers']>,
   stepDesc: string
 ): void {
-  const offerIds = new Set(availableRules.map((ar) => ar.rule.id));
-
   for (const id of expected.exists ?? []) {
-    expect(offerIds.has(id), `${stepDesc}: offer "${id}" should exist`).toBe(true);
+    const entry = availableRules.find((ar) => ar.rule.id === id);
+    expect(entry, `${stepDesc}: offer "${id}" should exist`).toBeDefined();
   }
   for (const id of expected.notExists ?? []) {
-    expect(offerIds.has(id), `${stepDesc}: offer "${id}" should NOT exist`).toBe(false);
+    const found = availableRules.some((ar) => ar.rule.id === id);
+    expect(!found, `${stepDesc}: offer "${id}" should NOT exist`).toBe(true);
+  }
+  for (const id of expected.illegal ?? []) {
+    const entry = availableRules.find((ar) => ar.rule.id === id);
+    expect(entry, `${stepDesc}: offer "${id}" should exist but be illegal`).toBeDefined();
+    expect(entry!.legal, `${stepDesc}: offer "${id}" should be illegal`).toBe(false);
   }
 }
 

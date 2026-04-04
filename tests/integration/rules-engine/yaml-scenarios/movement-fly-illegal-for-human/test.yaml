@@ -1,0 +1,13 @@
+name: 'Movement: Fly is illegal for human'
+description: 'Human has fly.can=0 so the fly offer exists but is marked as illegal'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+steps:
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - move-fly
