@@ -5,6 +5,8 @@ Unit tests for sync_rule_groups.py
 Run with: python -m pytest scripts/test_sync_rule_groups.py -v
 """
 
+import json
+
 import pytest
 from pathlib import Path
 from sync_rule_groups import (
@@ -14,6 +16,7 @@ from sync_rule_groups import (
     compute_category_hash,
     extract_fact_reads_writes,
     add_auto_groups,
+    output_json,
 )
 
 NOW = "2024-01-15T12:00:00Z"
@@ -799,3 +802,126 @@ class TestAddAutoGroups:
         add_auto_groups(rule)
         groups = rule.get("group", [])
         assert groups.index("_auto.fact.a.fact") < groups.index("_auto.fact.z.fact")
+
+
+class TestOutputJson:
+    """Tests for the output_json function."""
+
+    def _create_rule_group(self, tmp_path, category, rg_id, rules_yaml):
+        """Helper to create a rule group YAML file."""
+        category_dir = tmp_path / category
+        category_dir.mkdir(parents=True, exist_ok=True)
+        rule_file = category_dir / f"{rg_id}.yaml"
+        rule_file.write_text(
+            f"ruleGroups:\n"
+            f"  - id: {rg_id}\n"
+            f"    translations:\n"
+            f"      en:\n"
+            f"        name: {rg_id}\n"
+            f"        description: test\n"
+            f"        keywords: []\n"
+            f"    rules:\n{rules_yaml}"
+        )
+
+    def test_produces_valid_json(self, tmp_path):
+        """Should produce valid JSON file."""
+        self._create_rule_group(
+            tmp_path, "test-cat", "test-rg",
+            "      - id: rule1\n        activities: []\n"
+        )
+        output_path = str(tmp_path / "output.json")
+        output_json(tmp_path, output_path)
+
+        result = json.loads(Path(output_path).read_text())
+        assert isinstance(result, dict)
+
+    def test_keys_are_category_slash_id(self, tmp_path):
+        """Keys should be formatted as category/rule-group-id."""
+        self._create_rule_group(
+            tmp_path, "test-cat", "my-group",
+            "      - id: rule1\n        activities: []\n"
+        )
+        output_path = str(tmp_path / "output.json")
+        output_json(tmp_path, output_path)
+
+        result = json.loads(Path(output_path).read_text())
+        assert "test-cat/my-group" in result
+
+    def test_includes_auto_groups(self, tmp_path):
+        """Rules should have auto-groups added."""
+        self._create_rule_group(
+            tmp_path, "test-cat", "test-rg",
+            "      - id: rule1\n"
+            "        activities:\n"
+            "          - type: numberSet\n"
+            "            target: {fact: hp.max}\n"
+            "            source: {number: 10}\n"
+        )
+        output_path = str(tmp_path / "output.json")
+        output_json(tmp_path, output_path)
+
+        result = json.loads(Path(output_path).read_text())
+        rule = result["test-cat/test-rg"]["rules"][0]
+        assert "_auto.fact.hp.max" in rule.get("group", [])
+
+    def test_multiple_categories_and_groups(self, tmp_path):
+        """Should handle multiple categories and rule groups."""
+        self._create_rule_group(
+            tmp_path, "cat-a", "rg-1",
+            "      - id: rule1\n        activities: []\n"
+        )
+        self._create_rule_group(
+            tmp_path, "cat-a", "rg-2",
+            "      - id: rule2\n        activities: []\n"
+        )
+        self._create_rule_group(
+            tmp_path, "cat-b", "rg-3",
+            "      - id: rule3\n        activities: []\n"
+        )
+        output_path = str(tmp_path / "output.json")
+        output_json(tmp_path, output_path)
+
+        result = json.loads(Path(output_path).read_text())
+        assert len(result) == 3
+        assert "cat-a/rg-1" in result
+        assert "cat-a/rg-2" in result
+        assert "cat-b/rg-3" in result
+
+    def test_resolves_shared_definitions(self, tmp_path):
+        """Shared YAML anchors should be resolved in output."""
+        shared_dir = tmp_path / "_shared"
+        shared_dir.mkdir()
+        (shared_dir / "definitions.yaml").write_text(
+            "refs:\n  my-activity: &my-activity\n    type: setClear\n    target: {var: errors}\n"
+        )
+        self._create_rule_group(
+            tmp_path, "test-cat", "test-rg",
+            "      - id: rule1\n"
+            "        activities:\n"
+            "          - *my-activity\n"
+        )
+        output_path = str(tmp_path / "output.json")
+        output_json(tmp_path, output_path)
+
+        result = json.loads(Path(output_path).read_text())
+        activities = result["test-cat/test-rg"]["rules"][0]["activities"]
+        assert activities[0] == {"type": "setClear", "target": {"var": "errors"}}
+
+    def test_creates_parent_directories(self, tmp_path):
+        """Should create parent directories for output path."""
+        self._create_rule_group(
+            tmp_path, "cat", "rg",
+            "      - id: rule1\n        activities: []\n"
+        )
+        output_path = str(tmp_path / "subdir" / "nested" / "output.json")
+        output_json(tmp_path, output_path)
+
+        assert Path(output_path).exists()
+
+    def test_no_categories_exits(self, tmp_path):
+        """Should exit with error when no categories found."""
+        empty_dir = tmp_path / "empty"
+        empty_dir.mkdir()
+        output_path = str(tmp_path / "output.json")
+        with pytest.raises(SystemExit):
+            output_json(empty_dir, output_path)

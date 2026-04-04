@@ -1,0 +1,45 @@
+name: 'Help action consumes action point'
+description: >
+  Verify that adding help-action to the plan consumes one action point,
+  making the help-action offer illegal. After endTurn, actions reset
+  and help-action becomes available again.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          actions.max: 1
+          actions.remaining: 1
+        offers:
+          exists:
+            - free-action
+            - help-action
+          notExists: []
+        status:
+          ok: true
+          legal: true
+
+  - addOffer:
+      id: help-action
+      assert:
+        facts:
+          actions.remaining: 0
+        offers:
+          exists:
+            - free-action
+          notExists:
+            - help-action
+
+  - endTurn:
+      assert:
+        facts:
+          actions.max: 1
+          actions.remaining: 1
+        offers:
+          exists:
+            - free-action
+            - help-action
