@@ -36,6 +36,9 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Generate rule groups JSON
+        run: make build/test-rule-groups.json
+
       - name: Run unit tests
         run: pnpm test
 

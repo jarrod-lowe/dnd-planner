@@ -386,13 +386,17 @@ def cleanup_old_search_entries(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Sync rule groups to DynamoDB")
-    parser.add_argument("--table", required=True, help="DynamoDB table name")
+    parser.add_argument("--table", help="DynamoDB table name (required unless --json-out is used)")
     parser.add_argument("--dry-run", action="store_true", help="Show changes without writing")
     parser.add_argument("--verbose", action="store_true", help="Verbose output")
     parser.add_argument(
         "--data-dir",
         default="data/rule-groups",
         help="Path to rule groups data directory (default: data/rule-groups)",
+    )
+    parser.add_argument(
+        "--json-out",
+        help="Output processed rule groups as JSON to this path (skips DynamoDB)",
     )
     return parser.parse_args()
 
@@ -653,13 +657,56 @@ def sync_category(
     return stats
 
 
+def output_json(data_dir: Path, output_path: str, verbose: bool = False) -> None:
+    """Process rule groups and output as JSON, skipping DynamoDB."""
+    categories = sorted([d for d in data_dir.iterdir() if d.is_dir() and not d.name.startswith(".")])
+    if not categories:
+        print("No categories found in data directory", file=sys.stderr)
+        sys.exit(1)
+
+    result: dict[str, dict] = {}
+
+    for category_path in categories:
+        category = category_path.name
+        if verbose:
+            print(f"Processing {category}...")
+
+        rule_groups = parse_rule_groups(category_path, verbose)
+
+        for rg in rule_groups:
+            for rule in rg.get("rules", []):
+                add_auto_groups(rule)
+
+            rg_id = rg["id"]
+            key = f"{category}/{rg_id}"
+            result[key] = {"rules": rg.get("rules", [])}
+
+            if verbose:
+                print(f"  {key}: {len(rg.get('rules', []))} rules")
+
+    output_file = Path(output_path)
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    output_file.write_text(json.dumps(result, indent=2))
+
+    print(f"Wrote {len(result)} rule groups to {output_path}")
+
+
 def main():
     args = parse_args()
+
+    if not args.json_out and not args.table:
+        print("ERROR: --table is required when --json-out is not specified", file=sys.stderr)
+        sys.exit(1)
 
     data_dir = Path(args.data_dir)
     if not data_dir.exists():
         print(f"ERROR: Data directory not found: {data_dir}", file=sys.stderr)
         sys.exit(1)
+
+    # JSON output mode
+    if args.json_out:
+        output_json(data_dir, args.json_out, args.verbose)
+        return
 
     # Initialize DynamoDB
     dynamodb = boto3.resource("dynamodb")
