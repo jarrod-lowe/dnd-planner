@@ -530,9 +530,7 @@ describe('validateOrdering auto-group suppression', () => {
   });
 
   it('still warns for non-auto missing groups', () => {
-    const rules: Rule[] = [
-      { id: 'rule-1', after: [{ group: 'nonexistent' }], activities: [] }
-    ];
+    const rules: Rule[] = [{ id: 'rule-1', after: [{ group: 'nonexistent' }], activities: [] }];
 
     const diagnostics = validateOrdering(rules, 'normal');
 
