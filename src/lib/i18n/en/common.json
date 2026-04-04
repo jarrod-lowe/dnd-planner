@@ -157,6 +157,24 @@
         },
         "effect-cha-save-proficiency": {
           "name": "CHA Save Proficiency"
+        },
+        "proficiency-athletics": {
+          "name": "Proficiency - Athletics"
+        },
+        "proficiency-athletics-offer": {
+          "already_proficient": "Already proficient in Athletics"
+        },
+        "effect-athletics-proficiency": {
+          "name": "Athletics Proficiency (x{{level}})"
+        },
+        "proficiency-athletics": {
+          "name": "Proficiency - Athletics"
+        },
+        "proficiency-athletics-offer": {
+          "already_proficient": "Already proficient in Athletics"
+        },
+        "effect-athletics-proficiency": {
+          "name": "Athletics Proficiency (x{{level}})"
         }
       },
       "free-actions": {
@@ -289,9 +307,13 @@
         "turn": "Turn",
         "resources": "Resources",
         "stats": "Stats",
+        "skills": "Skills",
         "abilities": "Abilities",
         "magic": "Magic",
         "other": "Other"
+      },
+      "skills": {
+        "athletics": "Athletics"
       }
     },
     "choices": {
@@ -319,6 +341,11 @@
         "collapse": "Hide options",
         "expandAria": "Expand packed choices",
         "collapseAria": "Collapse packed choices"
+      },
+      "skillProficiency": {
+        "half": "Half (x0.5)",
+        "full": "Full (x1)",
+        "double": "Double (x2)"
       }
     },
     "plan": {

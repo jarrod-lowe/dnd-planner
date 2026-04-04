@@ -93,6 +93,17 @@
     uiModel === 'ability-score' ? resolveVarDefault('score') : undefined
   );
 
+  // Skill proficiency model specific values
+  const proficiencyLevel = $derived(
+    uiModel === 'skill-proficiency' ? resolveVarDefault('level') : undefined
+  );
+
+  const proficiencyOptions = [
+    { value: 0.5, label: '\u25CB', ariaLabel: $t('play.choices.skillProficiency.half') },
+    { value: 1, label: '\u25CF', ariaLabel: $t('play.choices.skillProficiency.full') },
+    { value: 2, label: '\u25CF\u25CF', ariaLabel: $t('play.choices.skillProficiency.double') }
+  ] as const;
+
   // Slider state - initialized from current/max distance, controlled by user
   // Using writable derived pattern for slider value
   let sliderValue = $derived.by(() => {
@@ -101,6 +112,12 @@
         return entry.rule.selections.score as number;
       }
       return abilityScoreValue ?? 10;
+    }
+    if (uiModel === 'skill-proficiency') {
+      if (entry.rule.selections?.level !== undefined) {
+        return entry.rule.selections.level as number;
+      }
+      return proficiencyLevel ?? 1;
     }
     // For display, use the selection from the rule if it exists
     if (entry.rule.selections?.distance !== undefined) {
@@ -117,9 +134,17 @@
     if (onSelectionChange) {
       if (uiModel === 'ability-score') {
         onSelectionChange({ score: value });
+      } else if (uiModel === 'skill-proficiency') {
+        onSelectionChange({ level: value });
       } else {
         onSelectionChange({ distance: value });
       }
+    }
+  }
+
+  function handleProficiencyChange(value: number): void {
+    if (onSelectionChange) {
+      onSelectionChange({ level: value });
     }
   }
 </script>
@@ -177,6 +202,24 @@
             oninput={handleSliderChange}
           />
           <span class="ability-score-value">{sliderValue}</span>
+        </div>
+      {/if}
+      {#if uiModel === 'skill-proficiency'}
+        <div class="choice-panel__model" role="radiogroup" aria-label={$t(uiName ?? '')}>
+          {#each proficiencyOptions as option (option.value)}
+            <button
+              type="button"
+              class="choice-panel__radio"
+              class:choice-panel__radio--active={proficiencyLevel === option.value}
+              role="radio"
+              aria-checked={proficiencyLevel === option.value}
+              aria-label={option.ariaLabel}
+              disabled={!editable}
+              onclick={() => handleProficiencyChange(option.value)}
+            >
+              {option.label}
+            </button>
+          {/each}
         </div>
       {/if}
     </div>
@@ -276,6 +319,21 @@
             aria-label={$t(uiName ?? '')}
           />
           <span class="ability-score-value">{sliderValue}</span>
+        </div>
+      {/if}
+      {#if uiModel === 'skill-proficiency'}
+        <div class="choice-panel__model" role="radiogroup" aria-label={$t(uiName ?? '')}>
+          {#each proficiencyOptions as option (option.value)}
+            <span
+              class="choice-panel__radio"
+              class:choice-panel__radio--active={proficiencyLevel === option.value}
+              role="radio"
+              aria-checked={proficiencyLevel === option.value}
+              aria-label={option.ariaLabel}
+            >
+              {option.label}
+            </span>
+          {/each}
         </div>
       {/if}
     </div>
@@ -400,6 +458,44 @@
     color: var(--md-sys-color-on-surface-variant);
     min-width: 2rem;
     text-align: right;
+  }
+
+  .choice-panel__radio {
+    flex: 1;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--md-sys-color-surface-container);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--radius-sm);
+    color: var(--md-sys-color-on-surface-variant);
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    text-align: center;
+    cursor: pointer;
+    transition:
+      background-color var(--transition-fast),
+      border-color var(--transition-fast),
+      color var(--transition-fast);
+  }
+
+  .choice-panel__radio:hover:not(:disabled) {
+    background: var(--md-sys-color-surface-container-high);
+  }
+
+  .choice-panel__radio:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: 2px;
+  }
+
+  .choice-panel__radio--active {
+    background: var(--md-sys-color-primary-container);
+    border-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary-container);
+  }
+
+  .choice-panel__radio:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
   /* Actions positioned at top-right inside panel */

@@ -157,6 +157,15 @@
         },
         "effect-cha-save-proficiency": {
           "name": "Quv toDval valwI'"
+        },
+        "proficiency-athletics": {
+          "name": "valwI' - Suv"
+        },
+        "proficiency-athletics-offer": {
+          "already_proficient": "Suv valwI' already"
+        },
+        "effect-athletics-proficiency": {
+          "name": "Suv valwI' (x{{level}})"
         }
       },
       "free-actions": {
@@ -268,6 +277,9 @@
       "turnCounter": "wa'DIch",
       "movement": "Do",
       "proficiency": "valwI'",
+      "skills": {
+        "athletics": "Suv"
+      },
       "strength": "HoS",
       "dexterity": "Do",
       "constitution": "'et",
@@ -289,6 +301,7 @@
         "turn": "wa'DIch",
         "resources": "DIvI' Duj",
         "stats": "DIvI'",
+        "skills": "Suv",
         "abilities": "laH",
         "magic": "mugh",
         "other": "latlh"
@@ -319,6 +332,11 @@
         "collapse": "DuH SoQmoH",
         "expandAria": "DuH poSmoH",
         "collapseAria": "DuH SoQmoH"
+      },
+      "skillProficiency": {
+        "half": "bIQ (x0.5)",
+        "full": "naQ (x1)",
+        "double": "cha'naQ (x2)"
       }
     },
     "plan": {
