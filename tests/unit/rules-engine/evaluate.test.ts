@@ -405,7 +405,12 @@ describe('evaluate', () => {
       phase: 'early',
       group: ['prof-base'],
       activities: [
-        { id: 'r1', type: 'numberSet', target: { fact: 'skill.proficiency' }, source: { number: 0 } }
+        {
+          id: 'r1',
+          type: 'numberSet',
+          target: { fact: 'skill.proficiency' },
+          source: { number: 0 }
+        }
       ]
     };
 
@@ -427,7 +432,12 @@ describe('evaluate', () => {
             id: 'proficiency-pick',
             group: ['__planned__'],
             activities: [
-              { id: 'set', type: 'numberSet', target: { fact: 'skill.proficiency' }, source: { number: 1 } }
+              {
+                id: 'set',
+                type: 'numberSet',
+                target: { fact: 'skill.proficiency' },
+                source: { number: 1 }
+              }
             ]
           }
         }
@@ -439,7 +449,12 @@ describe('evaluate', () => {
       id: 'planned-proficiency',
       group: ['__planned__'],
       activities: [
-        { id: 'set', type: 'numberSet', target: { fact: 'skill.proficiency' }, source: { number: 1 } }
+        {
+          id: 'set',
+          type: 'numberSet',
+          target: { fact: 'skill.proficiency' },
+          source: { number: 1 }
+        }
       ]
     };
 
