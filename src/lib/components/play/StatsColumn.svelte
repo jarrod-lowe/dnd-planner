@@ -87,7 +87,15 @@
     }
     if (stat.type === 'modifier') {
       const n = Number(facts[stat.fact]);
-      return `${n >= 0 ? '+' : ''}${n}`;
+      const base = `${n >= 0 ? '+' : ''}${n}`;
+      if (stat.proficiencyFact) {
+        const prof = Number(facts[stat.proficiencyFact]);
+        if (prof > 0) {
+          const badge = prof >= 2 ? '\u25CF\u25CF' : prof >= 1 ? '\u25CF' : '\u25CB';
+          return `${base} ${badge}`;
+        }
+      }
+      return base;
     }
     if (stat.type === 'usedMax') {
       const total = Number(facts[stat.total]);

@@ -450,14 +450,13 @@ describe('executeNumberFunction', () => {
     expect(context.workingState.facts['str.modifier']).toBe(4);
   });
 
-  it('calls multiply with args and stores result in target', () => {
+  it('calls multiply with two sources and stores result in target', () => {
     const activity: NumberFunctionActivity = {
       id: 'test-1',
       type: 'numberFunction',
       target: { fact: 'movement.half' },
       function: 'multiply',
-      sources: [{ fact: 'movement.current' }],
-      args: { multiplier: 0.5 }
+      sources: [{ fact: 'movement.current' }, { number: 0.5 }]
     };
 
     const context = createEmptyContext();

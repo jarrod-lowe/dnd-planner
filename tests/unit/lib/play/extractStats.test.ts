@@ -134,6 +134,32 @@ describe('isStatEntry', () => {
       })
     ).toBe(false);
   });
+
+  it('accepts modifier type with proficiencyFact', async () => {
+    const { isStatEntry } = await import('$lib/play/extractStats');
+    expect(
+      isStatEntry({
+        name: 'play.stats.skills.athletics',
+        type: 'modifier',
+        fact: 'skill.athletics.value',
+        proficiencyFact: 'skill.athletics.proficiency',
+        section: 'skills'
+      })
+    ).toBe(true);
+  });
+
+  it('rejects modifier type with non-string proficiencyFact', async () => {
+    const { isStatEntry } = await import('$lib/play/extractStats');
+    expect(
+      isStatEntry({
+        name: 'play.stats.skills.athletics',
+        type: 'modifier',
+        fact: 'skill.athletics.value',
+        proficiencyFact: 42,
+        section: 'skills'
+      })
+    ).toBe(false);
+  });
 });
 
 describe('extractStats', () => {
@@ -239,6 +265,33 @@ describe('extractStats', () => {
     if (result[0].type === 'value') {
       expect(result[0].modifierFact).toBe('str.modifier');
       expect(result[0].saveFact).toBe('str.save');
+    }
+  });
+
+  it('preserves proficiencyFact from rule UI declarations', async () => {
+    const { extractStats } = await import('$lib/play/extractStats');
+    const rules: Rule[] = [
+      {
+        id: 'r1',
+        activities: [],
+        ui: {
+          stats: [
+            {
+              name: 'play.stats.skills.athletics',
+              type: 'modifier',
+              fact: 'skill.athletics.value',
+              proficiencyFact: 'skill.athletics.proficiency',
+              section: 'skills'
+            }
+          ]
+        }
+      }
+    ];
+    const result = extractStats(rules);
+    expect(result).toHaveLength(1);
+    expect(result[0].type).toBe('modifier');
+    if (result[0].type === 'modifier') {
+      expect(result[0].proficiencyFact).toBe('skill.athletics.proficiency');
     }
   });
 });

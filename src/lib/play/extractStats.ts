@@ -18,6 +18,7 @@ export interface StatEntryValue extends StatEntryBase {
 export interface StatEntryModifier extends StatEntryBase {
   type: 'modifier';
   fact: string;
+  proficiencyFact?: string;
 }
 
 export interface StatEntryUsedMax extends StatEntryBase {
@@ -39,6 +40,10 @@ export function isStatEntry(entry: unknown): entry is StatEntry {
     if (obj.type === 'value') {
       if (obj.modifierFact !== undefined && typeof obj.modifierFact !== 'string') return false;
       if (obj.saveFact !== undefined && typeof obj.saveFact !== 'string') return false;
+    }
+    if (obj.type === 'modifier') {
+      if (obj.proficiencyFact !== undefined && typeof obj.proficiencyFact !== 'string')
+        return false;
     }
     return true;
   }

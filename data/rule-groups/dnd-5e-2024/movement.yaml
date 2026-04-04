@@ -39,10 +39,9 @@ ruleGroups:
             function: multiply
             sources:
               - fact: character.movement.total
+              - number: 0.5
             target:
               fact: character.movement.half_total
-            args:
-              multiplier: 0.5
       - id: compute-half-movement-remaining
         phase: normal
         after:
@@ -54,10 +53,9 @@ ruleGroups:
             function: multiply
             sources:
               - fact: character.movement.remaining
+              - number: 0.5
             target:
               fact: character.movement.half_remaining
-            args:
-              multiplier: 0.5
       - id: action-move-walk-offer
         after:
           - group: half-movement-remaining

@@ -269,9 +269,8 @@ describe('evaluate', () => {
           id: 'half-1',
           type: 'numberFunction',
           function: 'multiply',
-          sources: [{ fact: 'character.movement.remaining' }],
-          target: { fact: 'character.movement.half' },
-          args: { multiplier: 0.5 }
+          sources: [{ fact: 'character.movement.remaining' }, { number: 0.5 }],
+          target: { fact: 'character.movement.half' }
         }
       ]
     };
@@ -343,9 +342,8 @@ describe('evaluate', () => {
           id: 'half-1',
           type: 'numberFunction',
           function: 'multiply',
-          sources: [{ fact: 'character.movement.remaining' }],
-          target: { fact: 'character.movement.half' },
-          args: { multiplier: 0.5 }
+          sources: [{ fact: 'character.movement.remaining' }, { number: 0.5 }],
+          target: { fact: 'character.movement.half' }
         }
       ]
     };

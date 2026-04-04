@@ -1029,3 +1029,115 @@ ruleGroups:
                           fact: proficiency.bonus
                       - type: advertiseEffect
                         self: true
+
+      # =========================================================
+      # SKILLS
+      # =========================================================
+
+      # === ATHLETICS (STR) ===
+      - id: athletics-value-reset
+        phase: early
+        group:
+          - athletics-base
+        ui:
+          stats:
+            - name: play.stats.skills.athletics
+              type: modifier
+              fact: skill.athletics.value
+              proficiencyFact: skill.athletics.proficiency
+              section: skills
+        activities:
+          - type: numberSet
+            target:
+              fact: skill.athletics.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: skill.athletics.proficiency
+            source:
+              number: 0
+
+      - id: athletics-modifier
+        phase: normal
+        activities:
+          - type: numberIncrement
+            target:
+              fact: skill.athletics.value
+            source:
+              fact: str.modifier
+
+      - id: athletics-proficiency-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: skill.athletics.proficiency
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.athletics-proficiency-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-athletics
+              ui:
+                model: skill-proficiency
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-athletics.name
+              vars:
+                level:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: skill.athletics.proficiency
+                  source:
+                    var: level
+                - type: numberFunction
+                  function: multiply
+                  sources:
+                    - fact: proficiency.bonus
+                    - var: level
+                  target:
+                    var: profContribution
+                - type: numberIncrement
+                  target:
+                    fact: skill.athletics.value
+                  source:
+                    var: profContribution
+                - type: advertiseEffect
+                  rule:
+                    id: effect-athletics-proficiency
+                    phase: early
+                    after:
+                      - group: athletics-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-athletics-proficiency.name
+                    vars:
+                      level:
+                        capture: true
+                        default:
+                          number: 1
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: skill.athletics.proficiency
+                        source:
+                          var: level
+                      - type: numberFunction
+                        function: multiply
+                        sources:
+                          - fact: proficiency.bonus
+                          - var: level
+                        target:
+                          var: profContribution
+                      - type: numberIncrement
+                        target:
+                          fact: skill.athletics.value
+                        source:
+                          var: profContribution
+                      - type: advertiseEffect
+                        self: true
