@@ -39,10 +39,136 @@ SEARCHINDEX_GSI1SK_PREFIX = "UPDATEDAT#"
 SCORE_NAME_MATCH = "0002"
 SCORE_KEYWORD_MATCH = "0001"
 PREFIX_MIN_LENGTH = 3
+AUTO_GROUP_PREFIX = "_auto.fact."
 PREFIX_MAX_LENGTH = 6
 
 # Supported locales for translations - must match schema.json
 SUPPORTED_LOCALES = ["en", "en-x-tlh"]
+
+
+def _add_fact_from_condition(condition: dict[str, Any], reads: set[str]) -> None:
+    """Extract fact name from a condition dict if present."""
+    if "fact" in condition:
+        reads.add(condition["fact"])
+
+
+def _add_fact_from_source(source: dict[str, Any], reads: set[str]) -> None:
+    """Extract fact name from a source dict if present (fact or condition.fact)."""
+    if "fact" in source:
+        reads.add(source["fact"])
+    if "condition" in source:
+        _add_fact_from_condition(source["condition"], reads)
+
+
+def extract_fact_reads_writes(rule: dict[str, Any]) -> tuple[set[str], set[str]]:
+    """
+    Extract fact reads and writes from a single rule's conditions and activities.
+
+    Does NOT recurse into nested rules (offerRule, generateRule, advertiseEffect).
+    Returns (reads, writes) sets of fact name strings.
+    """
+    reads: set[str] = set()
+    writes: set[str] = set()
+
+    # Rule-level when conditions
+    for condition in rule.get("when", []):
+        _add_fact_from_condition(condition, reads)
+
+    # Activities
+    for activity in rule.get("activities", []):
+        # Activity-level when condition
+        if "when" in activity:
+            _add_fact_from_condition(activity["when"], reads)
+
+        activity_type = activity.get("type", "")
+
+        # Reads from source fields
+        if activity_type in ("numberSet", "numberCopy", "numberIncrement"):
+            source = activity.get("source", {})
+            _add_fact_from_source(source, reads)
+
+        if activity_type in ("numberSum", "numberFunction"):
+            for source in activity.get("sources", []):
+                _add_fact_from_source(source, reads)
+
+        # numberIncrement: implicit read of target.fact + max field
+        if activity_type == "numberIncrement":
+            target = activity.get("target", {})
+            if "fact" in target:
+                reads.add(target["fact"])
+            if "max" in activity and isinstance(activity["max"], str):
+                reads.add(activity["max"])
+
+        # offerRule: legalWhen conditions
+        if activity_type == "offerRule":
+            for entry in activity.get("legalWhen", []):
+                condition = entry.get("condition", {})
+                _add_fact_from_condition(condition, reads)
+
+        # Writes from target.fact (NOT target.var)
+        if activity_type in (
+            "numberSet",
+            "numberIncrement",
+            "numberCopy",
+            "numberSum",
+            "numberFunction",
+        ):
+            target = activity.get("target", {})
+            if "fact" in target:
+                writes.add(target["fact"])
+
+    return reads, writes
+
+
+def add_auto_groups(rule: dict[str, Any]) -> None:
+    """
+    Add auto-groups and auto-afters to a rule based on its fact reads/writes.
+
+    - Writes a fact -> group "_auto.fact.{NAME}"
+    - Reads a fact (not also written) -> after "_auto.fact.{NAME}"
+    - Reads AND writes same fact -> group only (writer, no after)
+
+    Recurses into nested rules in offerRule, generateRule, advertiseEffect.
+    Each nesting level is processed independently.
+    """
+    reads, writes = extract_fact_reads_writes(rule)
+
+    # Ensure lists exist (YAML empty key parses as None, not [])
+    if not rule.get("group"):
+        rule["group"] = []
+    if not rule.get("after"):
+        rule["after"] = []
+
+    existing_groups = set(rule["group"])
+    existing_after_groups = {a["group"] for a in rule["after"]}
+
+    # Add groups for all writes
+    for fact in sorted(writes):
+        auto_group = f"{AUTO_GROUP_PREFIX}{fact}"
+        if auto_group not in existing_groups:
+            rule["group"].append(auto_group)
+            existing_groups.add(auto_group)
+
+    # Add afters for reads that are NOT also writes
+    read_only = reads - writes
+    for fact in sorted(read_only):
+        auto_after = f"{AUTO_GROUP_PREFIX}{fact}"
+        if auto_after not in existing_after_groups:
+            rule["after"].append({"group": auto_after})
+            existing_after_groups.add(auto_after)
+
+    # Clean up empty lists
+    if not rule["group"]:
+        del rule["group"]
+    if not rule["after"]:
+        del rule["after"]
+
+    # Recurse into nested rules (each level independent)
+    for activity in rule.get("activities", []):
+        activity_type = activity.get("type", "")
+        if activity_type in ("offerRule", "generateRule", "advertiseEffect"):
+            if "rule" in activity:
+                add_auto_groups(activity["rule"])
 
 
 def standardize_term(text: str) -> str:
@@ -477,6 +603,12 @@ def sync_category(
 
     # Parse all rule groups from files
     rule_groups = parse_rule_groups(category_path, verbose)
+
+    # Apply auto-groups to all rules
+    for rg in rule_groups:
+        for rule in rg.get("rules", []):
+            add_auto_groups(rule)
+
     current_ids = {rg["id"] for rg in rule_groups}
 
     # Determine changes

@@ -321,5 +321,5 @@ The architecture supports:
 - Visibility of effects
 - Fix main page length
 - Rule generator AI prompt
-- Auto-add groups and afters, based on facts read/written
 - Delete character option
+- Real rule tests

@@ -462,7 +462,6 @@ ruleGroups:
                     phase: early
                     group:
                       - int-values
-                    after:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-intelligence.name
                     vars:
@@ -701,7 +700,6 @@ ruleGroups:
                     phase: early
                     group:
                       - cha-values
-                    after:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-charisma.name
                     vars:
