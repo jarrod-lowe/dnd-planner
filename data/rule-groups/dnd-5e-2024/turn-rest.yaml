@@ -25,6 +25,8 @@ ruleGroups:
 
       # Long Rest - offer the long rest action
       - id: offer-long-rest
+        after:
+          - group: __planned__
         activities:
           - type: offerRule
             rule:
@@ -33,6 +35,8 @@ ruleGroups:
                 model: rest
                 section: rest
                 name: rule.dnd-5e-2024.turn-rest.long-rest.name
+              group:
+                - __planned__
               phase: early
               after:
                 - group: rest-reset

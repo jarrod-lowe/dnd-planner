@@ -13,10 +13,14 @@ ruleGroups:
     rules:
       # Free Action
       - id: action-free-offer
+        after:
+          - group: __planned__
         activities:
           - type: offerRule
             rule:
               id: free-action
+              group:
+                - __planned__
               ui:
                 model: free
                 section: free
@@ -27,6 +31,7 @@ ruleGroups:
       - id: action-help-offer
         after:
           - group: action
+          - group: __planned__
         activities:
           - type: offerRule
             legalWhen:
@@ -44,6 +49,7 @@ ruleGroups:
                 section: action-other
                 name: rule.dnd-5e-2024.free-actions.help-action.name
               group:
+                - __planned__
                 - action
               activities:
                 - type: numberIncrement
