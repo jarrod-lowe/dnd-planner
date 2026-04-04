@@ -1,0 +1,15 @@
+name: 'Human Movement - Constants'
+description: 'Human species provides base movement of 30 with swim cost 2 and no fly'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/action-economy
+steps:
+  - evaluate:
+      assert:
+        facts:
+          character.movement.total: 30
+          character.movement.remaining: 30
+          character.movement.swim.can: 1
+          character.movement.swim.cost: 2
+          character.movement.fly.can: 0

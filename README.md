@@ -322,4 +322,3 @@ The architecture supports:
 - Fix main page length
 - Rule generator AI prompt
 - Delete character option
-- Real rule tests

@@ -1,0 +1,17 @@
+name: 'Turn Counter - Increments'
+description: 'Turn counter increments with each evaluation'
+ruleGroups:
+  - dnd-5e-2024/turn-rest
+steps:
+  - evaluate:
+      assert:
+        facts:
+          turn.counter: 1
+  - evaluate:
+      assert:
+        facts:
+          turn.counter: 2
+  - evaluate:
+      assert:
+        facts:
+          turn.counter: 3

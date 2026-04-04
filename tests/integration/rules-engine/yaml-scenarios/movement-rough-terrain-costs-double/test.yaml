@@ -1,0 +1,20 @@
+name: 'Movement: Rough terrain costs double'
+description: 'Moving through rough terrain costs 2 feet per foot of distance, using up all movement'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+steps:
+  - evaluate:
+      assert:
+        facts:
+          character.movement.remaining: 30
+        offers:
+          exists:
+            - move-rough-terrain
+  - addOffer:
+      id: move-rough-terrain
+      assert:
+        facts:
+          character.movement.remaining: 0

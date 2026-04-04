@@ -1,0 +1,26 @@
+name: 'Spell Cast'
+description: 'A paladin can cast a level 1 spell, consuming an action, spellcasting, and a spell slot'
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - spells/spell-create-and-destroy-water
+steps:
+  - evaluate:
+      assert:
+        facts:
+          actions.remaining: 1
+          spellcasting.remaining: 1
+          spellcasting.slots.level1.total: 2
+          spellcasting.slots.level1.remaining: 2
+        offers:
+          exists:
+            - cast-create-and-destroy-water
+  - addOffer:
+      id: cast-create-and-destroy-water
+      assert:
+        facts:
+          actions.remaining: 0
+          spellcasting.remaining: 0
+          spellcasting.slots.level1.remaining: 1

@@ -1,0 +1,42 @@
+name: 'Full Paladin Turn'
+description: 'A full paladin turn with ability scores, movement, spellcasting, and turn progression'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/turn-rest
+steps:
+  - evaluate:
+      assert:
+        facts:
+          character.movement.total: 30
+          character.movement.remaining: 30
+          actions.remaining: 1
+          proficiency.bonus: 2
+          spellcasting.slots.level1.total: 2
+          turn.counter: 1
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 16
+      assert:
+        facts:
+          str.value: 16
+          str.modifier: 3
+  - addOffer:
+      id: move-walk
+      assert:
+        facts:
+          character.movement.remaining: 0
+  - endTurn:
+      assert:
+        facts:
+          turn.counter: 2
+          str.value: 16
+          character.movement.remaining: 30
+          actions.remaining: 1

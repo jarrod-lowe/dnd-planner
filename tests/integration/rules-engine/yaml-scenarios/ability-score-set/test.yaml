@@ -1,0 +1,22 @@
+name: 'Ability Score Set'
+description: 'Setting an ability score to a specific value via the set-strength offer'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+steps:
+  - evaluate:
+      assert:
+        facts:
+          str.value: 0
+          str.modifier: 0
+        offers:
+          exists:
+            - set-strength
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 16
+      assert:
+        facts:
+          str.value: 16
+          str.modifier: 3

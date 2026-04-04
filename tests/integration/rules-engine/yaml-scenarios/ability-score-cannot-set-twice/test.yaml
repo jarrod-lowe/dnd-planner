@@ -1,0 +1,31 @@
+name: 'Ability Score Cannot Set Twice'
+description: 'Ability score offer becomes illegal after being set, and becomes available again after removal'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+steps:
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - set-strength
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 16
+      assert:
+        facts:
+          str.value: 16
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - set-strength
+  - removeFromPlan:
+      id: set-strength
+      assert:
+        facts:
+          str.value: 0
+        offers:
+          exists:
+            - set-strength

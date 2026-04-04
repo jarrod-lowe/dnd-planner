@@ -1,0 +1,28 @@
+name: 'Spell No Slots'
+description: 'Casting a spell twice exhausts all level 1 slots, and the spell is no longer available'
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - spells/spell-create-and-destroy-water
+steps:
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.slots.level1.remaining: 2
+  - addOffer:
+      id: cast-create-and-destroy-water
+      assert:
+        facts:
+          spellcasting.slots.level1.remaining: 1
+  - addOffer:
+      id: cast-create-and-destroy-water
+      assert:
+        facts:
+          spellcasting.slots.level1.remaining: 0
+  - evaluate:
+      assert:
+        offers:
+          notExists:
+            - cast-create-and-destroy-water

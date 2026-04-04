@@ -1,0 +1,32 @@
+name: 'Spell Long Rest Resets'
+description: 'A long rest removes persistent spell effects and restores spell slots'
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - spells/spell-create-and-destroy-water
+  - dnd-5e-2024/turn-rest
+steps:
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.slots.level1.remaining: 2
+  - addOffer:
+      id: cast-create-and-destroy-water
+      assert:
+        facts:
+          spellcasting.slots.level1.remaining: 1
+  - endTurn:
+      assert:
+        facts:
+          spellcasting.slots.level1.remaining: 1
+  - addOffer:
+      id: long-rest
+      assert:
+        facts:
+          rest.long: 1
+  - endTurn:
+      assert:
+        facts:
+          spellcasting.slots.level1.remaining: 2

@@ -1,0 +1,27 @@
+name: 'Movement: Multiple movement types consume and restore correctly'
+description: 'Walking consumes full distance, removing restores it, then rough terrain also consumes all'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+steps:
+  - evaluate:
+      assert:
+        facts:
+          character.movement.remaining: 30
+  - addOffer:
+      id: move-walk
+      assert:
+        facts:
+          character.movement.remaining: 0
+  - removeFromPlan:
+      id: move-walk
+      assert:
+        facts:
+          character.movement.remaining: 30
+  - addOffer:
+      id: move-rough-terrain
+      assert:
+        facts:
+          character.movement.remaining: 0
