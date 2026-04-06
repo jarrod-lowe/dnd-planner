@@ -1,0 +1,38 @@
+name: 'Skill Proficiency Persists Across Turns'
+description: 'Skill proficiency effects persist across turns after being selected mid-game'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - class-paladin/class-paladin-level1
+steps:
+  - evaluate:
+    assert:
+      facts:
+        proficiency.bonus: 2
+  - addOffer:
+      id: set-dexterity
+      selections:
+        score: 20
+    assert:
+      facts:
+        dex.modifier: 5
+        skill.acrobatics.value: 5
+  - endTurn:
+    assert:
+      facts:
+        skill.acrobatics.value: 5
+  - addOffer:
+      id: proficiency-acrobatics
+      selections:
+        level: 1
+    assert:
+      facts:
+        skill.acrobatics.proficiency: 1
+        skill.acrobatics.value: 7
+  - endTurn:
+    assert:
+      facts:
+        dex.modifier: 5
+        proficiency.bonus: 2
+        skill.acrobatics.proficiency: 1
+        skill.acrobatics.value: 7

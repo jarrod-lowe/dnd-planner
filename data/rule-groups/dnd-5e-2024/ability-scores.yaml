@@ -1134,6 +1134,7 @@ ruleGroups:
                 model: skill-proficiency
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-athletics.name
+                packBehind: proficiency-acrobatics
               vars:
                 level:
                   capture: true
@@ -1187,6 +1188,1926 @@ ruleGroups:
                       - type: numberIncrement
                         target:
                           fact: skill.athletics.value
+                        source:
+                          var: profContribution
+                      - type: advertiseEffect
+                        self: true
+
+      # === ACROBATICS (DEX) ===
+      - id: acrobatics-value-reset
+        phase: early
+        group:
+          - acrobatics-base
+        ui:
+          stats:
+            - name: play.stats.skills.acrobatics
+              type: modifier
+              fact: skill.acrobatics.value
+              proficiencyFact: skill.acrobatics.proficiency
+              section: skills
+        activities:
+          - type: numberSet
+            target:
+              fact: skill.acrobatics.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: skill.acrobatics.proficiency
+            source:
+              number: 0
+
+      - id: acrobatics-modifier
+        phase: normal
+        activities:
+          - type: numberIncrement
+            target:
+              fact: skill.acrobatics.value
+            source:
+              fact: dex.modifier
+
+      - id: acrobatics-proficiency-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: skill.acrobatics.proficiency
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.acrobatics-proficiency-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-acrobatics
+              group:
+                - __planned__
+              ui:
+                model: skill-proficiency
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-acrobatics.name
+              vars:
+                level:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: skill.acrobatics.proficiency
+                  source:
+                    var: level
+                - type: numberFunction
+                  function: multiply
+                  sources:
+                    - fact: proficiency.bonus
+                    - var: level
+                  target:
+                    var: profContribution
+                - type: numberIncrement
+                  target:
+                    fact: skill.acrobatics.value
+                  source:
+                    var: profContribution
+                - type: advertiseEffect
+                  rule:
+                    id: effect-acrobatics-proficiency
+                    phase: early
+                    after:
+                      - group: acrobatics-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-acrobatics-proficiency.name
+                    vars:
+                      level:
+                        capture: true
+                        default:
+                          number: 1
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: skill.acrobatics.proficiency
+                        source:
+                          var: level
+                      - type: numberFunction
+                        function: multiply
+                        sources:
+                          - fact: proficiency.bonus
+                          - var: level
+                        target:
+                          var: profContribution
+                      - type: numberIncrement
+                        target:
+                          fact: skill.acrobatics.value
+                        source:
+                          var: profContribution
+                      - type: advertiseEffect
+                        self: true
+
+      # === ANIMAL HANDLING (WIS) ===
+      - id: animal-handling-value-reset
+        phase: early
+        group:
+          - animal-handling-base
+        ui:
+          stats:
+            - name: play.stats.skills.animal-handling
+              type: modifier
+              fact: skill.animal-handling.value
+              proficiencyFact: skill.animal-handling.proficiency
+              section: skills
+        activities:
+          - type: numberSet
+            target:
+              fact: skill.animal-handling.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: skill.animal-handling.proficiency
+            source:
+              number: 0
+
+      - id: animal-handling-modifier
+        phase: normal
+        activities:
+          - type: numberIncrement
+            target:
+              fact: skill.animal-handling.value
+            source:
+              fact: wis.modifier
+
+      - id: animal-handling-proficiency-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: skill.animal-handling.proficiency
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.animal-handling-proficiency-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-animal-handling
+              group:
+                - __planned__
+              ui:
+                model: skill-proficiency
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-animal-handling.name
+                packBehind: proficiency-acrobatics
+              vars:
+                level:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: skill.animal-handling.proficiency
+                  source:
+                    var: level
+                - type: numberFunction
+                  function: multiply
+                  sources:
+                    - fact: proficiency.bonus
+                    - var: level
+                  target:
+                    var: profContribution
+                - type: numberIncrement
+                  target:
+                    fact: skill.animal-handling.value
+                  source:
+                    var: profContribution
+                - type: advertiseEffect
+                  rule:
+                    id: effect-animal-handling-proficiency
+                    phase: early
+                    after:
+                      - group: animal-handling-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-animal-handling-proficiency.name
+                    vars:
+                      level:
+                        capture: true
+                        default:
+                          number: 1
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: skill.animal-handling.proficiency
+                        source:
+                          var: level
+                      - type: numberFunction
+                        function: multiply
+                        sources:
+                          - fact: proficiency.bonus
+                          - var: level
+                        target:
+                          var: profContribution
+                      - type: numberIncrement
+                        target:
+                          fact: skill.animal-handling.value
+                        source:
+                          var: profContribution
+                      - type: advertiseEffect
+                        self: true
+
+      # === ARCANA (INT) ===
+      - id: arcana-value-reset
+        phase: early
+        group:
+          - arcana-base
+        ui:
+          stats:
+            - name: play.stats.skills.arcana
+              type: modifier
+              fact: skill.arcana.value
+              proficiencyFact: skill.arcana.proficiency
+              section: skills
+        activities:
+          - type: numberSet
+            target:
+              fact: skill.arcana.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: skill.arcana.proficiency
+            source:
+              number: 0
+
+      - id: arcana-modifier
+        phase: normal
+        activities:
+          - type: numberIncrement
+            target:
+              fact: skill.arcana.value
+            source:
+              fact: int.modifier
+
+      - id: arcana-proficiency-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: skill.arcana.proficiency
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.arcana-proficiency-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-arcana
+              group:
+                - __planned__
+              ui:
+                model: skill-proficiency
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-arcana.name
+                packBehind: proficiency-acrobatics
+              vars:
+                level:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: skill.arcana.proficiency
+                  source:
+                    var: level
+                - type: numberFunction
+                  function: multiply
+                  sources:
+                    - fact: proficiency.bonus
+                    - var: level
+                  target:
+                    var: profContribution
+                - type: numberIncrement
+                  target:
+                    fact: skill.arcana.value
+                  source:
+                    var: profContribution
+                - type: advertiseEffect
+                  rule:
+                    id: effect-arcana-proficiency
+                    phase: early
+                    after:
+                      - group: arcana-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-arcana-proficiency.name
+                    vars:
+                      level:
+                        capture: true
+                        default:
+                          number: 1
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: skill.arcana.proficiency
+                        source:
+                          var: level
+                      - type: numberFunction
+                        function: multiply
+                        sources:
+                          - fact: proficiency.bonus
+                          - var: level
+                        target:
+                          var: profContribution
+                      - type: numberIncrement
+                        target:
+                          fact: skill.arcana.value
+                        source:
+                          var: profContribution
+                      - type: advertiseEffect
+                        self: true
+
+      # === DECEPTION (CHA) ===
+      - id: deception-value-reset
+        phase: early
+        group:
+          - deception-base
+        ui:
+          stats:
+            - name: play.stats.skills.deception
+              type: modifier
+              fact: skill.deception.value
+              proficiencyFact: skill.deception.proficiency
+              section: skills
+        activities:
+          - type: numberSet
+            target:
+              fact: skill.deception.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: skill.deception.proficiency
+            source:
+              number: 0
+
+      - id: deception-modifier
+        phase: normal
+        activities:
+          - type: numberIncrement
+            target:
+              fact: skill.deception.value
+            source:
+              fact: cha.modifier
+
+      - id: deception-proficiency-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: skill.deception.proficiency
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.deception-proficiency-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-deception
+              group:
+                - __planned__
+              ui:
+                model: skill-proficiency
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-deception.name
+                packBehind: proficiency-acrobatics
+              vars:
+                level:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: skill.deception.proficiency
+                  source:
+                    var: level
+                - type: numberFunction
+                  function: multiply
+                  sources:
+                    - fact: proficiency.bonus
+                    - var: level
+                  target:
+                    var: profContribution
+                - type: numberIncrement
+                  target:
+                    fact: skill.deception.value
+                  source:
+                    var: profContribution
+                - type: advertiseEffect
+                  rule:
+                    id: effect-deception-proficiency
+                    phase: early
+                    after:
+                      - group: deception-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-deception-proficiency.name
+                    vars:
+                      level:
+                        capture: true
+                        default:
+                          number: 1
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: skill.deception.proficiency
+                        source:
+                          var: level
+                      - type: numberFunction
+                        function: multiply
+                        sources:
+                          - fact: proficiency.bonus
+                          - var: level
+                        target:
+                          var: profContribution
+                      - type: numberIncrement
+                        target:
+                          fact: skill.deception.value
+                        source:
+                          var: profContribution
+                      - type: advertiseEffect
+                        self: true
+
+      # === HISTORY (INT) ===
+      - id: history-value-reset
+        phase: early
+        group:
+          - history-base
+        ui:
+          stats:
+            - name: play.stats.skills.history
+              type: modifier
+              fact: skill.history.value
+              proficiencyFact: skill.history.proficiency
+              section: skills
+        activities:
+          - type: numberSet
+            target:
+              fact: skill.history.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: skill.history.proficiency
+            source:
+              number: 0
+
+      - id: history-modifier
+        phase: normal
+        activities:
+          - type: numberIncrement
+            target:
+              fact: skill.history.value
+            source:
+              fact: int.modifier
+
+      - id: history-proficiency-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: skill.history.proficiency
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.history-proficiency-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-history
+              group:
+                - __planned__
+              ui:
+                model: skill-proficiency
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-history.name
+                packBehind: proficiency-acrobatics
+              vars:
+                level:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: skill.history.proficiency
+                  source:
+                    var: level
+                - type: numberFunction
+                  function: multiply
+                  sources:
+                    - fact: proficiency.bonus
+                    - var: level
+                  target:
+                    var: profContribution
+                - type: numberIncrement
+                  target:
+                    fact: skill.history.value
+                  source:
+                    var: profContribution
+                - type: advertiseEffect
+                  rule:
+                    id: effect-history-proficiency
+                    phase: early
+                    after:
+                      - group: history-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-history-proficiency.name
+                    vars:
+                      level:
+                        capture: true
+                        default:
+                          number: 1
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: skill.history.proficiency
+                        source:
+                          var: level
+                      - type: numberFunction
+                        function: multiply
+                        sources:
+                          - fact: proficiency.bonus
+                          - var: level
+                        target:
+                          var: profContribution
+                      - type: numberIncrement
+                        target:
+                          fact: skill.history.value
+                        source:
+                          var: profContribution
+                      - type: advertiseEffect
+                        self: true
+
+      # === INSIGHT (WIS) ===
+      - id: insight-value-reset
+        phase: early
+        group:
+          - insight-base
+        ui:
+          stats:
+            - name: play.stats.skills.insight
+              type: modifier
+              fact: skill.insight.value
+              proficiencyFact: skill.insight.proficiency
+              section: skills
+        activities:
+          - type: numberSet
+            target:
+              fact: skill.insight.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: skill.insight.proficiency
+            source:
+              number: 0
+
+      - id: insight-modifier
+        phase: normal
+        activities:
+          - type: numberIncrement
+            target:
+              fact: skill.insight.value
+            source:
+              fact: wis.modifier
+
+      - id: insight-proficiency-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: skill.insight.proficiency
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.insight-proficiency-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-insight
+              group:
+                - __planned__
+              ui:
+                model: skill-proficiency
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-insight.name
+                packBehind: proficiency-acrobatics
+              vars:
+                level:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: skill.insight.proficiency
+                  source:
+                    var: level
+                - type: numberFunction
+                  function: multiply
+                  sources:
+                    - fact: proficiency.bonus
+                    - var: level
+                  target:
+                    var: profContribution
+                - type: numberIncrement
+                  target:
+                    fact: skill.insight.value
+                  source:
+                    var: profContribution
+                - type: advertiseEffect
+                  rule:
+                    id: effect-insight-proficiency
+                    phase: early
+                    after:
+                      - group: insight-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-insight-proficiency.name
+                    vars:
+                      level:
+                        capture: true
+                        default:
+                          number: 1
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: skill.insight.proficiency
+                        source:
+                          var: level
+                      - type: numberFunction
+                        function: multiply
+                        sources:
+                          - fact: proficiency.bonus
+                          - var: level
+                        target:
+                          var: profContribution
+                      - type: numberIncrement
+                        target:
+                          fact: skill.insight.value
+                        source:
+                          var: profContribution
+                      - type: advertiseEffect
+                        self: true
+
+      # === INTIMIDATION (CHA) ===
+      - id: intimidation-value-reset
+        phase: early
+        group:
+          - intimidation-base
+        ui:
+          stats:
+            - name: play.stats.skills.intimidation
+              type: modifier
+              fact: skill.intimidation.value
+              proficiencyFact: skill.intimidation.proficiency
+              section: skills
+        activities:
+          - type: numberSet
+            target:
+              fact: skill.intimidation.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: skill.intimidation.proficiency
+            source:
+              number: 0
+
+      - id: intimidation-modifier
+        phase: normal
+        activities:
+          - type: numberIncrement
+            target:
+              fact: skill.intimidation.value
+            source:
+              fact: cha.modifier
+
+      - id: intimidation-proficiency-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: skill.intimidation.proficiency
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.intimidation-proficiency-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-intimidation
+              group:
+                - __planned__
+              ui:
+                model: skill-proficiency
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-intimidation.name
+                packBehind: proficiency-acrobatics
+              vars:
+                level:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: skill.intimidation.proficiency
+                  source:
+                    var: level
+                - type: numberFunction
+                  function: multiply
+                  sources:
+                    - fact: proficiency.bonus
+                    - var: level
+                  target:
+                    var: profContribution
+                - type: numberIncrement
+                  target:
+                    fact: skill.intimidation.value
+                  source:
+                    var: profContribution
+                - type: advertiseEffect
+                  rule:
+                    id: effect-intimidation-proficiency
+                    phase: early
+                    after:
+                      - group: intimidation-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-intimidation-proficiency.name
+                    vars:
+                      level:
+                        capture: true
+                        default:
+                          number: 1
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: skill.intimidation.proficiency
+                        source:
+                          var: level
+                      - type: numberFunction
+                        function: multiply
+                        sources:
+                          - fact: proficiency.bonus
+                          - var: level
+                        target:
+                          var: profContribution
+                      - type: numberIncrement
+                        target:
+                          fact: skill.intimidation.value
+                        source:
+                          var: profContribution
+                      - type: advertiseEffect
+                        self: true
+
+      # === INVESTIGATION (INT) ===
+      - id: investigation-value-reset
+        phase: early
+        group:
+          - investigation-base
+        ui:
+          stats:
+            - name: play.stats.skills.investigation
+              type: modifier
+              fact: skill.investigation.value
+              proficiencyFact: skill.investigation.proficiency
+              section: skills
+        activities:
+          - type: numberSet
+            target:
+              fact: skill.investigation.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: skill.investigation.proficiency
+            source:
+              number: 0
+
+      - id: investigation-modifier
+        phase: normal
+        activities:
+          - type: numberIncrement
+            target:
+              fact: skill.investigation.value
+            source:
+              fact: int.modifier
+
+      - id: investigation-proficiency-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: skill.investigation.proficiency
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.investigation-proficiency-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-investigation
+              group:
+                - __planned__
+              ui:
+                model: skill-proficiency
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-investigation.name
+                packBehind: proficiency-acrobatics
+              vars:
+                level:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: skill.investigation.proficiency
+                  source:
+                    var: level
+                - type: numberFunction
+                  function: multiply
+                  sources:
+                    - fact: proficiency.bonus
+                    - var: level
+                  target:
+                    var: profContribution
+                - type: numberIncrement
+                  target:
+                    fact: skill.investigation.value
+                  source:
+                    var: profContribution
+                - type: advertiseEffect
+                  rule:
+                    id: effect-investigation-proficiency
+                    phase: early
+                    after:
+                      - group: investigation-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-investigation-proficiency.name
+                    vars:
+                      level:
+                        capture: true
+                        default:
+                          number: 1
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: skill.investigation.proficiency
+                        source:
+                          var: level
+                      - type: numberFunction
+                        function: multiply
+                        sources:
+                          - fact: proficiency.bonus
+                          - var: level
+                        target:
+                          var: profContribution
+                      - type: numberIncrement
+                        target:
+                          fact: skill.investigation.value
+                        source:
+                          var: profContribution
+                      - type: advertiseEffect
+                        self: true
+
+      # === MEDICINE (WIS) ===
+      - id: medicine-value-reset
+        phase: early
+        group:
+          - medicine-base
+        ui:
+          stats:
+            - name: play.stats.skills.medicine
+              type: modifier
+              fact: skill.medicine.value
+              proficiencyFact: skill.medicine.proficiency
+              section: skills
+        activities:
+          - type: numberSet
+            target:
+              fact: skill.medicine.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: skill.medicine.proficiency
+            source:
+              number: 0
+
+      - id: medicine-modifier
+        phase: normal
+        activities:
+          - type: numberIncrement
+            target:
+              fact: skill.medicine.value
+            source:
+              fact: wis.modifier
+
+      - id: medicine-proficiency-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: skill.medicine.proficiency
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.medicine-proficiency-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-medicine
+              group:
+                - __planned__
+              ui:
+                model: skill-proficiency
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-medicine.name
+                packBehind: proficiency-acrobatics
+              vars:
+                level:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: skill.medicine.proficiency
+                  source:
+                    var: level
+                - type: numberFunction
+                  function: multiply
+                  sources:
+                    - fact: proficiency.bonus
+                    - var: level
+                  target:
+                    var: profContribution
+                - type: numberIncrement
+                  target:
+                    fact: skill.medicine.value
+                  source:
+                    var: profContribution
+                - type: advertiseEffect
+                  rule:
+                    id: effect-medicine-proficiency
+                    phase: early
+                    after:
+                      - group: medicine-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-medicine-proficiency.name
+                    vars:
+                      level:
+                        capture: true
+                        default:
+                          number: 1
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: skill.medicine.proficiency
+                        source:
+                          var: level
+                      - type: numberFunction
+                        function: multiply
+                        sources:
+                          - fact: proficiency.bonus
+                          - var: level
+                        target:
+                          var: profContribution
+                      - type: numberIncrement
+                        target:
+                          fact: skill.medicine.value
+                        source:
+                          var: profContribution
+                      - type: advertiseEffect
+                        self: true
+
+      # === NATURE (INT) ===
+      - id: nature-value-reset
+        phase: early
+        group:
+          - nature-base
+        ui:
+          stats:
+            - name: play.stats.skills.nature
+              type: modifier
+              fact: skill.nature.value
+              proficiencyFact: skill.nature.proficiency
+              section: skills
+        activities:
+          - type: numberSet
+            target:
+              fact: skill.nature.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: skill.nature.proficiency
+            source:
+              number: 0
+
+      - id: nature-modifier
+        phase: normal
+        activities:
+          - type: numberIncrement
+            target:
+              fact: skill.nature.value
+            source:
+              fact: int.modifier
+
+      - id: nature-proficiency-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: skill.nature.proficiency
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.nature-proficiency-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-nature
+              group:
+                - __planned__
+              ui:
+                model: skill-proficiency
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-nature.name
+                packBehind: proficiency-acrobatics
+              vars:
+                level:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: skill.nature.proficiency
+                  source:
+                    var: level
+                - type: numberFunction
+                  function: multiply
+                  sources:
+                    - fact: proficiency.bonus
+                    - var: level
+                  target:
+                    var: profContribution
+                - type: numberIncrement
+                  target:
+                    fact: skill.nature.value
+                  source:
+                    var: profContribution
+                - type: advertiseEffect
+                  rule:
+                    id: effect-nature-proficiency
+                    phase: early
+                    after:
+                      - group: nature-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-nature-proficiency.name
+                    vars:
+                      level:
+                        capture: true
+                        default:
+                          number: 1
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: skill.nature.proficiency
+                        source:
+                          var: level
+                      - type: numberFunction
+                        function: multiply
+                        sources:
+                          - fact: proficiency.bonus
+                          - var: level
+                        target:
+                          var: profContribution
+                      - type: numberIncrement
+                        target:
+                          fact: skill.nature.value
+                        source:
+                          var: profContribution
+                      - type: advertiseEffect
+                        self: true
+
+      # === PERCEPTION (WIS) ===
+      - id: perception-value-reset
+        phase: early
+        group:
+          - perception-base
+        ui:
+          stats:
+            - name: play.stats.skills.perception
+              type: modifier
+              fact: skill.perception.value
+              proficiencyFact: skill.perception.proficiency
+              section: skills
+        activities:
+          - type: numberSet
+            target:
+              fact: skill.perception.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: skill.perception.proficiency
+            source:
+              number: 0
+
+      - id: perception-modifier
+        phase: normal
+        activities:
+          - type: numberIncrement
+            target:
+              fact: skill.perception.value
+            source:
+              fact: wis.modifier
+
+      - id: perception-proficiency-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: skill.perception.proficiency
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.perception-proficiency-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-perception
+              group:
+                - __planned__
+              ui:
+                model: skill-proficiency
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-perception.name
+                packBehind: proficiency-acrobatics
+              vars:
+                level:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: skill.perception.proficiency
+                  source:
+                    var: level
+                - type: numberFunction
+                  function: multiply
+                  sources:
+                    - fact: proficiency.bonus
+                    - var: level
+                  target:
+                    var: profContribution
+                - type: numberIncrement
+                  target:
+                    fact: skill.perception.value
+                  source:
+                    var: profContribution
+                - type: advertiseEffect
+                  rule:
+                    id: effect-perception-proficiency
+                    phase: early
+                    after:
+                      - group: perception-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-perception-proficiency.name
+                    vars:
+                      level:
+                        capture: true
+                        default:
+                          number: 1
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: skill.perception.proficiency
+                        source:
+                          var: level
+                      - type: numberFunction
+                        function: multiply
+                        sources:
+                          - fact: proficiency.bonus
+                          - var: level
+                        target:
+                          var: profContribution
+                      - type: numberIncrement
+                        target:
+                          fact: skill.perception.value
+                        source:
+                          var: profContribution
+                      - type: advertiseEffect
+                        self: true
+
+      # === PERFORMANCE (CHA) ===
+      - id: performance-value-reset
+        phase: early
+        group:
+          - performance-base
+        ui:
+          stats:
+            - name: play.stats.skills.performance
+              type: modifier
+              fact: skill.performance.value
+              proficiencyFact: skill.performance.proficiency
+              section: skills
+        activities:
+          - type: numberSet
+            target:
+              fact: skill.performance.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: skill.performance.proficiency
+            source:
+              number: 0
+
+      - id: performance-modifier
+        phase: normal
+        activities:
+          - type: numberIncrement
+            target:
+              fact: skill.performance.value
+            source:
+              fact: cha.modifier
+
+      - id: performance-proficiency-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: skill.performance.proficiency
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.performance-proficiency-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-performance
+              group:
+                - __planned__
+              ui:
+                model: skill-proficiency
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-performance.name
+                packBehind: proficiency-acrobatics
+              vars:
+                level:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: skill.performance.proficiency
+                  source:
+                    var: level
+                - type: numberFunction
+                  function: multiply
+                  sources:
+                    - fact: proficiency.bonus
+                    - var: level
+                  target:
+                    var: profContribution
+                - type: numberIncrement
+                  target:
+                    fact: skill.performance.value
+                  source:
+                    var: profContribution
+                - type: advertiseEffect
+                  rule:
+                    id: effect-performance-proficiency
+                    phase: early
+                    after:
+                      - group: performance-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-performance-proficiency.name
+                    vars:
+                      level:
+                        capture: true
+                        default:
+                          number: 1
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: skill.performance.proficiency
+                        source:
+                          var: level
+                      - type: numberFunction
+                        function: multiply
+                        sources:
+                          - fact: proficiency.bonus
+                          - var: level
+                        target:
+                          var: profContribution
+                      - type: numberIncrement
+                        target:
+                          fact: skill.performance.value
+                        source:
+                          var: profContribution
+                      - type: advertiseEffect
+                        self: true
+
+      # === PERSUASION (CHA) ===
+      - id: persuasion-value-reset
+        phase: early
+        group:
+          - persuasion-base
+        ui:
+          stats:
+            - name: play.stats.skills.persuasion
+              type: modifier
+              fact: skill.persuasion.value
+              proficiencyFact: skill.persuasion.proficiency
+              section: skills
+        activities:
+          - type: numberSet
+            target:
+              fact: skill.persuasion.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: skill.persuasion.proficiency
+            source:
+              number: 0
+
+      - id: persuasion-modifier
+        phase: normal
+        activities:
+          - type: numberIncrement
+            target:
+              fact: skill.persuasion.value
+            source:
+              fact: cha.modifier
+
+      - id: persuasion-proficiency-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: skill.persuasion.proficiency
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.persuasion-proficiency-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-persuasion
+              group:
+                - __planned__
+              ui:
+                model: skill-proficiency
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-persuasion.name
+                packBehind: proficiency-acrobatics
+              vars:
+                level:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: skill.persuasion.proficiency
+                  source:
+                    var: level
+                - type: numberFunction
+                  function: multiply
+                  sources:
+                    - fact: proficiency.bonus
+                    - var: level
+                  target:
+                    var: profContribution
+                - type: numberIncrement
+                  target:
+                    fact: skill.persuasion.value
+                  source:
+                    var: profContribution
+                - type: advertiseEffect
+                  rule:
+                    id: effect-persuasion-proficiency
+                    phase: early
+                    after:
+                      - group: persuasion-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-persuasion-proficiency.name
+                    vars:
+                      level:
+                        capture: true
+                        default:
+                          number: 1
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: skill.persuasion.proficiency
+                        source:
+                          var: level
+                      - type: numberFunction
+                        function: multiply
+                        sources:
+                          - fact: proficiency.bonus
+                          - var: level
+                        target:
+                          var: profContribution
+                      - type: numberIncrement
+                        target:
+                          fact: skill.persuasion.value
+                        source:
+                          var: profContribution
+                      - type: advertiseEffect
+                        self: true
+
+      # === RELIGION (INT) ===
+      - id: religion-value-reset
+        phase: early
+        group:
+          - religion-base
+        ui:
+          stats:
+            - name: play.stats.skills.religion
+              type: modifier
+              fact: skill.religion.value
+              proficiencyFact: skill.religion.proficiency
+              section: skills
+        activities:
+          - type: numberSet
+            target:
+              fact: skill.religion.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: skill.religion.proficiency
+            source:
+              number: 0
+
+      - id: religion-modifier
+        phase: normal
+        activities:
+          - type: numberIncrement
+            target:
+              fact: skill.religion.value
+            source:
+              fact: int.modifier
+
+      - id: religion-proficiency-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: skill.religion.proficiency
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.religion-proficiency-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-religion
+              group:
+                - __planned__
+              ui:
+                model: skill-proficiency
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-religion.name
+                packBehind: proficiency-acrobatics
+              vars:
+                level:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: skill.religion.proficiency
+                  source:
+                    var: level
+                - type: numberFunction
+                  function: multiply
+                  sources:
+                    - fact: proficiency.bonus
+                    - var: level
+                  target:
+                    var: profContribution
+                - type: numberIncrement
+                  target:
+                    fact: skill.religion.value
+                  source:
+                    var: profContribution
+                - type: advertiseEffect
+                  rule:
+                    id: effect-religion-proficiency
+                    phase: early
+                    after:
+                      - group: religion-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-religion-proficiency.name
+                    vars:
+                      level:
+                        capture: true
+                        default:
+                          number: 1
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: skill.religion.proficiency
+                        source:
+                          var: level
+                      - type: numberFunction
+                        function: multiply
+                        sources:
+                          - fact: proficiency.bonus
+                          - var: level
+                        target:
+                          var: profContribution
+                      - type: numberIncrement
+                        target:
+                          fact: skill.religion.value
+                        source:
+                          var: profContribution
+                      - type: advertiseEffect
+                        self: true
+
+      # === SLEIGHT OF HAND (DEX) ===
+      - id: sleight-of-hand-value-reset
+        phase: early
+        group:
+          - sleight-of-hand-base
+        ui:
+          stats:
+            - name: play.stats.skills.sleight-of-hand
+              type: modifier
+              fact: skill.sleight-of-hand.value
+              proficiencyFact: skill.sleight-of-hand.proficiency
+              section: skills
+        activities:
+          - type: numberSet
+            target:
+              fact: skill.sleight-of-hand.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: skill.sleight-of-hand.proficiency
+            source:
+              number: 0
+
+      - id: sleight-of-hand-modifier
+        phase: normal
+        activities:
+          - type: numberIncrement
+            target:
+              fact: skill.sleight-of-hand.value
+            source:
+              fact: dex.modifier
+
+      - id: sleight-of-hand-proficiency-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: skill.sleight-of-hand.proficiency
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.sleight-of-hand-proficiency-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-sleight-of-hand
+              group:
+                - __planned__
+              ui:
+                model: skill-proficiency
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-sleight-of-hand.name
+                packBehind: proficiency-acrobatics
+              vars:
+                level:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: skill.sleight-of-hand.proficiency
+                  source:
+                    var: level
+                - type: numberFunction
+                  function: multiply
+                  sources:
+                    - fact: proficiency.bonus
+                    - var: level
+                  target:
+                    var: profContribution
+                - type: numberIncrement
+                  target:
+                    fact: skill.sleight-of-hand.value
+                  source:
+                    var: profContribution
+                - type: advertiseEffect
+                  rule:
+                    id: effect-sleight-of-hand-proficiency
+                    phase: early
+                    after:
+                      - group: sleight-of-hand-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-sleight-of-hand-proficiency.name
+                    vars:
+                      level:
+                        capture: true
+                        default:
+                          number: 1
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: skill.sleight-of-hand.proficiency
+                        source:
+                          var: level
+                      - type: numberFunction
+                        function: multiply
+                        sources:
+                          - fact: proficiency.bonus
+                          - var: level
+                        target:
+                          var: profContribution
+                      - type: numberIncrement
+                        target:
+                          fact: skill.sleight-of-hand.value
+                        source:
+                          var: profContribution
+                      - type: advertiseEffect
+                        self: true
+
+      # === STEALTH (DEX) ===
+      - id: stealth-value-reset
+        phase: early
+        group:
+          - stealth-base
+        ui:
+          stats:
+            - name: play.stats.skills.stealth
+              type: modifier
+              fact: skill.stealth.value
+              proficiencyFact: skill.stealth.proficiency
+              section: skills
+        activities:
+          - type: numberSet
+            target:
+              fact: skill.stealth.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: skill.stealth.proficiency
+            source:
+              number: 0
+
+      - id: stealth-modifier
+        phase: normal
+        activities:
+          - type: numberIncrement
+            target:
+              fact: skill.stealth.value
+            source:
+              fact: dex.modifier
+
+      - id: stealth-proficiency-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: skill.stealth.proficiency
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.stealth-proficiency-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-stealth
+              group:
+                - __planned__
+              ui:
+                model: skill-proficiency
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-stealth.name
+                packBehind: proficiency-acrobatics
+              vars:
+                level:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: skill.stealth.proficiency
+                  source:
+                    var: level
+                - type: numberFunction
+                  function: multiply
+                  sources:
+                    - fact: proficiency.bonus
+                    - var: level
+                  target:
+                    var: profContribution
+                - type: numberIncrement
+                  target:
+                    fact: skill.stealth.value
+                  source:
+                    var: profContribution
+                - type: advertiseEffect
+                  rule:
+                    id: effect-stealth-proficiency
+                    phase: early
+                    after:
+                      - group: stealth-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-stealth-proficiency.name
+                    vars:
+                      level:
+                        capture: true
+                        default:
+                          number: 1
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: skill.stealth.proficiency
+                        source:
+                          var: level
+                      - type: numberFunction
+                        function: multiply
+                        sources:
+                          - fact: proficiency.bonus
+                          - var: level
+                        target:
+                          var: profContribution
+                      - type: numberIncrement
+                        target:
+                          fact: skill.stealth.value
+                        source:
+                          var: profContribution
+                      - type: advertiseEffect
+                        self: true
+
+      # === SURVIVAL (WIS) ===
+      - id: survival-value-reset
+        phase: early
+        group:
+          - survival-base
+        ui:
+          stats:
+            - name: play.stats.skills.survival
+              type: modifier
+              fact: skill.survival.value
+              proficiencyFact: skill.survival.proficiency
+              section: skills
+        activities:
+          - type: numberSet
+            target:
+              fact: skill.survival.value
+            source:
+              number: 0
+          - type: numberSet
+            target:
+              fact: skill.survival.proficiency
+            source:
+              number: 0
+
+      - id: survival-modifier
+        phase: normal
+        activities:
+          - type: numberIncrement
+            target:
+              fact: skill.survival.value
+            source:
+              fact: wis.modifier
+
+      - id: survival-proficiency-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: skill.survival.proficiency
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.survival-proficiency-offer.already_proficient
+                    severity: error
+            rule:
+              id: proficiency-survival
+              group:
+                - __planned__
+              ui:
+                model: skill-proficiency
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.proficiency-survival.name
+                packBehind: proficiency-acrobatics
+              vars:
+                level:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: skill.survival.proficiency
+                  source:
+                    var: level
+                - type: numberFunction
+                  function: multiply
+                  sources:
+                    - fact: proficiency.bonus
+                    - var: level
+                  target:
+                    var: profContribution
+                - type: numberIncrement
+                  target:
+                    fact: skill.survival.value
+                  source:
+                    var: profContribution
+                - type: advertiseEffect
+                  rule:
+                    id: effect-survival-proficiency
+                    phase: early
+                    after:
+                      - group: survival-base
+                      - group: proficiency-base
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-survival-proficiency.name
+                    vars:
+                      level:
+                        capture: true
+                        default:
+                          number: 1
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: skill.survival.proficiency
+                        source:
+                          var: level
+                      - type: numberFunction
+                        function: multiply
+                        sources:
+                          - fact: proficiency.bonus
+                          - var: level
+                        target:
+                          var: profContribution
+                      - type: numberIncrement
+                        target:
+                          fact: skill.survival.value
                         source:
                           var: profContribution
                       - type: advertiseEffect
