@@ -1014,11 +1014,9 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
 
-      # === ACROBATICS (DEX) ===
       - id: acrobatics-value-reset
         phase: early
-        group:
-          - acrobatics-base
+        activities: []
         ui:
           stats:
             - name: play.stats.skills.acrobatics
@@ -1026,17 +1024,6 @@ ruleGroups:
               fact: skill.acrobatics.value
               proficiencyFact: skill.acrobatics.proficiency
               section: skills
-        activities:
-          - type: numberSet
-            target:
-              fact: skill.acrobatics.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: skill.acrobatics.proficiency
-            source:
-              number: 0
 
       - id: acrobatics-modifier
         phase: normal
@@ -1095,9 +1082,6 @@ ruleGroups:
                   rule:
                     id: effect-acrobatics-proficiency
                     phase: early
-                    after:
-                      - group: acrobatics-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-acrobatics-proficiency.name
                     vars:
@@ -1126,11 +1110,9 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
 
-      # === ANIMAL HANDLING (WIS) ===
       - id: animal-handling-value-reset
         phase: early
-        group:
-          - animal-handling-base
+        activities: []
         ui:
           stats:
             - name: play.stats.skills.animal-handling
@@ -1138,17 +1120,6 @@ ruleGroups:
               fact: skill.animal-handling.value
               proficiencyFact: skill.animal-handling.proficiency
               section: skills
-        activities:
-          - type: numberSet
-            target:
-              fact: skill.animal-handling.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: skill.animal-handling.proficiency
-            source:
-              number: 0
 
       - id: animal-handling-modifier
         phase: normal
@@ -1208,9 +1179,6 @@ ruleGroups:
                   rule:
                     id: effect-animal-handling-proficiency
                     phase: early
-                    after:
-                      - group: animal-handling-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-animal-handling-proficiency.name
                     vars:
@@ -1239,11 +1207,9 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
 
-      # === ARCANA (INT) ===
       - id: arcana-value-reset
         phase: early
-        group:
-          - arcana-base
+        activities: []
         ui:
           stats:
             - name: play.stats.skills.arcana
@@ -1251,17 +1217,6 @@ ruleGroups:
               fact: skill.arcana.value
               proficiencyFact: skill.arcana.proficiency
               section: skills
-        activities:
-          - type: numberSet
-            target:
-              fact: skill.arcana.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: skill.arcana.proficiency
-            source:
-              number: 0
 
       - id: arcana-modifier
         phase: normal
@@ -1321,9 +1276,6 @@ ruleGroups:
                   rule:
                     id: effect-arcana-proficiency
                     phase: early
-                    after:
-                      - group: arcana-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-arcana-proficiency.name
                     vars:
@@ -1352,11 +1304,9 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
 
-      # === DECEPTION (CHA) ===
       - id: deception-value-reset
         phase: early
-        group:
-          - deception-base
+        activities: []
         ui:
           stats:
             - name: play.stats.skills.deception
@@ -1364,17 +1314,6 @@ ruleGroups:
               fact: skill.deception.value
               proficiencyFact: skill.deception.proficiency
               section: skills
-        activities:
-          - type: numberSet
-            target:
-              fact: skill.deception.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: skill.deception.proficiency
-            source:
-              number: 0
 
       - id: deception-modifier
         phase: normal
@@ -1434,9 +1373,6 @@ ruleGroups:
                   rule:
                     id: effect-deception-proficiency
                     phase: early
-                    after:
-                      - group: deception-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-deception-proficiency.name
                     vars:
@@ -1465,11 +1401,9 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
 
-      # === HISTORY (INT) ===
       - id: history-value-reset
         phase: early
-        group:
-          - history-base
+        activities: []
         ui:
           stats:
             - name: play.stats.skills.history
@@ -1477,17 +1411,6 @@ ruleGroups:
               fact: skill.history.value
               proficiencyFact: skill.history.proficiency
               section: skills
-        activities:
-          - type: numberSet
-            target:
-              fact: skill.history.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: skill.history.proficiency
-            source:
-              number: 0
 
       - id: history-modifier
         phase: normal
@@ -1547,9 +1470,6 @@ ruleGroups:
                   rule:
                     id: effect-history-proficiency
                     phase: early
-                    after:
-                      - group: history-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-history-proficiency.name
                     vars:
@@ -1578,11 +1498,9 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
 
-      # === INSIGHT (WIS) ===
       - id: insight-value-reset
         phase: early
-        group:
-          - insight-base
+        activities: []
         ui:
           stats:
             - name: play.stats.skills.insight
@@ -1590,17 +1508,6 @@ ruleGroups:
               fact: skill.insight.value
               proficiencyFact: skill.insight.proficiency
               section: skills
-        activities:
-          - type: numberSet
-            target:
-              fact: skill.insight.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: skill.insight.proficiency
-            source:
-              number: 0
 
       - id: insight-modifier
         phase: normal
@@ -1660,9 +1567,6 @@ ruleGroups:
                   rule:
                     id: effect-insight-proficiency
                     phase: early
-                    after:
-                      - group: insight-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-insight-proficiency.name
                     vars:
@@ -1691,11 +1595,9 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
 
-      # === INTIMIDATION (CHA) ===
       - id: intimidation-value-reset
         phase: early
-        group:
-          - intimidation-base
+        activities: []
         ui:
           stats:
             - name: play.stats.skills.intimidation
@@ -1703,17 +1605,6 @@ ruleGroups:
               fact: skill.intimidation.value
               proficiencyFact: skill.intimidation.proficiency
               section: skills
-        activities:
-          - type: numberSet
-            target:
-              fact: skill.intimidation.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: skill.intimidation.proficiency
-            source:
-              number: 0
 
       - id: intimidation-modifier
         phase: normal
@@ -1773,9 +1664,6 @@ ruleGroups:
                   rule:
                     id: effect-intimidation-proficiency
                     phase: early
-                    after:
-                      - group: intimidation-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-intimidation-proficiency.name
                     vars:
@@ -1804,11 +1692,9 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
 
-      # === INVESTIGATION (INT) ===
       - id: investigation-value-reset
         phase: early
-        group:
-          - investigation-base
+        activities: []
         ui:
           stats:
             - name: play.stats.skills.investigation
@@ -1816,17 +1702,6 @@ ruleGroups:
               fact: skill.investigation.value
               proficiencyFact: skill.investigation.proficiency
               section: skills
-        activities:
-          - type: numberSet
-            target:
-              fact: skill.investigation.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: skill.investigation.proficiency
-            source:
-              number: 0
 
       - id: investigation-modifier
         phase: normal
@@ -1886,9 +1761,6 @@ ruleGroups:
                   rule:
                     id: effect-investigation-proficiency
                     phase: early
-                    after:
-                      - group: investigation-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-investigation-proficiency.name
                     vars:
@@ -1917,11 +1789,9 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
 
-      # === MEDICINE (WIS) ===
       - id: medicine-value-reset
         phase: early
-        group:
-          - medicine-base
+        activities: []
         ui:
           stats:
             - name: play.stats.skills.medicine
@@ -1929,17 +1799,6 @@ ruleGroups:
               fact: skill.medicine.value
               proficiencyFact: skill.medicine.proficiency
               section: skills
-        activities:
-          - type: numberSet
-            target:
-              fact: skill.medicine.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: skill.medicine.proficiency
-            source:
-              number: 0
 
       - id: medicine-modifier
         phase: normal
@@ -1999,9 +1858,6 @@ ruleGroups:
                   rule:
                     id: effect-medicine-proficiency
                     phase: early
-                    after:
-                      - group: medicine-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-medicine-proficiency.name
                     vars:
@@ -2030,11 +1886,9 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
 
-      # === NATURE (INT) ===
       - id: nature-value-reset
         phase: early
-        group:
-          - nature-base
+        activities: []
         ui:
           stats:
             - name: play.stats.skills.nature
@@ -2042,17 +1896,6 @@ ruleGroups:
               fact: skill.nature.value
               proficiencyFact: skill.nature.proficiency
               section: skills
-        activities:
-          - type: numberSet
-            target:
-              fact: skill.nature.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: skill.nature.proficiency
-            source:
-              number: 0
 
       - id: nature-modifier
         phase: normal
@@ -2112,9 +1955,6 @@ ruleGroups:
                   rule:
                     id: effect-nature-proficiency
                     phase: early
-                    after:
-                      - group: nature-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-nature-proficiency.name
                     vars:
@@ -2143,11 +1983,9 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
 
-      # === PERCEPTION (WIS) ===
       - id: perception-value-reset
         phase: early
-        group:
-          - perception-base
+        activities: []
         ui:
           stats:
             - name: play.stats.skills.perception
@@ -2155,17 +1993,6 @@ ruleGroups:
               fact: skill.perception.value
               proficiencyFact: skill.perception.proficiency
               section: skills
-        activities:
-          - type: numberSet
-            target:
-              fact: skill.perception.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: skill.perception.proficiency
-            source:
-              number: 0
 
       - id: perception-modifier
         phase: normal
@@ -2225,9 +2052,6 @@ ruleGroups:
                   rule:
                     id: effect-perception-proficiency
                     phase: early
-                    after:
-                      - group: perception-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-perception-proficiency.name
                     vars:
@@ -2256,11 +2080,9 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
 
-      # === PERFORMANCE (CHA) ===
       - id: performance-value-reset
         phase: early
-        group:
-          - performance-base
+        activities: []
         ui:
           stats:
             - name: play.stats.skills.performance
@@ -2268,17 +2090,6 @@ ruleGroups:
               fact: skill.performance.value
               proficiencyFact: skill.performance.proficiency
               section: skills
-        activities:
-          - type: numberSet
-            target:
-              fact: skill.performance.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: skill.performance.proficiency
-            source:
-              number: 0
 
       - id: performance-modifier
         phase: normal
@@ -2338,9 +2149,6 @@ ruleGroups:
                   rule:
                     id: effect-performance-proficiency
                     phase: early
-                    after:
-                      - group: performance-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-performance-proficiency.name
                     vars:
@@ -2369,11 +2177,9 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
 
-      # === PERSUASION (CHA) ===
       - id: persuasion-value-reset
         phase: early
-        group:
-          - persuasion-base
+        activities: []
         ui:
           stats:
             - name: play.stats.skills.persuasion
@@ -2381,17 +2187,6 @@ ruleGroups:
               fact: skill.persuasion.value
               proficiencyFact: skill.persuasion.proficiency
               section: skills
-        activities:
-          - type: numberSet
-            target:
-              fact: skill.persuasion.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: skill.persuasion.proficiency
-            source:
-              number: 0
 
       - id: persuasion-modifier
         phase: normal
@@ -2451,9 +2246,6 @@ ruleGroups:
                   rule:
                     id: effect-persuasion-proficiency
                     phase: early
-                    after:
-                      - group: persuasion-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-persuasion-proficiency.name
                     vars:
@@ -2482,11 +2274,9 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
 
-      # === RELIGION (INT) ===
       - id: religion-value-reset
         phase: early
-        group:
-          - religion-base
+        activities: []
         ui:
           stats:
             - name: play.stats.skills.religion
@@ -2494,17 +2284,6 @@ ruleGroups:
               fact: skill.religion.value
               proficiencyFact: skill.religion.proficiency
               section: skills
-        activities:
-          - type: numberSet
-            target:
-              fact: skill.religion.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: skill.religion.proficiency
-            source:
-              number: 0
 
       - id: religion-modifier
         phase: normal
@@ -2564,9 +2343,6 @@ ruleGroups:
                   rule:
                     id: effect-religion-proficiency
                     phase: early
-                    after:
-                      - group: religion-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-religion-proficiency.name
                     vars:
@@ -2595,11 +2371,9 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
 
-      # === SLEIGHT OF HAND (DEX) ===
       - id: sleight-of-hand-value-reset
         phase: early
-        group:
-          - sleight-of-hand-base
+        activities: []
         ui:
           stats:
             - name: play.stats.skills.sleight-of-hand
@@ -2607,17 +2381,6 @@ ruleGroups:
               fact: skill.sleight-of-hand.value
               proficiencyFact: skill.sleight-of-hand.proficiency
               section: skills
-        activities:
-          - type: numberSet
-            target:
-              fact: skill.sleight-of-hand.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: skill.sleight-of-hand.proficiency
-            source:
-              number: 0
 
       - id: sleight-of-hand-modifier
         phase: normal
@@ -2677,9 +2440,6 @@ ruleGroups:
                   rule:
                     id: effect-sleight-of-hand-proficiency
                     phase: early
-                    after:
-                      - group: sleight-of-hand-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-sleight-of-hand-proficiency.name
                     vars:
@@ -2708,11 +2468,9 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
 
-      # === STEALTH (DEX) ===
       - id: stealth-value-reset
         phase: early
-        group:
-          - stealth-base
+        activities: []
         ui:
           stats:
             - name: play.stats.skills.stealth
@@ -2720,17 +2478,6 @@ ruleGroups:
               fact: skill.stealth.value
               proficiencyFact: skill.stealth.proficiency
               section: skills
-        activities:
-          - type: numberSet
-            target:
-              fact: skill.stealth.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: skill.stealth.proficiency
-            source:
-              number: 0
 
       - id: stealth-modifier
         phase: normal
@@ -2790,9 +2537,6 @@ ruleGroups:
                   rule:
                     id: effect-stealth-proficiency
                     phase: early
-                    after:
-                      - group: stealth-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-stealth-proficiency.name
                     vars:
@@ -2821,11 +2565,9 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
 
-      # === SURVIVAL (WIS) ===
       - id: survival-value-reset
         phase: early
-        group:
-          - survival-base
+        activities: []
         ui:
           stats:
             - name: play.stats.skills.survival
@@ -2833,17 +2575,6 @@ ruleGroups:
               fact: skill.survival.value
               proficiencyFact: skill.survival.proficiency
               section: skills
-        activities:
-          - type: numberSet
-            target:
-              fact: skill.survival.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: skill.survival.proficiency
-            source:
-              number: 0
 
       - id: survival-modifier
         phase: normal
@@ -2903,9 +2634,6 @@ ruleGroups:
                   rule:
                     id: effect-survival-proficiency
                     phase: early
-                    after:
-                      - group: survival-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-survival-proficiency.name
                     vars:
