@@ -16,8 +16,6 @@ ruleGroups:
       # Proficiency Bonus - Level 1 Paladin adds +2
       - id: paladin-level1-proficiency
         phase: early
-        after:
-          - group: proficiency-base
         activities:
           - type: numberIncrement
             target:
@@ -28,8 +26,6 @@ ruleGroups:
       # Spell Slots - Level 1 Paladin gets 2 level 1 slots
       - id: paladin-level1-spell-slots
         phase: early
-        after:
-          - group: spellcasting-slots-total
         group:
           - spellcasting-slots-set
         activities:

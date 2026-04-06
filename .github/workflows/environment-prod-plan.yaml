@@ -31,7 +31,7 @@ jobs:
 
       - name: Configure AWS credentials
         if: github.actor != 'dependabot[bot]'
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_ROLE }}
           aws-region: ${{ vars.AWS_REGION }}
@@ -97,6 +97,9 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Generate rule groups JSON
+        run: make build/test-rule-groups.json
 
       - name: Run unit tests
         run: pnpm test

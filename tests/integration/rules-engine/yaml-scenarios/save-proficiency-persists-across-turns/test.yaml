@@ -1,0 +1,28 @@
+name: 'Save Proficiency Persists Across Turns'
+description: 'Both ability score and save proficiency effects persist across turns'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - class-paladin/class-paladin-level1
+steps:
+  - evaluate:
+      assert:
+        facts: {}
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 16
+      assert:
+        facts: {}
+  - addOffer:
+      id: proficiency-str
+      assert:
+        facts:
+          str.save: 5
+  - endTurn:
+      assert:
+        facts:
+          str.value: 16
+          str.modifier: 3
+          str.save: 5
+          str.save.proficient: 1

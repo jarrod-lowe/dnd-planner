@@ -448,6 +448,10 @@
         "saveFact": {
           "type": "string",
           "description": "Fact path for the saving throw modifier (value type only). When present with modifierFact, value renders as score/modifier/save."
+        },
+        "proficiencyFact": {
+          "type": "string",
+          "description": "Fact path for proficiency multiplier indicator (modifier type only). When present, renders a proficiency badge next to the modifier."
         }
       },
       "additionalProperties": false,

@@ -17,4 +17,11 @@ export const SECTION_ORDER: string[] = [
  * Sections in this array appear first, in this order.
  * Unknown sections appear after these, sorted alphabetically.
  */
-export const STAT_SECTION_ORDER: string[] = ['turn', 'resources', 'stats', 'abilities', 'magic'];
+export const STAT_SECTION_ORDER: string[] = [
+  'turn',
+  'resources',
+  'stats',
+  'skills',
+  'abilities',
+  'magic'
+];

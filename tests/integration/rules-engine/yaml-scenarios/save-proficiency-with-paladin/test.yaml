@@ -1,0 +1,25 @@
+name: 'Save Proficiency With Paladin'
+description: 'Adding a saving throw proficiency with paladin class (proficiency bonus is 2)'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - class-paladin/class-paladin-level1
+steps:
+  - evaluate:
+      assert:
+        facts:
+          proficiency.bonus: 2
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 16
+      assert:
+        facts:
+          str.modifier: 3
+          str.save: 3
+  - addOffer:
+      id: proficiency-str
+      assert:
+        facts:
+          str.save.proficient: 1
+          str.save: 5

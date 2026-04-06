@@ -56,38 +56,38 @@ describe('createBuiltinFunctionRegistry', () => {
     expect(handler!([18])).toBe(4);
   });
 
-  it('multiply in registry multiplies value by multiplier', () => {
+  it('multiply in registry multiplies value by second source', () => {
     const registry = createBuiltinFunctionRegistry();
     const handler = registry.get('multiply');
 
     expect(handler).toBeDefined();
-    expect(handler!([30], { multiplier: 0.5 })).toBe(15);
+    expect(handler!([30, 0.5])).toBe(15);
   });
 });
 
 describe('multiplyHandler', () => {
   it('multiplies value by 0.5 (half)', () => {
-    expect(multiplyHandler([30], { multiplier: 0.5 })).toBe(15);
+    expect(multiplyHandler([30, 0.5])).toBe(15);
   });
 
   it('multiplies value by 2 (double)', () => {
-    expect(multiplyHandler([10], { multiplier: 2 })).toBe(20);
+    expect(multiplyHandler([10, 2])).toBe(20);
   });
 
   it('multiplies value by 3 (triple)', () => {
-    expect(multiplyHandler([5], { multiplier: 3 })).toBe(15);
+    expect(multiplyHandler([5, 3])).toBe(15);
   });
 
   it('returns 0 when value is undefined', () => {
-    expect(multiplyHandler([undefined], { multiplier: 2 })).toBe(0);
+    expect(multiplyHandler([undefined, 2])).toBe(0);
   });
 
-  it('defaults multiplier to 1 when not provided', () => {
+  it('returns value unchanged when multiplier is undefined (identity)', () => {
     expect(multiplyHandler([10])).toBe(10);
   });
 
   it('handles fractional results correctly', () => {
-    expect(multiplyHandler([10], { multiplier: 0.5 })).toBe(5);
-    expect(multiplyHandler([11], { multiplier: 0.5 })).toBe(5.5);
+    expect(multiplyHandler([10, 0.5])).toBe(5);
+    expect(multiplyHandler([11, 0.5])).toBe(5.5);
   });
 });

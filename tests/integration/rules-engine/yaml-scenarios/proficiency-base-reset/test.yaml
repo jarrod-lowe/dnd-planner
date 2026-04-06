@@ -1,0 +1,9 @@
+name: 'Proficiency - Base Reset'
+description: 'Proficiency bonus starts at 0 with no character data'
+ruleGroups:
+  - dnd-5e-2024/proficiency
+steps:
+  - evaluate:
+      assert:
+        facts:
+          proficiency.bonus: 0

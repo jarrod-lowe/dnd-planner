@@ -8,7 +8,7 @@ import type { NamedFunction } from './types';
  * Undefined values indicate the referenced fact didn't exist.
  *
  * Example: statToModifier([18]) returns 4 (Math.floor((18 - 10) / 2))
- * Example: multiply([30], { multiplier: 0.5 }) returns 15
+ * Example: multiply([30, 0.5]) returns 15
  */
 export type NamedFunctionHandler = (
   sourceArgs: (number | undefined)[],
@@ -28,7 +28,7 @@ export type FunctionRegistry = Map<NamedFunction, NamedFunctionHandler>;
  *
  * Currently includes:
  * - statToModifier: D&D 5e formula for converting ability score to modifier
- * - multiply: Multiplies a value by a multiplier (from args)
+ * - multiply: Multiplies two values (value * multiplier, both from sources)
  *
  * @returns Map of function names to handlers
  *
@@ -62,26 +62,28 @@ export function statToModifierHandler(sourceArgs: (number | undefined)[]): numbe
 }
 
 /**
- * Multiplies a value by a multiplier.
+ * Multiplies two values together.
+ *
+ * Takes two source args: the value and the multiplier.
+ * If no multiplier is provided, returns the value unchanged (identity).
  *
  * Examples:
- * - multiply([30], { multiplier: 0.5 }) -> 15 (half)
- * - multiply([10], { multiplier: 2 }) -> 20 (double)
- * - multiply([5], { multiplier: 3 }) -> 15 (triple)
+ * - multiply([30, 0.5]) -> 15 (half)
+ * - multiply([10, 2]) -> 20 (double)
+ * - multiply([5, 3]) -> 15 (triple)
+ * - multiply([10]) -> 10 (identity)
  *
- * @param sourceArgs - Array containing the value to multiply (args[0])
- * @param activityArgs - Object containing the multiplier (args.multiplier)
- * @returns The multiplied value, or 0 if value is undefined
+ * @param sourceArgs - Array containing [value, multiplier]
+ * @returns value * multiplier, or 0 if value is undefined
  *
  * @calledBy createBuiltinFunctionRegistry (to register this handler)
  */
-export function multiplyHandler(
-  sourceArgs: (number | undefined)[],
-  activityArgs?: Record<string, unknown>
-): number {
+export function multiplyHandler(sourceArgs: (number | undefined)[]): number {
   const value = sourceArgs[0];
   if (value === undefined) return 0;
 
-  const multiplier = (activityArgs?.multiplier as number) ?? 1;
+  const multiplier = sourceArgs[1];
+  if (multiplier === undefined) return value;
+
   return value * multiplier;
 }

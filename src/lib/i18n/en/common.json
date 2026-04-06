@@ -157,6 +157,168 @@
         },
         "effect-cha-save-proficiency": {
           "name": "CHA Save Proficiency"
+        },
+        "proficiency-athletics": {
+          "name": "Proficiency - Athletics"
+        },
+        "proficiency-athletics-offer": {
+          "already_proficient": "Already proficient in Athletics"
+        },
+        "effect-athletics-proficiency": {
+          "name": "Athletics Proficiency (x{{level}})"
+        },
+        "proficiency-acrobatics": {
+          "name": "Proficiency - Acrobatics"
+        },
+        "proficiency-acrobatics-offer": {
+          "already_proficient": "Already proficient in Acrobatics"
+        },
+        "effect-acrobatics-proficiency": {
+          "name": "Acrobatics Proficiency (x{{level}})"
+        },
+        "proficiency-animal-handling": {
+          "name": "Proficiency - Animal Handling"
+        },
+        "proficiency-animal-handling-offer": {
+          "already_proficient": "Already proficient in Animal Handling"
+        },
+        "effect-animal-handling-proficiency": {
+          "name": "Animal Handling Proficiency (x{{level}})"
+        },
+        "proficiency-arcana": {
+          "name": "Proficiency - Arcana"
+        },
+        "proficiency-arcana-offer": {
+          "already_proficient": "Already proficient in Arcana"
+        },
+        "effect-arcana-proficiency": {
+          "name": "Arcana Proficiency (x{{level}})"
+        },
+        "proficiency-deception": {
+          "name": "Proficiency - Deception"
+        },
+        "proficiency-deception-offer": {
+          "already_proficient": "Already proficient in Deception"
+        },
+        "effect-deception-proficiency": {
+          "name": "Deception Proficiency (x{{level}})"
+        },
+        "proficiency-history": {
+          "name": "Proficiency - History"
+        },
+        "proficiency-history-offer": {
+          "already_proficient": "Already proficient in History"
+        },
+        "effect-history-proficiency": {
+          "name": "History Proficiency (x{{level}})"
+        },
+        "proficiency-insight": {
+          "name": "Proficiency - Insight"
+        },
+        "proficiency-insight-offer": {
+          "already_proficient": "Already proficient in Insight"
+        },
+        "effect-insight-proficiency": {
+          "name": "Insight Proficiency (x{{level}})"
+        },
+        "proficiency-intimidation": {
+          "name": "Proficiency - Intimidation"
+        },
+        "proficiency-intimidation-offer": {
+          "already_proficient": "Already proficient in Intimidation"
+        },
+        "effect-intimidation-proficiency": {
+          "name": "Intimidation Proficiency (x{{level}})"
+        },
+        "proficiency-investigation": {
+          "name": "Proficiency - Investigation"
+        },
+        "proficiency-investigation-offer": {
+          "already_proficient": "Already proficient in Investigation"
+        },
+        "effect-investigation-proficiency": {
+          "name": "Investigation Proficiency (x{{level}})"
+        },
+        "proficiency-medicine": {
+          "name": "Proficiency - Medicine"
+        },
+        "proficiency-medicine-offer": {
+          "already_proficient": "Already proficient in Medicine"
+        },
+        "effect-medicine-proficiency": {
+          "name": "Medicine Proficiency (x{{level}})"
+        },
+        "proficiency-nature": {
+          "name": "Proficiency - Nature"
+        },
+        "proficiency-nature-offer": {
+          "already_proficient": "Already proficient in Nature"
+        },
+        "effect-nature-proficiency": {
+          "name": "Nature Proficiency (x{{level}})"
+        },
+        "proficiency-perception": {
+          "name": "Proficiency - Perception"
+        },
+        "proficiency-perception-offer": {
+          "already_proficient": "Already proficient in Perception"
+        },
+        "effect-perception-proficiency": {
+          "name": "Perception Proficiency (x{{level}})"
+        },
+        "proficiency-performance": {
+          "name": "Proficiency - Performance"
+        },
+        "proficiency-performance-offer": {
+          "already_proficient": "Already proficient in Performance"
+        },
+        "effect-performance-proficiency": {
+          "name": "Performance Proficiency (x{{level}})"
+        },
+        "proficiency-persuasion": {
+          "name": "Proficiency - Persuasion"
+        },
+        "proficiency-persuasion-offer": {
+          "already_proficient": "Already proficient in Persuasion"
+        },
+        "effect-persuasion-proficiency": {
+          "name": "Persuasion Proficiency (x{{level}})"
+        },
+        "proficiency-religion": {
+          "name": "Proficiency - Religion"
+        },
+        "proficiency-religion-offer": {
+          "already_proficient": "Already proficient in Religion"
+        },
+        "effect-religion-proficiency": {
+          "name": "Religion Proficiency (x{{level}})"
+        },
+        "proficiency-sleight-of-hand": {
+          "name": "Proficiency - Sleight of Hand"
+        },
+        "proficiency-sleight-of-hand-offer": {
+          "already_proficient": "Already proficient in Sleight of Hand"
+        },
+        "effect-sleight-of-hand-proficiency": {
+          "name": "Sleight of Hand Proficiency (x{{level}})"
+        },
+        "proficiency-stealth": {
+          "name": "Proficiency - Stealth"
+        },
+        "proficiency-stealth-offer": {
+          "already_proficient": "Already proficient in Stealth"
+        },
+        "effect-stealth-proficiency": {
+          "name": "Stealth Proficiency (x{{level}})"
+        },
+        "proficiency-survival": {
+          "name": "Proficiency - Survival"
+        },
+        "proficiency-survival-offer": {
+          "already_proficient": "Already proficient in Survival"
+        },
+        "effect-survival-proficiency": {
+          "name": "Survival Proficiency (x{{level}})"
         }
       },
       "free-actions": {
@@ -289,9 +451,30 @@
         "turn": "Turn",
         "resources": "Resources",
         "stats": "Stats",
+        "skills": "Skills",
         "abilities": "Abilities",
         "magic": "Magic",
         "other": "Other"
+      },
+      "skills": {
+        "athletics": "Athletics",
+        "acrobatics": "Acrobatics",
+        "animal-handling": "Animal Handling",
+        "arcana": "Arcana",
+        "deception": "Deception",
+        "history": "History",
+        "insight": "Insight",
+        "intimidation": "Intimidation",
+        "investigation": "Investigation",
+        "medicine": "Medicine",
+        "nature": "Nature",
+        "perception": "Perception",
+        "performance": "Performance",
+        "persuasion": "Persuasion",
+        "religion": "Religion",
+        "sleight-of-hand": "Sleight of Hand",
+        "stealth": "Stealth",
+        "survival": "Survival"
       }
     },
     "choices": {
@@ -319,6 +502,11 @@
         "collapse": "Hide options",
         "expandAria": "Expand packed choices",
         "collapseAria": "Collapse packed choices"
+      },
+      "skillProficiency": {
+        "half": "Half (x0.5)",
+        "full": "Full (x1)",
+        "double": "Double (x2)"
       }
     },
     "plan": {

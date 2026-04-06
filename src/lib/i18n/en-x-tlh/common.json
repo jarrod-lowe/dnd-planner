@@ -157,6 +157,168 @@
         },
         "effect-cha-save-proficiency": {
           "name": "Quv toDval valwI'"
+        },
+        "proficiency-athletics": {
+          "name": "valwI' - Suv"
+        },
+        "proficiency-athletics-offer": {
+          "already_proficient": "Suv valwI' already"
+        },
+        "effect-athletics-proficiency": {
+          "name": "Suv valwI' (x{{level}})"
+        },
+        "proficiency-acrobatics": {
+          "name": "valwI' - yIqIm"
+        },
+        "proficiency-acrobatics-offer": {
+          "already_proficient": "yIqIm valwI' already"
+        },
+        "effect-acrobatics-proficiency": {
+          "name": "yIqIm valwI' (x{{level}})"
+        },
+        "proficiency-animal-handling": {
+          "name": "valwI' - Ha'DIbaH SeH"
+        },
+        "proficiency-animal-handling-offer": {
+          "already_proficient": "Ha'DIbaH SeH valwI' already"
+        },
+        "effect-animal-handling-proficiency": {
+          "name": "Ha'DIbaH SeH valwI' (x{{level}})"
+        },
+        "proficiency-arcana": {
+          "name": "valwI' - mughlaH"
+        },
+        "proficiency-arcana-offer": {
+          "already_proficient": "mughlaH valwI' already"
+        },
+        "effect-arcana-proficiency": {
+          "name": "mughlaH valwI' (x{{level}})"
+        },
+        "proficiency-deception": {
+          "name": "valwI' - nIch"
+        },
+        "proficiency-deception-offer": {
+          "already_proficient": "nIch valwI' already"
+        },
+        "effect-deception-proficiency": {
+          "name": "nIch valwI' (x{{level}})"
+        },
+        "proficiency-history": {
+          "name": "valwI' - qun"
+        },
+        "proficiency-history-offer": {
+          "already_proficient": "qun valwI' already"
+        },
+        "effect-history-proficiency": {
+          "name": "qun valwI' (x{{level}})"
+        },
+        "proficiency-insight": {
+          "name": "valwI' - Qob"
+        },
+        "proficiency-insight-offer": {
+          "already_proficient": "Qob valwI' already"
+        },
+        "effect-insight-proficiency": {
+          "name": "Qob valwI' (x{{level}})"
+        },
+        "proficiency-intimidation": {
+          "name": "valwI' - HIv"
+        },
+        "proficiency-intimidation-offer": {
+          "already_proficient": "HIv valwI' already"
+        },
+        "effect-intimidation-proficiency": {
+          "name": "HIv valwI' (x{{level}})"
+        },
+        "proficiency-investigation": {
+          "name": "valwI' - nej"
+        },
+        "proficiency-investigation-offer": {
+          "already_proficient": "nej valwI' already"
+        },
+        "effect-investigation-proficiency": {
+          "name": "nej valwI' (x{{level}})"
+        },
+        "proficiency-medicine": {
+          "name": "valwI' - Qel"
+        },
+        "proficiency-medicine-offer": {
+          "already_proficient": "Qel valwI' already"
+        },
+        "effect-medicine-proficiency": {
+          "name": "Qel valwI' (x{{level}})"
+        },
+        "proficiency-nature": {
+          "name": "valwI' - Doch"
+        },
+        "proficiency-nature-offer": {
+          "already_proficient": "Doch valwI' already"
+        },
+        "effect-nature-proficiency": {
+          "name": "Doch valwI' (x{{level}})"
+        },
+        "proficiency-perception": {
+          "name": "valwI' - legh"
+        },
+        "proficiency-perception-offer": {
+          "already_proficient": "legh valwI' already"
+        },
+        "effect-perception-proficiency": {
+          "name": "legh valwI' (x{{level}})"
+        },
+        "proficiency-performance": {
+          "name": "valwI' - chel"
+        },
+        "proficiency-performance-offer": {
+          "already_proficient": "chel valwI' already"
+        },
+        "effect-performance-proficiency": {
+          "name": "chel valwI' (x{{level}})"
+        },
+        "proficiency-persuasion": {
+          "name": "valwI' - QIch"
+        },
+        "proficiency-persuasion-offer": {
+          "already_proficient": "QIch valwI' already"
+        },
+        "effect-persuasion-proficiency": {
+          "name": "QIch valwI' (x{{level}})"
+        },
+        "proficiency-religion": {
+          "name": "valwI' - Den"
+        },
+        "proficiency-religion-offer": {
+          "already_proficient": "Den valwI' already"
+        },
+        "effect-religion-proficiency": {
+          "name": "Den valwI' (x{{level}})"
+        },
+        "proficiency-sleight-of-hand": {
+          "name": "valwI' - nich"
+        },
+        "proficiency-sleight-of-hand-offer": {
+          "already_proficient": "nich valwI' already"
+        },
+        "effect-sleight-of-hand-proficiency": {
+          "name": "nich valwI' (x{{level}})"
+        },
+        "proficiency-stealth": {
+          "name": "valwI' - So'"
+        },
+        "proficiency-stealth-offer": {
+          "already_proficient": "So' valwI' already"
+        },
+        "effect-stealth-proficiency": {
+          "name": "So' valwI' (x{{level}})"
+        },
+        "proficiency-survival": {
+          "name": "valwI' - taH"
+        },
+        "proficiency-survival-offer": {
+          "already_proficient": "taH valwI' already"
+        },
+        "effect-survival-proficiency": {
+          "name": "taH valwI' (x{{level}})"
         }
       },
       "free-actions": {
@@ -268,6 +430,26 @@
       "turnCounter": "wa'DIch",
       "movement": "Do",
       "proficiency": "valwI'",
+      "skills": {
+        "athletics": "Suv",
+        "acrobatics": "yIqIm",
+        "animal-handling": "Ha'DIbaH SeH",
+        "arcana": "mughlaH",
+        "deception": "nIch",
+        "history": "qun",
+        "insight": "Qob",
+        "intimidation": "HIv",
+        "investigation": "nej",
+        "medicine": "Qel",
+        "nature": "Doch",
+        "perception": "legh",
+        "performance": "chel",
+        "persuasion": "QIch",
+        "religion": "Den",
+        "sleight-of-hand": "nich",
+        "stealth": "So'",
+        "survival": "taH"
+      },
       "strength": "HoS",
       "dexterity": "Do",
       "constitution": "'et",
@@ -289,6 +471,7 @@
         "turn": "wa'DIch",
         "resources": "DIvI' Duj",
         "stats": "DIvI'",
+        "skills": "Suv",
         "abilities": "laH",
         "magic": "mugh",
         "other": "latlh"
@@ -319,6 +502,11 @@
         "collapse": "DuH SoQmoH",
         "expandAria": "DuH poSmoH",
         "collapseAria": "DuH SoQmoH"
+      },
+      "skillProficiency": {
+        "half": "bIQ (x0.5)",
+        "full": "naQ (x1)",
+        "double": "cha'naQ (x2)"
       }
     },
     "plan": {

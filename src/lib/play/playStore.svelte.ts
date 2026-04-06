@@ -51,7 +51,7 @@ function performEvaluation(): void {
       effects: state.effects
     },
     state: {
-      facts: state.facts
+      facts: {}
     }
   };
 

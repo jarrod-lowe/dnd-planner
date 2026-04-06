@@ -1,0 +1,29 @@
+name: 'Save Proficiency'
+description: 'Adding a saving throw proficiency without a class (proficiency bonus is 0)'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+steps:
+  - evaluate:
+      assert:
+        facts:
+          str.save: 0
+          str.save.proficient: 0
+        offers:
+          exists:
+            - proficiency-str
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 16
+      assert:
+        facts:
+          str.value: 16
+          str.modifier: 3
+          str.save: 3
+  - addOffer:
+      id: proficiency-str
+      assert:
+        facts:
+          str.save.proficient: 1
+          str.save: 3

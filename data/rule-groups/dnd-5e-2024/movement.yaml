@@ -39,10 +39,9 @@ ruleGroups:
             function: multiply
             sources:
               - fact: character.movement.total
+              - number: 0.5
             target:
               fact: character.movement.half_total
-            args:
-              multiplier: 0.5
       - id: compute-half-movement-remaining
         phase: normal
         after:
@@ -54,13 +53,13 @@ ruleGroups:
             function: multiply
             sources:
               - fact: character.movement.remaining
+              - number: 0.5
             target:
               fact: character.movement.half_remaining
-            args:
-              multiplier: 0.5
       - id: action-move-walk-offer
         after:
           - group: half-movement-remaining
+          - group: __planned__
         activities:
           - type: offerRule
             legalWhen:
@@ -78,6 +77,7 @@ ruleGroups:
                 section: move
                 name: rule.dnd-5e-2024.movement.move-walk.name
               group:
+                - __planned__
                 - move
               vars:
                 distance:
@@ -112,6 +112,7 @@ ruleGroups:
         after:
           - group: half-movement-total
           - group: half-movement-remaining
+          - group: __planned__
         activities:
           - type: offerRule
             legalWhen:
@@ -130,6 +131,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.movement.move-rough-terrain.name
                 packBehind: move-walk
               group:
+                - __planned__
                 - move
               vars:
                 distance:
@@ -175,6 +177,7 @@ ruleGroups:
             value: 1
         after:
           - group: half-movement-remaining
+          - group: __planned__
         activities:
           - type: offerRule
             legalWhen:
@@ -204,6 +207,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.movement.move-swim.name
                 packBehind: move-walk
               group:
+                - __planned__
                 - move
               vars:
                 distance:
@@ -248,6 +252,7 @@ ruleGroups:
             value: 2
         after:
           - group: half-movement-remaining
+          - group: __planned__
         activities:
           - type: offerRule
             legalWhen:
@@ -277,6 +282,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.movement.move-swim.name
                 packBehind: move-walk
               group:
+                - __planned__
                 - move
               vars:
                 distance:
@@ -323,6 +329,7 @@ ruleGroups:
       - id: action-move-fly-offer
         after:
           - group: half-movement-remaining
+          - group: __planned__
         activities:
           - type: offerRule
             legalWhen:
@@ -348,6 +355,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.movement.move-fly.name
                 packBehind: move-walk
               group:
+                - __planned__
                 - move
               vars:
                 distance:

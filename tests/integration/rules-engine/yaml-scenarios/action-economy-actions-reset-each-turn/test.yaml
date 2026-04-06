@@ -1,0 +1,28 @@
+name: 'Action Economy - Actions Reset Each Turn'
+description: 'Actions are restored at the start of each turn'
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+steps:
+  - evaluate:
+      assert:
+        facts:
+          actions.remaining: 1
+  - addOffer:
+      id: help-action
+      assert:
+        facts:
+          actions.remaining: 0
+  - endTurn:
+      assert:
+        facts:
+          actions.remaining: 1
+  - addOffer:
+      id: help-action
+      assert:
+        facts:
+          actions.remaining: 0
+  - endTurn:
+      assert:
+        facts:
+          actions.remaining: 1

@@ -19,6 +19,7 @@ ruleGroups:
         after:
           - group: action
           - group: spellcasting
+          - group: __planned__
         activities:
           - type: offerRule
             legalWhen:
@@ -50,6 +51,7 @@ ruleGroups:
                 section: action-spell
                 name: rule.spell-create-and-destroy-water.cast-create-and-destroy-water.name
               group:
+                - __planned__
                 - action
                 - spellcasting
               activities:

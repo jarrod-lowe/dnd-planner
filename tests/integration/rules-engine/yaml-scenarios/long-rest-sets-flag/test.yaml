@@ -1,0 +1,17 @@
+name: 'Long Rest - Sets Flag'
+description: 'Adding a long-rest offer sets the rest.long flag'
+ruleGroups:
+  - dnd-5e-2024/turn-rest
+steps:
+  - evaluate:
+      assert:
+        facts:
+          rest.long: 0
+        offers:
+          exists:
+            - long-rest
+  - addOffer:
+      id: long-rest
+      assert:
+        facts:
+          rest.long: 1
