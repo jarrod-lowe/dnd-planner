@@ -1,6 +1,8 @@
 <script lang="ts">
   /**
    * EditCustomRules - edit custom rules for a character in YAML format.
+   * Uses a lazy-loaded CodeMirror 6 editor with autocomplete, syntax highlighting,
+   * inline validation markers, and line numbers.
    */
   import { t } from '$lib/i18n';
   import type { Character } from '$lib/character/types';
@@ -9,6 +11,7 @@
   import { playStore } from '$lib/play/playStore.svelte';
   import { debounce } from '$lib/play/debounce';
   import type { Rule } from '$lib/rules-engine';
+  import type { Extension } from '@codemirror/state';
 
   interface Props {
     character: Character;
@@ -34,6 +37,23 @@
   let saveError: string | null = $state(null);
 
   let isValid = $derived(validationErrors.length === 0);
+
+  // Lazy-loaded CodeMirror editor component and extensions
+  let EditorComponent:
+    | (typeof import('$lib/components/CodeMirrorEditor.svelte'))['default']
+    | null = $state(null);
+  let editorExtensions: Extension[] = $state([]);
+
+  // Lazy-load CodeMirror editor + extensions together
+  $effect(() => {
+    Promise.all([
+      import('$lib/components/CodeMirrorEditor.svelte'),
+      import('$lib/rules/editorSetup')
+    ]).then(([editorMod, setupMod]) => {
+      EditorComponent = editorMod.default;
+      editorExtensions = setupMod.createRuleEditorExtensions();
+    });
+  });
 
   // One-time initialization: populate editor from store on first load
   $effect(() => {
@@ -71,6 +91,12 @@
 
   const debouncedValidate = debounce((content: string) => runValidation(content), 500);
 
+  function handleEditorUpdate(content: string): void {
+    yamlContent = content;
+    debouncedValidate(yamlContent);
+  }
+
+  // Fallback textarea input handler (used while editor loads)
   function handleInput(e: Event): void {
     yamlContent = (e.target as HTMLTextAreaElement).value;
     debouncedValidate(yamlContent);
@@ -107,15 +133,23 @@
     <h1 class="edit-custom-rules__title">{$t('rules.customRulesTitle')}</h1>
   </div>
 
-  <textarea
-    class="edit-custom-rules__editor"
-    aria-label={$t('rules.customRulesTitle')}
-    aria-invalid={validationErrors.length > 0}
-    aria-describedby="edit-custom-rules-errors"
-    oninput={handleInput}
-    value={yamlContent}
-    spellcheck="false"
-  ></textarea>
+  {#if EditorComponent}
+    <EditorComponent
+      value={yamlContent}
+      onUpdate={handleEditorUpdate}
+      extensions={editorExtensions}
+    />
+  {:else}
+    <textarea
+      class="edit-custom-rules__editor"
+      aria-label={$t('rules.customRulesTitle')}
+      aria-invalid={validationErrors.length > 0}
+      aria-describedby="edit-custom-rules-errors"
+      oninput={handleInput}
+      value={yamlContent}
+      spellcheck="false"
+    ></textarea>
+  {/if}
 
   <div
     id="edit-custom-rules-errors"
@@ -226,11 +260,6 @@
     outline: none;
     border-color: var(--md-sys-color-primary);
     box-shadow: 0 0 0 1px var(--md-sys-color-primary);
-  }
-
-  .edit-custom-rules__editor[aria-invalid='true'] {
-    border-color: var(--md-sys-color-error);
-    box-shadow: 0 0 0 1px var(--md-sys-color-error);
   }
 
   .edit-custom-rules__errors {
