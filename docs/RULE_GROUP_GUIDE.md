@@ -545,7 +545,7 @@ Key points:
 
 Rules can declare stats to display in the play mode stats column via `ui.stats[]`. The rules engine ignores these — they are a UI concern only.
 
-**Convention:** Place `ui.stats[]` on the rule that establishes/defines the fact being displayed.
+**Convention:** Place `ui.stats[]` on the rule that logically owns the fact being displayed. For facts derived by rules with actual activities, put the stats there. For facts derived by modifier rules across multiple files, use a dedicated stats-only skeleton rule (with `activities: []`).
 
 Three stat types are supported:
 
@@ -563,12 +563,10 @@ Three stat types are supported:
         fact: turn.counter
         section: turn
 
-# Signed modifier (e.g., Proficiency +2)
+# Stats-only skeleton (no activities — facts derived by modifier rules)
+# Used when multiple rule groups contribute to a fact
 - id: proficiency-reset
-  activities:
-    - type: numberSet
-      target: { fact: proficiency.bonus }
-      source: { number: 0 }
+  activities: []
   ui:
     stats:
       - name: play.stats.proficiency
@@ -590,12 +588,10 @@ Three stat types are supported:
         remaining: actions.remaining
         section: resources
 
-# With i18n parameters (e.g., Spell L1)
+# Stats-only skeleton for spell slots (9 stat entries, one per level)
+# Slot totals are derived by class rules incrementing from 0
 - id: spellcasting-slots-total
-  activities:
-    - type: numberSet
-      target: { fact: spellcasting.slots.level1.total }
-      source: { number: 0 }
+  activities: []
   ui:
     stats:
       - name: play.stats.spellLevel
@@ -663,8 +659,6 @@ Currently available:
 
 Group names should describe what they gate:
 
-- `proficiency-base` — The base proficiency reset
-- `spellcasting-slots-total` — When slot totals are ready
 - `spellcasting-slots-set` — When all slot modifications are done
 - `species-constants` — When species base values are set
 - `action-max` — When action maximum is set
@@ -748,11 +742,11 @@ Phase: early
        └── sets movement.total               └── copies total to remaining
                                             (after species-constants)
 
-  proficiency-base ─────────────────> paladin-level1-proficiency
-  (proficiency)                        (class-paladin-level1)
-       │                                     │
-       └── sets bonus to 0                    └── increments bonus by 2
-                                            (after proficiency-base)
+  paladin-level1-proficiency
+  (class-paladin-level1)
+       │
+       └── increments proficiency.bonus by 2
+           (no after — facts start at 0)
 
   spellcasting-max ──────> spellcasting-reset
   (spellcasting)            (spellcasting)
@@ -760,17 +754,11 @@ Phase: early
        └── sets max to 1        └── copies max to remaining
                               (after spellcasting-max)
 
-  spellcasting-slots-total ──> paladin-level1-spell-slots ──> spellcasting-slots-reset
-  (spellcasting)                (class-paladin-level1)          (spellcasting)
-       │                              │                           │
-       └── resets totals to 0          └── adds +2 to level1      └── copies totals to remaining
-                                    (after slots-total,        (after slots-set)
-                                     joins slots-set)
-
-  rest-reset
-  (turn-rest)
-       │
-       └── sets rest.long to 0
+  paladin-level1-spell-slots ──> spellcasting-slots-reset
+  (class-paladin-level1)          (spellcasting)
+       │                              │
+       └── adds +2 to level1.total    └── copies totals to remaining
+         (joins spellcasting-slots-set)  (after spellcasting-slots-set)
 
   turn-counter
   (turn-rest)

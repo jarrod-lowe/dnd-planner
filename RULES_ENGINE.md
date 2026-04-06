@@ -27,7 +27,7 @@ It receives:
 - standing rules
 - planned rules
 - effect rules already in force
-- current facts
+- state (always empty facts — all facts are derived by rules)
 
 It evaluates them together and returns:
 
@@ -82,7 +82,7 @@ Examples:
 
 Facts are durable state values.
 
-They are provided as input and returned as output.
+They are derived entirely by rules during each evaluation and returned as output. The caller passes empty facts — all fact values are established by standing rules, effects, and planned rules.
 
 Examples:
 
@@ -117,7 +117,7 @@ It is replayable.
 
 If the caller invokes the engine again using `next` unchanged, the engine should produce a semantically equivalent result.
 
-This means `next.state.facts` are replay/base facts, not automatically committed projected facts.
+`next.state.facts` is always empty — facts are fully derived by rules on each evaluation.
 
 ---
 
@@ -882,7 +882,7 @@ Shape:
 Type: object mapping fact names to values
 
 Meaning:
-The replay/base facts at the start of evaluation.
+Always empty (`{}`). All facts are derived by standing rules, effects, and planned rules during evaluation. No facts are carried forward from previous evaluations.
 
 These are the current durable state values.
 
@@ -1130,10 +1130,9 @@ Facts are durable state.
 
 They:
 
-- appear in input as `state.facts`
+- are derived by rules during evaluation (input `state.facts` is always empty)
 - appear in output as top-level projected `facts`
-- appear in `next.state.facts` as replay/base facts
-- are passed back into later calls
+- appear in `next.state.facts` as an empty object (for replayability contract)
 
 ### Events
 
@@ -1163,9 +1162,9 @@ Commit is performed by the UI/caller.
 To commit the currently evaluated result, the UI should:
 
 1. take the returned `next`
-2. replace `next.state.facts` with the top-level projected `facts`
+2. commit effects from the output to the effects list
 3. make any corresponding UI-level plan edits, such as removing planned rules that have now actually been carried out
-4. use the resulting document as the new base input
+4. re-evaluate (facts are fully derived from rules, so no state needs to be carried forward)
 
 This keeps the distinction between preview and execution outside the engine.
 
@@ -1284,17 +1283,17 @@ If the UI adds the offered rule to `rules.planned`, top-level projected `facts` 
 ### To commit the result
 
 - take `next`
-- overwrite `next.state.facts` with top-level `facts`
+- commit effects from the output to the effects list
 - update `rules.planned` to reflect what was actually done
-- call the engine again if needed
+- call the engine again (facts are fully derived, no state to carry forward)
 
 ---
 
 ## Summary
 
-The input/output contract is built around two distinct fact states:
+The input/output contract is built around fully derived facts:
 
-- input replay/base facts in `state.facts`
+- input `state.facts` is always empty — all values come from rules
 - output projected facts in top-level `facts`
 
 and one replayable next input object:

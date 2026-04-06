@@ -3,13 +3,13 @@ import type { Diagnostics, EngineInput, EngineOutput, Rule, Status, WorkingState
 /**
  * Builds the replayable next input from current state.
  *
- * The next input is suitable for passing directly to another evaluate() call.
+ * The next input is suitable for passing directly to another evaluate() call
  * with no modifications. Key properties:
  * - schemaVersion: copied
  * - rules.standing: copied (standing rules persist)
  * - rules.planned: copied (planned rules persist until user removes them)
  * - rules.effects: getPersistableEffects() (all generated rules persist)
- * - state.facts: copied from input.state.facts (replay/base facts for replayability)
+ * - state.facts: copied from input (always empty — facts are fully derived by rules)
  *
  * @param input - Original input (for reference)
  * @param workingState - Current working state after evaluation
