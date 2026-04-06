@@ -194,7 +194,7 @@ format-check: install
 	pnpm format:check
 
 # Unit tests (Vitest)
-test-unit: install
+test-unit: install build/test-rule-groups.json
 	pnpm test
 
 # E2E tests (Playwright) - CI friendly, no browser opening
