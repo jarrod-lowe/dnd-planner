@@ -11,20 +11,12 @@ ruleGroups:
         description: valwI' DIvI' naQ
         keywords: [valwI']
     rules:
-      # Proficiency Bonus - reset to base (classes add to this)
       - id: proficiency-reset
         phase: early
-        group:
-          - proficiency-base
+        activities: []
         ui:
           stats:
             - name: play.stats.proficiency
               type: modifier
               fact: proficiency.bonus
               section: abilities
-        activities:
-          - type: numberSet
-            target:
-              fact: proficiency.bonus
-            source:
-              number: 0

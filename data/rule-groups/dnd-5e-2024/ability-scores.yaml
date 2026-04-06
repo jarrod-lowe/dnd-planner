@@ -11,11 +11,9 @@ ruleGroups:
         description: laHlIj Dangu'
         keywords: [laH, HoS, Do, "'et", val, Sov, Quv]
     rules:
-      # Reset str.value to 0 each turn (before effect overrides it)
       - id: str-value-reset
         phase: early
-        group:
-          - str-base
+        activities: []
         ui:
           stats:
             - name: play.stats.str
@@ -24,27 +22,6 @@ ruleGroups:
               modifierFact: str.modifier
               saveFact: str.save
               section: stats
-        activities:
-          - type: numberSet
-            target:
-              fact: str.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: str.modifier
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: str.save
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: str.save.proficient
-            source:
-              number: 0
 
       - id: str-save-modifier
         phase: normal
@@ -102,8 +79,6 @@ ruleGroups:
                     phase: early
                     group:
                       - str-values
-                    after:
-                      - group: str-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-strength.name
                     vars:
@@ -130,11 +105,9 @@ ruleGroups:
                         self: true
 
       # === DEXTERITY ===
-      # Reset dex.value to 0 each turn (before effect overrides it)
       - id: dex-value-reset
         phase: early
-        group:
-          - dex-base
+        activities: []
         ui:
           stats:
             - name: play.stats.dex
@@ -143,27 +116,6 @@ ruleGroups:
               modifierFact: dex.modifier
               saveFact: dex.save
               section: stats
-        activities:
-          - type: numberSet
-            target:
-              fact: dex.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: dex.modifier
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: dex.save
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: dex.save.proficient
-            source:
-              number: 0
 
       - id: dex-save-modifier
         phase: normal
@@ -222,8 +174,6 @@ ruleGroups:
                     phase: early
                     group:
                       - dex-values
-                    after:
-                      - group: dex-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-dexterity.name
                     vars:
@@ -250,11 +200,9 @@ ruleGroups:
                         self: true
 
       # === CONSTITUTION ===
-      # Reset con.value to 0 each turn (before effect overrides it)
       - id: con-value-reset
         phase: early
-        group:
-          - con-base
+        activities: []
         ui:
           stats:
             - name: play.stats.con
@@ -263,27 +211,6 @@ ruleGroups:
               modifierFact: con.modifier
               saveFact: con.save
               section: stats
-        activities:
-          - type: numberSet
-            target:
-              fact: con.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: con.modifier
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: con.save
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: con.save.proficient
-            source:
-              number: 0
 
       - id: con-save-modifier
         phase: normal
@@ -342,8 +269,6 @@ ruleGroups:
                     phase: early
                     group:
                       - con-values
-                    after:
-                      - group: con-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-constitution.name
                     vars:
@@ -370,11 +295,9 @@ ruleGroups:
                         self: true
 
       # === INTELLIGENCE ===
-      # Reset int.value to 0 each turn (before effect overrides it)
       - id: int-value-reset
         phase: early
-        group:
-          - int-base
+        activities: []
         ui:
           stats:
             - name: play.stats.int
@@ -383,27 +306,6 @@ ruleGroups:
               modifierFact: int.modifier
               saveFact: int.save
               section: stats
-        activities:
-          - type: numberSet
-            target:
-              fact: int.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: int.modifier
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: int.save
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: int.save.proficient
-            source:
-              number: 0
 
       - id: int-save-modifier
         phase: normal
@@ -488,11 +390,9 @@ ruleGroups:
                         self: true
 
       # === WISDOM ===
-      # Reset wis.value to 0 each turn (before effect overrides it)
       - id: wis-value-reset
         phase: early
-        group:
-          - wis-base
+        activities: []
         ui:
           stats:
             - name: play.stats.wis
@@ -501,27 +401,6 @@ ruleGroups:
               modifierFact: wis.modifier
               saveFact: wis.save
               section: stats
-        activities:
-          - type: numberSet
-            target:
-              fact: wis.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: wis.modifier
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: wis.save
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: wis.save.proficient
-            source:
-              number: 0
 
       - id: wis-save-modifier
         phase: normal
@@ -580,8 +459,6 @@ ruleGroups:
                     phase: early
                     group:
                       - wis-values
-                    after:
-                      - group: wis-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-wisdom.name
                     vars:
@@ -608,11 +485,9 @@ ruleGroups:
                         self: true
 
       # === CHARISMA ===
-      # Reset cha.value to 0 each turn (before effect overrides it)
       - id: cha-value-reset
         phase: early
-        group:
-          - cha-base
+        activities: []
         ui:
           stats:
             - name: play.stats.cha
@@ -621,27 +496,6 @@ ruleGroups:
               modifierFact: cha.modifier
               saveFact: cha.save
               section: stats
-        activities:
-          - type: numberSet
-            target:
-              fact: cha.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: cha.modifier
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: cha.save
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: cha.save.proficient
-            source:
-              number: 0
 
       - id: cha-save-modifier
         phase: normal
@@ -767,9 +621,6 @@ ruleGroups:
                   rule:
                     id: effect-str-save-proficiency
                     phase: early
-                    after:
-                      - group: str-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-str-save-proficiency.name
                     activities:
@@ -825,9 +676,6 @@ ruleGroups:
                   rule:
                     id: effect-dex-save-proficiency
                     phase: early
-                    after:
-                      - group: dex-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-dex-save-proficiency.name
                     activities:
@@ -883,9 +731,6 @@ ruleGroups:
                   rule:
                     id: effect-con-save-proficiency
                     phase: early
-                    after:
-                      - group: con-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-con-save-proficiency.name
                     activities:
@@ -941,9 +786,6 @@ ruleGroups:
                   rule:
                     id: effect-int-save-proficiency
                     phase: early
-                    after:
-                      - group: int-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-int-save-proficiency.name
                     activities:
@@ -999,9 +841,6 @@ ruleGroups:
                   rule:
                     id: effect-wis-save-proficiency
                     phase: early
-                    after:
-                      - group: wis-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-wis-save-proficiency.name
                     activities:
@@ -1057,9 +896,6 @@ ruleGroups:
                   rule:
                     id: effect-cha-save-proficiency
                     phase: early
-                    after:
-                      - group: cha-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-cha-save-proficiency.name
                     activities:
@@ -1083,8 +919,7 @@ ruleGroups:
       # === ATHLETICS (STR) ===
       - id: athletics-value-reset
         phase: early
-        group:
-          - athletics-base
+        activities: []
         ui:
           stats:
             - name: play.stats.skills.athletics
@@ -1092,17 +927,6 @@ ruleGroups:
               fact: skill.athletics.value
               proficiencyFact: skill.athletics.proficiency
               section: skills
-        activities:
-          - type: numberSet
-            target:
-              fact: skill.athletics.value
-            source:
-              number: 0
-          - type: numberSet
-            target:
-              fact: skill.athletics.proficiency
-            source:
-              number: 0
 
       - id: athletics-modifier
         phase: normal
@@ -1161,9 +985,6 @@ ruleGroups:
                   rule:
                     id: effect-athletics-proficiency
                     phase: early
-                    after:
-                      - group: athletics-base
-                      - group: proficiency-base
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-athletics-proficiency.name
                     vars:

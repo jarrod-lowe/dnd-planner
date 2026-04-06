@@ -69,22 +69,12 @@ describe('ability-scores proficiency choices', () => {
     }
   });
 
-  it('reset rules reset save.proficient to 0', () => {
+  it('reset rules exist but have no activities (facts start clean)', () => {
     const statNames = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
     for (const stat of statNames) {
       const resetRule = rules.find((r) => r.id === `${stat}-value-reset`);
       expect(resetRule).toBeDefined();
-      const activities = resetRule!.activities as {
-        type: string;
-        target?: { fact?: string };
-        source?: { number?: number };
-      }[];
-      const proficientReset = activities.find(
-        (a) =>
-          a.type === 'numberSet' &&
-          (a.target as { fact: string })?.fact === `${stat}.save.proficient`
-      );
-      expect(proficientReset).toBeDefined();
+      expect(resetRule!.activities).toEqual([]);
     }
   });
 
