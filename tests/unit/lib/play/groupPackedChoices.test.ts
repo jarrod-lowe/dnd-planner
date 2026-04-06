@@ -62,6 +62,22 @@ describe('groupPackedChoices', () => {
       });
     });
 
+    it('correctly packs follower when follower appears before leader in entries', () => {
+      const swim = createMockEntry('move-swim', { packBehind: 'move-walk' });
+      const walk = createMockEntry('move-walk');
+
+      const entries = [swim, walk]; // follower first, leader second
+
+      const groups = groupPackedChoices(entries);
+
+      expect(groups).toHaveLength(1);
+      expect(groups[0]).toEqual({
+        type: 'packed',
+        leader: walk,
+        followers: [swim]
+      });
+    });
+
     it('includes leader even when leader is illegal', () => {
       const walk = createMockEntry('move-walk', { legal: false });
       const swim = createMockEntry('move-swim', { packBehind: 'move-walk' });

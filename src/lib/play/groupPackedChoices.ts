@@ -57,11 +57,14 @@ export function groupPackedChoices(entries: AvailableRuleEntry[]): ChoiceGroup[]
 
     const packBehind = entry.rule.ui?.packBehind as string | undefined;
 
-    // Check if this entry has a packBehind pointing to a non-existent leader
-    if (packBehind && !entries.find((e) => e.rule.id === packBehind)) {
-      // Leader doesn't exist, render as single
-      groups.push({ type: 'single', entry });
-      processed.add(entry.rule.id);
+    // If this entry packs behind another, handle it
+    if (packBehind) {
+      if (!entries.find((e) => e.rule.id === packBehind)) {
+        // Leader doesn't exist, render as single
+        groups.push({ type: 'single', entry });
+        processed.add(entry.rule.id);
+      }
+      // Follower with existing leader — handled when leader is processed
       continue;
     }
 
