@@ -178,7 +178,7 @@ class TestHarness {
         effects: this.effects
       },
       state: {
-        facts: this.facts
+        facts: {}
       }
     };
   }

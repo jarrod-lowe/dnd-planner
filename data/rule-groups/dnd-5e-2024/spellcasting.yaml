@@ -42,12 +42,10 @@ ruleGroups:
             target:
               fact: spellcasting.remaining
 
-      # Spell Slots - initialize all slot totals to 0 (classes add to these)
+      # Spell Slots - UI stats for all slot levels
       - id: spellcasting-slots-total
         phase: early
-        group:
-          - spellcasting-slots-total
-          - spellcasting-slots-set
+        activities: []
         ui:
           stats:
             - name: play.stats.spellLevel
@@ -104,52 +102,6 @@ ruleGroups:
               total: spellcasting.slots.level9.total
               remaining: spellcasting.slots.level9.remaining
               section: magic
-        activities:
-          - type: numberSet
-            source:
-              number: 0
-            target:
-              fact: spellcasting.slots.level1.total
-          - type: numberSet
-            source:
-              number: 0
-            target:
-              fact: spellcasting.slots.level2.total
-          - type: numberSet
-            source:
-              number: 0
-            target:
-              fact: spellcasting.slots.level3.total
-          - type: numberSet
-            source:
-              number: 0
-            target:
-              fact: spellcasting.slots.level4.total
-          - type: numberSet
-            source:
-              number: 0
-            target:
-              fact: spellcasting.slots.level5.total
-          - type: numberSet
-            source:
-              number: 0
-            target:
-              fact: spellcasting.slots.level6.total
-          - type: numberSet
-            source:
-              number: 0
-            target:
-              fact: spellcasting.slots.level7.total
-          - type: numberSet
-            source:
-              number: 0
-            target:
-              fact: spellcasting.slots.level8.total
-          - type: numberSet
-            source:
-              number: 0
-            target:
-              fact: spellcasting.slots.level9.total
 
       # Spell Slots - reset all current to totals at start of turn
       - id: spellcasting-slots-reset
