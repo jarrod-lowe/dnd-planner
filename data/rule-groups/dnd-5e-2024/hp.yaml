@@ -1,0 +1,48 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: hp
+    translations:
+      en:
+        name: Hit Points
+        description: Core rules for hit points tracking
+        keywords: [hit points, hp, health]
+      en-x-tlh:
+        name: DIch DIvI'
+        description: DIch DIvI' naQ
+        keywords: [DIch, DIvI']
+    rules:
+      # HP Reset - sets hp.max to 0, declares two-group pattern
+      - id: hp-reset
+        phase: normal
+        group:
+          - hp-total
+          - hp-set
+        activities:
+          - type: numberSet
+            target:
+              fact: hp.max
+            source:
+              number: 0
+
+      # HP Copy - after all class levels contribute, copy max to current
+      - id: hp-copy
+        phase: normal
+        after:
+          - group: hp-set
+        activities:
+          - type: numberCopy
+            source:
+              fact: hp.max
+            target:
+              fact: hp.current
+
+      # HP Display - show in resources section
+      - id: hp-display
+        activities: []
+        ui:
+          stats:
+            - name: play.stats.hp
+              type: usedMax
+              total: hp.max
+              remaining: hp.current
+              section: resources

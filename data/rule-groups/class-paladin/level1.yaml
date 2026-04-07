@@ -25,6 +25,25 @@ ruleGroups:
             source:
               number: 1
 
+      # HP - Level 1 Paladin contributes d10 max + CON modifier
+      - id: paladin-level1-hp
+        phase: normal
+        after:
+          - group: hp-total
+        group:
+          - hp-set
+        activities:
+          - type: numberIncrement
+            target:
+              fact: hp.max
+            source:
+              number: 10
+          - type: numberIncrement
+            target:
+              fact: hp.max
+            source:
+              fact: con.modifier
+
       # Proficiency Bonus - Level 1 Paladin adds +2
       - id: paladin-level1-proficiency
         phase: early
