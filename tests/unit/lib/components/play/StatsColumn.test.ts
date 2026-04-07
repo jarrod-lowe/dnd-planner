@@ -267,4 +267,88 @@ describe('StatsColumn (config-driven)', () => {
     });
     expect(container.querySelector('.stats-column__value')?.textContent).toBe('5');
   });
+
+  it('renders hitDie stat with used/total d-size format', () => {
+    const hitDieStat: StatEntry = {
+      name: 'play.stats.hitDie',
+      type: 'hitDie',
+      total: 'hitDie.d10.total',
+      remaining: 'hitDie.d10.remaining',
+      dieSize: 10,
+      section: 'resources'
+    };
+    const facts: Facts = { 'hitDie.d10.total': 3, 'hitDie.d10.remaining': 1 };
+    const { container, getByText } = render(StatsColumn, {
+      props: { stats: [hitDieStat], facts }
+    });
+    expect(getByText('play.stats.hitDie')).toBeTruthy();
+    expect(container.querySelector('.stats-column__value')?.textContent).toBe(
+      'play.stats.hitDieValue'
+    );
+  });
+
+  it('hides hitDie stat when total is 0', () => {
+    const hitDieStat: StatEntry = {
+      name: 'play.stats.hitDie',
+      type: 'hitDie',
+      total: 'hitDie.d6.total',
+      remaining: 'hitDie.d6.remaining',
+      dieSize: 6,
+      section: 'resources'
+    };
+    const facts: Facts = { 'hitDie.d6.total': 0, 'hitDie.d6.remaining': 0 };
+    const { container } = render(StatsColumn, {
+      props: { stats: [hitDieStat], facts }
+    });
+    expect(container.querySelector('.stats-column__item')).toBeNull();
+    expect(container.textContent).toContain('play.stats.todo');
+  });
+
+  it('hides hitDie stat when total fact is missing', () => {
+    const hitDieStat: StatEntry = {
+      name: 'play.stats.hitDie',
+      type: 'hitDie',
+      total: 'hitDie.d8.total',
+      remaining: 'hitDie.d8.remaining',
+      dieSize: 8,
+      section: 'resources'
+    };
+    const facts: Facts = {};
+    const { container } = render(StatsColumn, {
+      props: { stats: [hitDieStat], facts }
+    });
+    expect(container.textContent).toContain('play.stats.todo');
+  });
+
+  it('renders multiple hitDie stats with different die sizes without duplicate key errors', () => {
+    const d10Stat: StatEntry = {
+      name: 'play.stats.hitDie',
+      nameParams: { dieSize: 10 },
+      type: 'hitDie',
+      total: 'hitDie.d10.total',
+      remaining: 'hitDie.d10.remaining',
+      dieSize: 10,
+      section: 'resources'
+    };
+    const d12Stat: StatEntry = {
+      name: 'play.stats.hitDie',
+      nameParams: { dieSize: 12 },
+      type: 'hitDie',
+      total: 'hitDie.d12.total',
+      remaining: 'hitDie.d12.remaining',
+      dieSize: 12,
+      section: 'resources'
+    };
+    const facts: Facts = {
+      'hitDie.d10.total': 3,
+      'hitDie.d10.remaining': 1,
+      'hitDie.d12.total': 2,
+      'hitDie.d12.remaining': 2
+    };
+    const { container } = render(StatsColumn, {
+      props: { stats: [d10Stat, d12Stat], facts }
+    });
+    const items = container.querySelectorAll('.stats-column__item');
+    expect(items.length).toBe(2);
+  });
 });

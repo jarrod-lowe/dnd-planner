@@ -1,0 +1,14 @@
+name: 'Hit die from paladin level 1'
+description: 'Paladin level 1 grants 1d10 hit die which resets to remaining on evaluation'
+ruleGroups:
+  - dnd-5e-2024/hit-die
+  - class-paladin/class-paladin-level1
+steps:
+  - evaluate:
+      assert:
+        facts:
+          hitDie.d10.total: 1
+          hitDie.d10.remaining: 1
+          hitDie.d6.total: 0
+          hitDie.d8.total: 0
+          hitDie.d12.total: 0

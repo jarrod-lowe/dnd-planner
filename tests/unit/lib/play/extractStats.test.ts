@@ -160,6 +160,73 @@ describe('isStatEntry', () => {
       })
     ).toBe(false);
   });
+
+  it('accepts hitDie type with name, total, remaining, dieSize, and section', async () => {
+    const { isStatEntry } = await import('$lib/play/extractStats');
+    expect(
+      isStatEntry({
+        name: 'play.stats.hitDie',
+        type: 'hitDie',
+        total: 'hitDie.d12.total',
+        remaining: 'hitDie.d12.remaining',
+        dieSize: 12,
+        section: 'resources'
+      })
+    ).toBe(true);
+  });
+
+  it('rejects hitDie type without dieSize', async () => {
+    const { isStatEntry } = await import('$lib/play/extractStats');
+    expect(
+      isStatEntry({
+        name: 'play.stats.hitDie',
+        type: 'hitDie',
+        total: 'hitDie.d12.total',
+        remaining: 'hitDie.d12.remaining',
+        section: 'resources'
+      })
+    ).toBe(false);
+  });
+
+  it('rejects hitDie type without total', async () => {
+    const { isStatEntry } = await import('$lib/play/extractStats');
+    expect(
+      isStatEntry({
+        name: 'play.stats.hitDie',
+        type: 'hitDie',
+        remaining: 'hitDie.d12.remaining',
+        dieSize: 12,
+        section: 'resources'
+      })
+    ).toBe(false);
+  });
+
+  it('rejects hitDie type without remaining', async () => {
+    const { isStatEntry } = await import('$lib/play/extractStats');
+    expect(
+      isStatEntry({
+        name: 'play.stats.hitDie',
+        type: 'hitDie',
+        total: 'hitDie.d12.total',
+        dieSize: 12,
+        section: 'resources'
+      })
+    ).toBe(false);
+  });
+
+  it('rejects hitDie type with non-number dieSize', async () => {
+    const { isStatEntry } = await import('$lib/play/extractStats');
+    expect(
+      isStatEntry({
+        name: 'play.stats.hitDie',
+        type: 'hitDie',
+        total: 'hitDie.d12.total',
+        remaining: 'hitDie.d12.remaining',
+        dieSize: '12',
+        section: 'resources'
+      })
+    ).toBe(false);
+  });
 });
 
 describe('extractStats', () => {
@@ -292,6 +359,36 @@ describe('extractStats', () => {
     expect(result[0].type).toBe('modifier');
     if (result[0].type === 'modifier') {
       expect(result[0].proficiencyFact).toBe('skill.athletics.proficiency');
+    }
+  });
+
+  it('preserves hitDie entry with dieSize from rule UI declarations', async () => {
+    const { extractStats } = await import('$lib/play/extractStats');
+    const rules: Rule[] = [
+      {
+        id: 'r1',
+        activities: [],
+        ui: {
+          stats: [
+            {
+              name: 'play.stats.hitDie',
+              type: 'hitDie',
+              total: 'hitDie.d12.total',
+              remaining: 'hitDie.d12.remaining',
+              dieSize: 12,
+              section: 'resources'
+            }
+          ]
+        }
+      }
+    ];
+    const result = extractStats(rules);
+    expect(result).toHaveLength(1);
+    expect(result[0].type).toBe('hitDie');
+    if (result[0].type === 'hitDie') {
+      expect(result[0].dieSize).toBe(12);
+      expect(result[0].total).toBe('hitDie.d12.total');
+      expect(result[0].remaining).toBe('hitDie.d12.remaining');
     }
   });
 });

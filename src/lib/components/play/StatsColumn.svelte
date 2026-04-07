@@ -42,7 +42,7 @@
 
   // Check visibility of a stat based on current facts
   function isVisible(stat: StatEntry): boolean {
-    if (stat.type === 'usedMax') {
+    if (stat.type === 'usedMax' || stat.type === 'hitDie') {
       const total = facts[stat.total];
       return total !== undefined && Number(total) !== 0;
     }
@@ -102,6 +102,12 @@
       const remaining = Number(facts[stat.remaining] ?? 0);
       const used = total - remaining;
       return $t('play.stats.usedMax', { used, max: total });
+    }
+    if (stat.type === 'hitDie') {
+      const total = Number(facts[stat.total]);
+      const remaining = Number(facts[stat.remaining] ?? 0);
+      const used = total - remaining;
+      return $t('play.stats.hitDieValue', { used, max: total, dieSize: stat.dieSize });
     }
     return '';
   }

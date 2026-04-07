@@ -466,6 +466,8 @@
       "spellcasting": "mugh DIvI'",
       "spellLevel": "mugh DIvI' L{{level}}",
       "usedMax": "{{used}} / {{max}}",
+      "hitDie": "QIp DIvI'",
+      "hitDieValue": "{{used}}/{{max}} DIvI' d{{dieSize}}",
       "todo": "TODO",
       "sections": {
         "turn": "wa'DIch",

@@ -1,0 +1,69 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: hit-die
+    translations:
+      en:
+        name: Hit Die
+        description: Core rules for hit die tracking and recovery
+        keywords: [hit die, hit dice, recovery, rest]
+      en-x-tlh:
+        name: QIp DIvI'
+        description: QIp DIvI' naQ 'ej QIp DIvI'
+        keywords: [QIp, DIvI', nIb]
+    rules:
+      # Hit Die Reset - copies totals to remaining after class levels have set them
+      - id: hit-die-reset
+        phase: early
+        after:
+          - group: hit-die-base
+        ui:
+          stats:
+            - name: play.stats.hitDie
+              nameParams: { dieSize: 6 }
+              type: hitDie
+              dieSize: 6
+              total: hitDie.d6.total
+              remaining: hitDie.d6.remaining
+              section: resources
+            - name: play.stats.hitDie
+              nameParams: { dieSize: 8 }
+              type: hitDie
+              dieSize: 8
+              total: hitDie.d8.total
+              remaining: hitDie.d8.remaining
+              section: resources
+            - name: play.stats.hitDie
+              nameParams: { dieSize: 10 }
+              type: hitDie
+              dieSize: 10
+              total: hitDie.d10.total
+              remaining: hitDie.d10.remaining
+              section: resources
+            - name: play.stats.hitDie
+              nameParams: { dieSize: 12 }
+              type: hitDie
+              dieSize: 12
+              total: hitDie.d12.total
+              remaining: hitDie.d12.remaining
+              section: resources
+        activities:
+          - type: numberCopy
+            source:
+              fact: hitDie.d6.total
+            target:
+              fact: hitDie.d6.remaining
+          - type: numberCopy
+            source:
+              fact: hitDie.d8.total
+            target:
+              fact: hitDie.d8.remaining
+          - type: numberCopy
+            source:
+              fact: hitDie.d10.total
+            target:
+              fact: hitDie.d10.remaining
+          - type: numberCopy
+            source:
+              fact: hitDie.d12.total
+            target:
+              fact: hitDie.d12.remaining

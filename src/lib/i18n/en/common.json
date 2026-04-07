@@ -446,6 +446,8 @@
       "spellcasting": "Spellcast",
       "spellLevel": "Spell L{{level}}",
       "usedMax": "{{used}} / {{max}}",
+      "hitDie": "Hit Die",
+      "hitDieValue": "{{used}}/{{max}} d{{dieSize}}",
       "todo": "TODO",
       "sections": {
         "turn": "Turn",
