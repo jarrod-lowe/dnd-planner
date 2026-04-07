@@ -20,6 +20,7 @@ interface AssertConfig {
   offers?: {
     exists?: string[];
     notExists?: string[];
+    legal?: string[];
     illegal?: string[];
   };
   status?: {
@@ -77,7 +78,9 @@ interface TestConfig {
 
 function assertFacts(actual: Facts, expected: Record<string, unknown>, stepDesc: string): void {
   for (const [key, value] of Object.entries(expected)) {
-    expect(actual[key], `${stepDesc}: fact "${key}"`).toEqual(value);
+    // In the auto-clear facts model, unset facts are undefined (equivalent to 0)
+    const actualValue = actual[key] ?? 0;
+    expect(actualValue, `${stepDesc}: fact "${key}"`).toEqual(value);
   }
 }
 
@@ -93,6 +96,11 @@ function assertOffers(
   for (const id of expected.notExists ?? []) {
     const found = availableRules.some((ar) => ar.rule.id === id);
     expect(!found, `${stepDesc}: offer "${id}" should NOT exist`).toBe(true);
+  }
+  for (const id of expected.legal ?? []) {
+    const entry = availableRules.find((ar) => ar.rule.id === id);
+    expect(entry, `${stepDesc}: offer "${id}" should exist`).toBeDefined();
+    expect(entry!.legal, `${stepDesc}: offer "${id}" should be legal`).toBe(true);
   }
   for (const id of expected.illegal ?? []) {
     const entry = availableRules.find((ar) => ar.rule.id === id);
@@ -233,9 +241,11 @@ class TestHarness {
   }
 
   doEndTurn(): EngineOutput {
-    // Commit effects from last output
+    // Use output.next.rules.effects — the engine's computed set of effects
+    // that should persist. This correctly excludes effects that stopped
+    // self-advertising (e.g., spell effects on long rest).
     if (this.lastOutput) {
-      this.effects = [...this.effects, ...this.lastOutput.effects];
+      this.effects = [...this.lastOutput.next.rules.effects];
     }
     // Clear planned items
     this.plannedItems = [];
@@ -265,39 +275,45 @@ describe('yaml rules scenarios', () => {
       );
 
       for (let i = 0; i < config.steps.length; i++) {
-        const step = config.steps[i];
+        const step = config.steps[i] as Record<string, unknown>;
         const stepDesc = `Step ${i}`;
 
-        if ('evaluate' in step) {
+        // Extract the step key and its nested data (including assertions)
+        const stepKey = Object.keys(step).find((k) => k !== 'assert');
+        if (!stepKey) throw new Error(`${stepDesc}: Unknown step type`);
+        const stepData = step[stepKey] as Record<string, unknown> | null;
+        const assert = (stepData?.assert ?? step.assert) as AssertConfig | undefined;
+
+        if (stepKey === 'evaluate') {
           const output = harness.doEvaluate();
-          if (step.assert) {
-            runAssertions(output, step.assert, stepDesc);
+          if (assert) {
+            runAssertions(output, assert, stepDesc);
           }
-        } else if ('addOffer' in step) {
-          const output = harness.doAddOffer(step.addOffer.id, step.addOffer.selections);
-          if (step.assert) {
-            runAssertions(output, step.assert, stepDesc);
+        } else if (stepKey === 'addOffer') {
+          const addOfferData = stepData as { id: string; selections?: Record<string, unknown> };
+          const output = harness.doAddOffer(addOfferData.id, addOfferData.selections);
+          if (assert) {
+            runAssertions(output, assert, stepDesc);
           }
-        } else if ('removeFromPlan' in step) {
-          const output = harness.doRemoveFromPlan(step.removeFromPlan.id);
-          if (step.assert) {
-            runAssertions(output, step.assert, stepDesc);
+        } else if (stepKey === 'removeFromPlan') {
+          const removeData = stepData as { id: string };
+          const output = harness.doRemoveFromPlan(removeData.id);
+          if (assert) {
+            runAssertions(output, assert, stepDesc);
           }
-        } else if ('updateSelections' in step) {
-          const output = harness.doUpdateSelections(
-            step.updateSelections.id,
-            step.updateSelections.selections
-          );
-          if (step.assert) {
-            runAssertions(output, step.assert, stepDesc);
+        } else if (stepKey === 'updateSelections') {
+          const updateData = stepData as { id: string; selections: Record<string, unknown> };
+          const output = harness.doUpdateSelections(updateData.id, updateData.selections);
+          if (assert) {
+            runAssertions(output, assert, stepDesc);
           }
-        } else if ('endTurn' in step) {
+        } else if (stepKey === 'endTurn') {
           const output = harness.doEndTurn();
-          if (step.assert) {
-            runAssertions(output, step.assert, stepDesc);
+          if (assert) {
+            runAssertions(output, assert, stepDesc);
           }
         } else {
-          throw new Error(`${stepDesc}: Unknown step type`);
+          throw new Error(`${stepDesc}: Unknown step type "${stepKey}"`);
         }
       }
     });

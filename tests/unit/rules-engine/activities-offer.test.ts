@@ -161,6 +161,37 @@ describe('executeOfferRule', () => {
     expect(context.workingState.offeredRules[0].applicable).toBe(true);
   });
 
+  it('sets legal to true when legalWhen checks equals 0 on missing fact', () => {
+    const rule: Rule = {
+      id: 'set-strength-offer',
+      activities: []
+    };
+
+    const activity: OfferRuleActivity = {
+      id: 'test-1',
+      type: 'offerRule',
+      rule,
+      legalWhen: [
+        {
+          condition: { fact: 'str.value', operator: 'equals', value: 0 },
+          illegalDiagnostics: [
+            {
+              code: 'rule.dnd-5e-2024.ability-scores.set-strength-offer.already_set',
+              severity: 'error'
+            }
+          ]
+        }
+      ]
+    };
+
+    const context = createEmptyContext();
+    // str.value is not in facts — stat has not been set yet
+
+    executeOfferRule(activity, context);
+
+    expect(context.workingState.offeredRules[0].legal).toBe(true);
+  });
+
   it('sets applicable to false when rule when conditions fail', () => {
     const rule: Rule = {
       id: 'offered-rule',
