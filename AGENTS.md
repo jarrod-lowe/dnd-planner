@@ -2,6 +2,8 @@
 
 Guidance for LLM Agents working in this repository.
 
+Q: Are you writing new rules? A: See docs/RULE_GROUP_GUIDE.md
+
 ## Purpose
 
 A tablet-optimized web application for tracking D&D character resources and planning combat turns.
