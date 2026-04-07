@@ -165,8 +165,8 @@ When multiple rule groups contribute to a value and then a final rule needs the 
 - id: hp-reset
   phase: normal
   group:
-    - hp-total      # Group A: signals that the base value has been set
-    - hp-set        # Group B: modifiers join this group
+    - hp-total # Group A: signals that the base value has been set
+    - hp-set # Group B: modifiers join this group
   activities:
     - type: numberSet
       target:
@@ -178,7 +178,7 @@ When multiple rule groups contribute to a value and then a final rule needs the 
 - id: hp-copy
   phase: normal
   after:
-    - group: hp-set  # Wait for all hp contributors
+    - group: hp-set # Wait for all hp contributors
   activities:
     - type: numberCopy
       source:
@@ -194,9 +194,9 @@ Then a class level contributes:
 - id: paladin-level1-hp
   phase: normal
   after:
-    - group: hp-total  # Wait for the base value to be set
+    - group: hp-total # Wait for the base value to be set
   group:
-    - hp-set           # Join this group (so hp-copy waits for us)
+    - hp-set # Join this group (so hp-copy waits for us)
   activities:
     - type: numberIncrement
       target:
@@ -261,17 +261,17 @@ Defined in `terraform/module/dnd-planner/dynamodb-items.tf`. When a new characte
 
 Every new character receives these core rule groups:
 
-| Rule Group ID    | Purpose                                      |
-| ---------------- | -------------------------------------------- |
-| `turn-rest`      | Turn counter and long rest management        |
-| `action-economy` | Action economy rules                         |
-| `proficiency`    | Proficiency bonus system                     |
-| `movement`       | Movement rules                               |
-| `free-actions`   | Free actions (like Help)                     |
-| `ability-scores` | Ability score system                         |
-| `hit-die`        | Hit die mechanics                            |
-| `hp`             | Hit points tracking                          |
-| `species-{name}` | Species-specific rules (e.g., `species-human`) |
+| Rule Group ID    | Purpose                                         |
+| ---------------- | ----------------------------------------------- |
+| `turn-rest`      | Turn counter and long rest management           |
+| `action-economy` | Action economy rules                            |
+| `proficiency`    | Proficiency bonus system                        |
+| `movement`       | Movement rules                                  |
+| `free-actions`   | Free actions (like Help)                        |
+| `ability-scores` | Ability score system                            |
+| `hit-die`        | Hit die mechanics                               |
+| `hp`             | Hit points tracking                             |
+| `species-{name}` | Species-specific rules (e.g., `species-human`)  |
 | `custom-{id}`    | Empty per-character rule group for custom rules |
 
 The species rule group is parameterized: the character creation request provides the species, and the seed template substitutes `$(species)` to produce the correct ID.
@@ -287,7 +287,7 @@ When a user assigns a rule group with `requires`, the system automatically resol
 ruleGroups:
   - id: class-paladin-level1
     requires:
-      - spellcasting  # Spellcasting must also be assigned
+      - spellcasting # Spellcasting must also be assigned
     rules: [...]
 ```
 
@@ -315,12 +315,12 @@ Before a new rule group can be used, it must be reachable via at least one mecha
 
 These are two different dependency mechanisms at different levels:
 
-|               | `requires` (ruleGroup level)                    | `after` (rule level)                              |
-| ------------- | ----------------------------------------------- | ------------------------------------------------- |
-| **Purpose**   | Ensure another rule group is assigned           | Control execution order within a phase            |
-| **Scope**     | Character assignment (composition)              | Single evaluation cycle                           |
-| **Mechanism** | Auto-assigns dependency when parent is assigned | Waits for group settlement                        |
-| **Example**   | Paladin requires spellcasting                   | HP increment waits for HP reset                   |
+|               | `requires` (ruleGroup level)                    | `after` (rule level)                   |
+| ------------- | ----------------------------------------------- | -------------------------------------- |
+| **Purpose**   | Ensure another rule group is assigned           | Control execution order within a phase |
+| **Scope**     | Character assignment (composition)              | Single evaluation cycle                |
+| **Mechanism** | Auto-assigns dependency when parent is assigned | Waits for group settlement             |
+| **Example**   | Paladin requires spellcasting                   | HP increment waits for HP reset        |
 
 ### `requires` — Composition Dependency
 
