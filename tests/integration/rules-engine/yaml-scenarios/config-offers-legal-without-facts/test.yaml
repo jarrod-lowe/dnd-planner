@@ -1,0 +1,13 @@
+name: 'Configuration offers legal without facts'
+description: 'Set STAT, save proficiency, and skill proficiency offers must be legal when no facts exist (fresh character)'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+steps:
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - set-strength
+            - proficiency-str
+            - proficiency-athletics

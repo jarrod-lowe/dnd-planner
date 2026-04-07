@@ -1,5 +1,5 @@
 name: 'Turn Counter - Increments'
-description: 'Turn counter increments with each evaluation'
+description: 'Turn counter increments each turn via committed effects'
 ruleGroups:
   - dnd-5e-2024/turn-rest
 steps:
@@ -7,11 +7,11 @@ steps:
       assert:
         facts:
           turn.counter: 1
-  - evaluate:
+  - endTurn:
       assert:
         facts:
           turn.counter: 2
-  - evaluate:
+  - endTurn:
       assert:
         facts:
           turn.counter: 3

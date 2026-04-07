@@ -95,6 +95,56 @@ describe('evaluateCondition', () => {
     });
   });
 
+  describe('FactComparisonCondition with missing facts', () => {
+    it('returns true when equals 0 and fact is absent', () => {
+      const condition: Condition = {
+        fact: 'str.value',
+        operator: 'equals',
+        value: 0
+      };
+      const facts: Facts = {};
+      const events = new Set<string>();
+
+      expect(evaluateCondition(condition, facts, events)).toBe(true);
+    });
+
+    it('returns false when equals 10 and fact is absent', () => {
+      const condition: Condition = {
+        fact: 'str.value',
+        operator: 'equals',
+        value: 10
+      };
+      const facts: Facts = {};
+      const events = new Set<string>();
+
+      expect(evaluateCondition(condition, facts, events)).toBe(false);
+    });
+
+    it('returns false when greaterThan 0 and fact is absent', () => {
+      const condition: Condition = {
+        fact: 'str.value',
+        operator: 'greaterThan',
+        value: 0
+      };
+      const facts: Facts = {};
+      const events = new Set<string>();
+
+      expect(evaluateCondition(condition, facts, events)).toBe(false);
+    });
+
+    it('returns false when notEquals 0 and fact is absent', () => {
+      const condition: Condition = {
+        fact: 'str.value',
+        operator: 'notEquals',
+        value: 0
+      };
+      const facts: Facts = {};
+      const events = new Set<string>();
+
+      expect(evaluateCondition(condition, facts, events)).toBe(false);
+    });
+  });
+
   describe('EventCondition', () => {
     it('returns true when event was emitted', () => {
       const condition: Condition = { event: 'attack' };

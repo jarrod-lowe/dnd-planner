@@ -34,3 +34,8 @@ ruleGroups:
               fact: spellcasting.slots.level1.total
             source:
               number: 2
+          - type: numberIncrement
+            target:
+              fact: spellcasting.slots.level1.remaining
+            source:
+              number: 2

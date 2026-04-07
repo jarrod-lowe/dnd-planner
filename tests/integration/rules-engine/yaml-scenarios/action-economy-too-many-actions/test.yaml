@@ -20,7 +20,7 @@ steps:
       id: help-action
       assert:
         offers:
-          notExists:
+          illegal:
             - help-action
   - endTurn:
       assert:

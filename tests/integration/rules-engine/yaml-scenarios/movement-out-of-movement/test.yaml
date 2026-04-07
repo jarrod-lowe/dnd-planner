@@ -18,6 +18,6 @@ steps:
   - evaluate:
       assert:
         offers:
-          notExists:
+          illegal:
             - move-walk
             - move-rough-terrain

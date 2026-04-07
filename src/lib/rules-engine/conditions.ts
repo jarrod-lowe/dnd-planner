@@ -47,7 +47,7 @@ export function evaluateCondition(
 
   // FactComparisonCondition: has 'fact', 'operator', and 'value'
   if ('operator' in condition) {
-    const actual = facts[condition.fact];
+    const actual = facts[condition.fact] ?? 0;
     if (typeof actual !== 'number') return false;
     return compareValues(actual, condition.operator, condition.value);
   }

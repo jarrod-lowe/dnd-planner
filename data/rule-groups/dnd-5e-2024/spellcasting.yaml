@@ -103,11 +103,16 @@ ruleGroups:
               remaining: spellcasting.slots.level9.remaining
               section: magic
 
-      # Spell Slots - reset all current to totals at start of turn
+      # Spell Slots - reset all current to totals on long rest only
       - id: spellcasting-slots-reset
         phase: early
         after:
           - group: spellcasting-slots-set
+          - group: spell-slot-effect
+        when:
+          - fact: rest.long
+            operator: equals
+            value: 1
         activities:
           - type: numberCopy
             source:

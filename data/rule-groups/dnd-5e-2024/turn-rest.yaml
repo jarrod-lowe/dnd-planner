@@ -38,6 +38,9 @@ ruleGroups:
                     number: 1
 
       # Turn Counter - increments each turn, never resets
+      # On each evaluation, the standing rule increments from 0 to 1 and advertises
+      # a new effect. Previously committed effects also increment by 1 each.
+      # Counter = 1 (standing) + N (existing effects) = turn number.
       - id: turn-counter-increment
         phase: early
         group:
@@ -54,3 +57,19 @@ ruleGroups:
               fact: turn.counter
             source:
               number: 1
+          - type: advertiseEffect
+            when:
+              fact: turn.counter
+              operator: equals
+              value: 1
+            rule:
+              id: effect-turn-counter
+              phase: early
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: turn.counter
+                  source:
+                    number: 1
+                - type: advertiseEffect
+                  self: true
