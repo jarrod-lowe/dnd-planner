@@ -123,6 +123,7 @@ make deploy-test  # Deploy to the test environment
   - See RULES_ENGINE.md for a lot of detail on how the rules engine works
   - See FRONTEND_DESIGN.md for the initial design of the frontend
   - See DATA_MODEL.md for a description of the DynamoDB data model
+  - See docs/RULE_GROUP_GUIDE.md for how to write new rules
 - Rules are handled in the rules engine in three phases (a rule belongs in one phase)
 - Within a phase, rules can specify that they run `after` groups set by other rules
   - Do NOT propose splitting up the rules processing further, use the dependency mechanism instead

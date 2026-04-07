@@ -1,0 +1,35 @@
+name: 'HP from paladin level 1'
+description: 'HP calculated from paladin level 1 base (d10) plus CON modifier'
+ruleGroups:
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/ability-scores
+  - class-paladin/class-paladin-level1
+steps:
+  # Without CON set, hp.max = 10 (paladin d10 base) + 0 (no CON mod)
+  - evaluate:
+      assert:
+        facts:
+          hp.max: 10
+          hp.current: 10
+
+  # Set CON to 14 (modifier +2)
+  - addOffer:
+      id: set-constitution
+      selections:
+        score: 14
+      assert:
+        facts:
+          con.modifier: 2
+          hp.max: 12
+          hp.current: 12
+
+  # Set CON to 16 (modifier +3)
+  - updateSelections:
+      id: set-constitution
+      selections:
+        score: 16
+      assert:
+        facts:
+          con.modifier: 3
+          hp.max: 13
+          hp.current: 13
