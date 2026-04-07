@@ -422,8 +422,8 @@
         },
         "type": {
           "type": "string",
-          "enum": ["value", "modifier", "usedMax"],
-          "description": "Display type: value (plain number), modifier (+/-X), usedMax (X/Y resource)"
+          "enum": ["value", "modifier", "usedMax", "hitDie"],
+          "description": "Display type: value (plain number), modifier (+/-X), usedMax (X/Y resource), hitDie (X/Y dZ)"
         },
         "fact": {
           "type": "string",
@@ -452,6 +452,10 @@
         "proficiencyFact": {
           "type": "string",
           "description": "Fact path for proficiency multiplier indicator (modifier type only). When present, renders a proficiency badge next to the modifier."
+        },
+        "dieSize": {
+          "type": "integer",
+          "description": "Die size for hitDie type (e.g., 6, 8, 10, 12)"
         }
       },
       "additionalProperties": false,
@@ -478,6 +482,18 @@
           },
           "then": {
             "required": ["fact"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "hitDie"
+              }
+            }
+          },
+          "then": {
+            "required": ["total", "remaining", "dieSize"]
           }
         }
       ]

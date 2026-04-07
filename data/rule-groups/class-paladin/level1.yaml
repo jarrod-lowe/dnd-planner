@@ -13,6 +13,18 @@ ruleGroups:
         description: Paladin Segh level 1, proficient chel
         keywords: [paladin, segh, level1]
     rules:
+      # Hit Die - Level 1 Paladin gets 1d10
+      - id: paladin-level1-hit-die
+        phase: early
+        group:
+          - hit-die-base
+        activities:
+          - type: numberIncrement
+            target:
+              fact: hitDie.d10.total
+            source:
+              number: 1
+
       # Proficiency Bonus - Level 1 Paladin adds +2
       - id: paladin-level1-proficiency
         phase: early

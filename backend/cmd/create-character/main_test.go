@@ -95,6 +95,13 @@ func TestHandle_ValidRequest_Returns201(t *testing.T) {
 			"ruleGroupId": "free-actions",
 			"enabled":     true,
 		},
+		{
+			"PK":          "SEED#CHAR#$(characterId)",
+			"SK":          "RULEGROUP#hit-die",
+			"gsiSeedPK":   "SEED#CHAR",
+			"ruleGroupId": "hit-die",
+			"enabled":     true,
+		},
 	}
 
 	db := &mockDB{
@@ -202,6 +209,13 @@ func TestHandle_ValidRequest_ReturnsCharacterFields(t *testing.T) {
 			"ruleGroupId": "free-actions",
 			"enabled":     true,
 		},
+		{
+			"PK":          "SEED#CHAR#$(characterId)",
+			"SK":          "RULEGROUP#hit-die",
+			"gsiSeedPK":   "SEED#CHAR",
+			"ruleGroupId": "hit-die",
+			"enabled":     true,
+		},
 	}
 
 	db := &mockDB{
@@ -268,8 +282,8 @@ func TestHandle_ValidRequest_ReturnsCharacterFields(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected ruleGroupIds to be an array, got %v", responseBody["ruleGroupIds"])
 	}
-	if len(ruleGroupIds) != 5 {
-		t.Errorf("expected ruleGroupIds to have 5 entries, got %d", len(ruleGroupIds))
+	if len(ruleGroupIds) != 6 {
+		t.Errorf("expected ruleGroupIds to have 6 entries, got %d", len(ruleGroupIds))
 	}
 	expectedGroups := map[string]bool{
 		"turn-rest":      false,
@@ -277,6 +291,7 @@ func TestHandle_ValidRequest_ReturnsCharacterFields(t *testing.T) {
 		"proficiency":    false,
 		"movement":       false,
 		"free-actions":   false,
+		"hit-die":        false,
 	}
 	for _, id := range ruleGroupIds {
 		idStr, ok := id.(string)

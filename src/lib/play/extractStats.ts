@@ -27,7 +27,14 @@ export interface StatEntryUsedMax extends StatEntryBase {
   remaining: string;
 }
 
-export type StatEntry = StatEntryValue | StatEntryModifier | StatEntryUsedMax;
+export interface StatEntryHitDie extends StatEntryBase {
+  type: 'hitDie';
+  total: string;
+  remaining: string;
+  dieSize: number;
+}
+
+export type StatEntry = StatEntryValue | StatEntryModifier | StatEntryUsedMax | StatEntryHitDie;
 
 export function isStatEntry(entry: unknown): entry is StatEntry {
   if (typeof entry !== 'object' || entry === null) return false;
@@ -49,6 +56,13 @@ export function isStatEntry(entry: unknown): entry is StatEntry {
   }
   if (obj.type === 'usedMax') {
     return typeof obj.total === 'string' && typeof obj.remaining === 'string';
+  }
+  if (obj.type === 'hitDie') {
+    return (
+      typeof obj.total === 'string' &&
+      typeof obj.remaining === 'string' &&
+      typeof obj.dieSize === 'number'
+    );
   }
   return false;
 }
