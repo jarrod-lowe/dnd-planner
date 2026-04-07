@@ -76,6 +76,14 @@ ruleGroups:
 
 ## 2. How the Engine Processes Rules
 
+### Facts Start at Zero
+
+The engine is fully stateless. `input.state.facts` is always empty at the start of each evaluation — all fact values are derived entirely by rules. When a rule reads a fact that hasn't been set, it defaults to 0. This means:
+
+- You do **not** need explicit `numberSet` to 0 before incrementing
+- Simple `numberIncrement` rules can run in any order with no `group` or `after`
+- Ordering is only needed when rules must run in a specific sequence (e.g., copy a final value after all contributions settle)
+
 ### Phase Execution Order
 
 The engine runs three phases **in strict order**:
@@ -84,7 +92,7 @@ The engine runs three phases **in strict order**:
 early  ->  normal  ->  safeguard
 ```
 
-- **early**: Establish preconditions. Reset counters, set base values, emit events.
+- **early**: Set base values, declare groups for ordering, compute derived values that other phases depend on.
 - **normal**: Standard evaluation. Offer actions, compute derived values.
 - **safeguard**: Late normalization. Rarely used.
 
@@ -110,42 +118,27 @@ A rule with no `after` and no `group` can execute immediately in its phase. The 
 
 ---
 
-## 3. The Reset-Before-Modify Pattern (Critical)
+## 3. Facts and Ordering
 
-This is the most important concept in rule group authoring. Get this wrong and values will be incorrect.
+### When You Don't Need Ordering
 
-### The Problem
-
-Rule groups from **different files** are combined into a single evaluation. Without explicit ordering, the engine might execute a "add +2 to proficiency" rule **before** the "reset proficiency to 0" rule, producing 0 instead of 2.
-
-File order does not matter. Rule order within a file does not matter. Only `group` and `after` matter.
-
-### The Solution: Declare a Group, Then Depend On It
-
-**Step 1 — Base rule resets and declares a group:**
+For most cases, you can simply `numberIncrement` a fact. Since facts start at 0, multiple increments from different rule groups will produce the correct total regardless of execution order:
 
 ```yaml
-# proficiency.yaml
+# proficiency.yaml — declares UI stats, no activities needed
 - id: proficiency-reset
   phase: early
-  group:
-    - proficiency-base # This rule DECLARES the group
-  activities:
-    - type: numberSet
-      target:
+  activities: []
+  ui:
+    stats:
+      - name: play.stats.proficiency
+        type: modifier
         fact: proficiency.bonus
-      source:
-        number: 0
-```
+        section: abilities
 
-**Step 2 — Modifier rule waits for the group:**
-
-```yaml
-# class-paladin/level1.yaml
+# class-paladin/level1.yaml — just increment, no after needed
 - id: paladin-level1-proficiency
   phase: early
-  after:
-    - group: proficiency-base # Wait for the reset to complete
   activities:
     - type: numberIncrement
       target:
@@ -154,76 +147,171 @@ File order does not matter. Rule order within a file does not matter. Only `grou
         number: 2
 ```
 
-**Result:** The reset always runs first, then the increment adds on top. Correct value = 2.
+Multiple classes can each increment `proficiency.bonus` without any ordering, because addition is commutative and facts start at 0.
 
-### Why This Works
+### When You DO Need Ordering
 
-1. The base rule belongs to `proficiency-base`, so the group exists
-2. The modifier rule has `after: [proficiency-base]`, so it waits
-3. The group settles after the base rule executes
-4. Only then does the modifier rule execute
+Ordering is needed when:
 
-Without the `after`, the two rules could run in any order.
+1. **A value must be copied after all contributions settle** (e.g., copy `hp.max` to `hp.current` after all class levels have contributed)
+2. **A rule sets a non-zero base value that modifiers depend on** (e.g., set `spellcasting.max` to 1, then copy to `remaining`)
 
-### The Two-Group Pattern (for composability)
+### The Two-Group Pattern (for copy-after-settle)
 
-When you need other rule groups to both **contribute to** a value AND have a subsequent rule **depend on the final value**, use two groups:
+When multiple rule groups contribute to a value and then a final rule needs the settled total, use two groups:
 
 ```yaml
-# spellcasting.yaml
-
-# Rule 1: Reset all slot totals AND declare two groups
-- id: spellcasting-slots-total
-  phase: early
+# hp.yaml — Reset and declare two groups
+- id: hp-reset
+  phase: normal
   group:
-    - spellcasting-slots-total # Group A: for modifiers to depend on
-    - spellcasting-slots-set # Group B: for modifiers to join
+    - hp-total      # Group A: signals that the base value has been set
+    - hp-set        # Group B: modifiers join this group
   activities:
     - type: numberSet
       target:
-        fact: spellcasting.slots.level1.total
+        fact: hp.max
       source:
         number: 0
 
-# In class-paladin/level1.yaml:
-- id: paladin-level1-spell-slots
-  phase: early
+# hp.yaml — Copy max to current, after ALL modifiers settle
+- id: hp-copy
+  phase: normal
   after:
-    - group: spellcasting-slots-total # Wait for the reset
-  group:
-    - spellcasting-slots-set # Join this group (so others can wait for it)
-  activities:
-    - type: numberIncrement
-      target:
-        fact: spellcasting.slots.level1.total
-      source:
-        number: 2
-
-# Back in spellcasting.yaml — Rule 2: Copy totals to remaining (AFTER all modifiers)
-- id: spellcasting-slots-reset
-  phase: early
-  after:
-    - group: spellcasting-slots-set # Wait for ALL modifiers to settle
+    - group: hp-set  # Wait for all hp contributors
   activities:
     - type: numberCopy
       source:
-        fact: spellcasting.slots.level1.total
+        fact: hp.max
       target:
-        fact: spellcasting.slots.level1.remaining
+        fact: hp.current
 ```
 
-This creates the chain: reset(0) -> modify(+2) -> copy(2 to remaining). The two groups allow modifiers to participate in the middle.
+Then a class level contributes:
+
+```yaml
+# class-paladin/level1.yaml — Contribute to HP
+- id: paladin-level1-hp
+  phase: normal
+  after:
+    - group: hp-total  # Wait for the base value to be set
+  group:
+    - hp-set           # Join this group (so hp-copy waits for us)
+  activities:
+    - type: numberIncrement
+      target:
+        fact: hp.max
+      source:
+        number: 10
+    - type: numberIncrement
+      target:
+        fact: hp.max
+      source:
+        fact: con.modifier
+```
+
+**Chain**: `hp-reset` (set to 0, declare groups) -> `paladin-level1-hp` (add 10 + CON) -> `hp-copy` (copy max to current).
+
+The two groups allow modifiers to participate between the reset and the copy. Without `hp-total`, the modifier might run before the reset. Without `hp-set`, the copy might run before the modifier.
+
+### The One-Group Pattern (for simple copy)
+
+When a value is set once and copied once (no modifiers from other rule groups), a single group suffices:
+
+```yaml
+# spellcasting.yaml
+- id: spellcasting-max
+  phase: early
+  group:
+    - spellcasting-max
+  activities:
+    - type: numberSet
+      source:
+        number: 1
+      target:
+        fact: spellcasting.max
+
+- id: spellcasting-reset
+  phase: early
+  after:
+    - group: spellcasting-max
+  activities:
+    - type: numberCopy
+      source:
+        fact: spellcasting.max
+      target:
+        fact: spellcasting.remaining
+```
 
 ### Rules
 
-- **ALWAYS** reset a fact before modifying it across rule groups. Never assume a value.
 - **NEVER** rely on file order or rule order within a file.
-- Reset rules should be in the same phase as modifier rules (usually `early`).
-- All modifiers for a given reset should share the same phase.
+- Use `group` and `after` only when ordering actually matters (copy-after-settle, base-then-modify).
+- Stats-only skeleton rules with `activities: []` are used to declare `ui.stats` for facts derived by multiple rule groups.
 
 ---
 
-## 4. Rule Group Dependencies (`requires` vs `after`)
+## 4. Rule Group Assignment
+
+Rule groups must reach a character through one of three mechanisms:
+
+### SEED# Records (Automatic on Character Creation)
+
+Defined in `terraform/module/dnd-planner/dynamodb-items.tf`. When a new character is created, the backend reads all `SEED#CHAR` records and instantiates them for that character.
+
+Every new character receives these core rule groups:
+
+| Rule Group ID    | Purpose                                      |
+| ---------------- | -------------------------------------------- |
+| `turn-rest`      | Turn counter and long rest management        |
+| `action-economy` | Action economy rules                         |
+| `proficiency`    | Proficiency bonus system                     |
+| `movement`       | Movement rules                               |
+| `free-actions`   | Free actions (like Help)                     |
+| `ability-scores` | Ability score system                         |
+| `hit-die`        | Hit die mechanics                            |
+| `hp`             | Hit points tracking                          |
+| `species-{name}` | Species-specific rules (e.g., `species-human`) |
+| `custom-{id}`    | Empty per-character rule group for custom rules |
+
+The species rule group is parameterized: the character creation request provides the species, and the seed template substitutes `$(species)` to produce the correct ID.
+
+**Adding a new SEED rule group**: Add a new `aws_dynamodb_table_item` resource to `dynamodb-items.tf` with `gsiSeedPK = "SEED#CHAR"`, then run `make deploy-test`.
+
+### `requires` Dependencies (Automatic on Assignment)
+
+When a user assigns a rule group with `requires`, the system automatically resolves all transitive dependencies and assigns them first:
+
+```yaml
+# class-paladin/level1.yaml
+ruleGroups:
+  - id: class-paladin-level1
+    requires:
+      - spellcasting  # Spellcasting must also be assigned
+    rules: [...]
+```
+
+Assigning `class-paladin-level1` will automatically assign `spellcasting` first. Dependencies are resolved in `src/lib/rules/resolveDependencies.ts` — deepest first, with deduplication for diamond dependencies.
+
+**Use `requires` for**: Supporting rule groups that should never be directly assigned by users but are needed by other rule groups.
+
+### Manual User Selection
+
+Rule groups synced to DynamoDB (via `make sync-rule-groups`) appear in the rule group picker in the UI. Users can manually browse and assign them. This is how class levels, spells, and other optional content get added to characters.
+
+**Use manual selection for**: Content that users choose to add — class levels, subclasses, spells, feats.
+
+### Authoring Checklist for New Rule Groups
+
+Before a new rule group can be used, it must be reachable via at least one mechanism:
+
+- **Every character needs it** → Add a SEED# record to `dynamodb-items.tf`
+- **Users choose to add it** → Sync via `make sync-rule-groups`; it appears in the UI picker
+- **It's a dependency of another group** → Add `requires` to the parent group; no SEED# needed
+
+---
+
+## 5. Rule Group Dependencies (`requires` vs `after`)
 
 These are two different dependency mechanisms at different levels:
 
@@ -232,7 +320,7 @@ These are two different dependency mechanisms at different levels:
 | **Purpose**   | Ensure another rule group is assigned           | Control execution order within a phase            |
 | **Scope**     | Character assignment (composition)              | Single evaluation cycle                           |
 | **Mechanism** | Auto-assigns dependency when parent is assigned | Waits for group settlement                        |
-| **Example**   | Paladin requires spellcasting                   | Proficiency increment waits for proficiency reset |
+| **Example**   | Paladin requires spellcasting                   | HP increment waits for HP reset                   |
 
 ### `requires` — Composition Dependency
 
@@ -243,11 +331,9 @@ When a user assigns a rule group with `requires`, the system automatically assig
 ruleGroups:
   - id: class-paladin-level1
     requires:
-      - spellcasting # Spellcasting must also be assigned
+      - spellcasting
     rules:
       - id: paladin-level1-spell-slots
-        after:
-          - group: spellcasting-slots-total # Fine-grained ordering
         group:
           - spellcasting-slots-set
         activities:
@@ -258,7 +344,7 @@ ruleGroups:
               number: 2
 ```
 
-Without `requires: [spellcasting]`, the `after: group: spellcasting-slots-total` reference would point to a non-existent group (the engine treats this as already satisfied, meaning the rule would execute immediately with no reset having occurred).
+Without `requires: [spellcasting]`, the `spellcasting-slots-set` group might not exist (if no other assigned rule group declares it), which could cause incorrect ordering.
 
 ### `after` — Execution Ordering
 
@@ -266,34 +352,33 @@ See Section 3. This controls the order rules execute within a single phase.
 
 ---
 
-## 5. Common Patterns
+## 6. Common Patterns
 
-### Pattern: Reset-Then-Modify
+### Pattern: Stats-Only Skeleton
 
-**Use when:** Multiple rule groups contribute to a single value (e.g., proficiency bonus, HP).
-
-**Base rule group** (reset to base value):
+**Use when:** Multiple rule groups contribute to a fact, and you need UI stats for it. The skeleton rule has no activities — it exists solely to declare `ui.stats`.
 
 ```yaml
+# proficiency.yaml
 - id: proficiency-reset
   phase: early
-  group:
-    - proficiency-base
-  activities:
-    - type: numberSet
-      target:
+  activities: []
+  ui:
+    stats:
+      - name: play.stats.proficiency
+        type: modifier
         fact: proficiency.bonus
-      source:
-        number: 0
+        section: abilities
 ```
 
-**Contributing rule group** (add to the value):
+### Pattern: Simple Increment (No Ordering)
+
+**Use when:** Multiple rule groups add to the same value. No ordering needed since facts start at 0 and addition is commutative.
 
 ```yaml
+# class-paladin/level1.yaml
 - id: paladin-level1-proficiency
   phase: early
-  after:
-    - group: proficiency-base
   activities:
     - type: numberIncrement
       target:
@@ -302,12 +387,17 @@ See Section 3. This controls the order rules execute within a single phase.
         number: 2
 ```
 
-### Pattern: Reset-Then-Copy (Resource Pool)
+### Pattern: Reset-Modify-Copy (Two-Group Pattern)
 
-**Use when:** A "max" value is set once, then copied to "remaining" at the start of each turn.
+**Use when:** Multiple rule groups contribute to a value, then a final copy is needed after all contributions settle (e.g., HP, spell slots). See Section 3 for the full explanation.
+
+Chain: `reset total to 0` -> `modifiers increment total` -> `copy total to remaining/current`
+
+### Pattern: Simple Copy (One-Group Pattern)
+
+**Use when:** A value is set once and needs to be copied once per evaluation (e.g., action points, spellcasting uses).
 
 ```yaml
-# Set max
 - id: action-max
   phase: early
   group:
@@ -319,7 +409,6 @@ See Section 3. This controls the order rules execute within a single phase.
       target:
         fact: actions.max
 
-# Copy max to remaining (after max is settled)
 - id: action-reset
   phase: early
   after:
@@ -332,12 +421,6 @@ See Section 3. This controls the order rules execute within a single phase.
         fact: actions.remaining
 ```
 
-### Pattern: Reset-Modify-Then-Copy (Slot Pool)
-
-**Use when:** Multiple rule groups contribute to a "total" that is then copied to "remaining". See the Two-Group Pattern in Section 3.
-
-Chain: `reset total to 0` -> `modifiers increment total` -> `copy total to remaining`
-
 ### Pattern: Offer Rule With Legality Checks
 
 **Use when:** Presenting an action the user can choose, with conditions that determine if it's legal.
@@ -348,12 +431,12 @@ Chain: `reset total to 0` -> `modifiers increment total` -> `copy total to remai
     - group: half-movement-remaining
   activities:
     - type: offerRule
-      legalWhen: # All conditions must pass for legality
+      legalWhen:
         - condition:
             fact: character.movement.remaining
             operator: greaterThanOrEqual
             value: 5
-          illegalDiagnostics: # Shown when this condition fails
+          illegalDiagnostics:
             - code: rule.dnd-5e-2024.movement.action-move-walk-offer.out_of_movement
               severity: error
       rule:
@@ -363,10 +446,10 @@ Chain: `reset total to 0` -> `modifiers increment total` -> `copy total to remai
           section: move
           name: rule.dnd-5e-2024.movement.move-walk.name
         group:
-          - move # Consume this group so others can wait
+          - move
         vars:
           distance:
-            capture: true # Snapshot value when added to plan
+            capture: true
             default:
               fact: character.movement.remaining
         activities:
@@ -374,7 +457,7 @@ Chain: `reset total to 0` -> `modifiers increment total` -> `copy total to remai
             target:
               fact: character.movement.remaining
             source:
-              var: distance # Uses captured or default value
+              var: distance
             subtract: true
 ```
 
@@ -391,9 +474,8 @@ Key points:
 **Use when:** An action should only be available under certain conditions.
 
 ```yaml
-# Only offer swim when swim cost equals 1
 - id: action-move-swim-offer
-  when: # Applicability gate — rule doesn't execute at all
+  when:
     - fact: character.movement.swim.cost
       operator: equals
       value: 1
@@ -412,14 +494,14 @@ Key points:
 
 ```yaml
 activities:
-  - *error-clear                          # Clear errors from previous evaluation
+  - *error-clear
   - type: numberIncrement
     target:
       fact: actions.remaining
     source:
       number: 1
     subtract: true
-  - type: setAdd                          # Add error if remaining went negative
+  - type: setAdd
     target:
       var: errors
     source:
@@ -440,7 +522,7 @@ The `*error-clear` anchor is defined in `_shared/definitions.yaml`. Always clear
 - id: compute-half-movement-total
   phase: normal
   group:
-    - half-movement-total # Others can wait on this
+    - half-movement-total
   activities:
     - type: numberFunction
       function: multiply
@@ -462,7 +544,7 @@ By declaring a `group`, other rules can use `after: [{group: half-movement-total
 - id: set-base-distance
   phase: early
   group:
-    - species-constants # Movement rules wait for this
+    - species-constants
   activities:
     - type: numberSet
       target:
@@ -487,7 +569,6 @@ By declaring a `group`, other rules can use `after: [{group: half-movement-total
 
 ```yaml
 activities:
-  # Consume resources
   - type: numberIncrement
     target:
       fact: actions.remaining
@@ -500,7 +581,6 @@ activities:
     source:
       number: 1
     subtract: true
-  # Advertise persistent effect
   - type: advertiseEffect
     rule:
       id: effect-my-spell-l1
@@ -509,7 +589,7 @@ activities:
         name: rule.my-spell.effect-my-spell-l1.name
       phase: early
       after:
-        - group: spellcasting-slots-set    # Effect participates in slot tracking
+        - group: spellcasting-slots-set
       group:
         - spell-slot-effect
       activities:
@@ -518,34 +598,32 @@ activities:
             fact: spellcasting.slots.level1.remaining
           source:
             number: 1
-          subtract: true                    # Continue consuming the slot each turn
+          subtract: true
         - type: advertiseEffect
-          self: true                        # Self-sustain until condition fails
+          self: true
           when:
             fact: rest.long
             operator: equals
-            value: 0                        # Expire on long rest
-  # Error tracking
+            value: 0
   - *error-clear
-  # ... setAdd for error conditions
 ```
 
 Key points:
 
 - `advertiseEffect` creates a rule that persists in `effects` across evaluations.
 - `self: true` re-advertises the effect each turn (self-sustaining).
-- The effect expires when its `when` condition is false (omitting `advertiseEffect self: true` also removes it).
+- The effect expires when its `when` condition is false.
 - Effects get unique IDs with numeric suffixes to avoid collisions.
 
 ---
 
-## 6. Conventions
+## 7. Conventions
 
 ### Stats Declarations (`ui.stats[]`)
 
 Rules can declare stats to display in the play mode stats column via `ui.stats[]`. The rules engine ignores these — they are a UI concern only.
 
-**Convention:** Place `ui.stats[]` on the rule that logically owns the fact being displayed. For facts derived by rules with actual activities, put the stats there. For facts derived by modifier rules across multiple files, use a dedicated stats-only skeleton rule (with `activities: []`).
+**Convention:** Place `ui.stats[]` on the rule that logically owns the fact being displayed. For facts derived by modifier rules across multiple files, use a dedicated stats-only skeleton rule (with `activities: []`).
 
 Three stat types are supported:
 
@@ -564,7 +642,6 @@ Three stat types are supported:
         section: turn
 
 # Stats-only skeleton (no activities — facts derived by modifier rules)
-# Used when multiple rule groups contribute to a fact
 - id: proficiency-reset
   activities: []
   ui:
@@ -589,7 +666,6 @@ Three stat types are supported:
         section: resources
 
 # Stats-only skeleton for spell slots (9 stat entries, one per level)
-# Slot totals are derived by class rules incrementing from 0
 - id: spellcasting-slots-total
   activities: []
   ui:
@@ -605,9 +681,11 @@ Three stat types are supported:
 **Sections** group stats visually. Known sections (in display order):
 
 - `turn` — Turn counter
-- `resources` — Speed, Actions, Spellcasting
+- `resources` — Speed, Actions, Spellcasting, HP
 - `abilities` — Proficiency
 - `magic` — Spell slots
+- `stats` — Ability scores
+- `skills` — Skills
 
 **Display rules:**
 
@@ -662,6 +740,8 @@ Group names should describe what they gate:
 - `spellcasting-slots-set` — When all slot modifications are done
 - `species-constants` — When species base values are set
 - `action-max` — When action maximum is set
+- `hp-total` — When HP base value has been set
+- `hp-set` — When all HP contributions have settled
 
 ### Rule ID Naming
 
@@ -673,7 +753,7 @@ Rule IDs should be descriptive and namespaced:
 
 ---
 
-## 7. Testing and Verification
+## 8. Testing and Verification
 
 ### Automated
 
@@ -682,7 +762,7 @@ Rule IDs should be descriptive and namespaced:
 
 ### Syncing to Test Environment
 
-- **`make sync-rule-groups`** — Syncs YAML definitions to the test DynamoDB table
+- **`make sync-rule-groups`** — Syncs YAML definitions to the test DynamoDB table. Run this after adding or modifying rule groups.
 - **`make deploy-test`** — Full deployment including rule group sync
 
 ### Manual Verification Checklist
@@ -690,15 +770,16 @@ Rule IDs should be descriptive and namespaced:
 1. All rule groups have `en` and `en-x-tlh` translations with `name`, `description`, and `keywords`
 2. Every YAML file has the schema comment on line 1
 3. All `after` references point to groups that actually exist in the same phase
-4. Reset rules declare groups; modifier rules wait for those groups
+4. Rules that modify the same fact use `group`/`after` only when ordering matters (copy-after-settle)
 5. No rule waits on a group it belongs to (self-dependency cycle)
 6. All `requires` references point to existing rule group IDs
 7. User-facing strings use i18n keys, not hardcoded text
 8. The `*error-clear` anchor is used before any `setAdd` to the `errors` var
+9. New rule groups are reachable via SEED#, `requires`, or manual selection (see Section 4)
 
 ---
 
-## 8. Activity Types Reference
+## 9. Activity Types Reference
 
 | Type              | Description                   | Key Fields                                     |
 | ----------------- | ----------------------------- | ---------------------------------------------- |
@@ -730,7 +811,7 @@ Rule IDs should be descriptive and namespaced:
 
 ---
 
-## 9. Dependency Graph Visualization
+## 10. Dependency Graph Visualization
 
 Here is the dependency graph for the base D&D 5e 2024 rule groups with a Paladin:
 
@@ -754,11 +835,17 @@ Phase: early
        └── sets max to 1        └── copies max to remaining
                               (after spellcasting-max)
 
-  paladin-level1-spell-slots ──> spellcasting-slots-reset
-  (class-paladin-level1)          (spellcasting)
-       │                              │
-       └── adds +2 to level1.total    └── copies totals to remaining
-         (joins spellcasting-slots-set)  (after spellcasting-slots-set)
+  paladin-level1-spell-slots
+  (class-paladin-level1)
+       │
+       └── increments spellcasting.slots.level1.total by 2
+           (no after — facts start at 0, joins spellcasting-slots-set)
+
+  paladin-level1-hit-die
+  (class-paladin-level1)
+       │
+       └── increments hitDie.d10.total by 1
+           (joins hit-die-base group)
 
   turn-counter
   (turn-rest)
@@ -766,6 +853,12 @@ Phase: early
        └── increments turn.counter by 1
 
 Phase: normal
+  hp-reset ──────> paladin-level1-hp ──> hp-copy
+  (hp)              (class-paladin-level1)  (hp)
+       │                  │                    │
+       └── sets max to 0  └── adds 10 + CON    └── copies max to current
+       (declares groups)     (joins hp-set)        (after hp-set)
+
   half-movement-total ──> ... ──> half-movement-remaining ──> offer rules
-  (movement)                (movement, after move group)       (movement)
+  (movement)                (movement)                         (movement)
 ```
