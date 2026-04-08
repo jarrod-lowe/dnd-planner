@@ -104,14 +104,10 @@
 
   // Configurable slider range (falls back to 1/30 for backward compatibility)
   const sliderMin = $derived(
-    uiModel === 'ability-score'
-      ? (entry.rule.ui?.sliderMin as number | undefined) ?? 1
-      : 1
+    uiModel === 'ability-score' ? ((entry.rule.ui?.sliderMin as number | undefined) ?? 1) : 1
   );
   const sliderMax = $derived(
-    uiModel === 'ability-score'
-      ? (entry.rule.ui?.sliderMax as number | undefined) ?? 30
-      : 30
+    uiModel === 'ability-score' ? ((entry.rule.ui?.sliderMax as number | undefined) ?? 30) : 30
   );
 
   // Skill proficiency model specific values
