@@ -2,26 +2,37 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 )
+
+type sqsSender interface {
+	SendMessage(ctx context.Context, params *sqs.SendMessageInput, optFns ...func(*sqs.Options)) (*sqs.SendMessageOutput, error)
+}
 
 type dbClient struct {
 	client    *dynamodb.Client
 	tableName string
 	logger    *slog.Logger
+	sqs       sqsSender
+	sqsURL    string
 }
 
-func newDBClient(client *dynamodb.Client, tableName string, logger *slog.Logger) *dbClient {
+func newDBClient(client *dynamodb.Client, tableName string, logger *slog.Logger, sqsClient sqsSender, sqsURL string) *dbClient {
 	return &dbClient{
 		client:    client,
 		tableName: tableName,
 		logger:    logger,
+		sqs:       sqsClient,
+		sqsURL:    sqsURL,
 	}
 }
 
@@ -116,7 +127,7 @@ func (d *dbClient) DeleteCharacter(ctx context.Context, userId, characterId stri
 				})
 				if err != nil {
 					d.logger.Error("failed to batch delete rule group assignments", "error", err, "characterId", characterId)
-					// Continue trying remaining batches
+					d.notifyFailedCleanup(ctx, userId, characterId, batch, err)
 				}
 			}
 		}
@@ -128,4 +139,57 @@ func (d *dbClient) DeleteCharacter(ctx context.Context, userId, characterId stri
 	}
 
 	return nil
+}
+
+type cleanupFailureMessage struct {
+	Action      string              `json:"action"`
+	CharacterId string              `json:"characterId"`
+	UserId      string              `json:"userId"`
+	FailedItems []map[string]string `json:"failedItems"`
+	Error       string              `json:"error"`
+	Timestamp   string              `json:"timestamp"`
+}
+
+func (d *dbClient) notifyFailedCleanup(ctx context.Context, userId, characterId string, batch []map[string]types.AttributeValue, batchErr error) {
+	if d.sqs == nil || d.sqsURL == "" {
+		return
+	}
+
+	failedItems := make([]map[string]string, len(batch))
+	for i, item := range batch {
+		failedItems[i] = map[string]string{
+			"PK": stringValue(item["PK"]),
+			"SK": stringValue(item["SK"]),
+		}
+	}
+
+	msg := cleanupFailureMessage{
+		Action:      "DELETE_CHARACTER",
+		CharacterId: characterId,
+		UserId:      userId,
+		FailedItems: failedItems,
+		Error:       batchErr.Error(),
+		Timestamp:   time.Now().UTC().Format(time.RFC3339),
+	}
+
+	body, err := json.Marshal(msg)
+	if err != nil {
+		d.logger.Error("failed to marshal cleanup failure message", "error", err)
+		return
+	}
+
+	_, err = d.sqs.SendMessage(ctx, &sqs.SendMessageInput{
+		QueueUrl:    aws.String(d.sqsURL),
+		MessageBody: aws.String(string(body)),
+	})
+	if err != nil {
+		d.logger.Error("failed to send cleanup failure to SQS", "error", err, "characterId", characterId)
+	}
+}
+
+func stringValue(v types.AttributeValue) string {
+	if s, ok := v.(*types.AttributeValueMemberS); ok {
+		return s.Value
+	}
+	return ""
 }

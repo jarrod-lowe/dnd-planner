@@ -202,6 +202,51 @@ resource "aws_iam_role_policy" "delete_character_dynamodb" {
   policy = data.aws_iam_policy_document.delete_character_dynamodb.json
 }
 
+resource "aws_sqs_queue" "delete_character_dlq" {
+  name                      = "${local.resource_prefix}-delete-character-dlq"
+  message_retention_seconds = 1209600 # 14 days
+
+  sqs_managed_sse_enabled = true
+}
+
+resource "aws_cloudwatch_metric_alarm" "delete_character_dlq" {
+  alarm_name          = "${local.resource_prefix}-delete-character-dlq"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "ApproximateNumberOfMessagesVisible"
+  namespace           = "AWS/SQS"
+  period              = 60
+  statistic           = "Sum"
+  threshold           = 0
+  alarm_description   = "Messages in delete-character DLQ - partial character deletion failures need manual cleanup"
+
+  dimensions = {
+    QueueName = aws_sqs_queue.delete_character_dlq.name
+  }
+
+  alarm_actions      = [var.sns_alarm_topic_arn]
+  ok_actions         = [var.sns_alarm_topic_arn]
+  treat_missing_data = "notBreaching"
+}
+
+data "aws_iam_policy_document" "delete_character_sqs" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "sqs:SendMessage",
+    ]
+    resources = [
+      aws_sqs_queue.delete_character_dlq.arn,
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "delete_character_sqs" {
+  name   = "${local.resource_prefix}-delete-character-sqs"
+  role   = aws_iam_role.delete_character.name
+  policy = data.aws_iam_policy_document.delete_character_sqs.json
+}
+
 module "delete_character" {
   source              = "../lambda"
   name                = "${local.resource_prefix}-delete-character"
@@ -211,6 +256,7 @@ module "delete_character" {
   log_retention_days  = var.lambda_log_retention_days
   sns_alarm_topic_arn = var.sns_alarm_topic_arn
   environment_variables = {
-    TABLE_NAME = aws_dynamodb_table.data.name
+    TABLE_NAME      = aws_dynamodb_table.data.name
+    CLEANUP_DLQ_URL = aws_sqs_queue.delete_character_dlq.id
   }
 }

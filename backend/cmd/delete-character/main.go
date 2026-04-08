@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/jarrod/dnd-planner/backend/internal/auth"
 	"github.com/jarrod/dnd-planner/backend/internal/response"
 )
@@ -83,7 +84,9 @@ func main() {
 		panic("TABLE_NAME environment variable is required")
 	}
 
-	db := newDBClient(dynamodb.NewFromConfig(cfg), tableName, slog.Default())
+	sqsURL := os.Getenv("CLEANUP_DLQ_URL")
+
+	db := newDBClient(dynamodb.NewFromConfig(cfg), tableName, slog.Default(), sqs.NewFromConfig(cfg), sqsURL)
 	h := newHandler(db)
 
 	lambda.Start(h.handle)
