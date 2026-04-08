@@ -80,8 +80,7 @@ func (d *dbClient) PutRuleGroup(ctx context.Context, characterId, ruleGroupId, u
 		},
 	})
 	if err != nil {
-		var ccfe *types.ConditionalCheckFailedException
-		if errors.As(err, &ccfe) {
+		if isConditionFailure(err) {
 			return "", ErrConditionalCheckFailed
 		}
 		return "", fmt.Errorf("put rule group: %w", err)
@@ -101,11 +100,27 @@ func (d *dbClient) DeleteRuleGroup(ctx context.Context, characterId, ruleGroupId
 		ConditionExpression: aws.String("attribute_exists(PK)"),
 	})
 	if err != nil {
-		var ccfe *types.ConditionalCheckFailedException
-		if errors.As(err, &ccfe) {
+		if isConditionFailure(err) {
 			return ErrNotFound
 		}
 		return fmt.Errorf("delete rule group: %w", err)
 	}
 	return nil
+}
+
+// isConditionFailure returns true if the error is a condition check failure,
+// whether from a single-item operation (ConditionalCheckFailedException) or
+// a transaction (TransactionCanceledException with ConditionalCheckFailed reason).
+func isConditionFailure(err error) bool {
+	var tce *types.TransactionCanceledException
+	if errors.As(err, &tce) {
+		for _, reason := range tce.CancellationReasons {
+			if reason.Code != nil && *reason.Code == "ConditionalCheckFailed" {
+				return true
+			}
+		}
+		return false
+	}
+	var ccfe *types.ConditionalCheckFailedException
+	return errors.As(err, &ccfe)
 }

@@ -18,15 +18,21 @@ type sqsSender interface {
 	SendMessage(ctx context.Context, params *sqs.SendMessageInput, optFns ...func(*sqs.Options)) (*sqs.SendMessageOutput, error)
 }
 
+type dynamoDBAPI interface {
+	TransactWriteItems(ctx context.Context, params *dynamodb.TransactWriteItemsInput, optFns ...func(*dynamodb.Options)) (*dynamodb.TransactWriteItemsOutput, error)
+	Query(ctx context.Context, params *dynamodb.QueryInput, optFns ...func(*dynamodb.Options)) (*dynamodb.QueryOutput, error)
+	BatchWriteItem(ctx context.Context, params *dynamodb.BatchWriteItemInput, optFns ...func(*dynamodb.Options)) (*dynamodb.BatchWriteItemOutput, error)
+}
+
 type dbClient struct {
-	client    *dynamodb.Client
+	client    dynamoDBAPI
 	tableName string
 	logger    *slog.Logger
 	sqs       sqsSender
 	sqsURL    string
 }
 
-func newDBClient(client *dynamodb.Client, tableName string, logger *slog.Logger, sqsClient sqsSender, sqsURL string) *dbClient {
+func newDBClient(client dynamoDBAPI, tableName string, logger *slog.Logger, sqsClient sqsSender, sqsURL string) *dbClient {
 	return &dbClient{
 		client:    client,
 		tableName: tableName,
@@ -75,8 +81,7 @@ func (d *dbClient) DeleteCharacter(ctx context.Context, userId, characterId stri
 		},
 	})
 	if err != nil {
-		var ccfe *types.ConditionalCheckFailedException
-		if errors.As(err, &ccfe) {
+		if isConditionFailure(err) {
 			return ErrNotFound
 		}
 		return fmt.Errorf("transaction delete: %w", err)
@@ -99,6 +104,7 @@ func (d *dbClient) DeleteCharacter(ctx context.Context, userId, characterId stri
 		})
 		if err != nil {
 			d.logger.Error("failed to query rule group assignments", "error", err, "characterId", characterId)
+			d.notifyFailedCleanup(ctx, userId, characterId, nil, err)
 			return nil
 		}
 
@@ -120,7 +126,7 @@ func (d *dbClient) DeleteCharacter(ctx context.Context, userId, characterId stri
 					}
 				}
 
-				_, err = d.client.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
+				out, err := d.client.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
 					RequestItems: map[string][]types.WriteRequest{
 						d.tableName: writeRequests,
 					},
@@ -128,6 +134,12 @@ func (d *dbClient) DeleteCharacter(ctx context.Context, userId, characterId stri
 				if err != nil {
 					d.logger.Error("failed to batch delete rule group assignments", "error", err, "characterId", characterId)
 					d.notifyFailedCleanup(ctx, userId, characterId, batch, err)
+				} else if unprocessed := out.UnprocessedItems[d.tableName]; len(unprocessed) > 0 {
+					failedKeys := make([]map[string]types.AttributeValue, len(unprocessed))
+					for i, req := range unprocessed {
+						failedKeys[i] = req.DeleteRequest.Key
+					}
+					d.notifyFailedCleanup(ctx, userId, characterId, failedKeys, fmt.Errorf("batch write returned %d unprocessed items", len(unprocessed)))
 				}
 			}
 		}
@@ -155,11 +167,14 @@ func (d *dbClient) notifyFailedCleanup(ctx context.Context, userId, characterId 
 		return
 	}
 
-	failedItems := make([]map[string]string, len(batch))
-	for i, item := range batch {
-		failedItems[i] = map[string]string{
-			"PK": stringValue(item["PK"]),
-			"SK": stringValue(item["SK"]),
+	var failedItems []map[string]string
+	if batch != nil {
+		failedItems = make([]map[string]string, len(batch))
+		for i, item := range batch {
+			failedItems[i] = map[string]string{
+				"PK": stringValue(item["PK"]),
+				"SK": stringValue(item["SK"]),
+			}
 		}
 	}
 
@@ -192,4 +207,21 @@ func stringValue(v types.AttributeValue) string {
 		return s.Value
 	}
 	return ""
+}
+
+// isConditionFailure returns true if the error is a condition check failure,
+// whether from a single-item operation (ConditionalCheckFailedException) or
+// a transaction (TransactionCanceledException with ConditionalCheckFailed reason).
+func isConditionFailure(err error) bool {
+	var tce *types.TransactionCanceledException
+	if errors.As(err, &tce) {
+		for _, reason := range tce.CancellationReasons {
+			if reason.Code != nil && *reason.Code == "ConditionalCheckFailed" {
+				return true
+			}
+		}
+		return false
+	}
+	var ccfe *types.ConditionalCheckFailedException
+	return errors.As(err, &ccfe)
 }
