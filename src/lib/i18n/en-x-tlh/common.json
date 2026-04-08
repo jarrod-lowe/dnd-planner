@@ -331,6 +331,14 @@
         "action-help-offer": {
           "no_action": "DIvI' tu'lu'be'"
         }
+      },
+      "hp": {
+        "set-hp-modifier-max": {
+          "name": "DIch DIvI' chenmoH"
+        },
+        "set-hp-modifier-current": {
+          "name": "DIch DIvI'"
+        }
       }
     }
   },
@@ -495,6 +503,7 @@
         "action-other": "DIvI' → latlh",
         "free": "Flavour",
         "rest": "nIb poH",
+        "health": "DIch DIvI'",
         "other": "latlh"
       },
       "move": {

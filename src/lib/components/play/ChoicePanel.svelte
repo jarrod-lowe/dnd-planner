@@ -88,9 +88,26 @@
     uiModel === 'move' ? resolveVarDefault('distance') : undefined
   );
 
+  // Auto-detect the var name for ability-score model (e.g. "score" or "modifier")
+  const abilityScoreVarName = $derived.by(() => {
+    if (uiModel !== 'ability-score' || !entry.rule.vars) return undefined;
+    const varNames = Object.keys(entry.rule.vars);
+    return varNames.length === 1 ? varNames[0] : varNames.find((v) => entry.rule.vars![v].capture);
+  });
+
   // Ability score model specific values
   const abilityScoreValue = $derived(
-    uiModel === 'ability-score' ? resolveVarDefault('score') : undefined
+    uiModel === 'ability-score' && abilityScoreVarName
+      ? resolveVarDefault(abilityScoreVarName)
+      : undefined
+  );
+
+  // Configurable slider range (falls back to 1/30 for backward compatibility)
+  const sliderMin = $derived(
+    uiModel === 'ability-score' ? ((entry.rule.ui?.sliderMin as number | undefined) ?? 1) : 1
+  );
+  const sliderMax = $derived(
+    uiModel === 'ability-score' ? ((entry.rule.ui?.sliderMax as number | undefined) ?? 30) : 30
   );
 
   // Skill proficiency model specific values
@@ -108,8 +125,8 @@
   // Using writable derived pattern for slider value
   let sliderValue = $derived.by(() => {
     if (uiModel === 'ability-score') {
-      if (entry.rule.selections?.score !== undefined) {
-        return entry.rule.selections.score as number;
+      if (abilityScoreVarName && entry.rule.selections?.[abilityScoreVarName] !== undefined) {
+        return entry.rule.selections[abilityScoreVarName] as number;
       }
       return abilityScoreValue ?? 10;
     }
@@ -132,8 +149,8 @@
     const value = parseInt(target.value, 10);
 
     if (onSelectionChange) {
-      if (uiModel === 'ability-score') {
-        onSelectionChange({ score: value });
+      if (uiModel === 'ability-score' && abilityScoreVarName) {
+        onSelectionChange({ [abilityScoreVarName]: value });
       } else if (uiModel === 'skill-proficiency') {
         onSelectionChange({ level: value });
       } else {
@@ -194,8 +211,8 @@
           <input
             type="range"
             class="move-slider"
-            min="1"
-            max="30"
+            min={sliderMin}
+            max={sliderMax}
             step="1"
             value={sliderValue}
             aria-label={$t(uiName ?? '')}
@@ -311,8 +328,8 @@
           <input
             type="range"
             class="move-slider"
-            min="1"
-            max="30"
+            min={sliderMin}
+            max={sliderMax}
             step="1"
             value={sliderValue}
             disabled

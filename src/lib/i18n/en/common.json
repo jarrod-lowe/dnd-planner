@@ -331,6 +331,14 @@
         "action-help-offer": {
           "no_action": "No action available"
         }
+      },
+      "hp": {
+        "set-hp-modifier-max": {
+          "name": "Max HP Modifier"
+        },
+        "set-hp-modifier-current": {
+          "name": "HP Modifier"
+        }
       }
     }
   },
@@ -495,6 +503,7 @@
         "action-other": "Action → Other",
         "free": "Flavour",
         "rest": "Rest",
+        "health": "Health",
         "other": "Other"
       },
       "move": {

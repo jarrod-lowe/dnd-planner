@@ -669,4 +669,99 @@ describe('ChoicePanel', () => {
     const valueSpan = container.querySelector('.ability-score-value');
     expect(valueSpan?.textContent).toBe('16');
   });
+
+  it('uses ui.sliderMin and ui.sliderMax for ability-score slider range', () => {
+    const entry: AvailableRuleEntry = {
+      rule: {
+        id: 'set-hp-modifier-max',
+        activities: [],
+        ui: {
+          model: 'ability-score',
+          section: 'health',
+          name: 'rule.dnd-5e-2024.hp.set-hp-modifier-max.name',
+          sliderMin: -10,
+          sliderMax: 30
+        },
+        vars: {
+          modifier: { capture: true, default: { number: 0 } }
+        }
+      } as Rule,
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    };
+
+    const { container } = render(ChoicePanel, {
+      props: { entry, editable: true }
+    });
+
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+    expect(slider).toBeTruthy();
+    expect(slider.min).toBe('-10');
+    expect(slider.max).toBe('30');
+    expect(slider.value).toBe('0');
+  });
+
+  it('resolves slider value from non-score var name', () => {
+    const entry: AvailableRuleEntry = {
+      rule: {
+        id: 'set-hp-modifier-max',
+        activities: [],
+        ui: {
+          model: 'ability-score',
+          section: 'health',
+          name: 'rule.dnd-5e-2024.hp.set-hp-modifier-max.name',
+          sliderMin: -10,
+          sliderMax: 30
+        },
+        vars: {
+          modifier: { capture: true, default: { number: 0 } }
+        },
+        selections: { modifier: 5 }
+      } as Rule,
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    };
+
+    const { container } = render(ChoicePanel, {
+      props: { entry, editable: true }
+    });
+
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+    expect(slider.value).toBe('5');
+  });
+
+  it('emits correct selection key for non-score var name', async () => {
+    const entry: AvailableRuleEntry = {
+      rule: {
+        id: 'set-hp-modifier-max',
+        activities: [],
+        ui: {
+          model: 'ability-score',
+          section: 'health',
+          name: 'rule.dnd-5e-2024.hp.set-hp-modifier-max.name',
+          sliderMin: -10,
+          sliderMax: 30
+        },
+        vars: {
+          modifier: { capture: true, default: { number: 0 } }
+        }
+      } as Rule,
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    };
+    const onSelectionChange = vi.fn();
+
+    const { container } = render(ChoicePanel, {
+      props: { entry, editable: true, onSelectionChange }
+    });
+
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+    slider.value = '18';
+    await fireEvent.input(slider);
+
+    expect(onSelectionChange).toHaveBeenCalledWith({ modifier: 18 });
+  });
 });

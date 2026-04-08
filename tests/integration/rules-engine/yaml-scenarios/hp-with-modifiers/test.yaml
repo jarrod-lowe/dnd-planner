@@ -1,0 +1,45 @@
+name: 'HP with modifiers'
+description: 'HP modifier for max HP and current HP, offered and persisted as effects'
+ruleGroups:
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/ability-scores
+  - class-paladin/class-paladin-level1
+steps:
+  # Base: hp.max = 10 (paladin d10), hp.current = 10
+  - evaluate:
+      assert:
+        facts:
+          hp.max: 10
+          hp.current: 10
+
+  # Accept max HP modifier +3
+  - addOffer:
+      id: set-hp-modifier-max
+      selections:
+        modifier: 3
+      assert:
+        facts:
+          hp.modifier.max: 3
+          hp.max: 13
+          hp.current: 13
+
+  # Accept current HP modifier -5 (damage)
+  - addOffer:
+      id: set-hp-modifier-current
+      selections:
+        modifier: -5
+      assert:
+        facts:
+          hp.modifier.max: 3
+          hp.max: 13
+          hp.modifier.current: -5
+          hp.current: 8
+
+  # End turn persists both effects
+  - endTurn:
+      assert:
+        facts:
+          hp.modifier.max: 3
+          hp.max: 13
+          hp.modifier.current: -5
+          hp.current: 8

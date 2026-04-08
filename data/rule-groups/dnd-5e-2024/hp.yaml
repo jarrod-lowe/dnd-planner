@@ -27,6 +27,8 @@ ruleGroups:
       # HP Copy - after all class levels contribute, copy max to current
       - id: hp-copy
         phase: normal
+        group:
+          - hp-copied
         after:
           - group: hp-set
         activities:
@@ -35,6 +37,124 @@ ruleGroups:
               fact: hp.max
             target:
               fact: hp.current
+
+      # === MAX HP MODIFIER OFFER ===
+      - id: set-hp-modifier-max-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            rule:
+              id: set-hp-modifier-max
+              group:
+                - __planned__
+              ui:
+                model: ability-score
+                section: health
+                name: rule.dnd-5e-2024.hp.set-hp-modifier-max.name
+                sliderMin: -10
+                sliderMax: 30
+              vars:
+                modifier:
+                  capture: true
+                  default:
+                    number: 0
+              activities:
+                - type: numberSet
+                  target:
+                    fact: hp.modifier.max
+                  source:
+                    var: modifier
+                - type: numberIncrement
+                  target:
+                    fact: hp.max
+                  source:
+                    var: modifier
+                - type: advertiseEffect
+                  rule:
+                    id: effect-hp-modifier-max
+                    phase: normal
+                    after:
+                      - group: hp-total
+                    group:
+                      - hp-set
+                    vars:
+                      modifier:
+                        capture: true
+                        default:
+                          number: 0
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: hp.modifier.max
+                        source:
+                          var: modifier
+                      - type: numberIncrement
+                        target:
+                          fact: hp.max
+                        source:
+                          var: modifier
+                      - type: advertiseEffect
+                        self: true
+
+      # === CURRENT HP MODIFIER OFFER ===
+      - id: set-hp-modifier-current-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            rule:
+              id: set-hp-modifier-current
+              group:
+                - __planned__
+              after:
+                - group: hp-copied
+              ui:
+                model: ability-score
+                section: health
+                name: rule.dnd-5e-2024.hp.set-hp-modifier-current.name
+                sliderMin: -30
+                sliderMax: 30
+              vars:
+                modifier:
+                  capture: true
+                  default:
+                    number: 0
+              activities:
+                - type: numberSet
+                  target:
+                    fact: hp.modifier.current
+                  source:
+                    var: modifier
+                - type: numberIncrement
+                  target:
+                    fact: hp.current
+                  source:
+                    var: modifier
+                - type: advertiseEffect
+                  rule:
+                    id: effect-hp-modifier-current
+                    phase: normal
+                    after:
+                      - group: hp-copied
+                    vars:
+                      modifier:
+                        capture: true
+                        default:
+                          number: 0
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: hp.modifier.current
+                        source:
+                          var: modifier
+                      - type: numberIncrement
+                        target:
+                          fact: hp.current
+                        source:
+                          var: modifier
+                      - type: advertiseEffect
+                        self: true
 
       # HP Display - show in resources section
       - id: hp-display

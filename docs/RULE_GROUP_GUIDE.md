@@ -755,6 +755,8 @@ Rule IDs should be descriptive and namespaced:
 
 ## 8. Testing and Verification
 
+Add suitable tests into `yaml-scenarios` when creating new rules.
+
 ### Automated
 
 - **`make test`** — Runs unit tests including translation completeness checks
