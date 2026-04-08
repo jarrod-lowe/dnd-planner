@@ -13,7 +13,14 @@
     onDeleteCharacter: (character: Character) => void;
   }
 
-  let { characters, isLoading, canCreateCharacter, onSelect, onCreateCharacter, onDeleteCharacter }: Props = $props();
+  let {
+    characters,
+    isLoading,
+    canCreateCharacter,
+    onSelect,
+    onCreateCharacter,
+    onDeleteCharacter
+  }: Props = $props();
 
   let characterToDelete: Character | null = $state(null);
   let isDeleting = $state(false);

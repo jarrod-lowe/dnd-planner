@@ -10,7 +10,14 @@
     errorMessage?: string | null;
   }
 
-  let { isOpen, isDeleting, characterName, onConfirm, onClose, errorMessage = null }: Props = $props();
+  let {
+    isOpen,
+    isDeleting,
+    characterName,
+    onConfirm,
+    onClose,
+    errorMessage = null
+  }: Props = $props();
 
   function handleCancel() {
     onClose();

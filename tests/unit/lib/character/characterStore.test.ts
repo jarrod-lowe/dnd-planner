@@ -115,8 +115,22 @@ describe('characterStore', () => {
       characterStore.reset();
 
       // Manually populate state with characters
-      const char1: Character = { characterId: 'char-1', userId: 'user-1', name: 'Aragorn', species: 'human', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' };
-      const char2: Character = { characterId: 'char-2', userId: 'user-1', name: 'Legolas', species: 'elf', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' };
+      const char1: Character = {
+        characterId: 'char-1',
+        userId: 'user-1',
+        name: 'Aragorn',
+        species: 'human',
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-01T00:00:00Z'
+      };
+      const char2: Character = {
+        characterId: 'char-2',
+        userId: 'user-1',
+        name: 'Legolas',
+        species: 'elf',
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-01T00:00:00Z'
+      };
       characterStore.state.characters = [char1, char2];
 
       await characterStore.deleteCharacter('char-1');
@@ -132,8 +146,22 @@ describe('characterStore', () => {
       const { characterStore } = await import('$lib/character/characterStore.svelte');
       characterStore.reset();
 
-      const char1: Character = { characterId: 'char-1', userId: 'user-1', name: 'Aragorn', species: 'human', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' };
-      const char2: Character = { characterId: 'char-2', userId: 'user-1', name: 'Legolas', species: 'elf', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' };
+      const char1: Character = {
+        characterId: 'char-1',
+        userId: 'user-1',
+        name: 'Aragorn',
+        species: 'human',
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-01T00:00:00Z'
+      };
+      const char2: Character = {
+        characterId: 'char-2',
+        userId: 'user-1',
+        name: 'Legolas',
+        species: 'elf',
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-01T00:00:00Z'
+      };
       characterStore.state.characters = [char1, char2];
       characterStore.state.selectedCharacter = char1;
 
@@ -149,8 +177,22 @@ describe('characterStore', () => {
       const { characterStore } = await import('$lib/character/characterStore.svelte');
       characterStore.reset();
 
-      const char1: Character = { characterId: 'char-1', userId: 'user-1', name: 'Aragorn', species: 'human', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' };
-      const char2: Character = { characterId: 'char-2', userId: 'user-1', name: 'Legolas', species: 'elf', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' };
+      const char1: Character = {
+        characterId: 'char-1',
+        userId: 'user-1',
+        name: 'Aragorn',
+        species: 'human',
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-01T00:00:00Z'
+      };
+      const char2: Character = {
+        characterId: 'char-2',
+        userId: 'user-1',
+        name: 'Legolas',
+        species: 'elf',
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-01T00:00:00Z'
+      };
       characterStore.state.characters = [char1, char2];
       characterStore.state.selectedCharacter = char2;
 

@@ -140,9 +140,7 @@ async function deleteCharacter(characterId: string): Promise<void> {
     ...state,
     characters: state.characters.filter((c) => c.characterId !== characterId),
     selectedCharacter:
-      state.selectedCharacter?.characterId === characterId
-        ? null
-        : state.selectedCharacter
+      state.selectedCharacter?.characterId === characterId ? null : state.selectedCharacter
   };
 
   if (state.selectedCharacter === null) {
