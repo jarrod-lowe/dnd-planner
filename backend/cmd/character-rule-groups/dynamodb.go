@@ -48,20 +48,36 @@ func (d *dbClient) QueryOwnership(ctx context.Context, userId, characterId strin
 // Returns ErrConditionalCheckFailed if the assignment already exists.
 func (d *dbClient) PutRuleGroup(ctx context.Context, characterId, ruleGroupId, userId string) (string, error) {
 	now := formatNow()
-	_, err := d.client.PutItem(ctx, &dynamodb.PutItemInput{
-		TableName: aws.String(d.tableName),
-		Item: map[string]types.AttributeValue{
-			"PK":          &types.AttributeValueMemberS{Value: fmt.Sprintf("CHAR#%s", characterId)},
-			"SK":          &types.AttributeValueMemberS{Value: fmt.Sprintf("RULEGROUP#%s", ruleGroupId)},
-			"type":        &types.AttributeValueMemberS{Value: "CHAR_RULEGROUP"},
-			"characterId": &types.AttributeValueMemberS{Value: characterId},
-			"ruleGroupId": &types.AttributeValueMemberS{Value: ruleGroupId},
-			"userId":      &types.AttributeValueMemberS{Value: userId},
-			"enabled":     &types.AttributeValueMemberBOOL{Value: true},
-			"createdAt":   &types.AttributeValueMemberS{Value: now},
-			"updatedAt":   &types.AttributeValueMemberS{Value: now},
+	_, err := d.client.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
+		TransactItems: []types.TransactWriteItem{
+			{
+				ConditionCheck: &types.ConditionCheck{
+					TableName: aws.String(d.tableName),
+					Key: map[string]types.AttributeValue{
+						"PK": &types.AttributeValueMemberS{Value: fmt.Sprintf("USER#%s", userId)},
+						"SK": &types.AttributeValueMemberS{Value: fmt.Sprintf("CHAR#%s", characterId)},
+					},
+					ConditionExpression: aws.String("attribute_exists(PK)"),
+				},
+			},
+			{
+				Put: &types.Put{
+					TableName: aws.String(d.tableName),
+					Item: map[string]types.AttributeValue{
+						"PK":          &types.AttributeValueMemberS{Value: fmt.Sprintf("CHAR#%s", characterId)},
+						"SK":          &types.AttributeValueMemberS{Value: fmt.Sprintf("RULEGROUP#%s", ruleGroupId)},
+						"type":        &types.AttributeValueMemberS{Value: "CHAR_RULEGROUP"},
+						"characterId": &types.AttributeValueMemberS{Value: characterId},
+						"ruleGroupId": &types.AttributeValueMemberS{Value: ruleGroupId},
+						"userId":      &types.AttributeValueMemberS{Value: userId},
+						"enabled":     &types.AttributeValueMemberBOOL{Value: true},
+						"createdAt":   &types.AttributeValueMemberS{Value: now},
+						"updatedAt":   &types.AttributeValueMemberS{Value: now},
+					},
+					ConditionExpression: aws.String("attribute_not_exists(PK)"),
+				},
+			},
 		},
-		ConditionExpression: aws.String("attribute_not_exists(PK)"),
 	})
 	if err != nil {
 		var ccfe *types.ConditionalCheckFailedException

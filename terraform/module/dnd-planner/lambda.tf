@@ -142,6 +142,7 @@ data "aws_iam_policy_document" "character_rule_groups_dynamodb" {
       "dynamodb:GetItem",
       "dynamodb:PutItem",
       "dynamodb:DeleteItem",
+      "dynamodb:TransactWriteItems",
     ]
     resources = [
       aws_dynamodb_table.data.arn,
@@ -160,6 +161,52 @@ module "character_rule_groups" {
   name                = "${local.resource_prefix}-character-rule-groups"
   zip_path            = "${path.module}/../../../terraform/dummy-lambda.zip"
   execution_role      = aws_iam_role.character_rule_groups.arn
+  api_source_arn      = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
+  log_retention_days  = var.lambda_log_retention_days
+  sns_alarm_topic_arn = var.sns_alarm_topic_arn
+  environment_variables = {
+    TABLE_NAME = aws_dynamodb_table.data.name
+  }
+}
+
+# Delete-character Lambda for character deletion API
+resource "aws_iam_role" "delete_character" {
+  name               = "${local.resource_prefix}-delete-character"
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "delete_character_basic" {
+  role       = aws_iam_role.delete_character.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+data "aws_iam_policy_document" "delete_character_dynamodb" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "dynamodb:TransactWriteItems",
+      "dynamodb:DeleteItem",
+      "dynamodb:UpdateItem",
+      "dynamodb:Query",
+      "dynamodb:BatchWriteItem",
+    ]
+    resources = [
+      aws_dynamodb_table.data.arn,
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "delete_character_dynamodb" {
+  name   = "${local.resource_prefix}-delete-character-dynamodb"
+  role   = aws_iam_role.delete_character.name
+  policy = data.aws_iam_policy_document.delete_character_dynamodb.json
+}
+
+module "delete_character" {
+  source              = "../lambda"
+  name                = "${local.resource_prefix}-delete-character"
+  zip_path            = "${path.module}/../../../terraform/dummy-lambda.zip"
+  execution_role      = aws_iam_role.delete_character.arn
   api_source_arn      = "${aws_api_gateway_rest_api.api.execution_arn}/*/*"
   log_retention_days  = var.lambda_log_retention_days
   sns_alarm_topic_arn = var.sns_alarm_topic_arn

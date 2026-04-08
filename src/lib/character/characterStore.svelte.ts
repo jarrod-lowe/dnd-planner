@@ -2,7 +2,7 @@
  * Character store for managing character state.
  * Uses Svelte 5 $state rune for reactivity.
  */
-import { apiGet, apiPost } from '$lib/api/client';
+import { apiGet, apiPost, apiDelete } from '$lib/api/client';
 import type { Character, CharacterState } from './types';
 
 const STORAGE_KEY = 'dnd-planner-selected-character';
@@ -125,6 +125,31 @@ function reset(): void {
   state = { ...initialState };
 }
 
+/**
+ * Delete a character.
+ * DELETEs to /api/characters/{characterId}, removes from state, clears selection if needed.
+ */
+async function deleteCharacter(characterId: string): Promise<void> {
+  const response = await apiDelete('/api/characters/' + characterId);
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete character: ${response.status}`);
+  }
+
+  state = {
+    ...state,
+    characters: state.characters.filter((c) => c.characterId !== characterId),
+    selectedCharacter:
+      state.selectedCharacter?.characterId === characterId
+        ? null
+        : state.selectedCharacter
+  };
+
+  if (state.selectedCharacter === null) {
+    localStorage.removeItem(STORAGE_KEY);
+  }
+}
+
 export const characterStore = {
   get state() {
     return state;
@@ -133,5 +158,6 @@ export const characterStore = {
   selectCharacter,
   clearSelection,
   createCharacter,
+  deleteCharacter,
   reset
 };

@@ -396,7 +396,12 @@
     "creating": "chenmoHlI'...",
     "noCharacters": "nuv DaDajbe' ",
     "loading": "nuv DIvI'...",
-    "createError": "nuv chenmoHlaHbe'. yInIDqa'."
+    "createError": "nuv chenmoHlaHbe'. yInIDqa'.",
+    "delete": "Qaw'",
+    "deleteConfirm": "{name} Qaw' net DaneH'a'?",
+    "deleteWarning": "vam choqHa'lu'be'.",
+    "deleting": "Qaw'lI'...",
+    "deleteError": "nuv Qaw'laHbe'. yInIDqa'."
   },
   "species": {
     "label": "Segh",

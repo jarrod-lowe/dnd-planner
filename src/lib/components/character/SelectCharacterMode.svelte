@@ -2,6 +2,7 @@
   import { t } from '$lib/i18n';
   import type { Character } from '$lib/character/types';
   import CharacterCard from './CharacterCard.svelte';
+  import DeleteCharacterDialog from './DeleteCharacterDialog.svelte';
 
   interface Props {
     characters: Character[];
@@ -9,9 +10,41 @@
     canCreateCharacter: boolean;
     onSelect: (character: Character) => void;
     onCreateCharacter: () => void;
+    onDeleteCharacter: (character: Character) => void;
   }
 
-  let { characters, isLoading, canCreateCharacter, onSelect, onCreateCharacter }: Props = $props();
+  let { characters, isLoading, canCreateCharacter, onSelect, onCreateCharacter, onDeleteCharacter }: Props = $props();
+
+  let characterToDelete: Character | null = $state(null);
+  let isDeleting = $state(false);
+  let deleteError: string | null = $state(null);
+
+  function handleDeleteClick(character: Character) {
+    characterToDelete = character;
+    deleteError = null;
+  }
+
+  async function handleDeleteConfirm() {
+    if (!characterToDelete) return;
+
+    isDeleting = true;
+    deleteError = null;
+
+    try {
+      await onDeleteCharacter(characterToDelete);
+      characterToDelete = null;
+    } catch {
+      deleteError = $t('character.deleteError');
+    } finally {
+      isDeleting = false;
+    }
+  }
+
+  function handleDeleteClose() {
+    if (isDeleting) return;
+    characterToDelete = null;
+    deleteError = null;
+  }
 </script>
 
 <div class="select-character-mode">
@@ -24,7 +57,7 @@
   {:else}
     <div class="select-character-mode__grid">
       {#each characters as character (character.characterId)}
-        <CharacterCard {character} {onSelect} />
+        <CharacterCard {character} {onSelect} onDelete={handleDeleteClick} />
       {/each}
     </div>
   {/if}
@@ -39,6 +72,15 @@
     </button>
   {/if}
 </div>
+
+<DeleteCharacterDialog
+  isOpen={characterToDelete !== null}
+  {isDeleting}
+  characterName={characterToDelete?.name ?? ''}
+  onConfirm={handleDeleteConfirm}
+  onClose={handleDeleteClose}
+  errorMessage={deleteError}
+/>
 
 <style>
   .select-character-mode {

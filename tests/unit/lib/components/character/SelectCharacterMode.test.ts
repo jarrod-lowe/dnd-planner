@@ -75,7 +75,8 @@ describe('SelectCharacterMode', () => {
         isLoading: true,
         canCreateCharacter: false,
         onSelect: vi.fn(),
-        onCreateCharacter: vi.fn()
+        onCreateCharacter: vi.fn(),
+        onDeleteCharacter: vi.fn()
       }
     });
 
@@ -90,7 +91,8 @@ describe('SelectCharacterMode', () => {
         isLoading: false,
         canCreateCharacter: false,
         onSelect: vi.fn(),
-        onCreateCharacter: vi.fn()
+        onCreateCharacter: vi.fn(),
+        onDeleteCharacter: vi.fn()
       }
     });
 
@@ -105,7 +107,8 @@ describe('SelectCharacterMode', () => {
         isLoading: false,
         canCreateCharacter: false,
         onSelect: vi.fn(),
-        onCreateCharacter: vi.fn()
+        onCreateCharacter: vi.fn(),
+        onDeleteCharacter: vi.fn()
       }
     });
 
@@ -120,7 +123,8 @@ describe('SelectCharacterMode', () => {
         isLoading: false,
         canCreateCharacter: false,
         onSelect: vi.fn(),
-        onCreateCharacter: vi.fn()
+        onCreateCharacter: vi.fn(),
+        onDeleteCharacter: vi.fn()
       }
     });
 
@@ -138,11 +142,12 @@ describe('SelectCharacterMode', () => {
         isLoading: false,
         canCreateCharacter: false,
         onSelect,
-        onCreateCharacter: vi.fn()
+        onCreateCharacter: vi.fn(),
+        onDeleteCharacter: vi.fn()
       }
     });
 
-    const firstCard = container.querySelector('.character-card') as HTMLElement;
+    const firstCard = container.querySelector('.character-card__body') as HTMLElement;
     firstCard?.click();
 
     expect(onSelect).toHaveBeenCalledWith(mockCharacters[0]);
@@ -156,7 +161,8 @@ describe('SelectCharacterMode', () => {
         isLoading: false,
         canCreateCharacter: false,
         onSelect: vi.fn(),
-        onCreateCharacter: vi.fn()
+        onCreateCharacter: vi.fn(),
+        onDeleteCharacter: vi.fn()
       }
     });
 
@@ -171,7 +177,8 @@ describe('SelectCharacterMode', () => {
         isLoading: false,
         canCreateCharacter: true,
         onSelect: vi.fn(),
-        onCreateCharacter: vi.fn()
+        onCreateCharacter: vi.fn(),
+        onDeleteCharacter: vi.fn()
       }
     });
 
@@ -188,7 +195,8 @@ describe('SelectCharacterMode', () => {
         isLoading: false,
         canCreateCharacter: true,
         onSelect: vi.fn(),
-        onCreateCharacter
+        onCreateCharacter,
+        onDeleteCharacter: vi.fn()
       }
     });
 
