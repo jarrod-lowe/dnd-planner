@@ -167,3 +167,133 @@ module "character_rule_groups" {
     TABLE_NAME = aws_dynamodb_table.data.name
   }
 }
+
+# Cleanup Character Lambda for async deletion of character records
+resource "aws_iam_role" "cleanup_character" {
+  name               = "${local.resource_prefix}-cleanup-character"
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "cleanup_character_basic" {
+  role       = aws_iam_role.cleanup_character.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+data "aws_iam_policy_document" "cleanup_character_dynamodb" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "dynamodb:Query",
+      "dynamodb:BatchWriteItem",
+      "dynamodb:DeleteItem",
+    ]
+    resources = [
+      aws_dynamodb_table.data.arn,
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "dynamodb:DescribeStream",
+      "dynamodb:GetRecords",
+      "dynamodb:GetShardIterator",
+      "dynamodb:ListStreams",
+    ]
+    resources = [
+      aws_dynamodb_table.data.stream_arn,
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "cleanup_character_dynamodb" {
+  name   = "${local.resource_prefix}-cleanup-character-dynamodb"
+  role   = aws_iam_role.cleanup_character.name
+  policy = data.aws_iam_policy_document.cleanup_character_dynamodb.json
+}
+
+data "aws_iam_policy_document" "cleanup_character_sqs" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "sqs:SendMessage",
+    ]
+    resources = [
+      aws_sqs_queue.cleanup_character_dlq.arn,
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "cleanup_character_sqs" {
+  name   = "${local.resource_prefix}-cleanup-character-sqs"
+  role   = aws_iam_role.cleanup_character.name
+  policy = data.aws_iam_policy_document.cleanup_character_sqs.json
+}
+
+resource "aws_sqs_queue" "cleanup_character_dlq" {
+  name                      = "${local.resource_prefix}-cleanup-character-dlq"
+  message_retention_seconds = 1209600
+  sqs_managed_sse_enabled   = true
+
+  tags = {
+    Name = "${local.resource_prefix}-cleanup-character-dlq"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "cleanup_character_dlq" {
+  alarm_name          = "${local.resource_prefix}-cleanup-character-dlq"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "ApproximateNumberOfMessagesVisible"
+  namespace           = "AWS/SQS"
+  period              = 60
+  statistic           = "Sum"
+  threshold           = 1
+  alarm_description   = "Cleanup character DLQ has messages — manual investigation needed"
+
+  dimensions = {
+    QueueName = aws_sqs_queue.cleanup_character_dlq.name
+  }
+
+  alarm_actions = [var.sns_alarm_topic_arn]
+  ok_actions    = [var.sns_alarm_topic_arn]
+}
+
+module "cleanup_character" {
+  source              = "../lambda"
+  name                = "${local.resource_prefix}-cleanup-character"
+  zip_path            = "${path.module}/../../../terraform/dummy-lambda.zip"
+  execution_role      = aws_iam_role.cleanup_character.arn
+  log_retention_days  = var.lambda_log_retention_days
+  sns_alarm_topic_arn = var.sns_alarm_topic_arn
+  environment_variables = {
+    TABLE_NAME = aws_dynamodb_table.data.name
+    DLQ_URL    = aws_sqs_queue.cleanup_character_dlq.id
+  }
+}
+
+resource "aws_lambda_event_source_mapping" "cleanup_character_stream" {
+  event_source_arn  = aws_dynamodb_table.data.stream_arn
+  function_name     = module.cleanup_character.arn
+  starting_position = "LATEST"
+
+  filter_criteria {
+    filter {
+      pattern = jsonencode({
+        eventName = ["REMOVE"]
+        dynamodb = {
+          Keys = {
+            PK = {
+              S = [{ prefix = "USER#" }]
+            }
+            SK = {
+              S = [{ prefix = "CHAR#" }]
+            }
+          }
+        }
+      })
+    }
+  }
+
+  function_response_types = ["ReportBatchItemFailures"]
+}

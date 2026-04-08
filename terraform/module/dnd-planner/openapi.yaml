@@ -274,6 +274,89 @@ paths:
                 #end
                 }
                 #end
+    delete:
+      summary: Delete a character
+      description: Deletes a character owned by the authenticated user and refunds their character quota
+      operationId: deleteCharacter
+      parameters:
+        - name: characterId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Character deleted successfully
+        '401':
+          description: Unauthorized - authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '404':
+          description: Not found - character not found or not owned by user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+      x-amazon-apigateway-integration:
+        type: aws
+        credentials: '${api_gateway_role_arn}'
+        uri: 'arn:aws:apigateway:${aws_region}:dynamodb:action/TransactWriteItems'
+        httpMethod: POST
+        requestTemplates:
+          application/json: |
+            {
+              "TransactItems": [
+                {
+                  "Delete": {
+                    "TableName": "${dynamodb_table_name}",
+                    "Key": {
+                      "PK": {"S": "USER#$context.authorizer.claims.sub"},
+                      "SK": {"S": "CHAR#$input.params('characterId')"}
+                    },
+                    "ConditionExpression": "attribute_exists(PK)"
+                  }
+                },
+                {
+                  "Update": {
+                    "TableName": "${dynamodb_table_name}",
+                    "Key": {
+                      "PK": {"S": "USER#$context.authorizer.claims.sub"},
+                      "SK": {"S": "META#"}
+                    },
+                    "UpdateExpression": "ADD charQuotaRemaining :inc",
+                    "ExpressionAttributeValues": {
+                      ":inc": {"N": "1"}
+                    }
+                  }
+                }
+              ]
+            }
+        responses:
+          default:
+            statusCode: '204'
+            responseTemplates:
+              application/json: ''
+          '.*TransactionCanceledException.*':
+            statusCode: '404'
+            responseTemplates:
+              application/json: '{"error": "Character not found"}'
 
   /user:
     get:

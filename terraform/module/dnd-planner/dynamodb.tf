@@ -2,6 +2,9 @@ resource "aws_dynamodb_table" "data" {
   name         = "${local.resource_prefix}-data"
   billing_mode = "PAY_PER_REQUEST"
 
+  stream_enabled   = true
+  stream_view_type = "KEYS_ONLY"
+
   attribute {
     name = "PK"
     type = "S"

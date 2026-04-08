@@ -154,6 +154,9 @@
           {canCreateCharacter}
           onSelect={(char) => characterStore.selectCharacter(char)}
           onCreateCharacter={() => (showDialog = true)}
+          onDeleteCharacter={async (char) => {
+            await characterStore.deleteCharacter(char.characterId);
+          }}
         />
       {/if}
     </main>
