@@ -1,0 +1,40 @@
+name: 'AC with paladin level 1'
+description: 'AC calculated for a paladin with dexterity and class rule groups loaded'
+ruleGroups:
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/ability-scores
+  - class-paladin/class-paladin-level1
+steps:
+  # Default: ac.value = 10 + 0
+  - evaluate:
+      assert:
+        facts:
+          ac.value: 10
+
+  # Set DEX to 12 (modifier +1)
+  - addOffer:
+      id: set-dexterity
+      selections:
+        score: 12
+      assert:
+        facts:
+          dex.modifier: 1
+          ac.base: 10
+          ac.dexBonus: 1
+          ac.value: 11
+
+  # Set DEX to 16 (modifier +3)
+  - updateSelections:
+      id: set-dexterity
+      selections:
+        score: 16
+      assert:
+        facts:
+          dex.modifier: 3
+          ac.value: 13
+
+  # Verify AC persists across turns
+  - endTurn:
+      assert:
+        facts:
+          ac.value: 13

@@ -1,0 +1,16 @@
+name: 'AC base default'
+description: 'Default AC is 10 (base) + 0 (no dex modifier)'
+ruleGroups:
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/ability-scores
+steps:
+  # Without dex set, ac.value = 10 (base) + 0 (dexBonus default)
+  - evaluate:
+      assert:
+        facts:
+          ac.base: 10
+          ac.dexBonus: 0
+          ac.armorBonus: 0
+          ac.shieldBonus: 0
+          ac.miscBonus: 0
+          ac.value: 10
