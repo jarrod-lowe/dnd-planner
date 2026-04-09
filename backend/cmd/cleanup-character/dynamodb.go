@@ -62,8 +62,12 @@ func batchDeleteItems(ctx context.Context, db dbClient, items []map[string]types
 
 		writeRequests := make([]types.WriteRequest, 0, end-i)
 		for _, item := range items[i:end] {
+			key := map[string]types.AttributeValue{
+				"PK": item["PK"],
+				"SK": item["SK"],
+			}
 			writeRequests = append(writeRequests, types.WriteRequest{
-				DeleteRequest: &types.DeleteRequest{Key: item},
+				DeleteRequest: &types.DeleteRequest{Key: key},
 			})
 		}
 

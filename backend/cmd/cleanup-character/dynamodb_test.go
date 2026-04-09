@@ -102,6 +102,60 @@ func TestBatchDeleteItems_DeletesInChunksOf25(t *testing.T) {
 	}
 }
 
+func TestBatchDeleteItems_ExtractsOnlyKeyAttributes(t *testing.T) {
+	ctx := context.Background()
+
+	// Items have extra fields beyond PK/SK (as DynamoDB Query returns)
+	items := []map[string]types.AttributeValue{
+		{
+			"PK":          &types.AttributeValueMemberS{Value: "CHAR#char-456"},
+			"SK":          &types.AttributeValueMemberS{Value: "RULEGROUP#turn-rest"},
+			"ruleGroupId": &types.AttributeValueMemberS{Value: "turn-rest"},
+			"enabled":     &types.AttributeValueMemberBOOL{Value: true},
+			"userId":      &types.AttributeValueMemberS{Value: "user-123"},
+		},
+		{
+			"PK":          &types.AttributeValueMemberS{Value: "CHAR#char-456"},
+			"SK":          &types.AttributeValueMemberS{Value: "RULEGROUP#action-economy"},
+			"ruleGroupId": &types.AttributeValueMemberS{Value: "action-economy"},
+			"enabled":     &types.AttributeValueMemberBOOL{Value: true},
+		},
+	}
+
+	db := &mockDB{
+		batchWriteFunc: func(ctx context.Context, writeRequests []types.WriteRequest) error {
+			if len(writeRequests) != 2 {
+				t.Fatalf("expected 2 write requests, got %d", len(writeRequests))
+			}
+			for _, wr := range writeRequests {
+				key := wr.DeleteRequest.Key
+				// DeleteRequest key must ONLY contain PK and SK
+				if len(key) != 2 {
+					t.Errorf("expected key to have exactly 2 attributes (PK, SK), got %d: %v", len(key), key)
+				}
+				if _, ok := key["PK"]; !ok {
+					t.Error("expected key to contain PK")
+				}
+				if _, ok := key["SK"]; !ok {
+					t.Error("expected key to contain SK")
+				}
+				if _, ok := key["ruleGroupId"]; ok {
+					t.Error("expected key NOT to contain ruleGroupId")
+				}
+				if _, ok := key["enabled"]; ok {
+					t.Error("expected key NOT to contain enabled")
+				}
+			}
+			return nil
+		},
+	}
+
+	err := batchDeleteItems(ctx, db, items)
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+}
+
 func TestDeleteCustomRuleGroup(t *testing.T) {
 	ctx := context.Background()
 	characterId := "char-456"
