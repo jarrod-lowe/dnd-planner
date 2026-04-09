@@ -352,7 +352,11 @@ paths:
           default:
             statusCode: '204'
             responseTemplates:
-              application/json: ''
+              application/json: |
+                #if($input.path('$').__type)
+                #set($context.responseOverride.status = 500)
+                {"error": "Failed to delete character"}
+                #end
           '.*TransactionCanceledException.*ConditionalCheckFailed.*':
             statusCode: '404'
             responseTemplates:

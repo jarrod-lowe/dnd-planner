@@ -296,4 +296,6 @@ resource "aws_lambda_event_source_mapping" "cleanup_character_stream" {
   }
 
   function_response_types = ["ReportBatchItemFailures"]
+
+  depends_on = [aws_iam_role_policy.cleanup_character_dynamodb]
 }
