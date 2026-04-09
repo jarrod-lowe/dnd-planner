@@ -353,10 +353,14 @@ paths:
             statusCode: '204'
             responseTemplates:
               application/json: ''
-          '.*TransactionCanceledException.*':
+          '.*TransactionCanceledException.*ConditionalCheckFailed.*':
             statusCode: '404'
             responseTemplates:
               application/json: '{"error": "Character not found"}'
+          '.*TransactionCanceledException.*':
+            statusCode: '500'
+            responseTemplates:
+              application/json: '{"error": "Failed to delete character"}'
 
   /user:
     get:

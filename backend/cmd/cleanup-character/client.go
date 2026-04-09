@@ -33,6 +33,7 @@ func (d *dynamoDBClient) query(ctx context.Context, pk string) ([]map[string]typ
 				":pk": &types.AttributeValueMemberS{Value: pk},
 			},
 			ExclusiveStartKey: lastKey,
+			ConsistentRead:    aws.Bool(true),
 		})
 		if err != nil {
 			return nil, err
