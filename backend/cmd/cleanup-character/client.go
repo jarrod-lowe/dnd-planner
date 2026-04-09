@@ -48,12 +48,19 @@ func (d *dynamoDBClient) query(ctx context.Context, pk string) ([]map[string]typ
 }
 
 func (d *dynamoDBClient) batchWrite(ctx context.Context, writeRequests []types.WriteRequest) error {
-	_, err := d.client.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
+	out, err := d.client.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
 		RequestItems: map[string][]types.WriteRequest{
 			d.tableName: writeRequests,
 		},
 	})
-	return err
+	if err != nil {
+		return err
+	}
+
+	if unprocessed := out.UnprocessedItems; len(unprocessed) > 0 && len(unprocessed[d.tableName]) > 0 {
+		return fmt.Errorf("BatchWriteItem: %d items unprocessed", len(unprocessed[d.tableName]))
+	}
+	return nil
 }
 
 func (d *dynamoDBClient) delete(ctx context.Context, pk, sk string) error {
