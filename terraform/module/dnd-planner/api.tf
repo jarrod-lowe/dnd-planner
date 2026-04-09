@@ -77,7 +77,9 @@ resource "aws_iam_role_policy" "api_dynamodb" {
         Action = [
           "dynamodb:Query",
           "dynamodb:BatchGetItem",
-          "dynamodb:UpdateItem"
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:TransactWriteItems"
         ]
         Resource = aws_dynamodb_table.data.arn
       }

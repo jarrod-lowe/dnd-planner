@@ -396,7 +396,12 @@
     "creating": "Creating...",
     "noCharacters": "You don't have any characters yet.",
     "loading": "Loading characters...",
-    "createError": "Failed to create character. Please try again."
+    "createError": "Failed to create character. Please try again.",
+    "delete": "Delete",
+    "deleteConfirm": "Are you sure you want to delete {name}?",
+    "deleteWarning": "This action cannot be undone.",
+    "deleting": "Deleting...",
+    "deleteError": "Failed to delete character. Please try again."
   },
   "species": {
     "label": "Species",

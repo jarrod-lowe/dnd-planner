@@ -321,4 +321,4 @@ The architecture supports:
 - Visibility of effects
 - Fix main page length
 - Rule generator AI prompt
-- Delete character option
+- Fix quotas
