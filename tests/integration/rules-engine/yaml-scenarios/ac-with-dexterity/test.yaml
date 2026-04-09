@@ -1,0 +1,46 @@
+name: 'AC with dexterity'
+description: 'AC calculated with positive, zero, and negative dexterity modifiers'
+ruleGroups:
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/ability-scores
+steps:
+  # Baseline evaluation
+  - evaluate:
+      assert:
+        facts:
+          ac.base: 10
+          ac.value: 10
+
+  # Set DEX to 14 (modifier +2)
+  - addOffer:
+      id: set-dexterity
+      selections:
+        score: 14
+      assert:
+        facts:
+          dex.modifier: 2
+          ac.base: 10
+          ac.dexBonus: 2
+          ac.value: 12
+
+  # Update DEX to 10 (modifier +0)
+  - updateSelections:
+      id: set-dexterity
+      selections:
+        score: 10
+      assert:
+        facts:
+          dex.modifier: 0
+          ac.dexBonus: 0
+          ac.value: 10
+
+  # Update DEX to 8 (modifier -1)
+  - updateSelections:
+      id: set-dexterity
+      selections:
+        score: 8
+      assert:
+        facts:
+          dex.modifier: -1
+          ac.dexBonus: -1
+          ac.value: 9

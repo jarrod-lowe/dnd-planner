@@ -482,6 +482,7 @@
       "hitDie": "QIp DIvI'",
       "hitDieValue": "{{used}}/{{max}} DIvI' d{{dieSize}}",
       "hp": "HP",
+      "ac": "DIch Jun",
       "todo": "TODO",
       "sections": {
         "turn": "wa'DIch",

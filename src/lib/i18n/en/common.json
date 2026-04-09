@@ -462,6 +462,7 @@
       "hitDie": "Hit Die",
       "hitDieValue": "{{used}}/{{max}} d{{dieSize}}",
       "hp": "HP",
+      "ac": "AC",
       "todo": "TODO",
       "sections": {
         "turn": "Turn",
