@@ -354,6 +354,12 @@
         },
         "attack-unarmed-strike-offer": {
           "no_action": "DIvI' tu'lu'be'"
+        },
+        "greataxe": {
+          "name": "nuH jen"
+        },
+        "attack-greataxe-offer": {
+          "no_action": "DIvI' tu'lu'be'"
         }
       },
       "hp": {

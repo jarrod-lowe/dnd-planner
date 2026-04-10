@@ -354,6 +354,12 @@
         },
         "attack-unarmed-strike-offer": {
           "no_action": "No action available"
+        },
+        "greataxe": {
+          "name": "Greataxe"
+        },
+        "attack-greataxe-offer": {
+          "no_action": "No action available"
         }
       },
       "hp": {

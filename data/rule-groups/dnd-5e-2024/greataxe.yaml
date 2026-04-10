@@ -1,0 +1,92 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: greataxe
+    requires:
+      - attacks
+    translations:
+      en:
+        name: Greataxe
+        description: Attack rules for the greataxe, a martial melee weapon dealing 1d12 slashing damage
+        keywords: [attack, greataxe, axe, weapon, melee, heavy, two-handed, damage]
+      en-x-tlh:
+        name: nuH jen
+        description: nuH jen 'ej jey' naQ
+        keywords: [nuH, jen, jey']
+    rules:
+      # Compute greataxe hit bonus = STR modifier + proficiency bonus
+      - id: compute-greataxe-hit-bonus
+        phase: normal
+        activities:
+          - type: numberSum
+            target:
+              fact: attack.greataxe.hitBonus
+            sources:
+              - fact: str.modifier
+              - fact: proficiency.bonus
+
+      # Compute greataxe damage bonus = STR modifier
+      - id: compute-greataxe-damage-bonus
+        phase: normal
+        activities:
+          - type: numberCopy
+            source:
+              fact: str.modifier
+            target:
+              fact: attack.greataxe.damageBonus
+
+      # Offer greataxe attack
+      - id: attack-greataxe-offer
+        after:
+          - group: action
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: actions.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.attacks.attack-greataxe-offer.no_action
+                    severity: error
+            rule:
+              id: greataxe
+              ui:
+                model: attack
+                section: action-other
+                name: rule.dnd-5e-2024.attacks.greataxe.name
+              group:
+                - __planned__
+                - action
+              vars:
+                range:
+                  default:
+                    number: 5
+                hitBonus:
+                  capture: true
+                  default:
+                    fact: attack.greataxe.hitBonus
+                damageDie:
+                  default:
+                    number: 12
+                damageBonus:
+                  capture: true
+                  default:
+                    fact: attack.greataxe.damageBonus
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: actions.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.attacks.attack-greataxe-offer.no_action
+                  when:
+                    fact: actions.remaining
+                    operator: lessThan
+                    value: 0

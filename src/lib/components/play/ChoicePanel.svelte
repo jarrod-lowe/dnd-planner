@@ -152,8 +152,8 @@
   const initiativeNat1 = $derived(initiativeRollResult === 1);
 
   function formatBonus(val: number | undefined): string {
-    if (val === undefined || val === 0) return '';
-    return val > 0 ? `+${val}` : `${val}`;
+    if (val === undefined) return '';
+    return val >= 0 ? `+${val}` : `${val}`;
   }
 
   function playRollAnimation(element: HTMLElement): void {
