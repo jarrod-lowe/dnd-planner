@@ -94,6 +94,9 @@
         ? () => {
             playStore.reset();
             characterStore.clearSelection();
+            manageRulesActive = false;
+            editCustomRulesActive = false;
+            viewFactsActive = false;
           }
         : undefined}
       showManageRules={!!characterStore.state.selectedCharacter &&
