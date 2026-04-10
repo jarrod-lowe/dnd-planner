@@ -12,10 +12,9 @@
 
   interface Props {
     character: Character;
-    onBack: () => void;
   }
 
-  let { character, onBack }: Props = $props();
+  let { character }: Props = $props();
 
   // Get available rules from engine output
   const availableRules = $derived(playStore.state.engineOutput?.availableRules ?? []);
@@ -60,14 +59,6 @@
 </script>
 
 <div class="play-character">
-  <button
-    class="play-character__back"
-    onclick={() => onBack()}
-    aria-label={$t('play.backToSelection')}
-  >
-    {$t('play.backToSelection')}
-  </button>
-
   {#if playStore.state.isLoadingRuleGroups}
     <div class="play-character__loading">{$t('play.choices.loading')}</div>
   {:else if playStore.state.ruleGroupError}
@@ -113,30 +104,6 @@
     flex-direction: column;
     width: 100%;
     height: 100%;
-  }
-
-  .play-character__back {
-    align-self: flex-start;
-    background: transparent;
-    border: 1px solid var(--md-sys-color-outline);
-    border-radius: var(--radius-md);
-    color: var(--md-sys-color-on-surface);
-    cursor: pointer;
-    font-family: var(--font-body);
-    font-size: var(--font-size-sm);
-    padding: var(--spacing-sm) var(--spacing-md);
-    margin-bottom: var(--spacing-md);
-    min-height: 2.5rem;
-    transition: background-color var(--transition-fast);
-  }
-
-  .play-character__back:hover {
-    background: var(--md-sys-color-surface-container);
-  }
-
-  .play-character__back:focus-visible {
-    outline: 2px solid var(--md-sys-color-primary);
-    outline-offset: 2px;
   }
 
   .play-character__loading,
