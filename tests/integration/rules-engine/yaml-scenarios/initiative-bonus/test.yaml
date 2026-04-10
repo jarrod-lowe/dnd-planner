@@ -1,0 +1,38 @@
+name: 'Initiative Bonus'
+description: >
+  Initiative bonus equals DEX modifier. Roll Initiative offer is available
+  as a free action and does not consume action economy resources.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/initiative
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          initiative.bonus: 0
+        offers:
+          exists:
+            - set-dexterity
+            - roll-initiative
+
+  - addOffer:
+      id: set-dexterity
+      selections:
+        score: 14
+      assert:
+        facts:
+          dex.modifier: 2
+          initiative.bonus: 2
+
+  - addOffer:
+      id: roll-initiative
+      assert:
+        facts:
+          actions.remaining: 1
+        offers:
+          exists:
+            - roll-initiative

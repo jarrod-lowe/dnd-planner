@@ -125,9 +125,15 @@
     uiModel === 'attack' ? resolveVarDefault('damageBonus') : undefined
   );
 
+  // Initiative roll model specific values
+  const initiativeBonus = $derived(
+    uiModel === 'initiative-roll' ? resolveVarDefault('initiativeBonus') : undefined
+  );
+
   // Dice roll state and functions
   let hitRollResult: number | null = $state(null);
   let damageRollResult: number | null = $state(null);
+  let initiativeRollResult: number | null = $state(null);
 
   // Derived roll totals and crit detection
   const hitTotal = $derived(hitRollResult !== null ? hitRollResult + (attackHitBonus ?? 0) : null);
@@ -136,6 +142,11 @@
   );
   const isNat20 = $derived(hitRollResult === 20);
   const isNat1 = $derived(hitRollResult === 1);
+  const initiativeTotal = $derived(
+    initiativeRollResult !== null ? initiativeRollResult + (initiativeBonus ?? 0) : null
+  );
+  const initiativeNat20 = $derived(initiativeRollResult === 20);
+  const initiativeNat1 = $derived(initiativeRollResult === 1);
 
   function formatBonus(val: number | undefined): string {
     if (val === undefined || val === 0) return '';
@@ -160,6 +171,11 @@
       damageRollResult = Math.floor(Math.random() * die) + 1;
       playRollAnimation(event.currentTarget as HTMLElement);
     }
+  }
+
+  function rollInitiative(event: MouseEvent): void {
+    initiativeRollResult = Math.floor(Math.random() * 20) + 1;
+    playRollAnimation(event.currentTarget as HTMLElement);
   }
 
   const proficiencyOptions = [
@@ -327,6 +343,30 @@
           </button>
         </div>
       {/if}
+      {#if uiModel === 'initiative-roll' && initiativeBonus !== undefined}
+        <div class="choice-panel__model choice-panel__attack">
+          <button
+            type="button"
+            class="attack-chip attack-chip--rollable"
+            class:attack-chip--crit={initiativeRollResult !== null && initiativeNat20}
+            class:attack-chip--fumble={initiativeRollResult !== null && initiativeNat1}
+            onclick={rollInitiative}
+            aria-label={initiativeRollResult !== null
+              ? `${$t('play.choices.initiative.reroll')}: ${initiativeTotal}${initiativeNat20 ? ` — ${$t('play.choices.attack.nat20')}` : ''}${initiativeNat1 ? ` — ${$t('play.choices.attack.nat1')}` : ''}`
+              : `${$t('play.choices.initiative.roll')}: d20${formatBonus(initiativeBonus)}`}
+          >
+            {#if initiativeRollResult !== null}
+              {#if initiativeNat20}<span class="attack-crit-icon" aria-hidden="true">&#10004;</span
+                >{/if}
+              {#if initiativeNat1}<span class="attack-crit-icon" aria-hidden="true">&#10008;</span
+                >{/if}
+              {initiativeTotal}
+            {:else}
+              d20{formatBonus(initiativeBonus)}
+            {/if}
+          </button>
+        </div>
+      {/if}
     </div>
     {#if showControls}
       <div class="choice-panel__actions" role="group" aria-label="Item controls">
@@ -454,6 +494,11 @@
               {formatBonus(attackDamageBonus) || '0'}
             {/if}
           </span>
+        </div>
+      {/if}
+      {#if uiModel === 'initiative-roll' && initiativeBonus !== undefined}
+        <div class="choice-panel__model choice-panel__attack">
+          <span class="attack-chip">d20{formatBonus(initiativeBonus)}</span>
         </div>
       {/if}
     </div>

@@ -347,6 +347,11 @@
         "set-hp-modifier-current": {
           "name": "DIch DIvI'"
         }
+      },
+      "initiative": {
+        "roll-initiative": {
+          "name": "DIvI' chuwI'"
+        }
       }
     }
   },
@@ -489,6 +494,7 @@
       "usedMax": "{{used}} / {{max}}",
       "hitDie": "QIp DIvI'",
       "hitDieValue": "{{used}}/{{max}} DIvI' d{{dieSize}}",
+      "initiative": "chuwI'",
       "hp": "HP",
       "ac": "DIch Jun",
       "todo": "TODO",
@@ -533,6 +539,10 @@
         "half": "bIQ (x0.5)",
         "full": "naQ (x1)",
         "double": "cha'naQ (x2)"
+      },
+      "initiative": {
+        "roll": "DIvI'",
+        "reroll": "DIvI'qa'"
       },
       "attack": {
         "range": "chuS",
