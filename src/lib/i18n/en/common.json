@@ -332,6 +332,14 @@
           "no_action": "No action available"
         }
       },
+      "attacks": {
+        "unarmed-strike": {
+          "name": "Unarmed Strike"
+        },
+        "attack-unarmed-strike-offer": {
+          "no_action": "No action available"
+        }
+      },
       "hp": {
         "set-hp-modifier-max": {
           "name": "Max HP Modifier"
@@ -525,6 +533,15 @@
         "half": "Half (x0.5)",
         "full": "Full (x1)",
         "double": "Double (x2)"
+      },
+      "attack": {
+        "range": "Range",
+        "hit": "Hit",
+        "damage": "Damage",
+        "roll": "Roll",
+        "reroll": "Re-roll",
+        "nat20": "Critical hit!",
+        "nat1": "Critical miss!"
       }
     },
     "plan": {

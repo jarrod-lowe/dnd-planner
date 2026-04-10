@@ -332,6 +332,14 @@
           "no_action": "DIvI' tu'lu'be'"
         }
       },
+      "attacks": {
+        "unarmed-strike": {
+          "name": "nuH DIvI'"
+        },
+        "attack-unarmed-strike-offer": {
+          "no_action": "DIvI' tu'lu'be'"
+        }
+      },
       "hp": {
         "set-hp-modifier-max": {
           "name": "DIch DIvI' chenmoH"
@@ -525,6 +533,15 @@
         "half": "bIQ (x0.5)",
         "full": "naQ (x1)",
         "double": "cha'naQ (x2)"
+      },
+      "attack": {
+        "range": "chuS",
+        "hit": "DIj",
+        "damage": "DIch",
+        "roll": "DIvI'",
+        "reroll": "DIvI'qa'",
+        "nat20": "DIch naQ!",
+        "nat1": "DIch Hutlh!"
       }
     },
     "plan": {
