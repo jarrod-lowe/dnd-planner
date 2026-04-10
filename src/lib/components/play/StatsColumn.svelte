@@ -204,6 +204,7 @@
   }
 
   .stats-column__section-header {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -216,6 +217,21 @@
     font-family: var(--font-body);
     width: 100%;
     text-align: left;
+  }
+
+  .stats-column__section-header::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1rem;
+    height: 1rem;
+    background: linear-gradient(
+      to bottom,
+      var(--md-sys-color-surface-container-high),
+      var(--md-sys-color-surface-container)
+    );
+    pointer-events: none;
   }
 
   .stats-column__section-header:focus-visible {
@@ -255,7 +271,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
-    padding: var(--spacing-sm) var(--spacing-md) 0;
+    padding: 1rem var(--spacing-md) 0;
   }
 
   .stats-column__item {
