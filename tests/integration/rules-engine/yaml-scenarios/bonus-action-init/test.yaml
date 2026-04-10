@@ -1,0 +1,10 @@
+name: 'Bonus Action - Initialize'
+description: 'Bonus action system initializes with max=1 and remaining=1'
+ruleGroups:
+  - dnd-5e-2024/action-economy
+steps:
+  - evaluate:
+      assert:
+        facts:
+          bonusActions.max: 1
+          bonusActions.remaining: 1

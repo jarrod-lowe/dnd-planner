@@ -114,6 +114,14 @@
               "type": "string",
               "description": "Rule ID to pack this choice behind (collapsible group)"
             },
+            "sliderMin": {
+              "type": "number",
+              "description": "Minimum value for the ability-score model slider"
+            },
+            "sliderMax": {
+              "type": "number",
+              "description": "Maximum value for the ability-score model slider"
+            },
             "stats": {
               "type": "array",
               "description": "Stats to display in the stats column",

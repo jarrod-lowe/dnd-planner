@@ -1,0 +1,183 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: class-paladin-lay-on-hands
+    translations:
+      en:
+        name: Lay on Hands
+        description: Paladins can draw on a pool of healing power to restore hit points or cure poison
+        keywords: [paladin, lay on hands, heal, cure, poison]
+      en-x-tlh:
+        name: ghop Du
+        description: Segh ghop Du lo' DIch DIvI' 'ej DIvI'
+        keywords: [paladin, ghop, DIch]
+    rules:
+      # Lay on Hands Pool - UI stats display
+      - id: loh-pool-ui
+        phase: early
+        activities: []
+        ui:
+          stats:
+            - name: play.stats.layOnHands
+              type: usedMax
+              total: layOnHands.pool.total
+              remaining: layOnHands.pool.remaining
+              section: resources
+
+      # Lay on Hands Pool - reset on Long Rest
+      - id: loh-pool-reset
+        phase: early
+        after:
+          - group: loh-pool-set
+          - group: loh-pool-effect
+        when:
+          - fact: rest.long
+            operator: equals
+            value: 1
+        activities:
+          - type: numberCopy
+            source:
+              fact: layOnHands.pool.total
+            target:
+              fact: layOnHands.pool.remaining
+
+      # Lay on Hands - Heal (bonus action)
+      - id: offer-loh-heal
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: bonusActions.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.class-paladin-lay-on-hands.offer-loh-heal.no_bonus_action
+                    severity: error
+              - condition:
+                  fact: layOnHands.pool.remaining
+                  operator: greaterThanOrEqual
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.class-paladin-lay-on-hands.offer-loh-heal.pool_empty
+                    severity: error
+            rule:
+              id: loh-heal
+              group:
+                - __planned__
+              ui:
+                model: ability-score
+                section: bonus-action-other
+                name: rule.class-paladin-lay-on-hands.loh-heal.name
+                sliderMin: 1
+              vars:
+                amount:
+                  capture: true
+                  default:
+                    fact: layOnHands.pool.remaining
+                maxValue:
+                  capture: true
+                  default:
+                    fact: layOnHands.pool.total
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: bonusActions.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                - type: numberIncrement
+                  target:
+                    fact: layOnHands.pool.remaining
+                  source:
+                    var: amount
+                  subtract: true
+                - type: advertiseEffect
+                  rule:
+                    id: effect-loh-heal
+                    phase: early
+                    group:
+                      - loh-pool-effect
+                    when:
+                      - fact: rest.long
+                        operator: equals
+                        value: 0
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: layOnHands.pool.remaining
+                        source:
+                          var: amount
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          fact: rest.long
+                          operator: equals
+                          value: 0
+
+      # Lay on Hands - Purify Poison (bonus action)
+      - id: offer-loh-purify-poison
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: bonusActions.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.class-paladin-lay-on-hands.offer-loh-purify-poison.no_bonus_action
+                    severity: error
+              - condition:
+                  fact: layOnHands.pool.remaining
+                  operator: greaterThanOrEqual
+                  value: 5
+                illegalDiagnostics:
+                  - code: rule.class-paladin-lay-on-hands.offer-loh-purify-poison.insufficient_pool
+                    severity: error
+            rule:
+              id: loh-purify-poison
+              group:
+                - __planned__
+              ui:
+                model: lay-on-hands-purify
+                section: bonus-action-other
+                name: rule.class-paladin-lay-on-hands.loh-purify-poison.name
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: bonusActions.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                - type: numberIncrement
+                  target:
+                    fact: layOnHands.pool.remaining
+                  source:
+                    number: 5
+                  subtract: true
+                - type: advertiseEffect
+                  rule:
+                    id: effect-loh-purify
+                    phase: early
+                    group:
+                      - loh-pool-effect
+                    when:
+                      - fact: rest.long
+                        operator: equals
+                        value: 0
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: layOnHands.pool.remaining
+                        source:
+                          number: 5
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          fact: rest.long
+                          operator: equals
+                          value: 0

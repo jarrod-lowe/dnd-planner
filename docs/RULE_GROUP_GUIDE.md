@@ -869,4 +869,6 @@ Phase: normal
 
 - Forgetting to create a SEED# record for new rule groups that should be used by all characters
 - Getting the ordering wrong
+- Not capturing variables that need to keep their values (e.g. slider max's)
 - Not making sure activities apply from both planned choices and active effects where required
+- Forgetting to `make deploy-test` or `make sync-rule-groups` to update the database

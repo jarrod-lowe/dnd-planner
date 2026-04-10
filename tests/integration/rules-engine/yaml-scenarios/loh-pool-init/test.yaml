@@ -1,0 +1,18 @@
+name: 'Lay on Hands - Pool Init'
+description: 'Lay on Hands pool initializes at 5/5 for a level 1 paladin'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ac
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-lay-on-hands
+steps:
+  - evaluate:
+      assert:
+        facts:
+          layOnHands.pool.total: 5
+          layOnHands.pool.remaining: 5

@@ -587,7 +587,8 @@ describe('ChoicePanel', () => {
           name: 'rule.dnd-5e-2024.ability-scores.set-strength.name'
         },
         vars: {
-          score: { capture: true, default: { number: 10 } }
+          score: { capture: true, default: { number: 10 } },
+          maxValue: { default: { number: 30 } }
         }
       } as Rule,
       legal: true,
@@ -619,7 +620,8 @@ describe('ChoicePanel', () => {
           name: 'rule.dnd-5e-2024.ability-scores.set-strength.name'
         },
         vars: {
-          score: { capture: true, default: { number: 10 } }
+          score: { capture: true, default: { number: 10 } },
+          maxValue: { default: { number: 30 } }
         },
         selections: { score: 15 }
       } as Rule,
@@ -649,7 +651,8 @@ describe('ChoicePanel', () => {
           name: 'rule.dnd-5e-2024.ability-scores.set-strength.name'
         },
         vars: {
-          score: { capture: true, default: { number: 10 } }
+          score: { capture: true, default: { number: 10 } },
+          maxValue: { default: { number: 30 } }
         }
       } as Rule,
       legal: true,
@@ -680,7 +683,8 @@ describe('ChoicePanel', () => {
           name: 'rule.dnd-5e-2024.ability-scores.set-strength.name'
         },
         vars: {
-          score: { capture: true, default: { number: 10 } }
+          score: { capture: true, default: { number: 10 } },
+          maxValue: { default: { number: 30 } }
         },
         selections: { score: 16 }
       } as Rule,
@@ -727,6 +731,66 @@ describe('ChoicePanel', () => {
     expect(slider.min).toBe('-10');
     expect(slider.max).toBe('30');
     expect(slider.value).toBe('0');
+  });
+
+  it('does not render slider when maxValue var and sliderMax are both missing', () => {
+    const entry: AvailableRuleEntry = {
+      rule: {
+        id: 'broken-rule',
+        activities: [],
+        ui: {
+          model: 'ability-score',
+          section: 'configuration',
+          name: 'broken'
+        },
+        vars: {
+          score: { capture: true, default: { number: 10 } }
+        }
+      } as Rule,
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    };
+
+    const { container } = render(ChoicePanel, {
+      props: { entry, editable: true }
+    });
+
+    const slider = container.querySelector('input[type="range"]');
+    expect(slider).toBeFalsy();
+  });
+
+  it('uses maxValue var as slider max when defined', () => {
+    const entry: AvailableRuleEntry = {
+      rule: {
+        id: 'loh-heal',
+        activities: [],
+        ui: {
+          model: 'ability-score',
+          section: 'action-other',
+          name: 'rule.class-paladin-lay-on-hands.loh-heal.name',
+          sliderMin: 1
+        },
+        vars: {
+          amount: { capture: true, default: { fact: 'layOnHands.pool.remaining' } },
+          maxValue: { default: { fact: 'layOnHands.pool.remaining' } }
+        }
+      } as Rule,
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    };
+    const facts = { 'layOnHands.pool.remaining': 5 };
+
+    const { container } = render(ChoicePanel, {
+      props: { entry, editable: true, facts }
+    });
+
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+    expect(slider).toBeTruthy();
+    expect(slider.min).toBe('1');
+    expect(slider.max).toBe('5');
+    expect(slider.value).toBe('5');
   });
 
   it('resolves slider value from non-score var name', () => {

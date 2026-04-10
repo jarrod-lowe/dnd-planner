@@ -58,6 +58,9 @@ ruleGroups:
                   capture: true
                   default:
                     number: 10
+                maxValue:
+                  default:
+                    number: 30
               activities:
                 # Set str.value from the slider
                 - type: numberSet
@@ -153,6 +156,9 @@ ruleGroups:
                   capture: true
                   default:
                     number: 10
+                maxValue:
+                  default:
+                    number: 30
               activities:
                 # Set dex.value from the slider
                 - type: numberSet
@@ -248,6 +254,9 @@ ruleGroups:
                   capture: true
                   default:
                     number: 10
+                maxValue:
+                  default:
+                    number: 30
               activities:
                 # Set con.value from the slider
                 - type: numberSet
@@ -343,6 +352,9 @@ ruleGroups:
                   capture: true
                   default:
                     number: 10
+                maxValue:
+                  default:
+                    number: 30
               activities:
                 # Set int.value from the slider
                 - type: numberSet
@@ -438,6 +450,9 @@ ruleGroups:
                   capture: true
                   default:
                     number: 10
+                maxValue:
+                  default:
+                    number: 30
               activities:
                 # Set wis.value from the slider
                 - type: numberSet
@@ -533,6 +548,9 @@ ruleGroups:
                   capture: true
                   default:
                     number: 10
+                maxValue:
+                  default:
+                    number: 30
               activities:
                 # Set cha.value from the slider
                 - type: numberSet

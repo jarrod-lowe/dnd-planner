@@ -59,6 +59,9 @@ ruleGroups:
                   capture: true
                   default:
                     number: 0
+                maxValue:
+                  default:
+                    number: 30
               activities:
                 - type: numberSet
                   target:
@@ -120,6 +123,9 @@ ruleGroups:
                   capture: true
                   default:
                     number: 0
+                maxValue:
+                  default:
+                    number: 30
               activities:
                 - type: numberSet
                   target:
