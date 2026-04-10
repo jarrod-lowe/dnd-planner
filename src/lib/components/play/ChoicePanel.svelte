@@ -115,6 +115,53 @@
     uiModel === 'skill-proficiency' ? resolveVarDefault('level') : undefined
   );
 
+  // Attack model specific values
+  const attackRange = $derived(uiModel === 'attack' ? resolveVarDefault('range') : undefined);
+  const attackHitBonus = $derived(uiModel === 'attack' ? resolveVarDefault('hitBonus') : undefined);
+  const attackDamageDie = $derived(
+    uiModel === 'attack' ? resolveVarDefault('damageDie') : undefined
+  );
+  const attackDamageBonus = $derived(
+    uiModel === 'attack' ? resolveVarDefault('damageBonus') : undefined
+  );
+
+  // Dice roll state and functions
+  let hitRollResult: number | null = $state(null);
+  let damageRollResult: number | null = $state(null);
+
+  // Derived roll totals and crit detection
+  const hitTotal = $derived(hitRollResult !== null ? hitRollResult + (attackHitBonus ?? 0) : null);
+  const damageTotal = $derived(
+    damageRollResult !== null ? damageRollResult + (attackDamageBonus ?? 0) : null
+  );
+  const isNat20 = $derived(hitRollResult === 20);
+  const isNat1 = $derived(hitRollResult === 1);
+
+  function formatBonus(val: number | undefined): string {
+    if (val === undefined || val === 0) return '';
+    return val > 0 ? `+${val}` : `${val}`;
+  }
+
+  function playRollAnimation(element: HTMLElement): void {
+    element.animate?.(
+      [{ transform: 'scale(1)' }, { transform: 'scale(1.1)' }, { transform: 'scale(1)' }],
+      { duration: 150, easing: 'ease-out' }
+    );
+  }
+
+  function rollHit(event: MouseEvent): void {
+    hitRollResult = Math.floor(Math.random() * 20) + 1;
+    playRollAnimation(event.currentTarget as HTMLElement);
+  }
+
+  function rollDamage(event: MouseEvent): void {
+    const die = attackDamageDie ?? 0;
+    if (die > 0) {
+      damageRollResult = Math.floor(Math.random() * die) + 1;
+      playRollAnimation(event.currentTarget as HTMLElement);
+    }
+  }
+
   const proficiencyOptions = [
     { value: 0.5, label: '\u25CB', ariaLabel: $t('play.choices.skillProficiency.half') },
     { value: 1, label: '\u25CF', ariaLabel: $t('play.choices.skillProficiency.full') },
@@ -239,6 +286,47 @@
           {/each}
         </div>
       {/if}
+      {#if uiModel === 'attack' && attackRange !== undefined}
+        <div class="choice-panel__model choice-panel__attack">
+          <span class="attack-range">{attackRange} ft</span>
+          <span class="attack-sep" aria-hidden="true">|</span>
+          <button
+            type="button"
+            class="attack-chip attack-chip--rollable"
+            class:attack-chip--crit={hitRollResult !== null && isNat20}
+            class:attack-chip--fumble={hitRollResult !== null && isNat1}
+            onclick={rollHit}
+            aria-label={hitRollResult !== null
+              ? `${$t('play.choices.attack.reroll')} ${$t('play.choices.attack.hit')}: ${hitTotal}${isNat20 ? ` — ${$t('play.choices.attack.nat20')}` : ''}${isNat1 ? ` — ${$t('play.choices.attack.nat1')}` : ''}`
+              : `${$t('play.choices.attack.roll')} ${$t('play.choices.attack.hit')}: d20{formatBonus(attackHitBonus)}`}
+          >
+            {#if hitRollResult !== null}{#if isNat20}<span
+                  class="attack-crit-icon"
+                  aria-hidden="true">&#10004;</span
+                >
+              {/if}{#if isNat1}<span class="attack-crit-icon" aria-hidden="true">&#10008;</span>
+              {/if}{hitTotal}{:else}d20{formatBonus(attackHitBonus)}{/if}
+          </button>
+          <span class="attack-sep" aria-hidden="true">|</span>
+          <button
+            type="button"
+            class="attack-chip attack-chip--rollable"
+            onclick={rollDamage}
+            disabled={!attackDamageDie || attackDamageDie <= 0}
+            aria-label={damageRollResult !== null
+              ? `${$t('play.choices.attack.reroll')} ${$t('play.choices.attack.damage')}: ${damageTotal}`
+              : `${$t('play.choices.attack.roll')} ${$t('play.choices.attack.damage')}: ${attackDamageDie && attackDamageDie > 0 ? `d${attackDamageDie}${formatBonus(attackDamageBonus)}` : formatBonus(attackDamageBonus) || '0'}`}
+          >
+            {#if damageRollResult !== null}
+              {damageTotal}
+            {:else if attackDamageDie && attackDamageDie > 0}
+              d{attackDamageDie}{formatBonus(attackDamageBonus)}
+            {:else}
+              {formatBonus(attackDamageBonus) || '0'}
+            {/if}
+          </button>
+        </div>
+      {/if}
     </div>
     {#if showControls}
       <div class="choice-panel__actions" role="group" aria-label="Item controls">
@@ -351,6 +439,21 @@
               {option.label}
             </span>
           {/each}
+        </div>
+      {/if}
+      {#if uiModel === 'attack' && attackRange !== undefined}
+        <div class="choice-panel__model choice-panel__attack">
+          <span class="attack-range">{attackRange} ft</span>
+          <span class="attack-sep" aria-hidden="true">|</span>
+          <span class="attack-chip">d20{formatBonus(attackHitBonus)}</span>
+          <span class="attack-sep" aria-hidden="true">|</span>
+          <span class="attack-chip">
+            {#if attackDamageDie && attackDamageDie > 0}
+              d{attackDamageDie}{formatBonus(attackDamageBonus)}
+            {:else}
+              {formatBonus(attackDamageBonus) || '0'}
+            {/if}
+          </span>
         </div>
       {/if}
     </div>
@@ -580,5 +683,78 @@
     top: var(--spacing-xs);
     left: var(--spacing-xs);
     z-index: 2;
+  }
+
+  .choice-panel__attack {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+  }
+
+  .attack-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--md-sys-color-surface-container);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .attack-chip--rollable {
+    min-width: 3.5rem;
+    justify-content: center;
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    border-color: var(--md-sys-color-outline-variant);
+    cursor: pointer;
+    transition:
+      background-color var(--transition-fast),
+      color var(--transition-fast);
+  }
+
+  .attack-chip--rollable:hover:not(:disabled) {
+    background: var(--md-sys-color-secondary);
+    color: var(--md-sys-color-on-secondary);
+  }
+
+  .attack-chip--rollable:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: 2px;
+  }
+
+  .attack-chip--rollable:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .attack-sep {
+    color: var(--md-sys-color-outline);
+    font-size: var(--font-size-sm);
+  }
+
+  .attack-range {
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .attack-crit-icon {
+    margin-right: var(--spacing-xs);
+  }
+
+  .attack-chip--crit {
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    border-color: var(--md-sys-color-primary);
+  }
+
+  .attack-chip--fumble {
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-error);
+    border-color: var(--md-sys-color-error);
   }
 </style>

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import ChoicePanel from '$lib/components/play/ChoicePanel.svelte';
 import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
@@ -9,6 +9,33 @@ const createMockEntry = (overrides?: Partial<AvailableRuleEntry>): AvailableRule
   applicable: true,
   diagnostics: [],
   ...overrides
+});
+
+const createMockAttackEntry = (overrides?: {
+  range?: number;
+  hitBonus?: number;
+  damageDie?: number;
+  damageBonus?: number;
+}): AvailableRuleEntry => ({
+  rule: {
+    id: 'unarmed-strike',
+    description: 'Unarmed Strike',
+    activities: [],
+    ui: {
+      model: 'attack',
+      section: 'action-other',
+      name: 'rule.dnd-5e-2024.attacks.unarmed-strike.name'
+    },
+    vars: {
+      range: { default: { number: overrides?.range ?? 5 } },
+      hitBonus: { capture: true, default: { number: overrides?.hitBonus ?? 5 } },
+      damageDie: { default: { number: overrides?.damageDie ?? 0 } },
+      damageBonus: { capture: true, default: { number: overrides?.damageBonus ?? 3 } }
+    }
+  } as Rule,
+  legal: true,
+  applicable: true,
+  diagnostics: []
 });
 
 const createMockMoveEntry = (overrides?: Partial<AvailableRuleEntry>): AvailableRuleEntry => ({
@@ -763,5 +790,185 @@ describe('ChoicePanel', () => {
     await fireEvent.input(slider);
 
     expect(onSelectionChange).toHaveBeenCalledWith({ modifier: 18 });
+  });
+
+  // === Attack model tests ===
+
+  describe('Attack model', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('renders range as plain text, not as a chip', () => {
+      const entry = createMockAttackEntry();
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const range = container.querySelector('.attack-range');
+      expect(range).toBeTruthy();
+      expect(range?.textContent).toBe('5 ft');
+      // Should NOT have attack-chip class
+      expect(range?.classList.contains('attack-chip')).toBe(false);
+    });
+
+    it('renders range as plain text in read-only mode', () => {
+      const entry = createMockAttackEntry();
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: false }
+      });
+
+      const range = container.querySelector('.attack-range');
+      expect(range).toBeTruthy();
+      expect(range?.textContent).toBe('5 ft');
+      expect(range?.classList.contains('attack-chip')).toBe(false);
+    });
+
+    it('shows hit formula before rolling', () => {
+      const entry = createMockAttackEntry();
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      const hitButton = buttons[0] as HTMLButtonElement;
+      expect(hitButton.textContent).toBe('d20+5');
+    });
+
+    it('replaces hit formula with total after rolling', async () => {
+      const entry = createMockAttackEntry();
+      // random 0.6 → floor(0.6 * 20) + 1 = 13, total = 13 + 5 = 18
+      vi.spyOn(Math, 'random').mockReturnValue(0.6);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      const hitButton = buttons[0] as HTMLButtonElement;
+      await fireEvent.click(hitButton);
+
+      expect(hitButton.textContent).toBe('18');
+    });
+
+    it('shows nat-20 indicator with star and crit styling', async () => {
+      const entry = createMockAttackEntry();
+      // random 0.95 → floor(0.95 * 20) + 1 = 20, total = 20 + 5 = 25
+      vi.spyOn(Math, 'random').mockReturnValue(0.95);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      const hitButton = buttons[0] as HTMLButtonElement;
+      await fireEvent.click(hitButton);
+
+      // Should contain check and total
+      expect(hitButton.textContent).toContain('✔');
+      expect(hitButton.textContent).toContain('25');
+      // Should have crit class
+      expect(hitButton.classList.contains('attack-chip--crit')).toBe(true);
+    });
+
+    it('shows nat-1 indicator with X and fumble styling', async () => {
+      const entry = createMockAttackEntry();
+      // random 0.0 → floor(0.0 * 20) + 1 = 1, total = 1 + 5 = 6
+      vi.spyOn(Math, 'random').mockReturnValue(0.0);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      const hitButton = buttons[0] as HTMLButtonElement;
+      await fireEvent.click(hitButton);
+
+      // Should contain bold X and total
+      expect(hitButton.textContent).toContain('✘');
+      expect(hitButton.textContent).toContain('6');
+      // Should have fumble class
+      expect(hitButton.classList.contains('attack-chip--fumble')).toBe(true);
+    });
+
+    it('re-rolls and replaces previous result', async () => {
+      const entry = createMockAttackEntry();
+      const randomMock = vi.spyOn(Math, 'random');
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      const hitButton = buttons[0] as HTMLButtonElement;
+
+      // First roll: 0.6 → 13 natural, total 18
+      randomMock.mockReturnValue(0.6);
+      await fireEvent.click(hitButton);
+      expect(hitButton.textContent).toBe('18');
+
+      // Second roll: 0.0 → 1 natural, total 6
+      randomMock.mockReturnValue(0.0);
+      await fireEvent.click(hitButton);
+      expect(hitButton.textContent).toContain('6');
+      expect(hitButton.textContent).toContain('✘');
+    });
+
+    it('replaces damage formula with total after rolling', async () => {
+      const entry = createMockAttackEntry({ damageDie: 8, damageBonus: 3 });
+      // random 0.5 → floor(0.5 * 8) + 1 = 5, total = 5 + 3 = 8
+      vi.spyOn(Math, 'random').mockReturnValue(0.5);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      const damageButton = buttons[1] as HTMLButtonElement;
+      await fireEvent.click(damageButton);
+
+      expect(damageButton.textContent).toBe('8');
+    });
+
+    it('has no attack-result spans after rolling', async () => {
+      const entry = createMockAttackEntry({ damageDie: 8, damageBonus: 3 });
+      vi.spyOn(Math, 'random').mockReturnValue(0.5);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      await fireEvent.click(buttons[0] as HTMLButtonElement);
+      await fireEvent.click(buttons[1] as HTMLButtonElement);
+
+      expect(container.querySelector('.attack-result')).toBeFalsy();
+    });
+
+    it('disables damage button when damageDie is 0', () => {
+      const entry = createMockAttackEntry({ damageDie: 0, damageBonus: 3 });
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      const damageButton = buttons[1] as HTMLButtonElement;
+      expect(damageButton.disabled).toBe(true);
+    });
+
+    it('renders separators between range, hit, and damage', () => {
+      const entry = createMockAttackEntry();
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const separators = container.querySelectorAll('.attack-sep');
+      expect(separators.length).toBe(2);
+    });
   });
 });

@@ -1,0 +1,90 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: attacks
+    translations:
+      en:
+        name: Attacks
+        description: Core attack rules for unarmed strike and weapon attacks
+        keywords: [attack, unarmed, strike, melee, weapon, damage]
+      en-x-tlh:
+        name: jey' DIvI'
+        description: jey' DIvI' 'ej jey' naQ
+        keywords: [jey', DIvI', nuH]
+    rules:
+      # Compute unarmed strike hit bonus = STR modifier + proficiency bonus
+      - id: compute-unarmed-hit-bonus
+        phase: normal
+        activities:
+          - type: numberSum
+            target:
+              fact: attack.unarmed.hitBonus
+            sources:
+              - fact: str.modifier
+              - fact: proficiency.bonus
+
+      # Compute unarmed strike damage bonus = STR modifier
+      - id: compute-unarmed-damage-bonus
+        phase: normal
+        activities:
+          - type: numberCopy
+            source:
+              fact: str.modifier
+            target:
+              fact: attack.unarmed.damageBonus
+
+      # Offer unarmed strike attack
+      - id: attack-unarmed-strike-offer
+        after:
+          - group: action
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: actions.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.attacks.attack-unarmed-strike-offer.no_action
+                    severity: error
+            rule:
+              id: unarmed-strike
+              ui:
+                model: attack
+                section: action-other
+                name: rule.dnd-5e-2024.attacks.unarmed-strike.name
+              group:
+                - __planned__
+                - action
+              vars:
+                range:
+                  default:
+                    number: 5
+                hitBonus:
+                  capture: true
+                  default:
+                    fact: attack.unarmed.hitBonus
+                damageDie:
+                  default:
+                    number: 0
+                damageBonus:
+                  capture: true
+                  default:
+                    fact: attack.unarmed.damageBonus
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: actions.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.attacks.attack-unarmed-strike-offer.no_action
+                  when:
+                    fact: actions.remaining
+                    operator: lessThan
+                    value: 0

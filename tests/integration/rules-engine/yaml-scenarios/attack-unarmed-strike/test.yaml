@@ -1,0 +1,59 @@
+name: 'Unarmed Strike Attack'
+description: >
+  Unarmed strike offer appears in action-other section, consumes an action
+  when added to plan. Attack facts (hitBonus, damageBonus) are computed
+  from STR modifier. After endTurn, actions reset and attack is available again.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/attacks
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          actions.max: 1
+          actions.remaining: 1
+        offers:
+          exists:
+            - set-strength
+            - unarmed-strike
+          notExists: []
+
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 16
+      assert:
+        facts:
+          str.value: 16
+          str.modifier: 3
+          attack.unarmed.hitBonus: 3
+          attack.unarmed.damageBonus: 3
+
+  - addOffer:
+      id: unarmed-strike
+      assert:
+        facts:
+          actions.remaining: 0
+        offers:
+          exists:
+            - free-action
+          illegal:
+            - help-action
+            - unarmed-strike
+
+  - endTurn:
+      assert:
+        facts:
+          actions.max: 1
+          actions.remaining: 1
+        offers:
+          exists:
+            - free-action
+            - help-action
+            - unarmed-strike
