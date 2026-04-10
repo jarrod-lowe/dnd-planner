@@ -208,7 +208,7 @@
   .app-layout {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    height: 100vh;
   }
 
   .app-layout__body {
@@ -216,7 +216,9 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: var(--spacing-xl);
+    padding: 0;
     background: var(--md-sys-color-background);
+    min-height: 0;
+    overflow: auto;
   }
 </style>
