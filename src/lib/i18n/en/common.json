@@ -347,6 +347,11 @@
         "set-hp-modifier-current": {
           "name": "HP Modifier"
         }
+      },
+      "initiative": {
+        "roll-initiative": {
+          "name": "Roll Initiative"
+        }
       }
     }
   },
@@ -469,6 +474,7 @@
       "usedMax": "{{used}} / {{max}}",
       "hitDie": "Hit Die",
       "hitDieValue": "{{used}}/{{max}} d{{dieSize}}",
+      "initiative": "Initiative",
       "hp": "HP",
       "ac": "AC",
       "todo": "TODO",
@@ -533,6 +539,10 @@
         "half": "Half (x0.5)",
         "full": "Full (x1)",
         "double": "Double (x2)"
+      },
+      "initiative": {
+        "roll": "Roll",
+        "reroll": "Re-roll"
       },
       "attack": {
         "range": "Range",

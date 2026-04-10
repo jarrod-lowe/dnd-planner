@@ -1,0 +1,54 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: initiative
+    translations:
+      en:
+        name: Initiative
+        description: Initiative bonus and roll
+        keywords: [initiative, roll, dexterity, combat]
+      en-x-tlh:
+        name: DIvI'
+        description: DIvI' bonus 'ej DIvI'
+        keywords: [DIvI', Do]
+    rules:
+      # Initiative bonus = DEX modifier
+      # Uses numberIncrement so future feats (e.g., Alert) can add to it
+      - id: initiative-bonus
+        phase: normal
+        activities:
+          - type: numberIncrement
+            target:
+              fact: initiative.bonus
+            source:
+              fact: dex.modifier
+
+      # Display initiative bonus in the stats column
+      - id: initiative-display
+        activities: []
+        ui:
+          stats:
+            - name: play.stats.initiative
+              type: modifier
+              fact: initiative.bonus
+              section: stats
+
+      # Offer "Roll Initiative" as a free action (display only, no state change)
+      - id: roll-initiative-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            rule:
+              id: roll-initiative
+              group:
+                - __planned__
+              ui:
+                model: initiative-roll
+                section: free
+                name: rule.dnd-5e-2024.initiative.roll-initiative.name
+              vars:
+                initiativeBonus:
+                  capture: true
+                  default:
+                    fact: initiative.bonus
+              activities: []

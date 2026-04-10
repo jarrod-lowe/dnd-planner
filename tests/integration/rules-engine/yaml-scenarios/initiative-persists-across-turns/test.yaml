@@ -1,0 +1,37 @@
+name: 'Initiative Persists Across Turns'
+description: >
+  Initiative bonus remains correct after end of turn.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/initiative
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          initiative.bonus: 0
+        offers:
+          exists:
+            - set-dexterity
+            - roll-initiative
+
+  - addOffer:
+      id: set-dexterity
+      selections:
+        score: 8
+      assert:
+        facts:
+          dex.modifier: -1
+          initiative.bonus: -1
+
+  - endTurn:
+      assert:
+        facts:
+          initiative.bonus: -1
+        offers:
+          exists:
+            - roll-initiative

@@ -864,3 +864,9 @@ Phase: normal
   half-movement-total ──> ... ──> half-movement-remaining ──> offer rules
   (movement)                (movement)                         (movement)
 ```
+
+## 11. Common Errors
+
+- Forgetting to create a SEED# record for new rule groups that should be used by all characters
+- Getting the ordering wrong
+- Not making sure activities apply from both planned choices and active effects where required

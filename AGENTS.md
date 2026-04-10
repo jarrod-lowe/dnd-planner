@@ -2,7 +2,9 @@
 
 Guidance for LLM Agents working in this repository.
 
-Q: Are you writing new rules? A: See docs/RULE_GROUP_GUIDE.md
+Q: Are you writing new rules? A: See docs/RULE_GROUP_GUIDE.md - this is the
+primary guide to use, read it carefully. Do not skip this when writing new
+rules.
 
 ## Purpose
 
