@@ -47,7 +47,9 @@
         2fr
       );
     gap: var(--spacing-md);
-    height: calc(100vh - 4rem);
+    flex: 1;
+    min-height: 0;
+    width: 100%;
     padding: var(--spacing-md);
   }
 
