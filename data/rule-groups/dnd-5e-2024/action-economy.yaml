@@ -41,3 +41,34 @@ ruleGroups:
               fact: actions.max
             target:
               fact: actions.remaining
+
+      # Bonus Action Resources - set max bonus actions (base rule: 1 per turn)
+      - id: bonus-action-max
+        phase: early
+        group:
+          - bonus-action-max
+        ui:
+          stats:
+            - name: play.stats.bonusActions
+              type: usedMax
+              total: bonusActions.max
+              remaining: bonusActions.remaining
+              section: resources
+        activities:
+          - type: numberSet
+            source:
+              number: 1
+            target:
+              fact: bonusActions.max
+
+      # Bonus Action Resources - reset remaining at start of turn
+      - id: bonus-action-reset
+        phase: early
+        after:
+          - group: bonus-action-max
+        activities:
+          - type: numberCopy
+            source:
+              fact: bonusActions.max
+            target:
+              fact: bonusActions.remaining

@@ -1,0 +1,53 @@
+name: 'Lay on Hands - Multiple Uses Accumulate'
+description: 'Multiple LoH uses across turns accumulate pool consumption'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ac
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-lay-on-hands
+steps:
+  # Turn 1: evaluate first, then use 3 points
+  - evaluate:
+      assert:
+        facts:
+          layOnHands.pool.remaining: 5
+  - addOffer:
+      id: loh-heal
+      selections:
+        amount: 3
+      assert:
+        facts:
+          layOnHands.pool.remaining: 2
+  - endTurn:
+      assert:
+        facts:
+          layOnHands.pool.remaining: 2
+  # Turn 2: use 2 more points
+  - evaluate:
+      assert:
+        facts:
+          layOnHands.pool.remaining: 2
+  - addOffer:
+      id: loh-heal
+      selections:
+        amount: 2
+      assert:
+        facts:
+          layOnHands.pool.remaining: 0
+  - endTurn:
+      assert:
+        facts:
+          layOnHands.pool.remaining: 0
+  # Turn 3: pool is empty, heal should be illegal
+  - evaluate:
+      assert:
+        facts:
+          layOnHands.pool.remaining: 0
+        offers:
+          illegal:
+            - loh-heal

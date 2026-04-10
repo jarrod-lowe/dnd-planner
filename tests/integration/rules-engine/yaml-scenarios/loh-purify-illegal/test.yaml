@@ -1,0 +1,40 @@
+name: 'Lay on Hands - Purify Poison Illegal'
+description: 'LoH Purify Poison is illegal when pool < 5 or no bonus action'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ac
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-lay-on-hands
+steps:
+  # Pool has 5 points - purify should be legal
+  - evaluate:
+      assert:
+        facts:
+          layOnHands.pool.remaining: 5
+          bonusActions.remaining: 1
+        offers:
+          exists:
+            - loh-purify-poison
+  # Use 3 pool points via heal (bonus action), pool drops to 2
+  - addOffer:
+      id: loh-heal
+      selections:
+        amount: 3
+      assert:
+        facts:
+          layOnHands.pool.remaining: 2
+          bonusActions.remaining: 0
+  # Now pool = 2 and no bonus action, purify should be illegal
+  - evaluate:
+      assert:
+        facts:
+          layOnHands.pool.remaining: 2
+          bonusActions.remaining: 0
+        offers:
+          illegal:
+            - loh-purify-poison

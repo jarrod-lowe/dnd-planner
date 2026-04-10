@@ -1,0 +1,47 @@
+name: 'Lay on Hands - Persistence Across Turns'
+description: 'Pool consumption persists across turns via committed effects'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ac
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-lay-on-hands
+steps:
+  # Turn 1: pool starts at 5
+  - evaluate:
+      assert:
+        facts:
+          layOnHands.pool.total: 5
+          layOnHands.pool.remaining: 5
+  # Use 3 points to heal
+  - addOffer:
+      id: loh-heal
+      selections:
+        amount: 3
+      assert:
+        facts:
+          layOnHands.pool.remaining: 2
+  # End turn - commit the effect
+  - endTurn:
+      assert:
+        facts:
+          layOnHands.pool.remaining: 2
+  # Turn 2: pool should still be 2 (effect persists)
+  - evaluate:
+      assert:
+        facts:
+          layOnHands.pool.total: 5
+          layOnHands.pool.remaining: 2
+          bonusActions.remaining: 1
+  # Can still use 2 more points
+  - addOffer:
+      id: loh-heal
+      selections:
+        amount: 2
+      assert:
+        facts:
+          layOnHands.pool.remaining: 0

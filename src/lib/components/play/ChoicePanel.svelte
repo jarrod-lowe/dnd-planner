@@ -102,13 +102,16 @@
       : undefined
   );
 
-  // Configurable slider range (falls back to 1/30 for backward compatibility)
+  // Configurable slider range - max comes from maxValue var or sliderMax UI property
   const sliderMin = $derived(
     uiModel === 'ability-score' ? ((entry.rule.ui?.sliderMin as number | undefined) ?? 1) : 1
   );
-  const sliderMax = $derived(
-    uiModel === 'ability-score' ? ((entry.rule.ui?.sliderMax as number | undefined) ?? 30) : 30
-  );
+  const sliderMax = $derived.by(() => {
+    if (uiModel !== 'ability-score') return undefined;
+    const dynamicMax = resolveVarDefault('maxValue');
+    if (dynamicMax !== undefined) return dynamicMax;
+    return entry.rule.ui?.sliderMax as number | undefined;
+  });
 
   // Skill proficiency model specific values
   const proficiencyLevel = $derived(
@@ -269,7 +272,7 @@
           <span class="move-value">{sliderValue} ft</span>
         </div>
       {/if}
-      {#if uiModel === 'ability-score'}
+      {#if uiModel === 'ability-score' && sliderMax !== undefined}
         <div class="choice-panel__model">
           <input
             type="range"
@@ -451,7 +454,7 @@
           <span class="move-value">{sliderValue} ft</span>
         </div>
       {/if}
-      {#if uiModel === 'ability-score'}
+      {#if uiModel === 'ability-score' && sliderMax !== undefined}
         <div class="choice-panel__model">
           <input
             type="range"

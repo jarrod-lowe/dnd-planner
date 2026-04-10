@@ -13,6 +13,22 @@
         "no_slots": "No level 1 spell slots remaining"
       }
     },
+    "class-paladin-lay-on-hands": {
+      "loh-heal": {
+        "name": "Heal (LoH)"
+      },
+      "offer-loh-heal": {
+        "no_bonus_action": "No bonus action available",
+        "pool_empty": "Lay on Hands pool is empty"
+      },
+      "loh-purify-poison": {
+        "name": "Purify Poison (LoH)"
+      },
+      "offer-loh-purify-poison": {
+        "no_bonus_action": "No bonus action available",
+        "insufficient_pool": "Need 5 Lay on Hands points"
+      }
+    },
     "dnd-5e-2024": {
       "turn-rest": {
         "long-rest": {
@@ -469,6 +485,8 @@
       "wis": "WIS",
       "cha": "CHA",
       "actions": "Actions",
+      "bonusActions": "Bonus Action",
+      "layOnHands": "Lay on Hands",
       "spellcasting": "Spellcast",
       "spellLevel": "Spell L{{level}}",
       "usedMax": "{{used}} / {{max}}",
@@ -521,6 +539,7 @@
         "move": "Move",
         "action-spell": "Action → Spell",
         "action-other": "Action → Other",
+        "bonus-action-other": "Bonus Action → Other",
         "free": "Flavour",
         "rest": "Rest",
         "health": "Health",

@@ -1,0 +1,31 @@
+name: 'Lay on Hands - Heal Illegal No Bonus Action'
+description: 'LoH Heal is illegal when no bonus action is available'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ac
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-lay-on-hands
+steps:
+  - evaluate:
+      assert:
+        facts:
+          bonusActions.remaining: 1
+          layOnHands.pool.remaining: 5
+  - addOffer:
+      id: loh-heal
+      selections:
+        amount: 3
+      assert:
+        facts:
+          bonusActions.remaining: 0
+          layOnHands.pool.remaining: 2
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - loh-heal

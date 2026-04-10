@@ -1028,6 +1028,58 @@ describe('playStore', () => {
       // Original item should not have selections
       expect(playStore.state.plannedItems[0].rule.selections).toBeUndefined();
     });
+
+    it('merges new selections with existing instead of replacing', async () => {
+      const mockEvaluate = vi.mocked(evaluate);
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      // Rule with multiple capture vars (like LoH heal with amount + maxValue)
+      const rule: Rule = {
+        id: 'loh-heal',
+        activities: [],
+        vars: {
+          amount: { capture: true, default: { number: 5 } },
+          maxValue: { capture: true, default: { number: 5 } }
+        }
+      };
+      playStore.addToPlan(rule);
+
+      const instanceId = playStore.state.plannedItems[0].instanceId;
+
+      // Initial selections should capture both vars
+      expect(playStore.state.plannedItems[0].rule.selections).toEqual({
+        amount: 5,
+        maxValue: 5
+      });
+
+      // User changes amount via slider - maxValue should be preserved
+      playStore.updateSelections(instanceId, { amount: 3 });
+
+      expect(playStore.state.plannedItems[0].rule.selections).toEqual({
+        amount: 3,
+        maxValue: 5
+      });
+    });
   });
 
   describe('assignRuleGroup', () => {

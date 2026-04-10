@@ -228,7 +228,7 @@ function updateSelections(instanceId: string, selections: Record<string, unknown
     ...updatedItems[itemIndex],
     rule: {
       ...updatedItems[itemIndex].rule,
-      selections
+      selections: { ...updatedItems[itemIndex].rule.selections, ...selections }
     }
   };
 

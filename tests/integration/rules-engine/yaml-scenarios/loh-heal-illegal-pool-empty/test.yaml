@@ -1,0 +1,35 @@
+name: 'Lay on Hands - Heal Illegal Pool Empty'
+description: 'LoH Heal is illegal when the pool is empty'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ac
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-lay-on-hands
+steps:
+  - evaluate:
+      assert:
+        facts:
+          layOnHands.pool.remaining: 5
+  - addOffer:
+      id: loh-heal
+      selections:
+        amount: 5
+      assert:
+        facts:
+          layOnHands.pool.remaining: 0
+  - endTurn:
+      assert:
+        facts:
+          layOnHands.pool.remaining: 0
+  - evaluate:
+      assert:
+        facts:
+          layOnHands.pool.remaining: 0
+        offers:
+          illegal:
+            - loh-heal

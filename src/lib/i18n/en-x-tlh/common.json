@@ -13,6 +13,22 @@
         "no_slots": "mugh laH tu'lu'be'"
       }
     },
+    "class-paladin-lay-on-hands": {
+      "loh-heal": {
+        "name": "DIch (ghop Du)"
+      },
+      "offer-loh-heal": {
+        "no_bonus_action": "DIvI' latlh tu'lu'be'",
+        "pool_empty": "ghop Du chenmoH tu'lu'be'"
+      },
+      "loh-purify-poison": {
+        "name": "DIvI' ghop Du"
+      },
+      "offer-loh-purify-poison": {
+        "no_bonus_action": "DIvI' latlh tu'lu'be'",
+        "insufficient_pool": "ghop Du vagh DIvI'"
+      }
+    },
     "dnd-5e-2024": {
       "turn-rest": {
         "long-rest": {
@@ -489,6 +505,8 @@
       "wis": "Sov",
       "cha": "Quv",
       "actions": "DIvI'",
+      "bonusActions": "DIvI' latlh",
+      "layOnHands": "ghop Du",
       "spellcasting": "mugh DIvI'",
       "spellLevel": "mugh DIvI' L{{level}}",
       "usedMax": "{{used}} / {{max}}",
@@ -521,6 +539,7 @@
         "move": "Do",
         "action-spell": "DIvI' → mugh",
         "action-other": "DIvI' → latlh",
+        "bonus-action-other": "Quv DIvI' → latlh",
         "free": "Flavour",
         "rest": "nIb poH",
         "health": "DIch DIvI'",
