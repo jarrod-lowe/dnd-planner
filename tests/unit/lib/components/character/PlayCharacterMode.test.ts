@@ -4,7 +4,6 @@ import { readable } from 'svelte/store';
 
 // English translations for testing
 const translations: Record<string, string> = {
-  'play.backToSelection': 'Back to Character Selection',
   'play.choices.loading': 'Loading choices...',
   'play.error.loadRuleGroups': 'Failed to load character data'
 };
@@ -119,35 +118,6 @@ describe('PlayCharacterMode', () => {
     container = document.createElement('div');
     document.body.appendChild(container);
     vi.clearAllMocks();
-  });
-
-  it('renders back button', () => {
-    mount(PlayCharacterMode, {
-      target: container,
-      props: {
-        character: mockCharacter,
-        onBack: vi.fn()
-      }
-    });
-
-    expect(container.textContent).toContain('Back to Character Selection');
-  });
-
-  it('calls onBack when back button is clicked', () => {
-    const onBack = vi.fn();
-
-    mount(PlayCharacterMode, {
-      target: container,
-      props: {
-        character: mockCharacter,
-        onBack
-      }
-    });
-
-    const backButton = container.querySelector('.play-character__back') as HTMLButtonElement;
-    backButton?.click();
-
-    expect(onBack).toHaveBeenCalledTimes(1);
   });
 
   it('calls loadRuleGroups on mount with character ID', async () => {

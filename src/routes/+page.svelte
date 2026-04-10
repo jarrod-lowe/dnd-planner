@@ -90,6 +90,15 @@
       onLogout={() => authStore.logout()}
       version="v0.0.0"
       selectedCharacter={characterStore.state.selectedCharacter}
+      onBack={characterStore.state.selectedCharacter
+        ? () => {
+            playStore.reset();
+            characterStore.clearSelection();
+            manageRulesActive = false;
+            editCustomRulesActive = false;
+            viewFactsActive = false;
+          }
+        : undefined}
       showManageRules={!!characterStore.state.selectedCharacter &&
         !manageRulesActive &&
         !editCustomRulesActive &&
@@ -139,13 +148,7 @@
             }}
           />
         {:else}
-          <PlayCharacterMode
-            character={characterStore.state.selectedCharacter}
-            onBack={() => {
-              playStore.reset();
-              characterStore.clearSelection();
-            }}
-          />
+          <PlayCharacterMode character={characterStore.state.selectedCharacter} />
         {/if}
       {:else}
         <SelectCharacterMode

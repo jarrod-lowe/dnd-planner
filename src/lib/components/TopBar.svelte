@@ -12,6 +12,7 @@
     onLogout: () => void;
     version?: string;
     selectedCharacter?: Character | null;
+    onBack?: () => void;
     onManageRules?: () => void;
     showManageRules?: boolean;
     onViewFacts?: () => void;
@@ -23,6 +24,7 @@
     onLogout,
     version = 'v0.0.0',
     selectedCharacter,
+    onBack,
     onManageRules,
     showManageRules = false,
     onViewFacts,
@@ -33,9 +35,29 @@
 <header class="top-bar">
   <div class="top-bar__left">
     {#if selectedCharacter}
-      <div class="top-bar__info">
-        <span class="top-bar__name">{selectedCharacter.name}</span>
-        <span class="top-bar__species">{$t(`species.${selectedCharacter.species}`)}</span>
+      <div class="top-bar__character">
+        {#if onBack}
+          <button
+            type="button"
+            class="top-bar__back"
+            aria-label={$t('play.backToSelection')}
+            onclick={onBack}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M19 12H5m7-7l-7 7 7 7" />
+            </svg>
+          </button>
+        {/if}
+        <div class="top-bar__info">
+          <span class="top-bar__name">{selectedCharacter.name}</span>
+          <span class="top-bar__species">{$t(`species.${selectedCharacter.species}`)}</span>
+        </div>
       </div>
     {:else}
       <div class="top-bar__info">
@@ -79,6 +101,41 @@
 
   .top-bar__left {
     justify-self: start;
+  }
+
+  .top-bar__character {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+
+  .top-bar__back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--md-sys-color-on-surface);
+    cursor: pointer;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: var(--spacing-xs);
+    border-radius: var(--radius-md);
+    transition: background-color var(--transition-fast);
+  }
+
+  .top-bar__back:hover {
+    background: var(--md-sys-color-surface-container);
+  }
+
+  .top-bar__back:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: 2px;
+  }
+
+  .top-bar__back svg {
+    width: 1.25rem;
+    height: 1.25rem;
   }
 
   .top-bar__info {
