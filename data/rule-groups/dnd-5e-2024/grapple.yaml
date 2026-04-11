@@ -1,0 +1,72 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: grapple
+    translations:
+      en:
+        name: Grapple
+        description: Core rules for the Grapple action
+        keywords: [grapple, action, attack, strength]
+      en-x-tlh:
+        name: DIvI' qop
+        description: DIvI' qop DIvI' naQ
+        keywords: [qop, DIvI', HIv, HoS]
+    rules:
+      # Compute grapple DC = 8 + proficiency bonus + STR modifier
+      - id: compute-grapple-dc
+        phase: normal
+        activities:
+          - type: numberSum
+            target:
+              fact: grapple.dc
+            sources:
+              - number: 8
+              - fact: proficiency.bonus
+              - fact: str.modifier
+
+      # Offer grapple as an action
+      - id: action-grapple-offer
+        after:
+          - group: action
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: actions.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.grapple.action-grapple-offer.no_action
+                    severity: error
+            rule:
+              id: grapple-action
+              ui:
+                model: grapple
+                section: action-attack
+                packBehind: unarmed-strike-use-action
+                name: rule.dnd-5e-2024.grapple.grapple-action.name
+              vars:
+                dc:
+                  capture: true
+                  default:
+                    fact: grapple.dc
+              group:
+                - __planned__
+                - action
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: actions.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.grapple.action-grapple-offer.no_action
+                  when:
+                    fact: actions.remaining
+                    operator: lessThan
+                    value: 0
