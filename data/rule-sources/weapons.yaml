@@ -45,6 +45,7 @@ definitions:
       weapon.light: true
       weapon.finesse: true
       weapon.throwable: true
+      weapon.mastery: nick
     ui:
       model: attack
       name: rule.dnd-5e-2024.attacks.dagger.name
@@ -91,6 +92,7 @@ definitions:
     traits:
       weapon.heavy: true
       weapon.twoHanded: true
+      weapon.mastery: cleave
     ui:
       model: attack
       name: rule.dnd-5e-2024.attacks.greataxe.name
@@ -131,6 +133,7 @@ definitions:
     requires: [javelin]
     traits:
       weapon.throwable: true
+      weapon.mastery: slow
     ui:
       model: attack
       name: rule.dnd-5e-2024.attacks.javelin.name

@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: javelin-mastery
+    requires:
+      - javelin
+    translations:
+      en:
+        name: Javelin Mastery (Slow)
+        description: Weapon mastery for the javelin, granting the Slow property
+        keywords: [attack, javelin, mastery, slow, weapon]
+      en-x-tlh:
+        name: Javelin Mastery (Slow)
+        description: Javelin mastery 'ej Slow
+        keywords: [javelin, mastery, slow, nuH]
+    rules:
+      - id: javelin-mastery-flag
+        phase: normal
+        activities:
+          - type: numberSet
+            target:
+              fact: attack.javelin.mastery
+            source:
+              number: 1
