@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: greataxe-mastery
+    requires:
+      - greataxe
+    translations:
+      en:
+        name: Greataxe Mastery (Cleave)
+        description: Weapon mastery for the greataxe, granting the Cleave property
+        keywords: [attack, greataxe, mastery, cleave, weapon]
+      en-x-tlh:
+        name: nuH jen Mastery (Cleave)
+        description: nuH jen mastery 'ej Cleave
+        keywords: [nuH, jen, mastery, cleave]
+    rules:
+      - id: greataxe-mastery-flag
+        phase: normal
+        activities:
+          - type: numberSet
+            target:
+              fact: attack.greataxe.mastery
+            source:
+              number: 1

@@ -1,0 +1,19 @@
+name: 'Greataxe Mastery'
+description: >
+  Assigning greataxe-mastery rule group sets the attack.greataxe.mastery fact to 1.
+
+ruleGroups:
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/greataxe
+  - dnd-5e-2024/greataxe-mastery
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          attack.greataxe.mastery: 1

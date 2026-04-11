@@ -470,14 +470,23 @@
         "greataxe": {
           "name": "nuH jen"
         },
+        "greataxe-mastery": {
+          "name": "nuH jen Mastery (Cleave)"
+        },
         "attack-greataxe-offer": {
           "no_action": "DIvI' tu'lu'be'"
         },
         "dagger": {
           "name": "nejwI'"
         },
+        "dagger-mastery": {
+          "name": "nejwI' Mastery (Nick)"
+        },
         "javelin": {
           "name": "Javelin"
+        },
+        "javelin-mastery": {
+          "name": "Javelin Mastery (Slow)"
         },
         "attack-javelin-offer": {
           "no_action": "DIvI' tu'lu'be'"

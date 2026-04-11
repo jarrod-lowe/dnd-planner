@@ -470,14 +470,23 @@
         "greataxe": {
           "name": "Greataxe"
         },
+        "greataxe-mastery": {
+          "name": "Greataxe Mastery (Cleave)"
+        },
         "attack-greataxe-offer": {
           "no_action": "No action available"
         },
         "dagger": {
           "name": "Dagger"
         },
+        "dagger-mastery": {
+          "name": "Dagger Mastery (Nick)"
+        },
         "javelin": {
           "name": "Javelin"
+        },
+        "javelin-mastery": {
+          "name": "Javelin Mastery (Slow)"
         },
         "attack-javelin-offer": {
           "no_action": "No action available"

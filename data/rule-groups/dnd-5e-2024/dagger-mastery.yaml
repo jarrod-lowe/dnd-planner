@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: dagger-mastery
+    requires:
+      - dagger
+    translations:
+      en:
+        name: Dagger Mastery (Nick)
+        description: Weapon mastery for the dagger, granting the Nick property
+        keywords: [attack, dagger, mastery, nick, weapon]
+      en-x-tlh:
+        name: Dagger Mastery (Nick)
+        description: Dagger mastery 'ej Nick
+        keywords: [dagger, mastery, nick, nuH]
+    rules:
+      - id: dagger-mastery-flag
+        phase: normal
+        activities:
+          - type: numberSet
+            target:
+              fact: attack.dagger.mastery
+            source:
+              number: 1
