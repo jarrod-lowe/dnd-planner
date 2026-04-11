@@ -488,6 +488,10 @@
         "javelin-mastery": {
           "name": "Javelin Mastery (Slow)"
         },
+        "javelin-slow": {
+          "button": "Slow",
+          "effect-name": "Slow (Javelin)"
+        },
         "attack-javelin-offer": {
           "no_action": "DIvI' tu'lu'be'"
         },
@@ -694,7 +698,8 @@
         "free": "Flavour",
         "rest": "nIb poH",
         "health": "DIch DIvI'",
-        "other": "latlh"
+        "other": "latlh",
+        "mastery": "Mastery"
       },
       "move": {
         "distance": "Do chu'"
@@ -756,7 +761,8 @@
     "effects": {
       "title": "DIvI' SeH",
       "empty": "SeHbe'",
-      "remove": "teq"
+      "remove": "teq",
+      "followupActions": "Followup actions"
     },
     "error": {
       "loadRuleGroups": "nuv DIvI' laHbe'",

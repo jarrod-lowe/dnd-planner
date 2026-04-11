@@ -323,6 +323,25 @@ export type Activity =
 // === RULE ===
 
 /**
+ * A followup action available on a planned rule's UI.
+ * Rendered as a button that the player can click to trigger an action.
+ *
+ * - type: effect — creates a one-turn effect (no self-advertise, expires at end of turn)
+ * - condition: when to show the button (evaluated against current facts)
+ * - button: i18n key for the button label
+ * - addRule: what rule to create and where to add it when clicked
+ */
+export interface Followup {
+  type: string;
+  condition: Condition;
+  button: string;
+  addRule: {
+    target: string;
+    rule: Rule;
+  };
+}
+
+/**
  * Reference to a group for `after` ordering constraints.
  */
 export interface GroupReference {

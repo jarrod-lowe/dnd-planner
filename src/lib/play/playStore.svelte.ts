@@ -492,6 +492,16 @@ function endTurn(): void {
   }
 }
 
+function addFollowupEffect(rule: Rule): void {
+  // JSON round-trip strips Svelte reactive proxies that structuredClone can't handle
+  const plainRule = JSON.parse(JSON.stringify(rule));
+  state = {
+    ...state,
+    effects: [...state.effects, plainRule]
+  };
+  performEvaluation();
+}
+
 function reset(): void {
   state = { ...initialState };
 }
@@ -511,6 +521,7 @@ export const playStore = {
   updateSelections,
   updateCustomRules,
   removeEffect,
+  addFollowupEffect,
   endTurn,
   reset
 };

@@ -1,0 +1,42 @@
+name: 'Javelin Slow Mastery Followup'
+description: >
+  When javelin-mastery is assigned, the javelin attack offer includes a Slow
+  followup in its ui. The followup creates a one-turn effect when triggered.
+
+ruleGroups:
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/javelin
+  - dnd-5e-2024/javelin-mastery
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          attack.javelin.mastery: 1
+        offers:
+          exists:
+            - javelin-use-action
+        offerUi:
+          - id: javelin-use-action
+            ui:
+              followups:
+                - type: effect
+                  condition:
+                    fact: attack.javelin.mastery
+                    operator: equals
+                    value: 1
+                  button: rule.dnd-5e-2024.attacks.javelin-slow.button
+                  addRule:
+                    target: effect
+                    rule:
+                      id: effect-javelin-slow
+                      ui:
+                        section: mastery
+                        name: rule.dnd-5e-2024.attacks.javelin-slow.effect-name
+                      phase: normal
+                      activities: []
