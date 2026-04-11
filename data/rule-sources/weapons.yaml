@@ -268,19 +268,19 @@ expansions:
       - use-reaction-weapon
       - use-bonus-followup-light
     emit:
-      ruleGroupIdPattern: "generated-$(definition.id)-activations"
-      ruleIdPattern: "$(definition.id)-$(profile.id)"
-      offerRuleIdPattern: "$(definition.id)-$(profile.id)-offer"
+      ruleGroupIdPattern: 'generated-$(definition.id)-activations'
+      ruleIdPattern: '$(definition.id)-$(profile.id)'
+      offerRuleIdPattern: '$(definition.id)-$(profile.id)-offer'
       after:
         - group: option-capabilities
       translations:
         en:
-          name: "$(definition.translations.en.name)"
-          description: "$(definition.translations.en.description)"
+          name: '$(definition.translations.en.name)'
+          description: '$(definition.translations.en.description)'
           keywords:
-            - "$(definition.id)"
+            - '$(definition.id)'
         en-x-tlh:
-          name: "$(definition.translations.en-x-tlh.name)"
-          description: "$(definition.translations.en-x-tlh.description)"
+          name: '$(definition.translations.en-x-tlh.name)'
+          description: '$(definition.translations.en-x-tlh.description)'
           keywords:
-            - "$(definition.id)"
+            - '$(definition.id)'
