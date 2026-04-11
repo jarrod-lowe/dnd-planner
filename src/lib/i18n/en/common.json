@@ -356,6 +356,50 @@
           "no_action": "No action available"
         }
       },
+      "simple-actions": {
+        "disengage-action": {
+          "name": "Disengage"
+        },
+        "action-disengage-offer": {
+          "no_action": "No action available"
+        },
+        "dodge-action": {
+          "name": "Dodge"
+        },
+        "action-dodge-offer": {
+          "no_action": "No action available"
+        },
+        "improvise-action": {
+          "name": "Improvise"
+        },
+        "action-improvise-offer": {
+          "no_action": "No action available"
+        },
+        "influence-action": {
+          "name": "Influence"
+        },
+        "action-influence-offer": {
+          "no_action": "No action available"
+        },
+        "search-action": {
+          "name": "Search"
+        },
+        "action-search-offer": {
+          "no_action": "No action available"
+        },
+        "study-action": {
+          "name": "Study"
+        },
+        "action-study-offer": {
+          "no_action": "No action available"
+        },
+        "utilize-action": {
+          "name": "Utilize"
+        },
+        "action-utilize-offer": {
+          "no_action": "No action available"
+        }
+      },
       "attacks": {
         "unarmed-strike": {
           "name": "Unarmed Strike"
