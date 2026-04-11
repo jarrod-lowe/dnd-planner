@@ -360,6 +360,14 @@
         },
         "attack-greataxe-offer": {
           "no_action": "DIvI' tu'lu'be'"
+        },
+        "dagger": {
+          "name": "nejwI'"
+        },
+        "activation": {
+          "no_action": "DIvI' tu'lu'be'",
+          "no_reaction": "DIvI' cha' tu'lu'be'",
+          "no_bonus_action": "Quv DIvI' tu'lu'be'"
         }
       },
       "hp": {
@@ -512,6 +520,7 @@
       "cha": "Quv",
       "actions": "DIvI'",
       "bonusActions": "DIvI' latlh",
+      "reactions": "DIvI' cha'",
       "layOnHands": "ghop Du",
       "spellcasting": "mugh DIvI'",
       "spellLevel": "mugh DIvI' L{{level}}",
@@ -547,6 +556,8 @@
         "action-attack": "DIvI' → HIv",
         "action-other": "DIvI' → latlh",
         "bonus-action-other": "Quv DIvI' → latlh",
+        "bonus-action": "Quv DIvI' → HIv",
+        "reaction": "DIvI' cha'",
         "free": "Flavour",
         "rest": "nIb poH",
         "health": "DIch DIvI'",

@@ -1,6 +1,6 @@
 name: 'Greataxe Attack'
 description: >
-  Greataxe offer appears in action-other section, consumes an action
+  Greataxe offer appears in action-attack section, consumes an action
   when added to plan. Attack facts (hitBonus, damageBonus) are computed
   from STR modifier + proficiency. damageDie is 12 (1d12). After endTurn,
   actions reset and attack is available again.
@@ -23,7 +23,7 @@ steps:
         offers:
           exists:
             - set-strength
-            - greataxe
+            - greataxe-use-action
           notExists: []
 
   - addOffer:
@@ -38,7 +38,7 @@ steps:
           attack.greataxe.damageBonus: 3
 
   - addOffer:
-      id: greataxe
+      id: greataxe-use-action
       assert:
         facts:
           actions.remaining: 0
@@ -47,7 +47,7 @@ steps:
             - free-action
           illegal:
             - help-action
-            - greataxe
+            - greataxe-use-action
 
   - endTurn:
       assert:
@@ -58,4 +58,4 @@ steps:
           exists:
             - free-action
             - help-action
-            - greataxe
+            - greataxe-use-action

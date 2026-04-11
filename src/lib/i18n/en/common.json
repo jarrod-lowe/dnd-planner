@@ -360,6 +360,14 @@
         },
         "attack-greataxe-offer": {
           "no_action": "No action available"
+        },
+        "dagger": {
+          "name": "Dagger"
+        },
+        "activation": {
+          "no_action": "No action available",
+          "no_reaction": "No reaction available",
+          "no_bonus_action": "No bonus action available"
         }
       },
       "hp": {
@@ -492,6 +500,7 @@
       "cha": "CHA",
       "actions": "Actions",
       "bonusActions": "Bonus Action",
+      "reactions": "Reactions",
       "layOnHands": "Lay on Hands",
       "spellcasting": "Spellcast",
       "spellLevel": "Spell L{{level}}",
@@ -547,6 +556,8 @@
         "action-attack": "Action → Attack",
         "action-other": "Action → Other",
         "bonus-action-other": "Bonus Action → Other",
+        "bonus-action": "Bonus Action → Attack",
+        "reaction": "Reaction",
         "free": "Flavour",
         "rest": "Rest",
         "health": "Health",

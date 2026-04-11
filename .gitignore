@@ -28,7 +28,10 @@ playwright-report/
 
 # Python virtual environment
 .venv/
-scripts/__pycache__/
+__pycache__/
 
 # Derived static assets
 static/data/
+
+# Generated rule groups (from preprocessor)
+generated/

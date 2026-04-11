@@ -1,4 +1,4 @@
-.PHONY: format-terraform validate security test help clean dev build lint format-frontend test-unit test-e2e test-e2e-debug test-component format-check push-test install pnpm setup-dev format go-build deploy-lambdas-test deploy-lambdas-prod sync-rule-groups test-rules
+.PHONY: format-terraform validate security test help clean dev build lint format-frontend test-unit test-e2e test-e2e-debug test-component format-check push-test install pnpm setup-dev format go-build deploy-lambdas-test deploy-lambdas-prod sync-rule-groups test-rules preprocess
 
 default: help
 
@@ -222,24 +222,33 @@ push-test: terraform/environment/test/.apply build go-build deploy-lambdas-test
 	@aws cloudfront create-invalidation --distribution-id $(TEST_CDN_ID) --paths "/*"
 
 # Build rule groups JSON for integration tests
-build/test-rule-groups.json: scripts/sync_rule_groups.py $(wildcard data/rule-groups/**/*.yaml data/rule-groups/_shared/*.yaml)
+build/test-rule-groups.json: scripts/sync_rule_groups.py $(wildcard data/rule-groups/**/*.yaml data/rule-groups/_shared/*.yaml) preprocess
 	@mkdir -p build
 	@PYTHON=$$(which python3 || which python); \
 	if [ ! -d .venv ]; then $$PYTHON -m venv .venv; fi; \
 	.venv/bin/pip install -q -r scripts/requirements.txt; \
-	.venv/bin/python scripts/sync_rule_groups.py --json-out build/test-rule-groups.json
+	.venv/bin/python scripts/sync_rule_groups.py --json-out build/test-rule-groups.json --data-dir2 generated/rule-groups
+
+# Preprocess rule source documents into generated rule groups
+preprocess:
+	@PYTHON=$$(which python3 || which python); \
+	if [ ! -d .venv ]; then $$PYTHON -m venv .venv; fi; \
+	.venv/bin/pip install -q -r scripts/requirements.txt; \
+	if [ -d data/rule-sources ]; then \
+		.venv/bin/python scripts/preprocess_rule_sources.py --source-dir data/rule-sources --output-dir generated/rule-groups; \
+	fi
 
 # Rules engine integration tests with real YAML data
 test-rules: install build/test-rule-groups.json
 	pnpm exec vitest run tests/integration/rules-engine/yaml-scenarios-runner.test.ts
 
 # Sync rule groups to DynamoDB
-sync-rule-groups: scripts/sync_rule_groups.py scripts/requirements.txt
+sync-rule-groups: scripts/sync_rule_groups.py scripts/requirements.txt preprocess
 	@echo "Syncing rule groups to DynamoDB..."
 	@PYTHON=$$(which python3 || which python); \
 	if [ ! -d .venv ]; then $$PYTHON -m venv .venv; fi; \
 	.venv/bin/pip install -q -r scripts/requirements.txt; \
-	.venv/bin/python scripts/sync_rule_groups.py --table=$(TEST_DYNAMODB_TABLE)
+	.venv/bin/python scripts/sync_rule_groups.py --table=$(TEST_DYNAMODB_TABLE) --data-dir2 generated/rule-groups
 
 # Validate for any environment
 validate-%: terraform/environment/%/.terraform
@@ -272,7 +281,7 @@ clean:
 	@echo "Cleaning Go artifacts..."
 	rm -rf build/lambdas
 	@echo "Cleaning frontend artifacts..."
-	rm -rf build .svelte-kit node_modules coverage test-results playwright-report
+	rm -rf build .svelte-kit node_modules coverage test-results playwright-report generated
 	@echo "Done."
 
 # Help
@@ -291,6 +300,7 @@ help:
 	@echo "  make build               Build for production"
 	@echo "  make push-test           Build and sync to test S3 + invalidate CDN"
 	@echo "  make sync-rule-groups      Sync rule groups from YAML files to DynamoDB"
+	@echo "  make preprocess            Compile rule source documents into rule-group YAML"
 	@echo ""
 	@echo "Testing:"
 	@echo "  make test                Run all tests (terraform + frontend)"
