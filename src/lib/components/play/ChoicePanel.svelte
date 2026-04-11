@@ -165,13 +165,19 @@
 
   function rollHit(event: MouseEvent): void {
     hitRollResult = Math.floor(Math.random() * 20) + 1;
+    damageRollResult = null;
     playRollAnimation(event.currentTarget as HTMLElement);
   }
 
   function rollDamage(event: MouseEvent): void {
     const die = attackDamageDie ?? 0;
     if (die > 0) {
-      damageRollResult = Math.floor(Math.random() * die) + 1;
+      if (isNat20) {
+        damageRollResult =
+          Math.floor(Math.random() * die) + 1 + (Math.floor(Math.random() * die) + 1);
+      } else {
+        damageRollResult = Math.floor(Math.random() * die) + 1;
+      }
       playRollAnimation(event.currentTarget as HTMLElement);
     }
   }
@@ -330,16 +336,17 @@
           <button
             type="button"
             class="attack-chip attack-chip--rollable"
+            class:attack-chip--crit={isNat20 && damageRollResult !== null}
             onclick={rollDamage}
             disabled={!attackDamageDie || attackDamageDie <= 0}
             aria-label={damageRollResult !== null
               ? `${$t('play.choices.attack.reroll')} ${$t('play.choices.attack.damage')}: ${damageTotal}`
-              : `${$t('play.choices.attack.roll')} ${$t('play.choices.attack.damage')}: ${attackDamageDie && attackDamageDie > 0 ? `d${attackDamageDie}${formatBonus(attackDamageBonus)}` : formatBonus(attackDamageBonus) || '0'}`}
+              : `${$t('play.choices.attack.roll')} ${$t('play.choices.attack.damage')}: ${attackDamageDie && attackDamageDie > 0 ? `${isNat20 ? '2' : ''}d${attackDamageDie}${formatBonus(attackDamageBonus)}` : formatBonus(attackDamageBonus) || '0'}`}
           >
             {#if damageRollResult !== null}
               {damageTotal}
             {:else if attackDamageDie && attackDamageDie > 0}
-              d{attackDamageDie}{formatBonus(attackDamageBonus)}
+              {isNat20 ? '2' : ''}d{attackDamageDie}{formatBonus(attackDamageBonus)}
             {:else}
               {formatBonus(attackDamageBonus) || '0'}
             {/if}
