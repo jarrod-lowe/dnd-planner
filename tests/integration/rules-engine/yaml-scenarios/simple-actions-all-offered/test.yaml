@@ -1,0 +1,43 @@
+name: 'All 7 simple actions offered simultaneously'
+description: >
+  Verify that all 7 simple actions (disengage, dodge, improvise, influence,
+  search, study, utilize) are offered and legal when an action is available.
+  Adding one consumes the action, making all others illegal.
+
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/simple-actions
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          actions.remaining: 1
+        offers:
+          legal:
+            - disengage-action
+            - dodge-action
+            - improvise-action
+            - influence-action
+            - search-action
+            - study-action
+            - utilize-action
+
+  - addOffer:
+      id: dodge-action
+      assert:
+        facts:
+          actions.remaining: 0
+
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - disengage-action
+            - dodge-action
+            - improvise-action
+            - influence-action
+            - search-action
+            - study-action
+            - utilize-action

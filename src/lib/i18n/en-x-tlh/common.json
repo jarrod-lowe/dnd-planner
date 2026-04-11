@@ -356,6 +356,50 @@
           "no_action": "DIvI' tu'lu'be'"
         }
       },
+      "simple-actions": {
+        "disengage-action": {
+          "name": "DIvI' DIch"
+        },
+        "action-disengage-offer": {
+          "no_action": "DIvI' tu'lu'be'"
+        },
+        "dodge-action": {
+          "name": "DIvI' pel"
+        },
+        "action-dodge-offer": {
+          "no_action": "DIvI' tu'lu'be'"
+        },
+        "improvise-action": {
+          "name": "DIvI' chu'"
+        },
+        "action-improvise-offer": {
+          "no_action": "DIvI' tu'lu'be'"
+        },
+        "influence-action": {
+          "name": "DIvI' Quv"
+        },
+        "action-influence-offer": {
+          "no_action": "DIvI' tu'lu'be'"
+        },
+        "search-action": {
+          "name": "DIvI' nej"
+        },
+        "action-search-offer": {
+          "no_action": "DIvI' tu'lu'be'"
+        },
+        "study-action": {
+          "name": "DIvI' laD"
+        },
+        "action-study-offer": {
+          "no_action": "DIvI' tu'lu'be'"
+        },
+        "utilize-action": {
+          "name": "DIvI' lo'"
+        },
+        "action-utilize-offer": {
+          "no_action": "DIvI' tu'lu'be'"
+        }
+      },
       "grapple": {
         "grapple-action": {
           "name": "DIvI' qop"
