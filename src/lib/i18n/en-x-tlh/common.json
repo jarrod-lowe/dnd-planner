@@ -568,7 +568,12 @@
       },
       "initiative": {
         "roll": "DIvI'",
-        "reroll": "DIvI'qa'"
+        "reroll": "DIvI'qa'",
+        "advantage": "DIvI' Dung",
+        "disadvantage": "DIvI' bIng",
+        "advantageResult": "DIvI' Dung",
+        "disadvantageResult": "DIvI' bIng",
+        "normal": "motlh"
       },
       "attack": {
         "range": "chuS",
@@ -577,7 +582,12 @@
         "roll": "DIvI'",
         "reroll": "DIvI'qa'",
         "nat20": "DIch naQ!",
-        "nat1": "DIch Hutlh!"
+        "nat1": "DIch Hutlh!",
+        "advantage": "DIvI' Dung",
+        "disadvantage": "DIvI' bIng",
+        "advantageResult": "DIvI' Dung",
+        "disadvantageResult": "DIvI' bIng",
+        "normal": "motlh"
       }
     },
     "plan": {

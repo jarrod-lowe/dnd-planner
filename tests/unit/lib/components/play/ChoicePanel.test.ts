@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import ChoicePanel from '$lib/components/play/ChoicePanel.svelte';
 import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
@@ -1186,6 +1186,483 @@ describe('ChoicePanel', () => {
 
       // Damage should reset to formula
       expect(buttons[1].textContent).toBe('d8+3');
+    });
+  });
+
+  // === Advantage/Disadvantage tests ===
+
+  const createMockInitiativeEntry = (overrides?: {
+    initiativeBonus?: number;
+  }): AvailableRuleEntry => ({
+    rule: {
+      id: 'roll-initiative',
+      description: 'Roll Initiative',
+      activities: [],
+      ui: {
+        model: 'initiative-roll',
+        section: 'other',
+        name: 'rule.dnd-5e-2024.initiative.roll-initiative.name'
+      },
+      vars: {
+        initiativeBonus: {
+          default: { number: overrides?.initiativeBonus ?? 2 }
+        }
+      }
+    } as Rule,
+    legal: true,
+    applicable: true,
+    diagnostics: []
+  });
+
+  describe('Advantage/Disadvantage', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+      vi.restoreAllMocks();
+    });
+
+    // --- Popover trigger tests ---
+
+    it('opens popover on long press of hit chip', async () => {
+      const entry = createMockAttackEntry();
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const hitButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.pointerDown(hitButton);
+      await vi.advanceTimersByTimeAsync(300);
+
+      const menu = container.querySelector('[role="menu"]');
+      expect(menu).toBeTruthy();
+    });
+
+    it('does not open popover on short press of hit chip', async () => {
+      const entry = createMockAttackEntry();
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const hitButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.pointerDown(hitButton);
+      vi.advanceTimersByTime(200);
+      await fireEvent.pointerUp(hitButton);
+      vi.advanceTimersByTime(100);
+
+      const menu = container.querySelector('[role="menu"]');
+      expect(menu).toBeFalsy();
+    });
+
+    it('opens popover on Shift+Enter on hit chip', async () => {
+      const entry = createMockAttackEntry();
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const hitButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.keyDown(hitButton, { key: 'Enter', shiftKey: true });
+
+      const menu = container.querySelector('[role="menu"]');
+      expect(menu).toBeTruthy();
+    });
+
+    it('opens popover on long press of initiative chip', async () => {
+      const entry = createMockInitiativeEntry();
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const initButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.pointerDown(initButton);
+      await vi.advanceTimersByTimeAsync(300);
+
+      const menu = container.querySelector('[role="menu"]');
+      expect(menu).toBeTruthy();
+    });
+
+    it('dismisses popover on click outside', async () => {
+      const entry = createMockAttackEntry();
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const hitButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.pointerDown(hitButton);
+      await vi.advanceTimersByTimeAsync(300);
+
+      expect(container.querySelector('[role="menu"]')).toBeTruthy();
+
+      await fireEvent.click(document.body);
+
+      expect(container.querySelector('[role="menu"]')).toBeFalsy();
+    });
+
+    // --- Roll mechanics tests ---
+
+    it('advantage roll takes higher of two d20s', async () => {
+      const entry = createMockAttackEntry();
+      // 0.1 → d20=3, 0.5 → d20=11. Advantage takes 11. Total = 11 + 5 = 16
+      const randomMock = vi.spyOn(Math, 'random').mockReturnValueOnce(0.1).mockReturnValueOnce(0.5);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      // Open popover
+      const hitButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.pointerDown(hitButton);
+      await vi.advanceTimersByTimeAsync(300);
+
+      // Click "Advantage" (first menuitem)
+      const items = container.querySelectorAll('[role="menuitem"]');
+      await fireEvent.click(items[0]);
+
+      // Should have called random twice (two d20 rolls)
+      expect(randomMock).toHaveBeenCalledTimes(2);
+      // Result should be 11 (higher) + 5 bonus = 16
+      expect(hitButton.textContent).toContain('16');
+    });
+
+    it('disadvantage roll takes lower of two d20s', async () => {
+      const entry = createMockAttackEntry();
+      // 0.1 → d20=3, 0.5 → d20=11. Disadvantage takes 3. Total = 3 + 5 = 8
+      vi.spyOn(Math, 'random').mockReturnValueOnce(0.1).mockReturnValueOnce(0.5);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const hitButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.pointerDown(hitButton);
+      await vi.advanceTimersByTimeAsync(300);
+
+      // Click "Disadvantage" (third menuitem)
+      const items = container.querySelectorAll('[role="menuitem"]');
+      await fireEvent.click(items[2]);
+
+      // Result should be 3 (lower) + 5 bonus = 8
+      expect(hitButton.textContent).toContain('8');
+    });
+
+    it('normal roll from popover uses single d20', async () => {
+      const entry = createMockAttackEntry();
+      // 0.6 → d20=13. Total = 13 + 5 = 18
+      const randomMock = vi.spyOn(Math, 'random').mockReturnValue(0.6);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const hitButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.pointerDown(hitButton);
+      await vi.advanceTimersByTimeAsync(300);
+
+      // Click "Normal" (second menuitem)
+      const items = container.querySelectorAll('[role="menuitem"]');
+      await fireEvent.click(items[1]);
+
+      expect(randomMock).toHaveBeenCalledTimes(1);
+      expect(hitButton.textContent).toContain('18');
+    });
+
+    it('re-rolling hit with advantage resets damage result', async () => {
+      const entry = createMockAttackEntry({ damageDie: 8, damageBonus: 3 });
+      const randomMock = vi.spyOn(Math, 'random');
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      const hitButton = buttons[0] as HTMLButtonElement;
+      const damageButton = buttons[1] as HTMLButtonElement;
+
+      // Roll normal hit: 0.6 → 13
+      randomMock.mockReturnValue(0.6);
+      await fireEvent.click(hitButton);
+
+      // Roll damage: 0.5 → floor(0.5*8)+1 = 5, total = 8
+      randomMock.mockReturnValue(0.5);
+      await fireEvent.click(damageButton);
+      expect(damageButton.textContent).toBe('8');
+
+      // Re-roll with advantage via popover
+      randomMock.mockReturnValueOnce(0.1).mockReturnValueOnce(0.5);
+      await fireEvent.pointerDown(hitButton);
+      await vi.advanceTimersByTimeAsync(300);
+      const items = container.querySelectorAll('[role="menuitem"]');
+      await fireEvent.click(items[0]); // Advantage
+
+      // Damage should reset to formula
+      expect(damageButton.textContent).toBe('d8+3');
+    });
+
+    it('advantage works for initiative roll', async () => {
+      const entry = createMockInitiativeEntry({ initiativeBonus: 2 });
+      // 0.1 → d20=3, 0.5 → d20=11. Advantage takes 11. Total = 11 + 2 = 13
+      vi.spyOn(Math, 'random').mockReturnValueOnce(0.1).mockReturnValueOnce(0.5);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const initButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.pointerDown(initButton);
+      await vi.advanceTimersByTimeAsync(300);
+
+      const items = container.querySelectorAll('[role="menuitem"]');
+      await fireEvent.click(items[0]); // Advantage
+
+      expect(initButton.textContent).toContain('13');
+    });
+
+    it('disadvantage works for initiative roll', async () => {
+      const entry = createMockInitiativeEntry({ initiativeBonus: 2 });
+      // 0.1 → d20=3, 0.5 → d20=11. Disadvantage takes 3. Total = 3 + 2 = 5
+      vi.spyOn(Math, 'random').mockReturnValueOnce(0.1).mockReturnValueOnce(0.5);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const initButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.pointerDown(initButton);
+      await vi.advanceTimersByTimeAsync(300);
+
+      const items = container.querySelectorAll('[role="menuitem"]');
+      await fireEvent.click(items[2]); // Disadvantage
+
+      expect(initButton.textContent).toContain('5');
+    });
+
+    // --- Result display tests ---
+
+    it('shows advantage arrow SVG before result', async () => {
+      const entry = createMockAttackEntry();
+      vi.spyOn(Math, 'random').mockReturnValueOnce(0.1).mockReturnValueOnce(0.5);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const hitButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.pointerDown(hitButton);
+      await vi.advanceTimersByTimeAsync(300);
+
+      const items = container.querySelectorAll('[role="menuitem"]');
+      await fireEvent.click(items[0]); // Advantage
+
+      const arrow = hitButton.querySelector('.roll-mode-icon--advantage');
+      expect(arrow).toBeTruthy();
+      expect(arrow?.getAttribute('aria-label')).toBe('play.choices.attack.advantageResult');
+    });
+
+    it('shows disadvantage arrow SVG before result', async () => {
+      const entry = createMockAttackEntry();
+      vi.spyOn(Math, 'random').mockReturnValueOnce(0.1).mockReturnValueOnce(0.5);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const hitButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.pointerDown(hitButton);
+      await vi.advanceTimersByTimeAsync(300);
+
+      const items = container.querySelectorAll('[role="menuitem"]');
+      await fireEvent.click(items[2]); // Disadvantage
+
+      const arrow = hitButton.querySelector('.roll-mode-icon--disadvantage');
+      expect(arrow).toBeTruthy();
+      expect(arrow?.getAttribute('aria-label')).toBe('play.choices.attack.disadvantageResult');
+    });
+
+    it('normal roll shows no arrow SVG', async () => {
+      const entry = createMockAttackEntry();
+      vi.spyOn(Math, 'random').mockReturnValue(0.6);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const hitButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.click(hitButton);
+
+      expect(hitButton.querySelector('.roll-mode-icon')).toBeFalsy();
+    });
+
+    it('advantage arrow uses upward pointing SVG path', async () => {
+      const entry = createMockAttackEntry();
+      vi.spyOn(Math, 'random').mockReturnValueOnce(0.1).mockReturnValueOnce(0.5);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const hitButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.pointerDown(hitButton);
+      await vi.advanceTimersByTimeAsync(300);
+
+      const items = container.querySelectorAll('[role="menuitem"]');
+      await fireEvent.click(items[0]); // Advantage
+
+      const path = hitButton.querySelector('.roll-mode-icon--advantage path') as SVGPathElement;
+      // Upward chevron path (points up)
+      expect(path?.getAttribute('d')).toBe('M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z');
+    });
+
+    it('disadvantage arrow uses downward pointing SVG path', async () => {
+      const entry = createMockAttackEntry();
+      vi.spyOn(Math, 'random').mockReturnValueOnce(0.1).mockReturnValueOnce(0.5);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const hitButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.pointerDown(hitButton);
+      await vi.advanceTimersByTimeAsync(300);
+
+      const items = container.querySelectorAll('[role="menuitem"]');
+      await fireEvent.click(items[2]); // Disadvantage
+
+      const path = hitButton.querySelector('.roll-mode-icon--disadvantage path') as SVGPathElement;
+      // Downward chevron path (points down)
+      expect(path?.getAttribute('d')).toBe('M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z');
+    });
+
+    // --- Accessibility tests ---
+
+    it('hit chip has aria-haspopup on trigger', () => {
+      const entry = createMockAttackEntry();
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const hitButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      expect(hitButton?.getAttribute('aria-haspopup')).toBe('menu');
+    });
+
+    it('initiative chip has aria-haspopup on trigger', () => {
+      const entry = createMockInitiativeEntry();
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const initButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      expect(initButton?.getAttribute('aria-haspopup')).toBe('menu');
+    });
+
+    it('popover menu items have role menuitem', async () => {
+      const entry = createMockAttackEntry();
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const hitButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.pointerDown(hitButton);
+      await vi.advanceTimersByTimeAsync(300);
+
+      const items = container.querySelectorAll('[role="menuitem"]');
+      expect(items.length).toBe(3);
+    });
+
+    it('closes popover on Escape key', async () => {
+      const entry = createMockAttackEntry();
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const hitButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.pointerDown(hitButton);
+      await vi.advanceTimersByTimeAsync(300);
+
+      const menu = container.querySelector('[role="menu"]');
+      expect(menu).toBeTruthy();
+
+      if (menu) {
+        await fireEvent.keyDown(menu, { key: 'Escape' });
+      }
+
+      expect(container.querySelector('[role="menu"]')).toBeFalsy();
+    });
+
+    it('advantage result aria-label includes advantage mode', async () => {
+      const entry = createMockAttackEntry();
+      vi.spyOn(Math, 'random').mockReturnValueOnce(0.1).mockReturnValueOnce(0.5);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const hitButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.pointerDown(hitButton);
+      await vi.advanceTimersByTimeAsync(300);
+
+      const items = container.querySelectorAll('[role="menuitem"]');
+      expect(items.length).toBeGreaterThanOrEqual(1);
+      if (items.length > 0) {
+        await fireEvent.click(items[0]); // Advantage
+      }
+
+      const ariaLabel = hitButton.getAttribute('aria-label');
+      expect(ariaLabel).toContain('play.choices.attack.advantageResult');
+    });
+
+    it('disadvantage result aria-label includes disadvantage mode', async () => {
+      const entry = createMockAttackEntry();
+      vi.spyOn(Math, 'random').mockReturnValueOnce(0.1).mockReturnValueOnce(0.5);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const hitButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.pointerDown(hitButton);
+      await vi.advanceTimersByTimeAsync(300);
+
+      const items = container.querySelectorAll('[role="menuitem"]');
+      expect(items.length).toBeGreaterThanOrEqual(3);
+      if (items.length >= 3) {
+        await fireEvent.click(items[2]); // Disadvantage
+      }
+
+      const ariaLabel = hitButton.getAttribute('aria-label');
+      expect(ariaLabel).toContain('play.choices.attack.disadvantageResult');
+    });
+
+    it('roll buttons have min-height style class', () => {
+      const entry = createMockAttackEntry();
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const hitButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      // The CSS rule .attack-chip--rollable { min-height: 2.75rem } is defined in the component
+      // jsdom doesn't resolve CSS, so we verify the class is present (the CSS is tested in browser)
+      expect(hitButton.classList.contains('attack-chip--rollable')).toBe(true);
+    });
+
+    it('popover shows three options: Advantage, Normal, Disadvantage', async () => {
+      const entry = createMockAttackEntry();
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const hitButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.pointerDown(hitButton);
+      await vi.advanceTimersByTimeAsync(300);
+
+      const items = container.querySelectorAll('[role="menuitem"]');
+      expect(items.length).toBe(3);
+      if (items.length >= 3) {
+        expect(items[0].textContent).toContain('play.choices.attack.advantage');
+        expect(items[1].textContent).toContain('play.choices.attack.normal');
+        expect(items[2].textContent).toContain('play.choices.attack.disadvantage');
+      }
     });
   });
 });

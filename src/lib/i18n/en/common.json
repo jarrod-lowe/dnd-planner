@@ -568,7 +568,12 @@
       },
       "initiative": {
         "roll": "Roll",
-        "reroll": "Re-roll"
+        "reroll": "Re-roll",
+        "advantage": "Advantage",
+        "disadvantage": "Disadvantage",
+        "advantageResult": "with advantage",
+        "disadvantageResult": "with disadvantage",
+        "normal": "Normal"
       },
       "attack": {
         "range": "Range",
@@ -577,7 +582,12 @@
         "roll": "Roll",
         "reroll": "Re-roll",
         "nat20": "Critical hit!",
-        "nat1": "Critical miss!"
+        "nat1": "Critical miss!",
+        "advantage": "Advantage",
+        "disadvantage": "Disadvantage",
+        "advantageResult": "with advantage",
+        "disadvantageResult": "with disadvantage",
+        "normal": "Normal"
       }
     },
     "plan": {
