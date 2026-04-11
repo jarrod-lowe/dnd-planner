@@ -41,10 +41,12 @@ ruleGroups:
             rule:
               id: shove-action
               ui:
-                model: shove
+                model: contested-action
                 section: action-attack
                 packBehind: unarmed-strike-use-action
                 name: rule.dnd-5e-2024.shove.shove-action.name
+                vsKey: play.choices.contested.vsStrDex
+                outcomeKey: play.choices.shove.outcome
               vars:
                 dc:
                   capture: true

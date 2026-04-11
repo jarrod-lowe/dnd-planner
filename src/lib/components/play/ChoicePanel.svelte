@@ -128,11 +128,16 @@
     uiModel === 'attack' ? resolveVarDefault('damageBonus') : undefined
   );
 
-  // Grapple model specific values
-  const grappleDc = $derived(uiModel === 'grapple' ? resolveVarDefault('dc') : undefined);
-
-  // Shove model specific values
-  const shoveDc = $derived(uiModel === 'shove' ? resolveVarDefault('dc') : undefined);
+  // Contested action model specific values (grapple, shove, etc.)
+  const contestedDc = $derived(
+    uiModel === 'contested-action' ? resolveVarDefault('dc') : undefined
+  );
+  const contestedOutcomeKey = $derived(
+    uiModel === 'contested-action' ? (entry.rule.ui?.outcomeKey as string | undefined) : undefined
+  );
+  const contestedVsKey = $derived(
+    uiModel === 'contested-action' ? (entry.rule.ui?.vsKey as string | undefined) : undefined
+  );
 
   // Initiative roll model specific values
   const initiativeBonus = $derived(
@@ -544,18 +549,15 @@
           </button>
         </div>
       {/if}
-      {#if uiModel === 'grapple' && grappleDc !== undefined}
+      {#if uiModel === 'contested-action' && contestedDc !== undefined}
         <div class="choice-panel__model choice-panel__attack">
-          <span class="grapple-dc">DC {grappleDc} {$t('play.choices.grapple.vsStrDex')}</span>
+          <span class="contested-dc"
+            >DC {contestedDc} {contestedVsKey ? $t(contestedVsKey) : ''}</span
+          >
           <span class="attack-sep" aria-hidden="true">|</span>
-          <span class="grapple-result">→ {$t('play.choices.grapple.grappled')}</span>
-        </div>
-      {/if}
-      {#if uiModel === 'shove' && shoveDc !== undefined}
-        <div class="choice-panel__model choice-panel__attack">
-          <span class="grapple-dc">DC {shoveDc} {$t('play.choices.shove.vsStrDex')}</span>
-          <span class="attack-sep" aria-hidden="true">|</span>
-          <span class="grapple-result">→ {$t('play.choices.shove.outcome')}</span>
+          <span class="contested-result"
+            >→ {contestedOutcomeKey ? $t(contestedOutcomeKey) : ''}</span
+          >
         </div>
       {/if}
       {#if uiModel === 'initiative-roll' && initiativeBonus !== undefined}
@@ -770,18 +772,15 @@
           </span>
         </div>
       {/if}
-      {#if uiModel === 'grapple' && grappleDc !== undefined}
+      {#if uiModel === 'contested-action' && contestedDc !== undefined}
         <div class="choice-panel__model choice-panel__attack">
-          <span class="grapple-dc">DC {grappleDc} {$t('play.choices.grapple.vsStrDex')}</span>
+          <span class="contested-dc"
+            >DC {contestedDc} {contestedVsKey ? $t(contestedVsKey) : ''}</span
+          >
           <span class="attack-sep" aria-hidden="true">|</span>
-          <span class="grapple-result">→ {$t('play.choices.grapple.grappled')}</span>
-        </div>
-      {/if}
-      {#if uiModel === 'shove' && shoveDc !== undefined}
-        <div class="choice-panel__model choice-panel__attack">
-          <span class="grapple-dc">DC {shoveDc} {$t('play.choices.shove.vsStrDex')}</span>
-          <span class="attack-sep" aria-hidden="true">|</span>
-          <span class="grapple-result">→ {$t('play.choices.shove.outcome')}</span>
+          <span class="contested-result"
+            >→ {contestedOutcomeKey ? $t(contestedOutcomeKey) : ''}</span
+          >
         </div>
       {/if}
       {#if uiModel === 'initiative-roll' && initiativeBonus !== undefined}
@@ -1038,14 +1037,14 @@
     color: var(--md-sys-color-on-surface);
   }
 
-  .grapple-dc {
+  .contested-dc {
     font-family: var(--font-body);
     font-size: var(--font-size-sm);
     font-weight: 600;
     color: var(--md-sys-color-on-surface);
   }
 
-  .grapple-result {
+  .contested-result {
     font-family: var(--font-body);
     font-size: var(--font-size-sm);
     font-weight: 500;
