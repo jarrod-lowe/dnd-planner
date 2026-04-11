@@ -7,6 +7,7 @@ export const SECTION_ORDER: string[] = [
   'configuration',
   'move',
   'action-spell',
+  'action-attack',
   'action-other',
   'bonus-action-other',
   'free',

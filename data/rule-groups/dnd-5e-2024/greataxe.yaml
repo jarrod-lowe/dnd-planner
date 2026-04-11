@@ -1,39 +1,41 @@
 # yaml-language-server: $schema=../schema.json
 ruleGroups:
-  - id: attacks
+  - id: greataxe
+    requires:
+      - attacks
     translations:
       en:
-        name: Attacks
-        description: Core attack rules for unarmed strike and weapon attacks
-        keywords: [attack, unarmed, strike, melee, weapon, damage]
+        name: Greataxe
+        description: Attack rules for the greataxe, a martial melee weapon dealing 1d12 slashing damage
+        keywords: [attack, greataxe, axe, weapon, melee, heavy, two-handed, damage]
       en-x-tlh:
-        name: jey' DIvI'
-        description: jey' DIvI' 'ej jey' naQ
-        keywords: [jey', DIvI', nuH]
+        name: nuH jen
+        description: nuH jen 'ej jey' naQ
+        keywords: [nuH, jen, jey']
     rules:
-      # Compute unarmed strike hit bonus = STR modifier + proficiency bonus
-      - id: compute-unarmed-hit-bonus
+      # Compute greataxe hit bonus = STR modifier + proficiency bonus
+      - id: compute-greataxe-hit-bonus
         phase: normal
         activities:
           - type: numberSum
             target:
-              fact: attack.unarmed.hitBonus
+              fact: attack.greataxe.hitBonus
             sources:
               - fact: str.modifier
               - fact: proficiency.bonus
 
-      # Compute unarmed strike damage bonus = STR modifier
-      - id: compute-unarmed-damage-bonus
+      # Compute greataxe damage bonus = STR modifier
+      - id: compute-greataxe-damage-bonus
         phase: normal
         activities:
           - type: numberCopy
             source:
               fact: str.modifier
             target:
-              fact: attack.unarmed.damageBonus
+              fact: attack.greataxe.damageBonus
 
-      # Offer unarmed strike attack
-      - id: attack-unarmed-strike-offer
+      # Offer greataxe attack
+      - id: attack-greataxe-offer
         after:
           - group: action
           - group: __planned__
@@ -45,14 +47,14 @@ ruleGroups:
                   operator: greaterThan
                   value: 0
                 illegalDiagnostics:
-                  - code: rule.dnd-5e-2024.attacks.attack-unarmed-strike-offer.no_action
+                  - code: rule.dnd-5e-2024.attacks.attack-greataxe-offer.no_action
                     severity: error
             rule:
-              id: unarmed-strike
+              id: greataxe
               ui:
                 model: attack
                 section: action-attack
-                name: rule.dnd-5e-2024.attacks.unarmed-strike.name
+                name: rule.dnd-5e-2024.attacks.greataxe.name
               group:
                 - __planned__
                 - action
@@ -63,14 +65,14 @@ ruleGroups:
                 hitBonus:
                   capture: true
                   default:
-                    fact: attack.unarmed.hitBonus
+                    fact: attack.greataxe.hitBonus
                 damageDie:
                   default:
-                    number: 0
+                    number: 12
                 damageBonus:
                   capture: true
                   default:
-                    fact: attack.unarmed.damageBonus
+                    fact: attack.greataxe.damageBonus
               activities:
                 - type: numberIncrement
                   target:
@@ -83,7 +85,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.dnd-5e-2024.attacks.attack-unarmed-strike-offer.no_action
+                    string: rule.dnd-5e-2024.attacks.attack-greataxe-offer.no_action
                   when:
                     fact: actions.remaining
                     operator: lessThan

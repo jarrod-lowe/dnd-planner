@@ -354,6 +354,12 @@
         },
         "attack-unarmed-strike-offer": {
           "no_action": "No action available"
+        },
+        "greataxe": {
+          "name": "Greataxe"
+        },
+        "attack-greataxe-offer": {
+          "no_action": "No action available"
         }
       },
       "hp": {
@@ -538,6 +544,7 @@
         "configuration": "Configuration",
         "move": "Move",
         "action-spell": "Action → Spell",
+        "action-attack": "Action → Attack",
         "action-other": "Action → Other",
         "bonus-action-other": "Bonus Action → Other",
         "free": "Flavour",

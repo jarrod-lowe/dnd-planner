@@ -354,6 +354,12 @@
         },
         "attack-unarmed-strike-offer": {
           "no_action": "DIvI' tu'lu'be'"
+        },
+        "greataxe": {
+          "name": "nuH jen"
+        },
+        "attack-greataxe-offer": {
+          "no_action": "DIvI' tu'lu'be'"
         }
       },
       "hp": {
@@ -538,6 +544,7 @@
         "configuration": "SeHna'",
         "move": "Do",
         "action-spell": "DIvI' → mugh",
+        "action-attack": "DIvI' → HIv",
         "action-other": "DIvI' → latlh",
         "bonus-action-other": "Quv DIvI' → latlh",
         "free": "Flavour",
