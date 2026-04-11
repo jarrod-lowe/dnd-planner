@@ -133,14 +133,10 @@
     uiModel === 'contested-action' ? resolveVarDefault('dc') : undefined
   );
   const contestedOutcomeKey = $derived(
-    uiModel === 'contested-action'
-      ? (entry.rule.ui?.outcomeKey as string | undefined)
-      : undefined
+    uiModel === 'contested-action' ? (entry.rule.ui?.outcomeKey as string | undefined) : undefined
   );
   const contestedVsKey = $derived(
-    uiModel === 'contested-action'
-      ? (entry.rule.ui?.vsKey as string | undefined)
-      : undefined
+    uiModel === 'contested-action' ? (entry.rule.ui?.vsKey as string | undefined) : undefined
   );
 
   // Initiative roll model specific values
@@ -555,9 +551,13 @@
       {/if}
       {#if uiModel === 'contested-action' && contestedDc !== undefined}
         <div class="choice-panel__model choice-panel__attack">
-          <span class="contested-dc">DC {contestedDc} {contestedVsKey ? $t(contestedVsKey) : ''}</span>
+          <span class="contested-dc"
+            >DC {contestedDc} {contestedVsKey ? $t(contestedVsKey) : ''}</span
+          >
           <span class="attack-sep" aria-hidden="true">|</span>
-          <span class="contested-result">→ {contestedOutcomeKey ? $t(contestedOutcomeKey) : ''}</span>
+          <span class="contested-result"
+            >→ {contestedOutcomeKey ? $t(contestedOutcomeKey) : ''}</span
+          >
         </div>
       {/if}
       {#if uiModel === 'initiative-roll' && initiativeBonus !== undefined}
@@ -774,9 +774,13 @@
       {/if}
       {#if uiModel === 'contested-action' && contestedDc !== undefined}
         <div class="choice-panel__model choice-panel__attack">
-          <span class="contested-dc">DC {contestedDc} {contestedVsKey ? $t(contestedVsKey) : ''}</span>
+          <span class="contested-dc"
+            >DC {contestedDc} {contestedVsKey ? $t(contestedVsKey) : ''}</span
+          >
           <span class="attack-sep" aria-hidden="true">|</span>
-          <span class="contested-result">→ {contestedOutcomeKey ? $t(contestedOutcomeKey) : ''}</span>
+          <span class="contested-result"
+            >→ {contestedOutcomeKey ? $t(contestedOutcomeKey) : ''}</span
+          >
         </div>
       {/if}
       {#if uiModel === 'initiative-roll' && initiativeBonus !== undefined}
