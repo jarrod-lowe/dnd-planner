@@ -476,6 +476,12 @@
         "dagger": {
           "name": "nejwI'"
         },
+        "javelin": {
+          "name": "Javelin"
+        },
+        "attack-javelin-offer": {
+          "no_action": "DIvI' tu'lu'be'"
+        },
         "activation": {
           "no_action": "DIvI' tu'lu'be'",
           "no_reaction": "DIvI' cha' tu'lu'be'",

@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: javelin
+    requires:
+      - attacks
+    translations:
+      en:
+        name: Javelin
+        description: Attack rules for the javelin, a simple melee weapon dealing 1d6 piercing damage
+        keywords: [attack, javelin, weapon, melee, throwable, damage]
+      en-x-tlh:
+        name: Javelin
+        description: Javelin 'ej jey' naQ
+        keywords: [jey', Javelin, nuH]
+    rules:
+      # Compute javelin hit bonus = STR modifier + proficiency bonus
+      - id: compute-javelin-hit-bonus
+        phase: normal
+        activities:
+          - type: numberSum
+            target:
+              fact: attack.javelin.hitBonus
+            sources:
+              - fact: str.modifier
+              - fact: proficiency.bonus
+
+      # Compute javelin damage bonus = STR modifier
+      - id: compute-javelin-damage-bonus
+        phase: normal
+        activities:
+          - type: numberCopy
+            source:
+              fact: str.modifier
+            target:
+              fact: attack.javelin.damageBonus

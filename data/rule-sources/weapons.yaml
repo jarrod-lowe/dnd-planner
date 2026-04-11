@@ -114,6 +114,44 @@ definitions:
         description: nuH jen
         keywords: [nuH, jen, jey']
 
+  - id: javelin
+    kind: option
+    tags: [attack, weapon, melee]
+    requires: [javelin]
+    traits:
+      weapon.throwable: true
+    ui:
+      model: attack
+      name: rule.dnd-5e-2024.attacks.javelin.name
+    vars:
+      range:
+        default:
+          number: 5
+      hitBonus:
+        capture: true
+        default:
+          fact: attack.javelin.hitBonus
+      damageDie:
+        default:
+          number: 6
+      damageBonus:
+        capture: true
+        default:
+          fact: attack.javelin.damageBonus
+    payload:
+      phase: normal
+      group: [__planned__]
+      activities: []
+    translations:
+      en:
+        name: Javelin
+        description: Javelin
+        keywords: [javelin, weapon, attack]
+      en-x-tlh:
+        name: Javelin
+        description: Javelin
+        keywords: [javelin, nuH, jey']
+
 profiles:
   - id: use-action
     match:

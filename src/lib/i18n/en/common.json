@@ -476,6 +476,12 @@
         "dagger": {
           "name": "Dagger"
         },
+        "javelin": {
+          "name": "Javelin"
+        },
+        "attack-javelin-offer": {
+          "no_action": "No action available"
+        },
         "activation": {
           "no_action": "No action available",
           "no_reaction": "No reaction available",
