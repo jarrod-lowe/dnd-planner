@@ -24,6 +24,7 @@ export const STAT_SECTION_ORDER: string[] = [
   'resources',
   'stats',
   'skills',
+  'passive',
   'abilities',
   'magic'
 ];
