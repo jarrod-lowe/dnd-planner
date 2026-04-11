@@ -41,10 +41,12 @@ ruleGroups:
             rule:
               id: grapple-action
               ui:
-                model: grapple
+                model: contested-action
                 section: action-attack
                 packBehind: unarmed-strike-use-action
                 name: rule.dnd-5e-2024.grapple.grapple-action.name
+                vsKey: play.choices.contested.vsStrDex
+                outcomeKey: play.choices.grapple.grappled
               vars:
                 dc:
                   capture: true
