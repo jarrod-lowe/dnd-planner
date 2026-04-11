@@ -234,7 +234,7 @@
     },
     "source": {
       "type": "object",
-      "description": "Value source - exactly one of number, fact, var, condition, or string must be present",
+      "description": "Value source - exactly one of number, fact, var, condition, string, or array must be present",
       "minProperties": 1,
       "maxProperties": 1,
       "properties": {
@@ -257,6 +257,32 @@
         "string": {
           "type": "string",
           "description": "Literal string value (typically an i18n key)"
+        },
+        "array": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rangeEntry"
+          },
+          "description": "Array of range entries for multi-range weapons"
+        }
+      },
+      "additionalProperties": false
+    },
+    "rangeEntry": {
+      "type": "object",
+      "required": ["distance", "type"],
+      "properties": {
+        "distance": {
+          "type": "integer",
+          "description": "Range distance in feet"
+        },
+        "type": {
+          "type": "string",
+          "description": "Range type (melee, thrown, ranged)"
+        },
+        "disadvantage": {
+          "type": "boolean",
+          "description": "Whether attacks at this range have disadvantage"
         }
       },
       "additionalProperties": false

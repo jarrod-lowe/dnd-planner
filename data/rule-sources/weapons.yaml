@@ -7,9 +7,11 @@ definitions:
       model: attack
       name: rule.dnd-5e-2024.attacks.unarmed-strike.name
     vars:
-      range:
+      ranges:
         default:
-          number: 5
+          array:
+            - distance: 5
+              type: melee
       hitBonus:
         capture: true
         default:
@@ -47,9 +49,16 @@ definitions:
       model: attack
       name: rule.dnd-5e-2024.attacks.dagger.name
     vars:
-      range:
+      ranges:
         default:
-          number: 5
+          array:
+            - distance: 5
+              type: melee
+            - distance: 20
+              type: thrown
+            - distance: 60
+              type: thrown
+              disadvantage: true
       hitBonus:
         capture: true
         default:
@@ -86,9 +95,11 @@ definitions:
       model: attack
       name: rule.dnd-5e-2024.attacks.greataxe.name
     vars:
-      range:
+      ranges:
         default:
-          number: 5
+          array:
+            - distance: 5
+              type: melee
       hitBonus:
         capture: true
         default:
@@ -124,9 +135,16 @@ definitions:
       model: attack
       name: rule.dnd-5e-2024.attacks.javelin.name
     vars:
-      range:
+      ranges:
         default:
-          number: 5
+          array:
+            - distance: 5
+              type: melee
+            - distance: 30
+              type: thrown
+            - distance: 120
+              type: thrown
+              disadvantage: true
       hitBonus:
         capture: true
         default:
@@ -197,6 +215,7 @@ profiles:
   - id: use-reaction-weapon
     match:
       tags: [weapon]
+    filterRanges: melee
     ui:
       section: reaction
     gating:

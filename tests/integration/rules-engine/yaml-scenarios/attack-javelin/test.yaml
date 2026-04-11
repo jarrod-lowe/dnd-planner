@@ -25,6 +25,19 @@ steps:
             - set-strength
             - javelin-use-action
           notExists: []
+        offerVars:
+          - id: javelin-use-action
+            vars:
+              ranges:
+                default:
+                  array:
+                    - distance: 5
+                      type: melee
+                    - distance: 30
+                      type: thrown
+                    - distance: 120
+                      type: thrown
+                      disadvantage: true
 
   - addOffer:
       id: set-strength

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { t } from '$lib/i18n';
   import WarningIndicator from './WarningIndicator.svelte';
-  import type { AvailableRuleEntry, Facts } from '$lib/rules-engine';
+  import type { AvailableRuleEntry, Facts, RangeEntry } from '$lib/rules-engine';
 
   interface Props {
     entry: AvailableRuleEntry;
@@ -119,7 +119,12 @@
   );
 
   // Attack model specific values
-  const attackRange = $derived(uiModel === 'attack' ? resolveVarDefault('range') : undefined);
+  const attackRanges = $derived.by(() => {
+    if (uiModel !== 'attack') return undefined;
+    const varDef = entry.rule.vars?.ranges;
+    if (!varDef) return undefined;
+    return varDef.default.array as RangeEntry[] | undefined;
+  });
   const attackHitBonus = $derived(uiModel === 'attack' ? resolveVarDefault('hitBonus') : undefined);
   const attackDamageDie = $derived(
     uiModel === 'attack' ? resolveVarDefault('damageDie') : undefined
@@ -149,9 +154,35 @@
   let damageRollResult: number | null = $state(null);
   let initiativeRollResult: number | null = $state(null);
 
+  // Range selection state - restored from selections if available
+  let selectedRangeIndex = $state((entry.rule.selections?.rangeIndex as number | undefined) ?? 0);
+
+  // Derived: currently selected range entry
+  const selectedRange = $derived(
+    attackRanges && attackRanges.length > 0 ? attackRanges[selectedRangeIndex] : undefined
+  );
+
+  // Cycle to next range, reset rolls, auto-apply disadvantage
+  function cycleRange(): void {
+    if (!attackRanges || attackRanges.length <= 1) return;
+    selectedRangeIndex = (selectedRangeIndex + 1) % attackRanges.length;
+    hitRollResult = null;
+    damageRollResult = null;
+    hitRollMode = selectedRange?.disadvantage ? 'disadvantage' : 'normal';
+    if (onSelectionChange) {
+      onSelectionChange({ rangeIndex: selectedRangeIndex });
+    }
+  }
+
   // Advantage/disadvantage state
   type RollMode = 'normal' | 'advantage' | 'disadvantage';
-  let hitRollMode: RollMode = $state('normal');
+  let hitRollMode: RollMode = $state(
+    (() => {
+      const ranges = entry.rule.vars?.ranges?.default?.array as RangeEntry[] | undefined;
+      const idx = (entry.rule.selections?.rangeIndex as number | undefined) ?? 0;
+      return ranges?.[idx]?.disadvantage ? 'disadvantage' : 'normal';
+    })()
+  );
   let initiativeRollMode: RollMode = $state('normal');
   let showHitPopover = $state(false);
   let showInitiativePopover = $state(false);
@@ -185,15 +216,20 @@
     );
   }
 
-  function rollD20(mode: RollMode): number {
+  function rollD20(mode: RollMode, label?: string): number {
     const roll1 = Math.floor(Math.random() * 20) + 1;
-    if (mode === 'normal') return roll1;
+    if (mode === 'normal') {
+      console.log(`[d20] ${label ?? 'roll'}: ${roll1}`);
+      return roll1;
+    }
     const roll2 = Math.floor(Math.random() * 20) + 1;
-    return mode === 'advantage' ? Math.max(roll1, roll2) : Math.min(roll1, roll2);
+    const result = mode === 'advantage' ? Math.max(roll1, roll2) : Math.min(roll1, roll2);
+    console.log(`[d20] ${label ?? 'roll'} (${mode}): [${roll1}, ${roll2}] → ${result}`);
+    return result;
   }
 
   function rollHit(event: MouseEvent, mode: RollMode = 'normal'): void {
-    hitRollResult = rollD20(mode);
+    hitRollResult = rollD20(mode, `${uiName ?? 'hit'} @ ${selectedRange?.distance ?? '?'}ft`);
     hitRollMode = mode;
     damageRollResult = null;
     playRollAnimation(event.currentTarget as HTMLElement);
@@ -213,7 +249,7 @@
   }
 
   function rollInitiative(event: MouseEvent, mode: RollMode = 'normal'): void {
-    initiativeRollResult = rollD20(mode);
+    initiativeRollResult = rollD20(mode, 'initiative');
     initiativeRollMode = mode;
     playRollAnimation(event.currentTarget as HTMLElement);
   }
@@ -451,9 +487,32 @@
           {/each}
         </div>
       {/if}
-      {#if uiModel === 'attack' && attackRange !== undefined}
+      {#if uiModel === 'attack' && selectedRange !== undefined}
         <div class="choice-panel__model choice-panel__attack">
-          <span class="attack-range">{attackRange} ft</span>
+          {#if attackRanges && attackRanges.length > 1}
+            <button
+              type="button"
+              class="attack-range attack-range--multi"
+              class:attack-range--disadvantage={selectedRange.disadvantage}
+              onclick={cycleRange}
+              aria-label="{$t(
+                'play.choices.attack.range'
+              )}: {selectedRange.distance} ft ({selectedRange.type}){selectedRange.disadvantage
+                ? `. ${$t('play.choices.attack.rangeDisadvantage')}`
+                : ''}. {$t('play.choices.attack.rangeCycle', {
+                distance: selectedRange.distance,
+                type: selectedRange.type
+              })}"
+              >{selectedRange.distance} ft{#if selectedRange.disadvantage}<span
+                  class="attack-range__disadv"
+                  aria-hidden="true"
+                >
+                  &#9660;</span
+                >{/if}</button
+            >
+          {:else}
+            <span class="attack-range">{selectedRange.distance} ft</span>
+          {/if}
           <span class="attack-sep" aria-hidden="true">|</span>
           <button
             type="button"
@@ -469,7 +528,7 @@
                 didOpenPopover = false;
                 return;
               }
-              rollHit(e);
+              rollHit(e, hitRollMode);
             }}
             onpointerdown={() => startLongPress('hit')}
             onpointerup={() => cancelLongPress()}
@@ -757,11 +816,16 @@
           {/each}
         </div>
       {/if}
-      {#if uiModel === 'attack' && attackRange !== undefined}
+      {#if uiModel === 'attack' && selectedRange !== undefined}
         <div class="choice-panel__model choice-panel__attack">
-          <span class="attack-range">{attackRange} ft</span>
-          <span class="attack-sep" aria-hidden="true">|</span>
-          <span class="attack-chip">d20{formatBonus(attackHitBonus)}</span>
+          <span class="attack-range" class:attack-range--disadvantage={selectedRange.disadvantage}
+            >{selectedRange.distance} ft{#if selectedRange.disadvantage}<span
+                class="attack-range__disadv"
+                aria-hidden="true"
+              >
+                &#9660;</span
+              >{/if}</span
+          >
           <span class="attack-sep" aria-hidden="true">|</span>
           <span class="attack-chip">
             {#if attackDamageDie && attackDamageDie > 0}
@@ -1088,6 +1152,35 @@
     font-family: var(--font-body);
     font-size: var(--font-size-sm);
     color: var(--md-sys-color-on-surface-variant);
+  }
+  .attack-range--multi {
+    background: none;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--radius-sm);
+    padding: 0.125rem 0.375rem;
+    cursor: pointer;
+    color: var(--md-sys-color-on-surface-variant);
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    touch-action: manipulation;
+    &:hover {
+      background: var(--md-sys-color-surface-container-highest);
+    }
+    &:active {
+      background: var(--md-sys-color-surface-container-high);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--md-sys-color-primary);
+      outline-offset: 2px;
+    }
+  }
+  .attack-range--disadvantage {
+    border-color: var(--md-sys-color-error);
+    color: var(--md-sys-color-error);
+  }
+  .attack-range__disadv {
+    font-size: 0.7em;
+    vertical-align: middle;
   }
 
   .attack-crit-icon {

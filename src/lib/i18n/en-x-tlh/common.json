@@ -712,6 +712,8 @@
       },
       "attack": {
         "range": "chuS",
+        "rangeCycle": "{distance} chuS ({type}). yIwuq.",
+        "rangeDisadvantage": "DIvI' bIng",
         "hit": "DIj",
         "damage": "DIch",
         "roll": "DIvI'",

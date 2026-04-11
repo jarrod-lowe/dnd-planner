@@ -75,12 +75,19 @@ export interface Target {
  * - condition: Evaluates a condition to 0 (false) or 1 (true)
  * - string: A literal string value (typically an i18n key)
  */
+export interface RangeEntry {
+  distance: number;
+  type: string;
+  disadvantage?: boolean;
+}
+
 export interface Source {
   fact?: string;
   number?: number;
   var?: string;
   condition?: Condition;
   string?: string;
+  array?: RangeEntry[];
 }
 
 /**

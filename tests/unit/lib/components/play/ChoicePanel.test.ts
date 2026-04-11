@@ -27,7 +27,7 @@ const createMockAttackEntry = (overrides?: {
       name: 'rule.dnd-5e-2024.attacks.unarmed-strike.name'
     },
     vars: {
-      range: { default: { number: overrides?.range ?? 5 } },
+      ranges: { default: { array: [{ distance: overrides?.range ?? 5, type: 'melee' }] } },
       hitBonus: { capture: true, default: { number: overrides?.hitBonus ?? 5 } },
       damageDie: { default: { number: overrides?.damageDie ?? 0 } },
       damageBonus: { capture: true, default: { number: overrides?.damageBonus ?? 3 } }
