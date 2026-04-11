@@ -1,0 +1,53 @@
+name: 'Shove Action'
+description: >
+  Shove action offer appears in action-attack section, consumes an action
+  when added to plan. Shove DC is computed as 8 + proficiency bonus + STR
+  modifier. After endTurn, actions reset and shove is available again.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/shove
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          actions.max: 1
+          actions.remaining: 1
+          shove.dc: 8
+        offers:
+          exists:
+            - set-strength
+            - shove-action
+
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 16
+      assert:
+        facts:
+          str.value: 16
+          str.modifier: 3
+          shove.dc: 11
+
+  - addOffer:
+      id: shove-action
+      assert:
+        facts:
+          actions.remaining: 0
+        offers:
+          illegal:
+            - shove-action
+
+  - endTurn:
+      assert:
+        facts:
+          actions.max: 1
+          actions.remaining: 1
+          shove.dc: 11
+        offers:
+          exists:
+            - shove-action

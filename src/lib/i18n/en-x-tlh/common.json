@@ -364,6 +364,14 @@
           "no_action": "DIvI' tu'lu'be'"
         }
       },
+      "shove": {
+        "shove-action": {
+          "name": "DIvI' puv"
+        },
+        "action-shove-offer": {
+          "no_action": "DIvI' tu'lu'be'"
+        }
+      },
       "simple-actions": {
         "disengage-action": {
           "name": "DIvI' DIch"
@@ -669,6 +677,10 @@
       "grapple": {
         "vsStrDex": "HoS/Do",
         "grappled": "qop"
+      },
+      "shove": {
+        "vsStrDex": "HoS/Do",
+        "outcome": "puv pagh ngech"
       }
     },
     "plan": {

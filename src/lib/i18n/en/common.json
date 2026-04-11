@@ -364,6 +364,14 @@
           "no_action": "No action available"
         }
       },
+      "shove": {
+        "shove-action": {
+          "name": "Shove"
+        },
+        "action-shove-offer": {
+          "no_action": "No action available"
+        }
+      },
       "simple-actions": {
         "disengage-action": {
           "name": "Disengage"
@@ -669,6 +677,10 @@
       "grapple": {
         "vsStrDex": "STR/DEX",
         "grappled": "Grappled"
+      },
+      "shove": {
+        "vsStrDex": "STR/DEX",
+        "outcome": "Push 5ft or Prone"
       }
     },
     "plan": {
