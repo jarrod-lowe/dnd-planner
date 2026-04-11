@@ -138,6 +138,17 @@
   let damageRollResult: number | null = $state(null);
   let initiativeRollResult: number | null = $state(null);
 
+  // Advantage/disadvantage state
+  type RollMode = 'normal' | 'advantage' | 'disadvantage';
+  let hitRollMode: RollMode = $state('normal');
+  let initiativeRollMode: RollMode = $state('normal');
+  let showHitPopover = $state(false);
+  let showInitiativePopover = $state(false);
+  let longPressTimer: ReturnType<typeof setTimeout> | null = null;
+  let didOpenPopover = false;
+  let hitTriggerRef: HTMLButtonElement | undefined = $state();
+  let initiativeTriggerRef: HTMLButtonElement | undefined = $state();
+
   // Derived roll totals and crit detection
   const hitTotal = $derived(hitRollResult !== null ? hitRollResult + (attackHitBonus ?? 0) : null);
   const damageTotal = $derived(
@@ -163,8 +174,16 @@
     );
   }
 
-  function rollHit(event: MouseEvent): void {
-    hitRollResult = Math.floor(Math.random() * 20) + 1;
+  function rollD20(mode: RollMode): number {
+    const roll1 = Math.floor(Math.random() * 20) + 1;
+    if (mode === 'normal') return roll1;
+    const roll2 = Math.floor(Math.random() * 20) + 1;
+    return mode === 'advantage' ? Math.max(roll1, roll2) : Math.min(roll1, roll2);
+  }
+
+  function rollHit(event: MouseEvent, mode: RollMode = 'normal'): void {
+    hitRollResult = rollD20(mode);
+    hitRollMode = mode;
     damageRollResult = null;
     playRollAnimation(event.currentTarget as HTMLElement);
   }
@@ -182,10 +201,120 @@
     }
   }
 
-  function rollInitiative(event: MouseEvent): void {
-    initiativeRollResult = Math.floor(Math.random() * 20) + 1;
+  function rollInitiative(event: MouseEvent, mode: RollMode = 'normal'): void {
+    initiativeRollResult = rollD20(mode);
+    initiativeRollMode = mode;
     playRollAnimation(event.currentTarget as HTMLElement);
   }
+
+  // Long-press detection for advantage/disadvantage popover
+  const LONG_PRESS_MS = 300;
+
+  function startLongPress(target: 'hit' | 'initiative'): void {
+    longPressTimer = setTimeout(() => {
+      longPressTimer = null;
+      didOpenPopover = true;
+      if (target === 'hit') {
+        showHitPopover = true;
+      } else {
+        showInitiativePopover = true;
+      }
+    }, LONG_PRESS_MS);
+  }
+
+  function cancelLongPress(): void {
+    if (longPressTimer !== null) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+  }
+
+  function selectHitMode(event: MouseEvent, mode: RollMode): void {
+    showHitPopover = false;
+    rollHit(event, mode);
+  }
+
+  function selectInitiativeMode(event: MouseEvent, mode: RollMode): void {
+    showInitiativePopover = false;
+    rollInitiative(event, mode);
+  }
+
+  // Click-outside dismissal for popovers
+  $effect(() => {
+    function handleClickOutside(e: MouseEvent): void {
+      if (showHitPopover) {
+        const popover = document.querySelector('.roll-popover');
+        if (
+          popover &&
+          !popover.contains(e.target as Node) &&
+          hitTriggerRef &&
+          !hitTriggerRef.contains(e.target as Node)
+        ) {
+          showHitPopover = false;
+        }
+      }
+      if (showInitiativePopover) {
+        const popover = document.querySelector('.roll-popover--initiative');
+        if (
+          popover &&
+          !popover.contains(e.target as Node) &&
+          initiativeTriggerRef &&
+          !initiativeTriggerRef.contains(e.target as Node)
+        ) {
+          showInitiativePopover = false;
+        }
+      }
+    }
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  });
+
+  // Keyboard navigation for popover focus trap
+  $effect(() => {
+    function handlePopoverKeydown(e: KeyboardEvent): void {
+      const popover =
+        document.querySelector('.roll-popover') ??
+        document.querySelector('.roll-popover--initiative');
+      if (!popover) return;
+      const items = Array.from(popover.querySelectorAll('[role="menuitem"]'));
+      const currentIndex = items.indexOf(document.activeElement as HTMLElement);
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (showHitPopover) {
+          showHitPopover = false;
+          hitTriggerRef?.focus();
+        }
+        if (showInitiativePopover) {
+          showInitiativePopover = false;
+          initiativeTriggerRef?.focus();
+        }
+        return;
+      }
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const next = items[(currentIndex + 1) % items.length];
+        (next as HTMLElement)?.focus();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prev = items[(currentIndex - 1 + items.length) % items.length];
+        (prev as HTMLElement)?.focus();
+      }
+    }
+
+    if (showHitPopover || showInitiativePopover) {
+      document.addEventListener('keydown', handlePopoverKeydown);
+      // Auto-focus first menuitem
+      const popover = document.querySelector(
+        showHitPopover ? '.roll-popover' : '.roll-popover--initiative'
+      );
+      const firstItem = popover?.querySelector('[role="menuitem"]') as HTMLElement;
+      firstItem?.focus();
+
+      return () => document.removeEventListener('keydown', handlePopoverKeydown);
+    }
+  });
 
   const proficiencyOptions = [
     { value: 0.5, label: '\u25CB', ariaLabel: $t('play.choices.skillProficiency.half') },
@@ -320,18 +449,74 @@
             class="attack-chip attack-chip--rollable"
             class:attack-chip--crit={hitRollResult !== null && isNat20}
             class:attack-chip--fumble={hitRollResult !== null && isNat1}
-            onclick={rollHit}
+            bind:this={hitTriggerRef}
+            aria-haspopup="menu"
+            aria-expanded={showHitPopover}
+            onclick={(e) => {
+              cancelLongPress();
+              if (didOpenPopover) {
+                didOpenPopover = false;
+                return;
+              }
+              rollHit(e);
+            }}
+            onpointerdown={() => startLongPress('hit')}
+            onpointerup={() => cancelLongPress()}
+            onpointerleave={() => cancelLongPress()}
+            onkeydown={(e) => {
+              if (e.key === 'Enter' && e.shiftKey) {
+                e.preventDefault();
+                showHitPopover = true;
+              }
+            }}
             aria-label={hitRollResult !== null
-              ? `${$t('play.choices.attack.reroll')} ${$t('play.choices.attack.hit')}: ${hitTotal}${isNat20 ? ` — ${$t('play.choices.attack.nat20')}` : ''}${isNat1 ? ` — ${$t('play.choices.attack.nat1')}` : ''}`
+              ? `${$t('play.choices.attack.reroll')} ${$t('play.choices.attack.hit')}: ${hitTotal}${hitRollMode === 'advantage' ? ` — ${$t('play.choices.attack.advantageResult')}` : ''}${hitRollMode === 'disadvantage' ? ` — ${$t('play.choices.attack.disadvantageResult')}` : ''}${isNat20 ? ` — ${$t('play.choices.attack.nat20')}` : ''}${isNat1 ? ` — ${$t('play.choices.attack.nat1')}` : ''}`
               : `${$t('play.choices.attack.roll')} ${$t('play.choices.attack.hit')}: d20{formatBonus(attackHitBonus)}`}
           >
-            {#if hitRollResult !== null}{#if isNat20}<span
-                  class="attack-crit-icon"
-                  aria-hidden="true">&#10004;</span
-                >
-              {/if}{#if isNat1}<span class="attack-crit-icon" aria-hidden="true">&#10008;</span>
-              {/if}{hitTotal}{:else}d20{formatBonus(attackHitBonus)}{/if}
+            {#if hitRollResult !== null}{#if hitRollMode === 'advantage'}<svg
+                  class="roll-mode-icon roll-mode-icon--advantage"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-label={$t('play.choices.attack.advantageResult')}
+                  ><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" /></svg
+                >{/if}{#if hitRollMode === 'disadvantage'}<svg
+                  class="roll-mode-icon roll-mode-icon--disadvantage"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-label={$t('play.choices.attack.disadvantageResult')}
+                  ><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z" /></svg
+                >{/if}{#if isNat20}<span class="attack-crit-icon" aria-hidden="true">&#10004;</span
+                >{/if}{#if isNat1}<span class="attack-crit-icon" aria-hidden="true">&#10008;</span
+                >{/if}{hitTotal}{:else}d20{formatBonus(attackHitBonus)}{/if}
           </button>
+          {#if showHitPopover}
+            <div class="roll-popover" role="menu" aria-label={$t('play.choices.attack.roll')}>
+              <button
+                type="button"
+                class="roll-popover__item"
+                role="menuitem"
+                onclick={(e) => selectHitMode(e, 'advantage')}
+              >
+                {$t('play.choices.attack.advantage')}
+              </button>
+              <button
+                type="button"
+                class="roll-popover__item"
+                role="menuitem"
+                onclick={(e) => selectHitMode(e, 'normal')}
+              >
+                {$t('play.choices.attack.normal')}
+              </button>
+              <button
+                type="button"
+                class="roll-popover__item"
+                role="menuitem"
+                onclick={(e) => selectHitMode(e, 'disadvantage')}
+              >
+                {$t('play.choices.attack.disadvantage')}
+              </button>
+            </div>
+          {/if}
           <span class="attack-sep" aria-hidden="true">|</span>
           <button
             type="button"
@@ -360,21 +545,80 @@
             class="attack-chip attack-chip--rollable"
             class:attack-chip--crit={initiativeRollResult !== null && initiativeNat20}
             class:attack-chip--fumble={initiativeRollResult !== null && initiativeNat1}
-            onclick={rollInitiative}
+            bind:this={initiativeTriggerRef}
+            aria-haspopup="menu"
+            aria-expanded={showInitiativePopover}
+            onclick={(e) => {
+              cancelLongPress();
+              if (didOpenPopover) {
+                didOpenPopover = false;
+                return;
+              }
+              rollInitiative(e);
+            }}
+            onpointerdown={() => startLongPress('initiative')}
+            onpointerup={() => cancelLongPress()}
+            onpointerleave={() => cancelLongPress()}
+            onkeydown={(e) => {
+              if (e.key === 'Enter' && e.shiftKey) {
+                e.preventDefault();
+                showInitiativePopover = true;
+              }
+            }}
             aria-label={initiativeRollResult !== null
-              ? `${$t('play.choices.initiative.reroll')}: ${initiativeTotal}${initiativeNat20 ? ` — ${$t('play.choices.attack.nat20')}` : ''}${initiativeNat1 ? ` — ${$t('play.choices.attack.nat1')}` : ''}`
+              ? `${$t('play.choices.initiative.reroll')}: ${initiativeTotal}${initiativeRollMode === 'advantage' ? ` — ${$t('play.choices.initiative.advantageResult')}` : ''}${initiativeRollMode === 'disadvantage' ? ` — ${$t('play.choices.initiative.disadvantageResult')}` : ''}${initiativeNat20 ? ` — ${$t('play.choices.attack.nat20')}` : ''}${initiativeNat1 ? ` — ${$t('play.choices.attack.nat1')}` : ''}`
               : `${$t('play.choices.initiative.roll')}: d20${formatBonus(initiativeBonus)}`}
           >
-            {#if initiativeRollResult !== null}
-              {#if initiativeNat20}<span class="attack-crit-icon" aria-hidden="true">&#10004;</span
-                >{/if}
-              {#if initiativeNat1}<span class="attack-crit-icon" aria-hidden="true">&#10008;</span
-                >{/if}
-              {initiativeTotal}
-            {:else}
-              d20{formatBonus(initiativeBonus)}
-            {/if}
+            {#if initiativeRollResult !== null}{#if initiativeRollMode === 'advantage'}<svg
+                  class="roll-mode-icon roll-mode-icon--advantage"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-label={$t('play.choices.initiative.advantageResult')}
+                  ><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" /></svg
+                >{/if}{#if initiativeRollMode === 'disadvantage'}<svg
+                  class="roll-mode-icon roll-mode-icon--disadvantage"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-label={$t('play.choices.initiative.disadvantageResult')}
+                  ><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z" /></svg
+                >{/if}{#if initiativeNat20}<span class="attack-crit-icon" aria-hidden="true"
+                  >&#10004;</span
+                >{/if}{#if initiativeNat1}<span class="attack-crit-icon" aria-hidden="true"
+                  >&#10008;</span
+                >{/if}{initiativeTotal}{:else}d20{formatBonus(initiativeBonus)}{/if}
           </button>
+          {#if showInitiativePopover}
+            <div
+              class="roll-popover roll-popover--initiative"
+              role="menu"
+              aria-label={$t('play.choices.initiative.roll')}
+            >
+              <button
+                type="button"
+                class="roll-popover__item"
+                role="menuitem"
+                onclick={(e) => selectInitiativeMode(e, 'advantage')}
+              >
+                {$t('play.choices.initiative.advantage')}
+              </button>
+              <button
+                type="button"
+                class="roll-popover__item"
+                role="menuitem"
+                onclick={(e) => selectInitiativeMode(e, 'normal')}
+              >
+                {$t('play.choices.initiative.normal')}
+              </button>
+              <button
+                type="button"
+                class="roll-popover__item"
+                role="menuitem"
+                onclick={(e) => selectInitiativeMode(e, 'disadvantage')}
+              >
+                {$t('play.choices.initiative.disadvantage')}
+              </button>
+            </div>
+          {/if}
         </div>
       {/if}
     </div>
@@ -745,6 +989,7 @@
     align-items: center;
     gap: var(--spacing-xs);
     flex-wrap: wrap;
+    position: relative;
   }
 
   .attack-chip {
@@ -761,6 +1006,7 @@
 
   .attack-chip--rollable {
     min-width: 3.5rem;
+    min-height: 2.75rem;
     justify-content: center;
     background: var(--md-sys-color-secondary-container);
     color: var(--md-sys-color-on-secondary-container);
@@ -811,5 +1057,92 @@
     background: var(--md-sys-color-error-container);
     color: var(--md-sys-color-error);
     border-color: var(--md-sys-color-error);
+  }
+
+  /* Roll mode indicator SVGs */
+  .roll-mode-icon {
+    width: 1rem;
+    height: 1rem;
+    margin-right: var(--spacing-xs);
+  }
+
+  .roll-mode-icon--advantage {
+    color: var(--md-sys-color-primary);
+  }
+
+  .roll-mode-icon--disadvantage {
+    color: var(--md-sys-color-error);
+  }
+
+  /* Override arrow colors when inside crit/fumble chips so they remain visible */
+  .attack-chip--crit .roll-mode-icon--advantage,
+  .attack-chip--crit .roll-mode-icon--disadvantage {
+    color: var(--md-sys-color-on-primary);
+  }
+
+  .attack-chip--fumble .roll-mode-icon--advantage,
+  .attack-chip--fumble .roll-mode-icon--disadvantage {
+    color: var(--md-sys-color-on-error-container);
+  }
+
+  /* Popover menu */
+  .roll-popover {
+    position: absolute;
+    top: calc(100% + var(--spacing-xs));
+    left: 0;
+    z-index: var(--z-dropdown);
+    min-width: 8rem;
+    background: var(--md-sys-color-surface-container);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    padding: var(--spacing-xs);
+    animation: popoverSlide 0.15s ease-out;
+  }
+
+  .roll-popover__item {
+    display: block;
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    color: var(--md-sys-color-on-surface);
+    cursor: pointer;
+    text-align: left;
+    min-height: 2.75rem;
+    transition:
+      background-color var(--transition-fast),
+      border-color var(--transition-fast);
+  }
+
+  .roll-popover__item:hover,
+  .roll-popover__item:focus-visible {
+    background: var(--md-sys-color-surface-container-high);
+    border-color: var(--md-sys-color-outline);
+  }
+
+  .roll-popover__item:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: -2px;
+  }
+
+  @keyframes popoverSlide {
+    from {
+      opacity: 0;
+      transform: translateY(-0.25rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .roll-popover {
+      animation: none;
+    }
   }
 </style>
