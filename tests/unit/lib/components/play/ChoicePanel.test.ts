@@ -1034,5 +1034,158 @@ describe('ChoicePanel', () => {
       const separators = container.querySelectorAll('.attack-sep');
       expect(separators.length).toBe(2);
     });
+
+    it('shows doubled damage formula after crit hit roll', async () => {
+      const entry = createMockAttackEntry({ damageDie: 8, damageBonus: 3 });
+      // Roll a nat 20: random 0.95 → floor(0.95 * 20) + 1 = 20
+      vi.spyOn(Math, 'random').mockReturnValue(0.95);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      const hitButton = buttons[0];
+      await fireEvent.click(hitButton);
+
+      const damageButton = buttons[1] as HTMLButtonElement;
+      // Should show "2d8+3" instead of "d8+3"
+      expect(damageButton.textContent).toBe('2d8+3');
+    });
+
+    it('rolls doubled damage dice on crit', async () => {
+      const entry = createMockAttackEntry({ damageDie: 8, damageBonus: 3 });
+      const randomMock = vi.spyOn(Math, 'random');
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+
+      // Roll nat 20 on hit: 0.95 → 20
+      randomMock.mockReturnValue(0.95);
+      await fireEvent.click(buttons[0]);
+
+      // Roll damage: two calls → 0.5 → floor(0.5*8)+1 = 5, 0.25 → floor(0.25*8)+1 = 3
+      randomMock.mockReturnValueOnce(0.5);
+      randomMock.mockReturnValueOnce(0.25);
+      await fireEvent.click(buttons[1]);
+
+      // 5 + 3 + 3(bonus) = 11
+      expect(buttons[1].textContent).toBe('11');
+    });
+
+    it('rolls normal damage on non-crit hit', async () => {
+      const entry = createMockAttackEntry({ damageDie: 8, damageBonus: 3 });
+      const randomMock = vi.spyOn(Math, 'random');
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+
+      // Roll normal hit: 0.6 → 13
+      randomMock.mockReturnValue(0.6);
+      await fireEvent.click(buttons[0]);
+
+      // Roll damage: 0.5 → floor(0.5*8)+1 = 5
+      randomMock.mockReturnValue(0.5);
+      await fireEvent.click(buttons[1]);
+
+      // 5 + 3 = 8
+      expect(buttons[1].textContent).toBe('8');
+    });
+
+    it('reverts damage label when hit is re-rolled as non-crit', async () => {
+      const entry = createMockAttackEntry({ damageDie: 8, damageBonus: 3 });
+      const randomMock = vi.spyOn(Math, 'random');
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      const hitButton = buttons[0];
+      const damageButton = buttons[1] as HTMLButtonElement;
+
+      // Roll nat 20
+      randomMock.mockReturnValue(0.95);
+      await fireEvent.click(hitButton);
+      expect(damageButton.textContent).toBe('2d8+3');
+
+      // Re-roll as non-crit
+      randomMock.mockReturnValue(0.6);
+      await fireEvent.click(hitButton);
+      expect(damageButton.textContent).toBe('d8+3');
+    });
+
+    it('applies crit styling to damage button after rolling crit damage', async () => {
+      const entry = createMockAttackEntry({ damageDie: 8, damageBonus: 3 });
+      const randomMock = vi.spyOn(Math, 'random');
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+
+      // Roll nat 20 on hit
+      randomMock.mockReturnValue(0.95);
+      await fireEvent.click(buttons[0]);
+
+      // Roll damage
+      randomMock.mockReturnValue(0.5);
+      await fireEvent.click(buttons[1]);
+
+      expect(buttons[1].classList.contains('attack-chip--crit')).toBe(true);
+    });
+
+    it('includes doubled dice in damage button aria-label after crit hit', async () => {
+      const entry = createMockAttackEntry({ damageDie: 8, damageBonus: 3 });
+      const randomMock = vi.spyOn(Math, 'random');
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+
+      // Roll nat 20
+      randomMock.mockReturnValue(0.95);
+      await fireEvent.click(buttons[0]);
+
+      const ariaLabel = (buttons[1] as HTMLButtonElement).getAttribute('aria-label');
+      expect(ariaLabel).toContain('2d8');
+    });
+
+    it('resets damage to formula when hit is re-rolled', async () => {
+      const entry = createMockAttackEntry({ damageDie: 8, damageBonus: 3 });
+      const randomMock = vi.spyOn(Math, 'random');
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+
+      // Roll nat 20 on hit
+      randomMock.mockReturnValue(0.95);
+      await fireEvent.click(buttons[0]);
+
+      // Roll damage
+      randomMock.mockReturnValue(0.5);
+      await fireEvent.click(buttons[1]);
+      // Damage shows a total
+      expect(buttons[1].textContent).not.toBe('d8+3');
+
+      // Re-roll hit as non-crit
+      randomMock.mockReturnValue(0.6);
+      await fireEvent.click(buttons[0]);
+
+      // Damage should reset to formula
+      expect(buttons[1].textContent).toBe('d8+3');
+    });
   });
 });
