@@ -718,12 +718,13 @@
         "disadvantageResult": "DIvI' bIng",
         "normal": "motlh"
       },
+      "contested": {
+        "vsStrDex": "HoS/Do"
+      },
       "grapple": {
-        "vsStrDex": "HoS/Do",
         "grappled": "qop"
       },
       "shove": {
-        "vsStrDex": "HoS/Do",
         "outcome": "puv pagh ngech"
       }
     },

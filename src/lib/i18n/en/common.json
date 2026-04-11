@@ -718,12 +718,13 @@
         "disadvantageResult": "with disadvantage",
         "normal": "Normal"
       },
+      "contested": {
+        "vsStrDex": "STR/DEX"
+      },
       "grapple": {
-        "vsStrDex": "STR/DEX",
         "grappled": "Grappled"
       },
       "shove": {
-        "vsStrDex": "STR/DEX",
         "outcome": "Push 5ft or Prone"
       }
     },
