@@ -323,3 +323,4 @@ The architecture supports:
 - Rule generator AI prompt
 - Fix quotas
 - ChoicePanel.svelte is a mess of specific code that needs to be normalised and maybe pushed into rules
+- Javelin & Greataxe specials (Slow and Cleave) + Thrown
