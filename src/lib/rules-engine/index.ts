@@ -46,6 +46,7 @@ export type {
   // Rule
   Rule,
   GroupReference,
+  Followup,
   // Input
   EngineInput,
   RulesInput,

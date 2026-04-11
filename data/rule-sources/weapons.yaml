@@ -137,6 +137,22 @@ definitions:
     ui:
       model: attack
       name: rule.dnd-5e-2024.attacks.javelin.name
+      followups:
+        - type: effect
+          condition:
+            fact: attack.javelin.mastery
+            operator: equals
+            value: 1
+          button: rule.dnd-5e-2024.attacks.javelin-slow.button
+          addRule:
+            target: effect
+            rule:
+              id: effect-javelin-slow
+              ui:
+                section: mastery
+                name: rule.dnd-5e-2024.attacks.javelin-slow.effect-name
+              phase: normal
+              activities: []
     vars:
       ranges:
         default:

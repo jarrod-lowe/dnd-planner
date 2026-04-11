@@ -27,6 +27,10 @@ interface AssertConfig {
     id: string;
     vars: Record<string, unknown>;
   }[];
+  offerUi?: {
+    id: string;
+    ui: Record<string, unknown>;
+  }[];
   status?: {
     ok?: boolean;
     legal?: boolean;
@@ -138,6 +142,21 @@ function assertOfferVars(
   }
 }
 
+function assertOfferUi(
+  availableRules: EngineOutput['availableRules'],
+  expected: NonNullable<AssertConfig['offerUi']>,
+  stepDesc: string
+): void {
+  for (const { id, ui } of expected) {
+    const entry = availableRules.find((ar) => ar.rule.id === id);
+    expect(entry, `${stepDesc}: offerUi "${id}" should exist`).toBeDefined();
+    for (const [uiKey, uiValue] of Object.entries(ui)) {
+      const actualValue = entry!.rule.ui?.[uiKey as string];
+      expect(actualValue, `${stepDesc}: offerUi "${id}" ui.${uiKey}`).toEqual(uiValue);
+    }
+  }
+}
+
 function runAssertions(output: EngineOutput, assert: AssertConfig, stepDesc: string): void {
   if (assert.facts) {
     assertFacts(output.facts, assert.facts, stepDesc);
@@ -147,6 +166,9 @@ function runAssertions(output: EngineOutput, assert: AssertConfig, stepDesc: str
   }
   if (assert.offerVars) {
     assertOfferVars(output.availableRules, assert.offerVars, stepDesc);
+  }
+  if (assert.offerUi) {
+    assertOfferUi(output.availableRules, assert.offerUi, stepDesc);
   }
   if (assert.status) {
     assertStatus(output.status, assert.status, stepDesc);

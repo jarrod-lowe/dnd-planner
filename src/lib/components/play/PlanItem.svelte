@@ -1,7 +1,7 @@
 <script lang="ts">
   import ChoicePanel from './ChoicePanel.svelte';
   import type { PlannedItem } from '$lib/play/types';
-  import type { Facts } from '$lib/rules-engine';
+  import type { Facts, Rule } from '$lib/rules-engine';
 
   interface Props {
     item: PlannedItem;
@@ -9,6 +9,7 @@
     canMoveUp?: boolean;
     canMoveDown?: boolean;
     onSelectionChange?: (selections: Record<string, unknown>) => void;
+    onFollowup?: (rule: Rule) => void;
     onMoveUp: () => void;
     onMoveDown: () => void;
     onRemove: () => void;
@@ -20,6 +21,7 @@
     canMoveUp = true,
     canMoveDown = true,
     onSelectionChange,
+    onFollowup,
     onMoveUp,
     onMoveDown,
     onRemove
@@ -41,6 +43,7 @@
     editable={true}
     {facts}
     {onSelectionChange}
+    {onFollowup}
     showControls={true}
     {canMoveUp}
     {canMoveDown}

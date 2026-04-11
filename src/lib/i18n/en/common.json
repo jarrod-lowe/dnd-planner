@@ -488,6 +488,10 @@
         "javelin-mastery": {
           "name": "Javelin Mastery (Slow)"
         },
+        "javelin-slow": {
+          "button": "Slow",
+          "effect-name": "Slow (Javelin)"
+        },
         "attack-javelin-offer": {
           "no_action": "No action available"
         },
@@ -694,7 +698,8 @@
         "free": "Flavour",
         "rest": "Rest",
         "health": "Health",
-        "other": "Other"
+        "other": "Other",
+        "mastery": "Mastery"
       },
       "move": {
         "distance": "Movement distance in feet"
@@ -756,7 +761,8 @@
     "effects": {
       "title": "Active Effects",
       "empty": "No active effects",
-      "remove": "Remove"
+      "remove": "Remove",
+      "followupActions": "Followup actions"
     },
     "error": {
       "loadRuleGroups": "Failed to load character data",

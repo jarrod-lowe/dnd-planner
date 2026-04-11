@@ -1,7 +1,8 @@
 <script lang="ts">
   import { t } from '$lib/i18n';
   import WarningIndicator from './WarningIndicator.svelte';
-  import type { AvailableRuleEntry, Facts, RangeEntry } from '$lib/rules-engine';
+  import type { AvailableRuleEntry, Facts, RangeEntry, Followup } from '$lib/rules-engine';
+  import { evaluateCondition } from '$lib/rules-engine/conditions';
 
   interface Props {
     entry: AvailableRuleEntry;
@@ -16,6 +17,7 @@
     onMoveUp?: () => void;
     onMoveDown?: () => void;
     onRemove?: () => void;
+    onFollowup?: (rule: import('$lib/rules-engine').Rule) => void;
   }
 
   let {
@@ -29,7 +31,8 @@
     canMoveDown = true,
     onMoveUp,
     onMoveDown,
-    onRemove
+    onRemove,
+    onFollowup
   }: Props = $props();
 
   const hasWarning = $derived(!entry.legal || !entry.applicable);
@@ -132,6 +135,20 @@
   const attackDamageBonus = $derived(
     uiModel === 'attack' ? resolveVarDefault('damageBonus') : undefined
   );
+
+  // Followup actions: conditional buttons on planned rules (e.g., mastery effects)
+  const visibleFollowups = $derived.by(() => {
+    if (!editable) return [];
+    const followups = entry.rule.ui?.followups as Followup[] | undefined;
+    if (!followups) return [];
+    return followups.filter((f) => evaluateCondition(f.condition, facts, new Set()));
+  });
+
+  function handleFollowup(followup: Followup): void {
+    if (followup.addRule.target === 'effect' && onFollowup) {
+      onFollowup(followup.addRule.rule);
+    }
+  }
 
   // Contested action model specific values (grapple, shove, etc.)
   const contestedDc = $derived(
@@ -703,6 +720,23 @@
         </div>
       {/if}
     </div>
+    {#if visibleFollowups.length > 0}
+      <div
+        class="choice-panel__followups"
+        role="group"
+        aria-label={$t('play.effects.followupActions')}
+      >
+        {#each visibleFollowups as followup (followup.button)}
+          <button
+            type="button"
+            class="choice-panel__followup-button"
+            onclick={() => handleFollowup(followup)}
+          >
+            {$t(followup.button)}
+          </button>
+        {/each}
+      </div>
+    {/if}
     {#if showControls}
       <div class="choice-panel__actions" role="group" aria-label="Item controls">
         <button
@@ -1284,5 +1318,39 @@
     .roll-popover {
       animation: none;
     }
+  }
+
+  .choice-panel__followups {
+    display: flex;
+    gap: var(--spacing-sm);
+    padding: 0 var(--spacing-md) var(--spacing-md);
+  }
+
+  .choice-panel__followup-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    min-height: 2.75rem;
+    background: var(--md-sys-color-surface-container);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    color: var(--md-sys-color-on-surface);
+    cursor: pointer;
+    transition:
+      background-color var(--transition-fast),
+      border-color var(--transition-fast);
+  }
+
+  .choice-panel__followup-button:hover {
+    background: var(--md-sys-color-surface-container-highest);
+    border-color: var(--md-sys-color-outline);
+  }
+
+  .choice-panel__followup-button:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: 2px;
   }
 </style>

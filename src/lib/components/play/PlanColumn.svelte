@@ -2,12 +2,13 @@
   import { t } from '$lib/i18n';
   import PlanItem from './PlanItem.svelte';
   import type { PlannedItem } from '$lib/play/types';
-  import type { Facts } from '$lib/rules-engine';
+  import type { Facts, Rule } from '$lib/rules-engine';
 
   interface Props {
     items: PlannedItem[];
     facts?: Facts;
     onSelectionChange?: (instanceId: string, selections: Record<string, unknown>) => void;
+    onFollowup?: (rule: Rule) => void;
     onMoveUp: (instanceId: string) => void;
     onMoveDown: (instanceId: string) => void;
     onRemove: (instanceId: string) => void;
@@ -18,6 +19,7 @@
     items,
     facts = {},
     onSelectionChange,
+    onFollowup,
     onMoveUp,
     onMoveDown,
     onRemove,
@@ -41,6 +43,7 @@
           onSelectionChange={onSelectionChange
             ? (selections) => onSelectionChange(item.instanceId, selections)
             : undefined}
+          {onFollowup}
           onMoveUp={() => onMoveUp(item.instanceId)}
           onMoveDown={() => onMoveDown(item.instanceId)}
           onRemove={() => onRemove(item.instanceId)}

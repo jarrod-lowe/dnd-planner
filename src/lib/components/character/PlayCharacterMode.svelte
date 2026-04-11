@@ -81,6 +81,7 @@
           items={playStore.state.plannedItems}
           facts={playStore.state.facts}
           onSelectionChange={handleSelectionChange}
+          onFollowup={(rule) => playStore.addFollowupEffect(rule)}
           onMoveUp={handleMoveUp}
           onMoveDown={handleMoveDown}
           onRemove={handleRemove}
