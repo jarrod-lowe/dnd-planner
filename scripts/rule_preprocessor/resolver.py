@@ -86,19 +86,53 @@ def _assign_activity_ids(activities: list[dict[str, Any]], rule_id: str) -> list
     return result
 
 
+def _filter_ranges(
+    vars_dict: dict[str, Any] | None,
+    filter_type: str | None,
+) -> dict[str, Any] | None:
+    """Filter the ranges var to only entries matching filter_type.
+
+    Returns the modified vars dict, or None if ranges becomes empty.
+    """
+    if filter_type is None or vars_dict is None:
+        return vars_dict
+
+    ranges_var = vars_dict.get("ranges")
+    if ranges_var is None:
+        return vars_dict
+
+    default = ranges_var.get("default")
+    if not isinstance(default, dict):
+        return vars_dict
+
+    entries = default.get("array")
+    if not isinstance(entries, list):
+        return vars_dict
+
+    filtered = [r for r in entries if r.get("type") == filter_type]
+    if not filtered:
+        return None
+
+    result = dict(vars_dict)
+    result["ranges"] = {"default": {"array": filtered}}
+    return result
+
+
 def _emit_offer_rule(
     definition: Definition,
     profile: Profile,
     expansion: Expansion,
     emit: EmitConfig,
     context: dict[str, str],
-) -> dict[str, Any]:
+) -> dict[str, Any] | None:
     """Emit a rule group with offerRule wrapper structure.
 
     Outer rule: phase, when (from expansion + profile gating), after (expansion + profile wrapper),
                  group (expansion + profile wrapper), one offerRule activity.
     Inner offered rule: id, ui, vars, when/after/group from definition payload,
                         merged activities.
+
+    Returns None if ranges filtering removes all range entries.
     """
     # Resolve IDs from patterns
     offer_rule_id = substitute_string(
@@ -158,6 +192,11 @@ def _emit_offer_rule(
         emit.vars,
     )
 
+    # Filter ranges for reaction profiles (melee-only)
+    inner_vars = _filter_ranges(inner_vars, profile.filterRanges)
+    if inner_vars is None:
+        return None
+
     # Build inner rule
     inner_rule: dict[str, Any] = {
         "id": rule_id,
@@ -210,7 +249,7 @@ def _emit_rule(
     expansion: Expansion,
     emit: EmitConfig,
     context: dict[str, str],
-) -> dict[str, Any]:
+) -> dict[str, Any] | None:
     """Emit a single flat rule (no offerRule wrapper).
 
     Merges when/after/group from all three sources.
@@ -260,6 +299,11 @@ def _emit_rule(
 
     # Merged vars
     merged_vars = merge_vars(definition.vars, None, emit.vars)
+
+    # Filter ranges for reaction profiles (melee-only)
+    merged_vars = _filter_ranges(merged_vars, profile.filterRanges)
+    if merged_vars is None:
+        return None
 
     # Build rule
     rule: dict[str, Any] = {
@@ -343,6 +387,10 @@ def resolve_expansion(
                     obj_id=expansion.id,
                     field="emit.mode",
                 )
+
+            # Skip if ranges filtering removed all ranges
+            if rule is None:
+                continue
 
             matched_rules.append(rule)
 

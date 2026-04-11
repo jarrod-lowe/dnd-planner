@@ -123,6 +123,7 @@ def _parse_profile(data: dict[str, Any]) -> Profile:
         gating=_parse_gating(data.get("gating")),
         wrapper=_parse_wrapper(data.get("wrapper")),
         emit=_parse_emit_config(data.get("emit")),
+        filterRanges=data.get("filterRanges"),
     )
 
 

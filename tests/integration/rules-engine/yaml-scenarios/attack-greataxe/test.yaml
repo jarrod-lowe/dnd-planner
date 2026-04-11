@@ -25,6 +25,14 @@ steps:
             - set-strength
             - greataxe-use-action
           notExists: []
+        offerVars:
+          - id: greataxe-use-action
+            vars:
+              ranges:
+                default:
+                  array:
+                    - distance: 5
+                      type: melee
 
   - addOffer:
       id: set-strength

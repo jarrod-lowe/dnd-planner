@@ -16,6 +16,7 @@ export type {
   NamedFunction,
   // Source
   Source,
+  RangeEntry,
   VarDefinition,
   // Conditions
   Condition,

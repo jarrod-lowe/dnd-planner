@@ -712,6 +712,8 @@
       },
       "attack": {
         "range": "Range",
+        "rangeCycle": "{distance} ft ({type}). Tap to cycle.",
+        "rangeDisadvantage": "disadvantage",
         "hit": "Hit",
         "damage": "Damage",
         "roll": "Roll",

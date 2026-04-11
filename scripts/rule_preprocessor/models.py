@@ -88,6 +88,7 @@ class Profile:
     gating: Gating | None = None
     wrapper: Wrapper | None = None
     emit: EmitConfig | None = None
+    filterRanges: str | None = None
 
 
 @dataclass

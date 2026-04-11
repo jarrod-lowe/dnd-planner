@@ -23,6 +23,10 @@ interface AssertConfig {
     legal?: string[];
     illegal?: string[];
   };
+  offerVars?: {
+    id: string;
+    vars: Record<string, unknown>;
+  }[];
   status?: {
     ok?: boolean;
     legal?: boolean;
@@ -119,12 +123,30 @@ function assertStatus(
   }
 }
 
+function assertOfferVars(
+  availableRules: EngineOutput['availableRules'],
+  expected: NonNullable<AssertConfig['offerVars']>,
+  stepDesc: string
+): void {
+  for (const { id, vars } of expected) {
+    const entry = availableRules.find((ar) => ar.rule.id === id);
+    expect(entry, `${stepDesc}: offerVars "${id}" should exist`).toBeDefined();
+    for (const [varName, varValue] of Object.entries(vars)) {
+      const actualVar = entry!.rule.vars?.[varName];
+      expect(actualVar, `${stepDesc}: offerVars "${id}" var "${varName}"`).toEqual(varValue);
+    }
+  }
+}
+
 function runAssertions(output: EngineOutput, assert: AssertConfig, stepDesc: string): void {
   if (assert.facts) {
     assertFacts(output.facts, assert.facts, stepDesc);
   }
   if (assert.offers) {
     assertOffers(output.availableRules, assert.offers, stepDesc);
+  }
+  if (assert.offerVars) {
+    assertOfferVars(output.availableRules, assert.offerVars, stepDesc);
   }
   if (assert.status) {
     assertStatus(output.status, assert.status, stepDesc);
