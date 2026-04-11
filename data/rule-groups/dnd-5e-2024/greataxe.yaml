@@ -53,7 +53,7 @@ ruleGroups:
               id: greataxe
               ui:
                 model: attack
-                section: action-other
+                section: action-attack
                 name: rule.dnd-5e-2024.attacks.greataxe.name
               group:
                 - __planned__

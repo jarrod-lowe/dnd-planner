@@ -544,6 +544,7 @@
         "configuration": "Configuration",
         "move": "Move",
         "action-spell": "Action → Spell",
+        "action-attack": "Action → Attack",
         "action-other": "Action → Other",
         "bonus-action-other": "Bonus Action → Other",
         "free": "Flavour",

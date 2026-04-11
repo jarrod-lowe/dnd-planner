@@ -51,7 +51,7 @@ ruleGroups:
               id: unarmed-strike
               ui:
                 model: attack
-                section: action-other
+                section: action-attack
                 name: rule.dnd-5e-2024.attacks.unarmed-strike.name
               group:
                 - __planned__
