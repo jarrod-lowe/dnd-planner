@@ -32,6 +32,8 @@ ruleGroups:
 
       - id: compute-half-movement-total
         phase: normal
+        after:
+          - group: __planned__
         group:
           - half-movement-total
         activities:
@@ -45,7 +47,7 @@ ruleGroups:
       - id: compute-half-movement-remaining
         phase: normal
         after:
-          - group: move
+          - group: __planned__
         group:
           - half-movement-remaining
         activities:

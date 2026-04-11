@@ -1,0 +1,34 @@
+name: 'Dash action illegal without action available'
+description: >
+  Verify that dash-action is illegal when no action is available,
+  after using the action for help-action.
+
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/dash
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          actions.remaining: 1
+        offers:
+          exists:
+            - dash-action
+          legal:
+            - dash-action
+
+  - addOffer:
+      id: help-action
+      assert:
+        facts:
+          actions.remaining: 0
+
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - dash-action

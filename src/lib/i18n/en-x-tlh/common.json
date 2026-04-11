@@ -348,6 +348,14 @@
           "no_action": "DIvI' tu'lu'be'"
         }
       },
+      "dash": {
+        "dash-action": {
+          "name": "Do naQ"
+        },
+        "action-dash-offer": {
+          "no_action": "DIvI' tu'lu'be'"
+        }
+      },
       "attacks": {
         "unarmed-strike": {
           "name": "nuH DIvI'"

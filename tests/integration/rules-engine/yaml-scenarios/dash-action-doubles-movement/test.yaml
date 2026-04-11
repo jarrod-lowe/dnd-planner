@@ -1,0 +1,53 @@
+name: 'Dash action doubles available movement'
+description: >
+  Verify that adding dash-action to the plan adds movement equal to
+  character.movement.total to character.movement.remaining, consuming
+  one action. After walking all 60 feet, movement is exhausted.
+  After endTurn, movement resets to base speed.
+
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/dash
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          character.movement.total: 30
+          character.movement.remaining: 30
+          actions.remaining: 1
+        offers:
+          exists:
+            - dash-action
+        status:
+          ok: true
+          legal: true
+
+  - addOffer:
+      id: dash-action
+      assert:
+        facts:
+          character.movement.total: 60
+          character.movement.remaining: 60
+          actions.remaining: 0
+
+  - addOffer:
+      id: move-walk
+      assert:
+        facts:
+          character.movement.remaining: 0
+
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - move-walk
+
+  - endTurn:
+      assert:
+        facts:
+          character.movement.total: 30
+          character.movement.remaining: 30
+          actions.remaining: 1

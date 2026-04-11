@@ -348,6 +348,14 @@
           "no_action": "No action available"
         }
       },
+      "dash": {
+        "dash-action": {
+          "name": "Dash"
+        },
+        "action-dash-offer": {
+          "no_action": "No action available"
+        }
+      },
       "attacks": {
         "unarmed-strike": {
           "name": "Unarmed Strike"

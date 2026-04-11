@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: dash
+    translations:
+      en:
+        name: Dash
+        description: Core rules for the Dash action
+        keywords: [dash, action, movement, speed]
+      en-x-tlh:
+        name: Do naQ
+        description: Do naQ DIvI' naQ
+        keywords: [Do, DIvI', naQ]
+    rules:
+      - id: action-dash-offer
+        after:
+          - group: action
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: actions.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.dash.action-dash-offer.no_action
+                    severity: error
+            rule:
+              id: dash-action
+              ui:
+                model: dash
+                section: action-other
+                name: rule.dnd-5e-2024.dash.dash-action.name
+              group:
+                - __planned__
+                - action
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: actions.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                - type: numberIncrement
+                  target:
+                    fact: character.movement.total
+                  source:
+                    fact: character.movement.total
+                - type: numberIncrement
+                  target:
+                    fact: character.movement.remaining
+                  source:
+                    fact: character.movement.total
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.dash.action-dash-offer.no_action
+                  when:
+                    fact: actions.remaining
+                    operator: lessThan
+                    value: 0

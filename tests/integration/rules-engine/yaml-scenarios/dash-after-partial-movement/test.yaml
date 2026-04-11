@@ -1,0 +1,44 @@
+name: 'Dash after partial movement adds speed to remaining'
+description: >
+  Verify that dash-action adds character.movement.total to the current
+  remaining movement (not doubles it). After walking 10 feet (remaining 20),
+  dashing adds 30 (total) for 50 remaining. Removing dash subtracts the bonus,
+  restoring remaining to 20.
+
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/dash
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          character.movement.remaining: 30
+
+  - addOffer:
+      id: move-walk
+      selections:
+        distance: 10
+      assert:
+        facts:
+          character.movement.remaining: 20
+
+  - addOffer:
+      id: dash-action
+      assert:
+        facts:
+          character.movement.remaining: 50
+
+  - removeFromPlan:
+      id: dash-action
+      assert:
+        facts:
+          character.movement.remaining: 20
+
+  - removeFromPlan:
+      id: move-walk
+      assert:
+        facts:
+          character.movement.remaining: 30
