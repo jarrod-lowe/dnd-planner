@@ -1,0 +1,28 @@
+name: 'Passive Insight'
+description: 'Passive insight equals 10 plus insight skill modifier'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/passive-skills
+steps:
+  - evaluate:
+      assert:
+        facts:
+          passive.insight.value: 10
+  - addOffer:
+      id: set-wisdom
+      selections:
+        score: 16
+      assert:
+        facts:
+          skill.insight.value: 3
+          passive.insight.value: 13
+  - addOffer:
+      id: proficiency-insight
+      selections:
+        level: 1
+      assert:
+        facts:
+          skill.insight.proficiency: 1
+          skill.insight.value: 3
+          passive.insight.value: 13

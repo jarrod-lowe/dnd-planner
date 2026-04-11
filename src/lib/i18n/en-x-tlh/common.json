@@ -536,9 +536,15 @@
         "resources": "DIvI' Duj",
         "stats": "DIvI'",
         "skills": "Suv",
+        "passive": "Qob",
         "abilities": "laH",
         "magic": "mugh",
         "other": "latlh"
+      },
+      "passive": {
+        "perception": "Qob legh",
+        "insight": "Qob Sov",
+        "investigation": "Qob nej"
       }
     },
     "choices": {

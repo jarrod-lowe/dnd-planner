@@ -1,0 +1,30 @@
+name: 'Passive Perception'
+description: 'Passive perception equals 10 plus perception skill modifier'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/passive-skills
+steps:
+  - evaluate:
+      assert:
+        facts:
+          passive.perception.value: 10
+          passive.insight.value: 10
+          passive.investigation.value: 10
+  - addOffer:
+      id: set-wisdom
+      selections:
+        score: 14
+      assert:
+        facts:
+          skill.perception.value: 2
+          passive.perception.value: 12
+  - addOffer:
+      id: proficiency-perception
+      selections:
+        level: 1
+      assert:
+        facts:
+          skill.perception.proficiency: 1
+          skill.perception.value: 2
+          passive.perception.value: 12

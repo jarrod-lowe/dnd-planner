@@ -1,0 +1,93 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: passive-skills
+    translations:
+      en:
+        name: Passive Skills
+        description: Calculate passive skill scores (10 + skill modifier)
+        keywords: [passive, perception, insight, investigation]
+      en-x-tlh:
+        name: Qob laH
+        description: Qob laH DIvI' (10 + laH DIvI')
+        keywords: [Qob, legh, Sov, nej]
+    rules:
+      # ===================================================================
+      # PASSIVE PERCEPTION - 10 + perception skill modifier
+      # ===================================================================
+      - id: passive-perception-base
+        phase: early
+        activities:
+          - type: numberSet
+            target:
+              fact: passive.perception.value
+            source:
+              number: 10
+        ui:
+          stats:
+            - name: play.stats.passive.perception
+              type: value
+              fact: passive.perception.value
+              section: passive
+
+      - id: passive-perception-skill
+        phase: safeguard
+        activities:
+          - type: numberIncrement
+            target:
+              fact: passive.perception.value
+            source:
+              fact: skill.perception.value
+
+      # ===================================================================
+      # PASSIVE INSIGHT - 10 + insight skill modifier
+      # ===================================================================
+      - id: passive-insight-base
+        phase: early
+        activities:
+          - type: numberSet
+            target:
+              fact: passive.insight.value
+            source:
+              number: 10
+        ui:
+          stats:
+            - name: play.stats.passive.insight
+              type: value
+              fact: passive.insight.value
+              section: passive
+
+      - id: passive-insight-skill
+        phase: safeguard
+        activities:
+          - type: numberIncrement
+            target:
+              fact: passive.insight.value
+            source:
+              fact: skill.insight.value
+
+      # ===================================================================
+      # PASSIVE INVESTIGATION - 10 + investigation skill modifier
+      # ===================================================================
+      - id: passive-investigation-base
+        phase: early
+        activities:
+          - type: numberSet
+            target:
+              fact: passive.investigation.value
+            source:
+              number: 10
+        ui:
+          stats:
+            - name: play.stats.passive.investigation
+              type: value
+              fact: passive.investigation.value
+              section: passive
+
+      - id: passive-investigation-skill
+        phase: safeguard
+        activities:
+          - type: numberIncrement
+            target:
+              fact: passive.investigation.value
+            source:
+              fact: skill.investigation.value

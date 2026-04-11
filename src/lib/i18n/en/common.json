@@ -516,6 +516,7 @@
         "resources": "Resources",
         "stats": "Stats",
         "skills": "Skills",
+        "passive": "Passive",
         "abilities": "Abilities",
         "magic": "Magic",
         "other": "Other"
@@ -539,6 +540,11 @@
         "sleight-of-hand": "Sleight of Hand",
         "stealth": "Stealth",
         "survival": "Survival"
+      },
+      "passive": {
+        "perception": "Passive Perception",
+        "insight": "Passive Insight",
+        "investigation": "Passive Investigation"
       }
     },
     "choices": {
