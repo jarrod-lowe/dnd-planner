@@ -1,6 +1,6 @@
 name: 'Unarmed Strike Attack'
 description: >
-  Unarmed strike offer appears in action-other section, consumes an action
+  Unarmed strike offer appears in action-attack section, consumes an action
   when added to plan. Attack facts (hitBonus, damageBonus) are computed
   from STR modifier. After endTurn, actions reset and attack is available again.
 
@@ -21,7 +21,7 @@ steps:
         offers:
           exists:
             - set-strength
-            - unarmed-strike
+            - unarmed-strike-use-action
           notExists: []
 
   - addOffer:
@@ -36,7 +36,7 @@ steps:
           attack.unarmed.damageBonus: 3
 
   - addOffer:
-      id: unarmed-strike
+      id: unarmed-strike-use-action
       assert:
         facts:
           actions.remaining: 0
@@ -45,7 +45,7 @@ steps:
             - free-action
           illegal:
             - help-action
-            - unarmed-strike
+            - unarmed-strike-use-action
 
   - endTurn:
       assert:
@@ -56,4 +56,4 @@ steps:
           exists:
             - free-action
             - help-action
-            - unarmed-strike
+            - unarmed-strike-use-action

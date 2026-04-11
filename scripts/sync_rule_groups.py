@@ -395,6 +395,11 @@ def parse_args() -> argparse.Namespace:
         help="Path to rule groups data directory (default: data/rule-groups)",
     )
     parser.add_argument(
+        "--data-dir2",
+        default=None,
+        help="Optional second data directory (e.g., build/rule-groups for generated rules)",
+    )
+    parser.add_argument(
         "--json-out",
         help="Output processed rule groups as JSON to this path (skips DynamoDB)",
     )
@@ -657,28 +662,191 @@ def sync_category(
     return stats
 
 
-def output_json(data_dir: Path, output_path: str, verbose: bool = False) -> None:
+def compute_merged_hash(category_path: Path, generated_path: Path | None = None) -> str:
+    """Compute hash including both base files and generated files.
+
+    This ensures that changes to generated rule groups trigger a re-sync
+    of the base categories they merge into.
+    """
+    hasher = hashlib.sha256()
+
+    # Hash base category files
+    base_hash = compute_category_hash(category_path)
+    hasher.update(base_hash.encode())
+
+    # Hash generated files if provided
+    if generated_path and generated_path.exists():
+        gen_hash = compute_category_hash(generated_path)
+        hasher.update(gen_hash.encode())
+
+    return hasher.hexdigest()
+
+
+def sync_category_with_groups(
+    table: Any,
+    category: str,
+    category_path: Path,
+    rule_groups: list[dict[str, Any]],
+    directory_records: dict[str, dict],
+    dry_run: bool,
+    verbose: bool,
+    generated_path: Path | None = None,
+) -> dict[str, int]:
+    """Sync a category using pre-parsed rule groups (already auto-grouped).
+
+    Similar to sync_category but accepts pre-parsed groups instead of reading files.
+    Used when generated groups have been merged into bases before syncing.
+    If generated_path is provided, the hash includes generated files so changes
+    to generated groups trigger a re-sync.
+    """
+    stats = {"added": 0, "updated": 0, "deleted": 0, "skipped": 0, "searchAdded": 0, "searchDeleted": 0}
+    now = datetime.now(timezone.utc).isoformat()
+
+    # Compute hash including generated files if applicable
+    current_hash = compute_merged_hash(category_path, generated_path)
+
+    # Get stored record
+    stored_record = directory_records.get(category)
+    stored_hash = stored_record.get("contentHash") if stored_record else None
+    stored_ids = set(stored_record.get("ids", [])) if stored_record else set()
+
+    # Check if unchanged
+    if stored_hash == current_hash:
+        stats["skipped"] = len(stored_ids)
+        if verbose:
+            print(f"  Skipping {category} (unchanged)")
+        return stats
+
+    print(f"  Syncing {category}...")
+
+    current_ids = {rg["id"] for rg in rule_groups}
+
+    # Determine changes
+    added_ids = current_ids - stored_ids
+    deleted_ids = stored_ids - current_ids
+
+    if verbose:
+        if added_ids:
+            print(f"    Added: {added_ids}")
+        if deleted_ids:
+            print(f"    Deleted: {deleted_ids}")
+
+    # Write rule groups (batch write handles both add and update)
+    written = batch_write_rule_groups(table, rule_groups, dry_run, verbose, now)
+    stats["added"] = len(added_ids)
+    stats["updated"] = len(current_ids) - len(added_ids)
+
+    # Delete removed rule groups
+    deleted = delete_rule_groups(table, list(deleted_ids), dry_run, verbose)
+    stats["deleted"] = deleted
+
+    # Build and write search index entries
+    search_entries = build_search_index_entries(rule_groups, category, now)
+    search_written = write_search_index(table, search_entries, dry_run, verbose)
+    stats["searchAdded"] = search_written
+
+    # Cleanup old search index entries
+    search_deleted = cleanup_old_search_entries(table, category, now, dry_run, verbose)
+    stats["searchDeleted"] = search_deleted
+
+    # Update directory record
+    if not dry_run:
+        write_directory_record(
+            table,
+            category,
+            current_hash,
+            list(current_ids),
+            len(rule_groups),
+            dry_run,
+        )
+
+    return stats
+
+
+def _collect_categories(*data_dirs: Path) -> list[tuple[str, Path]]:
+    """Collect (category_name, category_path) tuples from one or more data directories."""
+    categories: list[tuple[str, Path]] = []
+    seen: set[str] = set()
+    for data_dir in data_dirs:
+        if not data_dir.exists():
+            continue
+        for d in sorted(data_dir.iterdir()):
+            if d.is_dir() and not d.name.startswith(".") and d.name not in seen:
+                categories.append((d.name, d))
+                seen.add(d.name)
+    return categories
+
+
+def merge_generated_into_bases(
+    base_groups_by_id: dict[str, dict[str, Any]],
+    generated_groups: list[dict[str, Any]],
+) -> None:
+    """Merge generated activation rules into their base rule groups.
+
+    For each generated group, looks up its base via requires[0] and appends
+    the generated group's rules to the base group. Generated groups without
+    a matching base are skipped with a warning.
+    """
+    for gen_rg in generated_groups:
+        requires = gen_rg.get("requires", [])
+        if not requires:
+            print(
+                f"  WARNING: Generated group {gen_rg['id']} has no requires, skipping merge",
+                file=sys.stderr,
+            )
+            continue
+
+        base_id = requires[0]
+        if base_id not in base_groups_by_id:
+            print(
+                f"  WARNING: Generated group {gen_rg['id']} requires '{base_id}', but no base group found",
+                file=sys.stderr,
+            )
+            continue
+
+        base = base_groups_by_id[base_id]
+        gen_rules = gen_rg.get("rules", [])
+        base["rules"].extend(gen_rules)
+        print(f"  Merged {len(gen_rules)} rules from {gen_rg['id']} into {base_id}")
+
+
+def output_json(data_dir: Path, output_path: str, verbose: bool = False, data_dir2: Path | None = None) -> None:
     """Process rule groups and output as JSON, skipping DynamoDB."""
-    categories = sorted([d for d in data_dir.iterdir() if d.is_dir() and not d.name.startswith(".")])
+    dirs = [data_dir]
+    if data_dir2:
+        dirs.append(data_dir2)
+
+    categories = _collect_categories(*dirs)
     if not categories:
         print("No categories found in data directory", file=sys.stderr)
         sys.exit(1)
 
-    result: dict[str, dict] = {}
-
-    for category_path in categories:
-        category = category_path.name
+    # Parse all rule groups by category
+    category_groups: dict[str, list[dict[str, Any]]] = {}
+    for category_name, category_path in categories:
         if verbose:
-            print(f"Processing {category}...")
+            print(f"Processing {category_name}...")
 
         rule_groups = parse_rule_groups(category_path, verbose)
-
         for rg in rule_groups:
             for rule in rg.get("rules", []):
                 add_auto_groups(rule)
+        category_groups[category_name] = rule_groups
 
+    # Merge generated groups into their bases
+    generated_groups = category_groups.pop("generated", [])
+    if generated_groups:
+        base_groups_by_id: dict[str, dict[str, Any]] = {}
+        for rgs in category_groups.values():
+            for rg in rgs:
+                base_groups_by_id[rg["id"]] = rg
+        merge_generated_into_bases(base_groups_by_id, generated_groups)
+
+    result: dict[str, dict] = {}
+    for category_name, rule_groups in category_groups.items():
+        for rg in rule_groups:
             rg_id = rg["id"]
-            key = f"{category}/{rg_id}"
+            key = f"{category_name}/{rg_id}"
             result[key] = {"rules": rg.get("rules", [])}
 
             if verbose:
@@ -703,16 +871,18 @@ def main():
         print(f"ERROR: Data directory not found: {data_dir}", file=sys.stderr)
         sys.exit(1)
 
+    data_dir2 = Path(args.data_dir2) if args.data_dir2 else None
+
     # JSON output mode
     if args.json_out:
-        output_json(data_dir, args.json_out, args.verbose)
+        output_json(data_dir, args.json_out, args.verbose, data_dir2)
         return
 
     # Initialize DynamoDB
     dynamodb = boto3.resource("dynamodb")
     table = dynamodb.Table(args.table)
 
-    print(f"Syncing rule groups from {data_dir} to table {args.table}")
+    print(f"Syncing rule groups from {data_dir}" + (f" and {data_dir2}" if data_dir2 else "") + f" to table {args.table}")
     if args.dry_run:
         print("DRY RUN - no changes will be made")
     print()
@@ -722,8 +892,11 @@ def main():
     if args.verbose:
         print(f"Found {len(directory_records)} existing directory records")
 
-    # Find all categories
-    categories = sorted([d for d in data_dir.iterdir() if d.is_dir() and not d.name.startswith(".")])
+    # Find all categories from both directories
+    dirs = [data_dir]
+    if data_dir2:
+        dirs.append(data_dir2)
+    categories = _collect_categories(*dirs)
     if not categories:
         print("No categories found in data directory")
         sys.exit(0)
@@ -731,13 +904,53 @@ def main():
     print(f"Found {len(categories)} categories to sync")
     print()
 
-    # Sync each category
+    # Parse and merge generated groups into their bases before syncing
+    category_groups: dict[str, list[dict[str, Any]]] = {}
+    category_paths: dict[str, Path] = {}
+    for category_name, category_path in categories:
+        rule_groups = parse_rule_groups(category_path, args.verbose)
+        # Apply auto-groups to all rules before merge
+        for rg in rule_groups:
+            for rule in rg.get("rules", []):
+                add_auto_groups(rule)
+        category_groups[category_name] = rule_groups
+        category_paths[category_name] = category_path
+
+    generated_groups = category_groups.pop("generated", [])
+    generated_path = category_paths.pop("generated", None)
+    now = datetime.now(timezone.utc).isoformat()
+    if generated_groups:
+        base_groups_by_id: dict[str, dict[str, Any]] = {}
+        for rgs in category_groups.values():
+            for rg in rgs:
+                base_groups_by_id[rg["id"]] = rg
+        merge_generated_into_bases(base_groups_by_id, generated_groups)
+
+        # Delete stale generated rule groups from DynamoDB
+        # (they were merged into bases, no longer exist as separate groups)
+        generated_ids = [rg["id"] for rg in generated_groups]
+        deleted = delete_rule_groups(table, generated_ids, args.dry_run, args.verbose)
+        print(f"  Cleaned up {deleted} stale generated groups")
+        # Clean up search index entries for the generated category
+        search_deleted = cleanup_old_search_entries(
+            table, "generated", now, args.dry_run, args.verbose
+        )
+        if search_deleted:
+            print(f"  Cleaned up {search_deleted} stale generated search entries")
+        # Also clean up the generated category directory record
+        if not args.dry_run:
+            table.delete_item(
+                Key={"PK": DIRECTORY_PK, "SK": f"{DIRECTORY_SK_PREFIX}generated"}
+            )
+
+    # Sync each base category with merged content
     total_stats = {"added": 0, "updated": 0, "deleted": 0, "skipped": 0, "searchAdded": 0, "searchDeleted": 0}
 
-    for category_path in categories:
-        category = category_path.name
-        stats = sync_category(
-            table, category, category_path, directory_records, args.dry_run, args.verbose
+    for category_name, category_path in category_paths.items():
+        stats = sync_category_with_groups(
+            table, category_name, category_path, category_groups[category_name],
+            directory_records, args.dry_run, args.verbose,
+            generated_path=generated_path if generated_groups else None,
         )
         for key in total_stats:
             total_stats[key] += stats[key]

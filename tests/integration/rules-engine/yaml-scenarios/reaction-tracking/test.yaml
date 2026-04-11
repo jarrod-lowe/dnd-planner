@@ -1,0 +1,46 @@
+name: 'Reaction Tracking'
+description: >
+  Reactions are tracked like actions: max=1 per turn, remaining resets on
+  endTurn. A reaction weapon attack consumes a reaction, and when no
+  reactions remain the offer becomes illegal with no_reaction error.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/greataxe
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          reactions.max: 1
+          reactions.remaining: 1
+        offers:
+          exists:
+            - greataxe-use-reaction-weapon
+          notExists: []
+
+  - addOffer:
+      id: greataxe-use-reaction-weapon
+      assert:
+        facts:
+          reactions.remaining: 0
+        offers:
+          exists:
+            - greataxe-use-reaction-weapon
+          illegal:
+            - greataxe-use-reaction-weapon
+
+  - endTurn:
+      assert:
+        facts:
+          reactions.max: 1
+          reactions.remaining: 1
+        offers:
+          exists:
+            - greataxe-use-reaction-weapon
+          notExists: []

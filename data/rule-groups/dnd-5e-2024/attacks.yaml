@@ -32,59 +32,12 @@ ruleGroups:
             target:
               fact: attack.unarmed.damageBonus
 
-      # Offer unarmed strike attack
-      - id: attack-unarmed-strike-offer
-        after:
-          - group: action
-          - group: __planned__
+      # Grant reaction weapon attack capability (Opportunity Attacks)
+      - id: grant-reaction-weapon-capability
+        phase: normal
         activities:
-          - type: offerRule
-            legalWhen:
-              - condition:
-                  fact: actions.remaining
-                  operator: greaterThan
-                  value: 0
-                illegalDiagnostics:
-                  - code: rule.dnd-5e-2024.attacks.attack-unarmed-strike-offer.no_action
-                    severity: error
-            rule:
-              id: unarmed-strike
-              ui:
-                model: attack
-                section: action-attack
-                name: rule.dnd-5e-2024.attacks.unarmed-strike.name
-              group:
-                - __planned__
-                - action
-              vars:
-                range:
-                  default:
-                    number: 5
-                hitBonus:
-                  capture: true
-                  default:
-                    fact: attack.unarmed.hitBonus
-                damageDie:
-                  default:
-                    number: 0
-                damageBonus:
-                  capture: true
-                  default:
-                    fact: attack.unarmed.damageBonus
-              activities:
-                - type: numberIncrement
-                  target:
-                    fact: actions.remaining
-                  source:
-                    number: 1
-                  subtract: true
-                - *error-clear
-                - type: setAdd
-                  target:
-                    var: errors
-                  source:
-                    string: rule.dnd-5e-2024.attacks.attack-unarmed-strike-offer.no_action
-                  when:
-                    fact: actions.remaining
-                    operator: lessThan
-                    value: 0
+          - type: numberSet
+            target:
+              fact: capability.attack.reaction.weapon
+            source:
+              number: 1

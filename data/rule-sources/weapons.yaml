@@ -1,0 +1,286 @@
+definitions:
+  - id: unarmed-strike
+    kind: option
+    tags: [attack, weapon]
+    requires: [attacks]
+    ui:
+      model: attack
+      name: rule.dnd-5e-2024.attacks.unarmed-strike.name
+    vars:
+      range:
+        default:
+          number: 5
+      hitBonus:
+        capture: true
+        default:
+          fact: attack.unarmed.hitBonus
+      damageDie:
+        default:
+          number: 0
+      damageBonus:
+        capture: true
+        default:
+          fact: attack.unarmed.damageBonus
+    payload:
+      phase: normal
+      group: [__planned__]
+      activities: []
+    translations:
+      en:
+        name: Unarmed Strike
+        description: Unarmed Strike
+        keywords: [unarmed, strike, attack]
+      en-x-tlh:
+        name: DIvI' naQ
+        description: DIvI' naQ
+        keywords: [DIvI', naQ, jey']
+
+  - id: dagger
+    kind: option
+    tags: [attack, weapon, melee]
+    requires: [dagger]
+    traits:
+      weapon.light: true
+      weapon.finesse: true
+      weapon.throwable: true
+    ui:
+      model: attack
+      name: rule.dnd-5e-2024.attacks.dagger.name
+    vars:
+      range:
+        default:
+          number: 5
+      hitBonus:
+        capture: true
+        default:
+          fact: attack.dagger.hitBonus
+      damageDie:
+        default:
+          number: 4
+      damageBonus:
+        capture: true
+        default:
+          fact: attack.dagger.damageBonus
+    payload:
+      phase: normal
+      group: [__planned__]
+      activities: []
+    translations:
+      en:
+        name: Dagger
+        description: Dagger
+        keywords: [dagger, weapon, attack]
+      en-x-tlh:
+        name: Dagger
+        description: Dagger
+        keywords: [dagger, nuH, jey']
+
+  - id: greataxe
+    kind: option
+    tags: [attack, weapon, melee]
+    requires: [greataxe]
+    traits:
+      weapon.heavy: true
+      weapon.twoHanded: true
+    ui:
+      model: attack
+      name: rule.dnd-5e-2024.attacks.greataxe.name
+    vars:
+      range:
+        default:
+          number: 5
+      hitBonus:
+        capture: true
+        default:
+          fact: attack.greataxe.hitBonus
+      damageDie:
+        default:
+          number: 12
+      damageBonus:
+        capture: true
+        default:
+          fact: attack.greataxe.damageBonus
+    payload:
+      phase: normal
+      group: [__planned__]
+      activities: []
+    translations:
+      en:
+        name: Greataxe
+        description: Greataxe
+        keywords: [greataxe, weapon, attack]
+      en-x-tlh:
+        name: nuH jen
+        description: nuH jen
+        keywords: [nuH, jen, jey']
+
+profiles:
+  - id: use-action
+    match:
+      tags: [attack]
+    ui:
+      section: action-attack
+    gating:
+      legalWhen:
+        - condition:
+            fact: actions.remaining
+            operator: greaterThan
+            value: 0
+          illegalDiagnostics:
+            - code: rule.dnd-5e-2024.attacks.activation.no_action
+              severity: error
+    wrapper:
+      group: [action]
+      activitiesBefore:
+        - type: numberIncrement
+          target:
+            fact: actions.remaining
+          source:
+            number: 1
+          subtract: true
+          id: action-cost
+        - type: setClear
+          target:
+            var: errors
+          id: error-clear
+        - type: setAdd
+          target:
+            var: errors
+          source:
+            string: rule.dnd-5e-2024.attacks.activation.no_action
+          when:
+            fact: actions.remaining
+            operator: lessThan
+            value: 0
+          id: error-check
+    emit:
+      mode: offerRule
+
+  - id: use-reaction-weapon
+    match:
+      tags: [weapon]
+    ui:
+      section: reaction
+    gating:
+      when:
+        - fact: capability.attack.reaction.weapon
+          operator: equals
+          value: 1
+      legalWhen:
+        - condition:
+            fact: reactions.remaining
+            operator: greaterThan
+            value: 0
+          illegalDiagnostics:
+            - code: rule.dnd-5e-2024.attacks.activation.no_reaction
+              severity: error
+    wrapper:
+      activitiesBefore:
+        - type: numberIncrement
+          target:
+            fact: reactions.remaining
+          source:
+            number: 1
+          subtract: true
+          id: reaction-cost
+        - type: numberSet
+          target:
+            fact: attack.last.activation.reaction
+          source:
+            number: 1
+          id: reaction-flag
+        - type: setClear
+          target:
+            var: errors
+          id: error-clear
+        - type: setAdd
+          target:
+            var: errors
+          source:
+            string: rule.dnd-5e-2024.attacks.activation.no_reaction
+          when:
+            fact: reactions.remaining
+            operator: lessThan
+            value: 0
+          id: error-check
+    emit:
+      mode: offerRule
+
+  - id: use-bonus-followup-light
+    match:
+      tags: [weapon]
+      traits:
+        weapon.light: true
+    ui:
+      section: bonus-action
+    gating:
+      when:
+        - fact: capability.attack.bonus.light
+          operator: equals
+          value: 1
+      legalWhen:
+        - condition:
+            fact: bonusActions.remaining
+            operator: greaterThan
+            value: 0
+          illegalDiagnostics:
+            - code: rule.dnd-5e-2024.attacks.activation.no_bonus_action
+              severity: error
+    wrapper:
+      activitiesBefore:
+        - type: numberIncrement
+          target:
+            fact: bonusActions.remaining
+          source:
+            number: 1
+          subtract: true
+          id: bonus-cost
+        - type: numberSet
+          target:
+            fact: attack.last.activation.bonus
+          source:
+            number: 1
+          id: bonus-flag
+        - type: setClear
+          target:
+            var: errors
+          id: error-clear
+        - type: setAdd
+          target:
+            var: errors
+          source:
+            string: rule.dnd-5e-2024.attacks.activation.no_bonus_action
+          when:
+            fact: bonusActions.remaining
+            operator: lessThan
+            value: 0
+          id: error-check
+    emit:
+      mode: offerRule
+
+expansions:
+  - id: attack-activations
+    includeDefinitions:
+      kind: option
+      tags: [attack]
+    includeProfiles:
+      - use-action
+      - use-reaction-weapon
+      - use-bonus-followup-light
+    emit:
+      ruleGroupIdPattern: 'generated-$(definition.id)-activations'
+      ruleIdPattern: '$(definition.id)-$(profile.id)'
+      offerRuleIdPattern: '$(definition.id)-$(profile.id)-offer'
+      after:
+        - group: option-capabilities
+      translations:
+        en:
+          name: '$(definition.translations.en.name)'
+          description: '$(definition.translations.en.description)'
+          keywords:
+            - '$(definition.id)'
+        en-x-tlh:
+          name: '$(definition.translations.en-x-tlh.name)'
+          description: '$(definition.translations.en-x-tlh.description)'
+          keywords:
+            - '$(definition.id)'

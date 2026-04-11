@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: dagger
+    requires:
+      - attacks
+    translations:
+      en:
+        name: Dagger
+        description: Attack rules for the dagger, a simple melee weapon dealing 1d4 piercing damage
+        keywords: [attack, dagger, weapon, melee, light, finesse, damage]
+      en-x-tlh:
+        name: Dagger
+        description: Dagger 'ej jey' naQ
+        keywords: [jey', dagger, nuH]
+    rules:
+      # Compute dagger hit bonus = STR or DEX modifier (finesse) + proficiency bonus
+      - id: compute-dagger-hit-bonus
+        phase: normal
+        activities:
+          - type: numberSum
+            target:
+              fact: attack.dagger.hitBonus
+            sources:
+              - fact: str.modifier
+              - fact: proficiency.bonus
+
+      # Compute dagger damage bonus = STR modifier
+      - id: compute-dagger-damage-bonus
+        phase: normal
+        activities:
+          - type: numberCopy
+            source:
+              fact: str.modifier
+            target:
+              fact: attack.dagger.damageBonus

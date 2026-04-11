@@ -72,3 +72,35 @@ ruleGroups:
               fact: bonusActions.max
             target:
               fact: bonusActions.remaining
+
+      # Reaction Resources - add base reaction (1 per turn)
+      # Uses numberIncrement so future features can add extra reactions without ordering
+      - id: reaction-max
+        phase: early
+        group:
+          - reaction-max
+        ui:
+          stats:
+            - name: play.stats.reactions
+              type: usedMax
+              total: reactions.max
+              remaining: reactions.remaining
+              section: resources
+        activities:
+          - type: numberIncrement
+            source:
+              number: 1
+            target:
+              fact: reactions.max
+
+      # Reaction Resources - reset remaining at start of turn
+      - id: reaction-reset
+        phase: early
+        after:
+          - group: reaction-max
+        activities:
+          - type: numberCopy
+            source:
+              fact: reactions.max
+            target:
+              fact: reactions.remaining
