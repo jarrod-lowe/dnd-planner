@@ -196,6 +196,48 @@ definitions:
         description: Javelin
         keywords: [javelin, nuH, jey']
 
+  - id: scimitar
+    kind: option
+    tags: [attack, weapon, melee]
+    requires: [scimitar]
+    traits:
+      weapon.light: true
+      weapon.finesse: true
+      weapon.mastery: nick
+    ui:
+      model: attack
+      name: rule.dnd-5e-2024.attacks.scimitar.name
+    vars:
+      ranges:
+        default:
+          array:
+            - distance: 5
+              type: melee
+      hitBonus:
+        capture: true
+        default:
+          fact: attack.scimitar.hitBonus
+      damageDie:
+        default:
+          number: 6
+      damageBonus:
+        capture: true
+        default:
+          fact: attack.scimitar.damageBonus
+    payload:
+      phase: normal
+      group: [__planned__]
+      activities: []
+    translations:
+      en:
+        name: Scimitar
+        description: Scimitar
+        keywords: [scimitar, weapon, attack]
+      en-x-tlh:
+        name: Scimitar
+        description: Scimitar
+        keywords: [scimitar, nuH, jey']
+
 profiles:
   - id: use-action
     match:

@@ -1,0 +1,69 @@
+name: 'Scimitar Attack'
+description: >
+  Scimitar offer appears in action-attack section, consumes an action
+  when added to plan. Attack facts (hitBonus, damageBonus) are computed
+  from STR modifier + proficiency (finesse uses best of STR/DEX, here STR is higher).
+  damageDie is 6 (1d6). After endTurn, actions reset and attack is available again.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/scimitar
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          actions.max: 1
+          actions.remaining: 1
+        offers:
+          exists:
+            - set-strength
+            - scimitar-use-action
+          notExists: []
+        offerVars:
+          - id: scimitar-use-action
+            vars:
+              ranges:
+                default:
+                  array:
+                    - distance: 5
+                      type: melee
+
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 16
+      assert:
+        facts:
+          str.value: 16
+          str.modifier: 3
+          attack.scimitar.hitBonus: 3
+          attack.scimitar.damageBonus: 3
+
+  - addOffer:
+      id: scimitar-use-action
+      assert:
+        facts:
+          actions.remaining: 0
+        offers:
+          exists:
+            - free-action
+          illegal:
+            - help-action
+            - scimitar-use-action
+
+  - endTurn:
+      assert:
+        facts:
+          actions.max: 1
+          actions.remaining: 1
+        offers:
+          exists:
+            - free-action
+            - help-action
+            - scimitar-use-action

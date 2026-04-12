@@ -49,7 +49,7 @@ export type Facts = Record<string, number | string | boolean | object>;
  * Named functions available for number_function activities.
  * Closed set for v1 - statToModifier and multiply.
  */
-export type NamedFunction = 'statToModifier' | 'multiply';
+export type NamedFunction = 'statToModifier' | 'multiply' | 'max';
 
 // === SOURCE ===
 

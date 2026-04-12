@@ -38,6 +38,7 @@ export function createBuiltinFunctionRegistry(): FunctionRegistry {
   const registry = new Map<NamedFunction, NamedFunctionHandler>();
   registry.set('statToModifier', statToModifierHandler);
   registry.set('multiply', multiplyHandler);
+  registry.set('max', maxHandler);
   return registry;
 }
 
@@ -59,6 +60,25 @@ export function statToModifierHandler(sourceArgs: (number | undefined)[]): numbe
   const stat = sourceArgs[0];
   if (stat === undefined) return 0;
   return Math.floor((stat - 10) / 2);
+}
+
+/**
+ * Returns the maximum value from the source arguments.
+ *
+ * Examples:
+ * - max([3, -1]) -> 3
+ * - max([-1, 3]) -> 3
+ * - max([2, 2]) -> 2
+ *
+ * @param sourceArgs - Array of values to compare
+ * @returns The maximum value, or 0 if all args are undefined
+ *
+ * @calledBy createBuiltinFunctionRegistry (to register this handler)
+ */
+export function maxHandler(sourceArgs: (number | undefined)[]): number {
+  const defined = sourceArgs.filter((v): v is number => v !== undefined);
+  if (defined.length === 0) return 0;
+  return Math.max(...defined);
 }
 
 /**

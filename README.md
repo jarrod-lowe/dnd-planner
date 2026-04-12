@@ -325,13 +325,22 @@ The architecture supports:
 - ChoicePanel.svelte is a mess of specific code that needs to be normalised and maybe pushed into rules
 - Weapon: Thrown (item count)
 - Limit Cleave to once per turn
-- Scimitar
 - Shield
 - Don/Doff & Hands
 - Ready
 - Finish Help
 - Heroic Inspiration
-- Conditions
-- Defences
 - Armour (proficiency)
 - Tools (proficiency)
+- Damage types on weapons (and spells?)
+- Spells
+- Periapt of Wound Closure
+- Paladin Level 2
+- Paladin Level 3
+- Paladin Oath of Redemption Level 3
+
+### Low Priority
+
+- Other Mastery effects (including Nick, which exists but doesn't do anything)
+- Conditions
+- Defences

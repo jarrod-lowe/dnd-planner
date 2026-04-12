@@ -498,6 +498,12 @@
         "attack-javelin-offer": {
           "no_action": "DIvI' tu'lu'be'"
         },
+        "scimitar": {
+          "name": "Scimitar"
+        },
+        "scimitar-mastery": {
+          "name": "Scimitar Mastery (Nick)"
+        },
         "activation": {
           "no_action": "DIvI' tu'lu'be'",
           "no_reaction": "DIvI' cha' tu'lu'be'",
