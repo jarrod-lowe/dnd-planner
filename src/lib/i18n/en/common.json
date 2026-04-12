@@ -742,7 +742,9 @@
         "disadvantage": "Disadvantage",
         "advantageResult": "with advantage",
         "disadvantageResult": "with disadvantage",
-        "normal": "Normal"
+        "normal": "Normal",
+        "nat20": "Natural 20!",
+        "nat1": "Natural 1!"
       },
       "attack": {
         "range": "Range",

@@ -835,7 +835,7 @@
               }
             }}
             aria-label={initiativeRollResult !== null
-              ? `${$t('play.choices.initiative.reroll')}: ${initiativeTotal}${initiativeRollMode === 'advantage' ? ` — ${$t('play.choices.initiative.advantageResult')}` : ''}${initiativeRollMode === 'disadvantage' ? ` — ${$t('play.choices.initiative.disadvantageResult')}` : ''}${initiativeNat20 ? ` — ${$t('play.choices.attack.nat20')}` : ''}${initiativeNat1 ? ` — ${$t('play.choices.attack.nat1')}` : ''}`
+              ? `${$t('play.choices.initiative.reroll')}: ${initiativeTotal}${initiativeRollMode === 'advantage' ? ` — ${$t('play.choices.initiative.advantageResult')}` : ''}${initiativeRollMode === 'disadvantage' ? ` — ${$t('play.choices.initiative.disadvantageResult')}` : ''}${initiativeNat20 ? ` — ${$t('play.choices.initiative.nat20')}` : ''}${initiativeNat1 ? ` — ${$t('play.choices.initiative.nat1')}` : ''}`
               : `${$t('play.choices.initiative.roll')}: d20${formatBonus(rollBonus)}`}
           >
             {#if initiativeRollResult !== null}{#if initiativeRollMode === 'advantage'}<svg

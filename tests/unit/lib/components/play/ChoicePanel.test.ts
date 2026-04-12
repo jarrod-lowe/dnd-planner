@@ -2158,5 +2158,39 @@ describe('ChoicePanel', () => {
       const rollButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
       expect(rollButton.textContent).toBe('d20-2');
     });
+
+    it('skill check nat20 aria-label says Natural 20, not Critical hit', async () => {
+      const entry = createMockSkillCheckEntry({ rollBonus: 3 });
+      // 0.95 → d20=20
+      vi.spyOn(Math, 'random').mockReturnValue(0.95);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const rollButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.click(rollButton);
+
+      const ariaLabel = rollButton.getAttribute('aria-label') ?? '';
+      expect(ariaLabel).toContain('play.choices.initiative.nat20');
+      expect(ariaLabel).not.toContain('play.choices.attack.nat20');
+    });
+
+    it('skill check nat1 aria-label says Natural 1, not Critical miss', async () => {
+      const entry = createMockSkillCheckEntry({ rollBonus: 3 });
+      // 0.0 → d20=1
+      vi.spyOn(Math, 'random').mockReturnValue(0);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const rollButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.click(rollButton);
+
+      const ariaLabel = rollButton.getAttribute('aria-label') ?? '';
+      expect(ariaLabel).toContain('play.choices.initiative.nat1');
+      expect(ariaLabel).not.toContain('play.choices.attack.nat1');
+    });
   });
 });
