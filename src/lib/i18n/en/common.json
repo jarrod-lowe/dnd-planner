@@ -522,6 +522,14 @@
         "roll-initiative": {
           "name": "Roll Initiative"
         }
+      },
+      "heroic-inspiration": {
+        "grant-hi": {
+          "name": "Grant Heroic Inspiration"
+        },
+        "grant-hi-offer": {
+          "already_has": "Already have Heroic Inspiration"
+        }
       }
     }
   },
@@ -641,6 +649,7 @@
       "actions": "Actions",
       "bonusActions": "Bonus Action",
       "reactions": "Reactions",
+      "heroicInspiration": "Heroic Inspiration",
       "layOnHands": "Lay on Hands",
       "spellcasting": "Spellcast",
       "spellLevel": "Spell L{{level}}",

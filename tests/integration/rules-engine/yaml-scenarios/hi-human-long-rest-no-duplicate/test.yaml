@@ -1,0 +1,43 @@
+name: 'Heroic Inspiration - Human Long Rest No Duplicate'
+description: 'Human long rest does not duplicate effect when HI already active'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/heroic-inspiration
+initialEffects:
+  - id: effect-hi
+    phase: early
+    group:
+      - hi-settle
+    activities:
+      - type: numberSet
+        source:
+          number: 1
+        target:
+          fact: heroicInspiration.remaining
+      - type: advertiseEffect
+        self: true
+steps:
+  # HI already active
+  - evaluate:
+      assert:
+        facts:
+          heroicInspiration.remaining: 1
+  # Long rest - should not create duplicate effect
+  - addOffer:
+      id: long-rest
+      assert:
+        facts:
+          heroicInspiration.remaining: 1
+          rest.long: 1
+  # End turn
+  - endTurn:
+      assert:
+        facts:
+          heroicInspiration.remaining: 1
+  # Turn 2: still just 1, not duplicated
+  - evaluate:
+      assert:
+        facts:
+          heroicInspiration.max: 1
+          heroicInspiration.remaining: 1

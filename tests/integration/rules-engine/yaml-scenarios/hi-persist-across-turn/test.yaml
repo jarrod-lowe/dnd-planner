@@ -1,0 +1,35 @@
+name: 'Heroic Inspiration - Persist Across Turn'
+description: 'HI persists across turns via the persistent effect'
+ruleGroups:
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/heroic-inspiration
+steps:
+  # Turn 1: HI starts at 0
+  - evaluate:
+      assert:
+        facts:
+          heroicInspiration.max: 1
+          heroicInspiration.remaining: 0
+        offers:
+          exists:
+            - grant-hi
+  # Grant HI
+  - addOffer:
+      id: grant-hi
+      assert:
+        facts:
+          heroicInspiration.remaining: 1
+  # End turn - commit effect
+  - endTurn:
+      assert:
+        facts:
+          heroicInspiration.remaining: 1
+  # Turn 2: HI should persist
+  - evaluate:
+      assert:
+        facts:
+          heroicInspiration.max: 1
+          heroicInspiration.remaining: 1
+        offers:
+          illegal:
+            - grant-hi
