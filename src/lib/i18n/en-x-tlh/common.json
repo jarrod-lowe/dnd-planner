@@ -742,7 +742,9 @@
         "disadvantage": "DIvI' bIng",
         "advantageResult": "DIvI' Dung",
         "disadvantageResult": "DIvI' bIng",
-        "normal": "motlh"
+        "normal": "motlh",
+        "nat20": "wa'maH cha'!",
+        "nat1": "wa'!"
       },
       "attack": {
         "range": "chuS",
