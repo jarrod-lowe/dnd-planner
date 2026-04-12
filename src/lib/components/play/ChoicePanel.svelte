@@ -252,10 +252,12 @@
   let initiativeRollMode: RollMode = $state('normal');
   let showHitPopover = $state(false);
   let showInitiativePopover = $state(false);
+  let showCleaveHitPopover = $state(false);
   let longPressTimer: ReturnType<typeof setTimeout> | null = null;
   let didOpenPopover = false;
   let hitTriggerRef: HTMLButtonElement | undefined = $state();
   let initiativeTriggerRef: HTMLButtonElement | undefined = $state();
+  let cleaveHitTriggerRef: HTMLButtonElement | undefined = $state();
 
   // Derived roll totals and crit detection
   const hitTotal = $derived(hitRollResult !== null ? hitRollResult + (attackHitBonus ?? 0) : null);
@@ -330,12 +332,14 @@
   // Long-press detection for advantage/disadvantage popover
   const LONG_PRESS_MS = 300;
 
-  function startLongPress(target: 'hit' | 'initiative'): void {
+  function startLongPress(target: 'hit' | 'cleave-hit' | 'initiative'): void {
     longPressTimer = setTimeout(() => {
       longPressTimer = null;
       didOpenPopover = true;
       if (target === 'hit') {
         showHitPopover = true;
+      } else if (target === 'cleave-hit') {
+        showCleaveHitPopover = true;
       } else {
         showInitiativePopover = true;
       }
@@ -357,6 +361,11 @@
   function selectInitiativeMode(event: MouseEvent, mode: RollMode): void {
     showInitiativePopover = false;
     rollInitiative(event, mode);
+  }
+
+  function selectCleaveHitMode(event: MouseEvent, mode: RollMode): void {
+    showCleaveHitPopover = false;
+    rollCleaveHit(event, mode);
   }
 
   // Click-outside dismissal for popovers
@@ -384,6 +393,17 @@
           showInitiativePopover = false;
         }
       }
+      if (showCleaveHitPopover) {
+        const popover = document.querySelector('.roll-popover--cleave-hit');
+        if (
+          popover &&
+          !popover.contains(e.target as Node) &&
+          cleaveHitTriggerRef &&
+          !cleaveHitTriggerRef.contains(e.target as Node)
+        ) {
+          showCleaveHitPopover = false;
+        }
+      }
     }
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
@@ -394,7 +414,8 @@
     function handlePopoverKeydown(e: KeyboardEvent): void {
       const popover =
         document.querySelector('.roll-popover') ??
-        document.querySelector('.roll-popover--initiative');
+        document.querySelector('.roll-popover--initiative') ??
+        document.querySelector('.roll-popover--cleave-hit');
       if (!popover) return;
       const items = Array.from(popover.querySelectorAll('[role="menuitem"]'));
       const currentIndex = items.indexOf(document.activeElement as HTMLElement);
@@ -408,6 +429,10 @@
         if (showInitiativePopover) {
           showInitiativePopover = false;
           initiativeTriggerRef?.focus();
+        }
+        if (showCleaveHitPopover) {
+          showCleaveHitPopover = false;
+          cleaveHitTriggerRef?.focus();
         }
         return;
       }
@@ -423,11 +448,15 @@
       }
     }
 
-    if (showHitPopover || showInitiativePopover) {
+    if (showHitPopover || showInitiativePopover || showCleaveHitPopover) {
       document.addEventListener('keydown', handlePopoverKeydown);
       // Auto-focus first menuitem
       const popover = document.querySelector(
-        showHitPopover ? '.roll-popover' : '.roll-popover--initiative'
+        showHitPopover
+          ? '.roll-popover'
+          : showInitiativePopover
+            ? '.roll-popover--initiative'
+            : '.roll-popover--cleave-hit'
       );
       const firstItem = popover?.querySelector('[role="menuitem"]') as HTMLElement;
       firstItem?.focus();
@@ -690,6 +719,9 @@
             class="attack-chip attack-chip--rollable"
             class:attack-chip--crit={cleaveHitRollResult !== null && cleaveIsNat20}
             class:attack-chip--fumble={cleaveHitRollResult !== null && cleaveIsNat1}
+            bind:this={cleaveHitTriggerRef}
+            aria-haspopup="menu"
+            aria-expanded={showCleaveHitPopover}
             onclick={(e) => {
               cancelLongPress();
               if (didOpenPopover) {
@@ -698,9 +730,15 @@
               }
               rollCleaveHit(e, cleaveHitRollMode);
             }}
-            onpointerdown={() => startLongPress('hit')}
+            onpointerdown={() => startLongPress('cleave-hit')}
             onpointerup={() => cancelLongPress()}
             onpointerleave={() => cancelLongPress()}
+            onkeydown={(e) => {
+              if (e.key === 'Enter' && e.shiftKey) {
+                e.preventDefault();
+                showCleaveHitPopover = true;
+              }
+            }}
             aria-label={cleaveHitRollResult !== null
               ? `${$t('play.choices.attack.reroll')} ${$t('play.choices.attack.hit')}: ${cleaveHitTotal}`
               : `${$t('play.choices.attack.roll')} ${$t('play.choices.attack.hit')}: d20${formatBonus(attackHitBonus)}`}
@@ -723,6 +761,34 @@
                   >&#10008;</span
                 >{/if}{cleaveHitTotal}{:else}d20{formatBonus(attackHitBonus)}{/if}
           </button>
+          {#if showCleaveHitPopover}
+            <div class="roll-popover roll-popover--cleave-hit" role="menu" aria-label={$t('play.choices.attack.roll')}>
+              <button
+                type="button"
+                class="roll-popover__item"
+                role="menuitem"
+                onclick={(e) => selectCleaveHitMode(e, 'advantage')}
+              >
+                {$t('play.choices.attack.advantage')}
+              </button>
+              <button
+                type="button"
+                class="roll-popover__item"
+                role="menuitem"
+                onclick={(e) => selectCleaveHitMode(e, 'normal')}
+              >
+                {$t('play.choices.attack.normal')}
+              </button>
+              <button
+                type="button"
+                class="roll-popover__item"
+                role="menuitem"
+                onclick={(e) => selectCleaveHitMode(e, 'disadvantage')}
+              >
+                {$t('play.choices.attack.disadvantage')}
+              </button>
+            </div>
+          {/if}
           <span class="attack-sep" aria-hidden="true">|</span>
           <button
             type="button"
