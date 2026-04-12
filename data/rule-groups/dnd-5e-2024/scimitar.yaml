@@ -1,0 +1,47 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: scimitar
+    requires:
+      - attacks
+    translations:
+      en:
+        name: Scimitar
+        description: Attack rules for the scimitar, a martial melee weapon dealing 1d6 slashing damage
+        keywords: [attack, scimitar, weapon, melee, light, finesse, damage]
+      en-x-tlh:
+        name: Scimitar
+        description: Scimitar 'ej jey' naQ
+        keywords: [jey', scimitar, nuH]
+    rules:
+      # Compute scimitar finesse bonus = max(STR modifier, DEX modifier)
+      - id: compute-scimitar-finesse-bonus
+        phase: normal
+        activities:
+          - type: numberFunction
+            function: max
+            sources:
+              - fact: str.modifier
+              - fact: dex.modifier
+            target:
+              fact: attack.scimitar.finesseBonus
+
+      # Compute scimitar hit bonus = finesse bonus + proficiency bonus
+      - id: compute-scimitar-hit-bonus
+        phase: normal
+        activities:
+          - type: numberSum
+            target:
+              fact: attack.scimitar.hitBonus
+            sources:
+              - fact: attack.scimitar.finesseBonus
+              - fact: proficiency.bonus
+
+      # Compute scimitar damage bonus = finesse bonus
+      - id: compute-scimitar-damage-bonus
+        phase: normal
+        activities:
+          - type: numberCopy
+            source:
+              fact: attack.scimitar.finesseBonus
+            target:
+              fact: attack.scimitar.damageBonus

@@ -1,0 +1,19 @@
+name: 'Scimitar Mastery'
+description: >
+  Assigning scimitar-mastery rule group sets the attack.scimitar.mastery fact to 1.
+
+ruleGroups:
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/scimitar
+  - dnd-5e-2024/scimitar-mastery
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          attack.scimitar.mastery: 1

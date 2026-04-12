@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: scimitar-mastery
+    requires:
+      - scimitar
+    translations:
+      en:
+        name: Scimitar Mastery (Nick)
+        description: Weapon mastery for the scimitar, granting the Nick property
+        keywords: [attack, scimitar, mastery, nick, weapon]
+      en-x-tlh:
+        name: Scimitar Mastery (Nick)
+        description: Scimitar mastery 'ej Nick
+        keywords: [scimitar, mastery, nick, nuH]
+    rules:
+      - id: scimitar-mastery-flag
+        phase: normal
+        activities:
+          - type: numberSet
+            target:
+              fact: attack.scimitar.mastery
+            source:
+              number: 1
