@@ -530,6 +530,17 @@
         "grant-hi-offer": {
           "already_has": "SubchI' SuvwI' ghaj"
         }
+      },
+      "leather-armor": {
+        "don-leather-armor": {
+          "name": "DIch Jun tuQ"
+        },
+        "don-leather-armor-offer": {
+          "already-equipped": "DIch Jun tuQtaH"
+        },
+        "effect-leather-armor": {
+          "name": "DIch Jun"
+        }
       }
     }
   },
