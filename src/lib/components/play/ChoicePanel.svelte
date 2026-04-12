@@ -141,12 +141,17 @@
     if (!editable) return [];
     const followups = entry.rule.ui?.followups as Followup[] | undefined;
     if (!followups) return [];
-    return followups.filter((f) => evaluateCondition(f.condition, facts, new Set()));
+    return followups.filter((f) => {
+      if (f.type === 'attack-line' && cleaveActive) return false;
+      return evaluateCondition(f.condition, facts, new Set());
+    });
   });
 
   function handleFollowup(followup: Followup): void {
-    if (followup.addRule.target === 'effect' && onFollowup) {
+    if (followup.type === 'effect' && onFollowup) {
       onFollowup(followup.addRule.rule);
+    } else if (followup.type === 'attack-line') {
+      cleaveActive = true;
     }
   }
 
@@ -170,6 +175,50 @@
   let hitRollResult: number | null = $state(null);
   let damageRollResult: number | null = $state(null);
   let initiativeRollResult: number | null = $state(null);
+
+  // Cleave attack-line followup state
+  let cleaveActive = $state(false);
+  let cleaveHitRollResult: number | null = $state(null);
+  let cleaveDamageRollResult: number | null = $state(null);
+  let cleaveHitRollMode: RollMode = $state('normal');
+
+  // Cleave derived values
+  const cleaveDamageBonus = $derived(Math.min(0, attackDamageBonus ?? 0));
+  const cleaveHitTotal = $derived(
+    cleaveHitRollResult !== null ? cleaveHitRollResult + (attackHitBonus ?? 0) : null
+  );
+  const cleaveDamageTotal = $derived(
+    cleaveDamageRollResult !== null ? cleaveDamageRollResult + cleaveDamageBonus : null
+  );
+  const cleaveIsNat20 = $derived(cleaveHitRollResult === 20);
+  const cleaveIsNat1 = $derived(cleaveHitRollResult === 1);
+
+  function rollCleaveHit(event: MouseEvent, mode: RollMode = 'normal'): void {
+    cleaveHitRollResult = rollD20(mode, `Cleave hit @ ${selectedRange?.distance ?? '?'}ft`);
+    cleaveHitRollMode = mode;
+    cleaveDamageRollResult = null;
+    playRollAnimation(event.currentTarget as HTMLElement);
+  }
+
+  function rollCleaveDamage(event: MouseEvent): void {
+    const die = attackDamageDie ?? 0;
+    if (die > 0) {
+      if (cleaveIsNat20) {
+        const r1 = Math.floor(Math.random() * die) + 1;
+        const r2 = Math.floor(Math.random() * die) + 1;
+        cleaveDamageRollResult = r1 + r2;
+        console.log(
+          `[damage] Cleave (crit): [${r1}, ${r2}] + ${formatBonus(cleaveDamageBonus)} = ${r1 + r2 + cleaveDamageBonus}`
+        );
+      } else {
+        cleaveDamageRollResult = Math.floor(Math.random() * die) + 1;
+        console.log(
+          `[damage] Cleave: ${cleaveDamageRollResult} + ${formatBonus(cleaveDamageBonus)} = ${cleaveDamageRollResult + cleaveDamageBonus}`
+        );
+      }
+      playRollAnimation(event.currentTarget as HTMLElement);
+    }
+  }
 
   // Range selection state - restored from selections if available
   let selectedRangeIndex = $state((entry.rule.selections?.rangeIndex as number | undefined) ?? 0);
@@ -256,10 +305,17 @@
     const die = attackDamageDie ?? 0;
     if (die > 0) {
       if (isNat20) {
-        damageRollResult =
-          Math.floor(Math.random() * die) + 1 + (Math.floor(Math.random() * die) + 1);
+        const r1 = Math.floor(Math.random() * die) + 1;
+        const r2 = Math.floor(Math.random() * die) + 1;
+        damageRollResult = r1 + r2;
+        console.log(
+          `[damage] ${uiName ?? 'roll'} (crit): [${r1}, ${r2}] + ${formatBonus(attackDamageBonus)} = ${r1 + r2 + (attackDamageBonus ?? 0)}`
+        );
       } else {
         damageRollResult = Math.floor(Math.random() * die) + 1;
+        console.log(
+          `[damage] ${uiName ?? 'roll'}: ${damageRollResult} + ${formatBonus(attackDamageBonus)} = ${damageRollResult + (attackDamageBonus ?? 0)}`
+        );
       }
       playRollAnimation(event.currentTarget as HTMLElement);
     }
@@ -621,6 +677,69 @@
               {isNat20 ? '2' : ''}d{attackDamageDie}{formatBonus(attackDamageBonus)}
             {:else}
               {formatBonus(attackDamageBonus) || '0'}
+            {/if}
+          </button>
+        </div>
+      {/if}
+      {#if uiModel === 'attack' && cleaveActive && selectedRange !== undefined}
+        <div class="choice-panel__model choice-panel__attack">
+          <span class="attack-range">{selectedRange.distance} ft</span>
+          <span class="attack-sep" aria-hidden="true">|</span>
+          <button
+            type="button"
+            class="attack-chip attack-chip--rollable"
+            class:attack-chip--crit={cleaveHitRollResult !== null && cleaveIsNat20}
+            class:attack-chip--fumble={cleaveHitRollResult !== null && cleaveIsNat1}
+            onclick={(e) => {
+              cancelLongPress();
+              if (didOpenPopover) {
+                didOpenPopover = false;
+                return;
+              }
+              rollCleaveHit(e, cleaveHitRollMode);
+            }}
+            onpointerdown={() => startLongPress('hit')}
+            onpointerup={() => cancelLongPress()}
+            onpointerleave={() => cancelLongPress()}
+            aria-label={cleaveHitRollResult !== null
+              ? `${$t('play.choices.attack.reroll')} ${$t('play.choices.attack.hit')}: ${cleaveHitTotal}`
+              : `${$t('play.choices.attack.roll')} ${$t('play.choices.attack.hit')}: d20${formatBonus(attackHitBonus)}`}
+          >
+            {#if cleaveHitRollResult !== null}{#if cleaveHitRollMode === 'advantage'}<svg
+                  class="roll-mode-icon roll-mode-icon--advantage"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-label={$t('play.choices.attack.advantageResult')}
+                  ><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" /></svg
+                >{/if}{#if cleaveHitRollMode === 'disadvantage'}<svg
+                  class="roll-mode-icon roll-mode-icon--disadvantage"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-label={$t('play.choices.attack.disadvantageResult')}
+                  ><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z" /></svg
+                >{/if}{#if cleaveIsNat20}<span class="attack-crit-icon" aria-hidden="true"
+                  >&#10004;</span
+                >{/if}{#if cleaveIsNat1}<span class="attack-crit-icon" aria-hidden="true"
+                  >&#10008;</span
+                >{/if}{cleaveHitTotal}{:else}d20{formatBonus(attackHitBonus)}{/if}
+          </button>
+          <span class="attack-sep" aria-hidden="true">|</span>
+          <button
+            type="button"
+            class="attack-chip attack-chip--rollable"
+            class:attack-chip--crit={cleaveIsNat20 && cleaveDamageRollResult !== null}
+            onclick={rollCleaveDamage}
+            disabled={!attackDamageDie || attackDamageDie <= 0}
+            aria-label={cleaveDamageRollResult !== null
+              ? `${$t('play.choices.attack.reroll')} ${$t('play.choices.attack.damage')}: ${cleaveDamageTotal}`
+              : `${$t('play.choices.attack.roll')} ${$t('play.choices.attack.damage')}: ${attackDamageDie && attackDamageDie > 0 ? `${cleaveIsNat20 ? '2' : ''}d${attackDamageDie}${formatBonus(cleaveDamageBonus)}` : formatBonus(cleaveDamageBonus) || '0'}`}
+          >
+            {#if cleaveDamageRollResult !== null}
+              {cleaveDamageTotal}
+            {:else if attackDamageDie && attackDamageDie > 0}
+              {cleaveIsNat20 ? '2' : ''}d{attackDamageDie}{formatBonus(cleaveDamageBonus)}
+            {:else}
+              {formatBonus(cleaveDamageBonus) || '0'}
             {/if}
           </button>
         </div>

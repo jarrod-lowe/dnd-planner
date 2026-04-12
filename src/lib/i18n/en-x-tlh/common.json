@@ -470,6 +470,9 @@
         "greataxe": {
           "name": "nuH jen"
         },
+        "greataxe-cleave": {
+          "button": "Cleave"
+        },
         "greataxe-mastery": {
           "name": "nuH jen Mastery (Cleave)"
         },
