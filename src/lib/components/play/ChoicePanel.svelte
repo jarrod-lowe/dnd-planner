@@ -250,9 +250,11 @@
     })()
   );
   let initiativeRollMode: RollMode = $state('normal');
-  let showHitPopover = $state(false);
-  let showInitiativePopover = $state(false);
-  let showCleaveHitPopover = $state(false);
+  type PopoverTarget = 'hit' | 'cleave-hit' | 'initiative' | null;
+  let activePopover: PopoverTarget = $state(null);
+  const showHitPopover = $derived(activePopover === 'hit');
+  const showInitiativePopover = $derived(activePopover === 'initiative');
+  const showCleaveHitPopover = $derived(activePopover === 'cleave-hit');
   let longPressTimer: ReturnType<typeof setTimeout> | null = null;
   let didOpenPopover = false;
   let hitTriggerRef: HTMLButtonElement | undefined = $state();
@@ -336,13 +338,7 @@
     longPressTimer = setTimeout(() => {
       longPressTimer = null;
       didOpenPopover = true;
-      if (target === 'hit') {
-        showHitPopover = true;
-      } else if (target === 'cleave-hit') {
-        showCleaveHitPopover = true;
-      } else {
-        showInitiativePopover = true;
-      }
+      activePopover = target;
     }, LONG_PRESS_MS);
   }
 
@@ -354,55 +350,44 @@
   }
 
   function selectHitMode(event: MouseEvent, mode: RollMode): void {
-    showHitPopover = false;
+    activePopover = null;
     rollHit(event, mode);
   }
 
   function selectInitiativeMode(event: MouseEvent, mode: RollMode): void {
-    showInitiativePopover = false;
+    activePopover = null;
     rollInitiative(event, mode);
   }
 
   function selectCleaveHitMode(event: MouseEvent, mode: RollMode): void {
-    showCleaveHitPopover = false;
+    activePopover = null;
     rollCleaveHit(event, mode);
   }
 
   // Click-outside dismissal for popovers
   $effect(() => {
     function handleClickOutside(e: MouseEvent): void {
-      if (showHitPopover) {
-        const popover = document.querySelector('.roll-popover');
-        if (
-          popover &&
-          !popover.contains(e.target as Node) &&
-          hitTriggerRef &&
-          !hitTriggerRef.contains(e.target as Node)
-        ) {
-          showHitPopover = false;
-        }
-      }
-      if (showInitiativePopover) {
-        const popover = document.querySelector('.roll-popover--initiative');
-        if (
-          popover &&
-          !popover.contains(e.target as Node) &&
-          initiativeTriggerRef &&
-          !initiativeTriggerRef.contains(e.target as Node)
-        ) {
-          showInitiativePopover = false;
-        }
-      }
-      if (showCleaveHitPopover) {
-        const popover = document.querySelector('.roll-popover--cleave-hit');
-        if (
-          popover &&
-          !popover.contains(e.target as Node) &&
-          cleaveHitTriggerRef &&
-          !cleaveHitTriggerRef.contains(e.target as Node)
-        ) {
-          showCleaveHitPopover = false;
-        }
+      if (activePopover === null) return;
+      const selector =
+        activePopover === 'hit'
+          ? '.roll-popover'
+          : activePopover === 'initiative'
+            ? '.roll-popover--initiative'
+            : '.roll-popover--cleave-hit';
+      const triggerRef =
+        activePopover === 'hit'
+          ? hitTriggerRef
+          : activePopover === 'initiative'
+            ? initiativeTriggerRef
+            : cleaveHitTriggerRef;
+      const popover = document.querySelector(selector);
+      if (
+        popover &&
+        !popover.contains(e.target as Node) &&
+        triggerRef &&
+        !triggerRef.contains(e.target as Node)
+      ) {
+        activePopover = null;
       }
     }
     document.addEventListener('click', handleClickOutside);
@@ -410,30 +395,35 @@
   });
 
   // Keyboard navigation for popover focus trap
+  function popoverSelector(target: PopoverTarget): string {
+    return target === 'hit'
+      ? '.roll-popover'
+      : target === 'initiative'
+        ? '.roll-popover--initiative'
+        : '.roll-popover--cleave-hit';
+  }
+
+  function popoverTriggerRef(target: PopoverTarget): HTMLButtonElement | undefined {
+    return target === 'hit'
+      ? hitTriggerRef
+      : target === 'initiative'
+        ? initiativeTriggerRef
+        : cleaveHitTriggerRef;
+  }
+
   $effect(() => {
     function handlePopoverKeydown(e: KeyboardEvent): void {
-      const popover =
-        document.querySelector('.roll-popover') ??
-        document.querySelector('.roll-popover--initiative') ??
-        document.querySelector('.roll-popover--cleave-hit');
+      if (activePopover === null) return;
+      const popover = document.querySelector(popoverSelector(activePopover));
       if (!popover) return;
       const items = Array.from(popover.querySelectorAll('[role="menuitem"]'));
       const currentIndex = items.indexOf(document.activeElement as HTMLElement);
 
       if (e.key === 'Escape') {
         e.preventDefault();
-        if (showHitPopover) {
-          showHitPopover = false;
-          hitTriggerRef?.focus();
-        }
-        if (showInitiativePopover) {
-          showInitiativePopover = false;
-          initiativeTriggerRef?.focus();
-        }
-        if (showCleaveHitPopover) {
-          showCleaveHitPopover = false;
-          cleaveHitTriggerRef?.focus();
-        }
+        const prev = activePopover;
+        activePopover = null;
+        popoverTriggerRef(prev)?.focus();
         return;
       }
 
@@ -448,16 +438,10 @@
       }
     }
 
-    if (showHitPopover || showInitiativePopover || showCleaveHitPopover) {
+    if (activePopover !== null) {
       document.addEventListener('keydown', handlePopoverKeydown);
       // Auto-focus first menuitem
-      const popover = document.querySelector(
-        showHitPopover
-          ? '.roll-popover'
-          : showInitiativePopover
-            ? '.roll-popover--initiative'
-            : '.roll-popover--cleave-hit'
-      );
+      const popover = document.querySelector(popoverSelector(activePopover));
       const firstItem = popover?.querySelector('[role="menuitem"]') as HTMLElement;
       firstItem?.focus();
 
@@ -638,7 +622,7 @@
             onkeydown={(e) => {
               if (e.key === 'Enter' && e.shiftKey) {
                 e.preventDefault();
-                showHitPopover = true;
+                activePopover = 'hit';
               }
             }}
             aria-label={hitRollResult !== null
@@ -736,7 +720,7 @@
             onkeydown={(e) => {
               if (e.key === 'Enter' && e.shiftKey) {
                 e.preventDefault();
-                showCleaveHitPopover = true;
+                activePopover = 'cleave-hit';
               }
             }}
             aria-label={cleaveHitRollResult !== null
@@ -849,7 +833,7 @@
             onkeydown={(e) => {
               if (e.key === 'Enter' && e.shiftKey) {
                 e.preventDefault();
-                showInitiativePopover = true;
+                activePopover = 'initiative';
               }
             }}
             aria-label={initiativeRollResult !== null
