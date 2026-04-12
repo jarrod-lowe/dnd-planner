@@ -1191,21 +1191,43 @@ describe('ChoicePanel', () => {
 
   // === Advantage/Disadvantage tests ===
 
-  const createMockInitiativeEntry = (overrides?: {
-    initiativeBonus?: number;
-  }): AvailableRuleEntry => ({
+  const createMockInitiativeEntry = (overrides?: { rollBonus?: number }): AvailableRuleEntry => ({
     rule: {
       id: 'roll-initiative',
       description: 'Roll Initiative',
       activities: [],
       ui: {
-        model: 'initiative-roll',
+        model: 'd20-roll',
         section: 'other',
         name: 'rule.dnd-5e-2024.initiative.roll-initiative.name'
       },
       vars: {
-        initiativeBonus: {
-          default: { number: overrides?.initiativeBonus ?? 2 }
+        rollBonus: {
+          default: { number: overrides?.rollBonus ?? 2 }
+        }
+      }
+    } as Rule,
+    legal: true,
+    applicable: true,
+    diagnostics: []
+  });
+
+  const createMockSkillCheckEntry = (overrides?: {
+    skillName?: string;
+    rollBonus?: number;
+  }): AvailableRuleEntry => ({
+    rule: {
+      id: `roll-skill-${overrides?.skillName ?? 'acrobatics'}`,
+      description: `Roll ${overrides?.skillName ?? 'Acrobatics'}`,
+      activities: [],
+      ui: {
+        model: 'd20-roll',
+        section: 'free',
+        name: `play.stats.skills.${overrides?.skillName ?? 'acrobatics'}`
+      },
+      vars: {
+        rollBonus: {
+          default: { number: overrides?.rollBonus ?? 3 }
         }
       }
     } as Rule,
@@ -1401,7 +1423,7 @@ describe('ChoicePanel', () => {
     });
 
     it('advantage works for initiative roll', async () => {
-      const entry = createMockInitiativeEntry({ initiativeBonus: 2 });
+      const entry = createMockInitiativeEntry({ rollBonus: 2 });
       // 0.1 → d20=3, 0.5 → d20=11. Advantage takes 11. Total = 11 + 2 = 13
       vi.spyOn(Math, 'random').mockReturnValueOnce(0.1).mockReturnValueOnce(0.5);
 
@@ -1420,7 +1442,7 @@ describe('ChoicePanel', () => {
     });
 
     it('disadvantage works for initiative roll', async () => {
-      const entry = createMockInitiativeEntry({ initiativeBonus: 2 });
+      const entry = createMockInitiativeEntry({ rollBonus: 2 });
       // 0.1 → d20=3, 0.5 → d20=11. Disadvantage takes 3. Total = 3 + 2 = 5
       vi.spyOn(Math, 'random').mockReturnValueOnce(0.1).mockReturnValueOnce(0.5);
 
@@ -2024,6 +2046,117 @@ describe('ChoicePanel', () => {
       expect(cleaveHitChip.textContent).toContain('8');
       // Parent hit chip should remain unrolled
       expect(parentHitChip.textContent).toBe('d20+5');
+    });
+  });
+
+  // === Skill Check d20-roll tests ===
+
+  describe('Skill Check roller (d20-roll model)', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+      vi.restoreAllMocks();
+    });
+
+    it('renders skill check with d20+bonus display', () => {
+      const entry = createMockSkillCheckEntry({ rollBonus: 3 });
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const rollButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      expect(rollButton).toBeTruthy();
+      expect(rollButton.textContent).toBe('d20+3');
+    });
+
+    it('rolls skill check on tap', async () => {
+      const entry = createMockSkillCheckEntry({ rollBonus: 3 });
+      // 0.6 → d20=13. Total = 13 + 3 = 16
+      vi.spyOn(Math, 'random').mockReturnValue(0.6);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const rollButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.click(rollButton);
+
+      expect(rollButton.textContent).toContain('16');
+    });
+
+    it('opens popover on long press of skill check chip', async () => {
+      const entry = createMockSkillCheckEntry();
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const rollButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.pointerDown(rollButton);
+      await vi.advanceTimersByTimeAsync(300);
+
+      const menu = container.querySelector('[role="menu"]');
+      expect(menu).toBeTruthy();
+    });
+
+    it('advantage works for skill check roll', async () => {
+      const entry = createMockSkillCheckEntry({ rollBonus: 3 });
+      // 0.1 → d20=3, 0.5 → d20=11. Advantage takes 11. Total = 11 + 3 = 14
+      vi.spyOn(Math, 'random').mockReturnValueOnce(0.1).mockReturnValueOnce(0.5);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const rollButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.pointerDown(rollButton);
+      await vi.advanceTimersByTimeAsync(300);
+
+      const items = container.querySelectorAll('[role="menuitem"]');
+      await fireEvent.click(items[0]); // Advantage
+
+      expect(rollButton.textContent).toContain('14');
+    });
+
+    it('disadvantage works for skill check roll', async () => {
+      const entry = createMockSkillCheckEntry({ rollBonus: 3 });
+      // 0.1 → d20=3, 0.5 → d20=11. Disadvantage takes 3. Total = 3 + 3 = 6
+      vi.spyOn(Math, 'random').mockReturnValueOnce(0.1).mockReturnValueOnce(0.5);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const rollButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.pointerDown(rollButton);
+      await vi.advanceTimersByTimeAsync(300);
+
+      const items = container.querySelectorAll('[role="menuitem"]');
+      await fireEvent.click(items[2]); // Disadvantage
+
+      expect(rollButton.textContent).toContain('6');
+    });
+
+    it('skill check chip has aria-haspopup on trigger', () => {
+      const entry = createMockSkillCheckEntry();
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const rollButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      expect(rollButton?.getAttribute('aria-haspopup')).toBe('menu');
+    });
+
+    it('handles negative skill bonus', () => {
+      const entry = createMockSkillCheckEntry({ rollBonus: -2 });
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true }
+      });
+
+      const rollButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      expect(rollButton.textContent).toBe('d20-2');
     });
   });
 });
