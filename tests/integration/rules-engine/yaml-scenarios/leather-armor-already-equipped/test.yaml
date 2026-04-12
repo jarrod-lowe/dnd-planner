@@ -1,0 +1,35 @@
+name: 'Leather Armor Already Equipped'
+description: 'Cannot don leather armor when already equipped'
+ruleGroups:
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/leather-armor
+initialEffects:
+  - id: effect-leather-armor
+    phase: normal
+    after:
+      - group: ac-calculation
+    group:
+      - ac-components
+    activities:
+      - type: numberSet
+        target:
+          fact: ac.base
+        source:
+          number: 11
+      - type: numberSet
+        target:
+          fact: armor.leather.equipped
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+steps:
+  - evaluate:
+      assert:
+        facts:
+          ac.base: 11
+          ac.value: 11
+          armor.leather.equipped: 1
+        offers:
+          illegal:
+            - don-leather-armor

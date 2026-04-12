@@ -1,0 +1,39 @@
+name: 'Leather Armor AC'
+description: 'AC becomes 11 + Dex when leather armor is donned'
+ruleGroups:
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/leather-armor
+steps:
+  - evaluate:
+      assert:
+        facts:
+          ac.base: 10
+          ac.value: 10
+        offers:
+          exists:
+            - don-leather-armor
+  - addOffer:
+      id: don-leather-armor
+      assert:
+        facts:
+          ac.base: 11
+          ac.value: 11
+          armor.leather.equipped: 1
+  # Set DEX to 14 (modifier +2) — AC should become 13
+  - addOffer:
+      id: set-dexterity
+      selections:
+        score: 14
+      assert:
+        facts:
+          dex.modifier: 2
+          ac.base: 11
+          ac.dexBonus: 2
+          ac.value: 13
+  - endTurn:
+      assert:
+        facts:
+          ac.base: 11
+          ac.value: 13
+          armor.leather.equipped: 1

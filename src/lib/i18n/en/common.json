@@ -530,6 +530,17 @@
         "grant-hi-offer": {
           "already_has": "Already have Heroic Inspiration"
         }
+      },
+      "leather-armor": {
+        "don-leather-armor": {
+          "name": "Don Leather Armor"
+        },
+        "don-leather-armor-offer": {
+          "already-equipped": "Leather armor is already equipped"
+        },
+        "effect-leather-armor": {
+          "name": "Leather Armor"
+        }
       }
     }
   },

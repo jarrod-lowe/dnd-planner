@@ -339,6 +339,7 @@ The architecture supports:
 - Paladin Oath of Redemption Level 3
 - Paladin L1 should require Lay on Hands (test if it doesn't already)
 - Configuration done (to make all configuration illegal)
+- Two weapon fighting
 
 ### Low Priority
 

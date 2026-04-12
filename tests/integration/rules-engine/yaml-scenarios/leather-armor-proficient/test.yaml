@@ -1,0 +1,38 @@
+name: 'Leather Armor Proficient'
+description: 'No disadvantage and spellcasting works when proficient with light armor'
+ruleGroups:
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/leather-armor
+  - dnd-5e-2024/spellcasting
+initialEffects:
+  # Simulate a class granting light armor proficiency
+  - id: test-light-armor-proficiency
+    phase: early
+    activities:
+      - type: numberSet
+        target:
+          fact: armor.light.proficient
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+steps:
+  - evaluate:
+      assert:
+        facts:
+          armor.light.proficient: 1
+          spellcasting.max: 1
+          spellcasting.remaining: 1
+  - addOffer:
+      id: don-leather-armor
+      assert:
+        facts:
+          ac.base: 11
+          attack.disadvantage: 0
+          initiative.disadvantage: 0
+          skill.acrobatics.disadvantage: 0
+          skill.perception.disadvantage: 0
+          skill.stealth.disadvantage: 0
+          spellcasting.max: 1
+          spellcasting.remaining: 1
