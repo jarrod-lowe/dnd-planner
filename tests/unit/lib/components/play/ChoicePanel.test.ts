@@ -1700,7 +1700,12 @@ describe('ChoicePanel', () => {
   });
 
   describe('Cleave attack-line followup', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
     afterEach(() => {
+      vi.useRealTimers();
       vi.restoreAllMocks();
     });
 
@@ -1919,6 +1924,106 @@ describe('ChoicePanel', () => {
 
       // Parent should still show 10
       expect(parentChips?.[1]?.textContent).toBe('10');
+    });
+
+    it('opens popover on long press of Cleave hit chip', async () => {
+      const entry = createMockGreataxeMasteryEntry();
+      const facts = { 'attack.greataxe.mastery': 1 };
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      // Activate Cleave row
+      const followupButton = container.querySelector(
+        '.choice-panel__followup-button'
+      ) as HTMLButtonElement;
+      await fireEvent.click(followupButton);
+
+      const attackRows = container.querySelectorAll('.choice-panel__attack');
+      const cleaveRow = attackRows[1];
+      const cleaveHitChip = cleaveRow?.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+
+      // Long-press the Cleave hit chip
+      await fireEvent.pointerDown(cleaveHitChip);
+      await vi.advanceTimersByTimeAsync(300);
+
+      // Popover should appear inside the Cleave row
+      const cleaveMenu = cleaveRow?.querySelector('[role="menu"]');
+      expect(cleaveMenu).toBeTruthy();
+    });
+
+    it('Cleave popover advantage roll targets Cleave hit, not parent', async () => {
+      const entry = createMockGreataxeMasteryEntry();
+      const facts = { 'attack.greataxe.mastery': 1 };
+      // 0.1 → d20=3, 0.5 → d20=11. Advantage takes 11. Cleave total = 11 + 5 = 16
+      const randomMock = vi.spyOn(Math, 'random').mockReturnValueOnce(0.1).mockReturnValueOnce(0.5);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      // Activate Cleave row
+      const followupButton = container.querySelector(
+        '.choice-panel__followup-button'
+      ) as HTMLButtonElement;
+      await fireEvent.click(followupButton);
+
+      const attackRows = container.querySelectorAll('.choice-panel__attack');
+      const parentRow = attackRows[0];
+      const cleaveRow = attackRows[1];
+      const parentHitChip = parentRow?.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      const cleaveHitChip = cleaveRow?.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+
+      // Long-press Cleave hit chip and select Advantage
+      await fireEvent.pointerDown(cleaveHitChip);
+      await vi.advanceTimersByTimeAsync(300);
+
+      const items = cleaveRow?.querySelectorAll('[role="menuitem"]');
+      await fireEvent.click(items?.[0] as HTMLElement); // Advantage
+
+      // Cleave hit chip should show advantage result: 11 + 5 = 16
+      expect(randomMock).toHaveBeenCalledTimes(2);
+      expect(cleaveHitChip.textContent).toContain('16');
+      // Parent hit chip should remain unrolled
+      expect(parentHitChip.textContent).not.toContain('16');
+      expect(parentHitChip.textContent).toBe('d20+5');
+    });
+
+    it('Cleave popover disadvantage roll targets Cleave hit, not parent', async () => {
+      const entry = createMockGreataxeMasteryEntry();
+      const facts = { 'attack.greataxe.mastery': 1 };
+      // 0.1 → d20=3, 0.5 → d20=11. Disadvantage takes 3. Cleave total = 3 + 5 = 8
+      const randomMock = vi.spyOn(Math, 'random').mockReturnValueOnce(0.1).mockReturnValueOnce(0.5);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      // Activate Cleave row
+      const followupButton = container.querySelector(
+        '.choice-panel__followup-button'
+      ) as HTMLButtonElement;
+      await fireEvent.click(followupButton);
+
+      const attackRows = container.querySelectorAll('.choice-panel__attack');
+      const parentRow = attackRows[0];
+      const cleaveRow = attackRows[1];
+      const parentHitChip = parentRow?.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      const cleaveHitChip = cleaveRow?.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+
+      // Long-press Cleave hit chip and select Disadvantage
+      await fireEvent.pointerDown(cleaveHitChip);
+      await vi.advanceTimersByTimeAsync(300);
+
+      const items = cleaveRow?.querySelectorAll('[role="menuitem"]');
+      await fireEvent.click(items?.[2] as HTMLElement); // Disadvantage
+
+      // Cleave hit chip should show disadvantage result: 3 + 5 = 8
+      expect(randomMock).toHaveBeenCalledTimes(2);
+      expect(cleaveHitChip.textContent).toContain('8');
+      // Parent hit chip should remain unrolled
+      expect(parentHitChip.textContent).toBe('d20+5');
     });
   });
 });
