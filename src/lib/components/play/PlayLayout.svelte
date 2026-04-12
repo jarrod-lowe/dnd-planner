@@ -5,11 +5,12 @@
   interface Props {
     stats: Snippet;
     choices: Snippet;
+    choicesHeaderAction?: Snippet;
     plan: Snippet;
     effects: Snippet;
   }
 
-  let { stats, choices, plan, effects }: Props = $props();
+  let { stats, choices, choicesHeaderAction, plan, effects }: Props = $props();
 
   const statsId = 'stats-column';
   const choicesId = 'choices-column';
@@ -24,7 +25,12 @@
   </section>
 
   <section class="play-layout__column play-layout__choices" aria-labelledby={choicesId}>
-    <h2 id={choicesId} class="play-layout__header">{$t('play.choices.title')}</h2>
+    <div class="play-layout__header">
+      <h2 id={choicesId} class="play-layout__header-title">{$t('play.choices.title')}</h2>
+      {#if choicesHeaderAction}
+        <div class="play-layout__header-action">{@render choicesHeaderAction()}</div>
+      {/if}
+    </div>
     {@render choices()}
   </section>
 
@@ -65,13 +71,31 @@
   }
 
   .play-layout__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    flex-shrink: 0;
     font-family: var(--font-display);
     font-size: var(--font-size-lg);
     font-weight: 600;
     color: var(--md-sys-color-on-surface);
     margin: 0;
-    padding: var(--spacing-md);
-    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  .play-layout__header-title {
+    font-family: var(--font-display);
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    margin: 0;
+  }
+
+  .play-layout__header-action {
+    display: flex;
+    align-items: center;
     flex-shrink: 0;
   }
 
