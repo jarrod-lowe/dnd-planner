@@ -1,0 +1,33 @@
+name: 'Greataxe Cleave Mastery Followup'
+description: >
+  When greataxe-mastery is assigned, the greataxe attack offer includes a Cleave
+  followup (type: attack-line) in its ui.
+
+ruleGroups:
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/greataxe
+  - dnd-5e-2024/greataxe-mastery
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          attack.greataxe.mastery: 1
+        offers:
+          exists:
+            - greataxe-use-action
+        offerUi:
+          - id: greataxe-use-action
+            ui:
+              followups:
+                - type: attack-line
+                  condition:
+                    fact: attack.greataxe.mastery
+                    operator: equals
+                    value: 1
+                  button: rule.dnd-5e-2024.attacks.greataxe-cleave.button

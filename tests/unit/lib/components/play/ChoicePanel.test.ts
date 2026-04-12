@@ -1665,4 +1665,260 @@ describe('ChoicePanel', () => {
       }
     });
   });
+
+  // === Cleave attack-line followup tests ===
+
+  const createMockGreataxeMasteryEntry = (overrides?: {
+    damageBonus?: number;
+  }): AvailableRuleEntry => ({
+    rule: {
+      id: 'greataxe-use-action',
+      description: 'Greataxe',
+      activities: [],
+      ui: {
+        model: 'attack',
+        section: 'action-attack',
+        name: 'rule.dnd-5e-2024.attacks.greataxe.name',
+        followups: [
+          {
+            type: 'attack-line',
+            condition: { fact: 'attack.greataxe.mastery', operator: 'equals', value: 1 },
+            button: 'rule.dnd-5e-2024.attacks.greataxe-cleave.button'
+          }
+        ]
+      },
+      vars: {
+        ranges: { default: { array: [{ distance: 5, type: 'melee' }] } },
+        hitBonus: { capture: true, default: { number: 5 } },
+        damageDie: { default: { number: 12 } },
+        damageBonus: { capture: true, default: { number: overrides?.damageBonus ?? 3 } }
+      }
+    } as Rule,
+    legal: true,
+    applicable: true,
+    diagnostics: []
+  });
+
+  describe('Cleave attack-line followup', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('shows Cleave followup button when mastery condition is met', () => {
+      const entry = createMockGreataxeMasteryEntry();
+      const facts = { 'attack.greataxe.mastery': 1 };
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      const followupButton = container.querySelector('.choice-panel__followup-button');
+      expect(followupButton).toBeTruthy();
+      // In test environment, i18n returns the key itself as fallback
+      expect(followupButton?.textContent).toContain(
+        'rule.dnd-5e-2024.attacks.greataxe-cleave.button'
+      );
+    });
+
+    it('hides Cleave followup button when mastery condition is not met', () => {
+      const entry = createMockGreataxeMasteryEntry();
+      const facts = {};
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      const followupButton = container.querySelector('.choice-panel__followup-button');
+      expect(followupButton).toBeFalsy();
+    });
+
+    it('clicking Cleave button hides button and shows second attack row', async () => {
+      const entry = createMockGreataxeMasteryEntry();
+      const facts = { 'attack.greataxe.mastery': 1 };
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      // Before click: one attack row, followup button visible
+      const attackRows = container.querySelectorAll('.choice-panel__attack');
+      expect(attackRows.length).toBe(1);
+      expect(container.querySelector('.choice-panel__followup-button')).toBeTruthy();
+
+      // Click the Cleave button
+      const followupButton = container.querySelector(
+        '.choice-panel__followup-button'
+      ) as HTMLButtonElement;
+      await fireEvent.click(followupButton);
+
+      // After click: two attack rows, followup button hidden
+      const attackRowsAfter = container.querySelectorAll('.choice-panel__attack');
+      expect(attackRowsAfter.length).toBe(2);
+      expect(container.querySelector('.choice-panel__followup-button')).toBeFalsy();
+    });
+
+    it('second attack row shows same range as parent', async () => {
+      const entry = createMockGreataxeMasteryEntry();
+      const facts = { 'attack.greataxe.mastery': 1 };
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      // Click Cleave button
+      const followupButton = container.querySelector(
+        '.choice-panel__followup-button'
+      ) as HTMLButtonElement;
+      await fireEvent.click(followupButton);
+
+      // Second row should show same range
+      const attackRows = container.querySelectorAll('.choice-panel__attack');
+      const cleaveRow = attackRows[1];
+      const cleaveRange = cleaveRow?.querySelector('.attack-range');
+      expect(cleaveRange?.textContent).toBe('5 ft');
+    });
+
+    it('second attack row shows same hit bonus as parent', async () => {
+      const entry = createMockGreataxeMasteryEntry();
+      const facts = { 'attack.greataxe.mastery': 1 };
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      // Click Cleave button
+      const followupButton = container.querySelector(
+        '.choice-panel__followup-button'
+      ) as HTMLButtonElement;
+      await fireEvent.click(followupButton);
+
+      // Second row's d20 chip should show same hit bonus
+      const attackRows = container.querySelectorAll('.choice-panel__attack');
+      const cleaveRow = attackRows[1];
+      const cleaveHitChips = cleaveRow?.querySelectorAll('.attack-chip--rollable');
+      expect(cleaveHitChips?.[0]?.textContent).toBe('d20+5');
+    });
+
+    it('second attack row shows damage without positive ability modifier', async () => {
+      const entry = createMockGreataxeMasteryEntry({ damageBonus: 3 });
+      const facts = { 'attack.greataxe.mastery': 1 };
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      // Click Cleave button
+      const followupButton = container.querySelector(
+        '.choice-panel__followup-button'
+      ) as HTMLButtonElement;
+      await fireEvent.click(followupButton);
+
+      // Cleave damage shows d12 without the +3 ability modifier bonus.
+      // The bonus is Math.min(0, 3) = 0, formatted as "+0" by formatBonus.
+      const attackRows = container.querySelectorAll('.choice-panel__attack');
+      const cleaveRow = attackRows[1];
+      const cleaveHitChips = cleaveRow?.querySelectorAll('.attack-chip--rollable');
+      expect(cleaveHitChips?.[1]?.textContent).toBe('d12+0');
+    });
+
+    it('second attack row shows negative ability modifier in damage', async () => {
+      const entry = createMockGreataxeMasteryEntry({ damageBonus: -2 });
+      const facts = { 'attack.greataxe.mastery': 1 };
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      // Click Cleave button
+      const followupButton = container.querySelector(
+        '.choice-panel__followup-button'
+      ) as HTMLButtonElement;
+      await fireEvent.click(followupButton);
+
+      // Second row's damage chip should show d12-2 (negative modifier included)
+      const attackRows = container.querySelectorAll('.choice-panel__attack');
+      const cleaveRow = attackRows[1];
+      const cleaveHitChips = cleaveRow?.querySelectorAll('.attack-chip--rollable');
+      expect(cleaveHitChips?.[1]?.textContent).toBe('d12-2');
+    });
+
+    it('second attack row rolls d20 independently from parent', async () => {
+      const entry = createMockGreataxeMasteryEntry();
+      const facts = { 'attack.greataxe.mastery': 1 };
+      const randomMock = vi.spyOn(Math, 'random');
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      // Click Cleave button
+      const followupButton = container.querySelector(
+        '.choice-panel__followup-button'
+      ) as HTMLButtonElement;
+      await fireEvent.click(followupButton);
+
+      const attackRows = container.querySelectorAll('.choice-panel__attack');
+      const parentRow = attackRows[0];
+      const cleaveRow = attackRows[1];
+
+      // Roll parent hit: 0.6 → 13, total = 18
+      randomMock.mockReturnValue(0.6);
+      const parentHitChip = parentRow?.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.click(parentHitChip);
+      expect(parentHitChip.textContent).toBe('18');
+
+      // Roll cleave hit: 0.4 → 9, total = 14
+      randomMock.mockReturnValue(0.4);
+      const cleaveHitChips = cleaveRow?.querySelectorAll('.attack-chip--rollable');
+      const cleaveHitChip = cleaveHitChips?.[0] as HTMLButtonElement;
+      await fireEvent.click(cleaveHitChip);
+      expect(cleaveHitChip.textContent).toBe('14');
+
+      // Parent should still show 18
+      expect(parentHitChip.textContent).toBe('18');
+    });
+
+    it('second attack row rolls damage independently from parent', async () => {
+      const entry = createMockGreataxeMasteryEntry();
+      const facts = { 'attack.greataxe.mastery': 1 };
+      const randomMock = vi.spyOn(Math, 'random');
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      // Click Cleave button
+      const followupButton = container.querySelector(
+        '.choice-panel__followup-button'
+      ) as HTMLButtonElement;
+      await fireEvent.click(followupButton);
+
+      const attackRows = container.querySelectorAll('.choice-panel__attack');
+      const parentRow = attackRows[0];
+      const cleaveRow = attackRows[1];
+
+      // Roll parent hit
+      randomMock.mockReturnValue(0.6);
+      const parentChips = parentRow?.querySelectorAll('.attack-chip--rollable');
+      await fireEvent.click(parentChips?.[0] as HTMLButtonElement);
+
+      // Roll parent damage: 0.5 → floor(0.5*12)+1 = 7, total = 7+3 = 10
+      randomMock.mockReturnValue(0.5);
+      await fireEvent.click(parentChips?.[1] as HTMLButtonElement);
+      expect(parentChips?.[1]?.textContent).toBe('10');
+
+      // Roll cleave hit
+      randomMock.mockReturnValue(0.4);
+      const cleaveChips = cleaveRow?.querySelectorAll('.attack-chip--rollable');
+      await fireEvent.click(cleaveChips?.[0] as HTMLButtonElement);
+
+      // Roll cleave damage: 0.3 → floor(0.3*12)+1 = 4, total = 4+0 = 4 (no bonus)
+      randomMock.mockReturnValue(0.3);
+      await fireEvent.click(cleaveChips?.[1] as HTMLButtonElement);
+      expect(cleaveChips?.[1]?.textContent).toBe('4');
+
+      // Parent should still show 10
+      expect(parentChips?.[1]?.textContent).toBe('10');
+    });
+  });
 });

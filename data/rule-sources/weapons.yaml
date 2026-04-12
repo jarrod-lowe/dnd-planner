@@ -96,6 +96,13 @@ definitions:
     ui:
       model: attack
       name: rule.dnd-5e-2024.attacks.greataxe.name
+      followups:
+        - type: attack-line
+          condition:
+            fact: attack.greataxe.mastery
+            operator: equals
+            value: 1
+          button: rule.dnd-5e-2024.attacks.greataxe-cleave.button
     vars:
       ranges:
         default:

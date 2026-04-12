@@ -470,6 +470,9 @@
         "greataxe": {
           "name": "Greataxe"
         },
+        "greataxe-cleave": {
+          "button": "Cleave"
+        },
         "greataxe-mastery": {
           "name": "Greataxe Mastery (Cleave)"
         },
