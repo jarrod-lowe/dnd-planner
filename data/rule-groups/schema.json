@@ -383,7 +383,7 @@
         },
         "function": {
           "type": "string",
-          "enum": ["statToModifier", "multiply"],
+          "enum": ["statToModifier", "multiply", "max"],
           "description": "Named function (for numberFunction)"
         },
         "args": {

@@ -762,7 +762,11 @@
                 >{/if}{cleaveHitTotal}{:else}d20{formatBonus(attackHitBonus)}{/if}
           </button>
           {#if showCleaveHitPopover}
-            <div class="roll-popover roll-popover--cleave-hit" role="menu" aria-label={$t('play.choices.attack.roll')}>
+            <div
+              class="roll-popover roll-popover--cleave-hit"
+              role="menu"
+              aria-label={$t('play.choices.attack.roll')}
+            >
               <button
                 type="button"
                 class="roll-popover__item"

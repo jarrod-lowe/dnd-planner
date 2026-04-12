@@ -1957,10 +1957,7 @@ describe('ChoicePanel', () => {
       const entry = createMockGreataxeMasteryEntry();
       const facts = { 'attack.greataxe.mastery': 1 };
       // 0.1 → d20=3, 0.5 → d20=11. Advantage takes 11. Cleave total = 11 + 5 = 16
-      const randomMock = vi
-        .spyOn(Math, 'random')
-        .mockReturnValueOnce(0.1)
-        .mockReturnValueOnce(0.5);
+      const randomMock = vi.spyOn(Math, 'random').mockReturnValueOnce(0.1).mockReturnValueOnce(0.5);
 
       const { container } = render(ChoicePanel, {
         props: { entry, editable: true, facts }
@@ -1997,10 +1994,7 @@ describe('ChoicePanel', () => {
       const entry = createMockGreataxeMasteryEntry();
       const facts = { 'attack.greataxe.mastery': 1 };
       // 0.1 → d20=3, 0.5 → d20=11. Disadvantage takes 3. Cleave total = 3 + 5 = 8
-      const randomMock = vi
-        .spyOn(Math, 'random')
-        .mockReturnValueOnce(0.1)
-        .mockReturnValueOnce(0.5);
+      const randomMock = vi.spyOn(Math, 'random').mockReturnValueOnce(0.1).mockReturnValueOnce(0.5);
 
       const { container } = render(ChoicePanel, {
         props: { entry, editable: true, facts }

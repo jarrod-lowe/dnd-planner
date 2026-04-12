@@ -797,6 +797,14 @@ Add suitable tests into `yaml-scenarios` when creating new rules.
 | `setAdd`          | Add string to var array       | `target.var`, `source.string`                  |
 | `advertiseEffect` | Persistent cross-turn effect  | `rule` or `self: true`                         |
 
+### Named Functions (numberFunction)
+
+| Function         | Description                       | `args`       |
+| ---------------- | --------------------------------- | ------------ |
+| `statToModifier` | Convert ability score to modifier | _(none)_     |
+| `multiply`       | Multiply source values together   | `multiplier` |
+| `max`            | Return maximum value from sources | _(none)_     |
+
 ### Source Types
 
 | Type        | Example                                              | Description                  |
