@@ -1,0 +1,28 @@
+name: 'Heroic Inspiration - Grant Illegal When Active'
+description: 'Grant HI is illegal when HI is already active (remaining = 1)'
+ruleGroups:
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/heroic-inspiration
+initialEffects:
+  - id: effect-hi
+    phase: early
+    group:
+      - hi-settle
+    activities:
+      - type: numberSet
+        source:
+          number: 1
+        target:
+          fact: heroicInspiration.remaining
+      - type: advertiseEffect
+        self: true
+steps:
+  # HI already active from persistent effect
+  - evaluate:
+      assert:
+        facts:
+          heroicInspiration.max: 1
+          heroicInspiration.remaining: 1
+        offers:
+          illegal:
+            - grant-hi

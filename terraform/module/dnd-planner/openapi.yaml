@@ -144,7 +144,14 @@ paths:
                     items:
                       type: string
                     example:
-                      ['turn-rest', 'action-economy', 'proficiency', 'movement', 'free-actions']
+                      [
+                        'turn-rest',
+                        'action-economy',
+                        'proficiency',
+                        'movement',
+                        'free-actions',
+                        'heroic-inspiration'
+                      ]
         '400':
           description: Invalid request - name is required
           content:

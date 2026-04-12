@@ -522,6 +522,14 @@
         "roll-initiative": {
           "name": "DIvI' chuwI'"
         }
+      },
+      "heroic-inspiration": {
+        "grant-hi": {
+          "name": "SubchI' SuvwI' nob"
+        },
+        "grant-hi-offer": {
+          "already_has": "SubchI' SuvwI' ghaj"
+        }
       }
     }
   },
@@ -661,6 +669,7 @@
       "actions": "DIvI'",
       "bonusActions": "DIvI' latlh",
       "reactions": "DIvI' cha'",
+      "heroicInspiration": "SubchI' SuvwI'",
       "layOnHands": "ghop Du",
       "spellcasting": "mugh DIvI'",
       "spellLevel": "mugh DIvI' L{{level}}",

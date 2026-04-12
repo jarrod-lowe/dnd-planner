@@ -11,6 +11,39 @@ ruleGroups:
         description: Human Segh
         keywords: [Human, Segh, Do]
     rules:
+      # Grant Heroic Inspiration on Long Rest
+      - id: human-hi-long-rest
+        phase: early
+        after:
+          - group: hi-settle
+        when:
+          - fact: rest.long
+            operator: equals
+            value: 1
+          - fact: heroicInspiration.remaining
+            operator: equals
+            value: 0
+        activities:
+          - type: numberSet
+            source:
+              number: 1
+            target:
+              fact: heroicInspiration.remaining
+          - type: advertiseEffect
+            rule:
+              id: effect-hi
+              phase: early
+              group:
+                - hi-settle
+              activities:
+                - type: numberSet
+                  source:
+                    number: 1
+                  target:
+                    fact: heroicInspiration.remaining
+                - type: advertiseEffect
+                  self: true
+
       # Max Distance
       - id: set-base-distance
         phase: early

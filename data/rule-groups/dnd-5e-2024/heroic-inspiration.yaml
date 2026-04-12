@@ -1,0 +1,71 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: heroic-inspiration
+    translations:
+      en:
+        name: Heroic Inspiration
+        description: Track Heroic Inspiration
+        keywords: [inspiration, heroic]
+      en-x-tlh:
+        name: SuvwI' SubchI'
+        description: SuvwI' SubchI' track
+        keywords: [SuvwI', SubchI']
+    rules:
+      # Set max HI (always 1) and declare stat
+      - id: hi-max
+        phase: early
+        group:
+          - hi-settle
+        ui:
+          stats:
+            - name: play.stats.heroicInspiration
+              type: value
+              fact: heroicInspiration.remaining
+              section: resources
+        activities:
+          - type: numberSet
+            source:
+              number: 1
+            target:
+              fact: heroicInspiration.max
+
+      # Offer to grant HI (player marks DM gave inspiration)
+      - id: grant-hi-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: heroicInspiration.remaining
+                  operator: lessThan
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.heroic-inspiration.grant-hi-offer.already_has
+                    severity: error
+            rule:
+              id: grant-hi
+              ui:
+                model: heroic-inspiration-grant
+                section: other
+                name: rule.dnd-5e-2024.heroic-inspiration.grant-hi.name
+              activities:
+                - type: numberSet
+                  source:
+                    number: 1
+                  target:
+                    fact: heroicInspiration.remaining
+                - type: advertiseEffect
+                  rule:
+                    id: effect-hi
+                    phase: early
+                    group:
+                      - hi-settle
+                    activities:
+                      - type: numberSet
+                        source:
+                          number: 1
+                        target:
+                          fact: heroicInspiration.remaining
+                      - type: advertiseEffect
+                        self: true
