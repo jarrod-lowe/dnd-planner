@@ -167,9 +167,7 @@
   );
 
   // Initiative roll model specific values
-  const initiativeBonus = $derived(
-    uiModel === 'initiative-roll' ? resolveVarDefault('initiativeBonus') : undefined
-  );
+  const rollBonus = $derived(uiModel === 'd20-roll' ? resolveVarDefault('rollBonus') : undefined);
 
   // Dice roll state and functions
   let hitRollResult: number | null = $state(null);
@@ -269,7 +267,7 @@
   const isNat20 = $derived(hitRollResult === 20);
   const isNat1 = $derived(hitRollResult === 1);
   const initiativeTotal = $derived(
-    initiativeRollResult !== null ? initiativeRollResult + (initiativeBonus ?? 0) : null
+    initiativeRollResult !== null ? initiativeRollResult + (rollBonus ?? 0) : null
   );
   const initiativeNat20 = $derived(initiativeRollResult === 20);
   const initiativeNat1 = $derived(initiativeRollResult === 1);
@@ -809,7 +807,7 @@
           >
         </div>
       {/if}
-      {#if uiModel === 'initiative-roll' && initiativeBonus !== undefined}
+      {#if uiModel === 'd20-roll' && rollBonus !== undefined}
         <div class="choice-panel__model choice-panel__attack">
           <button
             type="button"
@@ -838,7 +836,7 @@
             }}
             aria-label={initiativeRollResult !== null
               ? `${$t('play.choices.initiative.reroll')}: ${initiativeTotal}${initiativeRollMode === 'advantage' ? ` — ${$t('play.choices.initiative.advantageResult')}` : ''}${initiativeRollMode === 'disadvantage' ? ` — ${$t('play.choices.initiative.disadvantageResult')}` : ''}${initiativeNat20 ? ` — ${$t('play.choices.attack.nat20')}` : ''}${initiativeNat1 ? ` — ${$t('play.choices.attack.nat1')}` : ''}`
-              : `${$t('play.choices.initiative.roll')}: d20${formatBonus(initiativeBonus)}`}
+              : `${$t('play.choices.initiative.roll')}: d20${formatBonus(rollBonus)}`}
           >
             {#if initiativeRollResult !== null}{#if initiativeRollMode === 'advantage'}<svg
                   class="roll-mode-icon roll-mode-icon--advantage"
@@ -856,7 +854,7 @@
                   >&#10004;</span
                 >{/if}{#if initiativeNat1}<span class="attack-crit-icon" aria-hidden="true"
                   >&#10008;</span
-                >{/if}{initiativeTotal}{:else}d20{formatBonus(initiativeBonus)}{/if}
+                >{/if}{initiativeTotal}{:else}d20{formatBonus(rollBonus)}{/if}
           </button>
           {#if showInitiativePopover}
             <div
@@ -1054,9 +1052,9 @@
           >
         </div>
       {/if}
-      {#if uiModel === 'initiative-roll' && initiativeBonus !== undefined}
+      {#if uiModel === 'd20-roll' && rollBonus !== undefined}
         <div class="choice-panel__model choice-panel__attack">
-          <span class="attack-chip">d20{formatBonus(initiativeBonus)}</span>
+          <span class="attack-chip">d20{formatBonus(rollBonus)}</span>
         </div>
       {/if}
     </div>
