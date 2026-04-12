@@ -702,6 +702,8 @@
       "empty": "No choices available",
       "illegal": "Illegal choice",
       "inapplicable": "Inapplicable choice",
+      "showIllegal": "Show illegal",
+      "hideIllegal": "Hide illegal",
       "addToPlan": "Add to plan",
       "removeFromPlan": "Remove from plan",
       "sections": {

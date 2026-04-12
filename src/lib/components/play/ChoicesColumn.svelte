@@ -9,13 +9,14 @@
     entries: AvailableRuleEntry[];
     facts?: Facts;
     isLoading?: boolean;
+    showIllegal?: boolean;
     onChoiceTap: (entry: AvailableRuleEntry) => void;
   }
 
-  let { entries, facts = {}, isLoading = false, onChoiceTap }: Props = $props();
+  let { entries, facts = {}, isLoading = false, showIllegal = true, onChoiceTap }: Props = $props();
 
   // Group entries by section, then by packBehind within each section
-  const sectionGroups = $derived(groupChoicesBySection(entries, SECTION_ORDER));
+  const sectionGroups = $derived(groupChoicesBySection(entries, SECTION_ORDER, showIllegal));
 </script>
 
 <div class="choices-column">

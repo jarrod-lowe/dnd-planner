@@ -702,6 +702,8 @@
       "empty": "DuH DIvI'be'",
       "illegal": "DuH DIvI'be'",
       "inapplicable": "DuH lo'laHbe'",
+      "showIllegal": "mugh DIvI'",
+      "hideIllegal": "mugh SoQmoH",
       "addToPlan": "DIvI' chel",
       "removeFromPlan": "DIvI' teq",
       "sections": {
