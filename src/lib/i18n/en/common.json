@@ -710,6 +710,7 @@
     "choices": {
       "title": "Available Choices",
       "loading": "Loading choices...",
+      "disadvantageApplies": "Disadvantage applies",
       "empty": "No choices available",
       "illegal": "Illegal choice",
       "inapplicable": "Inapplicable choice",
