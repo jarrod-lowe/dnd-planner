@@ -329,7 +329,6 @@ The architecture supports:
 - Don/Doff & Hands
 - Ready
 - Finish Help
-- Armour (proficiency)
 - Tools (proficiency)
 - Damage types on weapons (and spells?)
 - Spells

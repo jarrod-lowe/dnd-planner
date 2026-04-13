@@ -1,0 +1,15 @@
+name: 'Paladin Armor Proficiencies'
+description: 'Paladin Level 1 grants proficiency in light, medium, heavy armor and shields'
+ruleGroups:
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+steps:
+  - evaluate:
+      assert:
+        facts:
+          armor.light.proficient: 1
+          armor.medium.proficient: 1
+          armor.heavy.proficient: 1
+          armor.shield.proficient: 1
