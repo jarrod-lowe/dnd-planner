@@ -541,6 +541,17 @@
         "effect-leather-armor": {
           "name": "DIch Jun"
         }
+      },
+      "splint-armor": {
+        "don-splint-armor": {
+          "name": "DIch Sep tuQ"
+        },
+        "don-splint-armor-offer": {
+          "already-equipped": "DIch Sep tuQtaH"
+        },
+        "effect-splint-armor": {
+          "name": "DIch Sep"
+        }
       }
     }
   },

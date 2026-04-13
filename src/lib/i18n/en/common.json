@@ -541,6 +541,17 @@
         "effect-leather-armor": {
           "name": "Leather Armor"
         }
+      },
+      "splint-armor": {
+        "don-splint-armor": {
+          "name": "Don Splint Armor"
+        },
+        "don-splint-armor-offer": {
+          "already-equipped": "Splint armor is already equipped"
+        },
+        "effect-splint-armor": {
+          "name": "Splint Armor"
+        }
       }
     }
   },
