@@ -128,6 +128,25 @@
               "items": {
                 "$ref": "#/definitions/statEntry"
               }
+            },
+            "disadvantageFact": {
+              "type": "string",
+              "description": "Fact path indicating disadvantage on this roll"
+            },
+            "outcomeKey": {
+              "type": "string",
+              "description": "i18n key for contest outcome label"
+            },
+            "vsKey": {
+              "type": "string",
+              "description": "i18n key for 'vs' label in contested actions"
+            },
+            "followups": {
+              "type": "array",
+              "description": "Followup action buttons available on this rule",
+              "items": {
+                "$ref": "#/definitions/followup"
+              }
             }
           },
           "additionalProperties": false
@@ -440,6 +459,41 @@
           "enum": ["error", "warning", "notice"]
         }
       }
+    },
+    "followup": {
+      "type": "object",
+      "required": ["type", "condition", "button"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["effect", "attack-line"],
+          "description": "Followup action type"
+        },
+        "condition": {
+          "$ref": "#/definitions/condition",
+          "description": "Condition that must be true for the followup to be visible"
+        },
+        "button": {
+          "type": "string",
+          "description": "i18n key for the followup button label"
+        },
+        "addRule": {
+          "type": "object",
+          "description": "Rule to add when followup is triggered (for effect type)",
+          "properties": {
+            "target": {
+              "type": "string",
+              "description": "Target fact path for the added rule"
+            },
+            "rule": {
+              "$ref": "#/definitions/rule",
+              "description": "Rule to add"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     },
     "statEntry": {
       "type": "object",

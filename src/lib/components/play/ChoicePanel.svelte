@@ -226,7 +226,7 @@
   }
 
   // Range selection state - restored from selections if available
-  let selectedRangeIndex = $state((entry.rule.selections?.rangeIndex as number | undefined) ?? 0);
+  let selectedRangeIndex = $state.raw((entry.rule.selections?.rangeIndex as number | undefined) ?? 0);
 
   // Derived: currently selected range entry
   const selectedRange = $derived(
