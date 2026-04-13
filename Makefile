@@ -1,4 +1,4 @@
-.PHONY: format-terraform validate security test help clean dev build lint format-frontend test-unit test-e2e test-e2e-debug test-component format-check push-test install pnpm setup-dev format go-build deploy-lambdas-test deploy-lambdas-prod sync-rule-groups test-rules preprocess
+.PHONY: format-terraform validate security test help clean dev build lint format-frontend test-unit test-e2e test-e2e-debug test-component format-check push-test install pnpm setup-dev format go-build deploy-lambdas-test deploy-lambdas-prod sync-rule-groups test-rules preprocess validate-rules-schema
 
 default: help
 
@@ -261,8 +261,15 @@ validate: $(addprefix validate-,$(ENVS))
 security:
 	docker run --rm -v $(PWD)/terraform:/tf aquasec/trivy:0.69.3 config --severity CRITICAL,HIGH /tf
 
+# Validate rule YAML files against JSON Schema
+validate-rules-schema: preprocess
+	@PYTHON=$$(which python3 || which python); \
+	if [ ! -d .venv ]; then $$PYTHON -m venv .venv; fi; \
+	.venv/bin/pip install -q -r scripts/requirements.txt; \
+	.venv/bin/python scripts/validate_rule_schema.py --data-dir data/rule-groups --data-dir2 generated/rule-groups
+
 # Run all tests (terraform + frontend)
-test: validate security test-unit test-rules test-e2e lint
+test: validate security validate-rules-schema test-unit test-rules test-e2e lint
 
 preflight: format-terraform format test
 
@@ -306,6 +313,7 @@ help:
 	@echo "  make test                Run all tests (terraform + frontend)"
 	@echo "  make test-unit           Run Vitest unit tests"
 	@echo "  make test-rules          Run rules engine integration tests with real YAML"
+	@echo "  make validate-rules-schema Validate rule YAML files against JSON Schema"
 	@echo "  make test-e2e            Run Playwright E2E tests (CI-friendly)"
 	@echo "  make test-e2e-debug      Run Playwright E2E tests with debug report"
 	@echo "  make test-component      Run Playwright component tests"
