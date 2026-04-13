@@ -1,0 +1,47 @@
+name: 'Splint Armor Speed Penalty Low STR'
+description: 'Movement reduced by 10 when STR below 15'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/splint-armor
+  - dnd-5e-2024/action-economy
+steps:
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - set-strength
+            - don-splint-armor
+  # Set STR to 12 (below 15)
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 12
+      assert:
+        facts:
+          str.value: 12
+  - evaluate:
+      assert:
+        facts:
+          character.movement.total: 30
+          character.movement.remaining: 30
+        offers:
+          exists:
+            - don-splint-armor
+  # Don splint armor -- immediate speed penalty reduces remaining by 10
+  - addOffer:
+      id: don-splint-armor
+      assert:
+        facts:
+          ac.base: 17
+          armor.splint.equipped: 1
+          character.movement.remaining: 20
+  # End turn -- persistent effect reduces remaining by 10 again (after reset sets it to 30)
+  - endTurn:
+      assert:
+        facts:
+          character.movement.total: 30
+          character.movement.remaining: 20
+          armor.splint.equipped: 1

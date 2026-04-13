@@ -1,0 +1,40 @@
+name: 'Splint Armor Already Equipped'
+description: 'Cannot don splint armor when already equipped'
+ruleGroups:
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/splint-armor
+initialEffects:
+  - id: effect-splint-armor
+    phase: normal
+    after:
+      - group: ac-calculation
+    group:
+      - ac-components
+    activities:
+      - type: numberSet
+        target:
+          fact: ac.base
+        source:
+          number: 17
+      - type: numberSet
+        target:
+          fact: ac.dexBonus
+        source:
+          number: 0
+      - type: numberSet
+        target:
+          fact: armor.splint.equipped
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+steps:
+  - evaluate:
+      assert:
+        facts:
+          ac.base: 17
+          ac.value: 17
+          armor.splint.equipped: 1
+        offers:
+          illegal:
+            - don-splint-armor
