@@ -729,7 +729,7 @@
                 didOpenPopover = false;
                 return;
               }
-              rollCleaveHit(e, cleaveHitRollMode);
+              rollCleaveHit(e, defaultHitRollMode);
             }}
             onpointerdown={() => startLongPress('cleave-hit')}
             onpointerup={() => cancelLongPress()}
