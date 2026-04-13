@@ -1,0 +1,34 @@
+name: 'Splint Armor Disadvantage'
+description: 'Disadvantage applies, Stealth always disadvantaged, spellcasting blocked when not proficient with heavy armor'
+ruleGroups:
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/splint-armor
+  - dnd-5e-2024/spellcasting
+initialFacts:
+  armor.heavy.proficient: 0
+steps:
+  # Baseline: spellcasting works normally
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.max: 1
+          spellcasting.remaining: 1
+        offers:
+          exists:
+            - don-splint-armor
+  # Don splint armor -- disadvantage on STR/DEX checks, always Stealth disadvantage, spellcasting block
+  - addOffer:
+      id: don-splint-armor
+      assert:
+        facts:
+          ac.base: 17
+          ac.dexBonus: 0
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+          initiative.disadvantage: 1
+          skill.acrobatics.disadvantage: 1
+          skill.athletics.disadvantage: 1
+          skill.sleight-of-hand.disadvantage: 1
+          skill.stealth.disadvantage: 1
+          spellcasting.remaining: 0

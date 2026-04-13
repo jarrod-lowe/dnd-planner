@@ -1,0 +1,47 @@
+name: 'Splint Armor No Speed Penalty High STR'
+description: 'No speed penalty when STR 15 or above'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/splint-armor
+  - dnd-5e-2024/action-economy
+steps:
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - set-strength
+            - don-splint-armor
+  # Set STR to 16 (above 15 threshold)
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 16
+      assert:
+        facts:
+          str.value: 16
+  - evaluate:
+      assert:
+        facts:
+          character.movement.total: 30
+          character.movement.remaining: 30
+        offers:
+          exists:
+            - don-splint-armor
+  # Don splint armor -- no speed penalty
+  - addOffer:
+      id: don-splint-armor
+      assert:
+        facts:
+          ac.base: 17
+          armor.splint.equipped: 1
+          character.movement.remaining: 30
+  # End turn -- no speed penalty persists
+  - endTurn:
+      assert:
+        facts:
+          character.movement.total: 30
+          character.movement.remaining: 30
+          armor.splint.equipped: 1

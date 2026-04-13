@@ -1,0 +1,41 @@
+name: 'Splint Armor AC'
+description: 'AC becomes 17 with no Dex bonus when splint armor is donned'
+ruleGroups:
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/splint-armor
+steps:
+  - evaluate:
+      assert:
+        facts:
+          ac.base: 10
+          ac.value: 10
+        offers:
+          exists:
+            - don-splint-armor
+  - addOffer:
+      id: don-splint-armor
+      assert:
+        facts:
+          ac.base: 17
+          ac.dexBonus: 0
+          ac.value: 17
+          armor.splint.equipped: 1
+  # Set DEX to 14 (modifier +2) -- AC should still be 17 (no Dex bonus for heavy armor)
+  - addOffer:
+      id: set-dexterity
+      selections:
+        score: 14
+      assert:
+        facts:
+          dex.modifier: 2
+          ac.base: 17
+          ac.dexBonus: 0
+          ac.value: 17
+  - endTurn:
+      assert:
+        facts:
+          ac.base: 17
+          ac.dexBonus: 0
+          ac.value: 17
+          armor.splint.equipped: 1
