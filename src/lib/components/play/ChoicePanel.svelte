@@ -166,6 +166,13 @@
     uiModel === 'contested-action' ? (entry.rule.ui?.vsKey as string | undefined) : undefined
   );
 
+  // Rules-engine disadvantage: read from ui.disadvantageFact (data-driven, works with instance IDs)
+  const hasRulesDisadvantage = $derived.by(() => {
+    const disadvFact = entry.rule.ui?.disadvantageFact as string | undefined;
+    if (disadvFact) return facts[disadvFact] === 1;
+    return false;
+  });
+
   // Initiative roll model specific values
   const rollBonus = $derived(uiModel === 'd20-roll' ? resolveVarDefault('rollBonus') : undefined);
 
@@ -226,13 +233,12 @@
     attackRanges && attackRanges.length > 0 ? attackRanges[selectedRangeIndex] : undefined
   );
 
-  // Cycle to next range, reset rolls, auto-apply disadvantage
+  // Cycle to next range, reset rolls
   function cycleRange(): void {
     if (!attackRanges || attackRanges.length <= 1) return;
     selectedRangeIndex = (selectedRangeIndex + 1) % attackRanges.length;
     hitRollResult = null;
     damageRollResult = null;
-    hitRollMode = selectedRange?.disadvantage ? 'disadvantage' : 'normal';
     if (onSelectionChange) {
       onSelectionChange({ rangeIndex: selectedRangeIndex });
     }
@@ -240,13 +246,17 @@
 
   // Advantage/disadvantage state
   type RollMode = 'normal' | 'advantage' | 'disadvantage';
-  let hitRollMode: RollMode = $state(
-    (() => {
-      const ranges = entry.rule.vars?.ranges?.default?.array as RangeEntry[] | undefined;
-      const idx = (entry.rule.selections?.rangeIndex as number | undefined) ?? 0;
-      return ranges?.[idx]?.disadvantage ? 'disadvantage' : 'normal';
-    })()
-  );
+  // Default roll modes derived from rules engine + range disadvantage
+  // These are used for regular taps (reset each time)
+  const defaultHitRollMode = $derived.by(() => {
+    if (hasRulesDisadvantage) return 'disadvantage';
+    if (selectedRange?.disadvantage) return 'disadvantage';
+    return 'normal';
+  });
+  const defaultD20RollMode = $derived(hasRulesDisadvantage ? 'disadvantage' : 'normal');
+
+  // Stored roll modes track what was last rolled (for inside-arrow display)
+  let hitRollMode: RollMode = $state('normal');
   let initiativeRollMode: RollMode = $state('normal');
   type PopoverTarget = 'hit' | 'cleave-hit' | 'initiative' | null;
   let activePopover: PopoverTarget = $state(null);
@@ -324,7 +334,7 @@
   }
 
   function rollInitiative(event: MouseEvent, mode: RollMode = 'normal'): void {
-    initiativeRollResult = rollD20(mode, 'initiative');
+    initiativeRollResult = rollD20(mode, uiName ?? 'd20-roll');
     initiativeRollMode = mode;
     playRollAnimation(event.currentTarget as HTMLElement);
   }
@@ -598,6 +608,15 @@
             <span class="attack-range">{selectedRange.distance} ft</span>
           {/if}
           <span class="attack-sep" aria-hidden="true">|</span>
+          {#if hasRulesDisadvantage}
+            <svg
+              class="roll-disadv-indicator"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-label={$t('play.choices.disadvantageApplies')}
+              ><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z" /></svg
+            >
+          {/if}
           <button
             type="button"
             class="attack-chip attack-chip--rollable"
@@ -612,7 +631,7 @@
                 didOpenPopover = false;
                 return;
               }
-              rollHit(e, hitRollMode);
+              rollHit(e, defaultHitRollMode);
             }}
             onpointerdown={() => startLongPress('hit')}
             onpointerup={() => cancelLongPress()}
@@ -710,7 +729,7 @@
                 didOpenPopover = false;
                 return;
               }
-              rollCleaveHit(e, cleaveHitRollMode);
+              rollCleaveHit(e, defaultHitRollMode);
             }}
             onpointerdown={() => startLongPress('cleave-hit')}
             onpointerup={() => cancelLongPress()}
@@ -809,6 +828,15 @@
       {/if}
       {#if uiModel === 'd20-roll' && rollBonus !== undefined}
         <div class="choice-panel__model choice-panel__attack">
+          {#if hasRulesDisadvantage}
+            <svg
+              class="roll-disadv-indicator"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-label={$t('play.choices.disadvantageApplies')}
+              ><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z" /></svg
+            >
+          {/if}
           <button
             type="button"
             class="attack-chip attack-chip--rollable"
@@ -823,7 +851,7 @@
                 didOpenPopover = false;
                 return;
               }
-              rollInitiative(e);
+              rollInitiative(e, defaultD20RollMode);
             }}
             onpointerdown={() => startLongPress('initiative')}
             onpointerup={() => cancelLongPress()}
@@ -1417,6 +1445,14 @@
 
   .roll-mode-icon--disadvantage {
     color: var(--md-sys-color-error);
+  }
+
+  /* Rules-engine disadvantage indicator (before roll chip) */
+  .roll-disadv-indicator {
+    width: 1rem;
+    height: 1rem;
+    color: var(--md-sys-color-error);
+    flex-shrink: 0;
   }
 
   /* Override arrow colors when inside crit/fumble chips so they remain visible */

@@ -24,7 +24,8 @@ const createMockAttackEntry = (overrides?: {
     ui: {
       model: 'attack',
       section: 'action-other',
-      name: 'rule.dnd-5e-2024.attacks.unarmed-strike.name'
+      name: 'rule.dnd-5e-2024.attacks.unarmed-strike.name',
+      disadvantageFact: 'attack.str.disadvantage'
     },
     vars: {
       ranges: { default: { array: [{ distance: overrides?.range ?? 5, type: 'melee' }] } },
@@ -1187,6 +1188,87 @@ describe('ChoicePanel', () => {
       // Damage should reset to formula
       expect(buttons[1].textContent).toBe('d8+3');
     });
+
+    // --- Rules-engine disadvantage for attacks ---
+
+    it('shows disadvantage indicator when attack disadvantage fact is set', () => {
+      const entry = createMockAttackEntry();
+      const facts = { 'attack.str.disadvantage': 1 };
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      const indicator = container.querySelector('.roll-disadv-indicator');
+      expect(indicator).toBeTruthy();
+    });
+
+    it('rolls attack with disadvantage when fact is set', async () => {
+      const entry = createMockAttackEntry({ hitBonus: 5 });
+      const facts = { 'attack.str.disadvantage': 1 };
+      // 0.5 → d20=11, 0.1 → d20=3. Disadvantage takes 3. Total = 3 + 5 = 8
+      // (Normal would take 11 → total 16, so this proves disadvantage is used)
+      const randomMock = vi.spyOn(Math, 'random').mockReturnValueOnce(0.5).mockReturnValueOnce(0.1);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      const hitButton = buttons[0] as HTMLButtonElement;
+      await fireEvent.click(hitButton);
+
+      expect(randomMock).toHaveBeenCalledTimes(2);
+      expect(hitButton.textContent).toContain('8');
+    });
+
+    it('does not show disadvantage indicator when attack fact is not set', () => {
+      const entry = createMockAttackEntry();
+      const facts = {};
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      expect(container.querySelector('.roll-disadv-indicator')).toBeFalsy();
+    });
+  });
+
+  // === Attack rules-engine disadvantage (needs fake timers) ===
+
+  describe('Attack rules-engine disadvantage', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+      vi.restoreAllMocks();
+    });
+
+    it('disadvantage indicator persists on attack after user overrides to normal roll', async () => {
+      const entry = createMockAttackEntry();
+      const facts = { 'attack.str.disadvantage': 1 };
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      vi.spyOn(Math, 'random').mockReturnValue(0.6);
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      const hitButton = buttons[0] as HTMLButtonElement;
+
+      // Override to normal via popover
+      await fireEvent.pointerDown(hitButton);
+      await vi.advanceTimersByTimeAsync(300);
+      const items = container.querySelectorAll('[role="menuitem"]');
+      await fireEvent.click(items[1]); // Normal
+
+      // Indicator should still be present
+      const indicator = container.querySelector('.roll-disadv-indicator');
+      expect(indicator).toBeTruthy();
+    });
   });
 
   // === Advantage/Disadvantage tests ===
@@ -1199,7 +1281,8 @@ describe('ChoicePanel', () => {
       ui: {
         model: 'd20-roll',
         section: 'other',
-        name: 'rule.dnd-5e-2024.initiative.roll-initiative.name'
+        name: 'rule.dnd-5e-2024.initiative.roll-initiative.name',
+        disadvantageFact: 'initiative.disadvantage'
       },
       vars: {
         rollBonus: {
@@ -1223,7 +1306,8 @@ describe('ChoicePanel', () => {
       ui: {
         model: 'd20-roll',
         section: 'free',
-        name: `play.stats.skills.${overrides?.skillName ?? 'acrobatics'}`
+        name: `play.stats.skills.${overrides?.skillName ?? 'acrobatics'}`,
+        disadvantageFact: `skill.${overrides?.skillName ?? 'acrobatics'}.disadvantage`
       },
       vars: {
         rollBonus: {
@@ -1686,9 +1770,39 @@ describe('ChoicePanel', () => {
         expect(items[2].textContent).toContain('play.choices.attack.disadvantage');
       }
     });
-  });
 
-  // === Cleave attack-line followup tests ===
+    // --- Rules-engine disadvantage for initiative ---
+
+    it('shows disadvantage indicator when initiative disadvantage fact is set', () => {
+      const entry = createMockInitiativeEntry();
+      const facts = { 'initiative.disadvantage': 1 };
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      const indicator = container.querySelector('.roll-disadv-indicator');
+      expect(indicator).toBeTruthy();
+    });
+
+    it('rolls initiative with disadvantage when fact is set', async () => {
+      const entry = createMockInitiativeEntry({ rollBonus: 2 });
+      const facts = { 'initiative.disadvantage': 1 };
+      // 0.5 → d20=11, 0.1 → d20=3. Disadvantage takes 3. Total = 3 + 2 = 5
+      // (Normal would take 11 → total 13, so this proves disadvantage is used)
+      const randomMock = vi.spyOn(Math, 'random').mockReturnValueOnce(0.5).mockReturnValueOnce(0.1);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      const initButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.click(initButton);
+
+      expect(randomMock).toHaveBeenCalledTimes(2);
+      expect(initButton.textContent).toContain('5');
+    });
+  });
 
   const createMockGreataxeMasteryEntry = (overrides?: {
     damageBonus?: number;
@@ -2191,6 +2305,105 @@ describe('ChoicePanel', () => {
       const ariaLabel = rollButton.getAttribute('aria-label') ?? '';
       expect(ariaLabel).toContain('play.choices.initiative.nat1');
       expect(ariaLabel).not.toContain('play.choices.attack.nat1');
+    });
+
+    // --- Rules-engine disadvantage indicator tests ---
+
+    it('shows disadvantage indicator when skill disadvantage fact is set', () => {
+      const entry = createMockSkillCheckEntry({ skillName: 'acrobatics' });
+      const facts = { 'skill.acrobatics.disadvantage': 1 };
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      const indicator = container.querySelector('.roll-disadv-indicator');
+      expect(indicator).toBeTruthy();
+    });
+
+    it('does not show disadvantage indicator when fact is not set', () => {
+      const entry = createMockSkillCheckEntry({ skillName: 'acrobatics' });
+      const facts = {};
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      expect(container.querySelector('.roll-disadv-indicator')).toBeFalsy();
+    });
+
+    it('disadvantage indicator has accessible aria-label', () => {
+      const entry = createMockSkillCheckEntry({ skillName: 'acrobatics' });
+      const facts = { 'skill.acrobatics.disadvantage': 1 };
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      const indicator = container.querySelector('.roll-disadv-indicator');
+      expect(indicator?.getAttribute('aria-label')).toBe('play.choices.disadvantageApplies');
+    });
+
+    it('rolls with disadvantage by default when skill disadvantage fact is set', async () => {
+      const entry = createMockSkillCheckEntry({ skillName: 'acrobatics', rollBonus: 3 });
+      const facts = { 'skill.acrobatics.disadvantage': 1 };
+      // 0.5 → d20=11, 0.1 → d20=3. Disadvantage takes 3. Total = 3 + 3 = 6
+      // (Normal would take 11 → total 14, so this proves disadvantage is used)
+      const randomMock = vi.spyOn(Math, 'random').mockReturnValueOnce(0.5).mockReturnValueOnce(0.1);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      const rollButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+      await fireEvent.click(rollButton);
+
+      // Should have called random twice (disadvantage rolls two d20s)
+      expect(randomMock).toHaveBeenCalledTimes(2);
+      expect(rollButton.textContent).toContain('6');
+    });
+
+    it('resets to disadvantage after user overrides to normal', async () => {
+      const entry = createMockSkillCheckEntry({ skillName: 'acrobatics', rollBonus: 3 });
+      const facts = { 'skill.acrobatics.disadvantage': 1 };
+      const randomMock = vi.spyOn(Math, 'random');
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      const rollButton = container.querySelector('.attack-chip--rollable') as HTMLButtonElement;
+
+      // Override to normal via popover
+      await fireEvent.pointerDown(rollButton);
+      await vi.advanceTimersByTimeAsync(300);
+      const items = container.querySelectorAll('[role="menuitem"]');
+      randomMock.mockReturnValue(0.6); // d20=13, total=16
+      await fireEvent.click(items[1]); // Normal
+      expect(rollButton.textContent).toContain('16');
+
+      // Clear didOpenPopover flag (simulates the click that dismissed the popover)
+      await fireEvent.click(rollButton);
+
+      // Tap again — should roll with disadvantage (two random calls)
+      randomMock.mockReturnValueOnce(0.5).mockReturnValueOnce(0.1); // disadv: 0.5→11, 0.1→3, takes 3, total=6
+      await fireEvent.click(rollButton);
+      expect(randomMock).toHaveBeenCalledTimes(3); // 1 from normal + 2 from disadvantage
+      expect(rollButton.textContent).toContain('6');
+    });
+
+    it('shows disadvantage indicator when rule has instance ID (planned item)', () => {
+      const entry = createMockSkillCheckEntry({ skillName: 'acrobatics' });
+      // Simulate what addToPlan does: replace the ID with an instance ID
+      entry.rule.id = '1712345678901-abc123def';
+      const facts = { 'skill.acrobatics.disadvantage': 1 };
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      const indicator = container.querySelector('.roll-disadv-indicator');
+      expect(indicator).toBeTruthy();
     });
   });
 });

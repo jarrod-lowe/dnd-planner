@@ -25,6 +25,7 @@ ruleGroups:
                 model: d20-roll
                 section: free
                 name: play.stats.skills.acrobatics
+                disadvantageFact: skill.acrobatics.disadvantage
               vars:
                 rollBonus:
                   capture: true
@@ -46,6 +47,7 @@ ruleGroups:
                 model: d20-roll
                 section: free
                 name: play.stats.skills.animal-handling
+                disadvantageFact: skill.animal-handling.disadvantage
                 packBehind: roll-skill-acrobatics
               vars:
                 rollBonus:
@@ -68,6 +70,7 @@ ruleGroups:
                 model: d20-roll
                 section: free
                 name: play.stats.skills.arcana
+                disadvantageFact: skill.arcana.disadvantage
                 packBehind: roll-skill-acrobatics
               vars:
                 rollBonus:
@@ -90,6 +93,7 @@ ruleGroups:
                 model: d20-roll
                 section: free
                 name: play.stats.skills.athletics
+                disadvantageFact: skill.athletics.disadvantage
                 packBehind: roll-skill-acrobatics
               vars:
                 rollBonus:
@@ -112,6 +116,7 @@ ruleGroups:
                 model: d20-roll
                 section: free
                 name: play.stats.skills.deception
+                disadvantageFact: skill.deception.disadvantage
                 packBehind: roll-skill-acrobatics
               vars:
                 rollBonus:
@@ -134,6 +139,7 @@ ruleGroups:
                 model: d20-roll
                 section: free
                 name: play.stats.skills.history
+                disadvantageFact: skill.history.disadvantage
                 packBehind: roll-skill-acrobatics
               vars:
                 rollBonus:
@@ -156,6 +162,7 @@ ruleGroups:
                 model: d20-roll
                 section: free
                 name: play.stats.skills.insight
+                disadvantageFact: skill.insight.disadvantage
                 packBehind: roll-skill-acrobatics
               vars:
                 rollBonus:
@@ -178,6 +185,7 @@ ruleGroups:
                 model: d20-roll
                 section: free
                 name: play.stats.skills.intimidation
+                disadvantageFact: skill.intimidation.disadvantage
                 packBehind: roll-skill-acrobatics
               vars:
                 rollBonus:
@@ -200,6 +208,7 @@ ruleGroups:
                 model: d20-roll
                 section: free
                 name: play.stats.skills.investigation
+                disadvantageFact: skill.investigation.disadvantage
                 packBehind: roll-skill-acrobatics
               vars:
                 rollBonus:
@@ -222,6 +231,7 @@ ruleGroups:
                 model: d20-roll
                 section: free
                 name: play.stats.skills.medicine
+                disadvantageFact: skill.medicine.disadvantage
                 packBehind: roll-skill-acrobatics
               vars:
                 rollBonus:
@@ -244,6 +254,7 @@ ruleGroups:
                 model: d20-roll
                 section: free
                 name: play.stats.skills.nature
+                disadvantageFact: skill.nature.disadvantage
                 packBehind: roll-skill-acrobatics
               vars:
                 rollBonus:
@@ -266,6 +277,7 @@ ruleGroups:
                 model: d20-roll
                 section: free
                 name: play.stats.skills.perception
+                disadvantageFact: skill.perception.disadvantage
                 packBehind: roll-skill-acrobatics
               vars:
                 rollBonus:
@@ -288,6 +300,7 @@ ruleGroups:
                 model: d20-roll
                 section: free
                 name: play.stats.skills.performance
+                disadvantageFact: skill.performance.disadvantage
                 packBehind: roll-skill-acrobatics
               vars:
                 rollBonus:
@@ -310,6 +323,7 @@ ruleGroups:
                 model: d20-roll
                 section: free
                 name: play.stats.skills.persuasion
+                disadvantageFact: skill.persuasion.disadvantage
                 packBehind: roll-skill-acrobatics
               vars:
                 rollBonus:
@@ -332,6 +346,7 @@ ruleGroups:
                 model: d20-roll
                 section: free
                 name: play.stats.skills.religion
+                disadvantageFact: skill.religion.disadvantage
                 packBehind: roll-skill-acrobatics
               vars:
                 rollBonus:
@@ -354,6 +369,7 @@ ruleGroups:
                 model: d20-roll
                 section: free
                 name: play.stats.skills.sleight-of-hand
+                disadvantageFact: skill.sleight-of-hand.disadvantage
                 packBehind: roll-skill-acrobatics
               vars:
                 rollBonus:
@@ -376,6 +392,7 @@ ruleGroups:
                 model: d20-roll
                 section: free
                 name: play.stats.skills.stealth
+                disadvantageFact: skill.stealth.disadvantage
                 packBehind: roll-skill-acrobatics
               vars:
                 rollBonus:
@@ -398,6 +415,7 @@ ruleGroups:
                 model: d20-roll
                 section: free
                 name: play.stats.skills.survival
+                disadvantageFact: skill.survival.disadvantage
                 packBehind: roll-skill-acrobatics
               vars:
                 rollBonus:

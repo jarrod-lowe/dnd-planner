@@ -6,6 +6,7 @@ definitions:
     ui:
       model: attack
       name: rule.dnd-5e-2024.attacks.unarmed-strike.name
+      disadvantageFact: attack.str.disadvantage
     vars:
       ranges:
         default:
@@ -49,6 +50,7 @@ definitions:
     ui:
       model: attack
       name: rule.dnd-5e-2024.attacks.dagger.name
+      disadvantageFact: attack.str.disadvantage
     vars:
       ranges:
         default:
@@ -96,6 +98,7 @@ definitions:
     ui:
       model: attack
       name: rule.dnd-5e-2024.attacks.greataxe.name
+      disadvantageFact: attack.str.disadvantage
       followups:
         - type: attack-line
           condition:
@@ -144,6 +147,7 @@ definitions:
     ui:
       model: attack
       name: rule.dnd-5e-2024.attacks.javelin.name
+      disadvantageFact: attack.str.disadvantage
       followups:
         - type: effect
           condition:
@@ -207,6 +211,7 @@ definitions:
     ui:
       model: attack
       name: rule.dnd-5e-2024.attacks.scimitar.name
+      disadvantageFact: attack.dex.disadvantage
     vars:
       ranges:
         default:

@@ -49,10 +49,19 @@ ruleGroups:
                     fact: armor.leather.equipped
                   source:
                     number: 1
-                # Disadvantage when not proficient with light armor
+                # Disadvantage on STR/DEX checks when not proficient with light armor
                 - type: numberSet
                   target:
-                    fact: attack.disadvantage
+                    fact: attack.str.disadvantage
+                  source:
+                    number: 1
+                  when:
+                    fact: armor.light.proficient
+                    operator: notEquals
+                    value: 1
+                - type: numberSet
+                  target:
+                    fact: attack.dex.disadvantage
                   source:
                     number: 1
                   when:
@@ -79,124 +88,7 @@ ruleGroups:
                     value: 1
                 - type: numberSet
                   target:
-                    fact: skill.animal-handling.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    fact: armor.light.proficient
-                    operator: notEquals
-                    value: 1
-                - type: numberSet
-                  target:
-                    fact: skill.arcana.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    fact: armor.light.proficient
-                    operator: notEquals
-                    value: 1
-                - type: numberSet
-                  target:
                     fact: skill.athletics.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    fact: armor.light.proficient
-                    operator: notEquals
-                    value: 1
-                - type: numberSet
-                  target:
-                    fact: skill.deception.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    fact: armor.light.proficient
-                    operator: notEquals
-                    value: 1
-                - type: numberSet
-                  target:
-                    fact: skill.history.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    fact: armor.light.proficient
-                    operator: notEquals
-                    value: 1
-                - type: numberSet
-                  target:
-                    fact: skill.insight.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    fact: armor.light.proficient
-                    operator: notEquals
-                    value: 1
-                - type: numberSet
-                  target:
-                    fact: skill.intimidation.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    fact: armor.light.proficient
-                    operator: notEquals
-                    value: 1
-                - type: numberSet
-                  target:
-                    fact: skill.investigation.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    fact: armor.light.proficient
-                    operator: notEquals
-                    value: 1
-                - type: numberSet
-                  target:
-                    fact: skill.medicine.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    fact: armor.light.proficient
-                    operator: notEquals
-                    value: 1
-                - type: numberSet
-                  target:
-                    fact: skill.nature.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    fact: armor.light.proficient
-                    operator: notEquals
-                    value: 1
-                - type: numberSet
-                  target:
-                    fact: skill.perception.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    fact: armor.light.proficient
-                    operator: notEquals
-                    value: 1
-                - type: numberSet
-                  target:
-                    fact: skill.performance.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    fact: armor.light.proficient
-                    operator: notEquals
-                    value: 1
-                - type: numberSet
-                  target:
-                    fact: skill.persuasion.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    fact: armor.light.proficient
-                    operator: notEquals
-                    value: 1
-                - type: numberSet
-                  target:
-                    fact: skill.religion.disadvantage
                   source:
                     number: 1
                   when:
@@ -221,16 +113,7 @@ ruleGroups:
                     fact: armor.light.proficient
                     operator: notEquals
                     value: 1
-                - type: numberSet
-                  target:
-                    fact: skill.survival.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    fact: armor.light.proficient
-                    operator: notEquals
-                    value: 1
-                # Spellcasting blocked when not proficient (remaining only to avoid auto-dep)
+                # Spellcasting blocked when not proficient
                 - type: numberSet
                   target:
                     fact: spellcasting.remaining
@@ -261,10 +144,19 @@ ruleGroups:
                           fact: armor.leather.equipped
                         source:
                           number: 1
-                      # Disadvantage when not proficient with light armor
+                      # Disadvantage on STR/DEX checks when not proficient with light armor
                       - type: numberSet
                         target:
-                          fact: attack.disadvantage
+                          fact: attack.str.disadvantage
+                        source:
+                          number: 1
+                        when:
+                          fact: armor.light.proficient
+                          operator: notEquals
+                          value: 1
+                      - type: numberSet
+                        target:
+                          fact: attack.dex.disadvantage
                         source:
                           number: 1
                         when:
@@ -291,124 +183,7 @@ ruleGroups:
                           value: 1
                       - type: numberSet
                         target:
-                          fact: skill.animal-handling.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          fact: armor.light.proficient
-                          operator: notEquals
-                          value: 1
-                      - type: numberSet
-                        target:
-                          fact: skill.arcana.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          fact: armor.light.proficient
-                          operator: notEquals
-                          value: 1
-                      - type: numberSet
-                        target:
                           fact: skill.athletics.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          fact: armor.light.proficient
-                          operator: notEquals
-                          value: 1
-                      - type: numberSet
-                        target:
-                          fact: skill.deception.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          fact: armor.light.proficient
-                          operator: notEquals
-                          value: 1
-                      - type: numberSet
-                        target:
-                          fact: skill.history.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          fact: armor.light.proficient
-                          operator: notEquals
-                          value: 1
-                      - type: numberSet
-                        target:
-                          fact: skill.insight.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          fact: armor.light.proficient
-                          operator: notEquals
-                          value: 1
-                      - type: numberSet
-                        target:
-                          fact: skill.intimidation.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          fact: armor.light.proficient
-                          operator: notEquals
-                          value: 1
-                      - type: numberSet
-                        target:
-                          fact: skill.investigation.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          fact: armor.light.proficient
-                          operator: notEquals
-                          value: 1
-                      - type: numberSet
-                        target:
-                          fact: skill.medicine.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          fact: armor.light.proficient
-                          operator: notEquals
-                          value: 1
-                      - type: numberSet
-                        target:
-                          fact: skill.nature.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          fact: armor.light.proficient
-                          operator: notEquals
-                          value: 1
-                      - type: numberSet
-                        target:
-                          fact: skill.perception.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          fact: armor.light.proficient
-                          operator: notEquals
-                          value: 1
-                      - type: numberSet
-                        target:
-                          fact: skill.performance.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          fact: armor.light.proficient
-                          operator: notEquals
-                          value: 1
-                      - type: numberSet
-                        target:
-                          fact: skill.persuasion.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          fact: armor.light.proficient
-                          operator: notEquals
-                          value: 1
-                      - type: numberSet
-                        target:
-                          fact: skill.religion.disadvantage
                         source:
                           number: 1
                         when:
@@ -427,15 +202,6 @@ ruleGroups:
                       - type: numberSet
                         target:
                           fact: skill.stealth.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          fact: armor.light.proficient
-                          operator: notEquals
-                          value: 1
-                      - type: numberSet
-                        target:
-                          fact: skill.survival.disadvantage
                         source:
                           number: 1
                         when:

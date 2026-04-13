@@ -46,6 +46,7 @@ ruleGroups:
                 model: d20-roll
                 section: free
                 name: rule.dnd-5e-2024.initiative.roll-initiative.name
+                disadvantageFact: initiative.disadvantage
               vars:
                 rollBonus:
                   capture: true

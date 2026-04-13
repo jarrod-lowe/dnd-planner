@@ -17,30 +17,17 @@ steps:
         offers:
           exists:
             - don-leather-armor
-  # Don leather armor — disadvantage and spellcasting block apply
+  # Don leather armor — disadvantage on STR/DEX checks and spellcasting block apply
   - addOffer:
       id: don-leather-armor
       assert:
         facts:
           ac.base: 11
-          attack.disadvantage: 1
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
           initiative.disadvantage: 1
           skill.acrobatics.disadvantage: 1
-          skill.animal-handling.disadvantage: 1
-          skill.arcana.disadvantage: 1
           skill.athletics.disadvantage: 1
-          skill.deception.disadvantage: 1
-          skill.history.disadvantage: 1
-          skill.insight.disadvantage: 1
-          skill.intimidation.disadvantage: 1
-          skill.investigation.disadvantage: 1
-          skill.medicine.disadvantage: 1
-          skill.nature.disadvantage: 1
-          skill.perception.disadvantage: 1
-          skill.performance.disadvantage: 1
-          skill.persuasion.disadvantage: 1
-          skill.religion.disadvantage: 1
           skill.sleight-of-hand.disadvantage: 1
           skill.stealth.disadvantage: 1
-          skill.survival.disadvantage: 1
           spellcasting.remaining: 0

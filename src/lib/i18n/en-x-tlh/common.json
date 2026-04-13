@@ -710,6 +710,7 @@
     "choices": {
       "title": "DuH DIvI'",
       "loading": "DuH DIvI'...",
+      "disadvantageApplies": "DISADV applies",
       "empty": "DuH DIvI'be'",
       "illegal": "DuH DIvI'be'",
       "inapplicable": "DuH lo'laHbe'",
