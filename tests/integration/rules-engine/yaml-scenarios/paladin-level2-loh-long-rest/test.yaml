@@ -1,0 +1,70 @@
+name: 'Paladin Level 2 - Lay on Hands Long Rest Reset'
+description: 'Long Rest restores the Lay on Hands pool to 10/10 for a level 2 paladin'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ac
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-lay-on-hands
+steps:
+  # Turn 1: use 7 points from pool
+  - evaluate:
+      assert:
+        facts:
+          layOnHands.pool.remaining: 10
+  - addOffer:
+      id: loh-heal
+      selections:
+        amount: 7
+      assert:
+        facts:
+          layOnHands.pool.remaining: 3
+  - endTurn:
+      assert:
+        facts:
+          layOnHands.pool.remaining: 3
+  # Turn 2: use 3 more points
+  - evaluate:
+      assert:
+        facts:
+          layOnHands.pool.remaining: 3
+  - addOffer:
+      id: loh-heal
+      selections:
+        amount: 3
+      assert:
+        facts:
+          layOnHands.pool.remaining: 0
+  - endTurn:
+      assert:
+        facts:
+          layOnHands.pool.remaining: 0
+  # Turn 3: pool is empty, take Long Rest
+  - evaluate:
+      assert:
+        facts:
+          layOnHands.pool.remaining: 0
+  - addOffer:
+      id: long-rest
+      assert:
+        facts:
+          layOnHands.pool.remaining: 10
+  - endTurn:
+      assert:
+        facts:
+          layOnHands.pool.remaining: 10
+  # Turn 4: pool is fully restored after Long Rest
+  - evaluate:
+      assert:
+        facts:
+          layOnHands.pool.total: 10
+          layOnHands.pool.remaining: 10
+        offers:
+          exists:
+            - loh-heal
+            - loh-purify-poison
