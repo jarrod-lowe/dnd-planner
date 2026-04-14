@@ -139,8 +139,8 @@
   // Great Weapon Fighting: applies when character has GWF and weapon is two-handed or versatile
   const hasGreatWeaponFighting = $derived(
     uiModel === 'attack' &&
-    facts['character.fightingStyle.greatWeapon'] === 1 &&
-    (resolveVarDefault('weapon.twoHanded') === 1 || resolveVarDefault('weapon.versatile') === 1)
+      facts['character.fightingStyle.greatWeapon'] === 1 &&
+      (resolveVarDefault('weapon.twoHanded') === 1 || resolveVarDefault('weapon.versatile') === 1)
   );
 
   function applyGwf(roll: number): { result: number; log: string; original: number | null } {
@@ -229,21 +229,24 @@
         const g1 = applyGwf(Math.floor(Math.random() * die) + 1);
         const g2 = applyGwf(Math.floor(Math.random() * die) + 1);
         cleaveDamageRollResult = g1.result + g2.result;
-        cleaveGwfTotal = (g1.original !== null || g2.original !== null)
-          ? {
-              without: (g1.original ?? g1.result) + (g2.original ?? g2.result) + cleaveDamageBonus,
-              with: g1.result + g2.result + cleaveDamageBonus
-            }
-          : null;
+        cleaveGwfTotal =
+          g1.original !== null || g2.original !== null
+            ? {
+                without:
+                  (g1.original ?? g1.result) + (g2.original ?? g2.result) + cleaveDamageBonus,
+                with: g1.result + g2.result + cleaveDamageBonus
+              }
+            : null;
         console.log(
           `[damage] Cleave (crit): [${g1.log}, ${g2.log}] + ${formatBonus(cleaveDamageBonus)} = ${g1.result + g2.result + cleaveDamageBonus}`
         );
       } else {
         const g = applyGwf(Math.floor(Math.random() * die) + 1);
         cleaveDamageRollResult = g.result;
-        cleaveGwfTotal = g.original !== null
-          ? { without: g.original + cleaveDamageBonus, with: g.result + cleaveDamageBonus }
-          : null;
+        cleaveGwfTotal =
+          g.original !== null
+            ? { without: g.original + cleaveDamageBonus, with: g.result + cleaveDamageBonus }
+            : null;
         console.log(
           `[damage] Cleave: ${g.log} + ${formatBonus(cleaveDamageBonus)} = ${g.result + cleaveDamageBonus}`
         );
@@ -350,21 +353,29 @@
         const g1 = applyGwf(Math.floor(Math.random() * die) + 1);
         const g2 = applyGwf(Math.floor(Math.random() * die) + 1);
         damageRollResult = g1.result + g2.result;
-        damageGwfTotal = (g1.original !== null || g2.original !== null)
-          ? {
-              without: (g1.original ?? g1.result) + (g2.original ?? g2.result) + (attackDamageBonus ?? 0),
-              with: g1.result + g2.result + (attackDamageBonus ?? 0)
-            }
-          : null;
+        damageGwfTotal =
+          g1.original !== null || g2.original !== null
+            ? {
+                without:
+                  (g1.original ?? g1.result) +
+                  (g2.original ?? g2.result) +
+                  (attackDamageBonus ?? 0),
+                with: g1.result + g2.result + (attackDamageBonus ?? 0)
+              }
+            : null;
         console.log(
           `[damage] ${uiName ?? 'roll'} (crit): [${g1.log}, ${g2.log}] + ${formatBonus(attackDamageBonus)} = ${g1.result + g2.result + (attackDamageBonus ?? 0)}`
         );
       } else {
         const g = applyGwf(Math.floor(Math.random() * die) + 1);
         damageRollResult = g.result;
-        damageGwfTotal = g.original !== null
-          ? { without: g.original + (attackDamageBonus ?? 0), with: g.result + (attackDamageBonus ?? 0) }
-          : null;
+        damageGwfTotal =
+          g.original !== null
+            ? {
+                without: g.original + (attackDamageBonus ?? 0),
+                with: g.result + (attackDamageBonus ?? 0)
+              }
+            : null;
         console.log(
           `[damage] ${uiName ?? 'roll'}: ${g.log} + ${formatBonus(attackDamageBonus)} = ${g.result + (attackDamageBonus ?? 0)}`
         );

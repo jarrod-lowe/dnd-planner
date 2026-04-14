@@ -2389,97 +2389,97 @@ describe('ChoicePanel', () => {
     });
   });
 
-    it('shows strikethrough with would-have-been total when GWF triggers', async () => {
-      const { entry, facts } = createMockGreataxeWithTraits({ damageBonus: 3 });
-      vi.spyOn(Math, 'random').mockReturnValue(0.6);
+  it('shows strikethrough with would-have-been total when GWF triggers', async () => {
+    const { entry, facts } = createMockGreataxeWithTraits({ damageBonus: 3 });
+    vi.spyOn(Math, 'random').mockReturnValue(0.6);
 
-      const { container } = render(ChoicePanel, {
-        props: { entry, editable: true, facts }
-      });
-
-      const buttons = container.querySelectorAll('.attack-chip--rollable');
-      // Roll hit
-      await fireEvent.click(buttons[0]);
-
-      // Roll damage: 0.0 → 1 (GWF→3), total = 3+3 = 6
-      vi.spyOn(Math, 'random').mockReturnValue(0.0);
-      await fireEvent.click(buttons[1]);
-
-      // Should contain strikethrough element with adjusted die value
-      const strikeEl = buttons[1].querySelector('s');
-      expect(strikeEl).toBeTruthy();
-      expect(strikeEl?.textContent).toBe('4');
-      // Total should be present
-      expect(buttons[1].textContent).toContain('6');
+    const { container } = render(ChoicePanel, {
+      props: { entry, editable: true, facts }
     });
 
-    it('does not show strikethrough when GWF is active but no substitution', async () => {
-      const { entry, facts } = createMockGreataxeWithTraits({ damageBonus: 3 });
-      vi.spyOn(Math, 'random').mockReturnValue(0.6);
+    const buttons = container.querySelectorAll('.attack-chip--rollable');
+    // Roll hit
+    await fireEvent.click(buttons[0]);
 
-      const { container } = render(ChoicePanel, {
-        props: { entry, editable: true, facts }
-      });
+    // Roll damage: 0.0 → 1 (GWF→3), total = 3+3 = 6
+    vi.spyOn(Math, 'random').mockReturnValue(0.0);
+    await fireEvent.click(buttons[1]);
 
-      const buttons = container.querySelectorAll('.attack-chip--rollable');
-      await fireEvent.click(buttons[0]);
+    // Should contain strikethrough element with adjusted die value
+    const strikeEl = buttons[1].querySelector('s');
+    expect(strikeEl).toBeTruthy();
+    expect(strikeEl?.textContent).toBe('4');
+    // Total should be present
+    expect(buttons[1].textContent).toContain('6');
+  });
 
-      // Roll damage: 0.5 → 7, no GWF trigger, total = 7+3 = 10
-      vi.spyOn(Math, 'random').mockReturnValue(0.5);
-      await fireEvent.click(buttons[1]);
+  it('does not show strikethrough when GWF is active but no substitution', async () => {
+    const { entry, facts } = createMockGreataxeWithTraits({ damageBonus: 3 });
+    vi.spyOn(Math, 'random').mockReturnValue(0.6);
 
-      // No strikethrough — just the total
-      expect(buttons[1].querySelector('s')).toBeFalsy();
-      expect(buttons[1].textContent).toBe('10');
+    const { container } = render(ChoicePanel, {
+      props: { entry, editable: true, facts }
     });
 
-    it('shows strikethrough with would-have-been total in crit with GWF', async () => {
-      const { entry, facts } = createMockGreataxeWithTraits({ damageBonus: 3 });
-      const randomMock = vi.spyOn(Math, 'random');
+    const buttons = container.querySelectorAll('.attack-chip--rollable');
+    await fireEvent.click(buttons[0]);
 
-      const { container } = render(ChoicePanel, {
-        props: { entry, editable: true, facts }
-      });
+    // Roll damage: 0.5 → 7, no GWF trigger, total = 7+3 = 10
+    vi.spyOn(Math, 'random').mockReturnValue(0.5);
+    await fireEvent.click(buttons[1]);
 
-      const buttons = container.querySelectorAll('.attack-chip--rollable');
-      // Roll nat 20
-      randomMock.mockReturnValue(0.95);
-      await fireEvent.click(buttons[0]);
+    // No strikethrough — just the total
+    expect(buttons[1].querySelector('s')).toBeFalsy();
+    expect(buttons[1].textContent).toBe('10');
+  });
 
-      // Roll damage: 0.0 → 1 (GWF→3), 1/12 → 2 (GWF→3)
-      randomMock.mockReturnValueOnce(0.0).mockReturnValueOnce(1 / 12);
-      await fireEvent.click(buttons[1]);
+  it('shows strikethrough with would-have-been total in crit with GWF', async () => {
+    const { entry, facts } = createMockGreataxeWithTraits({ damageBonus: 3 });
+    const randomMock = vi.spyOn(Math, 'random');
 
-      // Would-have-been total shown as strikethrough
-      const strikeEl = buttons[1].querySelector('s');
-      expect(strikeEl).toBeTruthy();
-      expect(strikeEl?.textContent).toBe('6');
+    const { container } = render(ChoicePanel, {
+      props: { entry, editable: true, facts }
     });
 
-    it('shows strikethrough with would-have-been total when some dice trigger GWF in crit', async () => {
-      const { entry, facts } = createMockGreataxeWithTraits({ damageBonus: 3 });
-      const randomMock = vi.spyOn(Math, 'random');
+    const buttons = container.querySelectorAll('.attack-chip--rollable');
+    // Roll nat 20
+    randomMock.mockReturnValue(0.95);
+    await fireEvent.click(buttons[0]);
 
-      const { container } = render(ChoicePanel, {
-        props: { entry, editable: true, facts }
-      });
+    // Roll damage: 0.0 → 1 (GWF→3), 1/12 → 2 (GWF→3)
+    randomMock.mockReturnValueOnce(0.0).mockReturnValueOnce(1 / 12);
+    await fireEvent.click(buttons[1]);
 
-      const buttons = container.querySelectorAll('.attack-chip--rollable');
-      // Roll nat 20
-      randomMock.mockReturnValue(0.95);
-      await fireEvent.click(buttons[0]);
+    // Would-have-been total shown as strikethrough
+    const strikeEl = buttons[1].querySelector('s');
+    expect(strikeEl).toBeTruthy();
+    expect(strikeEl?.textContent).toBe('6');
+  });
 
-      // Roll damage: 0.0 → 1 (GWF→3), 0.5 → 7 (no GWF)
-      randomMock.mockReturnValueOnce(0.0).mockReturnValueOnce(0.5);
-      await fireEvent.click(buttons[1]);
+  it('shows strikethrough with would-have-been total when some dice trigger GWF in crit', async () => {
+    const { entry, facts } = createMockGreataxeWithTraits({ damageBonus: 3 });
+    const randomMock = vi.spyOn(Math, 'random');
 
-      // Would-have-been total shown as strikethrough
-      const strikeEl = buttons[1].querySelector('s');
-      expect(strikeEl).toBeTruthy();
-      expect(strikeEl?.textContent).toBe('11');
-      // Total = 3+7+3 = 13
-      expect(buttons[1].textContent).toContain('13');
+    const { container } = render(ChoicePanel, {
+      props: { entry, editable: true, facts }
     });
+
+    const buttons = container.querySelectorAll('.attack-chip--rollable');
+    // Roll nat 20
+    randomMock.mockReturnValue(0.95);
+    await fireEvent.click(buttons[0]);
+
+    // Roll damage: 0.0 → 1 (GWF→3), 0.5 → 7 (no GWF)
+    randomMock.mockReturnValueOnce(0.0).mockReturnValueOnce(0.5);
+    await fireEvent.click(buttons[1]);
+
+    // Would-have-been total shown as strikethrough
+    const strikeEl = buttons[1].querySelector('s');
+    expect(strikeEl).toBeTruthy();
+    expect(strikeEl?.textContent).toBe('11');
+    // Total = 3+7+3 = 13
+    expect(buttons[1].textContent).toContain('13');
+  });
 
   // === Skill Check d20-roll tests (original) ===
 
