@@ -338,7 +338,11 @@ The architecture supports:
 - Paladin L1 should require Lay on Hands (test if it doesn't already)
 - Configuration done (to make all configuration illegal)
 - Two weapon fighting
-- Prepared weapons restrictions
+- Prepared spells restrictions
+- Paladin Smite
+- Damage types (radiant, ...)
+- Remove Turn counter
+- Paladin Level 2 Hit Die? (+3?)
 
 ### Low Priority
 

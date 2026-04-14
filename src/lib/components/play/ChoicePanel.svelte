@@ -290,16 +290,41 @@
   // Stored roll modes track what was last rolled (for inside-arrow display)
   let hitRollMode: RollMode = $state('normal');
   let initiativeRollMode: RollMode = $state('normal');
-  type PopoverTarget = 'hit' | 'cleave-hit' | 'initiative' | null;
+  type PopoverTarget = 'hit' | 'cleave-hit' | 'initiative' | 'smite-level' | null;
   let activePopover: PopoverTarget = $state(null);
   const showHitPopover = $derived(activePopover === 'hit');
   const showInitiativePopover = $derived(activePopover === 'initiative');
   const showCleaveHitPopover = $derived(activePopover === 'cleave-hit');
+  const showSmiteLevelPopover = $derived(activePopover === 'smite-level');
   let longPressTimer: ReturnType<typeof setTimeout> | null = null;
   let didOpenPopover = false;
   let hitTriggerRef: HTMLButtonElement | undefined = $state();
   let initiativeTriggerRef: HTMLButtonElement | undefined = $state();
   let cleaveHitTriggerRef: HTMLButtonElement | undefined = $state();
+  let smiteTriggerRef: HTMLButtonElement | undefined = $state();
+
+  // Smite model specific values
+  const smiteDieCount = $derived(uiModel === 'smite' ? resolveVarDefault('dieCount') : undefined);
+  let smiteFiendUndead = $state(false);
+  const smiteTotalDice = $derived((smiteDieCount ?? 0) + (smiteFiendUndead ? 1 : 0));
+  let smiteRollResult: number | null = $state(null);
+
+  // Smite level options: slot levels 1-5 with total/remaining from facts
+  const smiteLevelOptions = $derived.by(() => {
+    if (uiModel !== 'smite') return [];
+    const options: { level: number; total: number; remaining: number }[] = [];
+    for (let level = 1; level <= 5; level++) {
+      const total = facts[`spellcasting.slots.level${level}.total`] ?? 0;
+      if (total > 0) {
+        options.push({
+          level,
+          total,
+          remaining: facts[`spellcasting.slots.level${level}.remaining`] ?? 0
+        });
+      }
+    }
+    return options;
+  });
 
   // Derived roll totals and crit detection
   const hitTotal = $derived(hitRollResult !== null ? hitRollResult + (attackHitBonus ?? 0) : null);
@@ -390,10 +415,33 @@
     playRollAnimation(event.currentTarget as HTMLElement);
   }
 
+  function rollSmiteDamage(event: MouseEvent): void {
+    const dice = smiteTotalDice;
+    if (dice > 0) {
+      let total = 0;
+      for (let i = 0; i < dice; i++) {
+        total += Math.floor(Math.random() * 8) + 1;
+      }
+      smiteRollResult = total;
+      console.log(
+        `[damage] ${uiName ?? 'smite'}: ${dice}d8${smiteFiendUndead ? ' (includes +1d8 fiend/undead)' : ''} = ${total}`
+      );
+      playRollAnimation(event.currentTarget as HTMLElement);
+    }
+  }
+
+  function selectSmiteLevel(level: number): void {
+    activePopover = null;
+    smiteRollResult = null;
+    if (onSelectionChange) {
+      onSelectionChange({ slotLevel: level, dieCount: 1 + level });
+    }
+  }
+
   // Long-press detection for advantage/disadvantage popover
   const LONG_PRESS_MS = 300;
 
-  function startLongPress(target: 'hit' | 'cleave-hit' | 'initiative'): void {
+  function startLongPress(target: 'hit' | 'cleave-hit' | 'initiative' | 'smite-level'): void {
     longPressTimer = setTimeout(() => {
       longPressTimer = null;
       didOpenPopover = true;
@@ -432,13 +480,17 @@
           ? '.roll-popover'
           : activePopover === 'initiative'
             ? '.roll-popover--initiative'
-            : '.roll-popover--cleave-hit';
+            : activePopover === 'smite-level'
+              ? '.roll-popover--smite'
+              : '.roll-popover--cleave-hit';
       const triggerRef =
         activePopover === 'hit'
           ? hitTriggerRef
           : activePopover === 'initiative'
             ? initiativeTriggerRef
-            : cleaveHitTriggerRef;
+            : activePopover === 'smite-level'
+              ? smiteTriggerRef
+              : cleaveHitTriggerRef;
       const popover = document.querySelector(selector);
       if (
         popover &&
@@ -977,6 +1029,69 @@
           {/if}
         </div>
       {/if}
+      {#if uiModel === 'smite' && smiteDieCount !== undefined}
+        <div class="choice-panel__model choice-panel__attack">
+          <button
+            type="button"
+            class="attack-chip attack-chip--rollable"
+            bind:this={smiteTriggerRef}
+            aria-haspopup="menu"
+            aria-expanded={showSmiteLevelPopover}
+            onclick={(e) => {
+              cancelLongPress();
+              if (didOpenPopover) {
+                didOpenPopover = false;
+                return;
+              }
+              rollSmiteDamage(e);
+            }}
+            onpointerdown={() => startLongPress('smite-level')}
+            onpointerup={() => cancelLongPress()}
+            onpointerleave={() => cancelLongPress()}
+            aria-label={smiteRollResult !== null
+              ? `${$t('play.choices.smite.reroll')}: ${smiteRollResult}`
+              : `${$t('play.choices.smite.roll')}: ${smiteTotalDice}d8`}
+          >
+            {#if smiteRollResult !== null}
+              {smiteRollResult}
+            {:else}
+              {smiteTotalDice}d8
+            {/if}
+          </button>
+          {#if showSmiteLevelPopover}
+            <div class="roll-popover roll-popover--smite" role="menu" aria-label="Spell slot level">
+              {#each smiteLevelOptions as opt (opt.level)}
+                <button
+                  type="button"
+                  class="roll-popover__item"
+                  class:roll-popover__item--dimmed={opt.remaining === 0}
+                  role="menuitem"
+                  disabled={opt.remaining === 0}
+                  onclick={() => selectSmiteLevel(opt.level)}
+                >
+                  L{opt.level} ({1 + opt.level}d8)
+                  {#if opt.remaining === 0}
+                    <span class="roll-popover__item-note"> (0 left)</span>
+                  {/if}
+                </button>
+              {/each}
+            </div>
+          {/if}
+          <button
+            type="button"
+            class="smite-toggle"
+            class:smite-toggle--active={smiteFiendUndead}
+            onclick={() => {
+              smiteFiendUndead = !smiteFiendUndead;
+              smiteRollResult = null;
+            }}
+            aria-pressed={smiteFiendUndead}
+            aria-label="+1d8 vs fiend/undead"
+          >
+            +1d8
+          </button>
+        </div>
+      {/if}
     </div>
     {#if visibleFollowups.length > 0}
       <div
@@ -1142,6 +1257,11 @@
       {#if uiModel === 'd20-roll' && rollBonus !== undefined}
         <div class="choice-panel__model choice-panel__attack">
           <span class="attack-chip">d20{formatBonus(rollBonus)}</span>
+        </div>
+      {/if}
+      {#if uiModel === 'smite' && smiteDieCount !== undefined}
+        <div class="choice-panel__model choice-panel__attack">
+          <span class="attack-chip">{smiteTotalDice}d8</span>
         </div>
       {/if}
     </div>
@@ -1622,5 +1742,35 @@
   .choice-panel__followup-button:focus-visible {
     outline: 2px solid var(--md-sys-color-primary);
     outline-offset: 2px;
+  }
+
+  .smite-toggle {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--md-sys-color-surface-container);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    color: var(--md-sys-color-on-surface-variant);
+    cursor: pointer;
+    min-height: 2.75rem;
+    transition:
+      background-color var(--transition-fast),
+      border-color var(--transition-fast);
+  }
+
+  .smite-toggle--active {
+    background: var(--md-sys-color-tertiary-container);
+    border-color: var(--md-sys-color-tertiary);
+    color: var(--md-sys-color-on-tertiary-container);
+  }
+
+  .roll-popover__item--dimmed {
+    opacity: 0.4;
+  }
+
+  .roll-popover__item-note {
+    font-size: var(--font-size-xs);
+    opacity: 0.7;
   }
 </style>

@@ -29,6 +29,17 @@
         "insufficient_pool": "ghop Du vagh DIvI'"
       }
     },
+    "class-paladin-divine-smite": {
+      "divine-smite": {
+        "name": "quv Qaw'"
+      },
+      "offer-divine-smite": {
+        "no_bonus_action": "DIvI' latlh tu'lu'be'",
+        "no_attack": "DIch DIvI' DIch tu'lu'be'",
+        "no_slots": "mugh laH tu'lu'be'",
+        "no_spellcasting": "DIvI' mugh DIvI' tu'lu'be'"
+      }
+    },
     "dnd-5e-2024": {
       "turn-rest": {
         "long-rest": {
@@ -784,6 +795,10 @@
         "advantageResult": "DIvI' Dung",
         "disadvantageResult": "DIvI' bIng",
         "normal": "motlh"
+      },
+      "smite": {
+        "roll": "DIvI'",
+        "reroll": "DIvI'qa'"
       },
       "contested": {
         "vsStrDex": "HoS/Do"

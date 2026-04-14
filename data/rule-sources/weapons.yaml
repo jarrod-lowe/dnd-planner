@@ -268,6 +268,12 @@ profiles:
             number: 1
           subtract: true
           id: action-cost
+        - type: numberSet
+          target:
+            fact: attack.last.activation.action
+          source:
+            number: 1
+          id: action-flag
         - type: setClear
           target:
             var: errors

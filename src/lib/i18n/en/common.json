@@ -29,6 +29,17 @@
         "insufficient_pool": "Need 5 Lay on Hands points"
       }
     },
+    "class-paladin-divine-smite": {
+      "divine-smite": {
+        "name": "Divine Smite"
+      },
+      "offer-divine-smite": {
+        "no_bonus_action": "No bonus action available",
+        "no_attack": "You must take the Attack action first",
+        "no_slots": "No spell slots remaining",
+        "no_spellcasting": "Already cast a spell this turn"
+      }
+    },
     "dnd-5e-2024": {
       "turn-rest": {
         "long-rest": {
@@ -784,6 +795,10 @@
         "advantageResult": "with advantage",
         "disadvantageResult": "with disadvantage",
         "normal": "Normal"
+      },
+      "smite": {
+        "roll": "Roll",
+        "reroll": "Re-roll"
       },
       "contested": {
         "vsStrDex": "STR/DEX"
