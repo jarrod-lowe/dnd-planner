@@ -1,0 +1,9 @@
+name: 'Fighting Style - Great Weapon Fighting'
+description: 'GWF sets character.fightingStyle.greatWeapon flag when assigned'
+ruleGroups:
+  - dnd-5e-2024/fighting-style-great-weapon
+steps:
+  - evaluate:
+      assert:
+        facts:
+          character.fightingStyle.greatWeapon: 1

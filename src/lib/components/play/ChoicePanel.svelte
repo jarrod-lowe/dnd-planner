@@ -136,6 +136,23 @@
     uiModel === 'attack' ? resolveVarDefault('damageBonus') : undefined
   );
 
+  // Great Weapon Fighting: applies when character has GWF and weapon is two-handed or versatile
+  const hasGreatWeaponFighting = $derived(
+    uiModel === 'attack' &&
+      facts['character.fightingStyle.greatWeapon'] === 1 &&
+      (resolveVarDefault('weapon.twoHanded') === 1 || resolveVarDefault('weapon.versatile') === 1)
+  );
+
+  function applyGwf(roll: number): { result: number; log: string; original: number | null } {
+    if (!hasGreatWeaponFighting) return { result: roll, log: `${roll}`, original: null };
+    if (roll <= 2) return { result: 3, log: `${roll}→3 (GWF)`, original: roll };
+    return { result: roll, log: `${roll}`, original: null };
+  }
+
+  // GWF display detail: null when no substitution, array of {original, adjusted} when GWF triggered
+  let damageGwfTotal: { without: number; with: number } | null = $state(null);
+  let cleaveGwfTotal: { without: number; with: number } | null = $state(null);
+
   // Followup actions: conditional buttons on planned rules (e.g., mastery effects)
   const visibleFollowups = $derived.by(() => {
     if (!editable) return [];
@@ -209,16 +226,29 @@
     const die = attackDamageDie ?? 0;
     if (die > 0) {
       if (cleaveIsNat20) {
-        const r1 = Math.floor(Math.random() * die) + 1;
-        const r2 = Math.floor(Math.random() * die) + 1;
-        cleaveDamageRollResult = r1 + r2;
+        const g1 = applyGwf(Math.floor(Math.random() * die) + 1);
+        const g2 = applyGwf(Math.floor(Math.random() * die) + 1);
+        cleaveDamageRollResult = g1.result + g2.result;
+        cleaveGwfTotal =
+          g1.original !== null || g2.original !== null
+            ? {
+                without:
+                  (g1.original ?? g1.result) + (g2.original ?? g2.result) + cleaveDamageBonus,
+                with: g1.result + g2.result + cleaveDamageBonus
+              }
+            : null;
         console.log(
-          `[damage] Cleave (crit): [${r1}, ${r2}] + ${formatBonus(cleaveDamageBonus)} = ${r1 + r2 + cleaveDamageBonus}`
+          `[damage] Cleave (crit): [${g1.log}, ${g2.log}] + ${formatBonus(cleaveDamageBonus)} = ${g1.result + g2.result + cleaveDamageBonus}`
         );
       } else {
-        cleaveDamageRollResult = Math.floor(Math.random() * die) + 1;
+        const g = applyGwf(Math.floor(Math.random() * die) + 1);
+        cleaveDamageRollResult = g.result;
+        cleaveGwfTotal =
+          g.original !== null
+            ? { without: g.original + cleaveDamageBonus, with: g.result + cleaveDamageBonus }
+            : null;
         console.log(
-          `[damage] Cleave: ${cleaveDamageRollResult} + ${formatBonus(cleaveDamageBonus)} = ${cleaveDamageRollResult + cleaveDamageBonus}`
+          `[damage] Cleave: ${g.log} + ${formatBonus(cleaveDamageBonus)} = ${g.result + cleaveDamageBonus}`
         );
       }
       playRollAnimation(event.currentTarget as HTMLElement);
@@ -312,6 +342,7 @@
     hitRollResult = rollD20(mode, `${uiName ?? 'hit'} @ ${selectedRange?.distance ?? '?'}ft`);
     hitRollMode = mode;
     damageRollResult = null;
+    damageGwfTotal = null;
     playRollAnimation(event.currentTarget as HTMLElement);
   }
 
@@ -319,16 +350,34 @@
     const die = attackDamageDie ?? 0;
     if (die > 0) {
       if (isNat20) {
-        const r1 = Math.floor(Math.random() * die) + 1;
-        const r2 = Math.floor(Math.random() * die) + 1;
-        damageRollResult = r1 + r2;
+        const g1 = applyGwf(Math.floor(Math.random() * die) + 1);
+        const g2 = applyGwf(Math.floor(Math.random() * die) + 1);
+        damageRollResult = g1.result + g2.result;
+        damageGwfTotal =
+          g1.original !== null || g2.original !== null
+            ? {
+                without:
+                  (g1.original ?? g1.result) +
+                  (g2.original ?? g2.result) +
+                  (attackDamageBonus ?? 0),
+                with: g1.result + g2.result + (attackDamageBonus ?? 0)
+              }
+            : null;
         console.log(
-          `[damage] ${uiName ?? 'roll'} (crit): [${r1}, ${r2}] + ${formatBonus(attackDamageBonus)} = ${r1 + r2 + (attackDamageBonus ?? 0)}`
+          `[damage] ${uiName ?? 'roll'} (crit): [${g1.log}, ${g2.log}] + ${formatBonus(attackDamageBonus)} = ${g1.result + g2.result + (attackDamageBonus ?? 0)}`
         );
       } else {
-        damageRollResult = Math.floor(Math.random() * die) + 1;
+        const g = applyGwf(Math.floor(Math.random() * die) + 1);
+        damageRollResult = g.result;
+        damageGwfTotal =
+          g.original !== null
+            ? {
+                without: g.original + (attackDamageBonus ?? 0),
+                with: g.result + (attackDamageBonus ?? 0)
+              }
+            : null;
         console.log(
-          `[damage] ${uiName ?? 'roll'}: ${damageRollResult} + ${formatBonus(attackDamageBonus)} = ${damageRollResult + (attackDamageBonus ?? 0)}`
+          `[damage] ${uiName ?? 'roll'}: ${g.log} + ${formatBonus(attackDamageBonus)} = ${g.result + (attackDamageBonus ?? 0)}`
         );
       }
       playRollAnimation(event.currentTarget as HTMLElement);
@@ -704,7 +753,11 @@
               : `${$t('play.choices.attack.roll')} ${$t('play.choices.attack.damage')}: ${attackDamageDie && attackDamageDie > 0 ? `${isNat20 ? '2' : ''}d${attackDamageDie}${formatBonus(attackDamageBonus)}` : formatBonus(attackDamageBonus) || '0'}`}
           >
             {#if damageRollResult !== null}
-              {damageTotal}
+              {#if damageGwfTotal}
+                <s>{damageGwfTotal.without}</s> <span class="gwf-result">{damageTotal}</span>
+              {:else}
+                {damageTotal}
+              {/if}
             {:else if attackDamageDie && attackDamageDie > 0}
               {isNat20 ? '2' : ''}d{attackDamageDie}{formatBonus(attackDamageBonus)}
             {:else}
@@ -808,7 +861,11 @@
               : `${$t('play.choices.attack.roll')} ${$t('play.choices.attack.damage')}: ${attackDamageDie && attackDamageDie > 0 ? `${cleaveIsNat20 ? '2' : ''}d${attackDamageDie}${formatBonus(cleaveDamageBonus)}` : formatBonus(cleaveDamageBonus) || '0'}`}
           >
             {#if cleaveDamageRollResult !== null}
-              {cleaveDamageTotal}
+              {#if cleaveGwfTotal}
+                <s>{cleaveGwfTotal.without}</s> <span class="gwf-result">{cleaveDamageTotal}</span>
+              {:else}
+                {cleaveDamageTotal}
+              {/if}
             {:else if attackDamageDie && attackDamageDie > 0}
               {cleaveIsNat20 ? '2' : ''}d{attackDamageDie}{formatBonus(cleaveDamageBonus)}
             {:else}
@@ -1450,6 +1507,10 @@
   }
 
   /* Rules-engine disadvantage indicator (before roll chip) */
+  .gwf-result {
+    margin-left: 0.375rem;
+  }
+
   .roll-disadv-indicator {
     width: 1rem;
     height: 1rem;

@@ -118,6 +118,23 @@ def _filter_ranges(
     return result
 
 
+def _promote_traits_to_vars(definition: Definition) -> dict[str, Any] | None:
+    """Promote boolean traits to vars for runtime access.
+
+    Converts traits like weapon.twoHanded: true into vars with
+    {default: {number: 1}}. String-valued traits (e.g. weapon.mastery: cleave)
+    are not promoted.
+    """
+    result: dict[str, Any] = {}
+    if definition.vars:
+        result.update(definition.vars)
+    if definition.traits:
+        for key, value in definition.traits.items():
+            if value is True:
+                result[key] = {"default": {"number": 1}}
+    return result if result else None
+
+
 def _emit_offer_rule(
     definition: Definition,
     profile: Profile,
@@ -185,9 +202,10 @@ def _emit_offer_rule(
         emit.ui,
     )
 
-    # Inner rule: merged vars
+    # Inner rule: merged vars (with trait promotion)
+    promoted_vars = _promote_traits_to_vars(definition)
     inner_vars = merge_vars(
-        definition.vars,
+        promoted_vars,
         None,  # profile vars not in spec for v1
         emit.vars,
     )
@@ -297,8 +315,9 @@ def _emit_rule(
     # Merged UI
     ui = merge_ui(definition.ui, profile.ui, emit.ui)
 
-    # Merged vars
-    merged_vars = merge_vars(definition.vars, None, emit.vars)
+    # Merged vars (with trait promotion)
+    promoted_vars = _promote_traits_to_vars(definition)
+    merged_vars = merge_vars(promoted_vars, None, emit.vars)
 
     # Filter ranges for reaction profiles (melee-only)
     merged_vars = _filter_ranges(merged_vars, profile.filterRanges)
