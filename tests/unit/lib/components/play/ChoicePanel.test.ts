@@ -1835,6 +1835,40 @@ describe('ChoicePanel', () => {
     diagnostics: []
   });
 
+  // Helper: greataxe entry with twoHanded trait var (as preprocessor now generates)
+  const createMockGreataxeWithTraits = (overrides?: {
+    damageBonus?: number;
+    gwf?: boolean;
+  }): { entry: AvailableRuleEntry; facts: Record<string, number> } => {
+    const gwf = overrides?.gwf ?? true;
+    return {
+      entry: {
+        rule: {
+          id: 'greataxe-use-action',
+          description: 'Greataxe',
+          activities: [],
+          ui: {
+            model: 'attack',
+            section: 'action-attack',
+            name: 'rule.dnd-5e-2024.attacks.greataxe.name'
+          },
+          vars: {
+            ranges: { default: { array: [{ distance: 5, type: 'melee' }] } },
+            hitBonus: { capture: true, default: { number: 5 } },
+            damageDie: { default: { number: 12 } },
+            damageBonus: { capture: true, default: { number: overrides?.damageBonus ?? 3 } },
+            'weapon.heavy': { default: { number: 1 } },
+            'weapon.twoHanded': { default: { number: 1 } }
+          }
+        } as Rule,
+        legal: true,
+        applicable: true,
+        diagnostics: []
+      },
+      facts: gwf ? { 'character.fightingStyle.greatWeapon': 1 } : {}
+    };
+  };
+
   describe('Cleave attack-line followup', () => {
     beforeEach(() => {
       vi.useFakeTimers();
@@ -2164,6 +2198,290 @@ describe('ChoicePanel', () => {
   });
 
   // === Skill Check d20-roll tests ===
+
+  // === Great Weapon Fighting tests ===
+
+  describe('Great Weapon Fighting', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('treats damage die roll of 1 as 3 with GWF on two-handed weapon', async () => {
+      const { entry, facts } = createMockGreataxeWithTraits({ damageBonus: 3 });
+      // random 0.0 → floor(0.0 * 12) + 1 = 1, GWF makes it 3. Total = 3 + 3 = 6
+      vi.spyOn(Math, 'random').mockReturnValue(0.0);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      // Roll a normal hit first (0.6 → 13)
+      vi.spyOn(Math, 'random').mockReturnValue(0.6);
+      await fireEvent.click(buttons[0]);
+
+      // Roll damage: 0.0 → floor(0.0*12)+1 = 1, GWF → 3, total = 3+3 = 6
+      vi.spyOn(Math, 'random').mockReturnValue(0.0);
+      await fireEvent.click(buttons[1]);
+
+      // GWF triggered — shows would-have-been total with strikethrough
+      expect(buttons[1].textContent).toContain('4');
+      expect(buttons[1].textContent).toContain('6');
+      expect(buttons[1].querySelector('s')).toBeTruthy();
+      expect(buttons[1].querySelector('s')?.textContent).toBe('4');
+    });
+
+    it('treats damage die roll of 2 as 3 with GWF on two-handed weapon', async () => {
+      const { entry, facts } = createMockGreataxeWithTraits({ damageBonus: 3 });
+      // random 1/12 → floor(1/12 * 12) + 1 = 2, GWF makes it 3. Total = 3 + 3 = 6
+      vi.spyOn(Math, 'random').mockReturnValue(1 / 12);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      vi.spyOn(Math, 'random').mockReturnValue(0.6);
+      await fireEvent.click(buttons[0]);
+
+      vi.spyOn(Math, 'random').mockReturnValue(1 / 12);
+      await fireEvent.click(buttons[1]);
+
+      expect(buttons[1].textContent).toContain('5');
+      expect(buttons[1].textContent).toContain('6');
+      expect(buttons[1].querySelector('s')).toBeTruthy();
+      expect(buttons[1].querySelector('s')?.textContent).toBe('5');
+    });
+
+    it('does not modify damage die roll of 3 with GWF', async () => {
+      const { entry, facts } = createMockGreataxeWithTraits({ damageBonus: 3 });
+      // random 2/12 → floor(2/12 * 12) + 1 = 3, no GWF change. Total = 3 + 3 = 6
+      vi.spyOn(Math, 'random').mockReturnValue(2 / 12);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      vi.spyOn(Math, 'random').mockReturnValue(0.6);
+      await fireEvent.click(buttons[0]);
+
+      vi.spyOn(Math, 'random').mockReturnValue(2 / 12);
+      await fireEvent.click(buttons[1]);
+
+      expect(buttons[1].textContent).toBe('6');
+    });
+
+    it('does not modify high damage roll with GWF', async () => {
+      const { entry, facts } = createMockGreataxeWithTraits({ damageBonus: 3 });
+      // random 0.5 → floor(0.5 * 12) + 1 = 7, no GWF change. Total = 7 + 3 = 10
+      vi.spyOn(Math, 'random').mockReturnValue(0.5);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      vi.spyOn(Math, 'random').mockReturnValue(0.6);
+      await fireEvent.click(buttons[0]);
+
+      vi.spyOn(Math, 'random').mockReturnValue(0.5);
+      await fireEvent.click(buttons[1]);
+
+      expect(buttons[1].textContent).toBe('10');
+    });
+
+    it('applies GWF to crit damage — both dice treated as 3 if 1 or 2', async () => {
+      const { entry, facts } = createMockGreataxeWithTraits({ damageBonus: 3 });
+      const randomMock = vi.spyOn(Math, 'random');
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      // Roll nat 20 on hit
+      randomMock.mockReturnValue(0.95);
+      await fireEvent.click(buttons[0]);
+
+      // Roll damage: 0.0 → 1 (GWF→3), 1/12 → 2 (GWF→3). Total = 3+3+3 = 9
+      randomMock.mockReturnValueOnce(0.0).mockReturnValueOnce(1 / 12);
+      await fireEvent.click(buttons[1]);
+
+      expect(buttons[1].textContent).toContain('9');
+      const strikeEl = buttons[1].querySelector('s');
+      expect(strikeEl).toBeTruthy();
+      expect(strikeEl?.textContent).toBe('6');
+    });
+
+    it('does not apply GWF when GWF fact is not set', async () => {
+      const { entry, facts } = createMockGreataxeWithTraits({ damageBonus: 3, gwf: false });
+      // random 0.0 → floor(0.0 * 12) + 1 = 1, no GWF. Total = 1 + 3 = 4
+      vi.spyOn(Math, 'random').mockReturnValue(0.0);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      vi.spyOn(Math, 'random').mockReturnValue(0.6);
+      await fireEvent.click(buttons[0]);
+
+      vi.spyOn(Math, 'random').mockReturnValue(0.0);
+      await fireEvent.click(buttons[1]);
+
+      // Without GWF, 1 stays as 1. Total = 1 + 3 = 4
+      expect(buttons[1].textContent).toBe('4');
+    });
+
+    it('does not apply GWF on non-two-handed weapon even with GWF fact', async () => {
+      const entry = createMockAttackEntry({ damageDie: 6, damageBonus: 3 });
+      const facts = { 'character.fightingStyle.greatWeapon': 1 };
+      // random 0.0 → floor(0.0 * 6) + 1 = 1, no GWF (dagger has no twoHanded var). Total = 1 + 3 = 4
+      vi.spyOn(Math, 'random').mockReturnValue(0.0);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      vi.spyOn(Math, 'random').mockReturnValue(0.6);
+      await fireEvent.click(buttons[0]);
+
+      vi.spyOn(Math, 'random').mockReturnValue(0.0);
+      await fireEvent.click(buttons[1]);
+
+      expect(buttons[1].textContent).toBe('4');
+    });
+
+    it('applies GWF to cleave damage rolls', async () => {
+      const entry = createMockGreataxeMasteryEntry({ damageBonus: 3 });
+      // Add twoHanded trait var to the mastery entry
+      (entry.rule as Rule).vars!['weapon.twoHanded'] = { default: { number: 1 } };
+      const facts = { 'attack.greataxe.mastery': 1, 'character.fightingStyle.greatWeapon': 1 };
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      // Activate Cleave row
+      const followupButton = container.querySelector(
+        '.choice-panel__followup-button'
+      ) as HTMLButtonElement;
+      await fireEvent.click(followupButton);
+
+      const attackRows = container.querySelectorAll('.choice-panel__attack');
+      const cleaveRow = attackRows[1];
+      const cleaveChips = cleaveRow?.querySelectorAll('.attack-chip--rollable');
+
+      // Roll cleave hit: 0.6 → 13
+      vi.spyOn(Math, 'random').mockReturnValue(0.6);
+      await fireEvent.click(cleaveChips?.[0] as HTMLButtonElement);
+
+      // Roll cleave damage: 0.0 → 1 (GWF→3). Cleave bonus = min(0,3) = 0. Total = 3+0 = 3
+      vi.spyOn(Math, 'random').mockReturnValue(0.0);
+      await fireEvent.click(cleaveChips?.[1] as HTMLButtonElement);
+
+      expect(cleaveChips?.[1]?.textContent).toContain('3');
+      expect(cleaveChips?.[1]?.textContent).toContain('1');
+      expect(cleaveChips?.[1]?.querySelector('s')).toBeTruthy();
+      expect(cleaveChips?.[1]?.querySelector('s')?.textContent).toBe('1');
+    });
+  });
+
+    it('shows strikethrough with would-have-been total when GWF triggers', async () => {
+      const { entry, facts } = createMockGreataxeWithTraits({ damageBonus: 3 });
+      vi.spyOn(Math, 'random').mockReturnValue(0.6);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      // Roll hit
+      await fireEvent.click(buttons[0]);
+
+      // Roll damage: 0.0 → 1 (GWF→3), total = 3+3 = 6
+      vi.spyOn(Math, 'random').mockReturnValue(0.0);
+      await fireEvent.click(buttons[1]);
+
+      // Should contain strikethrough element with adjusted die value
+      const strikeEl = buttons[1].querySelector('s');
+      expect(strikeEl).toBeTruthy();
+      expect(strikeEl?.textContent).toBe('4');
+      // Total should be present
+      expect(buttons[1].textContent).toContain('6');
+    });
+
+    it('does not show strikethrough when GWF is active but no substitution', async () => {
+      const { entry, facts } = createMockGreataxeWithTraits({ damageBonus: 3 });
+      vi.spyOn(Math, 'random').mockReturnValue(0.6);
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      await fireEvent.click(buttons[0]);
+
+      // Roll damage: 0.5 → 7, no GWF trigger, total = 7+3 = 10
+      vi.spyOn(Math, 'random').mockReturnValue(0.5);
+      await fireEvent.click(buttons[1]);
+
+      // No strikethrough — just the total
+      expect(buttons[1].querySelector('s')).toBeFalsy();
+      expect(buttons[1].textContent).toBe('10');
+    });
+
+    it('shows strikethrough with would-have-been total in crit with GWF', async () => {
+      const { entry, facts } = createMockGreataxeWithTraits({ damageBonus: 3 });
+      const randomMock = vi.spyOn(Math, 'random');
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      // Roll nat 20
+      randomMock.mockReturnValue(0.95);
+      await fireEvent.click(buttons[0]);
+
+      // Roll damage: 0.0 → 1 (GWF→3), 1/12 → 2 (GWF→3)
+      randomMock.mockReturnValueOnce(0.0).mockReturnValueOnce(1 / 12);
+      await fireEvent.click(buttons[1]);
+
+      // Would-have-been total shown as strikethrough
+      const strikeEl = buttons[1].querySelector('s');
+      expect(strikeEl).toBeTruthy();
+      expect(strikeEl?.textContent).toBe('6');
+    });
+
+    it('shows strikethrough with would-have-been total when some dice trigger GWF in crit', async () => {
+      const { entry, facts } = createMockGreataxeWithTraits({ damageBonus: 3 });
+      const randomMock = vi.spyOn(Math, 'random');
+
+      const { container } = render(ChoicePanel, {
+        props: { entry, editable: true, facts }
+      });
+
+      const buttons = container.querySelectorAll('.attack-chip--rollable');
+      // Roll nat 20
+      randomMock.mockReturnValue(0.95);
+      await fireEvent.click(buttons[0]);
+
+      // Roll damage: 0.0 → 1 (GWF→3), 0.5 → 7 (no GWF)
+      randomMock.mockReturnValueOnce(0.0).mockReturnValueOnce(0.5);
+      await fireEvent.click(buttons[1]);
+
+      // Would-have-been total shown as strikethrough
+      const strikeEl = buttons[1].querySelector('s');
+      expect(strikeEl).toBeTruthy();
+      expect(strikeEl?.textContent).toBe('11');
+      // Total = 3+7+3 = 13
+      expect(buttons[1].textContent).toContain('13');
+    });
+
+  // === Skill Check d20-roll tests (original) ===
 
   describe('Skill Check roller (d20-roll model)', () => {
     beforeEach(() => {

@@ -575,6 +575,100 @@ class TestResolveExpansionRuleMode:
         assert rule["ui"]["section"] == "auto-attack"  # from profile
 
 
+class TestTraitPromotion:
+    """Tests for automatic promotion of boolean traits to vars."""
+
+    def _make_expansion(self):
+        return Expansion(
+            id="option-activations",
+            includeDefinitions=MatchCriteria(kind="option", tags=["attack"]),
+            includeProfiles=["use-action"],
+            emit=EmitConfig(
+                ruleGroupIdPattern="generated-$(definition.id)-activations",
+                ruleIdPattern="$(definition.id)-$(profile.id)",
+                offerRuleIdPattern="$(definition.id)-$(profile.id)-offer",
+                mode="offerRule",
+                translations={
+                    "en": {"name": "N", "description": "D", "keywords": []},
+                    "en-x-tlh": {"name": "N", "description": "D", "keywords": []},
+                },
+            ),
+        )
+
+    def test_boolean_trait_promoted_to_var_in_offer_rule(self):
+        """Boolean traits (weapon.twoHanded: true) should appear as vars in generated rules."""
+        expansion = self._make_expansion()
+        profiles = {"use-action": USE_ACTION}
+        results = resolve_expansion(expansion, [GREATAXE], profiles)
+        inner = results[0]["rules"][0]["activities"][0]["rule"]
+        assert "vars" in inner
+        assert inner["vars"]["weapon.twoHanded"] == {"default": {"number": 1}}
+
+    def test_multiple_boolean_traits_promoted(self):
+        """All boolean traits should be promoted to vars."""
+        expansion = self._make_expansion()
+        profiles = {"use-action": USE_ACTION}
+        results = resolve_expansion(expansion, [GREATAXE], profiles)
+        inner = results[0]["rules"][0]["activities"][0]["rule"]
+        assert inner["vars"]["weapon.heavy"] == {"default": {"number": 1}}
+        assert inner["vars"]["weapon.twoHanded"] == {"default": {"number": 1}}
+
+    def test_string_traits_not_promoted(self):
+        """String-valued traits (weapon.mastery: cleave) should NOT be promoted."""
+        expansion = self._make_expansion()
+        profiles = {"use-action": USE_ACTION}
+        results = resolve_expansion(expansion, [GREATAXE], profiles)
+        inner = results[0]["rules"][0]["activities"][0]["rule"]
+        assert "weapon.mastery" not in inner.get("vars", {})
+
+    def test_definition_vars_preserved(self):
+        """Existing definition vars should still be present after trait promotion."""
+        expansion = self._make_expansion()
+        profiles = {"use-action": USE_ACTION}
+        results = resolve_expansion(expansion, [GREATAXE], profiles)
+        inner = results[0]["rules"][0]["activities"][0]["rule"]
+        assert inner["vars"]["target"] == {"capture": True}
+
+    def test_trait_promotion_in_flat_rule_mode(self):
+        """Trait promotion should also work in flat rule mode."""
+        expansion = Expansion(
+            id="auto-attacks",
+            includeDefinitions=MatchCriteria(kind="option", tags=["attack"]),
+            includeProfiles=["flat-attack-rule"],
+            emit=EmitConfig(
+                ruleGroupIdPattern="generated-$(definition.id)-activations",
+                ruleIdPattern="$(definition.id)-$(profile.id)",
+                mode="rule",
+                translations={
+                    "en": {"name": "N", "description": "D", "keywords": []},
+                    "en-x-tlh": {"name": "N", "description": "D", "keywords": []},
+                },
+            ),
+        )
+        profiles = {"flat-attack-rule": FLAT_ATTACK_RULE}
+        results = resolve_expansion(expansion, [GREATAXE], profiles)
+        rule = results[0]["rules"][0]
+        assert rule["vars"]["weapon.twoHanded"] == {"default": {"number": 1}}
+
+    def test_no_traits_no_promotion(self):
+        """Definitions without traits should not get any promoted vars."""
+        no_traits = Definition(
+            id="no-traits",
+            kind="option",
+            tags=["attack"],
+            payload={"activities": [{"type": "emitEvent", "event": "x", "id": "x"}]},
+            translations={
+                "en": {"name": "T", "description": "T", "keywords": []},
+                "en-x-tlh": {"name": "T", "description": "T", "keywords": []},
+            },
+        )
+        expansion = self._make_expansion()
+        profiles = {"use-action": USE_ACTION}
+        results = resolve_expansion(expansion, [no_traits], profiles)
+        inner = results[0]["rules"][0]["activities"][0]["rule"]
+        assert "weapon.twoHanded" not in inner.get("vars", {})
+
+
 class TestResolveExpansionEdgeCases:
     """Edge cases for expansion resolution."""
 

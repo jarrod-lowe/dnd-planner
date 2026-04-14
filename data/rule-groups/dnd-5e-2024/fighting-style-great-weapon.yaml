@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: fighting-style-great-weapon
+    translations:
+      en:
+        name: Great Weapon Fighting
+        description: >-
+          Damage die rolls of 1 or 2 count as 3 when attacking with a two-handed
+          or versatile melee weapon.
+        keywords: [fighting style, great weapon, damage, two-handed]
+      en-x-tlh:
+        name: nuH jen Suv
+        description: >-
+          DIvI' naQ DIvI' naQ DIvI' naQ. nuH jen Suv DIvI' naQ.
+        keywords: [nuH, jen, Suv]
+    rules:
+      - id: great-weapon-fighting-flag
+        phase: early
+        activities:
+          - type: numberSet
+            target:
+              fact: character.fightingStyle.greatWeapon
+            source:
+              number: 1
