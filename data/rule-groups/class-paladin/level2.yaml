@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: class-paladin-level2
+    requires:
+      - class-paladin-level1
+    translations:
+      en:
+        name: Paladin Level 2
+        description: Paladin class features at level 2, including an expanded Lay on Hands pool
+        keywords: [paladin, class, level2, lay on hands]
+      en-x-tlh:
+        name: Paladin Level 2
+        description: Paladin Segh level 2, ghop Du chel
+        keywords: [paladin, segh, level2, ghop]
+    rules:
+      # Lay on Hands Pool - Level 2 Paladin adds 5 more points
+      - id: paladin-level2-lay-on-hands-pool
+        phase: early
+        group:
+          - loh-pool-set
+        activities:
+          - type: numberIncrement
+            target:
+              fact: layOnHands.pool.total
+            source:
+              number: 5
+          - type: numberIncrement
+            target:
+              fact: layOnHands.pool.remaining
+            source:
+              number: 5

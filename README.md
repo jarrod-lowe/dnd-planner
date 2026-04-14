@@ -333,12 +333,12 @@ The architecture supports:
 - Damage types on weapons (and spells?)
 - Spells
 - Periapt of Wound Closure
-- Paladin Level 2
 - Paladin Level 3
 - Paladin Oath of Redemption Level 3
 - Paladin L1 should require Lay on Hands (test if it doesn't already)
 - Configuration done (to make all configuration illegal)
 - Two weapon fighting
+- Prepared weapons restrictions
 
 ### Low Priority
 
