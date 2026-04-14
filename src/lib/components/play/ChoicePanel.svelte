@@ -1059,11 +1059,7 @@
             {/if}
           </button>
           {#if showSmiteLevelPopover}
-            <div
-              class="roll-popover roll-popover--smite"
-              role="menu"
-              aria-label="Spell slot level"
-            >
+            <div class="roll-popover roll-popover--smite" role="menu" aria-label="Spell slot level">
               {#each smiteLevelOptions as opt (opt.level)}
                 <button
                   type="button"
@@ -1085,7 +1081,10 @@
             type="button"
             class="smite-toggle"
             class:smite-toggle--active={smiteFiendUndead}
-            onclick={() => { smiteFiendUndead = !smiteFiendUndead; smiteRollResult = null; }}
+            onclick={() => {
+              smiteFiendUndead = !smiteFiendUndead;
+              smiteRollResult = null;
+            }}
             aria-pressed={smiteFiendUndead}
             aria-label="+1d8 vs fiend/undead"
           >
