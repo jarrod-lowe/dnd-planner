@@ -92,6 +92,25 @@ ruleGroups:
                   source:
                     var: amount
                   subtract: true
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.class-paladin-lay-on-hands.offer-loh-heal.no_bonus_action
+                  when:
+                    fact: bonusActions.remaining
+                    operator: lessThan
+                    value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.class-paladin-lay-on-hands.offer-loh-heal.pool_empty
+                  when:
+                    fact: layOnHands.pool.remaining
+                    operator: lessThan
+                    value: 0
                 - type: advertiseEffect
                   rule:
                     id: effect-loh-heal
@@ -158,6 +177,25 @@ ruleGroups:
                   source:
                     number: 5
                   subtract: true
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.class-paladin-lay-on-hands.offer-loh-purify-poison.no_bonus_action
+                  when:
+                    fact: bonusActions.remaining
+                    operator: lessThan
+                    value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.class-paladin-lay-on-hands.offer-loh-purify-poison.insufficient_pool
+                  when:
+                    fact: layOnHands.pool.remaining
+                    operator: lessThan
+                    value: 0
                 - type: advertiseEffect
                   rule:
                     id: effect-loh-purify

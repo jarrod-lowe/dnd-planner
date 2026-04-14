@@ -1,0 +1,45 @@
+name: 'Divine Smite - Blocks Other Spells'
+description: 'Using Divine Smite consumes the spellcasting resource, preventing another spell cast'
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divine-smite
+  - spells/spell-create-and-destroy-water
+steps:
+  - evaluate:
+      assert:
+        facts:
+          actions.remaining: 1
+          bonusActions.remaining: 1
+          spellcasting.remaining: 1
+          spellcasting.slots.level1.remaining: 2
+        offers:
+          legal:
+            - cast-create-and-destroy-water
+  # Attack first (required for smite)
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          attack.last.activation.action: 1
+          spellcasting.remaining: 1
+  # Smite consumes the spellcasting resource
+  - addOffer:
+      id: divine-smite
+      selections:
+        slotLevel: 1
+      assert:
+        facts:
+          bonusActions.remaining: 0
+          spellcasting.remaining: 0
+          spellcasting.slots.level1.remaining: 1
+        offers:
+          illegal:
+            - cast-create-and-destroy-water
