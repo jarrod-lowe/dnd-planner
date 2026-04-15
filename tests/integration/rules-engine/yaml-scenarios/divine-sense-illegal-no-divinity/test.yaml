@@ -1,0 +1,46 @@
+name: 'Divine Sense - Illegal No Divinity'
+description: 'Divine Sense is illegal when no Divinity points remain'
+ruleGroups:
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divinity
+  - class-paladin/class-paladin-level3
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/turn-rest
+steps:
+  # Use first Divinity point
+  - evaluate:
+      assert:
+        facts:
+          divinity.remaining: 2
+  - addOffer:
+      id: divine-sense
+      assert:
+        facts:
+          divinity.remaining: 1
+  - endTurn:
+      assert:
+        facts:
+          divinity.remaining: 1
+  # Use second Divinity point
+  - evaluate:
+      assert:
+        facts:
+          divinity.remaining: 1
+  - addOffer:
+      id: divine-sense
+      assert:
+        facts:
+          divinity.remaining: 0
+  - endTurn:
+      assert:
+        facts:
+          divinity.remaining: 0
+  # Now Divine Sense should be illegal
+  - evaluate:
+      assert:
+        facts:
+          divinity.remaining: 0
+        offers:
+          illegal:
+            - divine-sense

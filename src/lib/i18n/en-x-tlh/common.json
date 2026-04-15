@@ -39,6 +39,15 @@
         "already_used": "DIvI' lo'pu'"
       }
     },
+    "class-paladin-divinity": {
+      "divine-sense": {
+        "name": "quv DIch"
+      },
+      "offer-divine-sense": {
+        "no_bonus_action": "DIvI' latlh tu'lu'be'",
+        "no_divinity": "quv DIvI' tu'lu'be'"
+      }
+    },
     "class-paladin-divine-smite": {
       "divine-smite": {
         "name": "quv Qaw'"
@@ -718,6 +727,7 @@
       "heroicInspiration": "SubchI' SuvwI'",
       "layOnHands": "ghop Du",
       "paladinSmite": "DIch Qaw'",
+      "divinity": "quv DIvI'",
       "spellcasting": "mugh DIvI'",
       "spellLevel": "mugh DIvI' L{{level}}",
       "usedMax": "{{used}} / {{max}}",

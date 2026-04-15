@@ -39,6 +39,15 @@
         "already_used": "Already used this rest"
       }
     },
+    "class-paladin-divinity": {
+      "divine-sense": {
+        "name": "Divine Sense"
+      },
+      "offer-divine-sense": {
+        "no_bonus_action": "No bonus action available",
+        "no_divinity": "No Divinity points remaining"
+      }
+    },
     "class-paladin-divine-smite": {
       "divine-smite": {
         "name": "Divine Smite"
@@ -698,6 +707,7 @@
       "heroicInspiration": "Heroic Inspiration",
       "layOnHands": "Lay on Hands",
       "paladinSmite": "Paladin Smite",
+      "divinity": "Divinity",
       "spellcasting": "Spellcast",
       "spellLevel": "Spell L{{level}}",
       "usedMax": "{{used}} / {{max}}",

@@ -1,0 +1,30 @@
+name: 'Divine Sense - Usage'
+description: 'Using Divine Sense consumes 1 Divinity point and 1 bonus action'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ac
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divinity
+  - class-paladin/class-paladin-level3
+steps:
+  - evaluate:
+      assert:
+        facts:
+          divinity.total: 2
+          divinity.remaining: 2
+          bonusActions.remaining: 1
+        offers:
+          exists:
+            - divine-sense
+  - addOffer:
+      id: divine-sense
+      assert:
+        facts:
+          divinity.remaining: 1
+          bonusActions.remaining: 0

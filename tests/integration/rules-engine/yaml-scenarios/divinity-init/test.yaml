@@ -1,0 +1,13 @@
+name: 'Divinity - Pool Init'
+description: 'Divinity pool initializes at 2/2 for a level 3 paladin'
+ruleGroups:
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divinity
+  - class-paladin/class-paladin-level3
+steps:
+  - evaluate:
+      assert:
+        facts:
+          divinity.total: 2
+          divinity.remaining: 2
