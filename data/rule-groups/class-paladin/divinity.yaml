@@ -40,6 +40,45 @@ ruleGroups:
             target:
               fact: divinity.remaining
 
+      # Short Rest - recover 1 Divinity point
+      - id: divinity-short-rest
+        phase: early
+        after:
+          - group: divinity-set
+          - group: divinity-effect
+        when:
+          - fact: rest.short
+            operator: equals
+            value: 1
+        activities:
+          - type: numberIncrement
+            target:
+              fact: divinity.remaining
+            source:
+              number: 1
+            max: divinity.total
+          - type: advertiseEffect
+            rule:
+              id: effect-divinity-short-rest
+              phase: early
+              when:
+                - fact: rest.long
+                  operator: equals
+                  value: 0
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: divinity.remaining
+                  source:
+                    number: 1
+                  max: divinity.total
+                - type: advertiseEffect
+                  self: true
+                  when:
+                    fact: rest.long
+                    operator: equals
+                    value: 0
+
       # Offer Divine Sense (bonus action)
       - id: offer-divine-sense
         after:
