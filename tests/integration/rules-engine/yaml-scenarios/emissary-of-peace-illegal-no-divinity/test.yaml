@@ -1,0 +1,47 @@
+name: 'Emissary of Peace - Illegal No Divinity'
+description: 'Emissary of Peace is illegal when no Divinity points remain'
+ruleGroups:
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divinity
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-oath-redemption-level3
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/turn-rest
+steps:
+  # Use first Divinity point
+  - evaluate:
+      assert:
+        facts:
+          divinity.remaining: 2
+  - addOffer:
+      id: divine-sense
+      assert:
+        facts:
+          divinity.remaining: 1
+  - endTurn:
+      assert:
+        facts:
+          divinity.remaining: 1
+  # Use second Divinity point
+  - evaluate:
+      assert:
+        facts:
+          divinity.remaining: 1
+  - addOffer:
+      id: divine-sense
+      assert:
+        facts:
+          divinity.remaining: 0
+  - endTurn:
+      assert:
+        facts:
+          divinity.remaining: 0
+  # Now Emissary of Peace should be illegal
+  - evaluate:
+      assert:
+        facts:
+          divinity.remaining: 0
+        offers:
+          illegal:
+            - emissary-of-peace

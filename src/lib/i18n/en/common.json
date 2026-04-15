@@ -63,6 +63,17 @@
       },
       "effect-rebuke-the-violent-divinity": {
         "name": "Rebuke the Violent (Divinity)"
+      },
+      "emissary-of-peace": {
+        "name": "Emissary of Peace",
+        "description": "10min | +5 Persuasion"
+      },
+      "offer-emissary-of-peace": {
+        "no_bonus_action": "No bonus action available",
+        "no_divinity": "No Divinity points remaining"
+      },
+      "effect-emissary-of-peace-divinity": {
+        "name": "Emissary of Peace (Divinity)"
       }
     },
     "class-paladin-divine-smite": {

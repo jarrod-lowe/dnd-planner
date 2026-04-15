@@ -1,0 +1,53 @@
+name: 'Emissary of Peace - Usage'
+description: 'Using Emissary of Peace consumes 1 Divinity point and 1 bonus action. While active, grants +5 to Persuasion. Removing the status effect does not refund the divinity point.'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/skill-checks
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divinity
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-oath-redemption-level3
+steps:
+  - evaluate:
+      assert:
+        facts:
+          divinity.total: 2
+          divinity.remaining: 2
+          bonusActions.remaining: 1
+        offers:
+          exists:
+            - emissary-of-peace
+  - addOffer:
+      id: emissary-of-peace
+      assert:
+        facts:
+          divinity.remaining: 1
+          bonusActions.remaining: 0
+          skill.persuasion.value: 5
+  - endTurn:
+      assert:
+        facts:
+          divinity.remaining: 1
+          skill.persuasion.value: 5
+        effects:
+          exists:
+            - effect-emissary-of-peace
+            - effect-emissary-of-peace-divinity
+  - removeEffect:
+      id: effect-emissary-of-peace
+      assert:
+        facts:
+          divinity.remaining: 1
+          skill.persuasion.value: 0
+        effects:
+          exists:
+            - effect-emissary-of-peace-divinity
+          notExists:
+            - effect-emissary-of-peace
