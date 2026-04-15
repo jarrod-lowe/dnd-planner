@@ -304,7 +304,9 @@
   let smiteTriggerRef: HTMLButtonElement | undefined = $state();
 
   // Smite model specific values
-  const smiteDieCount = $derived(uiModel === 'smite' || uiModel === 'paladin-smite' ? resolveVarDefault('dieCount') : undefined);
+  const smiteDieCount = $derived(
+    uiModel === 'smite' || uiModel === 'paladin-smite' ? resolveVarDefault('dieCount') : undefined
+  );
   const smiteSlotLevel = $derived(uiModel === 'smite' ? resolveVarDefault('slotLevel') : undefined);
   let smiteFiendUndead = $state(false);
   const smiteTotalDice = $derived((smiteDieCount ?? 0) + (smiteFiendUndead ? 1 : 0));
