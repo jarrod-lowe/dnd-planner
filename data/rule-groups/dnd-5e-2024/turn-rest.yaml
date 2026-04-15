@@ -4,8 +4,8 @@ ruleGroups:
     translations:
       en:
         name: Turn and Rest
-        description: Core rules for turn counting and long rest management
-        keywords: [turn, rest, long rest, counter]
+        description: Core rules for turn counting and rest management
+        keywords: [turn, rest, long rest, short rest, counter]
       en-x-tlh:
         name: wa'DIch 'ej nIb poH
         description: wa'DIch 'ej nIb poH DIvI' naQ
@@ -34,6 +34,28 @@ ruleGroups:
                 - type: numberSet
                   target:
                     fact: rest.long
+                  source:
+                    number: 1
+
+      # Short Rest - offer the short rest action
+      - id: offer-short-rest
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            rule:
+              id: short-rest
+              ui:
+                model: rest
+                section: rest
+                name: rule.dnd-5e-2024.turn-rest.short-rest.name
+              group:
+                - __planned__
+              phase: early
+              activities:
+                - type: numberSet
+                  target:
+                    fact: rest.short
                   source:
                     number: 1
 

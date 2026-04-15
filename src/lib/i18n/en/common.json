@@ -54,6 +54,9 @@
       "turn-rest": {
         "long-rest": {
           "name": "Long Rest"
+        },
+        "short-rest": {
+          "name": "Short Rest"
         }
       },
       "action-economy": {},
