@@ -41,7 +41,8 @@
     },
     "class-paladin-divinity": {
       "divine-sense": {
-        "name": "Divine Sense"
+        "name": "Divine Sense",
+        "description": "60ft | 10min | Detect Celestials, Fiends, Undead"
       },
       "offer-divine-sense": {
         "no_bonus_action": "No bonus action available",

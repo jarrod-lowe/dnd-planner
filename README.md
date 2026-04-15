@@ -334,7 +334,6 @@ The architecture supports:
 - Spells
 - Periapt of Wound Closure
 - Paladin Level 3 including Hit Die and Channel Divinity and +1 L1 spell slot
-- Paladin Oath of Redemption Level 3
 - Paladin L1 should require Lay on Hands (test if it doesn't already)
 - Paladin L1 should set Wisdom and Charisma Saving Throw Proficiencies
 - Configuration done (to make all configuration illegal)
@@ -343,9 +342,12 @@ The architecture supports:
 - Damage types (radiant, ...)
 - Remove Turn counter
 - Use and restoration of hit die
-- Paladin Level 3
-  - Divinity remaining increase on short rest and resets on long rest
-  - Divine Sense (60ft; 10min) - mention DC - panel exists, details to do
+- Paladin Oath of Redemption Level 3
+  - Sanctuary Spell
+  - Sleep Spell
+  - Emissary of Peach (Oath of Redemption)
+  - Rebuke the Violent (Oath of Redemption)
+- Bug: Cancel of Divine Sense refunds the Divinity point
 - HP addition after level 1
 
 ### Low Priority
