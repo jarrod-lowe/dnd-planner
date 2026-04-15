@@ -13,6 +13,18 @@ ruleGroups:
         description: Paladin Segh level 2, ghop Du chel
         keywords: [paladin, segh, level2, ghop]
     rules:
+      # Hit Die - Level 2 Paladin adds 1d10
+      - id: paladin-level2-hit-die
+        phase: early
+        group:
+          - hit-die-base
+        activities:
+          - type: numberIncrement
+            target:
+              fact: hitDie.d10.total
+            source:
+              number: 1
+
       # Lay on Hands Pool - Level 2 Paladin adds 5 more points
       - id: paladin-level2-lay-on-hands-pool
         phase: early
