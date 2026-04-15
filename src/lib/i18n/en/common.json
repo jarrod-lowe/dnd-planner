@@ -52,6 +52,19 @@
         "name": "Divine Sense (Divinity)"
       }
     },
+    "class-paladin-oath-redemption-level3": {
+      "rebuke-the-violent": {
+        "name": "Rebuke the Violent",
+        "description": "Reaction | 30ft | WIS save — Fail: full radiant damage, Success: half damage"
+      },
+      "offer-rebuke-the-violent": {
+        "no_reaction": "No reaction available",
+        "no_divinity": "No Divinity points remaining"
+      },
+      "effect-rebuke-the-violent-divinity": {
+        "name": "Rebuke the Violent (Divinity)"
+      }
+    },
     "class-paladin-divine-smite": {
       "divine-smite": {
         "name": "Divine Smite"

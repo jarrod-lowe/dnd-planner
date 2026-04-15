@@ -1,0 +1,39 @@
+name: 'Rebuke the Violent - Usage'
+description: 'Using Rebuke the Violent consumes 1 Divinity point and 1 reaction. Divinity consumption persists across turns.'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ac
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divinity
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-oath-redemption-level3
+steps:
+  - evaluate:
+      assert:
+        facts:
+          divinity.total: 2
+          divinity.remaining: 2
+          reactions.remaining: 1
+        offers:
+          exists:
+            - rebuke-the-violent
+  - addOffer:
+      id: rebuke-the-violent
+      assert:
+        facts:
+          divinity.remaining: 1
+          reactions.remaining: 0
+  - endTurn:
+      assert:
+        facts:
+          divinity.remaining: 1
+          reactions.remaining: 1
+        effects:
+          exists:
+            - effect-rebuke-the-violent-divinity

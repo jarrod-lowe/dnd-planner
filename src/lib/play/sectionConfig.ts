@@ -10,6 +10,7 @@ export const SECTION_ORDER: string[] = [
   'action-attack',
   'action-other',
   'bonus-action-other',
+  'reaction',
   'free',
   'rest',
   'senses'

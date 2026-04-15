@@ -1,0 +1,33 @@
+name: 'Rebuke the Violent - Illegal No Reaction'
+description: 'Rebuke the Violent is illegal when no reaction is available'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/greataxe
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divinity
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-oath-redemption-level3
+steps:
+  - evaluate:
+      assert:
+        facts:
+          reactions.remaining: 1
+          divinity.remaining: 2
+  # Use reaction via greataxe reaction weapon attack
+  - addOffer:
+      id: greataxe-use-reaction-weapon
+      assert:
+        facts:
+          reactions.remaining: 0
+          divinity.remaining: 2
+        offers:
+          illegal:
+            - rebuke-the-violent

@@ -345,9 +345,8 @@ The architecture supports:
 - Paladin Oath of Redemption Level 3
   - Sanctuary Spell
   - Sleep Spell
-  - Emissary of Peach (Oath of Redemption)
-  - Rebuke the Violent (Oath of Redemption)
-- Bug: Cancel of Divine Sense refunds the Divinity point
+  - Emissary of Peace (Oath of Redemption)
+  - Better tests for Divinity Points behaviour (bug?)
 - HP addition after level 1
 
 ### Low Priority
