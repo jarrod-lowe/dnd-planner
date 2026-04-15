@@ -1,0 +1,131 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: class-paladin-divinity
+    translations:
+      en:
+        name: Divinity
+        description: Paladins draw on divine power to fuel special abilities
+        keywords: [paladin, divinity, divine, channel]
+      en-x-tlh:
+        name: DIvI'
+        description: Segh DIvI' DIvI' DIch
+        keywords: [paladin, DIvI', DIch]
+    rules:
+      # Divinity UI stats display
+      - id: divinity-ui
+        phase: early
+        activities: []
+        ui:
+          stats:
+            - name: play.stats.divinity
+              type: usedMax
+              total: divinity.total
+              remaining: divinity.remaining
+              section: resources
+
+      # Divinity reset on Long Rest
+      - id: divinity-reset
+        phase: early
+        after:
+          - group: divinity-set
+          - group: divinity-effect
+        when:
+          - fact: rest.long
+            operator: equals
+            value: 1
+        activities:
+          - type: numberCopy
+            source:
+              fact: divinity.total
+            target:
+              fact: divinity.remaining
+
+      # Offer Divine Sense (bonus action)
+      - id: offer-divine-sense
+        after:
+          - group: __planned__
+          - group: divinity-set
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: bonusActions.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.class-paladin-divinity.offer-divine-sense.no_bonus_action
+                    severity: error
+              - condition:
+                  fact: divinity.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.class-paladin-divinity.offer-divine-sense.no_divinity
+                    severity: error
+            rule:
+              id: divine-sense
+              group:
+                - __planned__
+              ui:
+                model: divine-sense
+                section: bonus-action-other
+                name: rule.class-paladin-divinity.divine-sense.name
+              activities:
+                # Consume bonus action
+                - type: numberIncrement
+                  target:
+                    fact: bonusActions.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                # Consume 1 Divinity point
+                - type: numberIncrement
+                  target:
+                    fact: divinity.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.class-paladin-divinity.offer-divine-sense.no_bonus_action
+                  when:
+                    fact: bonusActions.remaining
+                    operator: lessThan
+                    value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.class-paladin-divinity.offer-divine-sense.no_divinity
+                  when:
+                    fact: divinity.remaining
+                    operator: lessThan
+                    value: 0
+                # Persist consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-divine-sense
+                    phase: early
+                    group:
+                      - divinity-effect
+                    when:
+                      - fact: rest.long
+                        operator: equals
+                        value: 0
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: divinity.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          fact: rest.long
+                          operator: equals
+                          value: 0

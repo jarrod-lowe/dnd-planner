@@ -3,6 +3,7 @@ ruleGroups:
   - id: class-paladin-level3
     requires:
       - class-paladin-level2
+      - class-paladin-divinity
     translations:
       en:
         name: Paladin Level 3
@@ -58,3 +59,20 @@ ruleGroups:
               fact: layOnHands.pool.remaining
             source:
               number: 5
+
+      # Divinity Pool - Level 3 Paladin starts with 2 Divinity points
+      - id: paladin-level3-divinity-pool
+        phase: early
+        group:
+          - divinity-set
+        activities:
+          - type: numberIncrement
+            target:
+              fact: divinity.total
+            source:
+              number: 2
+          - type: numberIncrement
+            target:
+              fact: divinity.remaining
+            source:
+              number: 2

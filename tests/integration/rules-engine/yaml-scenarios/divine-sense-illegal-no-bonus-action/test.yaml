@@ -1,0 +1,33 @@
+name: 'Divine Sense - Illegal No Bonus Action'
+description: 'Divine Sense is illegal when no bonus action is available'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ac
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divinity
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-lay-on-hands
+steps:
+  - evaluate:
+      assert:
+        facts:
+          bonusActions.remaining: 1
+          divinity.remaining: 2
+  # Use bonus action via LoH heal
+  - addOffer:
+      id: loh-heal
+      selections:
+        amount: 1
+      assert:
+        facts:
+          bonusActions.remaining: 0
+          divinity.remaining: 2
+        offers:
+          illegal:
+            - divine-sense

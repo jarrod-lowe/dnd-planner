@@ -344,9 +344,9 @@ The architecture supports:
 - Remove Turn counter
 - Use and restoration of hit die
 - Paladin Level 3
-  - Divinity pool (size=2)
-  - Divinity remaining increase on short rest and reset to full on long rest
-  - Divine Sense (60ft; 10min) - mention DC
+  - Divinity remaining increase on short rest and resets on long rest
+  - Divine Sense (60ft; 10min) - mention DC - panel exists, details to do
+- HP addition after level 1
 
 ### Low Priority
 
