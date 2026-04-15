@@ -23,6 +23,10 @@ interface AssertConfig {
     legal?: string[];
     illegal?: string[];
   };
+  effects?: {
+    exists?: string[];
+    notExists?: string[];
+  };
   offerVars?: {
     id: string;
     vars: Record<string, unknown>;
@@ -71,7 +75,20 @@ interface EndTurnStep {
   assert?: AssertConfig;
 }
 
-type Step = EvaluateStep | AddOfferStep | RemoveFromPlanStep | UpdateSelectionsStep | EndTurnStep;
+interface RemoveEffectStep {
+  removeEffect: {
+    id: string;
+  };
+  assert?: AssertConfig;
+}
+
+type Step =
+  | EvaluateStep
+  | AddOfferStep
+  | RemoveFromPlanStep
+  | UpdateSelectionsStep
+  | EndTurnStep
+  | RemoveEffectStep;
 
 interface TestConfig {
   name: string;
@@ -157,12 +174,50 @@ function assertOfferUi(
   }
 }
 
-function runAssertions(output: EngineOutput, assert: AssertConfig, stepDesc: string): void {
+function assertEffects(
+  effects: Rule[],
+  expected: NonNullable<AssertConfig['effects']>,
+  stepDesc: string
+): void {
+  for (const id of expected.exists ?? []) {
+    const found = effects.some((r) => matchesEffectId(r.id, id));
+    expect(found, `${stepDesc}: effect "${id}" should exist`).toBe(true);
+  }
+  for (const id of expected.notExists ?? []) {
+    const found = effects.some((r) => matchesEffectId(r.id, id));
+    expect(!found, `${stepDesc}: effect "${id}" should NOT exist`).toBe(true);
+  }
+}
+
+/**
+ * Match effect IDs by base ID. The engine appends a counter suffix to
+ * advertised effects (e.g., "effect-divine-sense" becomes "effect-divine-sense-2").
+ * This matches both exact IDs and counter-suffixed variants.
+ */
+function matchesEffectId(actualId: string, baseId: string): boolean {
+  if (actualId === baseId) return true;
+  // Match "{baseId}-{number}" (counter-suffixed)
+  if (actualId.startsWith(baseId + '-')) {
+    const suffix = actualId.slice(baseId.length + 1);
+    return /^\d+$/.test(suffix);
+  }
+  return false;
+}
+
+function runAssertions(
+  output: EngineOutput,
+  assert: AssertConfig,
+  stepDesc: string,
+  effects: Rule[]
+): void {
   if (assert.facts) {
     assertFacts(output.facts, assert.facts, stepDesc);
   }
   if (assert.offers) {
     assertOffers(output.availableRules, assert.offers, stepDesc);
+  }
+  if (assert.effects) {
+    assertEffects(effects, assert.effects, stepDesc);
   }
   if (assert.offerVars) {
     assertOfferVars(output.availableRules, assert.offerVars, stepDesc);
@@ -295,6 +350,11 @@ class TestHarness {
     this.plannedItems = [];
     return this.doEvaluate();
   }
+
+  doRemoveEffect(effectId: string): EngineOutput {
+    this.effects = this.effects.filter((rule) => !matchesEffectId(rule.id, effectId));
+    return this.doEvaluate();
+  }
 }
 
 // --- Auto-discover and run scenarios ---
@@ -331,30 +391,36 @@ describe('yaml rules scenarios', () => {
         if (stepKey === 'evaluate') {
           const output = harness.doEvaluate();
           if (assert) {
-            runAssertions(output, assert, stepDesc);
+            runAssertions(output, assert, stepDesc, harness.effects);
           }
         } else if (stepKey === 'addOffer') {
           const addOfferData = stepData as { id: string; selections?: Record<string, unknown> };
           const output = harness.doAddOffer(addOfferData.id, addOfferData.selections);
           if (assert) {
-            runAssertions(output, assert, stepDesc);
+            runAssertions(output, assert, stepDesc, harness.effects);
           }
         } else if (stepKey === 'removeFromPlan') {
           const removeData = stepData as { id: string };
           const output = harness.doRemoveFromPlan(removeData.id);
           if (assert) {
-            runAssertions(output, assert, stepDesc);
+            runAssertions(output, assert, stepDesc, harness.effects);
           }
         } else if (stepKey === 'updateSelections') {
           const updateData = stepData as { id: string; selections: Record<string, unknown> };
           const output = harness.doUpdateSelections(updateData.id, updateData.selections);
           if (assert) {
-            runAssertions(output, assert, stepDesc);
+            runAssertions(output, assert, stepDesc, harness.effects);
           }
         } else if (stepKey === 'endTurn') {
           const output = harness.doEndTurn();
           if (assert) {
-            runAssertions(output, assert, stepDesc);
+            runAssertions(output, assert, stepDesc, harness.effects);
+          }
+        } else if (stepKey === 'removeEffect') {
+          const removeEffectData = stepData as { id: string };
+          const output = harness.doRemoveEffect(removeEffectData.id);
+          if (assert) {
+            runAssertions(output, assert, stepDesc, harness.effects);
           }
         } else {
           throw new Error(`${stepDesc}: Unknown step type "${stepKey}"`);

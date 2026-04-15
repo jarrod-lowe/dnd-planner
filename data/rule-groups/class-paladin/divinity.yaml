@@ -147,10 +147,12 @@ ruleGroups:
                 # Persist consumption across turns
                 - type: advertiseEffect
                   rule:
-                    id: effect-divine-sense
+                    id: effect-divine-sense-divinity
                     phase: early
                     group:
                       - divinity-effect
+                    ui:
+                      name: rule.class-paladin-divinity.effect-divine-sense-divinity.name
                     when:
                       - fact: rest.long
                         operator: equals
@@ -162,6 +164,27 @@ ruleGroups:
                         source:
                           number: 1
                         subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          fact: rest.long
+                          operator: equals
+                          value: 0
+                # Status reminder (user-removable)
+                - type: advertiseEffect
+                  rule:
+                    id: effect-divine-sense
+                    phase: early
+                    group:
+                      - divinity-effect
+                    ui:
+                      section: senses
+                      name: rule.class-paladin-divinity.divine-sense.name
+                    when:
+                      - fact: rest.long
+                        operator: equals
+                        value: 0
+                    activities:
                       - type: advertiseEffect
                         self: true
                         when:

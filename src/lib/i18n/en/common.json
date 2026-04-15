@@ -47,6 +47,9 @@
       "offer-divine-sense": {
         "no_bonus_action": "No bonus action available",
         "no_divinity": "No Divinity points remaining"
+      },
+      "effect-divine-sense-divinity": {
+        "name": "Divine Sense (Divinity)"
       }
     },
     "class-paladin-divine-smite": {
@@ -778,7 +781,8 @@
         "rest": "Rest",
         "health": "Health",
         "other": "Other",
-        "mastery": "Mastery"
+        "mastery": "Mastery",
+        "senses": "Senses"
       },
       "move": {
         "distance": "Movement distance in feet"

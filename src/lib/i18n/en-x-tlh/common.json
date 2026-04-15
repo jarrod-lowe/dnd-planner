@@ -47,6 +47,9 @@
       "offer-divine-sense": {
         "no_bonus_action": "DIvI' latlh tu'lu'be'",
         "no_divinity": "quv DIvI' tu'lu'be'"
+      },
+      "effect-divine-sense-divinity": {
+        "name": "quv DIch (DIvI')"
       }
     },
     "class-paladin-divine-smite": {
@@ -778,7 +781,8 @@
         "rest": "nIb poH",
         "health": "DIch DIvI'",
         "other": "latlh",
-        "mastery": "Mastery"
+        "mastery": "Mastery",
+        "senses": "DIch"
       },
       "move": {
         "distance": "Do chu'"
