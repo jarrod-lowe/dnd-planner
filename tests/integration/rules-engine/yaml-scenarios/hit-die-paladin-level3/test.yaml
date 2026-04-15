@@ -1,0 +1,16 @@
+name: 'Hit die from paladin level 3'
+description: 'Paladin levels 1, 2, and 3 grant 3d10 hit dice which reset to remaining on evaluation'
+ruleGroups:
+  - dnd-5e-2024/hit-die
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-level3
+steps:
+  - evaluate:
+      assert:
+        facts:
+          hitDie.d10.total: 3
+          hitDie.d10.remaining: 3
+          hitDie.d6.total: 0
+          hitDie.d8.total: 0
+          hitDie.d12.total: 0

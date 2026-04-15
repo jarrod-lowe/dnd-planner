@@ -1,0 +1,12 @@
+name: 'Paladin: Lay on Hands pool at level 3'
+description: 'A level 3 paladin has a Lay on Hands pool of 15 (5 per level)'
+ruleGroups:
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-level3
+steps:
+  - evaluate:
+      assert:
+        facts:
+          layOnHands.pool.total: 15
+          layOnHands.pool.remaining: 15
