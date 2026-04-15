@@ -1136,6 +1136,13 @@
           </span>
         </div>
       {/if}
+      {#if uiModel === 'emissary-of-peace'}
+        <div class="choice-panel__model">
+          <span class="choice-panel__description">
+            {$t('rule.class-paladin-oath-redemption-level3.emissary-of-peace.description')}
+          </span>
+        </div>
+      {/if}
     </div>
     {#if visibleFollowups.length > 0}
       <div
@@ -1312,6 +1319,13 @@
         <div class="choice-panel__model">
           <span class="choice-panel__description">
             {$t('rule.class-paladin-divinity.divine-sense.description')}
+          </span>
+        </div>
+      {/if}
+      {#if uiModel === 'emissary-of-peace'}
+        <div class="choice-panel__model">
+          <span class="choice-panel__description">
+            {$t('rule.class-paladin-oath-redemption-level3.emissary-of-peace.description')}
           </span>
         </div>
       {/if}

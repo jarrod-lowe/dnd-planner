@@ -63,6 +63,17 @@
       },
       "effect-rebuke-the-violent-divinity": {
         "name": "qIpDIch (DIvI')"
+      },
+      "emissary-of-peace": {
+        "name": "rojDuy",
+        "description": "10min | +5 rarchuq"
+      },
+      "offer-emissary-of-peace": {
+        "no_bonus_action": "DIvI' cha' tu'lu'be'",
+        "no_divinity": "quv DIvI' tu'lu'be'"
+      },
+      "effect-emissary-of-peace-divinity": {
+        "name": "rojDuy (DIvI')"
       }
     },
     "class-paladin-divine-smite": {
