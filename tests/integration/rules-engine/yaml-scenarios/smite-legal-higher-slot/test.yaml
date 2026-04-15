@@ -1,0 +1,100 @@
+name: 'Divine Smite - Legal With Higher Slot Only'
+description: 'Divine Smite is legal when level 1 slots are exhausted but a higher-level slot is available'
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divine-smite
+initialEffects:
+  # Simulate having a level 2 spell slot (e.g., from a higher paladin level)
+  - id: test-grant-level2-slot
+    phase: early
+    group:
+      - spellcasting-slots-set
+    activities:
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.total
+        source:
+          number: 1
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.remaining
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+steps:
+  # Initial state: 2 L1 slots, 1 L2 slot
+  - evaluate:
+      assert:
+        facts:
+          bonusActions.remaining: 1
+          spellcasting.remaining: 1
+          spellcasting.slots.level1.remaining: 2
+          spellcasting.slots.level2.remaining: 1
+  # Attack first (required for smite)
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          attack.last.activation.action: 1
+          bonusActions.remaining: 1
+          spellcasting.remaining: 1
+          spellcasting.slots.level1.remaining: 2
+          spellcasting.slots.level2.remaining: 1
+        offers:
+          legal:
+            - divine-smite
+  # Smite using L1 slot (first)
+  - addOffer:
+      id: divine-smite
+      selections:
+        slotLevel: 1
+      assert:
+        facts:
+          bonusActions.remaining: 0
+          spellcasting.remaining: 0
+          spellcasting.slots.level1.remaining: 1
+          spellcasting.slots.level2.remaining: 1
+  - endTurn: {}
+  # Turn 2: Attack and smite again using L1 to exhaust it
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          attack.last.activation.action: 1
+          bonusActions.remaining: 1
+          spellcasting.remaining: 1
+          spellcasting.slots.level1.remaining: 1
+          spellcasting.slots.level2.remaining: 1
+  - addOffer:
+      id: divine-smite
+      selections:
+        slotLevel: 1
+      assert:
+        facts:
+          bonusActions.remaining: 0
+          spellcasting.remaining: 0
+          spellcasting.slots.level1.remaining: 0
+          spellcasting.slots.level2.remaining: 1
+  - endTurn: {}
+  # Turn 3: Attack - smite should be LEGAL (L1 exhausted, L2 available)
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          attack.last.activation.action: 1
+          bonusActions.remaining: 1
+          spellcasting.remaining: 1
+          spellcasting.slots.level1.remaining: 0
+          spellcasting.slots.level2.remaining: 1
+        offers:
+          legal:
+            - divine-smite

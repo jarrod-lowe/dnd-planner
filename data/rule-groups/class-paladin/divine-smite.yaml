@@ -16,11 +16,28 @@ ruleGroups:
           DIch level 2 bonus action. DIch nuH DIch DIvI' DIvI' DIvI'.
         keywords: [paladin, quv, Qaw']
     rules:
+      # Compute eligible smite slot count (levels 1-5)
+      - id: compute-smite-eligible-slots
+        phase: normal
+        group:
+          - smite-slots-computed
+        activities:
+          - type: numberSum
+            target:
+              fact: smite.eligibleSlotsRemaining
+            sources:
+              - fact: spellcasting.slots.level1.remaining
+              - fact: spellcasting.slots.level2.remaining
+              - fact: spellcasting.slots.level3.remaining
+              - fact: spellcasting.slots.level4.remaining
+              - fact: spellcasting.slots.level5.remaining
+
       # Offer Divine Smite (bonus action, gated on attack action taken)
       - id: offer-divine-smite
         after:
           - group: __planned__
           - group: spellcasting
+          - group: smite-slots-computed
         activities:
           - type: offerRule
             legalWhen:
@@ -39,7 +56,7 @@ ruleGroups:
                   - code: rule.class-paladin-divine-smite.offer-divine-smite.no_attack
                     severity: error
               - condition:
-                  fact: spellcasting.slots.level1.remaining
+                  fact: smite.eligibleSlotsRemaining
                   operator: greaterThan
                   value: 0
                 illegalDiagnostics:
