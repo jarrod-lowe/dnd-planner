@@ -305,6 +305,7 @@
 
   // Smite model specific values
   const smiteDieCount = $derived(uiModel === 'smite' ? resolveVarDefault('dieCount') : undefined);
+  const smiteSlotLevel = $derived(uiModel === 'smite' ? resolveVarDefault('slotLevel') : undefined);
   let smiteFiendUndead = $state(false);
   const smiteTotalDice = $derived((smiteDieCount ?? 0) + (smiteFiendUndead ? 1 : 0));
   let smiteRollResult: number | null = $state(null);
@@ -1049,14 +1050,15 @@
             onpointerup={() => cancelLongPress()}
             onpointerleave={() => cancelLongPress()}
             aria-label={smiteRollResult !== null
-              ? `${$t('play.choices.smite.reroll')}: ${smiteRollResult}`
-              : `${$t('play.choices.smite.roll')}: ${smiteTotalDice}d8`}
+              ? `${$t('play.choices.smite.reroll')}: ${smiteRollResult} @L${smiteSlotLevel ?? 1}`
+              : `${$t('play.choices.smite.roll')}: ${smiteTotalDice}d8 @L${smiteSlotLevel ?? 1}`}
           >
             {#if smiteRollResult !== null}
               {smiteRollResult}
             {:else}
               {smiteTotalDice}d8
             {/if}
+            <span class="choice-panel__smite-level">@L{smiteSlotLevel ?? 1}</span>
           </button>
           {#if showSmiteLevelPopover}
             <div class="roll-popover roll-popover--smite" role="menu" aria-label="Spell slot level">
@@ -1763,6 +1765,12 @@
     background: var(--md-sys-color-tertiary-container);
     border-color: var(--md-sys-color-tertiary);
     color: var(--md-sys-color-on-tertiary-container);
+  }
+
+  .choice-panel__smite-level {
+    font-size: var(--font-size-xs);
+    color: var(--md-sys-color-on-surface-variant);
+    margin-left: var(--spacing-xs);
   }
 
   .roll-popover__item--dimmed {

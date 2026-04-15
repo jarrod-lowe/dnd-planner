@@ -32,6 +32,104 @@ ruleGroups:
               - fact: spellcasting.slots.level4.remaining
               - fact: spellcasting.slots.level5.remaining
 
+      # Compute lowest available slot level and corresponding die count
+      # Cascade from high to low so the lowest available level overwrites
+      - id: compute-smite-lowest-slot
+        phase: normal
+        group:
+          - smite-slots-computed
+        activities:
+          - type: numberSet
+            target:
+              fact: smite.lowestAvailableSlotLevel
+            source:
+              number: 5
+            when:
+              fact: spellcasting.slots.level5.remaining
+              operator: greaterThan
+              value: 0
+          - type: numberSet
+            target:
+              fact: smite.defaultDieCount
+            source:
+              number: 6
+            when:
+              fact: spellcasting.slots.level5.remaining
+              operator: greaterThan
+              value: 0
+          - type: numberSet
+            target:
+              fact: smite.lowestAvailableSlotLevel
+            source:
+              number: 4
+            when:
+              fact: spellcasting.slots.level4.remaining
+              operator: greaterThan
+              value: 0
+          - type: numberSet
+            target:
+              fact: smite.defaultDieCount
+            source:
+              number: 5
+            when:
+              fact: spellcasting.slots.level4.remaining
+              operator: greaterThan
+              value: 0
+          - type: numberSet
+            target:
+              fact: smite.lowestAvailableSlotLevel
+            source:
+              number: 3
+            when:
+              fact: spellcasting.slots.level3.remaining
+              operator: greaterThan
+              value: 0
+          - type: numberSet
+            target:
+              fact: smite.defaultDieCount
+            source:
+              number: 4
+            when:
+              fact: spellcasting.slots.level3.remaining
+              operator: greaterThan
+              value: 0
+          - type: numberSet
+            target:
+              fact: smite.lowestAvailableSlotLevel
+            source:
+              number: 2
+            when:
+              fact: spellcasting.slots.level2.remaining
+              operator: greaterThan
+              value: 0
+          - type: numberSet
+            target:
+              fact: smite.defaultDieCount
+            source:
+              number: 3
+            when:
+              fact: spellcasting.slots.level2.remaining
+              operator: greaterThan
+              value: 0
+          - type: numberSet
+            target:
+              fact: smite.lowestAvailableSlotLevel
+            source:
+              number: 1
+            when:
+              fact: spellcasting.slots.level1.remaining
+              operator: greaterThan
+              value: 0
+          - type: numberSet
+            target:
+              fact: smite.defaultDieCount
+            source:
+              number: 2
+            when:
+              fact: spellcasting.slots.level1.remaining
+              operator: greaterThan
+              value: 0
+
       # Offer Divine Smite (bonus action, gated on attack action taken)
       - id: offer-divine-smite
         after:
@@ -82,11 +180,11 @@ ruleGroups:
                 slotLevel:
                   capture: true
                   default:
-                    number: 1
+                    fact: smite.lowestAvailableSlotLevel
                 dieCount:
                   capture: true
                   default:
-                    number: 2
+                    fact: smite.defaultDieCount
               activities:
                 # Consume bonus action
                 - type: numberIncrement

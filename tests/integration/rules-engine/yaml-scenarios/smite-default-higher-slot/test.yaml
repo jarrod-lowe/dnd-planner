@@ -1,0 +1,112 @@
+name: 'Divine Smite - Default Slot Level Picks Lowest Available'
+description: >-
+  When L1 slots are exhausted but L2+ is available, the computed defaults
+  smite.lowestAvailableSlotLevel and smite.defaultDieCount should reflect
+  the lowest available slot level, not hardcoded L1.
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divine-smite
+initialEffects:
+  # Grant a level 2 spell slot (simulating higher paladin level)
+  - id: test-grant-level2-slot
+    phase: early
+    group:
+      - spellcasting-slots-set
+    activities:
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.total
+        source:
+          number: 1
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.remaining
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+steps:
+  # Initial state: 2 L1 slots, 1 L2 slot
+  - evaluate:
+      assert:
+        facts:
+          bonusActions.remaining: 1
+          spellcasting.remaining: 1
+          spellcasting.slots.level1.remaining: 2
+          spellcasting.slots.level2.remaining: 1
+  # Exhaust L1 slots by smiting twice with L1
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          attack.last.activation.action: 1
+          bonusActions.remaining: 1
+          spellcasting.remaining: 1
+          spellcasting.slots.level1.remaining: 2
+          spellcasting.slots.level2.remaining: 1
+  - addOffer:
+      id: divine-smite
+      selections:
+        slotLevel: 1
+      assert:
+        facts:
+          spellcasting.slots.level1.remaining: 1
+          spellcasting.slots.level2.remaining: 1
+  - endTurn: {}
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          spellcasting.slots.level1.remaining: 1
+  - addOffer:
+      id: divine-smite
+      selections:
+        slotLevel: 1
+      assert:
+        facts:
+          spellcasting.slots.level1.remaining: 0
+          spellcasting.slots.level2.remaining: 1
+  - endTurn: {}
+  # Now L1 is exhausted, L2 available
+  # KEY ASSERTION: smite.lowestAvailableSlotLevel should be 2 (not 1)
+  # and smite.defaultDieCount should be 3 (L2 = 2+1 dice)
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.slots.level1.remaining: 0
+          spellcasting.slots.level2.remaining: 1
+          smite.eligibleSlotsRemaining: 1
+          smite.lowestAvailableSlotLevel: 2
+          smite.defaultDieCount: 3
+  # Attack to enable smite
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          attack.last.activation.action: 1
+          bonusActions.remaining: 1
+          spellcasting.slots.level1.remaining: 0
+          spellcasting.slots.level2.remaining: 1
+        offers:
+          legal:
+            - divine-smite
+  # Add smite WITHOUT specifying slotLevel — tests the real default path.
+  # resolveInitialSelections will capture slotLevel from the default source.
+  # With the fix (default.fact: smite.lowestAvailableSlotLevel), this captures 2.
+  # L1 stays at 0, L2 is consumed.
+  - addOffer:
+      id: divine-smite
+      assert:
+        facts:
+          bonusActions.remaining: 0
+          spellcasting.remaining: 0
+          spellcasting.slots.level1.remaining: 0
+          spellcasting.slots.level2.remaining: 0
