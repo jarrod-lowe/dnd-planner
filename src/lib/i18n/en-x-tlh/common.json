@@ -54,6 +54,9 @@
       "turn-rest": {
         "long-rest": {
           "name": "nIb poH"
+        },
+        "short-rest": {
+          "name": "nIb poH nIb"
         }
       },
       "action-economy": {},

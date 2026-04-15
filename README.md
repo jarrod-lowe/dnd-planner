@@ -343,6 +343,12 @@ The architecture supports:
 - Damage types (radiant, ...)
 - Remove Turn counter
 - Use and restoration of hit die
+- Paladin Level 3
+  - Hit Die
+  - +1 Level1 spell slot
+  - Divinity pool (size=2)
+  - Divinity remaining increase on short rest and reset to full on long rest
+  - Divine Sense (60ft; 10min) - mention DC
 
 ### Low Priority
 
