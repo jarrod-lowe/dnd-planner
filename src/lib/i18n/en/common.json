@@ -29,6 +29,16 @@
         "insufficient_pool": "Need 5 Lay on Hands points"
       }
     },
+    "class-paladin-paladin-smite": {
+      "paladin-smite": {
+        "name": "Paladin Smite"
+      },
+      "offer-paladin-smite": {
+        "no_bonus_action": "No bonus action available",
+        "no_attack": "You must take the Attack action first",
+        "already_used": "Already used this rest"
+      }
+    },
     "class-paladin-divine-smite": {
       "divine-smite": {
         "name": "Divine Smite"
@@ -684,6 +694,7 @@
       "reactions": "Reactions",
       "heroicInspiration": "Heroic Inspiration",
       "layOnHands": "Lay on Hands",
+      "paladinSmite": "Paladin Smite",
       "spellcasting": "Spellcast",
       "spellLevel": "Spell L{{level}}",
       "usedMax": "{{used}} / {{max}}",
@@ -798,7 +809,8 @@
       },
       "smite": {
         "roll": "Roll",
-        "reroll": "Re-roll"
+        "reroll": "Re-roll",
+        "slotLevel": "@L{{level}}"
       },
       "contested": {
         "vsStrDex": "STR/DEX"

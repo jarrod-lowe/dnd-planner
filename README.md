@@ -323,7 +323,7 @@ The architecture supports:
 - Rule generator AI prompt
 - Fix quotas
 - ChoicePanel.svelte is a mess of specific code that needs to be normalised and maybe pushed into rules
-- Weapon: Thrown (item count)
+- Weapon: Thrown (item count) [Javelin=6]
 - Limit Cleave to once per turn
 - Shield
 - Don/Doff & Hands
@@ -336,10 +336,10 @@ The architecture supports:
 - Paladin Level 3 including Hit Die and Channel Divinity and +1 L1 spell slot
 - Paladin Oath of Redemption Level 3
 - Paladin L1 should require Lay on Hands (test if it doesn't already)
+- Paladin L1 should set Wisdom and Charisma Saving Throw Proficiencies
 - Configuration done (to make all configuration illegal)
 - Two weapon fighting
 - Prepared spells restrictions
-- Paladin Smite
 - Damage types (radiant, ...)
 - Remove Turn counter
 - Use and restoration of hit die
@@ -349,3 +349,4 @@ The architecture supports:
 - Other Mastery effects (including Nick, which exists but doesn't do anything)
 - Conditions
 - Defences
+- Weapon Proficiencies

@@ -1,0 +1,31 @@
+name: 'Paladin Smite - Available After Attack'
+description: 'Paladin Smite is illegal before an attack action, then legal after attacking'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divine-smite
+  - class-paladin/class-paladin-paladin-smite
+steps:
+  # Before attack: paladin smite should be illegal
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - paladin-smite
+  # After attack: paladin smite should be legal
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          attack.last.activation.action: 1
+        offers:
+          legal:
+            - paladin-smite

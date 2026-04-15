@@ -1,0 +1,50 @@
+name: 'Paladin Smite - Already Used'
+description: 'After using Paladin Smite, it persists as illegal on the next turn (once per long rest)'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divine-smite
+  - class-paladin/class-paladin-paladin-smite
+steps:
+  # Turn 1: Attack then use Paladin Smite
+  - evaluate:
+      assert:
+        facts:
+          paladinSmite.remaining: 1
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          attack.last.activation.action: 1
+        offers:
+          legal:
+            - paladin-smite
+  - addOffer:
+      id: paladin-smite
+      assert:
+        facts:
+          bonusActions.remaining: 0
+          paladinSmite.remaining: 0
+  # End turn 1
+  - endTurn:
+      assert:
+        facts:
+          paladinSmite.remaining: 0
+  # Turn 2: Attack, then Paladin Smite should still be illegal
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          attack.last.activation.action: 1
+          paladinSmite.remaining: 0
+        offers:
+          illegal:
+            - paladin-smite

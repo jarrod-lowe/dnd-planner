@@ -1,0 +1,21 @@
+name: 'Paladin Smite - Not Available Without Attack'
+description: 'Paladin Smite is illegal when no Attack action has been taken this turn'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divine-smite
+  - class-paladin/class-paladin-paladin-smite
+steps:
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - paladin-smite

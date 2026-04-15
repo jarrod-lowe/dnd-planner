@@ -29,6 +29,16 @@
         "insufficient_pool": "ghop Du vagh DIvI'"
       }
     },
+    "class-paladin-paladin-smite": {
+      "paladin-smite": {
+        "name": "DIch Qaw'"
+      },
+      "offer-paladin-smite": {
+        "no_bonus_action": "DIvI' latlh tu'lu'be'",
+        "no_attack": "DIch DIvI' DIch tu'lu'be'",
+        "already_used": "DIvI' lo'pu'"
+      }
+    },
     "class-paladin-divine-smite": {
       "divine-smite": {
         "name": "quv Qaw'"
@@ -704,6 +714,7 @@
       "reactions": "DIvI' cha'",
       "heroicInspiration": "SubchI' SuvwI'",
       "layOnHands": "ghop Du",
+      "paladinSmite": "DIch Qaw'",
       "spellcasting": "mugh DIvI'",
       "spellLevel": "mugh DIvI' L{{level}}",
       "usedMax": "{{used}} / {{max}}",
@@ -798,7 +809,8 @@
       },
       "smite": {
         "roll": "DIvI'",
-        "reroll": "DIvI'qa'"
+        "reroll": "DIvI'qa'",
+        "slotLevel": "@L{{level}}"
       },
       "contested": {
         "vsStrDex": "HoS/Do"
