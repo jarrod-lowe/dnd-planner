@@ -11,7 +11,8 @@ export const SECTION_ORDER: string[] = [
   'action-other',
   'bonus-action-other',
   'free',
-  'rest'
+  'rest',
+  'senses'
 ];
 
 /**

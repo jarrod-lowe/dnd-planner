@@ -1,5 +1,5 @@
 name: 'Divine Sense - Usage'
-description: 'Using Divine Sense consumes 1 Divinity point and 1 bonus action'
+description: 'Using Divine Sense consumes 1 Divinity point and 1 bonus action. Removing the status effect does not refund the divinity point.'
 ruleGroups:
   - species-human/species-human
   - dnd-5e-2024/action-economy
@@ -28,3 +28,21 @@ steps:
         facts:
           divinity.remaining: 1
           bonusActions.remaining: 0
+  - endTurn:
+      assert:
+        facts:
+          divinity.remaining: 1
+        effects:
+          exists:
+            - effect-divine-sense
+            - effect-divine-sense-divinity
+  - removeEffect:
+      id: effect-divine-sense
+      assert:
+        facts:
+          divinity.remaining: 1
+        effects:
+          exists:
+            - effect-divine-sense-divinity
+          notExists:
+            - effect-divine-sense
