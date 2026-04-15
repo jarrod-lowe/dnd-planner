@@ -1,0 +1,110 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: class-paladin-oath-redemption-level3
+    requires:
+      - class-paladin-level3
+      - class-paladin-divinity
+    translations:
+      en:
+        name: Oath of Redemption Level 3
+        description: >
+          Paladin Oath of Redemption features at level 3, including the
+          Rebuke the Violent divinity channel option
+        keywords: [paladin, oath, redemption, level3, divinity, rebuke]
+      en-x-tlh:
+        name: Oath of Redemption Level 3
+        description: >
+          Paladin Oath of Redemption level 3, Rebuke the Violent DIvI'
+        keywords: [paladin, oath, redemption, level3, DIvI', rebuke]
+    rules:
+      # Offer Rebuke the Violent (reaction + 1 divinity point)
+      - id: offer-rebuke-the-violent
+        after:
+          - group: __planned__
+          - group: divinity-set
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: reactions.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.class-paladin-oath-redemption-level3.offer-rebuke-the-violent.no_reaction
+                    severity: error
+              - condition:
+                  fact: divinity.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.class-paladin-oath-redemption-level3.offer-rebuke-the-violent.no_divinity
+                    severity: error
+            rule:
+              id: rebuke-the-violent
+              group:
+                - __planned__
+              ui:
+                model: rebuke-the-violent
+                section: reaction
+                name: rule.class-paladin-oath-redemption-level3.rebuke-the-violent.name
+              activities:
+                # Consume reaction
+                - type: numberIncrement
+                  target:
+                    fact: reactions.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                # Consume 1 Divinity point
+                - type: numberIncrement
+                  target:
+                    fact: divinity.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.class-paladin-oath-redemption-level3.offer-rebuke-the-violent.no_reaction
+                  when:
+                    fact: reactions.remaining
+                    operator: lessThan
+                    value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.class-paladin-oath-redemption-level3.offer-rebuke-the-violent.no_divinity
+                  when:
+                    fact: divinity.remaining
+                    operator: lessThan
+                    value: 0
+                # Persist divinity consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-rebuke-the-violent-divinity
+                    phase: early
+                    group:
+                      - divinity-effect
+                    ui:
+                      name: rule.class-paladin-oath-redemption-level3.effect-rebuke-the-violent-divinity.name
+                    when:
+                      - fact: rest.long
+                        operator: equals
+                        value: 0
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: divinity.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          fact: rest.long
+                          operator: equals
+                          value: 0

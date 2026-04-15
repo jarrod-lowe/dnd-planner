@@ -52,6 +52,19 @@
         "name": "quv DIch (DIvI')"
       }
     },
+    "class-paladin-oath-redemption-level3": {
+      "rebuke-the-violent": {
+        "name": "qIpDIch",
+        "description": "DIvI' cha' | 30ft | wIS DIvI' — DIch: DIch qIp, DIch: puS qIp"
+      },
+      "offer-rebuke-the-violent": {
+        "no_reaction": "DIvI' cha' tu'lu'be'",
+        "no_divinity": "quv DIvI' tu'lu'be'"
+      },
+      "effect-rebuke-the-violent-divinity": {
+        "name": "qIpDIch (DIvI')"
+      }
+    },
     "class-paladin-divine-smite": {
       "divine-smite": {
         "name": "quv Qaw'"
