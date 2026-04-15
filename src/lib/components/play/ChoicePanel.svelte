@@ -1129,6 +1129,13 @@
           </button>
         </div>
       {/if}
+      {#if uiModel === 'divine-sense'}
+        <div class="choice-panel__model">
+          <span class="choice-panel__description">
+            {$t('rule.class-paladin-divinity.divine-sense.description')}
+          </span>
+        </div>
+      {/if}
     </div>
     {#if visibleFollowups.length > 0}
       <div
@@ -1299,6 +1306,13 @@
       {#if uiModel === 'smite' && smiteDieCount !== undefined}
         <div class="choice-panel__model choice-panel__attack">
           <span class="attack-chip">{smiteTotalDice}d8</span>
+        </div>
+      {/if}
+      {#if uiModel === 'divine-sense'}
+        <div class="choice-panel__model">
+          <span class="choice-panel__description">
+            {$t('rule.class-paladin-divinity.divine-sense.description')}
+          </span>
         </div>
       {/if}
     </div>
