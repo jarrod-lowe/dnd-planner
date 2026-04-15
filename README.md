@@ -342,7 +342,7 @@ The architecture supports:
 - Paladin Smite
 - Damage types (radiant, ...)
 - Remove Turn counter
-- Paladin Level 2 Hit Die? (+3?)
+- Use and restoration of hit die
 
 ### Low Priority
 

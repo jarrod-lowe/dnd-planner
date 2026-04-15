@@ -1,0 +1,15 @@
+name: 'Hit die from paladin level 2'
+description: 'Paladin levels 1 and 2 grant 2d10 hit dice which reset to remaining on evaluation'
+ruleGroups:
+  - dnd-5e-2024/hit-die
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+steps:
+  - evaluate:
+      assert:
+        facts:
+          hitDie.d10.total: 2
+          hitDie.d10.remaining: 2
+          hitDie.d6.total: 0
+          hitDie.d8.total: 0
+          hitDie.d12.total: 0
