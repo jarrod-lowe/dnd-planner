@@ -333,7 +333,7 @@ The architecture supports:
 - Damage types on weapons (and spells?)
 - Spells
 - Periapt of Wound Closure
-- Paladin Level 3
+- Paladin Level 3 including Hit Die and Channel Divinity and +1 L1 spell slot
 - Paladin Oath of Redemption Level 3
 - Paladin L1 should require Lay on Hands (test if it doesn't already)
 - Configuration done (to make all configuration illegal)
