@@ -1,0 +1,163 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: class-paladin-paladin-smite
+    requires:
+      - class-paladin-divine-smite
+    translations:
+      en:
+        name: Paladin Smite
+        description: >-
+          You can use Divine Smite once per Long Rest without expending a spell
+          slot. Deals 2d8 radiant damage.
+        keywords: [paladin, smite, radiant, damage, bonus action, free]
+      en-x-tlh:
+        name: DIch Qaw'
+        description: >-
+          DIch Qaw' wa' DIch Long Rest DIvI' DIvI' DIvI'.
+        keywords: [paladin, Qaw', DIch]
+    rules:
+      # Set total uses and initialize remaining
+      - id: paladin-smite-set-total
+        phase: early
+        group:
+          - paladin-smite-set
+        activities:
+          - type: numberIncrement
+            target:
+              fact: paladinSmite.total
+            source:
+              number: 1
+          - type: numberIncrement
+            target:
+              fact: paladinSmite.remaining
+            source:
+              number: 1
+
+      # UI stats display
+      - id: paladin-smite-ui
+        phase: early
+        activities: []
+        ui:
+          stats:
+            - name: play.stats.paladinSmite
+              type: usedMax
+              total: paladinSmite.total
+              remaining: paladinSmite.remaining
+              section: resources
+
+      # Reset on Long Rest
+      - id: paladin-smite-reset
+        phase: early
+        after:
+          - group: paladin-smite-set
+          - group: paladin-smite-effect
+        when:
+          - fact: rest.long
+            operator: equals
+            value: 1
+        activities:
+          - type: numberCopy
+            source:
+              fact: paladinSmite.total
+            target:
+              fact: paladinSmite.remaining
+
+      # Offer Paladin Smite (bonus action, gated on attack action taken)
+      - id: offer-paladin-smite
+        after:
+          - group: __planned__
+          - group: paladin-smite-set
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: bonusActions.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.class-paladin-paladin-smite.offer-paladin-smite.no_bonus_action
+                    severity: error
+              - condition:
+                  fact: attack.last.activation.action
+                  operator: equals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.class-paladin-paladin-smite.offer-paladin-smite.no_attack
+                    severity: error
+              - condition:
+                  fact: paladinSmite.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.class-paladin-paladin-smite.offer-paladin-smite.already_used
+                    severity: error
+            rule:
+              id: paladin-smite
+              group:
+                - __planned__
+              ui:
+                model: paladin-smite
+                section: bonus-action-other
+                name: rule.class-paladin-paladin-smite.paladin-smite.name
+              vars:
+                dieCount:
+                  capture: true
+                  default:
+                    number: 2
+              activities:
+                # Consume bonus action
+                - type: numberIncrement
+                  target:
+                    fact: bonusActions.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.class-paladin-paladin-smite.offer-paladin-smite.no_bonus_action
+                  when:
+                    fact: bonusActions.remaining
+                    operator: lessThan
+                    value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.class-paladin-paladin-smite.offer-paladin-smite.no_attack
+                  when:
+                    fact: attack.last.activation.action
+                    operator: lessThan
+                    value: 1
+                # Set paladinSmite.remaining to 0
+                - type: numberSet
+                  target:
+                    fact: paladinSmite.remaining
+                  source:
+                    number: 0
+                # Persist consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-paladin-smite
+                    phase: early
+                    group:
+                      - paladin-smite-effect
+                    when:
+                      - fact: rest.long
+                        operator: equals
+                        value: 0
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: paladinSmite.remaining
+                        source:
+                          number: 0
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          fact: rest.long
+                          operator: equals
+                          value: 0

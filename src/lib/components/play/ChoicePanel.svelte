@@ -304,7 +304,7 @@
   let smiteTriggerRef: HTMLButtonElement | undefined = $state();
 
   // Smite model specific values
-  const smiteDieCount = $derived(uiModel === 'smite' ? resolveVarDefault('dieCount') : undefined);
+  const smiteDieCount = $derived(uiModel === 'smite' || uiModel === 'paladin-smite' ? resolveVarDefault('dieCount') : undefined);
   const smiteSlotLevel = $derived(uiModel === 'smite' ? resolveVarDefault('slotLevel') : undefined);
   let smiteFiendUndead = $state(false);
   const smiteTotalDice = $derived((smiteDieCount ?? 0) + (smiteFiendUndead ? 1 : 0));
@@ -1050,15 +1050,17 @@
             onpointerup={() => cancelLongPress()}
             onpointerleave={() => cancelLongPress()}
             aria-label={smiteRollResult !== null
-              ? `${$t('play.choices.smite.reroll')}: ${smiteRollResult} @L${smiteSlotLevel ?? 1}`
-              : `${$t('play.choices.smite.roll')}: ${smiteTotalDice}d8 @L${smiteSlotLevel ?? 1}`}
+              ? `${$t('play.choices.smite.reroll')}: ${smiteRollResult} ${$t('play.choices.smite.slotLevel', { level: smiteSlotLevel ?? 1 })}`
+              : `${$t('play.choices.smite.roll')}: ${smiteTotalDice}d8 ${$t('play.choices.smite.slotLevel', { level: smiteSlotLevel ?? 1 })}`}
           >
             {#if smiteRollResult !== null}
               {smiteRollResult}
             {:else}
               {smiteTotalDice}d8
             {/if}
-            <span class="choice-panel__smite-level">@L{smiteSlotLevel ?? 1}</span>
+            <span class="choice-panel__smite-level"
+              >{$t('play.choices.smite.slotLevel', { level: smiteSlotLevel ?? 1 })}</span
+            >
           </button>
           {#if showSmiteLevelPopover}
             <div class="roll-popover roll-popover--smite" role="menu" aria-label="Spell slot level">
@@ -1079,6 +1081,37 @@
               {/each}
             </div>
           {/if}
+          <button
+            type="button"
+            class="smite-toggle"
+            class:smite-toggle--active={smiteFiendUndead}
+            onclick={() => {
+              smiteFiendUndead = !smiteFiendUndead;
+              smiteRollResult = null;
+            }}
+            aria-pressed={smiteFiendUndead}
+            aria-label="+1d8 vs fiend/undead"
+          >
+            +1d8
+          </button>
+        </div>
+      {/if}
+      {#if uiModel === 'paladin-smite' && smiteDieCount !== undefined}
+        <div class="choice-panel__model choice-panel__attack">
+          <button
+            type="button"
+            class="attack-chip attack-chip--rollable"
+            onclick={(e) => rollSmiteDamage(e)}
+            aria-label={smiteRollResult !== null
+              ? `${$t('play.choices.smite.reroll')}: ${smiteRollResult}`
+              : `${$t('play.choices.smite.roll')}: ${smiteTotalDice}d8`}
+          >
+            {#if smiteRollResult !== null}
+              {smiteRollResult}
+            {:else}
+              {smiteTotalDice}d8
+            {/if}
+          </button>
           <button
             type="button"
             class="smite-toggle"

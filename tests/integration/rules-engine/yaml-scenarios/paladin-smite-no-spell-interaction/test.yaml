@@ -1,0 +1,41 @@
+name: 'Paladin Smite - No Spell Interaction'
+description: 'Using Paladin Smite does not consume spellcasting or spell slots. Divine Smite remains available after using Paladin Smite.'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divine-smite
+  - class-paladin/class-paladin-paladin-smite
+steps:
+  # Attack first
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.remaining: 1
+          spellcasting.slots.level1.remaining: 2
+          paladinSmite.remaining: 1
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          attack.last.activation.action: 1
+  # Use Paladin Smite
+  - addOffer:
+      id: paladin-smite
+      assert:
+        facts:
+          spellcasting.remaining: 1
+          spellcasting.slots.level1.remaining: 2
+          bonusActions.remaining: 0
+          paladinSmite.remaining: 0
+        offers:
+          illegal:
+            - paladin-smite
+            - divine-smite
