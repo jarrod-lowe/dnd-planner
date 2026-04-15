@@ -1,0 +1,13 @@
+name: 'Paladin: Spell slots at level 3'
+description: 'A level 3 paladin has level 1 spell slots total and remaining of 3'
+ruleGroups:
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-level3
+steps:
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.slots.level1.total: 3
+          spellcasting.slots.level1.remaining: 3
