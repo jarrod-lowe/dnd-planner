@@ -1,5 +1,13 @@
 {
   "rule": {
+    "spell-sanctuary": {
+      "offer-sanctuary": {
+        "name": "chal",
+        "no_bonus_action": "Quv DIvI' tu'lu'be'",
+        "no_slots": "mugh laH tu'lu'be'",
+        "no_spellcasting": "mugh DIvI' tu'lu'be'"
+      }
+    },
     "spell-create-and-destroy-water": {
       "cast-create-and-destroy-water": {
         "name": "bIQ chenmoH 'ej HochHom"
@@ -758,6 +766,7 @@
       "divinity": "quv DIvI'",
       "spellcasting": "mugh DIvI'",
       "spellLevel": "mugh DIvI' L{{level}}",
+      "spellSaveDC": "mugh DIvI' DIch",
       "usedMax": "{{used}} / {{max}}",
       "hitDie": "QIp DIvI'",
       "hitDieValue": "{{used}}/{{max}} DIvI' d{{dieSize}}",
@@ -799,7 +808,9 @@
         "action-attack": "DIvI' → HIv",
         "action-other": "DIvI' → latlh",
         "bonus-action-other": "Quv DIvI' → latlh",
+        "bonus-action-spell": "Quv DIvI' → mugh",
         "bonus-action": "Quv DIvI' → HIv",
+        "ongoing": "DIngtaH",
         "reaction": "DIvI' cha'",
         "free": "Free",
         "rest": "nIb poH",

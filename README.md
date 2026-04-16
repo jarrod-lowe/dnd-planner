@@ -343,11 +343,11 @@ The architecture supports:
 - Remove Turn counter
 - Use and restoration of hit die
 - Paladin Oath of Redemption Level 3
-  - Sanctuary Spell
   - Sleep Spell
-  - Emissary of Peace (Oath of Redemption)
-  - Better tests for Divinity Points behaviour (bug?)
+  - Better tests for Divinity Points behaviour including double use of Divinity-using actions (bug?)
 - HP addition after level 1
+- rest.any?
+- Make activities and effects when's support multiple conditions, like base rules do
 
 ### Low Priority
 
@@ -355,3 +355,4 @@ The architecture supports:
 - Conditions
 - Defences
 - Weapon Proficiencies
+- UI code needs to be restructured to be less special-casey

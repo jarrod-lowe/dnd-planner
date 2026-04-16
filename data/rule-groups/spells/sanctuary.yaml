@@ -1,0 +1,427 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: spell-sanctuary
+    requires:
+      - spellcasting
+    translations:
+      en:
+        name: Sanctuary
+        description: >-
+          Level 1 bonus action spell. Target must make a WIS save or be unable
+          to attack or cast harmful spells. Lasts 1 minute (10 rounds).
+        keywords: [spell, level1, sanctuary, bonus action, abjuration]
+      en-x-tlh:
+        name: chal
+        description: >-
+          DIch level 1 bonus action. DIch chal DIvI' DIvI' DIvI'.
+        keywords: [spell, level1, chal, bonus action]
+    rules:
+      # Compute eligible sanctuary slot count (levels 1-5)
+      - id: compute-sanctuary-eligible-slots
+        phase: normal
+        group:
+          - sanctuary-slots-computed
+        activities:
+          - type: numberSum
+            target:
+              fact: sanctuary.eligibleSlotsRemaining
+            sources:
+              - fact: spellcasting.slots.level1.remaining
+              - fact: spellcasting.slots.level2.remaining
+              - fact: spellcasting.slots.level3.remaining
+              - fact: spellcasting.slots.level4.remaining
+              - fact: spellcasting.slots.level5.remaining
+
+      # Compute lowest available slot level
+      # Cascade from high to low so the lowest available level overwrites
+      - id: compute-sanctuary-lowest-slot
+        phase: normal
+        group:
+          - sanctuary-slots-computed
+        activities:
+          - type: numberSet
+            target:
+              fact: sanctuary.lowestAvailableSlotLevel
+            source:
+              number: 5
+            when:
+              fact: spellcasting.slots.level5.remaining
+              operator: greaterThan
+              value: 0
+          - type: numberSet
+            target:
+              fact: sanctuary.lowestAvailableSlotLevel
+            source:
+              number: 4
+            when:
+              fact: spellcasting.slots.level4.remaining
+              operator: greaterThan
+              value: 0
+          - type: numberSet
+            target:
+              fact: sanctuary.lowestAvailableSlotLevel
+            source:
+              number: 3
+            when:
+              fact: spellcasting.slots.level3.remaining
+              operator: greaterThan
+              value: 0
+          - type: numberSet
+            target:
+              fact: sanctuary.lowestAvailableSlotLevel
+            source:
+              number: 2
+            when:
+              fact: spellcasting.slots.level2.remaining
+              operator: greaterThan
+              value: 0
+          - type: numberSet
+            target:
+              fact: sanctuary.lowestAvailableSlotLevel
+            source:
+              number: 1
+            when:
+              fact: spellcasting.slots.level1.remaining
+              operator: greaterThan
+              value: 0
+
+      # Offer Sanctuary (bonus action)
+      - id: offer-sanctuary
+        after:
+          - group: __planned__
+          - group: spellcasting
+          - group: sanctuary-slots-computed
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: bonusActions.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-sanctuary.offer-sanctuary.no_bonus_action
+                    severity: error
+              - condition:
+                  fact: sanctuary.eligibleSlotsRemaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-sanctuary.offer-sanctuary.no_slots
+                    severity: error
+              - condition:
+                  fact: spellcasting.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-sanctuary.offer-sanctuary.no_spellcasting
+                    severity: error
+            rule:
+              id: cast-sanctuary
+              group:
+                - __planned__
+                - spellcasting
+              ui:
+                model: sanctuary
+                section: bonus-action-spell
+                name: rule.spell-sanctuary.offer-sanctuary.name
+              vars:
+                slotLevel:
+                  capture: true
+                  default:
+                    fact: sanctuary.lowestAvailableSlotLevel
+              activities:
+                # Consume bonus action
+                - type: numberIncrement
+                  target:
+                    fact: bonusActions.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                # Consume spellcasting resource
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-sanctuary.offer-sanctuary.no_bonus_action
+                  when:
+                    fact: bonusActions.remaining
+                    operator: lessThan
+                    value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-sanctuary.offer-sanctuary.no_spellcasting
+                  when:
+                    fact: spellcasting.remaining
+                    operator: lessThan
+                    value: 0
+                # Bridge var to fact for conditional slot consumption
+                - type: numberSet
+                  target:
+                    fact: sanctuary.selectedLevel
+                  source:
+                    var: slotLevel
+                # Consume L1 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level1.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    fact: sanctuary.selectedLevel
+                    operator: equals
+                    value: 1
+                # Consume L2 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level2.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    fact: sanctuary.selectedLevel
+                    operator: equals
+                    value: 2
+                # Consume L3 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level3.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    fact: sanctuary.selectedLevel
+                    operator: equals
+                    value: 3
+                # Consume L4 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level4.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    fact: sanctuary.selectedLevel
+                    operator: equals
+                    value: 4
+                # Consume L5 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level5.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    fact: sanctuary.selectedLevel
+                    operator: equals
+                    value: 5
+                # Track slot consumption errors
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-sanctuary.offer-sanctuary.no_slots
+                  when:
+                    fact: spellcasting.slots.level1.remaining
+                    operator: lessThan
+                    value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-sanctuary.offer-sanctuary.no_slots
+                  when:
+                    fact: spellcasting.slots.level2.remaining
+                    operator: lessThan
+                    value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-sanctuary.offer-sanctuary.no_slots
+                  when:
+                    fact: spellcasting.slots.level3.remaining
+                    operator: lessThan
+                    value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-sanctuary.offer-sanctuary.no_slots
+                  when:
+                    fact: spellcasting.slots.level4.remaining
+                    operator: lessThan
+                    value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-sanctuary.offer-sanctuary.no_slots
+                  when:
+                    fact: spellcasting.slots.level5.remaining
+                    operator: lessThan
+                    value: 0
+                # Persist L1 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-sanctuary-slot-l1
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level1.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          fact: rest.long
+                          operator: equals
+                          value: 0
+                  when:
+                    fact: sanctuary.selectedLevel
+                    operator: equals
+                    value: 1
+                # Persist L2 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-sanctuary-slot-l2
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level2.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          fact: rest.long
+                          operator: equals
+                          value: 0
+                  when:
+                    fact: sanctuary.selectedLevel
+                    operator: equals
+                    value: 2
+                # Persist L3 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-sanctuary-slot-l3
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level3.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          fact: rest.long
+                          operator: equals
+                          value: 0
+                  when:
+                    fact: sanctuary.selectedLevel
+                    operator: equals
+                    value: 3
+                # Persist L4 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-sanctuary-slot-l4
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level4.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          fact: rest.long
+                          operator: equals
+                          value: 0
+                  when:
+                    fact: sanctuary.selectedLevel
+                    operator: equals
+                    value: 4
+                # Persist L5 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-sanctuary-slot-l5
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level5.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          fact: rest.long
+                          operator: equals
+                          value: 0
+                  when:
+                    fact: sanctuary.selectedLevel
+                    operator: equals
+                    value: 5
+                # Create persistent Sanctuary effect (10 rounds, WIS save)
+                - type: advertiseEffect
+                  rule:
+                    id: effect-sanctuary
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    when:
+                      - fact: rest.short
+                        operator: equals
+                        value: 0
+                      - fact: rest.long
+                        operator: equals
+                        value: 0
+                    ui:
+                      model: timed-save-effect
+                      section: ongoing
+                      countDown: 10
+                      duration: 10
+                      saveType: WIS
+                      saveFact: spellcasting.saveDC
+                    activities:
+                      - type: advertiseEffect
+                        self: true

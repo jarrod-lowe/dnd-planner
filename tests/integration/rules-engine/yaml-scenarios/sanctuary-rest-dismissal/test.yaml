@@ -1,0 +1,37 @@
+name: 'Sanctuary Rest Dismissal'
+description: 'Sanctuary effect is dismissed on short rest and long rest'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/turn-rest
+  - class-paladin/class-paladin-level1
+  - spells/spell-sanctuary
+steps:
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.slots.level1.remaining: 2
+  - addOffer:
+      id: cast-sanctuary
+      assert:
+        facts:
+          spellcasting.slots.level1.remaining: 1
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-sanctuary
+  # Short rest should dismiss the sanctuary effect
+  - addOffer:
+      id: short-rest
+      assert:
+        facts:
+          rest.short: 1
+  - endTurn:
+      assert:
+        effects:
+          notExists:
+            - effect-sanctuary

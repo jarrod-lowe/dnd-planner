@@ -82,6 +82,7 @@
               entry={group.entry}
               deletable={deletableRuleIds?.has(group.entry.rule.id) ?? false}
               onRemove={() => onRemoveEffect?.(group.entry.rule.id)}
+              {facts}
             />
           {:else}
             <ChoicePanel

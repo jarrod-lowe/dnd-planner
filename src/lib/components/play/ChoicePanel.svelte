@@ -312,9 +312,17 @@
   const smiteTotalDice = $derived((smiteDieCount ?? 0) + (smiteFiendUndead ? 1 : 0));
   let smiteRollResult: number | null = $state(null);
 
+  // Sanctuary model specific values
+  const sanctuarySlotLevel = $derived(
+    uiModel === 'sanctuary' ? resolveVarDefault('slotLevel') : undefined
+  );
+  const sanctuarySaveDC = $derived(
+    uiModel === 'sanctuary' ? (facts['spellcasting.saveDC'] as number | undefined) : undefined
+  );
+
   // Smite level options: slot levels 1-5 with total/remaining from facts
   const smiteLevelOptions = $derived.by(() => {
-    if (uiModel !== 'smite') return [];
+    if (uiModel !== 'smite' && uiModel !== 'sanctuary') return [];
     const options: { level: number; total: number; remaining: number }[] = [];
     for (let level = 1; level <= 5; level++) {
       const total = facts[`spellcasting.slots.level${level}.total`] ?? 0;
@@ -438,6 +446,13 @@
     smiteRollResult = null;
     if (onSelectionChange) {
       onSelectionChange({ slotLevel: level, dieCount: 1 + level });
+    }
+  }
+
+  function selectSanctuaryLevel(level: number): void {
+    activePopover = null;
+    if (onSelectionChange) {
+      onSelectionChange({ slotLevel: level });
     }
   }
 
@@ -1143,6 +1158,52 @@
           </span>
         </div>
       {/if}
+      {#if uiModel === 'sanctuary' && sanctuarySlotLevel !== undefined}
+        <div class="choice-panel__model choice-panel__attack">
+          <button
+            type="button"
+            class="attack-chip attack-chip--rollable"
+            bind:this={smiteTriggerRef}
+            aria-haspopup="menu"
+            aria-expanded={showSmiteLevelPopover}
+            onclick={() => {
+              cancelLongPress();
+              if (didOpenPopover) {
+                didOpenPopover = false;
+                return;
+              }
+            }}
+            onpointerdown={() => startLongPress('smite-level')}
+            onpointerup={() => cancelLongPress()}
+            onpointerleave={() => cancelLongPress()}
+            aria-label="L{sanctuarySlotLevel}"
+          >
+            <span class="choice-panel__sanctuary-level">L{sanctuarySlotLevel}</span>
+          </button>
+          {#if showSmiteLevelPopover}
+            <div class="roll-popover roll-popover--smite" role="menu" aria-label="Spell slot level">
+              {#each smiteLevelOptions as opt (opt.level)}
+                <button
+                  type="button"
+                  class="roll-popover__item"
+                  class:roll-popover__item--dimmed={opt.remaining === 0}
+                  role="menuitem"
+                  disabled={opt.remaining === 0}
+                  onclick={() => selectSanctuaryLevel(opt.level)}
+                >
+                  L{opt.level}
+                  {#if opt.remaining === 0}
+                    <span class="roll-popover__item-note"> (0 left)</span>
+                  {/if}
+                </button>
+              {/each}
+            </div>
+          {/if}
+          {#if sanctuarySaveDC !== undefined}
+            <span class="effect-panel__save">WIS Save DC {sanctuarySaveDC}</span>
+          {/if}
+        </div>
+      {/if}
     </div>
     {#if visibleFollowups.length > 0}
       <div
@@ -1327,6 +1388,16 @@
           <span class="choice-panel__description">
             {$t('rule.class-paladin-oath-redemption-level3.emissary-of-peace.description')}
           </span>
+        </div>
+      {/if}
+      {#if uiModel === 'sanctuary' && sanctuarySlotLevel !== undefined}
+        <div class="choice-panel__model choice-panel__attack">
+          <span class="attack-chip">
+            <span class="choice-panel__sanctuary-level">L{sanctuarySlotLevel}</span>
+          </span>
+          {#if sanctuarySaveDC !== undefined}
+            <span class="effect-panel__save">WIS Save DC {sanctuarySaveDC}</span>
+          {/if}
         </div>
       {/if}
     </div>
@@ -1834,6 +1905,19 @@
     font-size: var(--font-size-xs);
     color: var(--md-sys-color-on-surface-variant);
     margin-left: var(--spacing-xs);
+  }
+
+  .choice-panel__sanctuary-level {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .effect-panel__save {
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface-variant);
   }
 
   .roll-popover__item--dimmed {

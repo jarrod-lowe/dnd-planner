@@ -117,6 +117,7 @@
       {#snippet effects()}
         <EffectsColumn
           effects={currentEffects}
+          facts={playStore.state.facts}
           committedCount={playStore.state.effects.length}
           onRemoveEffect={handleRemoveEffect}
         />

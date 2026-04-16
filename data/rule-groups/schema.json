@@ -147,6 +147,22 @@
               "items": {
                 "$ref": "#/definitions/followup"
               }
+            },
+            "countDown": {
+              "type": "number",
+              "description": "Remaining rounds for a timed effect (decremented each end turn)"
+            },
+            "duration": {
+              "type": "number",
+              "description": "Total rounds for a timed effect (constant)"
+            },
+            "saveType": {
+              "type": "string",
+              "description": "Ability score type for saving throw (e.g., 'WIS')"
+            },
+            "saveFact": {
+              "type": "string",
+              "description": "Fact path for the save DC value (e.g., 'spellcasting.saveDC')"
             }
           },
           "additionalProperties": false

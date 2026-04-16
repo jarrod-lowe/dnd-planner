@@ -55,6 +55,20 @@ ruleGroups:
             source:
               number: 2
 
+      # Spellcasting ability modifier (Charisma for Paladins)
+      - id: paladin-level1-spellcasting-modifier
+        phase: normal
+        after:
+          - group: __planned__
+        group:
+          - spellcasting-modifier-set
+        activities:
+          - type: numberIncrement
+            target:
+              fact: spellcasting.modifier
+            source:
+              fact: cha.modifier
+
       # Spell Slots - Level 1 Paladin gets 2 level 1 slots
       - id: paladin-level1-spell-slots
         phase: early
