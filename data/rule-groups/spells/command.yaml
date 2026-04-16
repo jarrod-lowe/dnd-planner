@@ -1,0 +1,408 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: spell-command
+    requires:
+      - spellcasting
+    translations:
+      en:
+        name: Command
+        description: >-
+          Level 1 action spell (60ft, V only). Target 1 creature per spell level.
+          WIS save. Instant duration.
+        keywords: [spell, level1, command, action, enchantment, instant]
+      en-x-tlh:
+        name: ra'
+        description: >-
+          ra' level 1 action. wa' DIvI' ra'. WIS ra'. DIch.
+        keywords: [spell, level1, ra', action]
+    rules:
+      # Compute eligible command slot count (levels 1-5)
+      - id: compute-command-eligible-slots
+        phase: normal
+        group:
+          - command-slots-computed
+        activities:
+          - type: numberSum
+            target:
+              fact: command.eligibleSlotsRemaining
+            sources:
+              - fact: spellcasting.slots.level1.remaining
+              - fact: spellcasting.slots.level2.remaining
+              - fact: spellcasting.slots.level3.remaining
+              - fact: spellcasting.slots.level4.remaining
+              - fact: spellcasting.slots.level5.remaining
+
+      # Compute lowest available slot level
+      # Cascade from high to low so the lowest available level overwrites
+      - id: compute-command-lowest-slot
+        phase: normal
+        group:
+          - command-slots-computed
+        activities:
+          - type: numberSet
+            target:
+              fact: command.lowestAvailableSlotLevel
+            source:
+              number: 5
+            when:
+              fact: spellcasting.slots.level5.remaining
+              operator: greaterThan
+              value: 0
+          - type: numberSet
+            target:
+              fact: command.lowestAvailableSlotLevel
+            source:
+              number: 4
+            when:
+              fact: spellcasting.slots.level4.remaining
+              operator: greaterThan
+              value: 0
+          - type: numberSet
+            target:
+              fact: command.lowestAvailableSlotLevel
+            source:
+              number: 3
+            when:
+              fact: spellcasting.slots.level3.remaining
+              operator: greaterThan
+              value: 0
+          - type: numberSet
+            target:
+              fact: command.lowestAvailableSlotLevel
+            source:
+              number: 2
+            when:
+              fact: spellcasting.slots.level2.remaining
+              operator: greaterThan
+              value: 0
+          - type: numberSet
+            target:
+              fact: command.lowestAvailableSlotLevel
+            source:
+              number: 1
+            when:
+              fact: spellcasting.slots.level1.remaining
+              operator: greaterThan
+              value: 0
+
+      # Offer Command (action spell)
+      - id: offer-command
+        after:
+          - group: action
+          - group: spellcasting
+          - group: __planned__
+          - group: command-slots-computed
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: actions.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-command.offer-command.no_action
+                    severity: error
+              - condition:
+                  fact: spellcasting.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-command.offer-command.no_spellcasting
+                    severity: error
+              - condition:
+                  fact: command.eligibleSlotsRemaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-command.offer-command.no_slots
+                    severity: error
+            rule:
+              id: cast-command
+              group:
+                - __planned__
+                - action
+                - spellcasting
+              ui:
+                model: spell-save
+                section: action-spell
+                name: rule.spell-command.offer-command.name
+                showDC: true
+                saveType: WIS
+                saveFact: spellcasting.saveDC
+              vars:
+                slotLevel:
+                  capture: true
+                  default:
+                    fact: command.lowestAvailableSlotLevel
+              activities:
+                # Consume action
+                - type: numberIncrement
+                  target:
+                    fact: actions.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                # Consume spellcasting resource
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-command.offer-command.no_action
+                  when:
+                    fact: actions.remaining
+                    operator: lessThan
+                    value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-command.offer-command.no_spellcasting
+                  when:
+                    fact: spellcasting.remaining
+                    operator: lessThan
+                    value: 0
+                # Bridge var to fact for conditional slot consumption
+                - type: numberSet
+                  target:
+                    fact: command.selectedLevel
+                  source:
+                    var: slotLevel
+                # Consume L1 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level1.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    fact: command.selectedLevel
+                    operator: equals
+                    value: 1
+                # Consume L2 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level2.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    fact: command.selectedLevel
+                    operator: equals
+                    value: 2
+                # Consume L3 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level3.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    fact: command.selectedLevel
+                    operator: equals
+                    value: 3
+                # Consume L4 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level4.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    fact: command.selectedLevel
+                    operator: equals
+                    value: 4
+                # Consume L5 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level5.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    fact: command.selectedLevel
+                    operator: equals
+                    value: 5
+                # Track slot consumption errors
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-command.offer-command.no_slots
+                  when:
+                    fact: spellcasting.slots.level1.remaining
+                    operator: lessThan
+                    value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-command.offer-command.no_slots
+                  when:
+                    fact: spellcasting.slots.level2.remaining
+                    operator: lessThan
+                    value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-command.offer-command.no_slots
+                  when:
+                    fact: spellcasting.slots.level3.remaining
+                    operator: lessThan
+                    value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-command.offer-command.no_slots
+                  when:
+                    fact: spellcasting.slots.level4.remaining
+                    operator: lessThan
+                    value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-command.offer-command.no_slots
+                  when:
+                    fact: spellcasting.slots.level5.remaining
+                    operator: lessThan
+                    value: 0
+                # Persist L1 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-command-slot-l1
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level1.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          fact: rest.long
+                          operator: equals
+                          value: 0
+                  when:
+                    fact: command.selectedLevel
+                    operator: equals
+                    value: 1
+                # Persist L2 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-command-slot-l2
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level2.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          fact: rest.long
+                          operator: equals
+                          value: 0
+                  when:
+                    fact: command.selectedLevel
+                    operator: equals
+                    value: 2
+                # Persist L3 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-command-slot-l3
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level3.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          fact: rest.long
+                          operator: equals
+                          value: 0
+                  when:
+                    fact: command.selectedLevel
+                    operator: equals
+                    value: 3
+                # Persist L4 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-command-slot-l4
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level4.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          fact: rest.long
+                          operator: equals
+                          value: 0
+                  when:
+                    fact: command.selectedLevel
+                    operator: equals
+                    value: 4
+                # Persist L5 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-command-slot-l5
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level5.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          fact: rest.long
+                          operator: equals
+                          value: 0
+                  when:
+                    fact: command.selectedLevel
+                    operator: equals
+                    value: 5

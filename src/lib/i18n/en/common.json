@@ -1,5 +1,13 @@
 {
   "rule": {
+    "spell-command": {
+      "offer-command": {
+        "name": "Command",
+        "no_action": "No action available",
+        "no_spellcasting": "Already cast a spell this turn",
+        "no_slots": "No spell slots remaining"
+      }
+    },
     "spell-sanctuary": {
       "offer-sanctuary": {
         "name": "Sanctuary",

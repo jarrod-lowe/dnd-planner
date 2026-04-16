@@ -348,6 +348,8 @@ The architecture supports:
 - rest.any?
 - Make activities and effects when's support multiple conditions, like base rules do
 - Test for rulegroup requires that don't exist
+  - Check rulegroup requires for cycles
+  - Also check they are correct
 
 ### Low Priority
 
