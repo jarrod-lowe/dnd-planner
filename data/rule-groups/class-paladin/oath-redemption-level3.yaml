@@ -5,6 +5,7 @@ ruleGroups:
       - class-paladin-level3
       - class-paladin-divinity
       - spell-sanctuary
+      - spell-sleep
     translations:
       en:
         name: Oath of Redemption Level 3

@@ -312,17 +312,17 @@
   const smiteTotalDice = $derived((smiteDieCount ?? 0) + (smiteFiendUndead ? 1 : 0));
   let smiteRollResult: number | null = $state(null);
 
-  // Sanctuary model specific values
-  const sanctuarySlotLevel = $derived(
-    uiModel === 'sanctuary' ? resolveVarDefault('slotLevel') : undefined
+  // spell-save model specific values
+  const spellSaveSlotLevel = $derived(
+    uiModel === 'spell-save' ? resolveVarDefault('slotLevel') : undefined
   );
-  const sanctuarySaveDC = $derived(
-    uiModel === 'sanctuary' ? (facts['spellcasting.saveDC'] as number | undefined) : undefined
+  const spellSaveSaveDC = $derived(
+    uiModel === 'spell-save' ? (facts['spellcasting.saveDC'] as number | undefined) : undefined
   );
 
   // Smite level options: slot levels 1-5 with total/remaining from facts
   const smiteLevelOptions = $derived.by(() => {
-    if (uiModel !== 'smite' && uiModel !== 'sanctuary') return [];
+    if (uiModel !== 'smite' && uiModel !== 'spell-save') return [];
     const options: { level: number; total: number; remaining: number }[] = [];
     for (let level = 1; level <= 5; level++) {
       const total = facts[`spellcasting.slots.level${level}.total`] ?? 0;
@@ -449,7 +449,7 @@
     }
   }
 
-  function selectSanctuaryLevel(level: number): void {
+  function selectSpellSaveLevel(level: number): void {
     activePopover = null;
     if (onSelectionChange) {
       onSelectionChange({ slotLevel: level });
@@ -1158,7 +1158,7 @@
           </span>
         </div>
       {/if}
-      {#if uiModel === 'sanctuary' && sanctuarySlotLevel !== undefined}
+      {#if uiModel === 'spell-save' && spellSaveSlotLevel !== undefined}
         <div class="choice-panel__model choice-panel__attack">
           <button
             type="button"
@@ -1176,9 +1176,9 @@
             onpointerdown={() => startLongPress('smite-level')}
             onpointerup={() => cancelLongPress()}
             onpointerleave={() => cancelLongPress()}
-            aria-label="L{sanctuarySlotLevel}"
+            aria-label="L{spellSaveSlotLevel}"
           >
-            <span class="choice-panel__sanctuary-level">L{sanctuarySlotLevel}</span>
+            <span class="choice-panel__spell-save-level">L{spellSaveSlotLevel}</span>
           </button>
           {#if showSmiteLevelPopover}
             <div class="roll-popover roll-popover--smite" role="menu" aria-label="Spell slot level">
@@ -1189,7 +1189,7 @@
                   class:roll-popover__item--dimmed={opt.remaining === 0}
                   role="menuitem"
                   disabled={opt.remaining === 0}
-                  onclick={() => selectSanctuaryLevel(opt.level)}
+                  onclick={() => selectSpellSaveLevel(opt.level)}
                 >
                   L{opt.level}
                   {#if opt.remaining === 0}
@@ -1199,8 +1199,8 @@
               {/each}
             </div>
           {/if}
-          {#if sanctuarySaveDC !== undefined}
-            <span class="effect-panel__save">WIS Save DC {sanctuarySaveDC}</span>
+          {#if spellSaveSaveDC !== undefined}
+            <span class="effect-panel__save">WIS Save DC {spellSaveSaveDC}</span>
           {/if}
         </div>
       {/if}
@@ -1390,13 +1390,13 @@
           </span>
         </div>
       {/if}
-      {#if uiModel === 'sanctuary' && sanctuarySlotLevel !== undefined}
+      {#if uiModel === 'spell-save' && spellSaveSlotLevel !== undefined}
         <div class="choice-panel__model choice-panel__attack">
           <span class="attack-chip">
-            <span class="choice-panel__sanctuary-level">L{sanctuarySlotLevel}</span>
+            <span class="choice-panel__spell-save-level">L{spellSaveSlotLevel}</span>
           </span>
-          {#if sanctuarySaveDC !== undefined}
-            <span class="effect-panel__save">WIS Save DC {sanctuarySaveDC}</span>
+          {#if spellSaveSaveDC !== undefined}
+            <span class="effect-panel__save">WIS Save DC {spellSaveSaveDC}</span>
           {/if}
         </div>
       {/if}
@@ -1907,7 +1907,7 @@
     margin-left: var(--spacing-xs);
   }
 
-  .choice-panel__sanctuary-level {
+  .choice-panel__spell-save-level {
     font-size: var(--font-size-sm);
     font-weight: 600;
     color: var(--md-sys-color-on-surface-variant);

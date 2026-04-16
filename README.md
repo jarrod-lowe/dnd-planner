@@ -343,11 +343,11 @@ The architecture supports:
 - Remove Turn counter
 - Use and restoration of hit die
 - Paladin Oath of Redemption Level 3
-  - Sleep Spell
   - Better tests for Divinity Points behaviour including double use of Divinity-using actions (bug?)
 - HP addition after level 1
 - rest.any?
 - Make activities and effects when's support multiple conditions, like base rules do
+- Test for rulegroup requires that don't exist
 
 ### Low Priority
 

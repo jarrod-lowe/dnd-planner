@@ -3,6 +3,7 @@ ruleGroups:
   - id: class-paladin-level2
     requires:
       - class-paladin-level1
+      - class-paladin-paladin-smite
     translations:
       en:
         name: Paladin Level 2

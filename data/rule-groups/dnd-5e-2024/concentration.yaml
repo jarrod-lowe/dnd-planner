@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: concentration
+    translations:
+      en:
+        name: Concentration
+        description: Tracks concentration state — only one concentration spell can be active at a time.
+        keywords: [concentration, spell, resource]
+      en-x-tlh:
+        name: buQ
+        description: buQ DIvI' DIch DIvI' DIch DIvI' naQ.
+        keywords: [buQ, DIvI', laH]
+    rules:
+      # Concentration resource - set max (1 slot, binary)
+      - id: concentration-max
+        phase: early
+        ui:
+          stats:
+            - name: play.stats.concentration
+              type: usedMax
+              total: concentration.max
+              remaining: concentration.remaining
+              section: magic
+        activities:
+          - type: numberSet
+            source:
+              number: 1
+            target:
+              fact: concentration.max
+
+      # Reset concentration remaining each turn
+      - id: concentration-reset
+        phase: early
+        after:
+          - group: concentration-max
+        activities:
+          - type: numberCopy
+            source:
+              fact: concentration.max
+            target:
+              fact: concentration.remaining
