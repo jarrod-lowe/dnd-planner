@@ -26,6 +26,30 @@ ruleGroups:
             source:
               number: 1
 
+      # HP - Level 2 Paladin adds average d10 (6) + captured CON modifier at level-up time
+      - id: paladin-level2-hp
+        phase: normal
+        after:
+          - group: hp-total
+        group:
+          - hp-set
+        vars:
+          conAtLevel:
+            capture: true
+            default:
+              fact: con.modifier
+        activities:
+          - type: numberIncrement
+            target:
+              fact: hp.max
+            source:
+              number: 6
+          - type: numberIncrement
+            target:
+              fact: hp.max
+            source:
+              var: conAtLevel
+
       # Lay on Hands Pool - Level 2 Paladin adds 5 more points
       - id: paladin-level2-lay-on-hands-pool
         phase: early

@@ -26,6 +26,30 @@ ruleGroups:
             source:
               number: 1
 
+      # HP - Level 3 Paladin adds average d10 (6) + captured CON modifier at level-up time
+      - id: paladin-level3-hp
+        phase: normal
+        after:
+          - group: hp-total
+        group:
+          - hp-set
+        vars:
+          conAtLevel:
+            capture: true
+            default:
+              fact: con.modifier
+        activities:
+          - type: numberIncrement
+            target:
+              fact: hp.max
+            source:
+              number: 6
+          - type: numberIncrement
+            target:
+              fact: hp.max
+            source:
+              var: conAtLevel
+
       # Spell Slots - Level 3 Paladin adds 1 level 1 slot
       - id: paladin-level3-spell-slots
         phase: early
