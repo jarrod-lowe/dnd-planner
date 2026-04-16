@@ -24,6 +24,15 @@
         "no_slots": "No spell slots remaining"
       }
     },
+    "spell-thunderous-smite": {
+      "offer-thunderous-smite": {
+        "name": "Thunderous Smite",
+        "no_bonus_action": "No bonus action available",
+        "no_attack": "You must take the Attack action first",
+        "no_slots": "No spell slots remaining",
+        "no_spellcasting": "Already cast a spell this turn"
+      }
+    },
     "spell-protection-from-evil-and-good": {
       "offer-protection-from-evil-and-good": {
         "name": "Protection from Evil and Good",

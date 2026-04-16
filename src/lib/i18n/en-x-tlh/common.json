@@ -24,6 +24,15 @@
         "no_slots": "mugh laH tu'lu'be'"
       }
     },
+    "spell-thunderous-smite": {
+      "offer-thunderous-smite": {
+        "name": "raQ muHta",
+        "no_bonus_action": "Quv DIvI' tu'lu'be'",
+        "no_attack": "DIch nuH DIvI' tu'lu'be'",
+        "no_slots": "mugh laH tu'lu'be'",
+        "no_spellcasting": "mugh DIvI' tu'lu'be'"
+      }
+    },
     "spell-protection-from-evil-and-good": {
       "offer-protection-from-evil-and-good": {
         "name": "mIgh Do' Ha'DIbaH je",

@@ -350,6 +350,7 @@ The architecture supports:
 - Test for rulegroup requires that don't exist
   - Check rulegroup requires for cycles
   - Also check they are correct
+- Thunderous Smite & Divine Smite: Should depend specifically on MELEE or UNARMED attacks
 
 ### Low Priority
 
