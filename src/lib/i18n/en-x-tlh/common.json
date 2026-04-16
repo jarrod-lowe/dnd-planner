@@ -1,5 +1,13 @@
 {
   "rule": {
+    "spell-command": {
+      "offer-command": {
+        "name": "ra'",
+        "no_action": "DIvI' tu'lu'be'",
+        "no_spellcasting": "mugh DIvI' tu'lu'be'",
+        "no_slots": "mugh laH tu'lu'be'"
+      }
+    },
     "spell-sanctuary": {
       "offer-sanctuary": {
         "name": "chal",
