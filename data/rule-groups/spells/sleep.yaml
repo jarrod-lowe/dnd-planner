@@ -125,6 +125,7 @@ ruleGroups:
                 model: spell-save
                 section: action-spell
                 name: rule.spell-sleep.offer-sleep.name
+                showDC: true
               vars:
                 slotLevel:
                   capture: true

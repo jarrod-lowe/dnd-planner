@@ -163,6 +163,10 @@
             "saveFact": {
               "type": "string",
               "description": "Fact path for the save DC value (e.g., 'spellcasting.saveDC')"
+            },
+            "showDC": {
+              "type": "boolean",
+              "description": "Show the save DC display for spell-save model"
             }
           },
           "additionalProperties": false

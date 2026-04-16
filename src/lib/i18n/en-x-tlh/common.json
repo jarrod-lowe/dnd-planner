@@ -16,6 +16,18 @@
         "no_slots": "mugh laH tu'lu'be'"
       }
     },
+    "spell-bless": {
+      "offer-bless": {
+        "name": "DIch",
+        "no_action": "DIvI' tu'lu'be'",
+        "no_spellcasting": "mugh DIvI' tu'lu'be'",
+        "already_concentrating": "buQ DIvI'",
+        "no_slots": "mugh laH tu'lu'be'"
+      },
+      "effect-bless": {
+        "name": "DIch"
+      }
+    },
     "spell-create-and-destroy-water": {
       "cast-create-and-destroy-water": {
         "name": "bIQ chenmoH 'ej HochHom"

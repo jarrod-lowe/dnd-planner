@@ -11,7 +11,8 @@ const createSanctuaryEntry = (): AvailableRuleEntry => ({
     ui: {
       model: 'spell-save',
       section: 'bonus-action-spell',
-      name: 'rule.spell-sanctuary.offer-sanctuary.name'
+      name: 'rule.spell-sanctuary.offer-sanctuary.name',
+      showDC: true
     },
     vars: {
       slotLevel: { capture: true, default: { fact: 'sanctuary.lowestAvailableSlotLevel' } }
@@ -82,5 +83,46 @@ describe('ChoicePanel - sanctuary model', () => {
     });
 
     expect(container.textContent).toContain('WIS Save DC 13');
+  });
+});
+
+describe('ChoicePanel - bless model (spell-save without showDC)', () => {
+  const createBlessEntry = (editable = false): AvailableRuleEntry => ({
+    rule: {
+      id: 'cast-bless',
+      description: 'Bless',
+      activities: [],
+      ui: {
+        model: 'spell-save',
+        section: 'action-spell',
+        name: 'rule.spell-bless.offer-bless.name'
+        // Note: no showDC — Bless has no save, so DC should NOT display
+      },
+      vars: {
+        slotLevel: { capture: true, default: { fact: 'bless.lowestAvailableSlotLevel' } }
+      },
+      selections: { slotLevel: 1 }
+    } as Rule,
+    legal: true,
+    applicable: editable,
+    diagnostics: []
+  });
+
+  it('does not show save DC in read-only view when showDC is absent', () => {
+    const entry = createBlessEntry();
+    const { container } = render(ChoicePanel, {
+      props: { entry, editable: false, onTap: vi.fn(), facts: factsWithSlots }
+    });
+
+    expect(container.textContent).not.toContain('WIS Save DC');
+  });
+
+  it('does not show save DC in editable view when showDC is absent', () => {
+    const entry = createBlessEntry(true);
+    const { container } = render(ChoicePanel, {
+      props: { entry, editable: true, facts: factsWithSlots, onSelectionChange: vi.fn() }
+    });
+
+    expect(container.textContent).not.toContain('WIS Save DC');
   });
 });
