@@ -1,30 +1,31 @@
 # yaml-language-server: $schema=../schema.json
 ruleGroups:
-  - id: spell-sanctuary
+  - id: spell-sleep
     requires:
       - spellcasting
+      - concentration
     translations:
       en:
-        name: Sanctuary
+        name: Sleep
         description: >-
-          Level 1 bonus action spell. Target must make a WIS save or be unable
-          to attack or cast harmful spells. Lasts 1 minute (10 rounds).
-        keywords: [spell, level1, sanctuary, bonus action, abjuration]
+          Level 1 action spell (60ft). Target must make a WIS save or fall
+          unconscious. Concentration, up to 1 minute (10 rounds).
+        keywords: [spell, level1, sleep, action, enchantment, concentration]
       en-x-tlh:
-        name: chal
+        name: Qong
         description: >-
-          DIch level 1 bonus action. DIch chal DIvI' DIvI' DIvI'.
-        keywords: [spell, level1, chal, bonus action]
+          DIch level 1 action. DIch Qong DIvI' WIS DIch. buQ, 1 rep.
+        keywords: [spell, level1, Qong, action, buQ]
     rules:
-      # Compute eligible sanctuary slot count (levels 1-5)
-      - id: compute-sanctuary-eligible-slots
+      # Compute eligible sleep slot count (levels 1-5)
+      - id: compute-sleep-eligible-slots
         phase: normal
         group:
-          - sanctuary-slots-computed
+          - sleep-slots-computed
         activities:
           - type: numberSum
             target:
-              fact: sanctuary.eligibleSlotsRemaining
+              fact: sleep.eligibleSlotsRemaining
             sources:
               - fact: spellcasting.slots.level1.remaining
               - fact: spellcasting.slots.level2.remaining
@@ -34,14 +35,14 @@ ruleGroups:
 
       # Compute lowest available slot level
       # Cascade from high to low so the lowest available level overwrites
-      - id: compute-sanctuary-lowest-slot
+      - id: compute-sleep-lowest-slot
         phase: normal
         group:
-          - sanctuary-slots-computed
+          - sleep-slots-computed
         activities:
           - type: numberSet
             target:
-              fact: sanctuary.lowestAvailableSlotLevel
+              fact: sleep.lowestAvailableSlotLevel
             source:
               number: 5
             when:
@@ -50,7 +51,7 @@ ruleGroups:
               value: 0
           - type: numberSet
             target:
-              fact: sanctuary.lowestAvailableSlotLevel
+              fact: sleep.lowestAvailableSlotLevel
             source:
               number: 4
             when:
@@ -59,7 +60,7 @@ ruleGroups:
               value: 0
           - type: numberSet
             target:
-              fact: sanctuary.lowestAvailableSlotLevel
+              fact: sleep.lowestAvailableSlotLevel
             source:
               number: 3
             when:
@@ -68,7 +69,7 @@ ruleGroups:
               value: 0
           - type: numberSet
             target:
-              fact: sanctuary.lowestAvailableSlotLevel
+              fact: sleep.lowestAvailableSlotLevel
             source:
               number: 2
             when:
@@ -77,7 +78,7 @@ ruleGroups:
               value: 0
           - type: numberSet
             target:
-              fact: sanctuary.lowestAvailableSlotLevel
+              fact: sleep.lowestAvailableSlotLevel
             source:
               number: 1
             when:
@@ -85,62 +86,62 @@ ruleGroups:
               operator: greaterThan
               value: 0
 
-      # Offer Sanctuary (bonus action)
-      - id: offer-sanctuary
+      # Offer Sleep (action spell)
+      - id: offer-sleep
         after:
           - group: __planned__
           - group: spellcasting
-          - group: sanctuary-slots-computed
+          - group: sleep-slots-computed
         activities:
           - type: offerRule
             legalWhen:
-              - condition:
-                  fact: bonusActions.remaining
-                  operator: greaterThan
-                  value: 0
-                illegalDiagnostics:
-                  - code: rule.spell-sanctuary.offer-sanctuary.no_bonus_action
-                    severity: error
-              - condition:
-                  fact: sanctuary.eligibleSlotsRemaining
-                  operator: greaterThan
-                  value: 0
-                illegalDiagnostics:
-                  - code: rule.spell-sanctuary.offer-sanctuary.no_slots
-                    severity: error
               - condition:
                   fact: spellcasting.remaining
                   operator: greaterThan
                   value: 0
                 illegalDiagnostics:
-                  - code: rule.spell-sanctuary.offer-sanctuary.no_spellcasting
+                  - code: rule.spell-sleep.offer-sleep.no_spellcasting
+                    severity: error
+              - condition:
+                  fact: concentration.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-sleep.offer-sleep.already_concentrating
+                    severity: error
+              - condition:
+                  fact: sleep.eligibleSlotsRemaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-sleep.offer-sleep.no_slots
                     severity: error
             rule:
-              id: cast-sanctuary
+              id: cast-sleep
               group:
                 - __planned__
                 - spellcasting
               ui:
                 model: spell-save
-                section: bonus-action-spell
-                name: rule.spell-sanctuary.offer-sanctuary.name
+                section: action-spell
+                name: rule.spell-sleep.offer-sleep.name
               vars:
                 slotLevel:
                   capture: true
                   default:
-                    fact: sanctuary.lowestAvailableSlotLevel
+                    fact: sleep.lowestAvailableSlotLevel
               activities:
-                # Consume bonus action
-                - type: numberIncrement
-                  target:
-                    fact: bonusActions.remaining
-                  source:
-                    number: 1
-                  subtract: true
                 # Consume spellcasting resource
                 - type: numberIncrement
                   target:
                     fact: spellcasting.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                # Consume concentration
+                - type: numberIncrement
+                  target:
+                    fact: concentration.remaining
                   source:
                     number: 1
                   subtract: true
@@ -150,16 +151,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.spell-sanctuary.offer-sanctuary.no_bonus_action
-                  when:
-                    fact: bonusActions.remaining
-                    operator: lessThan
-                    value: 0
-                - type: setAdd
-                  target:
-                    var: errors
-                  source:
-                    string: rule.spell-sanctuary.offer-sanctuary.no_spellcasting
+                    string: rule.spell-sleep.offer-sleep.no_spellcasting
                   when:
                     fact: spellcasting.remaining
                     operator: lessThan
@@ -167,7 +159,7 @@ ruleGroups:
                 # Bridge var to fact for conditional slot consumption
                 - type: numberSet
                   target:
-                    fact: sanctuary.selectedLevel
+                    fact: sleep.selectedLevel
                   source:
                     var: slotLevel
                 # Consume L1 slot
@@ -178,7 +170,7 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    fact: sanctuary.selectedLevel
+                    fact: sleep.selectedLevel
                     operator: equals
                     value: 1
                 # Consume L2 slot
@@ -189,7 +181,7 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    fact: sanctuary.selectedLevel
+                    fact: sleep.selectedLevel
                     operator: equals
                     value: 2
                 # Consume L3 slot
@@ -200,7 +192,7 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    fact: sanctuary.selectedLevel
+                    fact: sleep.selectedLevel
                     operator: equals
                     value: 3
                 # Consume L4 slot
@@ -211,7 +203,7 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    fact: sanctuary.selectedLevel
+                    fact: sleep.selectedLevel
                     operator: equals
                     value: 4
                 # Consume L5 slot
@@ -222,7 +214,7 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    fact: sanctuary.selectedLevel
+                    fact: sleep.selectedLevel
                     operator: equals
                     value: 5
                 # Track slot consumption errors
@@ -230,7 +222,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.spell-sanctuary.offer-sanctuary.no_slots
+                    string: rule.spell-sleep.offer-sleep.no_slots
                   when:
                     fact: spellcasting.slots.level1.remaining
                     operator: lessThan
@@ -239,7 +231,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.spell-sanctuary.offer-sanctuary.no_slots
+                    string: rule.spell-sleep.offer-sleep.no_slots
                   when:
                     fact: spellcasting.slots.level2.remaining
                     operator: lessThan
@@ -248,7 +240,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.spell-sanctuary.offer-sanctuary.no_slots
+                    string: rule.spell-sleep.offer-sleep.no_slots
                   when:
                     fact: spellcasting.slots.level3.remaining
                     operator: lessThan
@@ -257,7 +249,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.spell-sanctuary.offer-sanctuary.no_slots
+                    string: rule.spell-sleep.offer-sleep.no_slots
                   when:
                     fact: spellcasting.slots.level4.remaining
                     operator: lessThan
@@ -266,7 +258,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.spell-sanctuary.offer-sanctuary.no_slots
+                    string: rule.spell-sleep.offer-sleep.no_slots
                   when:
                     fact: spellcasting.slots.level5.remaining
                     operator: lessThan
@@ -274,7 +266,7 @@ ruleGroups:
                 # Persist L1 slot consumption across turns
                 - type: advertiseEffect
                   rule:
-                    id: effect-sanctuary-slot-l1
+                    id: effect-sleep-slot-l1
                     phase: early
                     after:
                       - group: spellcasting-slots-set
@@ -294,13 +286,13 @@ ruleGroups:
                           operator: equals
                           value: 0
                   when:
-                    fact: sanctuary.selectedLevel
+                    fact: sleep.selectedLevel
                     operator: equals
                     value: 1
                 # Persist L2 slot consumption across turns
                 - type: advertiseEffect
                   rule:
-                    id: effect-sanctuary-slot-l2
+                    id: effect-sleep-slot-l2
                     phase: early
                     after:
                       - group: spellcasting-slots-set
@@ -320,13 +312,13 @@ ruleGroups:
                           operator: equals
                           value: 0
                   when:
-                    fact: sanctuary.selectedLevel
+                    fact: sleep.selectedLevel
                     operator: equals
                     value: 2
                 # Persist L3 slot consumption across turns
                 - type: advertiseEffect
                   rule:
-                    id: effect-sanctuary-slot-l3
+                    id: effect-sleep-slot-l3
                     phase: early
                     after:
                       - group: spellcasting-slots-set
@@ -346,13 +338,13 @@ ruleGroups:
                           operator: equals
                           value: 0
                   when:
-                    fact: sanctuary.selectedLevel
+                    fact: sleep.selectedLevel
                     operator: equals
                     value: 3
                 # Persist L4 slot consumption across turns
                 - type: advertiseEffect
                   rule:
-                    id: effect-sanctuary-slot-l4
+                    id: effect-sleep-slot-l4
                     phase: early
                     after:
                       - group: spellcasting-slots-set
@@ -372,13 +364,13 @@ ruleGroups:
                           operator: equals
                           value: 0
                   when:
-                    fact: sanctuary.selectedLevel
+                    fact: sleep.selectedLevel
                     operator: equals
                     value: 4
                 # Persist L5 slot consumption across turns
                 - type: advertiseEffect
                   rule:
-                    id: effect-sanctuary-slot-l5
+                    id: effect-sleep-slot-l5
                     phase: early
                     after:
                       - group: spellcasting-slots-set
@@ -398,13 +390,13 @@ ruleGroups:
                           operator: equals
                           value: 0
                   when:
-                    fact: sanctuary.selectedLevel
+                    fact: sleep.selectedLevel
                     operator: equals
                     value: 5
-                # Create persistent Sanctuary effect (10 rounds, WIS save)
+                # Create persistent Sleep effect (10 rounds, WIS save, concentration)
                 - type: advertiseEffect
                   rule:
-                    id: effect-sanctuary
+                    id: effect-sleep
                     phase: early
                     after:
                       - group: spellcasting-slots-set
@@ -423,5 +415,11 @@ ruleGroups:
                       saveType: WIS
                       saveFact: spellcasting.saveDC
                     activities:
+                      - type: numberIncrement
+                        target:
+                          fact: concentration.remaining
+                        source:
+                          number: 1
+                        subtract: true
                       - type: advertiseEffect
                         self: true

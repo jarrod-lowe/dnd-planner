@@ -1,0 +1,53 @@
+name: 'Sleep Slot Selection'
+description: 'Sleep can be cast using different slot levels. Higher levels provide no extra benefit.'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/concentration
+  - dnd-5e-2024/turn-rest
+  - class-paladin/class-paladin-level1
+  - spells/spell-sleep
+initialEffects:
+  - id: test-grant-level2-slot
+    phase: early
+    group:
+      - spellcasting-slots-set
+    activities:
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.total
+        source:
+          number: 1
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.remaining
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+steps:
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.slots.level1.remaining: 2
+          spellcasting.slots.level2.remaining: 1
+  # Cast Sleep using default (L1) slot
+  - addOffer:
+      id: cast-sleep
+      assert:
+        facts:
+          spellcasting.slots.level1.remaining: 1
+          spellcasting.slots.level2.remaining: 1
+  - endTurn: {}
+  # Turn 2: Cast Sleep using L2 slot
+  - addOffer:
+      id: cast-sleep
+      selections:
+        slotLevel: 2
+      assert:
+        facts:
+          spellcasting.slots.level1.remaining: 1
+          spellcasting.slots.level2.remaining: 0

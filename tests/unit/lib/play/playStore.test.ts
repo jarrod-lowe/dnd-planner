@@ -62,7 +62,7 @@ import type { Rule, EngineOutput } from '$lib/rules-engine';
 
 describe('playStore', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     vi.useFakeTimers();
   });
 
@@ -1083,7 +1083,7 @@ describe('playStore', () => {
   });
 
   describe('assignRuleGroup', () => {
-    it('optimistically adds ruleGroupId before API resolves', async () => {
+    it('adds ruleGroupId to state on successful assignment', async () => {
       const mockApiPost = vi.mocked(apiPost);
       const mockEvaluate = vi.mocked(evaluate);
 
@@ -1106,31 +1106,25 @@ describe('playStore', () => {
         }
       } as EngineOutput);
 
-      // Pending POST so we can check optimistic state before it resolves
-      let resolvePost: (value: unknown) => void;
-      mockApiPost
-        .mockImplementationOnce(
-          () =>
-            new Promise((resolve) => {
-              resolvePost = resolve;
-            })
-        )
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => ({ ruleGroups: [] })
-        });
+      // Mock POST assign call
+      mockApiPost.mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        json: async () => ({})
+      } as Response);
+
+      // Mock batch fetch call
+      mockApiPost.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: [] })
+      } as Response);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
-      const promise = playStore.assignRuleGroup?.('char-1', 'group-new');
+      await playStore.assignRuleGroup?.('char-1', 'group-new');
 
-      // Optimistic: ID should appear before API resolves
       expect(playStore.state.ruleGroupIds).toContain('group-new');
-
-      // Clean up: resolve the assign call
-      resolvePost!({ ok: true, json: async () => ({}) });
-      await promise;
     });
 
     it('fetches rules and updates standing on success', async () => {

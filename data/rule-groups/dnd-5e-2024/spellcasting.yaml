@@ -1,6 +1,8 @@
 # yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: spellcasting
+    requires:
+      - concentration
     translations:
       en:
         name: Spellcasting

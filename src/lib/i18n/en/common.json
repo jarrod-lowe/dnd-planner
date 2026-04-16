@@ -8,6 +8,14 @@
         "no_spellcasting": "Already cast a spell this turn"
       }
     },
+    "spell-sleep": {
+      "offer-sleep": {
+        "name": "Sleep",
+        "no_spellcasting": "Already cast a spell this turn",
+        "already_concentrating": "Already concentrating",
+        "no_slots": "No spell slots remaining"
+      }
+    },
     "spell-create-and-destroy-water": {
       "cast-create-and-destroy-water": {
         "name": "Create and Destroy Water"
@@ -747,6 +755,7 @@
       "spellcasting": "Spellcast",
       "spellLevel": "Spell L{{level}}",
       "spellSaveDC": "Spell Save DC",
+      "concentration": "Concentration",
       "usedMax": "{{used}} / {{max}}",
       "hitDie": "Hit Die",
       "hitDieValue": "{{used}}/{{max}} d{{dieSize}}",

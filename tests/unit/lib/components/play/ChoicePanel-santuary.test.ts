@@ -9,7 +9,7 @@ const createSanctuaryEntry = (): AvailableRuleEntry => ({
     description: 'Sanctuary',
     activities: [],
     ui: {
-      model: 'sanctuary',
+      model: 'spell-save',
       section: 'bonus-action-spell',
       name: 'rule.spell-sanctuary.offer-sanctuary.name'
     },
@@ -53,7 +53,7 @@ describe('ChoicePanel - sanctuary model', () => {
     });
 
     // Should show slot level indicator
-    expect(container.querySelector('.choice-panel__sanctuary-level')).toBeTruthy();
+    expect(container.querySelector('.choice-panel__spell-save-level')).toBeTruthy();
   });
 
   it('renders editable view as a div, not button', () => {

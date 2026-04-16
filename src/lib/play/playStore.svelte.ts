@@ -8,7 +8,7 @@ import { extractStats } from './extractStats';
 import { decrementCountDowns } from './countDown';
 import { locale, t } from '$lib/i18n';
 import { get } from 'svelte/store';
-import { getCache } from '$lib/rules/ruleGroupCache.svelte';
+import { getCache, ensureCached } from '$lib/rules/ruleGroupCache.svelte';
 import { resolveDependencies } from '$lib/rules/resolveDependencies';
 import { toast } from 'svelte-sonner';
 
@@ -241,7 +241,63 @@ function updateSelections(instanceId: string, selections: Record<string, unknown
   debouncedEvaluate();
 }
 
+/**
+ * Recursively fetch metadata for all transitive dependencies.
+ * resolveDependencies can only walk cached entries, so we must ensure
+ * all intermediate deps are in the cache before calling it.
+ */
+async function prefetchDepTree(ruleGroupId: string, assignedIds: string[]): Promise<void> {
+  const cache = getCache();
+  const assigned = [...assignedIds, ruleGroupId];
+  const visited: string[] = [];
+  const toFetch: string[] = [];
+
+  // First pass: collect all dep IDs reachable from the target
+  function collect(id: string): void {
+    if (visited.includes(id)) return;
+    visited.push(id);
+    const meta = cache.get(id);
+    if (!meta) {
+      // Not in cache — queue for fetch
+      if (!assigned.includes(id)) {
+        toFetch.push(id);
+      }
+      return;
+    }
+    for (const depId of meta.requires) {
+      if (!assigned.includes(depId)) {
+        collect(depId);
+      }
+    }
+  }
+
+  collect(ruleGroupId);
+
+  // Iteratively fetch missing metadata and discover further deps
+  const currentLocale = get(locale);
+  while (toFetch.length > 0) {
+    const batch = [...toFetch];
+    toFetch.length = 0;
+    await ensureCached(batch, currentLocale);
+    for (const id of batch) {
+      const meta = cache.get(id);
+      if (meta) {
+        for (const depId of meta.requires) {
+          if (!assigned.includes(depId) && !visited.includes(depId)) {
+            toFetch.push(depId);
+          }
+        }
+      }
+    }
+  }
+}
+
 async function assignRuleGroup(characterId: string, ruleGroupId: string): Promise<void> {
+  // Pre-fetch metadata for the full transitive dependency tree
+  // resolveDependencies can only walk cached entries, so we must ensure
+  // all intermediate deps are in the cache before resolving.
+  await prefetchDepTree(ruleGroupId, state.ruleGroupIds);
+
   // Resolve transitive dependencies
   const cache = getCache();
   const deps = resolveDependencies(ruleGroupId, cache, state.ruleGroupIds);
