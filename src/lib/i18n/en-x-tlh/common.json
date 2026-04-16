@@ -24,6 +24,17 @@
         "no_slots": "mugh laH tu'lu'be'"
       }
     },
+    "spell-protection-from-evil-and-good": {
+      "offer-protection-from-evil-and-good": {
+        "name": "mIgh Do' Ha'DIbaH je",
+        "no_spellcasting": "mugh DIvI' tu'lu'be'",
+        "already_concentrating": "buQ DIvI'",
+        "no_slots": "mugh laH tu'lu'be'"
+      },
+      "effect-protection-from-evil-and-good": {
+        "name": "mIgh Do' Ha'DIbaH je"
+      }
+    },
     "spell-bless": {
       "offer-bless": {
         "name": "DIch",

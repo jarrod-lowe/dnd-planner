@@ -1,0 +1,436 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: spell-protection-from-evil-and-good
+    requires:
+      - spellcasting
+      - concentration
+    translations:
+      en:
+        name: Protection from Evil and Good
+        description: >-
+          Level 1 action spell (touch). Protects against aberrations, celestials,
+          elementals, fey, fiends, and undead. Concentration, up to 10 minutes
+          (100 rounds).
+        keywords:
+          [
+            spell,
+            level1,
+            protection-from-evil-and-good,
+            action,
+            abjuration,
+            concentration,
+          ]
+      en-x-tlh:
+        name: mIgh Do' Ha'DIbaH je
+        description: >-
+          DIch level 1 action. DIch mIgh Do' Ha'DIbaH je DIvI' DIvI'. buQ, 10
+          rep.
+        keywords:
+          [spell, level1, mIgh-Do'-Ha'DIbaH-je, action, abjuration, buQ]
+    rules:
+      # Compute eligible slot count (levels 1-5)
+      - id: compute-protection-from-evil-and-good-eligible-slots
+        phase: normal
+        group:
+          - protection-from-evil-and-good-slots-computed
+        activities:
+          - type: numberSum
+            target:
+              fact: protection-from-evil-and-good.eligibleSlotsRemaining
+            sources:
+              - fact: spellcasting.slots.level1.remaining
+              - fact: spellcasting.slots.level2.remaining
+              - fact: spellcasting.slots.level3.remaining
+              - fact: spellcasting.slots.level4.remaining
+              - fact: spellcasting.slots.level5.remaining
+
+      # Compute lowest available slot level
+      # Cascade from high to low so the lowest available level overwrites
+      - id: compute-protection-from-evil-and-good-lowest-slot
+        phase: normal
+        group:
+          - protection-from-evil-and-good-slots-computed
+        activities:
+          - type: numberSet
+            target:
+              fact: protection-from-evil-and-good.lowestAvailableSlotLevel
+            source:
+              number: 5
+            when:
+              fact: spellcasting.slots.level5.remaining
+              operator: greaterThan
+              value: 0
+          - type: numberSet
+            target:
+              fact: protection-from-evil-and-good.lowestAvailableSlotLevel
+            source:
+              number: 4
+            when:
+              fact: spellcasting.slots.level4.remaining
+              operator: greaterThan
+              value: 0
+          - type: numberSet
+            target:
+              fact: protection-from-evil-and-good.lowestAvailableSlotLevel
+            source:
+              number: 3
+            when:
+              fact: spellcasting.slots.level3.remaining
+              operator: greaterThan
+              value: 0
+          - type: numberSet
+            target:
+              fact: protection-from-evil-and-good.lowestAvailableSlotLevel
+            source:
+              number: 2
+            when:
+              fact: spellcasting.slots.level2.remaining
+              operator: greaterThan
+              value: 0
+          - type: numberSet
+            target:
+              fact: protection-from-evil-and-good.lowestAvailableSlotLevel
+            source:
+              number: 1
+            when:
+              fact: spellcasting.slots.level1.remaining
+              operator: greaterThan
+              value: 0
+
+      # Offer Protection from Evil and Good (action spell)
+      - id: offer-protection-from-evil-and-good
+        after:
+          - group: __planned__
+          - group: spellcasting
+          - group: protection-from-evil-and-good-slots-computed
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: spellcasting.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-protection-from-evil-and-good.offer-protection-from-evil-and-good.no_spellcasting
+                    severity: error
+              - condition:
+                  fact: concentration.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-protection-from-evil-and-good.offer-protection-from-evil-and-good.already_concentrating
+                    severity: error
+              - condition:
+                  fact: protection-from-evil-and-good.eligibleSlotsRemaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-protection-from-evil-and-good.offer-protection-from-evil-and-good.no_slots
+                    severity: error
+            rule:
+              id: cast-protection-from-evil-and-good
+              group:
+                - __planned__
+                - spellcasting
+              ui:
+                model: spell-save
+                section: action-spell
+                name: rule.spell-protection-from-evil-and-good.offer-protection-from-evil-and-good.name
+                showDC: true
+              vars:
+                slotLevel:
+                  capture: true
+                  default:
+                    fact: protection-from-evil-and-good.lowestAvailableSlotLevel
+              activities:
+                # Consume spellcasting resource
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                # Consume concentration
+                - type: numberIncrement
+                  target:
+                    fact: concentration.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-protection-from-evil-and-good.offer-protection-from-evil-and-good.no_spellcasting
+                  when:
+                    fact: spellcasting.remaining
+                    operator: lessThan
+                    value: 0
+                # Bridge var to fact for conditional slot consumption
+                - type: numberSet
+                  target:
+                    fact: protection-from-evil-and-good.selectedLevel
+                  source:
+                    var: slotLevel
+                # Consume L1 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level1.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    fact: protection-from-evil-and-good.selectedLevel
+                    operator: equals
+                    value: 1
+                # Consume L2 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level2.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    fact: protection-from-evil-and-good.selectedLevel
+                    operator: equals
+                    value: 2
+                # Consume L3 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level3.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    fact: protection-from-evil-and-good.selectedLevel
+                    operator: equals
+                    value: 3
+                # Consume L4 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level4.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    fact: protection-from-evil-and-good.selectedLevel
+                    operator: equals
+                    value: 4
+                # Consume L5 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level5.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    fact: protection-from-evil-and-good.selectedLevel
+                    operator: equals
+                    value: 5
+                # Track slot consumption errors
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-protection-from-evil-and-good.offer-protection-from-evil-and-good.no_slots
+                  when:
+                    fact: spellcasting.slots.level1.remaining
+                    operator: lessThan
+                    value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-protection-from-evil-and-good.offer-protection-from-evil-and-good.no_slots
+                  when:
+                    fact: spellcasting.slots.level2.remaining
+                    operator: lessThan
+                    value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-protection-from-evil-and-good.offer-protection-from-evil-and-good.no_slots
+                  when:
+                    fact: spellcasting.slots.level3.remaining
+                    operator: lessThan
+                    value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-protection-from-evil-and-good.offer-protection-from-evil-and-good.no_slots
+                  when:
+                    fact: spellcasting.slots.level4.remaining
+                    operator: lessThan
+                    value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-protection-from-evil-and-good.offer-protection-from-evil-and-good.no_slots
+                  when:
+                    fact: spellcasting.slots.level5.remaining
+                    operator: lessThan
+                    value: 0
+                # Persist L1 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-protection-from-evil-and-good-slot-l1
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level1.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          fact: rest.long
+                          operator: equals
+                          value: 0
+                  when:
+                    fact: protection-from-evil-and-good.selectedLevel
+                    operator: equals
+                    value: 1
+                # Persist L2 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-protection-from-evil-and-good-slot-l2
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level2.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          fact: rest.long
+                          operator: equals
+                          value: 0
+                  when:
+                    fact: protection-from-evil-and-good.selectedLevel
+                    operator: equals
+                    value: 2
+                # Persist L3 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-protection-from-evil-and-good-slot-l3
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level3.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          fact: rest.long
+                          operator: equals
+                          value: 0
+                  when:
+                    fact: protection-from-evil-and-good.selectedLevel
+                    operator: equals
+                    value: 3
+                # Persist L4 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-protection-from-evil-and-good-slot-l4
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level4.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          fact: rest.long
+                          operator: equals
+                          value: 0
+                  when:
+                    fact: protection-from-evil-and-good.selectedLevel
+                    operator: equals
+                    value: 4
+                # Persist L5 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-protection-from-evil-and-good-slot-l5
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level5.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          fact: rest.long
+                          operator: equals
+                          value: 0
+                  when:
+                    fact: protection-from-evil-and-good.selectedLevel
+                    operator: equals
+                    value: 5
+                # Create persistent effect (100 rounds, concentration)
+                - type: advertiseEffect
+                  rule:
+                    id: effect-protection-from-evil-and-good
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    when:
+                      - fact: rest.short
+                        operator: equals
+                        value: 0
+                      - fact: rest.long
+                        operator: equals
+                        value: 0
+                    ui:
+                      model: timed-save-effect
+                      section: ongoing
+                      name: rule.spell-protection-from-evil-and-good.effect-protection-from-evil-and-good.name
+                      countDown: 100
+                      duration: 100
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: concentration.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true

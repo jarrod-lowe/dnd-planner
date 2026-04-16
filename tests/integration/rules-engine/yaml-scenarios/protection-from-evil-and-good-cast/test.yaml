@@ -1,0 +1,41 @@
+name: 'Protection from Evil and Good Cast'
+description: 'Casting Protection from Evil and Good consumes a spell slot and concentration, creates a timed effect with countDown=100'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/concentration
+  - dnd-5e-2024/turn-rest
+  - class-paladin/class-paladin-level1
+  - spells/spell-protection-from-evil-and-good
+steps:
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.remaining: 1
+          concentration.remaining: 1
+          spellcasting.slots.level1.remaining: 2
+        offers:
+          exists:
+            - cast-protection-from-evil-and-good
+  - addOffer:
+      id: set-charisma
+      selections:
+        score: 16
+      assert:
+        facts:
+          spellcasting.saveDC: 13
+  - addOffer:
+      id: cast-protection-from-evil-and-good
+      assert:
+        facts:
+          spellcasting.remaining: 0
+          concentration.remaining: 0
+          spellcasting.slots.level1.remaining: 1
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-protection-from-evil-and-good
