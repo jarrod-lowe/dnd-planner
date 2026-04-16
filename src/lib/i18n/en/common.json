@@ -16,6 +16,18 @@
         "no_slots": "No spell slots remaining"
       }
     },
+    "spell-bless": {
+      "offer-bless": {
+        "name": "Bless",
+        "no_action": "No action available",
+        "no_spellcasting": "Already cast a spell this turn",
+        "already_concentrating": "Already concentrating",
+        "no_slots": "No spell slots remaining"
+      },
+      "effect-bless": {
+        "name": "Bless"
+      }
+    },
     "spell-create-and-destroy-water": {
       "cast-create-and-destroy-water": {
         "name": "Create and Destroy Water"

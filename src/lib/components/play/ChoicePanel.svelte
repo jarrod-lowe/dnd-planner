@@ -1199,7 +1199,7 @@
               {/each}
             </div>
           {/if}
-          {#if spellSaveSaveDC !== undefined}
+          {#if spellSaveSaveDC !== undefined && entry.rule.ui?.showDC}
             <span class="effect-panel__save">WIS Save DC {spellSaveSaveDC}</span>
           {/if}
         </div>
@@ -1395,7 +1395,7 @@
           <span class="attack-chip">
             <span class="choice-panel__spell-save-level">L{spellSaveSlotLevel}</span>
           </span>
-          {#if spellSaveSaveDC !== undefined}
+          {#if spellSaveSaveDC !== undefined && entry.rule.ui?.showDC}
             <span class="effect-panel__save">WIS Save DC {spellSaveSaveDC}</span>
           {/if}
         </div>

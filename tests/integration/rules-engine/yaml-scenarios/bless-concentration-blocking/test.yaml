@@ -1,0 +1,40 @@
+name: 'Bless Concentration Blocking'
+description: 'Cannot cast Bless while already concentrating. Concentration resource prevents second cast.'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/concentration
+  - dnd-5e-2024/turn-rest
+  - class-paladin/class-paladin-level1
+  - spells/spell-bless
+steps:
+  - evaluate:
+      assert:
+        facts:
+          concentration.remaining: 1
+        offers:
+          exists:
+            - cast-bless
+  # Cast Bless — consumes concentration
+  - addOffer:
+      id: cast-bless
+      assert:
+        facts:
+          concentration.remaining: 0
+          spellcasting.slots.level1.remaining: 1
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-bless
+  # Turn 2: Bless should be illegal due to concentration being active
+  - evaluate:
+      assert:
+        facts:
+          concentration.remaining: 0
+        offers:
+          illegal:
+            - cast-bless
