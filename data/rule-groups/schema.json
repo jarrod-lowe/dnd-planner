@@ -167,6 +167,10 @@
             "showDC": {
               "type": "boolean",
               "description": "Show the save DC display for spell-save model"
+            },
+            "dieSides": {
+              "type": "number",
+              "description": "Number of sides on the smite die (default 8 for d8)"
             }
           },
           "additionalProperties": false

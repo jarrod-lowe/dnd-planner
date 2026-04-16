@@ -304,6 +304,9 @@
   let smiteTriggerRef: HTMLButtonElement | undefined = $state();
 
   // Smite model specific values
+  const smiteDieSides = $derived(
+    (uiModel === 'smite' ? (entry.rule.ui?.dieSides as number | undefined) : undefined) ?? 8
+  );
   const smiteDieCount = $derived(
     uiModel === 'smite' || uiModel === 'paladin-smite' ? resolveVarDefault('dieCount') : undefined
   );
@@ -311,6 +314,12 @@
   let smiteFiendUndead = $state(false);
   const smiteTotalDice = $derived((smiteDieCount ?? 0) + (smiteFiendUndead ? 1 : 0));
   let smiteRollResult: number | null = $state(null);
+  const smiteSaveType = $derived(
+    uiModel === 'smite' ? (entry.rule.ui?.saveType as string | undefined) : undefined
+  );
+  const smiteSaveDC = $derived(
+    smiteSaveType ? (facts['spellcasting.saveDC'] as number | undefined) : undefined
+  );
 
   // spell-save model specific values
   const spellSaveSlotLevel = $derived(
@@ -429,13 +438,14 @@
   function rollSmiteDamage(event: MouseEvent): void {
     const dice = smiteTotalDice;
     if (dice > 0) {
+      const sides = smiteDieSides;
       let total = 0;
       for (let i = 0; i < dice; i++) {
-        total += Math.floor(Math.random() * 8) + 1;
+        total += Math.floor(Math.random() * sides) + 1;
       }
       smiteRollResult = total;
       console.log(
-        `[damage] ${uiName ?? 'smite'}: ${dice}d8${smiteFiendUndead ? ' (includes +1d8 fiend/undead)' : ''} = ${total}`
+        `[damage] ${uiName ?? 'smite'}: ${dice}d${sides}${smiteFiendUndead ? ' (includes +1d8 fiend/undead)' : ''} = ${total}`
       );
       playRollAnimation(event.currentTarget as HTMLElement);
     }
@@ -1068,12 +1078,12 @@
             onpointerleave={() => cancelLongPress()}
             aria-label={smiteRollResult !== null
               ? `${$t('play.choices.smite.reroll')}: ${smiteRollResult} ${$t('play.choices.smite.slotLevel', { level: smiteSlotLevel ?? 1 })}`
-              : `${$t('play.choices.smite.roll')}: ${smiteTotalDice}d8 ${$t('play.choices.smite.slotLevel', { level: smiteSlotLevel ?? 1 })}`}
+              : `${$t('play.choices.smite.roll')}: ${smiteTotalDice}d${smiteDieSides} ${$t('play.choices.smite.slotLevel', { level: smiteSlotLevel ?? 1 })}`}
           >
             {#if smiteRollResult !== null}
               {smiteRollResult}
             {:else}
-              {smiteTotalDice}d8
+              {smiteTotalDice}d{smiteDieSides}
             {/if}
             <span class="choice-panel__smite-level"
               >{$t('play.choices.smite.slotLevel', { level: smiteSlotLevel ?? 1 })}</span
@@ -1090,7 +1100,7 @@
                   disabled={opt.remaining === 0}
                   onclick={() => selectSmiteLevel(opt.level)}
                 >
-                  L{opt.level} ({1 + opt.level}d8)
+                  L{opt.level} ({1 + opt.level}d{smiteDieSides})
                   {#if opt.remaining === 0}
                     <span class="roll-popover__item-note"> (0 left)</span>
                   {/if}
@@ -1098,19 +1108,24 @@
               {/each}
             </div>
           {/if}
-          <button
-            type="button"
-            class="smite-toggle"
-            class:smite-toggle--active={smiteFiendUndead}
-            onclick={() => {
-              smiteFiendUndead = !smiteFiendUndead;
-              smiteRollResult = null;
-            }}
-            aria-pressed={smiteFiendUndead}
-            aria-label="+1d8 vs fiend/undead"
-          >
-            +1d8
-          </button>
+          {#if smiteDieSides === 8}
+            <button
+              type="button"
+              class="smite-toggle"
+              class:smite-toggle--active={smiteFiendUndead}
+              onclick={() => {
+                smiteFiendUndead = !smiteFiendUndead;
+                smiteRollResult = null;
+              }}
+              aria-pressed={smiteFiendUndead}
+              aria-label="+1d8 vs fiend/undead"
+            >
+              +1d8
+            </button>
+          {/if}
+          {#if smiteSaveType && smiteSaveDC !== undefined && entry.rule.ui?.showDC}
+            <span class="effect-panel__save">{smiteSaveType} Save DC {smiteSaveDC}</span>
+          {/if}
         </div>
       {/if}
       {#if uiModel === 'paladin-smite' && smiteDieCount !== undefined}
@@ -1373,7 +1388,7 @@
       {/if}
       {#if uiModel === 'smite' && smiteDieCount !== undefined}
         <div class="choice-panel__model choice-panel__attack">
-          <span class="attack-chip">{smiteTotalDice}d8</span>
+          <span class="attack-chip">{smiteTotalDice}d{smiteDieSides}</span>
         </div>
       {/if}
       {#if uiModel === 'divine-sense'}
