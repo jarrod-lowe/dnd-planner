@@ -1,0 +1,44 @@
+name: 'Protection from Evil and Good Concentration Blocking'
+description: 'Cannot cast Protection from Evil and Good while already concentrating. Concentration resource prevents second cast.'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/concentration
+  - dnd-5e-2024/turn-rest
+  - class-paladin/class-paladin-level1
+  - spells/spell-protection-from-evil-and-good
+steps:
+  - evaluate:
+      assert:
+        facts:
+          concentration.remaining: 1
+        offers:
+          exists:
+            - cast-protection-from-evil-and-good
+  - addOffer:
+      id: set-charisma
+      selections:
+        score: 16
+  # Cast Protection from Evil and Good — consumes concentration
+  - addOffer:
+      id: cast-protection-from-evil-and-good
+      assert:
+        facts:
+          concentration.remaining: 0
+          spellcasting.slots.level1.remaining: 1
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-protection-from-evil-and-good
+  # Turn 2: Should be illegal due to concentration being active
+  - evaluate:
+      assert:
+        facts:
+          concentration.remaining: 0
+        offers:
+          illegal:
+            - cast-protection-from-evil-and-good

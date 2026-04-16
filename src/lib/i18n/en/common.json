@@ -24,6 +24,17 @@
         "no_slots": "No spell slots remaining"
       }
     },
+    "spell-protection-from-evil-and-good": {
+      "offer-protection-from-evil-and-good": {
+        "name": "Protection from Evil and Good",
+        "no_spellcasting": "Already cast a spell this turn",
+        "already_concentrating": "Already concentrating",
+        "no_slots": "No spell slots remaining"
+      },
+      "effect-protection-from-evil-and-good": {
+        "name": "Protection from Evil and Good"
+      }
+    },
     "spell-bless": {
       "offer-bless": {
         "name": "Bless",
