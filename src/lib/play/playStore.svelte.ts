@@ -5,6 +5,7 @@ import type { PlannedItem, PlayState } from './types';
 import { debounce } from './debounce';
 import { resolveInitialSelections } from './resolveInitialSelections';
 import { extractStats } from './extractStats';
+import { decrementCountDowns } from './countDown';
 import { locale, t } from '$lib/i18n';
 import { get } from 'svelte/store';
 import { getCache } from '$lib/rules/ruleGroupCache.svelte';
@@ -466,7 +467,7 @@ function endTurn(): void {
   // Commit effects from the last evaluation output before clearing the plan.
   // This moves advertised effects into the committed effects array so they
   // persist across turns.
-  const effects = state.engineOutput?.effects ?? state.effects;
+  const effects = decrementCountDowns(state.engineOutput?.effects ?? state.effects);
   const characterId = state.currentCharacterId;
 
   state = {

@@ -4,15 +4,16 @@
   import { adaptEffectsAsEntries } from '$lib/play/adaptEffects';
   import { groupChoicesBySection } from '$lib/play/groupChoicesBySection';
   import { SECTION_ORDER } from '$lib/play/sectionConfig';
-  import type { Rule } from '$lib/rules-engine';
+  import type { Facts, Rule } from '$lib/rules-engine';
 
   interface Props {
     effects: Rule[];
+    facts?: Facts;
     committedCount?: number;
     onRemoveEffect?: (ruleId: string) => void;
   }
 
-  let { effects, committedCount, onRemoveEffect }: Props = $props();
+  let { effects, facts = {}, committedCount, onRemoveEffect }: Props = $props();
 
   const deletableRuleIds = $derived(
     committedCount && onRemoveEffect
@@ -38,7 +39,7 @@
           section={sectionGroup.section}
           packedGroups={sectionGroup.packedGroups}
           hasLegalEntries={sectionGroup.hasLegalEntries}
-          facts={{}}
+          {facts}
           onChoiceTap={() => {}}
           mode="effect"
           {deletableRuleIds}

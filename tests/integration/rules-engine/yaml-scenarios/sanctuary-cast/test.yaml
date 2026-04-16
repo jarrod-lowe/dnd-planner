@@ -1,0 +1,39 @@
+name: 'Sanctuary Cast'
+description: 'Casting Sanctuary consumes a bonus action and spell slot, creates a timed effect with countDown=10'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/turn-rest
+  - class-paladin/class-paladin-level1
+  - spells/spell-sanctuary
+steps:
+  - evaluate:
+      assert:
+        facts:
+          bonusActions.remaining: 1
+          spellcasting.slots.level1.remaining: 2
+        offers:
+          exists:
+            - cast-sanctuary
+  - addOffer:
+      id: set-charisma
+      selections:
+        score: 16
+      assert:
+        facts:
+          spellcasting.saveDC: 13
+  - addOffer:
+      id: cast-sanctuary
+      assert:
+        facts:
+          bonusActions.remaining: 0
+          spellcasting.remaining: 0
+          spellcasting.slots.level1.remaining: 1
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-sanctuary

@@ -1,0 +1,24 @@
+name: 'Spell Save DC'
+description: 'Spell save DC is computed as 8 + proficiency bonus + spellcasting ability modifier. Paladin uses CHA.'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+steps:
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.saveDC: 10
+          spellcasting.slots.level1.total: 2
+          spellcasting.modifier: 0
+  - addOffer:
+      id: set-charisma
+      selections:
+        score: 16
+      assert:
+        facts:
+          cha.modifier: 3
+          proficiency.bonus: 2
+          spellcasting.modifier: 3
+          spellcasting.saveDC: 13

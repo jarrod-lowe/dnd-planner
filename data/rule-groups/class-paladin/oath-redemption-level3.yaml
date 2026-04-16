@@ -4,6 +4,7 @@ ruleGroups:
     requires:
       - class-paladin-level3
       - class-paladin-divinity
+      - spell-sanctuary
     translations:
       en:
         name: Oath of Redemption Level 3

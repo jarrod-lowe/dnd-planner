@@ -42,6 +42,34 @@ ruleGroups:
             target:
               fact: spellcasting.remaining
 
+      # Spell Save DC - computed from proficiency + spellcasting ability modifier
+      - id: spellcasting-save-dc
+        phase: normal
+        after:
+          - group: spellcasting-modifier-set
+        ui:
+          stats:
+            - name: play.stats.spellSaveDC
+              type: value
+              fact: spellcasting.saveDC
+              section: magic
+        activities:
+          - type: numberSet
+            target:
+              fact: spellcasting.saveDC
+            source:
+              number: 8
+          - type: numberIncrement
+            target:
+              fact: spellcasting.saveDC
+            source:
+              fact: proficiency.bonus
+          - type: numberIncrement
+            target:
+              fact: spellcasting.saveDC
+            source:
+              fact: spellcasting.modifier
+
       # Spell Slots - UI stats for all slot levels
       - id: spellcasting-slots-total
         phase: early
