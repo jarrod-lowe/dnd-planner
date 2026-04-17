@@ -69,7 +69,7 @@ describe('ability-scores proficiency choices', () => {
     }
   });
 
-  it('reset rules exist but have no activities (facts start clean)', () => {
+  it('reset rules have no activities', () => {
     const statNames = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
     for (const stat of statNames) {
       const resetRule = rules.find((r) => r.id === `${stat}-value-reset`);

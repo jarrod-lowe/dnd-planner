@@ -1,0 +1,28 @@
+name: 'Ability Increase Past Max'
+description: 'Increase applies even when value is 20 (only offer is illegal)'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+steps:
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - set-strength
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 20
+      assert:
+        facts:
+          str.value: 20
+          str.modifier: 5
+        offers:
+          illegal:
+            - increase-strength
+  - addOffer:
+      id: increase-strength
+      assert:
+        facts:
+          str.value: 21
+          str.modifier: 5

@@ -1,0 +1,36 @@
+name: 'Ability Increase Affects Skills and Saves'
+description: 'Increasing strength updates str.modifier which flows to str.save and athletics'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+steps:
+  - evaluate:
+      assert:
+        facts:
+          str.value: 0
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 14
+      assert:
+        facts:
+          str.value: 14
+          str.modifier: 2
+          str.save: 2
+          skill.athletics.value: 2
+  - addOffer:
+      id: increase-strength
+      assert:
+        facts:
+          str.value: 15
+          str.modifier: 2
+          str.save: 2
+          skill.athletics.value: 2
+  - addOffer:
+      id: increase-strength
+      assert:
+        facts:
+          str.value: 16
+          str.modifier: 3
+          str.save: 3
+          skill.athletics.value: 3

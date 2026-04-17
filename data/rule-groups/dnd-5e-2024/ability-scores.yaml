@@ -13,6 +13,8 @@ ruleGroups:
     rules:
       - id: str-value-reset
         phase: early
+        group:
+          - str-values
         activities: []
         ui:
           stats:
@@ -25,11 +27,28 @@ ruleGroups:
 
       - id: str-save-modifier
         phase: normal
+        after:
+          - group: str-modifier-ready
         activities:
           - type: numberIncrement
             target:
               fact: str.save
             source:
+              fact: str.modifier
+
+      - id: str-modifier-compute
+        phase: normal
+        after:
+          - group: str-base-set
+          - group: str-increases
+        group:
+          - str-modifier-ready
+        activities:
+          - type: numberFunction
+            function: statToModifier
+            sources:
+              - fact: str.value
+            target:
               fact: str.modifier
 
       - id: set-strength-offer
@@ -49,6 +68,7 @@ ruleGroups:
               id: set-strength
               group:
                 - __planned__
+                - str-base-set
               ui:
                 model: ability-score
                 section: configuration
@@ -68,13 +88,6 @@ ruleGroups:
                     fact: str.value
                   source:
                     var: score
-                # Compute str.modifier from the score
-                - type: numberFunction
-                  function: statToModifier
-                  sources:
-                    - var: score
-                  target:
-                    fact: str.modifier
                 # Create a persistent effect that sustains forever
                 - type: advertiseEffect
                   rule:
@@ -96,13 +109,6 @@ ruleGroups:
                           fact: str.value
                         source:
                           var: score
-                      # Re-compute str.modifier
-                      - type: numberFunction
-                        function: statToModifier
-                        sources:
-                          - var: score
-                        target:
-                          fact: str.modifier
                       # Self-sustain forever (no when condition)
                       - type: advertiseEffect
                         self: true
@@ -110,6 +116,8 @@ ruleGroups:
       # === DEXTERITY ===
       - id: dex-value-reset
         phase: early
+        group:
+          - dex-values
         activities: []
         ui:
           stats:
@@ -122,11 +130,28 @@ ruleGroups:
 
       - id: dex-save-modifier
         phase: normal
+        after:
+          - group: dex-modifier-ready
         activities:
           - type: numberIncrement
             target:
               fact: dex.save
             source:
+              fact: dex.modifier
+
+      - id: dex-modifier-compute
+        phase: normal
+        after:
+          - group: dex-base-set
+          - group: dex-increases
+        group:
+          - dex-modifier-ready
+        activities:
+          - type: numberFunction
+            function: statToModifier
+            sources:
+              - fact: dex.value
+            target:
               fact: dex.modifier
 
       - id: set-dexterity-offer
@@ -146,6 +171,7 @@ ruleGroups:
               id: set-dexterity
               group:
                 - __planned__
+                - dex-base-set
               ui:
                 model: ability-score
                 section: configuration
@@ -166,13 +192,6 @@ ruleGroups:
                     fact: dex.value
                   source:
                     var: score
-                # Compute dex.modifier from the score
-                - type: numberFunction
-                  function: statToModifier
-                  sources:
-                    - var: score
-                  target:
-                    fact: dex.modifier
                 # Create a persistent effect that sustains forever
                 - type: advertiseEffect
                   rule:
@@ -194,13 +213,6 @@ ruleGroups:
                           fact: dex.value
                         source:
                           var: score
-                      # Re-compute dex.modifier
-                      - type: numberFunction
-                        function: statToModifier
-                        sources:
-                          - var: score
-                        target:
-                          fact: dex.modifier
                       # Self-sustain forever (no when condition)
                       - type: advertiseEffect
                         self: true
@@ -208,6 +220,8 @@ ruleGroups:
       # === CONSTITUTION ===
       - id: con-value-reset
         phase: early
+        group:
+          - con-values
         activities: []
         ui:
           stats:
@@ -220,11 +234,28 @@ ruleGroups:
 
       - id: con-save-modifier
         phase: normal
+        after:
+          - group: con-modifier-ready
         activities:
           - type: numberIncrement
             target:
               fact: con.save
             source:
+              fact: con.modifier
+
+      - id: con-modifier-compute
+        phase: normal
+        after:
+          - group: con-base-set
+          - group: con-increases
+        group:
+          - con-modifier-ready
+        activities:
+          - type: numberFunction
+            function: statToModifier
+            sources:
+              - fact: con.value
+            target:
               fact: con.modifier
 
       - id: set-constitution-offer
@@ -244,6 +275,7 @@ ruleGroups:
               id: set-constitution
               group:
                 - __planned__
+                - con-base-set
               ui:
                 model: ability-score
                 section: configuration
@@ -264,13 +296,6 @@ ruleGroups:
                     fact: con.value
                   source:
                     var: score
-                # Compute con.modifier from the score
-                - type: numberFunction
-                  function: statToModifier
-                  sources:
-                    - var: score
-                  target:
-                    fact: con.modifier
                 # Create a persistent effect that sustains forever
                 - type: advertiseEffect
                   rule:
@@ -292,13 +317,6 @@ ruleGroups:
                           fact: con.value
                         source:
                           var: score
-                      # Re-compute con.modifier
-                      - type: numberFunction
-                        function: statToModifier
-                        sources:
-                          - var: score
-                        target:
-                          fact: con.modifier
                       # Self-sustain forever (no when condition)
                       - type: advertiseEffect
                         self: true
@@ -306,6 +324,8 @@ ruleGroups:
       # === INTELLIGENCE ===
       - id: int-value-reset
         phase: early
+        group:
+          - int-values
         activities: []
         ui:
           stats:
@@ -318,11 +338,28 @@ ruleGroups:
 
       - id: int-save-modifier
         phase: normal
+        after:
+          - group: int-modifier-ready
         activities:
           - type: numberIncrement
             target:
               fact: int.save
             source:
+              fact: int.modifier
+
+      - id: int-modifier-compute
+        phase: normal
+        after:
+          - group: int-base-set
+          - group: int-increases
+        group:
+          - int-modifier-ready
+        activities:
+          - type: numberFunction
+            function: statToModifier
+            sources:
+              - fact: int.value
+            target:
               fact: int.modifier
 
       - id: set-intelligence-offer
@@ -342,6 +379,7 @@ ruleGroups:
               id: set-intelligence
               group:
                 - __planned__
+                - int-base-set
               ui:
                 model: ability-score
                 section: configuration
@@ -362,13 +400,6 @@ ruleGroups:
                     fact: int.value
                   source:
                     var: score
-                # Compute int.modifier from the score
-                - type: numberFunction
-                  function: statToModifier
-                  sources:
-                    - var: score
-                  target:
-                    fact: int.modifier
                 # Create a persistent effect that sustains forever
                 - type: advertiseEffect
                   rule:
@@ -390,13 +421,6 @@ ruleGroups:
                           fact: int.value
                         source:
                           var: score
-                      # Re-compute int.modifier
-                      - type: numberFunction
-                        function: statToModifier
-                        sources:
-                          - var: score
-                        target:
-                          fact: int.modifier
                       # Self-sustain forever (no when condition)
                       - type: advertiseEffect
                         self: true
@@ -404,6 +428,8 @@ ruleGroups:
       # === WISDOM ===
       - id: wis-value-reset
         phase: early
+        group:
+          - wis-values
         activities: []
         ui:
           stats:
@@ -416,11 +442,28 @@ ruleGroups:
 
       - id: wis-save-modifier
         phase: normal
+        after:
+          - group: wis-modifier-ready
         activities:
           - type: numberIncrement
             target:
               fact: wis.save
             source:
+              fact: wis.modifier
+
+      - id: wis-modifier-compute
+        phase: normal
+        after:
+          - group: wis-base-set
+          - group: wis-increases
+        group:
+          - wis-modifier-ready
+        activities:
+          - type: numberFunction
+            function: statToModifier
+            sources:
+              - fact: wis.value
+            target:
               fact: wis.modifier
 
       - id: set-wisdom-offer
@@ -440,6 +483,7 @@ ruleGroups:
               id: set-wisdom
               group:
                 - __planned__
+                - wis-base-set
               ui:
                 model: ability-score
                 section: configuration
@@ -460,13 +504,6 @@ ruleGroups:
                     fact: wis.value
                   source:
                     var: score
-                # Compute wis.modifier from the score
-                - type: numberFunction
-                  function: statToModifier
-                  sources:
-                    - var: score
-                  target:
-                    fact: wis.modifier
                 # Create a persistent effect that sustains forever
                 - type: advertiseEffect
                   rule:
@@ -488,13 +525,6 @@ ruleGroups:
                           fact: wis.value
                         source:
                           var: score
-                      # Re-compute wis.modifier
-                      - type: numberFunction
-                        function: statToModifier
-                        sources:
-                          - var: score
-                        target:
-                          fact: wis.modifier
                       # Self-sustain forever (no when condition)
                       - type: advertiseEffect
                         self: true
@@ -502,6 +532,8 @@ ruleGroups:
       # === CHARISMA ===
       - id: cha-value-reset
         phase: early
+        group:
+          - cha-values
         activities: []
         ui:
           stats:
@@ -514,11 +546,28 @@ ruleGroups:
 
       - id: cha-save-modifier
         phase: normal
+        after:
+          - group: cha-modifier-ready
         activities:
           - type: numberIncrement
             target:
               fact: cha.save
             source:
+              fact: cha.modifier
+
+      - id: cha-modifier-compute
+        phase: normal
+        after:
+          - group: cha-base-set
+          - group: cha-increases
+        group:
+          - cha-modifier-ready
+        activities:
+          - type: numberFunction
+            function: statToModifier
+            sources:
+              - fact: cha.value
+            target:
               fact: cha.modifier
 
       - id: set-charisma-offer
@@ -538,6 +587,7 @@ ruleGroups:
               id: set-charisma
               group:
                 - __planned__
+                - cha-base-set
               ui:
                 model: ability-score
                 section: configuration
@@ -558,13 +608,6 @@ ruleGroups:
                     fact: cha.value
                   source:
                     var: score
-                # Compute cha.modifier from the score
-                - type: numberFunction
-                  function: statToModifier
-                  sources:
-                    - var: score
-                  target:
-                    fact: cha.modifier
                 # Create a persistent effect that sustains forever
                 - type: advertiseEffect
                   rule:
@@ -586,14 +629,292 @@ ruleGroups:
                           fact: cha.value
                         source:
                           var: score
-                      # Re-compute cha.modifier
-                      - type: numberFunction
-                        function: statToModifier
-                        sources:
-                          - var: score
-                        target:
-                          fact: cha.modifier
                       # Self-sustain forever (no when condition)
+                      - type: advertiseEffect
+                        self: true
+
+      # =========================================================
+      # ABILITY INCREASES
+      # =========================================================
+
+      - id: increase-strength-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: str.value
+                  operator: lessThan
+                  value: 20
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.increase-strength-offer.max_score
+                    severity: error
+            rule:
+              id: increase-strength
+              group:
+                - __planned__
+                - str-increases
+              after:
+                - group: str-base-set
+              ui:
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.increase-strength.name
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: str.value
+                  source:
+                    number: 1
+                - type: advertiseEffect
+                  rule:
+                    id: effect-increase-strength
+                    phase: early
+                    after:
+                      - group: str-values
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-increase-strength.name
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: str.value
+                        source:
+                          number: 1
+                      - type: advertiseEffect
+                        self: true
+
+      - id: increase-dexterity-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: dex.value
+                  operator: lessThan
+                  value: 20
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.increase-dexterity-offer.max_score
+                    severity: error
+            rule:
+              id: increase-dexterity
+              group:
+                - __planned__
+                - dex-increases
+              after:
+                - group: dex-base-set
+              ui:
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.increase-dexterity.name
+                packBehind: increase-strength
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: dex.value
+                  source:
+                    number: 1
+                - type: advertiseEffect
+                  rule:
+                    id: effect-increase-dexterity
+                    phase: early
+                    after:
+                      - group: dex-values
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-increase-dexterity.name
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: dex.value
+                        source:
+                          number: 1
+                      - type: advertiseEffect
+                        self: true
+
+      - id: increase-constitution-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: con.value
+                  operator: lessThan
+                  value: 20
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.increase-constitution-offer.max_score
+                    severity: error
+            rule:
+              id: increase-constitution
+              group:
+                - __planned__
+                - con-increases
+              after:
+                - group: con-base-set
+              ui:
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.increase-constitution.name
+                packBehind: increase-strength
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: con.value
+                  source:
+                    number: 1
+                - type: advertiseEffect
+                  rule:
+                    id: effect-increase-constitution
+                    phase: early
+                    after:
+                      - group: con-values
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-increase-constitution.name
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: con.value
+                        source:
+                          number: 1
+                      - type: advertiseEffect
+                        self: true
+
+      - id: increase-intelligence-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: int.value
+                  operator: lessThan
+                  value: 20
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.increase-intelligence-offer.max_score
+                    severity: error
+            rule:
+              id: increase-intelligence
+              group:
+                - __planned__
+                - int-increases
+              after:
+                - group: int-base-set
+              ui:
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.increase-intelligence.name
+                packBehind: increase-strength
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: int.value
+                  source:
+                    number: 1
+                - type: advertiseEffect
+                  rule:
+                    id: effect-increase-intelligence
+                    phase: early
+                    after:
+                      - group: int-values
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-increase-intelligence.name
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: int.value
+                        source:
+                          number: 1
+                      - type: advertiseEffect
+                        self: true
+
+      - id: increase-wisdom-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: wis.value
+                  operator: lessThan
+                  value: 20
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.increase-wisdom-offer.max_score
+                    severity: error
+            rule:
+              id: increase-wisdom
+              group:
+                - __planned__
+                - wis-increases
+              after:
+                - group: wis-base-set
+              ui:
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.increase-wisdom.name
+                packBehind: increase-strength
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: wis.value
+                  source:
+                    number: 1
+                - type: advertiseEffect
+                  rule:
+                    id: effect-increase-wisdom
+                    phase: early
+                    after:
+                      - group: wis-values
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-increase-wisdom.name
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: wis.value
+                        source:
+                          number: 1
+                      - type: advertiseEffect
+                        self: true
+
+      - id: increase-charisma-offer
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: cha.value
+                  operator: lessThan
+                  value: 20
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.ability-scores.increase-charisma-offer.max_score
+                    severity: error
+            rule:
+              id: increase-charisma
+              group:
+                - __planned__
+                - cha-increases
+              after:
+                - group: cha-base-set
+              ui:
+                section: configuration
+                name: rule.dnd-5e-2024.ability-scores.increase-charisma.name
+                packBehind: increase-strength
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: cha.value
+                  source:
+                    number: 1
+                - type: advertiseEffect
+                  rule:
+                    id: effect-increase-charisma
+                    phase: early
+                    after:
+                      - group: cha-values
+                    ui:
+                      name: rule.dnd-5e-2024.ability-scores.effect-increase-charisma.name
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: cha.value
+                        source:
+                          number: 1
                       - type: advertiseEffect
                         self: true
 
@@ -948,6 +1269,8 @@ ruleGroups:
 
       - id: athletics-modifier
         phase: normal
+        after:
+          - group: str-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -1045,6 +1368,8 @@ ruleGroups:
 
       - id: acrobatics-modifier
         phase: normal
+        after:
+          - group: dex-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -1141,6 +1466,8 @@ ruleGroups:
 
       - id: animal-handling-modifier
         phase: normal
+        after:
+          - group: wis-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -1238,6 +1565,8 @@ ruleGroups:
 
       - id: arcana-modifier
         phase: normal
+        after:
+          - group: int-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -1335,6 +1664,8 @@ ruleGroups:
 
       - id: deception-modifier
         phase: normal
+        after:
+          - group: cha-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -1432,6 +1763,8 @@ ruleGroups:
 
       - id: history-modifier
         phase: normal
+        after:
+          - group: int-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -1529,6 +1862,8 @@ ruleGroups:
 
       - id: insight-modifier
         phase: normal
+        after:
+          - group: wis-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -1626,6 +1961,8 @@ ruleGroups:
 
       - id: intimidation-modifier
         phase: normal
+        after:
+          - group: cha-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -1723,6 +2060,8 @@ ruleGroups:
 
       - id: investigation-modifier
         phase: normal
+        after:
+          - group: int-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -1820,6 +2159,8 @@ ruleGroups:
 
       - id: medicine-modifier
         phase: normal
+        after:
+          - group: wis-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -1917,6 +2258,8 @@ ruleGroups:
 
       - id: nature-modifier
         phase: normal
+        after:
+          - group: int-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -2014,6 +2357,8 @@ ruleGroups:
 
       - id: perception-modifier
         phase: normal
+        after:
+          - group: wis-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -2111,6 +2456,8 @@ ruleGroups:
 
       - id: performance-modifier
         phase: normal
+        after:
+          - group: cha-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -2208,6 +2555,8 @@ ruleGroups:
 
       - id: persuasion-modifier
         phase: normal
+        after:
+          - group: cha-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -2305,6 +2654,8 @@ ruleGroups:
 
       - id: religion-modifier
         phase: normal
+        after:
+          - group: int-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -2402,6 +2753,8 @@ ruleGroups:
 
       - id: sleight-of-hand-modifier
         phase: normal
+        after:
+          - group: dex-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -2499,6 +2852,8 @@ ruleGroups:
 
       - id: stealth-modifier
         phase: normal
+        after:
+          - group: dex-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -2596,6 +2951,8 @@ ruleGroups:
 
       - id: survival-modifier
         phase: normal
+        after:
+          - group: wis-modifier-ready
         activities:
           - type: numberIncrement
             target:

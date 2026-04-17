@@ -1,0 +1,16 @@
+name: 'Ability Increase Offer Exists'
+description: 'All 6 increase offers appear in available choices'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+steps:
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - increase-strength
+            - increase-dexterity
+            - increase-constitution
+            - increase-intelligence
+            - increase-wisdom
+            - increase-charisma

@@ -237,6 +237,60 @@
         "effect-charisma": {
           "name": "Charisma {{score}}"
         },
+        "increase-strength": {
+          "name": "Increase Strength"
+        },
+        "increase-strength-offer": {
+          "max_score": "Strength is already at maximum (20)"
+        },
+        "effect-increase-strength": {
+          "name": "STR +1"
+        },
+        "increase-dexterity": {
+          "name": "Increase Dexterity"
+        },
+        "increase-dexterity-offer": {
+          "max_score": "Dexterity is already at maximum (20)"
+        },
+        "effect-increase-dexterity": {
+          "name": "DEX +1"
+        },
+        "increase-constitution": {
+          "name": "Increase Constitution"
+        },
+        "increase-constitution-offer": {
+          "max_score": "Constitution is already at maximum (20)"
+        },
+        "effect-increase-constitution": {
+          "name": "CON +1"
+        },
+        "increase-intelligence": {
+          "name": "Increase Intelligence"
+        },
+        "increase-intelligence-offer": {
+          "max_score": "Intelligence is already at maximum (20)"
+        },
+        "effect-increase-intelligence": {
+          "name": "INT +1"
+        },
+        "increase-wisdom": {
+          "name": "Increase Wisdom"
+        },
+        "increase-wisdom-offer": {
+          "max_score": "Wisdom is already at maximum (20)"
+        },
+        "effect-increase-wisdom": {
+          "name": "WIS +1"
+        },
+        "increase-charisma": {
+          "name": "Increase Charisma"
+        },
+        "increase-charisma-offer": {
+          "max_score": "Charisma is already at maximum (20)"
+        },
+        "effect-increase-charisma": {
+          "name": "CHA +1"
+        },
         "proficiency-str": {
           "name": "Proficiency - STR Save"
         },

@@ -6,6 +6,10 @@ A tablet-optimized web application for tracking D&D character resources and plan
 
 Help players manage combat resources efficiently while other players are taking their turns. The app is designed for tablet use during gameplay sessions.
 
+The app does not prevent a player from breaking the rules - in case the DM
+allows them to make any exception - but it marks things that cannot be done
+without breaking the rules as illegal.
+
 ### Primary Goals
 
 1. **Instant Resource Tracking** - Quickly track spell slots, Lay on Hands, Channel Divinity, and other resources
