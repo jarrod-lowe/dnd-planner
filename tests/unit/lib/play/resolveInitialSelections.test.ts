@@ -43,7 +43,7 @@ describe('resolveInitialSelections', () => {
       expect(selections).toEqual({ quantity: 5 });
     });
 
-    it('excludes selection when fact is undefined', () => {
+    it('captures 0 when fact is undefined', () => {
       const rule: Rule = {
         id: 'test-rule',
         activities: [],
@@ -58,10 +58,10 @@ describe('resolveInitialSelections', () => {
 
       const selections = resolveInitialSelections(rule, facts);
 
-      expect(selections).toEqual({});
+      expect(selections).toEqual({ distance: 0 });
     });
 
-    it('excludes selection when fact is null/undefined value', () => {
+    it('captures 0 when fact is null', () => {
       const rule: Rule = {
         id: 'test-rule',
         activities: [],
@@ -78,7 +78,7 @@ describe('resolveInitialSelections', () => {
 
       const selections = resolveInitialSelections(rule, facts);
 
-      expect(selections).toEqual({});
+      expect(selections).toEqual({ distance: 0 });
     });
   });
 

@@ -35,10 +35,7 @@ export function resolveInitialSelections(rule: Rule, facts: Facts): Record<strin
     // Resolve fact default
     if (defaultSource.fact !== undefined) {
       const factValue = facts[defaultSource.fact];
-      // Only include if fact exists and is not null/undefined
-      if (factValue !== undefined && factValue !== null) {
-        selections[varName] = factValue;
-      }
+      selections[varName] = factValue !== undefined && factValue !== null ? factValue : 0;
       continue;
     }
   }

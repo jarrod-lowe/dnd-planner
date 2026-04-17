@@ -1214,6 +1214,80 @@ describe('playStore', () => {
       // Should be reverted after failure
       expect(playStore.state.ruleGroupIds).not.toContain('group-new');
     });
+
+    it('captures vars for standing rules when assigning a new rule group', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      const mockApiPost = vi.mocked(apiPost);
+      const mockEvaluate = vi.mocked(evaluate);
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: { 'con.modifier': 3 },
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      // loadRuleGroups: get assigned IDs, then effects
+      mockApiGet
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ ruleGroups: ['base-group'] })
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ effects: null })
+        } as Response);
+
+      // loadRuleGroups: fetch base rules
+      mockApiPost.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          ruleGroups: [{ ruleGroupId: 'base-group', rules: JSON.stringify([]) }]
+        })
+      } as Response);
+
+      // assignRuleGroup: assign API call
+      mockApiPost.mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        json: async () => ({})
+      } as Response);
+
+      // assignRuleGroup: fetch assigned group rules
+      const assignedRule: Rule = {
+        id: 'paladin-level2-hp',
+        vars: {
+          conAtLevel: { capture: true, default: { fact: 'con.modifier' } }
+        },
+        activities: []
+      };
+      mockApiPost.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          ruleGroups: [{ ruleGroupId: 'group-new', rules: JSON.stringify([assignedRule]) }]
+        })
+      } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      await playStore.loadRuleGroups('char-1');
+      await playStore.assignRuleGroup?.('char-1', 'group-new');
+
+      const addedRule = playStore.state.ruleGroups.find((r) => r.id === 'paladin-level2-hp');
+      expect(addedRule?.selections).toEqual({ conAtLevel: 3 });
+    });
   });
 
   describe('unassignRuleGroup', () => {

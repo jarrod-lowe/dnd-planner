@@ -1,0 +1,36 @@
+name: 'HP from paladin level 3'
+description: 'HP calculated from paladin levels 1-3 using d10 max at level 1 and average d10 at levels 2 and 3'
+ruleGroups:
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/ability-scores
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-level3
+steps:
+  # Without CON set: 10 (L1) + 6 (L2 average) + 6 (L3 average) = 22
+  - evaluate:
+      assert:
+        facts:
+          hp.max: 22
+          hp.current: 22
+
+  # CON set after class levels are present:
+  # level 1 uses current CON, but levels 2 and 3 keep captured CON-at-level (0)
+  - addOffer:
+      id: set-constitution
+      selections:
+        score: 16
+      assert:
+        facts:
+          con.modifier: 3
+          hp.max: 25
+          hp.current: 25
+
+  # After a turn boundary, effect-constitution runs in early phase.
+  # Levels 2 and 3 should still use captured CON (0).
+  - endTurn:
+      assert:
+        facts:
+          con.modifier: 3
+          hp.max: 25
+          hp.current: 25

@@ -413,7 +413,19 @@ async function assignSingleGroup(characterId: string, ruleGroupId: string): Prom
     }
 
     const { ruleGroups: batchGroups } = await batchResponse.json();
-    const newRules: Rule[] = batchGroups.flatMap((rg: { rules: string }) => JSON.parse(rg.rules));
+    const fetchedRules: Rule[] = batchGroups.flatMap((rg: { rules: string }) =>
+      JSON.parse(rg.rules)
+    );
+    const newRules: Rule[] = fetchedRules.map((rule) => {
+      const initialSelections = resolveInitialSelections(rule, state.facts);
+      if (Object.keys(initialSelections).length === 0) {
+        return rule;
+      }
+      return {
+        ...rule,
+        selections: { ...initialSelections, ...rule.selections }
+      };
+    });
 
     state = {
       ...state,

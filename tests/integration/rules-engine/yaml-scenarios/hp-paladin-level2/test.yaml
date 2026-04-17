@@ -1,0 +1,35 @@
+name: 'HP from paladin level 2'
+description: 'HP calculated from paladin levels 1 and 2 using d10 max at level 1 and average d10 at level 2'
+ruleGroups:
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/ability-scores
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+steps:
+  # Without CON set: 10 (L1) + 6 (L2 average) = 16
+  - evaluate:
+      assert:
+        facts:
+          hp.max: 16
+          hp.current: 16
+
+  # CON set after class levels are present:
+  # level 1 uses current CON, but level 2 keeps captured CON-at-level (0)
+  - addOffer:
+      id: set-constitution
+      selections:
+        score: 14
+      assert:
+        facts:
+          con.modifier: 2
+          hp.max: 18
+          hp.current: 18
+
+  # After a turn boundary, effect-constitution runs in early phase setting con.modifier.
+  # L2 should still use captured CON (0), not the live modifier.
+  - endTurn:
+      assert:
+        facts:
+          con.modifier: 2
+          hp.max: 18
+          hp.current: 18

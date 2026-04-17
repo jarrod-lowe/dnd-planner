@@ -271,7 +271,14 @@ class TestHarness {
   instanceCounter = 0;
 
   constructor(standing: Rule[], initialFacts: Facts, initialEffects: Rule[]) {
-    this.standing = standing;
+    // Apply capture vars to standing rules, simulating assignSingleGroup
+    this.standing = standing.map((rule) => {
+      const resolved = resolveInitialSelections(rule, initialFacts);
+      if (Object.keys(resolved).length === 0) {
+        return rule;
+      }
+      return { ...rule, selections: { ...resolved, ...(rule.selections ?? {}) } };
+    });
     this.facts = { ...initialFacts };
     this.effects = [...initialEffects];
   }
