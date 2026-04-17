@@ -24,3 +24,12 @@ steps:
           con.modifier: 2
           hp.max: 18
           hp.current: 18
+
+  # After a turn boundary, effect-constitution runs in early phase setting con.modifier.
+  # L2 should still use captured CON (0), not the live modifier.
+  - endTurn:
+      assert:
+        facts:
+          con.modifier: 2
+          hp.max: 18
+          hp.current: 18

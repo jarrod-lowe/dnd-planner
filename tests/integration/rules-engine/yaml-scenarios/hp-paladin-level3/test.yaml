@@ -25,3 +25,12 @@ steps:
           con.modifier: 3
           hp.max: 25
           hp.current: 25
+
+  # After a turn boundary, effect-constitution runs in early phase.
+  # Levels 2 and 3 should still use captured CON (0).
+  - endTurn:
+      assert:
+        facts:
+          con.modifier: 3
+          hp.max: 25
+          hp.current: 25
