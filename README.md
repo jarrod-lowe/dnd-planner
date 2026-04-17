@@ -356,6 +356,8 @@ The architecture supports:
   - Check rulegroup requires for cycles
   - Also check they are correct
 - Thunderous Smite & Divine Smite: Should depend specifically on MELEE or UNARMED attacks
+- Fix HP Calculation
+- Feat: Savage Attack
 
 ### Low Priority
 

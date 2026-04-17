@@ -27,8 +27,6 @@ ruleGroups:
 
       - id: str-save-modifier
         phase: normal
-        after:
-          - group: str-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -37,7 +35,7 @@ ruleGroups:
               fact: str.modifier
 
       - id: str-modifier-compute
-        phase: normal
+        phase: early
         after:
           - group: str-base-set
           - group: str-increases
@@ -66,6 +64,9 @@ ruleGroups:
                     severity: error
             rule:
               id: set-strength
+              phase: early
+              after:
+                - group: str-values
               group:
                 - __planned__
                 - str-base-set
@@ -130,8 +131,6 @@ ruleGroups:
 
       - id: dex-save-modifier
         phase: normal
-        after:
-          - group: dex-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -140,7 +139,7 @@ ruleGroups:
               fact: dex.modifier
 
       - id: dex-modifier-compute
-        phase: normal
+        phase: early
         after:
           - group: dex-base-set
           - group: dex-increases
@@ -169,6 +168,9 @@ ruleGroups:
                     severity: error
             rule:
               id: set-dexterity
+              phase: early
+              after:
+                - group: dex-values
               group:
                 - __planned__
                 - dex-base-set
@@ -234,8 +236,6 @@ ruleGroups:
 
       - id: con-save-modifier
         phase: normal
-        after:
-          - group: con-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -244,7 +244,7 @@ ruleGroups:
               fact: con.modifier
 
       - id: con-modifier-compute
-        phase: normal
+        phase: early
         after:
           - group: con-base-set
           - group: con-increases
@@ -273,6 +273,9 @@ ruleGroups:
                     severity: error
             rule:
               id: set-constitution
+              phase: early
+              after:
+                - group: con-values
               group:
                 - __planned__
                 - con-base-set
@@ -338,8 +341,6 @@ ruleGroups:
 
       - id: int-save-modifier
         phase: normal
-        after:
-          - group: int-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -348,7 +349,7 @@ ruleGroups:
               fact: int.modifier
 
       - id: int-modifier-compute
-        phase: normal
+        phase: early
         after:
           - group: int-base-set
           - group: int-increases
@@ -377,6 +378,9 @@ ruleGroups:
                     severity: error
             rule:
               id: set-intelligence
+              phase: early
+              after:
+                - group: int-values
               group:
                 - __planned__
                 - int-base-set
@@ -442,8 +446,6 @@ ruleGroups:
 
       - id: wis-save-modifier
         phase: normal
-        after:
-          - group: wis-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -452,7 +454,7 @@ ruleGroups:
               fact: wis.modifier
 
       - id: wis-modifier-compute
-        phase: normal
+        phase: early
         after:
           - group: wis-base-set
           - group: wis-increases
@@ -481,6 +483,9 @@ ruleGroups:
                     severity: error
             rule:
               id: set-wisdom
+              phase: early
+              after:
+                - group: wis-values
               group:
                 - __planned__
                 - wis-base-set
@@ -546,8 +551,6 @@ ruleGroups:
 
       - id: cha-save-modifier
         phase: normal
-        after:
-          - group: cha-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -556,7 +559,7 @@ ruleGroups:
               fact: cha.modifier
 
       - id: cha-modifier-compute
-        phase: normal
+        phase: early
         after:
           - group: cha-base-set
           - group: cha-increases
@@ -585,6 +588,9 @@ ruleGroups:
                     severity: error
             rule:
               id: set-charisma
+              phase: early
+              after:
+                - group: cha-values
               group:
                 - __planned__
                 - cha-base-set
@@ -652,11 +658,13 @@ ruleGroups:
                     severity: error
             rule:
               id: increase-strength
+              phase: early
               group:
                 - __planned__
                 - str-increases
               after:
                 - group: str-base-set
+                - group: str-values
               ui:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.increase-strength.name
@@ -698,11 +706,13 @@ ruleGroups:
                     severity: error
             rule:
               id: increase-dexterity
+              phase: early
               group:
                 - __planned__
                 - dex-increases
               after:
                 - group: dex-base-set
+                - group: dex-values
               ui:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.increase-dexterity.name
@@ -745,11 +755,13 @@ ruleGroups:
                     severity: error
             rule:
               id: increase-constitution
+              phase: early
               group:
                 - __planned__
                 - con-increases
               after:
                 - group: con-base-set
+                - group: con-values
               ui:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.increase-constitution.name
@@ -792,11 +804,13 @@ ruleGroups:
                     severity: error
             rule:
               id: increase-intelligence
+              phase: early
               group:
                 - __planned__
                 - int-increases
               after:
                 - group: int-base-set
+                - group: int-values
               ui:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.increase-intelligence.name
@@ -839,11 +853,13 @@ ruleGroups:
                     severity: error
             rule:
               id: increase-wisdom
+              phase: early
               group:
                 - __planned__
                 - wis-increases
               after:
                 - group: wis-base-set
+                - group: wis-values
               ui:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.increase-wisdom.name
@@ -886,11 +902,13 @@ ruleGroups:
                     severity: error
             rule:
               id: increase-charisma
+              phase: early
               group:
                 - __planned__
                 - cha-increases
               after:
                 - group: cha-base-set
+                - group: cha-values
               ui:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.increase-charisma.name
@@ -1269,8 +1287,6 @@ ruleGroups:
 
       - id: athletics-modifier
         phase: normal
-        after:
-          - group: str-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -1368,8 +1384,6 @@ ruleGroups:
 
       - id: acrobatics-modifier
         phase: normal
-        after:
-          - group: dex-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -1466,8 +1480,6 @@ ruleGroups:
 
       - id: animal-handling-modifier
         phase: normal
-        after:
-          - group: wis-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -1565,8 +1577,6 @@ ruleGroups:
 
       - id: arcana-modifier
         phase: normal
-        after:
-          - group: int-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -1664,8 +1674,6 @@ ruleGroups:
 
       - id: deception-modifier
         phase: normal
-        after:
-          - group: cha-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -1763,8 +1771,6 @@ ruleGroups:
 
       - id: history-modifier
         phase: normal
-        after:
-          - group: int-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -1862,8 +1868,6 @@ ruleGroups:
 
       - id: insight-modifier
         phase: normal
-        after:
-          - group: wis-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -1961,8 +1965,6 @@ ruleGroups:
 
       - id: intimidation-modifier
         phase: normal
-        after:
-          - group: cha-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -2060,8 +2062,6 @@ ruleGroups:
 
       - id: investigation-modifier
         phase: normal
-        after:
-          - group: int-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -2159,8 +2159,6 @@ ruleGroups:
 
       - id: medicine-modifier
         phase: normal
-        after:
-          - group: wis-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -2258,8 +2256,6 @@ ruleGroups:
 
       - id: nature-modifier
         phase: normal
-        after:
-          - group: int-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -2357,8 +2353,6 @@ ruleGroups:
 
       - id: perception-modifier
         phase: normal
-        after:
-          - group: wis-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -2456,8 +2450,6 @@ ruleGroups:
 
       - id: performance-modifier
         phase: normal
-        after:
-          - group: cha-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -2555,8 +2547,6 @@ ruleGroups:
 
       - id: persuasion-modifier
         phase: normal
-        after:
-          - group: cha-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -2654,8 +2644,6 @@ ruleGroups:
 
       - id: religion-modifier
         phase: normal
-        after:
-          - group: int-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -2753,8 +2741,6 @@ ruleGroups:
 
       - id: sleight-of-hand-modifier
         phase: normal
-        after:
-          - group: dex-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -2852,8 +2838,6 @@ ruleGroups:
 
       - id: stealth-modifier
         phase: normal
-        after:
-          - group: dex-modifier-ready
         activities:
           - type: numberIncrement
             target:
@@ -2951,8 +2935,6 @@ ruleGroups:
 
       - id: survival-modifier
         phase: normal
-        after:
-          - group: wis-modifier-ready
         activities:
           - type: numberIncrement
             target:
