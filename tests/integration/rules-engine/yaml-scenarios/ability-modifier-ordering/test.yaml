@@ -1,0 +1,67 @@
+name: 'Ability modifier ordering: consumers before ability-scores in rule group list'
+description: >
+  Validates that ability modifiers are available to all normal-phase consumers
+  regardless of rule group assignment order. Lists consuming rule groups (attacks, hp,
+  class-paladin) BEFORE ability-scores to expose ordering-dependent bugs where
+  modifiers read as 0 because standing rules execute in array order when they have
+  no mutual after-dependencies.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - class-paladin/class-paladin-level1
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/turn-rest
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          proficiency.bonus: 2
+
+  # Set STR=16 (modifier +3) and CON=14 (modifier +2)
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 16
+      assert:
+        facts:
+          str.value: 16
+          str.modifier: 3
+
+  - addOffer:
+      id: set-constitution
+      selections:
+        score: 14
+      assert:
+        facts:
+          con.value: 14
+          con.modifier: 2
+
+  # Attack bonuses must reflect ability modifiers even though attacks rule group
+  # is listed before ability-scores. Without the fix, these read 0 because
+  # compute-unarmed-hit-bonus and compute-unarmed-damage-bonus run before
+  # str-modifier-compute in normal phase (no mutual after-dependency).
+  - evaluate:
+      assert:
+        facts:
+          attack.unarmed.hitBonus: 5
+          attack.unarmed.damageBonus: 3
+          hp.max: 12
+          hp.current: 12
+
+  # Persist across turns — effects re-apply in early phase, modifiers must still
+  # be available to normal-phase consumers.
+  - endTurn:
+      assert:
+        facts:
+          str.value: 16
+          str.modifier: 3
+          con.value: 14
+          con.modifier: 2
+          attack.unarmed.hitBonus: 5
+          attack.unarmed.damageBonus: 3
+          hp.max: 12
+          hp.current: 12
