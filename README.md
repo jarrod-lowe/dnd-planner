@@ -4,7 +4,8 @@ A tablet-optimized web application for tracking D&D character resources and plan
 
 ## Goals
 
-Help players manage combat resources efficiently while other players are taking their turns. The app is designed for tablet use during gameplay sessions.
+Help players plan their turn while other players are taking their turns. The app
+is designed for tablet use during gameplay sessions.
 
 The app does not prevent a player from breaking the rules - in case the DM
 allows them to make any exception - but it marks things that cannot be done

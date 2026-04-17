@@ -348,7 +348,7 @@
         "proficiency-athletics": {
           "name": "valwI' - Suv"
         },
-        "proficiency-athletics-offer": {
+        "athletics-proficiency-offer": {
           "already_proficient": "Suv valwI' already"
         },
         "effect-athletics-proficiency": {
@@ -357,7 +357,7 @@
         "proficiency-acrobatics": {
           "name": "valwI' - yIqIm"
         },
-        "proficiency-acrobatics-offer": {
+        "acrobatics-proficiency-offer": {
           "already_proficient": "yIqIm valwI' already"
         },
         "effect-acrobatics-proficiency": {
@@ -366,7 +366,7 @@
         "proficiency-animal-handling": {
           "name": "valwI' - Ha'DIbaH SeH"
         },
-        "proficiency-animal-handling-offer": {
+        "animal-handling-proficiency-offer": {
           "already_proficient": "Ha'DIbaH SeH valwI' already"
         },
         "effect-animal-handling-proficiency": {
@@ -375,7 +375,7 @@
         "proficiency-arcana": {
           "name": "valwI' - mughlaH"
         },
-        "proficiency-arcana-offer": {
+        "arcana-proficiency-offer": {
           "already_proficient": "mughlaH valwI' already"
         },
         "effect-arcana-proficiency": {
@@ -384,7 +384,7 @@
         "proficiency-deception": {
           "name": "valwI' - nIch"
         },
-        "proficiency-deception-offer": {
+        "deception-proficiency-offer": {
           "already_proficient": "nIch valwI' already"
         },
         "effect-deception-proficiency": {
@@ -393,7 +393,7 @@
         "proficiency-history": {
           "name": "valwI' - qun"
         },
-        "proficiency-history-offer": {
+        "history-proficiency-offer": {
           "already_proficient": "qun valwI' already"
         },
         "effect-history-proficiency": {
@@ -402,7 +402,7 @@
         "proficiency-insight": {
           "name": "valwI' - Qob"
         },
-        "proficiency-insight-offer": {
+        "insight-proficiency-offer": {
           "already_proficient": "Qob valwI' already"
         },
         "effect-insight-proficiency": {
@@ -411,7 +411,7 @@
         "proficiency-intimidation": {
           "name": "valwI' - HIv"
         },
-        "proficiency-intimidation-offer": {
+        "intimidation-proficiency-offer": {
           "already_proficient": "HIv valwI' already"
         },
         "effect-intimidation-proficiency": {
@@ -420,7 +420,7 @@
         "proficiency-investigation": {
           "name": "valwI' - nej"
         },
-        "proficiency-investigation-offer": {
+        "investigation-proficiency-offer": {
           "already_proficient": "nej valwI' already"
         },
         "effect-investigation-proficiency": {
@@ -429,7 +429,7 @@
         "proficiency-medicine": {
           "name": "valwI' - Qel"
         },
-        "proficiency-medicine-offer": {
+        "medicine-proficiency-offer": {
           "already_proficient": "Qel valwI' already"
         },
         "effect-medicine-proficiency": {
@@ -438,7 +438,7 @@
         "proficiency-nature": {
           "name": "valwI' - Doch"
         },
-        "proficiency-nature-offer": {
+        "nature-proficiency-offer": {
           "already_proficient": "Doch valwI' already"
         },
         "effect-nature-proficiency": {
@@ -447,7 +447,7 @@
         "proficiency-perception": {
           "name": "valwI' - legh"
         },
-        "proficiency-perception-offer": {
+        "perception-proficiency-offer": {
           "already_proficient": "legh valwI' already"
         },
         "effect-perception-proficiency": {
@@ -456,7 +456,7 @@
         "proficiency-performance": {
           "name": "valwI' - chel"
         },
-        "proficiency-performance-offer": {
+        "performance-proficiency-offer": {
           "already_proficient": "chel valwI' already"
         },
         "effect-performance-proficiency": {
@@ -465,7 +465,7 @@
         "proficiency-persuasion": {
           "name": "valwI' - QIch"
         },
-        "proficiency-persuasion-offer": {
+        "persuasion-proficiency-offer": {
           "already_proficient": "QIch valwI' already"
         },
         "effect-persuasion-proficiency": {
@@ -474,7 +474,7 @@
         "proficiency-religion": {
           "name": "valwI' - Den"
         },
-        "proficiency-religion-offer": {
+        "religion-proficiency-offer": {
           "already_proficient": "Den valwI' already"
         },
         "effect-religion-proficiency": {
@@ -483,7 +483,7 @@
         "proficiency-sleight-of-hand": {
           "name": "valwI' - nich"
         },
-        "proficiency-sleight-of-hand-offer": {
+        "sleight-of-hand-proficiency-offer": {
           "already_proficient": "nich valwI' already"
         },
         "effect-sleight-of-hand-proficiency": {
@@ -492,7 +492,7 @@
         "proficiency-stealth": {
           "name": "valwI' - So'"
         },
-        "proficiency-stealth-offer": {
+        "stealth-proficiency-offer": {
           "already_proficient": "So' valwI' already"
         },
         "effect-stealth-proficiency": {
@@ -501,7 +501,7 @@
         "proficiency-survival": {
           "name": "valwI' - taH"
         },
-        "proficiency-survival-offer": {
+        "survival-proficiency-offer": {
           "already_proficient": "taH valwI' already"
         },
         "effect-survival-proficiency": {

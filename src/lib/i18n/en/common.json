@@ -348,7 +348,7 @@
         "proficiency-athletics": {
           "name": "Proficiency - Athletics"
         },
-        "proficiency-athletics-offer": {
+        "athletics-proficiency-offer": {
           "already_proficient": "Already proficient in Athletics"
         },
         "effect-athletics-proficiency": {
@@ -357,7 +357,7 @@
         "proficiency-acrobatics": {
           "name": "Proficiency - Acrobatics"
         },
-        "proficiency-acrobatics-offer": {
+        "acrobatics-proficiency-offer": {
           "already_proficient": "Already proficient in Acrobatics"
         },
         "effect-acrobatics-proficiency": {
@@ -366,7 +366,7 @@
         "proficiency-animal-handling": {
           "name": "Proficiency - Animal Handling"
         },
-        "proficiency-animal-handling-offer": {
+        "animal-handling-proficiency-offer": {
           "already_proficient": "Already proficient in Animal Handling"
         },
         "effect-animal-handling-proficiency": {
@@ -375,7 +375,7 @@
         "proficiency-arcana": {
           "name": "Proficiency - Arcana"
         },
-        "proficiency-arcana-offer": {
+        "arcana-proficiency-offer": {
           "already_proficient": "Already proficient in Arcana"
         },
         "effect-arcana-proficiency": {
@@ -384,7 +384,7 @@
         "proficiency-deception": {
           "name": "Proficiency - Deception"
         },
-        "proficiency-deception-offer": {
+        "deception-proficiency-offer": {
           "already_proficient": "Already proficient in Deception"
         },
         "effect-deception-proficiency": {
@@ -393,7 +393,7 @@
         "proficiency-history": {
           "name": "Proficiency - History"
         },
-        "proficiency-history-offer": {
+        "history-proficiency-offer": {
           "already_proficient": "Already proficient in History"
         },
         "effect-history-proficiency": {
@@ -402,7 +402,7 @@
         "proficiency-insight": {
           "name": "Proficiency - Insight"
         },
-        "proficiency-insight-offer": {
+        "insight-proficiency-offer": {
           "already_proficient": "Already proficient in Insight"
         },
         "effect-insight-proficiency": {
@@ -411,7 +411,7 @@
         "proficiency-intimidation": {
           "name": "Proficiency - Intimidation"
         },
-        "proficiency-intimidation-offer": {
+        "intimidation-proficiency-offer": {
           "already_proficient": "Already proficient in Intimidation"
         },
         "effect-intimidation-proficiency": {
@@ -420,7 +420,7 @@
         "proficiency-investigation": {
           "name": "Proficiency - Investigation"
         },
-        "proficiency-investigation-offer": {
+        "investigation-proficiency-offer": {
           "already_proficient": "Already proficient in Investigation"
         },
         "effect-investigation-proficiency": {
@@ -429,7 +429,7 @@
         "proficiency-medicine": {
           "name": "Proficiency - Medicine"
         },
-        "proficiency-medicine-offer": {
+        "medicine-proficiency-offer": {
           "already_proficient": "Already proficient in Medicine"
         },
         "effect-medicine-proficiency": {
@@ -438,7 +438,7 @@
         "proficiency-nature": {
           "name": "Proficiency - Nature"
         },
-        "proficiency-nature-offer": {
+        "nature-proficiency-offer": {
           "already_proficient": "Already proficient in Nature"
         },
         "effect-nature-proficiency": {
@@ -447,7 +447,7 @@
         "proficiency-perception": {
           "name": "Proficiency - Perception"
         },
-        "proficiency-perception-offer": {
+        "perception-proficiency-offer": {
           "already_proficient": "Already proficient in Perception"
         },
         "effect-perception-proficiency": {
@@ -456,7 +456,7 @@
         "proficiency-performance": {
           "name": "Proficiency - Performance"
         },
-        "proficiency-performance-offer": {
+        "performance-proficiency-offer": {
           "already_proficient": "Already proficient in Performance"
         },
         "effect-performance-proficiency": {
@@ -465,7 +465,7 @@
         "proficiency-persuasion": {
           "name": "Proficiency - Persuasion"
         },
-        "proficiency-persuasion-offer": {
+        "persuasion-proficiency-offer": {
           "already_proficient": "Already proficient in Persuasion"
         },
         "effect-persuasion-proficiency": {
@@ -474,7 +474,7 @@
         "proficiency-religion": {
           "name": "Proficiency - Religion"
         },
-        "proficiency-religion-offer": {
+        "religion-proficiency-offer": {
           "already_proficient": "Already proficient in Religion"
         },
         "effect-religion-proficiency": {
@@ -483,7 +483,7 @@
         "proficiency-sleight-of-hand": {
           "name": "Proficiency - Sleight of Hand"
         },
-        "proficiency-sleight-of-hand-offer": {
+        "sleight-of-hand-proficiency-offer": {
           "already_proficient": "Already proficient in Sleight of Hand"
         },
         "effect-sleight-of-hand-proficiency": {
@@ -492,7 +492,7 @@
         "proficiency-stealth": {
           "name": "Proficiency - Stealth"
         },
-        "proficiency-stealth-offer": {
+        "stealth-proficiency-offer": {
           "already_proficient": "Already proficient in Stealth"
         },
         "effect-stealth-proficiency": {
@@ -501,7 +501,7 @@
         "proficiency-survival": {
           "name": "Proficiency - Survival"
         },
-        "proficiency-survival-offer": {
+        "survival-proficiency-offer": {
           "already_proficient": "Already proficient in Survival"
         },
         "effect-survival-proficiency": {
