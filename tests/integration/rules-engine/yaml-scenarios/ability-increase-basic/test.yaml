@@ -1,0 +1,31 @@
+name: 'Ability Increase Basic'
+description: 'Adding strength increases after setting strength'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+steps:
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - set-strength
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 16
+      assert:
+        facts:
+          str.value: 16
+          str.modifier: 3
+  - addOffer:
+      id: increase-strength
+      assert:
+        facts:
+          str.value: 17
+          str.modifier: 3
+  - addOffer:
+      id: increase-strength
+      assert:
+        facts:
+          str.value: 18
+          str.modifier: 4

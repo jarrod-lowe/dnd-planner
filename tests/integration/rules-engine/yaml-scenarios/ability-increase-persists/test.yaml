@@ -1,0 +1,34 @@
+name: 'Ability Increase Persists Across Turns'
+description: 'Increase effect persists across turns'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+steps:
+  - evaluate:
+      assert:
+        facts:
+          str.value: 0
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 14
+      assert:
+        facts:
+          str.value: 14
+          str.modifier: 2
+  - addOffer:
+      id: increase-strength
+      assert:
+        facts:
+          str.value: 15
+          str.modifier: 2
+  - endTurn:
+      assert:
+        facts:
+          str.value: 15
+          str.modifier: 2
+  - endTurn:
+      assert:
+        facts:
+          str.value: 15
+          str.modifier: 2

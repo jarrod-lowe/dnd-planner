@@ -1,0 +1,22 @@
+name: 'Ability Increase Max Illegal'
+description: 'Increase is illegal when ability score is at 20'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+steps:
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - set-strength
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 20
+      assert:
+        facts:
+          str.value: 20
+          str.modifier: 5
+        offers:
+          illegal:
+            - increase-strength

@@ -237,6 +237,60 @@
         "effect-charisma": {
           "name": "Quv {{score}}"
         },
+        "increase-strength": {
+          "name": "HoS 'egh"
+        },
+        "increase-strength-offer": {
+          "max_score": "HoS nIvDIch 'oS"
+        },
+        "effect-increase-strength": {
+          "name": "HoS +wa'"
+        },
+        "increase-dexterity": {
+          "name": "Do 'egh"
+        },
+        "increase-dexterity-offer": {
+          "max_score": "Do nIvDIch 'oS"
+        },
+        "effect-increase-dexterity": {
+          "name": "Do +wa'"
+        },
+        "increase-constitution": {
+          "name": "'et 'egh"
+        },
+        "increase-constitution-offer": {
+          "max_score": "'et nIvDIch 'oS"
+        },
+        "effect-increase-constitution": {
+          "name": "'et +wa'"
+        },
+        "increase-intelligence": {
+          "name": "val 'egh"
+        },
+        "increase-intelligence-offer": {
+          "max_score": "val nIvDIch 'oS"
+        },
+        "effect-increase-intelligence": {
+          "name": "val +wa'"
+        },
+        "increase-wisdom": {
+          "name": "Sov 'egh"
+        },
+        "increase-wisdom-offer": {
+          "max_score": "Sov nIvDIch 'oS"
+        },
+        "effect-increase-wisdom": {
+          "name": "Sov +wa'"
+        },
+        "increase-charisma": {
+          "name": "Quv 'egh"
+        },
+        "increase-charisma-offer": {
+          "max_score": "Quv nIvDIch 'oS"
+        },
+        "effect-increase-charisma": {
+          "name": "Quv +wa'"
+        },
         "proficiency-str": {
           "name": "valwI' - HoS toDval"
         },
