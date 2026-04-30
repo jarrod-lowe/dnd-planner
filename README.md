@@ -358,6 +358,10 @@ The architecture supports:
 - Thunderous Smite & Divine Smite: Should depend specifically on MELEE or UNARMED attacks
 - Fix HP Calculation
 - Feat: Savage Attack
+- Increase {skill} needs illegal marker in Planned column
+- Feat: Sentinel
+- Paladin Level 4 (+ the oath)
+- Feat: Alert
 
 ### Low Priority
 
@@ -366,3 +370,4 @@ The architecture supports:
 - Defences
 - Weapon Proficiencies
 - UI code needs to be restructured to be less special-casey
+- Reduce duplication - e.g. We have no_action text and action consumption per action; this should be one text, and a *target
