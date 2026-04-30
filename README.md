@@ -339,6 +339,7 @@ The architecture supports:
 - Spells
 - Periapt of Wound Closure
 - Paladin Level 3 including Hit Die and Channel Divinity and +1 L1 spell slot
+- Paladin L2 should require L1
 - Paladin L1 should require Lay on Hands (test if it doesn't already)
 - Paladin L1 should set Wisdom and Charisma Saving Throw Proficiencies
 - Configuration done (to make all configuration illegal)
@@ -370,4 +371,4 @@ The architecture supports:
 - Defences
 - Weapon Proficiencies
 - UI code needs to be restructured to be less special-casey
-- Reduce duplication - e.g. We have no_action text and action consumption per action; this should be one text, and a *target
+- Reduce duplication - e.g. We have no_action text and action consumption per action; this should be one text, and a \*target
