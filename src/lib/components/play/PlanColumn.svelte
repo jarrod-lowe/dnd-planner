@@ -3,10 +3,12 @@
   import PlanItem from './PlanItem.svelte';
   import type { PlannedItem } from '$lib/play/types';
   import type { Facts, Rule } from '$lib/rules-engine';
+  import type { AnnotationDef } from '$lib/play/annotations';
 
   interface Props {
     items: PlannedItem[];
     facts?: Facts;
+    activeAnnotations?: AnnotationDef[];
     onSelectionChange?: (instanceId: string, selections: Record<string, unknown>) => void;
     onFollowup?: (rule: Rule) => void;
     onMoveUp: (instanceId: string) => void;
@@ -18,6 +20,7 @@
   let {
     items,
     facts = {},
+    activeAnnotations = [],
     onSelectionChange,
     onFollowup,
     onMoveUp,
@@ -38,6 +41,7 @@
         <PlanItem
           {item}
           {facts}
+          {activeAnnotations}
           canMoveUp={index > 0}
           canMoveDown={index < items.length - 1}
           onSelectionChange={onSelectionChange

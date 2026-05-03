@@ -46,90 +46,90 @@ ruleGroups:
             source:
               number: 5
             when:
-              fact: spellcasting.slots.level5.remaining
-              operator: greaterThan
-              value: 0
+              - fact: spellcasting.slots.level5.remaining
+                operator: greaterThan
+                value: 0
           - type: numberSet
             target:
               fact: tsmite.defaultDieCount
             source:
               number: 6
             when:
-              fact: spellcasting.slots.level5.remaining
-              operator: greaterThan
-              value: 0
+              - fact: spellcasting.slots.level5.remaining
+                operator: greaterThan
+                value: 0
           - type: numberSet
             target:
               fact: tsmite.lowestAvailableSlotLevel
             source:
               number: 4
             when:
-              fact: spellcasting.slots.level4.remaining
-              operator: greaterThan
-              value: 0
+              - fact: spellcasting.slots.level4.remaining
+                operator: greaterThan
+                value: 0
           - type: numberSet
             target:
               fact: tsmite.defaultDieCount
             source:
               number: 5
             when:
-              fact: spellcasting.slots.level4.remaining
-              operator: greaterThan
-              value: 0
+              - fact: spellcasting.slots.level4.remaining
+                operator: greaterThan
+                value: 0
           - type: numberSet
             target:
               fact: tsmite.lowestAvailableSlotLevel
             source:
               number: 3
             when:
-              fact: spellcasting.slots.level3.remaining
-              operator: greaterThan
-              value: 0
+              - fact: spellcasting.slots.level3.remaining
+                operator: greaterThan
+                value: 0
           - type: numberSet
             target:
               fact: tsmite.defaultDieCount
             source:
               number: 4
             when:
-              fact: spellcasting.slots.level3.remaining
-              operator: greaterThan
-              value: 0
+              - fact: spellcasting.slots.level3.remaining
+                operator: greaterThan
+                value: 0
           - type: numberSet
             target:
               fact: tsmite.lowestAvailableSlotLevel
             source:
               number: 2
             when:
-              fact: spellcasting.slots.level2.remaining
-              operator: greaterThan
-              value: 0
+              - fact: spellcasting.slots.level2.remaining
+                operator: greaterThan
+                value: 0
           - type: numberSet
             target:
               fact: tsmite.defaultDieCount
             source:
               number: 3
             when:
-              fact: spellcasting.slots.level2.remaining
-              operator: greaterThan
-              value: 0
+              - fact: spellcasting.slots.level2.remaining
+                operator: greaterThan
+                value: 0
           - type: numberSet
             target:
               fact: tsmite.lowestAvailableSlotLevel
             source:
               number: 1
             when:
-              fact: spellcasting.slots.level1.remaining
-              operator: greaterThan
-              value: 0
+              - fact: spellcasting.slots.level1.remaining
+                operator: greaterThan
+                value: 0
           - type: numberSet
             target:
               fact: tsmite.defaultDieCount
             source:
               number: 2
             when:
-              fact: spellcasting.slots.level1.remaining
-              operator: greaterThan
-              value: 0
+              - fact: spellcasting.slots.level1.remaining
+                operator: greaterThan
+                value: 0
 
       # Offer Thunderous Smite (bonus action, gated on attack action taken)
       - id: offer-thunderous-smite
@@ -140,28 +140,28 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
-              - condition:
+              - condition: &ts-has-bonus-action
                   fact: bonusActions.remaining
                   operator: greaterThan
                   value: 0
                 illegalDiagnostics:
                   - code: rule.spell-thunderous-smite.offer-thunderous-smite.no_bonus_action
                     severity: error
-              - condition:
+              - condition: &ts-has-attack-action
                   fact: attack.last.activation.action
                   operator: equals
                   value: 1
                 illegalDiagnostics:
                   - code: rule.spell-thunderous-smite.offer-thunderous-smite.no_attack
                     severity: error
-              - condition:
+              - condition: &ts-has-smite-slots
                   fact: tsmite.eligibleSlotsRemaining
                   operator: greaterThan
                   value: 0
                 illegalDiagnostics:
                   - code: rule.spell-thunderous-smite.offer-thunderous-smite.no_slots
                     severity: error
-              - condition:
+              - condition: &ts-has-spellcasting
                   fact: spellcasting.remaining
                   operator: greaterThan
                   value: 0
@@ -212,27 +212,27 @@ ruleGroups:
                   source:
                     string: rule.spell-thunderous-smite.offer-thunderous-smite.no_bonus_action
                   when:
-                    fact: bonusActions.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: bonusActions.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.spell-thunderous-smite.offer-thunderous-smite.no_spellcasting
                   when:
-                    fact: spellcasting.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: spellcasting.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.spell-thunderous-smite.offer-thunderous-smite.no_attack
                   when:
-                    fact: attack.last.activation.action
-                    operator: lessThan
-                    value: 1
+                    - fact: attack.last.activation.action
+                      operator: lessThan
+                      value: 1
                 # Bridge var to fact for conditional slot consumption
                 - type: numberSet
                   target:
@@ -247,9 +247,9 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    fact: tsmite.selectedLevel
-                    operator: equals
-                    value: 1
+                    - fact: tsmite.selectedLevel
+                      operator: equals
+                      value: 1
                 # Consume L2 slot
                 - type: numberIncrement
                   target:
@@ -258,9 +258,9 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    fact: tsmite.selectedLevel
-                    operator: equals
-                    value: 2
+                    - fact: tsmite.selectedLevel
+                      operator: equals
+                      value: 2
                 # Consume L3 slot
                 - type: numberIncrement
                   target:
@@ -269,9 +269,9 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    fact: tsmite.selectedLevel
-                    operator: equals
-                    value: 3
+                    - fact: tsmite.selectedLevel
+                      operator: equals
+                      value: 3
                 # Consume L4 slot
                 - type: numberIncrement
                   target:
@@ -280,9 +280,9 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    fact: tsmite.selectedLevel
-                    operator: equals
-                    value: 4
+                    - fact: tsmite.selectedLevel
+                      operator: equals
+                      value: 4
                 # Consume L5 slot
                 - type: numberIncrement
                   target:
@@ -291,9 +291,9 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    fact: tsmite.selectedLevel
-                    operator: equals
-                    value: 5
+                    - fact: tsmite.selectedLevel
+                      operator: equals
+                      value: 5
                 # Track slot consumption errors
                 - type: setAdd
                   target:
@@ -301,45 +301,45 @@ ruleGroups:
                   source:
                     string: rule.spell-thunderous-smite.offer-thunderous-smite.no_slots
                   when:
-                    fact: spellcasting.slots.level1.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: spellcasting.slots.level1.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.spell-thunderous-smite.offer-thunderous-smite.no_slots
                   when:
-                    fact: spellcasting.slots.level2.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: spellcasting.slots.level2.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.spell-thunderous-smite.offer-thunderous-smite.no_slots
                   when:
-                    fact: spellcasting.slots.level3.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: spellcasting.slots.level3.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.spell-thunderous-smite.offer-thunderous-smite.no_slots
                   when:
-                    fact: spellcasting.slots.level4.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: spellcasting.slots.level4.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.spell-thunderous-smite.offer-thunderous-smite.no_slots
                   when:
-                    fact: spellcasting.slots.level5.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: spellcasting.slots.level5.remaining
+                      operator: lessThan
+                      value: 0
                 # Persist L1 slot consumption across turns
                 - type: advertiseEffect
                   rule:
@@ -359,13 +359,13 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
                   when:
-                    fact: tsmite.selectedLevel
-                    operator: equals
-                    value: 1
+                    - fact: tsmite.selectedLevel
+                      operator: equals
+                      value: 1
                 # Persist L2 slot consumption across turns
                 - type: advertiseEffect
                   rule:
@@ -385,13 +385,13 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
                   when:
-                    fact: tsmite.selectedLevel
-                    operator: equals
-                    value: 2
+                    - fact: tsmite.selectedLevel
+                      operator: equals
+                      value: 2
                 # Persist L3 slot consumption across turns
                 - type: advertiseEffect
                   rule:
@@ -411,13 +411,13 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
                   when:
-                    fact: tsmite.selectedLevel
-                    operator: equals
-                    value: 3
+                    - fact: tsmite.selectedLevel
+                      operator: equals
+                      value: 3
                 # Persist L4 slot consumption across turns
                 - type: advertiseEffect
                   rule:
@@ -437,13 +437,13 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
                   when:
-                    fact: tsmite.selectedLevel
-                    operator: equals
-                    value: 4
+                    - fact: tsmite.selectedLevel
+                      operator: equals
+                      value: 4
                 # Persist L5 slot consumption across turns
                 - type: advertiseEffect
                   rule:
@@ -463,10 +463,26 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
                   when:
-                    fact: tsmite.selectedLevel
-                    operator: equals
-                    value: 5
+                    - fact: tsmite.selectedLevel
+                      operator: equals
+                      value: 5
+
+      # Annotate melee/unarmed attacks when Thunderous Smite is available
+      - id: annotate-thunderous-smite
+        after:
+          - group: __planned__
+          - group: spellcasting
+          - group: tsmite-slots-computed
+        activities:
+          - type: annotate
+            when:
+              - *ts-has-bonus-action
+              - *ts-has-attack-action
+              - *ts-has-smite-slots
+              - *ts-has-spellcasting
+            key: rule.spell-thunderous-smite.annotation
+            targets: [attack.melee, attack.unarmed]

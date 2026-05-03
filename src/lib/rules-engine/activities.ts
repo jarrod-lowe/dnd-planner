@@ -1,6 +1,7 @@
 import type {
   Activity,
   AdvertiseEffectActivity,
+  AnnotateActivity,
   AvailableRuleEntry,
   EmitEventActivity,
   GenerateRuleActivity,
@@ -17,7 +18,7 @@ import type {
 } from './types';
 import { isPhaseAfter } from './types';
 import { createBuiltinFunctionRegistry } from './functions';
-import { evaluateCondition, isRuleApplicable } from './conditions';
+import { evaluateCondition, evaluateWhenConditions, isRuleApplicable } from './conditions';
 import { resolveSource, resolveStringSource } from './sources';
 
 /**
@@ -85,14 +86,14 @@ function getTargetValue(target: Target, context: RuleContext): number {
  * @calledBy executeRuleActivities
  */
 export function executeActivity(activity: Activity, context: RuleContext): void {
-  // Check if activity has a when condition that gates execution
+  // Check if activity has when conditions that gate execution
   if (activity.when !== undefined) {
-    const conditionMet = evaluateCondition(
+    const conditionsMet = evaluateWhenConditions(
       activity.when,
       context.workingState.facts,
       context.workingState.events
     );
-    if (!conditionMet) {
+    if (!conditionsMet) {
       return; // Skip this activity
     }
   }
@@ -130,6 +131,9 @@ export function executeActivity(activity: Activity, context: RuleContext): void 
       break;
     case 'advertiseEffect':
       executeAdvertiseEffect(activity, context);
+      break;
+    case 'annotate':
+      executeAnnotate(activity, context);
       break;
     default:
       throw new Error(`Unknown activity type: ${(activity as { type: string }).type}`);
@@ -491,4 +495,11 @@ export function executeAdvertiseEffect(
   } else {
     throw new Error('advertiseEffect requires either rule or self=true');
   }
+}
+
+export function executeAnnotate(activity: AnnotateActivity, context: RuleContext): void {
+  context.workingState.annotations.push({
+    key: activity.key,
+    targets: activity.targets
+  });
 }

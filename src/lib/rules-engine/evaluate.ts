@@ -71,6 +71,7 @@ export function evaluate(input: EngineInput): EngineOutput {
     advertisedEffects: [],
     advertisedEffectCounter: existingEffectCounter,
     offeredRules: [],
+    annotations: [],
     appliedRuleIds: [],
     appliedActivityIds: []
   };

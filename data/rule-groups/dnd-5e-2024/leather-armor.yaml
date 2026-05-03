@@ -56,63 +56,63 @@ ruleGroups:
                   source:
                     number: 1
                   when:
-                    fact: armor.light.proficient
-                    operator: notEquals
-                    value: 1
+                    - fact: armor.light.proficient
+                      operator: notEquals
+                      value: 1
                 - type: numberSet
                   target:
                     fact: attack.dex.disadvantage
                   source:
                     number: 1
                   when:
-                    fact: armor.light.proficient
-                    operator: notEquals
-                    value: 1
+                    - fact: armor.light.proficient
+                      operator: notEquals
+                      value: 1
                 - type: numberSet
                   target:
                     fact: initiative.disadvantage
                   source:
                     number: 1
                   when:
-                    fact: armor.light.proficient
-                    operator: notEquals
-                    value: 1
+                    - fact: armor.light.proficient
+                      operator: notEquals
+                      value: 1
                 - type: numberSet
                   target:
                     fact: skill.acrobatics.disadvantage
                   source:
                     number: 1
                   when:
-                    fact: armor.light.proficient
-                    operator: notEquals
-                    value: 1
+                    - fact: armor.light.proficient
+                      operator: notEquals
+                      value: 1
                 - type: numberSet
                   target:
                     fact: skill.athletics.disadvantage
                   source:
                     number: 1
                   when:
-                    fact: armor.light.proficient
-                    operator: notEquals
-                    value: 1
+                    - fact: armor.light.proficient
+                      operator: notEquals
+                      value: 1
                 - type: numberSet
                   target:
                     fact: skill.sleight-of-hand.disadvantage
                   source:
                     number: 1
                   when:
-                    fact: armor.light.proficient
-                    operator: notEquals
-                    value: 1
+                    - fact: armor.light.proficient
+                      operator: notEquals
+                      value: 1
                 - type: numberSet
                   target:
                     fact: skill.stealth.disadvantage
                   source:
                     number: 1
                   when:
-                    fact: armor.light.proficient
-                    operator: notEquals
-                    value: 1
+                    - fact: armor.light.proficient
+                      operator: notEquals
+                      value: 1
                 # Spellcasting blocked when not proficient
                 - type: numberSet
                   target:
@@ -120,9 +120,9 @@ ruleGroups:
                   source:
                     number: 0
                   when:
-                    fact: armor.light.proficient
-                    operator: notEquals
-                    value: 1
+                    - fact: armor.light.proficient
+                      operator: notEquals
+                      value: 1
                 - type: advertiseEffect
                   rule:
                     id: effect-leather-armor
@@ -151,63 +151,63 @@ ruleGroups:
                         source:
                           number: 1
                         when:
-                          fact: armor.light.proficient
-                          operator: notEquals
-                          value: 1
+                          - fact: armor.light.proficient
+                            operator: notEquals
+                            value: 1
                       - type: numberSet
                         target:
                           fact: attack.dex.disadvantage
                         source:
                           number: 1
                         when:
-                          fact: armor.light.proficient
-                          operator: notEquals
-                          value: 1
+                          - fact: armor.light.proficient
+                            operator: notEquals
+                            value: 1
                       - type: numberSet
                         target:
                           fact: initiative.disadvantage
                         source:
                           number: 1
                         when:
-                          fact: armor.light.proficient
-                          operator: notEquals
-                          value: 1
+                          - fact: armor.light.proficient
+                            operator: notEquals
+                            value: 1
                       - type: numberSet
                         target:
                           fact: skill.acrobatics.disadvantage
                         source:
                           number: 1
                         when:
-                          fact: armor.light.proficient
-                          operator: notEquals
-                          value: 1
+                          - fact: armor.light.proficient
+                            operator: notEquals
+                            value: 1
                       - type: numberSet
                         target:
                           fact: skill.athletics.disadvantage
                         source:
                           number: 1
                         when:
-                          fact: armor.light.proficient
-                          operator: notEquals
-                          value: 1
+                          - fact: armor.light.proficient
+                            operator: notEquals
+                            value: 1
                       - type: numberSet
                         target:
                           fact: skill.sleight-of-hand.disadvantage
                         source:
                           number: 1
                         when:
-                          fact: armor.light.proficient
-                          operator: notEquals
-                          value: 1
+                          - fact: armor.light.proficient
+                            operator: notEquals
+                            value: 1
                       - type: numberSet
                         target:
                           fact: skill.stealth.disadvantage
                         source:
                           number: 1
                         when:
-                          fact: armor.light.proficient
-                          operator: notEquals
-                          value: 1
+                          - fact: armor.light.proficient
+                            operator: notEquals
+                            value: 1
                       # Spellcasting blocked when not proficient
                       - type: numberSet
                         target:
@@ -215,17 +215,17 @@ ruleGroups:
                         source:
                           number: 0
                         when:
-                          fact: armor.light.proficient
-                          operator: notEquals
-                          value: 1
+                          - fact: armor.light.proficient
+                            operator: notEquals
+                            value: 1
                       - type: numberSet
                         target:
                           fact: spellcasting.remaining
                         source:
                           number: 0
                         when:
-                          fact: armor.light.proficient
-                          operator: notEquals
-                          value: 1
+                          - fact: armor.light.proficient
+                            operator: notEquals
+                            value: 1
                       - type: advertiseEffect
                         self: true

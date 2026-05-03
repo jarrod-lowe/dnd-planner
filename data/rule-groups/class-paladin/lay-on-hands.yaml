@@ -99,18 +99,18 @@ ruleGroups:
                   source:
                     string: rule.class-paladin-lay-on-hands.offer-loh-heal.no_bonus_action
                   when:
-                    fact: bonusActions.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: bonusActions.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.class-paladin-lay-on-hands.offer-loh-heal.pool_empty
                   when:
-                    fact: layOnHands.pool.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: layOnHands.pool.remaining
+                      operator: lessThan
+                      value: 0
                 - type: advertiseEffect
                   rule:
                     id: effect-loh-heal
@@ -131,9 +131,9 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
 
       # Lay on Hands - Purify Poison (bonus action)
       - id: offer-loh-purify-poison
@@ -184,18 +184,18 @@ ruleGroups:
                   source:
                     string: rule.class-paladin-lay-on-hands.offer-loh-purify-poison.no_bonus_action
                   when:
-                    fact: bonusActions.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: bonusActions.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.class-paladin-lay-on-hands.offer-loh-purify-poison.insufficient_pool
                   when:
-                    fact: layOnHands.pool.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: layOnHands.pool.remaining
+                      operator: lessThan
+                      value: 0
                 - type: advertiseEffect
                   rule:
                     id: effect-loh-purify
@@ -216,6 +216,6 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0

@@ -94,9 +94,9 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
                 - *error-clear
                 - type: setAdd
                   target:
@@ -104,24 +104,24 @@ ruleGroups:
                   source:
                     string: rule.spell-create-and-destroy-water.offer-create-and-destroy-water.no_action
                   when:
-                    fact: actions.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: actions.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.spell-create-and-destroy-water.offer-create-and-destroy-water.no_spellcasting
                   when:
-                    fact: spellcasting.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: spellcasting.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.spell-create-and-destroy-water.offer-create-and-destroy-water.no_slots
                   when:
-                    fact: spellcasting.slots.level1.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: spellcasting.slots.level1.remaining
+                      operator: lessThan
+                      value: 0

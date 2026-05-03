@@ -15,6 +15,7 @@ function createEmptyWorkingState(): WorkingState {
     advertisedEffects: [],
     advertisedEffectCounter: 0,
     offeredRules: [],
+    annotations: [],
     appliedRuleIds: [],
     appliedActivityIds: []
   };

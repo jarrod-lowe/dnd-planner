@@ -45,45 +45,45 @@ ruleGroups:
             source:
               number: 5
             when:
-              fact: spellcasting.slots.level5.remaining
-              operator: greaterThan
-              value: 0
+              - fact: spellcasting.slots.level5.remaining
+                operator: greaterThan
+                value: 0
           - type: numberSet
             target:
               fact: command.lowestAvailableSlotLevel
             source:
               number: 4
             when:
-              fact: spellcasting.slots.level4.remaining
-              operator: greaterThan
-              value: 0
+              - fact: spellcasting.slots.level4.remaining
+                operator: greaterThan
+                value: 0
           - type: numberSet
             target:
               fact: command.lowestAvailableSlotLevel
             source:
               number: 3
             when:
-              fact: spellcasting.slots.level3.remaining
-              operator: greaterThan
-              value: 0
+              - fact: spellcasting.slots.level3.remaining
+                operator: greaterThan
+                value: 0
           - type: numberSet
             target:
               fact: command.lowestAvailableSlotLevel
             source:
               number: 2
             when:
-              fact: spellcasting.slots.level2.remaining
-              operator: greaterThan
-              value: 0
+              - fact: spellcasting.slots.level2.remaining
+                operator: greaterThan
+                value: 0
           - type: numberSet
             target:
               fact: command.lowestAvailableSlotLevel
             source:
               number: 1
             when:
-              fact: spellcasting.slots.level1.remaining
-              operator: greaterThan
-              value: 0
+              - fact: spellcasting.slots.level1.remaining
+                operator: greaterThan
+                value: 0
 
       # Offer Command (action spell)
       - id: offer-command
@@ -157,18 +157,18 @@ ruleGroups:
                   source:
                     string: rule.spell-command.offer-command.no_action
                   when:
-                    fact: actions.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: actions.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.spell-command.offer-command.no_spellcasting
                   when:
-                    fact: spellcasting.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: spellcasting.remaining
+                      operator: lessThan
+                      value: 0
                 # Bridge var to fact for conditional slot consumption
                 - type: numberSet
                   target:
@@ -183,9 +183,9 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    fact: command.selectedLevel
-                    operator: equals
-                    value: 1
+                    - fact: command.selectedLevel
+                      operator: equals
+                      value: 1
                 # Consume L2 slot
                 - type: numberIncrement
                   target:
@@ -194,9 +194,9 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    fact: command.selectedLevel
-                    operator: equals
-                    value: 2
+                    - fact: command.selectedLevel
+                      operator: equals
+                      value: 2
                 # Consume L3 slot
                 - type: numberIncrement
                   target:
@@ -205,9 +205,9 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    fact: command.selectedLevel
-                    operator: equals
-                    value: 3
+                    - fact: command.selectedLevel
+                      operator: equals
+                      value: 3
                 # Consume L4 slot
                 - type: numberIncrement
                   target:
@@ -216,9 +216,9 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    fact: command.selectedLevel
-                    operator: equals
-                    value: 4
+                    - fact: command.selectedLevel
+                      operator: equals
+                      value: 4
                 # Consume L5 slot
                 - type: numberIncrement
                   target:
@@ -227,9 +227,9 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    fact: command.selectedLevel
-                    operator: equals
-                    value: 5
+                    - fact: command.selectedLevel
+                      operator: equals
+                      value: 5
                 # Track slot consumption errors
                 - type: setAdd
                   target:
@@ -237,45 +237,45 @@ ruleGroups:
                   source:
                     string: rule.spell-command.offer-command.no_slots
                   when:
-                    fact: spellcasting.slots.level1.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: spellcasting.slots.level1.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.spell-command.offer-command.no_slots
                   when:
-                    fact: spellcasting.slots.level2.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: spellcasting.slots.level2.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.spell-command.offer-command.no_slots
                   when:
-                    fact: spellcasting.slots.level3.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: spellcasting.slots.level3.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.spell-command.offer-command.no_slots
                   when:
-                    fact: spellcasting.slots.level4.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: spellcasting.slots.level4.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.spell-command.offer-command.no_slots
                   when:
-                    fact: spellcasting.slots.level5.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: spellcasting.slots.level5.remaining
+                      operator: lessThan
+                      value: 0
                 # Persist L1 slot consumption across turns
                 - type: advertiseEffect
                   rule:
@@ -295,13 +295,13 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
                   when:
-                    fact: command.selectedLevel
-                    operator: equals
-                    value: 1
+                    - fact: command.selectedLevel
+                      operator: equals
+                      value: 1
                 # Persist L2 slot consumption across turns
                 - type: advertiseEffect
                   rule:
@@ -321,13 +321,13 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
                   when:
-                    fact: command.selectedLevel
-                    operator: equals
-                    value: 2
+                    - fact: command.selectedLevel
+                      operator: equals
+                      value: 2
                 # Persist L3 slot consumption across turns
                 - type: advertiseEffect
                   rule:
@@ -347,13 +347,13 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
                   when:
-                    fact: command.selectedLevel
-                    operator: equals
-                    value: 3
+                    - fact: command.selectedLevel
+                      operator: equals
+                      value: 3
                 # Persist L4 slot consumption across turns
                 - type: advertiseEffect
                   rule:
@@ -373,13 +373,13 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
                   when:
-                    fact: command.selectedLevel
-                    operator: equals
-                    value: 4
+                    - fact: command.selectedLevel
+                      operator: equals
+                      value: 4
                 # Persist L5 slot consumption across turns
                 - type: advertiseEffect
                   rule:
@@ -399,10 +399,10 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
                   when:
-                    fact: command.selectedLevel
-                    operator: equals
-                    value: 5
+                    - fact: command.selectedLevel
+                      operator: equals
+                      value: 5

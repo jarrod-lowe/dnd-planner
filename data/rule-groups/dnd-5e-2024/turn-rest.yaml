@@ -81,9 +81,9 @@ ruleGroups:
               number: 1
           - type: advertiseEffect
             when:
-              fact: turn.counter
-              operator: equals
-              value: 1
+              - fact: turn.counter
+                operator: equals
+                value: 1
             rule:
               id: effect-turn-counter
               phase: early

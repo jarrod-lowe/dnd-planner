@@ -693,6 +693,62 @@ Three stat types are supported:
 - `modifier`: shows `+X` or `-X`; hidden if fact is undefined
 - `usedMax`: shows `X / Y`; hidden if total is 0 or undefined
 
+### Annotations (`annotate` activity and `ui.annotationLabels`)
+
+Annotations display reminder text on action panels when certain conditions are met. The rules engine produces annotations via the `annotate` activity, and the UI matches them against action labels.
+
+**How it works:**
+
+1. Actions (e.g., attacks) declare `ui.annotationLabels` — labels they respond to
+2. Rules use `annotate` activities with conditions and target labels — the engine produces annotations when conditions pass
+3. When an annotation's targets overlap with an action's labels, the annotation text appears on that action's panel
+
+**Attack labels** (on the definition's `ui` field):
+
+```yaml
+# Unarmed Strike
+ui:
+  model: attack
+  annotationLabels: [attack.any, attack.melee, attack.unarmed]
+
+# Melee weapon (dagger, greataxe, etc.)
+ui:
+  model: attack
+  annotationLabels: [attack.any, attack.melee, attack.weapon]
+```
+
+**Annotation rules** (using `annotate` activity with YAML anchors):
+
+```yaml
+# Define condition anchors (shared with legalWhen)
+legalWhen:
+  - condition: &ds-has-bonus-action
+      fact: bonusActions.remaining
+      operator: greaterThan
+      value: 0
+    illegalDiagnostics:
+      - code: rule.class-paladin-divine-smite.offer-divine-smite.no_bonus_action
+        severity: error
+
+# Annotate rule uses the same anchors
+- id: annotate-divine-smite
+  after:
+    - group: __planned__
+    - group: spellcasting
+    - group: smite-slots-computed
+  activities:
+    - type: annotate
+      when:
+        - *ds-has-bonus-action
+        - *ds-has-attack-action
+        - *ds-has-smite-slots
+        - *ds-has-spellcasting
+      key: rule.class-paladin-divine-smite.annotation
+      targets: [attack.melee, attack.unarmed]
+```
+
+Annotations are produced by the engine when all `when` conditions pass. Use YAML anchors (`&name` / `*name`) to share conditions between `legalWhen` and the annotate rule's `when` — avoiding duplication. The annotation `key` must be an i18n key with translations in both locales.
+
 ### Translations
 
 Every rule group must have translations for both supported locales:

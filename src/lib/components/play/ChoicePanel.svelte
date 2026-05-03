@@ -3,12 +3,15 @@
   import WarningIndicator from './WarningIndicator.svelte';
   import type { AvailableRuleEntry, Facts, RangeEntry, Followup } from '$lib/rules-engine';
   import { evaluateCondition } from '$lib/rules-engine/conditions';
+  import { getAnnotationLabels, getMatchingAnnotations } from '$lib/play/annotations';
+  import type { AnnotationDef } from '$lib/play/annotations';
 
   interface Props {
     entry: AvailableRuleEntry;
     onTap?: () => void;
     editable?: boolean;
     facts?: Facts;
+    activeAnnotations?: AnnotationDef[];
     onSelectionChange?: (selections: Record<string, unknown>) => void;
     // Control buttons (for planned items)
     showControls?: boolean;
@@ -25,6 +28,7 @@
     onTap,
     editable = false,
     facts = {},
+    activeAnnotations = [],
     onSelectionChange,
     showControls = false,
     canMoveUp = true,
@@ -62,6 +66,11 @@
   const uiSection = $derived(entry.rule.ui?.section as string | undefined);
   const uiName = $derived(entry.rule.ui?.name as string | undefined);
   const uiModel = $derived(entry.rule.ui?.model as string | undefined);
+
+  // Match active annotations to this panel's labels
+  const matchingAnnotations = $derived(
+    getMatchingAnnotations(getAnnotationLabels(entry.rule.ui), activeAnnotations)
+  );
 
   // Helper to resolve a var's default value from facts
   function resolveVarDefault(varName: string): number | undefined {
@@ -1219,6 +1228,17 @@
           {/if}
         </div>
       {/if}
+      {#if matchingAnnotations.length > 0}
+        <div
+          class="choice-panel__annotations"
+          role="note"
+          aria-label={$t('play.choices.annotations.label')}
+        >
+          {#each matchingAnnotations as annotation (annotation.key)}
+            <span class="choice-panel__annotation">{$t(annotation.key)}</span>
+          {/each}
+        </div>
+      {/if}
     </div>
     {#if visibleFollowups.length > 0}
       <div
@@ -1413,6 +1433,17 @@
           {#if spellSaveSaveDC !== undefined && entry.rule.ui?.showDC}
             <span class="effect-panel__save">WIS Save DC {spellSaveSaveDC}</span>
           {/if}
+        </div>
+      {/if}
+      {#if matchingAnnotations.length > 0}
+        <div
+          class="choice-panel__annotations"
+          role="note"
+          aria-label={$t('play.choices.annotations.label')}
+        >
+          {#each matchingAnnotations as annotation (annotation.key)}
+            <span class="choice-panel__annotation">{$t(annotation.key)}</span>
+          {/each}
         </div>
       {/if}
     </div>
@@ -1942,5 +1973,23 @@
   .roll-popover__item-note {
     font-size: var(--font-size-xs);
     opacity: 0.7;
+  }
+
+  .choice-panel__annotations {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    padding-top: var(--spacing-xs);
+  }
+
+  .choice-panel__annotation {
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    color: var(--md-sys-color-on-primary-container);
+    background: var(--md-sys-color-primary-container);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    line-height: var(--line-height-md);
   }
 </style>

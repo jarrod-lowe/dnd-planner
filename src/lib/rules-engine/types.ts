@@ -166,6 +166,16 @@ export interface Status {
   applicable: boolean;
 }
 
+// === ANNOTATIONS ===
+
+/**
+ * An annotation produced by the rules engine for display on action panels.
+ */
+export interface Annotation {
+  key: string;
+  targets: string[];
+}
+
 // === ACTIVITIES ===
 
 /**
@@ -174,8 +184,8 @@ export interface Status {
 export interface ActivityBase {
   id: string;
   type: string;
-  /** Optional condition that gates execution - if false, activity is skipped */
-  when?: Condition;
+  /** Conditions that must all be satisfied for execution - activity is skipped if any fails */
+  when?: Condition[];
 }
 
 /**
@@ -305,6 +315,17 @@ export interface AdvertiseEffectActivity extends ActivityBase {
 }
 
 /**
+ * Produces an annotation for display on matching action panels.
+ */
+export interface AnnotateActivity extends ActivityBase {
+  type: 'annotate';
+  /** i18n key for the annotation text */
+  key: string;
+  /** Label strings that action panels must have to receive this annotation */
+  targets: string[];
+}
+
+/**
  * Union of all activity types.
  */
 export type Activity =
@@ -318,7 +339,8 @@ export type Activity =
   | OfferRuleActivity
   | SetClearActivity
   | SetAddActivity
-  | AdvertiseEffectActivity;
+  | AdvertiseEffectActivity
+  | AnnotateActivity;
 
 // === RULE ===
 
@@ -444,6 +466,7 @@ export interface EngineOutput {
   facts: Facts;
   collections: Record<string, unknown>;
   availableRules: AvailableRuleEntry[];
+  annotations: Annotation[];
   diagnostics: Diagnostics;
   trace: Trace;
   /** Advertised effects that should persist across turns. UI commits these at end of turn. */
@@ -468,6 +491,7 @@ export interface WorkingState {
   advertisedEffects: Rule[];
   advertisedEffectCounter: number;
   offeredRules: AvailableRuleEntry[];
+  annotations: Annotation[];
   appliedRuleIds: string[];
   appliedActivityIds: string[];
 }

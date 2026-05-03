@@ -10,6 +10,7 @@
     "planned.move.amount": 10
   },
   "collections": {},
+  "annotations": [],
   "availableRules": [
     {
       "applicable": true,

@@ -45,45 +45,45 @@ ruleGroups:
             source:
               number: 5
             when:
-              fact: spellcasting.slots.level5.remaining
-              operator: greaterThan
-              value: 0
+              - fact: spellcasting.slots.level5.remaining
+                operator: greaterThan
+                value: 0
           - type: numberSet
             target:
               fact: sanctuary.lowestAvailableSlotLevel
             source:
               number: 4
             when:
-              fact: spellcasting.slots.level4.remaining
-              operator: greaterThan
-              value: 0
+              - fact: spellcasting.slots.level4.remaining
+                operator: greaterThan
+                value: 0
           - type: numberSet
             target:
               fact: sanctuary.lowestAvailableSlotLevel
             source:
               number: 3
             when:
-              fact: spellcasting.slots.level3.remaining
-              operator: greaterThan
-              value: 0
+              - fact: spellcasting.slots.level3.remaining
+                operator: greaterThan
+                value: 0
           - type: numberSet
             target:
               fact: sanctuary.lowestAvailableSlotLevel
             source:
               number: 2
             when:
-              fact: spellcasting.slots.level2.remaining
-              operator: greaterThan
-              value: 0
+              - fact: spellcasting.slots.level2.remaining
+                operator: greaterThan
+                value: 0
           - type: numberSet
             target:
               fact: sanctuary.lowestAvailableSlotLevel
             source:
               number: 1
             when:
-              fact: spellcasting.slots.level1.remaining
-              operator: greaterThan
-              value: 0
+              - fact: spellcasting.slots.level1.remaining
+                operator: greaterThan
+                value: 0
 
       # Offer Sanctuary (bonus action)
       - id: offer-sanctuary
@@ -153,18 +153,18 @@ ruleGroups:
                   source:
                     string: rule.spell-sanctuary.offer-sanctuary.no_bonus_action
                   when:
-                    fact: bonusActions.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: bonusActions.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.spell-sanctuary.offer-sanctuary.no_spellcasting
                   when:
-                    fact: spellcasting.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: spellcasting.remaining
+                      operator: lessThan
+                      value: 0
                 # Bridge var to fact for conditional slot consumption
                 - type: numberSet
                   target:
@@ -179,9 +179,9 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    fact: sanctuary.selectedLevel
-                    operator: equals
-                    value: 1
+                    - fact: sanctuary.selectedLevel
+                      operator: equals
+                      value: 1
                 # Consume L2 slot
                 - type: numberIncrement
                   target:
@@ -190,9 +190,9 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    fact: sanctuary.selectedLevel
-                    operator: equals
-                    value: 2
+                    - fact: sanctuary.selectedLevel
+                      operator: equals
+                      value: 2
                 # Consume L3 slot
                 - type: numberIncrement
                   target:
@@ -201,9 +201,9 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    fact: sanctuary.selectedLevel
-                    operator: equals
-                    value: 3
+                    - fact: sanctuary.selectedLevel
+                      operator: equals
+                      value: 3
                 # Consume L4 slot
                 - type: numberIncrement
                   target:
@@ -212,9 +212,9 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    fact: sanctuary.selectedLevel
-                    operator: equals
-                    value: 4
+                    - fact: sanctuary.selectedLevel
+                      operator: equals
+                      value: 4
                 # Consume L5 slot
                 - type: numberIncrement
                   target:
@@ -223,9 +223,9 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    fact: sanctuary.selectedLevel
-                    operator: equals
-                    value: 5
+                    - fact: sanctuary.selectedLevel
+                      operator: equals
+                      value: 5
                 # Track slot consumption errors
                 - type: setAdd
                   target:
@@ -233,45 +233,45 @@ ruleGroups:
                   source:
                     string: rule.spell-sanctuary.offer-sanctuary.no_slots
                   when:
-                    fact: spellcasting.slots.level1.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: spellcasting.slots.level1.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.spell-sanctuary.offer-sanctuary.no_slots
                   when:
-                    fact: spellcasting.slots.level2.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: spellcasting.slots.level2.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.spell-sanctuary.offer-sanctuary.no_slots
                   when:
-                    fact: spellcasting.slots.level3.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: spellcasting.slots.level3.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.spell-sanctuary.offer-sanctuary.no_slots
                   when:
-                    fact: spellcasting.slots.level4.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: spellcasting.slots.level4.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.spell-sanctuary.offer-sanctuary.no_slots
                   when:
-                    fact: spellcasting.slots.level5.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: spellcasting.slots.level5.remaining
+                      operator: lessThan
+                      value: 0
                 # Persist L1 slot consumption across turns
                 - type: advertiseEffect
                   rule:
@@ -291,13 +291,13 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
                   when:
-                    fact: sanctuary.selectedLevel
-                    operator: equals
-                    value: 1
+                    - fact: sanctuary.selectedLevel
+                      operator: equals
+                      value: 1
                 # Persist L2 slot consumption across turns
                 - type: advertiseEffect
                   rule:
@@ -317,13 +317,13 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
                   when:
-                    fact: sanctuary.selectedLevel
-                    operator: equals
-                    value: 2
+                    - fact: sanctuary.selectedLevel
+                      operator: equals
+                      value: 2
                 # Persist L3 slot consumption across turns
                 - type: advertiseEffect
                   rule:
@@ -343,13 +343,13 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
                   when:
-                    fact: sanctuary.selectedLevel
-                    operator: equals
-                    value: 3
+                    - fact: sanctuary.selectedLevel
+                      operator: equals
+                      value: 3
                 # Persist L4 slot consumption across turns
                 - type: advertiseEffect
                   rule:
@@ -369,13 +369,13 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
                   when:
-                    fact: sanctuary.selectedLevel
-                    operator: equals
-                    value: 4
+                    - fact: sanctuary.selectedLevel
+                      operator: equals
+                      value: 4
                 # Persist L5 slot consumption across turns
                 - type: advertiseEffect
                   rule:
@@ -395,13 +395,13 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
                   when:
-                    fact: sanctuary.selectedLevel
-                    operator: equals
-                    value: 5
+                    - fact: sanctuary.selectedLevel
+                      operator: equals
+                      value: 5
                 # Create persistent Sanctuary effect (10 rounds, WIS save)
                 - type: advertiseEffect
                   rule:

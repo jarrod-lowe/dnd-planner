@@ -5,16 +5,25 @@
   import EffectPanel from './EffectPanel.svelte';
   import WarningIndicator from './WarningIndicator.svelte';
   import type { AvailableRuleEntry, Facts } from '$lib/rules-engine';
+  import type { AnnotationDef } from '$lib/play/annotations';
 
   interface Props {
     leader: AvailableRuleEntry;
     followers: AvailableRuleEntry[];
     facts?: Facts;
+    activeAnnotations?: AnnotationDef[];
     onAddToPlan: (entry: AvailableRuleEntry) => void;
     readOnly?: boolean;
   }
 
-  let { leader, followers, facts = {}, onAddToPlan, readOnly = false }: Props = $props();
+  let {
+    leader,
+    followers,
+    facts = {},
+    activeAnnotations = [],
+    onAddToPlan,
+    readOnly = false
+  }: Props = $props();
 
   let expanded = $state(false);
 
@@ -84,7 +93,7 @@
   {#if readOnly}
     <EffectPanel entry={leader} />
   {:else}
-    <ChoicePanel entry={leader} {facts} onTap={() => onAddToPlan(leader)} />
+    <ChoicePanel entry={leader} {facts} {activeAnnotations} onTap={() => onAddToPlan(leader)} />
   {/if}
 
   <!-- Compact row for followers -->

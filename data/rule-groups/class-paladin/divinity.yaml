@@ -75,9 +75,9 @@ ruleGroups:
                 - type: advertiseEffect
                   self: true
                   when:
-                    fact: rest.long
-                    operator: equals
-                    value: 0
+                    - fact: rest.long
+                      operator: equals
+                      value: 0
 
       # Offer Divine Sense (bonus action)
       - id: offer-divine-sense
@@ -132,18 +132,18 @@ ruleGroups:
                   source:
                     string: rule.class-paladin-divinity.offer-divine-sense.no_bonus_action
                   when:
-                    fact: bonusActions.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: bonusActions.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.class-paladin-divinity.offer-divine-sense.no_divinity
                   when:
-                    fact: divinity.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: divinity.remaining
+                      operator: lessThan
+                      value: 0
                 # Persist consumption across turns
                 - type: advertiseEffect
                   rule:
@@ -167,9 +167,9 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
                 # Status reminder (user-removable)
                 - type: advertiseEffect
                   rule:
@@ -188,6 +188,6 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0

@@ -79,6 +79,7 @@ export function buildOutput(input: EngineInput, workingState: WorkingState): Eng
     facts: workingState.facts,
     collections: {},
     availableRules: workingState.offeredRules,
+    annotations: workingState.annotations,
     diagnostics,
     trace: {
       appliedRuleIds: workingState.appliedRuleIds,

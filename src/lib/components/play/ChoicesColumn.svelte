@@ -4,16 +4,25 @@
   import { groupChoicesBySection } from '$lib/play/groupChoicesBySection';
   import { SECTION_ORDER } from '$lib/play/sectionConfig';
   import type { AvailableRuleEntry, Facts } from '$lib/rules-engine';
+  import type { AnnotationDef } from '$lib/play/annotations';
 
   interface Props {
     entries: AvailableRuleEntry[];
     facts?: Facts;
     isLoading?: boolean;
     showIllegal?: boolean;
+    activeAnnotations?: AnnotationDef[];
     onChoiceTap: (entry: AvailableRuleEntry) => void;
   }
 
-  let { entries, facts = {}, isLoading = false, showIllegal = true, onChoiceTap }: Props = $props();
+  let {
+    entries,
+    facts = {},
+    isLoading = false,
+    showIllegal = true,
+    activeAnnotations = [],
+    onChoiceTap
+  }: Props = $props();
 
   // Group entries by section, then by packBehind within each section
   const sectionGroups = $derived(groupChoicesBySection(entries, SECTION_ORDER, showIllegal));
@@ -36,6 +45,7 @@
           packedGroups={sectionGroup.packedGroups}
           hasLegalEntries={sectionGroup.hasLegalEntries}
           {facts}
+          {activeAnnotations}
           {onChoiceTap}
         />
       {/each}

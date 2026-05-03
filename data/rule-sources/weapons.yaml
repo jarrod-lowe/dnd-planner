@@ -7,6 +7,7 @@ definitions:
       model: attack
       name: rule.dnd-5e-2024.attacks.unarmed-strike.name
       disadvantageFact: attack.str.disadvantage
+      annotationLabels: [attack.any, attack.melee, attack.unarmed]
     vars:
       ranges:
         default:
@@ -51,6 +52,7 @@ definitions:
       model: attack
       name: rule.dnd-5e-2024.attacks.dagger.name
       disadvantageFact: attack.str.disadvantage
+      annotationLabels: [attack.any, attack.melee, attack.weapon]
     vars:
       ranges:
         default:
@@ -99,6 +101,7 @@ definitions:
       model: attack
       name: rule.dnd-5e-2024.attacks.greataxe.name
       disadvantageFact: attack.str.disadvantage
+      annotationLabels: [attack.any, attack.melee, attack.weapon]
       followups:
         - type: attack-line
           condition:
@@ -148,6 +151,7 @@ definitions:
       model: attack
       name: rule.dnd-5e-2024.attacks.javelin.name
       disadvantageFact: attack.str.disadvantage
+      annotationLabels: [attack.any, attack.melee, attack.weapon]
       followups:
         - type: effect
           condition:
@@ -212,6 +216,7 @@ definitions:
       model: attack
       name: rule.dnd-5e-2024.attacks.scimitar.name
       disadvantageFact: attack.dex.disadvantage
+      annotationLabels: [attack.any, attack.melee, attack.weapon]
     vars:
       ranges:
         default:
@@ -284,9 +289,9 @@ profiles:
           source:
             string: rule.dnd-5e-2024.attacks.activation.no_action
           when:
-            fact: actions.remaining
-            operator: lessThan
-            value: 0
+            - fact: actions.remaining
+              operator: lessThan
+              value: 0
           id: error-check
     emit:
       mode: offerRule
@@ -335,9 +340,9 @@ profiles:
           source:
             string: rule.dnd-5e-2024.attacks.activation.no_reaction
           when:
-            fact: reactions.remaining
-            operator: lessThan
-            value: 0
+            - fact: reactions.remaining
+              operator: lessThan
+              value: 0
           id: error-check
     emit:
       mode: offerRule
@@ -387,9 +392,9 @@ profiles:
           source:
             string: rule.dnd-5e-2024.attacks.activation.no_bonus_action
           when:
-            fact: bonusActions.remaining
-            operator: lessThan
-            value: 0
+            - fact: bonusActions.remaining
+              operator: lessThan
+              value: 0
           id: error-check
     emit:
       mode: offerRule

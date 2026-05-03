@@ -58,6 +58,6 @@ ruleGroups:
                   source:
                     string: rule.dnd-5e-2024.dash.action-dash-offer.no_action
                   when:
-                    fact: actions.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: actions.remaining
+                      operator: lessThan
+                      value: 0

@@ -73,18 +73,18 @@ ruleGroups:
                   source:
                     string: rule.class-paladin-oath-redemption-level3.offer-rebuke-the-violent.no_reaction
                   when:
-                    fact: reactions.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: reactions.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.class-paladin-oath-redemption-level3.offer-rebuke-the-violent.no_divinity
                   when:
-                    fact: divinity.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: divinity.remaining
+                      operator: lessThan
+                      value: 0
                 # Persist divinity consumption across turns
                 - type: advertiseEffect
                   rule:
@@ -108,9 +108,9 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
 
       # Offer Emissary of Peace (bonus action + 1 divinity point)
       - id: offer-emissary-of-peace
@@ -171,18 +171,18 @@ ruleGroups:
                   source:
                     string: rule.class-paladin-oath-redemption-level3.offer-emissary-of-peace.no_bonus_action
                   when:
-                    fact: bonusActions.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: bonusActions.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.class-paladin-oath-redemption-level3.offer-emissary-of-peace.no_divinity
                   when:
-                    fact: divinity.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: divinity.remaining
+                      operator: lessThan
+                      value: 0
                 # Persist divinity consumption across turns
                 - type: advertiseEffect
                   rule:
@@ -206,9 +206,9 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
                 # Status reminder + persuasion bonus (user-removable)
                 - type: advertiseEffect
                   rule:
@@ -232,6 +232,6 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0

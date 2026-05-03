@@ -70,21 +70,21 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
-              - condition:
+              - condition: &ps-has-bonus-action
                   fact: bonusActions.remaining
                   operator: greaterThan
                   value: 0
                 illegalDiagnostics:
                   - code: rule.class-paladin-paladin-smite.offer-paladin-smite.no_bonus_action
                     severity: error
-              - condition:
+              - condition: &ps-has-attack-action
                   fact: attack.last.activation.action
                   operator: equals
                   value: 1
                 illegalDiagnostics:
                   - code: rule.class-paladin-paladin-smite.offer-paladin-smite.no_attack
                     severity: error
-              - condition:
+              - condition: &ps-has-paladin-smite-remaining
                   fact: paladinSmite.remaining
                   operator: greaterThan
                   value: 0
@@ -120,18 +120,18 @@ ruleGroups:
                   source:
                     string: rule.class-paladin-paladin-smite.offer-paladin-smite.no_bonus_action
                   when:
-                    fact: bonusActions.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: bonusActions.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors
                   source:
                     string: rule.class-paladin-paladin-smite.offer-paladin-smite.no_attack
                   when:
-                    fact: attack.last.activation.action
-                    operator: lessThan
-                    value: 1
+                    - fact: attack.last.activation.action
+                      operator: lessThan
+                      value: 1
                 # Set paladinSmite.remaining to 0
                 - type: numberSet
                   target:
@@ -158,6 +158,20 @@ ruleGroups:
                       - type: advertiseEffect
                         self: true
                         when:
-                          fact: rest.long
-                          operator: equals
-                          value: 0
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
+
+      # Annotate melee/unarmed attacks when Paladin Smite is available
+      - id: annotate-paladin-smite
+        after:
+          - group: __planned__
+          - group: paladin-smite-set
+        activities:
+          - type: annotate
+            when:
+              - *ps-has-bonus-action
+              - *ps-has-attack-action
+              - *ps-has-paladin-smite-remaining
+            key: rule.class-paladin-paladin-smite.annotation
+            targets: [attack.melee, attack.unarmed]

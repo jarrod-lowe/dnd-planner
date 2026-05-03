@@ -15,6 +15,7 @@ function createEmptyState(): WorkingState {
     advertisedEffects: [],
     advertisedEffectCounter: 0,
     offeredRules: [],
+    annotations: [],
     appliedRuleIds: [],
     appliedActivityIds: []
   };
@@ -334,11 +335,13 @@ describe('executeAdvertiseEffect', () => {
         id: 'adv-1',
         type: 'advertiseEffect',
         rule: effectRule,
-        when: {
+        when: [
+          {
           fact: 'some.fact',
           operator: 'equals',
           value: 1
-        }
+          }
+        ]
       };
 
       const context = createEmptyContext();

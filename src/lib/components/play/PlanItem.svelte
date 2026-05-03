@@ -2,10 +2,12 @@
   import ChoicePanel from './ChoicePanel.svelte';
   import type { PlannedItem } from '$lib/play/types';
   import type { Facts, Rule } from '$lib/rules-engine';
+  import type { AnnotationDef } from '$lib/play/annotations';
 
   interface Props {
     item: PlannedItem;
     facts?: Facts;
+    activeAnnotations?: AnnotationDef[];
     canMoveUp?: boolean;
     canMoveDown?: boolean;
     onSelectionChange?: (selections: Record<string, unknown>) => void;
@@ -18,6 +20,7 @@
   let {
     item,
     facts = {},
+    activeAnnotations = [],
     canMoveUp = true,
     canMoveDown = true,
     onSelectionChange,
@@ -42,6 +45,7 @@
     entry={{ rule: item.rule, legal: !isIllegal, applicable: true, diagnostics }}
     editable={true}
     {facts}
+    {activeAnnotations}
     {onSelectionChange}
     {onFollowup}
     showControls={true}
