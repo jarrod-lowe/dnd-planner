@@ -19,6 +19,7 @@
     "spell-sleep": {
       "offer-sleep": {
         "name": "Sleep",
+        "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
         "already_concentrating": "Already concentrating",
         "no_slots": "No spell slots remaining"
@@ -36,6 +37,7 @@
     "spell-protection-from-evil-and-good": {
       "offer-protection-from-evil-and-good": {
         "name": "Protection from Evil and Good",
+        "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
         "already_concentrating": "Already concentrating",
         "no_slots": "No spell slots remaining"

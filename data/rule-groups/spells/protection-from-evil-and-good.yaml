@@ -101,11 +101,19 @@ ruleGroups:
       - id: offer-protection-from-evil-and-good
         after:
           - group: __planned__
+          - group: action
           - group: spellcasting
           - group: protection-from-evil-and-good-slots-computed
         activities:
           - type: offerRule
             legalWhen:
+              - condition:
+                  fact: actions.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-protection-from-evil-and-good.offer-protection-from-evil-and-good.no_action
+                    severity: error
               - condition:
                   fact: spellcasting.remaining
                   operator: greaterThan
@@ -131,6 +139,7 @@ ruleGroups:
               id: cast-protection-from-evil-and-good
               group:
                 - __planned__
+                - action
                 - spellcasting
               ui:
                 model: spell-save
@@ -143,6 +152,13 @@ ruleGroups:
                   default:
                     fact: protection-from-evil-and-good.lowestAvailableSlotLevel
               activities:
+                # Consume action
+                - type: numberIncrement
+                  target:
+                    fact: actions.remaining
+                  source:
+                    number: 1
+                  subtract: true
                 # Consume spellcasting resource
                 - type: numberIncrement
                   target:
@@ -159,6 +175,15 @@ ruleGroups:
                   subtract: true
                 # Error tracking
                 - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-protection-from-evil-and-good.offer-protection-from-evil-and-good.no_action
+                  when:
+                    fact: actions.remaining
+                    operator: lessThan
+                    value: 0
                 - type: setAdd
                   target:
                     var: errors
