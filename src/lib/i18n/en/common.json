@@ -989,6 +989,7 @@
     "plan": {
       "title": "Your Plan",
       "empty": "No actions planned",
+      "actions": "Item controls",
       "moveUp": "Move up",
       "moveDown": "Move down",
       "remove": "Remove",

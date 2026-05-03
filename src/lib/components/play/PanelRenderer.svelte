@@ -20,6 +20,10 @@
     activeAnnotations?: Annotation[];
     onSelectionChange?: (selections: Record<string, unknown>) => void;
     onRemove?: () => void;
+    canMoveUp?: boolean;
+    canMoveDown?: boolean;
+    onMoveUp?: () => void;
+    onMoveDown?: () => void;
   }
 
   let {
@@ -30,7 +34,11 @@
     selections = {},
     activeAnnotations = [],
     onSelectionChange,
-    onRemove
+    onRemove,
+    canMoveUp = true,
+    canMoveDown = true,
+    onMoveUp,
+    onMoveDown
   }: Props = $props();
 
   const descriptor = $derived(extractPanelDescriptor(entry.rule));
@@ -148,20 +156,167 @@
   const matchingAnnotations = $derived(
     getMatchingAnnotations(annotationLabels, activeAnnotations)
   );
+
+  const hasActions = $derived(!!onRemove || !!onMoveUp || !!onMoveDown);
+
+  function handleRemoveClick(e: MouseEvent) {
+    e.stopPropagation();
+    onRemove?.();
+  }
 </script>
 
-{#if editable}
-  <div class="panel-renderer panel-renderer--editable">
-    <div class="panel-renderer__header">
-      <span class="panel-renderer__title">{displayName}</span>
-      {#if hasWarning && warningType}
-        <WarningIndicator type={warningType} />
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+<div
+  class="panel-renderer"
+  class:panel-renderer--editable={editable}
+  role={!editable ? 'button' : undefined}
+  tabindex={!editable ? 0 : undefined}
+  onclick={onTap}
+>
+  {#if hasWarning && warningType}
+    <WarningIndicator type={warningType} />
+  {/if}
+  <div class="panel-renderer__header">
+    <span class="panel-renderer__title">{displayName}</span>
+  </div>
+  {#if primarySlider}
+    <div class="panel-renderer__control">
+      <PanelSlider
+        control={primarySlider}
+        {editable}
+        {facts}
+        {vars}
+        {selections}
+        {onSelectionChange}
+      />
+    </div>
+  {/if}
+  {#if primaryDiceLine}
+    <div class="panel-renderer__control">
+      <PanelDiceLine
+        control={primaryDiceLine}
+        {editable}
+        {facts}
+        {vars}
+        {selections}
+        {onSelectionChange}
+      />
+    </div>
+  {/if}
+  {#if primarySelect}
+    <div class="panel-renderer__control">
+      <PanelSelect
+        control={primarySelect}
+        {editable}
+        {facts}
+        {vars}
+        {selections}
+        {onSelectionChange}
+      />
+    </div>
+  {/if}
+  {#if secondaryShowEnableButton}
+    <div class="panel-renderer__control panel-renderer__control--secondary">
+      <button
+        class="panel-renderer__enable-button"
+        type="button"
+        onclick={() => { secondaryActivated = true; }}
+      >
+        {$t(descriptor.secondaryControl!.enabled!.button)}
+      </button>
+    </div>
+  {/if}
+  {#if secondaryShouldRender && secondarySlider}
+    <div class="panel-renderer__control panel-renderer__control--secondary">
+      <PanelSlider
+        control={secondarySlider}
+        {editable}
+        {facts}
+        {vars}
+        {selections}
+        {onSelectionChange}
+      />
+    </div>
+  {/if}
+  {#if secondaryShouldRender && secondaryDiceLine}
+    <div class="panel-renderer__control panel-renderer__control--secondary">
+      <PanelDiceLine
+        control={secondaryDiceLine}
+        {editable}
+        {facts}
+        {vars}
+        {selections}
+        {onSelectionChange}
+      />
+    </div>
+  {/if}
+  {#if secondaryShouldRender && secondarySelect}
+    <div class="panel-renderer__control panel-renderer__control--secondary">
+      <PanelSelect
+        control={secondarySelect}
+        {editable}
+        {facts}
+        {vars}
+        {selections}
+        {onSelectionChange}
+      />
+    </div>
+  {/if}
+  {#each textInfos as text, i (i)}
+    <div class="panel-renderer__information panel-renderer__information--text">{text}</div>
+  {/each}
+  {#each countdownInfos as info (info.index)}
+    <div class="panel-renderer__markers" role="img" aria-label="{info.filled} of {info.total} remaining">
+      {#each info.filledIndices as i (i)}
+        <span class="panel-renderer__marker panel-renderer__marker--filled" aria-hidden="true"></span>
+      {/each}
+      {#each info.emptyIndices as i (i)}
+        <span class="panel-renderer__marker panel-renderer__marker--empty" aria-hidden="true"></span>
+      {/each}
+    </div>
+  {/each}
+  {#if matchingAnnotations.length > 0}
+    <div class="panel-renderer__annotations" role="note">
+      {#each matchingAnnotations as annotation (annotation.key)}
+        <span class="panel-renderer__annotation">{$t(annotation.key)}</span>
+      {/each}
+    </div>
+  {/if}
+  {#if hasActions}
+    <div class="panel-renderer__actions" role="group" aria-label={$t('play.plan.actions')}>
+      {#if onMoveUp}
+        <button
+          type="button"
+          class="panel-renderer__button panel-renderer__button--move-up"
+          disabled={!canMoveUp}
+          onclick={onMoveUp}
+          aria-label={$t('play.plan.moveUp')}
+          title={$t('play.plan.moveUp')}
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />
+          </svg>
+        </button>
+      {/if}
+      {#if onMoveDown}
+        <button
+          type="button"
+          class="panel-renderer__button panel-renderer__button--move-down"
+          disabled={!canMoveDown}
+          onclick={onMoveDown}
+          aria-label={$t('play.plan.moveDown')}
+          title={$t('play.plan.moveDown')}
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z" />
+          </svg>
+        </button>
       {/if}
       {#if onRemove}
         <button
-          class="panel-renderer__button--remove"
           type="button"
-          onclick={() => onRemove()}
+          class="panel-renderer__button panel-renderer__button--remove"
+          onclick={handleRemoveClick}
           aria-label={$t('play.plan.remove')}
           title={$t('play.plan.remove')}
         >
@@ -173,241 +328,12 @@
         </button>
       {/if}
     </div>
-    {#if primarySlider}
-      <div class="panel-renderer__control">
-        <PanelSlider
-          control={primarySlider}
-          {editable}
-          {facts}
-          {vars}
-          {selections}
-          {onSelectionChange}
-        />
-      </div>
-    {/if}
-    {#if primaryDiceLine}
-      <div class="panel-renderer__control">
-        <PanelDiceLine
-          control={primaryDiceLine}
-          {editable}
-          {facts}
-          {vars}
-          {selections}
-          {onSelectionChange}
-        />
-      </div>
-    {/if}
-    {#if primarySelect}
-      <div class="panel-renderer__control">
-        <PanelSelect
-          control={primarySelect}
-          {editable}
-          {facts}
-          {vars}
-          {selections}
-          {onSelectionChange}
-        />
-      </div>
-    {/if}
-    {#if secondaryShowEnableButton}
-      <div class="panel-renderer__control panel-renderer__control--secondary">
-        <button
-          class="panel-renderer__enable-button"
-          type="button"
-          onclick={() => { secondaryActivated = true; }}
-        >
-          {$t(descriptor.secondaryControl!.enabled!.button)}
-        </button>
-      </div>
-    {/if}
-    {#if secondaryShouldRender && secondarySlider}
-      <div class="panel-renderer__control panel-renderer__control--secondary">
-        <PanelSlider
-          control={secondarySlider}
-          {editable}
-          {facts}
-          {vars}
-          {selections}
-          {onSelectionChange}
-        />
-      </div>
-    {/if}
-    {#if secondaryShouldRender && secondaryDiceLine}
-      <div class="panel-renderer__control panel-renderer__control--secondary">
-        <PanelDiceLine
-          control={secondaryDiceLine}
-          {editable}
-          {facts}
-          {vars}
-          {selections}
-          {onSelectionChange}
-        />
-      </div>
-    {/if}
-    {#if secondaryShouldRender && secondarySelect}
-      <div class="panel-renderer__control panel-renderer__control--secondary">
-        <PanelSelect
-          control={secondarySelect}
-          {editable}
-          {facts}
-          {vars}
-          {selections}
-          {onSelectionChange}
-        />
-      </div>
-    {/if}
-    {#each textInfos as text, i (i)}
-      <div class="panel-renderer__information panel-renderer__information--text">{text}</div>
-    {/each}
-    {#each countdownInfos as info (info.index)}
-      <div class="panel-renderer__markers" role="img" aria-label="{info.filled} of {info.total} remaining">
-        {#each info.filledIndices as i (i)}
-          <span class="panel-renderer__marker panel-renderer__marker--filled" aria-hidden="true"></span>
-        {/each}
-        {#each info.emptyIndices as i (i)}
-          <span class="panel-renderer__marker panel-renderer__marker--empty" aria-hidden="true"></span>
-        {/each}
-      </div>
-    {/each}
-    {#if matchingAnnotations.length > 0}
-      <div class="panel-renderer__annotations" role="note">
-        {#each matchingAnnotations as annotation (annotation.key)}
-          <span class="panel-renderer__annotation">{$t(annotation.key)}</span>
-        {/each}
-      </div>
-    {/if}
-  </div>
-{:else}
-  <div class="panel-renderer" role="button" tabindex={onTap ? 0 : undefined} onclick={onTap}>
-    <div class="panel-renderer__header">
-      <span class="panel-renderer__title">{displayName}</span>
-      {#if hasWarning && warningType}
-        <WarningIndicator type={warningType} />
-      {/if}
-      {#if onRemove}
-        <button
-          class="panel-renderer__button--remove"
-          type="button"
-          onclick={(e) => { e.stopPropagation(); onRemove(); }}
-          aria-label={$t('play.plan.remove')}
-          title={$t('play.plan.remove')}
-        >
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path
-              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
-            />
-          </svg>
-        </button>
-      {/if}
-    </div>
-    {#if primarySlider}
-      <div class="panel-renderer__control">
-        <PanelSlider
-          control={primarySlider}
-          {editable}
-          {facts}
-          {vars}
-          {selections}
-          {onSelectionChange}
-        />
-      </div>
-    {/if}
-    {#if primaryDiceLine}
-      <div class="panel-renderer__control">
-        <PanelDiceLine
-          control={primaryDiceLine}
-          {editable}
-          {facts}
-          {vars}
-          {selections}
-          {onSelectionChange}
-        />
-      </div>
-    {/if}
-    {#if primarySelect}
-      <div class="panel-renderer__control">
-        <PanelSelect
-          control={primarySelect}
-          {editable}
-          {facts}
-          {vars}
-          {selections}
-          {onSelectionChange}
-        />
-      </div>
-    {/if}
-    {#if secondaryShowEnableButton}
-      <div class="panel-renderer__control panel-renderer__control--secondary">
-        <button
-          class="panel-renderer__enable-button"
-          type="button"
-          onclick={() => { secondaryActivated = true; }}
-        >
-          {$t(descriptor.secondaryControl!.enabled!.button)}
-        </button>
-      </div>
-    {/if}
-    {#if secondaryShouldRender && secondarySlider}
-      <div class="panel-renderer__control panel-renderer__control--secondary">
-        <PanelSlider
-          control={secondarySlider}
-          {editable}
-          {facts}
-          {vars}
-          {selections}
-          {onSelectionChange}
-        />
-      </div>
-    {/if}
-    {#if secondaryShouldRender && secondaryDiceLine}
-      <div class="panel-renderer__control panel-renderer__control--secondary">
-        <PanelDiceLine
-          control={secondaryDiceLine}
-          {editable}
-          {facts}
-          {vars}
-          {selections}
-          {onSelectionChange}
-        />
-      </div>
-    {/if}
-    {#if secondaryShouldRender && secondarySelect}
-      <div class="panel-renderer__control panel-renderer__control--secondary">
-        <PanelSelect
-          control={secondarySelect}
-          {editable}
-          {facts}
-          {vars}
-          {selections}
-          {onSelectionChange}
-        />
-      </div>
-    {/if}
-    {#each textInfos as text, i (i)}
-      <div class="panel-renderer__information panel-renderer__information--text">{text}</div>
-    {/each}
-    {#each countdownInfos as info (info.index)}
-      <div class="panel-renderer__markers" role="img" aria-label="{info.filled} of {info.total} remaining">
-        {#each info.filledIndices as i (i)}
-          <span class="panel-renderer__marker panel-renderer__marker--filled" aria-hidden="true"></span>
-        {/each}
-        {#each info.emptyIndices as i (i)}
-          <span class="panel-renderer__marker panel-renderer__marker--empty" aria-hidden="true"></span>
-        {/each}
-      </div>
-    {/each}
-    {#if matchingAnnotations.length > 0}
-      <div class="panel-renderer__annotations" role="note">
-        {#each matchingAnnotations as annotation (annotation.key)}
-          <span class="panel-renderer__annotation">{$t(annotation.key)}</span>
-        {/each}
-      </div>
-    {/if}
-  </div>
-{/if}
+  {/if}
+</div>
 
 <style>
   .panel-renderer {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xs);
@@ -439,6 +365,14 @@
     background: var(--md-sys-color-surface-container-high);
   }
 
+  /* Warning indicator positioned at top-left as overlay */
+  .panel-renderer :global(.warning-indicator) {
+    position: absolute;
+    top: var(--spacing-xs);
+    left: var(--spacing-xs);
+    z-index: 2;
+  }
+
   .panel-renderer__header {
     display: flex;
     align-items: center;
@@ -452,14 +386,28 @@
     color: var(--md-sys-color-on-surface);
   }
 
-  .panel-renderer__button--remove {
+  /* Actions positioned at top-right inside panel */
+  .panel-renderer__actions {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    display: flex;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs);
+    background: var(--md-sys-color-surface-container);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+    z-index: 1;
+  }
+
+  .panel-renderer__button {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 1.75rem;
     height: 1.75rem;
     padding: 0;
-    margin-left: auto;
     background: transparent;
     border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: var(--radius-sm);
@@ -471,20 +419,29 @@
       border-color var(--transition-fast);
   }
 
-  .panel-renderer__button--remove:hover {
-    background: var(--md-sys-color-error-container);
-    color: var(--md-sys-color-on-error-container);
-    border-color: var(--md-sys-color-error);
+  .panel-renderer__button:hover:not(:disabled) {
+    background: var(--md-sys-color-surface-container-highest);
   }
 
-  .panel-renderer__button--remove:focus-visible {
+  .panel-renderer__button:focus-visible {
     outline: 2px solid var(--md-sys-color-primary);
     outline-offset: 2px;
   }
 
-  .panel-renderer__button--remove svg {
+  .panel-renderer__button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .panel-renderer__button svg {
     width: 1rem;
     height: 1rem;
+  }
+
+  .panel-renderer__button--remove:hover:not(:disabled) {
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+    border-color: var(--md-sys-color-error);
   }
 
   .panel-renderer__control {
