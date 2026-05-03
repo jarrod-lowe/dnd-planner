@@ -1330,7 +1330,16 @@ ruleGroups:
                 primaryControl:
                   type: select
                   var: level
-                  options: { var: levels }
+                  options:
+                    - value: 0.5
+                      label: "○"
+                      ariaLabel: play.choices.skillProficiency.half
+                    - value: 1
+                      label: "●"
+                      ariaLabel: play.choices.skillProficiency.full
+                    - value: 2
+                      label: "●●"
+                      ariaLabel: play.choices.skillProficiency.double
               vars:
                 level:
                   capture: true
@@ -1429,7 +1438,16 @@ ruleGroups:
                 primaryControl:
                   type: select
                   var: level
-                  options: { var: levels }
+                  options:
+                    - value: 0.5
+                      label: "○"
+                      ariaLabel: play.choices.skillProficiency.half
+                    - value: 1
+                      label: "●"
+                      ariaLabel: play.choices.skillProficiency.full
+                    - value: 2
+                      label: "●●"
+                      ariaLabel: play.choices.skillProficiency.double
               vars:
                 level:
                   capture: true
@@ -1529,7 +1547,16 @@ ruleGroups:
                 primaryControl:
                   type: select
                   var: level
-                  options: { var: levels }
+                  options:
+                    - value: 0.5
+                      label: "○"
+                      ariaLabel: play.choices.skillProficiency.half
+                    - value: 1
+                      label: "●"
+                      ariaLabel: play.choices.skillProficiency.full
+                    - value: 2
+                      label: "●●"
+                      ariaLabel: play.choices.skillProficiency.double
               vars:
                 level:
                   capture: true
@@ -1629,7 +1656,16 @@ ruleGroups:
                 primaryControl:
                   type: select
                   var: level
-                  options: { var: levels }
+                  options:
+                    - value: 0.5
+                      label: "○"
+                      ariaLabel: play.choices.skillProficiency.half
+                    - value: 1
+                      label: "●"
+                      ariaLabel: play.choices.skillProficiency.full
+                    - value: 2
+                      label: "●●"
+                      ariaLabel: play.choices.skillProficiency.double
               vars:
                 level:
                   capture: true
@@ -1729,7 +1765,16 @@ ruleGroups:
                 primaryControl:
                   type: select
                   var: level
-                  options: { var: levels }
+                  options:
+                    - value: 0.5
+                      label: "○"
+                      ariaLabel: play.choices.skillProficiency.half
+                    - value: 1
+                      label: "●"
+                      ariaLabel: play.choices.skillProficiency.full
+                    - value: 2
+                      label: "●●"
+                      ariaLabel: play.choices.skillProficiency.double
               vars:
                 level:
                   capture: true
@@ -1829,7 +1874,16 @@ ruleGroups:
                 primaryControl:
                   type: select
                   var: level
-                  options: { var: levels }
+                  options:
+                    - value: 0.5
+                      label: "○"
+                      ariaLabel: play.choices.skillProficiency.half
+                    - value: 1
+                      label: "●"
+                      ariaLabel: play.choices.skillProficiency.full
+                    - value: 2
+                      label: "●●"
+                      ariaLabel: play.choices.skillProficiency.double
               vars:
                 level:
                   capture: true
@@ -1929,7 +1983,16 @@ ruleGroups:
                 primaryControl:
                   type: select
                   var: level
-                  options: { var: levels }
+                  options:
+                    - value: 0.5
+                      label: "○"
+                      ariaLabel: play.choices.skillProficiency.half
+                    - value: 1
+                      label: "●"
+                      ariaLabel: play.choices.skillProficiency.full
+                    - value: 2
+                      label: "●●"
+                      ariaLabel: play.choices.skillProficiency.double
               vars:
                 level:
                   capture: true
@@ -2029,7 +2092,16 @@ ruleGroups:
                 primaryControl:
                   type: select
                   var: level
-                  options: { var: levels }
+                  options:
+                    - value: 0.5
+                      label: "○"
+                      ariaLabel: play.choices.skillProficiency.half
+                    - value: 1
+                      label: "●"
+                      ariaLabel: play.choices.skillProficiency.full
+                    - value: 2
+                      label: "●●"
+                      ariaLabel: play.choices.skillProficiency.double
               vars:
                 level:
                   capture: true
@@ -2129,7 +2201,16 @@ ruleGroups:
                 primaryControl:
                   type: select
                   var: level
-                  options: { var: levels }
+                  options:
+                    - value: 0.5
+                      label: "○"
+                      ariaLabel: play.choices.skillProficiency.half
+                    - value: 1
+                      label: "●"
+                      ariaLabel: play.choices.skillProficiency.full
+                    - value: 2
+                      label: "●●"
+                      ariaLabel: play.choices.skillProficiency.double
               vars:
                 level:
                   capture: true
@@ -2229,7 +2310,16 @@ ruleGroups:
                 primaryControl:
                   type: select
                   var: level
-                  options: { var: levels }
+                  options:
+                    - value: 0.5
+                      label: "○"
+                      ariaLabel: play.choices.skillProficiency.half
+                    - value: 1
+                      label: "●"
+                      ariaLabel: play.choices.skillProficiency.full
+                    - value: 2
+                      label: "●●"
+                      ariaLabel: play.choices.skillProficiency.double
               vars:
                 level:
                   capture: true
@@ -2329,7 +2419,16 @@ ruleGroups:
                 primaryControl:
                   type: select
                   var: level
-                  options: { var: levels }
+                  options:
+                    - value: 0.5
+                      label: "○"
+                      ariaLabel: play.choices.skillProficiency.half
+                    - value: 1
+                      label: "●"
+                      ariaLabel: play.choices.skillProficiency.full
+                    - value: 2
+                      label: "●●"
+                      ariaLabel: play.choices.skillProficiency.double
               vars:
                 level:
                   capture: true
@@ -2429,7 +2528,16 @@ ruleGroups:
                 primaryControl:
                   type: select
                   var: level
-                  options: { var: levels }
+                  options:
+                    - value: 0.5
+                      label: "○"
+                      ariaLabel: play.choices.skillProficiency.half
+                    - value: 1
+                      label: "●"
+                      ariaLabel: play.choices.skillProficiency.full
+                    - value: 2
+                      label: "●●"
+                      ariaLabel: play.choices.skillProficiency.double
               vars:
                 level:
                   capture: true
@@ -2529,7 +2637,16 @@ ruleGroups:
                 primaryControl:
                   type: select
                   var: level
-                  options: { var: levels }
+                  options:
+                    - value: 0.5
+                      label: "○"
+                      ariaLabel: play.choices.skillProficiency.half
+                    - value: 1
+                      label: "●"
+                      ariaLabel: play.choices.skillProficiency.full
+                    - value: 2
+                      label: "●●"
+                      ariaLabel: play.choices.skillProficiency.double
               vars:
                 level:
                   capture: true
@@ -2629,7 +2746,16 @@ ruleGroups:
                 primaryControl:
                   type: select
                   var: level
-                  options: { var: levels }
+                  options:
+                    - value: 0.5
+                      label: "○"
+                      ariaLabel: play.choices.skillProficiency.half
+                    - value: 1
+                      label: "●"
+                      ariaLabel: play.choices.skillProficiency.full
+                    - value: 2
+                      label: "●●"
+                      ariaLabel: play.choices.skillProficiency.double
               vars:
                 level:
                   capture: true
@@ -2729,7 +2855,16 @@ ruleGroups:
                 primaryControl:
                   type: select
                   var: level
-                  options: { var: levels }
+                  options:
+                    - value: 0.5
+                      label: "○"
+                      ariaLabel: play.choices.skillProficiency.half
+                    - value: 1
+                      label: "●"
+                      ariaLabel: play.choices.skillProficiency.full
+                    - value: 2
+                      label: "●●"
+                      ariaLabel: play.choices.skillProficiency.double
               vars:
                 level:
                   capture: true
@@ -2829,7 +2964,16 @@ ruleGroups:
                 primaryControl:
                   type: select
                   var: level
-                  options: { var: levels }
+                  options:
+                    - value: 0.5
+                      label: "○"
+                      ariaLabel: play.choices.skillProficiency.half
+                    - value: 1
+                      label: "●"
+                      ariaLabel: play.choices.skillProficiency.full
+                    - value: 2
+                      label: "●●"
+                      ariaLabel: play.choices.skillProficiency.double
               vars:
                 level:
                   capture: true
@@ -2929,7 +3073,16 @@ ruleGroups:
                 primaryControl:
                   type: select
                   var: level
-                  options: { var: levels }
+                  options:
+                    - value: 0.5
+                      label: "○"
+                      ariaLabel: play.choices.skillProficiency.half
+                    - value: 1
+                      label: "●"
+                      ariaLabel: play.choices.skillProficiency.full
+                    - value: 2
+                      label: "●●"
+                      ariaLabel: play.choices.skillProficiency.double
               vars:
                 level:
                   capture: true
@@ -3029,7 +3182,16 @@ ruleGroups:
                 primaryControl:
                   type: select
                   var: level
-                  options: { var: levels }
+                  options:
+                    - value: 0.5
+                      label: "○"
+                      ariaLabel: play.choices.skillProficiency.half
+                    - value: 1
+                      label: "●"
+                      ariaLabel: play.choices.skillProficiency.full
+                    - value: 2
+                      label: "●●"
+                      ariaLabel: play.choices.skillProficiency.double
               vars:
                 level:
                   capture: true

@@ -35,10 +35,16 @@ export interface SliderControl extends ControlBase {
   unit?: string; // i18n key
 }
 
+export interface SelectOption {
+  value: number;
+  label: string;
+  ariaLabel?: string;
+}
+
 export interface SelectControl extends ControlBase {
   type: 'select';
   var: string;
-  options: ValueSource;
+  options: ValueSource | SelectOption[];
   display?: ValueSource;
 }
 
