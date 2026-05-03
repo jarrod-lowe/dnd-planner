@@ -7,7 +7,7 @@
   import PanelDiceLine from './panel-renderer/PanelDiceLine.svelte';
   import PanelSelect from './panel-renderer/PanelSelect.svelte';
   import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-engine';
-  import type { TextInformation } from './panel-renderer/types';
+  import type { TextInformation, CountdownInformation } from './panel-renderer/types';
 
   interface Props {
     entry: AvailableRuleEntry;
@@ -85,6 +85,27 @@
       }
     )
   );
+
+  const countdownInfos = $derived(
+    (descriptor.information?.filter((info): info is CountdownInformation => info.type === 'countdown') ?? [])
+      .map((info, index) => {
+        const filled = resolveValueSource(info.filled, facts, vars, selections);
+        const total = resolveValueSource(info.total, facts, vars, selections);
+        if (typeof filled !== 'number' || typeof total !== 'number') return null;
+        const empty = total - filled;
+        return {
+          index,
+          filledIndices: Array.from({ length: filled }, (_, i) => i),
+          emptyIndices: Array.from({ length: empty }, (_, i) => i),
+          filled,
+          total
+        };
+      })
+      .filter(
+        (v): v is { index: number; filledIndices: number[]; emptyIndices: number[]; filled: number; total: number } =>
+          v !== null
+      )
+  );
 </script>
 
 {#if editable}
@@ -146,6 +167,16 @@
     {#each textInfos as text}
       <div class="panel-renderer__information panel-renderer__information--text">{text}</div>
     {/each}
+    {#each countdownInfos as info (info.index)}
+      <div class="panel-renderer__markers" role="img" aria-label="{info.filled} of {info.total} remaining">
+        {#each info.filledIndices as i (i)}
+          <span class="panel-renderer__marker panel-renderer__marker--filled" aria-hidden="true"></span>
+        {/each}
+        {#each info.emptyIndices as i (i)}
+          <span class="panel-renderer__marker panel-renderer__marker--empty" aria-hidden="true"></span>
+        {/each}
+      </div>
+    {/each}
   </div>
 {:else}
   <button class="panel-renderer" onclick={onTap} type="button">
@@ -206,6 +237,16 @@
     {#each textInfos as text}
       <div class="panel-renderer__information panel-renderer__information--text">{text}</div>
     {/each}
+    {#each countdownInfos as info (info.index)}
+      <div class="panel-renderer__markers" role="img" aria-label="{info.filled} of {info.total} remaining">
+        {#each info.filledIndices as i (i)}
+          <span class="panel-renderer__marker panel-renderer__marker--filled" aria-hidden="true"></span>
+        {/each}
+        {#each info.emptyIndices as i (i)}
+          <span class="panel-renderer__marker panel-renderer__marker--empty" aria-hidden="true"></span>
+        {/each}
+      </div>
+    {/each}
   </button>
 {/if}
 
@@ -263,5 +304,27 @@
     border-top: 1px solid var(--md-sys-color-outline-variant);
     margin-top: var(--spacing-xs);
     padding-top: var(--spacing-sm);
+  }
+
+  .panel-renderer__markers {
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing-xs);
+  }
+
+  .panel-renderer__marker {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .panel-renderer__marker--filled {
+    background: var(--md-sys-color-primary);
+  }
+
+  .panel-renderer__marker--empty {
+    background: transparent;
+    border: 1px solid var(--md-sys-color-outline-variant);
   }
 </style>
