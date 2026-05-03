@@ -22,6 +22,7 @@ export function resolveValueSource(
     if (!varDef) return undefined;
     const def = varDef.default;
     if (def.number !== undefined) return def.number;
+    if (def.string !== undefined) return def.string;
     if (def.fact !== undefined) return facts[def.fact];
     if (def.array !== undefined) return def.array;
     return undefined;

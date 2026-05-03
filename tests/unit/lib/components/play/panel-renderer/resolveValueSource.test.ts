@@ -49,6 +49,15 @@ describe('resolveValueSource', () => {
     const result = resolveValueSource({ fact: 'nonexistent' }, {}, {});
     expect(result).toBeUndefined();
   });
+
+  it('resolves var default from string', () => {
+    const result = resolveValueSource(
+      { var: 'label' },
+      {},
+      { label: { default: { string: 'Proficient' } } }
+    );
+    expect(result).toBe('Proficient');
+  });
 });
 
 describe('resolveExpression', () => {

@@ -4,6 +4,7 @@
   import { extractPanelDescriptor } from './panel-renderer/extractPanelDescriptor';
   import PanelSlider from './panel-renderer/PanelSlider.svelte';
   import PanelDiceLine from './panel-renderer/PanelDiceLine.svelte';
+  import PanelSelect from './panel-renderer/PanelSelect.svelte';
   import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-engine';
 
   interface Props {
@@ -49,6 +50,9 @@
   const primaryDiceLine = $derived(
     descriptor.primaryControl?.type === 'dice-line' ? descriptor.primaryControl : undefined
   );
+  const primarySelect = $derived(
+    descriptor.primaryControl?.type === 'select' ? descriptor.primaryControl : undefined
+  );
   const secondarySlider = $derived(
     descriptor.secondaryControl?.type === 'slider' ? descriptor.secondaryControl : undefined
   );
@@ -78,6 +82,18 @@
       <div class="panel-renderer__control">
         <PanelDiceLine
           control={primaryDiceLine}
+          {editable}
+          {facts}
+          {vars}
+          {selections}
+          {onSelectionChange}
+        />
+      </div>
+    {/if}
+    {#if primarySelect}
+      <div class="panel-renderer__control">
+        <PanelSelect
+          control={primarySelect}
           {editable}
           {facts}
           {vars}
@@ -123,6 +139,18 @@
       <div class="panel-renderer__control">
         <PanelDiceLine
           control={primaryDiceLine}
+          {editable}
+          {facts}
+          {vars}
+          {selections}
+          {onSelectionChange}
+        />
+      </div>
+    {/if}
+    {#if primarySelect}
+      <div class="panel-renderer__control">
+        <PanelSelect
+          control={primarySelect}
           {editable}
           {facts}
           {vars}
