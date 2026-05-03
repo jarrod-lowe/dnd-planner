@@ -86,6 +86,7 @@
             {activeAnnotations}
             onTap={mode === 'choice' ? () => onChoiceTap(group.entry) : undefined}
             onRemove={deletableRuleIds?.has(group.entry.rule.id) ? () => onRemoveEffect?.(group.entry.rule.id) : undefined}
+            removeLabel={mode === 'effect' ? 'play.effects.remove' : 'play.plan.remove'}
           />
         {:else if group.type === 'packed'}
           <PackedChoiceGroup

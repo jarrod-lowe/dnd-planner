@@ -49,7 +49,7 @@
 </script>
 
 <div class="panel-renderer__select" role="radiogroup" aria-label={control.var}>
-  {#each options as option, i (String(option.value))}
+  {#each options as option (String(option.value))}
     {#if editable}
       <button
         type="button"
