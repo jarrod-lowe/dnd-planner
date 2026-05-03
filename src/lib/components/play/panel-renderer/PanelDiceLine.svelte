@@ -18,8 +18,10 @@
     facts,
     vars,
     selections = {},
-    onSelectionChange
+    onSelectionChange: _onSelectionChange
   }: Props = $props();
+
+  void _onSelectionChange;
 
   interface RangeEntry {
     distance: number;

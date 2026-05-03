@@ -25,11 +25,13 @@
     canMoveUp = true,
     canMoveDown = true,
     onSelectionChange,
-    onFollowup,
+    onFollowup: _onFollowup,
     onMoveUp,
     onMoveDown,
     onRemove
   }: Props = $props();
+
+  void _onFollowup;
 
   // Get errors array from varsRuntime
   const errors = $derived((item.rule.varsRuntime?.errors as string[] | undefined) || []);

@@ -1,12 +1,13 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import PanelRenderer from '$lib/components/play/PanelRenderer.svelte';
-import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
+import type { AvailableRuleEntry } from '$lib/rules-engine';
 
 const createEntryWithSecondary = (
   _conditionMet = true,
   secondaryType: 'dice-line' | 'slider' | 'select' = 'dice-line'
 ): AvailableRuleEntry => {
+  void _conditionMet;
   const secondaryControlBase = {
     enabled: {
       condition: { fact: 'attack.greataxe.mastery', operator: 'equals', value: 1 },

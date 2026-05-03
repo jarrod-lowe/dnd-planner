@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, fireEvent } from '@testing-library/svelte';
+import { render } from '@testing-library/svelte';
 import PanelRenderer from '$lib/components/play/PanelRenderer.svelte';
-import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
+import type { AvailableRuleEntry } from '$lib/rules-engine';
 
 const createMockEntry = (overrides?: Partial<AvailableRuleEntry>): AvailableRuleEntry => ({
   rule: { id: 'test-rule', description: 'Test Rule', activities: [] },

@@ -256,7 +256,7 @@
         />
       </div>
     {/if}
-    {#each textInfos as text}
+    {#each textInfos as text, i (i)}
       <div class="panel-renderer__information panel-renderer__information--text">{text}</div>
     {/each}
     {#each countdownInfos as info (info.index)}
@@ -383,7 +383,7 @@
         />
       </div>
     {/if}
-    {#each textInfos as text}
+    {#each textInfos as text, i (i)}
       <div class="panel-renderer__information panel-renderer__information--text">{text}</div>
     {/each}
     {#each countdownInfos as info (info.index)}

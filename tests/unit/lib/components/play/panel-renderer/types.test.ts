@@ -1,16 +1,13 @@
 // tests/unit/lib/components/play/panel-renderer/types.test.ts
 import { describe, it, expect } from 'vitest';
 import type {
-  Control,
   DiceLineControl,
   SliderControl,
   SelectControl,
-  Information,
   TextInformation,
   CountdownInformation,
   PanelDescriptor,
   ValueSource,
-  DiceEntry,
 } from '$lib/components/play/panel-renderer/types';
 
 describe('Panel renderer types', () => {

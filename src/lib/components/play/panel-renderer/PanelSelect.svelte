@@ -42,7 +42,7 @@
 
 {#if editable}
   <div class="panel-renderer__select" role="radiogroup" aria-label={control.var}>
-    {#each (options ?? []) as option}
+    {#each (options ?? []) as option (String(option))}
       <label class="panel-renderer__radio">
         <input
           type="radio"
