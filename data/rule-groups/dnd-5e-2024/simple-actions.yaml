@@ -49,9 +49,9 @@ ruleGroups:
                   source:
                     string: rule.dnd-5e-2024.simple-actions.action-disengage-offer.no_action
                   when:
-                    fact: actions.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: actions.remaining
+                      operator: lessThan
+                      value: 0
 
       # Dodge
       - id: action-dodge-offer
@@ -92,9 +92,9 @@ ruleGroups:
                   source:
                     string: rule.dnd-5e-2024.simple-actions.action-dodge-offer.no_action
                   when:
-                    fact: actions.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: actions.remaining
+                      operator: lessThan
+                      value: 0
 
       # Improvise
       - id: action-improvise-offer
@@ -135,9 +135,9 @@ ruleGroups:
                   source:
                     string: rule.dnd-5e-2024.simple-actions.action-improvise-offer.no_action
                   when:
-                    fact: actions.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: actions.remaining
+                      operator: lessThan
+                      value: 0
 
       # Influence
       - id: action-influence-offer
@@ -178,9 +178,9 @@ ruleGroups:
                   source:
                     string: rule.dnd-5e-2024.simple-actions.action-influence-offer.no_action
                   when:
-                    fact: actions.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: actions.remaining
+                      operator: lessThan
+                      value: 0
 
       # Search
       - id: action-search-offer
@@ -221,9 +221,9 @@ ruleGroups:
                   source:
                     string: rule.dnd-5e-2024.simple-actions.action-search-offer.no_action
                   when:
-                    fact: actions.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: actions.remaining
+                      operator: lessThan
+                      value: 0
 
       # Study
       - id: action-study-offer
@@ -264,9 +264,9 @@ ruleGroups:
                   source:
                     string: rule.dnd-5e-2024.simple-actions.action-study-offer.no_action
                   when:
-                    fact: actions.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: actions.remaining
+                      operator: lessThan
+                      value: 0
 
       # Utilize
       - id: action-utilize-offer
@@ -307,6 +307,6 @@ ruleGroups:
                   source:
                     string: rule.dnd-5e-2024.simple-actions.action-utilize-offer.no_action
                   when:
-                    fact: actions.remaining
-                    operator: lessThan
-                    value: 0
+                    - fact: actions.remaining
+                      operator: lessThan
+                      value: 0

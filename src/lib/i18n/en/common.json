@@ -26,6 +26,7 @@
       }
     },
     "spell-thunderous-smite": {
+      "annotation": "Thunderous Smite available",
       "offer-thunderous-smite": {
         "name": "Thunderous Smite",
         "no_bonus_action": "No bonus action available",
@@ -91,6 +92,7 @@
       "paladin-smite": {
         "name": "Paladin Smite"
       },
+      "annotation": "Paladin Smite available",
       "offer-paladin-smite": {
         "no_bonus_action": "No bonus action available",
         "no_attack": "You must take the Attack action first",
@@ -138,6 +140,7 @@
       "divine-smite": {
         "name": "Divine Smite"
       },
+      "annotation": "Divine Smite available",
       "offer-divine-smite": {
         "no_bonus_action": "No bonus action available",
         "no_attack": "You must take the Attack action first",
@@ -904,6 +907,9 @@
       "inapplicable": "Inapplicable choice",
       "showIllegal": "Show illegal",
       "hideIllegal": "Hide illegal",
+      "annotations": {
+        "label": "Available bonus actions"
+      },
       "addToPlan": "Add to plan",
       "removeFromPlan": "Remove from plan",
       "sections": {

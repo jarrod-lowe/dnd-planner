@@ -171,6 +171,13 @@
             "dieSides": {
               "type": "number",
               "description": "Number of sides on the smite die (default 8 for d8)"
+            },
+            "annotationLabels": {
+              "type": "array",
+              "description": "Labels this rule responds to for annotation matching (e.g., 'attack.melee')",
+              "items": {
+                "type": "string"
+              }
             }
           },
           "additionalProperties": false
@@ -394,13 +401,17 @@
             "offerRule",
             "setClear",
             "setAdd",
-            "advertiseEffect"
+            "advertiseEffect",
+            "annotate"
           ],
           "description": "Activity type"
         },
         "when": {
-          "$ref": "#/definitions/condition",
-          "description": "Condition that must be true for this activity to execute"
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/condition"
+          },
+          "description": "Conditions that must all be true for this activity to execute"
         },
         "target": {
           "$ref": "#/definitions/target",
@@ -452,6 +463,15 @@
             "$ref": "#/definitions/illegalWhenEntry"
           },
           "description": "Conditions for rule legality (for offerRule)"
+        },
+        "key": {
+          "type": "string",
+          "description": "i18n key for the annotation (for annotate)"
+        },
+        "targets": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Annotation label targets to match (for annotate)"
         }
       },
       "additionalProperties": false

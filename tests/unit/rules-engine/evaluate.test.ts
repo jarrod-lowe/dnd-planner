@@ -875,7 +875,7 @@ describe('evaluate', () => {
             id: 'sustain',
             type: 'advertiseEffect',
             self: true,
-            when: { fact: 'rest.long', operator: 'equals', value: 0 }
+            when: [{ fact: 'rest.long', operator: 'equals', value: 0 }]
           }
         ]
       };
@@ -985,7 +985,7 @@ describe('evaluate', () => {
                   id: 'sustain',
                   type: 'advertiseEffect',
                   self: true,
-                  when: { fact: 'rest.long', operator: 'equals', value: 0 }
+                  when: [{ fact: 'rest.long', operator: 'equals', value: 0 }]
                 }
               ]
             }
@@ -1053,6 +1053,64 @@ describe('evaluate', () => {
       // Reset to 2, no effects to subtract = 2
       expect(result4.facts['slots.remaining']).toBe(2);
       expect(result4.effects).toHaveLength(0);
+    });
+  });
+
+  describe('activity when as Condition[] with AND logic', () => {
+    it('executes activity when all conditions in when array are satisfied', () => {
+      const rule: Rule = {
+        id: 'test-and-when',
+        activities: [
+          {
+            id: 'act-1',
+            type: 'numberSet',
+            target: { fact: 'result' },
+            source: { number: 42 },
+            when: [
+              { fact: 'a', operator: 'greaterThan', value: 0 },
+              { fact: 'b', operator: 'greaterThan', value: 0 }
+            ]
+          }
+        ]
+      };
+
+      const input: EngineInput = {
+        schemaVersion: 1,
+        rules: { standing: [rule], planned: [], effects: [] },
+        state: { facts: { a: 1, b: 1 } }
+      };
+
+      const result = evaluate(input);
+
+      expect(result.facts['result']).toBe(42);
+    });
+
+    it('skips activity when one condition in when array fails', () => {
+      const rule: Rule = {
+        id: 'test-and-when-fail',
+        activities: [
+          {
+            id: 'act-1',
+            type: 'numberSet',
+            target: { fact: 'result' },
+            source: { number: 42 },
+            when: [
+              { fact: 'a', operator: 'greaterThan', value: 0 },
+              { fact: 'b', operator: 'greaterThan', value: 0 }
+            ]
+          }
+        ]
+      };
+
+      const input: EngineInput = {
+        schemaVersion: 1,
+        rules: { standing: [rule], planned: [], effects: [] },
+        state: { facts: { a: 1, b: 0 } }
+      };
+
+      const result = evaluate(input);
+
+      expect(result.facts['result']).toBeUndefined();
     });
   });
 });

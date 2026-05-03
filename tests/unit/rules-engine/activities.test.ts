@@ -30,6 +30,7 @@ function createEmptyState(): WorkingState {
     events: new Set(),
     generatedRules: { early: [], normal: [], safeguard: [] },
     offeredRules: [],
+    annotations: [],
     appliedRuleIds: [],
     appliedActivityIds: [],
     advertisedEffects: [],
@@ -692,11 +693,13 @@ describe('activity when condition', () => {
       type: 'numberSet',
       target: { fact: 'hp.current' },
       source: { number: 42 },
-      when: {
-        fact: 'hp.max',
-        operator: 'greaterThan',
-        value: 0
-      }
+      when: [
+        {
+          fact: 'hp.max',
+          operator: 'greaterThan',
+          value: 0
+        }
+      ]
     };
 
     const context = createEmptyContext();
@@ -713,11 +716,13 @@ describe('activity when condition', () => {
       type: 'numberSet',
       target: { fact: 'hp.current' },
       source: { number: 42 },
-      when: {
-        fact: 'hp.max',
-        operator: 'greaterThan',
-        value: 100
-      }
+      when: [
+        {
+          fact: 'hp.max',
+          operator: 'greaterThan',
+          value: 100
+        }
+      ]
     };
 
     const context = createEmptyContext();
@@ -749,9 +754,11 @@ describe('activity when condition', () => {
       type: 'numberSet',
       target: { fact: 'hp.current' },
       source: { number: 42 },
-      when: {
-        event: 'attack'
-      }
+      when: [
+        {
+          event: 'attack'
+        }
+      ]
     };
 
     const context = createEmptyContext();
@@ -768,9 +775,11 @@ describe('activity when condition', () => {
       type: 'numberSet',
       target: { fact: 'hp.current' },
       source: { number: 42 },
-      when: {
-        event: 'attack'
-      }
+      when: [
+        {
+          event: 'attack'
+        }
+      ]
     };
 
     const context = createEmptyContext();
@@ -821,11 +830,13 @@ describe('executeSetClear', () => {
       id: 'test-1',
       type: 'setClear',
       target: { var: 'errors' },
-      when: {
-        fact: 'some.fact',
-        operator: 'equals',
-        value: 1
-      }
+      when: [
+        {
+          fact: 'some.fact',
+          operator: 'equals',
+          value: 1
+        }
+      ]
     };
 
     const context = createEmptyContext();
@@ -933,11 +944,13 @@ describe('executeSetAdd', () => {
       type: 'setAdd',
       target: { var: 'errors' },
       source: { string: 'play.choices.illegal.movement' },
-      when: {
-        fact: 'movement.current',
-        operator: 'lessThan',
-        value: 0
-      }
+      when: [
+        {
+          fact: 'movement.current',
+          operator: 'lessThan',
+          value: 0
+        }
+      ]
     };
 
     const context = createEmptyContext();
@@ -960,11 +973,13 @@ describe('executeSetAdd', () => {
       type: 'setAdd',
       target: { var: 'errors' },
       source: { string: 'play.choices.illegal.movement' },
-      when: {
-        fact: 'movement.current',
-        operator: 'lessThan',
-        value: 0
-      }
+      when: [
+        {
+          fact: 'movement.current',
+          operator: 'lessThan',
+          value: 0
+        }
+      ]
     };
 
     const context = createEmptyContext();

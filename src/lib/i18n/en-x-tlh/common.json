@@ -26,6 +26,7 @@
       }
     },
     "spell-thunderous-smite": {
+      "annotation": "raQ muHta chen",
       "offer-thunderous-smite": {
         "name": "raQ muHta",
         "no_bonus_action": "Quv DIvI' tu'lu'be'",
@@ -91,6 +92,7 @@
       "paladin-smite": {
         "name": "DIch Qaw'"
       },
+      "annotation": "DIch Qaw' chen",
       "offer-paladin-smite": {
         "no_bonus_action": "DIvI' latlh tu'lu'be'",
         "no_attack": "DIch DIvI' DIch tu'lu'be'",
@@ -138,6 +140,7 @@
       "divine-smite": {
         "name": "quv Qaw'"
       },
+      "annotation": "quv Qaw' chen",
       "offer-divine-smite": {
         "no_bonus_action": "DIvI' latlh tu'lu'be'",
         "no_attack": "DIch DIvI' DIch tu'lu'be'",
@@ -904,6 +907,9 @@
       "inapplicable": "DuH lo'laHbe'",
       "showIllegal": "mugh DIvI'",
       "hideIllegal": "mugh SoQmoH",
+      "annotations": {
+        "label": "DIvI' latlh chen"
+      },
       "addToPlan": "DIvI' chel",
       "removeFromPlan": "DIvI' teq",
       "sections": {

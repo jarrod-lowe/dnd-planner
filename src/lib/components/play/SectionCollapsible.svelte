@@ -6,12 +6,14 @@
   import PackedChoiceGroup from './PackedChoiceGroup.svelte';
   import type { Facts, AvailableRuleEntry } from '$lib/rules-engine';
   import type { ChoiceGroup } from '$lib/play/groupPackedChoices';
+  import type { AnnotationDef } from '$lib/play/annotations';
 
   interface Props {
     section: string | undefined;
     packedGroups: ChoiceGroup[];
     hasLegalEntries: boolean;
     facts: Facts;
+    activeAnnotations?: AnnotationDef[];
     onChoiceTap: (entry: AvailableRuleEntry) => void;
     mode?: 'choice' | 'effect';
     deletableRuleIds?: Set<string>;
@@ -23,6 +25,7 @@
     packedGroups,
     hasLegalEntries,
     facts,
+    activeAnnotations = [],
     onChoiceTap,
     mode = 'choice',
     deletableRuleIds,
@@ -88,6 +91,7 @@
             <ChoicePanel
               entry={group.entry}
               {facts}
+              {activeAnnotations}
               editable={false}
               onTap={() => onChoiceTap(group.entry)}
             />
@@ -97,6 +101,7 @@
             leader={group.leader}
             followers={group.followers}
             {facts}
+            {activeAnnotations}
             onAddToPlan={onChoiceTap}
             readOnly={mode === 'effect'}
           />

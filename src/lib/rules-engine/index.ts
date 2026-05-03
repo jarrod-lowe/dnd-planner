@@ -42,7 +42,9 @@ export type {
   SetClearActivity,
   SetAddActivity,
   AdvertiseEffectActivity,
+  AnnotateActivity,
   IllegalWhenEntry,
+  Annotation,
   // Rule
   Rule,
   GroupReference,

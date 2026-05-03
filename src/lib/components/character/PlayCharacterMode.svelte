@@ -21,6 +21,9 @@
   // Get available rules from engine output
   const availableRules = $derived(playStore.state.engineOutput?.availableRules ?? []);
 
+  // Collect active annotations from engine output
+  const activeAnnotations = $derived(playStore.state.engineOutput?.annotations ?? []);
+
   // Get current effects (committed + newly advertised)
   const currentEffects = $derived([
     ...playStore.state.effects,
@@ -99,6 +102,7 @@
           facts={playStore.state.facts}
           isLoading={playStore.state.isEvaluating}
           {showIllegal}
+          {activeAnnotations}
           onChoiceTap={handleChoiceTap}
         />
       {/snippet}
@@ -106,6 +110,7 @@
         <PlanColumn
           items={playStore.state.plannedItems}
           facts={playStore.state.facts}
+          {activeAnnotations}
           onSelectionChange={handleSelectionChange}
           onFollowup={(rule) => playStore.addFollowupEffect(rule)}
           onMoveUp={handleMoveUp}
