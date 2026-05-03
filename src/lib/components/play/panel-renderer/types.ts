@@ -32,7 +32,8 @@ export interface SliderControl extends ControlBase {
   var: string;
   min?: ValueSource;
   max?: ValueSource;
-  unit?: string; // i18n key
+  step?: number;
+  unit?: string;
 }
 
 export interface SelectOption {

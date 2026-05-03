@@ -34,6 +34,8 @@
   const min = $derived(resolvedMin ?? 0);
   const max = $derived(resolvedMax ?? 0);
   const value = $derived(resolvedValue ?? min);
+  const step = $derived(control.step ?? 1);
+  const unit = $derived(control.unit ?? '');
 
   function handleChange(e: Event): void {
     const target = e.target as HTMLInputElement;
@@ -47,21 +49,31 @@
     type="range"
     {min}
     {max}
+    {step}
     {value}
     disabled={!editable}
     oninput={editable ? handleChange : undefined}
     aria-label={control.var}
   />
+  <span class="panel-renderer__slider-value">{value}{unit ? ` ${unit}` : ''}</span>
 </div>
 
 <style>
   .panel-renderer__slider {
     display: flex;
     align-items: center;
+    gap: var(--spacing-sm);
   }
 
   .panel-renderer__slider input[type='range'] {
-    width: 100%;
+    flex: 1;
     accent-color: var(--md-sys-color-primary);
+  }
+
+  .panel-renderer__slider-value {
+    font-family: var(--font-body);
+    font-size: var(--font-size-md);
+    color: var(--md-sys-color-on-surface);
+    white-space: nowrap;
   }
 </style>

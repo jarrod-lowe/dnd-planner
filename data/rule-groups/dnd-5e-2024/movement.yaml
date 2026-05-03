@@ -81,6 +81,8 @@ ruleGroups:
                   type: slider
                   var: distance
                   max: { var: maxDistance }
+                  step: 5
+                  unit: ft
               group:
                 - __planned__
                 - move
@@ -138,6 +140,8 @@ ruleGroups:
                   type: slider
                   var: distance
                   max: { var: maxDistance }
+                  step: 5
+                  unit: ft
               group:
                 - __planned__
                 - move
@@ -217,6 +221,8 @@ ruleGroups:
                   type: slider
                   var: distance
                   max: { var: maxDistance }
+                  step: 5
+                  unit: ft
               group:
                 - __planned__
                 - move
@@ -295,6 +301,8 @@ ruleGroups:
                   type: slider
                   var: distance
                   max: { var: maxDistance }
+                  step: 5
+                  unit: ft
               group:
                 - __planned__
                 - move
@@ -371,6 +379,8 @@ ruleGroups:
                   type: slider
                   var: distance
                   max: { var: maxDistance }
+                  step: 5
+                  unit: ft
               group:
                 - __planned__
                 - move
