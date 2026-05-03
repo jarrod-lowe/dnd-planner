@@ -6,6 +6,7 @@
   import PanelSlider from './panel-renderer/PanelSlider.svelte';
   import PanelDiceLine from './panel-renderer/PanelDiceLine.svelte';
   import PanelSelect from './panel-renderer/PanelSelect.svelte';
+  import { evaluateCondition } from '$lib/rules-engine/conditions';
   import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-engine';
   import type { TextInformation, CountdownInformation } from './panel-renderer/types';
 
@@ -57,6 +58,37 @@
   );
   const secondarySlider = $derived(
     descriptor.secondaryControl?.type === 'slider' ? descriptor.secondaryControl : undefined
+  );
+
+  let secondaryActivated = $state(false);
+
+  const secondaryConditionMet = $derived(
+    !descriptor.secondaryControl?.enabled
+      ? true
+      : evaluateCondition(descriptor.secondaryControl.enabled.condition, facts, new Set())
+  );
+
+  const secondaryShouldRender = $derived(
+    descriptor.secondaryControl
+      ? secondaryConditionMet
+        ? descriptor.secondaryControl.enabled
+          ? secondaryActivated
+          : true
+        : false
+      : false
+  );
+
+  const secondaryShowEnableButton = $derived(
+    descriptor.secondaryControl?.enabled
+      ? secondaryConditionMet && !secondaryActivated
+      : false
+  );
+
+  const secondaryDiceLine = $derived(
+    descriptor.secondaryControl?.type === 'dice-line' ? descriptor.secondaryControl : undefined
+  );
+  const secondarySelect = $derived(
+    descriptor.secondaryControl?.type === 'select' ? descriptor.secondaryControl : undefined
   );
 
   const textInfos = $derived(
@@ -152,10 +184,45 @@
         />
       </div>
     {/if}
-    {#if secondarySlider}
+    {#if secondaryShowEnableButton}
+      <div class="panel-renderer__control panel-renderer__control--secondary">
+        <button
+          class="panel-renderer__enable-button"
+          type="button"
+          onclick={() => { secondaryActivated = true; }}
+        >
+          {$t(descriptor.secondaryControl!.enabled!.button)}
+        </button>
+      </div>
+    {/if}
+    {#if secondaryShouldRender && secondarySlider}
       <div class="panel-renderer__control panel-renderer__control--secondary">
         <PanelSlider
           control={secondarySlider}
+          {editable}
+          {facts}
+          {vars}
+          {selections}
+          {onSelectionChange}
+        />
+      </div>
+    {/if}
+    {#if secondaryShouldRender && secondaryDiceLine}
+      <div class="panel-renderer__control panel-renderer__control--secondary">
+        <PanelDiceLine
+          control={secondaryDiceLine}
+          {editable}
+          {facts}
+          {vars}
+          {selections}
+          {onSelectionChange}
+        />
+      </div>
+    {/if}
+    {#if secondaryShouldRender && secondarySelect}
+      <div class="panel-renderer__control panel-renderer__control--secondary">
+        <PanelSelect
+          control={secondarySelect}
           {editable}
           {facts}
           {vars}
@@ -222,10 +289,45 @@
         />
       </div>
     {/if}
-    {#if secondarySlider}
+    {#if secondaryShowEnableButton}
+      <div class="panel-renderer__control panel-renderer__control--secondary">
+        <button
+          class="panel-renderer__enable-button"
+          type="button"
+          onclick={() => { secondaryActivated = true; }}
+        >
+          {$t(descriptor.secondaryControl!.enabled!.button)}
+        </button>
+      </div>
+    {/if}
+    {#if secondaryShouldRender && secondarySlider}
       <div class="panel-renderer__control panel-renderer__control--secondary">
         <PanelSlider
           control={secondarySlider}
+          {editable}
+          {facts}
+          {vars}
+          {selections}
+          {onSelectionChange}
+        />
+      </div>
+    {/if}
+    {#if secondaryShouldRender && secondaryDiceLine}
+      <div class="panel-renderer__control panel-renderer__control--secondary">
+        <PanelDiceLine
+          control={secondaryDiceLine}
+          {editable}
+          {facts}
+          {vars}
+          {selections}
+          {onSelectionChange}
+        />
+      </div>
+    {/if}
+    {#if secondaryShouldRender && secondarySelect}
+      <div class="panel-renderer__control panel-renderer__control--secondary">
+        <PanelSelect
+          control={secondarySelect}
           {editable}
           {facts}
           {vars}
@@ -304,6 +406,25 @@
     border-top: 1px solid var(--md-sys-color-outline-variant);
     margin-top: var(--spacing-xs);
     padding-top: var(--spacing-sm);
+  }
+
+  .panel-renderer__enable-button {
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--md-sys-color-primary);
+    background: transparent;
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-xs) var(--spacing-md);
+    cursor: pointer;
+    transition:
+      background-color var(--transition-fast),
+      border-color var(--transition-fast);
+  }
+
+  .panel-renderer__enable-button:hover {
+    background: var(--md-sys-color-surface-container);
   }
 
   .panel-renderer__markers {
