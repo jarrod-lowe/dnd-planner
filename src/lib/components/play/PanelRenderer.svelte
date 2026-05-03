@@ -2,10 +2,12 @@
   import { t } from '$lib/i18n';
   import WarningIndicator from './WarningIndicator.svelte';
   import { extractPanelDescriptor } from './panel-renderer/extractPanelDescriptor';
+  import { resolveValueSource } from './panel-renderer/resolveValueSource';
   import PanelSlider from './panel-renderer/PanelSlider.svelte';
   import PanelDiceLine from './panel-renderer/PanelDiceLine.svelte';
   import PanelSelect from './panel-renderer/PanelSelect.svelte';
   import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-engine';
+  import type { TextInformation } from './panel-renderer/types';
 
   interface Props {
     entry: AvailableRuleEntry;
@@ -55,6 +57,33 @@
   );
   const secondarySlider = $derived(
     descriptor.secondaryControl?.type === 'slider' ? descriptor.secondaryControl : undefined
+  );
+
+  const textInfos = $derived(
+    (descriptor.information?.filter((info): info is TextInformation => info.type === 'text') ?? []).map(
+      (info) => {
+        let text = $t(info.label);
+        if (info.labelValues) {
+          const resolvedValues: string[] = [];
+          for (const [key, source] of Object.entries(info.labelValues)) {
+            const resolved = resolveValueSource(source, facts, vars, selections);
+            if (resolved !== undefined) {
+              const placeholder = `{{${key}}}`;
+              const value = String(resolved);
+              if (text.includes(placeholder)) {
+                text = text.replace(placeholder, value);
+              } else {
+                resolvedValues.push(value);
+              }
+            }
+          }
+          if (resolvedValues.length > 0) {
+            text = text + ' ' + resolvedValues.join(' ');
+          }
+        }
+        return text;
+      }
+    )
   );
 </script>
 
@@ -114,6 +143,9 @@
         />
       </div>
     {/if}
+    {#each textInfos as text}
+      <div class="panel-renderer__information panel-renderer__information--text">{text}</div>
+    {/each}
   </div>
 {:else}
   <button class="panel-renderer" onclick={onTap} type="button">
@@ -171,6 +203,9 @@
         />
       </div>
     {/if}
+    {#each textInfos as text}
+      <div class="panel-renderer__information panel-renderer__information--text">{text}</div>
+    {/each}
   </button>
 {/if}
 
