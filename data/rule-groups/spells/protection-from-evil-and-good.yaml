@@ -146,6 +146,11 @@ ruleGroups:
                 section: action-spell
                 name: rule.spell-protection-from-evil-and-good.offer-protection-from-evil-and-good.name
                 showDC: true
+                information:
+                  - type: text
+                    label: play.information.saveDc
+                    labelValues:
+                      dc: { fact: spellcasting.saveDC }
               vars:
                 slotLevel:
                   capture: true
@@ -450,6 +455,10 @@ ruleGroups:
                       name: rule.spell-protection-from-evil-and-good.effect-protection-from-evil-and-good.name
                       countDown: 100
                       duration: 100
+                      information:
+                        - type: countdown
+                          filled: { number: 100 }
+                          total: { number: 100 }
                     activities:
                       - type: numberIncrement
                         target:

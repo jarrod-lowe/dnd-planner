@@ -74,6 +74,9 @@ ruleGroups:
                 model: ability-score
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.set-strength.name
+                primaryControl:
+                  type: slider
+                  var: score
               vars:
                 score:
                   capture: true
@@ -179,6 +182,9 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.set-dexterity.name
                 packBehind: set-strength
+                primaryControl:
+                  type: slider
+                  var: score
               vars:
                 score:
                   capture: true
@@ -284,6 +290,9 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.set-constitution.name
                 packBehind: set-strength
+                primaryControl:
+                  type: slider
+                  var: score
               vars:
                 score:
                   capture: true
@@ -389,6 +398,9 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.set-intelligence.name
                 packBehind: set-strength
+                primaryControl:
+                  type: slider
+                  var: score
               vars:
                 score:
                   capture: true
@@ -494,6 +506,9 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.set-wisdom.name
                 packBehind: set-strength
+                primaryControl:
+                  type: slider
+                  var: score
               vars:
                 score:
                   capture: true
@@ -599,6 +614,9 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.set-charisma.name
                 packBehind: set-strength
+                primaryControl:
+                  type: slider
+                  var: score
               vars:
                 score:
                   capture: true
@@ -1316,6 +1334,10 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-athletics.name
                 packBehind: proficiency-acrobatics
+                primaryControl:
+                  type: select
+                  var: level
+                  options: { var: levels }
               vars:
                 level:
                   capture: true
@@ -1412,6 +1434,10 @@ ruleGroups:
                 model: skill-proficiency
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-acrobatics.name
+                primaryControl:
+                  type: select
+                  var: level
+                  options: { var: levels }
               vars:
                 level:
                   capture: true
@@ -1509,6 +1535,10 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-animal-handling.name
                 packBehind: proficiency-acrobatics
+                primaryControl:
+                  type: select
+                  var: level
+                  options: { var: levels }
               vars:
                 level:
                   capture: true
@@ -1606,6 +1636,10 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-arcana.name
                 packBehind: proficiency-acrobatics
+                primaryControl:
+                  type: select
+                  var: level
+                  options: { var: levels }
               vars:
                 level:
                   capture: true
@@ -1703,6 +1737,10 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-deception.name
                 packBehind: proficiency-acrobatics
+                primaryControl:
+                  type: select
+                  var: level
+                  options: { var: levels }
               vars:
                 level:
                   capture: true
@@ -1800,6 +1838,10 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-history.name
                 packBehind: proficiency-acrobatics
+                primaryControl:
+                  type: select
+                  var: level
+                  options: { var: levels }
               vars:
                 level:
                   capture: true
@@ -1897,6 +1939,10 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-insight.name
                 packBehind: proficiency-acrobatics
+                primaryControl:
+                  type: select
+                  var: level
+                  options: { var: levels }
               vars:
                 level:
                   capture: true
@@ -1994,6 +2040,10 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-intimidation.name
                 packBehind: proficiency-acrobatics
+                primaryControl:
+                  type: select
+                  var: level
+                  options: { var: levels }
               vars:
                 level:
                   capture: true
@@ -2091,6 +2141,10 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-investigation.name
                 packBehind: proficiency-acrobatics
+                primaryControl:
+                  type: select
+                  var: level
+                  options: { var: levels }
               vars:
                 level:
                   capture: true
@@ -2188,6 +2242,10 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-medicine.name
                 packBehind: proficiency-acrobatics
+                primaryControl:
+                  type: select
+                  var: level
+                  options: { var: levels }
               vars:
                 level:
                   capture: true
@@ -2285,6 +2343,10 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-nature.name
                 packBehind: proficiency-acrobatics
+                primaryControl:
+                  type: select
+                  var: level
+                  options: { var: levels }
               vars:
                 level:
                   capture: true
@@ -2382,6 +2444,10 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-perception.name
                 packBehind: proficiency-acrobatics
+                primaryControl:
+                  type: select
+                  var: level
+                  options: { var: levels }
               vars:
                 level:
                   capture: true
@@ -2479,6 +2545,10 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-performance.name
                 packBehind: proficiency-acrobatics
+                primaryControl:
+                  type: select
+                  var: level
+                  options: { var: levels }
               vars:
                 level:
                   capture: true
@@ -2576,6 +2646,10 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-persuasion.name
                 packBehind: proficiency-acrobatics
+                primaryControl:
+                  type: select
+                  var: level
+                  options: { var: levels }
               vars:
                 level:
                   capture: true
@@ -2673,6 +2747,10 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-religion.name
                 packBehind: proficiency-acrobatics
+                primaryControl:
+                  type: select
+                  var: level
+                  options: { var: levels }
               vars:
                 level:
                   capture: true
@@ -2770,6 +2848,10 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-sleight-of-hand.name
                 packBehind: proficiency-acrobatics
+                primaryControl:
+                  type: select
+                  var: level
+                  options: { var: levels }
               vars:
                 level:
                   capture: true
@@ -2867,6 +2949,10 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-stealth.name
                 packBehind: proficiency-acrobatics
+                primaryControl:
+                  type: select
+                  var: level
+                  options: { var: levels }
               vars:
                 level:
                   capture: true
@@ -2964,6 +3050,10 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-survival.name
                 packBehind: proficiency-acrobatics
+                primaryControl:
+                  type: select
+                  var: level
+                  options: { var: levels }
               vars:
                 level:
                   capture: true

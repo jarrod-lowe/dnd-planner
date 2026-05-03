@@ -109,6 +109,9 @@ ruleGroups:
                 model: divine-sense
                 section: bonus-action-other
                 name: rule.class-paladin-divinity.divine-sense.name
+                information:
+                  - type: text
+                    label: rule.class-paladin-divinity.divine-sense.description
               activities:
                 # Consume bonus action
                 - type: numberIncrement

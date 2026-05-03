@@ -129,6 +129,12 @@ ruleGroups:
                 showDC: true
                 saveType: WIS
                 saveFact: spellcasting.saveDC
+                information:
+                  - type: text
+                    label: play.information.saveDc
+                    labelValues:
+                      saveType: { string: WIS }
+                      dc: { fact: spellcasting.saveDC }
               vars:
                 slotLevel:
                   capture: true

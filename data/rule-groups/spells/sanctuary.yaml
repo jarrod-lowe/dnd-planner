@@ -125,6 +125,11 @@ ruleGroups:
                 section: bonus-action-spell
                 name: rule.spell-sanctuary.offer-sanctuary.name
                 showDC: true
+                information:
+                  - type: text
+                    label: play.information.saveDc
+                    labelValues:
+                      dc: { fact: spellcasting.saveDC }
               vars:
                 slotLevel:
                   capture: true
@@ -423,6 +428,15 @@ ruleGroups:
                       duration: 10
                       saveType: WIS
                       saveFact: spellcasting.saveDC
+                      information:
+                        - type: countdown
+                          filled: { number: 10 }
+                          total: { number: 10 }
+                        - type: text
+                          label: play.information.saveDc
+                          labelValues:
+                            saveType: { string: WIS }
+                            dc: { fact: spellcasting.saveDC }
                     activities:
                       - type: advertiseEffect
                         self: true

@@ -47,6 +47,11 @@ ruleGroups:
                 name: rule.dnd-5e-2024.shove.shove-action.name
                 vsKey: play.choices.contested.vsStrDex
                 outcomeKey: play.choices.shove.outcome
+                primaryControl:
+                  type: dice-line
+                  dice:
+                    - expression: d20
+                      bonus: { var: dc }
               vars:
                 dc:
                   capture: true

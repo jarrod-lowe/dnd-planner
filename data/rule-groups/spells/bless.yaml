@@ -134,6 +134,11 @@ ruleGroups:
                 model: spell-save
                 section: action-spell
                 name: rule.spell-bless.offer-bless.name
+                information:
+                  - type: text
+                    label: play.information.saveDc
+                    labelValues:
+                      dc: { fact: spellcasting.saveDC }
               vars:
                 slotLevel:
                   capture: true
@@ -438,6 +443,14 @@ ruleGroups:
                       name: rule.spell-bless.effect-bless.name
                       countDown: 10
                       duration: 10
+                      information:
+                        - type: countdown
+                          filled: { number: 10 }
+                          total: { number: 10 }
+                        - type: text
+                          label: play.information.saveDc
+                          labelValues:
+                            dc: { fact: spellcasting.saveDC }
                     activities:
                       - type: numberIncrement
                         target:

@@ -180,6 +180,17 @@ ruleGroups:
                 dieSides: 6
                 showDC: true
                 saveType: STR
+                primaryControl:
+                  type: slider
+                  var: slotLevel
+                  min: { number: 1 }
+                  max: { number: 5 }
+                information:
+                  - type: text
+                    label: play.information.saveDc
+                    labelValues:
+                      saveType: { string: STR }
+                      dc: { fact: spellcasting.saveDC }
               vars:
                 slotLevel:
                   capture: true

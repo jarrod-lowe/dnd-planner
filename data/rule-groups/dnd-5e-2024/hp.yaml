@@ -54,6 +54,11 @@ ruleGroups:
                 name: rule.dnd-5e-2024.hp.set-hp-modifier-max.name
                 sliderMin: -10
                 sliderMax: 30
+                primaryControl:
+                  type: slider
+                  var: modifier
+                  min: { number: -10 }
+                  max: { number: 30 }
               vars:
                 modifier:
                   capture: true
@@ -118,6 +123,11 @@ ruleGroups:
                 name: rule.dnd-5e-2024.hp.set-hp-modifier-current.name
                 sliderMin: -30
                 sliderMax: 30
+                primaryControl:
+                  type: slider
+                  var: modifier
+                  min: { number: -30 }
+                  max: { number: 30 }
               vars:
                 modifier:
                   capture: true

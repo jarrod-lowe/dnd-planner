@@ -70,6 +70,10 @@ ruleGroups:
                 section: bonus-action-other
                 name: rule.class-paladin-lay-on-hands.loh-heal.name
                 sliderMin: 1
+                primaryControl:
+                  type: slider
+                  var: amount
+                  min: { number: 1 }
               vars:
                 amount:
                   capture: true

@@ -47,6 +47,12 @@ ruleGroups:
                 section: free
                 name: rule.dnd-5e-2024.initiative.roll-initiative.name
                 disadvantageFact: initiative.disadvantage
+                primaryControl:
+                  type: dice-line
+                  dice:
+                    - expression: d20
+                      bonus: { var: rollBonus }
+                  advantage: { fact: initiative.disadvantage }
               vars:
                 rollBonus:
                   capture: true
