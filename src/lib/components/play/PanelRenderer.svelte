@@ -157,6 +157,21 @@
       {#if hasWarning && warningType}
         <WarningIndicator type={warningType} />
       {/if}
+      {#if onRemove}
+        <button
+          class="panel-renderer__button--remove"
+          type="button"
+          onclick={() => onRemove()}
+          aria-label={$t('play.plan.remove')}
+          title={$t('play.plan.remove')}
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+            />
+          </svg>
+        </button>
+      {/if}
     </div>
     {#if primarySlider}
       <div class="panel-renderer__control">
@@ -263,11 +278,26 @@
     {/if}
   </div>
 {:else}
-  <button class="panel-renderer" onclick={onTap} type="button">
+  <div class="panel-renderer" role="button" tabindex={onTap ? 0 : undefined} onclick={onTap}>
     <div class="panel-renderer__header">
       <span class="panel-renderer__title">{displayName}</span>
       {#if hasWarning && warningType}
         <WarningIndicator type={warningType} />
+      {/if}
+      {#if onRemove}
+        <button
+          class="panel-renderer__button--remove"
+          type="button"
+          onclick={(e) => { e.stopPropagation(); onRemove(); }}
+          aria-label={$t('play.plan.remove')}
+          title={$t('play.plan.remove')}
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+            />
+          </svg>
+        </button>
       {/if}
     </div>
     {#if primarySlider}
@@ -373,7 +403,7 @@
         {/each}
       </div>
     {/if}
-  </button>
+  </div>
 {/if}
 
 <style>
@@ -420,6 +450,41 @@
     font-size: var(--font-size-md);
     font-weight: 500;
     color: var(--md-sys-color-on-surface);
+  }
+
+  .panel-renderer__button--remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    margin-left: auto;
+    background: transparent;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--radius-sm);
+    color: var(--md-sys-color-on-surface-variant);
+    cursor: pointer;
+    transition:
+      background-color var(--transition-fast),
+      color var(--transition-fast),
+      border-color var(--transition-fast);
+  }
+
+  .panel-renderer__button--remove:hover {
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+    border-color: var(--md-sys-color-error);
+  }
+
+  .panel-renderer__button--remove:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: 2px;
+  }
+
+  .panel-renderer__button--remove svg {
+    width: 1rem;
+    height: 1rem;
   }
 
   .panel-renderer__control {

@@ -23,8 +23,8 @@ describe('PanelRenderer', () => {
       const entry = createMockEntry();
       const onTap = vi.fn();
       const { container } = render(PanelRenderer, { props: { entry, onTap } });
-      const button = container.querySelector('button.panel-renderer');
-      button?.click();
+      const panel = container.querySelector('.panel-renderer');
+      panel?.click();
       expect(onTap).toHaveBeenCalledTimes(1);
     });
 
@@ -49,13 +49,14 @@ describe('PanelRenderer', () => {
       expect(panel?.tagName).toBe('DIV');
     });
 
-    it('renders as button when not editable', () => {
+    it('renders as div with role=button when not editable', () => {
       const entry = createMockEntry();
       const { container } = render(PanelRenderer, {
         props: { entry, editable: false }
       });
       const panel = container.querySelector('.panel-renderer');
-      expect(panel?.tagName).toBe('BUTTON');
+      expect(panel?.tagName).toBe('DIV');
+      expect(panel?.getAttribute('role')).toBe('button');
     });
 
     it('renders rule id as fallback when no description and no ui.name', () => {
