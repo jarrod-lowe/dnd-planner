@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import PanelRenderer from '$lib/components/play/PanelRenderer.svelte';
 import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
@@ -204,5 +204,66 @@ describe('PanelRenderer - dice-line control', () => {
     };
     const { container } = render(PanelRenderer, { props: { entry, editable: true, facts } });
     expect(container.textContent).toContain('10ft');
+  });
+
+  it('rolls d20 and displays result when chip is clicked', async () => {
+    const entry = createDiceLineEntry(); // d20+3
+    vi.spyOn(Math, 'random').mockReturnValue(0.8); // 0.8 * 20 + 1 = 17
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {} }
+    });
+    const chip = container.querySelector('.panel-renderer__die-chip');
+    expect(chip).toBeTruthy();
+    await fireEvent.click(chip!);
+    // Should show roll result: 17 + 3 = 20
+    expect(container.textContent).toContain('20');
+  });
+
+  it('shows crit highlight on natural 20', async () => {
+    const entry = createDiceLineEntry(); // d20+3
+    vi.spyOn(Math, 'random').mockReturnValue(0.95); // 0.95 * 20 + 1 = 20
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {} }
+    });
+    const chip = container.querySelector('.panel-renderer__die-chip');
+    await fireEvent.click(chip!);
+    expect(chip?.classList.contains('panel-renderer__die-chip--crit')).toBe(true);
+  });
+
+  it('shows fumble highlight on natural 1', async () => {
+    const entry = createDiceLineEntry(); // d20+3
+    vi.spyOn(Math, 'random').mockReturnValue(0); // 0 * 20 + 1 = 1
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {} }
+    });
+    const chip = container.querySelector('.panel-renderer__die-chip');
+    await fireEvent.click(chip!);
+    expect(chip?.classList.contains('panel-renderer__die-chip--fumble')).toBe(true);
+  });
+
+  it('does not roll when read-only', async () => {
+    const entry = createDiceLineEntry(); // d20+3
+    vi.spyOn(Math, 'random').mockReturnValue(0.8);
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: false, facts: {} }
+    });
+    // Read-only chips are spans, not buttons, so no click handler
+    const span = container.querySelector('.panel-renderer__die-chip');
+    expect(span?.tagName).toBe('SPAN');
+    // Content should still be the expression, not a rolled number
+    expect(container.textContent).toContain('d20');
+    expect(container.textContent).toContain('+3');
+  });
+
+  it('rolls damage die', async () => {
+    const entry = createAttackEntry(); // d20+5 | d12+3
+    vi.spyOn(Math, 'random').mockReturnValueOnce(0.5); // damage: floor(0.5*12)+1 = 7, 7+3=10
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {} }
+    });
+    const chips = container.querySelectorAll('.panel-renderer__die-chip');
+    // Click damage chip (second one, index 1)
+    await fireEvent.click(chips[1]);
+    expect(container.textContent).toContain('10');
   });
 });

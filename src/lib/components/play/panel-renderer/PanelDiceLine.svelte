@@ -30,6 +30,10 @@
 
   let rangeIndex = $state(0);
 
+  let rollResults = $state<Record<number, { total: number; natural: number }>>({});
+
+  const chipRefs: Record<number, HTMLElement> = $state({});
+
   const ranges = $derived(
     control.ranges
       ? (resolveValueSource(control.ranges, facts, vars, selections) as RangeEntry[] | undefined)
@@ -65,7 +69,10 @@
     return value ?? '';
   }
 
-  function formatDieChip(die: DiceEntry): string {
+  function formatDieChip(die: DiceEntry, dieIndex: number): string {
+    if (rollResults[dieIndex] !== undefined) {
+      return String(rollResults[dieIndex].total);
+    }
     let text = formatDieExpression(die);
     text += formatBonus(die);
     const dmgType = formatDamageType(die);
@@ -73,13 +80,44 @@
     return text;
   }
 
-  const parts = $derived.by<{ type: 'range' | 'die'; die?: DiceEntry }[]>(() => {
-    const result: { type: 'range' | 'die'; die?: DiceEntry }[] = [];
+  function getDieSides(die: DiceEntry): number | undefined {
+    const expr = resolveExpression(die.expression, facts, vars, selections);
+    if (typeof expr === 'string' && expr.startsWith('d')) {
+      const parsed = parseInt(expr.slice(1), 10);
+      return isNaN(parsed) ? undefined : parsed;
+    }
+    if (typeof expr === 'number') return expr;
+    return undefined;
+  }
+
+  function handleRoll(dieIndex: number): void {
+    if (!editable) return;
+    const die = control.dice[dieIndex];
+    const sides = getDieSides(die);
+    if (sides === undefined || sides < 1) return;
+    const natural = Math.floor(Math.random() * sides) + 1;
+    const bonus = (resolveValueSource(die.bonus, facts, vars, selections) as number) ?? 0;
+    rollResults[dieIndex] = { total: natural + bonus, natural };
+    const el = chipRefs[dieIndex];
+    if (el) {
+      el.animate(
+        [
+          { transform: 'scale(1)' },
+          { transform: 'scale(1.1)' },
+          { transform: 'scale(1)' }
+        ],
+        { duration: 200 }
+      );
+    }
+  }
+
+  const parts = $derived.by<{ type: 'range' | 'die'; die?: DiceEntry; dieIndex?: number }[]>(() => {
+    const result: { type: 'range' | 'die'; die?: DiceEntry; dieIndex?: number }[] = [];
     if (currentRange) {
       result.push({ type: 'range' });
     }
-    for (const die of control.dice) {
-      result.push({ type: 'die', die });
+    for (let di = 0; di < control.dice.length; di++) {
+      result.push({ type: 'die', die: control.dice[di], dieIndex: di });
     }
     return result;
   });
@@ -105,11 +143,19 @@
       {/if}
     {:else}
       {#if editable}
-        <button class="panel-renderer__die-chip" type="button">
-          {formatDieChip(part.die!)}
+        <button
+          class="panel-renderer__die-chip"
+          class:panel-renderer__die-chip--crit={rollResults[part.dieIndex!]?.natural === 20}
+          class:panel-renderer__die-chip--fumble={rollResults[part.dieIndex!]?.natural === 1}
+          type="button"
+          data-die-index={part.dieIndex}
+          bind:this={chipRefs[part.dieIndex!]}
+          onclick={() => handleRoll(part.dieIndex!)}
+        >
+          {formatDieChip(part.die!, part.dieIndex!)}
         </button>
       {:else}
-        <span class="panel-renderer__die-chip">{formatDieChip(part.die!)}</span>
+        <span class="panel-renderer__die-chip">{formatDieChip(part.die!, part.dieIndex!)}</span>
       {/if}
     {/if}
   {/each}
@@ -165,5 +211,17 @@
     background: transparent;
     border: none;
     padding: 0;
+  }
+
+  .panel-renderer__die-chip--crit {
+    color: var(--md-sys-color-on-primary);
+    background: var(--md-sys-color-primary);
+    border-color: var(--md-sys-color-primary);
+  }
+
+  .panel-renderer__die-chip--fumble {
+    color: var(--md-sys-color-on-error);
+    background: var(--md-sys-color-error);
+    border-color: var(--md-sys-color-error);
   }
 </style>
