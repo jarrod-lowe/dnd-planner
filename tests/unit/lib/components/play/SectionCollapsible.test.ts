@@ -25,7 +25,7 @@ describe('SectionCollapsible', () => {
     entry: createMockEntry('rule-1', { description: 'Test Rule' })
   };
 
-  it('renders ChoicePanel by default (mode=choice)', () => {
+  it('renders PanelRenderer by default (mode=choice)', () => {
     const { container } = render(SectionCollapsible, {
       props: {
         section: 'move',
@@ -36,12 +36,12 @@ describe('SectionCollapsible', () => {
       }
     });
 
-    // ChoicePanel renders as a button
-    const button = container.querySelector('button.choice-panel');
-    expect(button).toBeTruthy();
+    // PanelRenderer renders as a non-editable div with role=button
+    const panel = container.querySelector('.panel-renderer');
+    expect(panel).toBeTruthy();
   });
 
-  it('renders EffectPanel when mode=effect', () => {
+  it('renders PanelRenderer in editable mode when mode=effect', () => {
     const { container } = render(SectionCollapsible, {
       props: {
         section: 'action-spell',
@@ -53,13 +53,12 @@ describe('SectionCollapsible', () => {
       }
     });
 
-    // EffectPanel renders as div.effect-panel, not a button
-    const effectPanel = container.querySelector('.effect-panel');
-    expect(effectPanel).toBeTruthy();
-    expect(effectPanel?.tagName).toBe('DIV');
+    // PanelRenderer renders as editable div (no onclick)
+    const panel = container.querySelector('.panel-renderer--editable');
+    expect(panel).toBeTruthy();
   });
 
-  it('passes deletable and onRemoveEffect to EffectPanel in effect mode', () => {
+  it('passes onRemove to PanelRenderer in effect mode when deletable', () => {
     const onRemoveEffect = vi.fn();
     const { container } = render(SectionCollapsible, {
       props: {
@@ -74,8 +73,8 @@ describe('SectionCollapsible', () => {
       }
     });
 
-    // Should render delete button from EffectPanel
-    const deleteButton = container.querySelector('.effect-panel__button--remove');
+    // Should render delete button from PanelRenderer
+    const deleteButton = container.querySelector('.panel-renderer__button--remove');
     expect(deleteButton).toBeTruthy();
   });
 
@@ -94,7 +93,7 @@ describe('SectionCollapsible', () => {
       }
     });
 
-    const deleteButton = container.querySelector('.effect-panel__button--remove');
+    const deleteButton = container.querySelector('.panel-renderer__button--remove');
     await fireEvent.click(deleteButton!);
 
     expect(onRemoveEffect).toHaveBeenCalledWith('rule-1');
