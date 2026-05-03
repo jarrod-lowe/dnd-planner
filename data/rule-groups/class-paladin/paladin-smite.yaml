@@ -96,7 +96,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: paladin-smite
                 section: bonus-action-other
                 name: rule.class-paladin-paladin-smite.paladin-smite.name
               vars:

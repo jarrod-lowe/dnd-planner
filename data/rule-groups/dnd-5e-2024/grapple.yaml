@@ -41,7 +41,6 @@ ruleGroups:
             rule:
               id: grapple-action
               ui:
-                model: contested-action
                 section: action-attack
                 packBehind: unarmed-strike-use-action
                 name: rule.dnd-5e-2024.grapple.grapple-action.name

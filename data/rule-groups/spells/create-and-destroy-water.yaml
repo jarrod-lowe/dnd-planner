@@ -47,7 +47,6 @@ ruleGroups:
             rule:
               id: cast-create-and-destroy-water
               ui:
-                model: spell
                 section: action-spell
                 name: rule.spell-create-and-destroy-water.cast-create-and-destroy-water.name
               group:

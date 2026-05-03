@@ -174,7 +174,6 @@ ruleGroups:
                 - __planned__
                 - spellcasting
               ui:
-                model: smite
                 section: bonus-action-spell
                 name: rule.spell-thunderous-smite.offer-thunderous-smite.name
                 dieSides: 6

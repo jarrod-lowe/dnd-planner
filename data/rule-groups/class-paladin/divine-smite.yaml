@@ -173,7 +173,6 @@ ruleGroups:
                 - __planned__
                 - spellcasting
               ui:
-                model: smite
                 section: bonus-action-other
                 name: rule.class-paladin-divine-smite.divine-smite.name
                 primaryControl:

@@ -49,7 +49,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: ability-score
                 section: health
                 name: rule.dnd-5e-2024.hp.set-hp-modifier-max.name
                 sliderMin: -10
@@ -118,7 +117,6 @@ ruleGroups:
               after:
                 - group: hp-copied
               ui:
-                model: ability-score
                 section: health
                 name: rule.dnd-5e-2024.hp.set-hp-modifier-current.name
                 sliderMin: -30

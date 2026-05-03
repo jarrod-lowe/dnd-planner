@@ -121,7 +121,6 @@ ruleGroups:
                 - __planned__
                 - spellcasting
               ui:
-                model: spell-save
                 section: bonus-action-spell
                 name: rule.spell-sanctuary.offer-sanctuary.name
                 showDC: true
@@ -422,7 +421,6 @@ ruleGroups:
                         operator: equals
                         value: 0
                     ui:
-                      model: timed-save-effect
                       section: ongoing
                       countDown: 10
                       duration: 10

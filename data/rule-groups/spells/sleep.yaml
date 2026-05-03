@@ -131,7 +131,6 @@ ruleGroups:
                 - action
                 - spellcasting
               ui:
-                model: spell-save
                 section: action-spell
                 name: rule.spell-sleep.offer-sleep.name
                 showDC: true
@@ -439,7 +438,6 @@ ruleGroups:
                         operator: equals
                         value: 0
                     ui:
-                      model: timed-save-effect
                       section: ongoing
                       countDown: 10
                       duration: 10

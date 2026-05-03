@@ -142,7 +142,6 @@ ruleGroups:
                 - action
                 - spellcasting
               ui:
-                model: spell-save
                 section: action-spell
                 name: rule.spell-protection-from-evil-and-good.offer-protection-from-evil-and-good.name
                 showDC: true
@@ -450,7 +449,6 @@ ruleGroups:
                         operator: equals
                         value: 0
                     ui:
-                      model: timed-save-effect
                       section: ongoing
                       name: rule.spell-protection-from-evil-and-good.effect-protection-from-evil-and-good.name
                       countDown: 100

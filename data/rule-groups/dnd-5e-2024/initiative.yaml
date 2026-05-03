@@ -43,7 +43,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: d20-roll
                 section: free
                 name: rule.dnd-5e-2024.initiative.roll-initiative.name
                 disadvantageFact: initiative.disadvantage

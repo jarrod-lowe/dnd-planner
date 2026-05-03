@@ -75,7 +75,6 @@ ruleGroups:
             rule:
               id: move-walk
               ui:
-                model: move
                 section: move
                 name: rule.dnd-5e-2024.movement.move-walk.name
                 primaryControl:
@@ -132,7 +131,6 @@ ruleGroups:
             rule:
               id: move-rough-terrain
               ui:
-                model: move
                 section: move
                 name: rule.dnd-5e-2024.movement.move-rough-terrain.name
                 packBehind: move-walk
@@ -212,7 +210,6 @@ ruleGroups:
             rule:
               id: move-swim
               ui:
-                model: move
                 section: move
                 name: rule.dnd-5e-2024.movement.move-swim.name
                 packBehind: move-walk
@@ -291,7 +288,6 @@ ruleGroups:
             rule:
               id: move-swim-costly
               ui:
-                model: move
                 section: move
                 name: rule.dnd-5e-2024.movement.move-swim.name
                 packBehind: move-walk
@@ -368,7 +364,6 @@ ruleGroups:
             rule:
               id: move-fly
               ui:
-                model: move
                 section: move
                 name: rule.dnd-5e-2024.movement.move-fly.name
                 packBehind: move-walk

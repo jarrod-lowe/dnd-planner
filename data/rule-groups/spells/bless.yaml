@@ -131,7 +131,6 @@ ruleGroups:
                 - action
                 - spellcasting
               ui:
-                model: spell-save
                 section: action-spell
                 name: rule.spell-bless.offer-bless.name
                 information:
@@ -438,7 +437,6 @@ ruleGroups:
                         operator: equals
                         value: 0
                     ui:
-                      model: timed-save-effect
                       section: ongoing
                       name: rule.spell-bless.effect-bless.name
                       countDown: 10

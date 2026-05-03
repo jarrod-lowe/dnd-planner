@@ -4,7 +4,6 @@ definitions:
     tags: [attack, weapon]
     requires: [attacks]
     ui:
-      model: attack
       name: rule.dnd-5e-2024.attacks.unarmed-strike.name
       disadvantageFact: attack.str.disadvantage
       annotationLabels: [attack.any, attack.melee, attack.unarmed]
@@ -59,7 +58,6 @@ definitions:
       weapon.throwable: true
       weapon.mastery: nick
     ui:
-      model: attack
       name: rule.dnd-5e-2024.attacks.dagger.name
       disadvantageFact: attack.str.disadvantage
       annotationLabels: [attack.any, attack.melee, attack.weapon]
@@ -118,7 +116,6 @@ definitions:
       weapon.twoHanded: true
       weapon.mastery: cleave
     ui:
-      model: attack
       name: rule.dnd-5e-2024.attacks.greataxe.name
       disadvantageFact: attack.str.disadvantage
       annotationLabels: [attack.any, attack.melee, attack.weapon]
@@ -191,7 +188,6 @@ definitions:
       weapon.throwable: true
       weapon.mastery: slow
     ui:
-      model: attack
       name: rule.dnd-5e-2024.attacks.javelin.name
       disadvantageFact: attack.str.disadvantage
       annotationLabels: [attack.any, attack.melee, attack.weapon]
@@ -266,7 +262,6 @@ definitions:
       weapon.finesse: true
       weapon.mastery: nick
     ui:
-      model: attack
       name: rule.dnd-5e-2024.attacks.scimitar.name
       disadvantageFact: attack.dex.disadvantage
       annotationLabels: [attack.any, attack.melee, attack.weapon]

@@ -22,7 +22,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: free
                 section: free
                 name: rule.dnd-5e-2024.free-actions.free-action.name
               activities: []
@@ -45,7 +44,6 @@ ruleGroups:
             rule:
               id: help-action
               ui:
-                model: help
                 section: action-other
                 name: rule.dnd-5e-2024.free-actions.help-action.name
               group:

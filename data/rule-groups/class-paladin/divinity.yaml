@@ -106,7 +106,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: divine-sense
                 section: bonus-action-other
                 name: rule.class-paladin-divinity.divine-sense.name
                 information:

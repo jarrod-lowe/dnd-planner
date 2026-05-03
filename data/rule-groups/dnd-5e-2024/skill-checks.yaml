@@ -22,7 +22,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: d20-roll
                 section: free
                 name: play.stats.skills.acrobatics
                 disadvantageFact: skill.acrobatics.disadvantage
@@ -50,7 +49,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: d20-roll
                 section: free
                 name: play.stats.skills.animal-handling
                 disadvantageFact: skill.animal-handling.disadvantage
@@ -79,7 +77,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: d20-roll
                 section: free
                 name: play.stats.skills.arcana
                 disadvantageFact: skill.arcana.disadvantage
@@ -108,7 +105,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: d20-roll
                 section: free
                 name: play.stats.skills.athletics
                 disadvantageFact: skill.athletics.disadvantage
@@ -137,7 +133,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: d20-roll
                 section: free
                 name: play.stats.skills.deception
                 disadvantageFact: skill.deception.disadvantage
@@ -166,7 +161,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: d20-roll
                 section: free
                 name: play.stats.skills.history
                 disadvantageFact: skill.history.disadvantage
@@ -195,7 +189,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: d20-roll
                 section: free
                 name: play.stats.skills.insight
                 disadvantageFact: skill.insight.disadvantage
@@ -224,7 +217,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: d20-roll
                 section: free
                 name: play.stats.skills.intimidation
                 disadvantageFact: skill.intimidation.disadvantage
@@ -253,7 +245,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: d20-roll
                 section: free
                 name: play.stats.skills.investigation
                 disadvantageFact: skill.investigation.disadvantage
@@ -282,7 +273,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: d20-roll
                 section: free
                 name: play.stats.skills.medicine
                 disadvantageFact: skill.medicine.disadvantage
@@ -311,7 +301,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: d20-roll
                 section: free
                 name: play.stats.skills.nature
                 disadvantageFact: skill.nature.disadvantage
@@ -340,7 +329,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: d20-roll
                 section: free
                 name: play.stats.skills.perception
                 disadvantageFact: skill.perception.disadvantage
@@ -369,7 +357,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: d20-roll
                 section: free
                 name: play.stats.skills.performance
                 disadvantageFact: skill.performance.disadvantage
@@ -398,7 +385,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: d20-roll
                 section: free
                 name: play.stats.skills.persuasion
                 disadvantageFact: skill.persuasion.disadvantage
@@ -427,7 +413,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: d20-roll
                 section: free
                 name: play.stats.skills.religion
                 disadvantageFact: skill.religion.disadvantage
@@ -456,7 +441,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: d20-roll
                 section: free
                 name: play.stats.skills.sleight-of-hand
                 disadvantageFact: skill.sleight-of-hand.disadvantage
@@ -485,7 +469,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: d20-roll
                 section: free
                 name: play.stats.skills.stealth
                 disadvantageFact: skill.stealth.disadvantage
@@ -514,7 +497,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: d20-roll
                 section: free
                 name: play.stats.skills.survival
                 disadvantageFact: skill.survival.disadvantage
