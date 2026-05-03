@@ -17,9 +17,13 @@ const createMockMovePlanItem = (): PlannedItem => ({
     description: 'Move',
     activities: [],
     ui: {
-      model: 'move',
       section: 'move',
-      name: 'rule.dnd-5e-2024.movement.move-walk.name'
+      name: 'rule.dnd-5e-2024.movement.move-walk.name',
+      primaryControl: {
+        type: 'slider',
+        var: 'distance',
+        max: { var: 'maxDistance' }
+      }
     },
     vars: {
       distance: { default: { fact: 'character.movement.remaining' } },
@@ -40,7 +44,7 @@ describe('PlanItem', () => {
     expect(getByText('Attack')).toBeTruthy();
   });
 
-  // === Control buttons (via ChoicePanel) ===
+  // === Control buttons (via PlanItem wrapper) ===
 
   it('has move up button with accessible label', () => {
     const item = createMockPlanItem('attack', 'Attack');
@@ -49,7 +53,7 @@ describe('PlanItem', () => {
       props: { item, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove: vi.fn() }
     });
 
-    const upButton = container.querySelector('.choice-panel__button--move-up');
+    const upButton = container.querySelector('.plan-item__button--move-up');
     expect(upButton?.getAttribute('aria-label')).toContain('play.plan.moveUp');
   });
 
@@ -60,7 +64,7 @@ describe('PlanItem', () => {
       props: { item, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove: vi.fn() }
     });
 
-    const downButton = container.querySelector('.choice-panel__button--move-down');
+    const downButton = container.querySelector('.plan-item__button--move-down');
     expect(downButton?.getAttribute('aria-label')).toContain('play.plan.moveDown');
   });
 
@@ -71,7 +75,7 @@ describe('PlanItem', () => {
       props: { item, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove: vi.fn() }
     });
 
-    const removeButton = container.querySelector('.choice-panel__button--remove');
+    const removeButton = container.querySelector('.panel-renderer__button--remove');
     expect(removeButton?.getAttribute('aria-label')).toContain('play.plan.remove');
   });
 
@@ -83,7 +87,7 @@ describe('PlanItem', () => {
       props: { item, onMoveUp, onMoveDown: vi.fn(), onRemove: vi.fn() }
     });
 
-    const upButton = container.querySelector('.choice-panel__button--move-up') as HTMLButtonElement;
+    const upButton = container.querySelector('.plan-item__button--move-up') as HTMLButtonElement;
     upButton?.click();
 
     expect(onMoveUp).toHaveBeenCalledTimes(1);
@@ -98,7 +102,7 @@ describe('PlanItem', () => {
     });
 
     const downButton = container.querySelector(
-      '.choice-panel__button--move-down'
+      '.plan-item__button--move-down'
     ) as HTMLButtonElement;
     downButton?.click();
 
@@ -114,7 +118,7 @@ describe('PlanItem', () => {
     });
 
     const removeButton = container.querySelector(
-      '.choice-panel__button--remove'
+      '.panel-renderer__button--remove'
     ) as HTMLButtonElement;
     removeButton?.click();
 
@@ -128,7 +132,7 @@ describe('PlanItem', () => {
       props: { item, canMoveUp: false, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove: vi.fn() }
     });
 
-    const upButton = container.querySelector('.choice-panel__button--move-up') as HTMLButtonElement;
+    const upButton = container.querySelector('.plan-item__button--move-up') as HTMLButtonElement;
     expect(upButton?.disabled).toBe(true);
   });
 
@@ -140,14 +144,14 @@ describe('PlanItem', () => {
     });
 
     const downButton = container.querySelector(
-      '.choice-panel__button--move-down'
+      '.plan-item__button--move-down'
     ) as HTMLButtonElement;
     expect(downButton?.disabled).toBe(true);
   });
 
-  // === ChoicePanel integration tests ===
+  // === PanelRenderer integration tests ===
 
-  it('renders ChoicePanel with editable mode for move rules', () => {
+  it('renders PanelRenderer with editable mode for move rules', () => {
     const item = createMockMovePlanItem();
     const facts: Facts = {
       'character.movement.remaining': 25,
@@ -164,7 +168,7 @@ describe('PlanItem', () => {
     expect((slider as HTMLInputElement)?.disabled).toBe(false);
   });
 
-  it('calls onSelectionChange when ChoicePanel slider changes', async () => {
+  it('calls onSelectionChange when PanelRenderer slider changes', async () => {
     const item = createMockMovePlanItem();
     const facts: Facts = {
       'character.movement.remaining': 25,
@@ -215,36 +219,45 @@ describe('PlanItem', () => {
     const planItem = container.querySelector('.plan-item');
     // The wrapper should exist but not have its own visual container
     expect(planItem).toBeTruthy();
-    // ChoicePanel provides the visual container
-    expect(container.querySelector('.choice-panel')).toBeTruthy();
+    // PanelRenderer provides the visual container
+    expect(container.querySelector('.panel-renderer')).toBeTruthy();
   });
 
-  it('controls are in actions row at bottom of panel', () => {
+  it('controls are in actions group at top-left of panel', () => {
     const item = createMockPlanItem('attack', 'Attack');
 
     const { container } = render(PlanItem, {
       props: { item, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove: vi.fn() }
     });
 
-    const actions = container.querySelector('.choice-panel__actions');
+    const actions = container.querySelector('.plan-item__actions');
     expect(actions).toBeTruthy();
   });
 
-  it('actions contain move up, move down, and remove buttons', () => {
+  it('actions contain move up and move down buttons', () => {
     const item = createMockPlanItem('attack', 'Attack');
 
     const { container } = render(PlanItem, {
       props: { item, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove: vi.fn() }
     });
 
-    const actions = container.querySelector('.choice-panel__actions');
+    const actions = container.querySelector('.plan-item__actions');
 
-    const upButton = actions?.querySelector('.choice-panel__button--move-up');
-    const downButton = actions?.querySelector('.choice-panel__button--move-down');
-    const removeButton = actions?.querySelector('.choice-panel__button--remove');
+    const upButton = actions?.querySelector('.plan-item__button--move-up');
+    const downButton = actions?.querySelector('.plan-item__button--move-down');
 
     expect(upButton).toBeTruthy();
     expect(downButton).toBeTruthy();
+  });
+
+  it('remove button is inside panel-renderer', () => {
+    const item = createMockPlanItem('attack', 'Attack');
+
+    const { container } = render(PlanItem, {
+      props: { item, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove: vi.fn() }
+    });
+
+    const removeButton = container.querySelector('.panel-renderer__button--remove');
     expect(removeButton).toBeTruthy();
   });
 });
