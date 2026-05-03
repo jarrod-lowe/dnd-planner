@@ -20,6 +20,7 @@
     activeAnnotations?: Annotation[];
     onSelectionChange?: (selections: Record<string, unknown>) => void;
     onRemove?: () => void;
+    removeLabel?: string;
     canMoveUp?: boolean;
     canMoveDown?: boolean;
     onMoveUp?: () => void;
@@ -35,6 +36,7 @@
     activeAnnotations = [],
     onSelectionChange,
     onRemove,
+    removeLabel = 'play.plan.remove',
     canMoveUp = true,
     canMoveDown = true,
     onMoveUp,
@@ -171,6 +173,7 @@
   class:panel-renderer--editable={editable}
   role={!editable ? 'button' : undefined}
   tabindex={!editable ? 0 : undefined}
+  aria-label={!editable ? displayName + (hasWarning && warningType ? ` (${$t(warningType === 'illegal' ? 'play.choices.illegal' : 'play.choices.inapplicable')})` : '') : undefined}
   onclick={onTap}
 >
   {#if hasWarning && warningType}
@@ -317,8 +320,8 @@
           type="button"
           class="panel-renderer__button panel-renderer__button--remove"
           onclick={handleRemoveClick}
-          aria-label={$t('play.plan.remove')}
-          title={$t('play.plan.remove')}
+          aria-label={$t(removeLabel)}
+          title={$t(removeLabel)}
         >
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path
