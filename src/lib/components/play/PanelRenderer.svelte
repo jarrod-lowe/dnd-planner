@@ -7,6 +7,7 @@
   import PanelDiceLine from './panel-renderer/PanelDiceLine.svelte';
   import PanelSelect from './panel-renderer/PanelSelect.svelte';
   import { evaluateCondition } from '$lib/rules-engine/conditions';
+  import { getMatchingAnnotations } from '$lib/play/annotations';
   import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-engine';
   import type { TextInformation, CountdownInformation } from './panel-renderer/types';
 
@@ -138,6 +139,15 @@
           v !== null
       )
   );
+
+  const annotationLabels = $derived([
+    ...(descriptor.primaryControl?.annotationLabels ?? []),
+    ...(descriptor.secondaryControl?.annotationLabels ?? [])
+  ]);
+
+  const matchingAnnotations = $derived(
+    getMatchingAnnotations(annotationLabels, activeAnnotations)
+  );
 </script>
 
 {#if editable}
@@ -244,6 +254,13 @@
         {/each}
       </div>
     {/each}
+    {#if matchingAnnotations.length > 0}
+      <div class="panel-renderer__annotations" role="note">
+        {#each matchingAnnotations as annotation (annotation.key)}
+          <span class="panel-renderer__annotation">{$t(annotation.key)}</span>
+        {/each}
+      </div>
+    {/if}
   </div>
 {:else}
   <button class="panel-renderer" onclick={onTap} type="button">
@@ -349,6 +366,13 @@
         {/each}
       </div>
     {/each}
+    {#if matchingAnnotations.length > 0}
+      <div class="panel-renderer__annotations" role="note">
+        {#each matchingAnnotations as annotation (annotation.key)}
+          <span class="panel-renderer__annotation">{$t(annotation.key)}</span>
+        {/each}
+      </div>
+    {/if}
   </button>
 {/if}
 
@@ -447,5 +471,23 @@
   .panel-renderer__marker--empty {
     background: transparent;
     border: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  .panel-renderer__annotations {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    padding-top: var(--spacing-xs);
+  }
+
+  .panel-renderer__annotation {
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    color: var(--md-sys-color-on-primary-container);
+    background: var(--md-sys-color-primary-container);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    line-height: var(--line-height-md);
   }
 </style>

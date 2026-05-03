@@ -1,0 +1,106 @@
+import { describe, it, expect } from 'vitest';
+import { render } from '@testing-library/svelte';
+import PanelRenderer from '$lib/components/play/PanelRenderer.svelte';
+import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
+import type { Annotation } from '$lib/rules-engine';
+
+const createEntryWithAnnotations = (): AvailableRuleEntry => ({
+  rule: {
+    id: 'greataxe',
+    description: 'Greataxe',
+    activities: [],
+    ui: {
+      name: 'rule.attacks.greataxe.name',
+      primaryControl: {
+        type: 'dice-line',
+        dice: [{ expression: 'd20', bonus: { var: 'hitBonus' } }],
+        annotationLabels: ['attack.any', 'attack.melee']
+      }
+    },
+    vars: { hitBonus: { default: { number: 5 } } }
+  } as Rule,
+  legal: true,
+  applicable: true,
+  diagnostics: []
+});
+
+describe('PanelRenderer - annotations', () => {
+  it('renders matching annotations', () => {
+    const entry = createEntryWithAnnotations();
+    const annotations: Annotation[] = [
+      { key: 'play.annotations.some-buff', targets: ['attack.any'] }
+    ];
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {}, activeAnnotations: annotations }
+    });
+    expect(container.querySelector('.panel-renderer__annotations')).toBeTruthy();
+  });
+
+  it('renders nothing when no annotations match', () => {
+    const entry = createEntryWithAnnotations();
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {}, activeAnnotations: [] }
+    });
+    expect(container.querySelector('.panel-renderer__annotations')).toBeNull();
+  });
+
+  it('renders annotation text from translation key', () => {
+    const entry = createEntryWithAnnotations();
+    const annotations: Annotation[] = [
+      { key: 'play.annotations.some-buff', targets: ['attack.any'] }
+    ];
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {}, activeAnnotations: annotations }
+    });
+    const annotationSpan = container.querySelector('.panel-renderer__annotation');
+    expect(annotationSpan).toBeTruthy();
+    expect(annotationSpan?.textContent).toContain('play.annotations.some-buff');
+  });
+
+  it('collects labels from both primary and secondary controls', () => {
+    const entry: AvailableRuleEntry = {
+      rule: {
+        id: 'two-controls',
+        description: 'Two Controls',
+        activities: [],
+        ui: {
+          name: 'rule.two-controls.name',
+          primaryControl: {
+            type: 'dice-line',
+            dice: [{ expression: 'd20' }],
+            annotationLabels: ['attack.any']
+          },
+          secondaryControl: {
+            type: 'dice-line',
+            dice: [{ expression: 'd6' }],
+            annotationLabels: ['damage.melee']
+          }
+        }
+      } as Rule,
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    };
+    const annotations: Annotation[] = [
+      { key: 'play.annotations.damage-buff', targets: ['damage.melee'] }
+    ];
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {}, activeAnnotations: annotations }
+    });
+    expect(container.querySelector('.panel-renderer__annotations')).toBeTruthy();
+    expect(container.querySelector('.panel-renderer__annotation')?.textContent).toContain(
+      'play.annotations.damage-buff'
+    );
+  });
+
+  it('renders annotations in non-editable mode', () => {
+    const entry = createEntryWithAnnotations();
+    const annotations: Annotation[] = [
+      { key: 'play.annotations.some-buff', targets: ['attack.any'] }
+    ];
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: false, facts: {}, activeAnnotations: annotations }
+    });
+    expect(container.querySelector('.panel-renderer__annotations')).toBeTruthy();
+  });
+});
