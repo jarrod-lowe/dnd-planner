@@ -2,6 +2,7 @@
   import { t } from '$lib/i18n';
   import WarningIndicator from './WarningIndicator.svelte';
   import { extractPanelDescriptor } from './panel-renderer/extractPanelDescriptor';
+  import PanelSlider from './panel-renderer/PanelSlider.svelte';
   import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-engine';
 
   interface Props {
@@ -9,6 +10,7 @@
     editable?: boolean;
     onTap?: () => void;
     facts?: Facts;
+    selections?: Record<string, unknown>;
     activeAnnotations?: Annotation[];
     onSelectionChange?: (selections: Record<string, unknown>) => void;
     onRemove?: () => void;
@@ -19,6 +21,7 @@
     editable = false,
     onTap,
     facts = {},
+    selections = {},
     activeAnnotations = [],
     onSelectionChange,
     onRemove
@@ -36,6 +39,15 @@
   const warningType = $derived(
     !entry.legal ? ('illegal' as const) : !entry.applicable ? ('inapplicable' as const) : null
   );
+
+  const vars = $derived(entry.rule.vars ?? {});
+
+  const primarySlider = $derived(
+    descriptor.primaryControl?.type === 'slider' ? descriptor.primaryControl : undefined
+  );
+  const secondarySlider = $derived(
+    descriptor.secondaryControl?.type === 'slider' ? descriptor.secondaryControl : undefined
+  );
 </script>
 
 {#if editable}
@@ -46,6 +58,30 @@
         <WarningIndicator type={warningType} />
       {/if}
     </div>
+    {#if primarySlider}
+      <div class="panel-renderer__control">
+        <PanelSlider
+          control={primarySlider}
+          {editable}
+          {facts}
+          {vars}
+          {selections}
+          {onSelectionChange}
+        />
+      </div>
+    {/if}
+    {#if secondarySlider}
+      <div class="panel-renderer__control panel-renderer__control--secondary">
+        <PanelSlider
+          control={secondarySlider}
+          {editable}
+          {facts}
+          {vars}
+          {selections}
+          {onSelectionChange}
+        />
+      </div>
+    {/if}
   </div>
 {:else}
   <button class="panel-renderer" onclick={onTap} type="button">
@@ -55,6 +91,30 @@
         <WarningIndicator type={warningType} />
       {/if}
     </div>
+    {#if primarySlider}
+      <div class="panel-renderer__control">
+        <PanelSlider
+          control={primarySlider}
+          {editable}
+          {facts}
+          {vars}
+          {selections}
+          {onSelectionChange}
+        />
+      </div>
+    {/if}
+    {#if secondarySlider}
+      <div class="panel-renderer__control panel-renderer__control--secondary">
+        <PanelSlider
+          control={secondarySlider}
+          {editable}
+          {facts}
+          {vars}
+          {selections}
+          {onSelectionChange}
+        />
+      </div>
+    {/if}
   </button>
 {/if}
 
@@ -102,5 +162,15 @@
     font-size: var(--font-size-md);
     font-weight: 500;
     color: var(--md-sys-color-on-surface);
+  }
+
+  .panel-renderer__control {
+    padding-top: var(--spacing-xs);
+  }
+
+  .panel-renderer__control--secondary {
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+    margin-top: var(--spacing-xs);
+    padding-top: var(--spacing-sm);
   }
 </style>
