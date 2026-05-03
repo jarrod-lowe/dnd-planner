@@ -261,7 +261,7 @@ describe('resolveSource', () => {
         events: new Set(['some-event']),
         generatedRules: { early: [], normal: [], safeguard: [] },
         offeredRules: [],
-    annotations: [],
+        annotations: [],
         appliedRuleIds: [],
         appliedActivityIds: [],
         advertisedEffects: [],

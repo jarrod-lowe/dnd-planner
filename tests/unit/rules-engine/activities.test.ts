@@ -695,9 +695,9 @@ describe('activity when condition', () => {
       source: { number: 42 },
       when: [
         {
-        fact: 'hp.max',
-        operator: 'greaterThan',
-        value: 0
+          fact: 'hp.max',
+          operator: 'greaterThan',
+          value: 0
         }
       ]
     };
@@ -718,9 +718,9 @@ describe('activity when condition', () => {
       source: { number: 42 },
       when: [
         {
-        fact: 'hp.max',
-        operator: 'greaterThan',
-        value: 100
+          fact: 'hp.max',
+          operator: 'greaterThan',
+          value: 100
         }
       ]
     };
@@ -756,7 +756,7 @@ describe('activity when condition', () => {
       source: { number: 42 },
       when: [
         {
-        event: 'attack'
+          event: 'attack'
         }
       ]
     };
@@ -777,7 +777,7 @@ describe('activity when condition', () => {
       source: { number: 42 },
       when: [
         {
-        event: 'attack'
+          event: 'attack'
         }
       ]
     };
@@ -832,9 +832,9 @@ describe('executeSetClear', () => {
       target: { var: 'errors' },
       when: [
         {
-        fact: 'some.fact',
-        operator: 'equals',
-        value: 1
+          fact: 'some.fact',
+          operator: 'equals',
+          value: 1
         }
       ]
     };
@@ -946,9 +946,9 @@ describe('executeSetAdd', () => {
       source: { string: 'play.choices.illegal.movement' },
       when: [
         {
-        fact: 'movement.current',
-        operator: 'lessThan',
-        value: 0
+          fact: 'movement.current',
+          operator: 'lessThan',
+          value: 0
         }
       ]
     };
@@ -975,9 +975,9 @@ describe('executeSetAdd', () => {
       source: { string: 'play.choices.illegal.movement' },
       when: [
         {
-        fact: 'movement.current',
-        operator: 'lessThan',
-        value: 0
+          fact: 'movement.current',
+          operator: 'lessThan',
+          value: 0
         }
       ]
     };

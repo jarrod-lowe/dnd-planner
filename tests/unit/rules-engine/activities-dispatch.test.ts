@@ -21,7 +21,7 @@ function createEmptyContext(): RuleContext {
       events: new Set(),
       generatedRules: { early: [], normal: [], safeguard: [] },
       offeredRules: [],
-    annotations: [],
+      annotations: [],
       appliedRuleIds: [],
       appliedActivityIds: [],
       advertisedEffects: [],

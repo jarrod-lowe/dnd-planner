@@ -337,9 +337,9 @@ describe('executeAdvertiseEffect', () => {
         rule: effectRule,
         when: [
           {
-          fact: 'some.fact',
-          operator: 'equals',
-          value: 1
+            fact: 'some.fact',
+            operator: 'equals',
+            value: 1
           }
         ]
       };

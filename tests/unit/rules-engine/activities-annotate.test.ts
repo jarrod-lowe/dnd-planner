@@ -40,9 +40,7 @@ describe('annotate activity', () => {
           type: 'annotate',
           key: 'test.annotation',
           targets: ['attack.melee'],
-          when: [
-            { fact: 'bonusActions.remaining', operator: 'greaterThan', value: 0 }
-          ]
+          when: [{ fact: 'bonusActions.remaining', operator: 'greaterThan', value: 0 }]
         }
       ]
     };
