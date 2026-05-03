@@ -48,14 +48,17 @@ describe('PanelRenderer - slider control', () => {
     expect(slider.max).toBe('30');
   });
 
-  it('shows current value as text when read-only', () => {
+  it('renders a disabled slider when read-only', () => {
     const entry = createSliderEntry();
     const facts = { 'character.movement.remaining': 20, 'character.movement.total': 30 };
     const { container } = render(PanelRenderer, {
       props: { entry, editable: false, facts }
     });
-    expect(container.querySelector('input[type="range"]')).toBeNull();
-    expect(container.textContent).toContain('20');
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+    expect(slider).toBeTruthy();
+    expect(slider.disabled).toBe(true);
+    expect(slider.value).toBe('20');
+    expect(slider.max).toBe('30');
   });
 
   it('fires onSelectionChange when slider value changes', async () => {

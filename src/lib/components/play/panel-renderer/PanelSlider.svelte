@@ -42,20 +42,17 @@
   }
 </script>
 
-{#if editable}
-  <div class="panel-renderer__slider">
-    <input
-      type="range"
-      {min}
-      {max}
-      {value}
-      oninput={handleChange}
-      aria-label={control.var}
-    />
-  </div>
-{:else}
-  <span class="panel-renderer__slider panel-renderer__slider--readonly">{value}</span>
-{/if}
+<div class="panel-renderer__slider">
+  <input
+    type="range"
+    {min}
+    {max}
+    {value}
+    disabled={!editable}
+    oninput={editable ? handleChange : undefined}
+    aria-label={control.var}
+  />
+</div>
 
 <style>
   .panel-renderer__slider {
@@ -66,11 +63,5 @@
   .panel-renderer__slider input[type='range'] {
     width: 100%;
     accent-color: var(--md-sys-color-primary);
-  }
-
-  .panel-renderer__slider--readonly {
-    font-family: var(--font-body);
-    font-size: var(--font-size-md);
-    color: var(--md-sys-color-on-surface);
   }
 </style>
