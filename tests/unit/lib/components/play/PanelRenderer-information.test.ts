@@ -48,9 +48,7 @@ describe('PanelRenderer - text information', () => {
     const { container } = render(PanelRenderer, {
       props: { entry, facts: {} }
     });
-    expect(
-      container.querySelector('.panel-renderer__information--text')
-    ).toBeTruthy();
+    expect(container.querySelector('.panel-renderer__information--text')).toBeTruthy();
   });
 
   it('renders text information in editable mode', () => {
@@ -59,9 +57,7 @@ describe('PanelRenderer - text information', () => {
       props: { entry, facts: {}, editable: true }
     });
     expect(container.textContent).toContain('rule.test.description');
-    expect(
-      container.querySelector('.panel-renderer__information--text')
-    ).toBeTruthy();
+    expect(container.querySelector('.panel-renderer__information--text')).toBeTruthy();
   });
 
   it('renders nothing when information is absent', () => {
@@ -78,8 +74,6 @@ describe('PanelRenderer - text information', () => {
     const { container } = render(PanelRenderer, {
       props: { entry, facts: {} }
     });
-    expect(
-      container.querySelector('.panel-renderer__information')
-    ).toBeNull();
+    expect(container.querySelector('.panel-renderer__information')).toBeNull();
   });
 });

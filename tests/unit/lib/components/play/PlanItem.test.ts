@@ -87,7 +87,9 @@ describe('PlanItem', () => {
       props: { item, onMoveUp, onMoveDown: vi.fn(), onRemove: vi.fn() }
     });
 
-    const upButton = container.querySelector('.panel-renderer__button--move-up') as HTMLButtonElement;
+    const upButton = container.querySelector(
+      '.panel-renderer__button--move-up'
+    ) as HTMLButtonElement;
     upButton?.click();
 
     expect(onMoveUp).toHaveBeenCalledTimes(1);
@@ -132,7 +134,9 @@ describe('PlanItem', () => {
       props: { item, canMoveUp: false, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove: vi.fn() }
     });
 
-    const upButton = container.querySelector('.panel-renderer__button--move-up') as HTMLButtonElement;
+    const upButton = container.querySelector(
+      '.panel-renderer__button--move-up'
+    ) as HTMLButtonElement;
     expect(upButton?.disabled).toBe(true);
   });
 

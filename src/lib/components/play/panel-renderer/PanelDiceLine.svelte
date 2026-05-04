@@ -57,9 +57,7 @@
   );
 
   const rulesDisadvantage = $derived(
-    control.advantage
-      ? !!(resolveValueSource(control.advantage, facts, vars, selections))
-      : false
+    control.advantage ? !!resolveValueSource(control.advantage, facts, vars, selections) : false
   );
 
   const effectiveRollMode = $derived<RollMode>(
@@ -94,7 +92,8 @@
   function formatDieChip(die: DiceEntry, dieIndex: number): string {
     const result = rollResults[dieIndex];
     if (result !== undefined) {
-      const prefix = result.mode === 'advantage' ? '▲ ' : result.mode === 'disadvantage' ? '▼ ' : '';
+      const prefix =
+        result.mode === 'advantage' ? '▲ ' : result.mode === 'disadvantage' ? '▼ ' : '';
       return `${prefix}${result.total}`;
     }
     let text = formatDieExpression(die);
@@ -146,11 +145,7 @@
     const el = chipRefs[dieIndex];
     if (el) {
       el.animate(
-        [
-          { transform: 'scale(1)' },
-          { transform: 'scale(1.1)' },
-          { transform: 'scale(1)' }
-        ],
+        [{ transform: 'scale(1)' }, { transform: 'scale(1.1)' }, { transform: 'scale(1)' }],
         { duration: 200 }
       );
     }
@@ -240,7 +235,8 @@
             class:panel-renderer__die-chip--crit={rollResults[part.dieIndex!]?.natural === 20}
             class:panel-renderer__die-chip--fumble={rollResults[part.dieIndex!]?.natural === 1}
             class:panel-renderer__die-chip--adv={rollResults[part.dieIndex!]?.mode === 'advantage'}
-            class:panel-renderer__die-chip--disadv={rollResults[part.dieIndex!]?.mode === 'disadvantage'}
+            class:panel-renderer__die-chip--disadv={rollResults[part.dieIndex!]?.mode ===
+              'disadvantage'}
             type="button"
             data-die-index={part.dieIndex}
             bind:this={chipRefs[part.dieIndex!]}
@@ -256,20 +252,37 @@
         {/if}
         {#if showAdvPopover && popoverDieIndex === part.dieIndex}
           <div class="panel-renderer__popover" role="menu" aria-label="Roll mode">
-            <button type="button" class="panel-renderer__popover-item" role="menuitem"
-              onclick={() => handlePopoverSelect('advantage')}>
+            <button
+              type="button"
+              class="panel-renderer__popover-item"
+              role="menuitem"
+              onclick={() => handlePopoverSelect('advantage')}
+            >
               ▲ Advantage
             </button>
-            <button type="button" class="panel-renderer__popover-item" role="menuitem"
-              onclick={() => handlePopoverSelect('normal')}>
+            <button
+              type="button"
+              class="panel-renderer__popover-item"
+              role="menuitem"
+              onclick={() => handlePopoverSelect('normal')}
+            >
               — Normal
             </button>
-            <button type="button" class="panel-renderer__popover-item" role="menuitem"
-              onclick={() => handlePopoverSelect('disadvantage')}>
+            <button
+              type="button"
+              class="panel-renderer__popover-item"
+              role="menuitem"
+              onclick={() => handlePopoverSelect('disadvantage')}
+            >
               ▼ Disadvantage
             </button>
           </div>
-          <button type="button" class="panel-renderer__popover-backdrop" onclick={handlePopoverDismiss} aria-label="Close"></button>
+          <button
+            type="button"
+            class="panel-renderer__popover-backdrop"
+            onclick={handlePopoverDismiss}
+            aria-label="Close"
+          ></button>
         {/if}
       </div>
     {/if}

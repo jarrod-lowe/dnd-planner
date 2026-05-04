@@ -11,6 +11,7 @@
 **Design doc:** `docs/plans/2026-05-03-panel-renderer-design.md`
 
 **Important constraints:**
+
 - All user-facing text must go through i18n (CLAUDE.md)
 - CSS must use theme variables only, no new colors (CLAUDE.md)
 - TDD: RED tests must compile, run, not panic, and fail before implementation
@@ -23,6 +24,7 @@
 ### Task 1: TypeScript types for panel descriptor
 
 **Files:**
+
 - Create: `src/lib/components/play/panel-renderer/types.ts`
 - Test: `tests/unit/lib/components/play/panel-renderer/types.test.ts`
 
@@ -227,6 +229,7 @@ feat(panel-renderer): add TypeScript types for panel descriptor
 ### Task 2: resolveValueSource utility
 
 **Files:**
+
 - Create: `src/lib/components/play/panel-renderer/resolveValueSource.ts`
 - Test: `tests/unit/lib/components/play/panel-renderer/resolveValueSource.test.ts`
 
@@ -235,7 +238,10 @@ feat(panel-renderer): add TypeScript types for panel descriptor
 ```typescript
 // tests/unit/lib/components/play/panel-renderer/resolveValueSource.test.ts
 import { describe, it, expect } from 'vitest';
-import { resolveValueSource, resolveExpression } from '$lib/components/play/panel-renderer/resolveValueSource';
+import {
+  resolveValueSource,
+  resolveExpression
+} from '$lib/components/play/panel-renderer/resolveValueSource';
 import type { ValueSource, DiceEntry } from '$lib/components/play/panel-renderer/types';
 
 describe('resolveValueSource', () => {
@@ -377,6 +383,7 @@ feat(panel-renderer): add resolveValueSource utility
 Extracts a typed PanelDescriptor from a Rule's opaque `ui` field.
 
 **Files:**
+
 - Create: `src/lib/components/play/panel-renderer/extractPanelDescriptor.ts`
 - Test: `tests/unit/lib/components/play/panel-renderer/extractPanelDescriptor.test.ts`
 
@@ -489,6 +496,7 @@ feat(panel-renderer): add extractPanelDescriptor utility
 ### Task 4: PanelRenderer — title, warning, container
 
 **Files:**
+
 - Create: `src/lib/components/play/PanelRenderer.svelte`
 - Test: `tests/unit/lib/components/play/PanelRenderer.test.ts`
 
@@ -567,6 +575,7 @@ Expected: FAIL — module not found
 **Step 3: Write minimal PanelRenderer**
 
 Create `src/lib/components/play/PanelRenderer.svelte` with:
+
 - Props: `entry`, `editable`, `onTap`, `facts`, `activeAnnotations`, `onSelectionChange`, `onRemove`
 - Container: `<button>` when read-only, `<div>` when editable
 - Title from `extractPanelDescriptor`
@@ -589,6 +598,7 @@ feat(panel-renderer): basic title, warning, and container structure
 ### Task 5: PanelRenderer — slider control
 
 **Files:**
+
 - Modify: `src/lib/components/play/PanelRenderer.svelte`
 - Create: `src/lib/components/play/PanelSlider.svelte`
 - Test: `tests/unit/lib/components/play/PanelSlider.test.ts`
@@ -699,6 +709,7 @@ feat(panel-renderer): slider control
 ### Task 6: PanelRenderer — dice-line control
 
 **Files:**
+
 - Modify: `src/lib/components/play/PanelRenderer.svelte`
 - Create: `src/lib/components/play/PanelDiceLine.svelte`
 - Test: `tests/unit/lib/components/play/PanelDiceLine.test.ts`
@@ -722,9 +733,7 @@ const createDiceLineEntry = (): AvailableRuleEntry => ({
       name: 'rule.dnd-5e-2024.initiative.name',
       primaryControl: {
         type: 'dice-line',
-        dice: [
-          { expression: 'd20', bonus: { var: 'initiativeBonus' } }
-        ]
+        dice: [{ expression: 'd20', bonus: { var: 'initiativeBonus' } }]
       }
     },
     vars: {
@@ -749,7 +758,11 @@ const createAttackEntry = (): AvailableRuleEntry => ({
         ranges: { var: 'ranges' },
         dice: [
           { expression: 'd20', bonus: { var: 'hitBonus' } },
-          { expression: { var: 'damageDie' }, bonus: { var: 'damageBonus' }, damageType: { string: 'slashing' } }
+          {
+            expression: { var: 'damageDie' },
+            bonus: { var: 'damageBonus' },
+            damageType: { string: 'slashing' }
+          }
         ]
       }
     },
@@ -799,6 +812,7 @@ Expected: FAIL — dice-line not rendered
 **Step 3: Implement PanelDiceLine and integrate**
 
 Create `PanelDiceLine.svelte` — receives a `DiceLineControl`, `editable`, `facts`, `vars`, `selections`. Renders:
+
 - Range if present (from ranges var → first entry's distance)
 - Each dice entry: `[d20+N]`, `[dX+M]` with damage type
 - Read-only: same display, no interactivity
@@ -821,6 +835,7 @@ feat(panel-renderer): dice-line control
 ### Task 7: PanelRenderer — select control
 
 **Files:**
+
 - Modify: `src/lib/components/play/PanelRenderer.svelte`
 - Create: `src/lib/components/play/PanelSelect.svelte`
 - Test: `tests/unit/lib/components/play/PanelSelect.test.ts`
@@ -902,6 +917,7 @@ feat(panel-renderer): select control
 ### Task 8: PanelRenderer — text information
 
 **Files:**
+
 - Modify: `src/lib/components/play/PanelRenderer.svelte`
 - Test: `tests/unit/lib/components/play/PanelRenderer-information.test.ts`
 
@@ -914,16 +930,17 @@ import { render } from '@testing-library/svelte';
 import PanelRenderer from '$lib/components/play/PanelRenderer.svelte';
 import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
 
-const createTextInfoEntry = (label: string, labelValues?: Record<string, unknown>): AvailableRuleEntry => ({
+const createTextInfoEntry = (
+  label: string,
+  labelValues?: Record<string, unknown>
+): AvailableRuleEntry => ({
   rule: {
     id: 'spell-save',
     description: 'Spell Save',
     activities: [],
     ui: {
       name: 'rule.spells.test.name',
-      information: [
-        { type: 'text', label, labelValues }
-      ]
+      information: [{ type: 'text', label, labelValues }]
     }
   } as Rule,
   legal: true,
@@ -977,6 +994,7 @@ feat(panel-renderer): text information rendering
 ### Task 9: PanelRenderer — countdown information
 
 **Files:**
+
 - Modify: `src/lib/components/play/PanelRenderer.svelte`
 - Test: `tests/unit/lib/components/play/PanelRenderer-countdown.test.ts`
 
@@ -1030,7 +1048,7 @@ describe('PanelRenderer - countdown information', () => {
   });
 
   it('resolves filled and total from facts', () => {
-    const entry: AvailableRuleEntry = ({
+    const entry: AvailableRuleEntry = {
       rule: {
         id: 'effect',
         activities: [],
@@ -1040,7 +1058,7 @@ describe('PanelRenderer - countdown information', () => {
           ]
         }
       }
-    } as Rule) as AvailableRuleEntry;
+    } as Rule as AvailableRuleEntry;
     const facts: Facts = { countDown: 3, duration: 5 };
     const { container } = render(PanelRenderer, { props: { entry, facts } });
     const filled = container.querySelectorAll('.panel-renderer__marker--filled');
@@ -1074,6 +1092,7 @@ feat(panel-renderer): countdown information rendering
 ### Task 10: PanelRenderer — secondary control with enable button
 
 **Files:**
+
 - Modify: `src/lib/components/play/PanelRenderer.svelte`
 - Test: `tests/unit/lib/components/play/PanelRenderer-secondary.test.ts`
 
@@ -1172,6 +1191,7 @@ feat(panel-renderer): secondary control with enable button
 ### Task 11: PanelRenderer — annotations integration
 
 **Files:**
+
 - Modify: `src/lib/components/play/PanelRenderer.svelte`
 - Test: `tests/unit/lib/components/play/PanelRenderer-annotations.test.ts`
 
@@ -1252,6 +1272,7 @@ feat(panel-renderer): annotations integration
 ### Task 12: PanelRenderer — remove button
 
 **Files:**
+
 - Modify: `src/lib/components/play/PanelRenderer.svelte`
 - Test: `tests/unit/lib/components/play/PanelRenderer-remove.test.ts`
 
@@ -1317,6 +1338,7 @@ Commit if any fixes needed.
 ## Phase 3: YAML Migration
 
 For each group of YAML files, the pattern is:
+
 1. Add `primaryControl`, `secondaryControl`, `information` fields to `ui` block
 2. Keep `ui.model` temporarily until consumers are updated
 3. Run `make test` to verify
@@ -1324,6 +1346,7 @@ For each group of YAML files, the pattern is:
 ### Task 14: Migrate simple-action rules (no controls)
 
 **Files:**
+
 - Modify: `data/rule-groups/dnd-5e-2024/simple-actions.yaml` (disengage, dodge, improvise, influence, search, study, utilize, help)
 - Modify: `data/rule-groups/dnd-5e-2024/dash.yaml`
 - Modify: `data/rule-groups/dnd-5e-2024/free-actions.yaml`
@@ -1339,6 +1362,7 @@ Commit: `chore: migrate simple-action rules to panel renderer format`
 ### Task 15: Migrate slider rules (move, ability-score, smite)
 
 **Files:**
+
 - Modify: `data/rule-groups/dnd-5e-2024/movement.yaml` (5 move entries)
 - Modify: `data/rule-groups/dnd-5e-2024/ability-scores.yaml` (6 ability score entries)
 - Modify: `data/rule-groups/dnd-5e-2024/hp.yaml` (2 HP entries)
@@ -1350,6 +1374,7 @@ Commit: `chore: migrate simple-action rules to panel renderer format`
 Add `primaryControl: { type: slider, ... }` to each. For smite entries, also add `information` for damage preview.
 
 Example migration for move:
+
 ```yaml
 # Before
 ui:
@@ -1375,6 +1400,7 @@ Commit: `chore: migrate slider rules to panel renderer format`
 ### Task 16: Migrate select rules (skill-proficiency)
 
 **Files:**
+
 - Modify: `data/rule-groups/dnd-5e-2024/ability-scores.yaml` (18 proficiency entries)
 
 Add `primaryControl: { type: select, var: level, options: { var: levels } }` to each.
@@ -1386,6 +1412,7 @@ Commit: `chore: migrate select rules to panel renderer format`
 ### Task 17: Migrate dice-line rules (attack, d20-roll, contested-action)
 
 **Files:**
+
 - Modify: `data/rule-sources/weapons.yaml` (5 attack entries)
 - Modify: `data/rule-groups/dnd-5e-2024/initiative.yaml`
 - Modify: `data/rule-groups/dnd-5e-2024/skill-checks.yaml` (18 entries)
@@ -1395,6 +1422,7 @@ Commit: `chore: migrate select rules to panel renderer format`
 For attacks with followups (greataxe/cleave), move `ui.followups` into `secondaryControl` with `enabled` button.
 
 Example for greataxe:
+
 ```yaml
 ui:
   primaryControl:
@@ -1427,6 +1455,7 @@ Commit: `chore: migrate dice-line rules to panel renderer format`
 ### Task 18: Migrate information rules (spell-save, timed-save-effect, divine-sense, emissary-of-peace, spell, rebuke-the-violent, lay-on-hands-purify)
 
 **Files:**
+
 - Modify: `data/rule-groups/spells/protection-from-evil-and-good.yaml`
 - Modify: `data/rule-groups/spells/sanctuary.yaml`
 - Modify: `data/rule-groups/spells/sleep.yaml`
@@ -1452,12 +1481,14 @@ Commit: `chore: migrate information rules to panel renderer format`
 ### Task 19: Update SectionCollapsible to use PanelRenderer
 
 **Files:**
+
 - Modify: `src/lib/components/play/SectionCollapsible.svelte`
 - Test: `tests/unit/lib/components/play/SectionPanel.test.ts` (update existing SectionCollapsible tests)
 
 Replace the `mode === 'effect'` → EffectPanel / `else` → ChoicePanel dispatch with a single PanelRenderer. The `editable` and `onRemove` props determine behavior.
 
 Before:
+
 ```svelte
 {#if mode === 'effect'}
   <EffectPanel entry={group.entry} ... />
@@ -1467,14 +1498,17 @@ Before:
 ```
 
 After:
+
 ```svelte
 <PanelRenderer
   entry={group.entry}
   editable={mode !== 'effect' && false}
-  facts={facts}
+  {facts}
   {activeAnnotations}
   onTap={mode === 'choice' ? () => onChoiceTap(group.entry) : undefined}
-  onRemove={deletableRuleIds?.has(group.entry.rule.id) ? () => onRemoveEffect?.(group.entry.rule.id) : undefined}
+  onRemove={deletableRuleIds?.has(group.entry.rule.id)
+    ? () => onRemoveEffect?.(group.entry.rule.id)
+    : undefined}
 />
 ```
 
@@ -1485,6 +1519,7 @@ Commit: `refactor: update SectionCollapsible to use PanelRenderer`
 ### Task 20: Update PlanColumn and PlanItem to use PanelRenderer
 
 **Files:**
+
 - Modify: `src/lib/components/play/PlanItem.svelte`
 
 PlanItem wraps the panel with move up/down/remove controls. Replace internal ChoicePanel with PanelRenderer (`editable: true`).
@@ -1496,6 +1531,7 @@ Commit: `refactor: update PlanItem to use PanelRenderer`
 ### Task 21: Update PackedChoiceGroup to use PanelRenderer
 
 **Files:**
+
 - Modify: `src/lib/components/play/PackedChoiceGroup.svelte`
 
 Replace both the `readOnly` → EffectPanel and `!readOnly` → ChoicePanel dispatch with PanelRenderer.
@@ -1507,6 +1543,7 @@ Commit: `refactor: update PackedChoiceGroup to use PanelRenderer`
 ### Task 22: Remove old ChoicePanel and EffectPanel
 
 **Files:**
+
 - Delete: `src/lib/components/play/ChoicePanel.svelte`
 - Delete: `src/lib/components/play/EffectPanel.svelte`
 - Delete: `tests/unit/lib/components/play/ChoicePanel.test.ts`

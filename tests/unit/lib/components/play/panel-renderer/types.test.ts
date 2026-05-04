@@ -7,7 +7,7 @@ import type {
   TextInformation,
   CountdownInformation,
   PanelDescriptor,
-  ValueSource,
+  ValueSource
 } from '$lib/components/play/panel-renderer/types';
 
 describe('Panel renderer types', () => {
@@ -34,7 +34,7 @@ describe('Panel renderer types', () => {
   it('DiceLineControl has required fields', () => {
     const control: DiceLineControl = {
       type: 'dice-line',
-      dice: [{ expression: 'd20', bonus: { var: 'hitBonus' } }],
+      dice: [{ expression: 'd20', bonus: { var: 'hitBonus' } }]
     };
     expect(control.type).toBe('dice-line');
     expect(control.dice).toHaveLength(1);
@@ -44,7 +44,7 @@ describe('Panel renderer types', () => {
     const control: SliderControl = {
       type: 'slider',
       var: 'distance',
-      max: { var: 'maxDistance' },
+      max: { var: 'maxDistance' }
     };
     expect(control.type).toBe('slider');
     expect(control['var']).toBe('distance');
@@ -54,7 +54,7 @@ describe('Panel renderer types', () => {
     const control: SelectControl = {
       type: 'select',
       var: 'level',
-      options: { var: 'levels' },
+      options: { var: 'levels' }
     };
     expect(control.type).toBe('select');
   });
@@ -65,8 +65,8 @@ describe('Panel renderer types', () => {
       label: 'play.information.saveDc',
       labelValues: {
         saveType: { fact: 'spellcasting.saveType' },
-        dc: { fact: 'spellcasting.saveDC' },
-      },
+        dc: { fact: 'spellcasting.saveDC' }
+      }
     };
     expect(info.type).toBe('text');
     expect(info.labelValues?.dc).toBeTruthy();
@@ -76,7 +76,7 @@ describe('Panel renderer types', () => {
     const info: CountdownInformation = {
       type: 'countdown',
       filled: { var: 'countDown' },
-      total: { var: 'duration' },
+      total: { var: 'duration' }
     };
     expect(info.type).toBe('countdown');
     expect(info.filled).toBeTruthy();
@@ -88,9 +88,9 @@ describe('Panel renderer types', () => {
       name: 'rule.attacks.greataxe.name',
       primaryControl: {
         type: 'dice-line',
-        dice: [{ expression: 'd20', bonus: { var: 'hitBonus' } }],
+        dice: [{ expression: 'd20', bonus: { var: 'hitBonus' } }]
       },
-      information: [{ type: 'text', label: 'some.key' }],
+      information: [{ type: 'text', label: 'some.key' }]
     };
     expect(descriptor.secondaryControl).toBeUndefined();
     expect(descriptor.primaryControl?.type).toBe('dice-line');

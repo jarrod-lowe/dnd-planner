@@ -13,9 +13,7 @@ const createDiceLineEntry = (): AvailableRuleEntry => ({
       name: 'rule.dnd-5e-2024.initiative.name',
       primaryControl: {
         type: 'dice-line',
-        dice: [
-          { expression: 'd20', bonus: { var: 'initiativeBonus' } }
-        ]
+        dice: [{ expression: 'd20', bonus: { var: 'initiativeBonus' } }]
       }
     },
     vars: {
@@ -40,7 +38,11 @@ const createAttackEntry = (): AvailableRuleEntry => ({
         ranges: { var: 'ranges' },
         dice: [
           { expression: 'd20', bonus: { var: 'hitBonus' } },
-          { expression: { var: 'damageDie' }, bonus: { var: 'damageBonus' }, damageType: { string: 'slashing' } }
+          {
+            expression: { var: 'damageDie' },
+            bonus: { var: 'damageBonus' },
+            damageType: { string: 'slashing' }
+          }
         ]
       }
     },
@@ -176,7 +178,14 @@ describe('PanelRenderer - dice-line control', () => {
       ...entry.rule,
       vars: {
         ...entry.rule.vars,
-        ranges: { default: { array: [{ distance: 5, type: 'melee' }, { distance: 20, type: 'ranged' }] } }
+        ranges: {
+          default: {
+            array: [
+              { distance: 5, type: 'melee' },
+              { distance: 20, type: 'ranged' }
+            ]
+          }
+        }
       }
     } as Rule;
     const { container } = render(PanelRenderer, { props: { entry, editable: true, facts: {} } });

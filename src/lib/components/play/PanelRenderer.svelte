@@ -46,9 +46,7 @@
   const descriptor = $derived(extractPanelDescriptor(entry.rule));
 
   const displayName = $derived(
-    descriptor.name
-      ? $t(descriptor.name)
-      : entry.rule.description || entry.rule.id
+    descriptor.name ? $t(descriptor.name) : entry.rule.description || entry.rule.id
   );
 
   const hasWarning = $derived(!entry.legal || !entry.applicable);
@@ -90,9 +88,7 @@
   );
 
   const secondaryShowEnableButton = $derived(
-    descriptor.secondaryControl?.enabled
-      ? secondaryConditionMet && !secondaryActivated
-      : false
+    descriptor.secondaryControl?.enabled ? secondaryConditionMet && !secondaryActivated : false
   );
 
   const secondaryDiceLine = $derived(
@@ -103,34 +99,38 @@
   );
 
   const textInfos = $derived(
-    (descriptor.information?.filter((info): info is TextInformation => info.type === 'text') ?? []).map(
-      (info) => {
-        let text = $t(info.label);
-        if (info.labelValues) {
-          const resolvedValues: string[] = [];
-          for (const [key, source] of Object.entries(info.labelValues)) {
-            const resolved = resolveValueSource(source, facts, vars, selections);
-            if (resolved !== undefined) {
-              const placeholder = `{{${key}}}`;
-              const value = String(resolved);
-              if (text.includes(placeholder)) {
-                text = text.replace(placeholder, value);
-              } else {
-                resolvedValues.push(value);
-              }
+    (
+      descriptor.information?.filter((info): info is TextInformation => info.type === 'text') ?? []
+    ).map((info) => {
+      let text = $t(info.label);
+      if (info.labelValues) {
+        const resolvedValues: string[] = [];
+        for (const [key, source] of Object.entries(info.labelValues)) {
+          const resolved = resolveValueSource(source, facts, vars, selections);
+          if (resolved !== undefined) {
+            const placeholder = `{{${key}}}`;
+            const value = String(resolved);
+            if (text.includes(placeholder)) {
+              text = text.replace(placeholder, value);
+            } else {
+              resolvedValues.push(value);
             }
           }
-          if (resolvedValues.length > 0) {
-            text = text + ' ' + resolvedValues.join(' ');
-          }
         }
-        return text;
+        if (resolvedValues.length > 0) {
+          text = text + ' ' + resolvedValues.join(' ');
+        }
       }
-    )
+      return text;
+    })
   );
 
   const countdownInfos = $derived(
-    (descriptor.information?.filter((info): info is CountdownInformation => info.type === 'countdown') ?? [])
+    (
+      descriptor.information?.filter(
+        (info): info is CountdownInformation => info.type === 'countdown'
+      ) ?? []
+    )
       .map((info, index) => {
         const filled = resolveValueSource(info.filled, facts, vars, selections);
         const total = resolveValueSource(info.total, facts, vars, selections);
@@ -145,8 +145,15 @@
         };
       })
       .filter(
-        (v): v is { index: number; filledIndices: number[]; emptyIndices: number[]; filled: number; total: number } =>
-          v !== null
+        (
+          v
+        ): v is {
+          index: number;
+          filledIndices: number[];
+          emptyIndices: number[];
+          filled: number;
+          total: number;
+        } => v !== null
       )
   );
 
@@ -155,9 +162,7 @@
     ...(descriptor.secondaryControl?.annotationLabels ?? [])
   ]);
 
-  const matchingAnnotations = $derived(
-    getMatchingAnnotations(annotationLabels, activeAnnotations)
-  );
+  const matchingAnnotations = $derived(getMatchingAnnotations(annotationLabels, activeAnnotations));
 
   const hasActions = $derived(!!onRemove || !!onMoveUp || !!onMoveDown);
 
@@ -173,7 +178,12 @@
   class:panel-renderer--editable={editable}
   role={!editable ? 'button' : undefined}
   tabindex={!editable ? 0 : undefined}
-  aria-label={!editable ? displayName + (hasWarning && warningType ? ` (${$t(warningType === 'illegal' ? 'play.choices.illegal' : 'play.choices.inapplicable')})` : '') : undefined}
+  aria-label={!editable
+    ? displayName +
+      (hasWarning && warningType
+        ? ` (${$t(warningType === 'illegal' ? 'play.choices.illegal' : 'play.choices.inapplicable')})`
+        : '')
+    : undefined}
   onclick={onTap}
 >
   {#if hasWarning && warningType}
@@ -223,7 +233,9 @@
       <button
         class="panel-renderer__enable-button"
         type="button"
-        onclick={() => { secondaryActivated = true; }}
+        onclick={() => {
+          secondaryActivated = true;
+        }}
       >
         {$t(descriptor.secondaryControl!.enabled!.button)}
       </button>
@@ -269,12 +281,18 @@
     <div class="panel-renderer__information panel-renderer__information--text">{text}</div>
   {/each}
   {#each countdownInfos as info (info.index)}
-    <div class="panel-renderer__markers" role="img" aria-label="{info.filled} of {info.total} remaining">
+    <div
+      class="panel-renderer__markers"
+      role="img"
+      aria-label="{info.filled} of {info.total} remaining"
+    >
       {#each info.filledIndices as i (i)}
-        <span class="panel-renderer__marker panel-renderer__marker--filled" aria-hidden="true"></span>
+        <span class="panel-renderer__marker panel-renderer__marker--filled" aria-hidden="true"
+        ></span>
       {/each}
       {#each info.emptyIndices as i (i)}
-        <span class="panel-renderer__marker panel-renderer__marker--empty" aria-hidden="true"></span>
+        <span class="panel-renderer__marker panel-renderer__marker--empty" aria-hidden="true"
+        ></span>
       {/each}
     </div>
   {/each}

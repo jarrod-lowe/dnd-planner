@@ -98,7 +98,9 @@ describe('PanelRenderer - actions group', () => {
         canMoveDown: true
       }
     });
-    const upButton = container.querySelector('.panel-renderer__button--move-up') as HTMLButtonElement;
+    const upButton = container.querySelector(
+      '.panel-renderer__button--move-up'
+    ) as HTMLButtonElement;
     expect(upButton?.disabled).toBe(true);
   });
 
@@ -114,7 +116,9 @@ describe('PanelRenderer - actions group', () => {
         canMoveDown: false
       }
     });
-    const downButton = container.querySelector('.panel-renderer__button--move-down') as HTMLButtonElement;
+    const downButton = container.querySelector(
+      '.panel-renderer__button--move-down'
+    ) as HTMLButtonElement;
     expect(downButton?.disabled).toBe(true);
   });
 

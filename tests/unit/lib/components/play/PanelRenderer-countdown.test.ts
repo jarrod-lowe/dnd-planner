@@ -44,7 +44,7 @@ describe('PanelRenderer - countdown information', () => {
   });
 
   it('resolves filled and total from facts', () => {
-    const entry: AvailableRuleEntry = ({
+    const entry: AvailableRuleEntry = {
       rule: {
         id: 'effect',
         activities: [],
@@ -54,7 +54,7 @@ describe('PanelRenderer - countdown information', () => {
           ]
         }
       }
-    } as Rule) as AvailableRuleEntry;
+    } as Rule as AvailableRuleEntry;
     const facts: Facts = { countDown: 3, duration: 5 };
     const { container } = render(PanelRenderer, { props: { entry, facts } });
     const filled = container.querySelectorAll('.panel-renderer__marker--filled');
@@ -62,7 +62,7 @@ describe('PanelRenderer - countdown information', () => {
   });
 
   it('renders nothing when filled or total is missing', () => {
-    const entry: AvailableRuleEntry = ({
+    const entry: AvailableRuleEntry = {
       rule: {
         id: 'effect',
         activities: [],
@@ -72,7 +72,7 @@ describe('PanelRenderer - countdown information', () => {
           ]
         }
       }
-    } as Rule) as AvailableRuleEntry;
+    } as Rule as AvailableRuleEntry;
     const { container } = render(PanelRenderer, { props: { entry, facts: {} } });
     const markers = container.querySelectorAll('.panel-renderer__marker');
     expect(markers).toHaveLength(0);

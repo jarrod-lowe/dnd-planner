@@ -77,9 +77,7 @@ const createEntryWithSecondaryNoEnabled = (): AvailableRuleEntry => ({
       name: 'rule.attacks.greataxe.name',
       primaryControl: {
         type: 'dice-line',
-        dice: [
-          { expression: 'd20', bonus: { var: 'hitBonus' } }
-        ]
+        dice: [{ expression: 'd20', bonus: { var: 'hitBonus' } }]
       },
       secondaryControl: {
         type: 'dice-line',

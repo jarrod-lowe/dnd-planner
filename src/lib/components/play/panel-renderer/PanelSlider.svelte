@@ -12,14 +12,7 @@
     onSelectionChange?: (selections: Record<string, unknown>) => void;
   }
 
-  let {
-    control,
-    editable,
-    facts,
-    vars,
-    selections = {},
-    onSelectionChange
-  }: Props = $props();
+  let { control, editable, facts, vars, selections = {}, onSelectionChange }: Props = $props();
 
   const resolvedMax = $derived(
     resolveValueSource(control.max, facts, vars, selections) as number | undefined

@@ -12,14 +12,7 @@
     onSelectionChange?: (selections: Record<string, unknown>) => void;
   }
 
-  let {
-    control,
-    editable,
-    facts,
-    vars,
-    selections = {},
-    onSelectionChange
-  }: Props = $props();
+  let { control, editable, facts, vars, selections = {}, onSelectionChange }: Props = $props();
 
   const inlineOptions = $derived(
     Array.isArray(control.options) ? (control.options as SelectOption[]) : undefined
@@ -28,7 +21,12 @@
   const resolvedRawOptions = $derived(
     inlineOptions
       ? undefined
-      : (resolveValueSource(control.options as Exclude<SelectControl['options'], SelectOption[]>, facts, vars, selections) as unknown[] | undefined)
+      : (resolveValueSource(
+          control.options as Exclude<SelectControl['options'], SelectOption[]>,
+          facts,
+          vars,
+          selections
+        ) as unknown[] | undefined)
   );
 
   type NormalizedOption = { value: unknown; label: string };
@@ -39,9 +37,7 @@
       : (resolvedRawOptions ?? []).map((v) => ({ value: v, label: String(v) }))
   );
 
-  const selectedValue = $derived(
-    resolveValueSource({ var: control.var }, facts, vars, selections)
-  );
+  const selectedValue = $derived(resolveValueSource({ var: control.var }, facts, vars, selections));
 
   function handleChange(value: unknown): void {
     onSelectionChange?.({ [control.var]: value });
