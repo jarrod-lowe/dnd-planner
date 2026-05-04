@@ -28,6 +28,7 @@
   interface RangeEntry {
     distance: number;
     type: string;
+    disadvantage?: boolean;
   }
 
   interface RollResult {
@@ -60,8 +61,12 @@
     control.advantage ? !!resolveValueSource(control.advantage, facts, vars, selections) : false
   );
 
+  const defaultRollMode = $derived<RollMode>(
+    rulesDisadvantage || currentRange?.disadvantage ? 'disadvantage' : 'normal'
+  );
+
   const effectiveRollMode = $derived<RollMode>(
-    rulesDisadvantage && rollMode === 'normal' ? 'disadvantage' : rollMode
+    defaultRollMode !== 'normal' && rollMode === 'normal' ? defaultRollMode : rollMode
   );
 
   function handleRangeTap(): void {
@@ -214,6 +219,7 @@
       {#if editable}
         <button
           class="panel-renderer__range"
+          class:panel-renderer__range--clickable={ranges && ranges.length > 1}
           type="button"
           onclick={handleRangeTap}
           disabled={!ranges || ranges.length <= 1}
@@ -225,7 +231,7 @@
       {/if}
     {:else}
       {@const dieIsD20 = isD20(part.die!)}
-      {#if rulesDisadvantage && dieIsD20 && rollResults[part.dieIndex!] === undefined}
+      {#if defaultRollMode !== 'normal' && dieIsD20}
         <span class="panel-renderer__disadv-indicator" aria-label="Disadvantage">▼</span>
       {/if}
       <div class="panel-renderer__chip-wrapper">
@@ -310,12 +316,20 @@
     background: transparent;
     border: none;
     padding: 0;
-    cursor: pointer;
-    border-radius: var(--radius-sm);
+    cursor: default;
+    white-space: nowrap;
   }
 
-  .panel-renderer__range:disabled {
-    cursor: default;
+  .panel-renderer__range--clickable {
+    background: var(--md-sys-color-surface-container);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    cursor: pointer;
+  }
+
+  .panel-renderer__range--clickable:hover {
+    background: var(--md-sys-color-surface-container-highest);
   }
 
   .panel-renderer__disadv-indicator {

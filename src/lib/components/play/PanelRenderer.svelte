@@ -168,7 +168,9 @@
 
   const visibleFollowups = $derived(
     editable && onFollowup
-      ? (descriptor.followups ?? []).filter((f) => evaluateCondition(f.condition, facts, new Set()))
+      ? (descriptor.followups ?? []).filter(
+          (f) => f.type === 'effect' && evaluateCondition(f.condition, facts, new Set())
+        )
       : []
   );
 

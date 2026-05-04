@@ -275,4 +275,110 @@ describe('PanelRenderer - dice-line control', () => {
     await fireEvent.click(chips[1]);
     expect(container.textContent).toContain('10');
   });
+
+  // === Range-based disadvantage ===
+
+  it('shows disadvantage indicator when range has disadvantage', () => {
+    const entry = createAttackEntry();
+    entry.rule = {
+      ...entry.rule,
+      vars: {
+        ...entry.rule.vars,
+        ranges: {
+          default: {
+            array: [
+              { distance: 5, type: 'melee' },
+              { distance: 30, type: 'ranged', disadvantage: false },
+              { distance: 60, type: 'ranged', disadvantage: true }
+            ]
+          }
+        }
+      }
+    } as Rule;
+    // Cycle to the disadvantaged range by clicking twice
+    const { container } = render(PanelRenderer, { props: { entry, editable: true, facts: {} } });
+    // Start at 5ft melee - no disadvantage
+    expect(container.querySelector('.panel-renderer__disadv-indicator')).toBeFalsy();
+  });
+
+  it('rolls d20 at disadvantage when range has disadvantage flag', async () => {
+    const entry = createAttackEntry();
+    entry.rule = {
+      ...entry.rule,
+      vars: {
+        ...entry.rule.vars,
+        ranges: {
+          default: {
+            array: [
+              { distance: 5, type: 'melee' },
+              { distance: 60, type: 'ranged', disadvantage: true }
+            ]
+          }
+        }
+      }
+    } as Rule;
+    const { container } = render(PanelRenderer, { props: { entry, editable: true, facts: {} } });
+    // Cycle to the disadvantaged range
+    const rangeEl = container.querySelector('.panel-renderer__range') as HTMLElement;
+    await fireEvent.click(rangeEl);
+    // Now at 60ft with disadvantage
+    // Mock two rolls: 0.4->9, 0.7->15 => disadvantage takes min = 9
+    vi.spyOn(Math, 'random')
+      .mockReturnValueOnce(0.4) // first disadvantage roll: floor(0.4*20)+1 = 9
+      .mockReturnValueOnce(0.7); // second disadvantage roll: floor(0.7*20)+1 = 15
+    const chips = container.querySelectorAll('.panel-renderer__die-chip');
+    await fireEvent.click(chips[0]); // click d20
+    // Should show disadvantage marker and result of min(9,15) + 5 = 14
+    expect(container.textContent).toContain('14');
+    const d20chip = chips[0];
+    expect(d20chip.classList.contains('panel-renderer__die-chip--disadv')).toBe(true);
+  });
+
+  it('range button has chip-like styling', () => {
+    const entry = createAttackEntry();
+    const { container } = render(PanelRenderer, { props: { entry, editable: true, facts: {} } });
+    const rangeEl = container.querySelector('.panel-renderer__range') as HTMLElement;
+    expect(rangeEl).toBeTruthy();
+    expect(rangeEl.classList.contains('panel-renderer__range')).toBe(true);
+    expect(rangeEl.tagName).toBe('BUTTON');
+  });
+
+  // === Persistent default roll mode indicator ===
+
+  it('disadvantage indicator persists after rolling', async () => {
+    const entry = createAttackEntry();
+    entry.rule = {
+      ...entry.rule,
+      vars: {
+        ...entry.rule.vars,
+        ranges: {
+          default: {
+            array: [
+              { distance: 5, type: 'melee' },
+              { distance: 60, type: 'ranged', disadvantage: true }
+            ]
+          }
+        }
+      }
+    } as Rule;
+    vi.spyOn(Math, 'random').mockReturnValue(0.5);
+    const { container } = render(PanelRenderer, { props: { entry, editable: true, facts: {} } });
+    // Cycle to disadvantaged range
+    const rangeEl = container.querySelector('.panel-renderer__range') as HTMLElement;
+    await fireEvent.click(rangeEl);
+    // Indicator visible before rolling
+    expect(container.querySelector('.panel-renderer__disadv-indicator')).toBeTruthy();
+    // Roll the d20
+    const chips = container.querySelectorAll('.panel-renderer__die-chip');
+    await fireEvent.click(chips[0]);
+    // Indicator still visible after rolling
+    expect(container.querySelector('.panel-renderer__disadv-indicator')).toBeTruthy();
+  });
+
+  it('no disadvantage indicator when default is normal', () => {
+    const entry = createAttackEntry();
+    // Single melee range - no disadvantage
+    const { container } = render(PanelRenderer, { props: { entry, editable: true, facts: {} } });
+    expect(container.querySelector('.panel-renderer__disadv-indicator')).toBeFalsy();
+  });
 });
