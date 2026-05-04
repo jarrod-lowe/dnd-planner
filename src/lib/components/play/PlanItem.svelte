@@ -24,13 +24,11 @@
     canMoveUp = true,
     canMoveDown = true,
     onSelectionChange,
-    onFollowup: _onFollowup,
+    onFollowup,
     onMoveUp,
     onMoveDown,
     onRemove
   }: Props = $props();
-
-  void _onFollowup;
 
   // Get errors array from varsRuntime
   const errors = $derived((item.rule.varsRuntime?.errors as string[] | undefined) || []);
@@ -55,6 +53,7 @@
     {canMoveDown}
     {onMoveUp}
     {onMoveDown}
+    {onFollowup}
   />
 </div>
 

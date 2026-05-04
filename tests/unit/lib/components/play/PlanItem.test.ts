@@ -10,6 +10,34 @@ const createMockPlanItem = (ruleId: string, description?: string): PlannedItem =
   order: 0
 });
 
+const createMockFollowupPlanItem = (): PlannedItem => ({
+  instanceId: 'instance-javelin',
+  rule: {
+    id: 'attack-javelin',
+    description: 'Javelin',
+    activities: [],
+    ui: {
+      section: 'attack',
+      name: 'Javelin',
+      followups: [
+        {
+          type: 'effect',
+          condition: { fact: 'attack.javelin.mastery', operator: 'equals', value: 1 },
+          button: 'rule.dnd-5e-2024.attacks.javelin-slow.button',
+          addRule: {
+            target: 'effect',
+            rule: {
+              id: 'effect-javelin-slow',
+              activities: []
+            }
+          }
+        }
+      ]
+    }
+  } as Rule,
+  order: 0
+});
+
 const createMockMovePlanItem = (): PlannedItem => ({
   instanceId: 'instance-move',
   rule: {
@@ -304,5 +332,82 @@ describe('PlanItem', () => {
     const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
     // Slider should show 10 (from selections), NOT 0 (from facts after engine re-eval)
     expect(slider.value).toBe('10');
+  });
+
+  // === Followup action tests ===
+
+  it('renders followup button when condition is met and onFollowup provided', () => {
+    const item = createMockFollowupPlanItem();
+    const facts: Facts = { 'attack.javelin.mastery': 1 };
+
+    const { container } = render(PlanItem, {
+      props: {
+        item,
+        facts,
+        onFollowup: vi.fn(),
+        onMoveUp: vi.fn(),
+        onMoveDown: vi.fn(),
+        onRemove: vi.fn()
+      }
+    });
+
+    const followupButton = container.querySelector('.panel-renderer__followup-button');
+    expect(followupButton).toBeTruthy();
+  });
+
+  it('does not render followup button when condition is not met', () => {
+    const item = createMockFollowupPlanItem();
+    const facts: Facts = { 'attack.javelin.mastery': 0 };
+
+    const { container } = render(PlanItem, {
+      props: {
+        item,
+        facts,
+        onFollowup: vi.fn(),
+        onMoveUp: vi.fn(),
+        onMoveDown: vi.fn(),
+        onRemove: vi.fn()
+      }
+    });
+
+    const followupButton = container.querySelector('.panel-renderer__followup-button');
+    expect(followupButton).toBeFalsy();
+  });
+
+  it('does not render followup buttons when onFollowup is not provided', () => {
+    const item = createMockFollowupPlanItem();
+    const facts: Facts = { 'attack.javelin.mastery': 1 };
+
+    const { container } = render(PlanItem, {
+      props: { item, facts, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove: vi.fn() }
+    });
+
+    const followups = container.querySelector('.panel-renderer__followups');
+    expect(followups).toBeFalsy();
+  });
+
+  it('calls onFollowup with the rule when effect followup button is clicked', () => {
+    const item = createMockFollowupPlanItem();
+    const facts: Facts = { 'attack.javelin.mastery': 1 };
+    const onFollowup = vi.fn();
+
+    const { container } = render(PlanItem, {
+      props: {
+        item,
+        facts,
+        onFollowup,
+        onMoveUp: vi.fn(),
+        onMoveDown: vi.fn(),
+        onRemove: vi.fn()
+      }
+    });
+
+    const followupButton = container.querySelector(
+      '.panel-renderer__followup-button'
+    ) as HTMLButtonElement;
+    followupButton?.click();
+
+    expect(onFollowup).toHaveBeenCalledTimes(1);
+    expect(onFollowup).toHaveBeenCalledWith(expect.objectContaining({ id: 'effect-javelin-slow' }));
   });
 });

@@ -8,7 +8,7 @@
   import PanelSelect from './panel-renderer/PanelSelect.svelte';
   import { evaluateCondition } from '$lib/rules-engine/conditions';
   import { getMatchingAnnotations } from '$lib/play/annotations';
-  import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-engine';
+  import type { AvailableRuleEntry, Facts, Annotation, Rule } from '$lib/rules-engine';
   import type { TextInformation, CountdownInformation } from './panel-renderer/types';
 
   interface Props {
@@ -25,6 +25,7 @@
     canMoveDown?: boolean;
     onMoveUp?: () => void;
     onMoveDown?: () => void;
+    onFollowup?: (rule: Rule) => void;
   }
 
   let {
@@ -40,7 +41,8 @@
     canMoveUp = true,
     canMoveDown = true,
     onMoveUp,
-    onMoveDown
+    onMoveDown,
+    onFollowup
   }: Props = $props();
 
   const descriptor = $derived(extractPanelDescriptor(entry.rule));
@@ -163,6 +165,12 @@
   ]);
 
   const matchingAnnotations = $derived(getMatchingAnnotations(annotationLabels, activeAnnotations));
+
+  const visibleFollowups = $derived(
+    editable && onFollowup
+      ? (descriptor.followups ?? []).filter((f) => evaluateCondition(f.condition, facts, new Set()))
+      : []
+  );
 
   const hasActions = $derived(!!onRemove || !!onMoveUp || !!onMoveDown);
 
@@ -300,6 +308,21 @@
     <div class="panel-renderer__annotations" role="note">
       {#each matchingAnnotations as annotation (annotation.key)}
         <span class="panel-renderer__annotation">{$t(annotation.key)}</span>
+      {/each}
+    </div>
+  {/if}
+  {#if visibleFollowups.length > 0}
+    <div class="panel-renderer__followups" role="group">
+      {#each visibleFollowups as followup (followup.button)}
+        <button
+          type="button"
+          class="panel-renderer__followup-button"
+          onclick={() => {
+            if (followup.type === 'effect') onFollowup?.(followup.addRule.rule);
+          }}
+        >
+          {$t(followup.button)}
+        </button>
       {/each}
     </div>
   {/if}
@@ -532,5 +555,30 @@
     padding: var(--spacing-xs) var(--spacing-sm);
     border-radius: var(--radius-sm);
     line-height: var(--line-height-md);
+  }
+
+  .panel-renderer__followups {
+    display: flex;
+    gap: var(--spacing-xs);
+    padding-top: var(--spacing-xs);
+  }
+
+  .panel-renderer__followup-button {
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--md-sys-color-primary);
+    background: transparent;
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-xs) var(--spacing-md);
+    cursor: pointer;
+    transition:
+      background-color var(--transition-fast),
+      border-color var(--transition-fast);
+  }
+
+  .panel-renderer__followup-button:hover {
+    background: var(--md-sys-color-surface-container);
   }
 </style>

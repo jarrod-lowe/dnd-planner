@@ -71,4 +71,5 @@ export interface PanelDescriptor {
   primaryControl?: Control;
   secondaryControl?: Control;
   information?: Information[];
+  followups?: import('$lib/rules-engine').Followup[];
 }

@@ -8,6 +8,7 @@ export function extractPanelDescriptor(rule: Rule): PanelDescriptor {
     name: ui.name as string | undefined,
     primaryControl: ui.primaryControl as PanelDescriptor['primaryControl'],
     secondaryControl: ui.secondaryControl as PanelDescriptor['secondaryControl'],
-    information: ui.information as PanelDescriptor['information']
+    information: ui.information as PanelDescriptor['information'],
+    followups: ui.followups as PanelDescriptor['followups']
   };
 }
