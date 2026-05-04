@@ -1,17 +1,14 @@
 <script lang="ts">
   import { slide } from 'svelte/transition';
   import { t } from '$lib/i18n';
-  import ChoicePanel from './ChoicePanel.svelte';
-  import EffectPanel from './EffectPanel.svelte';
-  import WarningIndicator from './WarningIndicator.svelte';
-  import type { AvailableRuleEntry, Facts } from '$lib/rules-engine';
-  import type { AnnotationDef } from '$lib/play/annotations';
+  import PanelRenderer from './PanelRenderer.svelte';
+  import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-engine';
 
   interface Props {
     leader: AvailableRuleEntry;
     followers: AvailableRuleEntry[];
     facts?: Facts;
-    activeAnnotations?: AnnotationDef[];
+    activeAnnotations?: Annotation[];
     onAddToPlan: (entry: AvailableRuleEntry) => void;
     readOnly?: boolean;
   }
@@ -50,51 +47,16 @@
     onAddToPlan(entry);
     // Don't collapse - user might want to add multiple
   }
-
-  // Helper to resolve a var's default value from facts (same as ChoicePanel)
-  function resolveVarDefault(entry: AvailableRuleEntry, varName: string): number | undefined {
-    if (entry.rule.selections?.[varName] !== undefined) {
-      return entry.rule.selections[varName] as number;
-    }
-
-    const varDef = entry.rule.vars?.[varName];
-    if (!varDef) return undefined;
-
-    const defaultSource = varDef.default;
-    if (defaultSource.number !== undefined) {
-      return defaultSource.number;
-    }
-    if (defaultSource.fact !== undefined) {
-      return facts[defaultSource.fact] as number | undefined;
-    }
-    return undefined;
-  }
-
-  // Get warning state for an entry
-  function getWarningInfo(entry: AvailableRuleEntry): {
-    hasWarning: boolean;
-    type: 'illegal' | 'inapplicable' | null;
-    message: string | undefined;
-  } {
-    const hasWarning = !entry.legal || !entry.applicable;
-    const type = !entry.legal ? 'illegal' : !entry.applicable ? 'inapplicable' : null;
-
-    let message: string | undefined;
-    if (hasWarning && entry.diagnostics.length > 0) {
-      message = entry.diagnostics.map((d) => $t(d.code)).join('\n');
-    }
-
-    return { hasWarning, type, message };
-  }
 </script>
 
 <div class="packed-group">
   <!-- Leader panel -->
-  {#if readOnly}
-    <EffectPanel entry={leader} />
-  {:else}
-    <ChoicePanel entry={leader} {facts} {activeAnnotations} onTap={() => onAddToPlan(leader)} />
-  {/if}
+  <PanelRenderer
+    entry={leader}
+    {facts}
+    {activeAnnotations}
+    onTap={readOnly ? undefined : () => onAddToPlan(leader)}
+  />
 
   <!-- Compact row for followers -->
   <button
@@ -119,70 +81,16 @@
     </span>
   </button>
 
-  <!-- Expanded follower panels (slim) with animation -->
+  <!-- Expanded follower panels with animation -->
   {#if expanded}
     <div class="packed-group__followers" transition:slide={{ duration: 200 }}>
       {#each followers as entry (entry.rule.id)}
-        {@const uiModel = entry.rule.ui?.model as string | undefined}
-        {@const warningInfo = getWarningInfo(entry)}
-        {@const displayName = entry.rule.ui?.name
-          ? $t(entry.rule.ui.name as string)
-          : entry.rule.description || entry.rule.id}
-        {#if readOnly}
-          <div class="packed-group__slim-panel" aria-label={displayName}>
-            <div class="packed-group__slim-body">
-              <span class="packed-group__slim-title">{displayName}</span>
-            </div>
-          </div>
-        {:else}
-          {@const moveMaxDistance =
-            uiModel === 'move' ? resolveVarDefault(entry, 'maxDistance') : undefined}
-          {@const moveCurrentDistance =
-            uiModel === 'move' ? resolveVarDefault(entry, 'distance') : undefined}
-          {@const sliderValue =
-            entry.rule.selections?.distance !== undefined
-              ? (entry.rule.selections.distance as number)
-              : (moveCurrentDistance ?? moveMaxDistance ?? 1)}
-          <button
-            type="button"
-            class="packed-group__slim-panel"
-            class:packed-group__slim-panel--warning={warningInfo.hasWarning}
-            onclick={() => handleFollowerTap(entry)}
-            aria-label={entry.rule.ui?.name
-              ? $t(entry.rule.ui.name as string)
-              : entry.rule.description || entry.rule.id}
-          >
-            {#if warningInfo.hasWarning && warningInfo.type}
-              <WarningIndicator type={warningInfo.type} message={warningInfo.message} />
-            {/if}
-
-            <div class="packed-group__slim-body">
-              {#if entry.rule.ui?.name}
-                <span class="packed-group__slim-title">{$t(entry.rule.ui.name as string)}</span>
-              {:else}
-                <span class="packed-group__slim-title"
-                  >{entry.rule.description || entry.rule.id}</span
-                >
-              {/if}
-
-              {#if uiModel === 'move' && moveMaxDistance !== undefined}
-                <div class="packed-group__slim-model">
-                  <input
-                    type="range"
-                    class="move-slider"
-                    min="0"
-                    max={moveMaxDistance}
-                    step="5"
-                    value={sliderValue}
-                    disabled
-                    aria-label={$t('play.choices.move.distance')}
-                  />
-                  <span class="move-value">{sliderValue} ft</span>
-                </div>
-              {/if}
-            </div>
-          </button>
-        {/if}
+        <PanelRenderer
+          {entry}
+          {facts}
+          {activeAnnotations}
+          onTap={readOnly ? undefined : () => handleFollowerTap(entry)}
+        />
       {/each}
     </div>
   {/if}
@@ -198,7 +106,7 @@
   }
 
   /* Leader panel: remove border, apply top corners to match parent */
-  .packed-group > :global(.choice-panel:first-child) {
+  .packed-group > :global(.panel-renderer:first-child) {
     border: none;
     border-radius: var(--radius-md) var(--radius-md) 0 0;
   }
@@ -267,77 +175,8 @@
     flex-direction: column;
   }
 
-  .packed-group__slim-panel {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-    padding: var(--spacing-sm) var(--spacing-md);
-    background: var(--md-sys-color-surface-container-high);
-    border: none;
-    border-top: 1px solid var(--md-sys-color-outline-variant);
-    cursor: pointer;
-    text-align: left;
-    font-family: var(--font-body);
-    font-size: var(--font-size-base);
-    transition: background-color var(--transition-fast);
-  }
-
-  .packed-group__slim-panel:hover {
-    background: var(--md-sys-color-surface-container-highest);
-  }
-
-  .packed-group__slim-panel:focus-visible {
-    outline: 2px solid var(--md-sys-color-primary);
-    outline-offset: -2px;
-  }
-
-  .packed-group__slim-panel--warning {
-    border-color: var(--md-sys-color-error-container);
-  }
-
   /* Last follower gets bottom corners to match parent */
-  .packed-group__slim-panel:last-child {
+  .packed-group__followers :global(.panel-renderer:last-child) {
     border-radius: 0 0 var(--radius-md) var(--radius-md);
-  }
-
-  /* Warning indicator positioning */
-  .packed-group__slim-panel :global(.warning-indicator) {
-    position: absolute;
-    top: var(--spacing-xs);
-    left: var(--spacing-xs);
-    z-index: 1;
-  }
-
-  .packed-group__slim-body {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-  }
-
-  .packed-group__slim-title {
-    font-family: var(--font-body);
-    font-size: var(--font-size-md);
-    font-weight: 500;
-    color: var(--md-sys-color-on-surface);
-  }
-
-  .packed-group__slim-model {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-  }
-
-  .packed-group__slim-model .move-slider {
-    flex: 1;
-    accent-color: var(--md-sys-color-primary);
-  }
-
-  .packed-group__slim-model .move-value {
-    font-family: var(--font-body);
-    font-size: var(--font-size-sm);
-    color: var(--md-sys-color-on-surface-variant);
-    min-width: 3rem;
-    text-align: right;
   }
 </style>

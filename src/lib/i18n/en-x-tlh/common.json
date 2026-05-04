@@ -989,6 +989,7 @@
     "plan": {
       "title": "DIvI'lIj",
       "empty": "DIvI'be'",
+      "actions": "DIvI' SeH",
       "moveUp": "Dung jaH",
       "moveDown": "bIng jaH",
       "remove": "teq",
@@ -1004,6 +1005,9 @@
       "loadRuleGroups": "nuv DIvI' laHbe'",
       "loadEffects": "DIvI' DIvI' laHbe'",
       "saveEffects": "DIvI' pol laHbe'"
+    },
+    "information": {
+      "saveDc": "{{saveType}} DIvI' {{dc}}"
     }
   }
 }

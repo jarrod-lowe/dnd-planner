@@ -52,8 +52,8 @@ describe('EffectsColumn', () => {
     ];
     const { container } = render(EffectsColumn, { props: { effects } });
 
-    // Should render effect panels
-    const panels = container.querySelectorAll('.effect-panel');
+    // Should render panel renderers in editable mode
+    const panels = container.querySelectorAll('.panel-renderer--editable');
     expect(panels).toHaveLength(2);
   });
 
@@ -75,7 +75,7 @@ describe('EffectsColumn', () => {
     const { container } = render(EffectsColumn, { props: { effects } });
 
     // Should still render the effect
-    const panels = container.querySelectorAll('.effect-panel');
+    const panels = container.querySelectorAll('.panel-renderer--editable');
     expect(panels).toHaveLength(1);
   });
 
@@ -89,7 +89,7 @@ describe('EffectsColumn', () => {
     });
 
     // Only the committed effect should have a delete button
-    const deleteButtons = container.querySelectorAll('.effect-panel__button--remove');
+    const deleteButtons = container.querySelectorAll('.panel-renderer__button--remove');
     expect(deleteButtons).toHaveLength(1);
   });
 
@@ -101,7 +101,7 @@ describe('EffectsColumn', () => {
       props: { effects: [committed], committedCount: 1, onRemoveEffect }
     });
 
-    const deleteButton = container.querySelector('.effect-panel__button--remove');
+    const deleteButton = container.querySelector('.panel-renderer__button--remove');
     await fireEvent.click(deleteButton!);
 
     expect(onRemoveEffect).toHaveBeenCalledWith('effect-1');
@@ -114,6 +114,6 @@ describe('EffectsColumn', () => {
       props: { effects, committedCount: 1 }
     });
 
-    expect(container.querySelector('.effect-panel__button--remove')).toBeNull();
+    expect(container.querySelector('.panel-renderer__button--remove')).toBeNull();
   });
 });

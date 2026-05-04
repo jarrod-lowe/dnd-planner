@@ -28,7 +28,6 @@ ruleGroups:
             rule:
               id: dash-action
               ui:
-                model: dash
                 section: action-other
                 name: rule.dnd-5e-2024.dash.dash-action.name
               group:

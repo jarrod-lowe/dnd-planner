@@ -46,9 +46,9 @@ describe('ChoicesColumn', () => {
       props: { entries: [entry], onChoiceTap }
     });
 
-    // Find the choice panel (not the section header)
-    const choicePanel = container.querySelector('.choice-panel');
-    choicePanel?.click();
+    // Find the panel renderer (not the section header)
+    const panel = container.querySelector('.panel-renderer');
+    panel?.click();
 
     expect(onChoiceTap).toHaveBeenCalledWith(entry);
   });

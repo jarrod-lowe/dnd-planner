@@ -47,7 +47,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: rebuke-the-violent
                 section: reaction
                 name: rule.class-paladin-oath-redemption-level3.rebuke-the-violent.name
               activities:
@@ -139,9 +138,11 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: emissary-of-peace
                 section: bonus-action-other
                 name: rule.class-paladin-oath-redemption-level3.emissary-of-peace.name
+                information:
+                  - type: text
+                    label: rule.class-paladin-oath-redemption-level3.emissary-of-peace.description
               activities:
                 # Consume bonus action
                 - type: numberIncrement

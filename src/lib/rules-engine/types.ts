@@ -197,6 +197,12 @@ export interface NumberSetActivity extends ActivityBase {
   source: Source;
 }
 
+export interface StringSetActivity extends ActivityBase {
+  type: 'stringSet';
+  target: Target;
+  source: Source;
+}
+
 /**
  * Increments a numeric fact by a delta. Can use negative numbers to decrement.
  * If fact doesn't exist, treated as 0. Optional max cap from another fact.
@@ -330,6 +336,7 @@ export interface AnnotateActivity extends ActivityBase {
  */
 export type Activity =
   | NumberSetActivity
+  | StringSetActivity
   | NumberIncrementActivity
   | NumberCopyActivity
   | NumberSumActivity

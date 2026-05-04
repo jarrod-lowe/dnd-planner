@@ -178,6 +178,24 @@
               "items": {
                 "type": "string"
               }
+            },
+            "primaryControl": {
+              "type": "object",
+              "description": "Primary UI control configuration (e.g., dice-line, slider)",
+              "additionalProperties": true
+            },
+            "secondaryControl": {
+              "type": "object",
+              "description": "Secondary UI control configuration",
+              "additionalProperties": true
+            },
+            "information": {
+              "type": "array",
+              "description": "Informational UI elements to display (e.g., text, countdown)",
+              "items": {
+                "type": "object",
+                "additionalProperties": true
+              }
             }
           },
           "additionalProperties": false
@@ -392,6 +410,7 @@
           "type": "string",
           "enum": [
             "numberSet",
+            "stringSet",
             "numberIncrement",
             "numberCopy",
             "numberSum",

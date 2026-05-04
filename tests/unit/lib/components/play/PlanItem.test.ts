@@ -10,6 +10,34 @@ const createMockPlanItem = (ruleId: string, description?: string): PlannedItem =
   order: 0
 });
 
+const createMockFollowupPlanItem = (): PlannedItem => ({
+  instanceId: 'instance-javelin',
+  rule: {
+    id: 'attack-javelin',
+    description: 'Javelin',
+    activities: [],
+    ui: {
+      section: 'attack',
+      name: 'Javelin',
+      followups: [
+        {
+          type: 'effect',
+          condition: { fact: 'attack.javelin.mastery', operator: 'equals', value: 1 },
+          button: 'rule.dnd-5e-2024.attacks.javelin-slow.button',
+          addRule: {
+            target: 'effect',
+            rule: {
+              id: 'effect-javelin-slow',
+              activities: []
+            }
+          }
+        }
+      ]
+    }
+  } as Rule,
+  order: 0
+});
+
 const createMockMovePlanItem = (): PlannedItem => ({
   instanceId: 'instance-move',
   rule: {
@@ -17,9 +45,13 @@ const createMockMovePlanItem = (): PlannedItem => ({
     description: 'Move',
     activities: [],
     ui: {
-      model: 'move',
       section: 'move',
-      name: 'rule.dnd-5e-2024.movement.move-walk.name'
+      name: 'rule.dnd-5e-2024.movement.move-walk.name',
+      primaryControl: {
+        type: 'slider',
+        var: 'distance',
+        max: { var: 'maxDistance' }
+      }
     },
     vars: {
       distance: { default: { fact: 'character.movement.remaining' } },
@@ -40,7 +72,7 @@ describe('PlanItem', () => {
     expect(getByText('Attack')).toBeTruthy();
   });
 
-  // === Control buttons (via ChoicePanel) ===
+  // === Control buttons (via PanelRenderer) ===
 
   it('has move up button with accessible label', () => {
     const item = createMockPlanItem('attack', 'Attack');
@@ -49,7 +81,7 @@ describe('PlanItem', () => {
       props: { item, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove: vi.fn() }
     });
 
-    const upButton = container.querySelector('.choice-panel__button--move-up');
+    const upButton = container.querySelector('.panel-renderer__button--move-up');
     expect(upButton?.getAttribute('aria-label')).toContain('play.plan.moveUp');
   });
 
@@ -60,7 +92,7 @@ describe('PlanItem', () => {
       props: { item, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove: vi.fn() }
     });
 
-    const downButton = container.querySelector('.choice-panel__button--move-down');
+    const downButton = container.querySelector('.panel-renderer__button--move-down');
     expect(downButton?.getAttribute('aria-label')).toContain('play.plan.moveDown');
   });
 
@@ -71,7 +103,7 @@ describe('PlanItem', () => {
       props: { item, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove: vi.fn() }
     });
 
-    const removeButton = container.querySelector('.choice-panel__button--remove');
+    const removeButton = container.querySelector('.panel-renderer__button--remove');
     expect(removeButton?.getAttribute('aria-label')).toContain('play.plan.remove');
   });
 
@@ -83,7 +115,9 @@ describe('PlanItem', () => {
       props: { item, onMoveUp, onMoveDown: vi.fn(), onRemove: vi.fn() }
     });
 
-    const upButton = container.querySelector('.choice-panel__button--move-up') as HTMLButtonElement;
+    const upButton = container.querySelector(
+      '.panel-renderer__button--move-up'
+    ) as HTMLButtonElement;
     upButton?.click();
 
     expect(onMoveUp).toHaveBeenCalledTimes(1);
@@ -98,7 +132,7 @@ describe('PlanItem', () => {
     });
 
     const downButton = container.querySelector(
-      '.choice-panel__button--move-down'
+      '.panel-renderer__button--move-down'
     ) as HTMLButtonElement;
     downButton?.click();
 
@@ -114,7 +148,7 @@ describe('PlanItem', () => {
     });
 
     const removeButton = container.querySelector(
-      '.choice-panel__button--remove'
+      '.panel-renderer__button--remove'
     ) as HTMLButtonElement;
     removeButton?.click();
 
@@ -128,7 +162,9 @@ describe('PlanItem', () => {
       props: { item, canMoveUp: false, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove: vi.fn() }
     });
 
-    const upButton = container.querySelector('.choice-panel__button--move-up') as HTMLButtonElement;
+    const upButton = container.querySelector(
+      '.panel-renderer__button--move-up'
+    ) as HTMLButtonElement;
     expect(upButton?.disabled).toBe(true);
   });
 
@@ -140,14 +176,14 @@ describe('PlanItem', () => {
     });
 
     const downButton = container.querySelector(
-      '.choice-panel__button--move-down'
+      '.panel-renderer__button--move-down'
     ) as HTMLButtonElement;
     expect(downButton?.disabled).toBe(true);
   });
 
-  // === ChoicePanel integration tests ===
+  // === PanelRenderer integration tests ===
 
-  it('renders ChoicePanel with editable mode for move rules', () => {
+  it('renders PanelRenderer with editable mode for move rules', () => {
     const item = createMockMovePlanItem();
     const facts: Facts = {
       'character.movement.remaining': 25,
@@ -164,7 +200,7 @@ describe('PlanItem', () => {
     expect((slider as HTMLInputElement)?.disabled).toBe(false);
   });
 
-  it('calls onSelectionChange when ChoicePanel slider changes', async () => {
+  it('calls onSelectionChange when PanelRenderer slider changes', async () => {
     const item = createMockMovePlanItem();
     const facts: Facts = {
       'character.movement.remaining': 25,
@@ -215,36 +251,163 @@ describe('PlanItem', () => {
     const planItem = container.querySelector('.plan-item');
     // The wrapper should exist but not have its own visual container
     expect(planItem).toBeTruthy();
-    // ChoicePanel provides the visual container
-    expect(container.querySelector('.choice-panel')).toBeTruthy();
+    // PanelRenderer provides the visual container
+    expect(container.querySelector('.panel-renderer')).toBeTruthy();
   });
 
-  it('controls are in actions row at bottom of panel', () => {
+  it('controls are in actions group at top-right of panel', () => {
     const item = createMockPlanItem('attack', 'Attack');
 
     const { container } = render(PlanItem, {
       props: { item, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove: vi.fn() }
     });
 
-    const actions = container.querySelector('.choice-panel__actions');
+    const actions = container.querySelector('.panel-renderer__actions');
     expect(actions).toBeTruthy();
   });
 
-  it('actions contain move up, move down, and remove buttons', () => {
+  it('actions contain all three buttons', () => {
     const item = createMockPlanItem('attack', 'Attack');
 
     const { container } = render(PlanItem, {
       props: { item, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove: vi.fn() }
     });
 
-    const actions = container.querySelector('.choice-panel__actions');
+    const actions = container.querySelector('.panel-renderer__actions');
 
-    const upButton = actions?.querySelector('.choice-panel__button--move-up');
-    const downButton = actions?.querySelector('.choice-panel__button--move-down');
-    const removeButton = actions?.querySelector('.choice-panel__button--remove');
+    const upButton = actions?.querySelector('.panel-renderer__button--move-up');
+    const downButton = actions?.querySelector('.panel-renderer__button--move-down');
+    const removeButton = actions?.querySelector('.panel-renderer__button--remove');
 
     expect(upButton).toBeTruthy();
     expect(downButton).toBeTruthy();
     expect(removeButton).toBeTruthy();
+  });
+
+  it('PlanItem no longer has its own plan-item__actions div', () => {
+    const item = createMockPlanItem('attack', 'Attack');
+
+    const { container } = render(PlanItem, {
+      props: { item, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove: vi.fn() }
+    });
+
+    // Old plan-item__actions should no longer exist
+    expect(container.querySelector('.plan-item__actions')).toBeNull();
+  });
+
+  // === Selections passthrough to PanelRenderer ===
+
+  it('passes rule selections to PanelRenderer so slider uses selection over facts', () => {
+    const item = createMockMovePlanItem();
+    // Simulate user selected distance=15 (stored in rule.selections)
+    item.rule.selections = { distance: 15 };
+    const facts: Facts = {
+      // facts say remaining is 25, but user chose 15
+      'character.movement.remaining': 25,
+      'character.movement.total': 30
+    };
+
+    const { container } = render(PlanItem, {
+      props: { item, facts, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove: vi.fn() }
+    });
+
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+    // Slider should show 15 (from selections), NOT 25 (from facts)
+    expect(slider.value).toBe('15');
+  });
+
+  it('slider shows selection value even when facts change', () => {
+    const item = createMockMovePlanItem();
+    item.rule.selections = { distance: 10 };
+    const facts: Facts = {
+      // Engine says movement remaining is now 0 after consuming, but user chose 10
+      'character.movement.remaining': 0,
+      'character.movement.total': 30
+    };
+
+    const { container } = render(PlanItem, {
+      props: { item, facts, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove: vi.fn() }
+    });
+
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+    // Slider should show 10 (from selections), NOT 0 (from facts after engine re-eval)
+    expect(slider.value).toBe('10');
+  });
+
+  // === Followup action tests ===
+
+  it('renders followup button when condition is met and onFollowup provided', () => {
+    const item = createMockFollowupPlanItem();
+    const facts: Facts = { 'attack.javelin.mastery': 1 };
+
+    const { container } = render(PlanItem, {
+      props: {
+        item,
+        facts,
+        onFollowup: vi.fn(),
+        onMoveUp: vi.fn(),
+        onMoveDown: vi.fn(),
+        onRemove: vi.fn()
+      }
+    });
+
+    const followupButton = container.querySelector('.panel-renderer__followup-button');
+    expect(followupButton).toBeTruthy();
+  });
+
+  it('does not render followup button when condition is not met', () => {
+    const item = createMockFollowupPlanItem();
+    const facts: Facts = { 'attack.javelin.mastery': 0 };
+
+    const { container } = render(PlanItem, {
+      props: {
+        item,
+        facts,
+        onFollowup: vi.fn(),
+        onMoveUp: vi.fn(),
+        onMoveDown: vi.fn(),
+        onRemove: vi.fn()
+      }
+    });
+
+    const followupButton = container.querySelector('.panel-renderer__followup-button');
+    expect(followupButton).toBeFalsy();
+  });
+
+  it('does not render followup buttons when onFollowup is not provided', () => {
+    const item = createMockFollowupPlanItem();
+    const facts: Facts = { 'attack.javelin.mastery': 1 };
+
+    const { container } = render(PlanItem, {
+      props: { item, facts, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove: vi.fn() }
+    });
+
+    const followups = container.querySelector('.panel-renderer__followups');
+    expect(followups).toBeFalsy();
+  });
+
+  it('calls onFollowup with the rule when effect followup button is clicked', () => {
+    const item = createMockFollowupPlanItem();
+    const facts: Facts = { 'attack.javelin.mastery': 1 };
+    const onFollowup = vi.fn();
+
+    const { container } = render(PlanItem, {
+      props: {
+        item,
+        facts,
+        onFollowup,
+        onMoveUp: vi.fn(),
+        onMoveDown: vi.fn(),
+        onRemove: vi.fn()
+      }
+    });
+
+    const followupButton = container.querySelector(
+      '.panel-renderer__followup-button'
+    ) as HTMLButtonElement;
+    followupButton?.click();
+
+    expect(onFollowup).toHaveBeenCalledTimes(1);
+    expect(onFollowup).toHaveBeenCalledWith(expect.objectContaining({ id: 'effect-javelin-slow' }));
   });
 });

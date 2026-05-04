@@ -60,11 +60,12 @@ describe('skill-checks rule group structure', () => {
     }
   });
 
-  it('all skill offers use d20-roll model', () => {
+  it('all skill offers use dice-line primary control', () => {
     for (const skill of skillKeys) {
       const offerRule = rules.find((r) => r.id === `roll-skill-${skill}-offer`);
       const offerActivity = offerRule!.activities!.find((a) => a.type === 'offerRule');
-      expect(offerActivity!.rule!.ui!.model).toBe('d20-roll');
+      const pc = offerActivity!.rule!.ui!.primaryControl as { type: string };
+      expect(pc.type).toBe('dice-line');
     }
   });
 

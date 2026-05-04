@@ -4,10 +4,19 @@ definitions:
     tags: [attack, weapon]
     requires: [attacks]
     ui:
-      model: attack
       name: rule.dnd-5e-2024.attacks.unarmed-strike.name
       disadvantageFact: attack.str.disadvantage
       annotationLabels: [attack.any, attack.melee, attack.unarmed]
+      primaryControl:
+        type: dice-line
+        ranges: { var: ranges }
+        advantage: { fact: attack.str.disadvantage }
+        dice:
+          - expression: d20
+            bonus: { var: hitBonus }
+          - expression: { var: damageDie }
+            bonus: { var: damageBonus }
+        annotationLabels: [attack.any, attack.melee, attack.unarmed]
     vars:
       ranges:
         default:
@@ -49,10 +58,19 @@ definitions:
       weapon.throwable: true
       weapon.mastery: nick
     ui:
-      model: attack
       name: rule.dnd-5e-2024.attacks.dagger.name
       disadvantageFact: attack.str.disadvantage
       annotationLabels: [attack.any, attack.melee, attack.weapon]
+      primaryControl:
+        type: dice-line
+        ranges: { var: ranges }
+        advantage: { fact: attack.str.disadvantage }
+        dice:
+          - expression: d20
+            bonus: { var: hitBonus }
+          - expression: { var: damageDie }
+            bonus: { var: damageBonus }
+        annotationLabels: [attack.any, attack.melee, attack.weapon]
     vars:
       ranges:
         default:
@@ -98,7 +116,6 @@ definitions:
       weapon.twoHanded: true
       weapon.mastery: cleave
     ui:
-      model: attack
       name: rule.dnd-5e-2024.attacks.greataxe.name
       disadvantageFact: attack.str.disadvantage
       annotationLabels: [attack.any, attack.melee, attack.weapon]
@@ -109,6 +126,30 @@ definitions:
             operator: equals
             value: 1
           button: rule.dnd-5e-2024.attacks.greataxe-cleave.button
+      primaryControl:
+        type: dice-line
+        ranges: { var: ranges }
+        advantage: { fact: attack.str.disadvantage }
+        dice:
+          - expression: d20
+            bonus: { var: hitBonus }
+          - expression: { var: damageDie }
+            bonus: { var: damageBonus }
+        annotationLabels: [attack.any, attack.melee, attack.weapon]
+      secondaryControl:
+        type: dice-line
+        enabled:
+          condition:
+            fact: attack.greataxe.mastery
+            operator: equals
+            value: 1
+          button: rule.dnd-5e-2024.attacks.greataxe-cleave.button
+        ranges: { var: ranges }
+        dice:
+          - expression: d20
+            bonus: { var: hitBonus }
+          - expression: { var: damageDie }
+            bonus: { var: damageBonus }
     vars:
       ranges:
         default:
@@ -148,7 +189,6 @@ definitions:
       weapon.throwable: true
       weapon.mastery: slow
     ui:
-      model: attack
       name: rule.dnd-5e-2024.attacks.javelin.name
       disadvantageFact: attack.str.disadvantage
       annotationLabels: [attack.any, attack.melee, attack.weapon]
@@ -168,6 +208,16 @@ definitions:
                 name: rule.dnd-5e-2024.attacks.javelin-slow.effect-name
               phase: normal
               activities: []
+      primaryControl:
+        type: dice-line
+        ranges: { var: ranges }
+        advantage: { fact: attack.str.disadvantage }
+        dice:
+          - expression: d20
+            bonus: { var: hitBonus }
+          - expression: { var: damageDie }
+            bonus: { var: damageBonus }
+        annotationLabels: [attack.any, attack.melee, attack.weapon]
     vars:
       ranges:
         default:
@@ -213,10 +263,19 @@ definitions:
       weapon.finesse: true
       weapon.mastery: nick
     ui:
-      model: attack
       name: rule.dnd-5e-2024.attacks.scimitar.name
       disadvantageFact: attack.dex.disadvantage
       annotationLabels: [attack.any, attack.melee, attack.weapon]
+      primaryControl:
+        type: dice-line
+        ranges: { var: ranges }
+        advantage: { fact: attack.dex.disadvantage }
+        dice:
+          - expression: d20
+            bonus: { var: hitBonus }
+          - expression: { var: damageDie }
+            bonus: { var: damageBonus }
+        annotationLabels: [attack.any, attack.melee, attack.weapon]
     vars:
       ranges:
         default:

@@ -63,6 +63,11 @@ ruleGroups:
         group:
           - spellcasting-modifier-set
         activities:
+          - type: stringSet
+            target:
+              fact: spellcasting.saveAbility
+            source:
+              string: CHA
           - type: numberIncrement
             target:
               fact: spellcasting.modifier

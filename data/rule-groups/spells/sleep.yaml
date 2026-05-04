@@ -131,10 +131,15 @@ ruleGroups:
                 - action
                 - spellcasting
               ui:
-                model: spell-save
                 section: action-spell
                 name: rule.spell-sleep.offer-sleep.name
                 showDC: true
+                information:
+                  - type: text
+                    label: play.information.saveDc
+                    labelValues:
+                      saveType: { fact: spellcasting.saveAbility }
+                      dc: { fact: spellcasting.saveDC }
               vars:
                 slotLevel:
                   capture: true
@@ -434,12 +439,20 @@ ruleGroups:
                         operator: equals
                         value: 0
                     ui:
-                      model: timed-save-effect
                       section: ongoing
                       countDown: 10
                       duration: 10
                       saveType: WIS
                       saveFact: spellcasting.saveDC
+                      information:
+                        - type: countdown
+                          filled: { number: 10 }
+                          total: { number: 10 }
+                        - type: text
+                          label: play.information.saveDc
+                          labelValues:
+                            saveType: { fact: spellcasting.saveAbility }
+                            dc: { fact: spellcasting.saveDC }
                     activities:
                       - type: numberIncrement
                         target:

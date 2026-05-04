@@ -123,12 +123,17 @@ ruleGroups:
                 - action
                 - spellcasting
               ui:
-                model: spell-save
                 section: action-spell
                 name: rule.spell-command.offer-command.name
                 showDC: true
                 saveType: WIS
                 saveFact: spellcasting.saveDC
+                information:
+                  - type: text
+                    label: play.information.saveDc
+                    labelValues:
+                      saveType: { fact: spellcasting.saveAbility }
+                      dc: { fact: spellcasting.saveDC }
               vars:
                 slotLevel:
                   capture: true

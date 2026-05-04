@@ -174,12 +174,22 @@ ruleGroups:
                 - __planned__
                 - spellcasting
               ui:
-                model: smite
                 section: bonus-action-spell
                 name: rule.spell-thunderous-smite.offer-thunderous-smite.name
                 dieSides: 6
                 showDC: true
                 saveType: STR
+                primaryControl:
+                  type: slider
+                  var: slotLevel
+                  min: { number: 1 }
+                  max: { number: 5 }
+                information:
+                  - type: text
+                    label: play.information.saveDc
+                    labelValues:
+                      saveType: { fact: spellcasting.saveAbility }
+                      dc: { fact: spellcasting.saveDC }
               vars:
                 slotLevel:
                   capture: true

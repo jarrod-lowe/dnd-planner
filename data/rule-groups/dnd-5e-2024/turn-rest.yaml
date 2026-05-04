@@ -24,7 +24,6 @@ ruleGroups:
             rule:
               id: long-rest
               ui:
-                model: rest
                 section: rest
                 name: rule.dnd-5e-2024.turn-rest.long-rest.name
               group:
@@ -46,7 +45,6 @@ ruleGroups:
             rule:
               id: short-rest
               ui:
-                model: rest
                 section: rest
                 name: rule.dnd-5e-2024.turn-rest.short-rest.name
               group:

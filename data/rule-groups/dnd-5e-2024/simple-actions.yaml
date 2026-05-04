@@ -29,7 +29,6 @@ ruleGroups:
             rule:
               id: disengage-action
               ui:
-                model: disengage
                 section: action-other
                 name: rule.dnd-5e-2024.simple-actions.disengage-action.name
               group:
@@ -71,7 +70,6 @@ ruleGroups:
             rule:
               id: dodge-action
               ui:
-                model: dodge
                 section: action-other
                 name: rule.dnd-5e-2024.simple-actions.dodge-action.name
                 packBehind: disengage-action
@@ -114,7 +112,6 @@ ruleGroups:
             rule:
               id: improvise-action
               ui:
-                model: improvise
                 section: action-other
                 name: rule.dnd-5e-2024.simple-actions.improvise-action.name
                 packBehind: disengage-action
@@ -157,7 +154,6 @@ ruleGroups:
             rule:
               id: influence-action
               ui:
-                model: influence
                 section: action-other
                 name: rule.dnd-5e-2024.simple-actions.influence-action.name
                 packBehind: disengage-action
@@ -200,7 +196,6 @@ ruleGroups:
             rule:
               id: search-action
               ui:
-                model: search
                 section: action-other
                 name: rule.dnd-5e-2024.simple-actions.search-action.name
                 packBehind: disengage-action
@@ -243,7 +238,6 @@ ruleGroups:
             rule:
               id: study-action
               ui:
-                model: study
                 section: action-other
                 name: rule.dnd-5e-2024.simple-actions.study-action.name
                 packBehind: disengage-action
@@ -286,7 +280,6 @@ ruleGroups:
             rule:
               id: utilize-action
               ui:
-                model: utilize
                 section: action-other
                 name: rule.dnd-5e-2024.simple-actions.utilize-action.name
                 packBehind: disengage-action

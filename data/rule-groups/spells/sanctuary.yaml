@@ -121,10 +121,15 @@ ruleGroups:
                 - __planned__
                 - spellcasting
               ui:
-                model: spell-save
                 section: bonus-action-spell
                 name: rule.spell-sanctuary.offer-sanctuary.name
                 showDC: true
+                information:
+                  - type: text
+                    label: play.information.saveDc
+                    labelValues:
+                      saveType: { fact: spellcasting.saveAbility }
+                      dc: { fact: spellcasting.saveDC }
               vars:
                 slotLevel:
                   capture: true
@@ -417,12 +422,20 @@ ruleGroups:
                         operator: equals
                         value: 0
                     ui:
-                      model: timed-save-effect
                       section: ongoing
                       countDown: 10
                       duration: 10
                       saveType: WIS
                       saveFact: spellcasting.saveDC
+                      information:
+                        - type: countdown
+                          filled: { number: 10 }
+                          total: { number: 10 }
+                        - type: text
+                          label: play.information.saveDc
+                          labelValues:
+                            saveType: { fact: spellcasting.saveAbility }
+                            dc: { fact: spellcasting.saveDC }
                     activities:
                       - type: advertiseEffect
                         self: true

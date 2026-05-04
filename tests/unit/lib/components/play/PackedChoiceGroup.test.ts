@@ -48,7 +48,7 @@ describe('PackedChoiceGroup', () => {
   const followers = [swim, fly];
 
   describe('collapsed state (default)', () => {
-    it('renders the leader ChoicePanel', () => {
+    it('renders the leader PanelRenderer', () => {
       const { getByText } = render(PackedChoiceGroup, {
         props: { leader, followers, onAddToPlan: vi.fn() }
       });
@@ -73,15 +73,15 @@ describe('PackedChoiceGroup', () => {
         props: { leader, followers: [swim], onAddToPlan: vi.fn() }
       });
 
-      // The slim panel should not exist when collapsed
-      const slimPanels = container.querySelectorAll('.packed-group__slim-panel');
-      expect(slimPanels).toHaveLength(0);
+      // The follower panels should not exist when collapsed
+      const followerPanels = container.querySelectorAll('.packed-group__followers .panel-renderer');
+      expect(followerPanels).toHaveLength(0);
     });
   });
 
   describe('expand/collapse behavior', () => {
     it('expands when CompactRow is tapped', async () => {
-      const { container, getByRole } = render(PackedChoiceGroup, {
+      const { container } = render(PackedChoiceGroup, {
         props: { leader, followers: [swim], onAddToPlan: vi.fn() }
       });
 
@@ -90,8 +90,9 @@ describe('PackedChoiceGroup', () => {
       expect(compactRow).toBeTruthy();
       await fireEvent.click(compactRow!);
 
-      // Now should show the slim panel for swim
-      expect(getByRole('button', { name: /Swim/ })).toBeTruthy();
+      // Now should show a follower panel for swim
+      const followerPanels = container.querySelectorAll('.packed-group__followers .panel-renderer');
+      expect(followerPanels).toHaveLength(1);
     });
 
     it('collapses when CompactRow is tapped again', async () => {
@@ -103,14 +104,14 @@ describe('PackedChoiceGroup', () => {
 
       // Expand
       await fireEvent.click(compactRow!);
-      const slimPanels = container.querySelectorAll('.packed-group__slim-panel');
-      expect(slimPanels).toHaveLength(1);
+      const followerPanels = container.querySelectorAll('.packed-group__followers .panel-renderer');
+      expect(followerPanels).toHaveLength(1);
 
       // Collapse - need to wait for animation to complete
       await fireEvent.click(compactRow!);
       // Wait for the slide-out animation mock to complete (setTimeout 0)
       await vi.waitFor(() => {
-        const panels = container.querySelectorAll('.packed-group__slim-panel');
+        const panels = container.querySelectorAll('.packed-group__followers .panel-renderer');
         expect(panels).toHaveLength(0);
       });
     });
@@ -131,7 +132,7 @@ describe('PackedChoiceGroup', () => {
     });
   });
 
-  describe('SlimPanel interaction', () => {
+  describe('Follower panel interaction', () => {
     it('calls onAddToPlan with the follower entry when tapped', async () => {
       const onAddToPlan = vi.fn();
       const { container } = render(PackedChoiceGroup, {
@@ -142,15 +143,15 @@ describe('PackedChoiceGroup', () => {
       const compactRow = container.querySelector('.packed-group__compact-row');
       await fireEvent.click(compactRow!);
 
-      // Click on swim slim panel
-      const swimPanel = container.querySelector('.packed-group__slim-panel');
+      // Click on swim follower panel
+      const swimPanel = container.querySelector('.packed-group__followers .panel-renderer');
       expect(swimPanel).toBeTruthy();
       await fireEvent.click(swimPanel!);
 
       expect(onAddToPlan).toHaveBeenCalledWith(swim);
     });
 
-    it('does NOT collapse the group when SlimPanel is tapped', async () => {
+    it('does NOT collapse the group when follower panel is tapped', async () => {
       const onAddToPlan = vi.fn();
       const { container } = render(PackedChoiceGroup, {
         props: { leader, followers: [swim], onAddToPlan }
@@ -160,8 +161,8 @@ describe('PackedChoiceGroup', () => {
       const compactRow = container.querySelector('.packed-group__compact-row');
       await fireEvent.click(compactRow!);
 
-      // Click on swim slim panel
-      const swimPanel = container.querySelector('.packed-group__slim-panel');
+      // Click on swim follower panel
+      const swimPanel = container.querySelector('.packed-group__followers .panel-renderer');
       await fireEvent.click(swimPanel!);
 
       // Group should still be expanded
@@ -204,19 +205,19 @@ describe('PackedChoiceGroup', () => {
   });
 
   describe('readOnly mode (effects)', () => {
-    it('renders leader as EffectPanel instead of ChoicePanel when readOnly=true', () => {
+    it('renders leader as non-editable PanelRenderer when readOnly=true', () => {
       const { container } = render(PackedChoiceGroup, {
         props: { leader, followers: [swim], onAddToPlan: vi.fn(), readOnly: true }
       });
 
-      // Should render an EffectPanel for the leader, not a ChoicePanel button
-      const effectPanel = container.querySelector('.effect-panel');
-      expect(effectPanel).toBeTruthy();
-      const choiceButton = container.querySelector('button.choice-panel');
-      expect(choiceButton).toBeFalsy();
+      // Should render a PanelRenderer for the leader (non-editable, no tap)
+      const panelRenderer = container.querySelector('.panel-renderer');
+      expect(panelRenderer).toBeTruthy();
+      // No --editable class because it's always non-editable in PackedChoiceGroup
+      expect(panelRenderer!.classList.contains('panel-renderer--editable')).toBe(false);
     });
 
-    it('renders followers as divs not buttons when readOnly=true and expanded', async () => {
+    it('renders followers as PanelRenderer when readOnly=true and expanded', async () => {
       const { container } = render(PackedChoiceGroup, {
         props: { leader, followers: [swim], onAddToPlan: vi.fn(), readOnly: true }
       });
@@ -225,10 +226,9 @@ describe('PackedChoiceGroup', () => {
       const compactRow = container.querySelector('.packed-group__compact-row');
       await fireEvent.click(compactRow!);
 
-      // Followers should be divs, not buttons
-      const slimPanels = container.querySelectorAll('.packed-group__slim-panel');
-      expect(slimPanels).toHaveLength(1);
-      expect(slimPanels[0].tagName).toBe('DIV');
+      // Followers should be rendered as PanelRenderer
+      const followerPanels = container.querySelectorAll('.packed-group__followers .panel-renderer');
+      expect(followerPanels).toHaveLength(1);
     });
 
     it('still allows expand/collapse when readOnly=true', async () => {
@@ -245,7 +245,7 @@ describe('PackedChoiceGroup', () => {
       // Collapse
       await fireEvent.click(compactRow!);
       await vi.waitFor(() => {
-        const panels = container.querySelectorAll('.packed-group__slim-panel');
+        const panels = container.querySelectorAll('.packed-group__followers .panel-renderer');
         expect(panels).toHaveLength(0);
       });
     });

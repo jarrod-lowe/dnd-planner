@@ -66,10 +66,13 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: ability-score
                 section: bonus-action-other
                 name: rule.class-paladin-lay-on-hands.loh-heal.name
                 sliderMin: 1
+                primaryControl:
+                  type: slider
+                  var: amount
+                  min: { number: 1 }
               vars:
                 amount:
                   capture: true
@@ -161,7 +164,6 @@ ruleGroups:
               group:
                 - __planned__
               ui:
-                model: lay-on-hands-purify
                 section: bonus-action-other
                 name: rule.class-paladin-lay-on-hands.loh-purify-poison.name
               activities:

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import ChoicePanel from './ChoicePanel.svelte';
+  import PanelRenderer from './PanelRenderer.svelte';
   import type { PlannedItem } from '$lib/play/types';
   import type { Facts, Rule } from '$lib/rules-engine';
   import type { AnnotationDef } from '$lib/play/annotations';
@@ -41,25 +41,26 @@
 </script>
 
 <div class="plan-item">
-  <ChoicePanel
+  <PanelRenderer
     entry={{ rule: item.rule, legal: !isIllegal, applicable: true, diagnostics }}
     editable={true}
     {facts}
+    selections={item.rule.selections ?? {}}
     {activeAnnotations}
     {onSelectionChange}
-    {onFollowup}
-    showControls={true}
+    {onRemove}
     {canMoveUp}
     {canMoveDown}
     {onMoveUp}
     {onMoveDown}
-    {onRemove}
+    {onFollowup}
   />
 </div>
 
 <style>
   .plan-item {
+    position: relative;
     width: 100%;
-    /* No background, border, padding - ChoicePanel handles visuals */
+    /* No background, border, padding - PanelRenderer handles visuals */
   }
 </style>

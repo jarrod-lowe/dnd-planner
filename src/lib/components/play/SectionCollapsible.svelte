@@ -1,8 +1,7 @@
 <script lang="ts">
   import { slide } from 'svelte/transition';
   import { t } from '$lib/i18n';
-  import ChoicePanel from './ChoicePanel.svelte';
-  import EffectPanel from './EffectPanel.svelte';
+  import PanelRenderer from './PanelRenderer.svelte';
   import PackedChoiceGroup from './PackedChoiceGroup.svelte';
   import type { Facts, AvailableRuleEntry } from '$lib/rules-engine';
   import type { ChoiceGroup } from '$lib/play/groupPackedChoices';
@@ -80,22 +79,18 @@
     <div class="section-collapsible__content" transition:slide={{ duration: 200 }}>
       {#each packedGroups as group (group.type === 'packed' ? group.leader.rule.id : group.entry.rule.id)}
         {#if group.type === 'single'}
-          {#if mode === 'effect'}
-            <EffectPanel
-              entry={group.entry}
-              deletable={deletableRuleIds?.has(group.entry.rule.id) ?? false}
-              onRemove={() => onRemoveEffect?.(group.entry.rule.id)}
-              {facts}
-            />
-          {:else}
-            <ChoicePanel
-              entry={group.entry}
-              {facts}
-              {activeAnnotations}
-              editable={false}
-              onTap={() => onChoiceTap(group.entry)}
-            />
-          {/if}
+          <PanelRenderer
+            entry={group.entry}
+            editable={mode === 'effect'}
+            {facts}
+            selections={group.entry.rule.selections ?? {}}
+            {activeAnnotations}
+            onTap={mode === 'choice' ? () => onChoiceTap(group.entry) : undefined}
+            onRemove={deletableRuleIds?.has(group.entry.rule.id)
+              ? () => onRemoveEffect?.(group.entry.rule.id)
+              : undefined}
+            removeLabel={mode === 'effect' ? 'play.effects.remove' : 'play.plan.remove'}
+          />
         {:else if group.type === 'packed'}
           <PackedChoiceGroup
             leader={group.leader}

@@ -33,7 +33,7 @@ describe('PlanColumn', () => {
       props: { items, onMoveUp, onMoveDown: vi.fn(), onRemove: vi.fn() }
     });
 
-    const upButtons = container.querySelectorAll('.choice-panel__button--move-up');
+    const upButtons = container.querySelectorAll('.panel-renderer__button--move-up');
     await fireEvent.click(upButtons[0]!);
 
     expect(onMoveUp).toHaveBeenCalledWith('inst-1');
@@ -46,7 +46,7 @@ describe('PlanColumn', () => {
     const { container } = render(PlanColumn, {
       props: { items, onMoveUp: vi.fn(), onMoveDown, onRemove: vi.fn() }
     });
-    const downButtons = container.querySelectorAll('.choice-panel__button--move-down');
+    const downButtons = container.querySelectorAll('.panel-renderer__button--move-down');
     await fireEvent.click(downButtons[0]!);
 
     expect(onMoveDown).toHaveBeenCalledWith('inst-1');
@@ -59,7 +59,7 @@ describe('PlanColumn', () => {
     const { container } = render(PlanColumn, {
       props: { items, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove }
     });
-    const removeButtons = container.querySelectorAll('.choice-panel__button--remove');
+    const removeButtons = container.querySelectorAll('.panel-renderer__button--remove');
     await fireEvent.click(removeButtons[0]!);
 
     expect(onRemove).toHaveBeenCalledWith('inst-1');
@@ -74,7 +74,7 @@ describe('PlanColumn', () => {
     const { container } = render(PlanColumn, {
       props: { items, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove: vi.fn() }
     });
-    const upButtons = container.querySelectorAll('.choice-panel__button--move-up');
+    const upButtons = container.querySelectorAll('.panel-renderer__button--move-up');
     expect((upButtons[0] as HTMLButtonElement).disabled).toBe(true);
     expect((upButtons[1] as HTMLButtonElement).disabled).toBe(false);
   });
@@ -86,7 +86,7 @@ describe('PlanColumn', () => {
     const { container } = render(PlanColumn, {
       props: { items, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove: vi.fn() }
     });
-    const downButtons = container.querySelectorAll('.choice-panel__button--move-down');
+    const downButtons = container.querySelectorAll('.panel-renderer__button--move-down');
     expect((downButtons[0] as HTMLButtonElement).disabled).toBe(false);
     expect((downButtons[1] as HTMLButtonElement).disabled).toBe(true);
   });
