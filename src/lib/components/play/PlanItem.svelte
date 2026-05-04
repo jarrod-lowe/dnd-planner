@@ -47,6 +47,7 @@
     entry={{ rule: item.rule, legal: !isIllegal, applicable: true, diagnostics }}
     editable={true}
     {facts}
+    selections={item.rule.selections ?? {}}
     {activeAnnotations}
     {onSelectionChange}
     {onRemove}

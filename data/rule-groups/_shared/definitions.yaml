@@ -1,7 +1,7 @@
 # Shared anchor definitions for rule-group YAML files.
 # Prepended before parsing so anchors are available cross-file.
 
-refs:
+sharedRefs:
   error-clear: &error-clear
     type: setClear
     target:

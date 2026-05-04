@@ -1005,6 +1005,9 @@
       "loadRuleGroups": "nuv DIvI' laHbe'",
       "loadEffects": "DIvI' DIvI' laHbe'",
       "saveEffects": "DIvI' pol laHbe'"
+    },
+    "information": {
+      "saveDc": "{{saveType}} DIvI' {{dc}}"
     }
   }
 }

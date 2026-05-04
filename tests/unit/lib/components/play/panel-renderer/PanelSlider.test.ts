@@ -153,4 +153,53 @@ describe('PanelRenderer - slider control', () => {
     });
     expect(container.querySelector('.panel-renderer__slider')).toBeTruthy();
   });
+
+  it('updates displayed value immediately during drag (local state)', async () => {
+    const entry = createSliderEntry();
+    const facts = { 'character.movement.remaining': 20, 'character.movement.total': 30 };
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts }
+    });
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+    const valueSpan = container.querySelector('.panel-renderer__slider-value') as HTMLSpanElement;
+
+    // Simulate dragging to 10
+    slider.value = '10';
+    await fireEvent.input(slider);
+
+    // The displayed text should immediately show 10
+    expect(valueSpan.textContent).toContain('10');
+  });
+
+  it('keeps each slider independent when multiple exist', () => {
+    // Two sliders: walk (distance) and secondary slider
+    const entry = createSliderEntry({
+      rule: {
+        ...createSliderEntry().rule,
+        ui: {
+          ...createSliderEntry().rule.ui,
+          secondaryControl: {
+            type: 'slider',
+            var: 'secondaryDistance',
+            max: { var: 'maxDistance' }
+          }
+        },
+        vars: {
+          ...createSliderEntry().rule.vars,
+          secondaryDistance: { default: { fact: 'character.movement.remaining' } }
+        }
+      } as Rule
+    });
+    // Primary slider has selection=5, secondary has no selection (defaults to fact=10)
+    const facts = { 'character.movement.remaining': 10, 'character.movement.total': 30 };
+    const selections = { distance: 5 };
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts, selections }
+    });
+    const sliders = container.querySelectorAll('input[type="range"]');
+    // Primary slider should show 5 (from selections)
+    expect(sliders[0].value).toBe('5');
+    // Secondary slider should show 10 (from facts, no selection)
+    expect(sliders[1].value).toBe('10');
+  });
 });

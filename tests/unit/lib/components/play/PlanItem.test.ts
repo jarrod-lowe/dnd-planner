@@ -262,4 +262,43 @@ describe('PlanItem', () => {
     // Old plan-item__actions should no longer exist
     expect(container.querySelector('.plan-item__actions')).toBeNull();
   });
+
+  // === Selections passthrough to PanelRenderer ===
+
+  it('passes rule selections to PanelRenderer so slider uses selection over facts', () => {
+    const item = createMockMovePlanItem();
+    // Simulate user selected distance=15 (stored in rule.selections)
+    item.rule.selections = { distance: 15 };
+    const facts: Facts = {
+      // facts say remaining is 25, but user chose 15
+      'character.movement.remaining': 25,
+      'character.movement.total': 30
+    };
+
+    const { container } = render(PlanItem, {
+      props: { item, facts, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove: vi.fn() }
+    });
+
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+    // Slider should show 15 (from selections), NOT 25 (from facts)
+    expect(slider.value).toBe('15');
+  });
+
+  it('slider shows selection value even when facts change', () => {
+    const item = createMockMovePlanItem();
+    item.rule.selections = { distance: 10 };
+    const facts: Facts = {
+      // Engine says movement remaining is now 0 after consuming, but user chose 10
+      'character.movement.remaining': 0,
+      'character.movement.total': 30
+    };
+
+    const { container } = render(PlanItem, {
+      props: { item, facts, onMoveUp: vi.fn(), onMoveDown: vi.fn(), onRemove: vi.fn() }
+    });
+
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+    // Slider should show 10 (from selections), NOT 0 (from facts after engine re-eval)
+    expect(slider.value).toBe('10');
+  });
 });

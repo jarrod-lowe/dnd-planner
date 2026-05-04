@@ -83,6 +83,7 @@
             entry={group.entry}
             editable={mode === 'effect'}
             {facts}
+            selections={group.entry.rule.selections ?? {}}
             {activeAnnotations}
             onTap={mode === 'choice' ? () => onChoiceTap(group.entry) : undefined}
             onRemove={deletableRuleIds?.has(group.entry.rule.id) ? () => onRemoveEffect?.(group.entry.rule.id) : undefined}

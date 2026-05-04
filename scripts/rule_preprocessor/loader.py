@@ -30,7 +30,7 @@ from rule_preprocessor.models import (
 
 ALLOWED_TOP_LEVEL_KEYS = {"ruleGroups", "definitions", "profiles", "expansions"}
 # Keys from shared definitions files that are used for YAML anchors only
-IGNORED_KEYS = {"refs"}
+IGNORED_KEYS = {"refs", "sharedRefs"}
 
 
 @dataclass

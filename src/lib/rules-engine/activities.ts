@@ -14,6 +14,7 @@ import type {
   RuleContext,
   SetClearActivity,
   SetAddActivity,
+  StringSetActivity,
   Target
 } from './types';
 import { isPhaseAfter } from './types';
@@ -102,6 +103,9 @@ export function executeActivity(activity: Activity, context: RuleContext): void 
     case 'numberSet':
       executeNumberSet(activity, context);
       break;
+    case 'stringSet':
+      executeStringSet(activity, context);
+      break;
     case 'numberIncrement':
       executeNumberIncrement(activity, context);
       break;
@@ -175,6 +179,24 @@ export function executeNumberSet(activity: NumberSetActivity, context: RuleConte
   }
   const value = resolveSource(activity.source, context.workingState, rule);
   setTargetValue(activity.target, value ?? 0, context);
+}
+
+export function executeStringSet(activity: StringSetActivity, context: RuleContext): void {
+  const value = resolveStringSource(activity.source) ?? '';
+  if (activity.target.fact !== undefined) {
+    context.workingState.facts[activity.target.fact] = value;
+  } else if (activity.target.var !== undefined) {
+    const rule = context.currentRule;
+    if (!rule) {
+      throw new Error('Cannot set var target without currentRule in context');
+    }
+    if (!rule.varsRuntime) {
+      rule.varsRuntime = {};
+    }
+    rule.varsRuntime[activity.target.var] = value;
+  } else {
+    throw new Error('Target must have either fact or var');
+  }
 }
 
 /**

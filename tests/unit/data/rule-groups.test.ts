@@ -25,6 +25,7 @@ interface RuleGroup {
 
 interface RuleGroupsFile {
   ruleGroups: RuleGroup[];
+  refs?: unknown;
 }
 
 /**

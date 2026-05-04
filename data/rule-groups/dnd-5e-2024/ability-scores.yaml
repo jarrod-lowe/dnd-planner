@@ -1,4 +1,28 @@
 # yaml-language-server: $schema=../schema.json
+refs:
+  skill-proficiency-options: &skill-proficiency-options
+    - value: 0.5
+      label: "○"
+      ariaLabel: play.choices.skillProficiency.half
+    - value: 1
+      label: "●"
+      ariaLabel: play.choices.skillProficiency.full
+    - value: 2
+      label: "●●"
+      ariaLabel: play.choices.skillProficiency.double
+
+  skill-proficiency-control: &skill-proficiency-control
+    type: select
+    var: level
+    options: *skill-proficiency-options
+
+  ability-score-control: &ability-score-control
+    type: slider
+    var: score
+    max: { var: maxValue }
+    min: { number: 0 }
+    step: 1
+
 ruleGroups:
   - id: ability-scores
     translations:
@@ -73,9 +97,7 @@ ruleGroups:
               ui:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.set-strength.name
-                primaryControl:
-                  type: slider
-                  var: score
+                primaryControl: *ability-score-control
               vars:
                 score:
                   capture: true
@@ -100,11 +122,15 @@ ruleGroups:
                       - str-values
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-strength.name
+                      primaryControl: *ability-score-control
                     vars:
                       score:
                         capture: true
                         default:
                           number: 10
+                      maxValue:
+                        default:
+                          number: 30
                     activities:
                       # Re-set str.value from the stored score
                       - type: numberSet
@@ -180,9 +206,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.set-dexterity.name
                 packBehind: set-strength
-                primaryControl:
-                  type: slider
-                  var: score
+                primaryControl: *ability-score-control
               vars:
                 score:
                   capture: true
@@ -207,11 +231,15 @@ ruleGroups:
                       - dex-values
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-dexterity.name
+                      primaryControl: *ability-score-control
                     vars:
                       score:
                         capture: true
                         default:
                           number: 10
+                      maxValue:
+                        default:
+                          number: 30
                     activities:
                       # Re-set dex.value from the stored score
                       - type: numberSet
@@ -287,9 +315,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.set-constitution.name
                 packBehind: set-strength
-                primaryControl:
-                  type: slider
-                  var: score
+                primaryControl: *ability-score-control
               vars:
                 score:
                   capture: true
@@ -314,11 +340,15 @@ ruleGroups:
                       - con-values
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-constitution.name
+                      primaryControl: *ability-score-control
                     vars:
                       score:
                         capture: true
                         default:
                           number: 10
+                      maxValue:
+                        default:
+                          number: 30
                     activities:
                       # Re-set con.value from the stored score
                       - type: numberSet
@@ -394,9 +424,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.set-intelligence.name
                 packBehind: set-strength
-                primaryControl:
-                  type: slider
-                  var: score
+                primaryControl: *ability-score-control
               vars:
                 score:
                   capture: true
@@ -421,11 +449,15 @@ ruleGroups:
                       - int-values
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-intelligence.name
+                      primaryControl: *ability-score-control
                     vars:
                       score:
                         capture: true
                         default:
                           number: 10
+                      maxValue:
+                        default:
+                          number: 30
                     activities:
                       # Re-set int.value from the stored score
                       - type: numberSet
@@ -501,9 +533,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.set-wisdom.name
                 packBehind: set-strength
-                primaryControl:
-                  type: slider
-                  var: score
+                primaryControl: *ability-score-control
               vars:
                 score:
                   capture: true
@@ -528,11 +558,15 @@ ruleGroups:
                       - wis-values
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-wisdom.name
+                      primaryControl: *ability-score-control
                     vars:
                       score:
                         capture: true
                         default:
                           number: 10
+                      maxValue:
+                        default:
+                          number: 30
                     activities:
                       # Re-set wis.value from the stored score
                       - type: numberSet
@@ -608,9 +642,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.set-charisma.name
                 packBehind: set-strength
-                primaryControl:
-                  type: slider
-                  var: score
+                primaryControl: *ability-score-control
               vars:
                 score:
                   capture: true
@@ -635,11 +667,15 @@ ruleGroups:
                       - cha-values
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-charisma.name
+                      primaryControl: *ability-score-control
                     vars:
                       score:
                         capture: true
                         default:
                           number: 10
+                      maxValue:
+                        default:
+                          number: 30
                     activities:
                       # Re-set cha.value from the stored score
                       - type: numberSet
@@ -1327,19 +1363,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-athletics.name
                 packBehind: proficiency-acrobatics
-                primaryControl:
-                  type: select
-                  var: level
-                  options:
-                    - value: 0.5
-                      label: "○"
-                      ariaLabel: play.choices.skillProficiency.half
-                    - value: 1
-                      label: "●"
-                      ariaLabel: play.choices.skillProficiency.full
-                    - value: 2
-                      label: "●●"
-                      ariaLabel: play.choices.skillProficiency.double
+                primaryControl: *skill-proficiency-control
               vars:
                 level:
                   capture: true
@@ -1369,6 +1393,7 @@ ruleGroups:
                     phase: early
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-athletics-proficiency.name
+                      primaryControl: *skill-proficiency-control
                     vars:
                       level:
                         capture: true
@@ -1435,19 +1460,7 @@ ruleGroups:
               ui:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-acrobatics.name
-                primaryControl:
-                  type: select
-                  var: level
-                  options:
-                    - value: 0.5
-                      label: "○"
-                      ariaLabel: play.choices.skillProficiency.half
-                    - value: 1
-                      label: "●"
-                      ariaLabel: play.choices.skillProficiency.full
-                    - value: 2
-                      label: "●●"
-                      ariaLabel: play.choices.skillProficiency.double
+                primaryControl: *skill-proficiency-control
               vars:
                 level:
                   capture: true
@@ -1477,6 +1490,7 @@ ruleGroups:
                     phase: early
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-acrobatics-proficiency.name
+                      primaryControl: *skill-proficiency-control
                     vars:
                       level:
                         capture: true
@@ -1544,19 +1558,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-animal-handling.name
                 packBehind: proficiency-acrobatics
-                primaryControl:
-                  type: select
-                  var: level
-                  options:
-                    - value: 0.5
-                      label: "○"
-                      ariaLabel: play.choices.skillProficiency.half
-                    - value: 1
-                      label: "●"
-                      ariaLabel: play.choices.skillProficiency.full
-                    - value: 2
-                      label: "●●"
-                      ariaLabel: play.choices.skillProficiency.double
+                primaryControl: *skill-proficiency-control
               vars:
                 level:
                   capture: true
@@ -1586,6 +1588,7 @@ ruleGroups:
                     phase: early
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-animal-handling-proficiency.name
+                      primaryControl: *skill-proficiency-control
                     vars:
                       level:
                         capture: true
@@ -1653,19 +1656,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-arcana.name
                 packBehind: proficiency-acrobatics
-                primaryControl:
-                  type: select
-                  var: level
-                  options:
-                    - value: 0.5
-                      label: "○"
-                      ariaLabel: play.choices.skillProficiency.half
-                    - value: 1
-                      label: "●"
-                      ariaLabel: play.choices.skillProficiency.full
-                    - value: 2
-                      label: "●●"
-                      ariaLabel: play.choices.skillProficiency.double
+                primaryControl: *skill-proficiency-control
               vars:
                 level:
                   capture: true
@@ -1695,6 +1686,7 @@ ruleGroups:
                     phase: early
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-arcana-proficiency.name
+                      primaryControl: *skill-proficiency-control
                     vars:
                       level:
                         capture: true
@@ -1762,19 +1754,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-deception.name
                 packBehind: proficiency-acrobatics
-                primaryControl:
-                  type: select
-                  var: level
-                  options:
-                    - value: 0.5
-                      label: "○"
-                      ariaLabel: play.choices.skillProficiency.half
-                    - value: 1
-                      label: "●"
-                      ariaLabel: play.choices.skillProficiency.full
-                    - value: 2
-                      label: "●●"
-                      ariaLabel: play.choices.skillProficiency.double
+                primaryControl: *skill-proficiency-control
               vars:
                 level:
                   capture: true
@@ -1804,6 +1784,7 @@ ruleGroups:
                     phase: early
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-deception-proficiency.name
+                      primaryControl: *skill-proficiency-control
                     vars:
                       level:
                         capture: true
@@ -1871,19 +1852,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-history.name
                 packBehind: proficiency-acrobatics
-                primaryControl:
-                  type: select
-                  var: level
-                  options:
-                    - value: 0.5
-                      label: "○"
-                      ariaLabel: play.choices.skillProficiency.half
-                    - value: 1
-                      label: "●"
-                      ariaLabel: play.choices.skillProficiency.full
-                    - value: 2
-                      label: "●●"
-                      ariaLabel: play.choices.skillProficiency.double
+                primaryControl: *skill-proficiency-control
               vars:
                 level:
                   capture: true
@@ -1913,6 +1882,7 @@ ruleGroups:
                     phase: early
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-history-proficiency.name
+                      primaryControl: *skill-proficiency-control
                     vars:
                       level:
                         capture: true
@@ -1980,19 +1950,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-insight.name
                 packBehind: proficiency-acrobatics
-                primaryControl:
-                  type: select
-                  var: level
-                  options:
-                    - value: 0.5
-                      label: "○"
-                      ariaLabel: play.choices.skillProficiency.half
-                    - value: 1
-                      label: "●"
-                      ariaLabel: play.choices.skillProficiency.full
-                    - value: 2
-                      label: "●●"
-                      ariaLabel: play.choices.skillProficiency.double
+                primaryControl: *skill-proficiency-control
               vars:
                 level:
                   capture: true
@@ -2022,6 +1980,7 @@ ruleGroups:
                     phase: early
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-insight-proficiency.name
+                      primaryControl: *skill-proficiency-control
                     vars:
                       level:
                         capture: true
@@ -2089,19 +2048,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-intimidation.name
                 packBehind: proficiency-acrobatics
-                primaryControl:
-                  type: select
-                  var: level
-                  options:
-                    - value: 0.5
-                      label: "○"
-                      ariaLabel: play.choices.skillProficiency.half
-                    - value: 1
-                      label: "●"
-                      ariaLabel: play.choices.skillProficiency.full
-                    - value: 2
-                      label: "●●"
-                      ariaLabel: play.choices.skillProficiency.double
+                primaryControl: *skill-proficiency-control
               vars:
                 level:
                   capture: true
@@ -2131,6 +2078,7 @@ ruleGroups:
                     phase: early
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-intimidation-proficiency.name
+                      primaryControl: *skill-proficiency-control
                     vars:
                       level:
                         capture: true
@@ -2198,19 +2146,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-investigation.name
                 packBehind: proficiency-acrobatics
-                primaryControl:
-                  type: select
-                  var: level
-                  options:
-                    - value: 0.5
-                      label: "○"
-                      ariaLabel: play.choices.skillProficiency.half
-                    - value: 1
-                      label: "●"
-                      ariaLabel: play.choices.skillProficiency.full
-                    - value: 2
-                      label: "●●"
-                      ariaLabel: play.choices.skillProficiency.double
+                primaryControl: *skill-proficiency-control
               vars:
                 level:
                   capture: true
@@ -2240,6 +2176,7 @@ ruleGroups:
                     phase: early
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-investigation-proficiency.name
+                      primaryControl: *skill-proficiency-control
                     vars:
                       level:
                         capture: true
@@ -2307,19 +2244,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-medicine.name
                 packBehind: proficiency-acrobatics
-                primaryControl:
-                  type: select
-                  var: level
-                  options:
-                    - value: 0.5
-                      label: "○"
-                      ariaLabel: play.choices.skillProficiency.half
-                    - value: 1
-                      label: "●"
-                      ariaLabel: play.choices.skillProficiency.full
-                    - value: 2
-                      label: "●●"
-                      ariaLabel: play.choices.skillProficiency.double
+                primaryControl: *skill-proficiency-control
               vars:
                 level:
                   capture: true
@@ -2349,6 +2274,7 @@ ruleGroups:
                     phase: early
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-medicine-proficiency.name
+                      primaryControl: *skill-proficiency-control
                     vars:
                       level:
                         capture: true
@@ -2416,19 +2342,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-nature.name
                 packBehind: proficiency-acrobatics
-                primaryControl:
-                  type: select
-                  var: level
-                  options:
-                    - value: 0.5
-                      label: "○"
-                      ariaLabel: play.choices.skillProficiency.half
-                    - value: 1
-                      label: "●"
-                      ariaLabel: play.choices.skillProficiency.full
-                    - value: 2
-                      label: "●●"
-                      ariaLabel: play.choices.skillProficiency.double
+                primaryControl: *skill-proficiency-control
               vars:
                 level:
                   capture: true
@@ -2458,6 +2372,7 @@ ruleGroups:
                     phase: early
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-nature-proficiency.name
+                      primaryControl: *skill-proficiency-control
                     vars:
                       level:
                         capture: true
@@ -2525,19 +2440,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-perception.name
                 packBehind: proficiency-acrobatics
-                primaryControl:
-                  type: select
-                  var: level
-                  options:
-                    - value: 0.5
-                      label: "○"
-                      ariaLabel: play.choices.skillProficiency.half
-                    - value: 1
-                      label: "●"
-                      ariaLabel: play.choices.skillProficiency.full
-                    - value: 2
-                      label: "●●"
-                      ariaLabel: play.choices.skillProficiency.double
+                primaryControl: *skill-proficiency-control
               vars:
                 level:
                   capture: true
@@ -2567,6 +2470,7 @@ ruleGroups:
                     phase: early
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-perception-proficiency.name
+                      primaryControl: *skill-proficiency-control
                     vars:
                       level:
                         capture: true
@@ -2634,19 +2538,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-performance.name
                 packBehind: proficiency-acrobatics
-                primaryControl:
-                  type: select
-                  var: level
-                  options:
-                    - value: 0.5
-                      label: "○"
-                      ariaLabel: play.choices.skillProficiency.half
-                    - value: 1
-                      label: "●"
-                      ariaLabel: play.choices.skillProficiency.full
-                    - value: 2
-                      label: "●●"
-                      ariaLabel: play.choices.skillProficiency.double
+                primaryControl: *skill-proficiency-control
               vars:
                 level:
                   capture: true
@@ -2676,6 +2568,7 @@ ruleGroups:
                     phase: early
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-performance-proficiency.name
+                      primaryControl: *skill-proficiency-control
                     vars:
                       level:
                         capture: true
@@ -2743,19 +2636,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-persuasion.name
                 packBehind: proficiency-acrobatics
-                primaryControl:
-                  type: select
-                  var: level
-                  options:
-                    - value: 0.5
-                      label: "○"
-                      ariaLabel: play.choices.skillProficiency.half
-                    - value: 1
-                      label: "●"
-                      ariaLabel: play.choices.skillProficiency.full
-                    - value: 2
-                      label: "●●"
-                      ariaLabel: play.choices.skillProficiency.double
+                primaryControl: *skill-proficiency-control
               vars:
                 level:
                   capture: true
@@ -2785,6 +2666,7 @@ ruleGroups:
                     phase: early
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-persuasion-proficiency.name
+                      primaryControl: *skill-proficiency-control
                     vars:
                       level:
                         capture: true
@@ -2852,19 +2734,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-religion.name
                 packBehind: proficiency-acrobatics
-                primaryControl:
-                  type: select
-                  var: level
-                  options:
-                    - value: 0.5
-                      label: "○"
-                      ariaLabel: play.choices.skillProficiency.half
-                    - value: 1
-                      label: "●"
-                      ariaLabel: play.choices.skillProficiency.full
-                    - value: 2
-                      label: "●●"
-                      ariaLabel: play.choices.skillProficiency.double
+                primaryControl: *skill-proficiency-control
               vars:
                 level:
                   capture: true
@@ -2894,6 +2764,7 @@ ruleGroups:
                     phase: early
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-religion-proficiency.name
+                      primaryControl: *skill-proficiency-control
                     vars:
                       level:
                         capture: true
@@ -2961,19 +2832,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-sleight-of-hand.name
                 packBehind: proficiency-acrobatics
-                primaryControl:
-                  type: select
-                  var: level
-                  options:
-                    - value: 0.5
-                      label: "○"
-                      ariaLabel: play.choices.skillProficiency.half
-                    - value: 1
-                      label: "●"
-                      ariaLabel: play.choices.skillProficiency.full
-                    - value: 2
-                      label: "●●"
-                      ariaLabel: play.choices.skillProficiency.double
+                primaryControl: *skill-proficiency-control
               vars:
                 level:
                   capture: true
@@ -3003,6 +2862,7 @@ ruleGroups:
                     phase: early
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-sleight-of-hand-proficiency.name
+                      primaryControl: *skill-proficiency-control
                     vars:
                       level:
                         capture: true
@@ -3070,19 +2930,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-stealth.name
                 packBehind: proficiency-acrobatics
-                primaryControl:
-                  type: select
-                  var: level
-                  options:
-                    - value: 0.5
-                      label: "○"
-                      ariaLabel: play.choices.skillProficiency.half
-                    - value: 1
-                      label: "●"
-                      ariaLabel: play.choices.skillProficiency.full
-                    - value: 2
-                      label: "●●"
-                      ariaLabel: play.choices.skillProficiency.double
+                primaryControl: *skill-proficiency-control
               vars:
                 level:
                   capture: true
@@ -3112,6 +2960,7 @@ ruleGroups:
                     phase: early
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-stealth-proficiency.name
+                      primaryControl: *skill-proficiency-control
                     vars:
                       level:
                         capture: true
@@ -3179,19 +3028,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-survival.name
                 packBehind: proficiency-acrobatics
-                primaryControl:
-                  type: select
-                  var: level
-                  options:
-                    - value: 0.5
-                      label: "○"
-                      ariaLabel: play.choices.skillProficiency.half
-                    - value: 1
-                      label: "●"
-                      ariaLabel: play.choices.skillProficiency.full
-                    - value: 2
-                      label: "●●"
-                      ariaLabel: play.choices.skillProficiency.double
+                primaryControl: *skill-proficiency-control
               vars:
                 level:
                   capture: true
@@ -3221,6 +3058,7 @@ ruleGroups:
                     phase: early
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-survival-proficiency.name
+                      primaryControl: *skill-proficiency-control
                     vars:
                       level:
                         capture: true

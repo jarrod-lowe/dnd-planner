@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import SectionCollapsible from '$lib/components/play/SectionCollapsible.svelte';
-import type { AvailableRuleEntry } from '$lib/rules-engine';
+import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
 import type { ChoiceGroup } from '$lib/play/groupPackedChoices';
 
 const createMockEntry = (
@@ -97,5 +97,56 @@ describe('SectionCollapsible', () => {
     await fireEvent.click(deleteButton!);
 
     expect(onRemoveEffect).toHaveBeenCalledWith('rule-1');
+  });
+
+  it('passes rule selections to PanelRenderer for effects', () => {
+    // Half-proficiency (0.5) selected, but default is 1
+    const entryWithSelections: AvailableRuleEntry = {
+      rule: {
+        id: 'proficiency-athletics',
+        description: 'Athletics',
+        activities: [],
+        ui: {
+          section: 'proficiency',
+          name: 'Athletics',
+          primaryControl: {
+            type: 'select',
+            var: 'level',
+            options: [
+              { value: 0.5, label: '○' },
+              { value: 1, label: '●' },
+              { value: 2, label: '●●' }
+            ]
+          }
+        },
+        vars: {
+          level: { default: { number: 1 } }
+        },
+        selections: { level: 0.5 }
+      } as Rule,
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    };
+    const groupWithSelections: ChoiceGroup = {
+      type: 'single',
+      entry: entryWithSelections
+    };
+
+    const { container } = render(SectionCollapsible, {
+      props: {
+        section: 'proficiency',
+        packedGroups: [groupWithSelections],
+        hasLegalEntries: true,
+        facts: {},
+        onChoiceTap: vi.fn(),
+        mode: 'effect'
+      }
+    });
+
+    // The ○ option (value=0.5) should be marked active since selections.level=0.5
+    const activeOption = container.querySelector('.panel-renderer__radio-option--active');
+    expect(activeOption).toBeTruthy();
+    expect(activeOption?.textContent?.trim()).toBe('○');
   });
 });

@@ -132,7 +132,7 @@ ruleGroups:
                   - type: text
                     label: play.information.saveDc
                     labelValues:
-                      saveType: { string: WIS }
+                      saveType: { fact: spellcasting.saveAbility }
                       dc: { fact: spellcasting.saveDC }
               vars:
                 slotLevel:
