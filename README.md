@@ -357,6 +357,7 @@ The architecture supports:
   - Check rulegroup requires for cycles
   - Also check they are correct
 - Thunderous Smite & Divine Smite: Should depend specifically on MELEE or UNARMED attacks
+  - Javelin should only mention them when in 5ft mode
 - Fix HP Calculation
 - Feat: Savage Attack
 - Increase {skill} needs illegal marker in Planned column
