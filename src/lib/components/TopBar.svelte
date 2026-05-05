@@ -17,6 +17,8 @@
     showManageRules?: boolean;
     onViewFacts?: () => void;
     showViewFacts?: boolean;
+    onDownloadCharacter?: () => void;
+    showDownloadCharacter?: boolean;
   }
 
   let {
@@ -28,7 +30,9 @@
     onManageRules,
     showManageRules = false,
     onViewFacts,
-    showViewFacts = false
+    showViewFacts = false,
+    onDownloadCharacter,
+    showDownloadCharacter = false
   }: Props = $props();
 </script>
 
@@ -80,6 +84,8 @@
       {showManageRules}
       {onViewFacts}
       {showViewFacts}
+      {onDownloadCharacter}
+      {showDownloadCharacter}
     />
   </nav>
 </header>

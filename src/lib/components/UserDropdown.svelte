@@ -15,6 +15,8 @@
     showManageRules?: boolean;
     onViewFacts?: () => void;
     showViewFacts?: boolean;
+    onDownloadCharacter?: () => void;
+    showDownloadCharacter?: boolean;
   }
 
   let {
@@ -24,7 +26,9 @@
     onManageRules,
     showManageRules = false,
     onViewFacts,
-    showViewFacts = false
+    showViewFacts = false,
+    onDownloadCharacter,
+    showDownloadCharacter = false
   }: Props = $props();
 
   // Generate Gravatar URL with MD5 hash of email
@@ -54,6 +58,11 @@
 
   function handleViewFacts() {
     onViewFacts?.();
+    closeMenu();
+  }
+
+  function handleDownloadCharacter() {
+    onDownloadCharacter?.();
     closeMenu();
   }
 
@@ -145,6 +154,26 @@
           <polyline points="10 9 9 9 8 9" />
         </svg>
         {$t('facts.viewTitle')}
+      </button>
+
+      <div class="user-dropdown__divider" aria-hidden="true"></div>
+    {/if}
+
+    {#if showDownloadCharacter && onDownloadCharacter}
+      <button type="button" class="user-dropdown__menu-item" onclick={handleDownloadCharacter}>
+        <svg
+          class="user-dropdown__menu-item-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+        {$t('character.download')}
       </button>
 
       <div class="user-dropdown__divider" aria-hidden="true"></div>
@@ -259,7 +288,7 @@
     position: absolute;
     top: calc(100% + var(--spacing-sm));
     right: 0;
-    min-width: 14rem;
+    min-width: 15rem;
     background: var(--md-sys-color-surface-container);
     border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: var(--radius-lg);

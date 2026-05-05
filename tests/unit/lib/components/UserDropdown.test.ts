@@ -9,7 +9,8 @@ const translations: Record<string, string> = {
   'auth.logout': 'Logout',
   'auth.version': 'Version',
   'rules.manageTitle': 'Manage Rules',
-  'facts.viewTitle': 'View Facts'
+  'facts.viewTitle': 'View Facts',
+  'character.download': 'Download Character'
 };
 
 vi.mock('$lib/i18n', () => ({
@@ -154,5 +155,66 @@ describe('UserDropdown', () => {
     viewFactsButton?.click();
 
     expect(onViewFacts).toHaveBeenCalledOnce();
+  });
+
+  it('shows Download Character when showDownloadCharacter is true', () => {
+    mount(UserDropdown, {
+      target: container,
+      props: {
+        email: 'test@example.com',
+        onLogout: vi.fn(),
+        version: 'v1.0.0',
+        showDownloadCharacter: true,
+        onDownloadCharacter: vi.fn()
+      }
+    });
+
+    const details = container.querySelector('details') as HTMLDetailsElement;
+    if (details) details.open = true;
+
+    expect(container.textContent).toContain('Download Character');
+  });
+
+  it('hides Download Character when showDownloadCharacter is false', () => {
+    mount(UserDropdown, {
+      target: container,
+      props: {
+        email: 'test@example.com',
+        onLogout: vi.fn(),
+        version: 'v1.0.0',
+        showDownloadCharacter: false
+      }
+    });
+
+    const details = container.querySelector('details') as HTMLDetailsElement;
+    if (details) details.open = true;
+
+    expect(container.textContent).not.toContain('Download Character');
+  });
+
+  it('calls onDownloadCharacter when Download Character is clicked', () => {
+    const onDownloadCharacter = vi.fn();
+
+    mount(UserDropdown, {
+      target: container,
+      props: {
+        email: 'test@example.com',
+        onLogout: vi.fn(),
+        version: 'v1.0.0',
+        showDownloadCharacter: true,
+        onDownloadCharacter
+      }
+    });
+
+    const details = container.querySelector('details') as HTMLDetailsElement;
+    if (details) details.open = true;
+
+    const buttons = container.querySelectorAll('button');
+    const downloadButton = Array.from(buttons).find((b) =>
+      b.textContent?.includes('Download Character')
+    );
+    downloadButton?.click();
+
+    expect(onDownloadCharacter).toHaveBeenCalledOnce();
   });
 });
