@@ -139,7 +139,8 @@
       showDownloadCharacter={!!characterStore.state.selectedCharacter &&
         !manageRulesActive &&
         !editCustomRulesActive &&
-        !viewFactsActive}
+        !viewFactsActive &&
+        !playStore.state.isLoadingRuleGroups}
       onDownloadCharacter={handleDownloadCharacter}
     />
     <main id="main-content" class="app-layout__body">
