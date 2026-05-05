@@ -1,0 +1,33 @@
+name: 'Oath of Redemption level 4 - no new features'
+description: >
+  A level 4 Oath of Redemption paladin retains all level 3 abilities.
+  LoH pool is 20 (5 per level), divinity unchanged at 2, spell slots unchanged at 3.
+ruleGroups:
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/action-economy
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divinity
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-oath-redemption-level3
+  - class-paladin/class-paladin-level4
+  - class-paladin/class-paladin-oath-redemption-level4
+steps:
+  - evaluate:
+      assert:
+        facts:
+          hp.max: 28
+          hp.current: 28
+          layOnHands.pool.total: 20
+          layOnHands.pool.remaining: 20
+          divinity.total: 2
+          divinity.remaining: 2
+          spellcasting.slots.level1.total: 3
+          spellcasting.slots.level1.remaining: 3
+          hitDie.d10.total: 4
+        offers:
+          exists:
+            - rebuke-the-violent
+            - emissary-of-peace

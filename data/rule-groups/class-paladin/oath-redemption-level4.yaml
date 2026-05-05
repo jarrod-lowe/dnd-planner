@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: class-paladin-oath-redemption-level4
+    requires:
+      - class-paladin-level4
+      - class-paladin-oath-redemption-level3
+    translations:
+      en:
+        name: Oath of Redemption Level 4
+        description: >
+          Paladin Oath of Redemption features at level 4. No new subclass
+          features at this level.
+        keywords: [paladin, oath, redemption, level4]
+      en-x-tlh:
+        name: Oath of Redemption Level 4
+        description: >
+          Paladin Oath of Redemption level 4. Chu' DIvI' DIllI'be'.
+        keywords: [paladin, oath, redemption, level4]
+    rules: []

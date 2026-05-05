@@ -1,0 +1,67 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: class-paladin-level4
+    requires:
+      - class-paladin-level3
+    translations:
+      en:
+        name: Paladin Level 4
+        description: Paladin class features at level 4, including an additional hit die and expanded Lay on Hands pool
+        keywords: [paladin, class, level4]
+      en-x-tlh:
+        name: Paladin Level 4
+        description: Paladin Segh level 4, ghop Du chel
+        keywords: [paladin, segh, level4]
+    rules:
+      # Hit Die - Level 4 Paladin adds 1d10
+      - id: paladin-level4-hit-die
+        phase: early
+        group:
+          - hit-die-base
+        activities:
+          - type: numberIncrement
+            target:
+              fact: hitDie.d10.total
+            source:
+              number: 1
+
+      # HP - Level 4 Paladin adds average d10 (6) + captured CON modifier at level-up time
+      - id: paladin-level4-hp
+        phase: normal
+        after:
+          - group: hp-total
+        group:
+          - hp-set
+        vars:
+          conAtLevel:
+            capture: true
+            default:
+              fact: con.modifier
+        activities:
+          - type: numberIncrement
+            target:
+              fact: hp.max
+            source:
+              number: 6
+          - type: numberIncrement
+            target:
+              fact: hp.max
+            source:
+              var: conAtLevel
+
+      # Lay on Hands Pool - Level 4 Paladin adds 5 more points
+      - id: paladin-level4-lay-on-hands-pool
+        phase: early
+        group:
+          - loh-pool-set
+        activities:
+          - type: numberIncrement
+            target:
+              fact: layOnHands.pool.total
+            source:
+              number: 5
+          - type: numberIncrement
+            target:
+              fact: layOnHands.pool.remaining
+            source:
+              number: 5
