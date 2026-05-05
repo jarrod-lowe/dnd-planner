@@ -131,4 +131,33 @@ describe('TopBar', () => {
       expect(backButton.tagName).toBe('BUTTON');
     });
   });
+
+  describe('download character props', () => {
+    it('mounts without error when download props are provided', () => {
+      expect(() => {
+        mount(TopBar, {
+          target: container,
+          props: {
+            email: 'test@example.com',
+            onLogout: vi.fn(),
+            selectedCharacter: mockCharacter,
+            showDownloadCharacter: true,
+            onDownloadCharacter: vi.fn()
+          }
+        });
+      }).not.toThrow();
+    });
+
+    it('mounts without error when download props are omitted', () => {
+      expect(() => {
+        mount(TopBar, {
+          target: container,
+          props: {
+            email: 'test@example.com',
+            onLogout: vi.fn()
+          }
+        });
+      }).not.toThrow();
+    });
+  });
 });

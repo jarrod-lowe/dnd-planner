@@ -10,6 +10,7 @@
   import ViewFactsMode from '$lib/components/character/ViewFactsMode.svelte';
   import EditCustomRules from '$lib/components/character/EditCustomRules.svelte';
   import { playStore } from '$lib/play/playStore.svelte';
+  import { buildCharacterExport } from '$lib/character/exportCharacter';
   import { getCache } from '$lib/rules/ruleGroupCache.svelte';
   import { SvelteMap } from 'svelte/reactivity';
   import { t } from '$lib/i18n';
@@ -69,6 +70,28 @@
     createError = null;
   }
 
+  function handleDownloadCharacter() {
+    const character = characterStore.state.selectedCharacter;
+    if (!character) return;
+
+    const payload = buildCharacterExport(
+      character,
+      playStore.state.ruleGroupIds,
+      playStore.state.effects,
+      playStore.state.ruleGroupRulesMap
+    );
+    const json = JSON.stringify(payload, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${character.name.replace(/[/\\?%*:|"<>]/g, '_').substring(0, 200)}.json`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
+  }
+
   const canCreateCharacter = $derived(authStore.hasGroup('MayCreateCharacters'));
 </script>
 
@@ -113,6 +136,13 @@
       onViewFacts={() => {
         viewFactsActive = true;
       }}
+      showDownloadCharacter={!!characterStore.state.selectedCharacter &&
+        !manageRulesActive &&
+        !editCustomRulesActive &&
+        !viewFactsActive &&
+        !playStore.state.isLoadingRuleGroups &&
+        !playStore.state.ruleGroupError}
+      onDownloadCharacter={handleDownloadCharacter}
     />
     <main id="main-content" class="app-layout__body">
       {#if characterStore.state.selectedCharacter}

@@ -790,7 +790,8 @@
     "deleteConfirm": "Are you sure you want to delete {name}?",
     "deleteWarning": "This action cannot be undone.",
     "deleting": "Deleting...",
-    "deleteError": "Failed to delete character. Please try again."
+    "deleteError": "Failed to delete character. Please try again.",
+    "download": "Download Character"
   },
   "species": {
     "label": "Species",

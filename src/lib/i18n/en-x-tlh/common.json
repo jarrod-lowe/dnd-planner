@@ -790,7 +790,8 @@
     "deleteConfirm": "{name} Qaw' net DaneH'a'?",
     "deleteWarning": "vam choqHa'lu'be'.",
     "deleting": "Qaw'lI'...",
-    "deleteError": "nuv Qaw'laHbe'. yInIDqa'."
+    "deleteError": "nuv Qaw'laHbe'. yInIDqa'.",
+    "download": "nuv Suq"
   },
   "species": {
     "label": "Segh",
