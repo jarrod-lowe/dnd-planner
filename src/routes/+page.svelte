@@ -140,7 +140,8 @@
         !manageRulesActive &&
         !editCustomRulesActive &&
         !viewFactsActive &&
-        !playStore.state.isLoadingRuleGroups}
+        !playStore.state.isLoadingRuleGroups &&
+        !playStore.state.ruleGroupError}
       onDownloadCharacter={handleDownloadCharacter}
     />
     <main id="main-content" class="app-layout__body">
