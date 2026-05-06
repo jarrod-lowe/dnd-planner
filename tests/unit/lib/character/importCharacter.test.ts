@@ -2,12 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { validateCharacterImport, importCharacter } from '$lib/character/importCharacter';
 import type { Rule } from '$lib/rules-engine';
 
-const availableGroups = new Set([
-  'dnd-5e-2024',
-  'species-human',
-  'class-paladin',
-  'class-fighter'
-]);
+const availableGroups = new Set(['dnd-5e-2024', 'species-human', 'class-paladin', 'class-fighter']);
 
 describe('validateCharacterImport', () => {
   it('rejects JSON without schemaVersion', () => {
@@ -144,10 +139,7 @@ describe('validateCharacterImport', () => {
   });
 
   it('collects multiple errors at once', () => {
-    const result = validateCharacterImport(
-      { schemaVersion: 2 },
-      availableGroups
-    );
+    const result = validateCharacterImport({ schemaVersion: 2 }, availableGroups);
 
     expect(result.valid).toBe(false);
     expect(result.errors!.length).toBeGreaterThanOrEqual(3);
@@ -161,7 +153,14 @@ describe('importCharacter', () => {
     ruleGroups: ['dnd-5e-2024', 'species-human'],
     effects: []
   };
-  const defaultAssigned = ['turn-rest', 'action-economy', 'proficiency', 'movement', 'free-actions', 'custom-char-new'];
+  const defaultAssigned = [
+    'turn-rest',
+    'action-economy',
+    'proficiency',
+    'movement',
+    'free-actions',
+    'custom-char-new'
+  ];
 
   function createMockDeps(assigned: string[] = []) {
     return {

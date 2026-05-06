@@ -196,7 +196,12 @@
       </h2>
 
       {#if onImport}
-        <div class="dialog__mode-toggle" role="tablist" aria-label="Dialog mode" onkeydown={handleTabKeydown}>
+        <div
+          class="dialog__mode-toggle"
+          role="tablist"
+          aria-label="Dialog mode"
+          onkeydown={handleTabKeydown}
+        >
           <button
             type="button"
             role="tab"
@@ -245,11 +250,7 @@
 
           <label class="dialog__label">
             {$t('species.label')}
-            <select
-              class="dialog__select"
-              bind:value={selectedSpecies}
-              disabled={isCreating}
-            >
+            <select class="dialog__select" bind:value={selectedSpecies} disabled={isCreating}>
               {#each SPECIES_OPTIONS as species (species)}
                 <option value={species}>{$t(`species.${species}`)}</option>
               {/each}
