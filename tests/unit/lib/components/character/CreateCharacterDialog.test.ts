@@ -6,6 +6,7 @@ import CreateCharacterDialog from '$lib/components/character/CreateCharacterDial
 // English translations for testing
 const translations: Record<string, string> = {
   'character.enterName': 'Enter character name',
+  'character.createNew': 'Create New Character',
   'character.create': 'Create',
   'character.cancel': 'Cancel',
   'character.creating': 'Creating...',
@@ -62,7 +63,7 @@ describe('CreateCharacterDialog', () => {
     });
 
     expect(container.querySelector('[role="dialog"]')).toBeTruthy();
-    expect(container.textContent).toContain('Enter character name');
+    expect(container.textContent).toContain('Create New Character');
   });
 
   it('has proper ARIA attributes', () => {

@@ -72,6 +72,7 @@
   {#if canCreateCharacter}
     <button
       type="button"
+      id="create-character-btn"
       class="select-character-mode__create-button"
       onclick={() => onCreateCharacter()}
     >

@@ -11,12 +11,16 @@
   import EditCustomRules from '$lib/components/character/EditCustomRules.svelte';
   import { playStore } from '$lib/play/playStore.svelte';
   import { buildCharacterExport } from '$lib/character/exportCharacter';
-  import { getCache } from '$lib/rules/ruleGroupCache.svelte';
+  import { validateCharacterImport, importCharacter } from '$lib/character/importCharacter';
+  import { getCache, ensureCached } from '$lib/rules/ruleGroupCache.svelte';
+  import { apiGet, apiPost } from '$lib/api/client';
   import { SvelteMap } from 'svelte/reactivity';
-  import { t } from '$lib/i18n';
+  import { get } from 'svelte/store';
+  import { t, locale } from '$lib/i18n';
   const title = $derived($t('app.title'));
   let showDialog = $state(false);
   let isCreating = $state(false);
+  let isImporting = $state(false);
   let createError = $state<string | null>(null);
   let hasLoadedCharacters = $state(false);
   let manageRulesActive = $state(false);
@@ -68,6 +72,64 @@
 
   function handleClearCreateError() {
     createError = null;
+  }
+
+  async function handleImportCharacter(parsedJson: unknown, chosenName: string) {
+    isImporting = true;
+    createError = null;
+    try {
+      const rawRuleGroups = (parsedJson as Record<string, unknown>)?.ruleGroups;
+      if (Array.isArray(rawRuleGroups)) {
+        const currentLocale = get(locale);
+        const cached = await ensureCached(rawRuleGroups as string[], currentLocale);
+        const availableIds = new Set(cached.keys());
+        const validation = validateCharacterImport(parsedJson, availableIds);
+        if (!validation.valid) {
+          createError = validation.errors!.join(' ');
+          return;
+        }
+
+        const characterId = await importCharacter(validation.data!, chosenName, {
+          createCharacter: async (name, species) => {
+            await characterStore.createCharacter(name, species);
+            const char = characterStore.state.selectedCharacter;
+            if (!char) throw new Error('Character creation failed');
+            return { characterId: char.characterId };
+          },
+          fetchAssignedRuleGroups: async (cid) => {
+            const res = await apiGet(`/api/characters/${cid}/rule-groups`);
+            if (!res.ok) throw new Error(`Failed to fetch rule groups: ${res.status}`);
+            const { ruleGroups } = await res.json();
+            return ruleGroups as string[];
+          },
+          assignRuleGroup: async (cid, ruleGroupId) => {
+            const res = await apiPost(`/api/characters/${cid}/rule-groups`, { ruleGroupId });
+            if (!res.ok && res.status !== 409) throw new Error(`Assign failed: ${res.status}`);
+          },
+          updateCustomRules: async (cid, rules) => {
+            const res = await apiPost(`/api/rule-groups/custom-${cid}`, { rules });
+            if (!res.ok) throw new Error(`Save custom rules failed: ${res.status}`);
+          },
+          saveEffects: async (cid, effects) => {
+            const res = await apiPost(`/api/characters/${cid}/effects`, {
+              effects: JSON.stringify(effects)
+            });
+            if (!res.ok) throw new Error(`Save effects failed: ${res.status}`);
+          }
+        });
+
+        await playStore.loadRuleGroups(characterId);
+      } else {
+        createError = $t('character.importErrorMissingRuleGroups');
+        return;
+      }
+
+      showDialog = false;
+    } catch {
+      createError = $t('character.importError');
+    } finally {
+      isImporting = false;
+    }
   }
 
   function handleDownloadCharacter() {
@@ -198,10 +260,13 @@
   <CreateCharacterDialog
     isOpen={showDialog}
     {isCreating}
+    {isImporting}
     onCreate={handleCreateCharacter}
+    onImport={handleImportCharacter}
     onClose={() => {
       showDialog = false;
       createError = null;
+      document.getElementById('create-character-btn')?.focus();
     }}
     errorMessage={createError}
     onClearError={handleClearCreateError}

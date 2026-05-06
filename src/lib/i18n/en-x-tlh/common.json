@@ -791,7 +791,19 @@
     "deleteWarning": "vam choqHa'lu'be'.",
     "deleting": "Qaw'lI'...",
     "deleteError": "nuv Qaw'laHbe'. yInIDqa'.",
-    "download": "nuv Suq"
+    "download": "nuv Suq",
+    "modeCreate": "chenmoH",
+    "modeImport": "Suq",
+    "importTitle": "nuv Suq",
+    "importSelectFile": "JSON file yIwIv",
+    "importing": "SuqlI'...",
+    "importError": "nuv SuqlaHbe'.",
+    "importInvalidVersion": "De' mI' DeSHa'.",
+    "importInvalidJson": "JSON De' DeSHa'.",
+    "importMissingRuleGroups": "DIvI' chab lutu'lu'be': {groups}",
+    "importErrorMissingName": "pong lutu'lu'be' ghap DeSHa'",
+    "importErrorMissingSpecies": "Segh lutu'lu'be' ghap DeSHa'",
+    "importErrorMissingRuleGroups": "DIvI' chab lutu'lu'be' ghap DeSHa'"
   },
   "species": {
     "label": "Segh",

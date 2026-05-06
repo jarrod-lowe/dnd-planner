@@ -791,7 +791,19 @@
     "deleteWarning": "This action cannot be undone.",
     "deleting": "Deleting...",
     "deleteError": "Failed to delete character. Please try again.",
-    "download": "Download Character"
+    "download": "Download Character",
+    "modeCreate": "Create",
+    "modeImport": "Import",
+    "importTitle": "Import Character",
+    "importSelectFile": "Select JSON file",
+    "importing": "Importing...",
+    "importError": "Failed to import character.",
+    "importInvalidVersion": "Unsupported file format.",
+    "importInvalidJson": "Invalid JSON file.",
+    "importMissingRuleGroups": "Missing rule groups: {groups}",
+    "importErrorMissingName": "Missing or empty name",
+    "importErrorMissingSpecies": "Missing or empty species",
+    "importErrorMissingRuleGroups": "Missing or invalid rule groups"
   },
   "species": {
     "label": "Species",
