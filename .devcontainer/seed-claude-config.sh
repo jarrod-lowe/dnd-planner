@@ -39,4 +39,5 @@ if [[ -f /home/vscode/.gitconfig ]]; then
   git config --file /home/vscode/.gitconfig gpg.ssh.program /usr/bin/ssh-keygen
 fi
 
+touch /workspaces/dnd-planner/.claude/settings.json
 jq '.tools.shell.allow = ["*"] | .tools.shell.enabled = true' /workspaces/dnd-planner/.claude/settings.json > /tmp/$$.json && mv /tmp/$$.json /workspaces/dnd-planner/.claude/settings.json
