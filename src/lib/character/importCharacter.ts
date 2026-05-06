@@ -8,44 +8,49 @@ export interface CharacterImport {
   effects: Rule[];
 }
 
+export interface ImportValidationError {
+  code: string;
+  params?: Record<string, string>;
+}
+
 export interface ImportValidationResult {
   valid: boolean;
   data?: CharacterImport;
-  errors?: string[];
+  errors?: ImportValidationError[];
 }
 
 export function validateCharacterImport(
   raw: unknown,
   availableRuleGroupIds: Set<string>
 ): ImportValidationResult {
-  const errors: string[] = [];
+  const errors: ImportValidationError[] = [];
 
   if (typeof raw !== 'object' || raw === null) {
-    return { valid: false, errors: ['Invalid JSON: expected an object'] };
+    return { valid: false, errors: [{ code: 'importInvalidJson' }] };
   }
 
   const obj = raw as Record<string, unknown>;
 
   if (obj.schemaVersion !== 1) {
-    errors.push('Unsupported schema version: expected 1');
+    errors.push({ code: 'importInvalidVersion' });
   }
 
   if (typeof obj.name !== 'string' || obj.name.trim().length === 0) {
-    errors.push('Missing or empty name');
+    errors.push({ code: 'importErrorMissingName' });
   }
 
   if (typeof obj.species !== 'string' || obj.species.trim().length === 0) {
-    errors.push('Missing or empty species');
+    errors.push({ code: 'importErrorMissingSpecies' });
   }
 
   if (!Array.isArray(obj.ruleGroups)) {
-    errors.push('Missing or invalid ruleGroups: expected an array');
+    errors.push({ code: 'importErrorMissingRuleGroups' });
   } else {
     const missing = obj.ruleGroups.filter(
       (id) => typeof id !== 'string' || !availableRuleGroupIds.has(id)
     ) as string[];
     if (missing.length > 0) {
-      errors.push(`Unknown rule groups: ${missing.join(', ')}`);
+      errors.push({ code: 'importMissingRuleGroups', params: { groups: missing.join(', ') } });
     }
   }
 

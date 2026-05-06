@@ -85,7 +85,9 @@
         const availableIds = new Set(cached.keys());
         const validation = validateCharacterImport(parsedJson, availableIds);
         if (!validation.valid) {
-          createError = validation.errors!.join(' ');
+          createError = validation
+            .errors!.map((e) => $t(`character.${e.code}`, e.params))
+            .join(' ');
           return;
         }
 

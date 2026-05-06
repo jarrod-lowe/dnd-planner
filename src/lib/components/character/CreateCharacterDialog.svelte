@@ -232,6 +232,7 @@
       {/if}
 
       <div
+        class="dialog__content"
         role="tabpanel"
         id="dialog-tabpanel"
         aria-labelledby={activeMode === 'create' ? 'tab-create' : 'tab-import'}
@@ -476,6 +477,12 @@
   .dialog__file-input:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  .dialog__content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
   }
 
   .dialog__error {

@@ -80,7 +80,12 @@ describe('validateCharacterImport', () => {
 
     expect(result.valid).toBe(false);
     expect(result.errors).toBeDefined();
-    expect(result.errors!.some((e) => e.includes('nonexistent-pack'))).toBe(true);
+    expect(
+      result.errors!.some(
+        (e) =>
+          e.code === 'importMissingRuleGroups' && e.params?.groups?.includes('nonexistent-pack')
+      )
+    ).toBe(true);
   });
 
   it('accepts valid JSON with all required fields', () => {
