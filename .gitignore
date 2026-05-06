@@ -36,3 +36,6 @@ static/data/
 
 # Generated rule groups (from preprocessor)
 generated/
+
+# Claude Code config
+.claude/

@@ -9,13 +9,14 @@
     "--env-file=.devcontainer/.env"
   ],
   "mounts": [
-    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,readonly",
+    "source=${localEnv:HOME}/.claude,target=/mnt/claude-host-config,type=bind,readonly",
     "source=/run/host-services/ssh-auth.sock,target=/run/host-services/ssh-auth.sock,type=bind",
-    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,readonly"
+    "source=${localEnv:HOME}/.gitconfig,target=/mnt/host-gitconfig,type=bind,readonly"
   ],
   "remoteEnv": {
     "SSH_AUTH_SOCK": "/run/host-services/ssh-auth.sock",
-    "GIT_CONFIG_GLOBAL": "/home/vscode/.gitconfig-local"
+    "CLAUDE_CONFIG_DIR": "/workspaces/dnd-planner/.claude",
+    "CLAUDE_HOST_CONFIG_STAGING": "/mnt/claude-host-config"
   },
   "initializeCommand": ".devcontainer/fetch-creds.sh",
   "features": {
@@ -37,7 +38,7 @@
     }
   },
   "postCreateCommand": "pnpm install && pnpm exec playwright install chromium && rm -rf .venv && python3 -m venv .venv && .venv/bin/pip install -q -r scripts/requirements.txt && npm install -g @anthropic-ai/claude-code",
-  "postStartCommand": "mkdir -p ~/.claude/projects && ln -sf ~/.claude/projects/-Users-jarrod-git-dnd-planner ~/.claude/projects/-workspaces-dnd-planner || true && printf '[include]\\n  path = /home/vscode/.gitconfig\\n[gpg \"ssh\"]\\n  program = ssh-keygen\\n' > ~/.gitconfig-local",
+  "postStartCommand": ".devcontainer/seed-claude-config.sh",
   "forwardPorts": [5173],
   "customizations": {
     "vscode": {
