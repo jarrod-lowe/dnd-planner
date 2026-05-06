@@ -2,6 +2,7 @@
 tfplan
 .apply
 .stamp
+.pnpm-store
 terraform/environment/github/terraform.tfvars
 terraform/environment/test/terraform.tfvars
 terraform/environment/test/output.json
@@ -35,3 +36,6 @@ static/data/
 
 # Generated rule groups (from preprocessor)
 generated/
+
+# Claude Code config
+.claude/

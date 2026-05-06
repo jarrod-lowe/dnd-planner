@@ -259,7 +259,11 @@ validate: $(addprefix validate-,$(ENVS))
 
 # Security scan
 security:
-	docker run --rm -v $(PWD)/terraform:/tf aquasec/trivy:0.69.3 config --severity CRITICAL,HIGH /tf
+	@if command -v trivy >/dev/null 2>&1; then \
+		trivy config --severity CRITICAL,HIGH --exit-code 1 terraform/; \
+	else \
+		docker run --rm -v $(PWD)/terraform:/tf aquasec/trivy:0.69.3 config --severity CRITICAL,HIGH /tf; \
+	fi
 
 # Validate rule YAML files against JSON Schema
 validate-rules-schema: preprocess
