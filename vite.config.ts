@@ -10,6 +10,7 @@ export default defineConfig(({ mode }) => {
     plugins: [sveltekit(), devtoolsJson()],
     ...(mode === 'test' ? { resolve: { conditions: ['browser'] } } : {}),
     server: {
+      host: process.env.REMOTE_CONTAINERS ? '0.0.0.0' : undefined,
       proxy: env.VITE_API_PROXY_TARGET
         ? {
             '/api': {
