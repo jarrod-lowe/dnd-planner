@@ -2,6 +2,7 @@
 tfplan
 .apply
 .stamp
+.pnpm-store
 terraform/environment/github/terraform.tfvars
 terraform/environment/test/terraform.tfvars
 terraform/environment/test/output.json

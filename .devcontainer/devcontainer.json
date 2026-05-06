@@ -1,0 +1,59 @@
+{
+  "name": "dnd-planner",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "runArgs": [
+    "--cap-drop=ALL",
+    "--security-opt=no-new-privileges",
+    "--env-file=.devcontainer/.env"
+  ],
+  "mounts": [
+    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,readonly",
+    "source=/run/host-services/ssh-auth.sock,target=/run/host-services/ssh-auth.sock,type=bind",
+    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,readonly"
+  ],
+  "remoteEnv": {
+    "SSH_AUTH_SOCK": "/run/host-services/ssh-auth.sock",
+    "GIT_CONFIG_GLOBAL": "/home/vscode/.gitconfig-local"
+  },
+  "initializeCommand": ".devcontainer/fetch-creds.sh",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22",
+      "pnpm": "10.32.1"
+    },
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "1.26"
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3"
+    },
+    "ghcr.io/devcontainers/features/terraform:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    }
+  },
+  "postCreateCommand": "pnpm install && pnpm exec playwright install chromium && rm -rf .venv && python3 -m venv .venv && .venv/bin/pip install -q -r scripts/requirements.txt && npm install -g @anthropic-ai/claude-code",
+  "postStartCommand": "mkdir -p ~/.claude/projects && ln -sf ~/.claude/projects/-Users-jarrod-git-dnd-planner ~/.claude/projects/-workspaces-dnd-planner || true && printf '[include]\\n  path = /home/vscode/.gitconfig\\n[gpg \"ssh\"]\\n  program = ssh-keygen\\n' > ~/.gitconfig-local",
+  "forwardPorts": [5173],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "svelte.svelte-vscode",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "golang.go",
+        "ms-python.python",
+        "hashicorp.terraform",
+        "hashicorp.hcl",
+        "redhat.vscode-yaml",
+        "vitest.explorer",
+        "amazonwebservices.aws-toolkit-vscode",
+        "streetsidesoftware.code-spell-checker"
+      ]
+    }
+  }
+}
