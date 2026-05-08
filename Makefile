@@ -5,14 +5,16 @@ default: help
 PROJECT ?= dnd-planner
 AWS_PROFILE ?= dnd-planner
 ENVS := test prod
-ifneq ($(CI),)
-# In CI, AWS credentials are set via environment variables, not profile
+ifneq ($(or $(CI),$(AWS_ACCESS_KEY_ID)),)
+# CI or devcontainer: AWS credentials are set via environment variables, not profile
+AWS_PROFILE_SET :=
 else
 export AWS_PROFILE
+AWS_PROFILE_SET := AWS_PROFILE=$(AWS_PROFILE)
 endif
-AWS_ACCOUNT := $(shell AWS_PROFILE=$(AWS_PROFILE) aws sts get-caller-identity --query Account --output text 2>/dev/null)
+AWS_ACCOUNT := $(shell $(AWS_PROFILE_SET) aws sts get-caller-identity --query Account --output text 2>/dev/null)
 AWS_DEFAULT_REGION ?= ap-southeast-2
-AWS_REGION := $(shell AWS_PROFILE=$(AWS_PROFILE) aws configure get region 2>/dev/null || echo "$(AWS_DEFAULT_REGION)")
+AWS_REGION := $(shell $(AWS_PROFILE_SET) aws configure get region 2>/dev/null || echo "$(AWS_DEFAULT_REGION)")
 export AWS_REGION
 AWS_PAGER :=
 export AWS_PAGER
@@ -164,7 +166,9 @@ terraform/environment/test/output.json: terraform/environment/test/.apply
 	@echo "VITE_COGNITO_IDENTITY_POOL_ID=\"$$(jq -r '.cognito_identity_pool_id.value' $<)\"" >> $@
 	@echo "VITE_COGNITO_LOGIN_DOMAIN=\"$$(jq -r '.cognito_login_domain.value' $<)\"" >> $@
 
-setup-dev: .env.local
+setup-dev: terraform/environment/test/output.json
+	@rm -f .env.local
+	@$(MAKE) .env.local
 
 # Schema derived artifact (copied to static/ for runtime fetch)
 static/data/rule-groups/schema.json: data/rule-groups/schema.json
@@ -210,9 +214,9 @@ test-component: install
 	pnpm test:component
 
 # Get terraform outputs for test environment
-TEST_BUCKET := $(shell AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) terraform -chdir=terraform/environment/test output -raw s3_bucket_name 2>/dev/null)
-TEST_CDN_ID := $(shell AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) terraform -chdir=terraform/environment/test output -raw cloudfront_distribution_id 2>/dev/null)
-TEST_DYNAMODB_TABLE := $(shell AWS_PROFILE=$(AWS_PROFILE) AWS_REGION=$(AWS_REGION) terraform -chdir=terraform/environment/test output -raw dynamodb_table_name 2>/dev/null)
+TEST_BUCKET := $(shell $(AWS_PROFILE_SET) AWS_REGION=$(AWS_REGION) terraform -chdir=terraform/environment/test output -raw s3_bucket_name 2>/dev/null)
+TEST_CDN_ID := $(shell $(AWS_PROFILE_SET) AWS_REGION=$(AWS_REGION) terraform -chdir=terraform/environment/test output -raw cloudfront_distribution_id 2>/dev/null)
+TEST_DYNAMODB_TABLE := $(shell $(AWS_PROFILE_SET) AWS_REGION=$(AWS_REGION) terraform -chdir=terraform/environment/test output -raw dynamodb_table_name 2>/dev/null)
 
 # Push to test environment (build and sync to S3)
 push-test: terraform/environment/test/.apply build go-build deploy-lambdas-test
