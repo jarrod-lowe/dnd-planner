@@ -1,5 +1,5 @@
 name: 'Save Proficiency With Paladin'
-description: 'Adding a saving throw proficiency with paladin class (proficiency bonus is 2)'
+description: 'Paladin auto-grants WIS and CHA saving throw proficiency; STR proficiency can still be manually selected'
 ruleGroups:
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
@@ -9,6 +9,8 @@ steps:
       assert:
         facts:
           proficiency.bonus: 2
+          wis.save.proficient: 1
+          cha.save.proficient: 1
   - addOffer:
       id: set-strength
       selections:
@@ -17,9 +19,15 @@ steps:
         facts:
           str.modifier: 3
           str.save: 3
+          wis.save: 2
+          cha.save: 2
   - addOffer:
       id: proficiency-str
       assert:
         facts:
           str.save.proficient: 1
           str.save: 5
+          wis.save.proficient: 1
+          wis.save: 2
+          cha.save.proficient: 1
+          cha.save: 2
