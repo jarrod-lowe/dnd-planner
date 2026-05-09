@@ -72,7 +72,7 @@ describe('PanelRenderer - dice-line control', () => {
     expect(container.textContent).toContain('5');
     expect(container.textContent).toContain('d20');
     expect(container.textContent).toContain('d12');
-    expect(container.textContent).toContain('slashing');
+    expect(container.querySelector('.panel-renderer__damage-type-icon svg')).toBeTruthy();
   });
 
   it('renders dice line as read-only text when not editable', () => {
@@ -148,6 +148,12 @@ describe('PanelRenderer - dice-line control', () => {
     const entry = createDiceLineEntry();
     const { container } = render(PanelRenderer, { props: { entry, editable: true, facts: {} } });
     expect(container.querySelector('.panel-renderer__dice-line')).toBeTruthy();
+  });
+
+  it('does not render damage type icon when damageType is absent', () => {
+    const entry = createDiceLineEntry();
+    const { container } = render(PanelRenderer, { props: { entry, editable: true, facts: {} } });
+    expect(container.querySelector('.panel-renderer__damage-type-icon')).toBeNull();
   });
 
   it('has panel-renderer__die-chip class on each die element', () => {

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { resolveValueSource, resolveExpression } from './resolveValueSource';
+  import DamageTypeIcon from './DamageTypeIcon.svelte';
   import type { DiceLineControl, DiceEntry } from './types';
   import type { Facts, VarDefinition } from '$lib/rules-engine';
 
@@ -103,8 +104,6 @@
     }
     let text = formatDieExpression(die);
     text += formatBonus(die);
-    const dmgType = formatDamageType(die);
-    if (dmgType) text += ` ${dmgType}`;
     return text;
   }
 
@@ -291,6 +290,11 @@
           ></button>
         {/if}
       </div>
+      {#if !dieIsD20 && formatDamageType(part.die!)}
+        <span class="panel-renderer__damage-type-icon">
+          <DamageTypeIcon type={formatDamageType(part.die!)} />
+        </span>
+      {/if}
     {/if}
   {/each}
 </div>
@@ -418,5 +422,18 @@
 
   .panel-renderer__popover-item:hover {
     background: var(--md-sys-color-surface-container-highest);
+  }
+
+  .panel-renderer__damage-type-icon {
+    display: inline-flex;
+    align-items: center;
+    width: 1rem;
+    height: 1rem;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .panel-renderer__damage-type-icon :global(svg) {
+    width: 100%;
+    height: 100%;
   }
 </style>

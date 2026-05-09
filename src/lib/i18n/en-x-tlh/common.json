@@ -1022,5 +1022,20 @@
     "information": {
       "saveDc": "{{saveType}} DIvI' {{dc}}"
     }
+  },
+  "damage-type": {
+    "bludgeoning": "Bludgeoning",
+    "piercing": "Piercing",
+    "slashing": "Slashing",
+    "acid": "Acid",
+    "cold": "Cold",
+    "fire": "Fire",
+    "lightning": "Lightning",
+    "thunder": "Thunder",
+    "force": "Force",
+    "necrotic": "Necrotic",
+    "radiant": "Radiant",
+    "poison": "Poison",
+    "psychic": "Psychic"
   }
 }
