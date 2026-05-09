@@ -22,8 +22,8 @@
   }
 
   function handleClick(e: MouseEvent) {
-    e.stopPropagation();
     if (!message) return;
+    e.stopPropagation();
 
     if (activeClose && activeClose !== closeSelf) {
       activeClose();
