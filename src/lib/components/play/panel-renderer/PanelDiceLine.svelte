@@ -125,11 +125,13 @@
     if (!editable) return;
     const die = control.dice[dieIndex];
     const sides = getDieSides(die);
-    if (sides === undefined || sides < 1) return;
+    if (sides === undefined || sides < 0) return;
     const bonus = (resolveValueSource(die.bonus, facts, vars, selections) as number) ?? 0;
     const rollModeToUse = mode ?? (sides === 20 ? effectiveRollMode : 'normal');
     let natural: number;
-    if (rollModeToUse === 'advantage') {
+    if (sides === 0) {
+      natural = 0;
+    } else if (rollModeToUse === 'advantage') {
       const r1 = Math.floor(Math.random() * 20) + 1;
       const r2 = Math.floor(Math.random() * 20) + 1;
       natural = Math.max(r1, r2);

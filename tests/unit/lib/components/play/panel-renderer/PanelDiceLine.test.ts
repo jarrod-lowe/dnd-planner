@@ -282,6 +282,34 @@ describe('PanelRenderer - dice-line control', () => {
     expect(container.textContent).toContain('10');
   });
 
+  it('rolls d0 and displays 0', async () => {
+    const entry: AvailableRuleEntry = {
+      rule: {
+        id: 'zero-die',
+        description: 'Zero Die',
+        activities: [],
+        ui: {
+          section: 'free',
+          name: 'Zero Die',
+          primaryControl: {
+            type: 'dice-line',
+            dice: [{ expression: 'd0' }]
+          }
+        }
+      } as Rule,
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    };
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {} }
+    });
+    const chip = container.querySelector('.panel-renderer__die-chip');
+    expect(chip).toBeTruthy();
+    await fireEvent.click(chip!);
+    expect(container.textContent).toContain('0');
+  });
+
   // === Range-based disadvantage ===
 
   it('shows disadvantage indicator when range has disadvantage', () => {
