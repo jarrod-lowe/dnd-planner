@@ -1,7 +1,7 @@
-name: 'All 7 simple actions offered simultaneously'
+name: 'All 8 simple actions offered simultaneously'
 description: >
-  Verify that all 7 simple actions (disengage, dodge, improvise, influence,
-  search, study, utilize) are offered and legal when an action is available.
+  Verify that all 8 simple actions (disengage, dodge, improvise, influence,
+  interact, search, study, utilize) are offered and legal when an action is available.
   Adding one consumes the action, making all others illegal.
 
 ruleGroups:
@@ -20,6 +20,7 @@ steps:
             - dodge-action
             - improvise-action
             - influence-action
+            - interact-action
             - search-action
             - study-action
             - utilize-action
@@ -38,6 +39,7 @@ steps:
             - dodge-action
             - improvise-action
             - influence-action
+            - interact-action
             - search-action
             - study-action
             - utilize-action

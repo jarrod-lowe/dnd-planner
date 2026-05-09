@@ -5,11 +5,11 @@ ruleGroups:
       en:
         name: Simple Actions
         description: Core rules for simple actions that consume an action slot
-        keywords: [action, disengage, dodge, improvise, influence, search, study, utilize]
+        keywords: [action, disengage, dodge, improvise, influence, interact, search, study, utilize]
       en-x-tlh:
         name: DIvI' motlh
         description: DIvI' naQ DIvI' motlh
-        keywords: [DIvI', disengage, dodge, improvise, influence, search, study, utilize]
+        keywords: [DIvI', disengage, dodge, improvise, influence, interact, search, study, utilize]
     rules:
       # Disengage
       - id: action-disengage-offer
@@ -299,6 +299,48 @@ ruleGroups:
                     var: errors
                   source:
                     string: rule.dnd-5e-2024.simple-actions.action-utilize-offer.no_action
+                  when:
+                    - fact: actions.remaining
+                      operator: lessThan
+                      value: 0
+
+      # Interact
+      - id: action-interact-offer
+        after:
+          - group: action
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: actions.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.simple-actions.action-interact-offer.no_action
+                    severity: error
+            rule:
+              id: interact-action
+              ui:
+                section: action-other
+                name: rule.dnd-5e-2024.simple-actions.interact-action.name
+                packBehind: disengage-action
+              group:
+                - __planned__
+                - action
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: actions.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.simple-actions.action-interact-offer.no_action
                   when:
                     - fact: actions.remaining
                       operator: lessThan

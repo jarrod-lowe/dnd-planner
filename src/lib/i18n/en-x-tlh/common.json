@@ -574,6 +574,12 @@
         },
         "action-utilize-offer": {
           "no_action": "DIvI' tu'lu'be'"
+        },
+        "interact-action": {
+          "name": "DIvI' DIch"
+        },
+        "action-interact-offer": {
+          "no_action": "DIvI' tu'lu'be'"
         }
       },
       "grapple": {
@@ -633,6 +639,12 @@
           "name": "DIvI' lo'"
         },
         "action-utilize-offer": {
+          "no_action": "DIvI' tu'lu'be'"
+        },
+        "interact-action": {
+          "name": "DIvI' DIch"
+        },
+        "action-interact-offer": {
           "no_action": "DIvI' tu'lu'be'"
         }
       },
