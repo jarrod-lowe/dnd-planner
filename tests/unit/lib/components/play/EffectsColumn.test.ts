@@ -52,8 +52,8 @@ describe('EffectsColumn', () => {
     ];
     const { container } = render(EffectsColumn, { props: { effects } });
 
-    // Should render panel renderers in editable mode
-    const panels = container.querySelectorAll('.panel-renderer--editable');
+    // Should render panel renderers (read-only)
+    const panels = container.querySelectorAll('.panel-renderer');
     expect(panels).toHaveLength(2);
   });
 
@@ -74,8 +74,8 @@ describe('EffectsColumn', () => {
     const effects = [createMockRule('effect-no-section', { description: 'Mystery effect' })];
     const { container } = render(EffectsColumn, { props: { effects } });
 
-    // Should still render the effect
-    const panels = container.querySelectorAll('.panel-renderer--editable');
+    // Should still render the effect (read-only)
+    const panels = container.querySelectorAll('.panel-renderer');
     expect(panels).toHaveLength(1);
   });
 

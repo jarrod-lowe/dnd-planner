@@ -941,7 +941,8 @@
         "health": "Health",
         "other": "Other",
         "mastery": "Mastery",
-        "senses": "Senses"
+        "senses": "Senses",
+        "lay-on-hands": "Lay on Hands"
       },
       "move": {
         "distance": "Movement distance in feet"

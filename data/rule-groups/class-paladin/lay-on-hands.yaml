@@ -73,6 +73,7 @@ ruleGroups:
                   type: slider
                   var: amount
                   min: { number: 1 }
+                  max: { var: maxValue }
               vars:
                 amount:
                   capture: true
@@ -124,6 +125,23 @@ ruleGroups:
                       - fact: rest.long
                         operator: equals
                         value: 0
+                    ui:
+                      section: lay-on-hands
+                      name: rule.class-paladin-lay-on-hands.loh-heal.name
+                      primaryControl:
+                        type: slider
+                        var: amount
+                        min: { number: 1 }
+                        max: { var: maxValue }
+                    vars:
+                      amount:
+                        capture: true
+                        default:
+                          fact: layOnHands.pool.remaining
+                      maxValue:
+                        capture: true
+                        default:
+                          fact: layOnHands.pool.total
                     activities:
                       - type: numberIncrement
                         target:
@@ -208,6 +226,9 @@ ruleGroups:
                       - fact: rest.long
                         operator: equals
                         value: 0
+                    ui:
+                      section: lay-on-hands
+                      name: rule.class-paladin-lay-on-hands.loh-purify-poison.name
                     activities:
                       - type: numberIncrement
                         target:
