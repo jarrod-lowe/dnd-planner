@@ -56,6 +56,11 @@
     !entry.legal ? ('illegal' as const) : !entry.applicable ? ('inapplicable' as const) : null
   );
 
+  const warningMessage = $derived.by(() => {
+    if (!hasWarning || !entry.diagnostics?.length) return undefined;
+    return entry.diagnostics.map((d) => $t(d.code)).join('\n');
+  });
+
   const vars = $derived(entry.rule.vars ?? {});
 
   const primarySlider = $derived(
@@ -191,13 +196,13 @@
   aria-label={!editable
     ? displayName +
       (hasWarning && warningType
-        ? ` (${$t(warningType === 'illegal' ? 'play.choices.illegal' : 'play.choices.inapplicable')})`
+        ? ` (${warningMessage ?? $t(warningType === 'illegal' ? 'play.choices.illegal' : 'play.choices.inapplicable')})`
         : '')
     : undefined}
   onclick={onTap}
 >
   {#if hasWarning && warningType}
-    <WarningIndicator type={warningType} />
+    <WarningIndicator type={warningType} message={warningMessage} />
   {/if}
   <div class="panel-renderer__header">
     <span class="panel-renderer__title">{displayName}</span>

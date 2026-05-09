@@ -102,4 +102,56 @@ describe('PanelRenderer', () => {
       expect(container.querySelector('.panel-renderer--editable')).toBeNull();
     });
   });
+
+  describe('diagnostic messages', () => {
+    it('passes diagnostic message to warning indicator for illegal choice', () => {
+      const entry = createMockEntry({
+        legal: false,
+        diagnostics: [{ code: 'some.diagnostic.key', severity: 'error' }]
+      });
+      const { container } = render(PanelRenderer, { props: { entry } });
+      const indicator = container.querySelector('.warning-indicator');
+      expect(indicator?.getAttribute('aria-label')).toBe('some.diagnostic.key');
+    });
+
+    it('uses diagnostic message in aria-label when available', () => {
+      const entry = createMockEntry({
+        legal: false,
+        diagnostics: [{ code: 'some.diagnostic.key', severity: 'error' }]
+      });
+      const { container } = render(PanelRenderer, { props: { entry } });
+      const panel = container.querySelector('.panel-renderer');
+      expect(panel?.getAttribute('aria-label')).toContain('some.diagnostic.key');
+    });
+
+    it('falls back to generic label when diagnostics are empty', () => {
+      const entry = createMockEntry({ legal: false, diagnostics: [] });
+      const { container } = render(PanelRenderer, { props: { entry } });
+      const indicator = container.querySelector('.warning-indicator');
+      expect(indicator?.getAttribute('aria-label')).toBe('play.choices.illegal');
+    });
+
+    it('does not show diagnostic when legal and applicable', () => {
+      const entry = createMockEntry({
+        legal: true,
+        applicable: true,
+        diagnostics: [{ code: 'some.key', severity: 'error' }]
+      });
+      const { container } = render(PanelRenderer, { props: { entry } });
+      expect(container.querySelector('.warning-indicator')).toBeNull();
+    });
+
+    it('joins multiple diagnostic messages with semicolons', () => {
+      const entry = createMockEntry({
+        legal: false,
+        diagnostics: [
+          { code: 'reason.one', severity: 'error' },
+          { code: 'reason.two', severity: 'error' }
+        ]
+      });
+      const { container } = render(PanelRenderer, { props: { entry } });
+      const indicator = container.querySelector('.warning-indicator');
+      expect(indicator?.getAttribute('aria-label')).toBe('reason.one\nreason.two');
+    });
+  });
 });
