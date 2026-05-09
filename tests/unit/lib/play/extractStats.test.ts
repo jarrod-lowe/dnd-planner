@@ -31,7 +31,9 @@ describe('isStatEntry', () => {
 
   it('rejects value type without fact', async () => {
     const { isStatEntry } = await import('$lib/play/extractStats');
-    expect(isStatEntry({ name: 'play.stats.initiative', type: 'value', section: 'stats' })).toBe(false);
+    expect(isStatEntry({ name: 'play.stats.initiative', type: 'value', section: 'stats' })).toBe(
+      false
+    );
   });
 
   it('accepts modifier type with name, fact, and section', async () => {
