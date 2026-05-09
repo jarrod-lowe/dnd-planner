@@ -362,7 +362,7 @@ The architecture supports:
 - Increase {skill} needs illegal marker in Planned column
 - Feat: Sentinel
 - Feat: Alert
-- Ready
+- Ready (with spell concentration rules)
 
 ### Low Priority
 

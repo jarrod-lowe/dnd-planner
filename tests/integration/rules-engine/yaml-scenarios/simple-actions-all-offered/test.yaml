@@ -39,6 +39,7 @@ steps:
             - dodge-action
             - improvise-action
             - influence-action
+            - interact-action
             - search-action
             - study-action
             - utilize-action
