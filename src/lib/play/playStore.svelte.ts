@@ -446,7 +446,9 @@ async function assignSingleGroup(characterId: string, ruleGroupId: string): Prom
           settings:
             typeof rg.settings === 'string' && rg.settings
               ? JSON.parse(rg.settings)
-              : (Array.isArray(rg.settings) ? rg.settings : [])
+              : Array.isArray(rg.settings)
+                ? rg.settings
+                : []
         });
       }
     }

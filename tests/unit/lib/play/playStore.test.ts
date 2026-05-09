@@ -2136,7 +2136,10 @@ describe('playStore', () => {
             {
               id: 'paladin-mastery-1',
               type: 'select-rule-group',
-              translations: { en: { name: 'Weapon Mastery' }, 'en-x-tlh': { name: 'Weapon Mastery' } },
+              translations: {
+                en: { name: 'Weapon Mastery' },
+                'en-x-tlh': { name: 'Weapon Mastery' }
+              },
               options: [
                 { value: 'greataxe-mastery', translations: { en: { name: 'Greataxe (Cleave)' } } }
               ]
@@ -2144,7 +2147,10 @@ describe('playStore', () => {
             {
               id: 'paladin-mastery-2',
               type: 'select-rule-group',
-              translations: { en: { name: 'Weapon Mastery' }, 'en-x-tlh': { name: 'Weapon Mastery' } },
+              translations: {
+                en: { name: 'Weapon Mastery' },
+                'en-x-tlh': { name: 'Weapon Mastery' }
+              },
               options: [
                 { value: 'javelin-mastery', translations: { en: { name: 'Javelin (Slow)' } } }
               ]
@@ -2171,7 +2177,11 @@ describe('playStore', () => {
         'paladin-mastery-2': 'javelin-mastery'
       });
 
-      await playStore.assignRuleGroupWithSettings?.('char-1', 'class-paladin-level1', settingsValues);
+      await playStore.assignRuleGroupWithSettings?.(
+        'char-1',
+        'class-paladin-level1',
+        settingsValues
+      );
 
       expect(playStore.state.ruleGroupIds).toContain('class-paladin-level1');
       expect(playStore.state.ruleGroupIds).toContain('greataxe-mastery');
@@ -2217,7 +2227,10 @@ describe('playStore', () => {
             {
               id: 'paladin-mastery-1',
               type: 'select-rule-group',
-              translations: { en: { name: 'Weapon Mastery' }, 'en-x-tlh': { name: 'Weapon Mastery' } },
+              translations: {
+                en: { name: 'Weapon Mastery' },
+                'en-x-tlh': { name: 'Weapon Mastery' }
+              },
               options: [
                 { value: 'greataxe-mastery', translations: { en: { name: 'Greataxe (Cleave)' } } }
               ]
@@ -2237,7 +2250,11 @@ describe('playStore', () => {
         'paladin-mastery-1': 'greataxe-mastery'
       });
 
-      await playStore.assignRuleGroupWithSettings?.('char-1', 'class-paladin-level1', settingsValues);
+      await playStore.assignRuleGroupWithSettings?.(
+        'char-1',
+        'class-paladin-level1',
+        settingsValues
+      );
 
       expect(playStore.state.effects).toHaveLength(0);
     });
@@ -2287,22 +2304,30 @@ describe('playStore', () => {
             {
               id: 'paladin-skill-1',
               type: 'select',
-              translations: { en: { name: 'Skill Proficiency' }, 'en-x-tlh': { name: 'Skill Proficiency' } },
-              options: [
-                { value: 'athletics', translations: { en: { name: 'Athletics' } } }
-              ],
+              translations: {
+                en: { name: 'Skill Proficiency' },
+                'en-x-tlh': { name: 'Skill Proficiency' }
+              },
+              options: [{ value: 'athletics', translations: { en: { name: 'Athletics' } } }],
               effect: {
                 id: 'paladin-skill-proficiency-${value}',
                 phase: 'early',
                 activities: [
-                  { type: 'numberSet', target: { fact: 'skill.${value}.proficiency' }, source: { number: 1 } }
+                  {
+                    type: 'numberSet',
+                    target: { fact: 'skill.${value}.proficiency' },
+                    source: { number: 1 }
+                  }
                 ]
               }
             },
             {
               id: 'paladin-mastery-1',
               type: 'select-rule-group',
-              translations: { en: { name: 'Weapon Mastery' }, 'en-x-tlh': { name: 'Weapon Mastery' } },
+              translations: {
+                en: { name: 'Weapon Mastery' },
+                'en-x-tlh': { name: 'Weapon Mastery' }
+              },
               options: [
                 { value: 'greataxe-mastery', translations: { en: { name: 'Greataxe (Cleave)' } } }
               ]
@@ -2323,11 +2348,17 @@ describe('playStore', () => {
         'paladin-mastery-1': 'greataxe-mastery'
       });
 
-      await playStore.assignRuleGroupWithSettings?.('char-1', 'class-paladin-level1', settingsValues);
+      await playStore.assignRuleGroupWithSettings?.(
+        'char-1',
+        'class-paladin-level1',
+        settingsValues
+      );
 
       expect(playStore.state.ruleGroupIds).toContain('greataxe-mastery');
       expect(playStore.state.effects).toHaveLength(1);
-      expect(playStore.state.effects[0].id).toBe('class-paladin-level1::paladin-skill-proficiency-athletics');
+      expect(playStore.state.effects[0].id).toBe(
+        'class-paladin-level1::paladin-skill-proficiency-athletics'
+      );
     });
   });
 });
