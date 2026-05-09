@@ -750,6 +750,18 @@
         "effect-splint-armor": {
           "name": "Splint Armor"
         }
+      },
+      "shield": {
+        "don-shield": {
+          "name": "Don Shield"
+        },
+        "don-shield-offer": {
+          "already-equipped": "Shield is already equipped",
+          "not-proficient": "Not proficient with shields"
+        },
+        "effect-shield": {
+          "name": "Shield"
+        }
       }
     }
   },

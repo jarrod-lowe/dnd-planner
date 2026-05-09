@@ -1,0 +1,35 @@
+name: 'Shield Proficient'
+description: 'No warning or disadvantages when proficient with shields'
+ruleGroups:
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/shield
+initialEffects:
+  - id: test-shield-proficiency
+    phase: early
+    activities:
+      - type: numberSet
+        target:
+          fact: armor.shield.proficient
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+steps:
+  - evaluate:
+      assert:
+        facts:
+          armor.shield.proficient: 1
+        offers:
+          exists:
+            - don-shield
+  - addOffer:
+      id: don-shield
+      assert:
+        facts:
+          ac.shieldBonus: 2
+          ac.value: 12
+          armor.shield.equipped: 1
+          attack.str.disadvantage: 0
+          attack.dex.disadvantage: 0
+          skill.stealth.disadvantage: 0

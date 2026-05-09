@@ -1,0 +1,35 @@
+name: 'Shield Already Equipped'
+description: 'Cannot don shield when already equipped'
+ruleGroups:
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/shield
+initialEffects:
+  - id: effect-shield
+    phase: normal
+    after:
+      - group: ac-calculation
+    group:
+      - ac-components
+    activities:
+      - type: numberIncrement
+        target:
+          fact: ac.shieldBonus
+        source:
+          number: 2
+      - type: numberSet
+        target:
+          fact: armor.shield.equipped
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+steps:
+  - evaluate:
+      assert:
+        facts:
+          ac.shieldBonus: 2
+          ac.value: 12
+          armor.shield.equipped: 1
+        offers:
+          illegal:
+            - don-shield
