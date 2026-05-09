@@ -574,6 +574,12 @@
         },
         "action-utilize-offer": {
           "no_action": "No action available"
+        },
+        "interact-action": {
+          "name": "Interact"
+        },
+        "action-interact-offer": {
+          "no_action": "No action available"
         }
       },
       "grapple": {
@@ -633,6 +639,12 @@
           "name": "Utilize"
         },
         "action-utilize-offer": {
+          "no_action": "No action available"
+        },
+        "interact-action": {
+          "name": "Interact"
+        },
+        "action-interact-offer": {
           "no_action": "No action available"
         }
       },

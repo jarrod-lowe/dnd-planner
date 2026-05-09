@@ -352,7 +352,6 @@ The architecture supports:
   - Better tests for Divinity Points behaviour including double use of Divinity-using actions (bug?)
 - HP addition after level 1
 - rest.any?
-- Make activities and effects when's support multiple conditions, like base rules do
 - Test for rulegroup requires that don't exist
   - Check rulegroup requires for cycles
   - Also check they are correct
@@ -362,15 +361,15 @@ The architecture supports:
 - Feat: Savage Attack
 - Increase {skill} needs illegal marker in Planned column
 - Feat: Sentinel
-- Paladin Level 4 (+ the oath)
 - Feat: Alert
+- Ready
 
 ### Low Priority
 
 - Other Mastery effects (including Nick, which exists but doesn't do anything)
 - Conditions
 - Defences
-- Weapon Proficiencies
+- Weapon/Tool/Armour Proficiencies
 - UI code needs to be restructured to be less special-casey
 - Reduce duplication - e.g. We have no_action text and action consumption per action; this should be one text, and a \*target
 - Reduce code duplication - check e.g. when and legalWhen use the same code, all activities are base & speciality handling (not base repeated)

@@ -1,0 +1,32 @@
+name: 'Interact action consumes action, illegal when no action'
+description: >
+  Verify that interact-action is offered and legal when an action is available,
+  consumes one action when added to plan, and becomes illegal when no action remains.
+
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/simple-actions
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          actions.remaining: 1
+        offers:
+          exists:
+            - interact-action
+          legal:
+            - interact-action
+
+  - addOffer:
+      id: interact-action
+      assert:
+        facts:
+          actions.remaining: 0
+
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - interact-action
