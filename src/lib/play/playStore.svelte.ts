@@ -601,9 +601,7 @@ interface SettingsGroup {
   settings: SettingDefinition[];
 }
 
-async function getSettingsForRuleGroup(
-  ruleGroupId: string
-): Promise<SettingsGroup[] | null> {
+async function getSettingsForRuleGroup(ruleGroupId: string): Promise<SettingsGroup[] | null> {
   await prefetchDepTree(ruleGroupId, state.ruleGroupIds);
   const cache = getCache();
   const deps = resolveDependencies(ruleGroupId, cache, state.ruleGroupIds);

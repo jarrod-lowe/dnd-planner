@@ -28,14 +28,18 @@
 
   function getSettingName(setting: SettingDefinition): string {
     const currentLocale = get(locale);
-    return setting.translations[currentLocale]?.name ?? setting.translations['en']?.name ?? setting.id;
+    return (
+      setting.translations[currentLocale]?.name ?? setting.translations['en']?.name ?? setting.id
+    );
   }
 
   function getOptionName(setting: SettingDefinition, optionValue: string): string {
     const currentLocale = get(locale);
     const option = setting.options.find((o) => o.value === optionValue);
     if (!option) return optionValue;
-    return option.translations[currentLocale]?.name ?? option.translations['en']?.name ?? optionValue;
+    return (
+      option.translations[currentLocale]?.name ?? option.translations['en']?.name ?? optionValue
+    );
   }
 
   function handleConfirm(): void {

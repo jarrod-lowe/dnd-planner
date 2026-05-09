@@ -61,7 +61,8 @@ export async function ensureCached(
             name: rg.name,
             description: rg.description,
             requires: rg.requires ?? [],
-            settings: typeof rg.settings === 'string' ? JSON.parse(rg.settings) : (rg.settings ?? [])
+            settings:
+              typeof rg.settings === 'string' ? JSON.parse(rg.settings) : (rg.settings ?? [])
           };
           cache.set(rg.ruleGroupId, meta);
           result.set(rg.ruleGroupId, meta);
