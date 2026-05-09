@@ -750,6 +750,17 @@
         "effect-splint-armor": {
           "name": "Splint Armor"
         }
+      },
+      "shield": {
+        "don-shield": {
+          "name": "Don Shield"
+        },
+        "don-shield-offer": {
+          "already-equipped": "Shield is already equipped"
+        },
+        "effect-shield": {
+          "name": "Shield"
+        }
       }
     }
   },

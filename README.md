@@ -372,7 +372,7 @@ The architecture supports:
 - Other Mastery effects (including Nick, which exists but doesn't do anything)
 - Conditions
 - Defences
-- Weapon/Tool/Armour Proficiencies
+- Weapon/Tool/Armour/Shield Proficiencies
 - Reduce duplication - e.g. We have no_action text and action consumption per action; this should be one text, and a \*target
 - Reduce code duplication - check e.g. when and legalWhen use the same code, all activities are base & speciality handling (not base repeated)
 - Sort effects into more meaningful sections

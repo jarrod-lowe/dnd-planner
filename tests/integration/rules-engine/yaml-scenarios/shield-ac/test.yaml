@@ -1,0 +1,43 @@
+name: 'Shield AC'
+description: 'AC increases by 2 when shield is donned'
+ruleGroups:
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/shield
+steps:
+  - evaluate:
+      assert:
+        facts:
+          ac.base: 10
+          ac.value: 10
+          ac.shieldBonus: 0
+        offers:
+          exists:
+            - don-shield
+  - addOffer:
+      id: don-shield
+      assert:
+        facts:
+          ac.shieldBonus: 2
+          ac.value: 12
+          armor.shield.equipped: 1
+  # Set DEX to 14 (modifier +2) -- AC should be 10 + 2 + 2 = 14
+  - addOffer:
+      id: set-dexterity
+      selections:
+        score: 14
+      assert:
+        facts:
+          dex.modifier: 2
+          ac.base: 10
+          ac.dexBonus: 2
+          ac.shieldBonus: 2
+          ac.value: 14
+  - endTurn:
+      assert:
+        facts:
+          ac.base: 10
+          ac.dexBonus: 2
+          ac.shieldBonus: 2
+          ac.value: 14
+          armor.shield.equipped: 1

@@ -750,6 +750,17 @@
         "effect-splint-armor": {
           "name": "DIch Sep"
         }
+      },
+      "shield": {
+        "don-shield": {
+          "name": "yoD tuQ"
+        },
+        "don-shield-offer": {
+          "already-equipped": "yoD tuQtaH"
+        },
+        "effect-shield": {
+          "name": "yoD"
+        }
       }
     }
   },

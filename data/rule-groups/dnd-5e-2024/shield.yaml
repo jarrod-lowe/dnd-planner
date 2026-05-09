@@ -1,0 +1,208 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: shield
+    requires:
+      - ac
+    translations:
+      en:
+        name: Shield
+        description: Grants +2 AC when equipped, non-proficiency penalties apply
+        keywords: [shield, armor, ac, equipment]
+      en-x-tlh:
+        name: yoD
+        description: yoD nob DIvI' 2, DIvI' DIch pagh
+        keywords: [yoD, DIch]
+    rules:
+      - id: don-shield-offer
+        after:
+          - group: __planned__
+          - group: ac-components
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: armor.shield.equipped
+                  operator: notEquals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.shield.don-shield-offer.already-equipped
+                    severity: error
+            rule:
+              id: don-shield
+              phase: normal
+              after:
+                - group: ac-calculation
+              group:
+                - ac-components
+              ui:
+                section: configuration
+                name: rule.dnd-5e-2024.shield.don-shield.name
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: ac.shieldBonus
+                  source:
+                    number: 2
+                - type: numberSet
+                  target:
+                    fact: armor.shield.equipped
+                  source:
+                    number: 1
+                - type: numberSet
+                  target:
+                    fact: attack.str.disadvantage
+                  source:
+                    number: 1
+                  when:
+                    - fact: armor.shield.proficient
+                      operator: notEquals
+                      value: 1
+                - type: numberSet
+                  target:
+                    fact: attack.dex.disadvantage
+                  source:
+                    number: 1
+                  when:
+                    - fact: armor.shield.proficient
+                      operator: notEquals
+                      value: 1
+                - type: numberSet
+                  target:
+                    fact: initiative.disadvantage
+                  source:
+                    number: 1
+                  when:
+                    - fact: armor.shield.proficient
+                      operator: notEquals
+                      value: 1
+                - type: numberSet
+                  target:
+                    fact: skill.acrobatics.disadvantage
+                  source:
+                    number: 1
+                  when:
+                    - fact: armor.shield.proficient
+                      operator: notEquals
+                      value: 1
+                - type: numberSet
+                  target:
+                    fact: skill.athletics.disadvantage
+                  source:
+                    number: 1
+                  when:
+                    - fact: armor.shield.proficient
+                      operator: notEquals
+                      value: 1
+                - type: numberSet
+                  target:
+                    fact: skill.sleight-of-hand.disadvantage
+                  source:
+                    number: 1
+                  when:
+                    - fact: armor.shield.proficient
+                      operator: notEquals
+                      value: 1
+                - type: numberSet
+                  target:
+                    fact: spellcasting.remaining
+                  source:
+                    number: 0
+                  when:
+                    - fact: armor.shield.proficient
+                      operator: notEquals
+                      value: 1
+                - type: advertiseEffect
+                  rule:
+                    id: effect-shield
+                    phase: normal
+                    after:
+                      - group: ac-calculation
+                    group:
+                      - ac-components
+                    ui:
+                      name: rule.dnd-5e-2024.shield.effect-shield.name
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: ac.shieldBonus
+                        source:
+                          number: 2
+                      - type: numberSet
+                        target:
+                          fact: armor.shield.equipped
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: attack.str.disadvantage
+                        source:
+                          number: 1
+                        when:
+                          - fact: armor.shield.proficient
+                            operator: notEquals
+                            value: 1
+                      - type: numberSet
+                        target:
+                          fact: attack.dex.disadvantage
+                        source:
+                          number: 1
+                        when:
+                          - fact: armor.shield.proficient
+                            operator: notEquals
+                            value: 1
+                      - type: numberSet
+                        target:
+                          fact: initiative.disadvantage
+                        source:
+                          number: 1
+                        when:
+                          - fact: armor.shield.proficient
+                            operator: notEquals
+                            value: 1
+                      - type: numberSet
+                        target:
+                          fact: skill.acrobatics.disadvantage
+                        source:
+                          number: 1
+                        when:
+                          - fact: armor.shield.proficient
+                            operator: notEquals
+                            value: 1
+                      - type: numberSet
+                        target:
+                          fact: skill.athletics.disadvantage
+                        source:
+                          number: 1
+                        when:
+                          - fact: armor.shield.proficient
+                            operator: notEquals
+                            value: 1
+                      - type: numberSet
+                        target:
+                          fact: skill.sleight-of-hand.disadvantage
+                        source:
+                          number: 1
+                        when:
+                          - fact: armor.shield.proficient
+                            operator: notEquals
+                            value: 1
+                      - type: numberSet
+                        target:
+                          fact: spellcasting.max
+                        source:
+                          number: 0
+                        when:
+                          - fact: armor.shield.proficient
+                            operator: notEquals
+                            value: 1
+                      - type: numberSet
+                        target:
+                          fact: spellcasting.remaining
+                        source:
+                          number: 0
+                        when:
+                          - fact: armor.shield.proficient
+                            operator: notEquals
+                            value: 1
+                      - type: advertiseEffect
+                        self: true

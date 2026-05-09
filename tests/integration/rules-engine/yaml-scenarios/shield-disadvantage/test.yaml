@@ -1,0 +1,33 @@
+name: 'Shield Disadvantage'
+description: 'Disadvantage on STR/DEX checks, initiative, skills, and spellcasting blocked when not proficient with shield'
+ruleGroups:
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/shield
+  - dnd-5e-2024/spellcasting
+initialFacts:
+  armor.shield.proficient: 0
+steps:
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.max: 1
+          spellcasting.remaining: 1
+        offers:
+          exists:
+            - don-shield
+  - addOffer:
+      id: don-shield
+      assert:
+        facts:
+          ac.shieldBonus: 2
+          ac.value: 12
+          armor.shield.equipped: 1
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+          initiative.disadvantage: 1
+          skill.acrobatics.disadvantage: 1
+          skill.athletics.disadvantage: 1
+          skill.sleight-of-hand.disadvantage: 1
+          skill.stealth.disadvantage: 0
+          spellcasting.remaining: 0
