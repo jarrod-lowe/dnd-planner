@@ -6,7 +6,7 @@ definitions:
     ui:
       name: rule.dnd-5e-2024.attacks.unarmed-strike.name
       disadvantageFact: attack.str.disadvantage
-      annotationLabels: [attack.any, attack.melee, attack.unarmed]
+      annotationLabels: [attack.any, attack.melee, attack.unarmed, dice.any]
       primaryControl:
         type: dice-line
         ranges: { var: ranges }
@@ -17,7 +17,7 @@ definitions:
           - expression: { var: damageDie }
             bonus: { var: damageBonus }
             damageType: { string: bludgeoning }
-        annotationLabels: [attack.any, attack.melee, attack.unarmed]
+        annotationLabels: [attack.any, attack.melee, attack.unarmed, dice.any]
     vars:
       ranges:
         default:
@@ -61,7 +61,7 @@ definitions:
     ui:
       name: rule.dnd-5e-2024.attacks.dagger.name
       disadvantageFact: attack.str.disadvantage
-      annotationLabels: [attack.any, attack.melee, attack.weapon]
+      annotationLabels: [attack.any, attack.melee, attack.weapon, dice.any]
       primaryControl:
         type: dice-line
         ranges: { var: ranges }
@@ -72,7 +72,7 @@ definitions:
           - expression: { var: damageDie }
             bonus: { var: damageBonus }
             damageType: { string: piercing }
-        annotationLabels: [attack.any, attack.melee, attack.weapon]
+        annotationLabels: [attack.any, attack.melee, attack.weapon, dice.any]
     vars:
       ranges:
         default:
@@ -120,7 +120,7 @@ definitions:
     ui:
       name: rule.dnd-5e-2024.attacks.greataxe.name
       disadvantageFact: attack.str.disadvantage
-      annotationLabels: [attack.any, attack.melee, attack.weapon]
+      annotationLabels: [attack.any, attack.melee, attack.weapon, dice.any]
       followups:
         - type: attack-line
           condition:
@@ -138,7 +138,7 @@ definitions:
           - expression: { var: damageDie }
             bonus: { var: damageBonus }
             damageType: { string: slashing }
-        annotationLabels: [attack.any, attack.melee, attack.weapon]
+        annotationLabels: [attack.any, attack.melee, attack.weapon, dice.any]
       secondaryControl:
         type: dice-line
         enabled:
@@ -195,7 +195,7 @@ definitions:
     ui:
       name: rule.dnd-5e-2024.attacks.javelin.name
       disadvantageFact: attack.str.disadvantage
-      annotationLabels: [attack.any, attack.melee, attack.weapon]
+      annotationLabels: [attack.any, attack.melee, attack.weapon, dice.any]
       followups:
         - type: effect
           condition:
@@ -222,7 +222,7 @@ definitions:
           - expression: { var: damageDie }
             bonus: { var: damageBonus }
             damageType: { string: piercing }
-        annotationLabels: [attack.any, attack.melee, attack.weapon]
+        annotationLabels: [attack.any, attack.melee, attack.weapon, dice.any]
     vars:
       ranges:
         default:
@@ -270,7 +270,7 @@ definitions:
     ui:
       name: rule.dnd-5e-2024.attacks.scimitar.name
       disadvantageFact: attack.dex.disadvantage
-      annotationLabels: [attack.any, attack.melee, attack.weapon]
+      annotationLabels: [attack.any, attack.melee, attack.weapon, dice.any]
       primaryControl:
         type: dice-line
         ranges: { var: ranges }
@@ -281,7 +281,7 @@ definitions:
           - expression: { var: damageDie }
             bonus: { var: damageBonus }
             damageType: { string: slashing }
-        annotationLabels: [attack.any, attack.melee, attack.weapon]
+        annotationLabels: [attack.any, attack.melee, attack.weapon, dice.any]
     vars:
       ranges:
         default:

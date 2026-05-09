@@ -1,0 +1,13 @@
+name: 'Heroic Inspiration - Use Illegal When None'
+description: 'Use HI is illegal when no inspiration available'
+ruleGroups:
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/heroic-inspiration
+steps:
+  - evaluate:
+      assert:
+        facts:
+          heroicInspiration.remaining: 0
+        offers:
+          illegal:
+            - use-hi

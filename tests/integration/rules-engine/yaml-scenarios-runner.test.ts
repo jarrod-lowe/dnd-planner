@@ -35,6 +35,10 @@ interface AssertConfig {
     id: string;
     ui: Record<string, unknown>;
   }[];
+  annotations?: {
+    exists?: string[];
+    notExists?: string[];
+  };
   status?: {
     ok?: boolean;
     legal?: boolean;
@@ -189,6 +193,21 @@ function assertEffects(
   }
 }
 
+function assertAnnotations(
+  actual: EngineOutput['annotations'],
+  expected: NonNullable<AssertConfig['annotations']>,
+  stepDesc: string
+): void {
+  for (const key of expected.exists ?? []) {
+    const found = actual.some((a) => a.key === key);
+    expect(found, `${stepDesc}: annotation "${key}" should exist`).toBe(true);
+  }
+  for (const key of expected.notExists ?? []) {
+    const found = actual.some((a) => a.key === key);
+    expect(!found, `${stepDesc}: annotation "${key}" should NOT exist`).toBe(true);
+  }
+}
+
 /**
  * Match effect IDs by base ID. The engine appends a counter suffix to
  * advertised effects (e.g., "effect-divine-sense" becomes "effect-divine-sense-2").
@@ -224,6 +243,9 @@ function runAssertions(
   }
   if (assert.offerUi) {
     assertOfferUi(output.availableRules, assert.offerUi, stepDesc);
+  }
+  if (assert.annotations) {
+    assertAnnotations(output.annotations, assert.annotations, stepDesc);
   }
   if (assert.status) {
     assertStatus(output.status, assert.status, stepDesc);

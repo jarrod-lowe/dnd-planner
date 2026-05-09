@@ -700,11 +700,21 @@
         }
       },
       "heroic-inspiration": {
+        "annotation": "SuvwI' SubchI' DIch",
+        "effect-hi": {
+          "name": "SuvwI' SubchI'"
+        },
         "grant-hi": {
           "name": "SubchI' SuvwI' nob"
         },
         "grant-hi-offer": {
           "already_has": "SubchI' SuvwI' ghaj"
+        },
+        "use-hi": {
+          "name": "SuvwI' SubchI' lo'"
+        },
+        "use-hi-offer": {
+          "no_inspiration": "SuvwI' SubchI' tu'lu'be'"
         }
       },
       "leather-armor": {
