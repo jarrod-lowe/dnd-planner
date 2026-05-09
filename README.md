@@ -365,6 +365,7 @@ The architecture supports:
 - Ready (with spell concentration rules)
 - Rename "Spellcasting" to "Magic"
 - Paladin Long Rest: May swap one prepared spell
+- Log UI errors to AWS?
 
 ### Low Priority
 

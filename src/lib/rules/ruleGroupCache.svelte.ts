@@ -14,6 +14,14 @@ export interface RuleGroupMeta {
   settings: SettingDefinition[];
 }
 
+interface RuleGroupBatchItem {
+  ruleGroupId: string;
+  name: string;
+  description: string;
+  requires?: string[];
+  settings?: string | SettingDefinition[];
+}
+
 let cache = new SvelteMap<string, RuleGroupMeta>();
 
 export function clearCache(): void {
@@ -55,14 +63,24 @@ export async function ensureCached(
       });
 
       if (response.ok) {
-        const data = await response.json();
+        let data: { ruleGroups: RuleGroupBatchItem[] };
+        try {
+          data = await response.json();
+        } catch {
+          continue;
+        }
+        if (!data?.ruleGroups) continue;
         for (const rg of data.ruleGroups) {
           const meta: RuleGroupMeta = {
             name: rg.name,
             description: rg.description,
             requires: rg.requires ?? [],
             settings:
-              typeof rg.settings === 'string' ? JSON.parse(rg.settings) : (rg.settings ?? [])
+              typeof rg.settings === 'string' && rg.settings
+                ? JSON.parse(rg.settings)
+                : Array.isArray(rg.settings)
+                  ? rg.settings
+                  : []
           };
           cache.set(rg.ruleGroupId, meta);
           result.set(rg.ruleGroupId, meta);

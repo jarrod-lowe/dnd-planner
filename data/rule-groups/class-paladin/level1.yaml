@@ -25,6 +25,24 @@ paladin-skill-options: &paladin-skill-options
       en: { name: Religion }
       en-x-tlh: { name: Religion }
 
+paladin-mastery-options: &paladin-mastery-options
+  - value: greataxe-mastery
+    translations:
+      en: { name: Greataxe (Cleave) }
+      en-x-tlh: { name: Greataxe (Cleave) }
+  - value: dagger-mastery
+    translations:
+      en: { name: Dagger (Nick) }
+      en-x-tlh: { name: Dagger (Nick) }
+  - value: javelin-mastery
+    translations:
+      en: { name: Javelin (Slow) }
+      en-x-tlh: { name: Javelin (Slow) }
+  - value: scimitar-mastery
+    translations:
+      en: { name: Scimitar (Nick) }
+      en-x-tlh: { name: Scimitar (Nick) }
+
 paladin-skill-effect: &paladin-skill-effect
   id: paladin-skill-proficiency-${value}
   phase: early
@@ -81,6 +99,18 @@ ruleGroups:
           en-x-tlh: { name: Skill Proficiency }
         options: *paladin-skill-options
         effect: *paladin-skill-effect
+      - id: paladin-mastery-1
+        type: select-rule-group
+        translations:
+          en: { name: Weapon Mastery }
+          en-x-tlh: { name: Weapon Mastery }
+        options: *paladin-mastery-options
+      - id: paladin-mastery-2
+        type: select-rule-group
+        translations:
+          en: { name: Weapon Mastery }
+          en-x-tlh: { name: Weapon Mastery }
+        options: *paladin-mastery-options
     rules:
       # Hit Die - Level 1 Paladin gets 1d10
       - id: paladin-level1-hit-die

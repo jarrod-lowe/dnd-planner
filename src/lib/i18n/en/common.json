@@ -975,7 +975,8 @@
         "other": "Other",
         "mastery": "Mastery",
         "senses": "Senses",
-        "lay-on-hands": "Lay on Hands"
+        "lay-on-hands": "Lay on Hands",
+        "effects": "Effects"
       },
       "move": {
         "distance": "Movement distance in feet"

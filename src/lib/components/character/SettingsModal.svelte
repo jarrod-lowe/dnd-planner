@@ -1,8 +1,7 @@
 <script lang="ts">
-  import { t } from '$lib/i18n';
+  import { t, locale } from '$lib/i18n';
   import type { SettingDefinition } from '$lib/rules/settingsTypes';
   import { get } from 'svelte/store';
-  import { locale } from '$lib/i18n';
   import { SvelteMap } from 'svelte/reactivity';
 
   interface SettingsGroup {
@@ -95,7 +94,7 @@
       onclick={(e) => e.stopPropagation()}
     >
       <h2 id="settings-dialog-title" class="dialog__title">
-        {$t('rules.settingsTitle', { name: groups[0]?.name ?? '' })}
+        {get(t)('rules.settingsTitle', { name: groups[0]?.name ?? '' })}
       </h2>
 
       <div class="dialog__content">
@@ -113,7 +112,7 @@
                 }}
                 value={selections[setting.id] ?? ''}
               >
-                <option value="" disabled>{$t('rules.settingsSelectPlaceholder')}</option>
+                <option value="" disabled>{get(t)('rules.settingsSelectPlaceholder')}</option>
                 {#each setting.options as option (option.value)}
                   <option value={option.value}>{getOptionName(setting, option.value)}</option>
                 {/each}
@@ -129,7 +128,7 @@
           class="dialog__button dialog__button--secondary"
           onclick={handleCancel}
         >
-          {$t('rules.settingsCancel')}
+          {get(t)('rules.settingsCancel')}
         </button>
         <button
           type="button"
@@ -137,7 +136,7 @@
           onclick={handleConfirm}
           disabled={!allFilled}
         >
-          {$t('rules.settingsConfirm')}
+          {get(t)('rules.settingsConfirm')}
         </button>
       </div>
     </div>

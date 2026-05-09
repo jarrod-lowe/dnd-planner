@@ -261,7 +261,7 @@ async function prefetchDepTree(ruleGroupId: string, assignedIds: string[]): Prom
     const meta = cache.get(id);
     if (!meta) {
       // Not in cache — queue for fetch
-      if (!assigned.includes(id)) {
+      if (!assignedIds.includes(id)) {
         toFetch.push(id);
       }
       return;
@@ -280,7 +280,12 @@ async function prefetchDepTree(ruleGroupId: string, assignedIds: string[]): Prom
   while (toFetch.length > 0) {
     const batch = [...toFetch];
     toFetch.length = 0;
-    await ensureCached(batch, currentLocale);
+    try {
+      await ensureCached(batch, currentLocale);
+    } catch (e) {
+      console.error('[prefetchDepTree] ensureCached failed:', e);
+      break;
+    }
     for (const id of batch) {
       const meta = cache.get(id);
       if (meta) {
@@ -386,6 +391,8 @@ async function rollbackDeps(characterId: string, depIds: string[]): Promise<void
 }
 
 async function assignSingleGroup(characterId: string, ruleGroupId: string): Promise<void> {
+  if (state.ruleGroupIds.includes(ruleGroupId)) return;
+
   // Snapshot for revert
   const prevIds = [...state.ruleGroupIds];
 
@@ -414,10 +421,41 @@ async function assignSingleGroup(characterId: string, ruleGroupId: string): Prom
       throw new Error(`Fetch rules failed: ${batchResponse.status}`);
     }
 
-    const { ruleGroups: batchGroups } = await batchResponse.json();
-    const fetchedRules: Rule[] = batchGroups.flatMap((rg: { rules: string }) =>
-      JSON.parse(rg.rules)
-    );
+    let batchGroups: {
+      ruleGroupId: string;
+      rules: string;
+      name?: string;
+      description?: string;
+      requires?: string[];
+      settings?: string | unknown[];
+    }[] = [];
+    try {
+      const data = await batchResponse.json();
+      batchGroups = data.ruleGroups ?? [];
+    } catch {
+      // Empty body - group assigned but rules unavailable
+    }
+    // Also cache metadata from batch response so resolveDependencies can use it
+    const cache = getCache();
+    for (const rg of batchGroups) {
+      if (rg.ruleGroupId && !cache.has(rg.ruleGroupId)) {
+        cache.set(rg.ruleGroupId, {
+          name: rg.name ?? '',
+          description: rg.description ?? '',
+          requires: rg.requires ?? [],
+          settings:
+            typeof rg.settings === 'string' && rg.settings
+              ? JSON.parse(rg.settings)
+              : Array.isArray(rg.settings)
+                ? rg.settings
+                : []
+        });
+      }
+    }
+    const fetchedRules: Rule[] = batchGroups.flatMap((rg) => {
+      const rulesStr = typeof rg.rules === 'string' ? rg.rules : '[]';
+      return JSON.parse(rulesStr);
+    });
     const newRules: Rule[] = fetchedRules.map((rule) => {
       const initialSelections = resolveInitialSelections(rule, state.facts);
       if (Object.keys(initialSelections).length === 0) {
@@ -640,10 +678,25 @@ async function assignRuleGroupWithSettings(
     for (const setting of meta.settings) {
       const chosenValue = values[setting.id];
       if (!chosenValue) continue;
-      const effect = substituteTemplate(setting.effect, chosenValue) as Rule;
-      // Prefix the effect ID with the rule group ID so we can clean up on unassign
-      effect.id = `${groupId}::${effect.id}`;
-      newEffects.push(JSON.parse(JSON.stringify(effect)));
+
+      if (setting.type === 'select-rule-group') {
+        await assignRuleGroup(characterId, chosenValue);
+        // assignSingleGroup caches metadata on success, so check for
+        // unresolved deps that prefetchDepTree may have missed
+        const masteryMeta = cache.get(chosenValue);
+        if (masteryMeta) {
+          for (const depId of masteryMeta.requires) {
+            if (!state.ruleGroupIds.includes(depId)) {
+              await assignRuleGroup(characterId, depId);
+            }
+          }
+        }
+      } else {
+        const effect = substituteTemplate(setting.effect!, chosenValue) as Rule;
+        // Prefix the effect ID with the rule group ID so we can clean up on unassign
+        effect.id = `${groupId}::${effect.id}`;
+        newEffects.push(JSON.parse(JSON.stringify(effect)));
+      }
     }
   }
 

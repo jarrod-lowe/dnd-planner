@@ -117,7 +117,8 @@
         }
       }
       await onToggle(ruleGroupId, isAssigned);
-    } catch {
+    } catch (error) {
+      console.error('[handleToggle] Error:', error);
       toggleErrorId = ruleGroupId;
     } finally {
       togglingIds = new Set([...togglingIds].filter((id) => id !== ruleGroupId));
@@ -127,7 +128,8 @@
     if (!pendingSettingsRuleGroupId) return;
     try {
       await onToggleWithSettings(pendingSettingsRuleGroupId, values);
-    } catch {
+    } catch (error) {
+      console.error('[handleSettingsSubmit] Error:', error);
       toggleErrorId = pendingSettingsRuleGroupId;
     } finally {
       settingsModalOpen = false;
