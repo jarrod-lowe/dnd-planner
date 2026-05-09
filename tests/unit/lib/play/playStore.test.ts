@@ -2035,10 +2035,10 @@ describe('playStore', () => {
           ui: {
             stats: [
               {
-                name: 'play.stats.turnCounter',
+                name: 'play.stats.initiative',
                 type: 'value',
-                fact: 'turn.counter',
-                section: 'turn'
+                fact: 'initiative.value',
+                section: 'stats'
               }
             ]
           }
@@ -2075,7 +2075,7 @@ describe('playStore', () => {
       await playStore.loadRuleGroups('char-stats-1');
 
       expect(playStore.state.stats).toHaveLength(1);
-      expect(playStore.state.stats[0].name).toBe('play.stats.turnCounter');
+      expect(playStore.state.stats[0].name).toBe('play.stats.initiative');
     });
   });
 

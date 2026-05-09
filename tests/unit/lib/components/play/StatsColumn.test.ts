@@ -6,10 +6,10 @@ import type { Facts } from '$lib/rules-engine';
 
 describe('StatsColumn (config-driven)', () => {
   const valueStat: StatEntry = {
-    name: 'play.stats.turnCounter',
+    name: 'play.stats.initiative',
     type: 'value',
-    fact: 'turn.counter',
-    section: 'turn'
+    fact: 'initiative.value',
+    section: 'stats'
   };
 
   const modifierStat: StatEntry = {
@@ -28,11 +28,11 @@ describe('StatsColumn (config-driven)', () => {
   };
 
   it('renders value stat with plain fact value', () => {
-    const facts: Facts = { 'turn.counter': 3 };
+    const facts: Facts = { 'initiative.value': 3 };
     const { getByText } = render(StatsColumn, {
       props: { stats: [valueStat], facts }
     });
-    expect(getByText('play.stats.turnCounter')).toBeTruthy();
+    expect(getByText('play.stats.initiative')).toBeTruthy();
     expect(getByText('3')).toBeTruthy();
   });
 
@@ -102,7 +102,7 @@ describe('StatsColumn (config-driven)', () => {
   });
 
   it('groups stats by section', () => {
-    const facts: Facts = { 'turn.counter': 1, 'actions.max': 1, 'actions.remaining': 1 };
+    const facts: Facts = { 'initiative.value': 1, 'actions.max': 1, 'actions.remaining': 1 };
     const { container } = render(StatsColumn, {
       props: { stats: [valueStat, usedMaxStat], facts }
     });
@@ -115,13 +115,13 @@ describe('StatsColumn (config-driven)', () => {
       name: 'play.stats.alpha',
       type: 'value',
       fact: 'a',
-      section: 'turn'
+      section: 'stats'
     };
     const statB: StatEntry = {
       name: 'play.stats.beta',
       type: 'value',
       fact: 'b',
-      section: 'turn'
+      section: 'stats'
     };
     const facts: Facts = { a: 1, b: 2 };
     const { container } = render(StatsColumn, {
@@ -133,7 +133,7 @@ describe('StatsColumn (config-driven)', () => {
   });
 
   it('has proper accessibility structure', () => {
-    const facts: Facts = { 'turn.counter': 1 };
+    const facts: Facts = { 'initiative.value': 1 };
     const { container } = render(StatsColumn, {
       props: { stats: [valueStat], facts }
     });
@@ -173,14 +173,14 @@ describe('StatsColumn (config-driven)', () => {
   });
 
   it('renders section title for each visible section', () => {
-    const facts: Facts = { 'turn.counter': 1, 'actions.max': 1, 'actions.remaining': 1 };
+    const facts: Facts = { 'initiative.value': 1, 'actions.max': 1, 'actions.remaining': 1 };
     const { container } = render(StatsColumn, {
       props: { stats: [valueStat, usedMaxStat], facts }
     });
     // i18n mock returns key, fallback capitalizes section name
     const titles = container.querySelectorAll('.stats-column__section-title');
     const titleTexts = Array.from(titles).map((el) => el.textContent);
-    expect(titleTexts).toContain('Turn');
+    expect(titleTexts).toContain('Stats');
     expect(titleTexts).toContain('Resources');
   });
 
@@ -199,7 +199,7 @@ describe('StatsColumn (config-driven)', () => {
   });
 
   it('section header is a collapsible button with aria-expanded', () => {
-    const facts: Facts = { 'turn.counter': 1 };
+    const facts: Facts = { 'initiative.value': 1 };
     const { container } = render(StatsColumn, {
       props: { stats: [valueStat], facts }
     });
@@ -209,7 +209,7 @@ describe('StatsColumn (config-driven)', () => {
   });
 
   it('clicking section header toggles aria-expanded', async () => {
-    const facts: Facts = { 'turn.counter': 1 };
+    const facts: Facts = { 'initiative.value': 1 };
     const { container } = render(StatsColumn, {
       props: { stats: [valueStat], facts }
     });
@@ -256,12 +256,12 @@ describe('StatsColumn (config-driven)', () => {
 
   it('renders plain value stat unchanged when modifierFact absent', () => {
     const plainStat: StatEntry = {
-      name: 'play.stats.turnCounter',
+      name: 'play.stats.speed',
       type: 'value',
-      fact: 'turn.counter',
-      section: 'turn'
+      fact: 'speed.value',
+      section: 'stats'
     };
-    const facts: Facts = { 'turn.counter': 5 };
+    const facts: Facts = { 'speed.value': 5 };
     const { container } = render(StatsColumn, {
       props: { stats: [plainStat], facts }
     });

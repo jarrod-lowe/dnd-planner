@@ -19,7 +19,6 @@ steps:
           actions.remaining: 1
           proficiency.bonus: 2
           spellcasting.slots.level1.total: 2
-          turn.counter: 1
   - addOffer:
       id: set-strength
       selections:
@@ -36,7 +35,6 @@ steps:
   - endTurn:
       assert:
         facts:
-          turn.counter: 2
           str.value: 16
           character.movement.remaining: 30
           actions.remaining: 1

@@ -21,17 +21,19 @@ describe('isStatEntry', () => {
     const { isStatEntry } = await import('$lib/play/extractStats');
     expect(
       isStatEntry({
-        name: 'play.stats.turnCounter',
+        name: 'play.stats.initiative',
         type: 'value',
-        fact: 'turn.counter',
-        section: 'turn'
+        fact: 'initiative.value',
+        section: 'stats'
       })
     ).toBe(true);
   });
 
   it('rejects value type without fact', async () => {
     const { isStatEntry } = await import('$lib/play/extractStats');
-    expect(isStatEntry({ name: 'play.stats.turn', type: 'value', section: 'turn' })).toBe(false);
+    expect(isStatEntry({ name: 'play.stats.initiative', type: 'value', section: 'stats' })).toBe(
+      false
+    );
   });
 
   it('accepts modifier type with name, fact, and section', async () => {
@@ -246,7 +248,7 @@ describe('extractStats', () => {
         id: 'r1',
         activities: [],
         ui: {
-          stats: [{ name: 'a', type: 'value', fact: 'x', section: 'turn' }]
+          stats: [{ name: 'a', type: 'value', fact: 'x', section: 'stats' }]
         }
       },
       {
@@ -267,7 +269,7 @@ describe('extractStats', () => {
       {
         id: 'r2',
         activities: [],
-        ui: { stats: [{ name: 'a', type: 'value', fact: 'x', section: 'turn' }] }
+        ui: { stats: [{ name: 'a', type: 'value', fact: 'x', section: 'stats' }] }
       }
     ];
     expect(extractStats(rules)).toHaveLength(1);
@@ -280,7 +282,7 @@ describe('extractStats', () => {
         id: 'r1',
         activities: [],
         ui: {
-          stats: [{ bad: 'entry' }, { name: 'valid', type: 'value', fact: 'x', section: 'turn' }]
+          stats: [{ bad: 'entry' }, { name: 'valid', type: 'value', fact: 'x', section: 'stats' }]
         }
       }
     ];
@@ -297,7 +299,7 @@ describe('extractStats', () => {
         activities: [],
         ui: {
           stats: [
-            { name: 'a', type: 'value', fact: 'x', section: 'turn' },
+            { name: 'a', type: 'value', fact: 'x', section: 'stats' },
             { name: 'b', type: 'modifier', fact: 'y', section: 'abilities' }
           ]
         }
