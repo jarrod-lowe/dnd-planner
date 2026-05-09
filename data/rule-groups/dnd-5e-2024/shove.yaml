@@ -48,6 +48,7 @@ ruleGroups:
                 outcomeKey: play.choices.shove.outcome
                 primaryControl:
                   type: dice-line
+                  annotationLabels: [dice.any]
                   dice:
                     - expression: d20
                       bonus: { var: dc }

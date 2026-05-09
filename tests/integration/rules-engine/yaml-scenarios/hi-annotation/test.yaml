@@ -1,5 +1,5 @@
-name: 'Heroic Inspiration - Grant Illegal When Active'
-description: 'Grant HI is illegal when HI is already active (remaining = 1)'
+name: 'Heroic Inspiration - Annotation'
+description: 'Annotation appears when HI available and disappears after use'
 ruleGroups:
   - dnd-5e-2024/turn-rest
   - dnd-5e-2024/heroic-inspiration
@@ -29,12 +29,18 @@ initialEffects:
             operator: equals
             value: 0
 steps:
-  # HI already active from persistent effect
   - evaluate:
       assert:
         facts:
-          heroicInspiration.max: 1
           heroicInspiration.remaining: 1
-        offers:
-          illegal:
-            - grant-hi
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.heroic-inspiration.annotation
+  - addOffer:
+      id: use-hi
+      assert:
+        facts:
+          heroicInspiration.remaining: 0
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.heroic-inspiration.annotation

@@ -700,11 +700,21 @@
         }
       },
       "heroic-inspiration": {
+        "annotation": "Heroic Inspiration available",
+        "effect-hi": {
+          "name": "Heroic Inspiration"
+        },
         "grant-hi": {
           "name": "Grant Heroic Inspiration"
         },
         "grant-hi-offer": {
           "already_has": "Already have Heroic Inspiration"
+        },
+        "use-hi": {
+          "name": "Use Heroic Inspiration"
+        },
+        "use-hi-offer": {
+          "no_inspiration": "No Heroic Inspiration available"
         }
       },
       "leather-armor": {

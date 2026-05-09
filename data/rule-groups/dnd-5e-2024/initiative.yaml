@@ -48,6 +48,7 @@ ruleGroups:
                 disadvantageFact: initiative.disadvantage
                 primaryControl:
                   type: dice-line
+                  annotationLabels: [dice.any]
                   dice:
                     - expression: d20
                       bonus: { var: rollBonus }
