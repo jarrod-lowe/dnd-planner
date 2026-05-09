@@ -24,9 +24,15 @@ describe('DamageTypeIcon', () => {
     expect(container.querySelector('svg')).toBeTruthy();
   });
 
-  it('renders no SVG for an unknown damage type', () => {
+  it('renders a fallback SVG for an unknown damage type', () => {
     const { container } = render(DamageTypeIcon, { props: { type: 'unknown' } });
-    expect(container.querySelector('svg')).toBeNull();
+    expect(container.querySelector('svg')).toBeTruthy();
+  });
+
+  it('fallback SVG has aria-label with the raw type name', () => {
+    const { container } = render(DamageTypeIcon, { props: { type: 'unknown' } });
+    const svg = container.querySelector('svg')!;
+    expect(svg.getAttribute('aria-label')).toBe('unknown');
   });
 
   it.each(damageTypes)('SVG has aria-label for %s', (type) => {
