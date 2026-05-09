@@ -132,3 +132,28 @@ ruleGroups:
               fact: armor.shield.proficient
             source:
               number: 1
+
+      # Saving Throw Proficiencies - Paladin is proficient in Wisdom and Charisma
+      - id: paladin-level1-save-proficiencies
+        phase: early
+        activities:
+          - type: numberSet
+            target:
+              fact: wis.save.proficient
+            source:
+              number: 1
+          - type: numberIncrement
+            target:
+              fact: wis.save
+            source:
+              fact: proficiency.bonus
+          - type: numberSet
+            target:
+              fact: cha.save.proficient
+            source:
+              number: 1
+          - type: numberIncrement
+            target:
+              fact: cha.save
+            source:
+              fact: proficiency.bonus
