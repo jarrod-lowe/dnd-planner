@@ -9,12 +9,24 @@
   import { apiGet } from '$lib/api/client';
   import { debounce } from '$lib/play/debounce';
   import { ensureCached, type RuleGroupMeta } from '$lib/rules/ruleGroupCache.svelte';
+  import SettingsModal from './SettingsModal.svelte';
+
+  interface SettingsGroup {
+    ruleGroupId: string;
+    name: string;
+    settings: import('$lib/rules/settingsTypes').SettingDefinition[];
+  }
 
   interface Props {
     character: Character;
     assignedRuleGroupIds?: string[];
     lockedRuleGroups?: Map<string, string[]>;
     onToggle: (ruleGroupId: string, isAssigned: boolean) => Promise<void>;
+    onGetSettings?: (ruleGroupId: string) => Promise<SettingsGroup[] | null>;
+    onToggleWithSettings?: (
+      ruleGroupId: string,
+      values: Map<string, Record<string, string>>
+    ) => Promise<void>;
     onBack: () => void;
     onEditCustomRules?: () => void;
   }
@@ -24,6 +36,8 @@
     assignedRuleGroupIds = [],
     lockedRuleGroups = new Map<string, string[]>(),
     onToggle,
+    onGetSettings = () => Promise.resolve(null),
+    onToggleWithSettings = () => Promise.resolve(),
     onBack,
     onEditCustomRules
   }: Props = $props();
@@ -36,6 +50,9 @@
   let searchError = $state<string | null>(null);
   let togglingIds = $state<Set<string>>(new Set());
   let toggleErrorId = $state<string | null>(null);
+  let settingsModalOpen = $state(false);
+  let pendingSettingsGroups = $state<SettingsGroup[]>([]);
+  let pendingSettingsRuleGroupId = $state<string | null>(null);
   /**
    * Normalize text for search querying.
    * Must match the Python standardize_term() in sync_rule_groups.py exactly.
@@ -89,12 +106,41 @@
     togglingIds = new Set([...togglingIds, ruleGroupId]);
     toggleErrorId = null;
     try {
+      if (!isAssigned) {
+        // Check if this rule group (or its deps) has settings
+        const settingsGroups = await onGetSettings(ruleGroupId);
+        if (settingsGroups && settingsGroups.length > 0) {
+          pendingSettingsGroups = settingsGroups;
+          pendingSettingsRuleGroupId = ruleGroupId;
+          settingsModalOpen = true;
+          return;
+        }
+      }
       await onToggle(ruleGroupId, isAssigned);
     } catch {
       toggleErrorId = ruleGroupId;
     } finally {
       togglingIds = new Set([...togglingIds].filter((id) => id !== ruleGroupId));
     }
+  }
+  async function handleSettingsSubmit(values: Map<string, Record<string, string>>): Promise<void> {
+    if (!pendingSettingsRuleGroupId) return;
+    try {
+      await onToggleWithSettings(pendingSettingsRuleGroupId, values);
+    } catch {
+      toggleErrorId = pendingSettingsRuleGroupId;
+    } finally {
+      settingsModalOpen = false;
+      pendingSettingsGroups = [];
+      togglingIds = new Set([...togglingIds].filter((id) => id !== pendingSettingsRuleGroupId));
+      pendingSettingsRuleGroupId = null;
+    }
+  }
+  function handleSettingsCancel(): void {
+    togglingIds = new Set([...togglingIds].filter((id) => id !== pendingSettingsRuleGroupId));
+    settingsModalOpen = false;
+    pendingSettingsGroups = [];
+    pendingSettingsRuleGroupId = null;
   }
   function handleIndicatorKeydown(
     e: KeyboardEvent,
@@ -208,6 +254,12 @@
       <p class="manage-rules__status">{$t('rules.noResults')}</p>
     {/if}
   </div>
+  <SettingsModal
+    isOpen={settingsModalOpen}
+    groups={pendingSettingsGroups}
+    onSubmit={handleSettingsSubmit}
+    onCancel={handleSettingsCancel}
+  />
 </div>
 
 <style>

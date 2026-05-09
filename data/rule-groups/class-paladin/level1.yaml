@@ -1,4 +1,57 @@
 # yaml-language-server: $schema=../schema.json
+paladin-skill-options: &paladin-skill-options
+  - value: athletics
+    translations:
+      en: { name: Athletics }
+      en-x-tlh: { name: Athletics }
+  - value: insight
+    translations:
+      en: { name: Insight }
+      en-x-tlh: { name: Insight }
+  - value: intimidation
+    translations:
+      en: { name: Intimidation }
+      en-x-tlh: { name: Intimidation }
+  - value: medicine
+    translations:
+      en: { name: Medicine }
+      en-x-tlh: { name: Medicine }
+  - value: persuasion
+    translations:
+      en: { name: Persuasion }
+      en-x-tlh: { name: Persuasion }
+  - value: religion
+    translations:
+      en: { name: Religion }
+      en-x-tlh: { name: Religion }
+
+paladin-skill-effect: &paladin-skill-effect
+  id: paladin-skill-proficiency-${value}
+  phase: early
+  ui:
+    name: rules.settings.paladin-skill.${value}
+    section: effects
+  activities:
+    - type: numberSet
+      target:
+        fact: skill.${value}.proficiency
+      source:
+        number: 1
+    - type: numberFunction
+      function: multiply
+      sources:
+        - fact: proficiency.bonus
+        - number: 1
+      target:
+        var: profContribution
+    - type: numberIncrement
+      target:
+        fact: skill.${value}.value
+      source:
+        var: profContribution
+    - type: advertiseEffect
+      self: true
+
 ruleGroups:
   - id: class-paladin-level1
     requires:
@@ -13,6 +66,21 @@ ruleGroups:
         name: Paladin Level 1
         description: Paladin Segh level 1, proficient chel
         keywords: [paladin, segh, level1]
+    settings:
+      - id: paladin-skill-1
+        type: select
+        translations:
+          en: { name: Skill Proficiency }
+          en-x-tlh: { name: Skill Proficiency }
+        options: *paladin-skill-options
+        effect: *paladin-skill-effect
+      - id: paladin-skill-2
+        type: select
+        translations:
+          en: { name: Skill Proficiency }
+          en-x-tlh: { name: Skill Proficiency }
+        options: *paladin-skill-options
+        effect: *paladin-skill-effect
     rules:
       # Hit Die - Level 1 Paladin gets 1d10
       - id: paladin-level1-hit-die

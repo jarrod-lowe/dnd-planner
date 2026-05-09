@@ -573,6 +573,7 @@ describe('ManageRulesMode', () => {
     const indicator = container.querySelector('.manage-rules__indicator') as HTMLElement;
     expect(indicator).toBeTruthy();
     indicator.click();
+    await vi.runAllTimersAsync();
 
     expect(onToggle).toHaveBeenCalledWith('fireball', false);
   });
@@ -612,6 +613,7 @@ describe('ManageRulesMode', () => {
 
     const indicator = container.querySelector('.manage-rules__indicator') as HTMLElement;
     indicator.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+    await vi.runAllTimersAsync();
 
     expect(onToggle).toHaveBeenCalledWith('fireball', false);
   });
@@ -651,6 +653,7 @@ describe('ManageRulesMode', () => {
 
     const indicator = container.querySelector('.manage-rules__indicator') as HTMLElement;
     indicator.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await vi.runAllTimersAsync();
 
     expect(onToggle).toHaveBeenCalledWith('fireball', false);
   });

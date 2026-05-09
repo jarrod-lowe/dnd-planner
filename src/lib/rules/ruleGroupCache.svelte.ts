@@ -5,11 +5,13 @@
 
 import { apiPost } from '$lib/api/client';
 import { SvelteMap } from 'svelte/reactivity';
+import type { SettingDefinition } from './settingsTypes';
 
 export interface RuleGroupMeta {
   name: string;
   description: string;
   requires: string[];
+  settings: SettingDefinition[];
 }
 
 let cache = new SvelteMap<string, RuleGroupMeta>();
@@ -58,7 +60,9 @@ export async function ensureCached(
           const meta: RuleGroupMeta = {
             name: rg.name,
             description: rg.description,
-            requires: rg.requires ?? []
+            requires: rg.requires ?? [],
+            settings:
+              typeof rg.settings === 'string' ? JSON.parse(rg.settings) : (rg.settings ?? [])
           };
           cache.set(rg.ruleGroupId, meta);
           result.set(rg.ruleGroupId, meta);

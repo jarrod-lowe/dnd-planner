@@ -1089,6 +1089,12 @@ paths:
                       #else
                       "requires": [],
                       #end
+                      #set($settingsVal = $item.get('settings'))
+                      #if($settingsVal && $settingsVal.get('S'))
+                      "settings": "$util.escapeJavaScript($settingsVal.get('S')).replaceAll("\\'","'")",
+                      #else
+                      "settings": "[]",
+                      #end
                       "createdAt": "$item.get('createdAt').get('S')",
                       "updatedAt": "$item.get('updatedAt').get('S')"
                     }

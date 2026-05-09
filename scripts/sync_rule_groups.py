@@ -230,6 +230,7 @@ def build_rule_group_item(rg: dict[str, Any], now: str) -> dict[str, Any]:
         "translations": rg["translations"],
         "requires": rg.get("requires", []),
         "rules": json.dumps(rg.get("rules", [])),
+        "settings": json.dumps(rg.get("settings", [])),
         "createdAt": rg.get("createdAt", now),
         "updatedAt": now,
     }

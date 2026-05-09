@@ -363,6 +363,8 @@ The architecture supports:
 - Feat: Sentinel
 - Feat: Alert
 - Ready (with spell concentration rules)
+- Rename "Spellcasting" to "Magic"
+- Paladin Long Rest: May swap one prepared spell
 
 ### Low Priority
 
@@ -370,6 +372,6 @@ The architecture supports:
 - Conditions
 - Defences
 - Weapon/Tool/Armour Proficiencies
-- UI code needs to be restructured to be less special-casey
 - Reduce duplication - e.g. We have no_action text and action consumption per action; this should be one text, and a \*target
 - Reduce code duplication - check e.g. when and legalWhen use the same code, all activities are base & speciality handling (not base repeated)
+- Sort effects into more meaningful sections
