@@ -41,7 +41,7 @@ describe('SectionCollapsible', () => {
     expect(panel).toBeTruthy();
   });
 
-  it('renders PanelRenderer in editable mode when mode=effect', () => {
+  it('renders PanelRenderer as read-only when mode=effect', () => {
     const { container } = render(SectionCollapsible, {
       props: {
         section: 'action-spell',
@@ -53,9 +53,10 @@ describe('SectionCollapsible', () => {
       }
     });
 
-    // PanelRenderer renders as editable div (no onclick)
-    const panel = container.querySelector('.panel-renderer--editable');
+    // PanelRenderer renders as non-editable div (no --editable class)
+    const panel = container.querySelector('.panel-renderer');
     expect(panel).toBeTruthy();
+    expect(panel?.classList.contains('panel-renderer--editable')).toBe(false);
   });
 
   it('passes onRemove to PanelRenderer in effect mode when deletable', () => {

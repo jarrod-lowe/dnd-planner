@@ -81,7 +81,7 @@
         {#if group.type === 'single'}
           <PanelRenderer
             entry={group.entry}
-            editable={mode === 'effect'}
+            editable={false}
             {facts}
             selections={group.entry.rule.selections ?? {}}
             {activeAnnotations}
