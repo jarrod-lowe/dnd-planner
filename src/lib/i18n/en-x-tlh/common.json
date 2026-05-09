@@ -59,6 +59,29 @@
         "name": "DIch"
       }
     },
+    "spell-divine-favour": {
+      "offer-divine-favour": {
+        "name": "quv",
+        "already_active": "quv DIvI'",
+        "no_bonus_action": "DIvI' tu'lu'be'",
+        "no_spellcasting": "mugh DIvI' tu'lu'be'",
+        "no_slots": "mugh laH tu'lu'be'"
+      },
+      "effect-divine-favour": {
+        "name": "quv"
+      },
+      "effect-divine-favour-l1": {
+        "name": "wa' DIvI' mugh loS"
+      },
+      "annotation": "quv DIvI'",
+      "use-divine-favour": {
+        "name": "quv lo'"
+      },
+      "offer-use-divine-favour": {
+        "not_active": "quv DIvI'be'",
+        "no_attack": "DIch DIvI' lo'nIS"
+      }
+    },
     "spell-create-and-destroy-water": {
       "cast-create-and-destroy-water": {
         "name": "bIQ chenmoH 'ej HochHom"

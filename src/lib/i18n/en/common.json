@@ -59,6 +59,29 @@
         "name": "Bless"
       }
     },
+    "spell-divine-favour": {
+      "offer-divine-favour": {
+        "name": "Divine Favour",
+        "already_active": "Divine Favour is already active",
+        "no_bonus_action": "No bonus action available",
+        "no_spellcasting": "Already cast a spell this turn",
+        "no_slots": "No spell slots remaining"
+      },
+      "effect-divine-favour": {
+        "name": "Divine Favour"
+      },
+      "effect-divine-favour-l1": {
+        "name": "L1 Spell Slot Expended"
+      },
+      "annotation": "Divine Favour available",
+      "use-divine-favour": {
+        "name": "Use Divine Favour"
+      },
+      "offer-use-divine-favour": {
+        "not_active": "Divine Favour is not active",
+        "no_attack": "You must take the Attack action first"
+      }
+    },
     "spell-create-and-destroy-water": {
       "cast-create-and-destroy-water": {
         "name": "Create and Destroy Water"

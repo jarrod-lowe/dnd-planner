@@ -1,0 +1,84 @@
+name: 'Divine Favour'
+description: 'Casting Divine Favour consumes bonus action, spellcasting, and a spell slot. Creates a persistent effect that annotates weapon attacks and offers a free damage option.'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/attacks
+  - species-human/species-human
+  - class-paladin/class-paladin-level1
+  - spells/spell-divine-favour
+steps:
+  # Initial state: spell is available
+  - evaluate:
+      assert:
+        facts:
+          actions.remaining: 1
+          bonusActions.remaining: 1
+          spellcasting.remaining: 1
+          spellcasting.slots.level1.remaining: 2
+          divineFavour.active: 0
+        offers:
+          exists:
+            - cast-divine-favour
+          illegal:
+            - use-divine-favour
+        annotations:
+          notExists:
+            - rule.spell-divine-favour.annotation
+
+  # Cast Divine Favour - consumes bonus action, spellcasting, L1 slot
+  - addOffer:
+      id: cast-divine-favour
+      assert:
+        facts:
+          bonusActions.remaining: 0
+          spellcasting.remaining: 0
+          spellcasting.slots.level1.remaining: 1
+          divineFavour.active: 1
+        offers:
+          illegal:
+            - cast-divine-favour
+
+  # Attack - annotation appears, use-divine-favour offered
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          attack.last.activation.action: 1
+        annotations:
+          exists:
+            - rule.spell-divine-favour.annotation
+        offers:
+          exists:
+            - use-divine-favour
+        offerUi:
+          - id: use-divine-favour
+            ui:
+              primaryControl:
+                type: dice-line
+                dice:
+                  - expression: d4
+                    damageType: { string: radiant }
+
+  # Use Divine Favour - free, no resource cost
+  - addOffer:
+      id: use-divine-favour
+      assert:
+        facts:
+          bonusActions.remaining: 0
+          spellcasting.remaining: 0
+          spellcasting.slots.level1.remaining: 1
+
+  # End turn - effects persist
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-divine-favour
+            - effect-divine-favour-l1
+        facts:
+          divineFavour.active: 1

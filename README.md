@@ -366,6 +366,8 @@ The architecture supports:
 - Rename "Spellcasting" to "Magic"
 - Paladin Long Rest: May swap one prepared spell
 - Log UI errors to AWS?
+- Improve Divine Favour to be inline with attacks
+- Radiant and Bludgeoning symbols look very similar
 
 ### Low Priority
 
