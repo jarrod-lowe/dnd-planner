@@ -1,0 +1,28 @@
+name: 'Shield AC'
+description: 'AC increases by 2 when shield is donned, persists across turns'
+ruleGroups:
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/shield
+steps:
+  - evaluate:
+      assert:
+        facts:
+          ac.base: 10
+          ac.shieldBonus: 0
+          ac.value: 10
+        offers:
+          exists:
+            - don-shield
+  - addOffer:
+      id: don-shield
+      assert:
+        facts:
+          ac.shieldBonus: 2
+          ac.value: 12
+          armor.shield.equipped: 1
+  - endTurn:
+      assert:
+        facts:
+          ac.shieldBonus: 2
+          ac.value: 12
+          armor.shield.equipped: 1

@@ -1,0 +1,16 @@
+name: 'Shield Not Proficient Warning'
+description: 'Don shield is illegal with warning when not proficient, no disadvantages applied'
+ruleGroups:
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/shield
+initialFacts:
+  armor.shield.proficient: 0
+steps:
+  - evaluate:
+      assert:
+        facts:
+          ac.value: 10
+        offers:
+          illegal:
+            - don-shield

@@ -1,0 +1,82 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: shield
+    requires:
+      - ac
+    translations:
+      en:
+        name: Shield
+        description: A shield that grants +2 AC when equipped
+        keywords: [shield, armor, ac, equipment]
+      en-x-tlh:
+        name: DIch
+        description: DIch naQ, DIvI' 2 DIch Jun
+        keywords: [DIch, Jun]
+    rules:
+      - id: don-shield-offer
+        after:
+          - group: __planned__
+          - group: ac-components
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: armor.shield.equipped
+                  operator: notEquals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.shield.don-shield-offer.already-equipped
+                    severity: error
+              - condition:
+                  fact: armor.shield.proficient
+                  operator: equals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.shield.don-shield-offer.not-proficient
+                    severity: warning
+            rule:
+              id: don-shield
+              phase: normal
+              after:
+                - group: ac-calculation
+                - group: ac-dex
+              group:
+                - ac-components
+              ui:
+                section: configuration
+                name: rule.dnd-5e-2024.shield.don-shield.name
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: ac.shieldBonus
+                  source:
+                    number: 2
+                - type: numberSet
+                  target:
+                    fact: armor.shield.equipped
+                  source:
+                    number: 1
+                - type: advertiseEffect
+                  rule:
+                    id: effect-shield
+                    phase: normal
+                    after:
+                      - group: ac-calculation
+                      - group: ac-dex
+                    group:
+                      - ac-components
+                    ui:
+                      name: rule.dnd-5e-2024.shield.effect-shield.name
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: ac.shieldBonus
+                        source:
+                          number: 2
+                      - type: numberSet
+                        target:
+                          fact: armor.shield.equipped
+                        source:
+                          number: 1
+                      - type: advertiseEffect
+                        self: true

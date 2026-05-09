@@ -750,6 +750,18 @@
         "effect-splint-armor": {
           "name": "DIch Sep"
         }
+      },
+      "shield": {
+        "don-shield": {
+          "name": "DIch tuQ"
+        },
+        "don-shield-offer": {
+          "already-equipped": "DIch tuQtaH",
+          "not-proficient": "DIch SuvwI' DIch DIron"
+        },
+        "effect-shield": {
+          "name": "DIch"
+        }
       }
     }
   },
