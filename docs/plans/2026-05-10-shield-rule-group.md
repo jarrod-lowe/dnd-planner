@@ -13,6 +13,7 @@
 ### Task 1: Create the shield rule group YAML
 
 **Files:**
+
 - Create: `data/rule-groups/dnd-5e-2024/shield.yaml`
 
 **Step 1: Write the rule group**
@@ -121,6 +122,7 @@ feat: add shield rule group definition
 ### Task 2: Add i18n translations
 
 **Files:**
+
 - Modify: `src/lib/i18n/en/common.json`
 - Modify: `src/lib/i18n/en-x-tlh/common.json`
 
@@ -178,6 +180,7 @@ feat: add shield i18n translations
 ### Task 3: Create test — Shield AC bonus
 
 **Files:**
+
 - Create: `tests/integration/rules-engine/yaml-scenarios/shield-ac/test.yaml`
 
 **Step 1: Write the test**
@@ -229,6 +232,7 @@ test: add shield AC bonus scenario
 ### Task 4: Create test — Shield already equipped
 
 **Files:**
+
 - Create: `tests/integration/rules-engine/yaml-scenarios/shield-already-equipped/test.yaml`
 
 **Step 1: Write the test**
@@ -287,6 +291,7 @@ test: add shield already-equipped scenario
 ### Task 5: Create test — Shield proficiency warning
 
 **Files:**
+
 - Create: `tests/integration/rules-engine/yaml-scenarios/shield-not-proficient-warning/test.yaml`
 
 **Step 1: Write the test**
@@ -328,6 +333,7 @@ test: add shield not-proficient warning scenario
 ### Task 6: Create test — Shield proficient (no warning, no disadvantages)
 
 **Files:**
+
 - Create: `tests/integration/rules-engine/yaml-scenarios/shield-proficient/test.yaml`
 
 **Step 1: Write the test**
@@ -386,6 +392,7 @@ test: add shield proficient scenario
 ### Task 7: Create test — Shield with armor (stacks with splint)
 
 **Files:**
+
 - Create: `tests/integration/rules-engine/yaml-scenarios/shield-with-splint-armor/test.yaml`
 
 **Step 1: Write the test**
