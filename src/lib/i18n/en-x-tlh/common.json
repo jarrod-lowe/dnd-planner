@@ -852,7 +852,18 @@
     "saveError": "DIvI' pol laHbe'. yInIDqa'.",
     "validationErrors": "DIvI' DIvI'be'",
     "yamlSyntaxError": "YAML DIvI'be'",
-    "noErrors": "DIvI'be'"
+    "noErrors": "DIvI'be'",
+    "settingsTitle": "{{name}} DIvI'",
+    "settingsConfirm": "chel",
+    "settingsCancel": "DIvI'",
+    "settingsRequired": "poQ",
+    "settingsSelectPlaceholder": "wuq...",
+    "settings.paladin-skill.athletics": "Proficiency - Athletics (Paladin Level 1)",
+    "settings.paladin-skill.insight": "Proficiency - Insight (Paladin Level 1)",
+    "settings.paladin-skill.intimidation": "Proficiency - Intimidation (Paladin Level 1)",
+    "settings.paladin-skill.medicine": "Proficiency - Medicine (Paladin Level 1)",
+    "settings.paladin-skill.persuasion": "Proficiency - Persuasion (Paladin Level 1)",
+    "settings.paladin-skill.religion": "Proficiency - Religion (Paladin Level 1)"
   },
   "facts": {
     "viewTitle": "DIvI' DIvI'",

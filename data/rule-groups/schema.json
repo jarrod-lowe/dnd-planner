@@ -78,6 +78,13 @@
           "items": {
             "$ref": "#/definitions/rule"
           }
+        },
+        "settings": {
+          "type": "array",
+          "description": "Configuration settings presented to the user when this rule group is assigned",
+          "items": {
+            "$ref": "#/definitions/settingDefinition"
+          }
         }
       },
       "additionalProperties": false
@@ -553,6 +560,87 @@
               "description": "Rule to add"
             }
           },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "settingDefinition": {
+      "type": "object",
+      "required": ["id", "type", "translations", "options", "effect"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for this setting within the rule group"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["select"],
+          "description": "Setting type: select (single dropdown)"
+        },
+        "translations": {
+          "type": "object",
+          "description": "Translations for the setting label",
+          "properties": {
+            "en": {
+              "$ref": "#/definitions/settingTranslation"
+            },
+            "en-x-tlh": {
+              "$ref": "#/definitions/settingTranslation"
+            }
+          },
+          "required": ["en", "en-x-tlh"],
+          "additionalProperties": false
+        },
+        "options": {
+          "type": "array",
+          "description": "Available options for this setting",
+          "items": {
+            "$ref": "#/definitions/settingOption"
+          }
+        },
+        "effect": {
+          "$ref": "#/definitions/rule",
+          "description": "Effect template using ${value} substitution. After substitution, produces a standard Rule stored as a character effect."
+        }
+      },
+      "additionalProperties": false
+    },
+    "settingTranslation": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Display label for this setting"
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional description for this setting"
+        }
+      },
+      "additionalProperties": false
+    },
+    "settingOption": {
+      "type": "object",
+      "required": ["value", "translations"],
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "Option identifier used in ${value} substitution"
+        },
+        "translations": {
+          "type": "object",
+          "description": "Display name translations for this option",
+          "properties": {
+            "en": {
+              "$ref": "#/definitions/settingTranslation"
+            },
+            "en-x-tlh": {
+              "$ref": "#/definitions/settingTranslation"
+            }
+          },
+          "required": ["en", "en-x-tlh"],
           "additionalProperties": false
         }
       },

@@ -363,6 +363,8 @@ The architecture supports:
 - Feat: Sentinel
 - Feat: Alert
 - Ready (with spell concentration rules)
+- Rename "Spellcasting" to "Magic"
+- Paladin Long Rest: May swap one prepared spell
 
 ### Low Priority
 

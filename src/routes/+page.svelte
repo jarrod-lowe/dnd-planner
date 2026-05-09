@@ -228,6 +228,11 @@
                 ? playStore.unassignRuleGroup(charId, ruleGroupId)
                 : playStore.assignRuleGroup(charId, ruleGroupId);
             }}
+            onGetSettings={(ruleGroupId) => playStore.getSettingsForRuleGroup(ruleGroupId)}
+            onToggleWithSettings={(ruleGroupId, values) => {
+              const charId = characterStore.state.selectedCharacter!.characterId;
+              return playStore.assignRuleGroupWithSettings(charId, ruleGroupId, values);
+            }}
             onBack={() => {
               manageRulesActive = false;
             }}

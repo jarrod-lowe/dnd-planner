@@ -18,7 +18,7 @@ describe('ruleGroupCache', () => {
   describe('ensureCached', () => {
     it('returns cached data without making an API call', async () => {
       seedCache({
-        'rg-1': { name: 'Fireball', description: 'A fire spell', requires: [] }
+        'rg-1': { name: 'Fireball', description: 'A fire spell', requires: [], settings: [] }
       });
 
       const result = await ensureCached(['rg-1'], 'en');
@@ -27,7 +27,8 @@ describe('ruleGroupCache', () => {
       expect(result.get('rg-1')).toEqual({
         name: 'Fireball',
         description: 'A fire spell',
-        requires: []
+        requires: [],
+        settings: []
       });
     });
 
@@ -51,7 +52,8 @@ describe('ruleGroupCache', () => {
       expect(result.get('paladin-1')).toEqual({
         name: 'Paladin L1',
         description: 'Divine warrior',
-        requires: ['spellcasting']
+        requires: ['spellcasting'],
+        settings: []
       });
 
       // Should be in cache for future calls
@@ -82,7 +84,7 @@ describe('ruleGroupCache', () => {
 
     it('fetches uncached IDs via batch API and merges into cache', async () => {
       seedCache({
-        'rg-1': { name: 'Fireball', description: 'A fire spell', requires: [] }
+        'rg-1': { name: 'Fireball', description: 'A fire spell', requires: [], settings: [] }
       });
 
       mockApiPost.mockResolvedValue({
@@ -104,12 +106,14 @@ describe('ruleGroupCache', () => {
       expect(result.get('rg-1')).toEqual({
         name: 'Fireball',
         description: 'A fire spell',
-        requires: []
+        requires: [],
+        settings: []
       });
       expect(result.get('rg-2')).toEqual({
         name: 'Shield',
         description: 'A shield spell',
-        requires: []
+        requires: [],
+        settings: []
       });
 
       // rg-2 should now be cached
@@ -118,7 +122,8 @@ describe('ruleGroupCache', () => {
       expect(cachedResult.get('rg-2')).toEqual({
         name: 'Shield',
         description: 'A shield spell',
-        requires: []
+        requires: [],
+        settings: []
       });
     });
 
@@ -162,7 +167,7 @@ describe('ruleGroupCache', () => {
 
     it('returns partial results when API fails', async () => {
       seedCache({
-        'rg-1': { name: 'Fireball', description: 'A fire spell', requires: [] }
+        'rg-1': { name: 'Fireball', description: 'A fire spell', requires: [], settings: [] }
       });
 
       mockApiPost.mockResolvedValue({
@@ -176,7 +181,8 @@ describe('ruleGroupCache', () => {
       expect(result.get('rg-1')).toEqual({
         name: 'Fireball',
         description: 'A fire spell',
-        requires: []
+        requires: [],
+        settings: []
       });
       // Failed entry should not be in result
       expect(result.get('rg-2')).toBeUndefined();

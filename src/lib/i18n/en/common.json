@@ -852,7 +852,18 @@
     "saveError": "Failed to save rules. Please try again.",
     "validationErrors": "Validation Errors",
     "yamlSyntaxError": "YAML Syntax Error",
-    "noErrors": "No errors"
+    "noErrors": "No errors",
+    "settingsTitle": "Configure {{name}}",
+    "settingsConfirm": "Add",
+    "settingsCancel": "Cancel",
+    "settingsRequired": "Required",
+    "settingsSelectPlaceholder": "Choose...",
+    "settings.paladin-skill.athletics": "Proficiency - Athletics (Paladin Level 1)",
+    "settings.paladin-skill.insight": "Proficiency - Insight (Paladin Level 1)",
+    "settings.paladin-skill.intimidation": "Proficiency - Intimidation (Paladin Level 1)",
+    "settings.paladin-skill.medicine": "Proficiency - Medicine (Paladin Level 1)",
+    "settings.paladin-skill.persuasion": "Proficiency - Persuasion (Paladin Level 1)",
+    "settings.paladin-skill.religion": "Proficiency - Religion (Paladin Level 1)"
   },
   "facts": {
     "viewTitle": "View Facts",

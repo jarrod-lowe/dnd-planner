@@ -11,6 +11,8 @@ import { get } from 'svelte/store';
 import { getCache, ensureCached } from '$lib/rules/ruleGroupCache.svelte';
 import { resolveDependencies } from '$lib/rules/resolveDependencies';
 import { toast } from 'svelte-sonner';
+import type { SettingDefinition } from '$lib/rules/settingsTypes';
+import { substituteTemplate } from '$lib/rules/substituteSettings';
 
 const DEBOUNCE_MS = 300;
 const BATCH_SIZE = 100;
@@ -454,17 +456,19 @@ async function unassignRuleGroup(characterId: string, ruleGroupId: string): Prom
   const prevIds = [...state.ruleGroupIds];
   const prevRules = [...state.ruleGroups];
   const prevMap = { ...state.ruleGroupRulesMap };
+  const prevEffects = [...state.effects];
   const rulesToRemove = state.ruleGroupRulesMap[ruleGroupId] ?? [];
   const ruleIdsToRemove = new Set(rulesToRemove.map((r) => r.id));
 
-  // Optimistic: remove ID, rules, and map entry
+  // Optimistic: remove ID, rules, map entry, and settings effects
   state = {
     ...state,
     ruleGroupIds: state.ruleGroupIds.filter((id) => id !== ruleGroupId),
     ruleGroups: state.ruleGroups.filter((r) => !ruleIdsToRemove.has(r.id)),
     ruleGroupRulesMap: Object.fromEntries(
       Object.entries(state.ruleGroupRulesMap).filter(([id]) => id !== ruleGroupId)
-    )
+    ),
+    effects: state.effects.filter((e) => !e.id.startsWith(`${ruleGroupId}::`))
   };
 
   // Re-evaluate immediately for responsive UI
@@ -477,6 +481,21 @@ async function unassignRuleGroup(characterId: string, ruleGroupId: string): Prom
     if (!response.ok && response.status !== 204) {
       throw new Error(`Unassign failed: ${response.status}`);
     }
+
+    // Persist updated effects (settings-derived effects removed above)
+    if (state.currentCharacterId) {
+      apiPost(`/api/characters/${state.currentCharacterId}/effects`, {
+        effects: JSON.stringify(state.effects)
+      })
+        .then((res) => {
+          if (!res.ok) {
+            toast.error(get(t)('play.error.saveEffects'));
+          }
+        })
+        .catch(() => {
+          toast.error(get(t)('play.error.saveEffects'));
+        });
+    }
   } catch (error) {
     console.error('[unassignRuleGroup] Error:', error);
     // Revert
@@ -484,7 +503,8 @@ async function unassignRuleGroup(characterId: string, ruleGroupId: string): Prom
       ...state,
       ruleGroupIds: prevIds,
       ruleGroups: prevRules,
-      ruleGroupRulesMap: prevMap
+      ruleGroupRulesMap: prevMap,
+      effects: prevEffects
     };
     recalculateStats();
     performEvaluation();
@@ -575,6 +595,78 @@ function reset(): void {
   state = { ...initialState };
 }
 
+interface SettingsGroup {
+  ruleGroupId: string;
+  name: string;
+  settings: SettingDefinition[];
+}
+
+async function getSettingsForRuleGroup(
+  ruleGroupId: string
+): Promise<SettingsGroup[] | null> {
+  await prefetchDepTree(ruleGroupId, state.ruleGroupIds);
+  const cache = getCache();
+  const deps = resolveDependencies(ruleGroupId, cache, state.ruleGroupIds);
+  const allIds = [...deps, ruleGroupId];
+  const groups: SettingsGroup[] = [];
+
+  for (const id of allIds) {
+    const meta = cache.get(id);
+    if (meta && meta.settings.length > 0) {
+      groups.push({
+        ruleGroupId: id,
+        name: meta.name,
+        settings: meta.settings
+      });
+    }
+  }
+
+  return groups.length > 0 ? groups : null;
+}
+
+async function assignRuleGroupWithSettings(
+  characterId: string,
+  ruleGroupId: string,
+  settingsValues: Map<string, Record<string, string>>
+): Promise<void> {
+  await assignRuleGroup(characterId, ruleGroupId);
+
+  // Create effects from settings
+  const cache = getCache();
+  const newEffects: Rule[] = [];
+
+  for (const [groupId, values] of settingsValues) {
+    const meta = cache.get(groupId);
+    if (!meta) continue;
+
+    for (const setting of meta.settings) {
+      const chosenValue = values[setting.id];
+      if (!chosenValue) continue;
+      const effect = substituteTemplate(setting.effect, chosenValue) as Rule;
+      // Prefix the effect ID with the rule group ID so we can clean up on unassign
+      effect.id = `${groupId}::${effect.id}`;
+      newEffects.push(JSON.parse(JSON.stringify(effect)));
+    }
+  }
+
+  if (newEffects.length > 0) {
+    state = { ...state, effects: [...state.effects, ...newEffects] };
+    performEvaluation();
+
+    apiPost(`/api/characters/${characterId}/effects`, {
+      effects: JSON.stringify(state.effects)
+    })
+      .then((response) => {
+        if (!response.ok) {
+          toast.error(get(t)('play.error.saveEffects'));
+        }
+      })
+      .catch(() => {
+        toast.error(get(t)('play.error.saveEffects'));
+      });
+  }
+}
+
 export const playStore = {
   get state() {
     return state;
@@ -591,6 +683,8 @@ export const playStore = {
   updateCustomRules,
   removeEffect,
   addFollowupEffect,
+  getSettingsForRuleGroup,
+  assignRuleGroupWithSettings,
   endTurn,
   reset
 };

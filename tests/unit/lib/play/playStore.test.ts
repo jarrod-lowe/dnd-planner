@@ -1352,6 +1352,7 @@ describe('playStore', () => {
 
       // Clean up
       resolveDelete!({ ok: true, status: 204 });
+      mockApiPost.mockResolvedValueOnce({ ok: true } as Response);
       await promise;
     });
 
