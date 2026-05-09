@@ -1,0 +1,234 @@
+# yaml-language-server: $schema=../../schema.json
+ruleGroups:
+  - id: spell-divine-favour
+    requires:
+      - spellcasting
+    translations:
+      en:
+        name: Divine Favour
+        description: >-
+          Bonus action. For 1 minute, your weapon attacks deal an extra 1d4
+          radiant damage.
+        keywords: [paladin, divine, favour, radiant, damage, bonus action, spell]
+      en-x-tlh:
+        name: quv
+        description: >-
+          DIch bonus action. DIch DIvI' DIvI' DIvI' 1d4 radiant DIvI'.
+        keywords: [paladin, quv, radiant, DIvI']
+    rules:
+      # Compute eligible spell slots (level 1 only, no upcasting)
+      - id: compute-divine-favour-eligible-slots
+        phase: normal
+        group:
+          - divine-favour-slots-computed
+        activities:
+          - type: numberSum
+            target:
+              fact: divineFavour.eligibleSlotsRemaining
+            sources:
+              - fact: spellcasting.slots.level1.remaining
+
+      # Offer Divine Favour (bonus action spell)
+      - id: offer-divine-favour
+        after:
+          - group: __planned__
+          - group: spellcasting
+          - group: divine-favour-slots-computed
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: divineFavour.active
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-divine-favour.offer-divine-favour.already_active
+                    severity: error
+              - condition: &df-has-bonus-action
+                  fact: bonusActions.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-divine-favour.offer-divine-favour.no_bonus_action
+                    severity: error
+              - condition: &df-has-spellcasting
+                  fact: spellcasting.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-divine-favour.offer-divine-favour.no_spellcasting
+                    severity: error
+              - condition: &df-has-slots
+                  fact: divineFavour.eligibleSlotsRemaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-divine-favour.offer-divine-favour.no_slots
+                    severity: error
+            rule:
+              id: cast-divine-favour
+              group:
+                - __planned__
+                - spellcasting
+              ui:
+                section: bonus-action-spell
+                name: rule.spell-divine-favour.offer-divine-favour.name
+              activities:
+                # Consume bonus action
+                - type: numberIncrement
+                  target:
+                    fact: bonusActions.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                # Consume spellcasting resource
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-divine-favour.offer-divine-favour.no_bonus_action
+                  when:
+                    - fact: bonusActions.remaining
+                      operator: lessThan
+                      value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-divine-favour.offer-divine-favour.no_spellcasting
+                  when:
+                    - fact: spellcasting.remaining
+                      operator: lessThan
+                      value: 0
+                # Set active flag immediately so annotation/offer work this turn
+                - type: numberSet
+                  target:
+                    fact: divineFavour.active
+                  source:
+                    number: 1
+                # Consume L1 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level1.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                # Track slot consumption errors
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-divine-favour.offer-divine-favour.no_slots
+                  when:
+                    - fact: spellcasting.slots.level1.remaining
+                      operator: lessThan
+                      value: 0
+                # Persist L1 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-divine-favour-l1
+                    ui:
+                      name: rule.spell-divine-favour.effect-divine-favour-l1.name
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level1.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
+                # Create persistent Divine Favour effect (10 rounds)
+                - type: advertiseEffect
+                  rule:
+                    id: effect-divine-favour
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    when:
+                      - fact: rest.short
+                        operator: equals
+                        value: 0
+                      - fact: rest.long
+                        operator: equals
+                        value: 0
+                    ui:
+                      section: ongoing
+                      name: rule.spell-divine-favour.effect-divine-favour.name
+                      countDown: 10
+                      duration: 10
+                      information:
+                        - type: countdown
+                          filled: { number: 10 }
+                          total: { number: 10 }
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: divineFavour.active
+                        source:
+                          number: 1
+                      - type: advertiseEffect
+                        self: true
+
+      # Annotate weapon attacks while Divine Favour is active
+      - id: annotate-divine-favour
+        after:
+          - group: __planned__
+        activities:
+          - type: annotate
+            when:
+              - fact: divineFavour.active
+                operator: greaterThan
+                value: 0
+            key: rule.spell-divine-favour.annotation
+            targets: [attack.weapon, attack.unarmed]
+
+      # Offer "Use Divine Favour" while active and attack planned
+      - id: offer-use-divine-favour
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: divineFavour.active
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-divine-favour.offer-use-divine-favour.not_active
+                    severity: error
+              - condition:
+                  fact: attack.last.activation.action
+                  operator: equals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-divine-favour.offer-use-divine-favour.no_attack
+                    severity: error
+            rule:
+              id: use-divine-favour
+              ui:
+                section: free
+                name: rule.spell-divine-favour.use-divine-favour.name
+                primaryControl:
+                  type: dice-line
+                  dice:
+                    - expression: d4
+                      damageType: { string: radiant }
+              activities: []
