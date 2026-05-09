@@ -32,7 +32,8 @@ export default [
       'node_modules/',
       'coverage/',
       'test-results/',
-      'playwright-report/'
+      'playwright-report/',
+      '.claude/'
     ]
   }
 ];

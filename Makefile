@@ -214,12 +214,13 @@ test-component: install
 	pnpm test:component
 
 # Get terraform outputs for test environment
-TEST_BUCKET := $(shell $(AWS_PROFILE_SET) AWS_REGION=$(AWS_REGION) terraform -chdir=terraform/environment/test output -raw s3_bucket_name 2>/dev/null)
-TEST_CDN_ID := $(shell $(AWS_PROFILE_SET) AWS_REGION=$(AWS_REGION) terraform -chdir=terraform/environment/test output -raw cloudfront_distribution_id 2>/dev/null)
-TEST_DYNAMODB_TABLE := $(shell $(AWS_PROFILE_SET) AWS_REGION=$(AWS_REGION) terraform -chdir=terraform/environment/test output -raw dynamodb_table_name 2>/dev/null)
+TEST_OUTPUT_JSON := terraform/environment/test/output.json
+TEST_BUCKET := $(shell jq -r '.s3_bucket_name.value' $(TEST_OUTPUT_JSON) 2>/dev/null)
+TEST_CDN_ID := $(shell jq -r '.cloudfront_distribution_id.value' $(TEST_OUTPUT_JSON) 2>/dev/null)
+TEST_DYNAMODB_TABLE := $(shell jq -r '.dynamodb_table_name.value' $(TEST_OUTPUT_JSON) 2>/dev/null)
 
 # Push to test environment (build and sync to S3)
-push-test: terraform/environment/test/.apply build go-build deploy-lambdas-test
+push-test: $(TEST_OUTPUT_JSON) build go-build deploy-lambdas-test
 	@echo "Syncing to S3 bucket: $(TEST_BUCKET)"
 	@aws s3 sync build/ s3://$(TEST_BUCKET)/ --delete
 	@echo "Invalidating CloudFront distribution: $(TEST_CDN_ID)"
@@ -247,7 +248,7 @@ test-rules: install build/test-rule-groups.json
 	pnpm exec vitest run tests/integration/rules-engine/yaml-scenarios-runner.test.ts
 
 # Sync rule groups to DynamoDB
-sync-rule-groups: scripts/sync_rule_groups.py scripts/requirements.txt preprocess
+sync-rule-groups: scripts/sync_rule_groups.py scripts/requirements.txt preprocess $(TEST_OUTPUT_JSON)
 	@echo "Syncing rule groups to DynamoDB..."
 	@PYTHON=$$(which python3 || which python); \
 	if [ ! -d .venv ]; then $$PYTHON -m venv .venv; fi; \
