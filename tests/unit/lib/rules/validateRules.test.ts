@@ -95,10 +95,10 @@ describe('validateRules', () => {
           ui: {
             stats: [
               {
-                name: 'play.stats.turnCounter',
+                name: 'play.stats.initiative',
                 type: 'value',
-                fact: 'turn.counter',
-                section: 'turn'
+                fact: 'initiative.value',
+                section: 'stats'
               }
             ]
           }
@@ -160,7 +160,7 @@ describe('validateRules', () => {
           id: 'stat-rule',
           activities: [{ type: 'numberSet', target: { fact: 'x' }, source: { number: 1 } }],
           ui: {
-            stats: [{ name: 'play.stats.turn', type: 'value', section: 'turn' }]
+            stats: [{ name: 'play.stats.initiative', type: 'value', section: 'stats' }]
           }
         }
       ];
@@ -249,7 +249,7 @@ describe('validateRules', () => {
           id: 'stat-rule',
           activities: [{ type: 'numberSet', target: { fact: 'x' }, source: { number: 1 } }],
           ui: {
-            stats: [{ type: 'value', fact: 'y', section: 'turn' }]
+            stats: [{ type: 'value', fact: 'y', section: 'stats' }]
           }
         }
       ];

@@ -5,7 +5,7 @@ ruleGroups:
       en:
         name: Turn and Rest
         description: Core rules for turn counting and rest management
-        keywords: [turn, rest, long rest, short rest, counter]
+        keywords: [rest, long rest, short rest]
       en-x-tlh:
         name: wa'DIch 'ej nIb poH
         description: wa'DIch 'ej nIb poH DIvI' naQ
@@ -56,40 +56,3 @@ ruleGroups:
                     fact: rest.short
                   source:
                     number: 1
-
-      # Turn Counter - increments each turn, never resets
-      # On each evaluation, the standing rule increments from 0 to 1 and advertises
-      # a new effect. Previously committed effects also increment by 1 each.
-      # Counter = 1 (standing) + N (existing effects) = turn number.
-      - id: turn-counter-increment
-        phase: early
-        group:
-          - turn-counter
-        ui:
-          stats:
-            - name: play.stats.turnCounter
-              type: value
-              fact: turn.counter
-              section: turn
-        activities:
-          - type: numberIncrement
-            target:
-              fact: turn.counter
-            source:
-              number: 1
-          - type: advertiseEffect
-            when:
-              - fact: turn.counter
-                operator: equals
-                value: 1
-            rule:
-              id: effect-turn-counter
-              phase: early
-              activities:
-                - type: numberIncrement
-                  target:
-                    fact: turn.counter
-                  source:
-                    number: 1
-                - type: advertiseEffect
-                  self: true

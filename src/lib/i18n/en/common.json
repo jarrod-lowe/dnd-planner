@@ -875,7 +875,6 @@
     "backToSelection": "Back to Character Selection",
     "stats": {
       "title": "Stats",
-      "turnCounter": "Turn",
       "movement": "Speed",
       "proficiency": "Proficiency",
       "strength": "Strength",
@@ -909,7 +908,6 @@
       "ac": "AC",
       "todo": "TODO",
       "sections": {
-        "turn": "Turn",
         "resources": "Resources",
         "stats": "Stats",
         "skills": "Skills",

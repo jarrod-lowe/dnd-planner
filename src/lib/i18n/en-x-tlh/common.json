@@ -875,7 +875,6 @@
     "backToSelection": "nuv DIvI' HI'egh",
     "stats": {
       "title": "DIvI'",
-      "turnCounter": "wa'DIch",
       "movement": "Do",
       "proficiency": "valwI'",
       "skills": {
@@ -929,7 +928,6 @@
       "ac": "DIch Jun",
       "todo": "TODO",
       "sections": {
-        "turn": "wa'DIch",
         "resources": "DIvI' Duj",
         "stats": "DIvI'",
         "skills": "Suv",

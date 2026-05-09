@@ -24,7 +24,6 @@ export const SECTION_ORDER: string[] = [
  * Unknown sections appear after these, sorted alphabetically.
  */
 export const STAT_SECTION_ORDER: string[] = [
-  'turn',
   'resources',
   'stats',
   'skills',
