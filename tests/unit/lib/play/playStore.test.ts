@@ -1106,6 +1106,12 @@ describe('playStore', () => {
         }
       } as EngineOutput);
 
+      // prefetchDepTree: batch fetch metadata
+      mockApiPost.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: [] })
+      } as Response);
+
       // Mock POST assign call
       mockApiPost.mockResolvedValueOnce({
         ok: true,
@@ -1132,6 +1138,12 @@ describe('playStore', () => {
       const mockEvaluate = vi.mocked(evaluate);
 
       const newRules: Rule[] = [{ id: 'new-rule-1', activities: [] }];
+
+      // prefetchDepTree: batch fetch metadata
+      mockApiPost.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: [] })
+      } as Response);
 
       // Mock POST assign call
       mockApiPost.mockResolvedValueOnce({
@@ -1256,6 +1268,12 @@ describe('playStore', () => {
         json: async () => ({
           ruleGroups: [{ ruleGroupId: 'base-group', rules: JSON.stringify([]) }]
         })
+      } as Response);
+
+      // prefetchDepTree: batch fetch metadata for group-new
+      mockApiPost.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: [] })
       } as Response);
 
       // assignRuleGroup: assign API call
@@ -2058,6 +2076,258 @@ describe('playStore', () => {
 
       expect(playStore.state.stats).toHaveLength(1);
       expect(playStore.state.stats[0].name).toBe('play.stats.turnCounter');
+    });
+  });
+
+  describe('assignRuleGroupWithSettings', () => {
+    // assignSingleGroup makes 2 API calls: assign POST + batch fetch POST
+    function mockAssignAndFetch(mockApiPost: ReturnType<typeof vi.mocked<typeof apiPost>>): void {
+      // Assign call
+      mockApiPost.mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        json: async () => ({})
+      } as Response);
+      // Batch fetch call
+      mockApiPost.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: [] })
+      } as Response);
+    }
+
+    it('calls assignRuleGroup for select-rule-group settings', async () => {
+      const mockApiPost = vi.mocked(apiPost);
+      const mockEvaluate = vi.mocked(evaluate);
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      // Parent group + 2 mastery groups (no deps on masteries in test)
+      mockAssignAndFetch(mockApiPost); // class-paladin-level1
+      mockAssignAndFetch(mockApiPost); // greataxe-mastery
+      mockAssignAndFetch(mockApiPost); // javelin-mastery
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
+      playStore.reset();
+
+      seedCache({
+        'class-paladin-level1': {
+          name: 'Paladin Level 1',
+          description: 'Test',
+          requires: [],
+          settings: [
+            {
+              id: 'paladin-mastery-1',
+              type: 'select-rule-group',
+              translations: { en: { name: 'Weapon Mastery' }, 'en-x-tlh': { name: 'Weapon Mastery' } },
+              options: [
+                { value: 'greataxe-mastery', translations: { en: { name: 'Greataxe (Cleave)' } } }
+              ]
+            },
+            {
+              id: 'paladin-mastery-2',
+              type: 'select-rule-group',
+              translations: { en: { name: 'Weapon Mastery' }, 'en-x-tlh': { name: 'Weapon Mastery' } },
+              options: [
+                { value: 'javelin-mastery', translations: { en: { name: 'Javelin (Slow)' } } }
+              ]
+            }
+          ]
+        },
+        'greataxe-mastery': {
+          name: 'Greataxe Mastery',
+          description: 'Test',
+          requires: [],
+          settings: []
+        },
+        'javelin-mastery': {
+          name: 'Javelin Mastery',
+          description: 'Test',
+          requires: [],
+          settings: []
+        }
+      });
+
+      const settingsValues = new Map<string, Record<string, string>>();
+      settingsValues.set('class-paladin-level1', {
+        'paladin-mastery-1': 'greataxe-mastery',
+        'paladin-mastery-2': 'javelin-mastery'
+      });
+
+      await playStore.assignRuleGroupWithSettings?.('char-1', 'class-paladin-level1', settingsValues);
+
+      expect(playStore.state.ruleGroupIds).toContain('class-paladin-level1');
+      expect(playStore.state.ruleGroupIds).toContain('greataxe-mastery');
+      expect(playStore.state.ruleGroupIds).toContain('javelin-mastery');
+    });
+
+    it('does not generate effects for select-rule-group settings', async () => {
+      const mockApiPost = vi.mocked(apiPost);
+      const mockEvaluate = vi.mocked(evaluate);
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      mockAssignAndFetch(mockApiPost); // class-paladin-level1
+      mockAssignAndFetch(mockApiPost); // greataxe-mastery
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
+      playStore.reset();
+
+      seedCache({
+        'class-paladin-level1': {
+          name: 'Paladin Level 1',
+          description: 'Test',
+          requires: [],
+          settings: [
+            {
+              id: 'paladin-mastery-1',
+              type: 'select-rule-group',
+              translations: { en: { name: 'Weapon Mastery' }, 'en-x-tlh': { name: 'Weapon Mastery' } },
+              options: [
+                { value: 'greataxe-mastery', translations: { en: { name: 'Greataxe (Cleave)' } } }
+              ]
+            }
+          ]
+        },
+        'greataxe-mastery': {
+          name: 'Greataxe Mastery',
+          description: 'Test',
+          requires: [],
+          settings: []
+        }
+      });
+
+      const settingsValues = new Map<string, Record<string, string>>();
+      settingsValues.set('class-paladin-level1', {
+        'paladin-mastery-1': 'greataxe-mastery'
+      });
+
+      await playStore.assignRuleGroupWithSettings?.('char-1', 'class-paladin-level1', settingsValues);
+
+      expect(playStore.state.effects).toHaveLength(0);
+    });
+
+    it('handles mixed select and select-rule-group settings', async () => {
+      const mockApiPost = vi.mocked(apiPost);
+      const mockEvaluate = vi.mocked(evaluate);
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      // Parent assign + mastery assign + effects save
+      mockAssignAndFetch(mockApiPost); // class-paladin-level1
+      mockAssignAndFetch(mockApiPost); // greataxe-mastery
+      // Effects persist call
+      mockApiPost.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({})
+      } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
+      playStore.reset();
+
+      seedCache({
+        'class-paladin-level1': {
+          name: 'Paladin Level 1',
+          description: 'Test',
+          requires: [],
+          settings: [
+            {
+              id: 'paladin-skill-1',
+              type: 'select',
+              translations: { en: { name: 'Skill Proficiency' }, 'en-x-tlh': { name: 'Skill Proficiency' } },
+              options: [
+                { value: 'athletics', translations: { en: { name: 'Athletics' } } }
+              ],
+              effect: {
+                id: 'paladin-skill-proficiency-${value}',
+                phase: 'early',
+                activities: [
+                  { type: 'numberSet', target: { fact: 'skill.${value}.proficiency' }, source: { number: 1 } }
+                ]
+              }
+            },
+            {
+              id: 'paladin-mastery-1',
+              type: 'select-rule-group',
+              translations: { en: { name: 'Weapon Mastery' }, 'en-x-tlh': { name: 'Weapon Mastery' } },
+              options: [
+                { value: 'greataxe-mastery', translations: { en: { name: 'Greataxe (Cleave)' } } }
+              ]
+            }
+          ]
+        },
+        'greataxe-mastery': {
+          name: 'Greataxe Mastery',
+          description: 'Test',
+          requires: [],
+          settings: []
+        }
+      });
+
+      const settingsValues = new Map<string, Record<string, string>>();
+      settingsValues.set('class-paladin-level1', {
+        'paladin-skill-1': 'athletics',
+        'paladin-mastery-1': 'greataxe-mastery'
+      });
+
+      await playStore.assignRuleGroupWithSettings?.('char-1', 'class-paladin-level1', settingsValues);
+
+      expect(playStore.state.ruleGroupIds).toContain('greataxe-mastery');
+      expect(playStore.state.effects).toHaveLength(1);
+      expect(playStore.state.effects[0].id).toBe('class-paladin-level1::paladin-skill-proficiency-athletics');
     });
   });
 });

@@ -5,8 +5,8 @@ export interface SettingOption {
 
 export interface SettingDefinition {
   id: string;
-  type: 'select';
+  type: 'select' | 'select-rule-group';
   translations: Record<string, { name: string; description?: string }>;
   options: SettingOption[];
-  effect: Record<string, unknown>;
+  effect?: Record<string, unknown>;
 }

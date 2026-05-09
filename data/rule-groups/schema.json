@@ -567,7 +567,7 @@
     },
     "settingDefinition": {
       "type": "object",
-      "required": ["id", "type", "translations", "options", "effect"],
+      "required": ["id", "type", "translations", "options"],
       "properties": {
         "id": {
           "type": "string",
@@ -575,8 +575,8 @@
         },
         "type": {
           "type": "string",
-          "enum": ["select"],
-          "description": "Setting type: select (single dropdown)"
+          "enum": ["select", "select-rule-group"],
+          "description": "Setting type: select (dropdown generating an effect) or select-rule-group (dropdown auto-assigning a rule group)"
         },
         "translations": {
           "type": "object",
@@ -601,9 +601,19 @@
         },
         "effect": {
           "$ref": "#/definitions/rule",
-          "description": "Effect template using ${value} substitution. After substitution, produces a standard Rule stored as a character effect."
+          "description": "Effect template using ${value} substitution. After substitution, produces a standard Rule stored as a character effect. Required when type is 'select'."
         }
       },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "type": { "const": "select" } }
+          },
+          "then": {
+            "required": ["effect"]
+          }
+        }
+      ],
       "additionalProperties": false
     },
     "settingTranslation": {

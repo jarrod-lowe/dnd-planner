@@ -1067,6 +1067,11 @@ paths:
                     "error": "Unsupported language: '$lang'. Supported languages: en, en-x-tlh"
                   }
                 #else
+                #if(!$items || $items.size() == 0)
+                {
+                  "ruleGroups": []
+                }
+                #else
                 {
                   "ruleGroups": [
                 #set($itemFirst = true)
@@ -1101,6 +1106,7 @@ paths:
                 #end
                   ]
                 }
+                #end
                 #end
 
   /rule-groups/{ruleGroupId}:
