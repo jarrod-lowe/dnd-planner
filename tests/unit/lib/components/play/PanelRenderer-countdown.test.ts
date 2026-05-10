@@ -78,6 +78,25 @@ describe('PanelRenderer - countdown information', () => {
     expect(markers).toHaveLength(0);
   });
 
+  it('uses ui.countDown for filled dots when present', () => {
+    const entry: AvailableRuleEntry = {
+      rule: {
+        id: 'effect',
+        activities: [],
+        ui: {
+          countDown: 5,
+          duration: 10,
+          information: [{ type: 'countdown', filled: { number: 10 }, total: { number: 10 } }]
+        }
+      }
+    } as Rule as AvailableRuleEntry;
+    const { container } = render(PanelRenderer, { props: { entry, facts: {} } });
+    const filled = container.querySelectorAll('.panel-renderer__marker--filled');
+    const empty = container.querySelectorAll('.panel-renderer__marker--empty');
+    expect(filled).toHaveLength(5);
+    expect(empty).toHaveLength(5);
+  });
+
   it('renders countdown in editable mode', () => {
     const entry = createCountdownEntry(3, 5);
     const { container } = render(PanelRenderer, {

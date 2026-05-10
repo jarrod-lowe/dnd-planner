@@ -14,6 +14,9 @@
         "no_bonus_action": "No bonus action available",
         "no_slots": "No spell slots remaining",
         "no_spellcasting": "Already cast a spell this turn"
+      },
+      "effect-sanctuary": {
+        "name": "Sanctuary"
       }
     },
     "spell-sleep": {
@@ -23,6 +26,9 @@
         "no_spellcasting": "Already cast a spell this turn",
         "already_concentrating": "Already concentrating",
         "no_slots": "No spell slots remaining"
+      },
+      "effect-sleep": {
+        "name": "Sleep"
       }
     },
     "spell-thunderous-smite": {
@@ -70,9 +76,6 @@
       "effect-divine-favour": {
         "name": "Divine Favour"
       },
-      "effect-divine-favour-l1": {
-        "name": "L1 Spell Slot Expended"
-      },
       "annotation": "Divine Favour available",
       "use-divine-favour": {
         "name": "Use Divine Favour"
@@ -85,9 +88,6 @@
     "spell-create-and-destroy-water": {
       "cast-create-and-destroy-water": {
         "name": "Create and Destroy Water"
-      },
-      "effect-create-and-destroy-water-l1": {
-        "name": "L1 Spell Slot Expended"
       },
       "offer-create-and-destroy-water": {
         "no_action": "No action available",
@@ -1104,6 +1104,13 @@
     },
     "information": {
       "saveDc": "{{saveType}} Save DC {{dc}}"
+    },
+    "slotEffect": {
+      "l1": "L1 Spell Slot Expended",
+      "l2": "L2 Spell Slot Expended",
+      "l3": "L3 Spell Slot Expended",
+      "l4": "L4 Spell Slot Expended",
+      "l5": "L5 Spell Slot Expended"
     }
   },
   "damage-type": {

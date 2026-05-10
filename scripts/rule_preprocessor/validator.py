@@ -27,6 +27,20 @@ def _collect_rule_ids(rule: dict[str, Any], ids: list[str]) -> None:
             _collect_rule_ids(activity["rule"], ids)
 
 
+def _validate_effect_names(rule: dict[str, Any], rg_id: str) -> None:
+    """Check that visible effects (with ui block) have ui.name."""
+    for activity in rule.get("activities", []):
+        if activity.get("type") == "advertiseEffect" and "rule" in activity:
+            nested = activity["rule"]
+            ui = nested.get("ui")
+            if ui is not None and not ui.get("name"):
+                raise PreprocessorError(
+                    f"effect '{nested.get('id', '?')}' in rule group '{rg_id}' "
+                    f"missing ui.name",
+                )
+            _validate_effect_names(nested, rg_id)
+
+
 def validate_generated_output(output: list[dict[str, Any]]) -> None:
     """Validate the complete generated output.
 
@@ -86,3 +100,5 @@ def validate_generated_output(output: list[dict[str, Any]]) -> None:
                         raise PreprocessorError(
                             f"empty activities on nested rule '{nested.get('id', '?')}'",
                         )
+            # Check visible effects have ui.name
+            _validate_effect_names(rule, rg_id)

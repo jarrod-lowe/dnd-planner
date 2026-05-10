@@ -206,3 +206,81 @@ class TestValidateGeneratedOutput:
     def test_empty_output_passes(self):
         """Should not raise for empty output list."""
         validate_generated_output([])
+
+    def test_effect_with_ui_but_no_name_raises(self):
+        """Should raise for an advertiseEffect rule with ui block but no name."""
+        rg = {
+            "id": "test",
+            "translations": {
+                "en": {"name": "N", "description": "D", "keywords": []},
+                "en-x-tlh": {"name": "N", "description": "D", "keywords": []},
+            },
+            "rules": [
+                {
+                    "id": "cast-spell",
+                    "activities": [
+                        {
+                            "type": "advertiseEffect",
+                            "rule": {
+                                "id": "effect-spell",
+                                "ui": {"section": "ongoing"},
+                                "activities": [{"type": "emitEvent", "id": "a1", "event": "x"}],
+                            },
+                        }
+                    ],
+                }
+            ],
+        }
+        with pytest.raises(PreprocessorError, match="missing ui.name"):
+            validate_generated_output([rg])
+
+    def test_effect_with_ui_and_name_passes(self):
+        """Should not raise for an advertiseEffect rule with ui block and name."""
+        rg = {
+            "id": "test",
+            "translations": {
+                "en": {"name": "N", "description": "D", "keywords": []},
+                "en-x-tlh": {"name": "N", "description": "D", "keywords": []},
+            },
+            "rules": [
+                {
+                    "id": "cast-spell",
+                    "activities": [
+                        {
+                            "type": "advertiseEffect",
+                            "rule": {
+                                "id": "effect-spell",
+                                "ui": {"section": "ongoing", "name": "play.spell.name"},
+                                "activities": [{"type": "emitEvent", "id": "a1", "event": "x"}],
+                            },
+                        }
+                    ],
+                }
+            ],
+        }
+        validate_generated_output([rg])
+
+    def test_effect_without_ui_passes(self):
+        """Should not raise for an advertiseEffect rule without any ui block (hidden bookkeeping)."""
+        rg = {
+            "id": "test",
+            "translations": {
+                "en": {"name": "N", "description": "D", "keywords": []},
+                "en-x-tlh": {"name": "N", "description": "D", "keywords": []},
+            },
+            "rules": [
+                {
+                    "id": "rest-handler",
+                    "activities": [
+                        {
+                            "type": "advertiseEffect",
+                            "rule": {
+                                "id": "effect-rest",
+                                "activities": [{"type": "emitEvent", "id": "a1", "event": "x"}],
+                            },
+                        }
+                    ],
+                }
+            ],
+        }
+        validate_generated_output([rg])

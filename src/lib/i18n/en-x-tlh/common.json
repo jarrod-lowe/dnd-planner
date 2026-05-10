@@ -14,6 +14,9 @@
         "no_bonus_action": "Quv DIvI' tu'lu'be'",
         "no_slots": "mugh laH tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'"
+      },
+      "effect-sanctuary": {
+        "name": "chal"
       }
     },
     "spell-sleep": {
@@ -23,6 +26,9 @@
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
         "already_concentrating": "buQ DIvI'",
         "no_slots": "mugh laH tu'lu'be'"
+      },
+      "effect-sleep": {
+        "name": "Qong"
       }
     },
     "spell-thunderous-smite": {
@@ -70,9 +76,6 @@
       "effect-divine-favour": {
         "name": "quv"
       },
-      "effect-divine-favour-l1": {
-        "name": "wa' DIvI' mugh loS"
-      },
       "annotation": "quv DIvI'",
       "use-divine-favour": {
         "name": "quv lo'"
@@ -85,9 +88,6 @@
     "spell-create-and-destroy-water": {
       "cast-create-and-destroy-water": {
         "name": "bIQ chenmoH 'ej HochHom"
-      },
-      "effect-create-and-destroy-water-l1": {
-        "name": "wa' DIvI' mugh loS"
       },
       "offer-create-and-destroy-water": {
         "no_action": "DIvI' tu'lu'be'",
@@ -1104,6 +1104,13 @@
     },
     "information": {
       "saveDc": "{{saveType}} DIvI' {{dc}}"
+    },
+    "slotEffect": {
+      "l1": "DIvI' L1 mugh",
+      "l2": "DIvI' L2 mugh",
+      "l3": "DIvI' L3 mugh",
+      "l4": "DIvI' L4 mugh",
+      "l5": "DIvI' L5 mugh"
     }
   },
   "damage-type": {

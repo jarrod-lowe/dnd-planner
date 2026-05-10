@@ -143,8 +143,14 @@
       ) ?? []
     )
       .map((info, index) => {
-        const filled = resolveValueSource(info.filled, facts, vars, selections);
-        const total = resolveValueSource(info.total, facts, vars, selections);
+        const filled =
+          entry.rule.ui?.countDown != null
+            ? entry.rule.ui.countDown
+            : resolveValueSource(info.filled, facts, vars, selections);
+        const total =
+          entry.rule.ui?.duration != null
+            ? entry.rule.ui.duration
+            : resolveValueSource(info.total, facts, vars, selections);
         if (typeof filled !== 'number' || typeof total !== 'number') return null;
         const empty = total - filled;
         return {

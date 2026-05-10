@@ -309,6 +309,8 @@ ruleGroups:
                 - type: advertiseEffect
                   rule:
                     id: effect-protection-from-evil-and-good-slot-l1
+                    ui:
+                      name: play.slotEffect.l1
                     phase: early
                     after:
                       - group: spellcasting-slots-set
@@ -335,6 +337,8 @@ ruleGroups:
                 - type: advertiseEffect
                   rule:
                     id: effect-protection-from-evil-and-good-slot-l2
+                    ui:
+                      name: play.slotEffect.l2
                     phase: early
                     after:
                       - group: spellcasting-slots-set
@@ -361,6 +365,8 @@ ruleGroups:
                 - type: advertiseEffect
                   rule:
                     id: effect-protection-from-evil-and-good-slot-l3
+                    ui:
+                      name: play.slotEffect.l3
                     phase: early
                     after:
                       - group: spellcasting-slots-set
@@ -387,6 +393,8 @@ ruleGroups:
                 - type: advertiseEffect
                   rule:
                     id: effect-protection-from-evil-and-good-slot-l4
+                    ui:
+                      name: play.slotEffect.l4
                     phase: early
                     after:
                       - group: spellcasting-slots-set
@@ -413,6 +421,8 @@ ruleGroups:
                 - type: advertiseEffect
                   rule:
                     id: effect-protection-from-evil-and-good-slot-l5
+                    ui:
+                      name: play.slotEffect.l5
                     phase: early
                     after:
                       - group: spellcasting-slots-set
