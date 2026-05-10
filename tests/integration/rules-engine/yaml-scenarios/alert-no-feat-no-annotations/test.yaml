@@ -1,0 +1,14 @@
+name: 'Alert Feat - No Feat No Annotations'
+description: >
+  Without feat-alert assigned, no Alert annotations appear.
+
+ruleGroups:
+  - dnd-5e-2024/initiative
+
+steps:
+  - evaluate:
+      assert:
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.feat-alert.annotation-swap
+            - rule.dnd-5e-2024.feat-alert.annotation-proficiency

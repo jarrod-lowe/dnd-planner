@@ -1,0 +1,39 @@
+name: 'Alert Feat - Secondary Control on Initiative'
+description: >
+  When feat-alert is assigned, the Roll Initiative offer includes a
+  secondaryControl for "With Proficiency" enabled by the Alert flag.
+  The label is inline on the dice line (like range text), not a button.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/initiative
+  - dnd-5e-2024/feat-alert
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          feat.alert.active: 1
+        offers:
+          exists:
+            - roll-initiative
+        offerUi:
+          - id: roll-initiative
+            ui:
+              secondaryControl:
+                type: dice-line
+                enabled:
+                  condition:
+                    fact: feat.alert.active
+                    operator: equals
+                    value: 1
+                label: rule.dnd-5e-2024.feat-alert.initiative-proficiency.button
+                annotationLabels:
+                  - dice.any
+                  - dice.initiative
+                dice:
+                  - expression: d20
+                    bonus:
+                      var: alertBonus

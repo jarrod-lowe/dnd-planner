@@ -734,6 +734,13 @@
           "name": "DIvI' chuwI'"
         }
       },
+      "feat-alert": {
+        "annotation-swap": "valwI': DIvI' SuvwI' DIch DIch",
+        "annotation-proficiency": "valwI': valwI' DIch chel",
+        "initiative-proficiency": {
+          "button": "valwI' DIch"
+        }
+      },
       "heroic-inspiration": {
         "annotation": "SuvwI' SubchI' DIch",
         "effect-hi": {

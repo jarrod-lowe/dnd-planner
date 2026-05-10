@@ -15,6 +15,8 @@ ruleGroups:
       # Uses numberIncrement so future feats (e.g., Alert) can add to it
       - id: initiative-bonus
         phase: normal
+        group:
+          - initiative-bonus-settle
         activities:
           - type: numberIncrement
             target:
@@ -48,14 +50,30 @@ ruleGroups:
                 disadvantageFact: initiative.disadvantage
                 primaryControl:
                   type: dice-line
-                  annotationLabels: [dice.any]
+                  annotationLabels: [dice.any, dice.initiative]
                   dice:
                     - expression: d20
                       bonus: { var: rollBonus }
                   advantage: { fact: initiative.disadvantage }
+                secondaryControl:
+                  type: dice-line
+                  enabled:
+                    condition:
+                      fact: feat.alert.active
+                      operator: equals
+                      value: 1
+                  label: rule.dnd-5e-2024.feat-alert.initiative-proficiency.button
+                  annotationLabels: [dice.any, dice.initiative]
+                  dice:
+                    - expression: d20
+                      bonus: { var: alertBonus }
               vars:
                 rollBonus:
                   capture: true
                   default:
                     fact: initiative.bonus
+                alertBonus:
+                  capture: true
+                  default:
+                    fact: feat.alert.initiativeWithProficiency
               activities: []

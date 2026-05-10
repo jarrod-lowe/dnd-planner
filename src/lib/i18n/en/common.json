@@ -734,6 +734,13 @@
           "name": "Roll Initiative"
         }
       },
+      "feat-alert": {
+        "annotation-swap": "Alert: May swap initiative with an ally",
+        "annotation-proficiency": "Alert: May add proficiency",
+        "initiative-proficiency": {
+          "button": "With Proficiency"
+        }
+      },
       "heroic-inspiration": {
         "annotation": "Heroic Inspiration available",
         "effect-hi": {
