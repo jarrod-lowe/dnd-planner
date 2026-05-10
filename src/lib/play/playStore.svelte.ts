@@ -105,13 +105,73 @@ async function loadRuleGroups(characterId: string): Promise<void> {
 
       const { ruleGroups: batchGroups } = await batchResponse.json();
       const batchRules: Rule[] = batchGroups.flatMap(
-        (rg: { ruleGroupId: string; rules: string }) => {
+        (rg: { ruleGroupId: string; rules: string; requires?: string[] }) => {
           const rules: Rule[] = JSON.parse(rg.rules);
           allGroupsMap[rg.ruleGroupId] = rules;
           return rules;
         }
       );
       allRules.push(...batchRules);
+      const batchCache = getCache();
+      for (const rg of batchGroups) {
+        if (rg.ruleGroupId && !batchCache.has(rg.ruleGroupId)) {
+          batchCache.set(rg.ruleGroupId, {
+            name: rg.name ?? '',
+            description: rg.description ?? '',
+            requires: rg.requires ?? [],
+            settings:
+              typeof rg.settings === 'string' && rg.settings
+                ? JSON.parse(rg.settings)
+                : Array.isArray(rg.settings)
+                  ? rg.settings
+                  : []
+          });
+        }
+      }
+    }
+
+    // Self-heal missing requires dependencies
+    const cache = getCache();
+    for (const gid of groupIds) {
+      await prefetchDepTree(gid, groupIds);
+    }
+    const missingDeps: string[] = [];
+    const accumulated: string[] = [...groupIds];
+    for (const gid of groupIds) {
+      const deps = resolveDependencies(gid, cache, [...accumulated]);
+      for (const dep of deps) {
+        if (!accumulated.includes(dep)) {
+          missingDeps.push(dep);
+          accumulated.push(dep);
+        }
+      }
+    }
+    for (const depId of missingDeps) {
+      try {
+        const resp = await apiPost(`/api/characters/${characterId}/rule-groups`, {
+          ruleGroupId: depId
+        });
+        if (resp.ok) {
+          groupIds.push(depId);
+          const depBatchResponse = await apiPost(
+            `/api/rule-groups/batch?lang=${currentLocale}`,
+            { ids: [depId] }
+          );
+          if (depBatchResponse.ok) {
+            const { ruleGroups: depGroups } = await depBatchResponse.json();
+            const depRules: Rule[] = depGroups.flatMap(
+              (rg: { ruleGroupId: string; rules: string }) => {
+                const rules: Rule[] = JSON.parse(rg.rules);
+                allGroupsMap[rg.ruleGroupId] = rules;
+                return rules;
+              }
+            );
+            allRules.push(...depRules);
+          }
+        }
+      } catch {
+        // best-effort: skip failed dep assignments
+      }
     }
 
     state = {
