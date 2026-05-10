@@ -3,6 +3,7 @@
   import DamageTypeIcon from './DamageTypeIcon.svelte';
   import type { DiceLineControl, DiceEntry } from './types';
   import type { Facts, VarDefinition } from '$lib/rules-engine';
+  import { t } from '$lib/i18n';
 
   interface Props {
     control: DiceLineControl;
@@ -199,8 +200,13 @@
     popoverDieIndex = -1;
   }
 
-  const parts = $derived.by<{ type: 'range' | 'die'; die?: DiceEntry; dieIndex?: number }[]>(() => {
-    const result: { type: 'range' | 'die'; die?: DiceEntry; dieIndex?: number }[] = [];
+  const parts = $derived.by<
+    { type: 'label' | 'range' | 'die'; die?: DiceEntry; dieIndex?: number }[]
+  >(() => {
+    const result: { type: 'label' | 'range' | 'die'; die?: DiceEntry; dieIndex?: number }[] = [];
+    if (control.label) {
+      result.push({ type: 'label' });
+    }
     if (currentRange) {
       result.push({ type: 'range' });
     }
@@ -216,7 +222,9 @@
     {#if i > 0}
       <span class="panel-renderer__dice-separator">|</span>
     {/if}
-    {#if part.type === 'range'}
+    {#if part.type === 'label'}
+      <span class="panel-renderer__range">{$t(control.label!)}</span>
+    {:else if part.type === 'range'}
       {#if editable}
         <button
           class="panel-renderer__range"

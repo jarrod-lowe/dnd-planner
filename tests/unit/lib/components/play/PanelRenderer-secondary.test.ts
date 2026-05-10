@@ -265,4 +265,69 @@ describe('PanelRenderer - secondary control', () => {
       expect(secondaries.length).toBe(0);
     });
   });
+
+  describe('label without button', () => {
+    const createEntryWithLabel = (conditionMet = true): AvailableRuleEntry => {
+      void conditionMet;
+      return {
+        rule: {
+          id: 'labeled-secondary',
+          description: 'Labeled Secondary',
+          activities: [],
+          ui: {
+            name: 'rule.test.name',
+            primaryControl: {
+              type: 'dice-line',
+              dice: [{ expression: 'd20', bonus: { var: 'primaryBonus' } }]
+            },
+            secondaryControl: {
+              type: 'dice-line',
+              enabled: {
+                condition: { fact: 'feat.active', operator: 'equals', value: 1 }
+              },
+              label: 'rule.test.secondary-label',
+              dice: [{ expression: 'd20', bonus: { var: 'secondaryBonus' } }]
+            },
+            vars: {
+              primaryBonus: { default: { number: 3 } },
+              secondaryBonus: { default: { number: 2 } }
+            }
+          }
+        } as Rule,
+        legal: true,
+        applicable: true,
+        diagnostics: []
+      };
+    };
+
+    it('does not render secondary when condition is false', () => {
+      const entry = createEntryWithLabel(false);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {} }
+      });
+      expect(container.querySelector('.panel-renderer__control--secondary')).toBeNull();
+    });
+
+    it('renders control directly when condition is true, no button needed', () => {
+      const entry = createEntryWithLabel(true);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: { 'feat.active': 1 } }
+      });
+      expect(container.querySelector('.panel-renderer__enable-button')).toBeNull();
+      const secondaries = container.querySelectorAll('.panel-renderer__control--secondary');
+      expect(secondaries.length).toBe(1);
+    });
+
+    it('renders label text inline on the dice line when condition is true', () => {
+      const entry = createEntryWithLabel(true);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: { 'feat.active': 1 } }
+      });
+      const secondary = container.querySelector('.panel-renderer__control--secondary');
+      expect(secondary).toBeTruthy();
+      const range = secondary!.querySelector('.panel-renderer__range');
+      expect(range).toBeTruthy();
+      expect(range!.textContent).toContain('rule.test.secondary-label');
+    });
+  });
 });

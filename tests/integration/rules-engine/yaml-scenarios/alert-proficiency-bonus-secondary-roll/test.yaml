@@ -1,0 +1,40 @@
+name: 'Alert Feat - Proficiency Bonus Secondary Roll'
+description: >
+  The alertBonus var resolves to initiative.bonus + proficiency.bonus.
+  With DEX 14 (+2) and paladin proficiency (+2), the alert bonus is 4.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/initiative
+  - dnd-5e-2024/feat-alert
+  - class-paladin/class-paladin-level1
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          feat.alert.active: 1
+          proficiency.bonus: 2
+        offers:
+          exists:
+            - set-dexterity
+            - roll-initiative
+
+  - addOffer:
+      id: set-dexterity
+      selections:
+        score: 14
+      assert:
+        facts:
+          dex.modifier: 2
+          initiative.bonus: 2
+          feat.alert.initiativeWithProficiency: 4
+        offerVars:
+          - id: roll-initiative
+            vars:
+              alertBonus:
+                capture: true
+                default:
+                  fact: feat.alert.initiativeWithProficiency

@@ -15,7 +15,7 @@ export interface DiceEntry {
 export interface ControlBase {
   enabled?: {
     condition: import('$lib/rules-engine').Condition;
-    button: string; // i18n key
+    button?: string; // i18n key - when present, shows clickable button; when absent, shows control directly
   };
   annotationLabels?: string[];
 }
@@ -24,6 +24,7 @@ export interface DiceLineControl extends ControlBase {
   type: 'dice-line';
   ranges?: ValueSource;
   advantage?: ValueSource;
+  label?: string; // i18n key - inline text rendered like range text (e.g. "5ft")
   dice: DiceEntry[];
 }
 

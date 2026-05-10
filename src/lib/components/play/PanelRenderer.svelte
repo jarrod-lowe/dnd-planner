@@ -88,14 +88,18 @@
     descriptor.secondaryControl
       ? secondaryConditionMet
         ? descriptor.secondaryControl.enabled
-          ? secondaryActivated
+          ? descriptor.secondaryControl.enabled.button
+            ? secondaryActivated
+            : true
           : true
         : false
       : false
   );
 
   const secondaryShowEnableButton = $derived(
-    descriptor.secondaryControl?.enabled ? secondaryConditionMet && !secondaryActivated : false
+    descriptor.secondaryControl?.enabled
+      ? secondaryConditionMet && !secondaryActivated && !!descriptor.secondaryControl.enabled.button
+      : false
   );
 
   const secondaryDiceLine = $derived(
