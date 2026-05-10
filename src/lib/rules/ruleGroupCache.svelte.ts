@@ -6,12 +6,14 @@
 import { apiPost } from '$lib/api/client';
 import { SvelteMap } from 'svelte/reactivity';
 import type { SettingDefinition } from './settingsTypes';
+import type { RuleGroupCondition } from './conditionTypes';
 
 export interface RuleGroupMeta {
   name: string;
   description: string;
   requires: string[];
   settings: SettingDefinition[];
+  condition?: RuleGroupCondition[];
 }
 
 interface RuleGroupBatchItem {
@@ -20,6 +22,7 @@ interface RuleGroupBatchItem {
   description: string;
   requires?: string[];
   settings?: string | SettingDefinition[];
+  condition?: string | RuleGroupCondition[];
 }
 
 let cache = new SvelteMap<string, RuleGroupMeta>();
@@ -80,7 +83,13 @@ export async function ensureCached(
                 ? JSON.parse(rg.settings)
                 : Array.isArray(rg.settings)
                   ? rg.settings
-                  : []
+                  : [],
+            condition:
+              typeof rg.condition === 'string' && rg.condition
+                ? JSON.parse(rg.condition)
+                : Array.isArray(rg.condition)
+                  ? rg.condition
+                  : undefined
           };
           cache.set(rg.ruleGroupId, meta);
           result.set(rg.ruleGroupId, meta);

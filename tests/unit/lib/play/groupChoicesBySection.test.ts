@@ -288,4 +288,17 @@ describe('groupChoicesBySection', () => {
       expect(moveGroup.packedGroups[1]).toEqual({ type: 'single', entry: leader });
     });
   });
+
+  describe('section normalization', () => {
+    it('merges undefined and "other" sections into a single group', () => {
+      const withOther = createMockEntry('a', { section: 'other' });
+      const withoutSection = createMockEntry('b'); // no section → undefined
+
+      const groups = groupChoicesBySection([withOther, withoutSection], SECTION_ORDER);
+
+      const otherGroups = groups.filter((g) => g.section === 'other' || g.section === undefined);
+      expect(otherGroups).toHaveLength(1);
+      expect(otherGroups[0].packedGroups).toHaveLength(2);
+    });
+  });
 });

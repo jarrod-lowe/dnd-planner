@@ -22,6 +22,7 @@ describe('extractPanelDescriptor', () => {
     expect(desc.primaryControl).toBeUndefined();
     expect(desc.secondaryControl).toBeUndefined();
     expect(desc.information).toBeUndefined();
+    expect(desc.annotationLabels).toBeUndefined();
   });
 
   it('extracts primaryControl with type', () => {
@@ -57,5 +58,18 @@ describe('extractPanelDescriptor', () => {
     expect(desc.information).toHaveLength(2);
     expect(desc.information?.[0].type).toBe('text');
     expect(desc.information?.[1].type).toBe('countdown');
+  });
+
+  it('extracts top-level annotationLabels from ui', () => {
+    const rule: Rule = {
+      id: 'test',
+      activities: [],
+      ui: {
+        name: 'test',
+        annotationLabels: ['attack.any', 'attack.melee', 'attack.reaction']
+      }
+    };
+    const desc = extractPanelDescriptor(rule);
+    expect(desc.annotationLabels).toEqual(['attack.any', 'attack.melee', 'attack.reaction']);
   });
 });

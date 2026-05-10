@@ -741,6 +741,11 @@
           "button": "valwI' DIch"
         }
       },
+      "feat-sentinel": {
+        "annotation-disengage": "Sentinel: DIch DIvI' DIch",
+        "annotation-retaliate": "Sentinel: DIvI' DIch DIch DIvI' 'ej DIvI'",
+        "annotation-speed": "Sentinel: DIch DIvI' DIvI' DIch DIch"
+      },
       "heroic-inspiration": {
         "annotation": "SuvwI' SubchI' DIch",
         "effect-hi": {
@@ -885,6 +890,7 @@
     "ruleGroupUnassigned": "{name} DIvI'be'",
     "toggleError": "DIvI' DIvI' laHbe'. yInIDqa'.",
     "requiredBy": "DIvI': {{names}}",
+    "conditionNotMet": "DIch DIch DIvI'",
     "editCustomRules": "DIvI' chu' DIvI'",
     "customRulesTitle": "DIvI' chu'",
     "backToManageRules": "DIvI' SeH HI'egh",
@@ -905,7 +911,9 @@
     "settings.paladin-skill.intimidation": "Proficiency - Intimidation (Paladin Level 1)",
     "settings.paladin-skill.medicine": "Proficiency - Medicine (Paladin Level 1)",
     "settings.paladin-skill.persuasion": "Proficiency - Persuasion (Paladin Level 1)",
-    "settings.paladin-skill.religion": "Proficiency - Religion (Paladin Level 1)"
+    "settings.paladin-skill.religion": "Proficiency - Religion (Paladin Level 1)",
+    "settings.sentinel-asi.str": "HoS +1 (Sentinel)",
+    "settings.sentinel-asi.dex": "Do +1 (Sentinel)"
   },
   "facts": {
     "viewTitle": "DIvI' DIvI'",

@@ -1,0 +1,19 @@
+name: 'Sentinel Feat - Flag and Annotations'
+description: >
+  When feat-sentinel is assigned, feat.sentinel.active is set to 1 and
+  all three Sentinel annotations appear.
+
+ruleGroups:
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/feat-sentinel
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          feat.sentinel.active: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.feat-sentinel.annotation-disengage
+            - rule.dnd-5e-2024.feat-sentinel.annotation-retaliate
+            - rule.dnd-5e-2024.feat-sentinel.annotation-speed

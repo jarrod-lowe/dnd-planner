@@ -13,6 +13,7 @@ import { resolveDependencies } from '$lib/rules/resolveDependencies';
 import { toast } from 'svelte-sonner';
 import type { SettingDefinition } from '$lib/rules/settingsTypes';
 import { substituteTemplate } from '$lib/rules/substituteSettings';
+import { evaluateRuleGroupConditions } from '$lib/rules/evaluateCondition';
 
 const DEBOUNCE_MS = 300;
 const BATCH_SIZE = 100;
@@ -124,7 +125,13 @@ async function loadRuleGroups(characterId: string): Promise<void> {
                 ? JSON.parse(rg.settings)
                 : Array.isArray(rg.settings)
                   ? rg.settings
-                  : []
+                  : [],
+            condition:
+              typeof rg.condition === 'string' && rg.condition
+                ? JSON.parse(rg.condition)
+                : Array.isArray(rg.condition)
+                  ? rg.condition
+                  : undefined
           });
         }
       }
@@ -359,13 +366,19 @@ async function prefetchDepTree(ruleGroupId: string, assignedIds: string[]): Prom
 }
 
 async function assignRuleGroup(characterId: string, ruleGroupId: string): Promise<void> {
+  // Validate conditions
+  const cache = getCache();
+  const meta = cache.get(ruleGroupId);
+  if (meta?.condition && !evaluateRuleGroupConditions(meta.condition, state.facts)) {
+    throw new Error(`Prerequisites not met for ${ruleGroupId}`);
+  }
+
   // Pre-fetch metadata for the full transitive dependency tree
   // resolveDependencies can only walk cached entries, so we must ensure
   // all intermediate deps are in the cache before resolving.
   await prefetchDepTree(ruleGroupId, state.ruleGroupIds);
 
   // Resolve transitive dependencies
-  const cache = getCache();
   const deps = resolveDependencies(ruleGroupId, cache, state.ruleGroupIds);
 
   // Assign dependencies first (deepest-first order)
@@ -777,6 +790,13 @@ async function assignRuleGroupWithSettings(
   }
 }
 
+function checkCondition(ruleGroupId: string): boolean {
+  const cache = getCache();
+  const meta = cache.get(ruleGroupId);
+  if (!meta?.condition) return true;
+  return evaluateRuleGroupConditions(meta.condition, state.facts);
+}
+
 export const playStore = {
   get state() {
     return state;
@@ -794,6 +814,7 @@ export const playStore = {
   removeEffect,
   addFollowupEffect,
   getSettingsForRuleGroup,
+  checkCondition,
   assignRuleGroupWithSettings,
   endTurn,
   reset

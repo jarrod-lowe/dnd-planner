@@ -34,7 +34,7 @@
     </div>
   {:else}
     <div class="effects-column__list">
-      {#each sectionGroups as sectionGroup (sectionGroup.section ?? 'other')}
+      {#each sectionGroups as sectionGroup (sectionGroup.section)}
         <SectionCollapsible
           section={sectionGroup.section}
           packedGroups={sectionGroup.packedGroups}

@@ -11,10 +11,10 @@ const createEntryWithAnnotations = (): AvailableRuleEntry => ({
     activities: [],
     ui: {
       name: 'rule.attacks.greataxe.name',
+      annotationLabels: ['attack.any', 'attack.melee'],
       primaryControl: {
         type: 'dice-line',
-        dice: [{ expression: 'd20', bonus: { var: 'hitBonus' } }],
-        annotationLabels: ['attack.any', 'attack.melee']
+        dice: [{ expression: 'd20', bonus: { var: 'hitBonus' } }]
       }
     },
     vars: { hitBonus: { default: { number: 5 } } }
@@ -57,7 +57,7 @@ describe('PanelRenderer - annotations', () => {
     expect(annotationSpan?.textContent).toContain('play.annotations.some-buff');
   });
 
-  it('collects labels from both primary and secondary controls', () => {
+  it('ignores annotationLabels on controls (only top-level ui.annotationLabels is used)', () => {
     const entry: AvailableRuleEntry = {
       rule: {
         id: 'two-controls',
@@ -87,9 +87,33 @@ describe('PanelRenderer - annotations', () => {
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts: {}, activeAnnotations: annotations }
     });
+    expect(container.querySelector('.panel-renderer__annotations')).toBeNull();
+  });
+
+  it('collects labels from top-level ui.annotationLabels', () => {
+    const entry: AvailableRuleEntry = {
+      rule: {
+        id: 'reaction-attack',
+        description: 'Reaction Attack',
+        activities: [],
+        ui: {
+          name: 'rule.reaction-attack.name',
+          annotationLabels: ['attack.any', 'attack.melee', 'attack.reaction']
+        }
+      } as Rule,
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    };
+    const annotations: Annotation[] = [
+      { key: 'play.annotations.sentinel-buff', targets: ['attack.reaction'] }
+    ];
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {}, activeAnnotations: annotations }
+    });
     expect(container.querySelector('.panel-renderer__annotations')).toBeTruthy();
     expect(container.querySelector('.panel-renderer__annotation')?.textContent).toContain(
-      'play.annotations.damage-buff'
+      'play.annotations.sentinel-buff'
     );
   });
 

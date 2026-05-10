@@ -15,9 +15,8 @@ export interface DiceEntry {
 export interface ControlBase {
   enabled?: {
     condition: import('$lib/rules-engine').Condition;
-    button?: string; // i18n key - when present, shows clickable button; when absent, shows control directly
+    button?: string;
   };
-  annotationLabels?: string[];
 }
 
 export interface DiceLineControl extends ControlBase {
@@ -68,7 +67,8 @@ export type Information = TextInformation | CountdownInformation;
 
 export interface PanelDescriptor {
   section?: string;
-  name?: string; // i18n key
+  name?: string;
+  annotationLabels?: string[];
   primaryControl?: Control;
   secondaryControl?: Control;
   information?: Information[];

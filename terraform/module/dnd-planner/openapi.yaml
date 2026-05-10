@@ -1100,6 +1100,12 @@ paths:
                       #else
                       "settings": "[]",
                       #end
+                      #set($conditionVal = $item.get('condition'))
+                      #if($conditionVal && $conditionVal.get('S'))
+                      "condition": "$util.escapeJavaScript($conditionVal.get('S')).replaceAll("\\'","'")",
+                      #else
+                      "condition": "[]",
+                      #end
                       "createdAt": "$item.get('createdAt').get('S')",
                       "updatedAt": "$item.get('updatedAt').get('S')"
                     }
