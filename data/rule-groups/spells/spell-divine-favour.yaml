@@ -198,7 +198,7 @@ ruleGroups:
                 operator: greaterThan
                 value: 0
             key: rule.spell-divine-favour.annotation
-            targets: [attack.weapon, attack.unarmed]
+            targets: [attack.weapon]
 
       # Offer "Use Divine Favour" while active and attack planned
       - id: offer-use-divine-favour
