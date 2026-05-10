@@ -136,7 +136,7 @@ ruleGroups:
                   rule:
                     id: effect-divine-favour-l1
                     ui:
-                      name: rule.spell-divine-favour.effect-divine-favour-l1.name
+                      name: play.slotEffect.l1
                     phase: early
                     after:
                       - group: spellcasting-slots-set

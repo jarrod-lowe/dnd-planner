@@ -80,15 +80,48 @@ def validate_file(
         return []
 
     errors = sorted(validator.iter_errors(data), key=lambda e: list(e.path))
-    return [
+    schema_errors = [
         f"  {yaml_path}: {format_error(error)}" for error in errors
     ]
+    effect_errors = validate_effect_names(data, yaml_path)
+    return schema_errors + effect_errors
 
 
 def format_error(error: Any) -> str:
     """Format a jsonschema validation error."""
     path_str = format_path(list(error.path))
     return f"{path_str}: {error.message}"
+
+
+def validate_effect_names(data: dict[str, Any], yaml_path: Path) -> list[str]:
+    """Check that visible advertiseEffect rules have ui.name.
+
+    Effects with a ui block must have ui.name. Hidden effects without ui are exempt.
+    """
+    if not isinstance(data, dict):
+        return []
+    errors: list[str] = []
+
+    def walk(rule: dict[str, Any], path: str) -> None:
+        for i, activity in enumerate(rule.get("activities", [])):
+            if "rule" not in activity:
+                continue
+            nested = activity["rule"]
+            act_path = f"{path}.activities[{i}].rule"
+            if activity.get("type") == "advertiseEffect":
+                ui = nested.get("ui")
+                if ui is not None and not ui.get("name"):
+                    errors.append(
+                        f"  {yaml_path}: {act_path} ({nested.get('id', '?')}): "
+                        f"visible effect missing ui.name"
+                    )
+            walk(nested, act_path)
+
+    for ri, rg in enumerate(data.get("ruleGroups", [])):
+        for rj, rule in enumerate(rg.get("rules", [])):
+            walk(rule, f"ruleGroups[{ri}].rules[{rj}]")
+
+    return errors
 
 
 def parse_args() -> argparse.Namespace:

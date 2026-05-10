@@ -344,6 +344,8 @@ ruleGroups:
                 - type: advertiseEffect
                   rule:
                     id: effect-smite-l1
+                    ui:
+                      name: play.slotEffect.l1
                     phase: early
                     after:
                       - group: spellcasting-slots-set
@@ -370,6 +372,8 @@ ruleGroups:
                 - type: advertiseEffect
                   rule:
                     id: effect-smite-l2
+                    ui:
+                      name: play.slotEffect.l2
                     phase: early
                     after:
                       - group: spellcasting-slots-set
@@ -396,6 +400,8 @@ ruleGroups:
                 - type: advertiseEffect
                   rule:
                     id: effect-smite-l3
+                    ui:
+                      name: play.slotEffect.l3
                     phase: early
                     after:
                       - group: spellcasting-slots-set
@@ -422,6 +428,8 @@ ruleGroups:
                 - type: advertiseEffect
                   rule:
                     id: effect-smite-l4
+                    ui:
+                      name: play.slotEffect.l4
                     phase: early
                     after:
                       - group: spellcasting-slots-set
@@ -448,6 +456,8 @@ ruleGroups:
                 - type: advertiseEffect
                   rule:
                     id: effect-smite-l5
+                    ui:
+                      name: play.slotEffect.l5
                     phase: early
                     after:
                       - group: spellcasting-slots-set
