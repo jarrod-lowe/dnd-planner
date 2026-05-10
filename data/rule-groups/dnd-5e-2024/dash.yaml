@@ -42,12 +42,12 @@ ruleGroups:
                   subtract: true
                 - type: numberIncrement
                   target:
-                    fact: character.movement.total
+                    fact: character.movement.remaining
                   source:
                     fact: character.movement.total
                 - type: numberIncrement
                   target:
-                    fact: character.movement.remaining
+                    fact: character.movement.total
                   source:
                     fact: character.movement.total
                 - *error-clear

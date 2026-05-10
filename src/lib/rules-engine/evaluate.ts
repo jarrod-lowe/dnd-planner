@@ -79,40 +79,38 @@ export function evaluate(input: EngineInput): EngineOutput {
   // 2. Build group states for each phase
   const allRules = [...input.rules.standing, ...input.rules.planned, ...input.rules.effects];
 
-  // Build groups for each phase (groups are phase-specific)
-  const groups = new Map<string, import('./types').GroupState>();
-  const earlyGroups = buildGroupStates(
-    allRules.filter((r) => (r.phase ?? 'normal') === 'early'),
-    'early'
-  );
-  const normalGroups = buildGroupStates(
-    allRules.filter((r) => (r.phase ?? 'normal') === 'normal'),
-    'normal'
-  );
-  const safeguardGroups = buildGroupStates(
-    allRules.filter((r) => (r.phase ?? 'normal') === 'safeguard'),
-    'safeguard'
-  );
-
-  // Merge all groups into single map
-  for (const [key, value] of earlyGroups) groups.set(key, value);
-  for (const [key, value] of normalGroups) groups.set(key, value);
-  for (const [key, value] of safeguardGroups) groups.set(key, value);
+  // Build groups per phase (kept separate to prevent cross-phase auto-group collisions)
+  const phaseGroups = {
+    early: buildGroupStates(
+      allRules.filter((r) => (r.phase ?? 'normal') === 'early'),
+      'early'
+    ),
+    normal: buildGroupStates(
+      allRules.filter((r) => (r.phase ?? 'normal') === 'normal'),
+      'normal'
+    ),
+    safeguard: buildGroupStates(
+      allRules.filter((r) => (r.phase ?? 'normal') === 'safeguard'),
+      'safeguard'
+    )
+  };
 
   // 3. Create function registry (unused in v1 but required for completeness)
   createBuiltinFunctionRegistry();
 
-  // 4. Execute phases in order
+  // 4. Execute phases in order, each with its own group map
   const context: RuleContext = {
     input,
     workingState,
-    groups,
+    groups: phaseGroups.early,
     currentPhase: 'early',
     allRules
   };
 
   executePhase('early', context);
+  context.groups = phaseGroups.normal;
   executePhase('normal', context);
+  context.groups = phaseGroups.safeguard;
   executePhase('safeguard', context);
 
   // 5. Build and return output

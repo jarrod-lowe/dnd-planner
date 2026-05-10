@@ -368,6 +368,7 @@ The architecture supports:
 - Log UI errors to AWS?
 - Improve Divine Favour to be inline with attacks
 - Radiant and Bludgeoning symbols look very similar
+- Alert feat is not the only option for Human origin feat
 
 ### Low Priority
 
