@@ -1308,6 +1308,321 @@ describe('playStore', () => {
     });
   });
 
+  describe('condition gating', () => {
+    it('blocks assignRuleGroup when conditions are not met', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      const mockEvaluate = vi.mocked(evaluate);
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: { 'str.value': 10, 'dex.value': 10 },
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      // loadRuleGroups: get assigned IDs, then effects
+      mockApiGet
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ ruleGroups: [] })
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ effects: null })
+        } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
+      playStore.reset();
+
+      seedCache({
+        'feat-sentinel': {
+          name: 'Sentinel',
+          description: 'Test',
+          requires: [],
+          settings: [],
+          condition: [
+            {
+              type: 'or',
+              clauses: [
+                { fact: 'str.value', operator: 'greaterThanOrEqual', value: 13 },
+                { fact: 'dex.value', operator: 'greaterThanOrEqual', value: 13 }
+              ]
+            }
+          ]
+        }
+      });
+
+      // Load rule groups to populate state.facts via evaluation
+      await playStore.loadRuleGroups('char-1');
+
+      await expect(playStore.assignRuleGroup?.('char-1', 'feat-sentinel')).rejects.toThrow();
+
+      expect(playStore.state.ruleGroupIds).not.toContain('feat-sentinel');
+    });
+
+    it('allows assignRuleGroup when conditions are met', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      const mockApiPost = vi.mocked(apiPost);
+      const mockEvaluate = vi.mocked(evaluate);
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: { 'str.value': 14, 'dex.value': 10 },
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      // loadRuleGroups: get assigned IDs, then effects
+      mockApiGet
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ ruleGroups: [] })
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ effects: null })
+        } as Response);
+
+      // prefetchDepTree: batch fetch metadata
+      mockApiPost.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: [] })
+      } as Response);
+
+      // Mock POST assign call
+      mockApiPost.mockResolvedValueOnce({
+        ok: true,
+        status: 201,
+        json: async () => ({})
+      } as Response);
+
+      // Mock batch fetch call
+      mockApiPost.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: [] })
+      } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
+      playStore.reset();
+
+      seedCache({
+        'feat-sentinel': {
+          name: 'Sentinel',
+          description: 'Test',
+          requires: [],
+          settings: [],
+          condition: [
+            {
+              type: 'or',
+              clauses: [
+                { fact: 'str.value', operator: 'greaterThanOrEqual', value: 13 },
+                { fact: 'dex.value', operator: 'greaterThanOrEqual', value: 13 }
+              ]
+            }
+          ]
+        }
+      });
+
+      // Load rule groups to populate state.facts via evaluation
+      await playStore.loadRuleGroups('char-1');
+      expect(playStore.state.facts['str.value']).toBe(14);
+
+      await playStore.assignRuleGroup?.('char-1', 'feat-sentinel');
+
+      expect(playStore.state.ruleGroupIds).toContain('feat-sentinel');
+    });
+
+    it('checkCondition returns false when conditions not met', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      const mockEvaluate = vi.mocked(evaluate);
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: { 'str.value': 10, 'dex.value': 10 },
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      // loadRuleGroups: get assigned IDs, then effects
+      mockApiGet
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ ruleGroups: [] })
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ effects: null })
+        } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
+      playStore.reset();
+
+      seedCache({
+        'feat-sentinel': {
+          name: 'Sentinel',
+          description: 'Test',
+          requires: [],
+          settings: [],
+          condition: [
+            {
+              type: 'or',
+              clauses: [
+                { fact: 'str.value', operator: 'greaterThanOrEqual', value: 13 },
+                { fact: 'dex.value', operator: 'greaterThanOrEqual', value: 13 }
+              ]
+            }
+          ]
+        }
+      });
+
+      await playStore.loadRuleGroups('char-1');
+
+      expect(playStore.checkCondition?.('feat-sentinel')).toBe(false);
+    });
+
+    it('checkCondition returns true when no conditions defined', async () => {
+      const mockEvaluate = vi.mocked(evaluate);
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
+      playStore.reset();
+
+      seedCache({
+        'no-conditions-feat': {
+          name: 'No Conditions',
+          description: 'Test',
+          requires: [],
+          settings: []
+        }
+      });
+
+      expect(playStore.checkCondition?.('no-conditions-feat')).toBe(true);
+    });
+
+    it('checkCondition returns false after loadRuleGroups caches a condition-bearing group', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      const mockApiPost = vi.mocked(apiPost);
+      const mockEvaluate = vi.mocked(evaluate);
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: { 'str.value': 10, 'dex.value': 10 },
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      // loadRuleGroups: get assigned IDs (sentinel is assigned)
+      mockApiGet
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ ruleGroups: ['feat-sentinel'] })
+        } as Response)
+        // effects
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ effects: null })
+        } as Response);
+
+      // loadRuleGroups batch fetch: returns sentinel with condition as JSON string
+      mockApiPost.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          ruleGroups: [
+            {
+              ruleGroupId: 'feat-sentinel',
+              name: 'Sentinel',
+              description: 'Test',
+              rules: '[]',
+              requires: [],
+              settings: '[]',
+              condition:
+                '[{"type":"or","clauses":[{"fact":"str.value","operator":"greaterThanOrEqual","value":13},{"fact":"dex.value","operator":"greaterThanOrEqual","value":13}]}]'
+            }
+          ]
+        })
+      } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      await playStore.loadRuleGroups('char-1');
+
+      // After loadRuleGroups, checkCondition should still evaluate the condition
+      expect(playStore.state.facts['str.value']).toBe(10);
+      expect(playStore.checkCondition?.('feat-sentinel')).toBe(false);
+    });
+  });
+
   describe('unassignRuleGroup', () => {
     it('optimistically removes ruleGroupId and rules from state', async () => {
       const mockApiGet = vi.mocked(apiGet);

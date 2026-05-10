@@ -71,10 +71,10 @@ export function groupChoicesBySection(
   }
 
   // Group entries by section
-  const sectionMap = new Map<string | undefined, AvailableRuleEntry[]>();
+  const sectionMap = new Map<string, AvailableRuleEntry[]>();
 
   for (const entry of entries) {
-    const section = entry.rule.ui?.section as string | undefined;
+    const section = (entry.rule.ui?.section as string | undefined) ?? 'other';
     if (!sectionMap.has(section)) {
       sectionMap.set(section, []);
     }
@@ -107,20 +107,12 @@ export function groupChoicesBySection(
     }
   }
 
-  // Then, add unknown sections (excluding undefined)
-  const unknownSections = Array.from(sectionMap.keys()).filter((s): s is string => s !== undefined);
-  for (const section of unknownSections) {
+  // Then, add remaining unknown sections
+  for (const section of Array.from(sectionMap.keys())) {
     const sectionEntries = sectionMap.get(section)!;
     const result = buildSection(section, sectionEntries);
     if (result) sections.push(result);
     sectionMap.delete(section);
-  }
-
-  // Finally, add "Other" (undefined section) last
-  const otherEntries = sectionMap.get(undefined);
-  if (otherEntries) {
-    const result = buildSection(undefined, otherEntries);
-    if (result) sections.push(result);
   }
 
   return sections;

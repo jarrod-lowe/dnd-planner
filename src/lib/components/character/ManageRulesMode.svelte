@@ -21,6 +21,7 @@
     character: Character;
     assignedRuleGroupIds?: string[];
     lockedRuleGroups?: Map<string, string[]>;
+    checkCondition?: (ruleGroupId: string) => boolean;
     onToggle: (ruleGroupId: string, isAssigned: boolean) => Promise<void>;
     onGetSettings?: (ruleGroupId: string) => Promise<SettingsGroup[] | null>;
     onToggleWithSettings?: (
@@ -35,6 +36,7 @@
     character: _character,
     assignedRuleGroupIds = [],
     lockedRuleGroups = new Map<string, string[]>(),
+    checkCondition = () => true,
     onToggle,
     onGetSettings = () => Promise.resolve(null),
     onToggleWithSettings = () => Promise.resolve(),
@@ -101,6 +103,8 @@
     debouncedSearch(searchQuery);
   }
   async function handleToggle(ruleGroupId: string, isAssigned: boolean): Promise<void> {
+    // Block unassigned groups whose conditions are not met
+    if (!isAssigned && !checkCondition(ruleGroupId)) return;
     // Block removal of locked rule groups
     if (isAssigned && lockedSet.has(ruleGroupId)) return;
     togglingIds = new Set([...togglingIds, ruleGroupId]);
@@ -187,6 +191,7 @@
           {@const meta = resultMeta.get(id)}
           {@const isAssigned = assignedSet.has(id)}
           {@const isLocked = isAssigned && lockedSet.has(id)}
+          {@const meetsCondition = isAssigned || checkCondition(id)}
           {@const dependents = lockedRuleGroups.get(id) ?? []}
           <div class="manage-rules__panel" role="article">
             <div class="manage-rules__panel-row">
@@ -195,16 +200,19 @@
                 class:manage-rules__indicator--checked={isAssigned}
                 class:manage-rules__indicator--disabled={togglingIds.has(id)}
                 class:manage-rules__indicator--locked={isLocked}
+                class:manage-rules__indicator--unavailable={!meetsCondition}
                 role="checkbox"
                 aria-checked={isAssigned}
                 aria-busy={togglingIds.has(id)}
-                aria-disabled={isLocked || undefined}
+                aria-disabled={isLocked || !meetsCondition || undefined}
                 aria-label={isAssigned
                   ? $t('rules.ruleGroupAssigned', { name: meta?.name ?? id })
                   : $t('rules.ruleGroupUnassigned', { name: meta?.name ?? id })}
                 title={isLocked
                   ? $t('rules.requiredBy', { names: dependents.join(', ') })
-                  : undefined}
+                  : !meetsCondition
+                    ? $t('rules.conditionNotMet')
+                    : undefined}
                 tabindex="0"
                 onclick={() => handleToggle(id, isAssigned)}
                 onkeydown={(e) => handleIndicatorKeydown(e, id, isAssigned)}
@@ -394,6 +402,10 @@
     pointer-events: none;
   }
   .manage-rules__indicator--locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .manage-rules__indicator--unavailable {
     opacity: 0.5;
     cursor: not-allowed;
   }

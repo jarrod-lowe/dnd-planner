@@ -85,9 +85,55 @@
           "items": {
             "$ref": "#/definitions/settingDefinition"
           }
+        },
+        "condition": {
+          "type": "array",
+          "description": "Conditions that must be met before this rule group can be assigned to a character",
+          "items": {
+            "$ref": "#/definitions/ruleGroupCondition"
+          }
         }
       },
       "additionalProperties": false
+    },
+    "ruleGroupCondition": {
+      "type": "object",
+      "description": "A condition for rule group assignment. Top-level array is AND logic; use type 'or' for OR logic.",
+      "oneOf": [
+        {
+          "required": ["fact", "operator", "value"],
+          "properties": {
+            "fact": {
+              "type": "string",
+              "description": "Fact path to check"
+            },
+            "operator": {
+              "$ref": "#/definitions/comparisonOperator"
+            },
+            "value": {
+              "type": "number",
+              "description": "Value to compare against"
+            }
+          }
+        },
+        {
+          "required": ["type", "clauses"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "or",
+              "description": "OR logic: true if any clause passes"
+            },
+            "clauses": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ruleGroupCondition"
+              },
+              "description": "Clauses to evaluate with OR logic"
+            }
+          }
+        }
+      ]
     },
     "rule": {
       "type": "object",

@@ -168,10 +168,7 @@
       )
   );
 
-  const annotationLabels = $derived([
-    ...(descriptor.primaryControl?.annotationLabels ?? []),
-    ...(descriptor.secondaryControl?.annotationLabels ?? [])
-  ]);
+  const annotationLabels = $derived(descriptor.annotationLabels ?? []);
 
   const matchingAnnotations = $derived(getMatchingAnnotations(annotationLabels, activeAnnotations));
 

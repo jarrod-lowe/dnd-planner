@@ -222,6 +222,7 @@
             character={characterStore.state.selectedCharacter}
             assignedRuleGroupIds={playStore.state.ruleGroupIds}
             {lockedRuleGroups}
+            checkCondition={(id) => playStore.checkCondition?.(id) ?? true}
             onToggle={(ruleGroupId, isAssigned) => {
               const charId = characterStore.state.selectedCharacter!.characterId;
               return isAssigned

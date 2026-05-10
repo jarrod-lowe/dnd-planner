@@ -741,6 +741,11 @@
           "button": "With Proficiency"
         }
       },
+      "feat-sentinel": {
+        "annotation-disengage": "Sentinel: Bypasses Disengage",
+        "annotation-retaliate": "Sentinel: Attack on non-you triggers reaction",
+        "annotation-speed": "Sentinel: Hit creature's speed becomes 0"
+      },
       "heroic-inspiration": {
         "annotation": "Heroic Inspiration available",
         "effect-hi": {
@@ -885,6 +890,7 @@
     "ruleGroupUnassigned": "{name} not assigned",
     "toggleError": "Failed to update rule group. Please try again.",
     "requiredBy": "Required by: {{names}}",
+    "conditionNotMet": "Prerequisite not met",
     "editCustomRules": "Edit Custom Rules",
     "customRulesTitle": "Custom Rules",
     "backToManageRules": "Back to Manage Rules",
@@ -905,7 +911,9 @@
     "settings.paladin-skill.intimidation": "Proficiency - Intimidation (Paladin Level 1)",
     "settings.paladin-skill.medicine": "Proficiency - Medicine (Paladin Level 1)",
     "settings.paladin-skill.persuasion": "Proficiency - Persuasion (Paladin Level 1)",
-    "settings.paladin-skill.religion": "Proficiency - Religion (Paladin Level 1)"
+    "settings.paladin-skill.religion": "Proficiency - Religion (Paladin Level 1)",
+    "settings.sentinel-asi.str": "Strength +1 (Sentinel)",
+    "settings.sentinel-asi.dex": "Dexterity +1 (Sentinel)"
   },
   "facts": {
     "viewTitle": "View Facts",
