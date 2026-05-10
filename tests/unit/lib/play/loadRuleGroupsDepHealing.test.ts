@@ -219,7 +219,8 @@ describe('loadRuleGroups dependency self-healing', () => {
 
     // Should only have 1 apiPost call (the batch fetch) - no assignment calls
     const assignmentCalls = mockApiPost.mock.calls.filter(
-      (call) => typeof call[0] === 'string' && call[0].includes('/rule-groups') && call[1]?.ruleGroupId
+      (call) =>
+        typeof call[0] === 'string' && call[0].includes('/rule-groups') && call[1]?.ruleGroupId
     );
     expect(assignmentCalls).toHaveLength(0);
 
@@ -386,9 +387,7 @@ describe('loadRuleGroups dependency self-healing', () => {
     await playStore.loadRuleGroups('char-1');
 
     // group-c should be assigned exactly once
-    const assignCalls = mockApiPost.mock.calls.filter(
-      (call) => call[1]?.ruleGroupId === 'group-c'
-    );
+    const assignCalls = mockApiPost.mock.calls.filter((call) => call[1]?.ruleGroupId === 'group-c');
     expect(assignCalls).toHaveLength(1);
 
     expect(playStore.state.ruleGroupIds).toContain('group-c');
@@ -429,9 +428,7 @@ describe('loadRuleGroups dependency self-healing', () => {
     mockApiPost.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
-        ruleGroups: [
-          { ruleGroupId: 'feat-alert', rules: JSON.stringify([]), requires: [] }
-        ]
+        ruleGroups: [{ ruleGroupId: 'feat-alert', rules: JSON.stringify([]), requires: [] }]
       })
     } as Response);
 

@@ -153,10 +153,9 @@ async function loadRuleGroups(characterId: string): Promise<void> {
         });
         if (resp.ok) {
           groupIds.push(depId);
-          const depBatchResponse = await apiPost(
-            `/api/rule-groups/batch?lang=${currentLocale}`,
-            { ids: [depId] }
-          );
+          const depBatchResponse = await apiPost(`/api/rule-groups/batch?lang=${currentLocale}`, {
+            ids: [depId]
+          });
           if (depBatchResponse.ok) {
             const { ruleGroups: depGroups } = await depBatchResponse.json();
             const depRules: Rule[] = depGroups.flatMap(
