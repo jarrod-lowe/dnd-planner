@@ -98,6 +98,8 @@ def validate_effect_names(data: dict[str, Any], yaml_path: Path) -> list[str]:
 
     Effects with a ui block must have ui.name. Hidden effects without ui are exempt.
     """
+    if not isinstance(data, dict):
+        return []
     errors: list[str] = []
 
     def walk(rule: dict[str, Any], path: str) -> None:
