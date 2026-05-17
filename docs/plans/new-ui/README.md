@@ -163,24 +163,24 @@ Multi-tagging is normal. Sanctuary tags `AID` and `DEFEND`; Disengage tags `MOVE
 
 ### Rules engine implication: verb tagging (schema change)
 
-Add `ui.intents[]` (array of verb codes) and `ui.actionCost[]` (array of cost tags) to the **rule schema** — not just the rule data. The schema type files need new fields; the lint that enforces required-fields needs to learn about them; existing rules need values backfilled.
+Add `ui.intents` (a map of `verb → sub-bucket label`) and `ui.actionCost` (a list of cost tags) to the **rule schema** — not just the rule data. The schema type files need new fields; the lint that enforces required-fields needs to learn about them; existing rules need values backfilled.
+
+The keys of `ui.intents` declare which verbs this rule fulfills; the values declare which sub-bucket label the picker shows the rule under. `ui.actionCost` is purely a UI hint for the cost chips — the engine doesn't budget from it (budget comes from actual resource consumption in the rule's effects). A single rule may carry several cost tags (e.g., Searing Smite's cast is `[bonus, L1]`; a concentration spell that's also an action is `[action, conc]`). Zero-cost rules use the empty list.
 
 ```yaml
-# Example: existing rule extended
+# Existing rule extended with the two new fields
 - id: greataxe.attack
   ui:
-    section: 'Action -> Attack' # existing
-    name: play.action.greataxe # existing
-    model: attack # existing
-    intents: [ATTACK] # NEW — verbs this rule fulfills
+    section: 'Action -> Attack'
+    name: play.action.greataxe
+    model: attack
+    intents:
+      ATTACK: weapons
     actionCost:
-      [action] # NEW — array of cost tags (a single rule may carry several:
-      #       e.g. Searing Smite cast is [bonus, L1]; an action that
-      #       also requires concentration tagged [action, conc]).
-      #       UI hint for cost chips only. The engine doesn't budget
-      #       from this — budget comes from actual resource consumption
-      #       in the rule's effects.
+      - action
 ```
+
+Multi-intent rules declare one entry per intent (Sanctuary on ally has `intents: { AID: ally, DEFEND: ward }`). For verbs that need dynamic context-derived buckets (`SAVE → others`, where each entry is a specific effect's `resolve-save` sub-rule), the activated sub-rules carry their bucket label like any other rule.
 
 ---
 
@@ -401,22 +401,27 @@ The verbs that record events or set foundational state need rules to back them. 
 # rules live in your seed data). These are regular rules.
 - id: damage.taken
   ui:
-    intents: [DAMAGE]
-    actionCost: [] # empty array — records don't spend action economy
-    model: amount # → slider control; modelSelections = { amount, source?, type? }
     name: planner.record.damage
+    model: amount
+    intents:
+      DAMAGE: source
+    actionCost: []
 
 - id: save.made
   ui:
-    intents: [SAVE]
+    name: planner.record.save
+    model: roll-outcome
+    intents:
+      SAVE: others
     actionCost: []
 
 - id: stat.set
   ui:
-    intents: [STAT]
-    actionCost: []
-    model: ability-value # → slider 8–20 with ability picker
     name: planner.build.stat
+    model: ability-value
+    intents:
+      STAT: ability
+    actionCost: []
 ```
 
 When a planner verb needs a `ui.model` that doesn't already exist (`roll-outcome`, `text` for NOTE, `ability-value` for STAT, `category-key` for PROFICIENCY), **add the model to the engine's dispatch alongside the existing ones** — same mechanism, same lifecycle, no special path.
@@ -425,7 +430,7 @@ When a planner verb needs a `ui.model` that doesn't already exist (`roll-outcome
 
 These fields need to be added to the TypeScript types AND to the YAML/JSON rule schema validators:
 
-- **Rule schema**: add `ui.intents: Verb[]` and `ui.actionCost: ActionCost[]` as **required** fields on every rule (`actionCost: []` for zero-cost rules — the array can be empty but the field is required). The data linter must catch missing values.
+- **Rule schema**: add `ui.intents: { [verb]: bucket }` and `ui.actionCost: ActionCost[]` as **required** fields on every rule (`actionCost: []` for zero-cost rules — the list can be empty but the field is required). The data linter must catch missing values.
 - **Step type**: extend the union as above. Old plan steps that don't carry a `verb` get migrated (every existing step has an implicit verb derivable from its `ui.section`).
 - **Effect / standing-state types**: extend if needed; annotation merging, vars, and rule activation are existing mechanisms — use them rather than adding new top-level fields for riders, duration, or pending resolutions.
 
@@ -464,16 +469,16 @@ Pick a phase, complete it, ship it behind a **user-menu UI selector** ("Classic"
 
 ### Phase 0 — Engine prep (TypeScript rules engine + rule data + schema)
 
-| ID  | Task                                                                                                                                                | Acceptance                                                                                                                                                                           |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 0.1 | **Update the rule schema** (TypeScript types + validators) with `ui.intents: Verb[]` + `ui.actionCost: ActionCost[]`. Then tag every existing rule. | Schema type checks; validator rejects rules missing the new fields; all rule data files updated                                                                                      |
-| 0.2 | Extend `Step` to a discriminated union by `verb` (all 15 verbs)                                                                                     | Plan can serialize/deserialize all step kinds; migration handles legacy steps                                                                                                        |
-| 0.3 | Annotation resolution exposes merged riders                                                                                                         | Bless active → attack rules' resolved annotations include `+d4`; UI renders the chip. Use the existing annotation mechanism.                                                         |
-| 0.4 | Effect duration via `var`                                                                                                                           | Effects declare a `duration_left` var; UI reads it for near-expiry treatment.                                                                                                        |
-| 0.5 | Engine state is pure from step list (already true)                                                                                                  | Removing any step from the input list still produces a correct state. End Turn is a UI concern; the engine just sees the combined list.                                              |
-| 0.6 | Activate sub-rules for pending player resolutions                                                                                                   | Searing Smite at end-of-target-turn activates `searing-smite.resolve-save` in availableRules; resolving (recording a SAVE step) clears it. Same pattern for conc check after DAMAGE. |
-| 0.7 | Add `legal` + `illegalReason` per rule + rider in the engine response                                                                               | Engine flags illegal options and provides i18n keys for _why_                                                                                                                        |
-| 0.8 | Pure-function step list → state                                                                                                                     | Removing any step from the middle of the list still produces a correct state                                                                                                         |
+| ID  | Task                                                                                                                                                                                                                     | Acceptance                                                                                                                                                                           |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 0.1 | **Update the rule schema** (TypeScript types + validators) with `ui.intents: { [verb]: bucket }` and `ui.actionCost: ActionCost[]`. Then tag every existing rule.                                                        | Schema type checks; validator rejects rules missing the new fields; all rule data files updated                                                                                      |
+| 0.2 | Extend `Step` to the uniform shape: `{ id, verb, ruleId, modelSelections, riderIds?, recordedAt }`. **One shape**, not a discriminated union — payload dispatch happens via the resolved rule's `ui.model`, not by verb. | Plan serializes/deserializes; migration handles legacy steps (existing steps gain a `verb` derivable from their rule's intent and a `ruleId` already present).                       |
+| 0.3 | Annotation resolution exposes merged riders                                                                                                                                                                              | Bless active → attack rules' resolved annotations include `+d4`; UI renders the chip. Use the existing annotation mechanism.                                                         |
+| 0.4 | Effect duration via `var`                                                                                                                                                                                                | Effects declare a `duration_left` var; UI reads it for near-expiry treatment.                                                                                                        |
+| 0.5 | Engine state is pure from step list (already true)                                                                                                                                                                       | Removing any step from the input list still produces a correct state. End Turn is a UI concern; the engine just sees the combined list.                                              |
+| 0.6 | Activate sub-rules for pending player resolutions                                                                                                                                                                        | Searing Smite at end-of-target-turn activates `searing-smite.resolve-save` in availableRules; resolving (recording a SAVE step) clears it. Same pattern for conc check after DAMAGE. |
+| 0.7 | Add `legal` + `illegalReason` per rule + rider in the engine response                                                                                                                                                    | Engine flags illegal options and provides i18n keys for _why_                                                                                                                        |
+| 0.8 | Pure-function step list → state                                                                                                                                                                                          | Removing any step from the middle of the list still produces a correct state                                                                                                         |
 
 ### Phase 1 — Layout shell (Svelte)
 
