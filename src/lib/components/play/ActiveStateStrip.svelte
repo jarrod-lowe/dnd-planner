@@ -14,13 +14,8 @@
     onDismissEffect?: (ruleId: string) => void;
   }
 
-  let {
-    effects,
-    facts,
-    concentrationEffectName,
-    committedEffectIds,
-    onDismissEffect
-  }: Props = $props();
+  let { effects, facts, concentrationEffectName, committedEffectIds, onDismissEffect }: Props =
+    $props();
 
   let reminderEffect: Rule | null = $state(null);
   let reminderAnchor: DOMRect | null = $state(null);

@@ -80,9 +80,7 @@
     return key ? $t(key) : undefined;
   });
 
-  const committedEffectIds = $derived(
-    playStore.state.effects.map((e) => e.id)
-  );
+  const committedEffectIds = $derived(playStore.state.effects.map((e) => e.id));
 
   // Handle choice tap - add to plan
   function handleChoiceTap(entry: AvailableRuleEntry): void {
@@ -147,7 +145,7 @@
           effects={currentEffects}
           facts={playStore.state.facts}
           concentrationEffectName={concentrationName}
-          committedEffectIds={committedEffectIds}
+          {committedEffectIds}
           onDismissEffect={handleRemoveEffect}
         />
         <PlanStack />
