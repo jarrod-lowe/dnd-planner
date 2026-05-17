@@ -1,0 +1,177 @@
+D&D Planner — Every Available Choice
+=====================================
+Generated from data/rule-groups/ and data/rule-sources/weapons.yaml
+Every offerRule that can appear in the available choices column.
+
+CONFIGURATION - Usually only modified at setup
+===========================================================================================
+
+Ability Scores — Set (slider 0-30, default 10)
+  Set Strength
+  Set Dexterity
+  Set Constitution
+  Set Intelligence
+  Set Wisdom
+  Set Charisma
+
+Ability Scores — Increase (+1, max 20)
+  Increase Strength
+  Increase Dexterity
+  Increase Constitution
+  Increase Intelligence
+  Increase Wisdom
+  Increase Charisma
+
+Save Proficiencies
+  Strength Save Proficiency
+  Dexterity Save Proficiency
+  Constitution Save Proficiency
+  Intelligence Save Proficiency
+  Wisdom Save Proficiency
+  Charisma Save Proficiency
+
+Skill Proficiencies (select proficiency level: half / full / double)
+  Acrobatics (DEX)
+  Animal Handling (WIS)
+  Arcana (INT)
+  Athletics (STR)
+  Deception (CHA)
+  History (INT)
+  Insight (WIS)
+  Intimidation (CHA)
+  Investigation (INT)
+  Medicine (WIS)
+  Nature (INT)
+  Perception (WIS)
+  Performance (CHA)
+  Persuasion (CHA)
+  Religion (INT)
+  Sleight of Hand (DEX)
+  Stealth (DEX)
+  Survival (WIS)
+
+EQUIPMENT - Done rarely, but still needs to be accessible during play)
+=========
+  Don Leather Armor (light, AC 11+DEX)
+  Don Splint Armor (heavy, AC 17, STR 10+ required)
+  Don Shield (+2 AC)
+
+HP - Done rarely, but still needs to be accessible during play)
+=============
+  Set Maximum HP Modifier (slider)
+  Set Current HP Modifier (slider)
+
+INITIATIVE (initiative.yaml)
+=============================
+  Roll Initiative (dice-line: d20 + bonus)
+
+
+SKILL CHECKS (skill-checks.yaml)
+=================================
+  Acrobatics Check (d20 + DEX)
+  Animal Handling Check (d20 + WIS)
+  Arcana Check (d20 + INT)
+  Athletics Check (d20 + STR)
+  Deception Check (d20 + CHA)
+  History Check (d20 + INT)
+  Insight Check (d20 + WIS)
+  Intimidation Check (d20 + CHA)
+  Investigation Check (d20 + INT)
+  Medicine Check (d20 + WIS)
+  Nature Check (d20 + INT)
+  Perception Check (d20 + WIS)
+  Performance Check (d20 + CHA)
+  Persuasion Check (d20 + CHA)
+  Religion Check (d20 + INT)
+  Sleight of Hand Check (d20 + DEX)
+  Stealth Check (d20 + DEX)
+  Survival Check (d20 + WIS)
+
+
+ACTION — ATTACK (weapons.yaml, grapple.yaml, shove.yaml)
+=========================================================
+
+Weapon Attacks (as actions)
+  Unarmed Strike — melee 5ft, bludgeoning
+  Dagger — melee 5ft / thrown 20ft / disadv 60ft, d4 piercing, light/finesse, Nick mastery
+  Greataxe — melee 5ft, d12 slashing, heavy/two-handed, Cleave mastery followup
+  Javelin — melee 5ft / thrown 30ft / disadv 120ft, d6 piercing, Slow mastery effect
+  Scimitar — melee 5ft, d6 slashing, light/finesse, Nick mastery
+
+Special Attacks (as actions)
+  Grapple — Athletics check vs DC
+  Shove — Athletics check vs DC
+
+
+ACTION — OTHER (simple-actions.yaml, dash.yaml)
+=================================================
+  Dash — double movement speed
+  Disengage — no opportunity attacks this turn
+  Dodge — disadvantage on attacks against you, advantage on DEX saves
+  Improvise — any action not covered elsewhere
+  Influence — make a Charisma check to influence a creature
+  Search — use an action to search
+  Study — use an action to study
+  Utilize — use an object or feature
+  Interact — interact with one object free
+
+
+ACTION — SPELL (spells/)
+==========================
+  Bless — L1, action, concentration up to 1 minute, up to 3 creatures
+  Command — L1, action
+  Create and Destroy Water — L1, action
+  Protection from Evil and Good — L1, action, concentration up to 10 minutes
+  Sleep — L1, action
+
+
+BONUS ACTION — SPELL (spells/)
+================================
+  Divine Favour — bonus action, self-buff, d4 radiant on weapon hits (10 minutes)
+  Thunderous Smite — L1, bonus action, 2d6 thunder on next hit + push 10ft
+  Sanctuary — L1, bonus action, concentration up to 1 minute
+
+
+BONUS ACTION — OTHER (class-paladin/)
+=======================================
+  Lay on Hands — Heal (slider: 1 to pool max HP, costs pool points)
+  Lay on Hands — Purify Poison (costs 5 pool points)
+  Divine Smite (slider: slot level 1-5, requires attack action taken this turn)
+  Paladin Smite (free once per long rest, 2d8 radiant, requires attack action taken)
+  Divine Sense (costs 1 divinity point)
+  Emissary of Peace (costs 1 divinity point, +5 Persuasion)
+
+
+BONUS ACTION — LIGHT WEAPON (weapons.yaml)
+=============================================
+  Dagger — bonus attack (light weapon)
+  Scimitar — bonus attack (light weapon)
+
+
+REACTION (weapons.yaml, oath-redemption-level3.yaml)
+======================================================
+  Weapon Attack — Reaction (any melee weapon, requires capability)
+  Rebuke the Violent — costs 1 divinity point
+
+
+FREE (free-actions.yaml, heroic-inspiration.yaml, spell-divine-favour.yaml)
+============================================================================
+  Free Action
+  Help
+  Use Divine Favour — d4 radiant damage (while active, after attack action)
+  Use Heroic Inspiration — reroll a failed attack, ability check, or saving throw
+  Grant Heroic Inspiration
+
+
+MOVE (movement.yaml)
+======================
+  Walk (slider: feet)
+  Rough Terrain Walk (slider: feet, costs double distance)
+  Swim (slider: feet)
+  Fly (slider: feet)
+
+
+REST - Done rarely, but still needs to be accessible during play)
+=======================
+  Long Rest — reset HP, spell slots, Lay on Hands, Divinity, Paladin Smite, effects
+  Short Rest — recover 1 Divinity point
