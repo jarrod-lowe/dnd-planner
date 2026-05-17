@@ -122,6 +122,7 @@ ACTION — SPELL (spells/)
   Command — L1, action
   Create and Destroy Water — L1, action
   Protection from Evil and Good — L1, action, concentration up to 10 minutes
+  Sleep — L1, action
 
 
 BONUS ACTION — SPELL (spells/)
@@ -153,10 +154,11 @@ REACTION (weapons.yaml, oath-redemption-level3.yaml)
   Rebuke the Violent — costs 1 divinity point
 
 
-FREE (free-actions.yaml, heroic-inspiration.yaml)
-====================================================
+FREE (free-actions.yaml, heroic-inspiration.yaml, spell-divine-favour.yaml)
+============================================================================
   Free Action
   Help
+  Use Divine Favour — d4 radiant damage (while active, after attack action)
   Use Heroic Inspiration — reroll a failed attack, ability check, or saving throw
   Grant Heroic Inspiration
 
