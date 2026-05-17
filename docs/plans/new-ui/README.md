@@ -320,12 +320,12 @@ A clickable pill with `⚀ formula label` content. On click → roll the formula
 
 ### Flow D — Scheduling a dismissal
 
-1. User wants to drop Searing Smite to free their concentration for a new spell.
-2. User taps `✕` (dismiss control) on the Searing Smite effect chip.
+1. User wants to drop Detect Evil and Good to free their concentration for a new spell.
+2. User taps `✕` (dismiss control) on the Detect Evil and Good effect chip.
 3. The chip enters a "scheduled to dismiss" state: diagonal strike-through pattern, `↘ DISMISSING` corner badge, the `✕` becomes `↺ undo`.
-4. A new `HANDLE · Dismiss Searing Smite` row appears at the top of the plan stack with a `NEW` tag, `from ↑ effect` caveat in the verb stripe, and "free your concentration · no action cost" sub.
-5. Ledger and effect-rider state recompute: Divine Smite is no longer competing for concentration → its illegal modifier on ATTACK becomes legal (`🔓` unlock indicator).
-6. Cascading downstream changes (the +d6 fire rider on ATTACK disappears because Searing Smite is going away) reflect in the ATTACK row preview.
+4. A new `HANDLE · Dismiss Detect Evil and Good` row appears at the top of the plan stack with a `NEW` tag, `from ↑ effect` caveat in the verb stripe, and "free your concentration · no action cost" sub.
+5. Ledger and effect-rider state recompute: Compelled Duel is no longer competing for concentration → its becomes legal
+6. Cascading downstream changes reflect in the ATTACK row preview.
 7. If user changes mind → tap `↺ undo` on the HANDLE row → everything reverts.
 
 ### Flow E — End turn
@@ -430,7 +430,7 @@ When a planner verb needs a `ui.model` that doesn't already exist (`roll-outcome
 
 These fields need to be added to the TypeScript types AND to the YAML/JSON rule schema validators:
 
-- **Rule schema**: add `ui.intents: { [verb]: bucket }` and `ui.actionCost: ActionCost[]` as **required** fields on every rule (`actionCost: []` for zero-cost rules — the list can be empty but the field is required). The data linter must catch missing values.
+- **Rule schema**: add `ui.intents: { verb: bucket }` and `ui.actionCost: ActionCost[]` as **required** fields on every rule (`actionCost: []` for zero-cost rules — the list can be empty but the field is required). The data linter must catch missing values.
 - **Step type**: extend the union as above. Old plan steps that don't carry a `verb` get migrated (every existing step has an implicit verb derivable from its `ui.section`).
 - **Effect / standing-state types**: extend if needed; annotation merging, vars, and rule activation are existing mechanisms — use them rather than adding new top-level fields for riders, duration, or pending resolutions.
 
@@ -438,10 +438,10 @@ These fields need to be added to the TypeScript types AND to the YAML/JSON rule 
 
 Note that **the engine is stateless and pure**: given the ordered list of steps, it returns the resulting character state. There is no "before" or "after" — the engine _always_ returns the resulting state. The UI's notion of "undo" is simply not sending a step. The UI's notion of "End Turn" is moving steps between client-side lists (draft vs committed); the engine concatenates both lists and computes one state from the result.
 
-- For each rule in `availableRules`: `ui.intents[]` and `ui.actionCost[]` (above).
+- For each rule in `availableRules`: `ui.intents` and `ui.actionCost[]` (above).
 - **Riders come from the existing annotation mechanism.** Rules can declare annotations that target other rules — Divine Smite annotates "all weapon attacks: + d8 radiant on hit"; Bless annotates "this character's attack rolls: +d4". The annotated rule (Greataxe attack) never needs to know about the annotators. The engine resolves annotations during rule evaluation and exposes the merged result; the UI renders resolved annotations as rider chips on the target row.
 - **Effect duration uses the existing `var` mechanism.** An effect rule declares a `var` (e.g. `effect.searing-smite.duration_left`) that decrements each round; the UI reads the var and renders the near-expiry treatment when the value reaches 1.
-- **Pending player resolutions = rules made available.** When an effect needs the user to do something (target makes a save against your conc spell, conc check after taking damage, frightened-save at start of turn), the effect's rule activates another rule — e.g., `searing-smite.resolve-save` with `intents: [SAVE]`, `model: roll-outcome` — and it shows up in `availableRules` like any other rule. The UI looks at "does this effect have related rules in availableRules?" to decide whether to pulse the chip's `!`; the resolver popover is just a context-filtered picker over those rules.
+- **Pending player resolutions = rules made available.** When an effect needs the user to do something (target makes a save against your conc spell, conc check after taking damage, frightened-save at start of turn), the effect's rule activates another rule — e.g., `searing-smite.resolve-save` with `intents: {SAVE: others}`, `model: roll-outcome` — and it shows up in `availableRules` like any other rule. The UI looks at "does this effect have related rules in availableRules?" to decide whether to pulse the chip's `!`; the resolver popover is just a context-filtered picker over those rules.
 - For each rule and rider: `legal: boolean` and `illegalReason?: string` (i18n key) — used to render the `(!) why` tag on dim options.
 
 ### Undo
@@ -471,7 +471,7 @@ Pick a phase, complete it, ship it behind a **user-menu UI selector** ("Classic"
 
 | ID  | Task                                                                                                                                                                                                                     | Acceptance                                                                                                                                                                           |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 0.1 | **Update the rule schema** (TypeScript types + validators) with `ui.intents: { [verb]: bucket }` and `ui.actionCost: ActionCost[]`. Then tag every existing rule.                                                        | Schema type checks; validator rejects rules missing the new fields; all rule data files updated                                                                                      |
+| 0.1 | **Update the rule schema** (TypeScript types + validators) with `ui.intents: { verb: bucket }` and `ui.actionCost: ActionCost[]`. Then tag every existing rule.                                                        | Schema type checks; validator rejects rules missing the new fields; all rule data files updated                                                                                      |
 | 0.2 | Extend `Step` to the uniform shape: `{ id, verb, ruleId, modelSelections, riderIds?, recordedAt }`. **One shape**, not a discriminated union — payload dispatch happens via the resolved rule's `ui.model`, not by verb. | Plan serializes/deserializes; migration handles legacy steps (existing steps gain a `verb` derivable from their rule's intent and a `ruleId` already present).                       |
 | 0.3 | Annotation resolution exposes merged riders                                                                                                                                                                              | Bless active → attack rules' resolved annotations include `+d4`; UI renders the chip. Use the existing annotation mechanism.                                                         |
 | 0.4 | Effect duration via `var`                                                                                                                                                                                                | Effects declare a `duration_left` var; UI reads it for near-expiry treatment.                                                                                                        |
