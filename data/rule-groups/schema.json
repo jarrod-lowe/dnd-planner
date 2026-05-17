@@ -249,6 +249,21 @@
                 "type": "object",
                 "additionalProperties": true
               }
+            },
+            "intents": {
+              "type": "object",
+              "description": "Map of intent verb to sub-bucket label. Keys are verbs (ATTACK, AID, etc.), values are sub-bucket labels. Required when ui.section is present.",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "actionCost": {
+              "type": "array",
+              "description": "Cost tags for UI chip display. Required when ui.section is present.",
+              "items": {
+                "type": "string",
+                "enum": ["action", "bonus", "reaction", "move", "conc", "LoH", "CD", "L1", "L2", "L3", "L4", "L5", "free"]
+              }
             }
           },
           "additionalProperties": false
@@ -544,6 +559,10 @@
           "type": "array",
           "items": { "type": "string" },
           "description": "Annotation label targets to match (for annotate)"
+        },
+        "rider": {
+          "$ref": "#/definitions/annotationRider",
+          "description": "Optional rider data for rendering as a modifier chip (for annotate)"
         }
       },
       "additionalProperties": false
@@ -575,6 +594,38 @@
           "enum": ["error", "warning", "notice"]
         }
       }
+    },
+    "annotationRider": {
+      "type": "object",
+      "required": ["label", "type"],
+      "properties": {
+        "label": {
+          "type": "string",
+          "description": "i18n key for the rider chip label (e.g., 'spell-bless.rider.plus-d4')"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["dice", "modifier", "effect"],
+          "description": "Category of rider for UI rendering"
+        },
+        "costTags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["action", "bonus", "reaction", "move", "conc", "LoH", "CD", "L1", "L2", "L3", "L4", "L5", "free"]
+          },
+          "description": "Action cost tags consumed by this rider"
+        },
+        "legal": {
+          "type": "boolean",
+          "description": "Whether this rider is currently usable. Omit or true = legal."
+        },
+        "illegalReason": {
+          "type": "string",
+          "description": "i18n key explaining why the rider is illegal (when legal is false)"
+        }
+      },
+      "additionalProperties": false
     },
     "followup": {
       "type": "object",

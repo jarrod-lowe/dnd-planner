@@ -31,6 +31,8 @@ ruleGroups:
               ui:
                 section: action-other
                 name: rule.dnd-5e-2024.simple-actions.disengage-action.name
+                intents: { DEFEND: evade }
+                actionCost: [action]
               group:
                 - __planned__
                 - action
@@ -73,6 +75,8 @@ ruleGroups:
                 section: action-other
                 name: rule.dnd-5e-2024.simple-actions.dodge-action.name
                 packBehind: disengage-action
+                intents: { DEFEND: evade }
+                actionCost: [action]
               group:
                 - __planned__
                 - action
@@ -115,6 +119,8 @@ ruleGroups:
                 section: action-other
                 name: rule.dnd-5e-2024.simple-actions.improvise-action.name
                 packBehind: disengage-action
+                intents: { HANDLE: gear }
+                actionCost: [action]
               group:
                 - __planned__
                 - action
@@ -157,6 +163,8 @@ ruleGroups:
                 section: action-other
                 name: rule.dnd-5e-2024.simple-actions.influence-action.name
                 packBehind: disengage-action
+                intents: { AID: ally }
+                actionCost: [action]
               group:
                 - __planned__
                 - action
@@ -199,6 +207,8 @@ ruleGroups:
                 section: action-other
                 name: rule.dnd-5e-2024.simple-actions.search-action.name
                 packBehind: disengage-action
+                intents: { INSPECT: sense }
+                actionCost: [action]
               group:
                 - __planned__
                 - action
@@ -241,6 +251,8 @@ ruleGroups:
                 section: action-other
                 name: rule.dnd-5e-2024.simple-actions.study-action.name
                 packBehind: disengage-action
+                intents: { INSPECT: check }
+                actionCost: [action]
               group:
                 - __planned__
                 - action
@@ -283,6 +295,8 @@ ruleGroups:
                 section: action-other
                 name: rule.dnd-5e-2024.simple-actions.utilize-action.name
                 packBehind: disengage-action
+                intents: { HANDLE: gear }
+                actionCost: [action]
               group:
                 - __planned__
                 - action
@@ -325,6 +339,8 @@ ruleGroups:
                 section: action-other
                 name: rule.dnd-5e-2024.simple-actions.interact-action.name
                 packBehind: disengage-action
+                intents: { HANDLE: gear }
+                actionCost: [action]
               group:
                 - __planned__
                 - action

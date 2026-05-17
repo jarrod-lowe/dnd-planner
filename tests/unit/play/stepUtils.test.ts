@@ -1,0 +1,133 @@
+import { describe, it, expect } from 'vitest';
+import { deriveVerbFromRule, plannedItemToStep, stepToRule, stepsToRules } from '$lib/play/stepUtils';
+import type { Rule } from '$lib/rules-engine';
+import type { PlannedItem } from '$lib/play/types';
+
+const makeRule = (overrides: Partial<Rule> & { id: string }): Rule => ({
+  activities: [],
+  ...overrides
+});
+
+describe('deriveVerbFromRule', () => {
+  it('derives verb from ui.intents', () => {
+    const rule = makeRule({
+      id: 'greataxe-attack',
+      ui: { section: 'action-attack', intents: { ATTACK: 'weapons' }, actionCost: ['action'] }
+    });
+    expect(deriveVerbFromRule(rule)).toBe('ATTACK');
+  });
+
+  it('picks first intent when multiple are present', () => {
+    const rule = makeRule({
+      id: 'sanctuary',
+      ui: { section: 'bonus-action-other', intents: { DEFEND: 'ward', AID: 'ally' }, actionCost: ['bonus'] }
+    });
+    expect(deriveVerbFromRule(rule)).toBe('DEFEND');
+  });
+
+  it('falls back to section heuristic when no intents', () => {
+    const rule = makeRule({
+      id: 'old-rule',
+      ui: { section: 'action-attack' }
+    });
+    expect(deriveVerbFromRule(rule)).toBe('ATTACK');
+  });
+
+  it('falls back to HANDLE for unknown sections', () => {
+    const rule = makeRule({
+      id: 'mystery',
+      ui: { section: 'unknown-section' }
+    });
+    expect(deriveVerbFromRule(rule)).toBe('HANDLE');
+  });
+
+  it('falls back to HANDLE for rules with no ui', () => {
+    const rule = makeRule({ id: 'engine-rule' });
+    expect(deriveVerbFromRule(rule)).toBe('HANDLE');
+  });
+});
+
+describe('plannedItemToStep', () => {
+  it('converts a PlannedItem to a Step', () => {
+    const rule = makeRule({
+      id: 'cast-bless',
+      ui: { section: 'action-spell', intents: { AID: 'ally' }, actionCost: ['action', 'conc', 'L1'] },
+      selections: { slotLevel: 1 }
+    });
+    const item: PlannedItem = {
+      instanceId: 'inst-1',
+      rule,
+      order: 0
+    };
+
+    const step = plannedItemToStep(item);
+
+    expect(step.id).toBe('inst-1');
+    expect(step.verb).toBe('AID');
+    expect(step.ruleId).toBe('cast-bless');
+    expect(step.modelSelections).toEqual({ slotLevel: 1 });
+    expect(step.recordedAt).toBeTruthy();
+  });
+});
+
+describe('stepToRule', () => {
+  it('resolves a step to a rule with merged selections', () => {
+    const baseRule = makeRule({
+      id: 'cast-bless',
+      ui: { section: 'action-spell', intents: { AID: 'ally' } },
+      selections: { existing: 'value' }
+    });
+    const lookup = new Map<string, Rule>([['cast-bless', baseRule]]);
+
+    const step = {
+      id: 'step-1',
+      verb: 'AID' as const,
+      ruleId: 'cast-bless',
+      modelSelections: { slotLevel: 2 },
+      recordedAt: '2025-01-01T00:00:00Z'
+    };
+
+    const result = stepToRule(step, lookup);
+
+    expect(result).not.toBeNull();
+    expect(result!.id).toBe('cast-bless');
+    expect(result!.selections).toEqual({ existing: 'value', slotLevel: 2 });
+  });
+
+  it('returns null for unknown ruleId', () => {
+    const lookup = new Map<string, Rule>();
+    const step = {
+      id: 'step-1',
+      verb: 'ATTACK' as const,
+      ruleId: 'nonexistent',
+      modelSelections: {},
+      recordedAt: '2025-01-01T00:00:00Z'
+    };
+
+    expect(stepToRule(step, lookup)).toBeNull();
+  });
+});
+
+describe('stepsToRules', () => {
+  it('converts multiple steps, skipping unresolvable ones', () => {
+    const rule1 = makeRule({ id: 'rule-a', activities: [] });
+    const rule2 = makeRule({ id: 'rule-b', activities: [] });
+    const lookup = new Map<string, Rule>([
+      ['rule-a', rule1],
+      ['rule-b', rule2]
+    ]);
+
+    const steps = [
+      { id: 's1', verb: 'ATTACK' as const, ruleId: 'rule-a', modelSelections: {}, recordedAt: '' },
+      { id: 's2', verb: 'MOVE' as const, ruleId: 'nonexistent', modelSelections: {}, recordedAt: '' },
+      { id: 's3', verb: 'AID' as const, ruleId: 'rule-b', modelSelections: { amount: 5 }, recordedAt: '' }
+    ];
+
+    const rules = stepsToRules(steps, lookup);
+
+    expect(rules).toHaveLength(2);
+    expect(rules[0].id).toBe('rule-a');
+    expect(rules[1].id).toBe('rule-b');
+    expect(rules[1].selections).toEqual({ amount: 5 });
+  });
+});

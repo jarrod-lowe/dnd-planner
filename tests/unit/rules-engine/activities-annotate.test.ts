@@ -31,6 +31,75 @@ describe('annotate activity', () => {
     });
   });
 
+  it('passes rider data through to annotation output', () => {
+    const rule: Rule = {
+      id: 'test-annotate-rider',
+      activities: [
+        {
+          id: 'ann-1',
+          type: 'annotate',
+          key: 'test.bless-bonus',
+          targets: ['attack.melee'],
+          rider: {
+            label: 'spell-bless.rider.plus-d4',
+            type: 'dice',
+            costTags: ['conc'],
+            legal: true
+          }
+        }
+      ]
+    };
+
+    const input: EngineInput = {
+      schemaVersion: 1,
+      rules: { standing: [rule], planned: [], effects: [] },
+      state: { facts: {} }
+    };
+
+    const result = evaluate(input);
+
+    expect(result.annotations).toHaveLength(1);
+    expect(result.annotations[0].rider).toEqual({
+      label: 'spell-bless.rider.plus-d4',
+      type: 'dice',
+      costTags: ['conc'],
+      legal: true
+    });
+  });
+
+  it('passes illegal rider data through to annotation output', () => {
+    const rule: Rule = {
+      id: 'test-annotate-illegal-rider',
+      activities: [
+        {
+          id: 'ann-1',
+          type: 'annotate',
+          key: 'test.smite-bonus',
+          targets: ['attack.melee'],
+          rider: {
+            label: 'smite.rider.d8',
+            type: 'dice',
+            costTags: ['bonus', 'L1'],
+            legal: false,
+            illegalReason: 'smite.no-slots'
+          }
+        }
+      ]
+    };
+
+    const input: EngineInput = {
+      schemaVersion: 1,
+      rules: { standing: [rule], planned: [], effects: [] },
+      state: { facts: {} }
+    };
+
+    const result = evaluate(input);
+
+    expect(result.annotations).toHaveLength(1);
+    expect(result.annotations[0].rider?.legal).toBe(false);
+    expect(result.annotations[0].rider?.illegalReason).toBe('smite.no-slots');
+  });
+
   it('skips annotate when when conditions are not met', () => {
     const rule: Rule = {
       id: 'test-annotate-gated',

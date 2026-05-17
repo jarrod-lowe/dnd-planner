@@ -1,0 +1,45 @@
+name: 'Engine Purity - Remove Middle Step'
+description: 'Removing a planned item from the middle of the plan produces correct state'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/attacks
+  - class-paladin/class-paladin-level1
+steps:
+  - evaluate:
+      assert:
+        facts:
+          actions.remaining: 1
+          bonusActions.remaining: 1
+          character.movement.remaining: 30
+        offers:
+          exists:
+            - move-walk
+            - unarmed-strike-use-action
+  # Add walk first
+  - addOffer:
+      id: move-walk
+      selections:
+        distance: 15
+      assert:
+        facts:
+          character.movement.remaining: 15
+  # Add unarmed strike (uses action)
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          actions.remaining: 0
+          character.movement.remaining: 15
+  # Remove the walk from the middle — engine should recompute correctly
+  - removeFromPlan:
+      id: move-walk
+      assert:
+        facts:
+          actions.remaining: 0
+          character.movement.remaining: 30

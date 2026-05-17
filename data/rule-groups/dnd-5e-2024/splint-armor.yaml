@@ -39,6 +39,8 @@ ruleGroups:
               ui:
                 section: configuration
                 name: rule.dnd-5e-2024.splint-armor.don-splint-armor.name
+                intents: { HANDLE: gear }
+                actionCost: [move]
               activities:
                 # AC: set base to 17, zero Dex bonus (heavy armor)
                 - type: numberSet

@@ -1,0 +1,51 @@
+name: 'Concentration Check After Damage'
+description: 'Recording damage while concentrating triggers a concentration check offer'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/concentration
+  - dnd-5e-2024/turn-rest
+  - class-paladin/class-paladin-level1
+  - spells/spell-bless
+  - dnd-5e-2024/core-events
+steps:
+  - evaluate:
+      assert:
+        facts:
+          actions.remaining: 1
+          concentration.remaining: 1
+        offers:
+          exists:
+            - cast-bless
+  - addOffer:
+      id: cast-bless
+      assert:
+        facts:
+          concentration.remaining: 0
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-bless
+  # Now in next turn with Bless active (concentration.remaining consumed by effect)
+  - evaluate:
+      assert:
+        facts:
+          concentration.remaining: 0
+        offers:
+          exists:
+            - record-damage
+  # Record damage while concentrating
+  - addOffer:
+      id: record-damage
+      selections:
+        amount: 15
+      assert:
+        facts:
+          concentration.damage-taken: 1
+        offers:
+          exists:
+            - concentration-check

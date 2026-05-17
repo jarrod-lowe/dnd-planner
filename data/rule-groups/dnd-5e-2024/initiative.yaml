@@ -67,6 +67,8 @@ ruleGroups:
                   dice:
                     - expression: d20
                       bonus: { var: alertBonus }
+                intents: { INSPECT: sense }
+                actionCost: []
               vars:
                 rollBonus:
                   capture: true

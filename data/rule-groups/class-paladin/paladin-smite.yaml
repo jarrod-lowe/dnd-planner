@@ -98,6 +98,9 @@ ruleGroups:
               ui:
                 section: bonus-action-other
                 name: rule.class-paladin-paladin-smite.paladin-smite.name
+                intents:
+                  ATTACK: spells
+                actionCost: [bonus]
               vars:
                 dieCount:
                   capture: true

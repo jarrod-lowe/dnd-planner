@@ -38,6 +38,8 @@ ruleGroups:
               ui:
                 section: configuration
                 name: rule.dnd-5e-2024.leather-armor.don-leather-armor.name
+                intents: { HANDLE: gear }
+                actionCost: []
               activities:
                 - type: numberSet
                   target:

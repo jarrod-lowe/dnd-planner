@@ -1,0 +1,191 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: core-events
+    translations:
+      en:
+        name: Core Events
+        description: Built-in rules for recording game events (damage, healing, saves, checks, rests, notes)
+        keywords: [event, record, damage, heal, save, check, rest, note]
+      en-x-tlh:
+        name: DLon ngoD
+        description: DLon DIvI' DIvI' DIvI' DIvI' DIvI'
+        keywords: [DLon, DIvI', DIvI']
+    rules:
+      # === DAMAGE recording ===
+      # Records damage taken, triggers concentration check if concentrating.
+      - id: offer-record-damage
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            rule:
+              id: record-damage
+              group:
+                - __planned__
+              ui:
+                section: free
+                name: planner.record.damage
+                intents:
+                  DAMAGE: source
+                actionCost: []
+              vars:
+                amount:
+                  capture: true
+                  default:
+                    number: 0
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: hp.damage
+                  source:
+                    var: amount
+                  subtract: false
+                - type: numberSet
+                  target:
+                    fact: concentration.damage-taken
+                  source:
+                    number: 1
+                  when:
+                    - fact: concentration.remaining
+                      operator: lessThanOrEqual
+                      value: 0
+
+      # === HEAL recording ===
+      - id: offer-record-heal
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            rule:
+              id: record-heal
+              group:
+                - __planned__
+              ui:
+                section: free
+                name: planner.record.heal
+                intents:
+                  HEAL: source
+                actionCost: []
+              vars:
+                amount:
+                  capture: true
+                  default:
+                    number: 0
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: hp.damage
+                  source:
+                    var: amount
+                  subtract: true
+
+      # === SAVE recording ===
+      - id: offer-record-save
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            rule:
+              id: record-save
+              group:
+                - __planned__
+              ui:
+                section: free
+                name: planner.record.save
+                intents:
+                  SAVE: you
+                actionCost: []
+              vars:
+                passed:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: event.save-last-result
+                  source:
+                    var: passed
+
+      # === CHECK recording ===
+      - id: offer-record-check
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            rule:
+              id: record-check
+              group:
+                - __planned__
+              ui:
+                section: free
+                name: planner.record.check
+                intents:
+                  CHECK: skill
+                actionCost: []
+              activities: []
+
+      # === REST recording ===
+      # Short rest
+      - id: offer-record-short-rest
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            rule:
+              id: record-short-rest
+              group:
+                - __planned__
+              ui:
+                section: rest
+                name: planner.record.rest.short
+                intents:
+                  REST: type
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: rest.short
+                  source:
+                    number: 1
+
+      # Long rest
+      - id: offer-record-long-rest
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            rule:
+              id: record-long-rest
+              group:
+                - __planned__
+              ui:
+                section: rest
+                name: planner.record.rest.long
+                intents:
+                  REST: type
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: rest.long
+                  source:
+                    number: 1
+
+      # === NOTE recording ===
+      - id: offer-record-note
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            rule:
+              id: record-note
+              group:
+                - __planned__
+              ui:
+                section: free
+                name: planner.record.note
+                intents:
+                  NOTE: freeform
+                actionCost: []
+              activities: []

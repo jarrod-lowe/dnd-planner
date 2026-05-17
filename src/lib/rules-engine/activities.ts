@@ -522,6 +522,7 @@ export function executeAdvertiseEffect(
 export function executeAnnotate(activity: AnnotateActivity, context: RuleContext): void {
   context.workingState.annotations.push({
     key: activity.key,
-    targets: activity.targets
+    targets: activity.targets,
+    rider: activity.rider
   });
 }

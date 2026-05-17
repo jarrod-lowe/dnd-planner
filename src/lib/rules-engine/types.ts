@@ -1,6 +1,46 @@
 // === PRIMITIVES ===
 
 /**
+ * Intent verb for UI grouping. Determines which picker group a rule appears under,
+ * the row's stripe label, and visual treatment. Purely a UI hint — not used by the engine.
+ */
+export type Verb =
+  | 'ATTACK'
+  | 'AID'
+  | 'CONTROL'
+  | 'DEFEND'
+  | 'MOVE'
+  | 'INSPECT'
+  | 'HANDLE'
+  | 'DAMAGE'
+  | 'HEAL'
+  | 'SAVE'
+  | 'CHECK'
+  | 'REST'
+  | 'NOTE'
+  | 'STAT'
+  | 'PROFICIENCY';
+
+/**
+ * Action cost tags for UI chip display. Derived from what the rule consumes,
+ * not from the verb. Purely a UI hint — the engine budgets from actual resource consumption.
+ */
+export type ActionCostTag =
+  | 'action'
+  | 'bonus'
+  | 'reaction'
+  | 'move'
+  | 'conc'
+  | 'LoH'
+  | 'CD'
+  | 'L1'
+  | 'L2'
+  | 'L3'
+  | 'L4'
+  | 'L5'
+  | 'free';
+
+/**
  * Evaluation phase for a rule. Rules execute in phase order: early -> normal -> safeguard.
  * - early: Rules that establish preconditions for later rules (e.g., emit events)
  * - normal: Standard evaluation phase for most rules
@@ -169,11 +209,30 @@ export interface Status {
 // === ANNOTATIONS ===
 
 /**
+ * Rider data attached to an annotation, rendered as a chip in the UI.
+ * Describes a modifier or effect that augments a target rule (e.g., Bless +d4 on attacks).
+ */
+export interface AnnotationRider {
+  /** i18n key for the rider chip label (e.g., "spell-bless.rider.plus-d4") */
+  label: string;
+  /** Category of rider for UI rendering */
+  type: 'dice' | 'modifier' | 'effect';
+  /** Action cost tags consumed by this rider, if any */
+  costTags?: ActionCostTag[];
+  /** Whether this rider is currently usable. Undefined = true (always legal). */
+  legal?: boolean;
+  /** i18n key explaining why the rider is illegal, when legal is false */
+  illegalReason?: string;
+}
+
+/**
  * An annotation produced by the rules engine for display on action panels.
  */
 export interface Annotation {
   key: string;
   targets: string[];
+  /** Optional rider data for rendering as a modifier chip */
+  rider?: AnnotationRider;
 }
 
 // === ACTIVITIES ===
@@ -329,6 +388,8 @@ export interface AnnotateActivity extends ActivityBase {
   key: string;
   /** Label strings that action panels must have to receive this annotation */
   targets: string[];
+  /** Optional rider data for rendering as a modifier chip */
+  rider?: AnnotationRider;
 }
 
 /**

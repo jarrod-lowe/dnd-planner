@@ -1,0 +1,14 @@
+name: 'Core Events - Damage Recording Offered'
+description: 'The record-damage rule is offered from the core-events rule group'
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/core-events
+steps:
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - record-damage
+          notExists:
+            - concentration-check

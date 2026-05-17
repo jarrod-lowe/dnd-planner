@@ -83,6 +83,8 @@ ruleGroups:
                   max: { var: maxDistance }
                   step: 5
                   unit: ft
+                intents: { MOVE: walk }
+                actionCost: [move]
               group:
                 - __planned__
                 - move
@@ -142,6 +144,8 @@ ruleGroups:
                   max: { var: maxDistance }
                   step: 5
                   unit: ft
+                intents: { MOVE: walk }
+                actionCost: [move]
               group:
                 - __planned__
                 - move
@@ -223,6 +227,8 @@ ruleGroups:
                   max: { var: maxDistance }
                   step: 5
                   unit: ft
+                intents: { MOVE: walk }
+                actionCost: [move]
               group:
                 - __planned__
                 - move
@@ -303,6 +309,8 @@ ruleGroups:
                   max: { var: maxDistance }
                   step: 5
                   unit: ft
+                intents: { MOVE: walk }
+                actionCost: [move]
               group:
                 - __planned__
                 - move
@@ -381,6 +389,8 @@ ruleGroups:
                   max: { var: maxDistance }
                   step: 5
                   unit: ft
+                intents: { MOVE: walk }
+                actionCost: [move]
               group:
                 - __planned__
                 - move
