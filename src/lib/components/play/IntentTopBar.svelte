@@ -102,7 +102,7 @@
   );
   const acValue = $derived(acStat ? String(facts[acStat.fact] ?? '?') : undefined);
   const speedValue = $derived(speedStat ? String(facts[speedStat.remaining] ?? '?') : undefined);
-  const concActive = $derived(concStat ? Boolean(facts[concStat.remaining]) : false);
+  const concActive = $derived(!!concentrationEffectName);
 
   const abilitiesLine = $derived(
     abilityStats
