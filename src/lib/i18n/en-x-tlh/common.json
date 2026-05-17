@@ -1081,7 +1081,8 @@
       "conc": "CONC",
       "concNone": "No concentration",
       "concActive": "Active",
-      "abilities": "Abilities"
+      "abilities": "Abilities",
+      "proficient": "Proficient"
     }
   },
   "damage-type": {

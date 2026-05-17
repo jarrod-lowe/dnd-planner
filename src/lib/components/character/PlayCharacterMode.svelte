@@ -4,7 +4,6 @@
   import { playStore } from '$lib/play/playStore.svelte';
   import { uiPrefsStore } from '$lib/ui/uiPrefsStore.svelte';
   import PlayLayout from '../play/PlayLayout.svelte';
-  import IntentStackLayout from '../play/IntentStackLayout.svelte';
   import IntentTopBar from '../play/IntentTopBar.svelte';
   import ActiveStateStrip from '../play/ActiveStateStrip.svelte';
   import PlanStack from '../play/PlanStack.svelte';
@@ -92,46 +91,45 @@
 </script>
 
 <div class="play-character">
-  {#if playStore.state.isLoadingRuleGroups}
-    <div class="play-character__loading">{$t('play.choices.loading')}</div>
-  {:else if playStore.state.ruleGroupError}
-    <div class="play-character__error">{$t('play.error.loadRuleGroups')}</div>
-  {:else if uiPrefsStore.state.layout === 'intent'}
-    <IntentStackLayout>
-      {#snippet topBar()}
-        <IntentTopBar
-          {character}
-          stats={playStore.state.stats}
-          facts={playStore.state.facts}
-          {email}
-          {onLogout}
-          {version}
-          {onBack}
-          {onManageRules}
-          {showManageRules}
-          {onViewFacts}
-          {showViewFacts}
-          {onDownloadCharacter}
-          {showDownloadCharacter}
-          currentLayout={uiPrefsStore.state.layout}
-          onSwitchLayout={(l) => uiPrefsStore.setLayout(l)}
-        />
-      {/snippet}
-      {#snippet activeStrip()}
+  {#if uiPrefsStore.state.layout === 'intent'}
+    <IntentTopBar
+      {character}
+      stats={playStore.state.stats}
+      facts={playStore.state.facts}
+      {email}
+      {onLogout}
+      {version}
+      {onBack}
+      {onManageRules}
+      {showManageRules}
+      {onViewFacts}
+      {showViewFacts}
+      {onDownloadCharacter}
+      {showDownloadCharacter}
+      currentLayout={uiPrefsStore.state.layout}
+      onSwitchLayout={(l) => uiPrefsStore.setLayout(l)}
+    />
+    {#if playStore.state.isLoadingRuleGroups}
+      <div class="play-character__loading">{$t('play.choices.loading')}</div>
+    {:else if playStore.state.ruleGroupError}
+      <div class="play-character__error">{$t('play.error.loadRuleGroups')}</div>
+    {:else}
+      <div class="play-character__intent-body">
         <ActiveStateStrip effectCount={currentEffects.length} />
-      {/snippet}
-      {#snippet planStack()}
         <PlanStack />
-      {/snippet}
-      {#snippet ledger()}
         <Ledger
           stats={playStore.state.stats}
           facts={playStore.state.facts}
           status={playStore.state.engineOutput?.status}
         />
-      {/snippet}
-    </IntentStackLayout>
+      </div>
+    {/if}
   {:else}
+    {#if playStore.state.isLoadingRuleGroups}
+      <div class="play-character__loading">{$t('play.choices.loading')}</div>
+    {:else if playStore.state.ruleGroupError}
+      <div class="play-character__error">{$t('play.error.loadRuleGroups')}</div>
+    {:else}
     <PlayLayout>
       {#snippet stats()}
         <StatsColumn stats={playStore.state.stats} facts={playStore.state.facts} />
@@ -191,6 +189,7 @@
         />
       {/snippet}
     </PlayLayout>
+    {/if}
   {/if}
 </div>
 
@@ -217,6 +216,30 @@
 
   .play-character__error {
     color: var(--md-sys-color-error);
+  }
+
+  .play-character__intent-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .play-character__intent-body > :global(.active-state-strip) {
+    flex-shrink: 0;
+    max-height: 8.5rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .play-character__intent-body > :global(.plan-stack) {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .play-character__intent-body > :global(.ledger) {
+    flex-shrink: 0;
   }
 
   .play-character__toggle-illegal {
