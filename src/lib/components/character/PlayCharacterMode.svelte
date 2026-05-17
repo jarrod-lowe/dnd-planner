@@ -124,12 +124,11 @@
         />
       </div>
     {/if}
+  {:else if playStore.state.isLoadingRuleGroups}
+    <div class="play-character__loading">{$t('play.choices.loading')}</div>
+  {:else if playStore.state.ruleGroupError}
+    <div class="play-character__error">{$t('play.error.loadRuleGroups')}</div>
   {:else}
-    {#if playStore.state.isLoadingRuleGroups}
-      <div class="play-character__loading">{$t('play.choices.loading')}</div>
-    {:else if playStore.state.ruleGroupError}
-      <div class="play-character__error">{$t('play.error.loadRuleGroups')}</div>
-    {:else}
     <PlayLayout>
       {#snippet stats()}
         <StatsColumn stats={playStore.state.stats} facts={playStore.state.facts} />
@@ -189,7 +188,6 @@
         />
       {/snippet}
     </PlayLayout>
-    {/if}
   {/if}
 </div>
 
