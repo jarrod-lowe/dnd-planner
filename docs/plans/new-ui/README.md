@@ -294,7 +294,7 @@ A clickable pill with `⚀ formula label` content. On click → roll the formula
 ### Flow A — Planning an intent
 
 1. User taps `+ ADD → plan → ATTACK`.
-2. A new ATTACK row appears with the engine's best-default option pre-selected (e.g., Greataxe).
+2. A new ATTACK row appears with any one legal option pre-selected (e.g., Greataxe).
 3. The row's modifier chips list user-toggleable riders (Cleave, Divine Smite, Heroic Inspiration) plus any auto-attached effect riders (Bless `↑FX`, Searing Smite `↑FX`).
 4. User toggles Cleave on, Divine Smite on. Ledger updates: `L1: 2/2 → 1/2`.
 5. Dice rollers show the composed formula; user can roll any time.
@@ -305,7 +305,7 @@ A clickable pill with `⚀ formula label` content. On click → roll the formula
 2. User taps `+ ADD → record → DAMAGE`.
 3. A new DAMAGE row appears with slider defaulted to a reasonable starting value.
 4. User drags slider to 15.
-5. Engine cascades: HP 26→11 displayed; concentration check triggered (CON DC 15); save result populated from rolling button or manual entry; if failed, concentration drops and the held effect is removed from active state.
+5. Engine cascades: HP 26→11 displayed; concentration check triggered (CON DC 10); save result populated from rolling button or manual entry; if failed, concentration drops and the held effect is removed from active state.
 6. Cascade shown as indented `↳` lines on the row.
 7. If GM later says "oops, undo that" → user taps `↺` on the DAMAGE row → entire cascade reverses (HP restored, conc restored, effect re-added to active state).
 
@@ -431,7 +431,7 @@ When a planner verb needs a `ui.model` that doesn't already exist (`roll-outcome
 These fields need to be added to the TypeScript types AND to the YAML/JSON rule schema validators:
 
 - **Rule schema**: add `ui.intents: { verb: bucket }` and `ui.actionCost: ActionCost[]` as **required** fields on every rule (`actionCost: []` for zero-cost rules — the list can be empty but the field is required). The data linter must catch missing values.
-- **Step type**: extend the union as above. Old plan steps that don't carry a `verb` get migrated (every existing step has an implicit verb derivable from its `ui.section`).
+- **Step type**: extend the union as above. Old plan steps that don't carry a `verb` need one added
 - **Effect / standing-state types**: extend if needed; annotation merging, vars, and rule activation are existing mechanisms — use them rather than adding new top-level fields for riders, duration, or pending resolutions.
 
 ### New on output (Engine response)
