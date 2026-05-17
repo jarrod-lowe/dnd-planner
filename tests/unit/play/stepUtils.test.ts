@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { deriveVerbFromRule, plannedItemToStep, stepToRule, stepsToRules } from '$lib/play/stepUtils';
+import {
+  deriveVerbFromRule,
+  plannedItemToStep,
+  stepToRule,
+  stepsToRules
+} from '$lib/play/stepUtils';
 import type { Rule } from '$lib/rules-engine';
 import type { PlannedItem } from '$lib/play/types';
 
@@ -20,7 +25,11 @@ describe('deriveVerbFromRule', () => {
   it('picks first intent when multiple are present', () => {
     const rule = makeRule({
       id: 'sanctuary',
-      ui: { section: 'bonus-action-other', intents: { DEFEND: 'ward', AID: 'ally' }, actionCost: ['bonus'] }
+      ui: {
+        section: 'bonus-action-other',
+        intents: { DEFEND: 'ward', AID: 'ally' },
+        actionCost: ['bonus']
+      }
     });
     expect(deriveVerbFromRule(rule)).toBe('DEFEND');
   });
@@ -51,7 +60,11 @@ describe('plannedItemToStep', () => {
   it('converts a PlannedItem to a Step', () => {
     const rule = makeRule({
       id: 'cast-bless',
-      ui: { section: 'action-spell', intents: { AID: 'ally' }, actionCost: ['action', 'conc', 'L1'] },
+      ui: {
+        section: 'action-spell',
+        intents: { AID: 'ally' },
+        actionCost: ['action', 'conc', 'L1']
+      },
       selections: { slotLevel: 1 }
     });
     const item: PlannedItem = {
@@ -119,8 +132,20 @@ describe('stepsToRules', () => {
 
     const steps = [
       { id: 's1', verb: 'ATTACK' as const, ruleId: 'rule-a', modelSelections: {}, recordedAt: '' },
-      { id: 's2', verb: 'MOVE' as const, ruleId: 'nonexistent', modelSelections: {}, recordedAt: '' },
-      { id: 's3', verb: 'AID' as const, ruleId: 'rule-b', modelSelections: { amount: 5 }, recordedAt: '' }
+      {
+        id: 's2',
+        verb: 'MOVE' as const,
+        ruleId: 'nonexistent',
+        modelSelections: {},
+        recordedAt: ''
+      },
+      {
+        id: 's3',
+        verb: 'AID' as const,
+        ruleId: 'rule-b',
+        modelSelections: { amount: 5 },
+        recordedAt: ''
+      }
     ];
 
     const rules = stepsToRules(steps, lookup);

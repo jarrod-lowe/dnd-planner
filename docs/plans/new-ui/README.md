@@ -136,7 +136,7 @@ Each verb's options live in named sub-buckets. The same grouping shows in two pl
 | `ATTACK`  | **weapons** → Greataxe · Javelin melee · Javelin thrown · Unarmed Strike. **spells** → Command (forced damage) · Searing Smite cast · Thunderous Smite cast                                    |
 | `AID`     | **self** → Lay on Hands · Sanctuary on self. **ally** → Cure Wounds · Heroism · Bless · Sanctuary on ally · Help action. **area** → (reserved)                                                 |
 | `CONTROL` | **single** → Command · Abjure Enemy · Grapple · Shove-prone. **area** → Sleep                                                                                                                  |
-| `DEFEND`  | **evade** → Dodge · Disengage. **ward** → Shield (L1) · Sanctuary self. |
+| `DEFEND`  | **evade** → Dodge · Disengage. **ward** → Shield (L1) · Sanctuary self.                                                                                                                        |
 | `MOVE`    | **walk** → Walk · Crawl. **hustle** → Dash · Disengage. **special** → Climb · Jump · Swim                                                                                                      |
 | `INSPECT` | **sense** → Divine Sense · Detect Magic. **check** → Perception · Investigation · Insight · Search                                                                                             |
 | `HANDLE`  | **gear** → Equip/Doff · Draw/Sheathe · Drop · Pick up. **consume** → Drink potion · Read scroll. **effects** → Dismiss \<effect> · Drop concentration. **spells** → Prepare spells (long rest) |
