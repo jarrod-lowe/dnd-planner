@@ -54,7 +54,7 @@ export function plannedItemToStep(item: PlannedItem): Step {
     id: item.instanceId,
     verb: deriveVerbFromRule(item.rule),
     ruleId: item.rule.id,
-    modelSelections: item.rule.selections ?? {},
+    modelSelections: { ...(item.rule.selections ?? {}) },
     recordedAt: new Date().toISOString()
   };
 }

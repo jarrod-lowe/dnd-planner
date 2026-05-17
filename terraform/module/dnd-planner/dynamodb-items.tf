@@ -892,6 +892,45 @@ resource "aws_dynamodb_table_item" "char_custom_rulegroup_def_seed" {
 }
 
 # Custom rule group assignment seed - links the custom rule group to the character
+resource "aws_dynamodb_table_item" "char_core_events_rulegroup_seed" {
+  table_name = aws_dynamodb_table.data.name
+  hash_key   = "PK"
+  range_key  = "SK"
+
+  item = jsonencode({
+    PK = {
+      S = "SEED#CHAR#$(characterId)"
+    }
+    SK = {
+      S = "RULEGROUP#core-events"
+    }
+    gsiSeedPK = {
+      S = "SEED#CHAR"
+    }
+    type = {
+      S = "CHAR"
+    }
+    characterId = {
+      S = "$(characterId)"
+    }
+    ruleGroupId = {
+      S = "core-events"
+    }
+    userId = {
+      S = "$(userId)"
+    }
+    enabled = {
+      BOOL = true
+    }
+    createdAt = {
+      S = "$(now)"
+    }
+    updatedAt = {
+      S = "$(now)"
+    }
+  })
+}
+
 resource "aws_dynamodb_table_item" "char_custom_rulegroup_seed" {
   table_name = aws_dynamodb_table.data.name
   hash_key   = "PK"

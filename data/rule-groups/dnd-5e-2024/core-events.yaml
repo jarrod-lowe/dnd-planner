@@ -36,10 +36,10 @@ ruleGroups:
               activities:
                 - type: numberIncrement
                   target:
-                    fact: hp.damage
+                    fact: hp.current
                   source:
                     var: amount
-                  subtract: false
+                  subtract: true
                 - type: numberSet
                   target:
                     fact: concentration.damage-taken
@@ -74,10 +74,10 @@ ruleGroups:
               activities:
                 - type: numberIncrement
                   target:
-                    fact: hp.damage
+                    fact: hp.current
                   source:
                     var: amount
-                  subtract: true
+                  subtract: false
 
       # === SAVE recording ===
       - id: offer-record-save
