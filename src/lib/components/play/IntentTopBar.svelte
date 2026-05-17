@@ -3,7 +3,12 @@
   import { t } from '$lib/i18n';
   import UserDropdown from '$lib/components/UserDropdown.svelte';
   import type { Character } from '$lib/character/types';
-  import type { StatEntry, StatEntryValue, StatEntryModifier } from '$lib/play/extractStats';
+  import type {
+    StatEntry,
+    StatEntryValue,
+    StatEntryModifier,
+    StatEntryUsedMax
+  } from '$lib/play/extractStats';
   import type { Facts } from '$lib/rules-engine';
   import type { UiLayout } from '$lib/ui/uiPrefsStore.svelte';
 
@@ -23,6 +28,7 @@
     showDownloadCharacter?: boolean;
     currentLayout: UiLayout;
     onSwitchLayout: (layout: UiLayout) => void;
+    concentrationEffectName?: string;
   }
 
   let {
@@ -40,7 +46,8 @@
     onDownloadCharacter,
     showDownloadCharacter = false,
     currentLayout,
-    onSwitchLayout
+    onSwitchLayout,
+    concentrationEffectName
   }: Props = $props();
 
   let showAbilities = $state(false);
@@ -56,29 +63,29 @@
 
   const hpStat = $derived(
     stats.find(
-      (s): s is StatEntryValue =>
-        s.type === 'value' && s.name === 'play.stats.hp' && s.section === 'resources'
+      (s): s is StatEntryUsedMax =>
+        s.type === 'usedMax' && s.name === 'play.stats.hp' && s.section === 'resources'
     )
   );
 
   const acStat = $derived(
     stats.find(
       (s): s is StatEntryValue =>
-        s.type === 'value' && s.name === 'play.stats.ac' && s.section === 'resources'
+        s.type === 'value' && s.name === 'play.stats.ac' && s.section === 'abilities'
     )
   );
 
   const speedStat = $derived(
     stats.find(
-      (s): s is StatEntryValue =>
-        s.type === 'value' && s.name === 'play.stats.movement' && s.section === 'resources'
+      (s): s is StatEntryUsedMax =>
+        s.type === 'usedMax' && s.name === 'play.stats.movement' && s.section === 'resources'
     )
   );
 
   const concStat = $derived(
     stats.find(
-      (s): s is StatEntryValue =>
-        s.type === 'value' && s.name === 'play.stats.concentration' && s.section === 'resources'
+      (s): s is StatEntryUsedMax =>
+        s.type === 'usedMax' && s.name === 'play.stats.concentration' && s.section === 'magic'
     )
   );
 
@@ -86,18 +93,16 @@
     stats.filter((s): s is StatEntryModifier => s.type === 'modifier' && ABILITY_NAMES.has(s.name))
   );
 
-  const hpCurrent = $derived(hpStat ? Number(facts[hpStat.fact] ?? 0) : undefined);
-  const hpMax = $derived(
-    hpStat?.modifierFact ? Number(facts[hpStat.modifierFact] ?? 0) : undefined
-  );
+  const hpCurrent = $derived(hpStat ? Number(facts[hpStat.remaining] ?? 0) : undefined);
+  const hpMax = $derived(hpStat ? Number(facts[hpStat.total] ?? 0) : undefined);
   const hpPercent = $derived(
     hpCurrent !== undefined && hpMax !== undefined && hpMax > 0
       ? Math.round((hpCurrent / hpMax) * 100)
       : undefined
   );
   const acValue = $derived(acStat ? String(facts[acStat.fact] ?? '?') : undefined);
-  const speedValue = $derived(speedStat ? String(facts[speedStat.fact] ?? '?') : undefined);
-  const concActive = $derived(concStat ? Boolean(facts[concStat.fact]) : false);
+  const speedValue = $derived(speedStat ? String(facts[speedStat.remaining] ?? '?') : undefined);
+  const concActive = $derived(concStat ? Boolean(facts[concStat.remaining]) : false);
 
   const abilitiesLine = $derived(
     abilityStats
@@ -142,7 +147,10 @@
       {#if hpCurrent !== undefined && hpMax !== undefined}
         <div
           class="intent-top-bar__chip intent-top-bar__chip--hp"
-          aria-label="{$t('play.topBar.hp')} {$hpCurrent} of {$hpMax}"
+          aria-label="{$t('play.topBar.hp')} {$t('play.topBar.hpValue', {
+            current: hpCurrent,
+            max: hpMax
+          })}"
         >
           <span class="intent-top-bar__chip-label">{$t('play.topBar.hp')}</span>
           <span class="intent-top-bar__chip-value">{hpCurrent}/{hpMax}</span>
@@ -179,7 +187,7 @@
           class="intent-top-bar__chip intent-top-bar__chip--conc"
           class:intent-top-bar__chip--conc-active={concActive}
           aria-label="{$t('play.topBar.conc')}: {concActive
-            ? $t('play.topBar.concActive')
+            ? (concentrationEffectName ?? $t('play.topBar.concActive'))
             : $t('play.topBar.concNone')}"
         >
           <span class="intent-top-bar__chip-label">
@@ -196,7 +204,13 @@
             {$t('play.topBar.conc')}
           </span>
           <span class="intent-top-bar__chip-value">
-            {concActive ? $t('play.topBar.concActive') : $t('play.topBar.concNone')}
+            {#if concActive && concentrationEffectName}
+              {concentrationEffectName}
+            {:else if concActive}
+              {$t('play.topBar.concActive')}
+            {:else}
+              {$t('play.topBar.concNone')}
+            {/if}
           </span>
         </div>
       {/if}
