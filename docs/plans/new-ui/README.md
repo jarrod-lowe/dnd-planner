@@ -182,8 +182,6 @@ Add `ui.intents[]` (array of verb codes) and `ui.actionCost[]` (array of cost ta
       #       in the rule's effects.
 ```
 
-The planner verbs `STAT`, `PROFICIENCY`, `DAMAGE`, `HEAL`, `SAVE`, `CHECK`, `REST`, `NOTE` are **built-in to the planner** (not rule-driven); they always appear in `+ ADD`.
-
 ---
 
 ## Component specifications
@@ -208,7 +206,7 @@ Horizontal flex row of `EffectChip` components. Header line: `ACTIVE STATE · N 
 ~170–200px wide. Contains:
 
 - Top-left: kind tag (`CONC` / `ONGOING` / `SENSE` / `BUFF` / `DEBUFF` / `ITEM`); add `· CONC` suffix when applicable.
-- Top-right: dismiss control. Tap → adds a `MODIFY · Dismiss` row to the plan stack (does not immediately remove the effect; see _Dismissal flow_).
+- Top-right: dismiss control. Tap → adds a `HANDLE · Dismiss` row to the plan stack (does not immediately remove the effect; see _Dismissal flow_).
 - Body: effect name (bold), target line ("→ Gob 1" or "→ you · +d4 atk"), source line ("via ally Lyra" if cast by someone else).
 - Footer: duration pips + "N left" / "N rounds".
 
@@ -279,7 +277,7 @@ A dashed-border container with **three labeled groups** of verb chips (plan → 
 
 ### Ledger
 
-A pinned-bottom strip showing the **post-turn resource state**. Cells: `ACT`, `BON`, `RXN`, `MOV`, `L1` (and other spell slot levels), `LoH`, `CD` (Channel Divinity), plus any per-character resources from `ui.stats[]`. Each cell shows `remaining/max`. Cells with full remaining + no spend get muted (40% opacity). If the plan would overspend any resource, the ledger turns warn (cream-red bg, `⚠ over budget` scrawl).
+A pinned-bottom strip showing the **current resource state** as returned by the engine for the active plan. Cells: `ACT`, `BON`, `RXN`, `MOV`, `L1` (and other spell slot levels), `LoH`, `CD` (Channel Divinity), plus any per-character resources from `ui.stats[]`. Each cell shows `remaining/max`. Cells with full remaining + no spend get muted (40% opacity). If the plan would overspend any resource, the ledger turns warn (cream-red bg, `⚠ over budget` scrawl).
 
 ### Slider
 
@@ -429,17 +427,17 @@ These fields need to be added to the TypeScript types AND to the YAML/JSON rule 
 
 - **Rule schema**: add `ui.intents: Verb[]` and `ui.actionCost: ActionCost[]` as **required** fields on every rule (`actionCost: []` for zero-cost rules — the array can be empty but the field is required). The data linter must catch missing values.
 - **Step type**: extend the union as above. Old plan steps that don't carry a `verb` get migrated (every existing step has an implicit verb derivable from its `ui.section`).
-- **Effect / standing-state types**: add `pendingResolution?` and `expiringSoon: boolean` (see below).
+- **Effect / standing-state types**: extend if needed; annotation merging, vars, and rule activation are existing mechanisms — use them rather than adding new top-level fields for riders, duration, or pending resolutions.
 
 ### New on output (Engine response)
 
 Note that **the engine is stateless and pure**: given the ordered list of steps, it returns the resulting character state. There is no "before" or "after" — the engine _always_ returns the resulting state. The UI's notion of "undo" is simply not sending a step. The UI's notion of "End Turn" is moving steps between client-side lists (draft vs committed); the engine concatenates both lists and computes one state from the result.
 
 - For each rule in `availableRules`: `ui.intents[]` and `ui.actionCost[]` (above).
-- **Riders come from the existing annotation mechanism.** Rules can declare annotations that target other rules — Divine Smite annotates "all weapon attacks: + d8 radiant on hit"; Bless annotates "this character's attack rolls: +d4". The annotated rule (Greataxe attack) never needs to know about the annotators. The engine resolves annotations during rule evaluation and exposes the merged result; the UI renders resolved annotations as rider chips on the target row. **Do not invent an `effectiveRiders[]` field** — the annotation pattern already does this.
-- **Effect duration uses the existing `var` mechanism**, not a special flag. An effect rule declares a `var` (e.g. `effect.searing-smite.duration_left`) that decrements each round; the UI reads the var and renders the near-expiry treatment when the value reaches 1. **Do not invent an `expiringSoon: boolean`** — use the var-based engine→UI contract that already exists.
-- For each active effect: `pendingResolution?: { kind: 'save', ability, dc, target, when }` — surfaces the `!` reminder on the chip. (This could itself be a var — worth confirming with the existing engine contract before adding it as a dedicated field.)
-- For each rule and rider: use the existing `legal: boolean` and `illegalReason?: string` (i18n key) — used to render the `(!) why` tag on dim options.
+- **Riders come from the existing annotation mechanism.** Rules can declare annotations that target other rules — Divine Smite annotates "all weapon attacks: + d8 radiant on hit"; Bless annotates "this character's attack rolls: +d4". The annotated rule (Greataxe attack) never needs to know about the annotators. The engine resolves annotations during rule evaluation and exposes the merged result; the UI renders resolved annotations as rider chips on the target row.
+- **Effect duration uses the existing `var` mechanism.** An effect rule declares a `var` (e.g. `effect.searing-smite.duration_left`) that decrements each round; the UI reads the var and renders the near-expiry treatment when the value reaches 1.
+- **Pending player resolutions = rules made available.** When an effect needs the user to do something (target makes a save against your conc spell, conc check after taking damage, frightened-save at start of turn), the effect's rule activates another rule — e.g., `searing-smite.resolve-save` with `intents: [SAVE]`, `model: roll-outcome` — and it shows up in `availableRules` like any other rule. The UI looks at "does this effect have related rules in availableRules?" to decide whether to pulse the chip's `!`; the resolver popover is just a context-filtered picker over those rules.
+- For each rule and rider: `legal: boolean` and `illegalReason?: string` (i18n key) — used to render the `(!) why` tag on dim options.
 
 ### Undo
 
@@ -466,16 +464,16 @@ Pick a phase, complete it, ship it behind a **user-menu UI selector** ("Classic"
 
 ### Phase 0 — Engine prep (TypeScript rules engine + rule data + schema)
 
-| ID  | Task                                                                                                                                                | Acceptance                                                                                                                                             |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 0.1 | **Update the rule schema** (TypeScript types + validators) with `ui.intents: Verb[]` + `ui.actionCost: ActionCost[]`. Then tag every existing rule. | Schema type checks; validator rejects rules missing the new fields; all rule data files updated                                                        |
-| 0.2 | Extend `Step` to a discriminated union by `verb` (all 15 verbs)                                                                                     | Plan can serialize/deserialize all step kinds; migration handles legacy steps                                                                          |
-| 0.3 | Annotation resolution exposes merged riders                                                                                                         | Bless active → attack rules' resolved annotations include `+d4`; UI shows it. **Use existing annotation pattern, do NOT add a separate riders field.** |
-| 0.4 | Effect duration via `var`                                                                                                                           | Effects declare a `duration_left` var; UI reads it for near-expiry treatment. No `expiringSoon` flag.                                                  |
-| 0.5 | Engine state is pure from step list (already true)                                                                                                  | Removing any step from the input list still produces a correct state. End Turn is a UI concern; the engine just sees the combined list.                |
-| 0.6 | Surface `pendingResolution` for effects requiring a player action                                                                                   | Searing Smite at end-of-target-turn surfaces a pending save (probably also a var if that fits the existing engine contract)                            |
-| 0.7 | Add `legal` + `illegalReason` per rule + rider in the engine response                                                                               | Engine flags illegal options and provides i18n keys for _why_                                                                                          |
-| 0.8 | Pure-function step list → state                                                                                                                     | Removing any step from the middle of the list still produces a correct state                                                                           |
+| ID  | Task                                                                                                                                                | Acceptance                                                                                                                                                                           |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 0.1 | **Update the rule schema** (TypeScript types + validators) with `ui.intents: Verb[]` + `ui.actionCost: ActionCost[]`. Then tag every existing rule. | Schema type checks; validator rejects rules missing the new fields; all rule data files updated                                                                                      |
+| 0.2 | Extend `Step` to a discriminated union by `verb` (all 15 verbs)                                                                                     | Plan can serialize/deserialize all step kinds; migration handles legacy steps                                                                                                        |
+| 0.3 | Annotation resolution exposes merged riders                                                                                                         | Bless active → attack rules' resolved annotations include `+d4`; UI renders the chip. Use the existing annotation mechanism.                                                         |
+| 0.4 | Effect duration via `var`                                                                                                                           | Effects declare a `duration_left` var; UI reads it for near-expiry treatment.                                                                                                        |
+| 0.5 | Engine state is pure from step list (already true)                                                                                                  | Removing any step from the input list still produces a correct state. End Turn is a UI concern; the engine just sees the combined list.                                              |
+| 0.6 | Activate sub-rules for pending player resolutions                                                                                                   | Searing Smite at end-of-target-turn activates `searing-smite.resolve-save` in availableRules; resolving (recording a SAVE step) clears it. Same pattern for conc check after DAMAGE. |
+| 0.7 | Add `legal` + `illegalReason` per rule + rider in the engine response                                                                               | Engine flags illegal options and provides i18n keys for _why_                                                                                                                        |
+| 0.8 | Pure-function step list → state                                                                                                                     | Removing any step from the middle of the list still produces a correct state                                                                                                         |
 
 ### Phase 1 — Layout shell (Svelte)
 
@@ -497,14 +495,14 @@ Pick a phase, complete it, ship it behind a **user-menu UI selector** ("Classic"
 
 ### Phase 3 — Plan row + two-level verb picker
 
-| ID  | Task                                                                            | Acceptance                                                                     |
-| --- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| 3.1 | `PlanRow` Svelte component (verb stripe + content)                              | Reusable; supports primary/event/build/offturn/collapsed variants              |
-| 3.2 | `ModChip` with three variants                                                   | User-toggleable, effect-sourced (`↑FX`), and **illegal with `(!) why` tag**    |
-| 3.3 | `AddRowPicker` with **plan→/record→/build→** groups and **two-level expansion** | All 15 verbs available; tapping a verb expands its sub-buckets inline          |
-| 3.4 | Rule-to-verb mapping logic                                                      | Greataxe shows under ATTACK; Lay on Hands under AID/HEAL; etc.                 |
-| 3.5 | **Default option per verb**: any legal option for v1                            | Tapping ATTACK pre-fills _any_ legal attack — do not invent a heuristic for v1 |
-| 3.6 | **`👁 show illegal` toggle** preserving the current eye-icon affordance         | Toggle shows/hides illegal options in pickers and alternatives lists           |
+| ID  | Task                                                                            | Acceptance                                                                  |
+| --- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 3.1 | `PlanRow` Svelte component (verb stripe + content)                              | Reusable; supports primary/event/build/offturn/collapsed variants           |
+| 3.2 | `ModChip` with three variants                                                   | User-toggleable, effect-sourced (`↑FX`), and **illegal with `(!) why` tag** |
+| 3.3 | `AddRowPicker` with **plan→/record→/build→** groups and **two-level expansion** | All 15 verbs available; tapping a verb expands its sub-buckets inline       |
+| 3.4 | Rule-to-verb mapping logic                                                      | Greataxe shows under ATTACK; Lay on Hands under AID/HEAL; etc.              |
+| 3.5 | **Default option per verb**: any legal option for v1                            | Tapping ATTACK pre-fills _any_ legal attack.                                |
+| 3.6 | **`👁 show illegal` toggle** preserving the current eye-icon affordance         | Toggle shows/hides illegal options in pickers and alternatives lists        |
 
 ### Phase 4 — Inline controls
 
