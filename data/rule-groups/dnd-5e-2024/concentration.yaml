@@ -39,3 +39,44 @@ ruleGroups:
               fact: concentration.max
             target:
               fact: concentration.remaining
+
+      # Offer concentration check when damage is taken while concentrating
+      # Activates when core-events damage recording sets concentration.damage-taken = 1
+      - id: offer-concentration-check
+        after:
+          - group: __planned__
+        when:
+          - fact: concentration.damage-taken
+            operator: equals
+            value: 1
+          - fact: concentration.remaining
+            operator: lessThanOrEqual
+            value: 0
+        activities:
+          - type: offerRule
+            rule:
+              id: concentration-check
+              group:
+                - __planned__
+              ui:
+                section: free
+                name: planner.concentration.check
+                intents:
+                  SAVE: you
+                actionCost: []
+              vars:
+                passed:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: concentration.check-passed
+                  source:
+                    var: passed
+                - type: numberSet
+                  target:
+                    fact: concentration.damage-taken
+                  source:
+                    number: 0

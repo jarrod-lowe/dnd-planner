@@ -26,6 +26,8 @@ ruleGroups:
               ui:
                 section: rest
                 name: rule.dnd-5e-2024.turn-rest.long-rest.name
+                intents: { REST: type }
+                actionCost: []
               group:
                 - __planned__
               phase: early
@@ -47,6 +49,8 @@ ruleGroups:
               ui:
                 section: rest
                 name: rule.dnd-5e-2024.turn-rest.short-rest.name
+                intents: { REST: type }
+                actionCost: []
               group:
                 - __planned__
               phase: early

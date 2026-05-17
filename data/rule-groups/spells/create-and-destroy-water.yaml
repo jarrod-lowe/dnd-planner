@@ -49,6 +49,9 @@ ruleGroups:
               ui:
                 section: action-spell
                 name: rule.spell-create-and-destroy-water.cast-create-and-destroy-water.name
+                intents:
+                  HANDLE: consume
+                actionCost: [action, L1]
               group:
                 - __planned__
                 - action
@@ -78,6 +81,9 @@ ruleGroups:
                     ui:
                       section: action-spell
                       name: play.slotEffect.l1
+                      intents:
+                        HANDLE: consume
+                      actionCost: [L1]
                     phase: early
                     after:
                       - group: spellcasting-slots-set

@@ -74,6 +74,9 @@ ruleGroups:
                   var: amount
                   min: { number: 1 }
                   max: { var: maxValue }
+                intents:
+                  AID: self
+                actionCost: [bonus, LoH]
               vars:
                 amount:
                   capture: true
@@ -184,6 +187,9 @@ ruleGroups:
               ui:
                 section: bonus-action-other
                 name: rule.class-paladin-lay-on-hands.loh-purify-poison.name
+                intents:
+                  AID: self
+                actionCost: [bonus, LoH]
               activities:
                 - type: numberIncrement
                   target:

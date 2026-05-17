@@ -180,6 +180,9 @@ ruleGroups:
                   var: slotLevel
                   min: { number: 1 }
                   max: { number: 5 }
+                intents:
+                  ATTACK: spells
+                actionCost: [bonus]
               vars:
                 slotLevel:
                   capture: true

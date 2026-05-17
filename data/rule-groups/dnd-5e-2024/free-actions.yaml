@@ -24,6 +24,8 @@ ruleGroups:
               ui:
                 section: free
                 name: rule.dnd-5e-2024.free-actions.free-action.name
+                intents: { HANDLE: gear }
+                actionCost: []
               activities: []
 
       # Help Action
@@ -46,6 +48,8 @@ ruleGroups:
               ui:
                 section: action-other
                 name: rule.dnd-5e-2024.free-actions.help-action.name
+                intents: { AID: ally }
+                actionCost: [action]
               group:
                 - __planned__
                 - action

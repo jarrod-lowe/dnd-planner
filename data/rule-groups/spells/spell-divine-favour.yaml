@@ -73,6 +73,9 @@ ruleGroups:
               ui:
                 section: bonus-action-spell
                 name: rule.spell-divine-favour.offer-divine-favour.name
+                intents:
+                  ATTACK: spells
+                actionCost: [bonus, L1]
               activities:
                 # Consume bonus action
                 - type: numberIncrement
@@ -231,4 +234,7 @@ ruleGroups:
                   dice:
                     - expression: d4
                       damageType: { string: radiant }
+                intents:
+                  ATTACK: spells
+                actionCost: []
               activities: []

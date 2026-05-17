@@ -98,6 +98,8 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.set-strength.name
                 primaryControl: *ability-score-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 score:
                   capture: true
@@ -207,6 +209,8 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.set-dexterity.name
                 packBehind: set-strength
                 primaryControl: *ability-score-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 score:
                   capture: true
@@ -316,6 +320,8 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.set-constitution.name
                 packBehind: set-strength
                 primaryControl: *ability-score-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 score:
                   capture: true
@@ -425,6 +431,8 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.set-intelligence.name
                 packBehind: set-strength
                 primaryControl: *ability-score-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 score:
                   capture: true
@@ -534,6 +542,8 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.set-wisdom.name
                 packBehind: set-strength
                 primaryControl: *ability-score-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 score:
                   capture: true
@@ -643,6 +653,8 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.set-charisma.name
                 packBehind: set-strength
                 primaryControl: *ability-score-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 score:
                   capture: true
@@ -716,6 +728,8 @@ ruleGroups:
               ui:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.increase-strength.name
+                intents: { STAT: ability }
+                actionCost: []
               activities:
                 - type: numberIncrement
                   target:
@@ -765,6 +779,8 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.increase-dexterity.name
                 packBehind: increase-strength
+                intents: { STAT: ability }
+                actionCost: []
               activities:
                 - type: numberIncrement
                   target:
@@ -814,6 +830,8 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.increase-constitution.name
                 packBehind: increase-strength
+                intents: { STAT: ability }
+                actionCost: []
               activities:
                 - type: numberIncrement
                   target:
@@ -863,6 +881,8 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.increase-intelligence.name
                 packBehind: increase-strength
+                intents: { STAT: ability }
+                actionCost: []
               activities:
                 - type: numberIncrement
                   target:
@@ -912,6 +932,8 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.increase-wisdom.name
                 packBehind: increase-strength
+                intents: { STAT: ability }
+                actionCost: []
               activities:
                 - type: numberIncrement
                   target:
@@ -961,6 +983,8 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.increase-charisma.name
                 packBehind: increase-strength
+                intents: { STAT: ability }
+                actionCost: []
               activities:
                 - type: numberIncrement
                   target:
@@ -1009,6 +1033,8 @@ ruleGroups:
               ui:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-str.name
+                intents: { STAT: ability }
+                actionCost: []
               activities:
                 # Immediate: apply proficiency in current evaluation
                 - type: numberSet
@@ -1064,6 +1090,8 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-dex.name
                 packBehind: proficiency-str
+                intents: { STAT: ability }
+                actionCost: []
               activities:
                 # Immediate: apply proficiency in current evaluation
                 - type: numberSet
@@ -1119,6 +1147,8 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-con.name
                 packBehind: proficiency-str
+                intents: { STAT: ability }
+                actionCost: []
               activities:
                 # Immediate: apply proficiency in current evaluation
                 - type: numberSet
@@ -1174,6 +1204,8 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-int.name
                 packBehind: proficiency-str
+                intents: { STAT: ability }
+                actionCost: []
               activities:
                 # Immediate: apply proficiency in current evaluation
                 - type: numberSet
@@ -1229,6 +1261,8 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-wis.name
                 packBehind: proficiency-str
+                intents: { STAT: ability }
+                actionCost: []
               activities:
                 # Immediate: apply proficiency in current evaluation
                 - type: numberSet
@@ -1284,6 +1318,8 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-cha.name
                 packBehind: proficiency-str
+                intents: { STAT: ability }
+                actionCost: []
               activities:
                 # Immediate: apply proficiency in current evaluation
                 - type: numberSet
@@ -1364,6 +1400,8 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-athletics.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 level:
                   capture: true
@@ -1461,6 +1499,8 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-acrobatics.name
                 primaryControl: *skill-proficiency-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 level:
                   capture: true
@@ -1559,6 +1599,8 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-animal-handling.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 level:
                   capture: true
@@ -1657,6 +1699,8 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-arcana.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 level:
                   capture: true
@@ -1755,6 +1799,8 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-deception.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 level:
                   capture: true
@@ -1853,6 +1899,8 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-history.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 level:
                   capture: true
@@ -1951,6 +1999,8 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-insight.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 level:
                   capture: true
@@ -2049,6 +2099,8 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-intimidation.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 level:
                   capture: true
@@ -2147,6 +2199,8 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-investigation.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 level:
                   capture: true
@@ -2245,6 +2299,8 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-medicine.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 level:
                   capture: true
@@ -2343,6 +2399,8 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-nature.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 level:
                   capture: true
@@ -2441,6 +2499,8 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-perception.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 level:
                   capture: true
@@ -2539,6 +2599,8 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-performance.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 level:
                   capture: true
@@ -2637,6 +2699,8 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-persuasion.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 level:
                   capture: true
@@ -2735,6 +2799,8 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-religion.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 level:
                   capture: true
@@ -2833,6 +2899,8 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-sleight-of-hand.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 level:
                   capture: true
@@ -2931,6 +2999,8 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-stealth.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 level:
                   capture: true
@@ -3029,6 +3099,8 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-survival.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
+                intents: { STAT: ability }
+                actionCost: []
               vars:
                 level:
                   capture: true

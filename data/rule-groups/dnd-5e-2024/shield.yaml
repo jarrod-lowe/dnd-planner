@@ -45,6 +45,8 @@ ruleGroups:
               ui:
                 section: configuration
                 name: rule.dnd-5e-2024.shield.don-shield.name
+                intents: { HANDLE: gear }
+                actionCost: []
               activities:
                 - type: numberIncrement
                   target:

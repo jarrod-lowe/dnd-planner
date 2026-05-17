@@ -1,4 +1,4 @@
-import type { Rule, EngineOutput, Facts } from '$lib/rules-engine';
+import type { Rule, EngineOutput, Facts, Verb } from '$lib/rules-engine';
 import type { StatEntry } from '$lib/play/extractStats';
 
 /**
@@ -42,4 +42,24 @@ export interface PlayState {
   currentCharacterId: string | null;
   /** Stats declarations extracted from standing rules for display in stats column */
   stats: StatEntry[];
+}
+
+/**
+ * A uniform step in the intent-stack plan.
+ * The verb is a UI grouping tag — which picker group, stripe label, and visual treatment.
+ * Everything mechanical dispatches through the resolved rule's ui.model, not by verb.
+ */
+export interface Step {
+  /** Stable unique identifier */
+  id: string;
+  /** UI grouping tag — determines picker group, stripe label, visual treatment */
+  verb: Verb;
+  /** References a rule (from standing, offered, or core-events) */
+  ruleId: string;
+  /** User input payload — shape determined by the resolved rule's ui.model */
+  modelSelections: Record<string, unknown>;
+  /** Attached modifier rule IDs (e.g., Cleave, Divine Smite on an ATTACK) */
+  riderIds?: string[];
+  /** ISO8601 timestamp */
+  recordedAt: string;
 }

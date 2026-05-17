@@ -30,6 +30,8 @@ ruleGroups:
               ui:
                 section: action-other
                 name: rule.dnd-5e-2024.dash.dash-action.name
+                intents: { MOVE: hustle }
+                actionCost: [action]
               group:
                 - __planned__
                 - action

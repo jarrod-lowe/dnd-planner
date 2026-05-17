@@ -45,6 +45,9 @@ export type {
   AnnotateActivity,
   IllegalWhenEntry,
   Annotation,
+  AnnotationRider,
+  ActionCostTag,
+  Verb,
   // Rule
   Rule,
   GroupReference,

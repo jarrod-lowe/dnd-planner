@@ -111,6 +111,9 @@ ruleGroups:
                 information:
                   - type: text
                     label: rule.class-paladin-divinity.divine-sense.description
+                intents:
+                  INSPECT: sense
+                actionCost: [bonus, CD]
               activities:
                 # Consume bonus action
                 - type: numberIncrement

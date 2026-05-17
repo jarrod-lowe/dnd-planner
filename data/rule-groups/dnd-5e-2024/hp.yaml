@@ -58,6 +58,8 @@ ruleGroups:
                   var: modifier
                   min: { number: -10 }
                   max: { number: 30 }
+                intents: { HANDLE: gear }
+                actionCost: []
               vars:
                 modifier:
                   capture: true
@@ -126,6 +128,8 @@ ruleGroups:
                   var: modifier
                   min: { number: -30 }
                   max: { number: 30 }
+                intents: { HANDLE: gear }
+                actionCost: []
               vars:
                 modifier:
                   capture: true

@@ -134,6 +134,9 @@ ruleGroups:
                     labelValues:
                       saveType: { fact: spellcasting.saveAbility }
                       dc: { fact: spellcasting.saveDC }
+                intents:
+                  CONTROL: single
+                actionCost: [action, L1]
               vars:
                 slotLevel:
                   capture: true

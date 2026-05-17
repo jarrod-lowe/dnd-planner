@@ -136,7 +136,7 @@ Each verb's options live in named sub-buckets. The same grouping shows in two pl
 | `ATTACK`  | **weapons** → Greataxe · Javelin melee · Javelin thrown · Unarmed Strike. **spells** → Command (forced damage) · Searing Smite cast · Thunderous Smite cast                                    |
 | `AID`     | **self** → Lay on Hands · Sanctuary on self. **ally** → Cure Wounds · Heroism · Bless · Sanctuary on ally · Help action. **area** → (reserved)                                                 |
 | `CONTROL` | **single** → Command · Abjure Enemy · Grapple · Shove-prone. **area** → Sleep                                                                                                                  |
-| `DEFEND`  | **evade** → Dodge · Disengage. **ward** → Shield (L1) · Sanctuary self. **ready** → Sentinel reaction strike · Ready custom (trigger + reaction)                                               |
+| `DEFEND`  | **evade** → Dodge · Disengage. **ward** → Shield (L1) · Sanctuary self.                                                                                                                        |
 | `MOVE`    | **walk** → Walk · Crawl. **hustle** → Dash · Disengage. **special** → Climb · Jump · Swim                                                                                                      |
 | `INSPECT` | **sense** → Divine Sense · Detect Magic. **check** → Perception · Investigation · Insight · Search                                                                                             |
 | `HANDLE`  | **gear** → Equip/Doff · Draw/Sheathe · Drop · Pick up. **consume** → Drink potion · Read scroll. **effects** → Dismiss \<effect> · Drop concentration. **spells** → Prepare spells (long rest) |
@@ -323,7 +323,7 @@ A clickable pill with `⚀ formula label` content. On click → roll the formula
 1. User wants to drop Detect Evil and Good to free their concentration for a new spell.
 2. User taps `✕` (dismiss control) on the Detect Evil and Good effect chip.
 3. The chip enters a "scheduled to dismiss" state: diagonal strike-through pattern, `↘ DISMISSING` corner badge, the `✕` becomes `↺ undo`.
-4. A new `HANDLE · Dismiss Detect Evil and Good` row appears at the top of the plan stack with a `NEW` tag, `from ↑ effect` caveat in the verb stripe, and "free your concentration · no action cost" sub.
+4. A new `HANDLE · Dismiss Detect Evil and Good` row appears in the plan stack with a `NEW` tag, `from ↑ effect` caveat in the verb stripe, and "free your concentration · no action cost" sub.
 5. Ledger and effect-rider state recompute: Compelled Duel is no longer competing for concentration → its becomes legal
 6. Cascading downstream changes reflect in the ATTACK row preview.
 7. If user changes mind → tap `↺ undo` on the HANDLE row → everything reverts.
@@ -596,7 +596,7 @@ The "TODO" section at the bottom of the README lists many feature gaps (Spells, 
 The wireframe uses a hand-drawn b&w pencil look for clarity. **Production must use the existing dnd-planner "D&D in the desert" theme**:
 
 - Colors come exclusively from `light.css` and `dark.css`. **No new colors, no hardcoded hex values, no `filter:brightness()` tricks.**
-- Where the wireframe uses a tint to mark "recorded event" rows (or the warn-state ledger, or the "freed" cascade highlight), pick an **existing theme token** for that role. If no suitable token exists for a new role, **add a token to `light.css` / `dark.css`** with a semantic name (e.g., `--color-row-event-bg`, `--color-ledger-warn-bg`) — do not inline a hex.
+- Where the wireframe uses a tint to mark "recorded event" rows (or the warn-state ledger, or the "freed" cascade highlight), pick an **existing theme token** for that role.
 - Use existing typography choices.
 - Keep the existing tablet-first design philosophy; tap targets ≥ 44px.
 - Inline styles forbidden (per existing rules) — translate the wireframe's inline styles to CSS classes.

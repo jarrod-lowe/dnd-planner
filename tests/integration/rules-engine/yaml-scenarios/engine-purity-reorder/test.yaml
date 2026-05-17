@@ -1,0 +1,50 @@
+name: 'Engine Purity - Reorder Produces Same Result'
+description: 'Adding the same rules in different order produces the same final facts'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/attacks
+  - class-paladin/class-paladin-level1
+steps:
+  # Order A: walk then attack
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - move-walk
+            - unarmed-strike-use-action
+  - addOffer:
+      id: move-walk
+      selections:
+        distance: 10
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          actions.remaining: 0
+          character.movement.remaining: 20
+  # Remove both, then add in reverse order
+  - removeFromPlan:
+      id: move-walk
+  - removeFromPlan:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          actions.remaining: 1
+          character.movement.remaining: 30
+  # Order B: attack then walk
+  - addOffer:
+      id: unarmed-strike-use-action
+  - addOffer:
+      id: move-walk
+      selections:
+        distance: 10
+      assert:
+        facts:
+          actions.remaining: 0
+          character.movement.remaining: 20

@@ -52,6 +52,8 @@ ruleGroups:
                   dice:
                     - expression: d20
                       bonus: { var: dc }
+                intents: { ATTACK: weapons }
+                actionCost: [action]
               vars:
                 dc:
                   capture: true

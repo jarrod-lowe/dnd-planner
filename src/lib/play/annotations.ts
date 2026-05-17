@@ -1,7 +1,8 @@
-import type { Annotation } from '$lib/rules-engine';
+import type { Annotation, AnnotationRider } from '$lib/rules-engine';
 
 export interface ActiveAnnotation {
   key: string;
+  rider?: AnnotationRider;
 }
 
 export function getAnnotationLabels(ui: Record<string, unknown> | undefined): string[] {
@@ -19,7 +20,7 @@ export function getMatchingAnnotations(
   const result: ActiveAnnotation[] = [];
   for (const annotation of activeAnnotations) {
     if (annotation.targets.some((t) => labels.has(t))) {
-      result.push({ key: annotation.key });
+      result.push({ key: annotation.key, rider: annotation.rider });
     }
   }
   return result;
