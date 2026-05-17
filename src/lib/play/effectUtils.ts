@@ -1,10 +1,13 @@
-import type { Rule } from '$lib/rules-engine';
+import type { Facts, NumberIncrementActivity, Rule } from '$lib/rules-engine';
 
 export interface DurationState {
   remaining: number;
   total: number;
   nearExpiry: boolean;
 }
+
+export type EffectKind = 'CONC' | 'ONGOING' | 'SENSE' | 'BUFF' | 'DEBUFF' | 'ITEM';
+export type ChipState = 'rest' | 'pending' | 'expiring';
 
 /**
  * Reads duration state from an effect rule's ui.countDown and ui.duration fields.
@@ -24,4 +27,84 @@ export function getDurationState(rule: Rule): DurationState | null {
     total: duration,
     nearExpiry: countDown === 1
   };
+}
+
+/**
+ * Detects if a rule has an activity that decrements concentration.remaining,
+ * indicating it is a concentration spell effect.
+ */
+function hasConcentrationActivity(activities: Rule['activities']): boolean {
+  for (const activity of activities) {
+    if (
+      activity.type === 'numberIncrement' &&
+      'target' in activity &&
+      'fact' in (activity.target as object) &&
+      (activity.target as { fact: string }).fact === 'concentration.remaining' &&
+      (activity as NumberIncrementActivity).subtract === true
+    ) {
+      return true;
+    }
+    // Recurse into generateRule's nested rule activities
+    if (activity.type === 'generateRule' && 'rule' in activity) {
+      const nested = (activity as { rule: Rule }).rule;
+      if (hasConcentrationActivity(nested.activities)) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Derives the effect kind from existing rule fields.
+ * CONC  -> has activity decrementing concentration.remaining
+ * SENSE -> ui.section === 'senses'
+ * ITEM  -> ui.section === 'configuration'
+ * ONGOING -> default
+ */
+export function getEffectKind(rule: Rule): EffectKind {
+  if (hasConcentrationActivity(rule.activities)) return 'CONC';
+
+  const ui = rule.ui as Record<string, unknown> | undefined;
+  if (!ui) return 'ONGOING';
+
+  if (ui.section === 'senses') return 'SENSE';
+  if (ui.section === 'configuration') return 'ITEM';
+  return 'ONGOING';
+}
+
+/**
+ * Checks if the effect requires concentration.
+ */
+export function isConcentrationEffect(rule: Rule): boolean {
+  return hasConcentrationActivity(rule.activities);
+}
+
+/**
+ * Finds the concentration effect among all effects and returns its ui.name (i18n key).
+ * Returns null if no concentration effect exists.
+ */
+export function getConcentrationEffectName(effects: Rule[]): string | null {
+  for (const effect of effects) {
+    if (isConcentrationEffect(effect)) {
+      const ui = effect.ui as Record<string, unknown> | undefined;
+      if (ui && typeof ui.name === 'string') {
+        return ui.name;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Determines the visual chip state from the effect rule and current facts.
+ * Priority: expiring > pending > rest.
+ */
+export function getChipState(effect: Rule, facts: Facts): ChipState {
+  const duration = getDurationState(effect);
+  if (duration?.nearExpiry) return 'expiring';
+
+  if (isConcentrationEffect(effect) && facts['concentration.damage-taken'] === 1) {
+    return 'pending';
+  }
+
+  return 'rest';
 }

@@ -1064,7 +1064,29 @@
     },
     "activeState": {
       "title": "Active State",
-      "placeholder": "Active effects will appear here"
+      "standing": "{{count}} standing",
+      "placeholder": "No standing effects"
+    },
+    "effectChip": {
+      "kind": {
+        "CONC": "CONC",
+        "ONGOING": "ONGOING",
+        "SENSE": "SENSE",
+        "BUFF": "BUFF",
+        "DEBUFF": "DEBUFF",
+        "ITEM": "ITEM"
+      },
+      "dismiss": "Dismiss effect",
+      "reminder": "Reminder: action needed",
+      "durationLeft": "{{count}} left",
+      "ariaLabel": "{{name}}, {{kind}}, {{duration}}, {{state}}"
+    },
+    "reminder": {
+      "title": "Action Needed",
+      "tellGm": "Tell GM: {{message}}",
+      "outcomePass": "Passed",
+      "outcomeFail": "Failed",
+      "concCheck": "Concentration check required"
     },
     "planStack": {
       "title": "This Turn I Want To…",
@@ -1082,7 +1104,8 @@
       "concNone": "No concentration",
       "concActive": "Active",
       "abilities": "Abilities",
-      "proficient": "Proficient"
+      "proficient": "Proficient",
+      "hpValue": "{{current}} / {{max}}"
     }
   },
   "damage-type": {

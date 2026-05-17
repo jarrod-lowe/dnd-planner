@@ -13,7 +13,8 @@
   import PlanColumn from '../play/PlanColumn.svelte';
   import EffectsColumn from '../play/EffectsColumn.svelte';
   import type { Character } from '$lib/character/types';
-  import type { AvailableRuleEntry } from '$lib/rules-engine';
+  import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
+  import { getConcentrationEffectName } from '$lib/play/effectUtils';
 
   interface Props {
     character: Character;
@@ -51,11 +52,35 @@
   // Collect active annotations from engine output
   const activeAnnotations = $derived(playStore.state.engineOutput?.annotations ?? []);
 
-  // Get current effects (committed + newly advertised)
-  const currentEffects = $derived([
-    ...playStore.state.effects,
-    ...(playStore.state.engineOutput?.effects ?? [])
-  ]);
+  // Get current effects (committed + newly advertised), deduplicated by id.
+  // Committed-first ordering; advertised version preferred (has runtime vars like countDown).
+  const currentEffects = $derived.by(() => {
+    const committed = playStore.state.effects;
+    const advertised = playStore.state.engineOutput?.effects ?? [];
+    const advertisedById = new Array<string>();
+    for (const e of advertised) {
+      advertisedById.push(e.id);
+    }
+    const result: Rule[] = [];
+    for (const effect of committed) {
+      const idx = advertisedById.indexOf(effect.id);
+      result.push(idx >= 0 ? advertised[idx] : effect);
+    }
+    const committedIds = committed.map((e) => e.id);
+    for (const effect of advertised) {
+      if (!committedIds.includes(effect.id)) {
+        result.push(effect);
+      }
+    }
+    return result;
+  });
+
+  const concentrationName = $derived.by(() => {
+    const key = getConcentrationEffectName(currentEffects);
+    return key ? $t(key) : undefined;
+  });
+
+  const committedEffectIds = $derived(playStore.state.effects.map((e) => e.id));
 
   // Handle choice tap - add to plan
   function handleChoiceTap(entry: AvailableRuleEntry): void {
@@ -108,6 +133,7 @@
       {showDownloadCharacter}
       currentLayout={uiPrefsStore.state.layout}
       onSwitchLayout={(l) => uiPrefsStore.setLayout(l)}
+      concentrationEffectName={concentrationName}
     />
     {#if playStore.state.isLoadingRuleGroups}
       <div class="play-character__loading">{$t('play.choices.loading')}</div>
@@ -115,7 +141,13 @@
       <div class="play-character__error">{$t('play.error.loadRuleGroups')}</div>
     {:else}
       <div class="play-character__intent-body">
-        <ActiveStateStrip effectCount={currentEffects.length} />
+        <ActiveStateStrip
+          effects={currentEffects}
+          facts={playStore.state.facts}
+          concentrationEffectName={concentrationName}
+          {committedEffectIds}
+          onDismissEffect={handleRemoveEffect}
+        />
         <PlanStack />
         <Ledger
           stats={playStore.state.stats}
