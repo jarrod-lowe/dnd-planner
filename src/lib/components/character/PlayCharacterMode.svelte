@@ -2,7 +2,13 @@
   import { onMount } from 'svelte';
   import { t } from '$lib/i18n';
   import { playStore } from '$lib/play/playStore.svelte';
+  import { uiPrefsStore } from '$lib/ui/uiPrefsStore.svelte';
   import PlayLayout from '../play/PlayLayout.svelte';
+  import IntentStackLayout from '../play/IntentStackLayout.svelte';
+  import IntentTopBar from '../play/IntentTopBar.svelte';
+  import ActiveStateStrip from '../play/ActiveStateStrip.svelte';
+  import PlanStack from '../play/PlanStack.svelte';
+  import Ledger from '../play/Ledger.svelte';
   import StatsColumn from '../play/StatsColumn.svelte';
   import ChoicesColumn from '../play/ChoicesColumn.svelte';
   import PlanColumn from '../play/PlanColumn.svelte';
@@ -12,9 +18,31 @@
 
   interface Props {
     character: Character;
+    email: string | null;
+    onLogout: () => void;
+    version?: string;
+    onBack?: () => void;
+    onManageRules?: () => void;
+    showManageRules?: boolean;
+    onViewFacts?: () => void;
+    showViewFacts?: boolean;
+    onDownloadCharacter?: () => void;
+    showDownloadCharacter?: boolean;
   }
 
-  let { character }: Props = $props();
+  let {
+    character,
+    email,
+    onLogout,
+    version = 'v0.0.0',
+    onBack,
+    onManageRules,
+    showManageRules = false,
+    onViewFacts,
+    showViewFacts = false,
+    onDownloadCharacter,
+    showDownloadCharacter = false
+  }: Props = $props();
 
   let showIllegal = $state(false);
 
@@ -68,6 +96,41 @@
     <div class="play-character__loading">{$t('play.choices.loading')}</div>
   {:else if playStore.state.ruleGroupError}
     <div class="play-character__error">{$t('play.error.loadRuleGroups')}</div>
+  {:else if uiPrefsStore.state.layout === 'intent'}
+    <IntentStackLayout>
+      {#snippet topBar()}
+        <IntentTopBar
+          {character}
+          stats={playStore.state.stats}
+          facts={playStore.state.facts}
+          {email}
+          {onLogout}
+          {version}
+          {onBack}
+          {onManageRules}
+          {showManageRules}
+          {onViewFacts}
+          {showViewFacts}
+          {onDownloadCharacter}
+          {showDownloadCharacter}
+          currentLayout={uiPrefsStore.state.layout}
+          onSwitchLayout={(l) => uiPrefsStore.setLayout(l)}
+        />
+      {/snippet}
+      {#snippet activeStrip()}
+        <ActiveStateStrip effectCount={currentEffects.length} />
+      {/snippet}
+      {#snippet planStack()}
+        <PlanStack />
+      {/snippet}
+      {#snippet ledger()}
+        <Ledger
+          stats={playStore.state.stats}
+          facts={playStore.state.facts}
+          status={playStore.state.engineOutput?.status}
+        />
+      {/snippet}
+    </IntentStackLayout>
   {:else}
     <PlayLayout>
       {#snippet stats()}

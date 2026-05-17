@@ -621,56 +621,6 @@
           "no_action": "No action available"
         }
       },
-      "simple-actions": {
-        "disengage-action": {
-          "name": "Disengage"
-        },
-        "action-disengage-offer": {
-          "no_action": "No action available"
-        },
-        "dodge-action": {
-          "name": "Dodge"
-        },
-        "action-dodge-offer": {
-          "no_action": "No action available"
-        },
-        "improvise-action": {
-          "name": "Improvise"
-        },
-        "action-improvise-offer": {
-          "no_action": "No action available"
-        },
-        "influence-action": {
-          "name": "Influence"
-        },
-        "action-influence-offer": {
-          "no_action": "No action available"
-        },
-        "search-action": {
-          "name": "Search"
-        },
-        "action-search-offer": {
-          "no_action": "No action available"
-        },
-        "study-action": {
-          "name": "Study"
-        },
-        "action-study-offer": {
-          "no_action": "No action available"
-        },
-        "utilize-action": {
-          "name": "Utilize"
-        },
-        "action-utilize-offer": {
-          "no_action": "No action available"
-        },
-        "interact-action": {
-          "name": "Interact"
-        },
-        "action-interact-offer": {
-          "no_action": "No action available"
-        }
-      },
       "attacks": {
         "unarmed-strike": {
           "name": "Unarmed Strike"
@@ -1111,6 +1061,27 @@
       "l3": "L3 Spell Slot Expended",
       "l4": "L4 Spell Slot Expended",
       "l5": "L5 Spell Slot Expended"
+    },
+    "activeState": {
+      "title": "Active State",
+      "placeholder": "Active effects will appear here"
+    },
+    "planStack": {
+      "title": "This Turn I Want To…",
+      "placeholder": "Tap + ADD to plan your turn"
+    },
+    "ledger": {
+      "title": "Resources",
+      "overBudget": "Over budget"
+    },
+    "topBar": {
+      "hp": "HP",
+      "ac": "AC",
+      "speed": "SPD",
+      "conc": "CONC",
+      "concNone": "No concentration",
+      "concActive": "Active",
+      "abilities": "Abilities"
     }
   },
   "damage-type": {
@@ -1127,5 +1098,11 @@
     "radiant": "Radiant",
     "poison": "Poison",
     "psychic": "Psychic"
+  },
+  "ui": {
+    "layout": {
+      "switchToIntent": "Switch to Intent Stack",
+      "switchToClassic": "Switch to Classic Layout"
+    }
   }
 }
