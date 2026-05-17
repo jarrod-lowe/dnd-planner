@@ -53,17 +53,22 @@
   const activeAnnotations = $derived(playStore.state.engineOutput?.annotations ?? []);
 
   // Get current effects (committed + newly advertised), deduplicated by id.
-  // Engine output takes precedence (has runtime vars like countDown).
+  // Committed-first ordering; advertised version preferred (has runtime vars like countDown).
   const currentEffects = $derived.by(() => {
     const committed = playStore.state.effects;
     const advertised = playStore.state.engineOutput?.effects ?? [];
-    const advertisedIds = new Array<string>();
-    for (const effect of advertised) {
-      advertisedIds.push(effect.id);
+    const advertisedById = new Array<string>();
+    for (const e of advertised) {
+      advertisedById.push(e.id);
     }
-    const result: Rule[] = [...advertised];
+    const result: Rule[] = [];
     for (const effect of committed) {
-      if (!advertisedIds.includes(effect.id)) {
+      const idx = advertisedById.indexOf(effect.id);
+      result.push(idx >= 0 ? advertised[idx] : effect);
+    }
+    const committedIds = committed.map((e) => e.id);
+    for (const effect of advertised) {
+      if (!committedIds.includes(effect.id)) {
         result.push(effect);
       }
     }
@@ -74,6 +79,10 @@
     const key = getConcentrationEffectName(currentEffects);
     return key ? $t(key) : undefined;
   });
+
+  const committedEffectIds = $derived(
+    playStore.state.effects.map((e) => e.id)
+  );
 
   // Handle choice tap - add to plan
   function handleChoiceTap(entry: AvailableRuleEntry): void {
@@ -138,6 +147,7 @@
           effects={currentEffects}
           facts={playStore.state.facts}
           concentrationEffectName={concentrationName}
+          committedEffectIds={committedEffectIds}
           onDismissEffect={handleRemoveEffect}
         />
         <PlanStack />

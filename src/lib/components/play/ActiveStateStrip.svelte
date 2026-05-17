@@ -10,10 +10,17 @@
     effects: Rule[];
     facts: Facts;
     concentrationEffectName?: string;
+    committedEffectIds: string[];
     onDismissEffect?: (ruleId: string) => void;
   }
 
-  let { effects, facts, concentrationEffectName, onDismissEffect }: Props = $props();
+  let {
+    effects,
+    facts,
+    concentrationEffectName,
+    committedEffectIds,
+    onDismissEffect
+  }: Props = $props();
 
   let reminderEffect: Rule | null = $state(null);
   let reminderAnchor: DOMRect | null = $state(null);
@@ -58,7 +65,9 @@
           {facts}
           state={chipState}
           isConcentrationLink={isConcLink}
-          onDismiss={onDismissEffect ? () => onDismissEffect(effect.id) : undefined}
+          onDismiss={onDismissEffect && committedEffectIds.includes(effect.id)
+            ? () => onDismissEffect(effect.id)
+            : undefined}
           onReminder={chipState === 'pending'
             ? (e: MouseEvent) => handleReminder(effect, e)
             : undefined}
