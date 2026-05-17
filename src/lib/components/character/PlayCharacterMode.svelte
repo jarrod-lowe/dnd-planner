@@ -2,7 +2,12 @@
   import { onMount } from 'svelte';
   import { t } from '$lib/i18n';
   import { playStore } from '$lib/play/playStore.svelte';
+  import { uiPrefsStore } from '$lib/ui/uiPrefsStore.svelte';
   import PlayLayout from '../play/PlayLayout.svelte';
+  import IntentTopBar from '../play/IntentTopBar.svelte';
+  import ActiveStateStrip from '../play/ActiveStateStrip.svelte';
+  import PlanStack from '../play/PlanStack.svelte';
+  import Ledger from '../play/Ledger.svelte';
   import StatsColumn from '../play/StatsColumn.svelte';
   import ChoicesColumn from '../play/ChoicesColumn.svelte';
   import PlanColumn from '../play/PlanColumn.svelte';
@@ -12,9 +17,31 @@
 
   interface Props {
     character: Character;
+    email: string | null;
+    onLogout: () => void;
+    version?: string;
+    onBack?: () => void;
+    onManageRules?: () => void;
+    showManageRules?: boolean;
+    onViewFacts?: () => void;
+    showViewFacts?: boolean;
+    onDownloadCharacter?: () => void;
+    showDownloadCharacter?: boolean;
   }
 
-  let { character }: Props = $props();
+  let {
+    character,
+    email,
+    onLogout,
+    version = 'v0.0.0',
+    onBack,
+    onManageRules,
+    showManageRules = false,
+    onViewFacts,
+    showViewFacts = false,
+    onDownloadCharacter,
+    showDownloadCharacter = false
+  }: Props = $props();
 
   let showIllegal = $state(false);
 
@@ -64,7 +91,40 @@
 </script>
 
 <div class="play-character">
-  {#if playStore.state.isLoadingRuleGroups}
+  {#if uiPrefsStore.state.layout === 'intent'}
+    <IntentTopBar
+      {character}
+      stats={playStore.state.stats}
+      facts={playStore.state.facts}
+      {email}
+      {onLogout}
+      {version}
+      {onBack}
+      {onManageRules}
+      {showManageRules}
+      {onViewFacts}
+      {showViewFacts}
+      {onDownloadCharacter}
+      {showDownloadCharacter}
+      currentLayout={uiPrefsStore.state.layout}
+      onSwitchLayout={(l) => uiPrefsStore.setLayout(l)}
+    />
+    {#if playStore.state.isLoadingRuleGroups}
+      <div class="play-character__loading">{$t('play.choices.loading')}</div>
+    {:else if playStore.state.ruleGroupError}
+      <div class="play-character__error">{$t('play.error.loadRuleGroups')}</div>
+    {:else}
+      <div class="play-character__intent-body">
+        <ActiveStateStrip effectCount={currentEffects.length} />
+        <PlanStack />
+        <Ledger
+          stats={playStore.state.stats}
+          facts={playStore.state.facts}
+          status={playStore.state.engineOutput?.status}
+        />
+      </div>
+    {/if}
+  {:else if playStore.state.isLoadingRuleGroups}
     <div class="play-character__loading">{$t('play.choices.loading')}</div>
   {:else if playStore.state.ruleGroupError}
     <div class="play-character__error">{$t('play.error.loadRuleGroups')}</div>
@@ -154,6 +214,30 @@
 
   .play-character__error {
     color: var(--md-sys-color-error);
+  }
+
+  .play-character__intent-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .play-character__intent-body > :global(.active-state-strip) {
+    flex-shrink: 0;
+    max-height: 8.5rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .play-character__intent-body > :global(.plan-stack) {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .play-character__intent-body > :global(.ledger) {
+    flex-shrink: 0;
   }
 
   .play-character__toggle-illegal {

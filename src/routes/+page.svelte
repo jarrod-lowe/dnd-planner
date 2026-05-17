@@ -10,6 +10,7 @@
   import ViewFactsMode from '$lib/components/character/ViewFactsMode.svelte';
   import EditCustomRules from '$lib/components/character/EditCustomRules.svelte';
   import { playStore } from '$lib/play/playStore.svelte';
+  import { uiPrefsStore } from '$lib/ui/uiPrefsStore.svelte';
   import { buildCharacterExport } from '$lib/character/exportCharacter';
   import { validateCharacterImport, importCharacter } from '$lib/character/importCharacter';
   import { getCache, ensureCached } from '$lib/rules/ruleGroupCache.svelte';
@@ -26,6 +27,16 @@
   let manageRulesActive = $state(false);
   let editCustomRulesActive = $state(false);
   let viewFactsActive = $state(false);
+
+  // In Intent mode with a character selected in play view, the standalone TopBar is hidden
+  // because IntentTopBar is rendered inside IntentStackLayout instead.
+  const isIntentPlayMode = $derived(
+    uiPrefsStore.state.layout === 'intent' &&
+      !!characterStore.state.selectedCharacter &&
+      !manageRulesActive &&
+      !editCustomRulesActive &&
+      !viewFactsActive
+  );
 
   // Compute locked rule groups: assigned groups that are required by other assigned groups
   let lockedRuleGroups = $derived.by(() => {
@@ -172,42 +183,50 @@
   <LandingPage onLogin={() => authStore.login()} />
 {:else}
   <div class="app-layout">
-    <TopBar
-      email={authStore.state.email}
-      onLogout={() => authStore.logout()}
-      version="v0.0.0"
-      selectedCharacter={characterStore.state.selectedCharacter}
-      onBack={characterStore.state.selectedCharacter
-        ? () => {
-            playStore.reset();
-            characterStore.clearSelection();
-            manageRulesActive = false;
-            editCustomRulesActive = false;
-            viewFactsActive = false;
-          }
-        : undefined}
-      showManageRules={!!characterStore.state.selectedCharacter &&
-        !manageRulesActive &&
-        !editCustomRulesActive &&
-        !viewFactsActive}
-      onManageRules={() => {
-        manageRulesActive = true;
-      }}
-      showViewFacts={!!characterStore.state.selectedCharacter &&
-        !manageRulesActive &&
-        !editCustomRulesActive &&
-        !viewFactsActive}
-      onViewFacts={() => {
-        viewFactsActive = true;
-      }}
-      showDownloadCharacter={!!characterStore.state.selectedCharacter &&
-        !manageRulesActive &&
-        !editCustomRulesActive &&
-        !viewFactsActive &&
-        !playStore.state.isLoadingRuleGroups &&
-        !playStore.state.ruleGroupError}
-      onDownloadCharacter={handleDownloadCharacter}
-    />
+    {#if !isIntentPlayMode}
+      <TopBar
+        email={authStore.state.email}
+        onLogout={() => authStore.logout()}
+        version="v0.0.0"
+        selectedCharacter={characterStore.state.selectedCharacter}
+        onBack={characterStore.state.selectedCharacter
+          ? () => {
+              playStore.reset();
+              characterStore.clearSelection();
+              manageRulesActive = false;
+              editCustomRulesActive = false;
+              viewFactsActive = false;
+            }
+          : undefined}
+        showManageRules={!!characterStore.state.selectedCharacter &&
+          !manageRulesActive &&
+          !editCustomRulesActive &&
+          !viewFactsActive}
+        onManageRules={() => {
+          manageRulesActive = true;
+        }}
+        showViewFacts={!!characterStore.state.selectedCharacter &&
+          !manageRulesActive &&
+          !editCustomRulesActive &&
+          !viewFactsActive}
+        onViewFacts={() => {
+          viewFactsActive = true;
+        }}
+        showDownloadCharacter={!!characterStore.state.selectedCharacter &&
+          !manageRulesActive &&
+          !editCustomRulesActive &&
+          !viewFactsActive &&
+          !playStore.state.isLoadingRuleGroups &&
+          !playStore.state.ruleGroupError}
+        onDownloadCharacter={handleDownloadCharacter}
+        showLayoutToggle={!!characterStore.state.selectedCharacter &&
+          !manageRulesActive &&
+          !editCustomRulesActive &&
+          !viewFactsActive}
+        currentLayout={uiPrefsStore.state.layout}
+        onSwitchLayout={(l) => uiPrefsStore.setLayout(l)}
+      />
+    {/if}
     <main id="main-content" class="app-layout__body">
       {#if characterStore.state.selectedCharacter}
         {#if editCustomRulesActive}
@@ -248,7 +267,40 @@
             }}
           />
         {:else}
-          <PlayCharacterMode character={characterStore.state.selectedCharacter} />
+          <PlayCharacterMode
+            character={characterStore.state.selectedCharacter}
+            email={authStore.state.email}
+            onLogout={() => authStore.logout()}
+            version="v0.0.0"
+            onBack={() => {
+              playStore.reset();
+              characterStore.clearSelection();
+              manageRulesActive = false;
+              editCustomRulesActive = false;
+              viewFactsActive = false;
+            }}
+            showManageRules={!!characterStore.state.selectedCharacter &&
+              !manageRulesActive &&
+              !editCustomRulesActive &&
+              !viewFactsActive}
+            onManageRules={() => {
+              manageRulesActive = true;
+            }}
+            showViewFacts={!!characterStore.state.selectedCharacter &&
+              !manageRulesActive &&
+              !editCustomRulesActive &&
+              !viewFactsActive}
+            onViewFacts={() => {
+              viewFactsActive = true;
+            }}
+            showDownloadCharacter={!!characterStore.state.selectedCharacter &&
+              !manageRulesActive &&
+              !editCustomRulesActive &&
+              !viewFactsActive &&
+              !playStore.state.isLoadingRuleGroups &&
+              !playStore.state.ruleGroupError}
+            onDownloadCharacter={handleDownloadCharacter}
+          />
         {/if}
       {:else}
         <SelectCharacterMode

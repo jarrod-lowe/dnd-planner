@@ -17,6 +17,9 @@
     showViewFacts?: boolean;
     onDownloadCharacter?: () => void;
     showDownloadCharacter?: boolean;
+    showLayoutToggle?: boolean;
+    currentLayout?: 'classic' | 'intent';
+    onSwitchLayout?: (layout: 'classic' | 'intent') => void;
   }
 
   let {
@@ -28,7 +31,10 @@
     onViewFacts,
     showViewFacts = false,
     onDownloadCharacter,
-    showDownloadCharacter = false
+    showDownloadCharacter = false,
+    showLayoutToggle = false,
+    currentLayout = 'classic',
+    onSwitchLayout
   }: Props = $props();
 
   // Generate Gravatar URL with MD5 hash of email
@@ -63,6 +69,12 @@
 
   function handleDownloadCharacter() {
     onDownloadCharacter?.();
+    closeMenu();
+  }
+
+  function handleSwitchLayout() {
+    const next = currentLayout === 'classic' ? 'intent' : 'classic';
+    onSwitchLayout?.(next);
     closeMenu();
   }
 
@@ -174,6 +186,34 @@
           <line x1="12" y1="15" x2="12" y2="3" />
         </svg>
         {$t('character.download')}
+      </button>
+
+      <div class="user-dropdown__divider" aria-hidden="true"></div>
+    {/if}
+
+    {#if showLayoutToggle && onSwitchLayout}
+      <button type="button" class="user-dropdown__menu-item" onclick={handleSwitchLayout}>
+        <svg
+          class="user-dropdown__menu-item-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          {#if currentLayout === 'classic'}
+            <rect x="3" y="3" width="7" height="18" rx="1" />
+            <rect x="14" y="3" width="7" height="8" rx="1" />
+            <rect x="14" y="13" width="7" height="8" rx="1" />
+          {:else}
+            <rect x="3" y="3" width="18" height="4" rx="1" />
+            <rect x="3" y="9" width="18" height="4" rx="1" />
+            <rect x="3" y="15" width="18" height="6" rx="1" />
+          {/if}
+        </svg>
+        {currentLayout === 'classic'
+          ? $t('ui.layout.switchToIntent')
+          : $t('ui.layout.switchToClassic')}
       </button>
 
       <div class="user-dropdown__divider" aria-hidden="true"></div>

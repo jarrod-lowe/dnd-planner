@@ -621,56 +621,6 @@
           "no_action": "DIvI' tu'lu'be'"
         }
       },
-      "simple-actions": {
-        "disengage-action": {
-          "name": "DIvI' DIch"
-        },
-        "action-disengage-offer": {
-          "no_action": "DIvI' tu'lu'be'"
-        },
-        "dodge-action": {
-          "name": "DIvI' pel"
-        },
-        "action-dodge-offer": {
-          "no_action": "DIvI' tu'lu'be'"
-        },
-        "improvise-action": {
-          "name": "DIvI' chu'"
-        },
-        "action-improvise-offer": {
-          "no_action": "DIvI' tu'lu'be'"
-        },
-        "influence-action": {
-          "name": "DIvI' Quv"
-        },
-        "action-influence-offer": {
-          "no_action": "DIvI' tu'lu'be'"
-        },
-        "search-action": {
-          "name": "DIvI' nej"
-        },
-        "action-search-offer": {
-          "no_action": "DIvI' tu'lu'be'"
-        },
-        "study-action": {
-          "name": "DIvI' laD"
-        },
-        "action-study-offer": {
-          "no_action": "DIvI' tu'lu'be'"
-        },
-        "utilize-action": {
-          "name": "DIvI' lo'"
-        },
-        "action-utilize-offer": {
-          "no_action": "DIvI' tu'lu'be'"
-        },
-        "interact-action": {
-          "name": "DIvI' DIch"
-        },
-        "action-interact-offer": {
-          "no_action": "DIvI' tu'lu'be'"
-        }
-      },
       "attacks": {
         "unarmed-strike": {
           "name": "nuH DIvI'"
@@ -1111,6 +1061,28 @@
       "l3": "DIvI' L3 mugh",
       "l4": "DIvI' L4 mugh",
       "l5": "DIvI' L5 mugh"
+    },
+    "activeState": {
+      "title": "Active State",
+      "placeholder": "Active effects will appear here"
+    },
+    "planStack": {
+      "title": "This Turn I Want To…",
+      "placeholder": "Tap + ADD to plan your turn"
+    },
+    "ledger": {
+      "title": "Resources",
+      "overBudget": "Over budget"
+    },
+    "topBar": {
+      "hp": "HP",
+      "ac": "AC",
+      "speed": "SPD",
+      "conc": "CONC",
+      "concNone": "No concentration",
+      "concActive": "Active",
+      "abilities": "Abilities",
+      "proficient": "Proficient"
     }
   },
   "damage-type": {
@@ -1127,5 +1099,11 @@
     "radiant": "Radiant",
     "poison": "Poison",
     "psychic": "Psychic"
+  },
+  "ui": {
+    "layout": {
+      "switchToIntent": "Switch to Intent Stack",
+      "switchToClassic": "Switch to Classic Layout"
+    }
   }
 }
