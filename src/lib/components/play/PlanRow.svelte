@@ -204,7 +204,8 @@
           <span class="plan-row__alternatives-label">{$t('play.planRow.orInstead')}</span>
           {#each groupedAlternatives as [bucket, alts] (bucket)}
             <div class="plan-row__alt-bucket">
-              <span class="plan-row__alt-bucket-label">{$t(subBucketLabelKey(verb, bucket))} →</span>
+              <span class="plan-row__alt-bucket-label">{$t(subBucketLabelKey(verb, bucket))} →</span
+              >
               {#each alts as alt (alt.rule.id)}
                 {@const altDescriptor = extractPanelDescriptor(alt.rule)}
                 {@const altName = altDescriptor.name ? $t(altDescriptor.name) : alt.rule.id}
