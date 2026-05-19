@@ -1106,6 +1106,130 @@
       "abilities": "Abilities",
       "proficient": "Proficient",
       "hpValue": "{{current}} / {{max}}"
+    },
+    "verbs": {
+      "ATTACK": "Attack",
+      "AID": "Aid",
+      "CONTROL": "Control",
+      "DEFEND": "Defend",
+      "MOVE": "Move",
+      "INSPECT": "Inspect",
+      "HANDLE": "Handle",
+      "DAMAGE": "Damage",
+      "HEAL": "Heal",
+      "SAVE": "Save",
+      "CHECK": "Check",
+      "REST": "Rest",
+      "NOTE": "Note",
+      "STAT": "Stat",
+      "PROFICIENCY": "Proficiency"
+    },
+    "verbBuckets": {
+      "ATTACK": {
+        "default": "Other",
+        "weapons": "Weapons",
+        "spells": "Spells"
+      },
+      "AID": {
+        "default": "Other",
+        "self": "Self",
+        "ally": "Ally",
+        "area": "Area"
+      },
+      "CONTROL": {
+        "default": "Other",
+        "single": "Single Target",
+        "area": "Area"
+      },
+      "DEFEND": {
+        "default": "Other",
+        "evade": "Evade",
+        "ward": "Ward"
+      },
+      "MOVE": {
+        "default": "Other",
+        "walk": "Walk",
+        "hustle": "Hustle",
+        "special": "Special"
+      },
+      "INSPECT": {
+        "default": "Other",
+        "sense": "Sense",
+        "check": "Check"
+      },
+      "HANDLE": {
+        "default": "Other",
+        "gear": "Gear",
+        "consume": "Consume",
+        "effects": "Effects",
+        "spells": "Spells"
+      },
+      "DAMAGE": {
+        "default": "Source",
+        "source": "Source"
+      },
+      "HEAL": {
+        "default": "Source",
+        "source": "Source"
+      },
+      "SAVE": {
+        "default": "Other",
+        "others": "Others",
+        "you": "You"
+      },
+      "CHECK": {
+        "default": "Other",
+        "skill": "Skill",
+        "raw": "Raw"
+      },
+      "REST": {
+        "default": "Type",
+        "type": "Type"
+      },
+      "NOTE": {},
+      "STAT": {
+        "ability": "Ability"
+      },
+      "PROFICIENCY": {
+        "default": "Category"
+      }
+    },
+    "addRow": {
+      "title": "Add Action",
+      "planGroup": "plan →",
+      "recordGroup": "record →",
+      "buildGroup": "build →",
+      "expand": "Show options",
+      "collapse": "Hide options",
+      "emptyBucket": "No options available"
+    },
+    "planRow": {
+      "orInstead": "or instead",
+      "recorded": "recorded",
+      "expandAria": "Expand",
+      "collapseAria": "Collapse",
+      "undoAria": "Undo"
+    },
+    "modChip": {
+      "toggle": "Toggle {{name}}",
+      "effectSource": "Effect: {{name}}",
+      "illegalTag": "Illegal",
+      "illegalWhy": "Why illegal: {{reason}}"
+    },
+    "costTags": {
+      "action": "ACT",
+      "bonus": "BON",
+      "reaction": "RXN",
+      "move": "MOV",
+      "conc": "CONC",
+      "LoH": "LoH",
+      "CD": "CD",
+      "L1": "L1",
+      "L2": "L2",
+      "L3": "L3",
+      "L4": "L4",
+      "L5": "L5",
+      "free": "FREE"
     }
   },
   "damage-type": {

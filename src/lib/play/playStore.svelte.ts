@@ -1,11 +1,12 @@
 import { apiGet, apiPost, apiDelete } from '$lib/api/client';
 import { evaluate } from '$lib/rules-engine';
-import type { Rule } from '$lib/rules-engine';
-import type { PlannedItem, PlayState } from './types';
+import type { Rule, AvailableRuleEntry } from '$lib/rules-engine';
+import type { PlannedItem, PlayState, Step } from './types';
 import { debounce } from './debounce';
 import { resolveInitialSelections } from './resolveInitialSelections';
 import { extractStats } from './extractStats';
 import { decrementCountDowns } from './countDown';
+import { deriveVerbFromRule, stepsToRules } from './stepUtils';
 import { locale, t } from '$lib/i18n';
 import { get } from 'svelte/store';
 import { getCache, ensureCached } from '$lib/rules/ruleGroupCache.svelte';
@@ -27,6 +28,7 @@ const initialState: PlayState = {
   engineOutput: null,
   isEvaluating: false,
   plannedItems: [],
+  steps: [],
   facts: {},
   effects: [],
   currentCharacterId: null,
@@ -44,14 +46,31 @@ function recalculateStats(): void {
   state = { ...state, stats: extractStats(state.ruleGroups) };
 }
 
+function buildRuleLookup(): Record<string, Rule> {
+  const lookup: Record<string, Rule> = {};
+  for (const rule of state.ruleGroups) {
+    lookup[rule.id] = rule;
+  }
+  for (const effect of state.effects) {
+    lookup[effect.id] = effect;
+  }
+  const available = state.engineOutput?.availableRules ?? [];
+  for (const entry of available) {
+    lookup[entry.rule.id] = entry.rule;
+  }
+  return lookup;
+}
+
 function performEvaluation(): void {
   state = { ...state, isEvaluating: true };
+
+  const stepRules = stepsToRules(state.steps, buildRuleLookup());
 
   const input = {
     schemaVersion: 1 as const,
     rules: {
       standing: state.ruleGroups,
-      planned: state.plannedItems.map((item) => item.rule),
+      planned: [...state.plannedItems.map((item) => item.rule), ...stepRules],
       effects: state.effects
     },
     state: {
@@ -304,6 +323,94 @@ function updateSelections(instanceId: string, selections: Record<string, unknown
   state = {
     ...state,
     plannedItems: updatedItems
+  };
+
+  debouncedEvaluate();
+}
+
+function addStep(entry: AvailableRuleEntry): void {
+  const id = generateInstanceId();
+  const verb = deriveVerbFromRule(entry.rule);
+  const initialSelections = resolveInitialSelections(entry.rule, state.facts);
+
+  const step: Step = {
+    id,
+    verb,
+    ruleId: entry.rule.id,
+    modelSelections: initialSelections,
+    recordedAt: new Date().toISOString()
+  };
+
+  state = {
+    ...state,
+    steps: [...state.steps, step]
+  };
+
+  debouncedEvaluate();
+}
+
+function removeStep(id: string): void {
+  state = {
+    ...state,
+    steps: state.steps.filter((s) => s.id !== id)
+  };
+
+  debouncedEvaluate();
+}
+
+function updateStepSelections(id: string, selections: Record<string, unknown>): void {
+  const index = state.steps.findIndex((s) => s.id === id);
+  if (index === -1) return;
+
+  const updated = [...state.steps];
+  updated[index] = {
+    ...updated[index],
+    modelSelections: { ...updated[index].modelSelections, ...selections }
+  };
+
+  state = {
+    ...state,
+    steps: updated
+  };
+
+  debouncedEvaluate();
+}
+
+function moveStep(id: string, direction: 'up' | 'down'): void {
+  const steps = [...state.steps];
+  const currentIndex = steps.findIndex((s) => s.id === id);
+  if (currentIndex === -1) return;
+
+  const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+  if (targetIndex < 0 || targetIndex >= steps.length) return;
+
+  [steps[currentIndex], steps[targetIndex]] = [steps[targetIndex], steps[currentIndex]];
+
+  state = {
+    ...state,
+    steps
+  };
+
+  debouncedEvaluate();
+}
+
+function swapStepRule(id: string, entry: AvailableRuleEntry): void {
+  const index = state.steps.findIndex((s) => s.id === id);
+  if (index === -1) return;
+
+  const verb = deriveVerbFromRule(entry.rule);
+  const initialSelections = resolveInitialSelections(entry.rule, state.facts);
+  const updated = [...state.steps];
+  updated[index] = {
+    ...updated[index],
+    verb,
+    ruleId: entry.rule.id,
+    modelSelections: initialSelections
+  };
+
+  state = {
+    ...state,
+    steps: updated
   };
 
   debouncedEvaluate();
@@ -671,6 +778,7 @@ function endTurn(): void {
   state = {
     ...state,
     plannedItems: [],
+    steps: [],
     effects
   };
   performEvaluation();
@@ -810,6 +918,11 @@ export const playStore = {
   removeFromPlan,
   movePlanItem,
   updateSelections,
+  addStep,
+  removeStep,
+  updateStepSelections,
+  moveStep,
+  swapStepRule,
   updateCustomRules,
   removeEffect,
   addFollowupEffect,
