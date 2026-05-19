@@ -42,7 +42,7 @@
     canMoveDown = true,
     onMoveUp,
     onMoveDown,
-    onFollowup
+    onFollowup,
   }: Props = $props();
 
   const descriptor = $derived(extractPanelDescriptor(entry.rule));

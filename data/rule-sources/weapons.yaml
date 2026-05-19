@@ -314,6 +314,7 @@ profiles:
       tags: [attack]
     ui:
       section: action-attack
+      actionCost: [action]
     gating:
       legalWhen:
         - condition:
@@ -362,6 +363,7 @@ profiles:
     filterRanges: melee
     ui:
       section: reaction
+      actionCost: [reaction]
       annotationLabels:
         - attack.any
         - attack.melee
@@ -420,6 +422,7 @@ profiles:
         weapon.light: true
     ui:
       section: bonus-action
+      actionCost: [bonus]
     gating:
       when:
         - fact: capability.attack.bonus.light

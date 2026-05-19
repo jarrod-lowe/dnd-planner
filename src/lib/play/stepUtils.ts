@@ -60,11 +60,14 @@ export function plannedItemToStep(item: PlannedItem): Step {
 }
 
 /**
- * Resolves a Step to a Rule by looking up the ruleId in the provided map,
+ * Resolves a Step to a Rule by looking up the ruleId in the provided lookup,
  * then applying the step's modelSelections as the rule's selections.
  */
-export function stepToRule(step: Step, lookup: Map<string, Rule>): Rule | null {
-  const rule = lookup.get(step.ruleId);
+export function stepToRule(
+  step: Step,
+  lookup: Map<string, Rule> | Record<string, Rule>
+): Rule | null {
+  const rule = lookup instanceof Map ? lookup.get(step.ruleId) : lookup[step.ruleId];
   if (!rule) return null;
   return {
     ...rule,
@@ -76,7 +79,10 @@ export function stepToRule(step: Step, lookup: Map<string, Rule>): Rule | null {
  * Converts an array of Steps to Rules for engine evaluation.
  * Returns the rules in order, skipping any steps whose ruleId cannot be resolved.
  */
-export function stepsToRules(steps: Step[], lookup: Map<string, Rule>): Rule[] {
+export function stepsToRules(
+  steps: Step[],
+  lookup: Map<string, Rule> | Record<string, Rule>
+): Rule[] {
   const rules: Rule[] = [];
   for (const step of steps) {
     const rule = stepToRule(step, lookup);

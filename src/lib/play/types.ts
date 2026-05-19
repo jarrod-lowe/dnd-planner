@@ -32,8 +32,10 @@ export interface PlayState {
   engineOutput: EngineOutput | null;
   /** Whether the engine is currently evaluating */
   isEvaluating: boolean;
-  /** Items the user has added to their plan */
+  /** Items the user has added to their plan (classic layout) */
   plannedItems: PlannedItem[];
+  /** Steps in the intent-stack plan (intent layout) */
+  steps: Step[];
   /** Current facts from engine evaluation */
   facts: Facts;
   /** Committed effects from previous turns. Passed to engine as rules.effects. */
