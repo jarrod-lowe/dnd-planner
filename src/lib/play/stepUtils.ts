@@ -53,7 +53,7 @@ export function plannedItemToStep(item: PlannedItem): Step {
   return {
     id: item.instanceId,
     verb: deriveVerbFromRule(item.rule),
-    ruleId: item.rule.id,
+    ruleId: item.originalRuleId ?? item.rule.id,
     modelSelections: { ...(item.rule.selections ?? {}) },
     recordedAt: new Date().toISOString()
   };
@@ -91,4 +91,27 @@ export function stepsToRules(
     }
   }
   return rules;
+}
+
+/**
+ * Converts an array of Steps back to PlannedItems.
+ * Skips steps whose ruleId cannot be resolved.
+ * Re-indexes order values sequentially.
+ */
+export function stepsToPlannedItems(
+  steps: Step[],
+  lookup: Map<string, Rule> | Record<string, Rule>
+): PlannedItem[] {
+  const items: PlannedItem[] = [];
+  for (const step of steps) {
+    const rule = stepToRule(step, lookup);
+    if (!rule) continue;
+    items.push({
+      instanceId: step.id,
+      rule: { ...rule, id: step.id },
+      order: items.length,
+      originalRuleId: step.ruleId
+    });
+  }
+  return items;
 }

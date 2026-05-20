@@ -132,7 +132,10 @@
       {onDownloadCharacter}
       {showDownloadCharacter}
       currentLayout={uiPrefsStore.state.layout}
-      onSwitchLayout={(l) => uiPrefsStore.setLayout(l)}
+      onSwitchLayout={(l) => {
+        playStore.convertPlanForLayout(l);
+        uiPrefsStore.setLayout(l);
+      }}
       concentrationEffectName={concentrationName}
     />
     {#if playStore.state.isLoadingRuleGroups}

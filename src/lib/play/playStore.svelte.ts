@@ -6,7 +6,12 @@ import { debounce } from './debounce';
 import { resolveInitialSelections } from './resolveInitialSelections';
 import { extractStats } from './extractStats';
 import { decrementCountDowns } from './countDown';
-import { deriveVerbFromRule, stepsToRules } from './stepUtils';
+import {
+  deriveVerbFromRule,
+  stepsToRules,
+  stepsToPlannedItems,
+  plannedItemToStep
+} from './stepUtils';
 import { locale, t } from '$lib/i18n';
 import { get } from 'svelte/store';
 import { getCache, ensureCached } from '$lib/rules/ruleGroupCache.svelte';
@@ -251,7 +256,8 @@ function addToPlan(rule: Rule): void {
       // Only set selections if there are any to set
       ...(Object.keys(initialSelections).length > 0 && { selections: initialSelections })
     },
-    order: state.plannedItems.length
+    order: state.plannedItems.length,
+    originalRuleId: rule.id
   };
 
   state = {
@@ -813,6 +819,25 @@ function reset(): void {
   state = { ...initialState };
 }
 
+function convertPlanForLayout(newLayout: 'classic' | 'intent'): void {
+  if (newLayout === 'intent') {
+    if (state.plannedItems.length === 0) return;
+    const newSteps = state.plannedItems.map((item) => plannedItemToStep(item));
+    state = { ...state, steps: newSteps, plannedItems: [] };
+    debouncedEvaluate();
+  } else {
+    if (state.steps.length === 0) return;
+    const lookup = buildRuleLookup();
+    const newItems = stepsToPlannedItems(state.steps, lookup);
+    if (newItems.length < state.steps.length) {
+      const skipped = state.steps.length - newItems.length;
+      toast.warning(get(t)('play.warning.skippedSteps', { count: skipped }));
+    }
+    state = { ...state, plannedItems: newItems, steps: [] };
+    debouncedEvaluate();
+  }
+}
+
 interface SettingsGroup {
   ruleGroupId: string;
   name: string;
@@ -930,5 +955,6 @@ export const playStore = {
   checkCondition,
   assignRuleGroupWithSettings,
   endTurn,
+  convertPlanForLayout,
   reset
 };

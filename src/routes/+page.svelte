@@ -224,7 +224,10 @@
           !editCustomRulesActive &&
           !viewFactsActive}
         currentLayout={uiPrefsStore.state.layout}
-        onSwitchLayout={(l) => uiPrefsStore.setLayout(l)}
+        onSwitchLayout={(l) => {
+          playStore.convertPlanForLayout(l);
+          uiPrefsStore.setLayout(l);
+        }}
       />
     {/if}
     <main id="main-content" class="app-layout__body">

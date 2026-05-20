@@ -12,6 +12,8 @@ export interface PlannedItem {
   rule: Rule;
   /** Position in the plan (0-indexed) */
   order: number;
+  /** Original rule ID before instance-ID rewriting */
+  originalRuleId?: string;
 }
 
 /**
