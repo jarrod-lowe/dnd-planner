@@ -6,6 +6,7 @@
   import PanelSlider from './panel-renderer/PanelSlider.svelte';
   import PanelDiceLine from './panel-renderer/PanelDiceLine.svelte';
   import PanelSelect from './panel-renderer/PanelSelect.svelte';
+  import PanelTextInput from './panel-renderer/PanelTextInput.svelte';
   import { evaluateCondition } from '$lib/rules-engine/conditions';
   import { getMatchingAnnotations } from '$lib/play/annotations';
   import type { AvailableRuleEntry, Facts, Annotation, Rule } from '$lib/rules-engine';
@@ -72,6 +73,9 @@
   const primarySelect = $derived(
     descriptor.primaryControl?.type === 'select' ? descriptor.primaryControl : undefined
   );
+  const primaryTextInput = $derived(
+    descriptor.primaryControl?.type === 'text' ? descriptor.primaryControl : undefined
+  );
   const secondarySlider = $derived(
     descriptor.secondaryControl?.type === 'slider' ? descriptor.secondaryControl : undefined
   );
@@ -107,6 +111,9 @@
   );
   const secondarySelect = $derived(
     descriptor.secondaryControl?.type === 'select' ? descriptor.secondaryControl : undefined
+  );
+  const secondaryTextInput = $derived(
+    descriptor.secondaryControl?.type === 'text' ? descriptor.secondaryControl : undefined
   );
 
   const textInfos = $derived(
@@ -250,6 +257,18 @@
       />
     </div>
   {/if}
+  {#if primaryTextInput}
+    <div class="panel-renderer__control">
+      <PanelTextInput
+        control={primaryTextInput}
+        {editable}
+        {facts}
+        {vars}
+        {selections}
+        {onSelectionChange}
+      />
+    </div>
+  {/if}
   {#if secondaryShowEnableButton}
     <div class="panel-renderer__control panel-renderer__control--secondary">
       <button
@@ -291,6 +310,18 @@
     <div class="panel-renderer__control panel-renderer__control--secondary">
       <PanelSelect
         control={secondarySelect}
+        {editable}
+        {facts}
+        {vars}
+        {selections}
+        {onSelectionChange}
+      />
+    </div>
+  {/if}
+  {#if secondaryShouldRender && secondaryTextInput}
+    <div class="panel-renderer__control panel-renderer__control--secondary">
+      <PanelTextInput
+        control={secondaryTextInput}
         {editable}
         {facts}
         {vars}

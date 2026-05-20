@@ -1,0 +1,21 @@
+name: 'Core Events - Heal has slider control'
+description: 'record-heal offers a slider for amount input'
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/core-events
+steps:
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - record-heal
+        offerUi:
+          - id: record-heal
+            ui:
+              primaryControl:
+                type: slider
+                var: amount
+                min: { number: 0 }
+                max: { fact: hp.max }
+                unit: hp

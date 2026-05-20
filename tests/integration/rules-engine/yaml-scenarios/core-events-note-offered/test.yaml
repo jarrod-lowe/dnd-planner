@@ -1,0 +1,19 @@
+name: 'Core Events - Note has text input control'
+description: 'record-note offers a text input'
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/core-events
+steps:
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - record-note
+        offerUi:
+          - id: record-note
+            ui:
+              primaryControl:
+                type: text
+                var: text
+                multiline: true

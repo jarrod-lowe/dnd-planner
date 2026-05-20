@@ -1,0 +1,51 @@
+name: 'Heal persists and caps at max HP'
+description: 'Healing survives end turn and does not exceed hp.max'
+ruleGroups:
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - class-paladin/class-paladin-level1
+  - dnd-5e-2024/core-events
+steps:
+  # Set CON to 14 → hp.max = 12, hp.current = 12
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - set-constitution
+  - addOffer:
+      id: set-constitution
+      selections:
+        score: 14
+      assert:
+        facts:
+          hp.current: 12
+          hp.max: 12
+  # Record 5 damage → hp.current = 7
+  - addOffer:
+      id: record-damage
+      selections:
+        amount: 5
+      assert:
+        facts:
+          hp.current: 7
+  # Record 10 healing — capped at hp.max (12), so hp.current = 12 not 17
+  - addOffer:
+      id: record-heal
+      selections:
+        amount: 10
+      assert:
+        facts:
+          hp.current: 12
+  # End turn — heal effect should persist
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-hp-heal
+  # Next turn — healing should still be applied (hp.current stays at max)
+  - evaluate:
+      assert:
+        facts:
+          hp.current: 12

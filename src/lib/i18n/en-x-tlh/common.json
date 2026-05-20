@@ -1247,6 +1247,21 @@
     "poison": "Poison",
     "psychic": "Psychic"
   },
+  "planner": {
+    "record": {
+      "damage": "QInvID DIvI'",
+      "heal": "DIvI' DIvI'",
+      "save": "DIvI' DIvI'",
+      "check": "DIvI' DIvI'",
+      "note": "DIvI' DIvI'",
+      "passed": "DIvI'",
+      "failed": "DIvI'"
+    },
+    "rest": {
+      "short": "DIvI' nIv",
+      "long": "DIvI' tIQ"
+    }
+  },
   "ui": {
     "layout": {
       "switchToIntent": "Switch to Intent Stack",

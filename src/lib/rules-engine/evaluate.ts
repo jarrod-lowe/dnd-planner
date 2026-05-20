@@ -77,7 +77,14 @@ export function evaluate(input: EngineInput): EngineOutput {
   };
 
   // 2. Build group states for each phase
-  const allRules = [...input.rules.standing, ...input.rules.planned, ...input.rules.effects];
+  // Auto-assign all effects to an __effects__ group so planned rules can
+  // declare an after-dependency on them. This ensures persistent modifications
+  // (damage, healing, etc.) establish the baseline before planned actions run.
+  const effectsWithGroup = input.rules.effects.map((r) => ({
+    ...r,
+    group: [...(r.group ?? []), '__effects__']
+  }));
+  const allRules = [...input.rules.standing, ...input.rules.planned, ...effectsWithGroup];
 
   // Build groups per phase (kept separate to prevent cross-phase auto-group collisions)
   const phaseGroups = {
@@ -100,7 +107,7 @@ export function evaluate(input: EngineInput): EngineOutput {
 
   // 4. Execute phases in order, each with its own group map
   const context: RuleContext = {
-    input,
+    input: { ...input, rules: { ...input.rules, effects: effectsWithGroup } },
     workingState,
     groups: phaseGroups.early,
     currentPhase: 'early',

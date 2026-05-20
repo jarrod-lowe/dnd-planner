@@ -1,0 +1,21 @@
+name: 'Core Events - Damage has slider control'
+description: 'record-damage offers a slider for amount input'
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/core-events
+steps:
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - record-damage
+        offerUi:
+          - id: record-damage
+            ui:
+              primaryControl:
+                type: slider
+                var: amount
+                min: { number: 0 }
+                max: { fact: hp.max }
+                unit: hp
