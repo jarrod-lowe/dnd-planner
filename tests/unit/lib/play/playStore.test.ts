@@ -596,6 +596,63 @@ describe('playStore', () => {
       });
     });
 
+    it('preserves rule default selections alongside capture vars', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      const mockEvaluate = vi.mocked(evaluate);
+
+      mockApiGet.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: [] })
+      } as Response);
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {
+          'character.movement.remaining': 25
+        },
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      await playStore.loadRuleGroups('char-123');
+
+      // Rule with both default selections and a capture var
+      const rule: Rule = {
+        id: 'move-walk',
+        description: 'Walk',
+        activities: [],
+        selections: { slotLevel: 1 },
+        vars: {
+          distance: {
+            default: { fact: 'character.movement.remaining' },
+            capture: true
+          }
+        }
+      };
+
+      playStore.addToPlan(rule);
+
+      expect(playStore.state.plannedItems[0].rule.selections).toEqual({
+        slotLevel: 1,
+        distance: 25
+      });
+    });
+
     it('does not resolve vars without capture property', async () => {
       const mockEvaluate = vi.mocked(evaluate);
       mockEvaluate.mockReturnValue({
@@ -638,8 +695,8 @@ describe('playStore', () => {
       playStore.addToPlan(rule);
 
       expect(playStore.state.plannedItems).toHaveLength(1);
-      // selections should be empty or undefined since capture is not set
-      expect(playStore.state.plannedItems[0].rule.selections).toBeUndefined();
+      // selections should be empty since capture is not set
+      expect(playStore.state.plannedItems[0].rule.selections).toEqual({});
     });
 
     it('allows adding the same rule multiple times (duplicates)', async () => {
@@ -1143,8 +1200,8 @@ describe('playStore', () => {
       // Try to update non-existent instance
       playStore.updateSelections('non-existent-id', { distance: 15 });
 
-      // Original item should not have selections
-      expect(playStore.state.plannedItems[0].rule.selections).toBeUndefined();
+      // Original item should have empty selections
+      expect(playStore.state.plannedItems[0].rule.selections).toEqual({});
     });
 
     it('merges new selections with existing instead of replacing', async () => {

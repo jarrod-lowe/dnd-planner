@@ -230,8 +230,7 @@ function addToPlan(rule: Rule): void {
     rule: {
       ...rule,
       id: instanceId, // Unique ID so engine processes each instance separately
-      // Only set selections if there are any to set
-      ...(Object.keys(initialSelections).length > 0 && { selections: initialSelections })
+      selections: { ...(rule.selections ?? {}), ...initialSelections }
     },
     order: state.plannedItems.length,
     originalRuleId: rule.id,
@@ -324,7 +323,7 @@ function swapPlanItemRule(instanceId: string, entry: AvailableRuleEntry): void {
     rule: {
       ...entry.rule,
       id: instanceId,
-      ...(Object.keys(initialSelections).length > 0 && { selections: initialSelections })
+      selections: { ...(entry.rule.selections ?? {}), ...initialSelections }
     },
     originalRuleId: entry.rule.id
   };
