@@ -82,9 +82,7 @@ export function evaluate(input: EngineInput): EngineOutput {
   // (damage, healing, etc.) establish the baseline before planned actions run.
   const effectsWithGroup = input.rules.effects.map((r) => ({
     ...r,
-    group: (r.group ?? []).includes('__effects__')
-      ? r.group
-      : [...(r.group ?? []), '__effects__']
+    group: (r.group ?? []).includes('__effects__') ? r.group : [...(r.group ?? []), '__effects__']
   }));
   const allRules = [...input.rules.standing, ...input.rules.planned, ...effectsWithGroup];
 
