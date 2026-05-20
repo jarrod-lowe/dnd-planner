@@ -1,0 +1,23 @@
+name: 'Core Events - Save has select control'
+description: 'record-save offers a select for pass/fail'
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/core-events
+steps:
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - record-save
+        offerUi:
+          - id: record-save
+            ui:
+              primaryControl:
+                type: select
+                var: passed
+                options:
+                  - value: 1
+                    label: planner.record.passed
+                  - value: 0
+                    label: planner.record.failed

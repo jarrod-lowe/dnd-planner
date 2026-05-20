@@ -1,0 +1,20 @@
+name: 'Core Events - Check has dice-line control'
+description: 'record-check offers a d20 dice-line'
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/core-events
+steps:
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - record-check
+        offerUi:
+          - id: record-check
+            ui:
+              primaryControl:
+                type: dice-line
+                dice:
+                  - expression: d20
+                annotationLabels: [dice.any]

@@ -49,7 +49,14 @@ export interface SelectControl extends ControlBase {
   display?: ValueSource;
 }
 
-export type Control = DiceLineControl | SliderControl | SelectControl;
+export interface TextInputControl extends ControlBase {
+  type: 'text';
+  var: string;
+  placeholder?: string;
+  multiline?: boolean;
+}
+
+export type Control = DiceLineControl | SliderControl | SelectControl | TextInputControl;
 
 export interface TextInformation {
   type: 'text';

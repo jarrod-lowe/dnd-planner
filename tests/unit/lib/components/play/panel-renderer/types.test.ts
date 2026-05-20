@@ -7,7 +7,8 @@ import type {
   TextInformation,
   CountdownInformation,
   PanelDescriptor,
-  ValueSource
+  ValueSource,
+  Control
 } from '$lib/components/play/panel-renderer/types';
 
 describe('Panel renderer types', () => {
@@ -80,6 +81,14 @@ describe('Panel renderer types', () => {
     };
     expect(info.type).toBe('countdown');
     expect(info.filled).toBeTruthy();
+  });
+
+  it('TextInputControl is a valid Control type', () => {
+    const control: Control = {
+      type: 'text',
+      var: 'note'
+    };
+    expect(control.type).toBe('text');
   });
 
   it('PanelDescriptor with all optional fields', () => {

@@ -22,9 +22,18 @@ ruleGroups:
               id: record-damage
               group:
                 - __planned__
+              after:
+                - group: hp-copied
+                - group: __effects__
               ui:
                 section: free
                 name: planner.record.damage
+                primaryControl:
+                  type: slider
+                  var: amount
+                  min: { number: 0 }
+                  max: { fact: hp.max }
+                  unit: hp
                 intents:
                   DAMAGE: source
                 actionCost: []
@@ -40,6 +49,34 @@ ruleGroups:
                   source:
                     var: amount
                   subtract: true
+                - type: advertiseEffect
+                  rule:
+                    id: effect-hp-damage
+                    phase: normal
+                    after:
+                      - group: hp-copied
+                    when:
+                      - fact: rest.long
+                        operator: equals
+                        value: 0
+                    vars:
+                      amount:
+                        capture: true
+                        default:
+                          number: 0
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: hp.current
+                        source:
+                          var: amount
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
                 - type: numberSet
                   target:
                     fact: concentration.damage-taken
@@ -60,9 +97,18 @@ ruleGroups:
               id: record-heal
               group:
                 - __planned__
+              after:
+                - group: hp-copied
+                - group: __effects__
               ui:
                 section: free
                 name: planner.record.heal
+                primaryControl:
+                  type: slider
+                  var: amount
+                  min: { number: 0 }
+                  max: { fact: hp.max }
+                  unit: hp
                 intents:
                   HEAL: source
                 actionCost: []
@@ -78,6 +124,36 @@ ruleGroups:
                   source:
                     var: amount
                   subtract: false
+                  max: hp.max
+                - type: advertiseEffect
+                  rule:
+                    id: effect-hp-heal
+                    phase: normal
+                    after:
+                      - group: hp-copied
+                    when:
+                      - fact: rest.long
+                        operator: equals
+                        value: 0
+                    vars:
+                      amount:
+                        capture: true
+                        default:
+                          number: 0
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: hp.current
+                        source:
+                          var: amount
+                        subtract: false
+                        max: hp.max
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
 
       # === SAVE recording ===
       - id: offer-record-save
@@ -92,6 +168,14 @@ ruleGroups:
               ui:
                 section: free
                 name: planner.record.save
+                primaryControl:
+                  type: select
+                  var: passed
+                  options:
+                    - value: 1
+                      label: planner.record.passed
+                    - value: 0
+                      label: planner.record.failed
                 intents:
                   SAVE: you
                 actionCost: []
@@ -120,6 +204,11 @@ ruleGroups:
               ui:
                 section: free
                 name: planner.record.check
+                primaryControl:
+                  type: dice-line
+                  dice:
+                    - expression: d20
+                  annotationLabels: [dice.any]
                 intents:
                   CHECK: skill
                 actionCost: []
@@ -185,7 +274,16 @@ ruleGroups:
               ui:
                 section: free
                 name: planner.record.note
+                primaryControl:
+                  type: text
+                  var: text
+                  multiline: true
                 intents:
                   NOTE: freeform
                 actionCost: []
+              vars:
+                text:
+                  capture: true
+                  default:
+                    string: ''
               activities: []

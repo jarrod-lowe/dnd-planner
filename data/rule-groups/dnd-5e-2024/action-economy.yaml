@@ -1,6 +1,8 @@
 # yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: action-economy
+    requires:
+      - core-events
     translations:
       en:
         name: Action Economy

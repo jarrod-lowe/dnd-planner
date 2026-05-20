@@ -2,6 +2,7 @@
   import { resolveValueSource } from './resolveValueSource';
   import type { SelectControl, SelectOption } from './types';
   import type { Facts, VarDefinition } from '$lib/rules-engine';
+  import { t } from '$lib/i18n';
 
   interface Props {
     control: SelectControl;
@@ -55,7 +56,7 @@
         aria-checked={selectedValue === option.value}
         onclick={() => handleChange(option.value)}
       >
-        {option.label}
+        {$t(option.label)}
       </button>
     {:else}
       <span
@@ -64,7 +65,7 @@
         role="radio"
         aria-checked={selectedValue === option.value}
       >
-        {option.label}
+        {$t(option.label)}
       </span>
     {/if}
   {/each}

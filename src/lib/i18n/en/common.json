@@ -1247,6 +1247,21 @@
     "poison": "Poison",
     "psychic": "Psychic"
   },
+  "planner": {
+    "record": {
+      "damage": "Record Damage",
+      "heal": "Record Healing",
+      "save": "Record Save",
+      "check": "Record Check",
+      "note": "Record Note",
+      "passed": "Passed",
+      "failed": "Failed"
+    },
+    "rest": {
+      "short": "Short Rest",
+      "long": "Long Rest"
+    }
+  },
   "ui": {
     "layout": {
       "switchToIntent": "Switch to Intent Stack",

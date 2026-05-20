@@ -1,0 +1,43 @@
+name: 'Damage persists across end turn'
+description: 'Recorded damage survives end turn and reduces HP on next turn'
+ruleGroups:
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - class-paladin/class-paladin-level1
+  - dnd-5e-2024/core-events
+steps:
+  # Set CON to 14 → hp.max = 12, hp.current = 12
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - set-constitution
+  - addOffer:
+      id: set-constitution
+      selections:
+        score: 14
+      assert:
+        facts:
+          hp.max: 12
+          hp.current: 12
+  # Record 5 damage → hp.current = 7
+  - addOffer:
+      id: record-damage
+      selections:
+        amount: 5
+      assert:
+        facts:
+          hp.current: 7
+  # End turn — damage effect should persist
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-hp-damage
+  # Next turn — damage should still be applied
+  - evaluate:
+      assert:
+        facts:
+          hp.current: 7

@@ -154,4 +154,20 @@ describe('PanelRenderer', () => {
       expect(indicator?.getAttribute('aria-label')).toBe('reason.one\nreason.two');
     });
   });
+
+  describe('text input control', () => {
+    it('renders text input when primaryControl type is text', () => {
+      const entry = createMockEntry({
+        rule: {
+          ...createMockEntry().rule,
+          ui: {
+            name: 'test.text',
+            primaryControl: { type: 'text', var: 'note' }
+          }
+        }
+      });
+      const { container } = render(PanelRenderer, { props: { entry, editable: true } });
+      expect(container.querySelector('input[type="text"]')).toBeTruthy();
+    });
+  });
 });

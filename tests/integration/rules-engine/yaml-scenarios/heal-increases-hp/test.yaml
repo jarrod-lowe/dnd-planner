@@ -1,0 +1,40 @@
+name: 'Heal increases HP'
+description: 'Adding record-heal with amount=3 increases hp.current by 3'
+ruleGroups:
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - class-paladin/class-paladin-level1
+  - dnd-5e-2024/core-events
+steps:
+  # Set CON to 14 (modifier +2) → hp.max = 12, hp.current = 12
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - set-constitution
+  - addOffer:
+      id: set-constitution
+      selections:
+        score: 14
+      assert:
+        facts:
+          hp.max: 12
+          hp.current: 12
+  # Record 5 damage → hp.current = 7
+  - addOffer:
+      id: record-damage
+      selections:
+        amount: 5
+      assert:
+        facts:
+          hp.current: 7
+  # Record 3 healing → hp.current = 10
+  - addOffer:
+      id: record-heal
+      selections:
+        amount: 3
+      assert:
+        facts:
+          hp.current: 10

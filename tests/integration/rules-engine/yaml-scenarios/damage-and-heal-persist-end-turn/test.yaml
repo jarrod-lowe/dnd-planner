@@ -1,0 +1,54 @@
+name: 'Damage and heal both persist across end turn'
+description: 'Damage and healing effects both survive end turn with correct HP values'
+ruleGroups:
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - class-paladin/class-paladin-level1
+  - dnd-5e-2024/core-events
+steps:
+  # Set CON to 14 → hp.max = 12, hp.current = 12
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - set-constitution
+  - addOffer:
+      id: set-constitution
+      selections:
+        score: 14
+      assert:
+        facts:
+          hp.current: 12
+          hp.max: 12
+  # Record 5 damage → hp.current = 7
+  - addOffer:
+      id: record-damage
+      selections:
+        amount: 5
+      assert:
+        facts:
+          hp.current: 7
+  # Record 3 healing → hp.current = 10
+  - addOffer:
+      id: record-heal
+      selections:
+        amount: 3
+      assert:
+        facts:
+          hp.current: 10
+  # End turn — both effects should persist
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-hp-damage
+            - effect-hp-heal
+  # Next turn — both damage and healing should still be applied
+  # 12 - 5 + 3 = 10
+  - evaluate:
+      assert:
+        facts:
+          hp.current: 10
+          hp.max: 12
