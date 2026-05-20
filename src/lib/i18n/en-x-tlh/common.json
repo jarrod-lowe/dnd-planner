@@ -1052,9 +1052,6 @@
       "loadEffects": "DIvI' DIvI' laHbe'",
       "saveEffects": "DIvI' pol laHbe'"
     },
-    "warning": {
-      "skippedSteps": "DIvI' {{count}} DIch DIvI' DIvI'"
-    },
     "information": {
       "saveDc": "{{saveType}} DIvI' {{dc}}"
     },

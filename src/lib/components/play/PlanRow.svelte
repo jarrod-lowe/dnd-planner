@@ -6,18 +6,11 @@
   import { getMatchingAnnotations } from '$lib/play/annotations';
   import { extractPanelDescriptor } from './panel-renderer/extractPanelDescriptor';
   import { getSubBucket, subBucketLabelKey } from '$lib/play/groupChoicesByVerb';
-  import type { Step } from '$lib/play/types';
-  import type {
-    AvailableRuleEntry,
-    Annotation,
-    Facts,
-    Rule,
-    ActionCostTag
-  } from '$lib/rules-engine';
+  import type { PlannedItem } from '$lib/play/types';
+  import type { AvailableRuleEntry, Annotation, Facts, ActionCostTag } from '$lib/rules-engine';
 
   interface Props {
-    step: Step;
-    rule: Rule;
+    item: PlannedItem;
     entry: AvailableRuleEntry;
     facts: Facts;
     activeAnnotations: Annotation[];
@@ -32,8 +25,7 @@
   }
 
   let {
-    step,
-    rule,
+    item,
     entry,
     facts,
     activeAnnotations,
@@ -49,7 +41,8 @@
 
   let collapsed = $state(false);
 
-  const verb = $derived(step.verb);
+  const verb = $derived(item.verb);
+  const rule = $derived(item.rule);
   const descriptor = $derived(extractPanelDescriptor(rule));
   const displayName = $derived(descriptor.name ? $t(descriptor.name) : rule.id);
 
@@ -193,7 +186,7 @@
           {entry}
           editable={true}
           {facts}
-          selections={step.modelSelections}
+          selections={item.rule.selections}
           {activeAnnotations}
           {onSelectionChange}
         />

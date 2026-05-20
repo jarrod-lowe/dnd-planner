@@ -50,8 +50,7 @@ vi.mock('$lib/i18n', () => {
 vi.mock('svelte-sonner', () => ({
   toast: {
     error: vi.fn(),
-    success: vi.fn(),
-    warning: vi.fn()
+    success: vi.fn()
   }
 }));
 
@@ -708,10 +707,44 @@ describe('playStore', () => {
       expect(item.rule.id).toBe(item.instanceId);
       expect(item.originalRuleId).toBe('greataxe-attack');
     });
+
+    it('stores verb derived from the rule', async () => {
+      const mockEvaluate = vi.mocked(evaluate);
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      const rule: Rule = {
+        id: 'greataxe-attack',
+        activities: [],
+        ui: { section: 'action-attack', intents: { ATTACK: 'weapons' }, actionCost: ['action'] }
+      };
+      playStore.addToPlan(rule);
+
+      expect(playStore.state.plannedItems[0].verb).toBe('ATTACK');
+    });
   });
 
-  describe('convertPlanForLayout', () => {
-    it('is a no-op when both arrays are empty', async () => {
+  describe('swapPlanItemRule', () => {
+    it('swaps a planned item rule and updates verb and originalRuleId', async () => {
       const mockEvaluate = vi.mocked(evaluate);
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
@@ -735,209 +768,30 @@ describe('playStore', () => {
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
-      playStore.convertPlanForLayout('intent');
+      // Add initial item
+      const attackRule: Rule = {
+        id: 'greataxe-attack',
+        activities: [],
+        ui: { section: 'action-attack', intents: { ATTACK: 'weapons' }, actionCost: ['action'] }
+      };
+      playStore.addToPlan(attackRule);
 
-      expect(playStore.state.plannedItems).toHaveLength(0);
-      expect(playStore.state.steps).toHaveLength(0);
-      expect(mockEvaluate).not.toHaveBeenCalled();
-    });
+      const instanceId = playStore.state.plannedItems[0].instanceId;
 
-    it('converts plannedItems to steps when switching to intent', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
+      // Swap to a different rule
+      const spellRule: Rule = {
+        id: 'cast-bless',
+        activities: [],
+        ui: { section: 'action-spell', intents: { AID: 'ally' }, actionCost: ['action'] }
+      };
+      playStore.swapPlanItemRule(instanceId, { rule: spellRule, illegalReasons: [] });
 
-      const { playStore } = await import('$lib/play/playStore.svelte');
-      playStore.reset();
-
-      // Add two items via addToPlan (which stores originalRuleId)
-      const rule1: Rule = { id: 'greataxe-attack', activities: [] };
-      const rule2: Rule = { id: 'cast-bless', activities: [] };
-      playStore.addToPlan(rule1);
-      playStore.addToPlan(rule2);
-
-      expect(playStore.state.plannedItems).toHaveLength(2);
-
-      // Switch to intent
-      playStore.convertPlanForLayout('intent');
-
-      // plannedItems cleared, steps populated
-      expect(playStore.state.plannedItems).toHaveLength(0);
-      expect(playStore.state.steps).toHaveLength(2);
-
-      // Verify step references use original rule IDs
-      const ruleIds = playStore.state.steps.map((s) => s.ruleId);
-      expect(ruleIds).toContain('greataxe-attack');
-      expect(ruleIds).toContain('cast-bless');
-
-      // Flush debounced evaluation
-      vi.advanceTimersByTime(500);
-
-      // Evaluation triggered
-      expect(mockEvaluate).toHaveBeenCalled();
-    });
-
-    it('converts steps to plannedItems when switching to classic', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      const baseRule: Rule = { id: 'greataxe-attack', activities: [] };
-      const blessRule: Rule = { id: 'cast-bless', activities: [] };
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [
-          { rule: baseRule, illegalReasons: [] },
-          { rule: blessRule, illegalReasons: [] }
-        ],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
-      const { playStore } = await import('$lib/play/playStore.svelte');
-      playStore.reset();
-
-      // Add steps directly
-      playStore.addStep({ rule: baseRule, illegalReasons: [] });
-      playStore.addStep({ rule: blessRule, illegalReasons: [] });
-
-      // Simulate user selections on the steps
-      const stepId0 = playStore.state.steps[0].id;
-      const stepId1 = playStore.state.steps[1].id;
-      playStore.updateStepSelections(stepId0, { slotLevel: 3 });
-      playStore.updateStepSelections(stepId1, { slotLevel: 5 });
-
-      // Flush debounced evaluation so engineOutput.availableRules is populated
-      vi.advanceTimersByTime(500);
-
-      expect(playStore.state.steps).toHaveLength(2);
-
-      // Switch to classic
-      playStore.convertPlanForLayout('classic');
-
-      // steps cleared, plannedItems populated
-      expect(playStore.state.steps).toHaveLength(0);
-      expect(playStore.state.plannedItems).toHaveLength(2);
-
-      // Verify plannedItems have originalRuleId set
-      expect(playStore.state.plannedItems[0].originalRuleId).toBe('greataxe-attack');
-      expect(playStore.state.plannedItems[1].originalRuleId).toBe('cast-bless');
-
-      // Verify rule.id was rewritten to instanceId
-      const item = playStore.state.plannedItems[0];
-      expect(item.rule.id).toBe(item.instanceId);
-
-      // Verify user selections survived the conversion
-      expect(playStore.state.plannedItems[0].rule.selections).toEqual({ slotLevel: 3 });
-      expect(playStore.state.plannedItems[1].rule.selections).toEqual({ slotLevel: 5 });
-    });
-
-    it('skips unresolvable steps and shows warning when converting to classic', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
-      const { playStore } = await import('$lib/play/playStore.svelte');
-      playStore.reset();
-
-      // Add a step referencing a rule that won't be in the lookup
-      playStore.addStep({ rule: { id: 'gone-rule', activities: [] }, illegalReasons: [] });
-      playStore.addStep({ rule: { id: 'also-gone', activities: [] }, illegalReasons: [] });
-
-      // Switch to classic — no rules in lookup, so all should be preserved in steps
-      playStore.convertPlanForLayout('classic');
-
-      expect(playStore.state.plannedItems).toHaveLength(0);
-      // Unresolvable steps are preserved, not deleted
-      expect(playStore.state.steps).toHaveLength(2);
-      expect(vi.mocked(toast.warning)).toHaveBeenCalledWith('play.warning.skippedSteps');
-    });
-
-    it('preserves unresolvable steps while converting resolvable ones', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      const baseRule: Rule = { id: 'known-rule', activities: [] };
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [{ rule: baseRule, illegalReasons: [] }],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
-      const { playStore } = await import('$lib/play/playStore.svelte');
-      playStore.reset();
-
-      playStore.addStep({ rule: baseRule, illegalReasons: [] });
-      playStore.addStep({ rule: { id: 'gone-rule', activities: [] }, illegalReasons: [] });
-
-      // Flush debounced evaluation so engineOutput.availableRules is populated
-      vi.advanceTimersByTime(500);
-
-      playStore.convertPlanForLayout('classic');
-
-      // Resolvable step becomes a plannedItem
       expect(playStore.state.plannedItems).toHaveLength(1);
-      expect(playStore.state.plannedItems[0].originalRuleId).toBe('known-rule');
-
-      // Unresolvable step is preserved in steps
-      expect(playStore.state.steps).toHaveLength(1);
-      expect(playStore.state.steps[0].ruleId).toBe('gone-rule');
-
-      expect(vi.mocked(toast.warning)).toHaveBeenCalledWith('play.warning.skippedSteps');
+      const item = playStore.state.plannedItems[0];
+      expect(item.instanceId).toBe(instanceId); // same instance
+      expect(item.originalRuleId).toBe('cast-bless');
+      expect(item.verb).toBe('AID');
+      expect(item.rule.id).toBe(instanceId); // id still rewritten
     });
   });
 

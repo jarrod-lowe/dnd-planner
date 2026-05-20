@@ -3,32 +3,32 @@
   import PlanRow from './PlanRow.svelte';
   import AddRowPicker from './AddRowPicker.svelte';
   import { groupChoicesByVerb } from '$lib/play/groupChoicesByVerb';
-  import type { Step } from '$lib/play/types';
+  import type { PlannedItem } from '$lib/play/types';
   import type { AvailableRuleEntry, Annotation, Facts, Verb } from '$lib/rules-engine';
 
   interface Props {
-    steps: Step[];
+    items: PlannedItem[];
     entries: AvailableRuleEntry[];
     facts: Facts;
     activeAnnotations: Annotation[];
-    onAddStep: (entry: AvailableRuleEntry) => void;
-    onRemoveStep: (id: string) => void;
-    onMoveStep: (id: string, direction: 'up' | 'down') => void;
-    onUpdateStepSelections: (id: string, selections: Record<string, unknown>) => void;
-    onSwapStepRule: (id: string, entry: AvailableRuleEntry) => void;
+    onAddToPlan: (entry: AvailableRuleEntry) => void;
+    onRemoveFromPlan: (instanceId: string) => void;
+    onMovePlanItem: (instanceId: string, direction: 'up' | 'down') => void;
+    onSelectionChange: (instanceId: string, selections: Record<string, unknown>) => void;
+    onSwapPlanItemRule: (instanceId: string, entry: AvailableRuleEntry) => void;
     onEndTurn: () => void;
   }
 
   let {
-    steps,
+    items,
     entries,
     facts,
     activeAnnotations,
-    onAddStep,
-    onRemoveStep,
-    onMoveStep,
-    onUpdateStepSelections,
-    onSwapStepRule,
+    onAddToPlan,
+    onRemoveFromPlan,
+    onMovePlanItem,
+    onSelectionChange,
+    onSwapPlanItemRule,
     onEndTurn
   }: Props = $props();
 
@@ -42,13 +42,10 @@
     return result;
   });
 
-  const stepsWithRules = $derived(
-    steps.map((step) => {
-      const entry = entryById[step.ruleId];
-      const rule = entry
-        ? { ...entry.rule, selections: { ...entry.rule.selections, ...step.modelSelections } }
-        : null;
-      return { step, rule, entry: entry ?? null };
+  const itemsWithEntries = $derived(
+    items.map((item) => {
+      const entry = entryById[item.originalRuleId ?? item.rule.id];
+      return { item, entry: entry ?? null };
     })
   );
 
@@ -67,23 +64,22 @@
   <h2 class="plan-stack__title">{$t('play.planStack.title')}</h2>
 
   <div class="plan-stack__rows" role="list">
-    {#each stepsWithRules as { step, rule, entry }, i (step.id)}
-      {#if rule && entry}
+    {#each itemsWithEntries as { item, entry }, i (item.instanceId)}
+      {#if entry}
         <div role="listitem">
           <PlanRow
-            {step}
-            {rule}
+            {item}
             {entry}
             {facts}
             {activeAnnotations}
-            alternatives={getAlternatives(step.verb, step.ruleId)}
+            alternatives={getAlternatives(item.verb, item.originalRuleId ?? '')}
             canMoveUp={i > 0}
-            canMoveDown={i < steps.length - 1}
-            onSelectionChange={(selections) => onUpdateStepSelections(step.id, selections)}
-            onRemove={() => onRemoveStep(step.id)}
-            onMoveUp={() => onMoveStep(step.id, 'up')}
-            onMoveDown={() => onMoveStep(step.id, 'down')}
-            onSwapAlternative={(alt) => onSwapStepRule(step.id, alt)}
+            canMoveDown={i < items.length - 1}
+            onSelectionChange={(selections) => onSelectionChange(item.instanceId, selections)}
+            onRemove={() => onRemoveFromPlan(item.instanceId)}
+            onMoveUp={() => onMovePlanItem(item.instanceId, 'up')}
+            onMoveDown={() => onMovePlanItem(item.instanceId, 'down')}
+            onSwapAlternative={(alt) => onSwapPlanItemRule(item.instanceId, alt)}
           />
         </div>
       {/if}
@@ -93,7 +89,7 @@
   <AddRowPicker
     {entries}
     {showIllegal}
-    {onAddStep}
+    onAddStep={onAddToPlan}
     onToggleShowIllegal={() => (showIllegal = !showIllegal)}
   />
 
@@ -101,7 +97,7 @@
     <button
       type="button"
       class="plan-stack__end-turn"
-      disabled={steps.length === 0}
+      disabled={items.length === 0}
       onclick={onEndTurn}
     >
       {$t('play.plan.endTurn')}

@@ -132,10 +132,7 @@
       {onDownloadCharacter}
       {showDownloadCharacter}
       currentLayout={uiPrefsStore.state.layout}
-      onSwitchLayout={(l) => {
-        playStore.convertPlanForLayout(l);
-        uiPrefsStore.setLayout(l);
-      }}
+      onSwitchLayout={(l) => uiPrefsStore.setLayout(l)}
       concentrationEffectName={concentrationName}
     />
     {#if playStore.state.isLoadingRuleGroups}
@@ -152,15 +149,15 @@
           onDismissEffect={handleRemoveEffect}
         />
         <PlanStack
-          steps={playStore.state.steps}
+          items={playStore.state.plannedItems}
           entries={availableRules}
           facts={playStore.state.facts}
           {activeAnnotations}
-          onAddStep={(entry) => playStore.addStep(entry)}
-          onRemoveStep={(id) => playStore.removeStep(id)}
-          onMoveStep={(id, dir) => playStore.moveStep(id, dir)}
-          onUpdateStepSelections={(id, s) => playStore.updateStepSelections(id, s)}
-          onSwapStepRule={(id, entry) => playStore.swapStepRule(id, entry)}
+          onAddToPlan={handleChoiceTap}
+          onRemoveFromPlan={handleRemove}
+          onMovePlanItem={(id, dir) => playStore.movePlanItem(id, dir)}
+          onSelectionChange={handleSelectionChange}
+          onSwapPlanItemRule={(id, entry) => playStore.swapPlanItemRule(id, entry)}
           onEndTurn={() => playStore.endTurn()}
         />
         <Ledger
