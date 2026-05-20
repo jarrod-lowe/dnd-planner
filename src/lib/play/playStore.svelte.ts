@@ -6,12 +6,7 @@ import { debounce } from './debounce';
 import { resolveInitialSelections } from './resolveInitialSelections';
 import { extractStats } from './extractStats';
 import { decrementCountDowns } from './countDown';
-import {
-  deriveVerbFromRule,
-  stepsToRules,
-  stepsToPlannedItems,
-  plannedItemToStep
-} from './stepUtils';
+import { deriveVerbFromRule, stepsToRules, plannedItemToStep } from './stepUtils';
 import { locale, t } from '$lib/i18n';
 import { get } from 'svelte/store';
 import { getCache, ensureCached } from '$lib/rules/ruleGroupCache.svelte';
@@ -828,12 +823,24 @@ function convertPlanForLayout(newLayout: 'classic' | 'intent'): void {
   } else {
     if (state.steps.length === 0) return;
     const lookup = buildRuleLookup();
-    const newItems = stepsToPlannedItems(state.steps, lookup);
-    if (newItems.length < state.steps.length) {
-      const skipped = state.steps.length - newItems.length;
-      toast.warning(get(t)('play.warning.skippedSteps', { count: skipped }));
+    const newItems: PlannedItem[] = [];
+    const remainingSteps = state.steps.filter((step) => {
+      const rule = lookup[step.ruleId];
+      if (rule) {
+        newItems.push({
+          instanceId: step.id,
+          rule: { ...rule, id: step.id },
+          order: newItems.length,
+          originalRuleId: step.ruleId
+        });
+        return false;
+      }
+      return true;
+    });
+    if (remainingSteps.length > 0) {
+      toast.warning(get(t)('play.warning.skippedSteps', { count: remainingSteps.length }));
     }
-    state = { ...state, plannedItems: newItems, steps: [] };
+    state = { ...state, plannedItems: newItems, steps: remainingSteps };
     debouncedEvaluate();
   }
 }

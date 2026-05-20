@@ -1052,6 +1052,9 @@
       "loadEffects": "Failed to load effects",
       "saveEffects": "Failed to save effects"
     },
+    "warning": {
+      "skippedSteps": "Could not convert {{count}} planned action(s) to this view"
+    },
     "information": {
       "saveDc": "{{saveType}} Save DC {{dc}}"
     },

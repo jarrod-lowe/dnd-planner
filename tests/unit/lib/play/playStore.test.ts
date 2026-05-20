@@ -876,11 +876,57 @@ describe('playStore', () => {
       playStore.addStep({ rule: { id: 'gone-rule', activities: [] }, illegalReasons: [] });
       playStore.addStep({ rule: { id: 'also-gone', activities: [] }, illegalReasons: [] });
 
-      // Switch to classic — no rules in lookup, so all should be skipped
+      // Switch to classic — no rules in lookup, so all should be preserved in steps
       playStore.convertPlanForLayout('classic');
 
       expect(playStore.state.plannedItems).toHaveLength(0);
-      expect(playStore.state.steps).toHaveLength(0);
+      // Unresolvable steps are preserved, not deleted
+      expect(playStore.state.steps).toHaveLength(2);
+      expect(vi.mocked(toast.warning)).toHaveBeenCalledWith('play.warning.skippedSteps');
+    });
+
+    it('preserves unresolvable steps while converting resolvable ones', async () => {
+      const mockEvaluate = vi.mocked(evaluate);
+      const baseRule: Rule = { id: 'known-rule', activities: [] };
+
+      mockEvaluate.mockReturnValue({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [{ rule: baseRule, illegalReasons: [] }],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      playStore.addStep({ rule: baseRule, illegalReasons: [] });
+      playStore.addStep({ rule: { id: 'gone-rule', activities: [] }, illegalReasons: [] });
+
+      // Flush debounced evaluation so engineOutput.availableRules is populated
+      vi.advanceTimersByTime(500);
+
+      playStore.convertPlanForLayout('classic');
+
+      // Resolvable step becomes a plannedItem
+      expect(playStore.state.plannedItems).toHaveLength(1);
+      expect(playStore.state.plannedItems[0].originalRuleId).toBe('known-rule');
+
+      // Unresolvable step is preserved in steps
+      expect(playStore.state.steps).toHaveLength(1);
+      expect(playStore.state.steps[0].ruleId).toBe('gone-rule');
+
       expect(vi.mocked(toast.warning)).toHaveBeenCalledWith('play.warning.skippedSteps');
     });
   });
