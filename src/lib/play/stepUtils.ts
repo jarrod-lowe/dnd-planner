@@ -1,5 +1,4 @@
 import type { Rule, Verb } from '$lib/rules-engine';
-import type { PlannedItem, Step } from './types';
 
 /**
  * Derives the primary verb from a rule's ui.intents.
@@ -43,52 +42,4 @@ function deriveVerbFromSection(rule: Rule): Verb {
     default:
       return 'HANDLE';
   }
-}
-
-/**
- * Converts a PlannedItem to a Step.
- * Used for migrating legacy plan data to the new Step format.
- */
-export function plannedItemToStep(item: PlannedItem): Step {
-  return {
-    id: item.instanceId,
-    verb: deriveVerbFromRule(item.rule),
-    ruleId: item.rule.id,
-    modelSelections: { ...(item.rule.selections ?? {}) },
-    recordedAt: new Date().toISOString()
-  };
-}
-
-/**
- * Resolves a Step to a Rule by looking up the ruleId in the provided lookup,
- * then applying the step's modelSelections as the rule's selections.
- */
-export function stepToRule(
-  step: Step,
-  lookup: Map<string, Rule> | Record<string, Rule>
-): Rule | null {
-  const rule = lookup instanceof Map ? lookup.get(step.ruleId) : lookup[step.ruleId];
-  if (!rule) return null;
-  return {
-    ...rule,
-    selections: { ...rule.selections, ...step.modelSelections }
-  };
-}
-
-/**
- * Converts an array of Steps to Rules for engine evaluation.
- * Returns the rules in order, skipping any steps whose ruleId cannot be resolved.
- */
-export function stepsToRules(
-  steps: Step[],
-  lookup: Map<string, Rule> | Record<string, Rule>
-): Rule[] {
-  const rules: Rule[] = [];
-  for (const step of steps) {
-    const rule = stepToRule(step, lookup);
-    if (rule) {
-      rules.push(rule);
-    }
-  }
-  return rules;
 }
