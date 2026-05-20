@@ -829,7 +829,11 @@ function convertPlanForLayout(newLayout: 'classic' | 'intent'): void {
       if (rule) {
         newItems.push({
           instanceId: step.id,
-          rule: { ...rule, id: step.id },
+          rule: {
+            ...rule,
+            id: step.id,
+            selections: { ...rule.selections, ...step.modelSelections }
+          },
           order: newItems.length,
           originalRuleId: step.ruleId
         });

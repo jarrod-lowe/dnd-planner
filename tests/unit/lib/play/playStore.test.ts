@@ -827,6 +827,12 @@ describe('playStore', () => {
       playStore.addStep({ rule: baseRule, illegalReasons: [] });
       playStore.addStep({ rule: blessRule, illegalReasons: [] });
 
+      // Simulate user selections on the steps
+      const stepId0 = playStore.state.steps[0].id;
+      const stepId1 = playStore.state.steps[1].id;
+      playStore.updateStepSelections(stepId0, { slotLevel: 3 });
+      playStore.updateStepSelections(stepId1, { slotLevel: 5 });
+
       // Flush debounced evaluation so engineOutput.availableRules is populated
       vi.advanceTimersByTime(500);
 
@@ -846,6 +852,10 @@ describe('playStore', () => {
       // Verify rule.id was rewritten to instanceId
       const item = playStore.state.plannedItems[0];
       expect(item.rule.id).toBe(item.instanceId);
+
+      // Verify user selections survived the conversion
+      expect(playStore.state.plannedItems[0].rule.selections).toEqual({ slotLevel: 3 });
+      expect(playStore.state.plannedItems[1].rule.selections).toEqual({ slotLevel: 5 });
     });
 
     it('skips unresolvable steps and shows warning when converting to classic', async () => {
