@@ -45,6 +45,9 @@ function recalculateStats(): void {
   state = { ...state, stats: extractStats(state.ruleGroups) };
 }
 
+// Module-level, plain Map (not $state). Replaced entirely each performEvaluation().
+let _hypotheticalEntriesMap = new Map<string, AvailableRuleEntry[]>();
+
 function performEvaluation(): void {
   state = { ...state, isEvaluating: true };
 
@@ -62,12 +65,37 @@ function performEvaluation(): void {
 
   const output = evaluate(input);
 
+  // Pre-compute hypothetical evaluations for each planned item.
+  // Creates a brand-new Map each time — old map is GC'd, no stale entries.
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- intentionally non-reactive; replaced each evaluation
+  const newMap = new Map<string, AvailableRuleEntry[]>();
+  for (const item of state.plannedItems) {
+    const filteredPlanned = state.plannedItems
+      .filter((i) => i.instanceId !== item.instanceId)
+      .map((i) => {
+        const clone = JSON.parse(JSON.stringify(i.rule)) as Rule;
+        delete clone.varsRuntime;
+        return clone;
+      });
+    const hypInput = {
+      schemaVersion: 1 as const,
+      rules: { standing: state.ruleGroups, planned: filteredPlanned, effects: state.effects },
+      state: { facts: {} }
+    };
+    newMap.set(item.instanceId, evaluate(hypInput).availableRules);
+  }
+  _hypotheticalEntriesMap = newMap;
+
   state = {
     ...state,
     engineOutput: output,
     isEvaluating: false,
     facts: output.facts
   };
+}
+
+function getAlternativeEntries(instanceId: string): AvailableRuleEntry[] {
+  return _hypotheticalEntriesMap.get(instanceId) ?? [];
 }
 
 // Debounced evaluation for plan changes
@@ -729,6 +757,7 @@ function addFollowupEffect(rule: Rule): void {
 }
 
 function reset(): void {
+  _hypotheticalEntriesMap = new Map();
   state = { ...initialState };
 }
 
@@ -838,6 +867,7 @@ export const playStore = {
   movePlanItem,
   updateSelections,
   swapPlanItemRule,
+  getAlternativeEntries,
   updateCustomRules,
   removeEffect,
   addFollowupEffect,

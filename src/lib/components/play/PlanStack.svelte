@@ -1,5 +1,6 @@
 <script lang="ts">
   import { t } from '$lib/i18n';
+  import { playStore } from '$lib/play/playStore.svelte';
   import PlanRow from './PlanRow.svelte';
   import AddRowPicker from './AddRowPicker.svelte';
   import { groupChoicesByVerb } from '$lib/play/groupChoicesByVerb';
@@ -70,6 +71,19 @@
     if (!group) return [];
     return group.entries.filter((e) => e.rule.id !== currentRuleId);
   }
+
+  function correctedAlternatives(
+    item: PlannedItem,
+    baseAlts: AvailableRuleEntry[]
+  ): AvailableRuleEntry[] {
+    if (baseAlts.length === 0) return baseAlts;
+    const hypothetical = playStore.getAlternativeEntries(item.instanceId);
+    const hypById = new Map(hypothetical.map((e) => [e.rule.id, e]));
+    return baseAlts.map((alt) => {
+      const hypEntry = hypById.get(alt.rule.id);
+      return hypEntry ? { ...alt, legal: hypEntry.legal, diagnostics: hypEntry.diagnostics } : alt;
+    });
+  }
 </script>
 
 <section class="plan-stack" aria-label={$t('play.planStack.title')}>
@@ -84,7 +98,10 @@
             {entry}
             {facts}
             {activeAnnotations}
-            alternatives={getAlternatives(item.verb, item.originalRuleId ?? '')}
+            alternatives={correctedAlternatives(
+              item,
+              getAlternatives(item.verb, item.originalRuleId ?? '')
+            )}
             canMoveUp={i > 0}
             canMoveDown={i < items.length - 1}
             onSelectionChange={(selections) => onSelectionChange(item.instanceId, selections)}
