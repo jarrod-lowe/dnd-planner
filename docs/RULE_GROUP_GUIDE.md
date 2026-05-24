@@ -514,6 +514,50 @@ activities:
 
 The `*error-clear` anchor is defined in `_shared/definitions.yaml`. Always clear before collecting.
 
+### Pattern: Planned Item Legality
+
+There are two separate legality mechanisms in the engine:
+
+- **`legalWhen`** on `offerRule` controls the **offer display**. It answers "should this be shown as available?" and is evaluated AFTER all planned rules have executed, against the current world state. It only affects the choices list.
+- **`varsRuntime.errors`** (via `setAdd` to `var: errors`) controls the **plan display**. It answers "did this rule encounter a problem during execution?" and is evaluated DURING the rule's own execution. Both UIs use this to mark planned items as illegal.
+
+These are separate concerns that check at different times and can disagree. `legalWhen` prevents offering a rule when conditions fail, but it does NOT automatically make already-planned items show as illegal. If a planned item should show as illegal when a condition fails, the rule's activities must populate `varsRuntime.errors` for that condition.
+
+**Every rule with `legalWhen` should also have error tracking in its activities.** This ensures planned items display correct legality in both UIs.
+
+For resource-consuming rules (action economy, spell slots), check AFTER the resource is consumed:
+
+```yaml
+activities:
+  - type: numberIncrement
+    target: { fact: actions.remaining }
+    source: { number: 1 }
+    subtract: true
+  - *error-clear
+  - type: setAdd
+    target: { var: errors }
+    source: { string: rule.example.no_action }
+    when:
+      - fact: actions.remaining
+        operator: lessThan
+        value: 0
+```
+
+For state-checking rules (already equipped, already proficient), check BEFORE the state is changed:
+
+```yaml
+activities:
+  - *error-clear
+  - type: setAdd
+    target: { var: errors }
+    source: { string: rule.example.already_equipped }
+    when:
+      - fact: armor.shield.equipped
+        operator: equals
+        value: 1
+  # ... rest of activities that modify state
+```
+
 ### Pattern: Computed Values
 
 **Use when:** Deriving a value from another fact, especially when other rules need to wait for it.

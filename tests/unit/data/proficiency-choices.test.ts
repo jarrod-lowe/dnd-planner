@@ -13,7 +13,10 @@ describe('ability-scores proficiency choices', () => {
 
   beforeAll(() => {
     const content = fs.readFileSync(yamlPath, 'utf-8');
-    const data = yaml.load(content) as {
+    // Prepend shared definitions so YAML anchors like *error-clear resolve
+    const sharedDefsPath = path.resolve(process.cwd(), 'data/rule-groups/_shared/definitions.yaml');
+    const sharedDefs = fs.readFileSync(sharedDefsPath, 'utf-8');
+    const data = yaml.load(sharedDefs + '\n' + content) as {
       ruleGroups: {
         rules: { id: string; activities?: unknown[]; ui?: Record<string, unknown> }[];
       }[];

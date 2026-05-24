@@ -45,7 +45,19 @@
   const itemsWithEntries = $derived(
     items.map((item) => {
       const entry = entryById[item.originalRuleId ?? item.rule.id];
-      return { item, entry: entry ?? null };
+      if (!entry) return { item, entry: null };
+
+      const errors = (item.rule.varsRuntime?.errors as string[] | undefined) || [];
+      const hasErrors = errors.length > 0;
+      const correctedEntry: AvailableRuleEntry = {
+        ...entry,
+        legal: !hasErrors,
+        diagnostics: hasErrors
+          ? errors.map((code) => ({ code, severity: 'error' as const }))
+          : entry.diagnostics
+      };
+
+      return { item, entry: correctedEntry };
     })
   );
 
