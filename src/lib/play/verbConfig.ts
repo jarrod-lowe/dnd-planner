@@ -50,10 +50,6 @@ export const VERB_STRIPE_COLORS: Record<Verb, string> = {
   PROFICIENCY: 'var(--md-sys-color-on-surface-variant)'
 };
 
-export function isRecordVerb(verb: Verb): boolean {
-  return RECORD_VERBS.includes(verb);
-}
-
 export function isBuildVerb(verb: Verb): boolean {
   return BUILD_VERBS.includes(verb);
 }
