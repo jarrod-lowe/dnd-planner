@@ -363,7 +363,20 @@ paths:
           '4\d{2}':
             statusCode: '500'
             responseTemplates:
-              application/json: '{"error": "Failed to delete character"}'
+              application/json: |-
+                #set($isNotFound = false)##
+                #set($reasons = $input.path('$.CancellationReasons'))##
+                #foreach($reason in $reasons)##
+                #if($reason.Code == 'ConditionalCheckFailed')##
+                #set($isNotFound = true)##
+                #end##
+                #end##
+                #if($isNotFound)##
+                #set($context.responseOverride.status = 404)##
+                {"error":"Character not found"}##
+                #else##
+                {"error":"Failed to delete character"}##
+                #end
           default:
             statusCode: '204'
             responseTemplates:
