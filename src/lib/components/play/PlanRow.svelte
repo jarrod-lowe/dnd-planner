@@ -202,14 +202,26 @@
               {#each alts as alt (alt.rule.id)}
                 {@const altDescriptor = extractPanelDescriptor(alt.rule)}
                 {@const altName = altDescriptor.name ? $t(altDescriptor.name) : alt.rule.id}
+                {@const altIllegalMsg = !alt.legal
+                  ? alt.diagnostics.map((d) => $t(d.code)).join('\n')
+                  : ''}
                 <button
                   type="button"
                   class="plan-row__alt-btn"
                   class:plan-row__alt-btn--illegal={!alt.legal}
-                  disabled={!alt.legal}
+                  aria-label={!alt.legal && altIllegalMsg
+                    ? `${altName} — ${altIllegalMsg}`
+                    : altName}
                   onclick={() => onSwapAlternative?.(alt)}
                 >
                   {altName}
+                  {#if !alt.legal}
+                    <span class="plan-row__alt-illegal-tag" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                      </svg>
+                    </span>
+                  {/if}
                 </button>
               {/each}
             </div>
@@ -410,13 +422,16 @@
     border-radius: var(--radius-sm);
     padding: var(--spacing-xs) var(--spacing-sm);
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
     transition:
       background-color var(--transition-fast),
       border-color var(--transition-fast),
       color var(--transition-fast);
   }
 
-  .plan-row__alt-btn:hover:not(:disabled) {
+  .plan-row__alt-btn:hover {
     background: var(--md-sys-color-surface-container-highest);
     border-color: var(--md-sys-color-outline);
   }
@@ -427,9 +442,19 @@
   }
 
   .plan-row__alt-btn--illegal {
-    opacity: 0.4;
-    cursor: not-allowed;
     border-style: dashed;
+  }
+
+  .plan-row__alt-illegal-tag {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .plan-row__alt-illegal-tag svg {
+    width: 0.75rem;
+    height: 0.75rem;
+    color: var(--md-sys-color-error);
   }
 
   /* Event variant */

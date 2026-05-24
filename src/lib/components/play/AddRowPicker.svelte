@@ -1,3 +1,7 @@
+<script module lang="ts">
+  let activeTooltipClose: (() => void) | null = null;
+</script>
+
 <script lang="ts">
   import { t } from '$lib/i18n';
   import { PLAN_VERBS, RECORD_VERBS, BUILD_VERBS } from '$lib/play/verbConfig';
@@ -10,12 +14,10 @@
 
   interface Props {
     entries: AvailableRuleEntry[];
-    showIllegal: boolean;
     onAddStep: (entry: AvailableRuleEntry) => void;
-    onToggleShowIllegal: () => void;
   }
 
-  let { entries, showIllegal, onAddStep, onToggleShowIllegal }: Props = $props();
+  let { entries, onAddStep }: Props = $props();
 
   const verbGroupDefs = [
     { labelKey: 'play.addRow.planGroup', verbs: PLAN_VERBS },
@@ -24,7 +26,7 @@
   ];
 
   const allVerbs = [...PLAN_VERBS, ...RECORD_VERBS, ...BUILD_VERBS];
-  const verbGroups = $derived(groupChoicesByVerb(entries, allVerbs, showIllegal));
+  const verbGroups = $derived(groupChoicesByVerb(entries, allVerbs));
   const verbGroupMap = $derived(new Map(verbGroups.map((g) => [g.verb, g])));
 
   function handleVerbTap(verb: Verb) {
@@ -33,7 +35,45 @@
       onAddStep(defaultEntry);
     }
   }
+
+  let openTooltipVerb: Verb | null = $state(null);
+
+  function closeTooltip() {
+    openTooltipVerb = null;
+    if (activeTooltipClose === closeTooltip) {
+      activeTooltipClose = null;
+    }
+  }
+
+  function handleVerbClick(verb: Verb, hasLegal: boolean, e: MouseEvent) {
+    const target = e.target as Element;
+    if (!hasLegal && target.closest('.add-row-picker__illegal-tag')) {
+      e.stopPropagation();
+      if (activeTooltipClose && activeTooltipClose !== closeTooltip) {
+        activeTooltipClose();
+      }
+      if (openTooltipVerb === verb) {
+        closeTooltip();
+      } else {
+        openTooltipVerb = verb;
+        activeTooltipClose = closeTooltip;
+      }
+    } else {
+      if (openTooltipVerb) {
+        closeTooltip();
+      }
+      handleVerbTap(verb);
+    }
+  }
+
+  function handleWindowClick() {
+    if (openTooltipVerb) {
+      closeTooltip();
+    }
+  }
 </script>
+
+<svelte:window onclick={handleWindowClick} />
 
 <div class="add-row-picker" role="region" aria-label={$t('play.addRow.title')}>
   <div class="add-row-picker__stripe" aria-hidden="true">
@@ -46,41 +86,37 @@
         <div class="add-row-picker__verbs" role="group" aria-label={$t(groupDef.labelKey)}>
           {#each groupDef.verbs as verb (verb)}
             {@const group = verbGroupMap.get(verb)}
-            {@const hasLegal = group ? group.entries.some((e) => e.legal) : false}
-            <button
-              type="button"
-              class="add-row-picker__verb"
-              class:add-row-picker__verb--disabled={!hasLegal}
-              disabled={!hasLegal}
-              onclick={() => handleVerbTap(verb)}
-            >
-              {$t(verbLabelKey(verb))}
-            </button>
+            {#if group}
+              {@const hasLegal = group.entries.some((e) => e.legal)}
+              {@const illegalMessage = !hasLegal
+                ? [...new Set(group.entries.flatMap((e) => e.diagnostics.map((d) => $t(d.code))))].join('\n')
+                : ''}
+              <button
+                type="button"
+                class="add-row-picker__verb"
+                class:add-row-picker__verb--illegal={!hasLegal}
+                onclick={(e) => handleVerbClick(verb, hasLegal, e)}
+                aria-label={hasLegal ? $t(verbLabelKey(verb)) : `${$t(verbLabelKey(verb))} — ${$t('play.addRow.illegalTag')}`}
+              >
+                {$t(verbLabelKey(verb))}
+                {#if !hasLegal}
+                  <span class="add-row-picker__illegal-tag" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path
+                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+                      />
+                    </svg>
+                    {#if openTooltipVerb === verb && illegalMessage}
+                      <span class="add-row-picker__tooltip">{illegalMessage}</span>
+                    {/if}
+                  </span>
+                {/if}
+              </button>
+            {/if}
           {/each}
         </div>
       </div>
     {/each}
-    <button
-      type="button"
-      class="add-row-picker__toggle-illegal"
-      aria-pressed={showIllegal}
-      aria-label={showIllegal ? $t('play.choices.hideIllegal') : $t('play.choices.showIllegal')}
-      onclick={onToggleShowIllegal}
-    >
-      {#if showIllegal}
-        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <path
-            d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"
-          />
-        </svg>
-      {:else}
-        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <path
-            d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.35-3.01-3.01-3.01l-.16.02z"
-          />
-        </svg>
-      {/if}
-    </button>
   </div>
 </div>
 
@@ -157,6 +193,9 @@
     border-radius: var(--radius-sm);
     padding: var(--spacing-xs) var(--spacing-md);
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
     transition:
       background-color var(--transition-fast),
       border-color var(--transition-fast),
@@ -164,7 +203,7 @@
     min-height: 2.75rem;
   }
 
-  .add-row-picker__verb:hover:not(:disabled) {
+  .add-row-picker__verb:hover {
     background: var(--md-sys-color-surface-container-highest);
     border-color: var(--md-sys-color-outline);
   }
@@ -174,44 +213,37 @@
     outline-offset: 2px;
   }
 
-  .add-row-picker__verb--disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+  .add-row-picker__verb--illegal {
+    border-style: dashed;
   }
 
-  .add-row-picker__toggle-illegal {
-    display: flex;
+  .add-row-picker__illegal-tag {
+    position: relative;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    color: var(--md-sys-color-on-surface-variant);
-    background: none;
-    border: none;
+    flex-shrink: 0;
+  }
+
+  .add-row-picker__illegal-tag svg {
+    width: 0.75rem;
+    height: 0.75rem;
+    color: var(--md-sys-color-error);
+  }
+
+  .add-row-picker__tooltip {
+    position: absolute;
+    top: calc(100% + var(--spacing-xs));
+    right: 0;
+    white-space: pre;
+    padding: var(--spacing-xs) var(--spacing-sm);
     border-radius: var(--radius-sm);
-    padding: 0;
-    cursor: pointer;
-    align-self: flex-end;
-    transition:
-      background-color var(--transition-fast),
-      color var(--transition-fast);
-  }
-
-  .add-row-picker__toggle-illegal svg {
-    width: 1.25rem;
-    height: 1.25rem;
-  }
-
-  .add-row-picker__toggle-illegal:hover {
-    background: var(--md-sys-color-surface-container-high);
-  }
-
-  .add-row-picker__toggle-illegal:focus-visible {
-    outline: 2px solid var(--md-sys-color-primary);
-    outline-offset: 2px;
-  }
-
-  .add-row-picker__toggle-illegal[aria-pressed='true'] {
-    color: var(--md-sys-color-primary);
+    border: 1px solid var(--md-sys-color-outline);
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-md);
+    z-index: var(--z-dropdown);
+    pointer-events: none;
   }
 </style>
