@@ -58,7 +58,7 @@ import { apiGet, apiPost, apiDelete } from '$lib/api/client';
 import { evaluate } from '$lib/rules-engine';
 import { locale } from '$lib/i18n';
 import { toast } from 'svelte-sonner';
-import type { Rule, EngineOutput } from '$lib/rules-engine';
+import type { Rule, EngineOutput, EngineInput } from '$lib/rules-engine';
 
 describe('playStore', () => {
   beforeEach(() => {
@@ -3047,6 +3047,41 @@ describe('playStore', () => {
       const ruleB = playStore.state.plannedItems[1].rule;
       expect(ruleA.varsRuntime).toEqual({ source: 'main' });
       expect(ruleB.varsRuntime).toEqual({ source: 'main' });
+    });
+
+    it('passes clean rules without stale varsRuntime to hypothetical evaluations', async () => {
+      const mockEvaluate = vi.mocked(evaluate);
+      const hypotheticalInputs: EngineInput[] = [];
+      let callCount = 0;
+
+      mockEvaluate.mockImplementation((input) => {
+        callCount++;
+        if (callCount === 1) {
+          // Main eval: simulate real engine setting varsRuntime
+          for (const rule of input.rules.planned) {
+            rule.varsRuntime = { stale: true };
+          }
+        } else {
+          // Hypothetical evals: capture to verify they're clean
+          hypotheticalInputs.push(input);
+        }
+        return makeEngineOutput();
+      });
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      playStore.addToPlan({ id: 'attack-1', activities: [] });
+      playStore.addToPlan({ id: 'disengage-1', activities: [] });
+      vi.advanceTimersByTime(300);
+
+      // 2 hypothetical evals (one per planned item), each with 1 planned rule
+      expect(hypotheticalInputs).toHaveLength(2);
+      for (const hypInput of hypotheticalInputs) {
+        for (const rule of hypInput.rules.planned) {
+          expect(rule.varsRuntime).toBeUndefined();
+        }
+      }
     });
   });
 });
