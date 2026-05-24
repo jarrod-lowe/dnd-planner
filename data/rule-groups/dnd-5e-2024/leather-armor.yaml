@@ -41,6 +41,14 @@ ruleGroups:
                 intents: { HANDLE: gear }
                 actionCost: []
               activities:
+                - *error-clear
+                - type: setAdd
+                  target: { var: errors }
+                  source: { string: rule.dnd-5e-2024.leather-armor.don-leather-armor-offer.already-equipped }
+                  when:
+                    - fact: armor.leather.equipped
+                      operator: equals
+                      value: 1
                 - type: numberSet
                   target:
                     fact: ac.base
