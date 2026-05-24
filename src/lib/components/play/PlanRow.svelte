@@ -2,7 +2,7 @@
   import { t } from '$lib/i18n';
   import PanelRenderer from './PanelRenderer.svelte';
   import ModChip from './ModChip.svelte';
-  import { VERB_STRIPE_COLORS, isRecordVerb, isBuildVerb } from '$lib/play/verbConfig';
+  import { VERB_STRIPE_COLORS, isBuildVerb } from '$lib/play/verbConfig';
   import { getMatchingAnnotations } from '$lib/play/annotations';
   import { extractPanelDescriptor } from './panel-renderer/extractPanelDescriptor';
   import { getSubBucket, subBucketLabelKey } from '$lib/play/groupChoicesByVerb';
@@ -92,15 +92,9 @@
   const matchingAnnotations = $derived(getMatchingAnnotations(annotationLabels, activeAnnotations));
   const riderAnnotations = $derived(matchingAnnotations.filter((a) => a.rider));
 
-  const variantClass = $derived.by(() => {
-    if (isRecordVerb(verb)) return 'plan-row--event';
-    if (isBuildVerb(verb)) return 'plan-row--build';
-    return '';
-  });
+  const variantClass = $derived(isBuildVerb(verb) ? 'plan-row--build' : '');
 
   const verbLabel = $derived($t(`play.verbs.${verb}`));
-
-  const verbSub = $derived(isRecordVerb(verb) ? $t('play.planRow.recorded') : '');
 
   const groupedAlternatives = $derived.by(() => {
     const buckets: Record<string, AvailableRuleEntry[]> = {};
@@ -131,9 +125,6 @@
 >
   <div class="plan-row__left">
     <span class="plan-row__verb-label">{verbLabel}</span>
-    {#if verbSub}
-      <span class="plan-row__verb-sub">{verbSub}</span>
-    {/if}
     <div class="plan-row__left-controls">
       {#if onMoveUp}
         <button
@@ -320,16 +311,6 @@
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--plan-row-stripe);
-    text-align: center;
-  }
-
-  .plan-row__verb-sub {
-    font-family: var(--font-body);
-    font-size: 0.5625rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--md-sys-color-on-surface-variant);
     text-align: center;
   }
 
@@ -528,15 +509,6 @@
     text-transform: none;
     z-index: var(--z-dropdown);
     pointer-events: none;
-  }
-
-  /* Event variant */
-  .plan-row--event {
-    background: color-mix(
-      in srgb,
-      var(--md-sys-color-error-container) 30%,
-      var(--md-sys-color-surface-container-high)
-    );
   }
 
   /* Build variant */
