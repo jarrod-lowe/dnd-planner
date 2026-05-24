@@ -356,22 +356,31 @@ paths:
               ]
             }
         responses:
-          default:
-            statusCode: '204'
-            responseTemplates:
-              application/json: |
-                #if($input.path('$').__type)
-                #set($context.responseOverride.status = 500)
-                {"error": "Failed to delete character"}
-                #end
-          '.*TransactionCanceledException.*ConditionalCheckFailed.*':
-            statusCode: '404'
-            responseTemplates:
-              application/json: '{"error": "Character not found"}'
-          '.*TransactionCanceledException.*':
+          '5\d{2}':
             statusCode: '500'
             responseTemplates:
               application/json: '{"error": "Failed to delete character"}'
+          '4\d{2}':
+            statusCode: '500'
+            responseTemplates:
+              application/json: |-
+                #set($isNotFound = false)##
+                #set($reasons = $input.path('$.CancellationReasons'))##
+                #foreach($reason in $reasons)##
+                #if($reason.Code == 'ConditionalCheckFailed')##
+                #set($isNotFound = true)##
+                #end##
+                #end##
+                #if($isNotFound)##
+                #set($context.responseOverride.status = 404)##
+                {"error":"Character not found"}##
+                #else##
+                {"error":"Failed to delete character"}##
+                #end
+          default:
+            statusCode: '204'
+            responseTemplates:
+              application/json: '##'
 
   /user:
     get:
