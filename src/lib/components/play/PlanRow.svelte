@@ -2,7 +2,6 @@
   import { t } from '$lib/i18n';
   import PanelRenderer from './PanelRenderer.svelte';
   import ModChip from './ModChip.svelte';
-  import { VERB_STRIPE_COLORS, isBuildVerb } from '$lib/play/verbConfig';
   import { getMatchingAnnotations } from '$lib/play/annotations';
   import { extractPanelDescriptor } from './panel-renderer/extractPanelDescriptor';
   import { getSubBucket, subBucketLabelKey } from '$lib/play/groupChoicesByVerb';
@@ -82,8 +81,6 @@
   const descriptor = $derived(extractPanelDescriptor(rule));
   const displayName = $derived(descriptor.name ? $t(descriptor.name) : rule.id);
 
-  const stripeColor = $derived(VERB_STRIPE_COLORS[verb]);
-
   const costTags = $derived(
     ((rule.ui as Record<string, unknown>)?.actionCost as ActionCostTag[] | undefined) ?? []
   );
@@ -91,8 +88,6 @@
   const annotationLabels = $derived(descriptor.annotationLabels ?? []);
   const matchingAnnotations = $derived(getMatchingAnnotations(annotationLabels, activeAnnotations));
   const riderAnnotations = $derived(matchingAnnotations.filter((a) => a.rider));
-
-  const variantClass = $derived(isBuildVerb(verb) ? 'plan-row--build' : '');
 
   const verbLabel = $derived($t(`play.verbs.${verb}`));
 
@@ -118,10 +113,9 @@
 <svelte:window onclick={handleWindowClick} />
 
 <div
-  class="plan-row {variantClass}"
+  class="plan-row"
   class:plan-row--collapsed={collapsed}
   class:plan-row--tooltip-open={openTooltipAltId !== null}
-  style="--plan-row-stripe: {stripeColor};"
 >
   <div class="plan-row__left">
     <span class="plan-row__verb-label">{verbLabel}</span>
@@ -300,8 +294,8 @@
     width: 7rem;
     flex-shrink: 0;
     padding: var(--spacing-sm) var(--spacing-xs);
-    background: color-mix(in srgb, var(--plan-row-stripe) 8%, transparent);
-    border-right: 2px solid var(--plan-row-stripe);
+    background: var(--md-sys-color-surface-container-low);
+    border-right: 2px solid var(--md-sys-color-outline-variant);
   }
 
   .plan-row__verb-label {
@@ -310,7 +304,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--plan-row-stripe);
+    color: var(--md-sys-color-on-surface-variant);
     text-align: center;
   }
 
@@ -509,11 +503,5 @@
     text-transform: none;
     z-index: var(--z-dropdown);
     pointer-events: none;
-  }
-
-  /* Build variant */
-  .plan-row--build {
-    opacity: 0.7;
-    background: var(--md-sys-color-surface-container);
   }
 </style>
