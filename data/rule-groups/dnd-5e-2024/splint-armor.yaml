@@ -42,6 +42,14 @@ ruleGroups:
                 intents: { HANDLE: gear }
                 actionCost: [move]
               activities:
+                - *error-clear
+                - type: setAdd
+                  target: { var: errors }
+                  source: { string: rule.dnd-5e-2024.splint-armor.don-splint-armor-offer.already-equipped }
+                  when:
+                    - fact: armor.splint.equipped
+                      operator: equals
+                      value: 1
                 # AC: set base to 17, zero Dex bonus (heavy armor)
                 - type: numberSet
                   target:

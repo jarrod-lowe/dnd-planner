@@ -48,6 +48,21 @@ ruleGroups:
                 intents: { HANDLE: gear }
                 actionCost: []
               activities:
+                - *error-clear
+                - type: setAdd
+                  target: { var: errors }
+                  source: { string: rule.dnd-5e-2024.shield.don-shield-offer.already-equipped }
+                  when:
+                    - fact: armor.shield.equipped
+                      operator: equals
+                      value: 1
+                - type: setAdd
+                  target: { var: errors }
+                  source: { string: rule.dnd-5e-2024.shield.don-shield-offer.not-proficient }
+                  when:
+                    - fact: armor.shield.proficient
+                      operator: notEquals
+                      value: 1
                 - type: numberIncrement
                   target:
                     fact: ac.shieldBonus

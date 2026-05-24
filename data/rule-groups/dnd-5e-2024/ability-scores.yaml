@@ -109,6 +109,17 @@ ruleGroups:
                   default:
                     number: 30
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.set-strength-offer.already_set
+                  when:
+                    - fact: str.value
+                      operator: notEquals
+                      value: 0
                 # Set str.value from the slider
                 - type: numberSet
                   target:
@@ -220,6 +231,17 @@ ruleGroups:
                   default:
                     number: 30
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.set-dexterity-offer.already_set
+                  when:
+                    - fact: dex.value
+                      operator: notEquals
+                      value: 0
                 # Set dex.value from the slider
                 - type: numberSet
                   target:
@@ -331,6 +353,17 @@ ruleGroups:
                   default:
                     number: 30
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.set-constitution-offer.already_set
+                  when:
+                    - fact: con.value
+                      operator: notEquals
+                      value: 0
                 # Set con.value from the slider
                 - type: numberSet
                   target:
@@ -442,6 +475,17 @@ ruleGroups:
                   default:
                     number: 30
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.set-intelligence-offer.already_set
+                  when:
+                    - fact: int.value
+                      operator: notEquals
+                      value: 0
                 # Set int.value from the slider
                 - type: numberSet
                   target:
@@ -553,6 +597,17 @@ ruleGroups:
                   default:
                     number: 30
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.set-wisdom-offer.already_set
+                  when:
+                    - fact: wis.value
+                      operator: notEquals
+                      value: 0
                 # Set wis.value from the slider
                 - type: numberSet
                   target:
@@ -664,6 +719,17 @@ ruleGroups:
                   default:
                     number: 30
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.set-charisma-offer.already_set
+                  when:
+                    - fact: cha.value
+                      operator: notEquals
+                      value: 0
                 # Set cha.value from the slider
                 - type: numberSet
                   target:
@@ -731,11 +797,22 @@ ruleGroups:
                 intents: { STAT: ability }
                 actionCost: []
               activities:
+                - *error-clear
                 - type: numberIncrement
                   target:
                     fact: str.value
                   source:
                     number: 1
+                # Error tracking: check after increment
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.increase-strength-offer.max_score
+                  when:
+                    - fact: str.value
+                      operator: greaterThanOrEqual
+                      value: 20
                 - type: advertiseEffect
                   rule:
                     id: effect-increase-strength
@@ -782,11 +859,22 @@ ruleGroups:
                 intents: { STAT: ability }
                 actionCost: []
               activities:
+                - *error-clear
                 - type: numberIncrement
                   target:
                     fact: dex.value
                   source:
                     number: 1
+                # Error tracking: check after increment
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.increase-dexterity-offer.max_score
+                  when:
+                    - fact: dex.value
+                      operator: greaterThanOrEqual
+                      value: 20
                 - type: advertiseEffect
                   rule:
                     id: effect-increase-dexterity
@@ -833,11 +921,22 @@ ruleGroups:
                 intents: { STAT: ability }
                 actionCost: []
               activities:
+                - *error-clear
                 - type: numberIncrement
                   target:
                     fact: con.value
                   source:
                     number: 1
+                # Error tracking: check after increment
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.increase-constitution-offer.max_score
+                  when:
+                    - fact: con.value
+                      operator: greaterThanOrEqual
+                      value: 20
                 - type: advertiseEffect
                   rule:
                     id: effect-increase-constitution
@@ -884,11 +983,22 @@ ruleGroups:
                 intents: { STAT: ability }
                 actionCost: []
               activities:
+                - *error-clear
                 - type: numberIncrement
                   target:
                     fact: int.value
                   source:
                     number: 1
+                # Error tracking: check after increment
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.increase-intelligence-offer.max_score
+                  when:
+                    - fact: int.value
+                      operator: greaterThanOrEqual
+                      value: 20
                 - type: advertiseEffect
                   rule:
                     id: effect-increase-intelligence
@@ -935,11 +1045,22 @@ ruleGroups:
                 intents: { STAT: ability }
                 actionCost: []
               activities:
+                - *error-clear
                 - type: numberIncrement
                   target:
                     fact: wis.value
                   source:
                     number: 1
+                # Error tracking: check after increment
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.increase-wisdom-offer.max_score
+                  when:
+                    - fact: wis.value
+                      operator: greaterThanOrEqual
+                      value: 20
                 - type: advertiseEffect
                   rule:
                     id: effect-increase-wisdom
@@ -986,11 +1107,22 @@ ruleGroups:
                 intents: { STAT: ability }
                 actionCost: []
               activities:
+                - *error-clear
                 - type: numberIncrement
                   target:
                     fact: cha.value
                   source:
                     number: 1
+                # Error tracking: check after increment
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.increase-charisma-offer.max_score
+                  when:
+                    - fact: cha.value
+                      operator: greaterThanOrEqual
+                      value: 20
                 - type: advertiseEffect
                   rule:
                     id: effect-increase-charisma
@@ -1036,6 +1168,17 @@ ruleGroups:
                 intents: { STAT: ability }
                 actionCost: []
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.proficiency-str-offer.already_proficient
+                  when:
+                    - fact: str.save.proficient
+                      operator: notEquals
+                      value: 0
                 # Immediate: apply proficiency in current evaluation
                 - type: numberSet
                   target:
@@ -1093,6 +1236,17 @@ ruleGroups:
                 intents: { STAT: ability }
                 actionCost: []
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.proficiency-dex-offer.already_proficient
+                  when:
+                    - fact: dex.save.proficient
+                      operator: notEquals
+                      value: 0
                 # Immediate: apply proficiency in current evaluation
                 - type: numberSet
                   target:
@@ -1150,6 +1304,17 @@ ruleGroups:
                 intents: { STAT: ability }
                 actionCost: []
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.proficiency-con-offer.already_proficient
+                  when:
+                    - fact: con.save.proficient
+                      operator: notEquals
+                      value: 0
                 # Immediate: apply proficiency in current evaluation
                 - type: numberSet
                   target:
@@ -1207,6 +1372,17 @@ ruleGroups:
                 intents: { STAT: ability }
                 actionCost: []
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.proficiency-int-offer.already_proficient
+                  when:
+                    - fact: int.save.proficient
+                      operator: notEquals
+                      value: 0
                 # Immediate: apply proficiency in current evaluation
                 - type: numberSet
                   target:
@@ -1264,6 +1440,17 @@ ruleGroups:
                 intents: { STAT: ability }
                 actionCost: []
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.proficiency-wis-offer.already_proficient
+                  when:
+                    - fact: wis.save.proficient
+                      operator: notEquals
+                      value: 0
                 # Immediate: apply proficiency in current evaluation
                 - type: numberSet
                   target:
@@ -1321,6 +1508,17 @@ ruleGroups:
                 intents: { STAT: ability }
                 actionCost: []
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.proficiency-cha-offer.already_proficient
+                  when:
+                    - fact: cha.save.proficient
+                      operator: notEquals
+                      value: 0
                 # Immediate: apply proficiency in current evaluation
                 - type: numberSet
                   target:
@@ -1408,6 +1606,17 @@ ruleGroups:
                   default:
                     number: 1
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.athletics-proficiency-offer.already_proficient
+                  when:
+                    - fact: skill.athletics.proficiency
+                      operator: notEquals
+                      value: 0
                 - type: numberSet
                   target:
                     fact: skill.athletics.proficiency
@@ -1507,6 +1716,17 @@ ruleGroups:
                   default:
                     number: 1
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.acrobatics-proficiency-offer.already_proficient
+                  when:
+                    - fact: skill.acrobatics.proficiency
+                      operator: notEquals
+                      value: 0
                 - type: numberSet
                   target:
                     fact: skill.acrobatics.proficiency
@@ -1607,6 +1827,17 @@ ruleGroups:
                   default:
                     number: 1
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.animal-handling-proficiency-offer.already_proficient
+                  when:
+                    - fact: skill.animal-handling.proficiency
+                      operator: notEquals
+                      value: 0
                 - type: numberSet
                   target:
                     fact: skill.animal-handling.proficiency
@@ -1707,6 +1938,17 @@ ruleGroups:
                   default:
                     number: 1
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.arcana-proficiency-offer.already_proficient
+                  when:
+                    - fact: skill.arcana.proficiency
+                      operator: notEquals
+                      value: 0
                 - type: numberSet
                   target:
                     fact: skill.arcana.proficiency
@@ -1807,6 +2049,17 @@ ruleGroups:
                   default:
                     number: 1
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.deception-proficiency-offer.already_proficient
+                  when:
+                    - fact: skill.deception.proficiency
+                      operator: notEquals
+                      value: 0
                 - type: numberSet
                   target:
                     fact: skill.deception.proficiency
@@ -1907,6 +2160,17 @@ ruleGroups:
                   default:
                     number: 1
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.history-proficiency-offer.already_proficient
+                  when:
+                    - fact: skill.history.proficiency
+                      operator: notEquals
+                      value: 0
                 - type: numberSet
                   target:
                     fact: skill.history.proficiency
@@ -2007,6 +2271,17 @@ ruleGroups:
                   default:
                     number: 1
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.insight-proficiency-offer.already_proficient
+                  when:
+                    - fact: skill.insight.proficiency
+                      operator: notEquals
+                      value: 0
                 - type: numberSet
                   target:
                     fact: skill.insight.proficiency
@@ -2107,6 +2382,17 @@ ruleGroups:
                   default:
                     number: 1
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.intimidation-proficiency-offer.already_proficient
+                  when:
+                    - fact: skill.intimidation.proficiency
+                      operator: notEquals
+                      value: 0
                 - type: numberSet
                   target:
                     fact: skill.intimidation.proficiency
@@ -2207,6 +2493,17 @@ ruleGroups:
                   default:
                     number: 1
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.investigation-proficiency-offer.already_proficient
+                  when:
+                    - fact: skill.investigation.proficiency
+                      operator: notEquals
+                      value: 0
                 - type: numberSet
                   target:
                     fact: skill.investigation.proficiency
@@ -2307,6 +2604,17 @@ ruleGroups:
                   default:
                     number: 1
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.medicine-proficiency-offer.already_proficient
+                  when:
+                    - fact: skill.medicine.proficiency
+                      operator: notEquals
+                      value: 0
                 - type: numberSet
                   target:
                     fact: skill.medicine.proficiency
@@ -2407,6 +2715,17 @@ ruleGroups:
                   default:
                     number: 1
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.nature-proficiency-offer.already_proficient
+                  when:
+                    - fact: skill.nature.proficiency
+                      operator: notEquals
+                      value: 0
                 - type: numberSet
                   target:
                     fact: skill.nature.proficiency
@@ -2507,6 +2826,17 @@ ruleGroups:
                   default:
                     number: 1
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.perception-proficiency-offer.already_proficient
+                  when:
+                    - fact: skill.perception.proficiency
+                      operator: notEquals
+                      value: 0
                 - type: numberSet
                   target:
                     fact: skill.perception.proficiency
@@ -2607,6 +2937,17 @@ ruleGroups:
                   default:
                     number: 1
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.performance-proficiency-offer.already_proficient
+                  when:
+                    - fact: skill.performance.proficiency
+                      operator: notEquals
+                      value: 0
                 - type: numberSet
                   target:
                     fact: skill.performance.proficiency
@@ -2707,6 +3048,17 @@ ruleGroups:
                   default:
                     number: 1
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.persuasion-proficiency-offer.already_proficient
+                  when:
+                    - fact: skill.persuasion.proficiency
+                      operator: notEquals
+                      value: 0
                 - type: numberSet
                   target:
                     fact: skill.persuasion.proficiency
@@ -2807,6 +3159,17 @@ ruleGroups:
                   default:
                     number: 1
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.religion-proficiency-offer.already_proficient
+                  when:
+                    - fact: skill.religion.proficiency
+                      operator: notEquals
+                      value: 0
                 - type: numberSet
                   target:
                     fact: skill.religion.proficiency
@@ -2907,6 +3270,17 @@ ruleGroups:
                   default:
                     number: 1
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.sleight-of-hand-proficiency-offer.already_proficient
+                  when:
+                    - fact: skill.sleight-of-hand.proficiency
+                      operator: notEquals
+                      value: 0
                 - type: numberSet
                   target:
                     fact: skill.sleight-of-hand.proficiency
@@ -3007,6 +3381,17 @@ ruleGroups:
                   default:
                     number: 1
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.stealth-proficiency-offer.already_proficient
+                  when:
+                    - fact: skill.stealth.proficiency
+                      operator: notEquals
+                      value: 0
                 - type: numberSet
                   target:
                     fact: skill.stealth.proficiency
@@ -3107,6 +3492,17 @@ ruleGroups:
                   default:
                     number: 1
               activities:
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.ability-scores.survival-proficiency-offer.already_proficient
+                  when:
+                    - fact: skill.survival.proficiency
+                      operator: notEquals
+                      value: 0
                 - type: numberSet
                   target:
                     fact: skill.survival.proficiency
