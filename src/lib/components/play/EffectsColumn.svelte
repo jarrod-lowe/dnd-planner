@@ -31,7 +31,7 @@
 
   const deletableRuleIds = $derived(
     committedCount && onRemoveEffect
-      ? new Set(visibleEffects.slice(0, committedCount).map((e) => e.id))
+      ? new Set(effects.slice(0, committedCount).map((e) => e.id))
       : new Set<string>()
   );
 
