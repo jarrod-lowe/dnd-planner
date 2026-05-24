@@ -1203,14 +1203,16 @@
       "buildGroup": "BUILD →",
       "expand": "SHOW OPTIONS",
       "collapse": "HIDE OPTIONS",
-      "emptyBucket": "NO OPTIONS AVAILABLE"
+      "emptyBucket": "NO OPTIONS AVAILABLE",
+      "illegalTag": "All options illegal"
     },
     "planRow": {
       "orInstead": "OR INSTEAD",
       "recorded": "RECORDED",
       "expandAria": "Expand",
       "collapseAria": "Collapse",
-      "undoAria": "Undo"
+      "undoAria": "Undo",
+      "illegalAltTag": "Illegal"
     },
     "modChip": {
       "toggle": "TOGGLE {{name}}",

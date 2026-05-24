@@ -73,19 +73,22 @@ describe('groupChoicesByVerb', () => {
     expect(groups.map((g) => g.verb)).toEqual(['ATTACK', 'AID', 'REST']);
   });
 
-  it('filters illegal entries when showIllegal is false', () => {
+  it('includes illegal entries alongside legal ones', () => {
     const entries = [
       makeEntry('greataxe', { intents: { ATTACK: 'weapons' }, legal: true }),
       makeEntry('javelin', { intents: { ATTACK: 'weapons' }, legal: false }),
       makeEntry('dodge', { intents: { DEFEND: 'evade' }, legal: false })
     ];
 
-    const groups = groupChoicesByVerb(entries, undefined, false);
+    const groups = groupChoicesByVerb(entries);
 
-    expect(groups).toHaveLength(1);
+    expect(groups).toHaveLength(2);
     expect(groups[0].verb).toBe('ATTACK');
-    expect(groups[0].entries).toHaveLength(1);
-    expect(groups[0].entries[0].rule.id).toBe('greataxe');
+    expect(groups[0].entries).toHaveLength(2);
+    expect(groups[0].entries.map((e) => e.rule.id)).toEqual(['greataxe', 'javelin']);
+    expect(groups[1].verb).toBe('DEFEND');
+    expect(groups[1].entries).toHaveLength(1);
+    expect(groups[1].entries[0].legal).toBe(false);
   });
 
   it('falls back to section-based derivation when no intents', () => {
@@ -133,10 +136,13 @@ describe('findDefaultEntryForVerb', () => {
     expect(result!.rule.id).toBe('greataxe');
   });
 
-  it('returns null when no legal entries exist', () => {
+  it('returns first illegal entry when no legal entries exist', () => {
     const entries = [makeEntry('greataxe', { intents: { ATTACK: 'weapons' }, legal: false })];
 
-    expect(findDefaultEntryForVerb(entries, 'ATTACK')).toBeNull();
+    const result = findDefaultEntryForVerb(entries, 'ATTACK');
+
+    expect(result).not.toBeNull();
+    expect(result!.rule.id).toBe('greataxe');
   });
 
   it('returns null when no entries for verb exist', () => {

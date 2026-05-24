@@ -314,7 +314,6 @@ The architecture supports:
 
 - Disable merge bypass option
 - Missing lots of checks in pipeline
-- Lambda behind API GW - remove test one
 - Restructure deploy pipeline to build in a separate one earlier?
 - Better favicon
 - A11y - periodically recheck
@@ -323,45 +322,27 @@ The architecture supports:
 - Sans Serif Font?
 - Effect on End Turn, to make it being actioned is obvious
 - Allow stacking effects
-- Visibility of effects
 - Fix main page length
-- Rule generator AI prompt
 - Fix quotas
-- ChoicePanel.svelte is a mess of specific code that needs to be normalised and maybe pushed into rules
 - Weapon: Thrown (item count) [Javelin=6]
 - Limit Cleave to once per turn
-- Shield
 - Don/Doff & Hands
-- Ready
 - Finish Help
 - Tools (proficiency)
-- Damage types on weapons (and spells?)
-- Spells
 - Periapt of Wound Closure
-- Paladin Level 3 including Hit Die and Channel Divinity and +1 L1 spell slot
-- Paladin L2 should require L1
-- Paladin L1 should require Lay on Hands (test if it doesn't already)
-- Paladin L1 should set Wisdom and Charisma Saving Throw Proficiencies
 - Configuration done (to make all configuration illegal)
 - Two weapon fighting
 - Prepared spells restrictions
-- Damage types (radiant, ...)
-- Remove Turn counter
 - Use and restoration of hit die
 - Paladin Oath of Redemption Level 3
   - Better tests for Divinity Points behaviour including double use of Divinity-using actions (bug?)
-- HP addition after level 1
-- rest.any?
 - Test for rulegroup requires that don't exist
   - Check rulegroup requires for cycles
   - Also check they are correct
 - Thunderous Smite & Divine Smite: Should depend specifically on MELEE or UNARMED attacks
   - Javelin should only mention them when in 5ft mode
-- Fix HP Calculation
 - Feat: Savage Attack
 - Increase {skill} needs illegal marker in Planned column
-- Feat: Sentinel
-- Feat: Alert
 - Ready (with spell concentration rules)
 - Rename "Spellcasting" to "Magic"
 - Paladin Long Rest: May swap one prepared spell
@@ -369,6 +350,7 @@ The architecture supports:
 - Improve Divine Favour to be inline with attacks
 - Radiant and Bludgeoning symbols look very similar
 - Alert feat is not the only option for Human origin feat
+- De-duplicate icon sources in code
 
 ### Low Priority
 

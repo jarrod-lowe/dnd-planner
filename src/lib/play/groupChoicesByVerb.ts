@@ -14,13 +14,11 @@ export interface VerbGroup {
  *
  * @param entries - Flat list of available rule entries
  * @param verbOrder - Array defining the order of verbs in the picker
- * @param showIllegal - When false, illegal entries are filtered out
  * @returns Array of verb groups, ordered by verbOrder
  */
 export function groupChoicesByVerb(
   entries: AvailableRuleEntry[],
-  verbOrder: Verb[] = VERB_ORDER,
-  showIllegal: boolean = true
+  verbOrder: Verb[] = VERB_ORDER
 ): VerbGroup[] {
   if (entries.length === 0) {
     return [];
@@ -30,8 +28,6 @@ export function groupChoicesByVerb(
   const verbMap = new Map<Verb, Map<string, AvailableRuleEntry[]>>();
 
   for (const entry of entries) {
-    if (!showIllegal && !entry.legal) continue;
-
     const verb = deriveVerbFromRule(entry.rule);
     const subBucket = getSubBucket(entry.rule, verb);
 
@@ -75,15 +71,15 @@ export function getSubBucket(rule: AvailableRuleEntry['rule'], verb: Verb): stri
 }
 
 /**
- * Finds a default entry for a given verb — the first legal entry.
- * Returns null if no legal entries exist for the verb.
+ * Finds a default entry for a given verb — the first entry matching the verb.
+ * Returns null if no entries exist for the verb.
  */
 export function findDefaultEntryForVerb(
   entries: AvailableRuleEntry[],
   verb: Verb
 ): AvailableRuleEntry | null {
   for (const entry of entries) {
-    if (deriveVerbFromRule(entry.rule) === verb && entry.legal) {
+    if (deriveVerbFromRule(entry.rule) === verb) {
       return entry;
     }
   }

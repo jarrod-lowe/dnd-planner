@@ -33,8 +33,6 @@
     onEndTurn
   }: Props = $props();
 
-  let showIllegal = $state(false);
-
   const entryById = $derived.by(() => {
     const result: Record<string, AvailableRuleEntry> = {};
     for (const entry of entries) {
@@ -115,12 +113,7 @@
     {/each}
   </div>
 
-  <AddRowPicker
-    {entries}
-    {showIllegal}
-    onAddStep={onAddToPlan}
-    onToggleShowIllegal={() => (showIllegal = !showIllegal)}
-  />
+  <AddRowPicker {entries} onAddStep={onAddToPlan} />
 
   <div class="plan-stack__footer">
     <button

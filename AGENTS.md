@@ -14,6 +14,10 @@ A tablet-optimized web application for tracking D&D character resources and plan
 
 These rules are critical. Keep them through compactions, and add them into an plans you create.
 
+### TDD
+
+- Use the TDD superpower for all code changes
+
 ### Infrastructure Operations
 
 - **NEVER run `terraform` commands directly.** Always use Make targets:
