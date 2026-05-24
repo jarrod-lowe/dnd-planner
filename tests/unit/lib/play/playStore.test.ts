@@ -1975,6 +1975,24 @@ describe('playStore', () => {
           rules: { standing: [], planned: [], effects: [committedEffect] },
           state: { facts: {} }
         }
+      } as EngineOutput).mockReturnValueOnce({
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        effects: [],
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
       } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
@@ -2849,6 +2867,135 @@ describe('playStore', () => {
       expect(playStore.state.effects[0].id).toBe(
         'class-paladin-level1::paladin-skill-proficiency-athletics'
       );
+    });
+  });
+
+  describe('getAlternativeEntries', () => {
+    function makeEngineOutput(
+      availableRules: import('$lib/rules-engine').AvailableRuleEntry[] = []
+    ): EngineOutput {
+      return {
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules,
+        annotations: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        effects: [],
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput;
+    }
+
+    it('returns hypothetical availableRules for a planned item', async () => {
+      const mockEvaluate = vi.mocked(evaluate);
+
+      const mainOutput = makeEngineOutput([
+        { rule: { id: 'attack-1', activities: [] }, legal: false, applicable: true, diagnostics: [] },
+        { rule: { id: 'disengage-1', activities: [] }, legal: false, applicable: true, diagnostics: [] }
+      ]);
+
+      const hypotheticalOutput = makeEngineOutput([
+        { rule: { id: 'attack-1', activities: [] }, legal: true, applicable: true, diagnostics: [] },
+        { rule: { id: 'disengage-1', activities: [] }, legal: true, applicable: true, diagnostics: [] }
+      ]);
+
+      mockEvaluate.mockReturnValueOnce(mainOutput).mockReturnValueOnce(hypotheticalOutput);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      const rule: Rule = { id: 'attack-1', activities: [] };
+      playStore.addToPlan(rule);
+
+      // Advance timers to trigger debounced evaluation
+      vi.advanceTimersByTime(300);
+
+      const instanceId = playStore.state.plannedItems[0].instanceId;
+      const result = playStore.getAlternativeEntries(instanceId);
+
+      expect(result).toHaveLength(2);
+      expect(result[0].legal).toBe(true);
+      expect(result[1].legal).toBe(true);
+    });
+
+    it('returns empty array when instanceId is not in the map', async () => {
+      const mockEvaluate = vi.mocked(evaluate);
+      mockEvaluate.mockReturnValue(makeEngineOutput());
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      playStore.addToPlan({ id: 'attack-1', activities: [] });
+      vi.advanceTimersByTime(300);
+
+      const result = playStore.getAlternativeEntries('nonexistent-id');
+      expect(result).toEqual([]);
+    });
+
+    it('replaces map between evaluations so removed items have no stale entries', async () => {
+      const mockEvaluate = vi.mocked(evaluate);
+
+      const altRules = [
+        { rule: { id: 'dodge-1', activities: [] }, legal: true, applicable: true, diagnostics: [] }
+      ];
+      // 1 main eval + 2 hypothetical evals (one per planned item)
+      mockEvaluate
+        .mockReturnValueOnce(makeEngineOutput())
+        .mockReturnValueOnce(makeEngineOutput(altRules))
+        .mockReturnValueOnce(makeEngineOutput(altRules));
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      playStore.addToPlan({ id: 'attack-1', activities: [] });
+      playStore.addToPlan({ id: 'disengage-1', activities: [] });
+      vi.advanceTimersByTime(300);
+
+      const idA = playStore.state.plannedItems[0].instanceId;
+      const idB = playStore.state.plannedItems[1].instanceId;
+
+      // Both should be in the map after evaluation
+      expect(playStore.getAlternativeEntries(idA)).toBeDefined();
+      expect(playStore.getAlternativeEntries(idA)).not.toEqual([]);
+
+      // Remove item B and re-evaluate
+      mockEvaluate.mockReturnValue(makeEngineOutput());
+      playStore.removeFromPlan(idB);
+      vi.advanceTimersByTime(300);
+
+      // B's entries should be gone from the map
+      expect(playStore.getAlternativeEntries(idB)).toEqual([]);
+    });
+
+    it('clears map on reset so no stale entries persist', async () => {
+      const mockEvaluate = vi.mocked(evaluate);
+      mockEvaluate.mockReturnValue(makeEngineOutput());
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      playStore.addToPlan({ id: 'attack-1', activities: [] });
+      vi.advanceTimersByTime(300);
+
+      const instanceId = playStore.state.plannedItems[0].instanceId;
+
+      // Should have entries after evaluation
+      expect(playStore.getAlternativeEntries(instanceId)).toBeDefined();
+
+      // Reset clears everything
+      playStore.reset();
+
+      expect(playStore.getAlternativeEntries(instanceId)).toEqual([]);
     });
   });
 });
