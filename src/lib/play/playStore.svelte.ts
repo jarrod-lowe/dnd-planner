@@ -71,7 +71,7 @@ function performEvaluation(): void {
   for (const item of state.plannedItems) {
     const filteredPlanned = state.plannedItems
       .filter((i) => i.instanceId !== item.instanceId)
-      .map((i) => i.rule);
+      .map((i) => JSON.parse(JSON.stringify(i.rule)) as Rule);
     const hypInput = {
       schemaVersion: 1 as const,
       rules: { standing: state.ruleGroups, planned: filteredPlanned, effects: state.effects },

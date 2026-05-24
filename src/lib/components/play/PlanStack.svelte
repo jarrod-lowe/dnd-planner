@@ -86,7 +86,10 @@
             {entry}
             {facts}
             {activeAnnotations}
-            alternatives={correctedAlternatives(item, getAlternatives(item.verb, item.originalRuleId ?? ''))}
+            alternatives={correctedAlternatives(
+              item,
+              getAlternatives(item.verb, item.originalRuleId ?? '')
+            )}
             canMoveUp={i > 0}
             canMoveDown={i < items.length - 1}
             onSelectionChange={(selections) => onSelectionChange(item.instanceId, selections)}

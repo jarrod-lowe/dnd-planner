@@ -1957,43 +1957,45 @@ describe('playStore', () => {
       } as EngineOutput);
 
       // Second call: after endTurn, should receive committed effects
-      mockEvaluate.mockReturnValueOnce({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        effects: [committedEffect],
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [committedEffect] },
-          state: { facts: {} }
-        }
-      } as EngineOutput).mockReturnValueOnce({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        effects: [],
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
+      mockEvaluate
+        .mockReturnValueOnce({
+          status: { ok: true, legal: true, applicable: true },
+          facts: {},
+          collections: {},
+          availableRules: [],
+          diagnostics: { errors: [], warnings: [], notices: [] },
+          trace: {
+            appliedRuleIds: [],
+            appliedActivityIds: [],
+            providedCapabilities: [],
+            emittedEvents: []
+          },
+          effects: [committedEffect],
+          next: {
+            schemaVersion: 1,
+            rules: { standing: [], planned: [], effects: [committedEffect] },
+            state: { facts: {} }
+          }
+        } as EngineOutput)
+        .mockReturnValueOnce({
+          status: { ok: true, legal: true, applicable: true },
+          facts: {},
+          collections: {},
+          availableRules: [],
+          diagnostics: { errors: [], warnings: [], notices: [] },
+          trace: {
+            appliedRuleIds: [],
+            appliedActivityIds: [],
+            providedCapabilities: [],
+            emittedEvents: []
+          },
+          effects: [],
+          next: {
+            schemaVersion: 1,
+            rules: { standing: [], planned: [], effects: [] },
+            state: { facts: {} }
+          }
+        } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -2900,13 +2902,33 @@ describe('playStore', () => {
       const mockEvaluate = vi.mocked(evaluate);
 
       const mainOutput = makeEngineOutput([
-        { rule: { id: 'attack-1', activities: [] }, legal: false, applicable: true, diagnostics: [] },
-        { rule: { id: 'disengage-1', activities: [] }, legal: false, applicable: true, diagnostics: [] }
+        {
+          rule: { id: 'attack-1', activities: [] },
+          legal: false,
+          applicable: true,
+          diagnostics: []
+        },
+        {
+          rule: { id: 'disengage-1', activities: [] },
+          legal: false,
+          applicable: true,
+          diagnostics: []
+        }
       ]);
 
       const hypotheticalOutput = makeEngineOutput([
-        { rule: { id: 'attack-1', activities: [] }, legal: true, applicable: true, diagnostics: [] },
-        { rule: { id: 'disengage-1', activities: [] }, legal: true, applicable: true, diagnostics: [] }
+        {
+          rule: { id: 'attack-1', activities: [] },
+          legal: true,
+          applicable: true,
+          diagnostics: []
+        },
+        {
+          rule: { id: 'disengage-1', activities: [] },
+          legal: true,
+          applicable: true,
+          diagnostics: []
+        }
       ]);
 
       mockEvaluate.mockReturnValueOnce(mainOutput).mockReturnValueOnce(hypotheticalOutput);
@@ -2996,6 +3018,35 @@ describe('playStore', () => {
       playStore.reset();
 
       expect(playStore.getAlternativeEntries(instanceId)).toEqual([]);
+    });
+
+    it('does not corrupt plan state varsRuntime with hypothetical evaluation results', async () => {
+      const mockEvaluate = vi.mocked(evaluate);
+      let callCount = 0;
+
+      // Simulate real engine behavior: evaluate() mutates rule.varsRuntime
+      mockEvaluate.mockImplementation((input) => {
+        callCount++;
+        const tag = callCount === 1 ? 'main' : `hyp-${callCount}`;
+        for (const rule of input.rules.planned) {
+          rule.varsRuntime = { source: tag };
+        }
+        return makeEngineOutput();
+      });
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      playStore.addToPlan({ id: 'attack-1', activities: [] });
+      playStore.addToPlan({ id: 'disengage-1', activities: [] });
+      vi.advanceTimersByTime(300);
+
+      // Without cloning: hypothetical evals overwrite the real rules' varsRuntime
+      // With cloning: real rules keep the main evaluation's varsRuntime
+      const ruleA = playStore.state.plannedItems[0].rule;
+      const ruleB = playStore.state.plannedItems[1].rule;
+      expect(ruleA.varsRuntime).toEqual({ source: 'main' });
+      expect(ruleB.varsRuntime).toEqual({ source: 'main' });
     });
   });
 });
