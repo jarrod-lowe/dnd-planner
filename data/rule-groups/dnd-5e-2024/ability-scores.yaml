@@ -811,7 +811,7 @@ ruleGroups:
                     string: rule.dnd-5e-2024.ability-scores.increase-strength-offer.max_score
                   when:
                     - fact: str.value
-                      operator: greaterThanOrEqual
+                      operator: greaterThan
                       value: 20
                 - type: advertiseEffect
                   rule:
@@ -873,7 +873,7 @@ ruleGroups:
                     string: rule.dnd-5e-2024.ability-scores.increase-dexterity-offer.max_score
                   when:
                     - fact: dex.value
-                      operator: greaterThanOrEqual
+                      operator: greaterThan
                       value: 20
                 - type: advertiseEffect
                   rule:
@@ -935,7 +935,7 @@ ruleGroups:
                     string: rule.dnd-5e-2024.ability-scores.increase-constitution-offer.max_score
                   when:
                     - fact: con.value
-                      operator: greaterThanOrEqual
+                      operator: greaterThan
                       value: 20
                 - type: advertiseEffect
                   rule:
@@ -997,7 +997,7 @@ ruleGroups:
                     string: rule.dnd-5e-2024.ability-scores.increase-intelligence-offer.max_score
                   when:
                     - fact: int.value
-                      operator: greaterThanOrEqual
+                      operator: greaterThan
                       value: 20
                 - type: advertiseEffect
                   rule:
@@ -1059,7 +1059,7 @@ ruleGroups:
                     string: rule.dnd-5e-2024.ability-scores.increase-wisdom-offer.max_score
                   when:
                     - fact: wis.value
-                      operator: greaterThanOrEqual
+                      operator: greaterThan
                       value: 20
                 - type: advertiseEffect
                   rule:
@@ -1121,7 +1121,7 @@ ruleGroups:
                     string: rule.dnd-5e-2024.ability-scores.increase-charisma-offer.max_score
                   when:
                     - fact: cha.value
-                      operator: greaterThanOrEqual
+                      operator: greaterThan
                       value: 20
                 - type: advertiseEffect
                   rule:
