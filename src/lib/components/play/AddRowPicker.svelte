@@ -1,7 +1,3 @@
-<script module lang="ts">
-  let activeTooltipClose: (() => void) | null = null;
-</script>
-
 <script lang="ts">
   import { t } from '$lib/i18n';
   import { PLAN_VERBS, RECORD_VERBS, BUILD_VERBS } from '$lib/play/verbConfig';
@@ -10,6 +6,7 @@
     findDefaultEntryForVerb,
     verbLabelKey
   } from '$lib/play/groupChoicesByVerb';
+  import { closeActiveTooltip, registerTooltipClose } from './tooltipSingleton';
   import type { AvailableRuleEntry, Verb } from '$lib/rules-engine';
 
   interface Props {
@@ -37,30 +34,38 @@
   }
 
   let openTooltipVerb: Verb | null = $state(null);
+  let mainEl: HTMLDivElement | undefined = $state();
+  let tooltipStyle = $state('');
 
-  function closeTooltip() {
+  function closeLocalTooltip() {
     openTooltipVerb = null;
-    if (activeTooltipClose === closeTooltip) {
-      activeTooltipClose = null;
-    }
+    tooltipStyle = '';
+    registerTooltipClose(null);
   }
 
   function handleVerbClick(verb: Verb, hasLegal: boolean, e: MouseEvent) {
     const target = e.target as Element;
     if (!hasLegal && target.closest('.add-row-picker__illegal-tag')) {
       e.stopPropagation();
-      if (activeTooltipClose && activeTooltipClose !== closeTooltip) {
-        activeTooltipClose();
-      }
       if (openTooltipVerb === verb) {
-        closeTooltip();
+        closeLocalTooltip();
       } else {
+        closeActiveTooltip();
         openTooltipVerb = verb;
-        activeTooltipClose = closeTooltip;
+        registerTooltipClose(closeLocalTooltip);
+        requestAnimationFrame(() => {
+          const icon = target.closest('.add-row-picker__illegal-tag') as HTMLElement;
+          if (!mainEl || !icon) return;
+          const iconRect = icon.getBoundingClientRect();
+          const containerRect = mainEl.getBoundingClientRect();
+          const left = iconRect.left + iconRect.width / 2 - containerRect.left;
+          const top = iconRect.bottom - containerRect.top + 4;
+          tooltipStyle = `left:${left}px;top:${top}px;transform:translateX(-50%)`;
+        });
       }
     } else {
       if (openTooltipVerb) {
-        closeTooltip();
+        closeLocalTooltip();
       }
       handleVerbTap(verb);
     }
@@ -68,18 +73,23 @@
 
   function handleWindowClick() {
     if (openTooltipVerb) {
-      closeTooltip();
+      closeLocalTooltip();
     }
   }
 </script>
 
 <svelte:window onclick={handleWindowClick} />
 
-<div class="add-row-picker" role="region" aria-label={$t('play.addRow.title')}>
+<div
+  class="add-row-picker"
+  class:add-row-picker--tooltip-open={openTooltipVerb !== null}
+  role="region"
+  aria-label={$t('play.addRow.title')}
+>
   <div class="add-row-picker__stripe" aria-hidden="true">
     <span class="add-row-picker__stripe-label">+ ADD</span>
   </div>
-  <div class="add-row-picker__main">
+  <div class="add-row-picker__main" bind:this={mainEl}>
     {#each verbGroupDefs as groupDef (groupDef.labelKey)}
       <div class="add-row-picker__group">
         <span class="add-row-picker__group-label">{$t(groupDef.labelKey)}</span>
@@ -88,9 +98,6 @@
             {@const group = verbGroupMap.get(verb)}
             {#if group}
               {@const hasLegal = group.entries.some((e) => e.legal)}
-              {@const illegalMessage = !hasLegal
-                ? [...new Set(group.entries.flatMap((e) => e.diagnostics.map((d) => $t(d.code))))].join('\n')
-                : ''}
               <button
                 type="button"
                 class="add-row-picker__verb"
@@ -106,9 +113,6 @@
                         d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
                       />
                     </svg>
-                    {#if openTooltipVerb === verb && illegalMessage}
-                      <span class="add-row-picker__tooltip">{illegalMessage}</span>
-                    {/if}
                   </span>
                 {/if}
               </button>
@@ -117,6 +121,9 @@
         </div>
       </div>
     {/each}
+    {#if openTooltipVerb && tooltipStyle}
+      <span class="add-row-picker__tooltip" style={tooltipStyle}>{$t('play.addRow.illegalTag')}</span>
+    {/if}
   </div>
 </div>
 
@@ -124,7 +131,7 @@
   .add-row-picker {
     display: flex;
     border-radius: var(--radius-md);
-    overflow: hidden;
+    overflow: visible;
     border: 1.5px dashed var(--md-sys-color-outline-variant);
     background: var(--md-sys-color-surface-container);
   }
@@ -156,6 +163,7 @@
     gap: var(--spacing-sm);
     padding: var(--spacing-sm);
     min-width: 0;
+    position: relative;
   }
 
   .add-row-picker__group {
@@ -182,6 +190,7 @@
   }
 
   .add-row-picker__verb {
+    position: relative;
     font-family: var(--font-body);
     font-size: var(--font-size-sm);
     font-weight: 600;
@@ -193,9 +202,6 @@
     border-radius: var(--radius-sm);
     padding: var(--spacing-xs) var(--spacing-md);
     cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-xs);
     transition:
       background-color var(--transition-fast),
       border-color var(--transition-fast),
@@ -217,23 +223,26 @@
     border-style: dashed;
   }
 
+  .add-row-picker--tooltip-open {
+    z-index: var(--z-dropdown);
+  }
+
   .add-row-picker__illegal-tag {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    flex-shrink: 0;
+    position: absolute;
+    top: 50%;
+    left: var(--spacing-md);
+    transform: translate(-50%, -50%);
+    pointer-events: auto;
   }
 
   .add-row-picker__illegal-tag svg {
-    width: 0.75rem;
-    height: 0.75rem;
+    width: 1.25rem;
+    height: 1.25rem;
     color: var(--md-sys-color-error);
   }
 
   .add-row-picker__tooltip {
     position: absolute;
-    top: calc(100% + var(--spacing-xs));
-    right: 0;
     white-space: pre;
     padding: var(--spacing-xs) var(--spacing-sm);
     border-radius: var(--radius-sm);
@@ -243,6 +252,7 @@
     font-family: var(--font-body);
     font-size: var(--font-size-xs);
     line-height: var(--line-height-md);
+    text-transform: none;
     z-index: var(--z-dropdown);
     pointer-events: none;
   }

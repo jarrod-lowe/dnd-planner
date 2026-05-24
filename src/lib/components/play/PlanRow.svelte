@@ -6,6 +6,7 @@
   import { getMatchingAnnotations } from '$lib/play/annotations';
   import { extractPanelDescriptor } from './panel-renderer/extractPanelDescriptor';
   import { getSubBucket, subBucketLabelKey } from '$lib/play/groupChoicesByVerb';
+  import { closeActiveTooltip, registerTooltipClose } from './tooltipSingleton';
   import type { PlannedItem } from '$lib/play/types';
   import type { AvailableRuleEntry, Annotation, Facts, ActionCostTag } from '$lib/rules-engine';
 
@@ -40,6 +41,41 @@
   }: Props = $props();
 
   let collapsed = $state(false);
+  let openTooltipAltId: string | null = $state(null);
+  let rightEl: HTMLDivElement | undefined = $state();
+  let tooltipStyle = $state('');
+
+  function closeLocalTooltip() {
+    openTooltipAltId = null;
+    tooltipStyle = '';
+    registerTooltipClose(null);
+  }
+
+  function toggleAltTooltip(altId: string, e: MouseEvent) {
+    e.stopPropagation();
+    if (openTooltipAltId === altId) {
+      closeLocalTooltip();
+    } else {
+      closeActiveTooltip();
+      openTooltipAltId = altId;
+      registerTooltipClose(closeLocalTooltip);
+      const icon = e.currentTarget as HTMLElement;
+      requestAnimationFrame(() => {
+        if (!rightEl || !icon) return;
+        const iconRect = icon.getBoundingClientRect();
+        const containerRect = rightEl.getBoundingClientRect();
+        const left = iconRect.left + iconRect.width / 2 - containerRect.left;
+        const top = iconRect.bottom - containerRect.top + 4;
+        tooltipStyle = `left:${left}px;top:${top}px;transform:translateX(-50%)`;
+      });
+    }
+  }
+
+  function handleWindowClick() {
+    if (openTooltipAltId) {
+      closeLocalTooltip();
+    }
+  }
 
   const verb = $derived(item.verb);
   const rule = $derived(item.rule);
@@ -85,9 +121,12 @@
   }
 </script>
 
+<svelte:window onclick={handleWindowClick} />
+
 <div
   class="plan-row {variantClass}"
   class:plan-row--collapsed={collapsed}
+  class:plan-row--tooltip-open={openTooltipAltId !== null}
   style="--plan-row-stripe: {stripeColor};"
 >
   <div class="plan-row__left">
@@ -162,7 +201,7 @@
     </div>
   </div>
 
-  <div class="plan-row__right">
+  <div class="plan-row__right" bind:this={rightEl}>
     {#if !collapsed}
       <div class="plan-row__cost-chips">
         {#each costTags as tag (tag)}
@@ -214,19 +253,31 @@
                     : altName}
                   onclick={() => onSwapAlternative?.(alt)}
                 >
-                  {altName}
                   {#if !alt.legal}
-                    <span class="plan-row__alt-illegal-tag" aria-hidden="true">
+                    <span
+                      class="plan-row__alt-illegal-tag"
+                      aria-hidden="true"
+                      onclick={(e) => toggleAltTooltip(alt.rule.id, e)}
+                    >
                       <svg viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
                       </svg>
                     </span>
                   {/if}
+                  {altName}
                 </button>
               {/each}
             </div>
           {/each}
         </div>
+      {/if}
+      {#if openTooltipAltId && tooltipStyle}
+        <span class="plan-row__alt-tooltip" style={tooltipStyle}>
+          {(() => {
+            const alt = alternatives.find((a) => a.rule.id === openTooltipAltId);
+            return alt ? alt.diagnostics.map((d) => $t(d.code)).join('\n') : '';
+          })()}
+        </span>
       {/if}
     {:else}
       <span class="plan-row__collapsed-name">{displayName}</span>
@@ -239,7 +290,7 @@
     position: relative;
     display: flex;
     border-radius: var(--radius-md);
-    overflow: hidden;
+    overflow: visible;
     background: var(--md-sys-color-surface-container-high);
     border: 1px solid var(--md-sys-color-outline-variant);
     transition:
@@ -330,6 +381,7 @@
     min-width: 0;
     padding: var(--spacing-sm);
     gap: var(--spacing-xs);
+    position: relative;
   }
 
   .plan-row__cost-chips {
@@ -413,6 +465,7 @@
   }
 
   .plan-row__alt-btn {
+    position: relative;
     font-family: var(--font-body);
     font-size: var(--font-size-sm);
     font-weight: 500;
@@ -422,9 +475,6 @@
     border-radius: var(--radius-sm);
     padding: var(--spacing-xs) var(--spacing-sm);
     cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-xs);
     transition:
       background-color var(--transition-fast),
       border-color var(--transition-fast),
@@ -445,16 +495,37 @@
     border-style: dashed;
   }
 
+  .plan-row--tooltip-open {
+    z-index: var(--z-dropdown);
+  }
+
   .plan-row__alt-illegal-tag {
-    display: inline-flex;
-    align-items: center;
-    flex-shrink: 0;
+    position: absolute;
+    top: 50%;
+    left: var(--spacing-sm);
+    transform: translate(-50%, -50%);
   }
 
   .plan-row__alt-illegal-tag svg {
-    width: 0.75rem;
-    height: 0.75rem;
+    width: 1.25rem;
+    height: 1.25rem;
     color: var(--md-sys-color-error);
+  }
+
+  .plan-row__alt-tooltip {
+    position: absolute;
+    white-space: pre;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--md-sys-color-outline);
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-md);
+    text-transform: none;
+    z-index: var(--z-dropdown);
+    pointer-events: none;
   }
 
   /* Event variant */

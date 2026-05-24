@@ -1,9 +1,6 @@
-<script module lang="ts">
-  let activeClose: (() => void) | null = null;
-</script>
-
 <script lang="ts">
   import { t } from '$lib/i18n';
+  import { closeActiveTooltip, registerTooltipClose } from './tooltipSingleton';
 
   interface Props {
     type: 'illegal' | 'inapplicable';
@@ -16,21 +13,20 @@
 
   function closeSelf() {
     tooltipOpen = false;
-    if (activeClose === closeSelf) {
-      activeClose = null;
-    }
+    registerTooltipClose(null);
   }
 
   function handleClick(e: MouseEvent) {
     if (!message) return;
     e.stopPropagation();
 
-    if (activeClose && activeClose !== closeSelf) {
-      activeClose();
+    if (tooltipOpen) {
+      closeSelf();
+    } else {
+      closeActiveTooltip();
+      tooltipOpen = true;
+      registerTooltipClose(closeSelf);
     }
-
-    tooltipOpen = !tooltipOpen;
-    activeClose = tooltipOpen ? closeSelf : null;
   }
 
   function handleWindowClick() {
