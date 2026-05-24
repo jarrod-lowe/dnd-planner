@@ -364,6 +364,10 @@ paths:
             statusCode: '500'
             responseTemplates:
               application/json: '{"error": "Failed to delete character"}'
+          '.*__type.*':
+            statusCode: '500'
+            responseTemplates:
+              application/json: '{"error": "Failed to delete character"}'
           default:
             statusCode: '204'
             responseTemplates:
