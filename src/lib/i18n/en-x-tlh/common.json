@@ -1065,7 +1065,9 @@
     "activeState": {
       "title": "Active State",
       "standing": "{{count}} standing",
-      "placeholder": "No standing effects"
+      "placeholder": "No standing effects",
+      "showHidden": "Show background effects",
+      "hideHidden": "Hide background effects"
     },
     "effectChip": {
       "kind": {

@@ -4,7 +4,8 @@ import {
   getEffectKind,
   isConcentrationEffect,
   getConcentrationEffectName,
-  getChipState
+  getChipState,
+  isHiddenEffect
 } from '$lib/play/effectUtils';
 import type { Rule } from '$lib/rules-engine';
 import type { Facts } from '$lib/rules-engine';
@@ -252,5 +253,48 @@ describe('getChipState', () => {
     };
     const facts: Facts = { 'concentration.damage-taken': 1 };
     expect(getChipState(rule, facts)).toBe('expiring');
+  });
+});
+
+describe('isHiddenEffect', () => {
+  it('returns false for rule without ui', () => {
+    const rule: Rule = { id: 'test', activities: [] };
+    expect(isHiddenEffect(rule)).toBe(false);
+  });
+
+  it('returns false when ui has no hidden field', () => {
+    const rule: Rule = {
+      id: 'test',
+      activities: [],
+      ui: { section: 'ongoing', name: 'test.name' }
+    };
+    expect(isHiddenEffect(rule)).toBe(false);
+  });
+
+  it('returns false when hidden is false', () => {
+    const rule: Rule = {
+      id: 'test',
+      activities: [],
+      ui: { hidden: false, name: 'test.name' }
+    };
+    expect(isHiddenEffect(rule)).toBe(false);
+  });
+
+  it('returns true when hidden is true', () => {
+    const rule: Rule = {
+      id: 'effect-strength',
+      activities: [],
+      ui: { hidden: true, name: 'test.strength' }
+    };
+    expect(isHiddenEffect(rule)).toBe(true);
+  });
+
+  it('returns false when hidden is a non-boolean truthy value', () => {
+    const rule: Rule = {
+      id: 'test',
+      activities: [],
+      ui: { hidden: 'true', name: 'test.name' }
+    };
+    expect(isHiddenEffect(rule)).toBe(false);
   });
 });

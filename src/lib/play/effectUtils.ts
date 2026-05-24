@@ -95,6 +95,16 @@ export function getConcentrationEffectName(effects: Rule[]): string | null {
 }
 
 /**
+ * Checks if an effect rule is marked as hidden from the active state display.
+ * Hidden effects still function in the rules engine but are suppressed from
+ * the strip/column by default (toggled via eye icon).
+ */
+export function isHiddenEffect(rule: Rule): boolean {
+  const ui = rule.ui as Record<string, unknown> | undefined;
+  return ui?.hidden === true;
+}
+
+/**
  * Determines the visual chip state from the effect rule and current facts.
  * Priority: expiring > pending > rest.
  */

@@ -45,6 +45,7 @@
   }: Props = $props();
 
   let showIllegal = $state(false);
+  let showHiddenEffects = $state(false);
 
   // Get available rules from engine output
   const availableRules = $derived(playStore.state.engineOutput?.availableRules ?? []);
@@ -146,7 +147,9 @@
           facts={playStore.state.facts}
           concentrationEffectName={concentrationName}
           {committedEffectIds}
+          {showHiddenEffects}
           onDismissEffect={handleRemoveEffect}
+          onToggleHiddenEffects={() => (showHiddenEffects = !showHiddenEffects)}
         />
         <PlanStack
           items={playStore.state.plannedItems}
@@ -227,7 +230,9 @@
           effects={currentEffects}
           facts={playStore.state.facts}
           committedCount={playStore.state.effects.length}
+          {showHiddenEffects}
           onRemoveEffect={handleRemoveEffect}
+          onToggleHiddenEffects={() => (showHiddenEffects = !showHiddenEffects)}
         />
       {/snippet}
     </PlayLayout>
