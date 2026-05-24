@@ -28,7 +28,6 @@ export function groupChoicesByVerb(
   const verbMap = new Map<Verb, Map<string, AvailableRuleEntry[]>>();
 
   for (const entry of entries) {
-
     const verb = deriveVerbFromRule(entry.rule);
     const subBucket = getSubBucket(entry.rule, verb);
 

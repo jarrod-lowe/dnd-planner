@@ -103,7 +103,9 @@
                 class="add-row-picker__verb"
                 class:add-row-picker__verb--illegal={!hasLegal}
                 onclick={(e) => handleVerbClick(verb, hasLegal, e)}
-                aria-label={hasLegal ? $t(verbLabelKey(verb)) : `${$t(verbLabelKey(verb))} — ${$t('play.addRow.illegalTag')}`}
+                aria-label={hasLegal
+                  ? $t(verbLabelKey(verb))
+                  : `${$t(verbLabelKey(verb))} — ${$t('play.addRow.illegalTag')}`}
               >
                 {$t(verbLabelKey(verb))}
                 {#if !hasLegal}
@@ -122,7 +124,9 @@
       </div>
     {/each}
     {#if openTooltipVerb && tooltipStyle}
-      <span class="add-row-picker__tooltip" style={tooltipStyle}>{$t('play.addRow.illegalTag')}</span>
+      <span class="add-row-picker__tooltip" style={tooltipStyle}
+        >{$t('play.addRow.illegalTag')}</span
+      >
     {/if}
   </div>
 </div>

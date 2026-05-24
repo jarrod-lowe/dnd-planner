@@ -113,10 +113,7 @@
     {/each}
   </div>
 
-  <AddRowPicker
-    {entries}
-    onAddStep={onAddToPlan}
-  />
+  <AddRowPicker {entries} onAddStep={onAddToPlan} />
 
   <div class="plan-stack__footer">
     <button
