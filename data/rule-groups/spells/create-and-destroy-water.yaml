@@ -81,6 +81,7 @@ ruleGroups:
                     ui:
                       section: action-spell
                       name: play.slotEffect.l1
+                      hidden: true
                       intents:
                         HANDLE: consume
                       actionCost: [L1]

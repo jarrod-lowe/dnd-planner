@@ -135,6 +135,7 @@ ruleGroups:
                       - str-values
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-strength.name
+                      hidden: true
                       primaryControl: *ability-score-control
                     vars:
                       score:
@@ -257,6 +258,7 @@ ruleGroups:
                       - dex-values
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-dexterity.name
+                      hidden: true
                       primaryControl: *ability-score-control
                     vars:
                       score:
@@ -379,6 +381,7 @@ ruleGroups:
                       - con-values
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-constitution.name
+                      hidden: true
                       primaryControl: *ability-score-control
                     vars:
                       score:
@@ -501,6 +504,7 @@ ruleGroups:
                       - int-values
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-intelligence.name
+                      hidden: true
                       primaryControl: *ability-score-control
                     vars:
                       score:
@@ -623,6 +627,7 @@ ruleGroups:
                       - wis-values
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-wisdom.name
+                      hidden: true
                       primaryControl: *ability-score-control
                     vars:
                       score:
@@ -745,6 +750,7 @@ ruleGroups:
                       - cha-values
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-charisma.name
+                      hidden: true
                       primaryControl: *ability-score-control
                     vars:
                       score:
@@ -821,6 +827,7 @@ ruleGroups:
                       - group: str-values
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-increase-strength.name
+                      hidden: true
                     activities:
                       - type: numberIncrement
                         target:
@@ -883,6 +890,7 @@ ruleGroups:
                       - group: dex-values
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-increase-dexterity.name
+                      hidden: true
                     activities:
                       - type: numberIncrement
                         target:
@@ -945,6 +953,7 @@ ruleGroups:
                       - group: con-values
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-increase-constitution.name
+                      hidden: true
                     activities:
                       - type: numberIncrement
                         target:
@@ -1007,6 +1016,7 @@ ruleGroups:
                       - group: int-values
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-increase-intelligence.name
+                      hidden: true
                     activities:
                       - type: numberIncrement
                         target:
@@ -1069,6 +1079,7 @@ ruleGroups:
                       - group: wis-values
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-increase-wisdom.name
+                      hidden: true
                     activities:
                       - type: numberIncrement
                         target:
@@ -1131,6 +1142,7 @@ ruleGroups:
                       - group: cha-values
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-increase-charisma.name
+                      hidden: true
                     activities:
                       - type: numberIncrement
                         target:

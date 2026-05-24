@@ -264,6 +264,10 @@
                 "type": "string",
                 "enum": ["action", "bonus", "reaction", "move", "conc", "LoH", "CD", "L1", "L2", "L3", "L4", "L5", "free"]
               }
+            },
+            "hidden": {
+              "type": "boolean",
+              "description": "Suppress this effect from the active state display by default (toggled via eye icon)"
             }
           },
           "additionalProperties": false

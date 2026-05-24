@@ -286,6 +286,7 @@ ruleGroups:
                     id: effect-sanctuary-slot-l1
                     ui:
                       name: play.slotEffect.l1
+                      hidden: true
                     phase: early
                     after:
                       - group: spellcasting-slots-set
@@ -314,6 +315,7 @@ ruleGroups:
                     id: effect-sanctuary-slot-l2
                     ui:
                       name: play.slotEffect.l2
+                      hidden: true
                     phase: early
                     after:
                       - group: spellcasting-slots-set
@@ -342,6 +344,7 @@ ruleGroups:
                     id: effect-sanctuary-slot-l3
                     ui:
                       name: play.slotEffect.l3
+                      hidden: true
                     phase: early
                     after:
                       - group: spellcasting-slots-set
@@ -370,6 +373,7 @@ ruleGroups:
                     id: effect-sanctuary-slot-l4
                     ui:
                       name: play.slotEffect.l4
+                      hidden: true
                     phase: early
                     after:
                       - group: spellcasting-slots-set
@@ -398,6 +402,7 @@ ruleGroups:
                     id: effect-sanctuary-slot-l5
                     ui:
                       name: play.slotEffect.l5
+                      hidden: true
                     phase: early
                     after:
                       - group: spellcasting-slots-set
