@@ -67,6 +67,7 @@ function performEvaluation(): void {
 
   // Pre-compute hypothetical evaluations for each planned item.
   // Creates a brand-new Map each time — old map is GC'd, no stale entries.
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- intentionally non-reactive; replaced each evaluation
   const newMap = new Map<string, AvailableRuleEntry[]>();
   for (const item of state.plannedItems) {
     const filteredPlanned = state.plannedItems
