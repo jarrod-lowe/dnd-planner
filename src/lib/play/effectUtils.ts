@@ -6,7 +6,7 @@ export interface DurationState {
   nearExpiry: boolean;
 }
 
-export type EffectKind = 'CONC' | 'ONGOING' | 'SENSE' | 'BUFF' | 'DEBUFF' | 'ITEM';
+export type EffectKind = 'CONC' | 'ONGOING' | 'SENSE' | 'BUFF' | 'DEBUFF' | 'ITEM' | 'BUILD';
 export type ChipState = 'rest' | 'pending' | 'expiring';
 
 /**
@@ -62,6 +62,7 @@ function hasConcentrationActivity(activities: Rule['activities']): boolean {
  */
 export function getEffectKind(rule: Rule): EffectKind {
   if (hasConcentrationActivity(rule.activities)) return 'CONC';
+  if (hasBuildGroup(rule)) return 'BUILD';
 
   const ui = rule.ui as Record<string, unknown> | undefined;
   if (!ui) return 'ONGOING';
@@ -69,6 +70,13 @@ export function getEffectKind(rule: Rule): EffectKind {
   if (ui.section === 'senses') return 'SENSE';
   if (ui.section === 'configuration') return 'ITEM';
   return 'ONGOING';
+}
+
+const BUILD_GROUPS = new Set(['Stats', 'Proficiency']);
+
+function hasBuildGroup(rule: Rule): boolean {
+  if (!rule.group) return false;
+  return rule.group.some((g) => BUILD_GROUPS.has(g));
 }
 
 /**
@@ -117,4 +125,22 @@ export function getChipState(effect: Rule, facts: Facts): ChipState {
   }
 
   return 'rest';
+}
+
+export function getEffectDisplayValue(rule: Rule, facts: Facts): string | null {
+  const ui = rule.ui as Record<string, unknown> | undefined;
+  if (!ui || typeof ui.displayFact !== 'string') return null;
+
+  const value = facts[ui.displayFact];
+  if (value === undefined || value === null) return null;
+  return String(value);
+}
+
+export function getEffectLevel(rule: Rule, facts: Facts): number | null {
+  const ui = rule.ui as Record<string, unknown> | undefined;
+  if (!ui || typeof ui.levelFact !== 'string') return null;
+
+  const value = facts[ui.levelFact];
+  if (value === undefined || value === null) return null;
+  return Number(value);
 }

@@ -175,7 +175,7 @@ describe('PanelRenderer - select control', () => {
             options: [
               { value: 0.5, label: '○' },
               { value: 1, label: '●' },
-              { value: 2, label: '●●' }
+              { value: 2, label: '◉' }
             ]
           }
         },
@@ -195,7 +195,7 @@ describe('PanelRenderer - select control', () => {
     expect(buttons).toHaveLength(3);
     expect(container.textContent).toContain('○');
     expect(container.textContent).toContain('●');
-    expect(container.textContent).toContain('●●');
+    expect(container.textContent).toContain('◉');
   });
 
   it('renders disabled option buttons as spans when read-only with inline options', () => {
@@ -213,7 +213,7 @@ describe('PanelRenderer - select control', () => {
             options: [
               { value: 0.5, label: '○' },
               { value: 1, label: '●' },
-              { value: 2, label: '●●' }
+              { value: 2, label: '◉' }
             ]
           }
         },
@@ -237,7 +237,7 @@ describe('PanelRenderer - select control', () => {
     // Should show the labels, not raw numbers
     expect(container.textContent).toContain('○');
     expect(container.textContent).toContain('●');
-    expect(container.textContent).toContain('●●');
+    expect(container.textContent).toContain('◉');
   });
 
   it('marks the correct inline option as active', () => {
@@ -255,7 +255,7 @@ describe('PanelRenderer - select control', () => {
             options: [
               { value: 0.5, label: '○' },
               { value: 1, label: '●' },
-              { value: 2, label: '●●' }
+              { value: 2, label: '◉' }
             ]
           }
         },
@@ -274,7 +274,7 @@ describe('PanelRenderer - select control', () => {
     const activeOption = container.querySelector('.panel-renderer__radio-option--active');
     expect(activeOption).toBeTruthy();
     expect(activeOption?.textContent).toContain('●');
-    expect(activeOption?.textContent).not.toContain('●●');
+    expect(activeOption?.textContent).not.toContain('◉');
   });
 
   it('fires onSelectionChange when inline option button is clicked', async () => {
@@ -292,7 +292,7 @@ describe('PanelRenderer - select control', () => {
             options: [
               { value: 0.5, label: '○' },
               { value: 1, label: '●' },
-              { value: 2, label: '●●' }
+              { value: 2, label: '◉' }
             ]
           }
         },
@@ -309,7 +309,7 @@ describe('PanelRenderer - select control', () => {
       props: { entry, editable: true, facts: {}, onSelectionChange }
     });
     const buttons = container.querySelectorAll('.panel-renderer__radio-option');
-    // Click the "●●" button (value 2)
+    // Click the "◉" button (value 2)
     await fireEvent.click(buttons[2]);
     expect(onSelectionChange).toHaveBeenCalledWith({ level: 2 });
   });

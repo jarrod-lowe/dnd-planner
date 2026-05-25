@@ -1,6 +1,11 @@
 <script lang="ts">
   import { t } from '$lib/i18n';
-  import { getDurationState, getEffectKind } from '$lib/play/effectUtils';
+  import {
+    getDurationState,
+    getEffectKind,
+    getEffectDisplayValue,
+    getEffectLevel
+  } from '$lib/play/effectUtils';
   import type { Rule } from '$lib/rules-engine';
   import type { Facts } from '$lib/rules-engine';
   import type { ChipState } from '$lib/play/effectUtils';
@@ -14,15 +19,26 @@
     isConcentrationLink?: boolean;
   }
 
-  let { effect, state, onDismiss, onReminder, isConcentrationLink = false }: Props = $props();
+  let {
+    effect,
+    facts,
+    state,
+    onDismiss,
+    onReminder,
+    isConcentrationLink = false
+  }: Props = $props();
 
   const kind = $derived(getEffectKind(effect));
   const duration = $derived(getDurationState(effect));
 
+  const displayValue = $derived(getEffectDisplayValue(effect, facts));
+
   const effectName = $derived.by(() => {
     const ui = effect.ui as Record<string, unknown> | undefined;
     const nameKey = ui?.name;
-    return typeof nameKey === 'string' ? $t(nameKey) : effect.id;
+    if (typeof nameKey !== 'string') return effect.id;
+    if (displayValue !== null) return $t(nameKey, { score: displayValue });
+    return $t(nameKey);
   });
 
   const kindLabel = $derived($t(`play.effectChip.kind.${kind}`));
@@ -30,6 +46,17 @@
   const pipCount = $derived(duration ? Math.min(duration.total, 10) : 0);
 
   const pips = $derived(Array.from({ length: pipCount }, (_, i) => i < (duration?.remaining ?? 0)));
+
+  const level = $derived(getEffectLevel(effect, facts));
+  const levelDot = $derived(
+    level !== null
+      ? level >= 2
+        ? $t('play.topBar.proficientDotDouble')
+        : level >= 1
+          ? $t('play.topBar.proficientDotFull')
+          : $t('play.topBar.proficientDotHalf')
+      : null
+  );
 
   const ariaLabel = $derived.by(() => {
     const durationText = duration
@@ -134,6 +161,9 @@
       </svg>
     {/if}
     <span class="effect-chip__name">{effectName}</span>
+    {#if levelDot !== null}
+      <span class="effect-chip__level-dot" aria-hidden="true">{levelDot}</span>
+    {/if}
   </div>
 
   {#if duration}
@@ -265,6 +295,8 @@
   }
 
   .effect-chip__name {
+    flex: 1;
+    min-width: 0;
     font-family: var(--font-display);
     font-size: var(--font-size-sm);
     font-weight: 600;
@@ -272,6 +304,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .effect-chip__level-dot {
+    flex-shrink: 0;
+    font-size: var(--font-size-sm);
+    color: var(--md-sys-color-primary);
   }
 
   /* Footer */

@@ -2,13 +2,13 @@
 refs:
   skill-proficiency-options: &skill-proficiency-options
     - value: 0.5
-      label: "○"
+      label: play.topBar.proficientDotHalf
       ariaLabel: play.choices.skillProficiency.half
     - value: 1
-      label: "●"
+      label: play.topBar.proficientDotFull
       ariaLabel: play.choices.skillProficiency.full
     - value: 2
-      label: "●●"
+      label: play.topBar.proficientDotDouble
       ariaLabel: play.choices.skillProficiency.double
 
   skill-proficiency-control: &skill-proficiency-control
@@ -98,7 +98,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.set-strength.name
                 primaryControl: *ability-score-control
-                intents: { STAT: ability }
+                intents: { STAT: set }
                 actionCost: []
               vars:
                 score:
@@ -133,9 +133,11 @@ ruleGroups:
                     phase: early
                     group:
                       - str-values
+                      - Stats
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-strength.name
                       hidden: true
+                      displayFact: str.value
                       primaryControl: *ability-score-control
                     vars:
                       score:
@@ -221,7 +223,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.set-dexterity.name
                 packBehind: set-strength
                 primaryControl: *ability-score-control
-                intents: { STAT: ability }
+                intents: { STAT: set }
                 actionCost: []
               vars:
                 score:
@@ -256,9 +258,11 @@ ruleGroups:
                     phase: early
                     group:
                       - dex-values
+                      - Stats
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-dexterity.name
                       hidden: true
+                      displayFact: dex.value
                       primaryControl: *ability-score-control
                     vars:
                       score:
@@ -344,7 +348,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.set-constitution.name
                 packBehind: set-strength
                 primaryControl: *ability-score-control
-                intents: { STAT: ability }
+                intents: { STAT: set }
                 actionCost: []
               vars:
                 score:
@@ -379,9 +383,11 @@ ruleGroups:
                     phase: early
                     group:
                       - con-values
+                      - Stats
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-constitution.name
                       hidden: true
+                      displayFact: con.value
                       primaryControl: *ability-score-control
                     vars:
                       score:
@@ -467,7 +473,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.set-intelligence.name
                 packBehind: set-strength
                 primaryControl: *ability-score-control
-                intents: { STAT: ability }
+                intents: { STAT: set }
                 actionCost: []
               vars:
                 score:
@@ -502,9 +508,11 @@ ruleGroups:
                     phase: early
                     group:
                       - int-values
+                      - Stats
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-intelligence.name
                       hidden: true
+                      displayFact: int.value
                       primaryControl: *ability-score-control
                     vars:
                       score:
@@ -590,7 +598,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.set-wisdom.name
                 packBehind: set-strength
                 primaryControl: *ability-score-control
-                intents: { STAT: ability }
+                intents: { STAT: set }
                 actionCost: []
               vars:
                 score:
@@ -625,9 +633,11 @@ ruleGroups:
                     phase: early
                     group:
                       - wis-values
+                      - Stats
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-wisdom.name
                       hidden: true
+                      displayFact: wis.value
                       primaryControl: *ability-score-control
                     vars:
                       score:
@@ -713,7 +723,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.set-charisma.name
                 packBehind: set-strength
                 primaryControl: *ability-score-control
-                intents: { STAT: ability }
+                intents: { STAT: set }
                 actionCost: []
               vars:
                 score:
@@ -748,9 +758,11 @@ ruleGroups:
                     phase: early
                     group:
                       - cha-values
+                      - Stats
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-charisma.name
                       hidden: true
+                      displayFact: cha.value
                       primaryControl: *ability-score-control
                     vars:
                       score:
@@ -800,7 +812,7 @@ ruleGroups:
               ui:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.increase-strength.name
-                intents: { STAT: ability }
+                intents: { STAT: increase }
                 actionCost: []
               activities:
                 - *error-clear
@@ -823,6 +835,8 @@ ruleGroups:
                   rule:
                     id: effect-increase-strength
                     phase: early
+                    group:
+                      - Stats
                     after:
                       - group: str-values
                     ui:
@@ -863,7 +877,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.increase-dexterity.name
                 packBehind: increase-strength
-                intents: { STAT: ability }
+                intents: { STAT: increase }
                 actionCost: []
               activities:
                 - *error-clear
@@ -886,6 +900,8 @@ ruleGroups:
                   rule:
                     id: effect-increase-dexterity
                     phase: early
+                    group:
+                      - Stats
                     after:
                       - group: dex-values
                     ui:
@@ -926,7 +942,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.increase-constitution.name
                 packBehind: increase-strength
-                intents: { STAT: ability }
+                intents: { STAT: increase }
                 actionCost: []
               activities:
                 - *error-clear
@@ -949,6 +965,8 @@ ruleGroups:
                   rule:
                     id: effect-increase-constitution
                     phase: early
+                    group:
+                      - Stats
                     after:
                       - group: con-values
                     ui:
@@ -989,7 +1007,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.increase-intelligence.name
                 packBehind: increase-strength
-                intents: { STAT: ability }
+                intents: { STAT: increase }
                 actionCost: []
               activities:
                 - *error-clear
@@ -1012,6 +1030,8 @@ ruleGroups:
                   rule:
                     id: effect-increase-intelligence
                     phase: early
+                    group:
+                      - Stats
                     after:
                       - group: int-values
                     ui:
@@ -1052,7 +1072,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.increase-wisdom.name
                 packBehind: increase-strength
-                intents: { STAT: ability }
+                intents: { STAT: increase }
                 actionCost: []
               activities:
                 - *error-clear
@@ -1075,6 +1095,8 @@ ruleGroups:
                   rule:
                     id: effect-increase-wisdom
                     phase: early
+                    group:
+                      - Stats
                     after:
                       - group: wis-values
                     ui:
@@ -1115,7 +1137,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.increase-charisma.name
                 packBehind: increase-strength
-                intents: { STAT: ability }
+                intents: { STAT: increase }
                 actionCost: []
               activities:
                 - *error-clear
@@ -1138,6 +1160,8 @@ ruleGroups:
                   rule:
                     id: effect-increase-charisma
                     phase: early
+                    group:
+                      - Stats
                     after:
                       - group: cha-values
                     ui:
@@ -1177,7 +1201,7 @@ ruleGroups:
               ui:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-str.name
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: save }
                 actionCost: []
               activities:
                 # Error tracking
@@ -1207,8 +1231,11 @@ ruleGroups:
                   rule:
                     id: effect-str-save-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-str-save-proficiency.name
+                      hidden: true
                     activities:
                       - type: numberSet
                         target:
@@ -1245,7 +1272,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-dex.name
                 packBehind: proficiency-str
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: save }
                 actionCost: []
               activities:
                 # Error tracking
@@ -1275,8 +1302,11 @@ ruleGroups:
                   rule:
                     id: effect-dex-save-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-dex-save-proficiency.name
+                      hidden: true
                     activities:
                       - type: numberSet
                         target:
@@ -1313,7 +1343,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-con.name
                 packBehind: proficiency-str
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: save }
                 actionCost: []
               activities:
                 # Error tracking
@@ -1343,8 +1373,11 @@ ruleGroups:
                   rule:
                     id: effect-con-save-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-con-save-proficiency.name
+                      hidden: true
                     activities:
                       - type: numberSet
                         target:
@@ -1381,7 +1414,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-int.name
                 packBehind: proficiency-str
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: save }
                 actionCost: []
               activities:
                 # Error tracking
@@ -1411,8 +1444,11 @@ ruleGroups:
                   rule:
                     id: effect-int-save-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-int-save-proficiency.name
+                      hidden: true
                     activities:
                       - type: numberSet
                         target:
@@ -1449,7 +1485,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-wis.name
                 packBehind: proficiency-str
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: save }
                 actionCost: []
               activities:
                 # Error tracking
@@ -1479,8 +1515,11 @@ ruleGroups:
                   rule:
                     id: effect-wis-save-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-wis-save-proficiency.name
+                      hidden: true
                     activities:
                       - type: numberSet
                         target:
@@ -1517,7 +1556,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-cha.name
                 packBehind: proficiency-str
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: save }
                 actionCost: []
               activities:
                 # Error tracking
@@ -1547,8 +1586,11 @@ ruleGroups:
                   rule:
                     id: effect-cha-save-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-cha-save-proficiency.name
+                      hidden: true
                     activities:
                       - type: numberSet
                         target:
@@ -1610,7 +1652,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-athletics.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: skill }
                 actionCost: []
               vars:
                 level:
@@ -1650,8 +1692,12 @@ ruleGroups:
                   rule:
                     id: effect-athletics-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-athletics-proficiency.name
+                      hidden: true
+                      levelFact: skill.athletics.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -1720,7 +1766,7 @@ ruleGroups:
                 section: configuration
                 name: rule.dnd-5e-2024.ability-scores.proficiency-acrobatics.name
                 primaryControl: *skill-proficiency-control
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: skill }
                 actionCost: []
               vars:
                 level:
@@ -1760,8 +1806,12 @@ ruleGroups:
                   rule:
                     id: effect-acrobatics-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-acrobatics-proficiency.name
+                      hidden: true
+                      levelFact: skill.acrobatics.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -1831,7 +1881,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-animal-handling.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: skill }
                 actionCost: []
               vars:
                 level:
@@ -1871,8 +1921,12 @@ ruleGroups:
                   rule:
                     id: effect-animal-handling-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-animal-handling-proficiency.name
+                      hidden: true
+                      levelFact: skill.animal-handling.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -1942,7 +1996,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-arcana.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: skill }
                 actionCost: []
               vars:
                 level:
@@ -1982,8 +2036,12 @@ ruleGroups:
                   rule:
                     id: effect-arcana-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-arcana-proficiency.name
+                      hidden: true
+                      levelFact: skill.arcana.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -2053,7 +2111,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-deception.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: skill }
                 actionCost: []
               vars:
                 level:
@@ -2093,8 +2151,12 @@ ruleGroups:
                   rule:
                     id: effect-deception-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-deception-proficiency.name
+                      hidden: true
+                      levelFact: skill.deception.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -2164,7 +2226,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-history.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: skill }
                 actionCost: []
               vars:
                 level:
@@ -2204,8 +2266,12 @@ ruleGroups:
                   rule:
                     id: effect-history-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-history-proficiency.name
+                      hidden: true
+                      levelFact: skill.history.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -2275,7 +2341,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-insight.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: skill }
                 actionCost: []
               vars:
                 level:
@@ -2315,8 +2381,12 @@ ruleGroups:
                   rule:
                     id: effect-insight-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-insight-proficiency.name
+                      hidden: true
+                      levelFact: skill.insight.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -2386,7 +2456,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-intimidation.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: skill }
                 actionCost: []
               vars:
                 level:
@@ -2426,8 +2496,12 @@ ruleGroups:
                   rule:
                     id: effect-intimidation-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-intimidation-proficiency.name
+                      hidden: true
+                      levelFact: skill.intimidation.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -2497,7 +2571,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-investigation.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: skill }
                 actionCost: []
               vars:
                 level:
@@ -2537,8 +2611,12 @@ ruleGroups:
                   rule:
                     id: effect-investigation-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-investigation-proficiency.name
+                      hidden: true
+                      levelFact: skill.investigation.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -2608,7 +2686,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-medicine.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: skill }
                 actionCost: []
               vars:
                 level:
@@ -2648,8 +2726,12 @@ ruleGroups:
                   rule:
                     id: effect-medicine-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-medicine-proficiency.name
+                      hidden: true
+                      levelFact: skill.medicine.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -2719,7 +2801,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-nature.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: skill }
                 actionCost: []
               vars:
                 level:
@@ -2759,8 +2841,12 @@ ruleGroups:
                   rule:
                     id: effect-nature-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-nature-proficiency.name
+                      hidden: true
+                      levelFact: skill.nature.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -2830,7 +2916,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-perception.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: skill }
                 actionCost: []
               vars:
                 level:
@@ -2870,8 +2956,12 @@ ruleGroups:
                   rule:
                     id: effect-perception-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-perception-proficiency.name
+                      hidden: true
+                      levelFact: skill.perception.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -2941,7 +3031,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-performance.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: skill }
                 actionCost: []
               vars:
                 level:
@@ -2981,8 +3071,12 @@ ruleGroups:
                   rule:
                     id: effect-performance-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-performance-proficiency.name
+                      hidden: true
+                      levelFact: skill.performance.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -3052,7 +3146,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-persuasion.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: skill }
                 actionCost: []
               vars:
                 level:
@@ -3092,8 +3186,12 @@ ruleGroups:
                   rule:
                     id: effect-persuasion-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-persuasion-proficiency.name
+                      hidden: true
+                      levelFact: skill.persuasion.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -3163,7 +3261,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-religion.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: skill }
                 actionCost: []
               vars:
                 level:
@@ -3203,8 +3301,12 @@ ruleGroups:
                   rule:
                     id: effect-religion-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-religion-proficiency.name
+                      hidden: true
+                      levelFact: skill.religion.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -3274,7 +3376,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-sleight-of-hand.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: skill }
                 actionCost: []
               vars:
                 level:
@@ -3314,8 +3416,12 @@ ruleGroups:
                   rule:
                     id: effect-sleight-of-hand-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-sleight-of-hand-proficiency.name
+                      hidden: true
+                      levelFact: skill.sleight-of-hand.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -3385,7 +3491,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-stealth.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: skill }
                 actionCost: []
               vars:
                 level:
@@ -3425,8 +3531,12 @@ ruleGroups:
                   rule:
                     id: effect-stealth-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-stealth-proficiency.name
+                      hidden: true
+                      levelFact: skill.stealth.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -3496,7 +3606,7 @@ ruleGroups:
                 name: rule.dnd-5e-2024.ability-scores.proficiency-survival.name
                 packBehind: proficiency-acrobatics
                 primaryControl: *skill-proficiency-control
-                intents: { STAT: ability }
+                intents: { PROFICIENCY: skill }
                 actionCost: []
               vars:
                 level:
@@ -3536,8 +3646,12 @@ ruleGroups:
                   rule:
                     id: effect-survival-proficiency
                     phase: early
+                    group:
+                      - Proficiency
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-survival-proficiency.name
+                      hidden: true
+                      levelFact: skill.survival.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:

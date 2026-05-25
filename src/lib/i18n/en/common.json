@@ -380,7 +380,7 @@
           "already_proficient": "Already proficient in Athletics"
         },
         "effect-athletics-proficiency": {
-          "name": "Athletics Proficiency (x{{level}})"
+          "name": "Athletics Proficiency"
         },
         "proficiency-acrobatics": {
           "name": "Proficiency - Acrobatics"
@@ -389,7 +389,7 @@
           "already_proficient": "Already proficient in Acrobatics"
         },
         "effect-acrobatics-proficiency": {
-          "name": "Acrobatics Proficiency (x{{level}})"
+          "name": "Acrobatics Proficiency"
         },
         "proficiency-animal-handling": {
           "name": "Proficiency - Animal Handling"
@@ -398,7 +398,7 @@
           "already_proficient": "Already proficient in Animal Handling"
         },
         "effect-animal-handling-proficiency": {
-          "name": "Animal Handling Proficiency (x{{level}})"
+          "name": "Animal Handling Proficiency"
         },
         "proficiency-arcana": {
           "name": "Proficiency - Arcana"
@@ -407,7 +407,7 @@
           "already_proficient": "Already proficient in Arcana"
         },
         "effect-arcana-proficiency": {
-          "name": "Arcana Proficiency (x{{level}})"
+          "name": "Arcana Proficiency"
         },
         "proficiency-deception": {
           "name": "Proficiency - Deception"
@@ -416,7 +416,7 @@
           "already_proficient": "Already proficient in Deception"
         },
         "effect-deception-proficiency": {
-          "name": "Deception Proficiency (x{{level}})"
+          "name": "Deception Proficiency"
         },
         "proficiency-history": {
           "name": "Proficiency - History"
@@ -425,7 +425,7 @@
           "already_proficient": "Already proficient in History"
         },
         "effect-history-proficiency": {
-          "name": "History Proficiency (x{{level}})"
+          "name": "History Proficiency"
         },
         "proficiency-insight": {
           "name": "Proficiency - Insight"
@@ -434,7 +434,7 @@
           "already_proficient": "Already proficient in Insight"
         },
         "effect-insight-proficiency": {
-          "name": "Insight Proficiency (x{{level}})"
+          "name": "Insight Proficiency"
         },
         "proficiency-intimidation": {
           "name": "Proficiency - Intimidation"
@@ -443,7 +443,7 @@
           "already_proficient": "Already proficient in Intimidation"
         },
         "effect-intimidation-proficiency": {
-          "name": "Intimidation Proficiency (x{{level}})"
+          "name": "Intimidation Proficiency"
         },
         "proficiency-investigation": {
           "name": "Proficiency - Investigation"
@@ -452,7 +452,7 @@
           "already_proficient": "Already proficient in Investigation"
         },
         "effect-investigation-proficiency": {
-          "name": "Investigation Proficiency (x{{level}})"
+          "name": "Investigation Proficiency"
         },
         "proficiency-medicine": {
           "name": "Proficiency - Medicine"
@@ -461,7 +461,7 @@
           "already_proficient": "Already proficient in Medicine"
         },
         "effect-medicine-proficiency": {
-          "name": "Medicine Proficiency (x{{level}})"
+          "name": "Medicine Proficiency"
         },
         "proficiency-nature": {
           "name": "Proficiency - Nature"
@@ -470,7 +470,7 @@
           "already_proficient": "Already proficient in Nature"
         },
         "effect-nature-proficiency": {
-          "name": "Nature Proficiency (x{{level}})"
+          "name": "Nature Proficiency"
         },
         "proficiency-perception": {
           "name": "Proficiency - Perception"
@@ -479,7 +479,7 @@
           "already_proficient": "Already proficient in Perception"
         },
         "effect-perception-proficiency": {
-          "name": "Perception Proficiency (x{{level}})"
+          "name": "Perception Proficiency"
         },
         "proficiency-performance": {
           "name": "Proficiency - Performance"
@@ -488,7 +488,7 @@
           "already_proficient": "Already proficient in Performance"
         },
         "effect-performance-proficiency": {
-          "name": "Performance Proficiency (x{{level}})"
+          "name": "Performance Proficiency"
         },
         "proficiency-persuasion": {
           "name": "Proficiency - Persuasion"
@@ -497,7 +497,7 @@
           "already_proficient": "Already proficient in Persuasion"
         },
         "effect-persuasion-proficiency": {
-          "name": "Persuasion Proficiency (x{{level}})"
+          "name": "Persuasion Proficiency"
         },
         "proficiency-religion": {
           "name": "Proficiency - Religion"
@@ -506,7 +506,7 @@
           "already_proficient": "Already proficient in Religion"
         },
         "effect-religion-proficiency": {
-          "name": "Religion Proficiency (x{{level}})"
+          "name": "Religion Proficiency"
         },
         "proficiency-sleight-of-hand": {
           "name": "Proficiency - Sleight of Hand"
@@ -515,7 +515,7 @@
           "already_proficient": "Already proficient in Sleight of Hand"
         },
         "effect-sleight-of-hand-proficiency": {
-          "name": "Sleight of Hand Proficiency (x{{level}})"
+          "name": "Sleight of Hand Proficiency"
         },
         "proficiency-stealth": {
           "name": "Proficiency - Stealth"
@@ -524,7 +524,7 @@
           "already_proficient": "Already proficient in Stealth"
         },
         "effect-stealth-proficiency": {
-          "name": "Stealth Proficiency (x{{level}})"
+          "name": "Stealth Proficiency"
         },
         "proficiency-survival": {
           "name": "Proficiency - Survival"
@@ -533,7 +533,7 @@
           "already_proficient": "Already proficient in Survival"
         },
         "effect-survival-proficiency": {
-          "name": "Survival Proficiency (x{{level}})"
+          "name": "Survival Proficiency"
         }
       },
       "free-actions": {
@@ -1076,7 +1076,8 @@
         "SENSE": "SENSE",
         "BUFF": "BUFF",
         "DEBUFF": "DEBUFF",
-        "ITEM": "ITEM"
+        "ITEM": "ITEM",
+        "BUILD": "BUILD"
       },
       "dismiss": "Dismiss effect",
       "reminder": "Reminder: action needed",
@@ -1107,6 +1108,9 @@
       "concActive": "Active",
       "abilities": "Abilities",
       "proficient": "Proficient",
+      "proficientDotHalf": "○",
+      "proficientDotFull": "●",
+      "proficientDotDouble": "◉",
       "hpValue": "{{current}} / {{max}}"
     },
     "verbs": {
@@ -1130,7 +1134,8 @@
       "ATTACK": {
         "default": "Other",
         "weapons": "Weapons",
-        "spells": "Spells"
+        "spells": "Spells",
+        "brawl": "Brawl"
       },
       "AID": {
         "default": "Other",
@@ -1150,8 +1155,8 @@
       },
       "MOVE": {
         "default": "Other",
-        "walk": "Walk",
-        "hustle": "Hustle",
+        "travel": "Travel",
+        "dash": "Dash",
         "special": "Special"
       },
       "INSPECT": {
@@ -1190,10 +1195,12 @@
       },
       "NOTE": {},
       "STAT": {
-        "ability": "Ability"
+        "set": "Set",
+        "increase": "Increase"
       },
       "PROFICIENCY": {
-        "default": "Category"
+        "save": "Save",
+        "skill": "Skill"
       }
     },
     "addRow": {

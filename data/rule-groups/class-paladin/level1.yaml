@@ -46,9 +46,12 @@ paladin-mastery-options: &paladin-mastery-options
 paladin-skill-effect: &paladin-skill-effect
   id: paladin-skill-proficiency-${value}
   phase: early
+  group:
+    - Proficiency
   ui:
     name: rules.settings.paladin-skill.${value}
     section: effects
+    hidden: true
   activities:
     - type: numberSet
       target:

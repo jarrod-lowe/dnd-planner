@@ -380,7 +380,7 @@
           "already_proficient": "Suv valwI' already"
         },
         "effect-athletics-proficiency": {
-          "name": "Suv valwI' (x{{level}})"
+          "name": "Suv valwI'"
         },
         "proficiency-acrobatics": {
           "name": "valwI' - yIqIm"
@@ -389,7 +389,7 @@
           "already_proficient": "yIqIm valwI' already"
         },
         "effect-acrobatics-proficiency": {
-          "name": "yIqIm valwI' (x{{level}})"
+          "name": "yIqIm valwI'"
         },
         "proficiency-animal-handling": {
           "name": "valwI' - Ha'DIbaH SeH"
@@ -398,7 +398,7 @@
           "already_proficient": "Ha'DIbaH SeH valwI' already"
         },
         "effect-animal-handling-proficiency": {
-          "name": "Ha'DIbaH SeH valwI' (x{{level}})"
+          "name": "Ha'DIbaH SeH valwI'"
         },
         "proficiency-arcana": {
           "name": "valwI' - mughlaH"
@@ -407,7 +407,7 @@
           "already_proficient": "mughlaH valwI' already"
         },
         "effect-arcana-proficiency": {
-          "name": "mughlaH valwI' (x{{level}})"
+          "name": "mughlaH valwI'"
         },
         "proficiency-deception": {
           "name": "valwI' - nIch"
@@ -416,7 +416,7 @@
           "already_proficient": "nIch valwI' already"
         },
         "effect-deception-proficiency": {
-          "name": "nIch valwI' (x{{level}})"
+          "name": "nIch valwI'"
         },
         "proficiency-history": {
           "name": "valwI' - qun"
@@ -425,7 +425,7 @@
           "already_proficient": "qun valwI' already"
         },
         "effect-history-proficiency": {
-          "name": "qun valwI' (x{{level}})"
+          "name": "qun valwI'"
         },
         "proficiency-insight": {
           "name": "valwI' - Qob"
@@ -434,7 +434,7 @@
           "already_proficient": "Qob valwI' already"
         },
         "effect-insight-proficiency": {
-          "name": "Qob valwI' (x{{level}})"
+          "name": "Qob valwI'"
         },
         "proficiency-intimidation": {
           "name": "valwI' - HIv"
@@ -443,7 +443,7 @@
           "already_proficient": "HIv valwI' already"
         },
         "effect-intimidation-proficiency": {
-          "name": "HIv valwI' (x{{level}})"
+          "name": "HIv valwI'"
         },
         "proficiency-investigation": {
           "name": "valwI' - nej"
@@ -452,7 +452,7 @@
           "already_proficient": "nej valwI' already"
         },
         "effect-investigation-proficiency": {
-          "name": "nej valwI' (x{{level}})"
+          "name": "nej valwI'"
         },
         "proficiency-medicine": {
           "name": "valwI' - Qel"
@@ -461,7 +461,7 @@
           "already_proficient": "Qel valwI' already"
         },
         "effect-medicine-proficiency": {
-          "name": "Qel valwI' (x{{level}})"
+          "name": "Qel valwI'"
         },
         "proficiency-nature": {
           "name": "valwI' - Doch"
@@ -470,7 +470,7 @@
           "already_proficient": "Doch valwI' already"
         },
         "effect-nature-proficiency": {
-          "name": "Doch valwI' (x{{level}})"
+          "name": "Doch valwI'"
         },
         "proficiency-perception": {
           "name": "valwI' - legh"
@@ -479,7 +479,7 @@
           "already_proficient": "legh valwI' already"
         },
         "effect-perception-proficiency": {
-          "name": "legh valwI' (x{{level}})"
+          "name": "legh valwI'"
         },
         "proficiency-performance": {
           "name": "valwI' - chel"
@@ -488,7 +488,7 @@
           "already_proficient": "chel valwI' already"
         },
         "effect-performance-proficiency": {
-          "name": "chel valwI' (x{{level}})"
+          "name": "chel valwI'"
         },
         "proficiency-persuasion": {
           "name": "valwI' - QIch"
@@ -497,7 +497,7 @@
           "already_proficient": "QIch valwI' already"
         },
         "effect-persuasion-proficiency": {
-          "name": "QIch valwI' (x{{level}})"
+          "name": "QIch valwI'"
         },
         "proficiency-religion": {
           "name": "valwI' - Den"
@@ -506,7 +506,7 @@
           "already_proficient": "Den valwI' already"
         },
         "effect-religion-proficiency": {
-          "name": "Den valwI' (x{{level}})"
+          "name": "Den valwI'"
         },
         "proficiency-sleight-of-hand": {
           "name": "valwI' - nich"
@@ -515,7 +515,7 @@
           "already_proficient": "nich valwI' already"
         },
         "effect-sleight-of-hand-proficiency": {
-          "name": "nich valwI' (x{{level}})"
+          "name": "nich valwI'"
         },
         "proficiency-stealth": {
           "name": "valwI' - So'"
@@ -524,7 +524,7 @@
           "already_proficient": "So' valwI' already"
         },
         "effect-stealth-proficiency": {
-          "name": "So' valwI' (x{{level}})"
+          "name": "So' valwI'"
         },
         "proficiency-survival": {
           "name": "valwI' - taH"
@@ -533,7 +533,7 @@
           "already_proficient": "taH valwI' already"
         },
         "effect-survival-proficiency": {
-          "name": "taH valwI' (x{{level}})"
+          "name": "taH valwI'"
         }
       },
       "free-actions": {
@@ -1076,7 +1076,8 @@
         "SENSE": "SENSE",
         "BUFF": "BUFF",
         "DEBUFF": "DEBUFF",
-        "ITEM": "ITEM"
+        "ITEM": "ITEM",
+        "BUILD": "BUILD"
       },
       "dismiss": "Dismiss effect",
       "reminder": "Reminder: action needed",
@@ -1107,6 +1108,9 @@
       "concActive": "Active",
       "abilities": "Abilities",
       "proficient": "Proficient",
+      "proficientDotHalf": "○",
+      "proficientDotFull": "●",
+      "proficientDotDouble": "◉",
       "hpValue": "{{current}} / {{max}}"
     },
     "verbs": {
@@ -1130,7 +1134,8 @@
       "ATTACK": {
         "default": "OTHER",
         "weapons": "WEAPONS",
-        "spells": "SPELLS"
+        "spells": "SPELLS",
+        "brawl": "BRAWL"
       },
       "AID": {
         "default": "OTHER",
@@ -1150,8 +1155,8 @@
       },
       "MOVE": {
         "default": "OTHER",
-        "walk": "WALK",
-        "hustle": "HUSTLE",
+        "travel": "TRAVEL",
+        "dash": "DASH",
         "special": "SPECIAL"
       },
       "INSPECT": {
@@ -1190,10 +1195,12 @@
       },
       "NOTE": {},
       "STAT": {
-        "ability": "ABILITY"
+        "set": "Set",
+        "increase": "Increase"
       },
       "PROFICIENCY": {
-        "default": "CATEGORY"
+        "save": "Save",
+        "skill": "Skill"
       }
     },
     "addRow": {
