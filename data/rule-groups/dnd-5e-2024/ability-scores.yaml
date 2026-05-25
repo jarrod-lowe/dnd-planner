@@ -137,6 +137,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-strength.name
                       hidden: true
+                      displayFact: str.value
                       primaryControl: *ability-score-control
                     vars:
                       score:
@@ -261,6 +262,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-dexterity.name
                       hidden: true
+                      displayFact: dex.value
                       primaryControl: *ability-score-control
                     vars:
                       score:
@@ -385,6 +387,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-constitution.name
                       hidden: true
+                      displayFact: con.value
                       primaryControl: *ability-score-control
                     vars:
                       score:
@@ -509,6 +512,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-intelligence.name
                       hidden: true
+                      displayFact: int.value
                       primaryControl: *ability-score-control
                     vars:
                       score:
@@ -633,6 +637,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-wisdom.name
                       hidden: true
+                      displayFact: wis.value
                       primaryControl: *ability-score-control
                     vars:
                       score:
@@ -757,6 +762,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-charisma.name
                       hidden: true
+                      displayFact: cha.value
                       primaryControl: *ability-score-control
                     vars:
                       score:
@@ -1691,6 +1697,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-athletics-proficiency.name
                       hidden: true
+                      levelFact: skill.athletics.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -1804,6 +1811,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-acrobatics-proficiency.name
                       hidden: true
+                      levelFact: skill.acrobatics.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -1918,6 +1926,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-animal-handling-proficiency.name
                       hidden: true
+                      levelFact: skill.animal-handling.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -2032,6 +2041,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-arcana-proficiency.name
                       hidden: true
+                      levelFact: skill.arcana.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -2146,6 +2156,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-deception-proficiency.name
                       hidden: true
+                      levelFact: skill.deception.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -2260,6 +2271,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-history-proficiency.name
                       hidden: true
+                      levelFact: skill.history.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -2374,6 +2386,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-insight-proficiency.name
                       hidden: true
+                      levelFact: skill.insight.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -2488,6 +2501,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-intimidation-proficiency.name
                       hidden: true
+                      levelFact: skill.intimidation.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -2602,6 +2616,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-investigation-proficiency.name
                       hidden: true
+                      levelFact: skill.investigation.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -2716,6 +2731,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-medicine-proficiency.name
                       hidden: true
+                      levelFact: skill.medicine.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -2830,6 +2846,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-nature-proficiency.name
                       hidden: true
+                      levelFact: skill.nature.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -2944,6 +2961,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-perception-proficiency.name
                       hidden: true
+                      levelFact: skill.perception.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -3058,6 +3076,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-performance-proficiency.name
                       hidden: true
+                      levelFact: skill.performance.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -3172,6 +3191,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-persuasion-proficiency.name
                       hidden: true
+                      levelFact: skill.persuasion.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -3286,6 +3306,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-religion-proficiency.name
                       hidden: true
+                      levelFact: skill.religion.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -3400,6 +3421,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-sleight-of-hand-proficiency.name
                       hidden: true
+                      levelFact: skill.sleight-of-hand.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -3514,6 +3536,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-stealth-proficiency.name
                       hidden: true
+                      levelFact: skill.stealth.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:
@@ -3628,6 +3651,7 @@ ruleGroups:
                     ui:
                       name: rule.dnd-5e-2024.ability-scores.effect-survival-proficiency.name
                       hidden: true
+                      levelFact: skill.survival.proficiency
                       primaryControl: *skill-proficiency-control
                     vars:
                       level:

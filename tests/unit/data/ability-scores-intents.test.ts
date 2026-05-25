@@ -23,9 +23,7 @@ describe('ability-scores intent sub-buckets', () => {
     rules = data.ruleGroups[0].rules;
   });
 
-  function getIntentOfOfferRule(
-    offerRuleId: string
-  ): Record<string, string> | undefined {
+  function getIntentOfOfferRule(offerRuleId: string): Record<string, string> | undefined {
     const offerRule = rules.find((r) => r.id === offerRuleId);
     if (!offerRule) return undefined;
     const activities = offerRule.activities as {

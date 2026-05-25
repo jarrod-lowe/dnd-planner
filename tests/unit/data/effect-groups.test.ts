@@ -70,9 +70,7 @@ function findEffectInOffer(rules: Rule[], offerRuleId: string): Rule | undefined
   if (!offerRule?.activities) return undefined;
   const offerActivity = offerRule.activities.find((a) => a.type === 'offerRule');
   if (!offerActivity?.rule?.activities) return undefined;
-  const effectActivity = offerActivity.rule.activities.find(
-    (a) => a.type === 'advertiseEffect'
-  );
+  const effectActivity = offerActivity.rule.activities.find((a) => a.type === 'advertiseEffect');
   return effectActivity?.rule;
 }
 
@@ -89,12 +87,21 @@ describe('ability-scores effect groups', () => {
   });
 
   describe('stat set effects have Stats group and are hidden', () => {
+    const displayFacts: Record<string, string> = {
+      str: 'str.value',
+      dex: 'dex.value',
+      con: 'con.value',
+      int: 'int.value',
+      wis: 'wis.value',
+      cha: 'cha.value'
+    };
     for (const stat of stats) {
-      it(`effect-${fullNames[stat]} has group Stats and ui.hidden`, () => {
+      it(`effect-${fullNames[stat]} has group Stats, ui.hidden, and displayFact`, () => {
         const effect = findEffectInOffer(rules, `set-${fullNames[stat]}-offer`);
         expect(effect).toBeDefined();
         expect(effect!.group).toContain('Stats');
         expect(effect!.ui?.hidden).toBe(true);
+        expect(effect!.ui?.displayFact).toBe(displayFacts[stat]);
       });
     }
   });
@@ -121,13 +128,14 @@ describe('ability-scores effect groups', () => {
     }
   });
 
-  describe('skill proficiency effects have Proficiency group and are hidden', () => {
+  describe('skill proficiency effects have Proficiency group, hidden, and levelFact', () => {
     for (const skill of skills) {
-      it(`effect-${skill}-proficiency has group Proficiency and ui.hidden`, () => {
+      it(`effect-${skill}-proficiency has group Proficiency, ui.hidden, and levelFact`, () => {
         const effect = findEffectInOffer(rules, `${skill}-proficiency-offer`);
         expect(effect).toBeDefined();
         expect(effect!.group).toContain('Proficiency');
         expect(effect!.ui?.hidden).toBe(true);
+        expect(effect!.ui?.levelFact).toBe(`skill.${skill}.proficiency`);
       });
     }
   });

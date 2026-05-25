@@ -5,7 +5,9 @@ import {
   isConcentrationEffect,
   getConcentrationEffectName,
   getChipState,
-  isHiddenEffect
+  isHiddenEffect,
+  getEffectDisplayValue,
+  getEffectLevel
 } from '$lib/play/effectUtils';
 import type { Rule } from '$lib/rules-engine';
 import type { Facts } from '$lib/rules-engine';
@@ -127,6 +129,34 @@ describe('getEffectKind', () => {
   it('returns ONGOING for rule without ui', () => {
     const rule: Rule = { id: 'test', activities: [] };
     expect(getEffectKind(rule)).toBe('ONGOING');
+  });
+
+  it('returns BUILD for rule with Stats group', () => {
+    const rule: Rule = { id: 'effect-strength', activities: [], group: ['str-values', 'Stats'] };
+    expect(getEffectKind(rule)).toBe('BUILD');
+  });
+
+  it('returns BUILD for rule with Proficiency group', () => {
+    const rule: Rule = {
+      id: 'effect-str-save-proficiency',
+      activities: [],
+      group: ['Proficiency']
+    };
+    expect(getEffectKind(rule)).toBe('BUILD');
+  });
+
+  it('returns BUILD for rule with only Stats group', () => {
+    const rule: Rule = { id: 'effect-increase-str', activities: [], group: ['Stats'] };
+    expect(getEffectKind(rule)).toBe('BUILD');
+  });
+
+  it('CONC takes priority over BUILD', () => {
+    const rule: Rule = {
+      id: 'effect-conc-stat',
+      activities: [concActivity],
+      group: ['Stats']
+    };
+    expect(getEffectKind(rule)).toBe('CONC');
   });
 
   it('returns CONC for nested concentration in generateRule', () => {
@@ -296,5 +326,83 @@ describe('isHiddenEffect', () => {
       ui: { hidden: 'true', name: 'test.name' }
     };
     expect(isHiddenEffect(rule)).toBe(false);
+  });
+});
+
+describe('getEffectDisplayValue', () => {
+  it('returns null for rule without ui', () => {
+    const rule: Rule = { id: 'test', activities: [] };
+    expect(getEffectDisplayValue(rule, {})).toBeNull();
+  });
+
+  it('returns null for rule without displayFact', () => {
+    const rule: Rule = { id: 'test', activities: [], ui: { name: 'test.name' } };
+    expect(getEffectDisplayValue(rule, {})).toBeNull();
+  });
+
+  it('returns null when the fact is undefined', () => {
+    const rule: Rule = {
+      id: 'effect-str',
+      activities: [],
+      ui: { displayFact: 'str.value', name: 'test.name' }
+    };
+    expect(getEffectDisplayValue(rule, {})).toBeNull();
+  });
+
+  it('returns stringified fact value when displayFact is set and fact exists', () => {
+    const rule: Rule = {
+      id: 'effect-str',
+      activities: [],
+      ui: { displayFact: 'str.value', name: 'test.name' }
+    };
+    expect(getEffectDisplayValue(rule, { 'str.value': 16 })).toBe('16');
+  });
+});
+
+describe('getEffectLevel', () => {
+  it('returns null for rule without ui', () => {
+    const rule: Rule = { id: 'test', activities: [] };
+    expect(getEffectLevel(rule, {})).toBeNull();
+  });
+
+  it('returns null for rule without levelFact', () => {
+    const rule: Rule = { id: 'test', activities: [], ui: { name: 'test.name' } };
+    expect(getEffectLevel(rule, {})).toBeNull();
+  });
+
+  it('returns null when the fact is undefined', () => {
+    const rule: Rule = {
+      id: 'test',
+      activities: [],
+      ui: { levelFact: 'skill.athletics.proficiency', name: 'test.name' }
+    };
+    expect(getEffectLevel(rule, {})).toBeNull();
+  });
+
+  it('returns 1 for single proficiency', () => {
+    const rule: Rule = {
+      id: 'test',
+      activities: [],
+      ui: { levelFact: 'skill.athletics.proficiency', name: 'test.name' }
+    };
+    expect(getEffectLevel(rule, { 'skill.athletics.proficiency': 1 })).toBe(1);
+  });
+
+  it('returns 2 for expertise', () => {
+    const rule: Rule = {
+      id: 'test',
+      activities: [],
+      ui: { levelFact: 'skill.athletics.proficiency', name: 'test.name' }
+    };
+    expect(getEffectLevel(rule, { 'skill.athletics.proficiency': 2 })).toBe(2);
+  });
+
+  it('returns 0.5 for half-proficiency', () => {
+    const rule: Rule = {
+      id: 'test',
+      activities: [],
+      ui: { levelFact: 'skill.athletics.proficiency', name: 'test.name' }
+    };
+    expect(getEffectLevel(rule, { 'skill.athletics.proficiency': 0.5 })).toBe(0.5);
   });
 });
