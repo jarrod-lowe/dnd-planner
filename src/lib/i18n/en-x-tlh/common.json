@@ -1190,10 +1190,12 @@
       },
       "NOTE": {},
       "STAT": {
-        "ability": "ABILITY"
+        "set": "Set",
+        "increase": "Increase"
       },
       "PROFICIENCY": {
-        "default": "CATEGORY"
+        "save": "Save",
+        "skill": "Skill"
       }
     },
     "addRow": {

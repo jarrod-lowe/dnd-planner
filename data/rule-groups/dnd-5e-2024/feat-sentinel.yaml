@@ -40,11 +40,13 @@ ruleGroups:
           ui:
             name: rules.settings.sentinel-asi.${value}
             section: other
+            hidden: true
           after:
             - group: ${value}-base-set
             - group: ${value}-values
           group:
             - ${value}-increases
+            - Stats
           activities:
             - type: numberIncrement
               target:
