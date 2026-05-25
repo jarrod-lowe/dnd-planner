@@ -166,7 +166,7 @@ describe('proficiency dot translation keys', () => {
   });
 
   it('en has play.topBar.proficientDotDouble', () => {
-    expect(en.play.topBar.proficientDotDouble).toBe('●●');
+    expect(en.play.topBar.proficientDotDouble).toBe('◉');
   });
 
   it('en-x-tlh has play.topBar.proficientDotHalf', () => {
@@ -178,6 +178,6 @@ describe('proficiency dot translation keys', () => {
   });
 
   it('en-x-tlh has play.topBar.proficientDotDouble', () => {
-    expect(tlh.play.topBar.proficientDotDouble).toBe('●●');
+    expect(tlh.play.topBar.proficientDotDouble).toBe('◉');
   });
 });

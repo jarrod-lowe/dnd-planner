@@ -48,9 +48,13 @@
   const pips = $derived(Array.from({ length: pipCount }, (_, i) => i < (duration?.remaining ?? 0)));
 
   const level = $derived(getEffectLevel(effect, facts));
-  const levelPips = $derived(
+  const levelDot = $derived(
     level !== null
-      ? Array.from({ length: Math.ceil(level) }, (_, i) => i < Math.floor(level))
+      ? level >= 2
+        ? $t('play.topBar.proficientDotDouble')
+        : level >= 1
+          ? $t('play.topBar.proficientDotFull')
+          : $t('play.topBar.proficientDotHalf')
       : null
   );
 
@@ -157,13 +161,8 @@
       </svg>
     {/if}
     <span class="effect-chip__name">{effectName}</span>
-    {#if levelPips}
-      <div class="effect-chip__pips">
-        {#each levelPips as filled, i (i)}
-          <span class="effect-chip__pip" class:effect-chip__pip--filled={filled} aria-hidden="true"
-          ></span>
-        {/each}
-      </div>
+    {#if levelDot !== null}
+      <span class="effect-chip__level-dot" aria-hidden="true">{levelDot}</span>
     {/if}
   </div>
 
@@ -305,6 +304,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .effect-chip__level-dot {
+    flex-shrink: 0;
+    font-size: var(--font-size-sm);
+    color: var(--md-sys-color-primary);
   }
 
   /* Footer */

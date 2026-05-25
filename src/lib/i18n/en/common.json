@@ -1110,7 +1110,7 @@
       "proficient": "Proficient",
       "proficientDotHalf": "○",
       "proficientDotFull": "●",
-      "proficientDotDouble": "●●",
+      "proficientDotDouble": "◉",
       "hpValue": "{{current}} / {{max}}"
     },
     "verbs": {
