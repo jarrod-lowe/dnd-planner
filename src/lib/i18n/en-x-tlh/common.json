@@ -1131,7 +1131,8 @@
       "ATTACK": {
         "default": "OTHER",
         "weapons": "WEAPONS",
-        "spells": "SPELLS"
+        "spells": "SPELLS",
+        "brawl": "BRAWL"
       },
       "AID": {
         "default": "OTHER",
@@ -1151,8 +1152,8 @@
       },
       "MOVE": {
         "default": "OTHER",
-        "walk": "WALK",
-        "hustle": "HUSTLE",
+        "travel": "TRAVEL",
+        "dash": "DASH",
         "special": "SPECIAL"
       },
       "INSPECT": {

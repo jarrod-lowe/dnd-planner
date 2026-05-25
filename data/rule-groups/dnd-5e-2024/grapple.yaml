@@ -52,7 +52,7 @@ ruleGroups:
                   dice:
                     - expression: d20
                       bonus: { var: dc }
-                intents: { ATTACK: weapons }
+                intents: { ATTACK: brawl }
                 actionCost: [action]
               vars:
                 dc:
