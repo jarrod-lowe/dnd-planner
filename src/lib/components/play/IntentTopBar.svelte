@@ -268,7 +268,9 @@
           <span class="intent-top-bar__ability-value">{mod >= 0 ? '+' : ''}{mod}</span>
           {#if prof > 0}
             <span class="intent-top-bar__ability-prof" aria-label={$t('play.topBar.proficient')}>
-              {#if prof >= 2}●●{:else}●{/if}
+              {#if prof >= 2}{$t('play.topBar.proficientDotDouble')}{:else if prof >= 1}{$t(
+                  'play.topBar.proficientDotFull'
+                )}{:else}{$t('play.topBar.proficientDotHalf')}{/if}
             </span>
           {/if}
         </div>

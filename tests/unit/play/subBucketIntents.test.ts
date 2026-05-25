@@ -4,15 +4,9 @@ import path from 'path';
 import yaml from 'js-yaml';
 
 function loadRules(filename: string) {
-  const yamlPath = path.resolve(
-    process.cwd(),
-    `data/rule-groups/dnd-5e-2024/${filename}`
-  );
+  const yamlPath = path.resolve(process.cwd(), `data/rule-groups/dnd-5e-2024/${filename}`);
   const content = fs.readFileSync(yamlPath, 'utf-8');
-  const sharedDefsPath = path.resolve(
-    process.cwd(),
-    'data/rule-groups/_shared/definitions.yaml'
-  );
+  const sharedDefsPath = path.resolve(process.cwd(), 'data/rule-groups/_shared/definitions.yaml');
   const sharedDefs = fs.readFileSync(sharedDefsPath, 'utf-8');
   const data = yaml.load(sharedDefs + '\n' + content) as {
     ruleGroups: {
@@ -41,10 +35,7 @@ function getIntentOfOfferRule(
 }
 
 function loadTranslations(locale: string) {
-  const p = path.resolve(
-    process.cwd(),
-    `src/lib/i18n/${locale}/common.json`
-  );
+  const p = path.resolve(process.cwd(), `src/lib/i18n/${locale}/common.json`);
   return JSON.parse(fs.readFileSync(p, 'utf-8'));
 }
 
@@ -54,9 +45,9 @@ describe('sub-bucket intents', () => {
     const shoveRules = loadRules('shove.yaml');
 
     it('grapple-action has intents { ATTACK: brawl }', () => {
-      expect(getIntentOfOfferRule(grappleRules, 'action-grapple-offer')).toEqual(
-        { ATTACK: 'brawl' }
-      );
+      expect(getIntentOfOfferRule(grappleRules, 'action-grapple-offer')).toEqual({
+        ATTACK: 'brawl'
+      });
     });
 
     it('shove-action has intents { ATTACK: brawl }', () => {
@@ -70,33 +61,33 @@ describe('sub-bucket intents', () => {
     const movementRules = loadRules('movement.yaml');
 
     it('move-walk has intents { MOVE: travel }', () => {
-      expect(
-        getIntentOfOfferRule(movementRules, 'action-move-walk-offer')
-      ).toEqual({ MOVE: 'travel' });
+      expect(getIntentOfOfferRule(movementRules, 'action-move-walk-offer')).toEqual({
+        MOVE: 'travel'
+      });
     });
 
     it('move-rough-terrain has intents { MOVE: travel }', () => {
-      expect(
-        getIntentOfOfferRule(movementRules, 'action-move-rough-terrain-offer')
-      ).toEqual({ MOVE: 'travel' });
+      expect(getIntentOfOfferRule(movementRules, 'action-move-rough-terrain-offer')).toEqual({
+        MOVE: 'travel'
+      });
     });
 
     it('move-swim has intents { MOVE: travel }', () => {
-      expect(
-        getIntentOfOfferRule(movementRules, 'action-move-swim-offer')
-      ).toEqual({ MOVE: 'travel' });
+      expect(getIntentOfOfferRule(movementRules, 'action-move-swim-offer')).toEqual({
+        MOVE: 'travel'
+      });
     });
 
     it('move-swim-costly has intents { MOVE: travel }', () => {
-      expect(
-        getIntentOfOfferRule(movementRules, 'action-move-swim-costly-offer')
-      ).toEqual({ MOVE: 'travel' });
+      expect(getIntentOfOfferRule(movementRules, 'action-move-swim-costly-offer')).toEqual({
+        MOVE: 'travel'
+      });
     });
 
     it('move-fly has intents { MOVE: travel }', () => {
-      expect(
-        getIntentOfOfferRule(movementRules, 'action-move-fly-offer')
-      ).toEqual({ MOVE: 'travel' });
+      expect(getIntentOfOfferRule(movementRules, 'action-move-fly-offer')).toEqual({
+        MOVE: 'travel'
+      });
     });
   });
 
@@ -159,5 +150,34 @@ describe('sub-bucket translation keys', () => {
     it('en-x-tlh does NOT have verbBuckets.MOVE.hustle', () => {
       expect(tlh.play.verbBuckets.MOVE.hustle).toBeUndefined();
     });
+  });
+});
+
+describe('proficiency dot translation keys', () => {
+  const en = loadTranslations('en');
+  const tlh = loadTranslations('en-x-tlh');
+
+  it('en has play.topBar.proficientDotHalf', () => {
+    expect(en.play.topBar.proficientDotHalf).toBe('○');
+  });
+
+  it('en has play.topBar.proficientDotFull', () => {
+    expect(en.play.topBar.proficientDotFull).toBe('●');
+  });
+
+  it('en has play.topBar.proficientDotDouble', () => {
+    expect(en.play.topBar.proficientDotDouble).toBe('●●');
+  });
+
+  it('en-x-tlh has play.topBar.proficientDotHalf', () => {
+    expect(tlh.play.topBar.proficientDotHalf).toBe('○');
+  });
+
+  it('en-x-tlh has play.topBar.proficientDotFull', () => {
+    expect(tlh.play.topBar.proficientDotFull).toBe('●');
+  });
+
+  it('en-x-tlh has play.topBar.proficientDotDouble', () => {
+    expect(tlh.play.topBar.proficientDotDouble).toBe('●●');
   });
 });

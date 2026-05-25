@@ -91,7 +91,12 @@
       if (stat.proficiencyFact) {
         const prof = Number(facts[stat.proficiencyFact]);
         if (prof > 0) {
-          const badge = prof >= 2 ? '\u25CF\u25CF' : prof >= 1 ? '\u25CF' : '\u25CB';
+          const badge =
+            prof >= 2
+              ? $t('play.topBar.proficientDotDouble')
+              : prof >= 1
+                ? $t('play.topBar.proficientDotFull')
+                : $t('play.topBar.proficientDotHalf');
           return `${base} ${badge}`;
         }
       }

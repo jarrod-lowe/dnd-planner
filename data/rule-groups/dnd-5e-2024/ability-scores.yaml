@@ -2,13 +2,13 @@
 refs:
   skill-proficiency-options: &skill-proficiency-options
     - value: 0.5
-      label: "○"
+      label: play.topBar.proficientDotHalf
       ariaLabel: play.choices.skillProficiency.half
     - value: 1
-      label: "●"
+      label: play.topBar.proficientDotFull
       ariaLabel: play.choices.skillProficiency.full
     - value: 2
-      label: "●●"
+      label: play.topBar.proficientDotDouble
       ariaLabel: play.choices.skillProficiency.double
 
   skill-proficiency-control: &skill-proficiency-control

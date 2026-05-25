@@ -1108,6 +1108,9 @@
       "concActive": "Active",
       "abilities": "Abilities",
       "proficient": "Proficient",
+      "proficientDotHalf": "○",
+      "proficientDotFull": "●",
+      "proficientDotDouble": "●●",
       "hpValue": "{{current}} / {{max}}"
     },
     "verbs": {
