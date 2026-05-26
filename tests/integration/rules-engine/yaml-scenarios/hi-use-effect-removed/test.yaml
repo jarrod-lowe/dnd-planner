@@ -1,5 +1,5 @@
-name: 'Heroic Inspiration - Use Twice'
-description: 'Second use-hi should have errors, first should not'
+name: 'Heroic Inspiration - Use After Effect Removed'
+description: 'Planned use-hi errors when HI effects are removed mid-turn'
 ruleGroups:
   - dnd-5e-2024/core-events
   - dnd-5e-2024/heroic-inspiration
@@ -59,16 +59,21 @@ initialEffects:
             operator: equals
             value: 0
 steps:
+  # HI is active
   - evaluate:
       assert:
         facts:
           heroicInspiration.remaining: 1
         offers:
-          exists:
+          legal:
             - use-hi
+  # Add use-hi to plan - should be legal with no errors
   - addOffer:
       id: use-hi
       assert:
+        facts:
+          heroicInspiration.remaining: 0
+          heroicInspiration.consumed: 1
         offers:
           illegal:
             - use-hi
@@ -76,17 +81,23 @@ steps:
           - id: use-hi
             index: 0
             errors: []
-  - addOffer:
-      id: use-hi
+  # Remove visible effect - remaining drops to 0, use-hi should now error
+  - removeEffect:
+      id: effect-hi-set
       assert:
-        offers:
-          illegal:
-            - use-hi
+        facts:
+          heroicInspiration.remaining: 0
         planErrors:
           - id: use-hi
             index: 0
-            errors: []
+            errors:
+              - rule.dnd-5e-2024.heroic-inspiration.use-hi-offer.no_inspiration
+  # Remove hidden persist effect too - errors persist
+  - removeEffect:
+      id: effect-hi-persist
+      assert:
+        planErrors:
           - id: use-hi
-            index: 1
+            index: 0
             errors:
               - rule.dnd-5e-2024.heroic-inspiration.use-hi-offer.no_inspiration

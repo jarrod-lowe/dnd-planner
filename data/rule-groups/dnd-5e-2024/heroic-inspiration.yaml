@@ -58,6 +58,9 @@ ruleGroups:
                     severity: error
             rule:
               id: grant-hi
+              phase: early
+              group:
+                - hi-set
               ui:
                 section: other
                 name: rule.dnd-5e-2024.heroic-inspiration.grant-hi.name
@@ -78,13 +81,11 @@ ruleGroups:
                   target:
                     fact: heroicInspiration.remaining
                 - type: advertiseEffect
-                  rule:
-                    id: effect-hi
+                  rule: &effect-hi-set-def
+                    id: effect-hi-set
                     phase: early
-                    after:
-                      - group: hi-consume
                     group:
-                      - hi-settle
+                      - hi-set
                     ui:
                       name: rule.dnd-5e-2024.heroic-inspiration.effect-hi.name
                     activities:
@@ -97,8 +98,26 @@ ruleGroups:
                           - fact: heroicInspiration.consumed
                             operator: equals
                             value: 0
+                - type: advertiseEffect
+                  rule:
+                    id: effect-hi-persist
+                    phase: early
+                    after:
+                      - group: hi-consume
+                    group:
+                      - hi-settle
+                    ui:
+                      name: rule.dnd-5e-2024.heroic-inspiration.effect-hi.name
+                      hidden: true
+                    activities:
                       - type: advertiseEffect
                         self: true
+                        when:
+                          - fact: heroicInspiration.consumed
+                            operator: equals
+                            value: 0
+                      - type: advertiseEffect
+                        rule: *effect-hi-set-def
                         when:
                           - fact: heroicInspiration.consumed
                             operator: equals
@@ -122,7 +141,7 @@ ruleGroups:
               id: use-hi
               phase: early
               after:
-                - group: hi-init
+                - group: hi-set
               group:
                 - hi-consume
               ui:
@@ -136,9 +155,9 @@ ruleGroups:
                   target: { var: errors }
                   source: { string: rule.dnd-5e-2024.heroic-inspiration.use-hi-offer.no_inspiration }
                   when:
-                    - fact: heroicInspiration.consumed
-                      operator: greaterThan
-                      value: 0
+                    - fact: heroicInspiration.remaining
+                      operator: lessThan
+                      value: 1
                 - type: numberSet
                   source:
                     number: 1

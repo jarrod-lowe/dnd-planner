@@ -20,4 +20,5 @@ steps:
         planErrors:
           - id: use-hi
             index: 0
-            errors: []
+            errors:
+              - rule.dnd-5e-2024.heroic-inspiration.use-hi-offer.no_inspiration

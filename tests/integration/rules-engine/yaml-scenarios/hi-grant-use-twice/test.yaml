@@ -1,0 +1,50 @@
+name: 'Heroic Inspiration - Grant Use Twice Same Turn'
+description: 'Grant HI, use HI (OK), use again (error) in same turn'
+ruleGroups:
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/heroic-inspiration
+steps:
+  # No HI initially
+  - evaluate:
+      assert:
+        facts:
+          heroicInspiration.remaining: 0
+  # Grant HI
+  - addOffer:
+      id: grant-hi
+      assert:
+        facts:
+          heroicInspiration.remaining: 1
+        planErrors:
+          - id: grant-hi
+            index: 0
+            errors: []
+  # First use — should be OK
+  - addOffer:
+      id: use-hi
+      assert:
+        facts:
+          heroicInspiration.remaining: 0
+          heroicInspiration.consumed: 1
+        planErrors:
+          - id: grant-hi
+            index: 0
+            errors: []
+          - id: use-hi
+            index: 0
+            errors: []
+  # Second use — should error (no HI left)
+  - addOffer:
+      id: use-hi
+      assert:
+        planErrors:
+          - id: grant-hi
+            index: 0
+            errors: []
+          - id: use-hi
+            index: 0
+            errors: []
+          - id: use-hi
+            index: 1
+            errors:
+              - rule.dnd-5e-2024.heroic-inspiration.use-hi-offer.no_inspiration
