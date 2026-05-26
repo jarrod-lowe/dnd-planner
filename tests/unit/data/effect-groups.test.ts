@@ -186,3 +186,30 @@ describe('sentinel effect groups', () => {
     expect(effect!.ui?.hidden).toBe(true);
   });
 });
+
+// ============================================================
+// hp.yaml
+// ============================================================
+
+describe('hp effect groups', () => {
+  let rules: Rule[];
+
+  beforeAll(() => {
+    const groups = loadYaml('data/rule-groups/dnd-5e-2024/hp.yaml');
+    rules = groups[0].rules;
+  });
+
+  it('effect-hp-modifier-max has displayFact and health section', () => {
+    const effect = findEffectInOffer(rules, 'set-hp-modifier-max-offer');
+    expect(effect).toBeDefined();
+    expect(effect!.ui?.displayFact).toBe('hp.modifier.max');
+    expect(effect!.ui?.section).toBe('health');
+  });
+
+  it('effect-hp-modifier-current has displayFact and health section', () => {
+    const effect = findEffectInOffer(rules, 'set-hp-modifier-current-offer');
+    expect(effect).toBeDefined();
+    expect(effect!.ui?.displayFact).toBe('hp.modifier.current');
+    expect(effect!.ui?.section).toBe('health');
+  });
+});

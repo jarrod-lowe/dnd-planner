@@ -115,6 +115,9 @@
       "paladin-smite": {
         "name": "DIch Qaw'"
       },
+      "effect-paladin-smite": {
+        "name": "DIch Qaw' lo'pu'"
+      },
       "annotation": "DIch Qaw' chen",
       "offer-paladin-smite": {
         "no_bonus_action": "DIvI' latlh tu'lu'be'",
@@ -133,6 +136,9 @@
       },
       "effect-divine-sense-divinity": {
         "name": "quv DIch (DIvI')"
+      },
+      "effect-divinity-short-rest": {
+        "name": "DIvI' DIch"
       }
     },
     "class-paladin-oath-redemption-level3": {
@@ -173,6 +179,14 @@
     },
     "dnd-5e-2024": {
       "action-economy": {},
+      "core-events": {
+        "effect-hp-damage": {
+          "name": "DIvI' {{score}}"
+        },
+        "effect-hp-heal": {
+          "name": "DIch {{score}}"
+        }
+      },
       "proficiency": {},
       "movement": {
         "move-walk": {
@@ -669,6 +683,12 @@
         },
         "set-hp-modifier-current": {
           "name": "DIch DIvI'"
+        },
+        "effect-hp-modifier-max": {
+          "name": "DIch DIvI' chenmoH {{score}}"
+        },
+        "effect-hp-modifier-current": {
+          "name": "DIch DIvI' {{score}}"
         }
       },
       "initiative": {

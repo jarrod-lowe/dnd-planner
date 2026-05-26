@@ -60,6 +60,8 @@ ruleGroups:
           - type: advertiseEffect
             rule:
               id: effect-divinity-short-rest
+              ui:
+                name: rule.class-paladin-divinity.effect-divinity-short-rest.name
               phase: early
               when:
                 - fact: rest.long

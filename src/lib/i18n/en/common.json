@@ -115,6 +115,9 @@
       "paladin-smite": {
         "name": "Paladin Smite"
       },
+      "effect-paladin-smite": {
+        "name": "Paladin Smite Used"
+      },
       "annotation": "Paladin Smite available",
       "offer-paladin-smite": {
         "no_bonus_action": "No bonus action available",
@@ -133,6 +136,9 @@
       },
       "effect-divine-sense-divinity": {
         "name": "Divine Sense (Divinity)"
+      },
+      "effect-divinity-short-rest": {
+        "name": "Divinity Recovery"
       }
     },
     "class-paladin-oath-redemption-level3": {
@@ -173,6 +179,14 @@
     },
     "dnd-5e-2024": {
       "action-economy": {},
+      "core-events": {
+        "effect-hp-damage": {
+          "name": "Damage {{score}}"
+        },
+        "effect-hp-heal": {
+          "name": "Healing {{score}}"
+        }
+      },
       "proficiency": {},
       "movement": {
         "move-walk": {
@@ -669,6 +683,12 @@
         },
         "set-hp-modifier-current": {
           "name": "HP Modifier"
+        },
+        "effect-hp-modifier-max": {
+          "name": "Max HP {{score}}"
+        },
+        "effect-hp-modifier-current": {
+          "name": "HP {{score}}"
         }
       },
       "initiative": {

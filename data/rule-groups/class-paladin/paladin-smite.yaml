@@ -144,6 +144,8 @@ ruleGroups:
                 - type: advertiseEffect
                   rule:
                     id: effect-paladin-smite
+                    ui:
+                      name: rule.class-paladin-paladin-smite.effect-paladin-smite.name
                     phase: early
                     group:
                       - paladin-smite-effect
