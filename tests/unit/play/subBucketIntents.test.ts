@@ -153,6 +153,47 @@ describe('sub-bucket translation keys', () => {
   });
 });
 
+describe('skill check intents', () => {
+  const skillChecks = loadRules('skill-checks.yaml');
+
+  it('acrobatics check uses CHECK:skill', () => {
+    expect(getIntentOfOfferRule(skillChecks, 'roll-skill-acrobatics-offer')).toEqual({
+      CHECK: 'skill'
+    });
+  });
+
+  it('athletics check uses CHECK:skill', () => {
+    expect(getIntentOfOfferRule(skillChecks, 'roll-skill-athletics-offer')).toEqual({
+      CHECK: 'skill'
+    });
+  });
+
+  it('stealth check uses CHECK:skill', () => {
+    expect(getIntentOfOfferRule(skillChecks, 'roll-skill-stealth-offer')).toEqual({
+      CHECK: 'skill'
+    });
+  });
+});
+
+describe('per-stat saving throw intents', () => {
+  const coreEvents = loadRules('core-events.yaml');
+
+  const stats = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+
+  stats.forEach((stat) => {
+    it(`${stat} saving throw uses SAVE:you`, () => {
+      expect(getIntentOfOfferRule(coreEvents, `offer-record-save-${stat}`)).toEqual({
+        SAVE: 'you'
+      });
+    });
+  });
+
+  it('generic record-save offer no longer exists', () => {
+    const rule = coreEvents.find((r) => r.id === 'offer-record-save');
+    expect(rule).toBeUndefined();
+  });
+});
+
 describe('proficiency dot translation keys', () => {
   const en = loadTranslations('en');
   const tlh = loadTranslations('en-x-tlh');

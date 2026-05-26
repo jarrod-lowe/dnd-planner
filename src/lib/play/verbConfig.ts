@@ -8,8 +8,7 @@ export const VERB_ORDER: Verb[] = [
   'MOVE',
   'INSPECT',
   'HANDLE',
-  'DAMAGE',
-  'HEAL',
+  'HEALTH',
   'SAVE',
   'CHECK',
   'REST',
@@ -28,7 +27,7 @@ export const PLAN_VERBS: Verb[] = [
   'HANDLE'
 ];
 
-export const RECORD_VERBS: Verb[] = ['DAMAGE', 'HEAL', 'SAVE', 'CHECK', 'REST', 'NOTE'];
+export const RECORD_VERBS: Verb[] = ['HEALTH', 'SAVE', 'CHECK', 'REST', 'NOTE'];
 
 export const BUILD_VERBS: Verb[] = ['STAT', 'PROFICIENCY'];
 

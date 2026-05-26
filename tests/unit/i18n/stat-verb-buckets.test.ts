@@ -40,4 +40,34 @@ describe('verb sub-bucket i18n keys', () => {
       expect(proficiency['skill']).toBeDefined();
     });
   });
+
+  describe('HEALTH', () => {
+    const health = verbBuckets.HEALTH as Record<string, unknown>;
+
+    it('has "hp" sub-bucket', () => {
+      expect(health['hp']).toBeDefined();
+    });
+  });
+
+  describe('DAMAGE and HEAL removed', () => {
+    it('does not have DAMAGE verb bucket', () => {
+      expect(verbBuckets['DAMAGE']).toBeUndefined();
+    });
+
+    it('does not have HEAL verb bucket', () => {
+      expect(verbBuckets['HEAL']).toBeUndefined();
+    });
+
+    it('does not have DAMAGE verb label', () => {
+      expect((play['verbs'] as Record<string, unknown>)['DAMAGE']).toBeUndefined();
+    });
+
+    it('does not have HEAL verb label', () => {
+      expect((play['verbs'] as Record<string, unknown>)['HEAL']).toBeUndefined();
+    });
+
+    it('has HEALTH verb label', () => {
+      expect((play['verbs'] as Record<string, unknown>)['HEALTH']).toBeDefined();
+    });
+  });
 });

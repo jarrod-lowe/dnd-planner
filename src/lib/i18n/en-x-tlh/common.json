@@ -1121,8 +1121,7 @@
       "MOVE": "MOVE",
       "INSPECT": "INSPECT",
       "HANDLE": "HANDLE",
-      "DAMAGE": "DAMAGE",
-      "HEAL": "HEAL",
+      "HEALTH": "HEALTH",
       "SAVE": "SAVE",
       "CHECK": "CHECK",
       "REST": "REST",
@@ -1151,7 +1150,8 @@
       "DEFEND": {
         "default": "OTHER",
         "evade": "EVADE",
-        "ward": "WARD"
+        "ward": "WARD",
+        "weapons": "WEAPONS"
       },
       "MOVE": {
         "default": "OTHER",
@@ -1171,13 +1171,9 @@
         "effects": "EFFECTS",
         "spells": "SPELLS"
       },
-      "DAMAGE": {
-        "default": "SOURCE",
-        "source": "SOURCE"
-      },
-      "HEAL": {
-        "default": "SOURCE",
-        "source": "SOURCE"
+      "HEALTH": {
+        "default": "HP",
+        "hp": "HP"
       },
       "SAVE": {
         "default": "OTHER",
@@ -1261,7 +1257,14 @@
     "record": {
       "damage": "QInvID DIvI'",
       "heal": "DIvI' DIvI'",
-      "save": "DIvI' DIvI'",
+      "save": {
+        "str": "DIvI' HoS",
+        "dex": "DIvI' vIH",
+        "con": "DIvI' chIS",
+        "int": "DIvI' DIvI'",
+        "wis": "DIvI' DIvI'",
+        "cha": "DIvI' DIvI'"
+      },
       "check": "DIvI' DIvI'",
       "note": "DIvI' DIvI'",
       "passed": "DIvI'",
