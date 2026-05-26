@@ -1,5 +1,5 @@
-name: 'Heroic Inspiration - Use'
-description: 'Using HI sets remaining to 0 and effect does not self-advertise'
+name: 'Heroic Inspiration - Use Twice'
+description: 'Second use-hi should have errors, first should not'
 ruleGroups:
   - dnd-5e-2024/core-events
   - dnd-5e-2024/heroic-inspiration
@@ -32,7 +32,6 @@ steps:
   - evaluate:
       assert:
         facts:
-          heroicInspiration.max: 1
           heroicInspiration.remaining: 1
         offers:
           exists:
@@ -40,16 +39,18 @@ steps:
   - addOffer:
       id: use-hi
       assert:
-        facts:
-          heroicInspiration.remaining: 0
-          heroicInspiration.consumed: 1
         planErrors:
           - id: use-hi
+            index: 0
             errors: []
-  - endTurn:
+  - addOffer:
+      id: use-hi
       assert:
-        facts:
-          heroicInspiration.remaining: 0
-        effects:
-          notExists:
-            - effect-hi
+        planErrors:
+          - id: use-hi
+            index: 0
+            errors: []
+          - id: use-hi
+            index: 1
+            errors:
+              - rule.dnd-5e-2024.heroic-inspiration.use-hi-offer.no_inspiration

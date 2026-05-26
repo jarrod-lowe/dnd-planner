@@ -136,9 +136,9 @@ ruleGroups:
                   target: { var: errors }
                   source: { string: rule.dnd-5e-2024.heroic-inspiration.use-hi-offer.no_inspiration }
                   when:
-                    - fact: heroicInspiration.remaining
-                      operator: lessThan
-                      value: 1
+                    - fact: heroicInspiration.consumed
+                      operator: greaterThan
+                      value: 0
                 - type: numberSet
                   source:
                     number: 1
