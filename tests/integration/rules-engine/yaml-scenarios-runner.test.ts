@@ -247,7 +247,9 @@ function assertPlanErrors(
       `${stepDesc}: planned item "${id}" index ${index} should exist (${matches.length} found)`
     ).toBe(true);
     const actualErrors = (matches[index]!.rule.varsRuntime?.errors as string[]) ?? [];
-    expect(actualErrors, `${stepDesc}: planned item "${id}"[${index}] errors`).toEqual(expectedErrors);
+    expect(actualErrors, `${stepDesc}: planned item "${id}"[${index}] errors`).toEqual(
+      expectedErrors
+    );
   }
 }
 
