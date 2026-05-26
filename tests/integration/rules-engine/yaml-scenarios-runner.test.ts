@@ -465,23 +465,27 @@ describe('yaml rules scenarios', () => {
           const output = harness.doRemoveFromPlan(removeData.id);
           if (assert) {
             runAssertions(output, assert, stepDesc, harness.effects);
+            assertPlanErrors(assert, harness.plannedItems, stepDesc);
           }
         } else if (stepKey === 'updateSelections') {
           const updateData = stepData as { id: string; selections: Record<string, unknown> };
           const output = harness.doUpdateSelections(updateData.id, updateData.selections);
           if (assert) {
             runAssertions(output, assert, stepDesc, harness.effects);
+            assertPlanErrors(assert, harness.plannedItems, stepDesc);
           }
         } else if (stepKey === 'endTurn') {
           const output = harness.doEndTurn();
           if (assert) {
             runAssertions(output, assert, stepDesc, harness.effects);
+            assertPlanErrors(assert, harness.plannedItems, stepDesc);
           }
         } else if (stepKey === 'removeEffect') {
           const removeEffectData = stepData as { id: string };
           const output = harness.doRemoveEffect(removeEffectData.id);
           if (assert) {
             runAssertions(output, assert, stepDesc, harness.effects);
+            assertPlanErrors(assert, harness.plannedItems, stepDesc);
           }
         } else {
           throw new Error(`${stepDesc}: Unknown step type "${stepKey}"`);

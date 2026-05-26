@@ -39,6 +39,9 @@ steps:
   - addOffer:
       id: use-hi
       assert:
+        offers:
+          illegal:
+            - use-hi
         planErrors:
           - id: use-hi
             index: 0
@@ -46,6 +49,9 @@ steps:
   - addOffer:
       id: use-hi
       assert:
+        offers:
+          illegal:
+            - use-hi
         planErrors:
           - id: use-hi
             index: 0

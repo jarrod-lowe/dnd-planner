@@ -43,6 +43,9 @@ steps:
         facts:
           heroicInspiration.remaining: 0
           heroicInspiration.consumed: 1
+        offers:
+          illegal:
+            - use-hi
         planErrors:
           - id: use-hi
             errors: []
