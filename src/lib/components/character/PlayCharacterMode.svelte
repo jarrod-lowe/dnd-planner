@@ -68,7 +68,8 @@
       const baseId = stripSuffix(effect.id);
       const idx = advertisedBaseIds.indexOf(baseId);
       if (idx >= 0) {
-        result.push(advertised[idx]);
+        const merged = { ...advertised[idx], id: effect.id };
+        result.push(merged);
         matchedIndices.push(idx);
       } else {
         result.push(effect);
