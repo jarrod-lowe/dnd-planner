@@ -20,44 +20,6 @@ initialEffects:
           - fact: heroicInspiration.consumed
             operator: equals
             value: 0
-  - id: effect-hi-persist
-    phase: early
-    after:
-      - group: hi-consume
-    group:
-      - hi-settle
-    ui:
-      name: rule.dnd-5e-2024.heroic-inspiration.effect-hi.name
-      hidden: true
-    activities:
-      - type: advertiseEffect
-        self: true
-        when:
-          - fact: heroicInspiration.consumed
-            operator: equals
-            value: 0
-      - type: advertiseEffect
-        rule:
-          id: effect-hi-set
-          phase: early
-          group:
-            - hi-set
-          ui:
-            name: rule.dnd-5e-2024.heroic-inspiration.effect-hi.name
-          activities:
-            - type: numberSet
-              source:
-                number: 1
-              target:
-                fact: heroicInspiration.remaining
-              when:
-                - fact: heroicInspiration.consumed
-                  operator: equals
-                  value: 0
-        when:
-          - fact: heroicInspiration.consumed
-            operator: equals
-            value: 0
 steps:
   # Effect active, use-hi legal, grant-hi illegal
   - evaluate:
