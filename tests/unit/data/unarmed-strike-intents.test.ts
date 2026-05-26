@@ -8,18 +8,12 @@ import yaml from 'js-yaml';
  * and has brawl intents in its standalone rule group.
  */
 describe('unarmed strike brawl intents', () => {
-  const attacksPath = path.resolve(
-    process.cwd(),
-    'data/rule-groups/dnd-5e-2024/attacks.yaml'
-  );
+  const attacksPath = path.resolve(process.cwd(), 'data/rule-groups/dnd-5e-2024/attacks.yaml');
   let rules: { id: string; activities?: unknown[] }[];
 
   beforeAll(() => {
     const content = fs.readFileSync(attacksPath, 'utf-8');
-    const sharedDefsPath = path.resolve(
-      process.cwd(),
-      'data/rule-groups/_shared/definitions.yaml'
-    );
+    const sharedDefsPath = path.resolve(process.cwd(), 'data/rule-groups/_shared/definitions.yaml');
     const sharedDefs = fs.readFileSync(sharedDefsPath, 'utf-8');
     const data = yaml.load(sharedDefs + '\n' + content) as {
       ruleGroups: {
