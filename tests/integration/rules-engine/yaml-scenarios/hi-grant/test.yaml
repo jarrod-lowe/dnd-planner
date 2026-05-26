@@ -20,3 +20,7 @@ steps:
         facts:
           heroicInspiration.max: 1
           heroicInspiration.remaining: 1
+        planErrors:
+          - id: grant-hi
+            index: 0
+            errors: []

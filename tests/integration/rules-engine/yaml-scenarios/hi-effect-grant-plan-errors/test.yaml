@@ -1,0 +1,81 @@
+name: 'Heroic Inspiration - Effect Active Grant Plan Errors'
+description: 'Effect active, force grant-hi into plan → Tier 2 already_has error'
+ruleGroups:
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/heroic-inspiration
+initialEffects:
+  - id: effect-hi-set
+    phase: early
+    group:
+      - hi-set
+    ui:
+      name: rule.dnd-5e-2024.heroic-inspiration.effect-hi.name
+    activities:
+      - type: numberSet
+        source:
+          number: 1
+        target:
+          fact: heroicInspiration.remaining
+        when:
+          - fact: heroicInspiration.consumed
+            operator: equals
+            value: 0
+  - id: effect-hi-persist
+    phase: early
+    after:
+      - group: hi-consume
+    group:
+      - hi-settle
+    ui:
+      name: rule.dnd-5e-2024.heroic-inspiration.effect-hi.name
+      hidden: true
+    activities:
+      - type: advertiseEffect
+        self: true
+        when:
+          - fact: heroicInspiration.consumed
+            operator: equals
+            value: 0
+      - type: advertiseEffect
+        rule:
+          id: effect-hi-set
+          phase: early
+          group:
+            - hi-set
+          ui:
+            name: rule.dnd-5e-2024.heroic-inspiration.effect-hi.name
+          activities:
+            - type: numberSet
+              source:
+                number: 1
+              target:
+                fact: heroicInspiration.remaining
+              when:
+                - fact: heroicInspiration.consumed
+                  operator: equals
+                  value: 0
+        when:
+          - fact: heroicInspiration.consumed
+            operator: equals
+            value: 0
+steps:
+  # Effect sets remaining=1
+  - evaluate:
+      assert:
+        facts:
+          heroicInspiration.remaining: 1
+        offers:
+          illegal:
+            - grant-hi
+  # Force grant-hi into plan despite being illegal
+  - addOffer:
+      id: grant-hi
+      assert:
+        offers:
+          illegal:
+            - grant-hi
+        planErrors:
+          - id: grant-hi
+            index: 0
+            errors:
+              - rule.dnd-5e-2024.heroic-inspiration.grant-hi-offer.already_has

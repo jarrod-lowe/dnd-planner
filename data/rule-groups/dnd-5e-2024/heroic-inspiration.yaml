@@ -59,8 +59,10 @@ ruleGroups:
             rule:
               id: grant-hi
               phase: early
+              after:
+                - group: hi-set
               group:
-                - hi-set
+                - hi-grant
               ui:
                 section: other
                 name: rule.dnd-5e-2024.heroic-inspiration.grant-hi.name
@@ -142,6 +144,7 @@ ruleGroups:
               phase: early
               after:
                 - group: hi-set
+                - group: hi-grant
               group:
                 - hi-consume
               ui:
