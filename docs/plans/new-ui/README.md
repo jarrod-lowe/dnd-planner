@@ -150,7 +150,7 @@ Each verb's options live in named sub-buckets. The same grouping shows in two pl
 | `SAVE`   | **others** → dynamically populated from active effects on others requiring a save (e.g., Sleep · Gob 1). **you** → STR · DEX · CON · INT · WIS · CHA (when GM prompts you to make a save). |
 | `CHECK`  | **skill** → Athletics · Arcana · Insight · Perception · Religion · Stealth · … (auto-pulls proficiency state). **raw** → STR · DEX · CON · INT · WIS · CHA.                                |
 | `REST`   | **type** → Short · Long. _One-level toggle._                                                                                                                                               |
-| `NOTE`   | _No sub-buckets; opens a text field for flavour / RP recording (no mechanics, no cascade)._                                                                                                 |
+| `NOTE`   | _No sub-buckets; opens a text field for flavour / RP recording (no mechanics, no cascade)._                                                                                                |
 
 ### build →
 
