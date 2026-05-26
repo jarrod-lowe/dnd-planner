@@ -1,7 +1,7 @@
 name: 'Heroic Inspiration - Persist Across Turn'
 description: 'HI persists across turns via the persistent effect'
 ruleGroups:
-  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/core-events
   - dnd-5e-2024/heroic-inspiration
 steps:
   # Turn 1: HI starts at 0

@@ -1,7 +1,7 @@
 name: 'Heroic Inspiration - Use'
 description: 'Using HI sets remaining to 0 and effect does not self-advertise'
 ruleGroups:
-  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/core-events
   - dnd-5e-2024/heroic-inspiration
 initialEffects:
   - id: effect-hi

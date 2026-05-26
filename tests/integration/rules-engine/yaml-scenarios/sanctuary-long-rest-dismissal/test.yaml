@@ -6,7 +6,7 @@ ruleGroups:
   - dnd-5e-2024/action-economy
   - dnd-5e-2024/free-actions
   - dnd-5e-2024/spellcasting
-  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/core-events
   - class-paladin/class-paladin-level1
   - spells/spell-sanctuary
 steps:
@@ -26,7 +26,7 @@ steps:
             - effect-sanctuary
   # Long rest should dismiss the sanctuary effect and restore slots
   - addOffer:
-      id: long-rest
+      id: record-long-rest
       assert:
         facts:
           rest.long: 1

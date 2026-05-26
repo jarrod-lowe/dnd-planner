@@ -1,7 +1,7 @@
 name: 'Short Rest - Sets Flag'
 description: 'Adding a short-rest offer sets the rest.short flag'
 ruleGroups:
-  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/core-events
 steps:
   - evaluate:
       assert:
@@ -9,9 +9,9 @@ steps:
           rest.short: 0
         offers:
           exists:
-            - short-rest
+            - record-short-rest
   - addOffer:
-      id: short-rest
+      id: record-short-rest
       assert:
         facts:
           rest.short: 1

@@ -4,7 +4,7 @@ ruleGroups:
   - species-human/species-human
   - dnd-5e-2024/action-economy
   - dnd-5e-2024/hp
-  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/core-events
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/ac
@@ -49,7 +49,7 @@ steps:
         facts:
           layOnHands.pool.remaining: 0
   - addOffer:
-      id: long-rest
+      id: record-long-rest
       assert:
         facts:
           layOnHands.pool.remaining: 5

@@ -6,7 +6,7 @@ ruleGroups:
   - class-paladin/class-paladin-divinity
   - class-paladin/class-paladin-level3
   - dnd-5e-2024/action-economy
-  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/core-events
 steps:
   # Use 1 point
   - evaluate:
@@ -42,7 +42,7 @@ steps:
         facts:
           divinity.remaining: 0
   - addOffer:
-      id: long-rest
+      id: record-long-rest
       assert:
         facts:
           divinity.remaining: 2

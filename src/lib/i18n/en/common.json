@@ -172,14 +172,6 @@
       }
     },
     "dnd-5e-2024": {
-      "turn-rest": {
-        "long-rest": {
-          "name": "Long Rest"
-        },
-        "short-rest": {
-          "name": "Short Rest"
-        }
-      },
       "action-economy": {},
       "proficiency": {},
       "movement": {
@@ -1186,8 +1178,8 @@
         "raw": "Raw"
       },
       "REST": {
-        "default": "Type",
-        "type": "Type"
+        "default": "Rest",
+        "rest": "Rest"
       },
       "NOTE": {},
       "STAT": {
@@ -1268,11 +1260,11 @@
       "check": "Record Check",
       "note": "Record Note",
       "passed": "Passed",
-      "failed": "Failed"
-    },
-    "rest": {
-      "short": "Short Rest",
-      "long": "Long Rest"
+      "failed": "Failed",
+      "rest": {
+        "short": "Short Rest",
+        "long": "Long Rest"
+      }
     }
   },
   "ui": {

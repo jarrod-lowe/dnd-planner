@@ -3,7 +3,7 @@ description: >
   Assigning javelin-mastery rule group sets the attack.javelin.mastery fact to 1.
 
 ruleGroups:
-  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/core-events
   - dnd-5e-2024/action-economy
   - dnd-5e-2024/free-actions
   - dnd-5e-2024/proficiency
