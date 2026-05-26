@@ -5,6 +5,7 @@ import {
   verbLabelKey,
   subBucketLabelKey
 } from '$lib/play/groupChoicesByVerb';
+import { getVerbGroup } from '$lib/play/verbConfig';
 import type { AvailableRuleEntry, Verb } from '$lib/rules-engine';
 
 const makeEntry = (
@@ -174,5 +175,11 @@ describe('verbLabelKey', () => {
 describe('subBucketLabelKey', () => {
   it('returns correct i18n key', () => {
     expect(subBucketLabelKey('ATTACK', 'weapons')).toBe('play.verbBuckets.ATTACK.weapons');
+  });
+});
+
+describe('getVerbGroup', () => {
+  it('HEALTH is in record group', () => {
+    expect(getVerbGroup('HEALTH')).toBe('record');
   });
 });

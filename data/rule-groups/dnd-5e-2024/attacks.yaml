@@ -41,3 +41,139 @@ ruleGroups:
               fact: capability.attack.reaction.weapon
             source:
               number: 1
+
+      # === Unarmed Strike as action ===
+      - id: unarmed-strike-use-action-offer
+        after:
+          - group: option-capabilities
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: actions.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.attacks.activation.no_action
+                    severity: error
+            rule:
+              id: unarmed-strike-use-action
+              group:
+                - __planned__
+                - action
+              ui:
+                section: action-attack
+                name: rule.dnd-5e-2024.attacks.unarmed-strike.name
+                intents: { ATTACK: brawl }
+                actionCost: [action]
+                disadvantageFact: attack.str.disadvantage
+                annotationLabels: [attack.any, attack.melee, attack.unarmed, dice.any]
+                primaryControl:
+                  type: dice-line
+                  ranges:
+                    - distance: 5
+                      type: melee
+                  advantage: { fact: attack.str.disadvantage }
+                  dice:
+                    - expression: d20
+                      bonus: { var: hitBonus }
+                    - expression: { var: damageDie }
+                      bonus: { var: damageBonus }
+                      damageType: { string: bludgeoning }
+              vars:
+                hitBonus:
+                  capture: true
+                  default:
+                    fact: attack.unarmed.hitBonus
+                damageDie:
+                  default:
+                    number: 0
+                damageBonus:
+                  capture: true
+                  default:
+                    fact: attack.unarmed.damageBonus
+              phase: normal
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: actions.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  id: action-cost
+                - type: numberSet
+                  target:
+                    fact: attack.last.activation.action
+                  source:
+                    number: 1
+                  id: action-flag
+
+      # === Unarmed Strike as reaction ===
+      - id: unarmed-strike-use-reaction-offer
+        after:
+          - group: option-capabilities
+        activities:
+          - type: offerRule
+            when:
+              - fact: capability.attack.reaction.weapon
+                operator: equals
+                value: 1
+            legalWhen:
+              - condition:
+                  fact: reactions.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.attacks.activation.no_reaction
+                    severity: error
+            rule:
+              id: unarmed-strike-use-reaction
+              group:
+                - __planned__
+                - action
+              ui:
+                section: reaction
+                name: rule.dnd-5e-2024.attacks.unarmed-strike.name
+                intents: { DEFEND: brawl }
+                actionCost: [reaction]
+                disadvantageFact: attack.str.disadvantage
+                annotationLabels: [attack.any, attack.melee, attack.unarmed, dice.any, attack.reaction]
+                primaryControl:
+                  type: dice-line
+                  ranges:
+                    - distance: 5
+                      type: melee
+                  advantage: { fact: attack.str.disadvantage }
+                  dice:
+                    - expression: d20
+                      bonus: { var: hitBonus }
+                    - expression: { var: damageDie }
+                      bonus: { var: damageBonus }
+                      damageType: { string: bludgeoning }
+              vars:
+                hitBonus:
+                  capture: true
+                  default:
+                    fact: attack.unarmed.hitBonus
+                damageDie:
+                  default:
+                    number: 0
+                damageBonus:
+                  capture: true
+                  default:
+                    fact: attack.unarmed.damageBonus
+              phase: normal
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: reactions.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  id: reaction-cost
+                - type: numberSet
+                  target:
+                    fact: attack.last.activation.reaction
+                  source:
+                    number: 1
+                  id: reaction-flag

@@ -1121,8 +1121,7 @@
       "MOVE": "Move",
       "INSPECT": "Inspect",
       "HANDLE": "Handle",
-      "DAMAGE": "Damage",
-      "HEAL": "Heal",
+      "HEALTH": "Health",
       "SAVE": "Save",
       "CHECK": "Check",
       "REST": "Rest",
@@ -1151,7 +1150,8 @@
       "DEFEND": {
         "default": "Other",
         "evade": "Evade",
-        "ward": "Ward"
+        "ward": "Ward",
+        "weapons": "Weapons"
       },
       "MOVE": {
         "default": "Other",
@@ -1171,13 +1171,9 @@
         "effects": "Effects",
         "spells": "Spells"
       },
-      "DAMAGE": {
-        "default": "Source",
-        "source": "Source"
-      },
-      "HEAL": {
-        "default": "Source",
-        "source": "Source"
+      "HEALTH": {
+        "default": "HP",
+        "hp": "HP"
       },
       "SAVE": {
         "default": "Other",
@@ -1261,7 +1257,14 @@
     "record": {
       "damage": "Record Damage",
       "heal": "Record Healing",
-      "save": "Record Save",
+      "save": {
+        "str": "Strength Save",
+        "dex": "Dexterity Save",
+        "con": "Constitution Save",
+        "int": "Intelligence Save",
+        "wis": "Wisdom Save",
+        "cha": "Charisma Save"
+      },
       "check": "Record Check",
       "note": "Record Note",
       "passed": "Passed",

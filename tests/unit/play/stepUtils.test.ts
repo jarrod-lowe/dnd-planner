@@ -48,4 +48,12 @@ describe('deriveVerbFromRule', () => {
     const rule = makeRule({ id: 'engine-rule' });
     expect(deriveVerbFromRule(rule)).toBe('HANDLE');
   });
+
+  it('derives HEALTH verb from intents', () => {
+    const rule = makeRule({
+      id: 'record-damage',
+      ui: { section: 'free', intents: { HEALTH: 'hp' }, actionCost: [] }
+    });
+    expect(deriveVerbFromRule(rule)).toBe('HEALTH');
+  });
 });

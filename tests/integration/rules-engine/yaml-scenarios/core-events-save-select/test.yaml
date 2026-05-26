@@ -1,5 +1,5 @@
 name: 'Core Events - Save has select control'
-description: 'record-save offers a select for pass/fail'
+description: 'per-stat save offers a select for pass/fail'
 ruleGroups:
   - dnd-5e-2024/action-economy
   - dnd-5e-2024/free-actions
@@ -9,9 +9,9 @@ steps:
       assert:
         offers:
           exists:
-            - record-save
+            - record-save-dex
         offerUi:
-          - id: record-save
+          - id: record-save-dex
             ui:
               primaryControl:
                 type: select

@@ -35,7 +35,7 @@ ruleGroups:
                   max: { fact: hp.max }
                   unit: hp
                 intents:
-                  DAMAGE: source
+                  HEALTH: hp
                 actionCost: []
               vars:
                 amount:
@@ -110,7 +110,7 @@ ruleGroups:
                   max: { fact: hp.max }
                   unit: hp
                 intents:
-                  HEAL: source
+                  HEALTH: hp
                 actionCost: []
               vars:
                 amount:
@@ -156,18 +156,193 @@ ruleGroups:
                             value: 0
 
       # === SAVE recording ===
-      - id: offer-record-save
+      - id: offer-record-save-str
         after:
           - group: __planned__
         activities:
           - type: offerRule
             rule:
-              id: record-save
+              id: record-save-str
               group:
                 - __planned__
               ui:
                 section: free
-                name: planner.record.save
+                name: planner.record.save.str
+                primaryControl:
+                  type: select
+                  var: passed
+                  options:
+                    - value: 1
+                      label: planner.record.passed
+                    - value: 0
+                      label: planner.record.failed
+                intents:
+                  SAVE: you
+                actionCost: []
+              vars:
+                passed:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: event.save-last-result
+                  source:
+                    var: passed
+
+      - id: offer-record-save-dex
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            rule:
+              id: record-save-dex
+              group:
+                - __planned__
+              ui:
+                section: free
+                name: planner.record.save.dex
+                primaryControl:
+                  type: select
+                  var: passed
+                  options:
+                    - value: 1
+                      label: planner.record.passed
+                    - value: 0
+                      label: planner.record.failed
+                intents:
+                  SAVE: you
+                actionCost: []
+              vars:
+                passed:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: event.save-last-result
+                  source:
+                    var: passed
+
+      - id: offer-record-save-con
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            rule:
+              id: record-save-con
+              group:
+                - __planned__
+              ui:
+                section: free
+                name: planner.record.save.con
+                primaryControl:
+                  type: select
+                  var: passed
+                  options:
+                    - value: 1
+                      label: planner.record.passed
+                    - value: 0
+                      label: planner.record.failed
+                intents:
+                  SAVE: you
+                actionCost: []
+              vars:
+                passed:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: event.save-last-result
+                  source:
+                    var: passed
+
+      - id: offer-record-save-int
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            rule:
+              id: record-save-int
+              group:
+                - __planned__
+              ui:
+                section: free
+                name: planner.record.save.int
+                primaryControl:
+                  type: select
+                  var: passed
+                  options:
+                    - value: 1
+                      label: planner.record.passed
+                    - value: 0
+                      label: planner.record.failed
+                intents:
+                  SAVE: you
+                actionCost: []
+              vars:
+                passed:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: event.save-last-result
+                  source:
+                    var: passed
+
+      - id: offer-record-save-wis
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            rule:
+              id: record-save-wis
+              group:
+                - __planned__
+              ui:
+                section: free
+                name: planner.record.save.wis
+                primaryControl:
+                  type: select
+                  var: passed
+                  options:
+                    - value: 1
+                      label: planner.record.passed
+                    - value: 0
+                      label: planner.record.failed
+                intents:
+                  SAVE: you
+                actionCost: []
+              vars:
+                passed:
+                  capture: true
+                  default:
+                    number: 1
+              activities:
+                - type: numberSet
+                  target:
+                    fact: event.save-last-result
+                  source:
+                    var: passed
+
+      - id: offer-record-save-cha
+        after:
+          - group: __planned__
+        activities:
+          - type: offerRule
+            rule:
+              id: record-save-cha
+              group:
+                - __planned__
+              ui:
+                section: free
+                name: planner.record.save.cha
                 primaryControl:
                   type: select
                   var: passed

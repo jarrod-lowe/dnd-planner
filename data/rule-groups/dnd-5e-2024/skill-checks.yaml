@@ -32,7 +32,7 @@ ruleGroups:
                     - expression: d20
                       bonus: { var: rollBonus }
                   advantage: { fact: skill.acrobatics.disadvantage }
-                intents: { INSPECT: check }
+                intents: { CHECK: skill }
                 actionCost: []
               vars:
                 rollBonus:
@@ -63,7 +63,7 @@ ruleGroups:
                     - expression: d20
                       bonus: { var: rollBonus }
                   advantage: { fact: skill.animal-handling.disadvantage }
-                intents: { INSPECT: check }
+                intents: { CHECK: skill }
                 actionCost: []
               vars:
                 rollBonus:
@@ -94,7 +94,7 @@ ruleGroups:
                     - expression: d20
                       bonus: { var: rollBonus }
                   advantage: { fact: skill.arcana.disadvantage }
-                intents: { INSPECT: check }
+                intents: { CHECK: skill }
                 actionCost: []
               vars:
                 rollBonus:
@@ -125,7 +125,7 @@ ruleGroups:
                     - expression: d20
                       bonus: { var: rollBonus }
                   advantage: { fact: skill.athletics.disadvantage }
-                intents: { INSPECT: check }
+                intents: { CHECK: skill }
                 actionCost: []
               vars:
                 rollBonus:
@@ -156,7 +156,7 @@ ruleGroups:
                     - expression: d20
                       bonus: { var: rollBonus }
                   advantage: { fact: skill.deception.disadvantage }
-                intents: { INSPECT: check }
+                intents: { CHECK: skill }
                 actionCost: []
               vars:
                 rollBonus:
@@ -187,7 +187,7 @@ ruleGroups:
                     - expression: d20
                       bonus: { var: rollBonus }
                   advantage: { fact: skill.history.disadvantage }
-                intents: { INSPECT: check }
+                intents: { CHECK: skill }
                 actionCost: []
               vars:
                 rollBonus:
@@ -218,7 +218,7 @@ ruleGroups:
                     - expression: d20
                       bonus: { var: rollBonus }
                   advantage: { fact: skill.insight.disadvantage }
-                intents: { INSPECT: check }
+                intents: { CHECK: skill }
                 actionCost: []
               vars:
                 rollBonus:
@@ -249,7 +249,7 @@ ruleGroups:
                     - expression: d20
                       bonus: { var: rollBonus }
                   advantage: { fact: skill.intimidation.disadvantage }
-                intents: { INSPECT: check }
+                intents: { CHECK: skill }
                 actionCost: []
               vars:
                 rollBonus:
@@ -280,7 +280,7 @@ ruleGroups:
                     - expression: d20
                       bonus: { var: rollBonus }
                   advantage: { fact: skill.investigation.disadvantage }
-                intents: { INSPECT: check }
+                intents: { CHECK: skill }
                 actionCost: []
               vars:
                 rollBonus:
@@ -311,7 +311,7 @@ ruleGroups:
                     - expression: d20
                       bonus: { var: rollBonus }
                   advantage: { fact: skill.medicine.disadvantage }
-                intents: { INSPECT: check }
+                intents: { CHECK: skill }
                 actionCost: []
               vars:
                 rollBonus:
@@ -342,7 +342,7 @@ ruleGroups:
                     - expression: d20
                       bonus: { var: rollBonus }
                   advantage: { fact: skill.nature.disadvantage }
-                intents: { INSPECT: check }
+                intents: { CHECK: skill }
                 actionCost: []
               vars:
                 rollBonus:
@@ -373,7 +373,7 @@ ruleGroups:
                     - expression: d20
                       bonus: { var: rollBonus }
                   advantage: { fact: skill.perception.disadvantage }
-                intents: { INSPECT: check }
+                intents: { CHECK: skill }
                 actionCost: []
               vars:
                 rollBonus:
@@ -404,7 +404,7 @@ ruleGroups:
                     - expression: d20
                       bonus: { var: rollBonus }
                   advantage: { fact: skill.performance.disadvantage }
-                intents: { INSPECT: check }
+                intents: { CHECK: skill }
                 actionCost: []
               vars:
                 rollBonus:
@@ -435,7 +435,7 @@ ruleGroups:
                     - expression: d20
                       bonus: { var: rollBonus }
                   advantage: { fact: skill.persuasion.disadvantage }
-                intents: { INSPECT: check }
+                intents: { CHECK: skill }
                 actionCost: []
               vars:
                 rollBonus:
@@ -466,7 +466,7 @@ ruleGroups:
                     - expression: d20
                       bonus: { var: rollBonus }
                   advantage: { fact: skill.religion.disadvantage }
-                intents: { INSPECT: check }
+                intents: { CHECK: skill }
                 actionCost: []
               vars:
                 rollBonus:
@@ -497,7 +497,7 @@ ruleGroups:
                     - expression: d20
                       bonus: { var: rollBonus }
                   advantage: { fact: skill.sleight-of-hand.disadvantage }
-                intents: { INSPECT: check }
+                intents: { CHECK: skill }
                 actionCost: []
               vars:
                 rollBonus:
@@ -528,7 +528,7 @@ ruleGroups:
                     - expression: d20
                       bonus: { var: rollBonus }
                   advantage: { fact: skill.stealth.disadvantage }
-                intents: { INSPECT: check }
+                intents: { CHECK: skill }
                 actionCost: []
               vars:
                 rollBonus:
@@ -559,7 +559,7 @@ ruleGroups:
                     - expression: d20
                       bonus: { var: rollBonus }
                   advantage: { fact: skill.survival.disadvantage }
-                intents: { INSPECT: check }
+                intents: { CHECK: skill }
                 actionCost: []
               vars:
                 rollBonus:
