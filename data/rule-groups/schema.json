@@ -273,6 +273,10 @@
               "type": "string",
               "description": "Fact key to read for displaying a value on the effect chip (e.g., 'str.value')"
             },
+            "displaySelection": {
+              "type": "string",
+              "description": "Selection key to read for displaying a value on the effect chip (e.g., 'amount')"
+            },
             "levelFact": {
               "type": "string",
               "description": "Fact key to read for displaying proficiency level as pips on the effect chip (e.g., 'skill.athletics.proficiency')"

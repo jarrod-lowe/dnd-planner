@@ -357,6 +357,36 @@ describe('getEffectDisplayValue', () => {
     };
     expect(getEffectDisplayValue(rule, { 'str.value': 16 })).toBe('16');
   });
+
+  it('returns stringified selection value when displaySelection is set and selection exists', () => {
+    const rule: Rule = {
+      id: 'effect-damage',
+      activities: [],
+      ui: { displaySelection: 'amount', name: 'test.name' },
+      selections: { amount: 5 }
+    };
+    expect(getEffectDisplayValue(rule, {})).toBe('5');
+  });
+
+  it('prefers displayFact over displaySelection when both are set', () => {
+    const rule: Rule = {
+      id: 'effect-test',
+      activities: [],
+      ui: { displayFact: 'str.value', displaySelection: 'amount', name: 'test.name' },
+      selections: { amount: 5 }
+    };
+    expect(getEffectDisplayValue(rule, { 'str.value': 16 })).toBe('16');
+  });
+
+  it('returns null when displaySelection is set but selection is undefined', () => {
+    const rule: Rule = {
+      id: 'effect-damage',
+      activities: [],
+      ui: { displaySelection: 'amount', name: 'test.name' },
+      selections: {}
+    };
+    expect(getEffectDisplayValue(rule, {})).toBeNull();
+  });
 });
 
 describe('getEffectLevel', () => {

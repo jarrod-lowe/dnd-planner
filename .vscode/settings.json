@@ -1,5 +1,6 @@
 {
   "cSpell.words": [
+    "anymore",
     "aquasec",
     "armor",
     "attributevalue",
@@ -27,15 +28,19 @@
     "Followup",
     "Followups",
     "freeform",
+    "fulfills",
     "GOARCH",
     "GOOS",
     "Greataxe",
+    "Handoff",
     "Hoch",
     "imds",
     "Ingan",
+    "Insp",
     "linters",
     "mugh",
     "nonsensitive",
+    "offturn",
     "pagh",
     "Persistable",
     "pgrep",
@@ -55,12 +60,14 @@
     "tfstate",
     "tfvars",
     "Thornblade",
+    "toggleable",
     "trimpath",
     "UPDATEDAT",
     "vars",
     "venv",
     "VITE",
-    "Vitest"
+    "Vitest",
+    "wireframed"
   ],
   "yaml.schemas": {
     "./data/rule-groups/schema.json": "data/rule-groups/**/*.yaml"

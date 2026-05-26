@@ -17,10 +17,16 @@ interface Translation {
   keywords: string[];
 }
 
+interface Rule {
+  id: string;
+  activities?: { type: string; rule?: Rule }[];
+  ui?: Record<string, unknown>;
+}
+
 interface RuleGroup {
   id: string;
   translations: Record<SupportedLocale, Translation>;
-  rules?: unknown[];
+  rules?: Rule[];
 }
 
 interface RuleGroupsFile {
@@ -158,5 +164,35 @@ describe('rule groups translations', () => {
     }
 
     expect(invalid, `Invalid keywords: ${invalid.join(', ')}`).toEqual([]);
+  });
+
+  it('all advertiseEffect rules have ui.name', () => {
+    const missing: string[] = [];
+
+    function findAdvertisedEffects(activities: Rule['activities'], file: string): void {
+      if (!activities) return;
+      for (const activity of activities) {
+        if (activity.type === 'advertiseEffect' && activity.rule) {
+          const ui = activity.rule.ui;
+          if (!ui?.name) {
+            missing.push(`${activity.rule.id} (in ${file})`);
+          }
+          // recurse into nested activities
+          findAdvertisedEffects(activity.rule.activities, file);
+        } else if (activity.rule) {
+          // recurse into offerRule and other nested rules
+          findAdvertisedEffects(activity.rule.activities, file);
+        }
+      }
+    }
+
+    for (const { file, ruleGroup } of allRuleGroups) {
+      if (!ruleGroup.rules) continue;
+      for (const rule of ruleGroup.rules) {
+        findAdvertisedEffects(rule.activities, file);
+      }
+    }
+
+    expect(missing, `Effects missing ui.name: ${missing.join(', ')}`).toEqual([]);
   });
 });

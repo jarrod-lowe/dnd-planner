@@ -150,7 +150,7 @@ Each verb's options live in named sub-buckets. The same grouping shows in two pl
 | `SAVE`   | **others** → dynamically populated from active effects on others requiring a save (e.g., Sleep · Gob 1). **you** → STR · DEX · CON · INT · WIS · CHA (when GM prompts you to make a save). |
 | `CHECK`  | **skill** → Athletics · Arcana · Insight · Perception · Religion · Stealth · … (auto-pulls proficiency state). **raw** → STR · DEX · CON · INT · WIS · CHA.                                |
 | `REST`   | **type** → Short · Long. _One-level toggle._                                                                                                                                               |
-| `NOTE`   | _No sub-buckets; opens a text field for flavor / RP recording (no mechanics, no cascade)._                                                                                                 |
+| `NOTE`   | _No sub-buckets; opens a text field for flavour / RP recording (no mechanics, no cascade)._                                                                                                 |
 
 ### build →
 
@@ -273,7 +273,7 @@ Pill-shaped modifier toggle. Two variants:
 
 ### AddRowPicker
 
-A dashed-border container with **three labeled groups** of verb chips (plan → / record → / build →). Plan verbs use plain chips; record verbs use the event-row tint; build verbs are slightly dimmed (rare use). Tapping a verb **expands its sub-buckets inline below the picker** (accordion-style) — the same two-level structure shows up in the row's `OR INSTEAD` panel when swapping alternatives. The picker also carries the `👁 show illegal` toggle.
+A dashed-border container with **three labelled groups** of verb chips (plan → / record → / build →). Plan verbs use plain chips; record verbs use the event-row tint; build verbs are slightly dimmed (rare use). Tapping a verb **expands its sub-buckets inline below the picker** (accordion-style) — the same two-level structure shows up in the row's `OR INSTEAD` panel when swapping alternatives. The picker also carries the `👁 show illegal` toggle.
 
 ### Ledger
 

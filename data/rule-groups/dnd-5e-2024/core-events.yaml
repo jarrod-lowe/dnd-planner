@@ -52,6 +52,10 @@ ruleGroups:
                 - type: advertiseEffect
                   rule:
                     id: effect-hp-damage
+                    ui:
+                      name: rule.dnd-5e-2024.core-events.effect-hp-damage.name
+                      displaySelection: amount
+                      section: health
                     phase: normal
                     after:
                       - group: hp-copied
@@ -128,6 +132,10 @@ ruleGroups:
                 - type: advertiseEffect
                   rule:
                     id: effect-hp-heal
+                    ui:
+                      name: rule.dnd-5e-2024.core-events.effect-hp-heal.name
+                      displaySelection: amount
+                      section: health
                     phase: normal
                     after:
                       - group: hp-copied

@@ -129,11 +129,19 @@ export function getChipState(effect: Rule, facts: Facts): ChipState {
 
 export function getEffectDisplayValue(rule: Rule, facts: Facts): string | null {
   const ui = rule.ui as Record<string, unknown> | undefined;
-  if (!ui || typeof ui.displayFact !== 'string') return null;
+  if (!ui) return null;
 
-  const value = facts[ui.displayFact];
-  if (value === undefined || value === null) return null;
-  return String(value);
+  if (typeof ui.displayFact === 'string') {
+    const value = facts[ui.displayFact];
+    if (value !== undefined && value !== null) return String(value);
+  }
+
+  if (typeof ui.displaySelection === 'string' && rule.selections) {
+    const value = (rule.selections as Record<string, unknown>)[ui.displaySelection];
+    if (value !== undefined && value !== null) return String(value);
+  }
+
+  return null;
 }
 
 export function getEffectLevel(rule: Rule, facts: Facts): number | null {
