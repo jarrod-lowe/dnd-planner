@@ -13,7 +13,7 @@ ruleGroups:
   - dnd-5e-2024/attacks
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/ability-scores
-  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/core-events
 
 steps:
   - evaluate:

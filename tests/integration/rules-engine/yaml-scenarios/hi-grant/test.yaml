@@ -1,7 +1,7 @@
 name: 'Heroic Inspiration - Grant'
 description: 'Granting HI sets remaining to 1 and creates a persistent effect'
 ruleGroups:
-  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/core-events
   - dnd-5e-2024/heroic-inspiration
 steps:
   # HI resource initialized: max=1, remaining=0 (no auto-reset)

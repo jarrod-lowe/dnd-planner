@@ -6,7 +6,7 @@ ruleGroups:
   - dnd-5e-2024/spellcasting
   - class-paladin/class-paladin-level1
   - spells/spell-create-and-destroy-water
-  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/core-events
 steps:
   - evaluate:
       assert:
@@ -22,7 +22,7 @@ steps:
         facts:
           spellcasting.slots.level1.remaining: 1
   - addOffer:
-      id: long-rest
+      id: record-long-rest
       assert:
         facts:
           rest.long: 1

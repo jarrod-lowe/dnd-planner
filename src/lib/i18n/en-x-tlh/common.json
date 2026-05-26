@@ -172,14 +172,6 @@
       }
     },
     "dnd-5e-2024": {
-      "turn-rest": {
-        "long-rest": {
-          "name": "nIb poH"
-        },
-        "short-rest": {
-          "name": "nIb poH nIb"
-        }
-      },
       "action-economy": {},
       "proficiency": {},
       "movement": {
@@ -1186,8 +1178,8 @@
         "raw": "RAW"
       },
       "REST": {
-        "default": "TYPE",
-        "type": "TYPE"
+        "default": "Rest",
+        "rest": "Rest"
       },
       "NOTE": {},
       "STAT": {
@@ -1268,11 +1260,11 @@
       "check": "DIvI' DIvI'",
       "note": "DIvI' DIvI'",
       "passed": "DIvI'",
-      "failed": "DIvI'"
-    },
-    "rest": {
-      "short": "DIvI' nIv",
-      "long": "DIvI' tIQ"
+      "failed": "DIvI'",
+      "rest": {
+        "short": "DIvI' nIv",
+        "long": "DIvI' tIQ"
+      }
     }
   },
   "ui": {

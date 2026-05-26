@@ -7,7 +7,7 @@ ruleGroups:
   - class-paladin/class-paladin-level3
   - class-paladin/class-paladin-oath-redemption-level3
   - dnd-5e-2024/action-economy
-  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/core-events
 steps:
   # Use first Divinity point
   - evaluate:

@@ -7,7 +7,7 @@ ruleGroups:
   - dnd-5e-2024/free-actions
   - dnd-5e-2024/spellcasting
   - dnd-5e-2024/concentration
-  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/core-events
   - class-paladin/class-paladin-level1
   - spells/spell-protection-from-evil-and-good
 steps:
@@ -29,7 +29,7 @@ steps:
             - effect-protection-from-evil-and-good
   # Short rest should dismiss the effect and free concentration
   - addOffer:
-      id: short-rest
+      id: record-short-rest
       assert:
         facts:
           rest.short: 1

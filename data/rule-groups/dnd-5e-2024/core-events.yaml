@@ -400,11 +400,12 @@ ruleGroups:
               id: record-short-rest
               group:
                 - __planned__
+              phase: early
               ui:
                 section: rest
                 name: planner.record.rest.short
                 intents:
-                  REST: type
+                  REST: rest
                 actionCost: []
               activities:
                 - type: numberSet
@@ -423,11 +424,12 @@ ruleGroups:
               id: record-long-rest
               group:
                 - __planned__
+              phase: early
               ui:
                 section: rest
                 name: planner.record.rest.long
                 intents:
-                  REST: type
+                  REST: rest
                 actionCost: []
               activities:
                 - type: numberSet

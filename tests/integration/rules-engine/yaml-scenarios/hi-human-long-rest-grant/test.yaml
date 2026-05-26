@@ -2,7 +2,7 @@ name: 'Heroic Inspiration - Human Long Rest Grant'
 description: 'Humans gain HI on long rest'
 ruleGroups:
   - species-human/species-human
-  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/core-events
   - dnd-5e-2024/heroic-inspiration
 steps:
   # Turn 1: HI starts at 0
@@ -13,7 +13,7 @@ steps:
           heroicInspiration.remaining: 0
   # Long rest
   - addOffer:
-      id: long-rest
+      id: record-long-rest
       assert:
         facts:
           rest.long: 1

@@ -4,7 +4,7 @@ description: >
   followup (type: attack-line) in its ui.
 
 ruleGroups:
-  - dnd-5e-2024/turn-rest
+  - dnd-5e-2024/core-events
   - dnd-5e-2024/action-economy
   - dnd-5e-2024/free-actions
   - dnd-5e-2024/proficiency
