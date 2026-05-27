@@ -5,7 +5,13 @@ import yaml from 'js-yaml';
 
 interface Rule {
   id: string;
-  activities?: { type: string; rule?: Rule; self?: boolean; source?: Record<string, unknown>; sources?: Record<string, unknown>[] }[];
+  activities?: {
+    type: string;
+    rule?: Rule;
+    self?: boolean;
+    source?: Record<string, unknown>;
+    sources?: Record<string, unknown>[];
+  }[];
   ui?: Record<string, unknown>;
   group?: string[];
   vars?: Record<string, unknown>;
