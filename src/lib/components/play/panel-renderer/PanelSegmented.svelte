@@ -22,39 +22,64 @@
   }
 </script>
 
-<div class="panel-renderer__segmented" role="radiogroup" aria-label={control.var}>
+<fieldset class="panel-renderer__segmented">
   {#each control.options as option (option.value)}
     {#if editable}
-      <button
-        type="button"
-        class="panel-renderer__segment"
-        class:panel-renderer__segment--active={selectedValue === option.value}
-        role="radio"
-        aria-checked={selectedValue === option.value}
-        onclick={() => handleChange(option.value)}
-      >
-        {$t(option.label)}
-      </button>
+      {@const inputId = `${control.var}-${option.value}`}
+      <div class="panel-renderer__segment-wrapper">
+        <input
+          type="radio"
+          name={control.var}
+          id={inputId}
+          value={option.value}
+          class="panel-renderer__segment-input"
+          checked={selectedValue === option.value}
+          onchange={() => handleChange(option.value)}
+        />
+        <label
+          for={inputId}
+          class="panel-renderer__segment"
+          class:panel-renderer__segment--active={selectedValue === option.value}
+        >
+          {$t(option.label)}
+        </label>
+      </div>
     {:else}
       <span
         class="panel-renderer__segment panel-renderer__segment--readonly"
         class:panel-renderer__segment--active={selectedValue === option.value}
-        role="radio"
-        aria-checked={selectedValue === option.value}
       >
         {$t(option.label)}
       </span>
     {/if}
   {/each}
-</div>
+</fieldset>
 
 <style>
   .panel-renderer__segmented {
     display: flex;
     gap: 1px;
     background: var(--md-sys-color-outline-variant);
+    border: none;
     border-radius: var(--radius-sm);
     overflow: hidden;
+    padding: 0;
+    margin: 0;
+    min-inline-size: 0;
+  }
+
+  .panel-renderer__segment-wrapper {
+    flex: 1;
+    display: flex;
+    position: relative;
+  }
+
+  .panel-renderer__segment-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
   }
 
   .panel-renderer__segment {

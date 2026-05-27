@@ -22,25 +22,25 @@ const baseProps = {
 };
 
 describe('PanelSegmented', () => {
-  it('renders three segments', () => {
+  it('renders three radio inputs', () => {
     const { container } = render(PanelSegmented, { props: baseProps });
-    const buttons = container.querySelectorAll('button');
-    expect(buttons).toHaveLength(3);
+    const inputs = container.querySelectorAll('input[type="radio"]');
+    expect(inputs).toHaveLength(3);
   });
 
-  it('renders segment labels via i18n keys', () => {
+  it('renders labels with i18n keys', () => {
     const { container } = render(PanelSegmented, { props: baseProps });
-    const buttons = container.querySelectorAll('button');
+    const labels = container.querySelectorAll('label');
     // Mock i18n returns the key as value
-    expect(buttons[0].textContent).toBe('planner.record.outcome.none');
-    expect(buttons[1].textContent).toBe('planner.record.passed');
-    expect(buttons[2].textContent).toBe('planner.record.failed');
+    expect(labels[0].textContent).toBe('planner.record.outcome.none');
+    expect(labels[1].textContent).toBe('planner.record.passed');
+    expect(labels[2].textContent).toBe('planner.record.failed');
   });
 
-  it('has radiogroup role', () => {
+  it('has radiogroup via native fieldset', () => {
     const { container } = render(PanelSegmented, { props: baseProps });
-    const group = container.querySelector('[role="radiogroup"]');
-    expect(group).toBeTruthy();
+    const fieldset = container.querySelector('fieldset');
+    expect(fieldset).toBeTruthy();
   });
 
   it('calls onSelectionChange with -1 when none option clicked', async () => {
@@ -48,8 +48,8 @@ describe('PanelSegmented', () => {
     const { container } = render(PanelSegmented, {
       props: { ...baseProps, onSelectionChange }
     });
-    const buttons = container.querySelectorAll('button');
-    await fireEvent.click(buttons[0]);
+    const inputs = container.querySelectorAll('input[type="radio"]');
+    await fireEvent.click(inputs[0]);
     expect(onSelectionChange).toHaveBeenCalledWith({ passed: -1 });
   });
 
@@ -58,8 +58,8 @@ describe('PanelSegmented', () => {
     const { container } = render(PanelSegmented, {
       props: { ...baseProps, onSelectionChange }
     });
-    const buttons = container.querySelectorAll('button');
-    await fireEvent.click(buttons[1]);
+    const inputs = container.querySelectorAll('input[type="radio"]');
+    await fireEvent.click(inputs[1]);
     expect(onSelectionChange).toHaveBeenCalledWith({ passed: 1 });
   });
 
@@ -68,28 +68,28 @@ describe('PanelSegmented', () => {
     const { container } = render(PanelSegmented, {
       props: { ...baseProps, onSelectionChange }
     });
-    const buttons = container.querySelectorAll('button');
-    await fireEvent.click(buttons[2]);
+    const inputs = container.querySelectorAll('input[type="radio"]');
+    await fireEvent.click(inputs[2]);
     expect(onSelectionChange).toHaveBeenCalledWith({ passed: 0 });
   });
 
-  it('renders spans instead of buttons in non-editable mode', () => {
+  it('renders spans instead of inputs in non-editable mode', () => {
     const { container } = render(PanelSegmented, {
       props: { ...baseProps, editable: false }
     });
-    const buttons = container.querySelectorAll('button');
-    const spans = container.querySelectorAll('span[role="radio"]');
-    expect(buttons).toHaveLength(0);
+    const inputs = container.querySelectorAll('input');
+    const spans = container.querySelectorAll('span.panel-renderer__segment--readonly');
+    expect(inputs).toHaveLength(0);
     expect(spans).toHaveLength(3);
   });
 
-  it('sets aria-checked on active segment', () => {
+  it('checks the active radio input', () => {
     const { container } = render(PanelSegmented, {
       props: { ...baseProps, selections: { passed: 1 } }
     });
-    const buttons = container.querySelectorAll('button');
-    expect(buttons[0].getAttribute('aria-checked')).toBe('false');
-    expect(buttons[1].getAttribute('aria-checked')).toBe('true');
-    expect(buttons[2].getAttribute('aria-checked')).toBe('false');
+    const inputs = container.querySelectorAll('input[type="radio"]');
+    expect(inputs[0].checked).toBe(false);
+    expect(inputs[1].checked).toBe(true);
+    expect(inputs[2].checked).toBe(false);
   });
 });
