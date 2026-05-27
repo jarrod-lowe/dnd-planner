@@ -1,21 +1,5 @@
 # yaml-language-server: $schema=../schema.json
 refs:
-  skill-proficiency-options: &skill-proficiency-options
-    - value: 0.5
-      label: play.topBar.proficientDotHalf
-      ariaLabel: play.choices.skillProficiency.half
-    - value: 1
-      label: play.topBar.proficientDotFull
-      ariaLabel: play.choices.skillProficiency.full
-    - value: 2
-      label: play.topBar.proficientDotDouble
-      ariaLabel: play.choices.skillProficiency.double
-
-  skill-proficiency-control: &skill-proficiency-control
-    type: select
-    var: level
-    options: *skill-proficiency-options
-
   ability-score-control: &ability-score-control
     type: slider
     var: score
