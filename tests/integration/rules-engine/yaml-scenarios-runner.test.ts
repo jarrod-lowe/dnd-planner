@@ -44,6 +44,11 @@ interface AssertConfig {
     legal?: boolean;
     applicable?: boolean;
   };
+  planErrors?: {
+    id: string;
+    index?: number;
+    errors: string[];
+  }[];
 }
 
 interface EvaluateStep {
@@ -221,6 +226,31 @@ function matchesEffectId(actualId: string, baseId: string): boolean {
     return /^\d+$/.test(suffix);
   }
   return false;
+}
+
+interface PlannedItem {
+  instanceId: string;
+  originalOfferId: string;
+  rule: Rule;
+}
+
+function assertPlanErrors(
+  assert: AssertConfig,
+  plannedItems: PlannedItem[],
+  stepDesc: string
+): void {
+  if (!assert.planErrors) return;
+  for (const { id, index = 0, errors: expectedErrors } of assert.planErrors) {
+    const matches = plannedItems.filter((i) => i.originalOfferId === id);
+    expect(
+      matches.length > index,
+      `${stepDesc}: planned item "${id}" index ${index} should exist (${matches.length} found)`
+    ).toBe(true);
+    const actualErrors = (matches[index]!.rule.varsRuntime?.errors as string[]) ?? [];
+    expect(actualErrors, `${stepDesc}: planned item "${id}"[${index}] errors`).toEqual(
+      expectedErrors
+    );
+  }
 }
 
 function runAssertions(
@@ -421,35 +451,41 @@ describe('yaml rules scenarios', () => {
           const output = harness.doEvaluate();
           if (assert) {
             runAssertions(output, assert, stepDesc, harness.effects);
+            assertPlanErrors(assert, harness.plannedItems, stepDesc);
           }
         } else if (stepKey === 'addOffer') {
           const addOfferData = stepData as { id: string; selections?: Record<string, unknown> };
           const output = harness.doAddOffer(addOfferData.id, addOfferData.selections);
           if (assert) {
             runAssertions(output, assert, stepDesc, harness.effects);
+            assertPlanErrors(assert, harness.plannedItems, stepDesc);
           }
         } else if (stepKey === 'removeFromPlan') {
           const removeData = stepData as { id: string };
           const output = harness.doRemoveFromPlan(removeData.id);
           if (assert) {
             runAssertions(output, assert, stepDesc, harness.effects);
+            assertPlanErrors(assert, harness.plannedItems, stepDesc);
           }
         } else if (stepKey === 'updateSelections') {
           const updateData = stepData as { id: string; selections: Record<string, unknown> };
           const output = harness.doUpdateSelections(updateData.id, updateData.selections);
           if (assert) {
             runAssertions(output, assert, stepDesc, harness.effects);
+            assertPlanErrors(assert, harness.plannedItems, stepDesc);
           }
         } else if (stepKey === 'endTurn') {
           const output = harness.doEndTurn();
           if (assert) {
             runAssertions(output, assert, stepDesc, harness.effects);
+            assertPlanErrors(assert, harness.plannedItems, stepDesc);
           }
         } else if (stepKey === 'removeEffect') {
           const removeEffectData = stepData as { id: string };
           const output = harness.doRemoveEffect(removeEffectData.id);
           if (assert) {
             runAssertions(output, assert, stepDesc, harness.effects);
+            assertPlanErrors(assert, harness.plannedItems, stepDesc);
           }
         } else {
           throw new Error(`${stepDesc}: Unknown step type "${stepKey}"`);

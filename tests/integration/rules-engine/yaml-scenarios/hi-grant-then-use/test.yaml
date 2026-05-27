@@ -1,0 +1,48 @@
+name: 'Heroic Inspiration - Grant Then Use Same Turn'
+description: 'Grant HI then use HI in the same turn — both should have no errors'
+ruleGroups:
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/heroic-inspiration
+steps:
+  # No HI initially
+  - evaluate:
+      assert:
+        facts:
+          heroicInspiration.remaining: 0
+        offers:
+          legal:
+            - grant-hi
+          illegal:
+            - use-hi
+  # Grant HI
+  - addOffer:
+      id: grant-hi
+      assert:
+        facts:
+          heroicInspiration.remaining: 1
+        offers:
+          legal:
+            - use-hi
+        planErrors:
+          - id: grant-hi
+            index: 0
+            errors: []
+  # Use HI in same turn
+  - addOffer:
+      id: use-hi
+      assert:
+        facts:
+          heroicInspiration.remaining: 0
+          heroicInspiration.consumed: 1
+        offers:
+          illegal:
+            - use-hi
+          legal:
+            - grant-hi
+        planErrors:
+          - id: grant-hi
+            index: 0
+            errors: []
+          - id: use-hi
+            index: 0
+            errors: []

@@ -17,7 +17,7 @@ ruleGroups:
       - id: human-hi-long-rest
         phase: early
         after:
-          - group: hi-settle
+          - group: hi-set
         when:
           - fact: rest.long
             operator: equals
@@ -31,32 +31,6 @@ ruleGroups:
               number: 1
             target:
               fact: heroicInspiration.remaining
-          - type: advertiseEffect
-            rule:
-              id: effect-hi
-              phase: early
-              after:
-                - group: hi-consume
-              group:
-                - hi-settle
-              ui:
-                name: rule.dnd-5e-2024.heroic-inspiration.effect-hi.name
-              activities:
-                - type: numberSet
-                  source:
-                    number: 1
-                  target:
-                    fact: heroicInspiration.remaining
-                  when:
-                    - fact: heroicInspiration.consumed
-                      operator: equals
-                      value: 0
-                - type: advertiseEffect
-                  self: true
-                  when:
-                    - fact: heroicInspiration.consumed
-                      operator: equals
-                      value: 0
 
       # Max Distance
       - id: set-base-distance

@@ -11,12 +11,11 @@ ruleGroups:
         description: SuvwI' SubchI' track
         keywords: [SuvwI', SubchI']
     rules:
-      # Initialize consumed flag each evaluation
+      # Reset consumed flag each evaluation
       - id: hi-consumed-reset
         phase: early
         group:
           - hi-init
-          - hi-consume
         activities:
           - type: numberSet
             source:
@@ -24,11 +23,9 @@ ruleGroups:
             target:
               fact: heroicInspiration.consumed
 
-      # Set max HI (always 1) and declare stat
+      # Set max HI and declare UI stat
       - id: hi-max
         phase: early
-        group:
-          - hi-settle
         ui:
           stats:
             - name: play.stats.heroicInspiration
@@ -58,6 +55,9 @@ ruleGroups:
                     severity: error
             rule:
               id: grant-hi
+              phase: normal
+              group:
+                - hi-provide
               ui:
                 section: other
                 name: rule.dnd-5e-2024.heroic-inspiration.grant-hi.name
@@ -77,32 +77,6 @@ ruleGroups:
                     number: 1
                   target:
                     fact: heroicInspiration.remaining
-                - type: advertiseEffect
-                  rule:
-                    id: effect-hi
-                    phase: early
-                    after:
-                      - group: hi-consume
-                    group:
-                      - hi-settle
-                    ui:
-                      name: rule.dnd-5e-2024.heroic-inspiration.effect-hi.name
-                    activities:
-                      - type: numberSet
-                        source:
-                          number: 1
-                        target:
-                          fact: heroicInspiration.remaining
-                        when:
-                          - fact: heroicInspiration.consumed
-                            operator: equals
-                            value: 0
-                      - type: advertiseEffect
-                        self: true
-                        when:
-                          - fact: heroicInspiration.consumed
-                            operator: equals
-                            value: 0
 
       # Offer to use HI (consume inspiration)
       - id: use-hi-offer
@@ -120,9 +94,9 @@ ruleGroups:
                     severity: error
             rule:
               id: use-hi
-              phase: early
+              phase: normal
               after:
-                - group: hi-init
+                - group: hi-provide
               group:
                 - hi-consume
               ui:
@@ -150,11 +124,41 @@ ruleGroups:
                   target:
                     fact: heroicInspiration.remaining
 
+      # Advertise effect-hi-set when HI is available and not consumed
+      - id: hi-effect-advertise
+        phase: safeguard
+        when:
+          - fact: heroicInspiration.remaining
+            operator: greaterThan
+            value: 0
+          - fact: heroicInspiration.consumed
+            operator: equals
+            value: 0
+        activities:
+          - type: advertiseEffect
+            rule:
+              id: effect-hi-set
+              phase: early
+              group:
+                - hi-set
+              ui:
+                name: rule.dnd-5e-2024.heroic-inspiration.effect-hi.name
+              activities:
+                - type: numberSet
+                  source:
+                    number: 1
+                  target:
+                    fact: heroicInspiration.remaining
+                  when:
+                    - fact: heroicInspiration.consumed
+                      operator: equals
+                      value: 0
+
       # Annotate dice panels when HI is available
       - id: annotate-hi
         phase: normal
         after:
-          - group: hi-settle
+          - group: hi-consume
         when:
           - fact: heroicInspiration.remaining
             operator: greaterThan

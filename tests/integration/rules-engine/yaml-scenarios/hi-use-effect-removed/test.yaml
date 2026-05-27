@@ -1,5 +1,5 @@
-name: 'Heroic Inspiration - Use'
-description: 'Using HI sets remaining to 0 and effect does not self-advertise'
+name: 'Heroic Inspiration - Use After Effect Removed'
+description: 'Planned use-hi errors when HI effects are removed mid-turn'
 ruleGroups:
   - dnd-5e-2024/core-events
   - dnd-5e-2024/heroic-inspiration
@@ -21,14 +21,15 @@ initialEffects:
             operator: equals
             value: 0
 steps:
+  # HI is active
   - evaluate:
       assert:
         facts:
-          heroicInspiration.max: 1
           heroicInspiration.remaining: 1
         offers:
-          exists:
+          legal:
             - use-hi
+  # Add use-hi to plan - should be legal with no errors
   - addOffer:
       id: use-hi
       assert:
@@ -40,11 +41,16 @@ steps:
             - use-hi
         planErrors:
           - id: use-hi
+            index: 0
             errors: []
-  - endTurn:
+  # Remove visible effect - remaining drops to 0, use-hi should now error
+  - removeEffect:
+      id: effect-hi-set
       assert:
         facts:
           heroicInspiration.remaining: 0
-        effects:
-          notExists:
-            - effect-hi-set
+        planErrors:
+          - id: use-hi
+            index: 0
+            errors:
+              - rule.dnd-5e-2024.heroic-inspiration.use-hi-offer.no_inspiration

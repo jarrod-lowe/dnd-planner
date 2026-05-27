@@ -4,12 +4,10 @@ ruleGroups:
   - dnd-5e-2024/core-events
   - dnd-5e-2024/heroic-inspiration
 initialEffects:
-  - id: effect-hi
+  - id: effect-hi-set
     phase: early
-    after:
-      - group: hi-consume
     group:
-      - hi-settle
+      - hi-set
     ui:
       name: rule.dnd-5e-2024.heroic-inspiration.effect-hi.name
     activities:
@@ -18,12 +16,6 @@ initialEffects:
           number: 1
         target:
           fact: heroicInspiration.remaining
-        when:
-          - fact: heroicInspiration.consumed
-            operator: equals
-            value: 0
-      - type: advertiseEffect
-        self: true
         when:
           - fact: heroicInspiration.consumed
             operator: equals
@@ -44,3 +36,7 @@ steps:
         annotations:
           notExists:
             - rule.dnd-5e-2024.heroic-inspiration.annotation
+        planErrors:
+          - id: use-hi
+            index: 0
+            errors: []

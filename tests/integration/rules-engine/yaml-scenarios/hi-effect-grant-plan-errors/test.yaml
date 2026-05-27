@@ -1,5 +1,5 @@
-name: 'Heroic Inspiration - Grant Illegal When Active'
-description: 'Grant HI is illegal when HI is already active (remaining = 1)'
+name: 'Heroic Inspiration - Effect Active Grant Plan Errors'
+description: 'Effect active, force grant-hi into plan → Tier 2 already_has error'
 ruleGroups:
   - dnd-5e-2024/core-events
   - dnd-5e-2024/heroic-inspiration
@@ -21,12 +21,23 @@ initialEffects:
             operator: equals
             value: 0
 steps:
-  # HI already active from persistent effect
+  # Effect sets remaining=1
   - evaluate:
       assert:
         facts:
-          heroicInspiration.max: 1
           heroicInspiration.remaining: 1
         offers:
           illegal:
             - grant-hi
+  # Force grant-hi into plan despite being illegal
+  - addOffer:
+      id: grant-hi
+      assert:
+        offers:
+          illegal:
+            - grant-hi
+        planErrors:
+          - id: grant-hi
+            index: 0
+            errors:
+              - rule.dnd-5e-2024.heroic-inspiration.grant-hi-offer.already_has

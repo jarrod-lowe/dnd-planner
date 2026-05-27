@@ -1,5 +1,5 @@
-name: 'Heroic Inspiration - Use'
-description: 'Using HI sets remaining to 0 and effect does not self-advertise'
+name: 'Heroic Inspiration - Effect Active Grant Plus Use'
+description: 'Effect active, grant-hi + use-hi planned → grant errors, use no error'
 ruleGroups:
   - dnd-5e-2024/core-events
   - dnd-5e-2024/heroic-inspiration
@@ -21,30 +21,37 @@ initialEffects:
             operator: equals
             value: 0
 steps:
+  # Effect active, use-hi legal, grant-hi illegal
   - evaluate:
       assert:
         facts:
-          heroicInspiration.max: 1
           heroicInspiration.remaining: 1
         offers:
-          exists:
+          legal:
             - use-hi
+          illegal:
+            - grant-hi
+  # Add use-hi first — should have no errors
   - addOffer:
       id: use-hi
       assert:
         facts:
           heroicInspiration.remaining: 0
           heroicInspiration.consumed: 1
-        offers:
-          illegal:
-            - use-hi
         planErrors:
           - id: use-hi
+            index: 0
             errors: []
-  - endTurn:
+  # Force grant-hi into plan — should have already_has error
+  # use-hi should still have no errors (remaining was set by effect before use-hi consumed it)
+  - addOffer:
+      id: grant-hi
       assert:
-        facts:
-          heroicInspiration.remaining: 0
-        effects:
-          notExists:
-            - effect-hi-set
+        planErrors:
+          - id: use-hi
+            index: 0
+            errors: []
+          - id: grant-hi
+            index: 0
+            errors:
+              - rule.dnd-5e-2024.heroic-inspiration.grant-hi-offer.already_has

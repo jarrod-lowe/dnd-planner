@@ -1,0 +1,24 @@
+name: 'Heroic Inspiration - Use Illegal When None, Plan Errors'
+description: 'When no HI at all, use-hi offer is illegal AND planned use-hi has errors'
+ruleGroups:
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/heroic-inspiration
+steps:
+  - evaluate:
+      assert:
+        facts:
+          heroicInspiration.remaining: 0
+        offers:
+          illegal:
+            - use-hi
+  - addOffer:
+      id: use-hi
+      assert:
+        offers:
+          illegal:
+            - use-hi
+        planErrors:
+          - id: use-hi
+            index: 0
+            errors:
+              - rule.dnd-5e-2024.heroic-inspiration.use-hi-offer.no_inspiration
