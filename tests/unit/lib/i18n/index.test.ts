@@ -34,7 +34,7 @@ describe('translation parity', () => {
       const localePath = `/src/lib/i18n/${locale}/common.json`;
       const module = translations[localePath];
       expect(module, `Missing translation file for locale: ${locale}`).toBeDefined();
-      const translation = (module as any).default ?? module;
+      const translation = (module as Record<string, unknown>).default ?? module;
       localeKeys.set(locale, flattenKeys(translation));
     }
 
@@ -62,7 +62,7 @@ describe('translation completeness', () => {
     // Use .default to get the actual JSON content (Vite wraps eager JSON imports)
     const enPath = '/src/lib/i18n/en/common.json';
     const enModule = translations[enPath];
-    const enData = (enModule as any).default ?? enModule;
+    const enData = (enModule as Record<string, unknown>).default ?? enModule;
     const availableKeys = new Set(flattenKeys(enData));
     console.log('Has class.label:', availableKeys.has('class.label'));
 

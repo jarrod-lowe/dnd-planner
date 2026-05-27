@@ -168,11 +168,11 @@
     onclick={(e) => e.stopPropagation()}
   >
     <h2 id="wizard-title" class="dialog__title">
-      {isConfirmStep ? $t('wizard.stepConfirm') : isBasicsStep ? $t('wizard.stepBasics') : $t('wizard.stepSettings', { values: { name: currentSettingsGroup?.name ?? '' } } as any)}
+      {isConfirmStep ? $t('wizard.stepConfirm') : isBasicsStep ? $t('wizard.stepBasics') : $t('wizard.stepSettings', { values: { name: currentSettingsGroup?.name ?? '' } } as Record<string, unknown>)}
     </h2>
 
     <div class="wizard__steps" role="navigation" aria-label="Wizard progress">
-      {#each Array(totalSteps) as _, i}
+      {#each Array.from({ length: totalSteps }, (_, i) => i) as i (i)}
         <span
           class="wizard__step-dot"
           class:wizard__step-dot--active={i === currentStep}

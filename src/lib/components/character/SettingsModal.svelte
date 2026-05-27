@@ -79,7 +79,7 @@
       onclick={(e) => e.stopPropagation()}
     >
       <h2 id="settings-dialog-title" class="dialog__title">
-        {get(t)('rules.settingsTitle', { name: groups[0]?.name ?? '' } as any)}
+        {get(t)('rules.settingsTitle', { name: groups[0]?.name ?? '' } as Record<string, unknown>)}
       </h2>
 
       <div class="dialog__content">
