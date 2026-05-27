@@ -7,6 +7,7 @@
   import PanelDiceLine from './panel-renderer/PanelDiceLine.svelte';
   import PanelSelect from './panel-renderer/PanelSelect.svelte';
   import PanelTextInput from './panel-renderer/PanelTextInput.svelte';
+  import PanelSegmented from './panel-renderer/PanelSegmented.svelte';
   import { evaluateCondition } from '$lib/rules-engine/conditions';
   import { getMatchingAnnotations } from '$lib/play/annotations';
   import type { AvailableRuleEntry, Facts, Annotation, Rule } from '$lib/rules-engine';
@@ -114,6 +115,9 @@
   );
   const secondaryTextInput = $derived(
     descriptor.secondaryControl?.type === 'text' ? descriptor.secondaryControl : undefined
+  );
+  const secondarySegmented = $derived(
+    descriptor.secondaryControl?.type === 'segmented' ? descriptor.secondaryControl : undefined
   );
 
   const textInfos = $derived(
@@ -322,6 +326,18 @@
     <div class="panel-renderer__control panel-renderer__control--secondary">
       <PanelTextInput
         control={secondaryTextInput}
+        {editable}
+        {facts}
+        {vars}
+        {selections}
+        {onSelectionChange}
+      />
+    </div>
+  {/if}
+  {#if secondaryShouldRender && secondarySegmented}
+    <div class="panel-renderer__control panel-renderer__control--secondary">
+      <PanelSegmented
+        control={secondarySegmented}
         {editable}
         {facts}
         {vars}

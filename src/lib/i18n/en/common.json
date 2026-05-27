@@ -1281,6 +1281,9 @@
       "note": "Record Note",
       "passed": "Passed",
       "failed": "Failed",
+      "outcome": {
+        "none": "—"
+      },
       "rest": {
         "short": "Short Rest",
         "long": "Long Rest"

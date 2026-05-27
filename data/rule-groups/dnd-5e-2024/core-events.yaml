@@ -177,9 +177,16 @@ ruleGroups:
                 section: free
                 name: planner.record.save.str
                 primaryControl:
-                  type: select
+                  type: dice-line
+                  dice:
+                    - expression: d20
+                      bonus: { var: saveBonus }
+                secondaryControl:
+                  type: segmented
                   var: passed
                   options:
+                    - value: -1
+                      label: planner.record.outcome.none
                     - value: 1
                       label: planner.record.passed
                     - value: 0
@@ -188,10 +195,14 @@ ruleGroups:
                   SAVE: you
                 actionCost: []
               vars:
+                saveBonus:
+                  capture: true
+                  default:
+                    fact: str.save
                 passed:
                   capture: true
                   default:
-                    number: 1
+                    number: -1
               activities:
                 - type: numberSet
                   target:
@@ -212,9 +223,16 @@ ruleGroups:
                 section: free
                 name: planner.record.save.dex
                 primaryControl:
-                  type: select
+                  type: dice-line
+                  dice:
+                    - expression: d20
+                      bonus: { var: saveBonus }
+                secondaryControl:
+                  type: segmented
                   var: passed
                   options:
+                    - value: -1
+                      label: planner.record.outcome.none
                     - value: 1
                       label: planner.record.passed
                     - value: 0
@@ -223,10 +241,14 @@ ruleGroups:
                   SAVE: you
                 actionCost: []
               vars:
+                saveBonus:
+                  capture: true
+                  default:
+                    fact: dex.save
                 passed:
                   capture: true
                   default:
-                    number: 1
+                    number: -1
               activities:
                 - type: numberSet
                   target:
@@ -247,9 +269,16 @@ ruleGroups:
                 section: free
                 name: planner.record.save.con
                 primaryControl:
-                  type: select
+                  type: dice-line
+                  dice:
+                    - expression: d20
+                      bonus: { var: saveBonus }
+                secondaryControl:
+                  type: segmented
                   var: passed
                   options:
+                    - value: -1
+                      label: planner.record.outcome.none
                     - value: 1
                       label: planner.record.passed
                     - value: 0
@@ -258,10 +287,14 @@ ruleGroups:
                   SAVE: you
                 actionCost: []
               vars:
+                saveBonus:
+                  capture: true
+                  default:
+                    fact: con.save
                 passed:
                   capture: true
                   default:
-                    number: 1
+                    number: -1
               activities:
                 - type: numberSet
                   target:
@@ -282,9 +315,16 @@ ruleGroups:
                 section: free
                 name: planner.record.save.int
                 primaryControl:
-                  type: select
+                  type: dice-line
+                  dice:
+                    - expression: d20
+                      bonus: { var: saveBonus }
+                secondaryControl:
+                  type: segmented
                   var: passed
                   options:
+                    - value: -1
+                      label: planner.record.outcome.none
                     - value: 1
                       label: planner.record.passed
                     - value: 0
@@ -293,10 +333,14 @@ ruleGroups:
                   SAVE: you
                 actionCost: []
               vars:
+                saveBonus:
+                  capture: true
+                  default:
+                    fact: int.save
                 passed:
                   capture: true
                   default:
-                    number: 1
+                    number: -1
               activities:
                 - type: numberSet
                   target:
@@ -317,9 +361,16 @@ ruleGroups:
                 section: free
                 name: planner.record.save.wis
                 primaryControl:
-                  type: select
+                  type: dice-line
+                  dice:
+                    - expression: d20
+                      bonus: { var: saveBonus }
+                secondaryControl:
+                  type: segmented
                   var: passed
                   options:
+                    - value: -1
+                      label: planner.record.outcome.none
                     - value: 1
                       label: planner.record.passed
                     - value: 0
@@ -328,10 +379,14 @@ ruleGroups:
                   SAVE: you
                 actionCost: []
               vars:
+                saveBonus:
+                  capture: true
+                  default:
+                    fact: wis.save
                 passed:
                   capture: true
                   default:
-                    number: 1
+                    number: -1
               activities:
                 - type: numberSet
                   target:
@@ -352,9 +407,16 @@ ruleGroups:
                 section: free
                 name: planner.record.save.cha
                 primaryControl:
-                  type: select
+                  type: dice-line
+                  dice:
+                    - expression: d20
+                      bonus: { var: saveBonus }
+                secondaryControl:
+                  type: segmented
                   var: passed
                   options:
+                    - value: -1
+                      label: planner.record.outcome.none
                     - value: 1
                       label: planner.record.passed
                     - value: 0
@@ -363,10 +425,14 @@ ruleGroups:
                   SAVE: you
                 actionCost: []
               vars:
+                saveBonus:
+                  capture: true
+                  default:
+                    fact: cha.save
                 passed:
                   capture: true
                   default:
-                    number: 1
+                    number: -1
               activities:
                 - type: numberSet
                   target:

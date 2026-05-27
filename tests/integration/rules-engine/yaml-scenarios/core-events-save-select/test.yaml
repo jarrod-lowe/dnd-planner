@@ -1,5 +1,5 @@
-name: 'Core Events - Save has select control'
-description: 'per-stat save offers a select for pass/fail'
+name: 'Core Events - Save has dice-line and segmented controls'
+description: 'per-stat save offers a dice roll with segmented pass/fail outcome'
 ruleGroups:
   - dnd-5e-2024/action-economy
   - dnd-5e-2024/free-actions
@@ -14,9 +14,17 @@ steps:
           - id: record-save-dex
             ui:
               primaryControl:
-                type: select
+                type: dice-line
+                dice:
+                  - expression: d20
+                    bonus:
+                      var: saveBonus
+              secondaryControl:
+                type: segmented
                 var: passed
                 options:
+                  - value: -1
+                    label: planner.record.outcome.none
                   - value: 1
                     label: planner.record.passed
                   - value: 0
