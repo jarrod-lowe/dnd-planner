@@ -32,8 +32,9 @@ describe('translation parity', () => {
 
     for (const locale of locales) {
       const localePath = `/src/lib/i18n/${locale}/common.json`;
-      const translation = translations[localePath];
-      expect(translation, `Missing translation file for locale: ${locale}`).toBeDefined();
+      const module = translations[localePath];
+      expect(module, `Missing translation file for locale: ${locale}`).toBeDefined();
+      const translation = (module as any).default ?? module;
       localeKeys.set(locale, flattenKeys(translation));
     }
 
@@ -58,8 +59,12 @@ describe('translation parity', () => {
 describe('translation completeness', () => {
   it('all $t() calls reference existing translation keys', () => {
     // Get all available keys from en locale (reference)
+    // Use .default to get the actual JSON content (Vite wraps eager JSON imports)
     const enPath = '/src/lib/i18n/en/common.json';
-    const availableKeys = new Set(flattenKeys(translations[enPath]));
+    const enModule = translations[enPath];
+    const enData = (enModule as any).default ?? enModule;
+    const availableKeys = new Set(flattenKeys(enData));
+    console.log('Has class.label:', availableKeys.has('class.label'));
 
     // Find all source files with potential $t() calls
     const srcDir = path.resolve(process.cwd(), 'src');

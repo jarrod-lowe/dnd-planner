@@ -13,7 +13,7 @@ import { getCache, ensureCached } from '$lib/rules/ruleGroupCache.svelte';
 import { resolveDependencies } from '$lib/rules/resolveDependencies';
 import { toast } from 'svelte-sonner';
 import type { SettingDefinition } from '$lib/rules/settingsTypes';
-import { substituteTemplate } from '$lib/rules/substituteSettings';
+import { resolveSettings } from '$lib/rules/resolveSettings';
 import { evaluateRuleGroupConditions } from '$lib/rules/evaluateCondition';
 
 const DEBOUNCE_MS = 300;
@@ -795,41 +795,26 @@ async function assignRuleGroupWithSettings(
 ): Promise<void> {
   await assignRuleGroup(characterId, ruleGroupId);
 
-  // Create effects from settings
   const cache = getCache();
-  const newEffects: Rule[] = [];
 
-  for (const [groupId, values] of settingsValues) {
+  const groups = Array.from(settingsValues.entries()).map(([groupId, values]) => {
     const meta = cache.get(groupId);
-    if (!meta) continue;
+    return { ruleGroupId: groupId, settings: meta?.settings ?? [], values };
+  });
 
-    for (const setting of meta.settings) {
-      const chosenValue = values[setting.id];
-      if (!chosenValue) continue;
+  const { additionalRuleGroupIds, effects } = resolveSettings(groups, (id) => {
+    const meta = cache.get(id);
+    return meta ? { requires: meta.requires } : undefined;
+  });
 
-      if (setting.type === 'select-rule-group') {
-        await assignRuleGroup(characterId, chosenValue);
-        // assignSingleGroup caches metadata on success, so check for
-        // unresolved deps that prefetchDepTree may have missed
-        const masteryMeta = cache.get(chosenValue);
-        if (masteryMeta) {
-          for (const depId of masteryMeta.requires) {
-            if (!state.ruleGroupIds.includes(depId)) {
-              await assignRuleGroup(characterId, depId);
-            }
-          }
-        }
-      } else {
-        const effect = substituteTemplate(setting.effect!, chosenValue) as Rule;
-        // Prefix the effect ID with the rule group ID so we can clean up on unassign
-        effect.id = `${groupId}::${effect.id}`;
-        newEffects.push(JSON.parse(JSON.stringify(effect)));
-      }
+  for (const additionalId of additionalRuleGroupIds) {
+    if (!state.ruleGroupIds.includes(additionalId)) {
+      await assignRuleGroup(characterId, additionalId);
     }
   }
 
-  if (newEffects.length > 0) {
-    state = { ...state, effects: [...state.effects, ...newEffects] };
+  if (effects.length > 0) {
+    state = { ...state, effects: [...state.effects, ...effects] };
     performEvaluation();
 
     apiPost(`/api/characters/${characterId}/effects`, {

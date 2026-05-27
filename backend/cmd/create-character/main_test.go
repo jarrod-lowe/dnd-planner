@@ -115,7 +115,7 @@ func TestHandle_ValidRequest_Returns201(t *testing.T) {
 
 	h := newHandler(db)
 
-	body := `{"name":"` + charName + `","species":"` + charSpecies + `"}`
+	body := `{"name":"` + charName + `","species":"` + charSpecies + `","class":"paladin-level1"}`
 	event := events.APIGatewayProxyRequest{
 		Body: body,
 		RequestContext: events.APIGatewayProxyRequestContext{
@@ -229,7 +229,7 @@ func TestHandle_ValidRequest_ReturnsCharacterFields(t *testing.T) {
 
 	h := newHandler(db)
 
-	body := `{"name":"` + charName + `","species":"` + charSpecies + `"}`
+	body := `{"name":"` + charName + `","species":"` + charSpecies + `","class":"paladin-level1"}`
 	event := events.APIGatewayProxyRequest{
 		Body: body,
 		RequestContext: events.APIGatewayProxyRequestContext{
@@ -393,6 +393,90 @@ func TestHandle_MissingSpecies_Returns400(t *testing.T) {
 	}
 }
 
+func TestHandle_MissingClass_Returns400(t *testing.T) {
+	ctx := context.Background()
+	db := &mockDB{}
+	h := newHandler(db)
+
+	event := events.APIGatewayProxyRequest{
+		Body: `{"name":"Gandalf","species":"human"}`,
+		RequestContext: events.APIGatewayProxyRequestContext{
+			Authorizer: map[string]any{
+				"claims": map[string]any{
+					"sub": "user-123",
+				},
+			},
+		},
+	}
+
+	resp, err := h.handle(ctx, event)
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected status 400, got %d", resp.StatusCode)
+	}
+	if db.queryByGsiSeedPKCalled {
+		t.Error("expected queryByGsiSeedPK NOT to be called")
+	}
+}
+
+func TestHandle_ValidRequest_WithAdditionalRuleGroups(t *testing.T) {
+	ctx := context.Background()
+	seedRecords := []map[string]any{
+		{
+			"PK": "SEED#USER#$(userId)", "SK": "CHAR#$(characterId)", "gsiSeedPK": "SEED#CHAR",
+			"type": "CHAR", "characterId": "$(characterId)", "userId": "$(userId)",
+			"name": "$(name)", "species": "$(species)", "class": "$(class)", "effects": "$(effects)",
+			"createdAt": "$(now)", "updatedAt": "$(now)",
+		},
+		{
+			"PK": "SEED#CHAR#$(characterId)", "SK": "RULEGROUP#turn-rest",
+			"gsiSeedPK": "SEED#CHAR", "ruleGroupId": "turn-rest", "enabled": true,
+		},
+	}
+
+	db := &mockDB{
+		queryByGsiSeedPKFunc: func(ctx context.Context, pk string) ([]map[string]any, error) {
+			return seedRecords, nil
+		},
+		batchWriteItemsFunc: func(ctx context.Context, items []map[string]any) error {
+			return nil
+		},
+	}
+	h := newHandler(db)
+
+	event := events.APIGatewayProxyRequest{
+		Body: `{"name":"Test","species":"human","class":"paladin-level1","additionalRuleGroupIds":["greataxe-mastery"]}`,
+		RequestContext: events.APIGatewayProxyRequestContext{
+			Authorizer: map[string]any{
+				"claims": map[string]any{"sub": "user-123"},
+			},
+		},
+	}
+
+	resp, err := h.handle(ctx, event)
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+	if resp.StatusCode != http.StatusCreated {
+		t.Fatalf("expected status 201, got %d: %s", resp.StatusCode, resp.Body)
+	}
+
+	var responseBody map[string]any
+	json.Unmarshal([]byte(resp.Body), &responseBody)
+	ruleGroupIds, _ := responseBody["ruleGroupIds"].([]any)
+	found := false
+	for _, id := range ruleGroupIds {
+		if id == "greataxe-mastery" {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("expected ruleGroupIds to contain 'greataxe-mastery'")
+	}
+}
+
 func TestHandle_EmptyName_Returns400(t *testing.T) {
 	// Arrange
 	ctx := context.Background()
@@ -484,7 +568,7 @@ func TestHandle_ExtractsUserIdFromJWT(t *testing.T) {
 	h := newHandler(db)
 
 	event := events.APIGatewayProxyRequest{
-		Body: `{"name":"Test","species":"human"}`,
+		Body: `{"name":"Test","species":"human","class":"paladin-level1"}`,
 		RequestContext: events.APIGatewayProxyRequestContext{
 			Authorizer: map[string]any{
 				"claims": map[string]any{
@@ -542,7 +626,7 @@ func TestHandle_QueriesCharSeeds(t *testing.T) {
 	h := newHandler(db)
 
 	event := events.APIGatewayProxyRequest{
-		Body: `{"name":"Test","species":"human"}`,
+		Body: `{"name":"Test","species":"human","class":"paladin-level1"}`,
 		RequestContext: events.APIGatewayProxyRequestContext{
 			Authorizer: map[string]any{
 				"claims": map[string]any{
@@ -595,7 +679,7 @@ func TestHandle_GeneratesValidUUID(t *testing.T) {
 	h := newHandler(db)
 
 	event := events.APIGatewayProxyRequest{
-		Body: `{"name":"Test","species":"human"}`,
+		Body: `{"name":"Test","species":"human","class":"paladin-level1"}`,
 		RequestContext: events.APIGatewayProxyRequestContext{
 			Authorizer: map[string]any{
 				"claims": map[string]any{
@@ -738,7 +822,7 @@ func TestHandle_SeedQueryFails_Returns500(t *testing.T) {
 	h := newHandler(db)
 
 	event := events.APIGatewayProxyRequest{
-		Body: `{"name":"Test","species":"human"}`,
+		Body: `{"name":"Test","species":"human","class":"paladin-level1"}`,
 		RequestContext: events.APIGatewayProxyRequestContext{
 			Authorizer: map[string]any{
 				"claims": map[string]any{
@@ -791,7 +875,7 @@ func TestHandle_WriteFails_Returns500(t *testing.T) {
 	h := newHandler(db)
 
 	event := events.APIGatewayProxyRequest{
-		Body: `{"name":"Test","species":"human"}`,
+		Body: `{"name":"Test","species":"human","class":"paladin-level1"}`,
 		RequestContext: events.APIGatewayProxyRequestContext{
 			Authorizer: map[string]any{
 				"claims": map[string]any{

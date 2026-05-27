@@ -71,6 +71,12 @@ resource "aws_dynamodb_table_item" "char_seed" {
     species = {
       S = "$(species)"
     }
+    class = {
+      S = "$(class)"
+    }
+    effects = {
+      S = "$(effects)"
+    }
     createdAt = {
       S = "$(now)"
     }
@@ -808,6 +814,46 @@ resource "aws_dynamodb_table_item" "char_species_rulegroup_seed" {
     }
     ruleGroupId = {
       S = "species-$(species)"
+    }
+    userId = {
+      S = "$(userId)"
+    }
+    enabled = {
+      BOOL = true
+    }
+    createdAt = {
+      S = "$(now)"
+    }
+    updatedAt = {
+      S = "$(now)"
+    }
+  })
+}
+
+# Class rule group seed - creates the class-specific rule group assignment
+resource "aws_dynamodb_table_item" "char_class_rulegroup_seed" {
+  table_name = aws_dynamodb_table.data.name
+  hash_key   = "PK"
+  range_key  = "SK"
+
+  item = jsonencode({
+    PK = {
+      S = "SEED#CHAR#$(characterId)"
+    }
+    SK = {
+      S = "RULEGROUP#class-$(class)"
+    }
+    gsiSeedPK = {
+      S = "SEED#CHAR"
+    }
+    type = {
+      S = "CHAR"
+    }
+    characterId = {
+      S = "$(characterId)"
+    }
+    ruleGroupId = {
+      S = "class-$(class)"
     }
     userId = {
       S = "$(userId)"

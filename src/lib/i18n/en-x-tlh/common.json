@@ -840,6 +840,20 @@
     "label": "Segh",
     "human": "Human"
   },
+  "class": {
+    "label": "Segh yotlh",
+    "paladin-level1": "SuvwI' Sub"
+  },
+  "wizard": {
+    "stepBasics": "Chut",
+    "stepSettings": "{{name}} laH",
+    "stepConfirm": "ChIch",
+    "next": "Chel",
+    "back": "chap",
+    "create": "chenmoH",
+    "creating": "chenmoHtaH...",
+    "confirmSummary": "{{name}} — {{species}} {{class}}"
+  },
   "rules": {
     "manageTitle": "DIvI' SeH",
     "searchPlaceholder": "DIvI' mugh...",

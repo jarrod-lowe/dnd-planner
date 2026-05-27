@@ -840,6 +840,20 @@
     "label": "Species",
     "human": "Human"
   },
+  "class": {
+    "label": "Class",
+    "paladin-level1": "Paladin"
+  },
+  "wizard": {
+    "stepBasics": "Basics",
+    "stepSettings": "Configure {{name}}",
+    "stepConfirm": "Confirm",
+    "next": "Next",
+    "back": "Back",
+    "create": "Create",
+    "creating": "Creating...",
+    "confirmSummary": "{{name}} — {{species}} {{class}}"
+  },
   "rules": {
     "manageTitle": "Manage Rules",
     "searchPlaceholder": "Search rule groups...",
