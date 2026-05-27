@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { t } from '$lib/i18n';
+  import { t, locale } from '$lib/i18n';
   import { tick } from 'svelte';
+  import { get } from 'svelte/store';
   import type { Snippet } from 'svelte';
   import SettingsForm from './SettingsForm.svelte';
   import { ensureCached, getCache } from '$lib/rules/ruleGroupCache.svelte';
@@ -66,7 +67,7 @@
     loadError = null;
     const ids = [`species-${selectedSpecies}`, `class-${selectedClass}`];
     try {
-      await ensureCached(ids, 'en');
+      await ensureCached(ids, get(locale));
       const cache = getCache();
       const missing = ids.filter((id) => !cache.has(id));
       if (missing.length > 0) {
@@ -322,7 +323,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.5);
+    background: color-mix(in srgb, var(--md-sys-color-scrim) 50%, transparent);
     z-index: 1000;
   }
 

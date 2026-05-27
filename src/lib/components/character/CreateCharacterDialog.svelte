@@ -303,7 +303,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.5);
+    background: color-mix(in srgb, var(--md-sys-color-scrim) 50%, transparent);
     z-index: 1000;
   }
 
