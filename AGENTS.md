@@ -38,6 +38,11 @@ These rules are critical. Keep them through compactions, and add them into an pl
 
 Avoid `$(...)` in commands, as they trigger security checks that slow you down.
 
+### Git
+
+- **NEVER** commit to git while tests fail
+- **NEVER** commit to main
+
 ### Plan Execution
 
 - **If you discover a plan won't work, STOP.** Do not change tack or improvise a different approach. Ask the user how to proceed before continuing.
