@@ -42,6 +42,17 @@ export interface SelectOption {
   ariaLabel?: string;
 }
 
+export interface SegmentedOption {
+  value: number;
+  label: string;
+}
+
+export interface SegmentedControl extends ControlBase {
+  type: 'segmented';
+  var: string;
+  options: SegmentedOption[];
+}
+
 export interface SelectControl extends ControlBase {
   type: 'select';
   var: string;
@@ -56,7 +67,12 @@ export interface TextInputControl extends ControlBase {
   multiline?: boolean;
 }
 
-export type Control = DiceLineControl | SliderControl | SelectControl | TextInputControl;
+export type Control =
+  | DiceLineControl
+  | SliderControl
+  | SelectControl
+  | TextInputControl
+  | SegmentedControl;
 
 export interface TextInformation {
   type: 'text';
