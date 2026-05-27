@@ -4,10 +4,7 @@ import path from 'path';
 import yaml from 'js-yaml';
 
 describe('save rules structure', () => {
-  const yamlPath = path.resolve(
-    process.cwd(),
-    'data/rule-groups/dnd-5e-2024/core-events.yaml'
-  );
+  const yamlPath = path.resolve(process.cwd(), 'data/rule-groups/dnd-5e-2024/core-events.yaml');
   let rules: {
     id: string;
     activities?: {
