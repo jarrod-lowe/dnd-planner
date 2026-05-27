@@ -84,15 +84,29 @@ function clearSelection(): void {
   localStorage.removeItem(STORAGE_KEY);
 }
 
+interface CreateCharacterOptions {
+  name: string;
+  species: string;
+  class?: string;
+  additionalRuleGroupIds?: string[];
+  effects?: unknown[];
+}
+
 /**
  * Create a new character.
  * POSTs to /api/characters and auto-selects the new character.
  */
-async function createCharacter(name: string, species: string): Promise<void> {
+async function createCharacter(options: CreateCharacterOptions): Promise<void> {
   state = { ...state, isLoading: true, error: null };
 
   try {
-    const response = await apiPost('/api/characters', { name, species });
+    const response = await apiPost('/api/characters', {
+      name: options.name,
+      species: options.species,
+      class: options.class ?? '',
+      additionalRuleGroupIds: options.additionalRuleGroupIds ?? [],
+      effects: options.effects ?? []
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to create character: ${response.status}`);

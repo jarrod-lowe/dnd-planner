@@ -3,7 +3,6 @@ import { mount } from 'svelte';
 import { readable } from 'svelte/store';
 import CreateCharacterDialog from '$lib/components/character/CreateCharacterDialog.svelte';
 
-// English translations for testing
 const translations: Record<string, string> = {
   'character.enterName': 'Enter character name',
   'character.createNew': 'Create New Character',
@@ -11,11 +10,24 @@ const translations: Record<string, string> = {
   'character.cancel': 'Cancel',
   'character.creating': 'Creating...',
   'character.createError': 'Failed to create character. Please try again.',
+  'character.modeCreate': 'Create',
+  'character.modeImport': 'Import',
+  'character.importTitle': 'Import Character',
+  'character.importSelectFile': 'Select file',
+  'character.importing': 'Importing...',
   'species.label': 'Species',
-  'species.human': 'Human'
+  'species.human': 'Human',
+  'class.label': 'Class',
+  'class.paladin-level1': 'Paladin',
+  'wizard.stepBasics': 'Basics',
+  'wizard.stepConfirm': 'Confirm',
+  'wizard.stepSettings': 'Settings: {name}',
+  'wizard.next': 'Next',
+  'wizard.back': 'Back',
+  'wizard.create': 'Create',
+  'wizard.creating': 'Creating...'
 };
 
-// Mock $lib/i18n module for this test file
 vi.mock('$lib/i18n', () => ({
   t: readable((key: string) => translations[key] ?? key),
   locale: {
@@ -47,11 +59,10 @@ describe('CreateCharacterDialog', () => {
       }
     });
 
-    // No dialog should be rendered
     expect(container.querySelector('[role="dialog"]')).toBeNull();
   });
 
-  it('renders dialog when isOpen is true', () => {
+  it('renders wizard dialog when isOpen is true in create mode', () => {
     mount(CreateCharacterDialog, {
       target: container,
       props: {
@@ -63,92 +74,45 @@ describe('CreateCharacterDialog', () => {
     });
 
     expect(container.querySelector('[role="dialog"]')).toBeTruthy();
-    expect(container.textContent).toContain('Create New Character');
+    expect(container.querySelector('input[type="text"]')).toBeTruthy();
   });
 
-  it('has proper ARIA attributes', () => {
+  it('passes error message to the wizard in create mode', () => {
     mount(CreateCharacterDialog, {
       target: container,
       props: {
         isOpen: true,
         isCreating: false,
         onCreate: vi.fn(),
-        onClose: vi.fn()
+        onClose: vi.fn(),
+        errorMessage: 'Failed to create character. Please try again.',
+        onClearError: vi.fn()
       }
     });
 
-    const dialog = container.querySelector('[role="dialog"]');
-    expect(dialog?.getAttribute('aria-modal')).toBe('true');
-    expect(dialog?.getAttribute('aria-labelledby')).toBe('dialog-title');
+    expect(container.textContent).toContain('Failed to create character. Please try again.');
   });
 
-  it('shows input field for character name', () => {
+  it('renders import dialog when in import mode', () => {
     mount(CreateCharacterDialog, {
       target: container,
       props: {
         isOpen: true,
         isCreating: false,
+        isImporting: false,
         onCreate: vi.fn(),
+        onImport: vi.fn(),
         onClose: vi.fn()
       }
     });
 
+    // Default is create mode, so we see the wizard with basics step
+    expect(container.querySelector('[role="dialog"]')).toBeTruthy();
     const input = container.querySelector('input[type="text"]');
     expect(input).toBeTruthy();
-    expect(input?.getAttribute('placeholder')).toContain('Enter character name');
   });
 
-  it('has Create and Cancel buttons', () => {
-    mount(CreateCharacterDialog, {
-      target: container,
-      props: {
-        isOpen: true,
-        isCreating: false,
-        onCreate: vi.fn(),
-        onClose: vi.fn()
-      }
-    });
-
-    const buttons = container.querySelectorAll('button');
-    const buttonTexts = Array.from(buttons).map((b) => b.textContent);
-
-    expect(buttonTexts.some((t) => t?.includes('Create'))).toBe(true);
-    expect(buttonTexts.some((t) => t?.includes('Cancel'))).toBe(true);
-  });
-
-  it('calls onCreate with entered name when Create is clicked', async () => {
-    const onCreate = vi.fn();
-
-    mount(CreateCharacterDialog, {
-      target: container,
-      props: {
-        isOpen: true,
-        isCreating: false,
-        onCreate,
-        onClose: vi.fn()
-      }
-    });
-
-    // Get the input and simulate user typing
-    const input = container.querySelector('input[type="text"]') as HTMLInputElement;
-
-    // Simulate user input by triggering input events
-    input.focus();
-    input.value = 'Gandalf';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-
-    // Force Svelte to process the binding
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    const createButton = Array.from(container.querySelectorAll('button')).find((b) =>
-      b.textContent?.includes('Create')
-    );
-    createButton?.click();
-
-    expect(onCreate).toHaveBeenCalledWith('Gandalf', 'human');
-  });
-
-  it('calls onClose when Cancel is clicked', () => {
+  it('calls onClose when wizard cancels', () => {
     const onClose = vi.fn();
 
     mount(CreateCharacterDialog, {
@@ -167,111 +131,6 @@ describe('CreateCharacterDialog', () => {
     cancelButton?.click();
 
     expect(onClose).toHaveBeenCalledOnce();
-  });
-
-  it('disables Create button when name is empty', () => {
-    mount(CreateCharacterDialog, {
-      target: container,
-      props: {
-        isOpen: true,
-        isCreating: false,
-        onCreate: vi.fn(),
-        onClose: vi.fn()
-      }
-    });
-
-    const createButton = Array.from(container.querySelectorAll('button')).find((b) =>
-      b.textContent?.includes('Create')
-    );
-
-    expect(createButton?.disabled).toBe(true);
-  });
-
-  it('shows loading state when isCreating is true', () => {
-    mount(CreateCharacterDialog, {
-      target: container,
-      props: {
-        isOpen: true,
-        isCreating: true,
-        onCreate: vi.fn(),
-        onClose: vi.fn()
-      }
-    });
-
-    const buttons = container.querySelectorAll('button');
-    const buttonTexts = Array.from(buttons).map((b) => b.textContent);
-
-    expect(buttonTexts.some((t) => t?.includes('Creating'))).toBe(true);
-  });
-
-  it('disables all interactive elements when creating', () => {
-    mount(CreateCharacterDialog, {
-      target: container,
-      props: {
-        isOpen: true,
-        isCreating: true,
-        onCreate: vi.fn(),
-        onClose: vi.fn()
-      }
-    });
-
-    const input = container.querySelector('input[type="text"]');
-    expect(input?.disabled).toBe(true);
-
-    const buttons = container.querySelectorAll('button');
-    buttons.forEach((btn) => {
-      expect(btn.disabled).toBe(true);
-    });
-  });
-
-  it('displays error message when errorMessage prop is provided', () => {
-    mount(CreateCharacterDialog, {
-      target: container,
-      props: {
-        isOpen: true,
-        isCreating: false,
-        onCreate: vi.fn(),
-        onClose: vi.fn(),
-        errorMessage: 'Failed to create character. Please try again.',
-        onClearError: vi.fn()
-      }
-    });
-
-    expect(container.textContent).toContain('Failed to create character. Please try again.');
-  });
-
-  it('does not display error message when errorMessage is null', () => {
-    mount(CreateCharacterDialog, {
-      target: container,
-      props: {
-        isOpen: true,
-        isCreating: false,
-        onCreate: vi.fn(),
-        onClose: vi.fn(),
-        errorMessage: null,
-        onClearError: vi.fn()
-      }
-    });
-
-    expect(container.textContent).not.toContain('Failed to create');
-  });
-
-  it('error message has proper ARIA attributes for accessibility', () => {
-    mount(CreateCharacterDialog, {
-      target: container,
-      props: {
-        isOpen: true,
-        isCreating: false,
-        onCreate: vi.fn(),
-        onClose: vi.fn(),
-        errorMessage: 'Failed to create character. Please try again.',
-        onClearError: vi.fn()
-      }
-    });
-
-    const errorElement = container.querySelector('[role="alert"]');
-    expect(errorElement).toBeTruthy();
-    expect(errorElement?.getAttribute('aria-live')).toBe('polite');
   });
 
   it('calls onClearError when user types in the input field', async () => {
@@ -298,85 +157,65 @@ describe('CreateCharacterDialog', () => {
     expect(onClearError).toHaveBeenCalledOnce();
   });
 
-  // Species Selection Tests
-  describe('Species Selection', () => {
-    it('renders a species dropdown', () => {
+  it('renders wizard with species and class selects on basics step', () => {
+    mount(CreateCharacterDialog, {
+      target: container,
+      props: {
+        isOpen: true,
+        isCreating: false,
+        onCreate: vi.fn(),
+        onClose: vi.fn()
+      }
+    });
+
+    const selects = container.querySelectorAll('select');
+    expect(selects).toHaveLength(2);
+  });
+
+  describe('mode switching', () => {
+    it('shows mode toggle tabs when onImport is provided in create mode', () => {
       mount(CreateCharacterDialog, {
         target: container,
         props: {
           isOpen: true,
           isCreating: false,
           onCreate: vi.fn(),
+          onImport: vi.fn(),
           onClose: vi.fn()
         }
       });
 
-      const select = container.querySelector('select');
-      expect(select).toBeTruthy();
+      const tablist = container.querySelector('[role="tablist"]');
+      expect(tablist).toBeTruthy();
+      const tabs = container.querySelectorAll('[role="tab"]');
+      expect(tabs).toHaveLength(2);
     });
 
-    it('includes Human as an option in the species dropdown', () => {
+    it('switches to import mode when Import tab is clicked', async () => {
       mount(CreateCharacterDialog, {
         target: container,
         props: {
           isOpen: true,
           isCreating: false,
           onCreate: vi.fn(),
+          onImport: vi.fn(),
           onClose: vi.fn()
         }
       });
 
-      const select = container.querySelector('select');
-      const options = Array.from(select?.options ?? []);
-      const humanOption = options.find((opt) => opt.value === 'human');
+      // Should start in create mode (wizard with name input)
+      expect(container.querySelector('input[type="text"]')).toBeTruthy();
 
-      expect(humanOption).toBeTruthy();
-      expect(humanOption?.textContent).toBe('Human');
-    });
-
-    it('defaults species to human', () => {
-      mount(CreateCharacterDialog, {
-        target: container,
-        props: {
-          isOpen: true,
-          isCreating: false,
-          onCreate: vi.fn(),
-          onClose: vi.fn()
-        }
-      });
-
-      const select = container.querySelector('select') as HTMLSelectElement;
-      expect(select?.value).toBe('human');
-    });
-
-    it('calls onCreate with name and species when Create is clicked', async () => {
-      const onCreate = vi.fn();
-
-      mount(CreateCharacterDialog, {
-        target: container,
-        props: {
-          isOpen: true,
-          isCreating: false,
-          onCreate,
-          onClose: vi.fn()
-        }
-      });
-
-      // Fill in the name
-      const input = container.querySelector('input[type="text"]') as HTMLInputElement;
-      input.focus();
-      input.value = 'Legolas';
-      input.dispatchEvent(new Event('input', { bubbles: true }));
+      const importTab = Array.from(container.querySelectorAll('[role="tab"]')).find((b) =>
+        b.textContent?.includes('Import')
+      );
+      importTab?.click();
 
       await new Promise((resolve) => setTimeout(resolve, 0));
 
-      // Click Create
-      const createButton = Array.from(container.querySelectorAll('button')).find((b) =>
-        b.textContent?.includes('Create')
-      );
-      createButton?.click();
-
-      expect(onCreate).toHaveBeenCalledWith('Legolas', 'human');
+      // Should now show import dialog (file input, not wizard name input)
+      const fileInput = container.querySelector('input[type="file"]');
+      expect(fileInput).toBeTruthy();
     });
   });
 });

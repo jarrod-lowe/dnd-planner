@@ -817,6 +817,7 @@
     "noCharacters": "nuv DaDajbe' ",
     "loading": "nuv DIvI'...",
     "createError": "nuv chenmoHlaHbe'. yInIDqa'.",
+    "loadSettingsError": "nuv DIvI' chu' DIvI'laHbe'. yInIDqa'.",
     "delete": "Qaw'",
     "deleteConfirm": "{name} Qaw' net DaneH'a'?",
     "deleteWarning": "vam choqHa'lu'be'.",
@@ -831,7 +832,7 @@
     "importError": "nuv SuqlaHbe'.",
     "importInvalidVersion": "De' mI' DeSHa'.",
     "importInvalidJson": "JSON De' DeSHa'.",
-    "importMissingRuleGroups": "DIvI' chab lutu'lu'be': {groups}",
+    "importMissingRuleGroups": "DIvI' chab lutu'lu'be': {{groups}}",
     "importErrorMissingName": "pong lutu'lu'be' ghap DeSHa'",
     "importErrorMissingSpecies": "Segh lutu'lu'be' ghap DeSHa'",
     "importErrorMissingRuleGroups": "DIvI' chab lutu'lu'be' ghap DeSHa'"
@@ -839,6 +840,21 @@
   "species": {
     "label": "Segh",
     "human": "Human"
+  },
+  "class": {
+    "label": "Segh yotlh",
+    "paladin-level1": "SuvwI' Sub"
+  },
+  "wizard": {
+    "stepBasics": "Chut",
+    "stepSettings": "{{name}} laH",
+    "stepConfirm": "ChIch",
+    "next": "Chel",
+    "back": "chap",
+    "create": "chenmoH",
+    "creating": "chenmoHtaH...",
+    "confirmSummary": "{{name}} — {{species}} {{class}}",
+    "progressLabel": "mI' DIvI'"
   },
   "rules": {
     "manageTitle": "DIvI' SeH",

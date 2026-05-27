@@ -43,7 +43,7 @@ describe('characterStore', () => {
   });
 
   describe('createCharacter', () => {
-    it('sends name and species to the API', async () => {
+    it('sends name, species, and class to the API', async () => {
       const mockApiPost = vi.mocked(apiPost);
       mockApiPost.mockResolvedValue({
         ok: true,
@@ -52,6 +52,7 @@ describe('characterStore', () => {
           userId: 'user-1',
           name: 'Aragorn',
           species: 'human',
+          class: 'paladin-level1',
           createdAt: '2024-01-01T00:00:00Z',
           updatedAt: '2024-01-01T00:00:00Z'
         })
@@ -60,11 +61,18 @@ describe('characterStore', () => {
       // Import store after mocks are set up
       const { characterStore } = await import('$lib/character/characterStore.svelte');
 
-      await characterStore.createCharacter('Aragorn', 'human');
+      await characterStore.createCharacter({
+        name: 'Aragorn',
+        species: 'human',
+        class: 'paladin-level1'
+      });
 
       expect(mockApiPost).toHaveBeenCalledWith('/api/characters', {
         name: 'Aragorn',
-        species: 'human'
+        species: 'human',
+        class: 'paladin-level1',
+        additionalRuleGroupIds: [],
+        effects: []
       });
     });
 
@@ -74,6 +82,7 @@ describe('characterStore', () => {
         userId: 'user-1',
         name: 'Aragorn',
         species: 'human',
+        class: 'paladin-level1',
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-01T00:00:00Z'
       };
@@ -87,7 +96,11 @@ describe('characterStore', () => {
       const { characterStore } = await import('$lib/character/characterStore.svelte');
 
       characterStore.reset();
-      await characterStore.createCharacter('Aragorn', 'human');
+      await characterStore.createCharacter({
+        name: 'Aragorn',
+        species: 'human',
+        class: 'paladin-level1'
+      });
 
       expect(characterStore.state.characters).toContainEqual(newCharacter);
       expect(characterStore.state.selectedCharacter).toEqual(newCharacter);
@@ -120,6 +133,7 @@ describe('characterStore', () => {
         userId: 'user-1',
         name: 'Aragorn',
         species: 'human',
+        class: 'paladin-level1',
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-01T00:00:00Z'
       };
@@ -128,6 +142,7 @@ describe('characterStore', () => {
         userId: 'user-1',
         name: 'Legolas',
         species: 'elf',
+        class: 'paladin-level1',
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-01T00:00:00Z'
       };
@@ -151,6 +166,7 @@ describe('characterStore', () => {
         userId: 'user-1',
         name: 'Aragorn',
         species: 'human',
+        class: 'paladin-level1',
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-01T00:00:00Z'
       };
@@ -159,6 +175,7 @@ describe('characterStore', () => {
         userId: 'user-1',
         name: 'Legolas',
         species: 'elf',
+        class: 'paladin-level1',
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-01T00:00:00Z'
       };
@@ -182,6 +199,7 @@ describe('characterStore', () => {
         userId: 'user-1',
         name: 'Aragorn',
         species: 'human',
+        class: 'paladin-level1',
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-01T00:00:00Z'
       };
@@ -190,6 +208,7 @@ describe('characterStore', () => {
         userId: 'user-1',
         name: 'Legolas',
         species: 'elf',
+        class: 'paladin-level1',
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-01T00:00:00Z'
       };

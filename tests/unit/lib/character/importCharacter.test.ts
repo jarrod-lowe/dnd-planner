@@ -159,7 +159,6 @@ describe('importCharacter', () => {
     effects: []
   };
   const defaultAssigned = [
-    'turn-rest',
     'action-economy',
     'proficiency',
     'movement',
@@ -203,7 +202,7 @@ describe('importCharacter', () => {
   it('skips rule groups already assigned by character creation', async () => {
     const data = {
       ...baseData,
-      ruleGroups: ['dnd-5e-2024', 'turn-rest', 'species-human', 'proficiency']
+      ruleGroups: ['dnd-5e-2024', 'species-human', 'proficiency']
     };
     const deps = createMockDeps(defaultAssigned);
     await importCharacter(data, 'Thorin', deps);
@@ -216,7 +215,7 @@ describe('importCharacter', () => {
   it('does not assign any groups when all are already assigned', async () => {
     const data = {
       ...baseData,
-      ruleGroups: ['turn-rest', 'proficiency']
+      ruleGroups: ['proficiency', 'movement']
     };
     const deps = createMockDeps(defaultAssigned);
     await importCharacter(data, 'Thorin', deps);

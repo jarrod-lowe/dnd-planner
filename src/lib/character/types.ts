@@ -16,6 +16,7 @@ export interface Character {
   userId: string;
   name: string;
   species: string;
+  class: string;
   baseStats?: BaseStats;
   createdAt: string;
   updatedAt: string;

@@ -335,13 +335,6 @@ func TestInstantiate_WritesToDynamoDB(t *testing.T) {
 		},
 		{
 			"PK":          "SEED#CHAR#$(characterId)",
-			"SK":          "RULEGROUP#turn-rest",
-			"gsiSeedPK":   "SEED#CHAR",
-			"ruleGroupId": "turn-rest",
-			"enabled":     true,
-		},
-		{
-			"PK":          "SEED#CHAR#$(characterId)",
 			"SK":          "RULEGROUP#action-economy",
 			"gsiSeedPK":   "SEED#CHAR",
 			"ruleGroupId": "action-economy",
@@ -401,9 +394,9 @@ func TestInstantiate_WritesToDynamoDB(t *testing.T) {
 		t.Error("expected batchWriteItems to be called")
 	}
 
-	// Verify all 7 records were written (1 CHAR + 6 RULEGROUP)
-	if len(db.batchWriteItemsPayloads) != 7 {
-		t.Errorf("expected 7 records to be written, got %d", len(db.batchWriteItemsPayloads))
+	// Verify all 6 records were written (1 CHAR + 5 RULEGROUP)
+	if len(db.batchWriteItemsPayloads) != 6 {
+		t.Errorf("expected 6 records to be written, got %d", len(db.batchWriteItemsPayloads))
 	}
 }
 

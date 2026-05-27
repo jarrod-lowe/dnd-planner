@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { t, locale } from '$lib/i18n';
+  import { t } from '$lib/i18n';
   import type { SettingDefinition } from '$lib/rules/settingsTypes';
   import { get } from 'svelte/store';
   import { SvelteMap } from 'svelte/reactivity';
+  import SettingsForm from './SettingsForm.svelte';
 
   interface SettingsGroup {
     ruleGroupId: string;
@@ -24,22 +25,6 @@
 
   const allSettings = $derived(groups.flatMap((g) => g.settings));
   const allFilled = $derived(allSettings.every((s) => selections[s.id]));
-
-  function getSettingName(setting: SettingDefinition): string {
-    const currentLocale = get(locale);
-    return (
-      setting.translations[currentLocale]?.name ?? setting.translations['en']?.name ?? setting.id
-    );
-  }
-
-  function getOptionName(setting: SettingDefinition, optionValue: string): string {
-    const currentLocale = get(locale);
-    const option = setting.options.find((o) => o.value === optionValue);
-    if (!option) return optionValue;
-    return (
-      option.translations[currentLocale]?.name ?? option.translations['en']?.name ?? optionValue
-    );
-  }
 
   function handleConfirm(): void {
     const result = new SvelteMap<string, Record<string, string>>();
@@ -94,7 +79,7 @@
       onclick={(e) => e.stopPropagation()}
     >
       <h2 id="settings-dialog-title" class="dialog__title">
-        {get(t)('rules.settingsTitle', { name: groups[0]?.name ?? '' })}
+        {get(t)('rules.settingsTitle', { name: groups[0]?.name ?? '' } as Record<string, unknown>)}
       </h2>
 
       <div class="dialog__content">
@@ -102,23 +87,13 @@
           {#if groups.length > 1}
             <h3 class="dialog__group-title">{group.name}</h3>
           {/if}
-          {#each group.settings as setting (setting.id)}
-            <label class="dialog__label">
-              <span>{getSettingName(setting)}</span>
-              <select
-                class="dialog__select"
-                onchange={(e) => {
-                  selections = { ...selections, [setting.id]: e.currentTarget.value };
-                }}
-                value={selections[setting.id] ?? ''}
-              >
-                <option value="" disabled>{get(t)('rules.settingsSelectPlaceholder')}</option>
-                {#each setting.options as option (option.value)}
-                  <option value={option.value}>{getOptionName(setting, option.value)}</option>
-                {/each}
-              </select>
-            </label>
-          {/each}
+          <SettingsForm
+            settings={group.settings}
+            values={selections}
+            onchange={(newValues) => {
+              selections = newValues;
+            }}
+          />
         {/each}
       </div>
 
@@ -187,34 +162,6 @@
     color: var(--md-sys-color-on-surface-variant);
     border-bottom: 1px solid var(--md-sys-color-outline-variant);
     padding-bottom: var(--spacing-xs);
-  }
-
-  .dialog__label {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-    font-family: var(--font-body);
-    font-size: var(--font-size-sm);
-    color: var(--md-sys-color-on-surface-variant);
-  }
-
-  .dialog__select {
-    width: 100%;
-    padding: var(--spacing-md);
-    font-family: var(--font-body);
-    font-size: var(--font-size-md);
-    color: var(--md-sys-color-on-surface);
-    background: var(--md-sys-color-surface);
-    border: 1px solid var(--md-sys-color-outline-variant);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    min-height: 2.75rem;
-    transition: border-color var(--transition-fast);
-  }
-
-  .dialog__select:focus {
-    outline: none;
-    border-color: var(--md-sys-color-primary);
   }
 
   .dialog__actions {

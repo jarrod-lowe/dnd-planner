@@ -1,10 +1,7 @@
 <script lang="ts">
   import { t } from '$lib/i18n';
   import { tick } from 'svelte';
-
-  // Available species options (hardcoded for now, will expand later)
-  const SPECIES_OPTIONS = ['human'] as const;
-  type Species = (typeof SPECIES_OPTIONS)[number];
+  import CreationWizard from './CreationWizard.svelte';
 
   type DialogMode = 'create' | 'import';
 
@@ -12,7 +9,13 @@
     isOpen: boolean;
     isCreating: boolean;
     isImporting?: boolean;
-    onCreate: (name: string, species: Species) => void;
+    onCreate: (options: {
+      name: string;
+      species: string;
+      class: string;
+      additionalRuleGroupIds: string[];
+      effects: unknown[];
+    }) => void;
     onImport?: (parsedJson: unknown, chosenName: string) => void;
     onClose: () => void;
     errorMessage?: string | null;
@@ -31,8 +34,6 @@
   }: Props = $props();
 
   let activeMode = $state<DialogMode>('create');
-  let characterName = $state('');
-  let selectedSpecies = $state<Species>('human');
   let importName = $state('');
   let parsedFileData: unknown = $state(null);
   let importError = $state<string | null>(null);
@@ -47,46 +48,6 @@
     activeMode = mode;
     onClearError?.();
     resetImportState();
-  }
-
-  function handleSubmit() {
-    const trimmedName = characterName.trim();
-    if (trimmedName) {
-      onCreate(trimmedName, selectedSpecies);
-    }
-  }
-
-  function handleImport() {
-    const trimmedName = importName.trim();
-    if (parsedFileData && trimmedName) {
-      onImport?.(parsedFileData, trimmedName);
-    }
-  }
-
-  function handleCancel() {
-    onClose();
-  }
-
-  function handleTabKeydown(event: KeyboardEvent) {
-    const modes: DialogMode[] = ['create', 'import'];
-    const idx = modes.indexOf(activeMode);
-    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
-      event.preventDefault();
-      switchMode(modes[(idx + 1) % modes.length]);
-      document.getElementById('tab-' + modes[(idx + 1) % modes.length])?.focus();
-    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
-      event.preventDefault();
-      switchMode(modes[(idx - 1 + modes.length) % modes.length]);
-      document.getElementById('tab-' + modes[(idx - 1 + modes.length) % modes.length])?.focus();
-    } else if (event.key === 'Home') {
-      event.preventDefault();
-      switchMode(modes[0]);
-      document.getElementById('tab-create')?.focus();
-    } else if (event.key === 'End') {
-      event.preventDefault();
-      switchMode(modes[modes.length - 1]);
-      document.getElementById('tab-import')?.focus();
-    }
   }
 
   function handleFileChange(event: Event) {
@@ -136,16 +97,21 @@
     reader.readAsText(file);
   }
 
+  function handleImport() {
+    const trimmedName = importName.trim();
+    if (parsedFileData && trimmedName) {
+      onImport?.(parsedFileData, trimmedName);
+    }
+  }
+
   let dialogEl: HTMLDivElement | undefined = $state();
 
-  // Focus the dialog when it opens
   $effect(() => {
-    if (isOpen) {
+    if (isOpen && activeMode === 'import') {
       tick().then(() => dialogEl?.focus());
     }
   });
 
-  // Close on Escape key, trap Tab focus
   function handleKeydown(event: KeyboardEvent) {
     if (event.key === 'Escape' && !isCreating && !isImporting) {
       onClose();
@@ -153,6 +119,28 @@
     }
     if (event.key === 'Tab' && dialogEl) {
       trapFocus(event, dialogEl);
+    }
+  }
+
+  function handleTabKeydown(event: KeyboardEvent) {
+    const modes: DialogMode[] = ['create', 'import'];
+    const idx = modes.indexOf(activeMode);
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      switchMode(modes[(idx + 1) % modes.length]);
+      document.getElementById('tab-' + modes[(idx + 1) % modes.length])?.focus();
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      switchMode(modes[(idx - 1 + modes.length) % modes.length]);
+      document.getElementById('tab-' + modes[(idx - 1 + modes.length) % modes.length])?.focus();
+    } else if (event.key === 'Home') {
+      event.preventDefault();
+      switchMode(modes[0]);
+      document.getElementById('tab-create')?.focus();
+    } else if (event.key === 'End') {
+      event.preventDefault();
+      switchMode(modes[modes.length - 1]);
+      document.getElementById('tab-import')?.focus();
     }
   }
 
@@ -177,87 +165,80 @@
   }
 </script>
 
-<svelte:window onkeydown={handleKeydown} />
+<svelte:window onkeydown={isOpen && activeMode === 'import' ? handleKeydown : undefined} />
 
 {#if isOpen}
-  <!-- svelte-ignore a11y_click_events_have_key_events -->
-  <div class="dialog-overlay" onclick={handleCancel} role="presentation">
-    <div
-      class="dialog"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="dialog-title"
-      bind:this={dialogEl}
-      tabindex="-1"
-      onclick={(e) => e.stopPropagation()}
-    >
-      <h2 id="dialog-title" class="dialog__title">
-        {activeMode === 'create' ? $t('character.createNew') : $t('character.importTitle')}
-      </h2>
-
-      {#if onImport}
-        <div
-          class="dialog__mode-toggle"
-          role="tablist"
-          aria-label="Dialog mode"
-          onkeydown={handleTabKeydown}
-        >
-          <button
-            type="button"
-            role="tab"
-            id="tab-create"
-            class="dialog__mode-button"
-            class:dialog__mode-button--active={activeMode === 'create'}
-            aria-selected={activeMode === 'create'}
-            aria-controls="dialog-tabpanel"
-            onclick={() => switchMode('create')}
-            disabled={isCreating || isImporting}
-          >
-            {$t('character.modeCreate')}
-          </button>
-          <button
-            type="button"
-            role="tab"
-            id="tab-import"
-            class="dialog__mode-button"
-            class:dialog__mode-button--active={activeMode === 'import'}
-            aria-selected={activeMode === 'import'}
-            aria-controls="dialog-tabpanel"
-            onclick={() => switchMode('import')}
-            disabled={isCreating || isImporting}
-          >
-            {$t('character.modeImport')}
-          </button>
-        </div>
-      {/if}
-
+  {#snippet tabBar()}
+    {#if onImport}
       <div
-        class="dialog__content"
-        role="tabpanel"
-        id="dialog-tabpanel"
-        aria-labelledby={activeMode === 'create' ? 'tab-create' : 'tab-import'}
+        class="dialog__mode-toggle"
+        role="tablist"
+        aria-label="Dialog mode"
         tabindex="0"
+        onkeydown={handleTabKeydown}
       >
-        {#if activeMode === 'create'}
-          <input
-            type="text"
-            class="dialog__input"
-            placeholder={$t('character.enterName')}
-            bind:value={characterName}
-            disabled={isCreating}
-            aria-label={$t('character.enterName')}
-            oninput={() => onClearError?.()}
-          />
+        <button
+          type="button"
+          role="tab"
+          id="tab-create"
+          class="dialog__mode-button"
+          class:dialog__mode-button--active={activeMode === 'create'}
+          aria-selected={activeMode === 'create'}
+          onclick={() => switchMode('create')}
+          disabled={isCreating || isImporting}
+        >
+          {$t('character.modeCreate')}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          id="tab-import"
+          class="dialog__mode-button"
+          class:dialog__mode-button--active={activeMode === 'import'}
+          aria-selected={activeMode === 'import'}
+          onclick={() => switchMode('import')}
+          disabled={isCreating || isImporting}
+        >
+          {$t('character.modeImport')}
+        </button>
+      </div>
+    {/if}
+  {/snippet}
 
-          <label class="dialog__label">
-            {$t('species.label')}
-            <select class="dialog__select" bind:value={selectedSpecies} disabled={isCreating}>
-              {#each SPECIES_OPTIONS as species (species)}
-                <option value={species}>{$t(`species.${species}`)}</option>
-              {/each}
-            </select>
-          </label>
-        {:else}
+  {#if activeMode === 'create'}
+    <CreationWizard
+      {isCreating}
+      {onCreate}
+      onCancel={onClose}
+      {errorMessage}
+      {onClearError}
+      header={tabBar}
+    />
+  {:else}
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <div class="dialog-overlay" onclick={onClose} role="presentation">
+      <div
+        class="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dialog-title"
+        bind:this={dialogEl}
+        tabindex="-1"
+        onclick={(e) => e.stopPropagation()}
+      >
+        {@render tabBar()}
+
+        <h2 id="dialog-title" class="dialog__title">
+          {$t('character.importTitle')}
+        </h2>
+
+        <div
+          class="dialog__content"
+          role="tabpanel"
+          id="dialog-tabpanel"
+          aria-labelledby="tab-import"
+          tabindex="0"
+        >
           <label class="dialog__label">
             {$t('character.importSelectFile')}
             <input
@@ -278,40 +259,29 @@
             aria-label={$t('character.enterName')}
             oninput={() => onClearError?.()}
           />
+        </div>
+
+        {#if errorMessage}
+          <p class="dialog__error" role="alert" aria-live="polite">
+            {errorMessage}
+          </p>
         {/if}
-      </div>
 
-      {#if errorMessage}
-        <p class="dialog__error" role="alert" aria-live="polite">
-          {errorMessage}
-        </p>
-      {/if}
+        {#if importError}
+          <p class="dialog__error" role="alert" aria-live="polite">
+            {importError}
+          </p>
+        {/if}
 
-      {#if importError}
-        <p class="dialog__error" role="alert" aria-live="polite">
-          {importError}
-        </p>
-      {/if}
-
-      <div class="dialog__actions">
-        <button
-          type="button"
-          class="dialog__button dialog__button--secondary"
-          onclick={handleCancel}
-          disabled={isCreating || isImporting}
-        >
-          {$t('character.cancel')}
-        </button>
-        {#if activeMode === 'create'}
+        <div class="dialog__actions">
           <button
             type="button"
-            class="dialog__button dialog__button--primary"
-            onclick={handleSubmit}
-            disabled={isCreating || !characterName.trim()}
+            class="dialog__button dialog__button--secondary"
+            onclick={onClose}
+            disabled={isCreating || isImporting}
           >
-            {isCreating ? $t('character.creating') : $t('character.create')}
+            {$t('character.cancel')}
           </button>
-        {:else}
           <button
             type="button"
             class="dialog__button dialog__button--primary"
@@ -320,10 +290,10 @@
           >
             {isImporting ? $t('character.importing') : $t('character.modeImport')}
           </button>
-        {/if}
+        </div>
       </div>
     </div>
-  </div>
+  {/if}
 {/if}
 
 <style>
@@ -333,7 +303,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.5);
+    background: color-mix(in srgb, var(--md-sys-color-scrim) 50%, transparent);
     z-index: 1000;
   }
 
@@ -430,30 +400,6 @@
     font-size: var(--font-size-sm);
     color: var(--md-sys-color-on-surface-variant);
     min-height: 5.25rem;
-  }
-
-  .dialog__select {
-    width: 100%;
-    padding: var(--spacing-md);
-    font-family: var(--font-body);
-    font-size: var(--font-size-md);
-    color: var(--md-sys-color-on-surface);
-    background: var(--md-sys-color-surface);
-    border: 1px solid var(--md-sys-color-outline-variant);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    min-height: 2.75rem;
-    transition: border-color var(--transition-fast);
-  }
-
-  .dialog__select:focus {
-    outline: none;
-    border-color: var(--md-sys-color-primary);
-  }
-
-  .dialog__select:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
   }
 
   .dialog__file-input {

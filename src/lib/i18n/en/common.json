@@ -817,6 +817,7 @@
     "noCharacters": "You don't have any characters yet.",
     "loading": "Loading characters...",
     "createError": "Failed to create character. Please try again.",
+    "loadSettingsError": "Failed to load character options. Please try again.",
     "delete": "Delete",
     "deleteConfirm": "Are you sure you want to delete {name}?",
     "deleteWarning": "This action cannot be undone.",
@@ -831,7 +832,7 @@
     "importError": "Failed to import character.",
     "importInvalidVersion": "Unsupported file format.",
     "importInvalidJson": "Invalid JSON file.",
-    "importMissingRuleGroups": "Missing rule groups: {groups}",
+    "importMissingRuleGroups": "Missing rule groups: {{groups}}",
     "importErrorMissingName": "Missing or empty name",
     "importErrorMissingSpecies": "Missing or empty species",
     "importErrorMissingRuleGroups": "Missing or invalid rule groups"
@@ -839,6 +840,21 @@
   "species": {
     "label": "Species",
     "human": "Human"
+  },
+  "class": {
+    "label": "Class",
+    "paladin-level1": "Paladin"
+  },
+  "wizard": {
+    "stepBasics": "Basics",
+    "stepSettings": "Configure {{name}}",
+    "stepConfirm": "Confirm",
+    "next": "Next",
+    "back": "Back",
+    "create": "Create",
+    "creating": "Creating...",
+    "confirmSummary": "{{name}} — {{species}} {{class}}",
+    "progressLabel": "Wizard progress"
   },
   "rules": {
     "manageTitle": "Manage Rules",

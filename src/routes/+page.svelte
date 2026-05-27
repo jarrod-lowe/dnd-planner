@@ -68,11 +68,17 @@
     }
   });
 
-  async function handleCreateCharacter(name: string, species: string) {
+  async function handleCreateCharacter(options: {
+    name: string;
+    species: string;
+    class: string;
+    additionalRuleGroupIds: string[];
+    effects: unknown[];
+  }) {
     isCreating = true;
     createError = null;
     try {
-      await characterStore.createCharacter(name, species);
+      await characterStore.createCharacter(options);
       showDialog = false;
     } catch {
       createError = $t('character.createError');
@@ -104,7 +110,7 @@
 
         const characterId = await importCharacter(validation.data!, chosenName, {
           createCharacter: async (name, species) => {
-            await characterStore.createCharacter(name, species);
+            await characterStore.createCharacter({ name, species });
             const char = characterStore.state.selectedCharacter;
             if (!char) throw new Error('Character creation failed');
             return { characterId: char.characterId };

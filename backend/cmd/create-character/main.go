@@ -43,8 +43,11 @@ func (h *handler) handle(ctx context.Context, event events.APIGatewayProxyReques
 
 	// 2. Parse request body
 	var body struct {
-		Name    string `json:"name"`
-		Species string `json:"species"`
+		Name                   string          `json:"name"`
+		Species                string          `json:"species"`
+		Class                  string          `json:"class"`
+		AdditionalRuleGroupIds []string        `json:"additionalRuleGroupIds"`
+		Effects                json.RawMessage `json:"effects"`
 	}
 	if err := json.Unmarshal([]byte(event.Body), &body); err != nil {
 		return errorResponse(http.StatusBadRequest, "invalid request body"), nil
@@ -61,6 +64,8 @@ func (h *handler) handle(ctx context.Context, event events.APIGatewayProxyReques
 		return errorResponse(http.StatusBadRequest, "species is required"), nil
 	}
 
+	class := strings.TrimSpace(body.Class)
+
 	// 4. Generate characterId (UUID)
 	characterId := uuid.New().String()
 
@@ -70,7 +75,13 @@ func (h *handler) handle(ctx context.Context, event events.APIGatewayProxyReques
 		"characterId": characterId,
 		"name":        name,
 		"species":     species,
+		"class":       class,
 		"now":         time.Now().UTC().Format(time.RFC3339),
+	}
+	if len(body.Effects) > 0 {
+		vars["effects"] = string(body.Effects)
+	} else {
+		vars["effects"] = "[]"
 	}
 
 	// 6. Instantiate seeds (field-agnostic)
@@ -83,13 +94,41 @@ func (h *handler) handle(ctx context.Context, event events.APIGatewayProxyReques
 	// 7. Build response (field-agnostic)
 	response := buildCharacterResponse(records)
 
+	// 8. Write additional rule groups from settings
+	if len(body.AdditionalRuleGroupIds) > 0 {
+		now := time.Now().UTC().Format(time.RFC3339)
+		additionalRecords := make([]map[string]any, 0, len(body.AdditionalRuleGroupIds))
+		for _, rgId := range body.AdditionalRuleGroupIds {
+			additionalRecords = append(additionalRecords, map[string]any{
+				"PK":          "CHAR#" + characterId,
+				"SK":          "RULEGROUP#" + rgId,
+				"type":        "CHAR",
+				"characterId": characterId,
+				"ruleGroupId": rgId,
+				"userId":      userId,
+				"enabled":     true,
+				"createdAt":   now,
+				"updatedAt":   now,
+			})
+		}
+		if err := h.db.BatchWriteItems(ctx, additionalRecords); err != nil {
+			h.logger.Error("failed to write additional rule groups", "error", err)
+			return errorResponse(http.StatusInternalServerError, "failed to create character"), nil
+		}
+		rgIds, _ := response["ruleGroupIds"].([]string)
+		for _, id := range body.AdditionalRuleGroupIds {
+			rgIds = append(rgIds, id)
+		}
+		response["ruleGroupIds"] = rgIds
+	}
+
 	responseBody, err := json.Marshal(response)
 	if err != nil {
 		h.logger.Error("failed to marshal response", "error", err)
 		return errorResponse(http.StatusInternalServerError, "failed to create character"), nil
 	}
 
-	// 8. Return 201 with Location header
+	// 9. Return 201 with Location header
 	return events.APIGatewayProxyResponse{
 		StatusCode: http.StatusCreated,
 		Headers: map[string]string{
