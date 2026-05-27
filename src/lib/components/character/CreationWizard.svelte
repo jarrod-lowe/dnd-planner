@@ -1,6 +1,7 @@
 <script lang="ts">
   import { t } from '$lib/i18n';
   import { tick } from 'svelte';
+  import type { Snippet } from 'svelte';
   import SettingsForm from './SettingsForm.svelte';
   import { ensureCached, getCache } from '$lib/rules/ruleGroupCache.svelte';
   import { discoverSettingsSteps, resolveSettings } from '$lib/rules/resolveSettings';
@@ -10,6 +11,7 @@
   const CLASS_OPTIONS = ['paladin-level1'] as const;
 
   interface Props {
+    header?: Snippet;
     isCreating: boolean;
     onCreate: (options: {
       name: string;
@@ -23,7 +25,14 @@
     onClearError?: () => void;
   }
 
-  let { isCreating, onCreate, onCancel, errorMessage = null, onClearError }: Props = $props();
+  let {
+    header,
+    isCreating,
+    onCreate,
+    onCancel,
+    errorMessage = null,
+    onClearError
+  }: Props = $props();
 
   let characterName = $state('');
   let selectedSpecies = $state<(typeof SPECIES_OPTIONS)[number]>('human');
@@ -174,6 +183,9 @@
     tabindex="-1"
     onclick={(e) => e.stopPropagation()}
   >
+    {#if header}
+      {@render header()}
+    {/if}
     <h2 id="wizard-title" class="dialog__title">
       {isConfirmStep
         ? $t('wizard.stepConfirm')

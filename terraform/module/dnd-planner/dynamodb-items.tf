@@ -88,45 +88,6 @@ resource "aws_dynamodb_table_item" "char_seed" {
 
 # Character rule group seeds - create rule group assignments for new characters
 
-resource "aws_dynamodb_table_item" "char_turn_rest_rulegroup_seed" {
-  table_name = aws_dynamodb_table.data.name
-  hash_key   = "PK"
-  range_key  = "SK"
-
-  item = jsonencode({
-    PK = {
-      S = "SEED#CHAR#$(characterId)"
-    }
-    SK = {
-      S = "RULEGROUP#turn-rest"
-    }
-    gsiSeedPK = {
-      S = "SEED#CHAR"
-    }
-    type = {
-      S = "CHAR"
-    }
-    characterId = {
-      S = "$(characterId)"
-    }
-    ruleGroupId = {
-      S = "turn-rest"
-    }
-    userId = {
-      S = "$(userId)"
-    }
-    enabled = {
-      BOOL = true
-    }
-    createdAt = {
-      S = "$(now)"
-    }
-    updatedAt = {
-      S = "$(now)"
-    }
-  })
-}
-
 resource "aws_dynamodb_table_item" "char_action_economy_rulegroup_seed" {
   table_name = aws_dynamodb_table.data.name
   hash_key   = "PK"

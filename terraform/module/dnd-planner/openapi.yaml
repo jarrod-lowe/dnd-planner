@@ -145,7 +145,6 @@ paths:
                       type: string
                     example:
                       [
-                        'turn-rest',
                         'action-economy',
                         'proficiency',
                         'movement',

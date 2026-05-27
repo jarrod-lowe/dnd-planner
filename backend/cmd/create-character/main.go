@@ -65,9 +65,6 @@ func (h *handler) handle(ctx context.Context, event events.APIGatewayProxyReques
 	}
 
 	class := strings.TrimSpace(body.Class)
-	if class == "" {
-		return errorResponse(http.StatusBadRequest, "class is required"), nil
-	}
 
 	// 4. Generate characterId (UUID)
 	characterId := uuid.New().String()

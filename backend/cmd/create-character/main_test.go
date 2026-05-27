@@ -393,9 +393,32 @@ func TestHandle_MissingSpecies_Returns400(t *testing.T) {
 	}
 }
 
-func TestHandle_MissingClass_Returns400(t *testing.T) {
+func TestHandle_MissingClass_Returns201(t *testing.T) {
 	ctx := context.Background()
-	db := &mockDB{}
+
+	seedRecords := []map[string]any{
+		{
+			"PK":          "SEED#USER#$(userId)",
+			"SK":          "CHAR#$(characterId)",
+			"gsiSeedPK":   "SEED#CHAR",
+			"type":        "CHAR",
+			"characterId": "$(characterId)",
+			"userId":      "$(userId)",
+			"name":        "$(name)",
+			"species":     "$(species)",
+			"createdAt":   "$(now)",
+			"updatedAt":   "$(now)",
+		},
+	}
+
+	db := &mockDB{
+		queryByGsiSeedPKFunc: func(ctx context.Context, gsiSeedPK string) ([]map[string]any, error) {
+			return seedRecords, nil
+		},
+		batchWriteItemsFunc: func(ctx context.Context, items []map[string]any) error {
+			return nil
+		},
+	}
 	h := newHandler(db)
 
 	event := events.APIGatewayProxyRequest{
@@ -413,11 +436,8 @@ func TestHandle_MissingClass_Returns400(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected no error, got: %v", err)
 	}
-	if resp.StatusCode != http.StatusBadRequest {
-		t.Errorf("expected status 400, got %d", resp.StatusCode)
-	}
-	if db.queryByGsiSeedPKCalled {
-		t.Error("expected queryByGsiSeedPK NOT to be called")
+	if resp.StatusCode != http.StatusCreated {
+		t.Errorf("expected status 201, got %d: %s", resp.StatusCode, resp.Body)
 	}
 }
 

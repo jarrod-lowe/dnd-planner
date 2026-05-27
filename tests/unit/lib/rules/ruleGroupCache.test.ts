@@ -68,18 +68,18 @@ describe('ruleGroupCache', () => {
         json: async () => ({
           ruleGroups: [
             {
-              ruleGroupId: 'turn-rest',
-              name: 'Turn and Rest',
-              description: 'Core rules for turn counting and long rest management',
+              ruleGroupId: 'proficiency',
+              name: 'Proficiency',
+              description: 'Core rules for proficiency',
               requires: []
             }
           ]
         })
       } as Response);
 
-      const result = await ensureCached(['turn-rest'], 'en');
+      const result = await ensureCached(['proficiency'], 'en');
 
-      expect(result.get('turn-rest')?.requires).toEqual([]);
+      expect(result.get('proficiency')?.requires).toEqual([]);
     });
 
     it('fetches uncached IDs via batch API and merges into cache', async () => {

@@ -171,4 +171,51 @@ describe('CreateCharacterDialog', () => {
     const selects = container.querySelectorAll('select');
     expect(selects).toHaveLength(2);
   });
+
+  describe('mode switching', () => {
+    it('shows mode toggle tabs when onImport is provided in create mode', () => {
+      mount(CreateCharacterDialog, {
+        target: container,
+        props: {
+          isOpen: true,
+          isCreating: false,
+          onCreate: vi.fn(),
+          onImport: vi.fn(),
+          onClose: vi.fn()
+        }
+      });
+
+      const tablist = container.querySelector('[role="tablist"]');
+      expect(tablist).toBeTruthy();
+      const tabs = container.querySelectorAll('[role="tab"]');
+      expect(tabs).toHaveLength(2);
+    });
+
+    it('switches to import mode when Import tab is clicked', async () => {
+      mount(CreateCharacterDialog, {
+        target: container,
+        props: {
+          isOpen: true,
+          isCreating: false,
+          onCreate: vi.fn(),
+          onImport: vi.fn(),
+          onClose: vi.fn()
+        }
+      });
+
+      // Should start in create mode (wizard with name input)
+      expect(container.querySelector('input[type="text"]')).toBeTruthy();
+
+      const importTab = Array.from(container.querySelectorAll('[role="tab"]')).find((b) =>
+        b.textContent?.includes('Import')
+      );
+      importTab?.click();
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Should now show import dialog (file input, not wizard name input)
+      const fileInput = container.querySelector('input[type="file"]');
+      expect(fileInput).toBeTruthy();
+    });
+  });
 });

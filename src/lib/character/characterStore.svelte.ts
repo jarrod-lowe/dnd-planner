@@ -87,7 +87,7 @@ function clearSelection(): void {
 interface CreateCharacterOptions {
   name: string;
   species: string;
-  class: string;
+  class?: string;
   additionalRuleGroupIds?: string[];
   effects?: unknown[];
 }
@@ -103,7 +103,7 @@ async function createCharacter(options: CreateCharacterOptions): Promise<void> {
     const response = await apiPost('/api/characters', {
       name: options.name,
       species: options.species,
-      class: options.class,
+      class: options.class ?? '',
       additionalRuleGroupIds: options.additionalRuleGroupIds ?? [],
       effects: options.effects ?? []
     });

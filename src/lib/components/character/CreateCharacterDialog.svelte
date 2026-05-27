@@ -168,8 +168,52 @@
 <svelte:window onkeydown={isOpen && activeMode === 'import' ? handleKeydown : undefined} />
 
 {#if isOpen}
+  {#snippet tabBar()}
+    {#if onImport}
+      <div
+        class="dialog__mode-toggle"
+        role="tablist"
+        aria-label="Dialog mode"
+        tabindex="0"
+        onkeydown={handleTabKeydown}
+      >
+        <button
+          type="button"
+          role="tab"
+          id="tab-create"
+          class="dialog__mode-button"
+          class:dialog__mode-button--active={activeMode === 'create'}
+          aria-selected={activeMode === 'create'}
+          onclick={() => switchMode('create')}
+          disabled={isCreating || isImporting}
+        >
+          {$t('character.modeCreate')}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          id="tab-import"
+          class="dialog__mode-button"
+          class:dialog__mode-button--active={activeMode === 'import'}
+          aria-selected={activeMode === 'import'}
+          onclick={() => switchMode('import')}
+          disabled={isCreating || isImporting}
+        >
+          {$t('character.modeImport')}
+        </button>
+      </div>
+    {/if}
+  {/snippet}
+
   {#if activeMode === 'create'}
-    <CreationWizard {isCreating} {onCreate} onCancel={onClose} {errorMessage} {onClearError} />
+    <CreationWizard
+      {isCreating}
+      {onCreate}
+      onCancel={onClose}
+      {errorMessage}
+      {onClearError}
+      header={tabBar}
+    />
   {:else}
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <div class="dialog-overlay" onclick={onClose} role="presentation">
@@ -182,45 +226,11 @@
         tabindex="-1"
         onclick={(e) => e.stopPropagation()}
       >
+        {@render tabBar()}
+
         <h2 id="dialog-title" class="dialog__title">
           {$t('character.importTitle')}
         </h2>
-
-        {#if onImport}
-          <div
-            class="dialog__mode-toggle"
-            role="tablist"
-            aria-label="Dialog mode"
-            onkeydown={handleTabKeydown}
-          >
-            <button
-              type="button"
-              role="tab"
-              id="tab-create"
-              class="dialog__mode-button"
-              class:dialog__mode-button--active={(activeMode as string) === 'create'}
-              aria-selected={(activeMode as string) === 'create'}
-              aria-controls="dialog-tabpanel"
-              onclick={() => switchMode('create')}
-              disabled={isCreating || isImporting}
-            >
-              {$t('character.modeCreate')}
-            </button>
-            <button
-              type="button"
-              role="tab"
-              id="tab-import"
-              class="dialog__mode-button"
-              class:dialog__mode-button--active={activeMode === 'import'}
-              aria-selected={activeMode === 'import'}
-              aria-controls="dialog-tabpanel"
-              onclick={() => switchMode('import')}
-              disabled={isCreating || isImporting}
-            >
-              {$t('character.modeImport')}
-            </button>
-          </div>
-        {/if}
 
         <div
           class="dialog__content"

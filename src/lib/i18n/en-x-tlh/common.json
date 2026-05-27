@@ -831,7 +831,7 @@
     "importError": "nuv SuqlaHbe'.",
     "importInvalidVersion": "De' mI' DeSHa'.",
     "importInvalidJson": "JSON De' DeSHa'.",
-    "importMissingRuleGroups": "DIvI' chab lutu'lu'be': {groups}",
+    "importMissingRuleGroups": "DIvI' chab lutu'lu'be': {{groups}}",
     "importErrorMissingName": "pong lutu'lu'be' ghap DeSHa'",
     "importErrorMissingSpecies": "Segh lutu'lu'be' ghap DeSHa'",
     "importErrorMissingRuleGroups": "DIvI' chab lutu'lu'be' ghap DeSHa'"

@@ -110,7 +110,7 @@
 
         const characterId = await importCharacter(validation.data!, chosenName, {
           createCharacter: async (name, species) => {
-            await characterStore.createCharacter({ name, species, class: 'paladin-level1' });
+            await characterStore.createCharacter({ name, species });
             const char = characterStore.state.selectedCharacter;
             if (!char) throw new Error('Character creation failed');
             return { characterId: char.characterId };

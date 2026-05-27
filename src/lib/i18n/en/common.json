@@ -831,7 +831,7 @@
     "importError": "Failed to import character.",
     "importInvalidVersion": "Unsupported file format.",
     "importInvalidJson": "Invalid JSON file.",
-    "importMissingRuleGroups": "Missing rule groups: {groups}",
+    "importMissingRuleGroups": "Missing rule groups: {{groups}}",
     "importErrorMissingName": "Missing or empty name",
     "importErrorMissingSpecies": "Missing or empty species",
     "importErrorMissingRuleGroups": "Missing or invalid rule groups"
