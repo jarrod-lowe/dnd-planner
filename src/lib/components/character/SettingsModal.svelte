@@ -90,7 +90,9 @@
           <SettingsForm
             settings={group.settings}
             values={selections}
-            onchange={(newValues) => { selections = newValues; }}
+            onchange={(newValues) => {
+              selections = newValues;
+            }}
           />
         {/each}
       </div>

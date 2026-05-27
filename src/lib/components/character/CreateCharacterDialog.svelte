@@ -146,7 +146,7 @@
 
   function trapFocus(event: KeyboardEvent, container: HTMLElement) {
     const focusable = container.querySelectorAll<HTMLElement>(
-      'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
     );
     if (focusable.length === 0) return;
     const first = focusable[0];
@@ -169,13 +169,7 @@
 
 {#if isOpen}
   {#if activeMode === 'create'}
-    <CreationWizard
-      {isCreating}
-      onCreate={onCreate}
-      onCancel={onClose}
-      {errorMessage}
-      {onClearError}
-    />
+    <CreationWizard {isCreating} {onCreate} onCancel={onClose} {errorMessage} {onClearError} />
   {:else}
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <div class="dialog-overlay" onclick={onClose} role="presentation">

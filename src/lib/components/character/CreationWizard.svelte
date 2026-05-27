@@ -29,7 +29,9 @@
   let selectedSpecies = $state<(typeof SPECIES_OPTIONS)[number]>('human');
   let selectedClass = $state<(typeof CLASS_OPTIONS)[number]>('paladin-level1');
   let currentStep = $state(0);
-  let settingsSteps = $state<Array<{ ruleGroupId: string; name: string; settings: SettingDefinition[] }>>([]);
+  let settingsSteps = $state<
+    Array<{ ruleGroupId: string; name: string; settings: SettingDefinition[] }>
+  >([]);
   let settingsValues = $state<Record<string, Record<string, string>>>({});
   let stepsLoaded = $state(false);
   let dialogEl: HTMLDivElement | undefined = $state();
@@ -46,7 +48,7 @@
   const currentSettingsGroup = $derived(
     isSettingsStep && settingsSteps[currentSettingsIndex]
       ? settingsSteps[currentSettingsIndex]
-      : null,
+      : null
   );
 
   async function loadSteps() {
@@ -59,9 +61,14 @@
         (id) => {
           const meta = cache.get(id);
           return meta
-            ? { name: meta.name, description: meta.description, requires: meta.requires, settings: meta.settings }
+            ? {
+                name: meta.name,
+                description: meta.description,
+                requires: meta.requires,
+                settings: meta.settings
+              }
             : undefined;
-        },
+        }
       );
       settingsSteps = newSteps;
       stepsLoaded = true;
@@ -93,7 +100,7 @@
     const groups = settingsSteps.map((step) => ({
       ruleGroupId: step.ruleGroupId,
       settings: step.settings,
-      values: settingsValues[step.ruleGroupId] ?? {},
+      values: settingsValues[step.ruleGroupId] ?? {}
     }));
 
     const { additionalRuleGroupIds, effects } = resolveSettings(groups, (id) => {
@@ -106,7 +113,7 @@
       species: selectedSpecies,
       class: selectedClass,
       additionalRuleGroupIds,
-      effects,
+      effects
     });
   }
 
@@ -135,7 +142,7 @@
 
   function trapFocus(event: KeyboardEvent, container: HTMLElement) {
     const focusable = container.querySelectorAll<HTMLElement>(
-      'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
     );
     if (focusable.length === 0) return;
     const first = focusable[0];
@@ -168,7 +175,13 @@
     onclick={(e) => e.stopPropagation()}
   >
     <h2 id="wizard-title" class="dialog__title">
-      {isConfirmStep ? $t('wizard.stepConfirm') : isBasicsStep ? $t('wizard.stepBasics') : $t('wizard.stepSettings', { values: { name: currentSettingsGroup?.name ?? '' } } as Record<string, unknown>)}
+      {isConfirmStep
+        ? $t('wizard.stepConfirm')
+        : isBasicsStep
+          ? $t('wizard.stepBasics')
+          : $t('wizard.stepSettings', {
+              values: { name: currentSettingsGroup?.name ?? '' }
+            } as Record<string, unknown>)}
     </h2>
 
     <div class="wizard__steps" role="navigation" aria-label="Wizard progress">
@@ -215,14 +228,16 @@
         <SettingsForm
           settings={currentSettingsGroup.settings}
           values={settingsValues[currentSettingsGroup.ruleGroupId] ?? {}}
-          onchange={(newValues) => handleSettingsChange(currentSettingsGroup.ruleGroupId, newValues)}
+          onchange={(newValues) =>
+            handleSettingsChange(currentSettingsGroup.ruleGroupId, newValues)}
           disabled={isCreating}
         />
       {:else if isConfirmStep}
         <div class="wizard__confirm">
           <p class="wizard__confirm-name">{characterName.trim()}</p>
           <p class="wizard__confirm-detail">
-            {$t(`species.${selectedSpecies}`)} {$t(`class.${selectedClass}`)}
+            {$t(`species.${selectedSpecies}`)}
+            {$t(`class.${selectedClass}`)}
           </p>
         </div>
       {/if}

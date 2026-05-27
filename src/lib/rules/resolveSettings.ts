@@ -19,7 +19,7 @@ export interface ResolvedSettings {
 
 export function resolveSettings(
   groups: SettingsGroup[],
-  lookupMeta: (id: string) => MetaLookup | undefined,
+  lookupMeta: (id: string) => MetaLookup | undefined
 ): ResolvedSettings {
   const additionalRuleGroupIds: string[] = [];
   const effects: Rule[] = [];
@@ -59,7 +59,7 @@ interface SimpleMeta {
 
 export function discoverSettingsSteps(
   ruleGroupIds: string[],
-  lookupMeta: (id: string) => SimpleMeta | undefined,
+  lookupMeta: (id: string) => SimpleMeta | undefined
 ): Array<{ ruleGroupId: string; name: string; settings: SettingDefinition[] }> {
   const steps: Array<{
     ruleGroupId: string;

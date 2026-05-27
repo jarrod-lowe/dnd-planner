@@ -15,9 +15,7 @@
   function getSettingName(setting: SettingDefinition): string {
     const currentLocale = get(locale);
     return (
-      setting.translations[currentLocale]?.name ??
-      setting.translations['en']?.name ??
-      setting.id
+      setting.translations[currentLocale]?.name ?? setting.translations['en']?.name ?? setting.id
     );
   }
 
@@ -26,9 +24,7 @@
     const option = setting.options.find((o) => o.value === optionValue);
     if (!option) return optionValue;
     return (
-      option.translations[currentLocale]?.name ??
-      option.translations['en']?.name ??
-      optionValue
+      option.translations[currentLocale]?.name ?? option.translations['en']?.name ?? optionValue
     );
   }
 </script>

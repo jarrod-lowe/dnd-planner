@@ -8,7 +8,7 @@ describe('CreationWizard', () => {
     onCreate: vi.fn(),
     onCancel: vi.fn(),
     errorMessage: null as string | null,
-    onClearError: vi.fn(),
+    onClearError: vi.fn()
   };
 
   it('renders name input and species/class selects on basics step', () => {
@@ -22,7 +22,7 @@ describe('CreationWizard', () => {
   it('disables Next button when name is empty', () => {
     const { container } = render(CreationWizard, { props: baseProps });
     const nextButton = container.querySelector(
-      'button.dialog__button--primary',
+      'button.dialog__button--primary'
     ) as HTMLButtonElement;
     expect(nextButton.disabled).toBe(true);
   });
@@ -32,7 +32,7 @@ describe('CreationWizard', () => {
     const input = container.querySelector('input')!;
     await fireEvent.input(input, { target: { value: 'Gandalf' } });
     const nextButton = container.querySelector(
-      'button.dialog__button--primary',
+      'button.dialog__button--primary'
     ) as HTMLButtonElement;
     expect(nextButton.disabled).toBe(false);
   });
@@ -40,11 +40,9 @@ describe('CreationWizard', () => {
   it('calls onCancel when cancel button is clicked', async () => {
     const onCancel = vi.fn();
     const { container } = render(CreationWizard, {
-      props: { ...baseProps, onCancel },
+      props: { ...baseProps, onCancel }
     });
-    const cancelButton = container.querySelector(
-      'button.dialog__button--secondary',
-    )!;
+    const cancelButton = container.querySelector('button.dialog__button--secondary')!;
     await fireEvent.click(cancelButton);
     expect(onCancel).toHaveBeenCalled();
   });
@@ -60,13 +58,11 @@ describe('CreationWizard', () => {
     const input = container.querySelector('input')!;
     await fireEvent.input(input, { target: { value: 'Gandalf' } });
     const nextButton = container.querySelector(
-      'button.dialog__button--primary',
+      'button.dialog__button--primary'
     ) as HTMLButtonElement;
     await fireEvent.click(nextButton);
     // After clicking Next, we should be on the next step (or confirm if no settings)
-    const primaryButton = container.querySelector(
-      'button.dialog__button--primary',
-    );
+    const primaryButton = container.querySelector('button.dialog__button--primary');
     expect(primaryButton).toBeTruthy();
   });
 });

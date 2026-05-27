@@ -64,7 +64,7 @@ describe('characterStore', () => {
       await characterStore.createCharacter({
         name: 'Aragorn',
         species: 'human',
-        class: 'paladin-level1',
+        class: 'paladin-level1'
       });
 
       expect(mockApiPost).toHaveBeenCalledWith('/api/characters', {
@@ -72,7 +72,7 @@ describe('characterStore', () => {
         species: 'human',
         class: 'paladin-level1',
         additionalRuleGroupIds: [],
-        effects: [],
+        effects: []
       });
     });
 
@@ -99,7 +99,7 @@ describe('characterStore', () => {
       await characterStore.createCharacter({
         name: 'Aragorn',
         species: 'human',
-        class: 'paladin-level1',
+        class: 'paladin-level1'
       });
 
       expect(characterStore.state.characters).toContainEqual(newCharacter);

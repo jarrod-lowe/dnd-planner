@@ -9,7 +9,7 @@ describe('resolveSettings', () => {
     translations: { en: { name: 'Skill Proficiency' } },
     options: [
       { value: 'athletics', translations: { en: { name: 'Athletics' } } },
-      { value: 'insight', translations: { en: { name: 'Insight' } } },
+      { value: 'insight', translations: { en: { name: 'Insight' } } }
     ],
     effect: {
       id: 'skill-proficiency-${value}',
@@ -17,10 +17,10 @@ describe('resolveSettings', () => {
         {
           type: 'numberSet',
           target: { fact: 'skill.${value}.proficiency' },
-          source: { value: 1 },
-        },
-      ],
-    },
+          source: { value: 1 }
+        }
+      ]
+    }
   };
 
   const selectRuleGroupSetting: SettingDefinition = {
@@ -29,8 +29,8 @@ describe('resolveSettings', () => {
     translations: { en: { name: 'Weapon Mastery' } },
     options: [
       { value: 'greataxe-mastery', translations: { en: { name: 'Greataxe' } } },
-      { value: 'dagger-mastery', translations: { en: { name: 'Dagger' } } },
-    ],
+      { value: 'dagger-mastery', translations: { en: { name: 'Dagger' } } }
+    ]
   };
 
   it('creates effects from select settings', () => {
@@ -39,15 +39,13 @@ describe('resolveSettings', () => {
         {
           ruleGroupId: 'class-paladin-level1',
           settings: [selectSetting],
-          values: { 'skill-1': 'athletics' },
-        },
+          values: { 'skill-1': 'athletics' }
+        }
       ],
-      () => undefined,
+      () => undefined
     );
     expect(result.effects).toHaveLength(1);
-    expect(result.effects[0].id).toBe(
-      'class-paladin-level1::skill-proficiency-athletics',
-    );
+    expect(result.effects[0].id).toBe('class-paladin-level1::skill-proficiency-athletics');
     expect(result.additionalRuleGroupIds).toHaveLength(0);
   });
 
@@ -57,10 +55,10 @@ describe('resolveSettings', () => {
         {
           ruleGroupId: 'class-paladin-level1',
           settings: [selectRuleGroupSetting],
-          values: { 'mastery-1': 'greataxe-mastery' },
-        },
+          values: { 'mastery-1': 'greataxe-mastery' }
+        }
       ],
-      () => undefined,
+      () => undefined
     );
     expect(result.effects).toHaveLength(0);
     expect(result.additionalRuleGroupIds).toEqual(['greataxe-mastery']);
@@ -76,15 +74,12 @@ describe('resolveSettings', () => {
         {
           ruleGroupId: 'class-paladin-level1',
           settings: [selectRuleGroupSetting],
-          values: { 'mastery-1': 'greataxe-mastery' },
-        },
+          values: { 'mastery-1': 'greataxe-mastery' }
+        }
       ],
-      lookupMeta,
+      lookupMeta
     );
-    expect(result.additionalRuleGroupIds).toEqual([
-      'greataxe-mastery',
-      'weapon-mastery-base',
-    ]);
+    expect(result.additionalRuleGroupIds).toEqual(['greataxe-mastery', 'weapon-mastery-base']);
   });
 
   it('handles mixed settings types', () => {
@@ -99,11 +94,11 @@ describe('resolveSettings', () => {
           settings: [selectSetting, selectRuleGroupSetting],
           values: {
             'skill-1': 'athletics',
-            'mastery-1': 'greataxe-mastery',
-          },
-        },
+            'mastery-1': 'greataxe-mastery'
+          }
+        }
       ],
-      lookupMeta,
+      lookupMeta
     );
     expect(result.effects).toHaveLength(1);
     expect(result.additionalRuleGroupIds).toEqual(['greataxe-mastery']);
@@ -115,10 +110,10 @@ describe('resolveSettings', () => {
         {
           ruleGroupId: 'class-paladin-level1',
           settings: [selectSetting],
-          values: {},
-        },
+          values: {}
+        }
       ],
-      () => undefined,
+      () => undefined
     );
     expect(result.effects).toHaveLength(0);
     expect(result.additionalRuleGroupIds).toHaveLength(0);
@@ -142,20 +137,20 @@ describe('resolveSettings', () => {
           ruleGroupId: 'class-paladin-level1',
           settings: [
             { ...selectRuleGroupSetting, id: 'mastery-1' },
-            { ...selectRuleGroupSetting, id: 'mastery-2' },
+            { ...selectRuleGroupSetting, id: 'mastery-2' }
           ],
           values: {
             'mastery-1': 'greataxe-mastery',
-            'mastery-2': 'dagger-mastery',
-          },
-        },
+            'mastery-2': 'dagger-mastery'
+          }
+        }
       ],
-      lookupMeta,
+      lookupMeta
     );
     expect(result.additionalRuleGroupIds).toEqual([
       'greataxe-mastery',
       'shared-dep',
-      'dagger-mastery',
+      'dagger-mastery'
     ]);
   });
 });
@@ -166,7 +161,7 @@ describe('discoverSettingsSteps', () => {
       name: '',
       description: '',
       requires: [],
-      settings: [],
+      settings: []
     });
     const steps = discoverSettingsSteps(['species-human', 'movement'], lookupMeta);
     expect(steps).toEqual([]);
@@ -178,8 +173,8 @@ describe('discoverSettingsSteps', () => {
         id: 's1',
         type: 'select',
         translations: { en: { name: 'S1' } },
-        options: [],
-      },
+        options: []
+      }
     ];
     const lookupMeta = (id: string) => {
       if (id === 'class-paladin-level1')
@@ -187,14 +182,11 @@ describe('discoverSettingsSteps', () => {
           name: 'Paladin Level 1',
           description: '',
           requires: [],
-          settings,
+          settings
         };
       return { name: id, description: '', requires: [], settings: [] };
     };
-    const steps = discoverSettingsSteps(
-      ['species-human', 'class-paladin-level1'],
-      lookupMeta,
-    );
+    const steps = discoverSettingsSteps(['species-human', 'class-paladin-level1'], lookupMeta);
     expect(steps).toHaveLength(1);
     expect(steps[0].ruleGroupId).toBe('class-paladin-level1');
     expect(steps[0].settings).toEqual(settings);

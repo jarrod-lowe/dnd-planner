@@ -9,8 +9,8 @@ const singleSetting: SettingDefinition = {
   translations: { en: { name: 'Skill Proficiency' } },
   options: [
     { value: 'athletics', translations: { en: { name: 'Athletics' } } },
-    { value: 'insight', translations: { en: { name: 'Insight' } } },
-  ],
+    { value: 'insight', translations: { en: { name: 'Insight' } } }
+  ]
 };
 
 const multipleSettings: SettingDefinition[] = [
@@ -21,15 +21,15 @@ const multipleSettings: SettingDefinition[] = [
     translations: { en: { name: 'Skill Proficiency 2' } },
     options: [
       { value: 'athletics', translations: { en: { name: 'Athletics' } } },
-      { value: 'insight', translations: { en: { name: 'Insight' } } },
-    ],
-  },
+      { value: 'insight', translations: { en: { name: 'Insight' } } }
+    ]
+  }
 ];
 
 describe('SettingsForm', () => {
   it('renders one select per setting', () => {
     const { container } = render(SettingsForm, {
-      props: { settings: multipleSettings, values: {}, onchange: vi.fn() },
+      props: { settings: multipleSettings, values: {}, onchange: vi.fn() }
     });
     const selects = container.querySelectorAll('select');
     expect(selects).toHaveLength(2);
@@ -37,7 +37,7 @@ describe('SettingsForm', () => {
 
   it('renders the setting name as label text', () => {
     const { container } = render(SettingsForm, {
-      props: { settings: [singleSetting], values: {}, onchange: vi.fn() },
+      props: { settings: [singleSetting], values: {}, onchange: vi.fn() }
     });
     const label = container.querySelector('label');
     expect(label?.textContent).toContain('Skill Proficiency');
@@ -45,7 +45,7 @@ describe('SettingsForm', () => {
 
   it('renders options for each setting', () => {
     const { container } = render(SettingsForm, {
-      props: { settings: [singleSetting], values: {}, onchange: vi.fn() },
+      props: { settings: [singleSetting], values: {}, onchange: vi.fn() }
     });
     const select = container.querySelector('select');
     const options = select?.querySelectorAll('option');
@@ -56,7 +56,7 @@ describe('SettingsForm', () => {
   it('calls onchange with updated values when an option is selected', async () => {
     const onchange = vi.fn();
     const { container } = render(SettingsForm, {
-      props: { settings: [singleSetting], values: {}, onchange },
+      props: { settings: [singleSetting], values: {}, onchange }
     });
     const select = container.querySelector('select')!;
     await fireEvent.change(select, { target: { value: 'athletics' } });
@@ -69,14 +69,14 @@ describe('SettingsForm', () => {
       props: {
         settings: multipleSettings,
         values: { 'skill-1': 'athletics' },
-        onchange,
-      },
+        onchange
+      }
     });
     const selects = container.querySelectorAll('select');
     await fireEvent.change(selects[1], { target: { value: 'insight' } });
     expect(onchange).toHaveBeenCalledWith({
       'skill-1': 'athletics',
-      'skill-2': 'insight',
+      'skill-2': 'insight'
     });
   });
 
@@ -85,8 +85,8 @@ describe('SettingsForm', () => {
       props: {
         settings: [singleSetting],
         values: { 'skill-1': 'insight' },
-        onchange: vi.fn(),
-      },
+        onchange: vi.fn()
+      }
     });
     const select = container.querySelector('select') as HTMLSelectElement;
     expect(select.value).toBe('insight');

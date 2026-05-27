@@ -105,7 +105,7 @@ async function createCharacter(options: CreateCharacterOptions): Promise<void> {
       species: options.species,
       class: options.class,
       additionalRuleGroupIds: options.additionalRuleGroupIds ?? [],
-      effects: options.effects ?? [],
+      effects: options.effects ?? []
     });
 
     if (!response.ok) {
