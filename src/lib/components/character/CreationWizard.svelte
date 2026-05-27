@@ -43,6 +43,7 @@
   >([]);
   let settingsValues = $state<Record<string, Record<string, string>>>({});
   let stepsLoaded = $state(false);
+  let loadError = $state<string | null>(null);
   let dialogEl: HTMLDivElement | undefined = $state();
 
   const nameFilled = $derived(characterName.trim().length > 0);
@@ -62,35 +63,38 @@
 
   async function loadSteps() {
     if (stepsLoaded) return;
+    loadError = null;
+    const ids = [`species-${selectedSpecies}`, `class-${selectedClass}`];
     try {
-      await ensureCached([`species-${selectedSpecies}`, `class-${selectedClass}`], 'en');
+      await ensureCached(ids, 'en');
       const cache = getCache();
-      const newSteps = discoverSettingsSteps(
-        [`species-${selectedSpecies}`, `class-${selectedClass}`],
-        (id) => {
-          const meta = cache.get(id);
-          return meta
-            ? {
-                name: meta.name,
-                description: meta.description,
-                requires: meta.requires,
-                settings: meta.settings
-              }
-            : undefined;
-        }
-      );
+      const missing = ids.filter((id) => !cache.has(id));
+      if (missing.length > 0) {
+        loadError = $t('character.loadSettingsError');
+        return;
+      }
+      const newSteps = discoverSettingsSteps(ids, (id) => {
+        const meta = cache.get(id);
+        return meta
+          ? {
+              name: meta.name,
+              description: meta.description,
+              requires: meta.requires,
+              settings: meta.settings
+            }
+          : undefined;
+      });
       settingsSteps = newSteps;
       stepsLoaded = true;
     } catch {
-      // If metadata isn't available, skip settings steps
-      settingsSteps = [];
-      stepsLoaded = true;
+      loadError = $t('character.loadSettingsError');
     }
   }
 
   async function handleNext() {
     if (isBasicsStep) {
       await loadSteps();
+      if (loadError) return;
     }
     if (currentStep < totalSteps - 1) {
       currentStep++;
@@ -258,6 +262,12 @@
     {#if errorMessage}
       <p class="dialog__error" role="alert" aria-live="polite">
         {errorMessage}
+      </p>
+    {/if}
+
+    {#if loadError}
+      <p class="dialog__error" role="alert" aria-live="polite">
+        {loadError}
       </p>
     {/if}
 
