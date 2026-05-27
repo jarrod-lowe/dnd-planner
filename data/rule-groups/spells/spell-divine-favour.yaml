@@ -44,17 +44,11 @@ ruleGroups:
                 illegalDiagnostics:
                   - code: rule.spell-divine-favour.offer-divine-favour.already_active
                     severity: error
-              - condition: &df-has-bonus-action
-                  fact: bonusActions.remaining
-                  operator: greaterThan
-                  value: 0
+              - condition: *has-bonus-action
                 illegalDiagnostics:
                   - code: rule.spell-divine-favour.offer-divine-favour.no_bonus_action
                     severity: error
-              - condition: &df-has-spellcasting
-                  fact: spellcasting.remaining
-                  operator: greaterThan
-                  value: 0
+              - condition: *has-spellcasting
                 illegalDiagnostics:
                   - code: rule.spell-divine-favour.offer-divine-favour.no_spellcasting
                     severity: error

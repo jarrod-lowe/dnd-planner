@@ -70,17 +70,11 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
-              - condition: &ps-has-bonus-action
-                  fact: bonusActions.remaining
-                  operator: greaterThan
-                  value: 0
+              - condition: *has-bonus-action
                 illegalDiagnostics:
                   - code: rule.class-paladin-paladin-smite.offer-paladin-smite.no_bonus_action
                     severity: error
-              - condition: &ps-has-attack-action
-                  fact: attack.last.activation.action
-                  operator: equals
-                  value: 1
+              - condition: *has-attack-action
                 illegalDiagnostics:
                   - code: rule.class-paladin-paladin-smite.offer-paladin-smite.no_attack
                     severity: error
@@ -174,8 +168,8 @@ ruleGroups:
         activities:
           - type: annotate
             when:
-              - *ps-has-bonus-action
-              - *ps-has-attack-action
+              - *has-bonus-action
+              - *has-attack-action
               - *ps-has-paladin-smite-remaining
             key: rule.class-paladin-paladin-smite.annotation
             targets: [attack.melee, attack.unarmed]

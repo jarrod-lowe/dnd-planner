@@ -140,17 +140,11 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
-              - condition: &ts-has-bonus-action
-                  fact: bonusActions.remaining
-                  operator: greaterThan
-                  value: 0
+              - condition: *has-bonus-action
                 illegalDiagnostics:
                   - code: rule.spell-thunderous-smite.offer-thunderous-smite.no_bonus_action
                     severity: error
-              - condition: &ts-has-attack-action
-                  fact: attack.last.activation.action
-                  operator: equals
-                  value: 1
+              - condition: *has-attack-action
                 illegalDiagnostics:
                   - code: rule.spell-thunderous-smite.offer-thunderous-smite.no_attack
                     severity: error
@@ -161,10 +155,7 @@ ruleGroups:
                 illegalDiagnostics:
                   - code: rule.spell-thunderous-smite.offer-thunderous-smite.no_slots
                     severity: error
-              - condition: &ts-has-spellcasting
-                  fact: spellcasting.remaining
-                  operator: greaterThan
-                  value: 0
+              - condition: *has-spellcasting
                 illegalDiagnostics:
                   - code: rule.spell-thunderous-smite.offer-thunderous-smite.no_spellcasting
                     severity: error
@@ -508,9 +499,9 @@ ruleGroups:
         activities:
           - type: annotate
             when:
-              - *ts-has-bonus-action
-              - *ts-has-attack-action
+              - *has-bonus-action
+              - *has-attack-action
               - *ts-has-smite-slots
-              - *ts-has-spellcasting
+              - *has-spellcasting
             key: rule.spell-thunderous-smite.annotation
             targets: [attack.melee, attack.unarmed]
