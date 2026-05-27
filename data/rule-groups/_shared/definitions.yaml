@@ -22,3 +22,18 @@ sharedRefs:
     type: select
     var: level
     options: *skill-proficiency-options
+
+  has-bonus-action: &has-bonus-action
+    fact: bonusActions.remaining
+    operator: greaterThan
+    value: 0
+
+  has-attack-action: &has-attack-action
+    fact: attack.last.activation.action
+    operator: equals
+    value: 1
+
+  has-spellcasting: &has-spellcasting
+    fact: spellcasting.remaining
+    operator: greaterThan
+    value: 0

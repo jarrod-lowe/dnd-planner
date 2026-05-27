@@ -139,17 +139,11 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
-              - condition: &ds-has-bonus-action
-                  fact: bonusActions.remaining
-                  operator: greaterThan
-                  value: 0
+              - condition: *has-bonus-action
                 illegalDiagnostics:
                   - code: rule.class-paladin-divine-smite.offer-divine-smite.no_bonus_action
                     severity: error
-              - condition: &ds-has-attack-action
-                  fact: attack.last.activation.action
-                  operator: equals
-                  value: 1
+              - condition: *has-attack-action
                 illegalDiagnostics:
                   - code: rule.class-paladin-divine-smite.offer-divine-smite.no_attack
                     severity: error
@@ -160,10 +154,7 @@ ruleGroups:
                 illegalDiagnostics:
                   - code: rule.class-paladin-divine-smite.offer-divine-smite.no_slots
                     severity: error
-              - condition: &ds-has-spellcasting
-                  fact: spellcasting.remaining
-                  operator: greaterThan
-                  value: 0
+              - condition: *has-spellcasting
                 illegalDiagnostics:
                   - code: rule.class-paladin-divine-smite.offer-divine-smite.no_spellcasting
                     severity: error
@@ -498,9 +489,9 @@ ruleGroups:
         activities:
           - type: annotate
             when:
-              - *ds-has-bonus-action
-              - *ds-has-attack-action
+              - *has-bonus-action
+              - *has-attack-action
               - *ds-has-smite-slots
-              - *ds-has-spellcasting
+              - *has-spellcasting
             key: rule.class-paladin-divine-smite.annotation
             targets: [attack.melee, attack.unarmed]
