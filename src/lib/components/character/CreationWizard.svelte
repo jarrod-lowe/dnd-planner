@@ -200,7 +200,7 @@
             } as Record<string, unknown>)}
     </h2>
 
-    <div class="wizard__steps" role="navigation" aria-label="Wizard progress">
+    <div class="wizard__steps" role="navigation" aria-label={$t('wizard.progressLabel')}>
       {#each Array.from({ length: totalSteps }, (_, i) => i) as i (i)}
         <span
           class="wizard__step-dot"

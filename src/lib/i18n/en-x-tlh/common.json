@@ -853,7 +853,8 @@
     "back": "chap",
     "create": "chenmoH",
     "creating": "chenmoHtaH...",
-    "confirmSummary": "{{name}} — {{species}} {{class}}"
+    "confirmSummary": "{{name}} — {{species}} {{class}}",
+    "progressLabel": "mI' DIvI'"
   },
   "rules": {
     "manageTitle": "DIvI' SeH",

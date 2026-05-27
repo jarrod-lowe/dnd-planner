@@ -853,7 +853,8 @@
     "back": "Back",
     "create": "Create",
     "creating": "Creating...",
-    "confirmSummary": "{{name}} — {{species}} {{class}}"
+    "confirmSummary": "{{name}} — {{species}} {{class}}",
+    "progressLabel": "Wizard progress"
   },
   "rules": {
     "manageTitle": "Manage Rules",
