@@ -52,17 +52,24 @@ paladin-skill-effect: &paladin-skill-effect
     name: rules.settings.paladin-skill.${value}
     section: effects
     hidden: true
+    levelFact: skill.${value}.proficiency
+    primaryControl: *skill-proficiency-control
+  vars:
+    level:
+      capture: true
+      default:
+        number: 1
   activities:
     - type: numberSet
       target:
         fact: skill.${value}.proficiency
       source:
-        number: 1
+        var: level
     - type: numberFunction
       function: multiply
       sources:
         - fact: proficiency.bonus
-        - number: 1
+        - var: level
       target:
         var: profContribution
     - type: numberIncrement
