@@ -53,31 +53,24 @@
   // Collect active annotations from engine output
   const activeAnnotations = $derived(playStore.state.engineOutput?.annotations ?? []);
 
-  // Get current effects (committed + newly advertised), deduplicated by base id.
+  // Get current effects (committed + newly advertised), deduplicated by id.
   // Committed-first ordering; advertised version preferred (has runtime vars like countDown).
-  // Base ID strips counter suffix (e.g. effect-hi-set-2 → effect-hi-set) to handle
-  // re-advertised effects whose IDs differ across turns.
   const currentEffects = $derived.by(() => {
     const committed = playStore.state.effects;
     const advertised = playStore.state.engineOutput?.effects ?? [];
-    const stripSuffix = (id: string) => id.replace(/-\d+$/, '');
-    const advertisedBaseIds = advertised.map((e) => stripSuffix(e.id));
-    const result: Rule[] = [];
-    const matchedIndices: number[] = [];
-    for (const effect of committed) {
-      const baseId = stripSuffix(effect.id);
-      const idx = advertisedBaseIds.indexOf(baseId);
-      if (idx >= 0) {
-        const merged = { ...advertised[idx], id: effect.id };
-        result.push(merged);
-        matchedIndices.push(idx);
-      } else {
-        result.push(effect);
-      }
+    const advertisedById = new Array<string>();
+    for (const e of advertised) {
+      advertisedById.push(e.id);
     }
-    for (let i = 0; i < advertised.length; i++) {
-      if (!matchedIndices.includes(i)) {
-        result.push(advertised[i]);
+    const result: Rule[] = [];
+    for (const effect of committed) {
+      const idx = advertisedById.indexOf(effect.id);
+      result.push(idx >= 0 ? advertised[idx] : effect);
+    }
+    const committedIds = committed.map((e) => e.id);
+    for (const effect of advertised) {
+      if (!committedIds.includes(effect.id)) {
+        result.push(effect);
       }
     }
     return result;
