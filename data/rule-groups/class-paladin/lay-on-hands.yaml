@@ -47,10 +47,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
-              - condition:
-                  fact: bonusActions.remaining
-                  operator: greaterThan
-                  value: 0
+              - condition: *has-bonus-action
                 illegalDiagnostics:
                   - code: rule.class-paladin-lay-on-hands.offer-loh-heal.no_bonus_action
                     severity: error
@@ -166,10 +163,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
-              - condition:
-                  fact: bonusActions.remaining
-                  operator: greaterThan
-                  value: 0
+              - condition: *has-bonus-action
                 illegalDiagnostics:
                   - code: rule.class-paladin-lay-on-hands.offer-loh-purify-poison.no_bonus_action
                     severity: error

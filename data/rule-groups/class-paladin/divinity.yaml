@@ -89,10 +89,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
-              - condition:
-                  fact: bonusActions.remaining
-                  operator: greaterThan
-                  value: 0
+              - condition: *has-bonus-action
                 illegalDiagnostics:
                   - code: rule.class-paladin-divinity.offer-divine-sense.no_bonus_action
                     severity: error
