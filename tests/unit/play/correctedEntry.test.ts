@@ -15,7 +15,7 @@ function makeEntry(overrides: Partial<AvailableRuleEntry> = {}): AvailableRuleEn
 
 function makeItem(varsRuntime?: { errors?: string[] }): { rule: Rule } {
   return {
-    rule: { id: 'test-rule', varsRuntime } as Rule,
+    rule: { id: 'test-rule', varsRuntime } as Rule
   };
 }
 
@@ -49,7 +49,10 @@ describe('correctEntryForPlanItem', () => {
   });
 
   it('stays illegal when entry illegal and runtime errors exist', () => {
-    const entry = makeEntry({ legal: false, diagnostics: [{ code: 'offer-error', severity: 'error' }] });
+    const entry = makeEntry({
+      legal: false,
+      diagnostics: [{ code: 'offer-error', severity: 'error' }]
+    });
     const item = makeItem({ errors: ['inner-error'] });
 
     const result = correctEntryForPlanItem(entry, item);
