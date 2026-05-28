@@ -189,3 +189,19 @@ ruleGroups:
               fact: spellcasting.slots.level9.total
             target:
               fact: spellcasting.slots.level9.remaining
+
+      # Prepared Spell Capacity - compute remaining slots
+      - id: compute-prepared-remaining
+        phase: normal
+        activities:
+          - type: numberCopy
+            source:
+              fact: spellcasting.prepared.max
+            target:
+              fact: spellcasting.prepared.remaining
+          - type: numberIncrement
+            target:
+              fact: spellcasting.prepared.remaining
+            source:
+              fact: spellcasting.prepared.count
+            subtract: true

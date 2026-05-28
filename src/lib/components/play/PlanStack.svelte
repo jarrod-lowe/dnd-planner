@@ -1,6 +1,7 @@
 <script lang="ts">
   import { t } from '$lib/i18n';
   import { playStore } from '$lib/play/playStore.svelte';
+  import { correctEntryForPlanItem } from '$lib/play/correctedEntry';
   import PlanRow from './PlanRow.svelte';
   import AddRowPicker from './AddRowPicker.svelte';
   import { groupChoicesByVerb } from '$lib/play/groupChoicesByVerb';
@@ -46,17 +47,15 @@
       const entry = entryById[item.originalRuleId ?? item.rule.id];
       if (!entry) return { item, entry: null };
 
-      const errors = (item.rule.varsRuntime?.errors as string[] | undefined) || [];
-      const hasErrors = errors.length > 0;
-      const correctedEntry: AvailableRuleEntry = {
-        ...entry,
-        legal: !hasErrors,
-        diagnostics: hasErrors
-          ? errors.map((code) => ({ code, severity: 'error' as const }))
-          : entry.diagnostics
-      };
+      const hypothetical = playStore.getAlternativeEntries(item.instanceId);
+      const hypEntry = hypothetical.find(
+        (e) => e.rule.id === (item.originalRuleId ?? item.rule.id)
+      );
+      const baseEntry = hypEntry
+        ? { ...entry, legal: hypEntry.legal, diagnostics: hypEntry.diagnostics }
+        : entry;
 
-      return { item, entry: correctedEntry };
+      return { item, entry: correctEntryForPlanItem(baseEntry, item) };
     })
   );
 

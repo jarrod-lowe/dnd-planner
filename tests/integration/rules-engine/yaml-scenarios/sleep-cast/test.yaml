@@ -9,6 +9,7 @@ ruleGroups:
   - dnd-5e-2024/concentration
   - dnd-5e-2024/core-events
   - class-paladin/class-paladin-level1
+  - class-paladin/paladin-spells-l1
   - spells/spell-sleep
 steps:
   - evaluate:
@@ -18,8 +19,15 @@ steps:
           concentration.remaining: 1
           spellcasting.slots.level1.remaining: 2
         offers:
-          exists:
+          notExists:
             - cast-sleep
+          exists:
+            - prepare-sleep
+  # Prepare Sleep first
+  - addOffer:
+      id: prepare-sleep
+  - endTurn: {}
+  # Now set charisma and cast sleep
   - addOffer:
       id: set-charisma
       selections:

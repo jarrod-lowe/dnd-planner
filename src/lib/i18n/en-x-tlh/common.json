@@ -29,6 +29,21 @@
       },
       "effect-sleep": {
         "name": "Qong"
+      },
+      "effect-sleep-prepared": {
+        "name": "Qong Prepared"
+      },
+      "effect-sleep-removing": {
+        "name": "Removing Qong"
+      },
+      "prepare-sleep-offer": {
+        "name": "Prepare Qong",
+        "max_prepared": "mugh DIvI' nIb",
+        "already_prepared": "Qong already prepared"
+      },
+      "unprepare-sleep-offer": {
+        "name": "Unprepare Qong",
+        "not_prepared": "Qong not prepared"
       }
     },
     "spell-thunderous-smite": {
@@ -1155,7 +1170,8 @@
       "REST": "REST",
       "NOTE": "NOTE",
       "STAT": "STAT",
-      "PROFICIENCY": "PROFICIENCY"
+      "PROFICIENCY": "PROFICIENCY",
+      "PREPARE": "PREPARE"
     },
     "verbBuckets": {
       "ATTACK": {
@@ -1225,6 +1241,9 @@
       "PROFICIENCY": {
         "save": "Save",
         "skill": "Skill"
+      },
+      "PREPARE": {
+        "L1": "Level 1"
       }
     },
     "addRow": {

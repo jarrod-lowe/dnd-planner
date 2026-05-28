@@ -9,12 +9,20 @@ ruleGroups:
   - dnd-5e-2024/concentration
   - dnd-5e-2024/core-events
   - class-paladin/class-paladin-level1
+  - class-paladin/paladin-spells-l1
   - spells/spell-sleep
 steps:
   - evaluate:
       assert:
         facts:
           concentration.remaining: 1
+        offers:
+          exists:
+            - prepare-sleep
+  # Prepare Sleep
+  - addOffer:
+      id: prepare-sleep
+  - endTurn: {}
   # Cast Sleep
   - addOffer:
       id: cast-sleep

@@ -9,6 +9,7 @@ ruleGroups:
   - dnd-5e-2024/concentration
   - dnd-5e-2024/core-events
   - class-paladin/class-paladin-level1
+  - class-paladin/paladin-spells-l1
   - spells/spell-sleep
 initialEffects:
   - id: test-grant-level2-slot
@@ -34,6 +35,13 @@ steps:
         facts:
           spellcasting.slots.level1.remaining: 2
           spellcasting.slots.level2.remaining: 1
+        offers:
+          exists:
+            - prepare-sleep
+  # Prepare Sleep
+  - addOffer:
+      id: prepare-sleep
+  - endTurn: {}
   # Cast Sleep using default (L1) slot
   - addOffer:
       id: cast-sleep

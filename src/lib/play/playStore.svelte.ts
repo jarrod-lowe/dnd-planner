@@ -720,7 +720,8 @@ function endTurn(): void {
   // Commit effects from the last evaluation output before clearing the plan.
   // This moves advertised effects into the committed effects array so they
   // persist across turns.
-  const effects = decrementCountDowns(state.engineOutput?.effects ?? state.effects);
+  const preDecrement = state.engineOutput?.effects ?? state.effects;
+  const effects = decrementCountDowns(preDecrement);
   const characterId = state.currentCharacterId;
 
   state = {

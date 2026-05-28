@@ -18,7 +18,8 @@ export type Verb =
   | 'REST'
   | 'NOTE'
   | 'STAT'
-  | 'PROFICIENCY';
+  | 'PROFICIENCY'
+  | 'PREPARE';
 
 /**
  * Action cost tags for UI chip display. Derived from what the rule consumes,
