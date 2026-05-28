@@ -65,7 +65,8 @@
     const result: Rule[] = [];
     for (const effect of committed) {
       const idx = advertisedById.indexOf(effect.id);
-      result.push(idx >= 0 ? advertised[idx] : effect);
+      const chosen = idx >= 0 ? advertised[idx] : effect;
+      result.push(chosen);
     }
     const committedIds = committed.map((e) => e.id);
     for (const effect of advertised) {

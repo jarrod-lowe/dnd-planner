@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: paladin-spells-l1
+    requires:
+      - spell-sleep
+    translations:
+      en:
+        name: Paladin Spells Level 1
+        description: Level 1 spells available to Paladins
+        keywords: [paladin, spells, level1]
+      en-x-tlh:
+        name: Paladin Spells Level 1
+        description: Paladin level 1 jupmey
+        keywords: [paladin, jupmey, level1]
+    rules: []

@@ -1,0 +1,96 @@
+name: 'Sleep Prepare'
+description: 'Preparing and unpreparing Sleep with persistent effect lifecycle'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/concentration
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - class-paladin/paladin-spells-l1
+  - spells/spell-sleep
+steps:
+  # TC1: Initially both offers exist, unprepare is illegal (not prepared)
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.prepared.max: 2
+          spellcasting.prepared.count: 0
+          spellcasting.prepared.remaining: 2
+          spell.l1.sleep.prepared: 0
+        offers:
+          exists:
+            - prepare-sleep
+            - unprepare-sleep
+          illegal:
+            - unprepare-sleep
+  # TC2: Prepare Sleep — both offers still exist, prepare now illegal
+  - addOffer:
+      id: prepare-sleep
+      assert:
+        facts:
+          spell.l1.sleep.prepared: 1
+          spellcasting.prepared.count: 1
+          spellcasting.prepared.remaining: 1
+        offers:
+          exists:
+            - prepare-sleep
+            - unprepare-sleep
+          illegal:
+            - prepare-sleep
+  # TC3: End turn to persist effects
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-sleep-prepared
+  # After preparing: prepare-sleep illegal, unprepare-sleep legal
+  - evaluate:
+      assert:
+        facts:
+          spell.l1.sleep.prepared: 1
+          spellcasting.prepared.count: 1
+          spellcasting.prepared.remaining: 1
+        offers:
+          exists:
+            - prepare-sleep
+            - unprepare-sleep
+          illegal:
+            - prepare-sleep
+  # TC4: Unprepare Sleep — both offers still exist, unprepare now illegal
+  - addOffer:
+      id: unprepare-sleep
+      assert:
+        facts:
+          spell.l1.sleep.prepared: 0
+          spell.l1.sleep.removing: 1
+          spellcasting.prepared.count: 0
+          spellcasting.prepared.remaining: 2
+        offers:
+          exists:
+            - prepare-sleep
+            - unprepare-sleep
+          illegal:
+            - unprepare-sleep
+  # End turn - persist removal effect into effects list
+  - endTurn: {}
+  # End turn again - removal effect fires, prepare effect expires
+  - endTurn: {}
+  # TC5: After unpreparing: unprepare-sleep illegal, prepare-sleep legal
+  - evaluate:
+      assert:
+        facts:
+          spell.l1.sleep.prepared: 0
+          spellcasting.prepared.count: 0
+          spellcasting.prepared.remaining: 2
+        effects:
+          notExists:
+            - effect-sleep-prepared
+        offers:
+          exists:
+            - prepare-sleep
+            - unprepare-sleep
+          illegal:
+            - unprepare-sleep

@@ -17,6 +17,133 @@ ruleGroups:
           DIch level 1 action. DIch Qong DIvI' WIS DIch. buQ, 1 rep.
         keywords: [spell, level1, Qong, action, buQ]
     rules:
+      # Offer to prepare Sleep (Build → Prepare → L1)
+      - id: prepare-sleep-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: spell.l1.sleep.prepared
+                  operator: notEquals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-sleep.prepare-sleep-offer.already_prepared
+                    severity: error
+              - condition:
+                  fact: spellcasting.prepared.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-sleep.prepare-sleep-offer.max_prepared
+                    severity: error
+            rule:
+              id: prepare-sleep
+              phase: normal
+              group:
+                - __planned__
+              ui:
+                section: configuration
+                name: rule.spell-sleep.prepare-sleep-offer.name
+                intents: { PREPARE: L1 }
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: spell.l1.sleep.prepared
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.prepared.count
+                  source:
+                    number: 1
+                - type: advertiseEffect
+                  rule:
+                    id: effect-sleep-prepared
+                    ui:
+                      name: rule.spell-sleep.effect-sleep-prepared.name
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spell-l1-sleep-removal-set
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: spell.l1.sleep.prepared
+                        source:
+                          number: 1
+                        when:
+                          - fact: spell.l1.sleep.removing
+                            operator: equals
+                            value: 0
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.prepared.count
+                        source:
+                          number: 1
+                        when:
+                          - fact: spell.l1.sleep.removing
+                            operator: equals
+                            value: 0
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: spell.l1.sleep.removing
+                            operator: equals
+                            value: 0
+
+      # Offer to unprepare Sleep
+      - id: unprepare-sleep-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: spell.l1.sleep.prepared
+                  operator: equals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-sleep.unprepare-sleep-offer.not_prepared
+                    severity: error
+            rule:
+              id: unprepare-sleep
+              ui:
+                section: configuration
+                name: rule.spell-sleep.unprepare-sleep-offer.name
+                intents: { PREPARE: L1 }
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: spell.l1.sleep.prepared
+                  source:
+                    number: 0
+                - type: numberSet
+                  target:
+                    fact: spell.l1.sleep.removing
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.prepared.count
+                  source:
+                    number: 1
+                  subtract: true
+                - type: advertiseEffect
+                  rule:
+                    id: effect-sleep-removing
+                    ui:
+                      name: rule.spell-sleep.effect-sleep-removing.name
+                      hidden: true
+                    phase: early
+                    group:
+                      - spell-l1-sleep-removal-set
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: spell.l1.sleep.removing
+                        source:
+                          number: 1
+
       # Compute eligible sleep slot count (levels 1-5)
       - id: compute-sleep-eligible-slots
         phase: normal
@@ -88,6 +215,10 @@ ruleGroups:
 
       # Offer Sleep (action spell)
       - id: offer-sleep
+        when:
+          - fact: spell.l1.sleep.prepared
+            operator: equals
+            value: 1
         after:
           - group: __planned__
           - group: action

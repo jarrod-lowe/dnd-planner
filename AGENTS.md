@@ -74,7 +74,7 @@ Avoid `$(...)` in commands, as they trigger security checks that slow you down.
 
 ### Forbidden commands
 
-- **DO NOT USE** `find ... -exec grep`; use `rg` instead
+- **DO NOT USE** `find ... -exec grep ...` or `find ... -exec xargs grep ...`; use `rg` instead
 - **DO NOT USE** `$(...)` wherever possible (consider running interior commands separately and remembering their output)
 - **DO NOT USE** `terraform`, use the make targets for it
 - **DO NOT USE** python or node, etc, to validate JSON or YAML - use `jq` and `yq` (WITHOUT redirections!)

@@ -85,6 +85,7 @@ ruleGroups:
     requires:
       - spellcasting
       - class-paladin-lay-on-hands
+      - paladin-spells-l1
     translations:
       en:
         name: Paladin Level 1
@@ -265,3 +266,13 @@ ruleGroups:
               fact: cha.save
             source:
               fact: proficiency.bonus
+
+      # Prepared Spell Capacity - Level 1 Paladin can prepare 2 spells
+      - id: paladin-level1-prepared-max
+        phase: early
+        activities:
+          - type: numberIncrement
+            target:
+              fact: spellcasting.prepared.max
+            source:
+              number: 2
