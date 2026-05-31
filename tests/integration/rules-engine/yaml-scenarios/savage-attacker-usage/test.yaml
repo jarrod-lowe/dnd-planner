@@ -1,0 +1,56 @@
+name: 'Savage Attacker Feat - Usage'
+description: >-
+  Using Savage Attacker consumes the once-per-turn resource.
+  savageAttacker.remaining goes to 0, offer becomes illegal, annotation disappears.
+
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/feat-savage-attacker
+
+steps:
+  # Initially, remaining = 1 but offer is illegal (no attack planned)
+  - evaluate:
+      assert:
+        facts:
+          savageAttacker.remaining: 1
+          actions.remaining: 1
+        offers:
+          exists:
+            - unarmed-strike-use-action
+            - savage-attacker-use
+          illegal:
+            - savage-attacker-use
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.feat-savage-attacker.annotation
+  # Attack first (prerequisite)
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          attack.last.activation.action: 1
+          savageAttacker.remaining: 1
+        offers:
+          legal:
+            - savage-attacker-use
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.feat-savage-attacker.annotation
+  # Use Savage Attacker
+  - addOffer:
+      id: savage-attacker-use
+      assert:
+        facts:
+          savageAttacker.remaining: 0
+        offers:
+          illegal:
+            - savage-attacker-use
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.feat-savage-attacker.annotation

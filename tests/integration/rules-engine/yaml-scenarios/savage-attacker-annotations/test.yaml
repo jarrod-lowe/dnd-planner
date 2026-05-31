@@ -1,0 +1,34 @@
+name: 'Savage Attacker Feat - Annotations'
+description: >
+  When feat-savage-attacker is assigned with attacks and an attack is planned,
+  savageAttacker.remaining is 1 and the annotation appears on weapon attacks.
+
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/feat-savage-attacker
+
+steps:
+  # Initially, facts are set but no annotation (no attack planned)
+  - evaluate:
+      assert:
+        facts:
+          savageAttacker.max: 1
+          savageAttacker.remaining: 1
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.feat-savage-attacker.annotation
+  # Plan an attack - annotation should appear
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          savageAttacker.remaining: 1
+          attack.last.activation.action: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.feat-savage-attacker.annotation

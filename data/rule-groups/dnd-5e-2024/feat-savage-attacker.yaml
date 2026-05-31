@@ -1,0 +1,130 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: feat-savage-attacker
+    translations:
+      en:
+        name: Savage Attacker
+        description: >-
+          Origin Feat. You've trained to deal particularly damaging strikes.
+          Once per turn when you hit a target with a weapon, you can roll
+          the weapon's damage dice twice and use either roll against the target.
+        keywords: [savage, attacker, feat, damage, weapon, reroll, origin]
+      en-x-tlh:
+        name: Qaw' SuvwI'
+        description: >-
+          Origin DIvI'. Qaw' SuvwI' DIch DIvI' nuH.
+          wa' DIch nuH damage dice cha' DIch 'ej wa' DIch lo'.
+        keywords: [Qaw', SuvwI', DIvI', nuH, damage]
+    detail:
+      key: feat/savage-attacker
+      source: srd52
+      translations:
+        en:
+          meta: 'Origin Feat'
+          body: >
+            You've trained to deal particularly damaging strikes. Once per turn
+            when you hit a target with a weapon, you can roll the weapon's
+            damage dice twice and use either roll against the target.
+    rules:
+      # Set max uses per turn
+      - id: savage-attacker-max
+        phase: early
+        group:
+          - savage-attacker-set
+        ui:
+          stats:
+            - name: play.stats.savageAttacker
+              type: usedMax
+              total: savageAttacker.max
+              remaining: savageAttacker.remaining
+              section: resources
+        activities:
+          - type: numberSet
+            target:
+              fact: savageAttacker.max
+            source:
+              number: 1
+
+      # Copy max to remaining at start of each evaluation
+      - id: savage-attacker-reset
+        phase: early
+        after:
+          - group: savage-attacker-set
+        activities:
+          - type: numberCopy
+            source:
+              fact: savageAttacker.max
+            target:
+              fact: savageAttacker.remaining
+
+      # Offer "Use Savage Attacker" as a planned item
+      - id: offer-savage-attacker
+        after:
+          - group: __planned__
+          - group: savage-attacker-set
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition: *has-attack-action
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.feat-savage-attacker.offer-savage-attacker.no_attack
+                    severity: error
+              - condition: &sa-has-remaining
+                  fact: savageAttacker.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.feat-savage-attacker.offer-savage-attacker.already_used
+                    severity: error
+            rule:
+              id: savage-attacker-use
+              group:
+                - __planned__
+              ui:
+                section: free
+                name: rule.dnd-5e-2024.feat-savage-attacker.savage-attacker-use.name
+                detailKey: feat/savage-attacker
+                intents:
+                  ATTACK: brawl
+                actionCost: []
+              phase: normal
+              activities:
+                - type: numberIncrement
+                  target:
+                    fact: savageAttacker.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.feat-savage-attacker.offer-savage-attacker.no_attack
+                  when:
+                    - fact: attack.last.activation.action
+                      operator: lessThan
+                      value: 1
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.feat-savage-attacker.offer-savage-attacker.already_used
+                  when:
+                    - fact: savageAttacker.remaining
+                      operator: lessThan
+                      value: 0
+
+      # Annotate weapon attacks when Savage Attacker is available
+      - id: annotate-savage-attacker
+        after:
+          - group: __planned__
+          - group: savage-attacker-set
+        activities:
+          - type: annotate
+            when:
+              - *has-attack-action
+              - *sa-has-remaining
+            key: rule.dnd-5e-2024.feat-savage-attacker.annotation
+            targets:
+              - attack.weapon

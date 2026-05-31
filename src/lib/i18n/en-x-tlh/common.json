@@ -718,6 +718,16 @@
           "button": "valwI' DIch"
         }
       },
+      "feat-savage-attacker": {
+        "annotation": "Qaw' SuvwI': wa' DIch damage dice reroll",
+        "savage-attacker-use": {
+          "name": "Qaw' SuvwI' lo'"
+        },
+        "offer-savage-attacker": {
+          "already_used": "DIch lo'lu'pu'",
+          "no_attack": "DIch DIvI' DIch"
+        }
+      },
       "feat-sentinel": {
         "annotation-disengage": "Sentinel: DIch DIvI' DIch",
         "annotation-retaliate": "Sentinel: DIvI' DIch DIch DIvI' 'ej DIvI'",
@@ -970,6 +980,7 @@
       "reactions": "DIvI' cha'",
       "heroicInspiration": "SubchI' SuvwI'",
       "layOnHands": "ghop Du",
+      "savageAttacker": "Qaw' SuvwI'",
       "paladinSmite": "DIch Qaw'",
       "divinity": "quv DIvI'",
       "spellcasting": "mugh DIvI'",

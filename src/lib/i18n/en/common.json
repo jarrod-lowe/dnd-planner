@@ -718,6 +718,16 @@
           "button": "With Proficiency"
         }
       },
+      "feat-savage-attacker": {
+        "annotation": "Savage Attacker: Reroll damage dice once per turn",
+        "savage-attacker-use": {
+          "name": "Use Savage Attacker"
+        },
+        "offer-savage-attacker": {
+          "already_used": "Already used this turn",
+          "no_attack": "No attack planned"
+        }
+      },
       "feat-sentinel": {
         "annotation-disengage": "Sentinel: Bypasses Disengage",
         "annotation-retaliate": "Sentinel: Attack on non-you triggers reaction",
@@ -950,6 +960,7 @@
       "reactions": "Reactions",
       "heroicInspiration": "Heroic Inspiration",
       "layOnHands": "Lay on Hands",
+      "savageAttacker": "Savage Attacker",
       "paladinSmite": "Paladin Smite",
       "divinity": "Divinity",
       "spellcasting": "Spellcast",
