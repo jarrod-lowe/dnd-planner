@@ -31,7 +31,7 @@ vi.mock('$lib/details/index', () => ({
     meta: 'Level 1 Enchantment',
     fields: [
       { labelKey: 'rules.field.castingTime', value: 'Action' },
-      { labelKey: 'rules.field.range', value: '90 feet' }
+      { labelKey: 'rules.field.range', value: '60 feet' }
     ],
     body: [{ text: ['Rules text for testing.'] }]
   })),

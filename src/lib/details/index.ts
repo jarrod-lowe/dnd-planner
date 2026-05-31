@@ -15,11 +15,7 @@ async function fetchDetail(key: string): Promise<ItemDetail | null> {
     if (!res.ok) return null;
     return (await res.json()) as ItemDetail;
   };
-  try {
-    return (await tryLoad(loc)) ?? (loc !== 'en' ? await tryLoad('en') : null);
-  } catch {
-    return null;
-  }
+  return (await tryLoad(loc)) ?? (loc !== 'en' ? await tryLoad('en') : null);
 }
 
 function remember(key: string, val: ItemDetail | null) {
@@ -30,22 +26,32 @@ function remember(key: string, val: ItemDetail | null) {
 
 export function prefetchDetail(key: string): void {
   if (!key || _cache.has(key) || _inflight.has(key)) return;
-  const p = fetchDetail(key).then((d) => {
-    remember(key, d);
-    _inflight.delete(key);
-    return d;
-  });
+  const p = fetchDetail(key)
+    .then((d) => {
+      remember(key, d);
+      _inflight.delete(key);
+      return d;
+    })
+    .catch(() => {
+      _inflight.delete(key);
+      return null;
+    });
   _inflight.set(key, p);
 }
 
 export async function getDetail(key: string): Promise<ItemDetail | null> {
   if (_cache.has(key)) return _cache.get(key)!;
   if (_inflight.has(key)) return _inflight.get(key)!;
-  const p = fetchDetail(key).then((d) => {
-    remember(key, d);
-    _inflight.delete(key);
-    return d;
-  });
+  const p = fetchDetail(key)
+    .then((d) => {
+      remember(key, d);
+      _inflight.delete(key);
+      return d;
+    })
+    .catch(() => {
+      _inflight.delete(key);
+      return null;
+    });
   _inflight.set(key, p);
   return p;
 }

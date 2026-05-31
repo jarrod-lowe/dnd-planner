@@ -112,11 +112,31 @@ describe('detail service', () => {
       expect(result).toBeNull();
     });
 
-    it('returns null on network error', async () => {
+    it('returns null on network error without caching', async () => {
       vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('network fail'));
 
       const result = await getDetail('spell/sleep');
       expect(result).toBeNull();
+      // Transient errors must NOT be cached — peekDetail should be undefined,
+      // not null, so the UI allows retry instead of permanently hiding rules mode
+      expect(peekDetail('spell/sleep')).toBeUndefined();
+    });
+
+    it('retries fetch after transient network error', async () => {
+      const detail = makeDetail();
+      const fetchSpy = vi
+        .spyOn(globalThis, 'fetch')
+        .mockRejectedValueOnce(new Error('transient'))
+        .mockResolvedValueOnce(new Response(JSON.stringify(detail), { status: 200 }));
+
+      // First call fails
+      const result1 = await getDetail('spell/sleep');
+      expect(result1).toBeNull();
+
+      // Second call retries and succeeds
+      const result2 = await getDetail('spell/sleep');
+      expect(result2).toEqual(detail);
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
     });
 
     it('serves from cache on second call', async () => {
@@ -184,8 +204,8 @@ describe('detail service', () => {
   describe('LRU eviction', () => {
     it('evicts oldest entry when cache exceeds max', async () => {
       const detail = makeDetail();
-      vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-        new Response(JSON.stringify(detail), { status: 200 })
+      vi.spyOn(globalThis, 'fetch').mockImplementation(() =>
+        Promise.resolve(new Response(JSON.stringify(detail), { status: 200 }))
       );
 
       // Fill 60 entries (default MAX_ENTRIES)
