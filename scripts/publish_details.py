@@ -40,13 +40,30 @@ def parse_markdown_body(md: str) -> list[dict]:
     lines: list[dict] = []
     blocks = re.split(r"\n\n+", md.strip())
     for block in blocks:
-        block = " ".join(block.split("\n")).strip()
-        if not block:
-            continue
-        if block.startswith("- "):
-            lines.append({"bullet": True, "text": _parse_spans(block[2:])})
+        raw_lines = block.split("\n")
+        # Check if this block is a list: any line starts with "- "
+        is_list = any(ln.lstrip().startswith("- ") for ln in raw_lines)
+        if is_list:
+            # Accumulate wrapped list items: a "- ..." line may continue on
+            # subsequent non-bullet lines
+            current: str | None = None
+            for ln in raw_lines:
+                stripped = ln.strip()
+                if stripped.startswith("- "):
+                    if current is not None:
+                        lines.append({"bullet": True, "text": _parse_spans(current)})
+                    current = stripped[2:]
+                elif current is not None and stripped:
+                    current += " " + stripped
+                elif stripped:
+                    # Non-bullet line before any bullet — treat as paragraph
+                    lines.append({"text": _parse_spans(stripped)})
+            if current is not None:
+                lines.append({"bullet": True, "text": _parse_spans(current)})
         else:
-            lines.append({"text": _parse_spans(block)})
+            text = " ".join(ln.strip() for ln in raw_lines).strip()
+            if text:
+                lines.append({"text": _parse_spans(text)})
     return lines
 
 

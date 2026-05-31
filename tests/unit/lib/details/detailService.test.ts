@@ -150,6 +150,36 @@ describe('detail service', () => {
 
       expect(fetchSpy).toHaveBeenCalledTimes(1);
     });
+
+    it('re-fetches when locale changes after cache', async () => {
+      const { locale } = await import('$lib/i18n');
+      const enDetail = makeDetail({ meta: 'English' });
+      const tlhDetail = makeDetail({ meta: 'Klingon' });
+
+      const fetchSpy = vi
+        .spyOn(globalThis, 'fetch')
+        .mockImplementation((url: string | Request | URL) => {
+          const u = typeof url === 'string' ? url : url.toString();
+          if (u.includes('/en-x-tlh/')) {
+            return Promise.resolve(new Response(JSON.stringify(tlhDetail), { status: 200 }));
+          }
+          return Promise.resolve(new Response(JSON.stringify(enDetail), { status: 200 }));
+        });
+
+      // Fetch in English
+      const result1 = await getDetail('spell/sleep');
+      expect(result1!.meta).toBe('English');
+
+      // Switch locale
+      locale.set('en-x-tlh');
+
+      // Should re-fetch for the new locale, not return the cached English version
+      const result2 = await getDetail('spell/sleep');
+      expect(result2!.meta).toBe('Klingon');
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+
+      locale.set('en'); // restore
+    });
   });
 
   describe('prefetchDetail', () => {
@@ -217,8 +247,8 @@ describe('detail service', () => {
       // Add one more - should evict the oldest
       await getDetail('spell/spell-60');
       expect(_cache.size).toBe(60);
-      expect(_cache.has('spell/spell-0')).toBe(false);
-      expect(_cache.has('spell/spell-60')).toBe(true);
+      expect(_cache.has('en:spell/spell-0')).toBe(false);
+      expect(_cache.has('en:spell/spell-60')).toBe(true);
     });
   });
 });

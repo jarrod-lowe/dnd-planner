@@ -79,6 +79,20 @@ class TestParseMarkdownBody:
         result = parse_markdown_body("Value must be less than < 10")
         assert result == [{"text": ["Value must be less than < 10"]}]
 
+    def test_adjacent_list_items_parse_separately(self):
+        result = parse_markdown_body("- first item\n- second item")
+        assert result == [
+            {"bullet": True, "text": ["first item"]},
+            {"bullet": True, "text": ["second item"]},
+        ]
+
+    def test_adjacent_list_items_with_blank_line_parse_separately(self):
+        result = parse_markdown_body("- first item\n\n- second item")
+        assert result == [
+            {"bullet": True, "text": ["first item"]},
+            {"bullet": True, "text": ["second item"]},
+        ]
+
 
 def _make_rule_group(detail=None, **kwargs):
     """Helper to build a rule-group dict for extraction tests."""

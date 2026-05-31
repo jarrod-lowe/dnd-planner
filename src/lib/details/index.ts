@@ -8,6 +8,11 @@ export const _cache = new Map<string, ItemDetail | null>();
 export const _inflight = new Map<string, Promise<ItemDetail | null>>();
 const MAX_ENTRIES = 60;
 
+function cacheKey(key: string): string {
+  const loc = get(locale) ?? 'en';
+  return `${loc}:${key}`;
+}
+
 async function fetchDetail(key: string): Promise<ItemDetail | null> {
   const loc = get(locale) ?? 'en';
   const tryLoad = async (l: string): Promise<ItemDetail | null> => {
@@ -18,46 +23,49 @@ async function fetchDetail(key: string): Promise<ItemDetail | null> {
   return (await tryLoad(loc)) ?? (loc !== 'en' ? await tryLoad('en') : null);
 }
 
-function remember(key: string, val: ItemDetail | null) {
-  _cache.delete(key);
-  _cache.set(key, val);
+function remember(ck: string, val: ItemDetail | null) {
+  _cache.delete(ck);
+  _cache.set(ck, val);
   if (_cache.size > MAX_ENTRIES) _cache.delete(_cache.keys().next().value!);
 }
 
 export function prefetchDetail(key: string): void {
-  if (!key || _cache.has(key) || _inflight.has(key)) return;
+  const ck = cacheKey(key);
+  if (!key || _cache.has(ck) || _inflight.has(ck)) return;
   const p = fetchDetail(key)
     .then((d) => {
-      remember(key, d);
-      _inflight.delete(key);
+      remember(ck, d);
+      _inflight.delete(ck);
       return d;
     })
     .catch(() => {
-      _inflight.delete(key);
+      _inflight.delete(ck);
       return null;
     });
-  _inflight.set(key, p);
+  _inflight.set(ck, p);
 }
 
 export async function getDetail(key: string): Promise<ItemDetail | null> {
-  if (_cache.has(key)) return _cache.get(key)!;
-  if (_inflight.has(key)) return _inflight.get(key)!;
+  const ck = cacheKey(key);
+  if (_cache.has(ck)) return _cache.get(ck)!;
+  if (_inflight.has(ck)) return _inflight.get(ck)!;
   const p = fetchDetail(key)
     .then((d) => {
-      remember(key, d);
-      _inflight.delete(key);
+      remember(ck, d);
+      _inflight.delete(ck);
       return d;
     })
     .catch(() => {
-      _inflight.delete(key);
+      _inflight.delete(ck);
       return null;
     });
-  _inflight.set(key, p);
+  _inflight.set(ck, p);
   return p;
 }
 
 export function peekDetail(key: string): ItemDetail | null | undefined {
-  return _cache.get(key);
+  const ck = cacheKey(key);
+  return _cache.get(ck);
 }
 
 export function clearCache(): void {
