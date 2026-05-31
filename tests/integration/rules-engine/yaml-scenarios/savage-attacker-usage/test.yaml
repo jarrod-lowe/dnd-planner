@@ -1,0 +1,65 @@
+name: 'Savage Attacker Feat - Usage'
+description: >-
+  Using Savage Attacker consumes the once-per-turn resource.
+  savageAttacker.remaining goes to 0, offer becomes illegal, annotation disappears.
+  Uses a dagger weapon attack to trigger availability.
+
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/dagger
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/feat-savage-attacker
+
+steps:
+  # Initially, remaining = 1 but offer is illegal (no weapon attack planned)
+  - evaluate:
+      assert:
+        facts:
+          savageAttacker.remaining: 1
+          actions.remaining: 1
+        offers:
+          exists:
+            - savage-attacker-use
+          illegal:
+            - savage-attacker-use
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.feat-savage-attacker.annotation
+  # Set strength for dagger
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 16
+      assert:
+        facts:
+          str.value: 16
+  # Weapon attack (dagger) - prerequisite triggers availability
+  - addOffer:
+      id: dagger-use-action
+      assert:
+        facts:
+          attack.last.weapon: 1
+          savageAttacker.remaining: 1
+        offers:
+          legal:
+            - savage-attacker-use
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.feat-savage-attacker.annotation
+  # Use Savage Attacker
+  - addOffer:
+      id: savage-attacker-use
+      assert:
+        facts:
+          savageAttacker.remaining: 0
+        offers:
+          illegal:
+            - savage-attacker-use
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.feat-savage-attacker.annotation

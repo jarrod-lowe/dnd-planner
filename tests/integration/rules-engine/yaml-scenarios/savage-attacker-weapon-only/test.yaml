@@ -1,0 +1,71 @@
+name: 'Savage Attacker Feat - Weapon Only'
+description: >-
+  Savage Attacker should only be available after a weapon attack, not after
+  an unarmed strike. After unarmed strike, the offer must remain illegal.
+  After a weapon attack (dagger), the offer should be legal.
+
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/dagger
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/feat-savage-attacker
+
+steps:
+  # Initially, no attack planned
+  - evaluate:
+      assert:
+        facts:
+          savageAttacker.remaining: 1
+        offers:
+          illegal:
+            - savage-attacker-use
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.feat-savage-attacker.annotation
+
+  # Unarmed strike is planned - Savage Attacker must STILL be illegal
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          attack.last.activation.action: 1
+        offers:
+          illegal:
+            - savage-attacker-use
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.feat-savage-attacker.annotation
+
+  # End turn to reset
+  - endTurn:
+      assert:
+        facts:
+          savageAttacker.remaining: 1
+
+  # Set strength for dagger hit bonus
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 16
+      assert:
+        facts:
+          str.value: 16
+
+  # Weapon attack (dagger) - Savage Attacker should become legal
+  - addOffer:
+      id: dagger-use-action
+      assert:
+        facts:
+          attack.last.activation.action: 1
+          attack.last.weapon: 1
+        offers:
+          legal:
+            - savage-attacker-use
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.feat-savage-attacker.annotation

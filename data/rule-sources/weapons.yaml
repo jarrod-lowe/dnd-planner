@@ -292,6 +292,12 @@ profiles:
           source:
             number: 1
           id: action-flag
+        - type: numberSet
+          target:
+            fact: attack.last.weapon
+          source:
+            number: 1
+          id: weapon-flag
         - type: setClear
           target:
             var: errors
@@ -351,6 +357,12 @@ profiles:
           source:
             number: 1
           id: reaction-flag
+        - type: numberSet
+          target:
+            fact: attack.last.weapon
+          source:
+            number: 1
+          id: weapon-flag
         - type: setClear
           target:
             var: errors
@@ -405,6 +417,12 @@ profiles:
           source:
             number: 1
           id: bonus-flag
+        - type: numberSet
+          target:
+            fact: attack.last.weapon
+          source:
+            number: 1
+          id: weapon-flag
         - type: setClear
           target:
             var: errors

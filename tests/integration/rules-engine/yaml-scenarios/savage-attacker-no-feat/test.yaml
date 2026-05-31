@@ -1,0 +1,25 @@
+name: 'Savage Attacker Feat - Not Assigned'
+description: >-
+  Without feat-savage-attacker assigned, no savageAttacker facts are set
+  and no annotation appears.
+
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/core-events
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          savageAttacker.max: 0
+          savageAttacker.remaining: 0
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.feat-savage-attacker.annotation
+        offers:
+          notExists:
+            - savage-attacker-use
