@@ -74,15 +74,15 @@ describe('ActiveStateStrip Rules mode', () => {
         committedEffectIds: []
       }
     });
-    // Click the chip body to trigger rules mode
-    const chip = container.querySelector('.effect-chip');
-    expect(chip).toBeTruthy();
-    await fireEvent.click(chip!);
+    // Click the flip target button to trigger rules mode
+    const flipTarget = container.querySelector('.effect-chip__flip-target');
+    expect(flipTarget).toBeTruthy();
+    await fireEvent.click(flipTarget!);
     // Should now show the RulesPane
     expect(container.querySelector('.rules-shell')).toBeTruthy();
   });
 
-  it('renders clickable effect chip as native button', () => {
+  it('renders clickable effect chip with native flip button', () => {
     const effect = makeEffect('spell-bless', 'spell/bless');
     const { container } = render(ActiveStateStrip, {
       props: {
@@ -91,8 +91,8 @@ describe('ActiveStateStrip Rules mode', () => {
         committedEffectIds: []
       }
     });
-    const chip = container.querySelector('.effect-chip');
-    expect(chip?.tagName).toBe('BUTTON');
+    const flipTarget = container.querySelector('.effect-chip__flip-target');
+    expect(flipTarget?.tagName).toBe('BUTTON');
   });
 
   it('shows return label Effects in rules mode', async () => {
@@ -104,7 +104,7 @@ describe('ActiveStateStrip Rules mode', () => {
         committedEffectIds: []
       }
     });
-    const chip = container.querySelector('.effect-chip');
+    const chip = container.querySelector('.effect-chip__flip-target');
     await fireEvent.click(chip!);
     // The return chip should show the localized flip label
     const returnChip = container.querySelector('.rules-rail__return');
@@ -120,7 +120,7 @@ describe('ActiveStateStrip Rules mode', () => {
         committedEffectIds: []
       }
     });
-    const chip = container.querySelector('.effect-chip');
+    const chip = container.querySelector('.effect-chip__flip-target');
     await fireEvent.click(chip!);
     expect(container.querySelector('.rules-shell')).toBeTruthy();
 

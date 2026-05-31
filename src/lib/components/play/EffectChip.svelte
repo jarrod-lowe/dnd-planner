@@ -74,15 +74,8 @@
     });
   });
 
-  function handleDismiss(e: MouseEvent) {
-    e.stopPropagation();
-    onDismiss?.();
-  }
-
-  function handleReminder(e: MouseEvent) {
-    e.stopPropagation();
-    onReminder?.(e);
-  }
+  const hasDismiss = $derived(!!onDismiss);
+  const hasReminder = $derived(state === 'pending');
 
   const stateClass = $derived(
     state === 'pending'
@@ -93,29 +86,7 @@
   );
 </script>
 
-{#snippet chipContent()}
-  {#if state === 'pending'}
-    <button
-      type="button"
-      class="effect-chip__badge effect-chip__badge--pending"
-      aria-label={$t('play.effectChip.reminder')}
-      onclick={handleReminder}
-    >
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <circle cx="12" cy="12" r="11" fill="var(--md-sys-color-error-container)" />
-        <text
-          x="12"
-          y="17"
-          text-anchor="middle"
-          fill="var(--md-sys-color-on-error-container)"
-          font-size="16"
-          font-weight="700"
-          font-family="var(--font-body)">!</text
-        >
-      </svg>
-    </button>
-  {/if}
-
+{#snippet chipBody()}
   {#if state === 'expiring'}
     <span class="effect-chip__badge effect-chip__badge--expiring" aria-hidden="true">
       <svg
@@ -135,25 +106,6 @@
 
   <div class="effect-chip__header">
     <span class="effect-chip__kind-tag">{kindLabel}</span>
-    {#if onDismiss}
-      <button
-        type="button"
-        class="effect-chip__dismiss"
-        aria-label={$t('play.effectChip.dismiss')}
-        onclick={handleDismiss}
-      >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          aria-hidden="true"
-        >
-          <line x1="6" y1="6" x2="18" y2="18" />
-          <line x1="18" y1="6" x2="6" y2="18" />
-        </svg>
-      </button>
-    {/if}
   </div>
 
   <div class="effect-chip__body">
@@ -193,27 +145,65 @@
   {/if}
 {/snippet}
 
-{#if canFlip}
-  <button
-    type="button"
-    class="effect-chip {stateClass}"
-    class:effect-chip--conc-link={isConcentrationLink}
-    class:effect-chip--clickable={true}
-    aria-label={ariaLabel}
-    onclick={onShowRules}
-  >
-    {@render chipContent()}
-  </button>
-{:else}
-  <div
-    class="effect-chip {stateClass}"
-    class:effect-chip--conc-link={isConcentrationLink}
-    role="listitem"
-    aria-label={ariaLabel}
-  >
-    {@render chipContent()}
-  </div>
-{/if}
+<div
+  class="effect-chip {stateClass}"
+  class:effect-chip--conc-link={isConcentrationLink}
+  class:effect-chip--clickable={canFlip}
+  role={canFlip ? 'group' : 'listitem'}
+  aria-label={ariaLabel}
+>
+  {#if hasReminder}
+    <button
+      type="button"
+      class="effect-chip__badge effect-chip__badge--pending"
+      aria-label={$t('play.effectChip.reminder')}
+      onclick={onReminder}
+    >
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <circle cx="12" cy="12" r="11" fill="var(--md-sys-color-error-container)" />
+        <text
+          x="12"
+          y="17"
+          text-anchor="middle"
+          fill="var(--md-sys-color-on-error-container)"
+          font-size="16"
+          font-weight="700"
+          font-family="var(--font-body)">!</text
+        >
+      </svg>
+    </button>
+  {/if}
+
+  {#if canFlip}
+    <button type="button" class="effect-chip__flip-target" onclick={onShowRules}>
+      {@render chipBody()}
+    </button>
+  {:else}
+    <div class="effect-chip__inner">
+      {@render chipBody()}
+    </div>
+  {/if}
+
+  {#if hasDismiss}
+    <button
+      type="button"
+      class="effect-chip__dismiss"
+      aria-label={$t('play.effectChip.dismiss')}
+      onclick={onDismiss}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        aria-hidden="true"
+      >
+        <line x1="6" y1="6" x2="18" y2="18" />
+        <line x1="18" y1="6" x2="6" y2="18" />
+      </svg>
+    </button>
+  {/if}
+</div>
 
 <style>
   .effect-chip {
@@ -273,6 +263,42 @@
     outline-offset: 2px;
   }
 
+  /* Flip target: button that covers the chip body */
+  .effect-chip__flip-target {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    width: 100%;
+  }
+
+  .effect-chip--clickable .effect-chip__flip-target:hover {
+    /* hover handled by parent */
+  }
+
+  .effect-chip__flip-target:focus-visible {
+    outline: none;
+  }
+
+  .effect-chip--clickable:focus-visible .effect-chip__flip-target {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Inner wrapper for non-clickable chips */
+  .effect-chip__inner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
   /* Header */
   .effect-chip__header {
     display: flex;
@@ -296,6 +322,9 @@
 
   /* Dismiss button */
   .effect-chip__dismiss {
+    position: absolute;
+    top: 0;
+    right: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -310,6 +339,7 @@
     transition:
       background-color var(--transition-fast),
       color var(--transition-fast);
+    z-index: 2;
   }
 
   .effect-chip__dismiss:hover {
@@ -411,7 +441,7 @@
     position: absolute;
     top: -0.5rem;
     left: -0.5rem;
-    z-index: 1;
+    z-index: 3;
   }
 
   .effect-chip__badge--pending {
