@@ -88,6 +88,26 @@ class TestBuildRuleGroupItem:
 
         assert item["createdAt"] == "2024-01-01T00:00:00Z"
 
+    def test_strips_detail_block(self):
+        """Should not include detail prose in DynamoDB item."""
+        rule_group = {
+            "id": "spell-sleep",
+            "translations": {
+                "en": {"name": "Sleep", "description": "desc", "keywords": ["sleep"]},
+                "en-x-tlh": {"name": "Qong", "description": "desc", "keywords": ["Qong"]},
+            },
+            "detail": {
+                "key": "spell/sleep",
+                "source": "srd52",
+                "body": "Prose that should not reach DynamoDB.",
+            },
+            "rules": [{"id": "r1", "activities": []}],
+        }
+
+        item = build_rule_group_item(rule_group, NOW)
+
+        assert "detail" not in item
+
 
 class TestLoadSharedDefinitions:
     """Tests for the load_shared_definitions function."""

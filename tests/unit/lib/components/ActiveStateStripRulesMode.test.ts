@@ -167,4 +167,40 @@ describe('ActiveStateStrip Rules mode', () => {
     // Should NOT enter rules mode
     expect(container.querySelector('.rules-shell')).toBeNull();
   });
+
+  it('shows rail button while detail is loading so user can escape', async () => {
+    const { peekDetail, getDetail } = await import('$lib/details/index');
+    // peekDetail returns undefined = not cached, not known-absent → enters loading path
+    (peekDetail as ReturnType<typeof vi.fn>).mockReturnValue(undefined);
+    // getDetail hangs so we stay in loading state
+    (getDetail as ReturnType<typeof vi.fn>).mockReturnValue(new Promise(() => {}));
+
+    const effect = makeEffect('spell-slow', 'spell/slow');
+    const { container } = render(ActiveStateStrip, {
+      props: {
+        effects: [effect],
+        facts: mockFacts,
+        committedEffectIds: []
+      }
+    });
+
+    // Click the chip to enter rules mode
+    const flipTarget = container.querySelector('.effect-chip__flip-target');
+    expect(flipTarget).toBeTruthy();
+    await fireEvent.click(flipTarget!);
+
+    // While loading, the rail button must be visible so the user can go back
+    const rail = container.querySelector('.rules-rail');
+    expect(rail).toBeTruthy();
+
+    // Cleanup: restore mocks for subsequent tests
+    (peekDetail as ReturnType<typeof vi.fn>).mockReturnValue({
+      source: 'srd52',
+      body: [{ text: ['Rules text.'] }]
+    });
+    (getDetail as ReturnType<typeof vi.fn>).mockImplementation(async () => ({
+      source: 'srd52',
+      body: [{ text: ['Rules text.'] }]
+    }));
+  });
 });

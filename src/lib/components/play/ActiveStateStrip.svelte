@@ -144,7 +144,17 @@
     <p class="active-state-strip__placeholder">{$t('play.activeState.placeholder')}</p>
   {:else if rulesEffect}
     {#if rulesLoading}
-      <div class="active-state-strip__rules-loading" aria-live="polite">{$t('rules.none')}</div>
+      <div class="rules-shell">
+        <button type="button" class="rules-rail" aria-pressed="true" onclick={exitRulesMode}>
+          <span class="rules-rail__label">
+            {getEffectName(rulesEffect)}
+          </span>
+          <span class="rules-rail__return">
+            {$t('play.planRow.flipReturn')}
+          </span>
+        </button>
+        <div class="active-state-strip__rules-loading" aria-live="polite">{$t('rules.none')}</div>
+      </div>
     {:else if rulesDetail}
       <RulesPane detail={rulesDetail} name={getEffectName(rulesEffect)} onFlip={exitRulesMode} />
     {/if}

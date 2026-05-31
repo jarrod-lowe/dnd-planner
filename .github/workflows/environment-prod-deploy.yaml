@@ -33,6 +33,17 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Generate detail JSON
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -q -r scripts/requirements.txt
+          .venv/bin/python scripts/publish_details.py --data-dir data/rule-groups --output-dir static/details
+
       - name: Build
         run: pnpm build
 
@@ -161,6 +172,17 @@ jobs:
             bucket=${{ vars.STATE_BUCKET }},
             key=dnd-planner/prod/terraform.tfstate,
             region=${{ vars.AWS_REGION }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Generate detail JSON
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -q -r scripts/requirements.txt
+          .venv/bin/python scripts/publish_details.py --data-dir data/rule-groups --output-dir static/details
 
       - name: Build
         run: pnpm build
