@@ -103,17 +103,25 @@ def _make_rule_group(detail=None, **kwargs):
     return {"ruleGroups": [rg]}
 
 
+def _flat_detail(key="spell/test", source="srd52", body="Text.", meta=None, fields=None):
+    """Helper to build a detail dict with translations map."""
+    detail = {"key": key, "source": source, "translations": {"en": {"body": body}}}
+    if meta is not None:
+        detail["translations"]["en"]["meta"] = meta
+    if fields is not None:
+        detail["translations"]["en"]["fields"] = fields
+    return detail
+
+
 class TestExtractDetails:
     def test_rule_group_with_detail_produces_entry(self):
-        data = _make_rule_group(detail={
-            "key": "spell/sleep",
-            "source": "srd52",
-            "meta": "Level 1 Enchantment",
-            "body": "Some text here.",
-        })
+        data = _make_rule_group(detail=_flat_detail(
+            key="spell/sleep", source="srd52", body="Some text here.", meta="Level 1 Enchantment",
+        ))
         results = extract_details([data])
         assert len(results) == 1
-        key, detail = results[0]
+        locale, key, detail = results[0]
+        assert locale == "en"
         assert key == "spell/sleep"
         assert detail["source"] == "srd52"
         assert detail["meta"] == "Level 1 Enchantment"
@@ -125,44 +133,68 @@ class TestExtractDetails:
         assert results == []
 
     def test_missing_key_raises(self):
-        data = _make_rule_group(detail={"source": "srd52", "body": "Text"})
+        data = _make_rule_group(detail={"source": "srd52", "translations": {"en": {"body": "Text"}}})
         with pytest.raises(ValueError, match="key"):
             extract_details([data])
 
     def test_missing_source_raises(self):
-        data = _make_rule_group(detail={"key": "spell/x", "body": "Text"})
+        data = _make_rule_group(detail={"key": "spell/x", "translations": {"en": {"body": "Text"}}})
         with pytest.raises(ValueError, match="source"):
             extract_details([data])
 
     def test_missing_body_raises(self):
-        data = _make_rule_group(detail={"key": "spell/x", "source": "srd52"})
+        data = _make_rule_group(detail={"key": "spell/x", "source": "srd52", "translations": {"en": {}}})
         with pytest.raises(ValueError, match="body"):
+            extract_details([data])
+
+    def test_missing_translations_raises(self):
+        data = _make_rule_group(detail={"key": "spell/x", "source": "srd52", "body": "Text"})
+        with pytest.raises(ValueError, match="translations"):
             extract_details([data])
 
     def test_fields_and_meta_passed_through(self):
         fields = [{"labelKey": "rules.field.castingTime", "value": "Action"}]
-        data = _make_rule_group(detail={
-            "key": "spell/test",
-            "source": "custom",
-            "meta": "A test spell",
-            "fields": fields,
-            "body": "Text.",
-        })
+        data = _make_rule_group(detail=_flat_detail(
+            key="spell/test", source="custom", body="Text.", meta="A test spell", fields=fields,
+        ))
         results = extract_details([data])
-        _, detail = results[0]
+        _, _, detail = results[0]
         assert detail["fields"] == fields
         assert detail["meta"] == "A test spell"
 
     def test_fields_omitted_when_absent(self):
-        data = _make_rule_group(detail={
-            "key": "spell/minimal",
-            "source": "srd52",
-            "body": "Minimal.",
-        })
+        data = _make_rule_group(detail=_flat_detail(key="spell/minimal", source="srd52", body="Minimal."))
         results = extract_details([data])
-        _, detail = results[0]
+        _, _, detail = results[0]
         assert "fields" not in detail
         assert "meta" not in detail
+
+    def test_multi_locale_produces_multiple_entries(self):
+        data = _make_rule_group(detail={
+            "key": "spell/sleep",
+            "source": "srd52",
+            "translations": {
+                "en": {
+                    "meta": "Level 1 Enchantment",
+                    "body": "English text.",
+                },
+                "en-x-tlh": {
+                    "meta": "tlhIngan Hol",
+                    "body": "tlhIngan text.",
+                },
+            },
+        })
+        results = extract_details([data])
+        assert len(results) == 2
+        by_locale = {loc: (k, d) for loc, k, d in results}
+        assert "en" in by_locale
+        assert "en-x-tlh" in by_locale
+        _, en_detail = by_locale["en"]
+        assert en_detail["meta"] == "Level 1 Enchantment"
+        assert en_detail["body"] == [{"text": ["English text."]}]
+        _, tlh_detail = by_locale["en-x-tlh"]
+        assert tlh_detail["meta"] == "tlhIngan Hol"
+        assert tlh_detail["body"] == [{"text": ["tlhIngan text."]}]
 
 
 class TestPublishToDir:
@@ -209,9 +241,13 @@ class TestRunEndToEnd:
                     "detail": {
                         "key": "spell/sleep",
                         "source": "srd52",
-                        "meta": "Level 1 Enchantment",
-                        "fields": [{"labelKey": "rules.field.castingTime", "value": "Action"}],
-                        "body": "Creatures must make a **Wisdom save**.",
+                        "translations": {
+                            "en": {
+                                "meta": "Level 1 Enchantment",
+                                "fields": [{"labelKey": "rules.field.castingTime", "value": "Action"}],
+                                "body": "Creatures must make a **Wisdom save**.",
+                            }
+                        },
                     },
                 }
             ]
