@@ -67,32 +67,38 @@ def parse_markdown_body(md: str) -> list[dict]:
     return lines
 
 
-def extract_details(rule_group_docs: list[dict]) -> list[tuple[str, dict]]:
+def extract_details(rule_group_docs: list[dict]) -> list[tuple[str, str, dict]]:
     """Extract detail blocks from parsed rule-group documents.
 
     Args:
         rule_group_docs: List of dicts, each with a "ruleGroups" key.
 
     Returns:
-        List of (detail_key, item_detail_dict) tuples.
+        List of (locale, detail_key, item_detail_dict) tuples.
     """
-    results: list[tuple[str, dict]] = []
+    results: list[tuple[str, str, dict]] = []
     for doc in rule_group_docs:
         for rg in doc.get("ruleGroups", []):
             detail = rg.get("detail")
             if detail is None:
                 continue
-            for field in ("key", "source", "body"):
+            for field in ("key", "source", "translations"):
                 if field not in detail:
                     raise ValueError(
                         f"Rule group '{rg.get('id', '?')}' detail missing required field: {field}"
                     )
-            item: dict = {"source": detail["source"], "body": parse_markdown_body(detail["body"])}
-            if "meta" in detail:
-                item["meta"] = detail["meta"]
-            if "fields" in detail:
-                item["fields"] = detail["fields"]
-            results.append((detail["key"], item))
+            translations = detail["translations"]
+            for locale, locale_content in translations.items():
+                if "body" not in locale_content:
+                    raise ValueError(
+                        f"Rule group '{rg.get('id', '?')}' detail locale '{locale}' missing required field: body"
+                    )
+                item: dict = {"source": detail["source"], "body": parse_markdown_body(locale_content["body"])}
+                if "meta" in locale_content:
+                    item["meta"] = locale_content["meta"]
+                if "fields" in locale_content:
+                    item["fields"] = locale_content["fields"]
+                results.append((locale, detail["key"], item))
     return results
 
 
@@ -146,13 +152,18 @@ def _load_yaml_docs(data_dir: Path) -> list[dict]:
     return docs
 
 
-def run(data_dir: Path, output_dir: Path, data_dir2: Path | None = None, locale: str = "en") -> None:
+def run(data_dir: Path, output_dir: Path, data_dir2: Path | None = None) -> None:
     """Main entry point: scan YAML, extract details, write JSON."""
     docs = _load_yaml_docs(data_dir)
     if data_dir2:
         docs.extend(_load_yaml_docs(data_dir2))
-    details = extract_details(docs)
-    publish_to_dir(details, output_dir, locale=locale)
+    all_details = extract_details(docs)
+    # Group by locale
+    locale_details: dict[str, list[tuple[str, dict]]] = {}
+    for locale, key, item_detail in all_details:
+        locale_details.setdefault(locale, []).append((key, item_detail))
+    for locale, details in locale_details.items():
+        publish_to_dir(details, output_dir, locale=locale)
 
 
 def main() -> None:
@@ -160,9 +171,8 @@ def main() -> None:
     parser.add_argument("--data-dir", required=True, help="Path to rule groups data directory")
     parser.add_argument("--data-dir2", default=None, help="Optional second data directory")
     parser.add_argument("--output-dir", default="static/details", help="Output directory for detail JSON")
-    parser.add_argument("--locale", default="en", help="Locale to publish (default: en)")
     args = parser.parse_args()
-    run(Path(args.data_dir), Path(args.output_dir), Path(args.data_dir2) if args.data_dir2 else None, args.locale)
+    run(Path(args.data_dir), Path(args.output_dir), Path(args.data_dir2) if args.data_dir2 else None)
 
 
 if __name__ == "__main__":
