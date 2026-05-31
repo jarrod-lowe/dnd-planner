@@ -131,6 +131,25 @@ describe('ActiveStateStrip Rules mode', () => {
     expect(container.querySelector('.effect-chip')).toBeTruthy();
   });
 
+  it('preserves listitem role on flippable chips inside role=list', () => {
+    const effect = makeEffect('spell-bless', 'spell/bless');
+    const { container } = render(ActiveStateStrip, {
+      props: {
+        effects: [effect],
+        facts: mockFacts,
+        committedEffectIds: []
+      }
+    });
+    // The chips container should be a list
+    const list = container.querySelector('[role="list"]');
+    expect(list).toBeTruthy();
+    // Direct children should be listitem, even when the chip has a detail (canFlip=true)
+    const listItems = list!.querySelectorAll(':scope > [role="listitem"]');
+    expect(listItems.length).toBe(1);
+    // No child should have role="group" — that breaks list semantics
+    expect(list!.querySelector('[role="group"]')).toBeNull();
+  });
+
   it('does not enter rules mode for effects without detailKey', async () => {
     const { peekDetail } = await import('$lib/details/index');
     (peekDetail as ReturnType<typeof vi.fn>).mockReturnValue(null);

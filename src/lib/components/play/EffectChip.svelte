@@ -149,7 +149,7 @@
   class="effect-chip {stateClass}"
   class:effect-chip--conc-link={isConcentrationLink}
   class:effect-chip--clickable={canFlip}
-  role={canFlip ? 'group' : 'listitem'}
+  role="listitem"
   aria-label={ariaLabel}
 >
   {#if hasReminder}
@@ -258,11 +258,6 @@
     background: var(--md-sys-color-surface-container-highest);
   }
 
-  .effect-chip--clickable:focus-visible {
-    outline: 2px solid var(--md-sys-color-primary);
-    outline-offset: 2px;
-  }
-
   /* Flip target: button that covers the chip body */
   .effect-chip__flip-target {
     display: flex;
@@ -283,10 +278,6 @@
   }
 
   .effect-chip__flip-target:focus-visible {
-    outline: none;
-  }
-
-  .effect-chip--clickable:focus-visible .effect-chip__flip-target {
     outline: 2px solid var(--md-sys-color-primary);
     outline-offset: 2px;
     border-radius: var(--radius-sm);
