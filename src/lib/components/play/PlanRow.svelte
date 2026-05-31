@@ -147,7 +147,9 @@
     } else {
       rulesLoading = true;
       rulesMode = true;
+      const capturedKey = detailKey;
       getDetail(detailKey).then((d) => {
+        if (detailKey !== capturedKey) return;
         rulesDetail = d;
         rulesLoading = false;
         if (!d) {

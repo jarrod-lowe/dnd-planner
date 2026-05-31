@@ -226,6 +226,64 @@ describe('PlanRow Rules mode', () => {
     expect(warning).toBeTruthy();
   });
 
+  it('ignores stale detail fetch when item has changed', async () => {
+    mockedPeekDetail.mockReturnValue(undefined);
+
+    const detailA = { source: 'srd52', body: [{ text: ['Sleep rules text.'] }] };
+
+    let resolveA!: (d: typeof detailA) => void;
+    const promiseA = new Promise<typeof detailA>((resolve) => {
+      resolveA = resolve;
+    });
+    const promiseB = new Promise(() => {}); // intentionally never resolves
+
+    mockedGetDetail.mockImplementation((key: string) => {
+      if (key === 'spell/sleep') return promiseA;
+      if (key === 'spell/heal') return promiseB;
+      return Promise.resolve(null);
+    });
+
+    const itemA = makeItem(); // detailKey = 'spell/sleep'
+    const itemB = makeItem({
+      id: 'spell-heal',
+      ui: { actionCost: ['action'], detailKey: 'spell/heal' }
+    });
+
+    const { container, rerender } = render(PlanRow, {
+      props: {
+        item: itemA,
+        entry: mockEntry,
+        facts: mockFacts,
+        activeAnnotations: []
+      }
+    });
+
+    // Toggle rules mode for item A → loading, fetch starts
+    let toggle = container.querySelector('[data-rules-toggle]');
+    await fireEvent.click(toggle!);
+    expect(container.querySelector('.plan-row__rules-loading')).toBeTruthy();
+
+    // Exit rules mode
+    toggle = container.querySelector('[data-rules-toggle]');
+    await fireEvent.click(toggle!);
+
+    // Switch to item B (different detailKey)
+    await rerender({ item: itemB, entry: mockEntry, facts: mockFacts, activeAnnotations: [] });
+
+    // Enter rules mode for item B → new fetch starts
+    toggle = container.querySelector('[data-rules-toggle]');
+    await fireEvent.click(toggle!);
+    expect(container.querySelector('.plan-row__rules-loading')).toBeTruthy();
+
+    // Resolve A's stale promise
+    resolveA(detailA);
+    await promiseA;
+    await new Promise((r) => setTimeout(r, 0));
+
+    // A's detail should NOT appear — loading should continue for B
+    expect(container.querySelector('.plan-row__rules-loading')).toBeTruthy();
+  });
+
   it('shows loading details text while detail is fetching', async () => {
     mockedPeekDetail.mockReturnValue(undefined);
     // getDetail hangs so we stay in loading state

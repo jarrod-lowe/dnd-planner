@@ -77,7 +77,9 @@
     } else {
       rulesEffect = effect;
       rulesLoading = true;
+      const capturedEffect = effect;
       getDetail(key).then((d) => {
+        if (rulesEffect !== capturedEffect) return;
         rulesDetail = d;
         rulesLoading = false;
         if (!d) {

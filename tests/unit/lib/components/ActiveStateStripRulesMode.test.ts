@@ -199,6 +199,76 @@ describe('ActiveStateStrip Rules mode', () => {
     expect(container.querySelector('.active-state-strip__header')).toBeTruthy();
   });
 
+  it('ignores stale detail fetch when user exits loading and opens a different effect', async () => {
+    const { peekDetail, getDetail } = await import('$lib/details/index');
+
+    const detailA = { source: 'srd52', body: [{ text: ['Slow rules text.'] }] };
+    const detailB = { source: 'srd52', body: [{ text: ['Bless rules text.'] }] };
+
+    let resolveA!: (d: typeof detailA) => void;
+    const promiseA = new Promise<typeof detailA>((resolve) => {
+      resolveA = resolve;
+    });
+
+    // peekDetail: undefined for slow (uncached), cached for bless
+    (peekDetail as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
+      if (key === 'spell/slow') return undefined;
+      if (key === 'spell/bless') return detailB;
+      return null;
+    });
+    // getDetail: controlled promise for slow
+    (getDetail as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
+      if (key === 'spell/slow') return promiseA;
+      return Promise.resolve(detailB);
+    });
+
+    const effectA = makeEffect('spell-slow', 'spell/slow');
+    const effectB = makeEffect('spell-bless', 'spell/bless');
+    const { container } = render(ActiveStateStrip, {
+      props: {
+        effects: [effectA, effectB],
+        facts: mockFacts,
+        committedEffectIds: []
+      }
+    });
+
+    // Click effect A (uncached) → enters loading
+    const chips = container.querySelectorAll('.effect-chip__flip-target');
+    expect(chips.length).toBe(2);
+    await fireEvent.click(chips[0]); // effect A
+    expect(container.querySelector('.active-state-strip__rules-loading')).toBeTruthy();
+
+    // Exit via rail → back to chips
+    const rail = container.querySelector('.rules-rail');
+    await fireEvent.click(rail!);
+    expect(container.querySelector('.rules-shell')).toBeNull();
+
+    // Click effect B (cached) → shows B's detail immediately
+    const chipsAgain = container.querySelectorAll('.effect-chip__flip-target');
+    await fireEvent.click(chipsAgain[1]); // effect B
+    expect(container.querySelector('.rules-body')?.textContent).toContain('Bless rules text.');
+
+    // Resolve A's stale promise
+    resolveA(detailA);
+    await promiseA;
+    await new Promise((r) => setTimeout(r, 0));
+
+    // A's detail should NOT overwrite B's
+    const bodyText = container.querySelector('.rules-body')?.textContent ?? '';
+    expect(bodyText).not.toContain('Slow rules text.');
+    expect(bodyText).toContain('Bless rules text.');
+
+    // Cleanup
+    (peekDetail as ReturnType<typeof vi.fn>).mockReturnValue({
+      source: 'srd52',
+      body: [{ text: ['Rules text.'] }]
+    });
+    (getDetail as ReturnType<typeof vi.fn>).mockImplementation(async () => ({
+      source: 'srd52',
+      body: [{ text: ['Rules text.'] }]
+    }));
+  });
+
   it('shows rail button while detail is loading so user can escape', async () => {
     const { peekDetail, getDetail } = await import('$lib/details/index');
     // peekDetail returns undefined = not cached, not known-absent → enters loading path
