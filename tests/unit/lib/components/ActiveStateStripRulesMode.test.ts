@@ -193,6 +193,10 @@ describe('ActiveStateStrip Rules mode', () => {
     const rail = container.querySelector('.rules-rail');
     expect(rail).toBeTruthy();
 
+    // Loading message should say "loading details", not "no reference text"
+    const loadingEl = container.querySelector('.active-state-strip__rules-loading');
+    expect(loadingEl?.textContent).toContain('rules.loadingDetails');
+
     // Cleanup: restore mocks for subsequent tests
     (peekDetail as ReturnType<typeof vi.fn>).mockReturnValue({
       source: 'srd52',

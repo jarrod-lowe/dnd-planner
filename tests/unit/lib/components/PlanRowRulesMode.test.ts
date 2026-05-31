@@ -225,4 +225,23 @@ describe('PlanRow Rules mode', () => {
     const warning = container.querySelector('.warning-indicator--illegal');
     expect(warning).toBeTruthy();
   });
+
+  it('shows loading details text while detail is fetching', async () => {
+    mockedPeekDetail.mockReturnValue(undefined);
+    // getDetail hangs so we stay in loading state
+    mockedGetDetail.mockReturnValue(new Promise(() => {}));
+    const { container } = render(PlanRow, {
+      props: {
+        item: makeItem(),
+        entry: mockEntry,
+        facts: mockFacts,
+        activeAnnotations: []
+      }
+    });
+    const toggle = container.querySelector('[data-rules-toggle]');
+    await fireEvent.click(toggle!);
+    // Loading message should say "loading details", not "no reference text"
+    const loadingEl = container.querySelector('.plan-row__rules-loading');
+    expect(loadingEl?.textContent).toContain('rules.loadingDetails');
+  });
 });

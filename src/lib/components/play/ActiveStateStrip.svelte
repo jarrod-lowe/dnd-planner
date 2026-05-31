@@ -153,7 +153,9 @@
             {$t('play.planRow.flipReturn')}
           </span>
         </button>
-        <div class="active-state-strip__rules-loading" aria-live="polite">{$t('rules.none')}</div>
+        <div class="active-state-strip__rules-loading" aria-live="polite">
+          {$t('rules.loadingDetails')}
+        </div>
       </div>
     {:else if rulesDetail}
       <RulesPane detail={rulesDetail} name={getEffectName(rulesEffect)} onFlip={exitRulesMode} />

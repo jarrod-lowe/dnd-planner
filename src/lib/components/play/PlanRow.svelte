@@ -266,7 +266,7 @@
   <div class="plan-row__right" bind:this={rightEl}>
     {#if rulesMode}
       {#if rulesLoading}
-        <div class="plan-row__rules-loading" aria-live="polite">{$t('rules.none')}</div>
+        <div class="plan-row__rules-loading" aria-live="polite">{$t('rules.loadingDetails')}</div>
       {:else if rulesDetail}
         <RulesPane detail={rulesDetail} name={displayName} onFlip={toggleRulesMode} />
       {/if}
