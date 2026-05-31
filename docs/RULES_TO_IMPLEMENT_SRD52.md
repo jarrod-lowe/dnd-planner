@@ -10,23 +10,23 @@ For what _is_ implemented, see the rule groups in `data/rule-groups/dnd-5e-2024/
 
 All 15 conditions from the SRD are defined but none have their mechanical effects enforced by the rules engine. Each condition modifies rolls, speed, abilities, or other game state, and these modifiers need to be applied automatically when a creature has the condition.
 
-| Condition | Key Effects |
-| --- | --- |
-| **Blinded** | Auto-fail sight-based checks; attacks have disadvantage; attacks against you have advantage |
-| **Charmed** | Can't attack the charmer; charmer has advantage on social checks against you |
-| **Deafened** | Can't hear; auto-fail hearing-based checks |
-| **Exhaustion** | Cumulative (1–6 levels). Each level: −2 per level on D20 Tests, −5 ft per level Speed. Level 6 = death. Long Rest removes 1 level |
-| **Frightened** | Disadvantage on checks and attacks while source is in line of sight; can't willingly approach source |
-| **Grappled** | Speed 0 (can't increase); disadvantage on attacks vs anyone but grappler; grappler can drag you |
-| **Incapacitated** | Can't take actions, bonus actions, or reactions; can't speak; concentration broken; disadvantage on Initiative if Incapacitated when rolling |
-| **Invisible** | Impossible to see without special sense; attacks against you have disadvantage; your attacks have advantage |
-| **Paralysed** | Incapacitated + Speed 0; auto-fail STR/DEX saves; attacks against you have advantage; melee hits within 5 ft are critical hits |
-| **Petrified** | Transformed to inanimate substance; Incapacitated + Speed 0; attacks against you have advantage; auto-fail STR/DEX saves; resistance to all damage |
-| **Poisoned** | Disadvantage on attack rolls and ability checks |
-| **Prone** | Disadvantage on attack rolls; advantage on attacks against you within 5 ft, disadvantage beyond; crawling costs 2x movement; standing costs half Speed |
-| **Restrained** | Speed 0 (can't increase); attacks against you have advantage; your attacks have disadvantage; disadvantage on DEX saves |
-| **Stunned** | Incapacitated + can't speak; auto-fail STR/DEX saves; attacks against you have advantage |
-| **Unconscious** | Incapacitated + Prone; drop held items; Speed 0; attacks against you have advantage; melee hits within 5 ft are critical hits; unaware of surroundings |
+| Condition         | Key Effects                                                                                                                                            |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Blinded**       | Auto-fail sight-based checks; attacks have disadvantage; attacks against you have advantage                                                            |
+| **Charmed**       | Can't attack the charmer; charmer has advantage on social checks against you                                                                           |
+| **Deafened**      | Can't hear; auto-fail hearing-based checks                                                                                                             |
+| **Exhaustion**    | Cumulative (1–6 levels). Each level: −2 per level on D20 Tests, −5 ft per level Speed. Level 6 = death. Long Rest removes 1 level                      |
+| **Frightened**    | Disadvantage on checks and attacks while source is in line of sight; can't willingly approach source                                                   |
+| **Grappled**      | Speed 0 (can't increase); disadvantage on attacks vs anyone but grappler; grappler can drag you                                                        |
+| **Incapacitated** | Can't take actions, bonus actions, or reactions; can't speak; concentration broken; disadvantage on Initiative if Incapacitated when rolling           |
+| **Invisible**     | Impossible to see without special sense; attacks against you have disadvantage; your attacks have advantage                                            |
+| **Paralysed**     | Incapacitated + Speed 0; auto-fail STR/DEX saves; attacks against you have advantage; melee hits within 5 ft are critical hits                         |
+| **Petrified**     | Transformed to inanimate substance; Incapacitated + Speed 0; attacks against you have advantage; auto-fail STR/DEX saves; resistance to all damage     |
+| **Poisoned**      | Disadvantage on attack rolls and ability checks                                                                                                        |
+| **Prone**         | Disadvantage on attack rolls; advantage on attacks against you within 5 ft, disadvantage beyond; crawling costs 2x movement; standing costs half Speed |
+| **Restrained**    | Speed 0 (can't increase); attacks against you have advantage; your attacks have disadvantage; disadvantage on DEX saves                                |
+| **Stunned**       | Incapacitated + can't speak; auto-fail STR/DEX saves; attacks against you have advantage                                                               |
+| **Unconscious**   | Incapacitated + Prone; drop held items; Speed 0; attacks against you have advantage; melee hits within 5 ft are critical hits; unaware of surroundings |
 
 ## 2. Combat Rules
 
@@ -34,10 +34,10 @@ All 15 conditions from the SRD are defined but none have their mechanical effect
 
 Player toggles their own cover; app applies the modifier.
 
-| Degree | AC/Dex Save Bonus |
-| --- | --- |
-| Half | +2 |
-| Three-Quarters | +5 |
+| Degree         | AC/Dex Save Bonus |
+| -------------- | ----------------- |
+| Half           | +2                |
+| Three-Quarters | +5                |
 
 ### Ready [Action]
 
@@ -178,47 +178,47 @@ All require level 19+. Each grants +1 to one ability score (max 30) plus a speci
 
 Finesse and Light are partially implemented. The following properties are not:
 
-| Property | Effect |
-| --- | --- |
-| **Ammunition** | Each attack consumes one piece of ammunition. Can recover half after battle. |
-| **Heavy** | Small creatures have disadvantage on attack rolls. |
-| **Light** | When you take the Attack action with a Light weapon, you can make one extra attack as a Bonus Action with a different Light weapon. Don't add ability modifier to the extra attack's damage unless negative. |
-| **Loading** | Can fire only once per action/bonus action/reaction, regardless of extra attacks. |
-| **Range** | Two numbers: normal range and long range. Long range imposes disadvantage. |
-| **Reach** | Adds 5 ft to reach for attacks and opportunity attacks. |
-| **Thrown** | Can throw to make a ranged attack; draw as part of the attack. Melee weapons use same ability modifier. |
-| **Two-Handed** | Requires two hands to attack. |
-| **Versatile** | Can use with one or two hands; parenthesized damage when two-handed. |
+| Property       | Effect                                                                                                                                                                                                       |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Ammunition** | Each attack consumes one piece of ammunition. Can recover half after battle.                                                                                                                                 |
+| **Heavy**      | Small creatures have disadvantage on attack rolls.                                                                                                                                                           |
+| **Light**      | When you take the Attack action with a Light weapon, you can make one extra attack as a Bonus Action with a different Light weapon. Don't add ability modifier to the extra attack's damage unless negative. |
+| **Loading**    | Can fire only once per action/bonus action/reaction, regardless of extra attacks.                                                                                                                            |
+| **Range**      | Two numbers: normal range and long range. Long range imposes disadvantage.                                                                                                                                   |
+| **Reach**      | Adds 5 ft to reach for attacks and opportunity attacks.                                                                                                                                                      |
+| **Thrown**     | Can throw to make a ranged attack; draw as part of the attack. Melee weapons use same ability modifier.                                                                                                      |
+| **Two-Handed** | Requires two hands to attack.                                                                                                                                                                                |
+| **Versatile**  | Can use with one or two hands; parenthesized damage when two-handed.                                                                                                                                         |
 
 ### Mastery Properties
 
 Nick (dagger, scimitar), Cleave (greataxe), and Slow (javelin) have i18n strings but are not implemented as rules engine effects. The following mastery properties are not implemented at all:
 
-| Property | Effect |
-| --- | --- |
-| **Graze** | If miss but roll 10+, deal damage equal to the ability modifier used for the attack. |
-| **Push** | If hit, push target 10 ft straight away (Large or smaller). |
-| **Sap** | If hit, target has disadvantage on its next attack roll before your next turn. |
+| Property   | Effect                                                                                                         |
+| ---------- | -------------------------------------------------------------------------------------------------------------- |
+| **Graze**  | If miss but roll 10+, deal damage equal to the ability modifier used for the attack.                           |
+| **Push**   | If hit, push target 10 ft straight away (Large or smaller).                                                    |
+| **Sap**    | If hit, target has disadvantage on its next attack roll before your next turn.                                 |
 | **Topple** | If hit, target must succeed on a CON save or have the Prone condition (DC 8 + ability modifier + Proficiency). |
-| **Vex** | If hit, gain advantage on your next attack roll against the target before your next turn. |
+| **Vex**    | If hit, gain advantage on your next attack roll against the target before your next turn.                      |
 
 ### Armor
 
 2 of 10 armors are implemented (leather armor, splint armor) plus shield. The full armor table:
 
-| Armor | AC | STR Req | Stealth | Weight | Cost |
-| --- | --- | --- | --- | --- | --- |
-| Padded | 11 + DEX | — | Disadvantage | 8 lb | 5 GP |
-| Leather ✅ | 11 + DEX | — | — | 10 lb | 10 GP |
-| Studded Leather | 12 + DEX | — | — | 13 lb | 45 GP |
-| Hide | 12 + DEX (max 2) | — | — | 12 lb | 10 GP |
-| Chain Shirt | 13 + DEX (max 2) | — | — | 20 lb | 50 GP |
-| Scale Mail | 14 + DEX (max 2) | — | Disadvantage | 30 lb | 50 GP |
-| Breastplate | 14 + DEX (max 2) | — | — | 20 lb | 400 GP |
-| Half Plate | 15 + DEX (max 2) | — | Disadvantage | 40 lb | 750 GP |
-| Chain Mail | 16 | STR 13 | Disadvantage | 55 lb | 75 GP |
-| Splint ✅ | 17 | STR 15 | Disadvantage | 60 lb | 200 GP |
-| Plate | 18 | STR 15 | Disadvantage | 65 lb | 1,500 GP |
+| Armor           | AC               | STR Req | Stealth      | Weight | Cost     |
+| --------------- | ---------------- | ------- | ------------ | ------ | -------- |
+| Padded          | 11 + DEX         | —       | Disadvantage | 8 lb   | 5 GP     |
+| Leather ✅      | 11 + DEX         | —       | —            | 10 lb  | 10 GP    |
+| Studded Leather | 12 + DEX         | —       | —            | 13 lb  | 45 GP    |
+| Hide            | 12 + DEX (max 2) | —       | —            | 12 lb  | 10 GP    |
+| Chain Shirt     | 13 + DEX (max 2) | —       | —            | 20 lb  | 50 GP    |
+| Scale Mail      | 14 + DEX (max 2) | —       | Disadvantage | 30 lb  | 50 GP    |
+| Breastplate     | 14 + DEX (max 2) | —       | —            | 20 lb  | 400 GP   |
+| Half Plate      | 15 + DEX (max 2) | —       | Disadvantage | 40 lb  | 750 GP   |
+| Chain Mail      | 16               | STR 13  | Disadvantage | 55 lb  | 75 GP    |
+| Splint ✅       | 17               | STR 15  | Disadvantage | 60 lb  | 200 GP   |
+| Plate           | 18               | STR 15  | Disadvantage | 65 lb  | 1,500 GP |
 
 ### Armor Training
 
@@ -245,13 +245,13 @@ If you wear armor and lack training with it: disadvantage on any D20 Test involv
 
 ### Coins
 
-| Coin | Value in GP |
-| --- | --- |
-| Copper Piece (CP) | 1/100 |
-| Silver Piece (SP) | 1/10 |
-| Electrum Piece (EP) | 1/2 |
-| Gold Piece (GP) | 1 |
-| Platinum Piece (PP) | 10 |
+| Coin                | Value in GP |
+| ------------------- | ----------- |
+| Copper Piece (CP)   | 1/100       |
+| Silver Piece (SP)   | 1/10        |
+| Electrum Piece (EP) | 1/2         |
+| Gold Piece (GP)     | 1           |
+| Platinum Piece (PP) | 10          |
 
 A coin weighs about 1/3 oz; 50 coins = 1 lb. Equipment sells for half its cost. Trade goods retain full value.
 
@@ -266,27 +266,27 @@ A coin weighs about 1/3 oz; 50 coins = 1 lb. Equipment sells for half its cost. 
 ### Experience Points and Levelling
 
 | Level | XP Required | Proficiency Bonus |
-| --- | --- | --- |
-| 1 | 0 | +2 |
-| 2 | 300 | +2 |
-| 3 | 900 | +2 |
-| 4 | 2,700 | +2 |
-| 5 | 6,500 | +3 |
-| 6 | 14,000 | +3 |
-| 7 | 23,000 | +3 |
-| 8 | 34,000 | +3 |
-| 9 | 48,000 | +4 |
-| 10 | 64,000 | +4 |
-| 11 | 85,000 | +4 |
-| 12 | 100,000 | +4 |
-| 13 | 120,000 | +5 |
-| 14 | 140,000 | +5 |
-| 15 | 165,000 | +5 |
-| 16 | 195,000 | +5 |
-| 17 | 225,000 | +6 |
-| 18 | 265,000 | +6 |
-| 19 | 305,000 | +6 |
-| 20 | 355,000 | +6 |
+| ----- | ----------- | ----------------- |
+| 1     | 0           | +2                |
+| 2     | 300         | +2                |
+| 3     | 900         | +2                |
+| 4     | 2,700       | +2                |
+| 5     | 6,500       | +3                |
+| 6     | 14,000      | +3                |
+| 7     | 23,000      | +3                |
+| 8     | 34,000      | +3                |
+| 9     | 48,000      | +4                |
+| 10    | 64,000      | +4                |
+| 11    | 85,000      | +4                |
+| 12    | 100,000     | +4                |
+| 13    | 120,000     | +5                |
+| 14    | 140,000     | +5                |
+| 15    | 165,000     | +5                |
+| 16    | 195,000     | +5                |
+| 17    | 225,000     | +6                |
+| 18    | 265,000     | +6                |
+| 19    | 305,000     | +6                |
+| 20    | 355,000     | +6                |
 
 When XP equals or exceeds a threshold, the character reaches that level. Each level may grant: hit points, class features, ability score improvements, spell slot increases, etc.
 
