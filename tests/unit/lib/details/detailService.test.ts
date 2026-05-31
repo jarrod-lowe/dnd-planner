@@ -139,6 +139,74 @@ describe('detail service', () => {
       expect(fetchSpy).toHaveBeenCalledTimes(2);
     });
 
+    it('returns null on HTTP 500 without caching', async () => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 500 }));
+
+      const result = await getDetail('spell/sleep');
+      expect(result).toBeNull();
+      // Server errors must NOT be cached — peekDetail should be undefined,
+      // not null, so the UI allows retry instead of permanently hiding rules mode
+      expect(peekDetail('spell/sleep')).toBeUndefined();
+    });
+
+    it('retries fetch after HTTP 500', async () => {
+      const detail = makeDetail();
+      const fetchSpy = vi
+        .spyOn(globalThis, 'fetch')
+        .mockResolvedValueOnce(new Response(null, { status: 500 }))
+        .mockResolvedValueOnce(new Response(JSON.stringify(detail), { status: 200 }));
+
+      // First call hits 500
+      const result1 = await getDetail('spell/sleep');
+      expect(result1).toBeNull();
+
+      // Second call retries and succeeds
+      const result2 = await getDetail('spell/sleep');
+      expect(result2).toEqual(detail);
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it('falls back to en and caches when locale returns 500 but en returns 200', async () => {
+      const { locale } = await import('$lib/i18n');
+      locale.set('fr');
+
+      const detail = makeDetail({ meta: 'English fallback' });
+      vi.spyOn(globalThis, 'fetch').mockImplementation((url: string | Request | URL) => {
+        const u = typeof url === 'string' ? url : url.toString();
+        if (u.includes('/fr/')) {
+          return Promise.resolve(new Response(null, { status: 500 }));
+        }
+        return Promise.resolve(new Response(JSON.stringify(detail), { status: 200 }));
+      });
+
+      const result = await getDetail('spell/sleep');
+      expect(result).toEqual(detail);
+      // Should be cached (successful fallback)
+      expect(peekDetail('spell/sleep')).toEqual(detail);
+
+      locale.set('en'); // restore
+    });
+
+    it('does not cache when locale returns 500 and en returns 404', async () => {
+      const { locale } = await import('$lib/i18n');
+      locale.set('fr');
+
+      vi.spyOn(globalThis, 'fetch').mockImplementation((url: string | Request | URL) => {
+        const u = typeof url === 'string' ? url : url.toString();
+        if (u.includes('/fr/')) {
+          return Promise.resolve(new Response(null, { status: 500 }));
+        }
+        return Promise.resolve(new Response(null, { status: 404 }));
+      });
+
+      const result = await getDetail('spell/sleep');
+      expect(result).toBeNull();
+      // Must NOT be cached — the 500 means we don't know if the file exists
+      expect(peekDetail('spell/sleep')).toBeUndefined();
+
+      locale.set('en'); // restore
+    });
+
     it('serves from cache on second call', async () => {
       const detail = makeDetail();
       const fetchSpy = vi

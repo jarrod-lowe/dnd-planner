@@ -15,12 +15,19 @@ function cacheKey(key: string): string {
 
 async function fetchDetail(key: string): Promise<ItemDetail | null> {
   const loc = get(locale) ?? 'en';
+  let transient = false;
   const tryLoad = async (l: string): Promise<ItemDetail | null> => {
     const res = await fetch(`${BASE}/${l}/${key}.json`);
-    if (!res.ok) return null;
+    if (res.status === 404) return null;
+    if (!res.ok) {
+      transient = true;
+      return null;
+    }
     return (await res.json()) as ItemDetail;
   };
-  return (await tryLoad(loc)) ?? (loc !== 'en' ? await tryLoad('en') : null);
+  const result = (await tryLoad(loc)) ?? (loc !== 'en' ? await tryLoad('en') : null);
+  if (result === null && transient) throw new Error('transient');
+  return result;
 }
 
 function remember(ck: string, val: ItemDetail | null) {
