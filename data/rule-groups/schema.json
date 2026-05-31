@@ -20,6 +20,33 @@
       "enum": ["en", "en-x-tlh"],
       "description": "Supported locales for rule group translations"
     },
+    "detailLocale": {
+      "type": "object",
+      "description": "Translated detail content for a single locale",
+      "required": ["body"],
+      "properties": {
+        "meta": {
+          "type": "string",
+          "description": "Italic subtitle line"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["labelKey", "value"],
+            "properties": {
+              "labelKey": { "type": "string" },
+              "value": { "type": "string" }
+            }
+          }
+        },
+        "body": {
+          "type": "string",
+          "description": "Markdown body text"
+        }
+      },
+      "additionalProperties": false
+    },
     "translation": {
       "type": "object",
       "required": ["name", "description", "keywords"],
@@ -96,7 +123,7 @@
         "detail": {
           "type": "object",
           "description": "Detail text for rules mode (extracted by publish step, stripped before DynamoDB)",
-          "required": ["key", "source", "body"],
+          "required": ["key", "source", "translations"],
           "properties": {
             "key": {
               "type": "string",
@@ -107,24 +134,12 @@
               "enum": ["srd52", "srd51", "custom"],
               "description": "Provenance label"
             },
-            "meta": {
-              "type": "string",
-              "description": "Italic subtitle line"
-            },
-            "fields": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "required": ["labelKey", "value"],
-                "properties": {
-                  "labelKey": { "type": "string" },
-                  "value": { "type": "string" }
-                }
+            "translations": {
+              "type": "object",
+              "description": "Map of locale code to translated detail content",
+              "additionalProperties": {
+                "$ref": "#/definitions/detailLocale"
               }
-            },
-            "body": {
-              "type": "string",
-              "description": "Markdown body text"
             }
           },
           "additionalProperties": false
