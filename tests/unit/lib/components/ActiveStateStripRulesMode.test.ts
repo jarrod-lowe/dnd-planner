@@ -168,6 +168,37 @@ describe('ActiveStateStrip Rules mode', () => {
     expect(container.querySelector('.rules-shell')).toBeNull();
   });
 
+  it('exits rules mode when the viewed effect is removed from effects', async () => {
+    const { peekDetail } = await import('$lib/details/index');
+    (peekDetail as ReturnType<typeof vi.fn>).mockReturnValue({
+      source: 'srd52',
+      body: [{ text: ['Rules text.'] }]
+    });
+
+    const effectA = makeEffect('spell-bless', 'spell/bless');
+    const effectB = makeEffect('spell-shield');
+    const { container, rerender } = render(ActiveStateStrip, {
+      props: {
+        effects: [effectA, effectB],
+        facts: mockFacts,
+        committedEffectIds: []
+      }
+    });
+
+    // Enter rules mode for effectA
+    const flipTarget = container.querySelector('.effect-chip__flip-target');
+    await fireEvent.click(flipTarget!);
+    expect(container.querySelector('.rules-shell')).toBeTruthy();
+
+    // Effect A disappears (e.g. countdown expired on End Turn)
+    await rerender({ effects: [effectB], facts: mockFacts, committedEffectIds: [] });
+
+    // Should exit rules mode — no stale rules pane
+    expect(container.querySelector('.rules-shell')).toBeNull();
+    // Should show the header again (it's hidden while in rules mode)
+    expect(container.querySelector('.active-state-strip__header')).toBeTruthy();
+  });
+
   it('shows rail button while detail is loading so user can escape', async () => {
     const { peekDetail, getDetail } = await import('$lib/details/index');
     // peekDetail returns undefined = not cached, not known-absent → enters loading path

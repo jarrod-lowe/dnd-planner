@@ -40,6 +40,14 @@
   let rulesDetail: ItemDetail | null | undefined = $state(undefined);
   let rulesLoading = $state(false);
 
+  $effect(() => {
+    if (rulesEffect && !visibleEffects.some((e) => e.id === rulesEffect!.id)) {
+      rulesEffect = null;
+      rulesDetail = undefined;
+      rulesLoading = false;
+    }
+  });
+
   function getDetailKey(effect: Rule): string {
     const ui = effect.ui as Record<string, unknown> | undefined;
     return (ui?.detailKey as string | undefined) ?? '';
