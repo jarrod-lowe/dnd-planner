@@ -1274,7 +1274,11 @@
       "expandAria": "Expand",
       "collapseAria": "Collapse",
       "undoAria": "Undo",
-      "illegalAltTag": "Illegal"
+      "illegalAltTag": "Illegal",
+      "flipToRules": "Flip to rules",
+      "flipToPlan": "Flip back to plan",
+      "flipLabel": "↺ Flip",
+      "flipReturn": "↺ Flip"
     },
     "modChip": {
       "toggle": "TOGGLE {{name}}",

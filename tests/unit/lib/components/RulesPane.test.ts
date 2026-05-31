@@ -46,7 +46,7 @@ describe('RulesPane', () => {
     });
     const returnChip = container.querySelector('.rules-rail__return');
     expect(returnChip).toBeTruthy();
-    expect(returnChip?.textContent).toContain('↺ Flip');
+    expect(returnChip?.textContent).toContain('play.planRow.flipReturn');
   });
 
   it('calls onFlip when rail is clicked', async () => {
@@ -122,5 +122,13 @@ describe('RulesPane', () => {
     });
     const rail = container.querySelector('[aria-pressed="true"]');
     expect(rail).toBeTruthy();
+  });
+
+  it('renders rail as native button element', () => {
+    const { container } = render(RulesPane, {
+      props: { detail: sampleDetail, onFlip: vi.fn() }
+    });
+    const rail = container.querySelector('.rules-rail');
+    expect(rail?.tagName).toBe('BUTTON');
   });
 });

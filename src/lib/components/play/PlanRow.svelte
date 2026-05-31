@@ -190,10 +190,10 @@
         class="plan-row__flip-btn"
         data-rules-toggle
         aria-pressed={rulesMode}
-        aria-label={rulesMode ? 'Flip back to plan' : 'Flip to rules'}
+        aria-label={rulesMode ? $t('play.planRow.flipToPlan') : $t('play.planRow.flipToRules')}
         onclick={toggleRulesMode}
       >
-        ↺ Flip
+        {$t('play.planRow.flipLabel')}
       </button>
     {/if}
     <div class="plan-row__left-controls">

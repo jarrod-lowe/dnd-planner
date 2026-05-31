@@ -14,21 +14,14 @@
 </script>
 
 <div class="rules-shell">
-  <div
-    class="rules-rail"
-    role="button"
-    tabindex="0"
-    aria-pressed="true"
-    onclick={onFlip}
-    onkeydown={(e) => {
-      if (e.key === 'Enter' || e.key === ' ') onFlip();
-    }}
-  >
+  <button type="button" class="rules-rail" aria-pressed="true" onclick={onFlip}>
     <span class="rules-rail__label">
       {#if name}{name}{:else}{$t('rules.mode')}{/if}
     </span>
-    <span class="rules-rail__return" role="button" tabindex="0"> ↺ Flip </span>
-  </div>
+    <span class="rules-rail__return">
+      {$t('play.planRow.flipReturn')}
+    </span>
+  </button>
 
   <div class="rules-pane">
     {#if detail.meta}

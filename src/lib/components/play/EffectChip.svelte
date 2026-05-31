@@ -74,6 +74,16 @@
     });
   });
 
+  function handleDismiss(e: MouseEvent) {
+    e.stopPropagation();
+    onDismiss?.();
+  }
+
+  function handleReminder(e: MouseEvent) {
+    e.stopPropagation();
+    onReminder?.(e);
+  }
+
   const stateClass = $derived(
     state === 'pending'
       ? 'effect-chip--pending'
@@ -83,26 +93,13 @@
   );
 </script>
 
-<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-<div
-  class="effect-chip {stateClass}"
-  class:effect-chip--conc-link={isConcentrationLink}
-  class:effect-chip--clickable={canFlip}
-  role={onShowRules ? 'button' : 'listitem'}
-  tabindex={onShowRules ? 0 : undefined}
-  aria-label={ariaLabel}
-  onclick={onShowRules}
-  onkeydown={onShowRules &&
-    ((e: KeyboardEvent) => {
-      if (e.key === 'Enter' || e.key === ' ') onShowRules();
-    })}
->
+{#snippet chipContent()}
   {#if state === 'pending'}
     <button
       type="button"
       class="effect-chip__badge effect-chip__badge--pending"
       aria-label={$t('play.effectChip.reminder')}
-      onclick={onReminder}
+      onclick={handleReminder}
     >
       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <circle cx="12" cy="12" r="11" fill="var(--md-sys-color-error-container)" />
@@ -143,7 +140,7 @@
         type="button"
         class="effect-chip__dismiss"
         aria-label={$t('play.effectChip.dismiss')}
-        onclick={onDismiss}
+        onclick={handleDismiss}
       >
         <svg
           viewBox="0 0 24 24"
@@ -194,7 +191,29 @@
       </span>
     </div>
   {/if}
-</div>
+{/snippet}
+
+{#if canFlip}
+  <button
+    type="button"
+    class="effect-chip {stateClass}"
+    class:effect-chip--conc-link={isConcentrationLink}
+    class:effect-chip--clickable={true}
+    aria-label={ariaLabel}
+    onclick={onShowRules}
+  >
+    {@render chipContent()}
+  </button>
+{:else}
+  <div
+    class="effect-chip {stateClass}"
+    class:effect-chip--conc-link={isConcentrationLink}
+    role="listitem"
+    aria-label={ariaLabel}
+  >
+    {@render chipContent()}
+  </div>
+{/if}
 
 <style>
   .effect-chip {

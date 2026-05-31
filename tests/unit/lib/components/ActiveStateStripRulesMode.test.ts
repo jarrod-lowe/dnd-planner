@@ -82,6 +82,19 @@ describe('ActiveStateStrip Rules mode', () => {
     expect(container.querySelector('.rules-shell')).toBeTruthy();
   });
 
+  it('renders clickable effect chip as native button', () => {
+    const effect = makeEffect('spell-bless', 'spell/bless');
+    const { container } = render(ActiveStateStrip, {
+      props: {
+        effects: [effect],
+        facts: mockFacts,
+        committedEffectIds: []
+      }
+    });
+    const chip = container.querySelector('.effect-chip');
+    expect(chip?.tagName).toBe('BUTTON');
+  });
+
   it('shows return label Effects in rules mode', async () => {
     const effect = makeEffect('spell-bless', 'spell/bless');
     const { container } = render(ActiveStateStrip, {
@@ -93,9 +106,9 @@ describe('ActiveStateStrip Rules mode', () => {
     });
     const chip = container.querySelector('.effect-chip');
     await fireEvent.click(chip!);
-    // The return chip should show "Flip"
+    // The return chip should show the localized flip label
     const returnChip = container.querySelector('.rules-rail__return');
-    expect(returnChip?.textContent).toContain('Flip');
+    expect(returnChip?.textContent).toContain('play.planRow.flipReturn');
   });
 
   it('returns to chip view when rules rail is clicked', async () => {
