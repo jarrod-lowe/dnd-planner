@@ -16,6 +16,8 @@
     state: ChipState;
     onDismiss?: () => void;
     onReminder?: (event: MouseEvent) => void;
+    onShowRules?: () => void;
+    canFlip?: boolean;
     isConcentrationLink?: boolean;
   }
 
@@ -25,6 +27,8 @@
     state,
     onDismiss,
     onReminder,
+    onShowRules,
+    canFlip = false,
     isConcentrationLink = false
   }: Props = $props();
 
@@ -79,11 +83,19 @@
   );
 </script>
 
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
   class="effect-chip {stateClass}"
   class:effect-chip--conc-link={isConcentrationLink}
-  role="listitem"
+  class:effect-chip--clickable={canFlip}
+  role={onShowRules ? 'button' : 'listitem'}
+  tabindex={onShowRules ? 0 : undefined}
   aria-label={ariaLabel}
+  onclick={onShowRules}
+  onkeydown={onShowRules &&
+    ((e: KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') onShowRules();
+    })}
 >
   {#if state === 'pending'}
     <button
@@ -161,6 +173,9 @@
       </svg>
     {/if}
     <span class="effect-chip__name">{effectName}</span>
+    {#if canFlip}
+      <span class="effect-chip__flip-hint" aria-hidden="true">↺</span>
+    {/if}
     {#if levelDot !== null}
       <span class="effect-chip__level-dot" aria-hidden="true">{levelDot}</span>
     {/if}
@@ -223,6 +238,20 @@
   /* Concentration link */
   .effect-chip--conc-link {
     border-left: 3px solid var(--md-sys-color-primary);
+  }
+
+  /* Clickable for rules */
+  .effect-chip--clickable {
+    cursor: pointer;
+  }
+
+  .effect-chip--clickable:hover {
+    background: var(--md-sys-color-surface-container-highest);
+  }
+
+  .effect-chip--clickable:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: 2px;
   }
 
   /* Header */
@@ -310,6 +339,18 @@
     flex-shrink: 0;
     font-size: var(--font-size-sm);
     color: var(--md-sys-color-primary);
+  }
+
+  .effect-chip__flip-hint {
+    flex-shrink: 0;
+    font-size: var(--font-size-xs);
+    color: var(--md-sys-color-outline);
+    opacity: 0.7;
+  }
+
+  .effect-chip--clickable .effect-chip__flip-hint {
+    color: var(--md-sys-color-primary);
+    opacity: 1;
   }
 
   /* Footer */

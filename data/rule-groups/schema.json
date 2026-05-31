@@ -280,6 +280,10 @@
             "levelFact": {
               "type": "string",
               "description": "Fact key to read for displaying proficiency level as pips on the effect chip (e.g., 'skill.athletics.proficiency')"
+            },
+            "detailKey": {
+              "type": "string",
+              "description": "Key for fetching detail content to display in rules mode (e.g., 'spell/sleep')"
             }
           },
           "additionalProperties": false

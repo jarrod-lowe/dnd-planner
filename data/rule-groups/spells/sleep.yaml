@@ -264,6 +264,7 @@ ruleGroups:
               ui:
                 section: action-spell
                 name: rule.spell-sleep.offer-sleep.name
+                detailKey: spell/sleep
                 showDC: true
                 information:
                   - type: text
@@ -590,6 +591,7 @@ ruleGroups:
                     ui:
                       section: ongoing
                       name: rule.spell-sleep.effect-sleep.name
+                      detailKey: spell/sleep
                       countDown: 10
                       duration: 10
                       saveType: WIS

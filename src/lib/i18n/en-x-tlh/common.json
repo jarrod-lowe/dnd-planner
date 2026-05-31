@@ -906,7 +906,20 @@
     "settings.paladin-skill.persuasion": "Proficiency - Persuasion (Paladin Level 1)",
     "settings.paladin-skill.religion": "Proficiency - Religion (Paladin Level 1)",
     "settings.sentinel-asi.str": "HoS +1 (Sentinel)",
-    "settings.sentinel-asi.dex": "Do +1 (Sentinel)"
+    "settings.sentinel-asi.dex": "Do +1 (Sentinel)",
+    "field": {
+      "castingTime": "mugh DIvI'",
+      "range": "chuS",
+      "components": "DIch",
+      "duration": "DIvI' poH",
+      "source": "chu'"
+    },
+    "mode": "Chut",
+    "return": {
+      "cast": "mugh",
+      "effects": "DIvI' SeH"
+    },
+    "none": "DIvI' DIvI' tu'lu'be'."
   },
   "facts": {
     "viewTitle": "DIvI' DIvI'",

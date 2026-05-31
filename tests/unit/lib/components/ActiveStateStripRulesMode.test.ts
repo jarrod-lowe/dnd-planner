@@ -1,0 +1,138 @@
+import { describe, it, expect, vi, beforeAll } from 'vitest';
+import { render, fireEvent } from '@testing-library/svelte';
+
+// Mock Element.animate for JSDOM
+beforeAll(() => {
+  Element.prototype.animate = vi.fn();
+});
+
+// Mock i18n
+vi.mock('$lib/i18n', () => ({
+  t: {
+    subscribe: (cb: (v: (k: string) => string) => void) => {
+      cb((k: string) => k);
+      return { unsubscribe: () => {} };
+    }
+  },
+  locale: {
+    subscribe: (cb: (v: string) => void) => {
+      cb('en');
+      return { unsubscribe: () => {} };
+    },
+    get: () => 'en'
+  }
+}));
+
+// Mock detail service
+vi.mock('$lib/details/index', () => ({
+  peekDetail: vi.fn(() => ({
+    source: 'srd52',
+    body: [{ text: ['Rules text.'] }]
+  })),
+  getDetail: vi.fn(async () => ({
+    source: 'srd52',
+    body: [{ text: ['Rules text.'] }]
+  })),
+  prefetchDetail: vi.fn()
+}));
+
+// Mock effect utils
+vi.mock('$lib/play/effectUtils', () => ({
+  getChipState: vi.fn(() => 'normal'),
+  isConcentrationEffect: vi.fn(() => false),
+  isHiddenEffect: vi.fn(() => false),
+  getEffectKind: vi.fn(() => 'ONGOING'),
+  getDurationState: vi.fn(() => null),
+  getEffectDisplayValue: vi.fn(() => null),
+  getEffectLevel: vi.fn(() => null)
+}));
+
+import ActiveStateStrip from '$lib/components/play/ActiveStateStrip.svelte';
+import type { Rule } from '$lib/rules-engine';
+import type { Facts } from '$lib/rules-engine';
+
+const mockFacts = {} as Facts;
+
+function makeEffect(id: string, detailKey?: string): Rule {
+  return {
+    id,
+    activities: [],
+    ui: {
+      name: `rule.${id}.name`,
+      ...(detailKey ? { detailKey } : {})
+    }
+  };
+}
+
+describe('ActiveStateStrip Rules mode', () => {
+  it('enters rules mode when an effect chip is clicked', async () => {
+    const effect = makeEffect('spell-bless', 'spell/bless');
+    const { container } = render(ActiveStateStrip, {
+      props: {
+        effects: [effect],
+        facts: mockFacts,
+        committedEffectIds: []
+      }
+    });
+    // Click the chip body to trigger rules mode
+    const chip = container.querySelector('.effect-chip');
+    expect(chip).toBeTruthy();
+    await fireEvent.click(chip!);
+    // Should now show the RulesPane
+    expect(container.querySelector('.rules-shell')).toBeTruthy();
+  });
+
+  it('shows return label Effects in rules mode', async () => {
+    const effect = makeEffect('spell-bless', 'spell/bless');
+    const { container } = render(ActiveStateStrip, {
+      props: {
+        effects: [effect],
+        facts: mockFacts,
+        committedEffectIds: []
+      }
+    });
+    const chip = container.querySelector('.effect-chip');
+    await fireEvent.click(chip!);
+    // The return chip should show "Flip"
+    const returnChip = container.querySelector('.rules-rail__return');
+    expect(returnChip?.textContent).toContain('Flip');
+  });
+
+  it('returns to chip view when rules rail is clicked', async () => {
+    const effect = makeEffect('spell-bless', 'spell/bless');
+    const { container } = render(ActiveStateStrip, {
+      props: {
+        effects: [effect],
+        facts: mockFacts,
+        committedEffectIds: []
+      }
+    });
+    const chip = container.querySelector('.effect-chip');
+    await fireEvent.click(chip!);
+    expect(container.querySelector('.rules-shell')).toBeTruthy();
+
+    // Click the rail to return
+    const rail = container.querySelector('.rules-rail');
+    await fireEvent.click(rail!);
+    expect(container.querySelector('.rules-shell')).toBeNull();
+    expect(container.querySelector('.effect-chip')).toBeTruthy();
+  });
+
+  it('does not enter rules mode for effects without detailKey', async () => {
+    const { peekDetail } = await import('$lib/details/index');
+    (peekDetail as ReturnType<typeof vi.fn>).mockReturnValue(null);
+
+    const effect = makeEffect('no-detail');
+    const { container } = render(ActiveStateStrip, {
+      props: {
+        effects: [effect],
+        facts: mockFacts,
+        committedEffectIds: []
+      }
+    });
+    const chip = container.querySelector('.effect-chip');
+    await fireEvent.click(chip!);
+    // Should NOT enter rules mode
+    expect(container.querySelector('.rules-shell')).toBeNull();
+  });
+});
