@@ -1,8 +1,8 @@
-name: 'Savage Attacker Feat - Usage'
+name: 'Savage Attacker Feat - Weapon Only'
 description: >-
-  Using Savage Attacker consumes the once-per-turn resource.
-  savageAttacker.remaining goes to 0, offer becomes illegal, annotation disappears.
-  Uses a dagger weapon attack to trigger availability.
+  Savage Attacker should only be available after a weapon attack, not after
+  an unarmed strike. After unarmed strike, the offer must remain illegal.
+  After a weapon attack (dagger), the offer should be legal.
 
 ruleGroups:
   - species-human/species-human
@@ -16,21 +16,38 @@ ruleGroups:
   - dnd-5e-2024/feat-savage-attacker
 
 steps:
-  # Initially, remaining = 1 but offer is illegal (no weapon attack planned)
+  # Initially, no attack planned
   - evaluate:
       assert:
         facts:
           savageAttacker.remaining: 1
-          actions.remaining: 1
         offers:
-          exists:
-            - savage-attacker-use
           illegal:
             - savage-attacker-use
         annotations:
           notExists:
             - rule.dnd-5e-2024.feat-savage-attacker.annotation
-  # Set strength for dagger
+
+  # Unarmed strike is planned - Savage Attacker must STILL be illegal
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          attack.last.activation.action: 1
+        offers:
+          illegal:
+            - savage-attacker-use
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.feat-savage-attacker.annotation
+
+  # End turn to reset
+  - endTurn:
+      assert:
+        facts:
+          savageAttacker.remaining: 1
+
+  # Set strength for dagger hit bonus
   - addOffer:
       id: set-strength
       selections:
@@ -38,28 +55,17 @@ steps:
       assert:
         facts:
           str.value: 16
-  # Weapon attack (dagger) - prerequisite triggers availability
+
+  # Weapon attack (dagger) - Savage Attacker should become legal
   - addOffer:
       id: dagger-use-action
       assert:
         facts:
+          attack.last.activation.action: 1
           attack.last.weapon: 1
-          savageAttacker.remaining: 1
         offers:
           legal:
             - savage-attacker-use
         annotations:
           exists:
-            - rule.dnd-5e-2024.feat-savage-attacker.annotation
-  # Use Savage Attacker
-  - addOffer:
-      id: savage-attacker-use
-      assert:
-        facts:
-          savageAttacker.remaining: 0
-        offers:
-          illegal:
-            - savage-attacker-use
-        annotations:
-          notExists:
             - rule.dnd-5e-2024.feat-savage-attacker.annotation

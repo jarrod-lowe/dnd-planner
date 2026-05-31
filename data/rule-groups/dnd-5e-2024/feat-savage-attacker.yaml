@@ -65,7 +65,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
-              - condition: *has-attack-action
+              - condition: *has-weapon-attack
                 illegalDiagnostics:
                   - code: rule.dnd-5e-2024.feat-savage-attacker.offer-savage-attacker.no_attack
                     severity: error
@@ -102,7 +102,7 @@ ruleGroups:
                   source:
                     string: rule.dnd-5e-2024.feat-savage-attacker.offer-savage-attacker.no_attack
                   when:
-                    - fact: attack.last.activation.action
+                    - fact: attack.last.weapon
                       operator: lessThan
                       value: 1
                 - type: setAdd
@@ -123,7 +123,7 @@ ruleGroups:
         activities:
           - type: annotate
             when:
-              - *has-attack-action
+              - *has-weapon-attack
               - *sa-has-remaining
             key: rule.dnd-5e-2024.feat-savage-attacker.annotation
             targets:

@@ -37,3 +37,8 @@ sharedRefs:
     fact: spellcasting.remaining
     operator: greaterThan
     value: 0
+
+  has-weapon-attack: &has-weapon-attack
+    fact: attack.last.weapon
+    operator: equals
+    value: 1
