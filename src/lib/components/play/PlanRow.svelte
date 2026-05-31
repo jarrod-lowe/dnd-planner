@@ -2,10 +2,14 @@
   import { t } from '$lib/i18n';
   import PanelRenderer from './PanelRenderer.svelte';
   import ModChip from './ModChip.svelte';
+  import WarningIndicator from './WarningIndicator.svelte';
+  import RulesPane from './details/RulesPane.svelte';
   import { getMatchingAnnotations } from '$lib/play/annotations';
   import { extractPanelDescriptor } from './panel-renderer/extractPanelDescriptor';
   import { getSubBucket, subBucketLabelKey } from '$lib/play/groupChoicesByVerb';
   import { closeActiveTooltip, registerTooltipClose } from './tooltipSingleton';
+  import { peekDetail, getDetail } from '$lib/details/index';
+  import type { ItemDetail } from '$lib/details/types';
   import type { PlannedItem } from '$lib/play/types';
   import type { AvailableRuleEntry, Annotation, Facts, ActionCostTag } from '$lib/rules-engine';
 
@@ -43,6 +47,9 @@
   let openTooltipAltId: string | null = $state(null);
   let rightEl: HTMLDivElement | undefined = $state();
   let tooltipStyle = $state('');
+  let rulesMode = $state(false);
+  let rulesDetail = $state<ItemDetail | null | undefined>(undefined);
+  let rulesLoading = $state(false);
 
   function closeLocalTooltip() {
     openTooltipAltId = null;
@@ -89,6 +96,16 @@
   const matchingAnnotations = $derived(getMatchingAnnotations(annotationLabels, activeAnnotations));
   const riderAnnotations = $derived(matchingAnnotations.filter((a) => a.rider));
 
+  const hasWarning = $derived(!entry.legal || !entry.applicable);
+  const warningType = $derived(
+    !entry.legal ? ('illegal' as const) : !entry.applicable ? ('inapplicable' as const) : null
+  );
+  const warningMessage = $derived(
+    hasWarning && entry.diagnostics?.length
+      ? entry.diagnostics.map((d) => $t(d.code)).join('\n')
+      : undefined
+  );
+
   const verbLabel = $derived($t(`play.verbs.${verb}`));
 
   const groupedAlternatives = $derived.by(() => {
@@ -108,9 +125,57 @@
   function toggleCollapse() {
     collapsed = !collapsed;
   }
+
+  const detailKey = $derived(
+    ((rule.ui as Record<string, unknown>)?.detailKey as string | undefined) ?? ''
+  );
+
+  const hasDetail = $derived(detailKey !== '' && peekDetail(detailKey) !== null);
+
+  function toggleRulesMode() {
+    if (rulesMode) {
+      rulesMode = false;
+      rulesDetail = undefined;
+      rulesLoading = false;
+      return;
+    }
+    const cached = peekDetail(detailKey);
+    if (cached === null) return; // known-absent
+    if (cached) {
+      rulesDetail = cached;
+      rulesMode = true;
+    } else {
+      rulesLoading = true;
+      rulesMode = true;
+      const capturedKey = detailKey;
+      getDetail(detailKey).then((d) => {
+        if (detailKey !== capturedKey) return;
+        rulesDetail = d;
+        rulesLoading = false;
+        if (!d) {
+          rulesMode = false;
+        }
+      });
+    }
+  }
 </script>
 
 <svelte:window onclick={handleWindowClick} />
+
+{#snippet modChips()}
+  {#if riderAnnotations.length > 0}
+    <div class="plan-row__mod-chips">
+      {#each riderAnnotations as ann (ann.key)}
+        {@const rider = ann.rider!}
+        <ModChip
+          variant={rider.legal === false ? 'illegal' : 'effect'}
+          label={rider.label ? $t(rider.label) : $t(ann.key)}
+          illegalReason={rider.illegalReason}
+        />
+      {/each}
+    </div>
+  {/if}
+{/snippet}
 
 <div
   class="plan-row"
@@ -118,7 +183,21 @@
   class:plan-row--tooltip-open={openTooltipAltId !== null}
 >
   <div class="plan-row__left">
-    <span class="plan-row__verb-label">{verbLabel}</span>
+    <span class="plan-row__verb-label">
+      {verbLabel}
+    </span>
+    {#if hasDetail}
+      <button
+        type="button"
+        class="plan-row__flip-btn"
+        data-rules-toggle
+        aria-pressed={rulesMode}
+        aria-label={rulesMode ? $t('play.planRow.flipToPlan') : $t('play.planRow.flipToRules')}
+        onclick={toggleRulesMode}
+      >
+        {$t('play.planRow.flipLabel')}
+      </button>
+    {/if}
     <div class="plan-row__left-controls">
       {#if onMoveUp}
         <button
@@ -187,23 +266,24 @@
   </div>
 
   <div class="plan-row__right" bind:this={rightEl}>
-    {#if !collapsed}
+    {#if rulesMode}
+      {#if rulesLoading}
+        <div class="plan-row__rules-loading" aria-live="polite">{$t('rules.loadingDetails')}</div>
+      {:else if rulesDetail}
+        <RulesPane detail={rulesDetail} name={displayName} onFlip={toggleRulesMode} />
+      {/if}
+      {#if hasWarning && warningType}
+        <WarningIndicator type={warningType} message={warningMessage} />
+      {/if}
+      {@render modChips()}
+    {:else if !collapsed}
       <div class="plan-row__cost-chips">
         {#each costTags as tag (tag)}
           <span class="plan-row__cost-tag">{formatCostTag(tag)}</span>
         {/each}
       </div>
 
-      <div class="plan-row__mod-chips">
-        {#each riderAnnotations as ann (ann.key)}
-          {@const rider = ann.rider!}
-          <ModChip
-            variant={rider.legal === false ? 'illegal' : 'effect'}
-            label={rider.label ? $t(rider.label) : $t(ann.key)}
-            illegalReason={rider.illegalReason}
-          />
-        {/each}
-      </div>
+      {@render modChips()}
 
       <div class="plan-row__content">
         <PanelRenderer
@@ -308,6 +388,44 @@
     text-align: center;
   }
 
+  .plan-row__flip-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: transparent;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--radius-sm);
+    color: var(--md-sys-color-on-surface-variant);
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    cursor: pointer;
+    transition:
+      background-color var(--transition-fast),
+      color var(--transition-fast);
+  }
+
+  .plan-row__flip-btn:hover {
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+  }
+
+  .plan-row__flip-btn:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: 2px;
+  }
+
+  .plan-row__rules-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-lg);
+    color: var(--md-sys-color-on-surface-variant);
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+  }
+
   .plan-row__left-controls {
     display: flex;
     gap: var(--spacing-xs);
@@ -359,6 +477,13 @@
     padding: var(--spacing-sm);
     gap: var(--spacing-xs);
     position: relative;
+  }
+
+  .plan-row__right > :global(.warning-indicator) {
+    position: absolute;
+    top: var(--spacing-xs);
+    left: var(--spacing-xs);
+    z-index: 2;
   }
 
   .plan-row__cost-chips {

@@ -17,11 +17,22 @@ without breaking the rules as illegal.
 2. **Turn Planning** - Plan upcoming actions while waiting for other players
 3. **Effect Management** - Track concentration spells, buffs, and duration-based effects
 4. **Rest Management** - Easy short/long rest workflow
-5. **Multiple Plans** - Save reusable combat scenarios
+
+This is focussed on the players own turn. It does not have any knowledge of the
+actions of other players, or the GM, beyond what the user tells it. It does not
+require the user to keep informing it of things happening around the table all
+the time.
 
 ### Target Experience
 
 Running on a tablet during gameplay. One-handed operation. Quick taps. Clear visual state.
+
+## D&D
+
+This work includes material from the System Reference Document 5.2 (“SRD 5.2”)
+by Wizards of the Coast LLC, available at <https://www.dndbeyond.com/srd>. The
+SRD 5.2 is licensed under the Creative Commons Attribution 4.0 International
+License, available at <https://creativecommons.org/licenses/by/4.0/legalcode>.
 
 ## Character Focus
 

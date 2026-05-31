@@ -1,0 +1,130 @@
+/* Detail Rules Pane — shared visual language for PlanRow & EffectStrip */
+
+/* === Shell: outer wrapper for the whole rules view === */
+.rules-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+}
+
+/* === Rail: tinted strip with mode label + return chip === */
+.rules-rail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.rules-rail:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: -2px;
+}
+
+.rules-rail__label {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+.rules-rail__name {
+  font-weight: 400;
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.rules-rail__return {
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-full);
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-primary-container);
+  cursor: pointer;
+}
+
+/* === Pane: scrollable content area === */
+.rules-pane {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-md);
+  background-color: var(--md-sys-color-surface-container-low);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-top: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+/* === Meta: italic subtitle === */
+.rules-meta {
+  display: block;
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: var(--font-size-sm);
+  color: var(--md-sys-color-on-surface-variant);
+  margin-bottom: var(--spacing-sm);
+}
+
+/* === Fields: key/value stat block === */
+.rules-fields {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--spacing-xs) var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-sm);
+}
+
+.rules-fields dt {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--md-sys-color-on-surface-variant);
+  white-space: nowrap;
+}
+
+.rules-fields dd {
+  font-family: var(--font-body);
+  color: var(--md-sys-color-on-surface);
+}
+
+/* === Body: prose rendered by LineRenderer === */
+.rules-body {
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+  color: var(--md-sys-color-on-surface);
+}
+
+.rules-body p {
+  margin-bottom: var(--spacing-sm);
+}
+
+.rules-body ul {
+  margin: var(--spacing-xs) 0 var(--spacing-sm) var(--spacing-md);
+  padding-left: var(--spacing-md);
+  list-style-type: disc;
+}
+
+.rules-body li {
+  margin-bottom: var(--spacing-xs);
+}
+
+.rules-body strong {
+  font-weight: 600;
+}
+
+.rules-body em {
+  font-style: italic;
+}

@@ -33,6 +33,25 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Preprocess rule sources
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -q -r scripts/requirements.txt
+          if [ -d data/rule-sources ]; then
+            .venv/bin/python scripts/preprocess_rule_sources.py --source-dir data/rule-sources --output-dir generated/rule-groups
+          fi
+
+      - name: Generate detail JSON
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -q -r scripts/requirements.txt
+          .venv/bin/python scripts/publish_details.py --data-dir data/rule-groups --data-dir2 generated/rule-groups --output-dir static/details
+
       - name: Build
         run: pnpm build
 
@@ -111,11 +130,19 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Preprocess rule sources
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -q -r scripts/requirements.txt
+          if [ -d data/rule-sources ]; then
+            .venv/bin/python scripts/preprocess_rule_sources.py --source-dir data/rule-sources --output-dir generated/rule-groups
+          fi
+
       - name: Sync rule groups
         run: |
           python -m venv .venv
           .venv/bin/pip install -q -r scripts/requirements.txt
-          .venv/bin/python scripts/sync_rule_groups.py --table=${{ steps.tf-outputs.outputs.dynamodb_table_name }}
+          .venv/bin/python scripts/sync_rule_groups.py --table=${{ steps.tf-outputs.outputs.dynamodb_table_name }} --data-dir2 generated/rule-groups
 
   frontend:
     name: Deploy Frontend
@@ -161,6 +188,25 @@ jobs:
             bucket=${{ vars.STATE_BUCKET }},
             key=dnd-planner/prod/terraform.tfstate,
             region=${{ vars.AWS_REGION }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Preprocess rule sources
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -q -r scripts/requirements.txt
+          if [ -d data/rule-sources ]; then
+            .venv/bin/python scripts/preprocess_rule_sources.py --source-dir data/rule-sources --output-dir generated/rule-groups
+          fi
+
+      - name: Generate detail JSON
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -q -r scripts/requirements.txt
+          .venv/bin/python scripts/publish_details.py --data-dir data/rule-groups --data-dir2 generated/rule-groups --output-dir static/details
 
       - name: Build
         run: pnpm build

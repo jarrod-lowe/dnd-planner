@@ -3,6 +3,7 @@
   import '$lib/styles/themes/light.css';
   import '$lib/styles/themes/dark.css';
   import '$lib/styles/base.css';
+  import '$lib/styles/details.css';
   import { configureAmplify } from '$lib/auth/cognito';
   import { authStore } from '$lib/auth/authStore.svelte';
   import { locale, isLoading, detectLocale, t } from '$lib/i18n';

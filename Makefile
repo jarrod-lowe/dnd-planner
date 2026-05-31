@@ -1,4 +1,4 @@
-.PHONY: format-terraform validate security test help clean dev build lint format-frontend test-unit test-e2e test-e2e-debug test-component format-check push-test install pnpm setup-dev format go-build deploy-lambdas-test deploy-lambdas-prod sync-rule-groups test-rules preprocess validate-rules-schema
+.PHONY: format-terraform validate security test help clean dev build lint format-frontend test-unit test-e2e test-e2e-debug test-component format-check push-test install pnpm setup-dev format go-build deploy-lambdas-test deploy-lambdas-prod sync-rule-groups test-rules preprocess validate-rules-schema publish-details
 
 default: help
 
@@ -175,12 +175,19 @@ static/data/rule-groups/schema.json: data/rule-groups/schema.json
 	@mkdir -p static/data/rule-groups
 	cp $< $@
 
+# Generate detail JSON files from inline YAML detail blocks
+publish-details: scripts/publish_details.py $(wildcard data/rule-groups/**/*.yaml data/rule-groups/_shared/*.yaml) preprocess
+	@PYTHON=$$(which python3 || which python); \
+	if [ ! -d .venv ]; then $$PYTHON -m venv .venv; fi; \
+	.venv/bin/pip install -q -r scripts/requirements.txt; \
+	.venv/bin/python scripts/publish_details.py --data-dir data/rule-groups --data-dir2 generated/rule-groups --output-dir static/details
+
 # Development server
-dev: .env.local install static/data/rule-groups/schema.json
+dev: .env.local install static/data/rule-groups/schema.json publish-details
 	pnpm dev
 
 # Production build
-build: install static/data/rule-groups/schema.json
+build: install static/data/rule-groups/schema.json publish-details
 	pnpm build
 
 # Linting
@@ -298,6 +305,7 @@ clean:
 	rm -rf build/lambdas
 	@echo "Cleaning frontend artifacts..."
 	rm -rf build .svelte-kit node_modules coverage test-results playwright-report generated
+	rm -rf static/details/en
 	@echo "Done."
 
 # Help
@@ -316,6 +324,7 @@ help:
 	@echo "  make build               Build for production"
 	@echo "  make push-test           Build and sync to test S3 + invalidate CDN"
 	@echo "  make sync-rule-groups      Sync rule groups from YAML files to DynamoDB"
+	@echo "  make publish-details       Generate detail JSON from inline YAML detail blocks"
 	@echo "  make preprocess            Compile rule source documents into rule-group YAML"
 	@echo ""
 	@echo "Testing:"

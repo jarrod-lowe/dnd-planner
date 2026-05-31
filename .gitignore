@@ -36,6 +36,9 @@ __pycache__/
 # Derived static assets
 static/data/
 
+# Generated detail JSON files
+static/details/
+
 # Generated rule groups (from preprocessor)
 generated/
 

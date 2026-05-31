@@ -16,6 +16,8 @@
     state: ChipState;
     onDismiss?: () => void;
     onReminder?: (event: MouseEvent) => void;
+    onShowRules?: () => void;
+    canFlip?: boolean;
     isConcentrationLink?: boolean;
   }
 
@@ -25,6 +27,8 @@
     state,
     onDismiss,
     onReminder,
+    onShowRules,
+    canFlip = false,
     isConcentrationLink = false
   }: Props = $props();
 
@@ -70,6 +74,9 @@
     });
   });
 
+  const hasDismiss = $derived(!!onDismiss);
+  const hasReminder = $derived(state === 'pending');
+
   const stateClass = $derived(
     state === 'pending'
       ? 'effect-chip--pending'
@@ -79,13 +86,73 @@
   );
 </script>
 
+{#snippet chipBody()}
+  {#if state === 'expiring'}
+    <span class="effect-chip__badge effect-chip__badge--expiring" aria-hidden="true">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M6 2h12v4l-4 4 4 4v4H6v-4l4-4-4-4V2z" />
+        <line x1="6" y1="6" x2="18" y2="6" />
+        <line x1="6" y1="18" x2="18" y2="18" />
+      </svg>
+    </span>
+  {/if}
+
+  <div class="effect-chip__header">
+    <span class="effect-chip__kind-tag">{kindLabel}</span>
+  </div>
+
+  <div class="effect-chip__body">
+    {#if isConcentrationLink}
+      <svg
+        class="effect-chip__chain-icon"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        aria-hidden="true"
+      >
+        <path
+          d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"
+        />
+      </svg>
+    {/if}
+    <span class="effect-chip__name">{effectName}</span>
+    {#if canFlip}
+      <span class="effect-chip__flip-hint" aria-hidden="true">↺</span>
+    {/if}
+    {#if levelDot !== null}
+      <span class="effect-chip__level-dot" aria-hidden="true">{levelDot}</span>
+    {/if}
+  </div>
+
+  {#if duration}
+    <div class="effect-chip__footer">
+      <div class="effect-chip__pips">
+        {#each pips as filled, i (i)}
+          <span class="effect-chip__pip" class:effect-chip__pip--filled={filled} aria-hidden="true"
+          ></span>
+        {/each}
+      </div>
+      <span class="effect-chip__duration-text">
+        {$t('play.effectChip.durationLeft', { count: duration.remaining })}
+      </span>
+    </div>
+  {/if}
+{/snippet}
+
 <div
   class="effect-chip {stateClass}"
   class:effect-chip--conc-link={isConcentrationLink}
+  class:effect-chip--clickable={canFlip}
   role="listitem"
   aria-label={ariaLabel}
 >
-  {#if state === 'pending'}
+  {#if hasReminder}
     <button
       type="button"
       class="effect-chip__badge effect-chip__badge--pending"
@@ -107,77 +174,34 @@
     </button>
   {/if}
 
-  {#if state === 'expiring'}
-    <span class="effect-chip__badge effect-chip__badge--expiring" aria-hidden="true">
+  {#if canFlip}
+    <button type="button" class="effect-chip__flip-target" onclick={onShowRules}>
+      {@render chipBody()}
+    </button>
+  {:else}
+    <div class="effect-chip__inner">
+      {@render chipBody()}
+    </div>
+  {/if}
+
+  {#if hasDismiss}
+    <button
+      type="button"
+      class="effect-chip__dismiss"
+      aria-label={$t('play.effectChip.dismiss')}
+      onclick={onDismiss}
+    >
       <svg
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
         stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M6 2h12v4l-4 4 4 4v4H6v-4l4-4-4-4V2z" />
-        <line x1="6" y1="6" x2="18" y2="6" />
-        <line x1="6" y1="18" x2="18" y2="18" />
-      </svg>
-    </span>
-  {/if}
-
-  <div class="effect-chip__header">
-    <span class="effect-chip__kind-tag">{kindLabel}</span>
-    {#if onDismiss}
-      <button
-        type="button"
-        class="effect-chip__dismiss"
-        aria-label={$t('play.effectChip.dismiss')}
-        onclick={onDismiss}
-      >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          aria-hidden="true"
-        >
-          <line x1="6" y1="6" x2="18" y2="18" />
-          <line x1="18" y1="6" x2="6" y2="18" />
-        </svg>
-      </button>
-    {/if}
-  </div>
-
-  <div class="effect-chip__body">
-    {#if isConcentrationLink}
-      <svg
-        class="effect-chip__chain-icon"
-        viewBox="0 0 24 24"
-        fill="currentColor"
         aria-hidden="true"
       >
-        <path
-          d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"
-        />
+        <line x1="6" y1="6" x2="18" y2="18" />
+        <line x1="18" y1="6" x2="6" y2="18" />
       </svg>
-    {/if}
-    <span class="effect-chip__name">{effectName}</span>
-    {#if levelDot !== null}
-      <span class="effect-chip__level-dot" aria-hidden="true">{levelDot}</span>
-    {/if}
-  </div>
-
-  {#if duration}
-    <div class="effect-chip__footer">
-      <div class="effect-chip__pips">
-        {#each pips as filled, i (i)}
-          <span class="effect-chip__pip" class:effect-chip__pip--filled={filled} aria-hidden="true"
-          ></span>
-        {/each}
-      </div>
-      <span class="effect-chip__duration-text">
-        {$t('play.effectChip.durationLeft', { count: duration.remaining })}
-      </span>
-    </div>
+    </button>
   {/if}
 </div>
 
@@ -225,6 +249,47 @@
     border-left: 3px solid var(--md-sys-color-primary);
   }
 
+  /* Clickable for rules */
+  .effect-chip--clickable {
+    cursor: pointer;
+  }
+
+  .effect-chip--clickable:hover {
+    background: var(--md-sys-color-surface-container-highest);
+  }
+
+  /* Flip target: button that covers the chip body */
+  .effect-chip__flip-target {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    width: 100%;
+  }
+
+  .effect-chip--clickable .effect-chip__flip-target:hover {
+    /* hover handled by parent */
+  }
+
+  .effect-chip__flip-target:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Inner wrapper for non-clickable chips */
+  .effect-chip__inner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
   /* Header */
   .effect-chip__header {
     display: flex;
@@ -248,6 +313,9 @@
 
   /* Dismiss button */
   .effect-chip__dismiss {
+    position: absolute;
+    top: 0;
+    right: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -262,6 +330,7 @@
     transition:
       background-color var(--transition-fast),
       color var(--transition-fast);
+    z-index: 2;
   }
 
   .effect-chip__dismiss:hover {
@@ -312,6 +381,18 @@
     color: var(--md-sys-color-primary);
   }
 
+  .effect-chip__flip-hint {
+    flex-shrink: 0;
+    font-size: var(--font-size-xs);
+    color: var(--md-sys-color-outline);
+    opacity: 0.7;
+  }
+
+  .effect-chip--clickable .effect-chip__flip-hint {
+    color: var(--md-sys-color-primary);
+    opacity: 1;
+  }
+
   /* Footer */
   .effect-chip__footer {
     display: flex;
@@ -351,7 +432,7 @@
     position: absolute;
     top: -0.5rem;
     left: -0.5rem;
-    z-index: 1;
+    z-index: 3;
   }
 
   .effect-chip__badge--pending {

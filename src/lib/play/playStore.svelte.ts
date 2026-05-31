@@ -8,6 +8,7 @@ import { extractStats } from './extractStats';
 import { decrementCountDowns } from './countDown';
 import { deriveVerbFromRule } from './stepUtils';
 import { locale, t } from '$lib/i18n';
+import { prefetchDetailsForEffects } from '$lib/details/rehydrate';
 import { get } from 'svelte/store';
 import { getCache, ensureCached } from '$lib/rules/ruleGroupCache.svelte';
 import { resolveDependencies } from '$lib/rules/resolveDependencies';
@@ -225,6 +226,7 @@ async function loadRuleGroups(characterId: string): Promise<void> {
         const { effects: effectsJson } = await effectsResponse.json();
         if (effectsJson) {
           state = { ...state, effects: JSON.parse(effectsJson) as Rule[] };
+          prefetchDetailsForEffects(state.effects);
         }
       } else {
         toast.error(get(t)('play.error.loadEffects'));

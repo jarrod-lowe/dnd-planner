@@ -20,6 +20,33 @@
       "enum": ["en", "en-x-tlh"],
       "description": "Supported locales for rule group translations"
     },
+    "detailLocale": {
+      "type": "object",
+      "description": "Translated detail content for a single locale",
+      "required": ["body"],
+      "properties": {
+        "meta": {
+          "type": "string",
+          "description": "Italic subtitle line"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["labelKey", "value"],
+            "properties": {
+              "labelKey": { "type": "string" },
+              "value": { "type": "string" }
+            }
+          }
+        },
+        "body": {
+          "type": "string",
+          "description": "Markdown body text"
+        }
+      },
+      "additionalProperties": false
+    },
     "translation": {
       "type": "object",
       "required": ["name", "description", "keywords"],
@@ -92,6 +119,30 @@
           "items": {
             "$ref": "#/definitions/ruleGroupCondition"
           }
+        },
+        "detail": {
+          "type": "object",
+          "description": "Detail text for rules mode (extracted by publish step, stripped before DynamoDB)",
+          "required": ["key", "source", "translations"],
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "Detail key e.g. 'spell/sleep'"
+            },
+            "source": {
+              "type": "string",
+              "enum": ["srd52", "srd51", "custom"],
+              "description": "Provenance label"
+            },
+            "translations": {
+              "type": "object",
+              "description": "Map of locale code to translated detail content",
+              "additionalProperties": {
+                "$ref": "#/definitions/detailLocale"
+              }
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
@@ -280,6 +331,10 @@
             "levelFact": {
               "type": "string",
               "description": "Fact key to read for displaying proficiency level as pips on the effect chip (e.g., 'skill.athletics.proficiency')"
+            },
+            "detailKey": {
+              "type": "string",
+              "description": "Key for fetching detail content to display in rules mode (e.g., 'spell/sleep')"
             }
           },
           "additionalProperties": false
