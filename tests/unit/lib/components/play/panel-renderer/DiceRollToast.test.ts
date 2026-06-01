@@ -7,16 +7,16 @@ describe('DiceRollToast', () => {
   it('renders title and roll type', () => {
     const result: RollResult = { total: 20, natural: 14, bonus: 6, sides: 20 };
     const { container } = render(DiceRollToast, {
-      props: { title: 'Greataxe', rollType: 'Attack', result }
+      props: { title: 'Greataxe', rollType: 'Check', result }
     });
     expect(container.textContent).toContain('Greataxe');
-    expect(container.textContent).toContain('Attack');
+    expect(container.textContent).toContain('Check');
   });
 
   it('renders normal roll with bonus', () => {
     const result: RollResult = { total: 20, natural: 14, bonus: 6, sides: 20 };
     const { container } = render(DiceRollToast, {
-      props: { title: 'Greataxe', rollType: 'Attack', result }
+      props: { title: 'Greataxe', rollType: 'Check', result }
     });
     expect(container.textContent).toContain('14');
     expect(container.textContent).toContain('+');
@@ -52,7 +52,7 @@ describe('DiceRollToast', () => {
       sides: 20
     };
     const { container } = render(DiceRollToast, {
-      props: { title: 'Javelin', rollType: 'Attack', result }
+      props: { title: 'Javelin', rollType: 'Check', result }
     });
     expect(container.textContent).toContain('18');
     expect(container.textContent).toContain('4');
@@ -73,7 +73,7 @@ describe('DiceRollToast', () => {
       sides: 20
     };
     const { container } = render(DiceRollToast, {
-      props: { title: 'Greataxe', rollType: 'Attack', result }
+      props: { title: 'Greataxe', rollType: 'Check', result }
     });
     expect(container.textContent).toContain('7');
     expect(container.textContent).toContain('15');
@@ -88,7 +88,7 @@ describe('DiceRollToast', () => {
     const { container } = render(DiceRollToast, {
       props: {
         title: 'Greataxe',
-        rollType: 'Attack',
+        rollType: 'Check',
         result,
         modifiers: ['Advantage', 'Great Weapon Fighting']
       }
@@ -102,7 +102,7 @@ describe('DiceRollToast', () => {
   it('does not render modifiers line when empty', () => {
     const result: RollResult = { total: 20, natural: 14, bonus: 6, sides: 20 };
     const { container } = render(DiceRollToast, {
-      props: { title: 'Greataxe', rollType: 'Attack', result }
+      props: { title: 'Greataxe', rollType: 'Check', result }
     });
     expect(container.querySelector('.dice-toast__modifiers')).toBeNull();
   });
@@ -112,7 +112,7 @@ describe('DiceRollToast', () => {
     const { container } = render(DiceRollToast, {
       props: {
         title: 'Greataxe',
-        rollType: 'Attack',
+        rollType: 'Check',
         result,
         modifiers: ['Advantage', 'Great Weapon Fighting']
       }
@@ -124,7 +124,7 @@ describe('DiceRollToast', () => {
   it('highlights nat 20 with crit class', () => {
     const result: RollResult = { total: 26, natural: 20, bonus: 6, sides: 20 };
     const { container } = render(DiceRollToast, {
-      props: { title: 'Greataxe', rollType: 'Attack', result }
+      props: { title: 'Greataxe', rollType: 'Check', result }
     });
     const crit = container.querySelector('.dice-toast__nat--crit');
     expect(crit).toBeTruthy();
@@ -134,7 +134,7 @@ describe('DiceRollToast', () => {
   it('highlights nat 1 with fumble class', () => {
     const result: RollResult = { total: 7, natural: 1, bonus: 6, sides: 20 };
     const { container } = render(DiceRollToast, {
-      props: { title: 'Greataxe', rollType: 'Attack', result }
+      props: { title: 'Greataxe', rollType: 'Check', result }
     });
     const fumble = container.querySelector('.dice-toast__nat--fumble');
     expect(fumble).toBeTruthy();
@@ -159,7 +159,7 @@ describe('DiceRollToast', () => {
       sides: 20
     };
     const { container } = render(DiceRollToast, {
-      props: { title: 'Greataxe', rollType: 'Attack', result }
+      props: { title: 'Greataxe', rollType: 'Check', result }
     });
     // The kept roll (20) should have crit class
     const kept = container.querySelector('.dice-toast__kept .dice-toast__nat--crit');
@@ -176,7 +176,7 @@ describe('DiceRollToast', () => {
       sides: 20
     };
     const { container } = render(DiceRollToast, {
-      props: { title: 'Greataxe', rollType: 'Attack', result }
+      props: { title: 'Greataxe', rollType: 'Check', result }
     });
     // The dropped roll (20) should have crit class even though dropped
     const dropped = container.querySelector('.dice-toast__dropped .dice-toast__nat--crit');
@@ -193,7 +193,7 @@ describe('DiceRollToast', () => {
       sides: 20
     };
     const { container } = render(DiceRollToast, {
-      props: { title: 'Greataxe', rollType: 'Attack', result }
+      props: { title: 'Greataxe', rollType: 'Check', result }
     });
     const kept = container.querySelector('.dice-toast__kept .dice-toast__nat--fumble');
     expect(kept).toBeTruthy();
@@ -230,7 +230,7 @@ describe('DiceRollToast', () => {
   it('does not render damage type when no damageTypeKey', () => {
     const result: RollResult = { total: 20, natural: 14, bonus: 6, sides: 20 };
     const { container } = render(DiceRollToast, {
-      props: { title: 'Greataxe', rollType: 'Attack', result }
+      props: { title: 'Greataxe', rollType: 'Check', result }
     });
     expect(container.querySelector('.dice-toast__damage-icon')).toBeNull();
   });

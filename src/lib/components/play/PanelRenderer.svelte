@@ -213,7 +213,7 @@
 
     const rollType =
       result.sides === 20
-        ? $t('play.toast.rollType.attack')
+        ? $t('play.toast.rollType.check')
         : result.damageType
           ? $t('play.toast.rollType.damage')
           : $t('play.toast.rollType.roll');
