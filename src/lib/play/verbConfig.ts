@@ -15,7 +15,8 @@ export const VERB_ORDER: Verb[] = [
   'NOTE',
   'STAT',
   'PROFICIENCY',
-  'PREPARE'
+  'PREPARE',
+  'EQUIP'
 ];
 
 export const PLAN_VERBS: Verb[] = [
@@ -30,7 +31,7 @@ export const PLAN_VERBS: Verb[] = [
 
 export const RECORD_VERBS: Verb[] = ['HEALTH', 'SAVE', 'CHECK', 'REST', 'NOTE'];
 
-export const BUILD_VERBS: Verb[] = ['STAT', 'PROFICIENCY', 'PREPARE'];
+export const BUILD_VERBS: Verb[] = ['STAT', 'PROFICIENCY', 'PREPARE', 'EQUIP'];
 
 export function getVerbGroup(verb: Verb): 'plan' | 'record' | 'build' {
   if (RECORD_VERBS.includes(verb)) return 'record';

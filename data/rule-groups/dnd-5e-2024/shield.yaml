@@ -43,9 +43,9 @@ ruleGroups:
               group:
                 - ac-components
               ui:
-                section: configuration
+                section: equip
                 name: rule.dnd-5e-2024.shield.don-shield.name
-                intents: { HANDLE: gear }
+                intents: { EQUIP: armor }
                 actionCost: []
               activities:
                 - *error-clear

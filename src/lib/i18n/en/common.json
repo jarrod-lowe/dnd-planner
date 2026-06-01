@@ -788,6 +788,44 @@
         "effect-shield": {
           "name": "Shield"
         }
+      },
+      "weapon-don": {
+        "don-dagger": {
+          "name": "Don Dagger"
+        },
+        "don-greataxe": {
+          "name": "Don Greataxe"
+        },
+        "don-javelin": {
+          "name": "Don Javelin"
+        },
+        "don-scimitar": {
+          "name": "Don Scimitar"
+        },
+        "dagger": {
+          "already-equipped": "Dagger is already equipped"
+        },
+        "greataxe": {
+          "already-equipped": "Greataxe is already equipped"
+        },
+        "javelin": {
+          "already-equipped": "Javelin is already equipped"
+        },
+        "scimitar": {
+          "already-equipped": "Scimitar is already equipped"
+        },
+        "effect-dagger": {
+          "name": "Dagger"
+        },
+        "effect-greataxe": {
+          "name": "Greataxe"
+        },
+        "effect-javelin": {
+          "name": "Javelin"
+        },
+        "effect-scimitar": {
+          "name": "Scimitar"
+        }
       }
     }
   },
@@ -1210,7 +1248,8 @@
       "NOTE": "Note",
       "STAT": "Stat",
       "PROFICIENCY": "Proficiency",
-      "PREPARE": "Prepare"
+      "PREPARE": "Prepare",
+      "EQUIP": "Equip"
     },
     "verbBuckets": {
       "ATTACK": {
@@ -1283,6 +1322,10 @@
       },
       "PREPARE": {
         "L1": "Level 1"
+      },
+      "EQUIP": {
+        "weapons": "Weapons",
+        "armor": "Armor"
       }
     },
     "addRow": {

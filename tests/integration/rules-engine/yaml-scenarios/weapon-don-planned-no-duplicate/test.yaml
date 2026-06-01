@@ -1,0 +1,30 @@
+name: 'Weapon Don Planned - No Duplicate'
+description: >
+  After adding don-dagger to the plan, the don-dagger offer should be illegal
+  to prevent equipping the same weapon twice in one turn.
+
+ruleGroups:
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/dagger
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          weapon.dagger.equipped: 0
+        offers:
+          legal:
+            - don-dagger
+  - addOffer:
+      id: don-dagger
+      assert:
+        facts:
+          weapon.dagger.equipped: 1
+        offers:
+          illegal:
+            - don-dagger

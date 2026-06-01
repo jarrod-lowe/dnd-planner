@@ -669,6 +669,143 @@ class TestTraitPromotion:
         assert "weapon.twoHanded" not in inner.get("vars", {})
 
 
+class TestVariableSubstitutionInActivities:
+    """Tests for $(definition.id) substitution in wrapper activities and gating."""
+
+    def test_substitution_in_wrapper_activities(self):
+        """$(definition.id) in wrapper activities should be resolved."""
+        profile = Profile(
+            id="don-offer",
+            match=MatchCriteria(tags=["weapon"]),
+            wrapper=Wrapper(
+                activitiesAfter=[
+                    {
+                        "type": "numberSet",
+                        "target": {"fact": "weapon.$(definition.id).equipped"},
+                        "source": {"number": 1},
+                    },
+                    {
+                        "type": "advertiseEffect",
+                        "rule": {
+                            "id": "effect-$(definition.id)",
+                            "activities": [
+                                {
+                                    "type": "numberSet",
+                                    "target": {"fact": "weapon.$(definition.id).equipped"},
+                                    "source": {"number": 1},
+                                },
+                                {"type": "advertiseEffect", "self": True},
+                            ],
+                        },
+                    },
+                ],
+            ),
+            ui={"section": "configuration"},
+            emit=EmitConfig(mode="offerRule"),
+        )
+        expansion = Expansion(
+            id="weapon-don-doff",
+            includeDefinitions=MatchCriteria(kind="option", tags=["weapon"]),
+            includeProfiles=["don-offer"],
+            emit=EmitConfig(
+                ruleGroupIdPattern="generated-$(definition.id)-don-doff",
+                ruleIdPattern="don-$(definition.id)",
+                offerRuleIdPattern="don-$(definition.id)-offer",
+                translations={
+                    "en": {"name": "N", "description": "D", "keywords": []},
+                    "en-x-tlh": {"name": "N", "description": "D", "keywords": []},
+                },
+            ),
+        )
+        profiles = {"don-offer": profile}
+        results = resolve_expansion(expansion, [DAGGER], profiles)
+        inner = results[0]["rules"][0]["activities"][0]["rule"]
+        activities = inner["activities"]
+        # Definition activities (2) come before wrapper activitiesAfter (2)
+        # First wrapper activity: numberSet with substituted fact name
+        assert activities[2]["target"]["fact"] == "weapon.dagger.equipped"
+        # Second wrapper activity: advertiseEffect with substituted nested rule
+        effect_rule = activities[3]["rule"]
+        assert effect_rule["id"] == "effect-dagger"
+        assert effect_rule["activities"][0]["target"]["fact"] == "weapon.dagger.equipped"
+
+    def test_substitution_in_gating_legalWhen(self):
+        """$(definition.id) in gating legalWhen should be resolved."""
+        profile = Profile(
+            id="don-offer",
+            match=MatchCriteria(tags=["weapon"]),
+            gating=Gating(
+                legalWhen=[
+                    {
+                        "condition": {
+                            "fact": "weapon.$(definition.id).equipped",
+                            "operator": "notEquals",
+                            "value": 1,
+                        },
+                        "illegalDiagnostics": [
+                            {"code": "already-equipped", "severity": "error"},
+                        ],
+                    },
+                ],
+            ),
+            emit=EmitConfig(mode="offerRule"),
+        )
+        expansion = Expansion(
+            id="weapon-don-doff",
+            includeDefinitions=MatchCriteria(kind="option", tags=["weapon"]),
+            includeProfiles=["don-offer"],
+            emit=EmitConfig(
+                ruleGroupIdPattern="generated-$(definition.id)-don-doff",
+                ruleIdPattern="don-$(definition.id)",
+                offerRuleIdPattern="don-$(definition.id)-offer",
+                translations={
+                    "en": {"name": "N", "description": "D", "keywords": []},
+                    "en-x-tlh": {"name": "N", "description": "D", "keywords": []},
+                },
+            ),
+        )
+        profiles = {"don-offer": profile}
+        results = resolve_expansion(expansion, [DAGGER], profiles)
+        outer = results[0]["rules"][0]
+        offer_activity = outer["activities"][0]
+        assert offer_activity["legalWhen"][0]["condition"]["fact"] == "weapon.dagger.equipped"
+
+    def test_substitution_in_gating_when(self):
+        """$(definition.id) in gating when should be resolved."""
+        profile = Profile(
+            id="gated",
+            match=MatchCriteria(tags=["weapon"]),
+            gating=Gating(
+                when=[
+                    {
+                        "fact": "weapon.$(definition.id).equipped",
+                        "operator": "equals",
+                        "value": 1,
+                    },
+                ],
+            ),
+            emit=EmitConfig(mode="offerRule"),
+        )
+        expansion = Expansion(
+            id="test",
+            includeDefinitions=MatchCriteria(kind="option", tags=["weapon"]),
+            includeProfiles=["gated"],
+            emit=EmitConfig(
+                ruleGroupIdPattern="generated-$(definition.id)-test",
+                ruleIdPattern="$(definition.id)-gated",
+                offerRuleIdPattern="$(definition.id)-gated-offer",
+                translations={
+                    "en": {"name": "N", "description": "D", "keywords": []},
+                    "en-x-tlh": {"name": "N", "description": "D", "keywords": []},
+                },
+            ),
+        )
+        profiles = {"gated": profile}
+        results = resolve_expansion(expansion, [DAGGER], profiles)
+        outer = results[0]["rules"][0]
+        assert outer["when"][0]["fact"] == "weapon.dagger.equipped"
+
+
 class TestResolveExpansionEdgeCases:
     """Edge cases for expansion resolution."""
 
