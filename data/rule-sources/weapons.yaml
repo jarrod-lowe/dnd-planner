@@ -268,6 +268,10 @@ profiles:
       intents: { ATTACK: weapons }
       actionCost: [action]
     gating:
+      when:
+        - fact: weapon.$(definition.id).equipped
+          operator: equals
+          value: 1
       legalWhen:
         - condition:
             fact: actions.remaining
@@ -334,6 +338,9 @@ profiles:
         - fact: capability.attack.reaction.weapon
           operator: equals
           value: 1
+        - fact: weapon.$(definition.id).equipped
+          operator: equals
+          value: 1
       legalWhen:
         - condition:
             fact: reactions.remaining
@@ -394,6 +401,9 @@ profiles:
         - fact: capability.attack.bonus.light
           operator: equals
           value: 1
+        - fact: weapon.$(definition.id).equipped
+          operator: equals
+          value: 1
       legalWhen:
         - condition:
             fact: bonusActions.remaining
@@ -440,7 +450,80 @@ profiles:
     emit:
       mode: offerRule
 
+  - id: don-offer
+    match:
+      tags: [weapon]
+    ui:
+      section: equip
+      name: rule.dnd-5e-2024.weapon-don.don-$(definition.id).name
+      intents: { EQUIP: weapons }
+      actionCost: []
+      primaryControl: null
+      disadvantageFact: null
+      annotationLabels: null
+      followups: null
+    gating:
+      legalWhen:
+        - condition:
+            fact: weapon.$(definition.id).equipped
+            operator: notEquals
+            value: 1
+          illegalDiagnostics:
+            - code: rule.dnd-5e-2024.weapon-don.$(definition.id).already-equipped
+              severity: error
+    wrapper:
+      activitiesAfter:
+        - type: numberSet
+          target:
+            fact: weapon.$(definition.id).equipped
+          source:
+            number: 1
+        - type: advertiseEffect
+          rule:
+            id: effect-$(definition.id)
+            phase: normal
+            group: [equipment-state]
+            ui:
+              name: rule.dnd-5e-2024.weapon-don.effect-$(definition.id).name
+            activities:
+              - type: numberSet
+                target:
+                  fact: weapon.$(definition.id).equipped
+                source:
+                  number: 1
+              - type: advertiseEffect
+                self: true
+    emit:
+      mode: offerRule
+
 expansions:
+  - id: weapon-don-doff
+    includeDefinitions:
+      kind: option
+      tags: [weapon]
+    includeProfiles:
+      - don-offer
+    emit:
+      ruleGroupIdPattern: 'generated-$(definition.id)-don-doff'
+      ruleIdPattern: 'don-$(definition.id)'
+      offerRuleIdPattern: 'don-$(definition.id)-offer'
+      after:
+        - group: equipment-state
+      translations:
+        en:
+          name: '$(definition.translations.en.name)'
+          description: 'Don $(definition.translations.en.name)'
+          keywords:
+            - '$(definition.id)'
+            - don
+            - equipment
+        en-x-tlh:
+          name: '$(definition.translations.en-x-tlh.name)'
+          description: '$(definition.translations.en-x-tlh.name)'
+          keywords:
+            - '$(definition.id)'
+            - don
+
   - id: attack-activations
     includeDefinitions:
       kind: option
@@ -455,6 +538,7 @@ expansions:
       offerRuleIdPattern: '$(definition.id)-$(profile.id)-offer'
       after:
         - group: option-capabilities
+        - group: equipment-state
       translations:
         en:
           name: '$(definition.translations.en.name)'

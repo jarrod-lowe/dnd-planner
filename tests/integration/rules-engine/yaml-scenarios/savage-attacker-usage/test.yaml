@@ -15,6 +15,19 @@ ruleGroups:
   - dnd-5e-2024/core-events
   - dnd-5e-2024/feat-savage-attacker
 
+initialEffects:
+  - id: effect-dagger
+    phase: normal
+    group: [equipment-state]
+    activities:
+      - type: numberSet
+        target:
+          fact: weapon.dagger.equipped
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+
 steps:
   # Initially, remaining = 1 but offer is illegal (no weapon attack planned)
   - evaluate:

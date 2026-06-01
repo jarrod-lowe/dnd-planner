@@ -15,6 +15,20 @@ ruleGroups:
   - class-paladin/class-paladin-divinity
   - class-paladin/class-paladin-level3
   - class-paladin/class-paladin-oath-redemption-level3
+
+initialEffects:
+  - id: effect-greataxe
+    phase: normal
+    group: [equipment-state]
+    activities:
+      - type: numberSet
+        target:
+          fact: weapon.greataxe.equipped
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+
 steps:
   - evaluate:
       assert:

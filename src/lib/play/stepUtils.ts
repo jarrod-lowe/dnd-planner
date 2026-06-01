@@ -35,6 +35,8 @@ function deriveVerbFromSection(rule: Rule): Verb {
       return 'INSPECT';
     case 'configuration':
       return 'HANDLE';
+    case 'equip':
+      return 'EQUIP';
     case 'rest':
       return 'REST';
     case 'senses':

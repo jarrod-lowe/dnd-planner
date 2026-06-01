@@ -1,0 +1,19 @@
+name: 'Unarmed Strike Works Without Weapon'
+description: >
+  Unarmed strike should still appear when no weapons are equipped.
+  It is not gated by the weapon equipped state.
+
+ruleGroups:
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/attacks
+
+steps:
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - unarmed-strike-use-action

@@ -13,6 +13,19 @@ ruleGroups:
   - dnd-5e-2024/javelin
   - dnd-5e-2024/javelin-mastery
 
+initialEffects:
+  - id: effect-javelin
+    phase: normal
+    group: [equipment-state]
+    activities:
+      - type: numberSet
+        target:
+          fact: weapon.javelin.equipped
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+
 steps:
   - evaluate:
       assert:

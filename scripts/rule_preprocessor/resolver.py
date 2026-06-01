@@ -172,6 +172,8 @@ def _emit_offer_rule(
         profile.gating.when if profile.gating else None,
         None,
     )
+    if outer_when:
+        outer_when = substitute(outer_when, context)
 
     # Outer rule after: expansion.emit.after + profile.wrapper.after
     outer_after = merge_when(
@@ -193,6 +195,7 @@ def _emit_offer_rule(
         profile.wrapper.activitiesBefore if profile.wrapper else None,
         profile.wrapper.activitiesAfter if profile.wrapper else None,
     )
+    inner_activities = substitute(inner_activities, context)
     inner_activities = _assign_activity_ids(inner_activities, rule_id)
 
     # Inner rule: merged UI
@@ -201,6 +204,7 @@ def _emit_offer_rule(
         profile.ui,
         emit.ui,
     )
+    inner_ui = substitute(inner_ui, context)
 
     # Inner rule: merged vars (with trait promotion)
     promoted_vars = _promote_traits_to_vars(definition)
@@ -238,7 +242,7 @@ def _emit_offer_rule(
         "rule": inner_rule,
     }
     if profile.gating and profile.gating.legalWhen:
-        offer_activity["legalWhen"] = copy.deepcopy(profile.gating.legalWhen)
+        offer_activity["legalWhen"] = substitute(copy.deepcopy(profile.gating.legalWhen), context)
 
     # Build outer rule
     outer_rule: dict[str, Any] = {
@@ -289,6 +293,8 @@ def _emit_rule(
         profile.gating.when if profile.gating else None,
         emit.when,
     )
+    if rule_when:
+        rule_when = substitute(rule_when, context)
 
     # Merged after: definition.payload + profile.wrapper + expansion.emit
     rule_after = merge_when(
@@ -310,10 +316,12 @@ def _emit_rule(
         profile.wrapper.activitiesBefore if profile.wrapper else None,
         profile.wrapper.activitiesAfter if profile.wrapper else None,
     )
+    activities = substitute(activities, context)
     activities = _assign_activity_ids(activities, rule_id)
 
     # Merged UI
     ui = merge_ui(definition.ui, profile.ui, emit.ui)
+    ui = substitute(ui, context)
 
     # Merged vars (with trait promotion)
     promoted_vars = _promote_traits_to_vars(definition)

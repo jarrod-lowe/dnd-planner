@@ -19,13 +19,18 @@ from rule_preprocessor.errors import PreprocessorError
 def _recursive_merge(base: dict, overlay: dict) -> dict:
     """Recursively merge overlay into base. Lists are replaced, dicts are merged.
 
+    Setting a value to None in the overlay removes the key from the result,
+    allowing profiles to explicitly clear definition UI fields.
+
     Exception: annotationLabels lists are unioned (concat + dedupe) so that
     weapon property labels from definitions are preserved when profiles add
     their own labels (e.g. attack.reaction).
     """
     result = dict(base)
     for key, value in overlay.items():
-        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+        if value is None:
+            result.pop(key, None)
+        elif key in result and isinstance(result[key], dict) and isinstance(value, dict):
             result[key] = _recursive_merge(result[key], value)
         elif key == "annotationLabels" and isinstance(value, list):
             base_list = result.get(key, [])

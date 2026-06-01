@@ -1,0 +1,23 @@
+name: 'Weapon Attacks Hidden When Stowed'
+description: >
+  When a weapon is stowed (not equipped), weapon attack offers
+  should not appear in available rules.
+
+ruleGroups:
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/dagger
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          weapon.dagger.equipped: 0
+        offers:
+          notExists:
+            - dagger-use-action
+            - dagger-use-reaction-weapon
