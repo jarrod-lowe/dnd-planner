@@ -234,4 +234,41 @@ describe('DiceRollToast', () => {
     });
     expect(container.querySelector('.dice-toast__damage-icon')).toBeNull();
   });
+
+  it('renders GWF floor format (original|3) with bonus', () => {
+    const result: RollResult = { total: 6, natural: 3, gwfFloor: 1, bonus: 3, sides: 12 };
+    const { container } = render(DiceRollToast, {
+      props: { title: 'Greataxe', rollType: 'Damage', result }
+    });
+    // Should show (1 | 3) format with strikethrough on original
+    expect(container.textContent).toContain('1');
+    expect(container.textContent).toContain('3');
+    expect(container.textContent).toContain('6');
+    const dropped = container.querySelector('.dice-toast__dropped');
+    expect(dropped).toBeTruthy();
+    expect(dropped?.textContent).toContain('1');
+  });
+
+  it('renders GWF floor format without bonus', () => {
+    const result: RollResult = { total: 3, natural: 3, gwfFloor: 2, sides: 12 };
+    const { container } = render(DiceRollToast, {
+      props: { title: 'Greataxe', rollType: 'Damage', result }
+    });
+    expect(container.textContent).toContain('2');
+    expect(container.textContent).toContain('3');
+    const dropped = container.querySelector('.dice-toast__dropped');
+    expect(dropped).toBeTruthy();
+    expect(dropped?.textContent).toContain('2');
+  });
+
+  it('does not render GWF format when gwfFloor is undefined', () => {
+    const result: RollResult = { total: 10, natural: 7, bonus: 3, sides: 12 };
+    const { container } = render(DiceRollToast, {
+      props: { title: 'Greataxe', rollType: 'Damage', result }
+    });
+    // Normal display — no parenthetical GWF format
+    const dropped = container.querySelector('.dice-toast__dropped');
+    // dropped only appears for advantage/disadvantage or GWF
+    expect(dropped).toBeNull();
+  });
 });

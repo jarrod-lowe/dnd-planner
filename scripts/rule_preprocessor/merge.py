@@ -17,11 +17,22 @@ from rule_preprocessor.errors import PreprocessorError
 
 
 def _recursive_merge(base: dict, overlay: dict) -> dict:
-    """Recursively merge overlay into base. Lists are replaced, dicts are merged."""
+    """Recursively merge overlay into base. Lists are replaced, dicts are merged.
+
+    Exception: annotationLabels lists are unioned (concat + dedupe) so that
+    weapon property labels from definitions are preserved when profiles add
+    their own labels (e.g. attack.reaction).
+    """
     result = dict(base)
     for key, value in overlay.items():
         if key in result and isinstance(result[key], dict) and isinstance(value, dict):
             result[key] = _recursive_merge(result[key], value)
+        elif key == "annotationLabels" and isinstance(value, list):
+            base_list = result.get(key, [])
+            if isinstance(base_list, list):
+                result[key] = dedupe_preserving_order(base_list + value)
+            else:
+                result[key] = value
         else:
             result[key] = value
     return result

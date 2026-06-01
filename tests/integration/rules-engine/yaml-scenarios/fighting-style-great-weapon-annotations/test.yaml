@@ -1,0 +1,55 @@
+name: 'Fighting Style - Great Weapon Fighting - Annotations'
+description: >
+  When fighting-style-great-weapon is assigned and a greataxe attack is planned,
+  the GWF annotation appears on qualifying weapon panels (those with property.twoHanded
+  or property.versatile labels). The annotation does NOT appear without a planned
+  weapon attack or on unarmed strikes.
+
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/greataxe
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/fighting-style-great-weapon
+
+steps:
+  # GWF flag is set, but no annotation without a planned weapon attack
+  - evaluate:
+      assert:
+        facts:
+          character.fightingStyle.greatWeapon: 1
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.fighting-style-great-weapon.annotation
+  # Plan unarmed strike - no GWF annotation (unarmed strike lacks property.twoHanded/versatile labels)
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          attack.last.activation.action: 1
+          attack.last.weapon: 0
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.fighting-style-great-weapon.annotation
+  # End turn to reset
+  - endTurn: {}
+  # Set strength for greataxe
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 16
+      assert:
+        facts:
+          str.value: 16
+  # Plan a greataxe attack - GWF annotation should appear (greataxe has property.twoHanded label)
+  - addOffer:
+      id: greataxe-use-action
+      assert:
+        facts:
+          attack.last.weapon: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.fighting-style-great-weapon.annotation

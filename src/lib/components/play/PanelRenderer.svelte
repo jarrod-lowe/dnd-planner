@@ -193,6 +193,12 @@
 
   const matchingAnnotations = $derived(getMatchingAnnotations(annotationLabels, activeAnnotations));
 
+  const gwfActive = $derived(
+    matchingAnnotations.some(
+      (ann) => ann.rider?.label === 'rule.dnd-5e-2024.fighting-style-great-weapon.rider'
+    )
+  );
+
   const visibleFollowups = $derived(
     editable && onFollowup
       ? (descriptor.followups ?? []).filter(
@@ -283,6 +289,7 @@
         {selections}
         {onSelectionChange}
         onRoll={handleDiceRoll}
+        {gwfActive}
       />
     </div>
   {/if}
@@ -345,6 +352,7 @@
         {selections}
         {onSelectionChange}
         onRoll={handleDiceRoll}
+        {gwfActive}
       />
     </div>
   {/if}

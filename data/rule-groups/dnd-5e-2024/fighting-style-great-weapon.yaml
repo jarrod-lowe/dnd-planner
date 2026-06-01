@@ -22,3 +22,23 @@ ruleGroups:
               fact: character.fightingStyle.greatWeapon
             source:
               number: 1
+
+      - id: annotate-great-weapon-fighting
+        after:
+          - group: __planned__
+        activities:
+          - type: annotate
+            when:
+              - fact: character.fightingStyle.greatWeapon
+                operator: equals
+                value: 1
+              - fact: attack.last.weapon
+                operator: equals
+                value: 1
+            key: rule.dnd-5e-2024.fighting-style-great-weapon.annotation
+            targets:
+              - property.twoHanded
+              - property.versatile
+            rider:
+              label: rule.dnd-5e-2024.fighting-style-great-weapon.rider
+              type: modifier
