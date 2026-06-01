@@ -1,0 +1,53 @@
+name: 'Spear Versatile Damage Die'
+description: >
+  Spear ranges include 4 entries: melee 1H, melee 2H (with damageDie override to 8),
+  thrown 20ft, and thrown 60ft with disadvantage. The 2H entry has damageDie: 8
+  overriding the default damageDie of 6.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spear
+
+initialEffects:
+  - id: effect-spear
+    phase: normal
+    group: [equipment-state]
+    activities:
+      - type: numberSet
+        target:
+          fact: weapon.spear.equipped
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+
+steps:
+  - evaluate:
+      assert:
+        offerVars:
+          - id: spear-use-action
+            vars:
+              ranges:
+                default:
+                  array:
+                    - distance: 5
+                      type: melee
+                      label: 1H
+                    - distance: 5
+                      type: melee
+                      label: 2H
+                      damageDie: 8
+                      extraHands: 1
+                    - distance: 20
+                      type: thrown
+                    - distance: 60
+                      type: thrown
+                      disadvantage: true
+              damageDie:
+                default:
+                  number: 6

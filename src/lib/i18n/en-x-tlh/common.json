@@ -686,10 +686,16 @@
         "scimitar-mastery": {
           "name": "Scimitar Mastery (Nick)"
         },
+        "spear": {
+          "name": "yan"
+        },
         "activation": {
           "no_action": "DIvI' tu'lu'be'",
           "no_reaction": "DIvI' cha' tu'lu'be'",
           "no_bonus_action": "Quv DIvI' tu'lu'be'"
+        },
+        "versatile": {
+          "no-free-hand": "ghopDu' puS nuH jen lo'"
         }
       },
       "hp": {
@@ -803,6 +809,9 @@
         "don-scimitar": {
           "name": "Don Scimitar"
         },
+        "don-spear": {
+          "name": "Don yan"
+        },
         "dagger": {
           "already-equipped": "Dagger is already equipped",
           "no-hands": "not enough ghopDu'"
@@ -819,6 +828,10 @@
           "already-equipped": "Scimitar is already equipped",
           "no-hands": "not enough ghopDu'"
         },
+        "spear": {
+          "already-equipped": "yan is already equipped",
+          "no-hands": "not enough ghopDu'"
+        },
         "effect-dagger": {
           "name": "Dagger"
         },
@@ -830,6 +843,9 @@
         },
         "effect-scimitar": {
           "name": "Scimitar"
+        },
+        "effect-spear": {
+          "name": "yan"
         }
       }
     }

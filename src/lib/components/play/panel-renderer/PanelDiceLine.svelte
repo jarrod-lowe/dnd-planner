@@ -35,9 +35,14 @@
     distance: number;
     type: string;
     disadvantage?: boolean;
+    label?: string;
+    damageDie?: number;
+    extraHands?: number;
   }
 
-  let rangeIndex = $state(0);
+  let rangeIndex = $state(
+    selections && typeof selections.rangeIndex === 'number' ? selections.rangeIndex : 0
+  );
   let rollResults = $state<Record<number, RollResult>>({});
   let rollMode = $state<RollMode>('normal');
   let showAdvPopover = $state(false);
@@ -72,6 +77,18 @@
   function handleRangeTap(): void {
     if (!editable || !ranges || ranges.length <= 1) return;
     rangeIndex = (rangeIndex + 1) % ranges.length;
+    const range = ranges[rangeIndex];
+    if (_onSelectionChange) {
+      _onSelectionChange({
+        rangeIndex,
+        extraHands: range?.extraHands ?? 0
+      });
+    }
+  }
+
+  function formatRangeText(range: RangeEntry): string {
+    if (range.label) return `${range.distance}ft ${range.label}`;
+    return `${range.distance}ft`;
   }
 
   function formatBonus(die: DiceEntry): string {
@@ -83,6 +100,10 @@
   }
 
   function formatDieExpression(die: DiceEntry): string {
+    // Check for range-based damage die override (versatile weapons)
+    if (die.damageType && currentRange?.damageDie) {
+      return `d${currentRange.damageDie}`;
+    }
     const expr = resolveExpression(die.expression, facts, vars, selections);
     if (typeof expr === 'number') return `d${expr}`;
     return expr ?? '';
@@ -107,6 +128,10 @@
   }
 
   function getDieSides(die: DiceEntry): number | undefined {
+    // Check for range-based damage die override (versatile weapons)
+    if (die.damageType && currentRange?.damageDie) {
+      return currentRange.damageDie;
+    }
     const expr = resolveExpression(die.expression, facts, vars, selections);
     if (typeof expr === 'string' && expr.startsWith('d')) {
       const parsed = parseInt(expr.slice(1), 10);
@@ -248,10 +273,10 @@
           onclick={handleRangeTap}
           disabled={!ranges || ranges.length <= 1}
         >
-          {currentRange!.distance}ft
+          {formatRangeText(currentRange!)}
         </button>
       {:else}
-        <span class="panel-renderer__range">{currentRange!.distance}ft</span>
+        <span class="panel-renderer__range">{formatRangeText(currentRange!)}</span>
       {/if}
     {:else}
       {@const dieIsD20 = isD20(part.die!)}

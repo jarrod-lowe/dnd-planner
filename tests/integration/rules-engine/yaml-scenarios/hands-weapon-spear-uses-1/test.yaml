@@ -1,0 +1,29 @@
+name: 'Hands - Spear Uses 1 Hand'
+description: >
+  Donning a spear decrements hands.remaining by 1.
+
+ruleGroups:
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spear
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          hands.max: 2
+          hands.remaining: 2
+        offers:
+          exists:
+            - don-spear
+  - addOffer:
+      id: don-spear
+      assert:
+        facts:
+          weapon.spear.equipped: 1
+          hands.remaining: 1

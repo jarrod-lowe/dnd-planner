@@ -686,10 +686,16 @@
         "scimitar-mastery": {
           "name": "Scimitar Mastery (Nick)"
         },
+        "spear": {
+          "name": "Spear"
+        },
         "activation": {
           "no_action": "No action available",
           "no_reaction": "No reaction available",
           "no_bonus_action": "No bonus action available"
+        },
+        "versatile": {
+          "no-free-hand": "Not enough free hands for two-handed attack"
         }
       },
       "hp": {
@@ -803,6 +809,9 @@
         "don-scimitar": {
           "name": "Don Scimitar"
         },
+        "don-spear": {
+          "name": "Don Spear"
+        },
         "dagger": {
           "already-equipped": "Dagger is already equipped",
           "no-hands": "Not enough hands to equip a dagger"
@@ -819,6 +828,10 @@
           "already-equipped": "Scimitar is already equipped",
           "no-hands": "Not enough hands to equip a scimitar"
         },
+        "spear": {
+          "already-equipped": "Spear is already equipped",
+          "no-hands": "Not enough hands to equip a spear"
+        },
         "effect-dagger": {
           "name": "Dagger"
         },
@@ -830,6 +843,9 @@
         },
         "effect-scimitar": {
           "name": "Scimitar"
+        },
+        "effect-spear": {
+          "name": "Spear"
         }
       }
     }

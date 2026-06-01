@@ -490,6 +490,18 @@
         "disadvantage": {
           "type": "boolean",
           "description": "Whether attacks at this range have disadvantage"
+        },
+        "label": {
+          "type": "string",
+          "description": "Display label appended to range (e.g., '1H', '2H' for versatile weapons)"
+        },
+        "damageDie": {
+          "type": "integer",
+          "description": "Override the damage die for this range (e.g., 8 for d8 when using two hands)"
+        },
+        "extraHands": {
+          "type": "integer",
+          "description": "Additional free hands required beyond what the weapon already consumes"
         }
       },
       "additionalProperties": false
