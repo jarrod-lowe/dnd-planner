@@ -35,12 +35,6 @@
     disadvantage?: boolean;
   }
 
-  interface RollResult {
-    total: number;
-    natural: number;
-    mode?: RollMode;
-  }
-
   let rangeIndex = $state(0);
   let rollResults = $state<Record<number, RollResult>>({});
   let rollMode = $state<RollMode>('normal');
