@@ -1,7 +1,7 @@
 <script lang="ts">
   import { resolveValueSource, resolveExpression } from './resolveValueSource';
   import DamageTypeIcon from './DamageTypeIcon.svelte';
-  import type { DiceLineControl, DiceEntry } from './types';
+  import type { DiceLineControl, DiceEntry, RollResult } from './types';
   import type { Facts, VarDefinition } from '$lib/rules-engine';
   import { t } from '$lib/i18n';
 
@@ -12,6 +12,7 @@
     vars: Record<string, VarDefinition>;
     selections?: Record<string, unknown>;
     onSelectionChange?: (selections: Record<string, unknown>) => void;
+    onRoll?: (data: RollResult, dieIndex: number) => void;
   }
 
   let {
@@ -20,7 +21,8 @@
     facts,
     vars,
     selections = {},
-    onSelectionChange: _onSelectionChange
+    onSelectionChange: _onSelectionChange,
+    onRoll
   }: Props = $props();
 
   void _onSelectionChange;
@@ -130,25 +132,35 @@
     const bonus = (resolveValueSource(die.bonus, facts, vars, selections) as number) ?? 0;
     const rollModeToUse = mode ?? (sides === 20 ? effectiveRollMode : 'normal');
     let natural: number;
+    let droppedRoll: number | undefined;
     if (sides === 0) {
       natural = 0;
     } else if (rollModeToUse === 'advantage') {
-      const r1 = Math.floor(Math.random() * 20) + 1;
-      const r2 = Math.floor(Math.random() * 20) + 1;
+      const r1 = Math.floor(Math.random() * sides) + 1;
+      const r2 = Math.floor(Math.random() * sides) + 1;
       natural = Math.max(r1, r2);
+      droppedRoll = Math.min(r1, r2);
     } else if (rollModeToUse === 'disadvantage') {
-      const r1 = Math.floor(Math.random() * 20) + 1;
-      const r2 = Math.floor(Math.random() * 20) + 1;
+      const r1 = Math.floor(Math.random() * sides) + 1;
+      const r2 = Math.floor(Math.random() * sides) + 1;
       natural = Math.min(r1, r2);
+      droppedRoll = Math.max(r1, r2);
     } else {
       natural = Math.floor(Math.random() * sides) + 1;
     }
-    rollResults[dieIndex] = {
+    const damageTypeStr = formatDamageType(die) || undefined;
+    const result: RollResult = {
       total: natural + bonus,
       natural,
-      mode: sides === 20 ? rollModeToUse : undefined
+      mode: sides === 20 ? rollModeToUse : undefined,
+      droppedRoll,
+      bonus: bonus !== 0 ? bonus : undefined,
+      sides,
+      damageType: damageTypeStr
     };
+    rollResults[dieIndex] = result;
     rollMode = 'normal';
+    onRoll?.(result, dieIndex);
     const el = chipRefs[dieIndex];
     if (el) {
       el.animate(

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { t } from '$lib/i18n';
+  import { toast } from 'svelte-sonner';
   import WarningIndicator from './WarningIndicator.svelte';
   import { extractPanelDescriptor } from './panel-renderer/extractPanelDescriptor';
   import { resolveValueSource } from './panel-renderer/resolveValueSource';
@@ -8,10 +9,11 @@
   import PanelSelect from './panel-renderer/PanelSelect.svelte';
   import PanelTextInput from './panel-renderer/PanelTextInput.svelte';
   import PanelSegmented from './panel-renderer/PanelSegmented.svelte';
+  import DiceRollToast from './panel-renderer/DiceRollToast.svelte';
   import { evaluateCondition } from '$lib/rules-engine/conditions';
   import { getMatchingAnnotations } from '$lib/play/annotations';
   import type { AvailableRuleEntry, Facts, Annotation, Rule } from '$lib/rules-engine';
-  import type { TextInformation, CountdownInformation } from './panel-renderer/types';
+  import type { TextInformation, CountdownInformation, RollResult } from './panel-renderer/types';
 
   interface Props {
     entry: AvailableRuleEntry;
@@ -28,6 +30,7 @@
     onMoveUp?: () => void;
     onMoveDown?: () => void;
     onFollowup?: (rule: Rule) => void;
+    onRoll?: (data: RollResult, dieIndex: number) => void;
   }
 
   let {
@@ -44,7 +47,8 @@
     canMoveDown = true,
     onMoveUp,
     onMoveDown,
-    onFollowup
+    onFollowup,
+    onRoll
   }: Props = $props();
 
   const descriptor = $derived(extractPanelDescriptor(entry.rule));
@@ -203,6 +207,38 @@
     e.stopPropagation();
     onRemove?.();
   }
+
+  function handleDiceRoll(result: RollResult, _dieIndex: number) {
+    onRoll?.(result, _dieIndex);
+
+    const rollType =
+      result.sides === 20
+        ? $t('play.toast.rollType.attack')
+        : result.damageType
+          ? $t('play.toast.rollType.damage')
+          : $t('play.toast.rollType.roll');
+
+    const modifiers: string[] = [];
+    if (result.mode === 'advantage') modifiers.push($t('play.toast.modifier.advantage'));
+    if (result.mode === 'disadvantage') modifiers.push($t('play.toast.modifier.disadvantage'));
+    for (const ann of matchingAnnotations) {
+      if (ann.rider?.type === 'dice' || ann.rider?.type === 'modifier') {
+        modifiers.push($t(ann.rider.label));
+      }
+    }
+
+    toast.custom(DiceRollToast, {
+      componentProps: {
+        title: displayName,
+        rollType,
+        result,
+        modifiers: modifiers.length > 0 ? modifiers : undefined,
+        damageTypeKey: result.damageType
+      },
+      duration: 4000,
+      unstyled: true
+    });
+  }
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
@@ -246,6 +282,7 @@
         {vars}
         {selections}
         {onSelectionChange}
+        onRoll={handleDiceRoll}
       />
     </div>
   {/if}
@@ -307,6 +344,7 @@
         {vars}
         {selections}
         {onSelectionChange}
+        onRoll={handleDiceRoll}
       />
     </div>
   {/if}

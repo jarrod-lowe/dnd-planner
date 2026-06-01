@@ -1,3 +1,19 @@
+export type RollMode = 'normal' | 'advantage' | 'disadvantage';
+
+export interface RollResult {
+  total: number;
+  natural: number;
+  mode?: RollMode;
+  /** The roll that was NOT kept (for advantage/disadvantage) */
+  droppedRoll?: number;
+  /** Resolved bonus value */
+  bonus?: number;
+  /** Die sides (20, 12, 6, etc.) */
+  sides?: number;
+  /** Resolved damage type string (e.g. "slashing") */
+  damageType?: string;
+}
+
 export interface ValueSource {
   fact?: string;
   var?: string;

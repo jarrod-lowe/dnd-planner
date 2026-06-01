@@ -1119,6 +1119,17 @@
       "loadEffects": "Failed to load effects",
       "saveEffects": "Failed to save effects"
     },
+    "toast": {
+      "rollType": {
+        "attack": "Attack",
+        "damage": "Damage",
+        "roll": "Roll"
+      },
+      "modifier": {
+        "advantage": "Advantage",
+        "disadvantage": "Disadvantage"
+      }
+    },
     "information": {
       "saveDc": "{{saveType}} Save DC {{dc}}"
     },
