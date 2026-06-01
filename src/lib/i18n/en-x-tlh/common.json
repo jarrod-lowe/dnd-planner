@@ -1119,6 +1119,17 @@
       "loadEffects": "DIvI' DIvI' laHbe'",
       "saveEffects": "DIvI' pol laHbe'"
     },
+    "toast": {
+      "rollType": {
+        "check": "Check",
+        "damage": "Damage",
+        "roll": "Roll"
+      },
+      "modifier": {
+        "advantage": "Advantage",
+        "disadvantage": "Disadvantage"
+      }
+    },
     "information": {
       "saveDc": "{{saveType}} DIvI' {{dc}}"
     },
