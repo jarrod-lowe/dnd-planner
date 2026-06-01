@@ -110,6 +110,7 @@ def _parse_definition(data: dict[str, Any]) -> Definition:
         payload=payload,
         translations=data.get("translations", {}),
         requires=data.get("requires"),
+        hands=data.get("hands"),
     )
 
 

@@ -2,7 +2,8 @@ definitions:
   - id: dagger
     kind: option
     tags: [attack, weapon, melee]
-    requires: [dagger]
+    requires: [dagger, hands]
+    hands: 1
     traits:
       weapon.light: true
       weapon.finesse: true
@@ -61,7 +62,8 @@ definitions:
   - id: greataxe
     kind: option
     tags: [attack, weapon, melee]
-    requires: [greataxe]
+    requires: [greataxe, hands]
+    hands: 2
     traits:
       weapon.heavy: true
       weapon.twoHanded: true
@@ -136,7 +138,8 @@ definitions:
   - id: javelin
     kind: option
     tags: [attack, weapon, melee]
-    requires: [javelin]
+    requires: [javelin, hands]
+    hands: 1
     traits:
       weapon.throwable: true
       weapon.mastery: slow
@@ -209,7 +212,8 @@ definitions:
   - id: scimitar
     kind: option
     tags: [attack, weapon, melee]
-    requires: [scimitar]
+    requires: [scimitar, hands]
+    hands: 1
     traits:
       weapon.light: true
       weapon.finesse: true
@@ -472,6 +476,13 @@ profiles:
           illegalDiagnostics:
             - code: rule.dnd-5e-2024.weapon-don.$(definition.id).already-equipped
               severity: error
+        - condition:
+            fact: hands.remaining
+            operator: greaterThanOrEqual
+            value: $(definition.hands)
+          illegalDiagnostics:
+            - code: rule.dnd-5e-2024.weapon-don.$(definition.id).no-hands
+              severity: error
     wrapper:
       activitiesAfter:
         - type: numberSet
@@ -479,6 +490,19 @@ profiles:
             fact: weapon.$(definition.id).equipped
           source:
             number: 1
+        - type: numberIncrement
+          target:
+            fact: hands.remaining
+          source:
+            number: $(definition.hands)
+          subtract: true
+        - type: setAdd
+          target: { var: errors }
+          source: { string: rule.dnd-5e-2024.weapon-don.$(definition.id).no-hands }
+          when:
+            - fact: hands.remaining
+              operator: lessThan
+              value: 0
         - type: advertiseEffect
           rule:
             id: effect-$(definition.id)
@@ -492,6 +516,12 @@ profiles:
                   fact: weapon.$(definition.id).equipped
                 source:
                   number: 1
+              - type: numberIncrement
+                target:
+                  fact: hands.remaining
+                source:
+                  number: $(definition.hands)
+                subtract: true
               - type: advertiseEffect
                 self: true
     emit:

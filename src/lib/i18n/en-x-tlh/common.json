@@ -783,7 +783,8 @@
         },
         "don-shield-offer": {
           "already-equipped": "DIch tuQtaH",
-          "not-proficient": "DIch SuvwI' DIch DIron"
+          "not-proficient": "DIch SuvwI' DIch DIron",
+          "no-hands": "not enough ghopDu'"
         },
         "effect-shield": {
           "name": "DIch"
@@ -803,16 +804,20 @@
           "name": "Don Scimitar"
         },
         "dagger": {
-          "already-equipped": "Dagger is already equipped"
+          "already-equipped": "Dagger is already equipped",
+          "no-hands": "not enough ghopDu'"
         },
         "greataxe": {
-          "already-equipped": "nuH jen is already equipped"
+          "already-equipped": "nuH jen is already equipped",
+          "no-hands": "not enough ghopDu'"
         },
         "javelin": {
-          "already-equipped": "Javelin is already equipped"
+          "already-equipped": "Javelin is already equipped",
+          "no-hands": "not enough ghopDu'"
         },
         "scimitar": {
-          "already-equipped": "Scimitar is already equipped"
+          "already-equipped": "Scimitar is already equipped",
+          "no-hands": "not enough ghopDu'"
         },
         "effect-dagger": {
           "name": "Dagger"
@@ -1049,7 +1054,8 @@
         "perception": "Qob legh",
         "insight": "Qob Sov",
         "investigation": "Qob nej"
-      }
+      },
+      "hands": "ghopDu'"
     },
     "choices": {
       "title": "DuH DIvI'",

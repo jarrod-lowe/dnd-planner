@@ -3,6 +3,7 @@ ruleGroups:
   - id: javelin
     requires:
       - attacks
+      - hands
     translations:
       en:
         name: Javelin

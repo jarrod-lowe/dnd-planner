@@ -1,0 +1,12 @@
+name: 'Hands - Default Max'
+description: 'Characters have 2 hands by default, with 2 remaining'
+
+ruleGroups:
+  - dnd-5e-2024/hands
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          hands.max: 2
+          hands.remaining: 2

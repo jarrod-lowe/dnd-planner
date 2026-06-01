@@ -3,6 +3,7 @@ ruleGroups:
   - id: dagger
     requires:
       - attacks
+      - hands
     translations:
       en:
         name: Dagger

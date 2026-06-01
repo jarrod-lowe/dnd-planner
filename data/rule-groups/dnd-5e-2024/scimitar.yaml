@@ -3,6 +3,7 @@ ruleGroups:
   - id: scimitar
     requires:
       - attacks
+      - hands
     translations:
       en:
         name: Scimitar

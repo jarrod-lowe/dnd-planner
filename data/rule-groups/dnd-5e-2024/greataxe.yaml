@@ -3,6 +3,7 @@ ruleGroups:
   - id: greataxe
     requires:
       - attacks
+      - hands
     translations:
       en:
         name: Greataxe

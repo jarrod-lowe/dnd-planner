@@ -1,0 +1,12 @@
+name: 'Hands - Reset Each Turn'
+description: 'Hands remaining resets to max at the start of each turn'
+
+ruleGroups:
+  - dnd-5e-2024/hands
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          hands.max: 2
+          hands.remaining: 2

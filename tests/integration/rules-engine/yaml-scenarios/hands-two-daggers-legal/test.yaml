@@ -1,0 +1,53 @@
+name: 'Hands - Dagger Legal With Shield Equipped'
+description: >
+  With a shield equipped (1 hand used, 1 remaining), donning a dagger should
+  still be legal since it only needs 1 hand.
+
+ruleGroups:
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/shield
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/dagger
+
+initialEffects:
+  - id: effect-shield
+    phase: normal
+    after:
+      - group: ac-calculation
+    group:
+      - ac-components
+    activities:
+      - type: numberIncrement
+        target:
+          fact: ac.shieldBonus
+        source:
+          number: 2
+      - type: numberSet
+        target:
+          fact: armor.shield.equipped
+        source:
+          number: 1
+      - type: numberIncrement
+        target:
+          fact: hands.remaining
+        source:
+          number: 1
+        subtract: true
+      - type: advertiseEffect
+        self: true
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          armor.shield.equipped: 1
+          hands.remaining: 1
+        offers:
+          legal:
+            - don-dagger

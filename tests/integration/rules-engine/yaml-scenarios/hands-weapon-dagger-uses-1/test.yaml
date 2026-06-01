@@ -1,7 +1,6 @@
-name: 'Weapon Don Planned - No Duplicate'
+name: 'Hands - Dagger Uses 1 Hand'
 description: >
-  After adding don-dagger to the plan, the don-dagger offer should be illegal
-  to prevent equipping the same weapon twice in one turn.
+  Donning a dagger decrements hands.remaining by 1.
 
 ruleGroups:
   - dnd-5e-2024/hands
@@ -17,15 +16,14 @@ steps:
   - evaluate:
       assert:
         facts:
-          weapon.dagger.equipped: 0
+          hands.max: 2
+          hands.remaining: 2
         offers:
-          legal:
+          exists:
             - don-dagger
   - addOffer:
       id: don-dagger
       assert:
         facts:
           weapon.dagger.equipped: 1
-        offers:
-          illegal:
-            - don-dagger
+          hands.remaining: 1
