@@ -711,6 +711,10 @@
           "name": "DIvI' chuwI'"
         }
       },
+      "fighting-style-great-weapon": {
+        "annotation": "nuH jen Suv: wa' cha' wej DIch",
+        "rider": "nuH jen Suv"
+      },
       "feat-alert": {
         "annotation-swap": "valwI': DIvI' SuvwI' DIch DIch",
         "annotation-proficiency": "valwI': valwI' DIch chel",

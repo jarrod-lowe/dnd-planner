@@ -13,6 +13,7 @@
     selections?: Record<string, unknown>;
     onSelectionChange?: (selections: Record<string, unknown>) => void;
     onRoll?: (data: RollResult, dieIndex: number) => void;
+    gwfActive?: boolean;
   }
 
   let {
@@ -22,7 +23,8 @@
     vars,
     selections = {},
     onSelectionChange: _onSelectionChange,
-    onRoll
+    onRoll,
+    gwfActive = false
   }: Props = $props();
 
   void _onSelectionChange;
@@ -142,6 +144,12 @@
     } else {
       natural = Math.floor(Math.random() * sides) + 1;
     }
+    // Apply Great Weapon Fighting: damage die rolls of 1 or 2 count as 3
+    let gwfFloor: number | undefined;
+    if (gwfActive && die.damageType && sides > 2 && (natural === 1 || natural === 2)) {
+      gwfFloor = natural;
+      natural = 3;
+    }
     const damageTypeStr = formatDamageType(die) || undefined;
     const result: RollResult = {
       total: natural + bonus,
@@ -150,7 +158,8 @@
       droppedRoll,
       bonus: bonus !== 0 ? bonus : undefined,
       sides,
-      damageType: damageTypeStr
+      damageType: damageTypeStr,
+      gwfFloor
     };
     rollResults[dieIndex] = result;
     rollMode = 'normal';

@@ -711,6 +711,10 @@
           "name": "Roll Initiative"
         }
       },
+      "fighting-style-great-weapon": {
+        "annotation": "Great Weapon Fighting: 1s and 2s count as 3",
+        "rider": "Great Weapon Fighting"
+      },
       "feat-alert": {
         "annotation-swap": "Alert: May swap initiative with an ally",
         "annotation-proficiency": "Alert: May add proficiency",

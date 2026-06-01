@@ -69,7 +69,7 @@ definitions:
     ui:
       name: rule.dnd-5e-2024.attacks.greataxe.name
       disadvantageFact: attack.str.disadvantage
-      annotationLabels: [attack.any, attack.melee, attack.weapon, dice.any]
+      annotationLabels: [attack.any, attack.melee, attack.weapon, dice.any, property.twoHanded]
       followups:
         - type: attack-line
           condition:

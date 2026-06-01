@@ -20,6 +20,7 @@
   }
 
   const isAdvDisadv = $derived(result.mode === 'advantage' || result.mode === 'disadvantage');
+  const isGWF = $derived(result.gwfFloor !== undefined);
   const hasBonus = $derived(result.bonus !== undefined && result.bonus !== 0);
 </script>
 
@@ -40,6 +41,21 @@
       <span class="dice-toast__dropped"
         ><s><span class={natClass(result.droppedRoll!)}>{result.droppedRoll}</span></s></span
       >
+      <span class="dice-toast__paren">)</span>
+      {#if hasBonus}
+        {#if result.bonus! > 0}
+          <span class="dice-toast__bonus"> + {result.bonus}</span>
+        {:else}
+          <span class="dice-toast__bonus"> − {Math.abs(result.bonus!)}</span>
+        {/if}
+      {/if}
+      <span class="dice-toast__equals"> = </span>
+      <span class="dice-toast__total">{result.total}</span>
+    {:else if isGWF}
+      <span class="dice-toast__paren">(</span>
+      <span class="dice-toast__dropped"><s>{result.gwfFloor}</s></span>
+      <span class="dice-toast__paren"> | </span>
+      <span class="dice-toast__kept">{result.natural}</span>
       <span class="dice-toast__paren">)</span>
       {#if hasBonus}
         {#if result.bonus! > 0}

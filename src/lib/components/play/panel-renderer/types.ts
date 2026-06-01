@@ -12,6 +12,8 @@ export interface RollResult {
   sides?: number;
   /** Resolved damage type string (e.g. "slashing") */
   damageType?: string;
+  /** Original die value (1 or 2) before GWF floor applied */
+  gwfFloor?: number;
 }
 
 export interface ValueSource {
