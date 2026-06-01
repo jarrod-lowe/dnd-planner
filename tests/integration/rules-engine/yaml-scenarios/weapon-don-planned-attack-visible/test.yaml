@@ -1,0 +1,30 @@
+name: 'Weapon Don Planned - Attack Visible Same Turn'
+description: >
+  After adding don-dagger to the plan, attack offers for dagger should appear
+  in the same turn because the don offer wait for __planned__ before evaluating.
+
+ruleGroups:
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/dagger
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          weapon.dagger.equipped: 0
+        offers:
+          notExists:
+            - dagger-use-action
+  - addOffer:
+      id: don-dagger
+      assert:
+        facts:
+          weapon.dagger.equipped: 1
+        offers:
+          exists:
+            - dagger-use-action
