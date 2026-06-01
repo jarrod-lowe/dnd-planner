@@ -59,6 +59,19 @@ class TestMergeUI:
         # Nested merge: stats is a list, lists get replaced
         assert result == {"stats": [{"name": "b"}]}
 
+    def test_annotationLabels_unioned_not_replaced(self):
+        """annotationLabels should be unioned (concat + dedupe), not replaced."""
+        result = merge_ui(
+            {"annotationLabels": ["attack.any", "attack.melee", "attack.weapon", "dice.any", "property.twoHanded"]},
+            {"annotationLabels": ["attack.any", "attack.melee", "attack.weapon", "dice.any", "attack.reaction"]},
+            None,
+        )
+        assert "property.twoHanded" in result["annotationLabels"]
+        assert "attack.reaction" in result["annotationLabels"]
+        assert "attack.weapon" in result["annotationLabels"]
+        # No duplicates
+        assert len(result["annotationLabels"]) == len(set(result["annotationLabels"]))
+
     def test_nested_dict_recursive_merge(self):
         """Should recursively merge nested dicts by key."""
         result = merge_ui(
