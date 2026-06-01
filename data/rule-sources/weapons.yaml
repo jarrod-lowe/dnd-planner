@@ -490,6 +490,12 @@ profiles:
             fact: weapon.$(definition.id).equipped
           source:
             number: 1
+        - type: numberIncrement
+          target:
+            fact: hands.remaining
+          source:
+            number: $(definition.hands)
+          subtract: true
         - type: setAdd
           target: { var: errors }
           source: { string: rule.dnd-5e-2024.weapon-don.$(definition.id).no-hands }
@@ -497,12 +503,6 @@ profiles:
             - fact: hands.remaining
               operator: lessThan
               value: 0
-        - type: numberIncrement
-          target:
-            fact: hands.remaining
-          source:
-            number: $(definition.hands)
-          subtract: true
         - type: advertiseEffect
           rule:
             id: effect-$(definition.id)

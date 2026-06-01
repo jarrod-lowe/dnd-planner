@@ -71,13 +71,6 @@ ruleGroups:
                     - fact: armor.shield.proficient
                       operator: notEquals
                       value: 1
-                - type: setAdd
-                  target: { var: errors }
-                  source: { string: rule.dnd-5e-2024.shield.don-shield-offer.no-hands }
-                  when:
-                    - fact: hands.remaining
-                      operator: lessThan
-                      value: 0
                 - type: numberIncrement
                   target:
                     fact: ac.shieldBonus
@@ -94,6 +87,13 @@ ruleGroups:
                   source:
                     number: 1
                   subtract: true
+                - type: setAdd
+                  target: { var: errors }
+                  source: { string: rule.dnd-5e-2024.shield.don-shield-offer.no-hands }
+                  when:
+                    - fact: hands.remaining
+                      operator: lessThan
+                      value: 0
                 - type: advertiseEffect
                   rule:
                     id: effect-shield
