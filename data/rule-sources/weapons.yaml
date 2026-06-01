@@ -459,6 +459,7 @@ profiles:
       intents: { EQUIP: weapons }
       actionCost: []
       primaryControl: null
+      secondaryControl: null
       disadvantageFact: null
       annotationLabels: null
       followups: null
