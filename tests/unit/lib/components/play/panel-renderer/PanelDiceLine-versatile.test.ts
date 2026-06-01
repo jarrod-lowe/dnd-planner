@@ -236,37 +236,38 @@ describe('PanelRenderer - versatile weapon (spear)', () => {
   });
 
   // === GWF gating on versatile range selection ===
+  // Gating is done in PanelRenderer (effectiveGwfActive), which passes
+  // the correct gwfActive value to PanelDiceLine. These tests verify
+  // PanelDiceLine correctly applies/suppresses the GWF floor based on
+  // the gwfActive prop it receives.
 
-  it('does NOT apply GWF floor on 1H range of versatile weapon', async () => {
+  it('does NOT apply GWF floor when gwfActive is false (1H range)', async () => {
     const entry = createVersatileSpearEntry();
     const control = entry.rule.ui!.primaryControl as DiceLineControl;
     const vars = entry.rule.vars as Record<string, VarDefinition>;
     const { container } = render(PanelDiceLine, {
-      props: { control, editable: true, facts: {}, vars, gwfActive: true }
+      props: { control, editable: true, facts: {}, vars, gwfActive: false }
     });
-    // Default range is 1H — damage die is d6
-    // Roll a 1 on the damage die — GWF should NOT floor it to 3
+    // Default range is 1H — PanelRenderer sets gwfActive=false for 1H
     vi.spyOn(Math, 'random').mockReturnValue(0); // floor(0 * 6) + 1 = 1
     const chips = container.querySelectorAll('.panel-renderer__die-chip');
     await fireEvent.click(chips[1]); // Click damage die
     // Without GWF floor: 1 + 3 = 4
-    // With GWF floor (wrong): 3 + 3 = 6
     expect(container.textContent).toContain('4');
     expect(container.textContent).not.toContain('6');
   });
 
-  it('applies GWF floor on 2H range of versatile weapon', async () => {
+  it('applies GWF floor when gwfActive is true (2H range)', async () => {
     const entry = createVersatileSpearEntry();
     const control = entry.rule.ui!.primaryControl as DiceLineControl;
     const vars = entry.rule.vars as Record<string, VarDefinition>;
     const { container } = render(PanelDiceLine, {
       props: { control, editable: true, facts: {}, vars, gwfActive: true }
     });
-    // Cycle to 2H range
+    // Cycle to 2H range — PanelRenderer sets gwfActive=true for 2H
     const rangeEl = container.querySelector('.panel-renderer__range') as HTMLElement;
     await fireEvent.click(rangeEl);
-    // Damage die is d8 in 2H mode
-    // Roll a 1 — GWF SHOULD floor it to 3
+    // Damage die is d8 in 2H mode, roll a 1 — GWF SHOULD floor it to 3
     vi.spyOn(Math, 'random').mockReturnValue(0); // floor(0 * 8) + 1 = 1
     const chips = container.querySelectorAll('.panel-renderer__die-chip');
     await fireEvent.click(chips[1]); // Click damage die
@@ -274,18 +275,17 @@ describe('PanelRenderer - versatile weapon (spear)', () => {
     expect(container.textContent).toContain('6');
   });
 
-  it('does NOT apply GWF floor on thrown range of versatile weapon', async () => {
+  it('does NOT apply GWF floor when gwfActive is false (thrown range)', async () => {
     const entry = createVersatileSpearEntry();
     const control = entry.rule.ui!.primaryControl as DiceLineControl;
     const vars = entry.rule.vars as Record<string, VarDefinition>;
     const { container } = render(PanelDiceLine, {
-      props: { control, editable: true, facts: {}, vars, gwfActive: true }
+      props: { control, editable: true, facts: {}, vars, gwfActive: false }
     });
-    // Cycle to thrown range (20ft)
+    // Cycle to thrown range (20ft) — PanelRenderer sets gwfActive=false for thrown
     const rangeEl = container.querySelector('.panel-renderer__range') as HTMLElement;
     await fireEvent.click(rangeEl); // -> 2H
     await fireEvent.click(rangeEl); // -> 20ft thrown
-    // Roll a 1 on damage die — GWF should NOT floor it
     vi.spyOn(Math, 'random').mockReturnValue(0); // floor(0 * 6) + 1 = 1
     const chips = container.querySelectorAll('.panel-renderer__die-chip');
     await fireEvent.click(chips[1]); // Click damage die

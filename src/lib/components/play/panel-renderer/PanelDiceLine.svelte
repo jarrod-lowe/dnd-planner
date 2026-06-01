@@ -170,12 +170,8 @@
       natural = Math.floor(Math.random() * sides) + 1;
     }
     // Apply Great Weapon Fighting: damage die rolls of 1 or 2 count as 3
-    // For versatile weapons, only apply when 2H range is selected (extraHands > 0)
     let gwfFloor: number | undefined;
-    const hasVersatileRanges = ranges?.some((r) => (r.extraHands ?? 0) > 0);
-    const effectiveGwfActive =
-      gwfActive && (!hasVersatileRanges || (currentRange?.extraHands ?? 0) > 0);
-    if (effectiveGwfActive && die.damageType && sides > 2 && (natural === 1 || natural === 2)) {
+    if (gwfActive && die.damageType && sides > 2 && (natural === 1 || natural === 2)) {
       gwfFloor = natural;
       natural = 3;
     }
