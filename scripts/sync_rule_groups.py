@@ -809,6 +809,16 @@ def merge_generated_into_bases(
         base = base_groups_by_id[base_id]
         gen_rules = gen_rg.get("rules", [])
         base["rules"].extend(gen_rules)
+
+        # Merge requires from generated group into base group
+        gen_requires = gen_rg.get("requires", [])
+        base_requires = base.get("requires", [])
+        for req in gen_requires:
+            if req not in base_requires and req != base_id:
+                base_requires.append(req)
+        if base_requires:
+            base["requires"] = base_requires
+
         print(f"  Merged {len(gen_rules)} rules from {gen_rg['id']} into {base_id}")
 
 
@@ -849,7 +859,10 @@ def output_json(data_dir: Path, output_path: str, verbose: bool = False, data_di
         for rg in rule_groups:
             rg_id = rg["id"]
             key = f"{category_name}/{rg_id}"
-            result[key] = {"rules": rg.get("rules", [])}
+            entry: dict[str, Any] = {"rules": rg.get("rules", [])}
+            if rg.get("requires"):
+                entry["requires"] = rg["requires"]
+            result[key] = entry
 
             if verbose:
                 print(f"  {key}: {len(rg.get('rules', []))} rules")
