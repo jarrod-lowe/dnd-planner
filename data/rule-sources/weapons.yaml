@@ -496,6 +496,25 @@ profiles:
               operator: lessThan
               value: 0
           id: error-check
+        - type: numberSet
+          target:
+            fact: attack.$(definition.id).extraHandsNeeded
+          source:
+            var: extraHands
+          id: extra-hands-fact
+        - type: setAdd
+          target:
+            var: errors
+          source:
+            string: rule.dnd-5e-2024.attacks.versatile.no-free-hand
+          when:
+            - fact: attack.$(definition.id).extraHandsNeeded
+              operator: greaterThan
+              value: 0
+            - fact: hands.remaining
+              operator: lessThan
+              value: 1
+          id: extra-hands-check
     emit:
       mode: offerRule
 
@@ -559,6 +578,25 @@ profiles:
               operator: lessThan
               value: 0
           id: error-check
+        - type: numberSet
+          target:
+            fact: attack.$(definition.id).extraHandsNeeded
+          source:
+            var: extraHands
+          id: extra-hands-fact
+        - type: setAdd
+          target:
+            var: errors
+          source:
+            string: rule.dnd-5e-2024.attacks.versatile.no-free-hand
+          when:
+            - fact: attack.$(definition.id).extraHandsNeeded
+              operator: greaterThan
+              value: 0
+            - fact: hands.remaining
+              operator: lessThan
+              value: 1
+          id: extra-hands-check
     emit:
       mode: offerRule
 
