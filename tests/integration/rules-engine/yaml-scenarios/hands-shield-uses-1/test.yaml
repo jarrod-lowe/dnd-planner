@@ -1,0 +1,24 @@
+name: 'Hands - Shield Uses 1 Hand'
+description: >
+  Donning a shield decrements hands.remaining by 1.
+
+ruleGroups:
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/shield
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          hands.max: 2
+          hands.remaining: 2
+        offers:
+          exists:
+            - don-shield
+  - addOffer:
+      id: don-shield
+      assert:
+        facts:
+          armor.shield.equipped: 1
+          hands.remaining: 1

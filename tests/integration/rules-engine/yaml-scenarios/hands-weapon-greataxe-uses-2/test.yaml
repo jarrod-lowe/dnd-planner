@@ -1,0 +1,29 @@
+name: 'Hands - Greataxe Uses 2 Hands'
+description: >
+  Donning a greataxe decrements hands.remaining by 2.
+
+ruleGroups:
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/greataxe
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          hands.max: 2
+          hands.remaining: 2
+        offers:
+          exists:
+            - don-greataxe
+  - addOffer:
+      id: don-greataxe
+      assert:
+        facts:
+          weapon.greataxe.equipped: 1
+          hands.remaining: 0

@@ -783,7 +783,8 @@
         },
         "don-shield-offer": {
           "already-equipped": "Shield is already equipped",
-          "not-proficient": "Not proficient with shields"
+          "not-proficient": "Not proficient with shields",
+          "no-hands": "Not enough hands to equip a shield"
         },
         "effect-shield": {
           "name": "Shield"
@@ -803,16 +804,20 @@
           "name": "Don Scimitar"
         },
         "dagger": {
-          "already-equipped": "Dagger is already equipped"
+          "already-equipped": "Dagger is already equipped",
+          "no-hands": "Not enough hands to equip a dagger"
         },
         "greataxe": {
-          "already-equipped": "Greataxe is already equipped"
+          "already-equipped": "Greataxe is already equipped",
+          "no-hands": "Not enough hands to equip a greataxe"
         },
         "javelin": {
-          "already-equipped": "Javelin is already equipped"
+          "already-equipped": "Javelin is already equipped",
+          "no-hands": "Not enough hands to equip a javelin"
         },
         "scimitar": {
-          "already-equipped": "Scimitar is already equipped"
+          "already-equipped": "Scimitar is already equipped",
+          "no-hands": "Not enough hands to equip a scimitar"
         },
         "effect-dagger": {
           "name": "Dagger"
@@ -1049,7 +1054,8 @@
         "perception": "Passive Perception",
         "insight": "Passive Insight",
         "investigation": "Passive Investigation"
-      }
+      },
+      "hands": "Hands"
     },
     "choices": {
       "title": "Available Choices",

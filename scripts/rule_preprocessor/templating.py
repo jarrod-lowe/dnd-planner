@@ -4,8 +4,10 @@ Translation templating with $(...) interpolation for the rule source preprocesso
 Supports three interpolation variable types:
 - $(definition.id), $(profile.id), $(expansion.id) — top-level ids
 - $(definition.translations.en.name) — deep paths into definition translations
+- $(definition.hands) — numeric fields from definition
 
 Substitution is mechanical string replacement only. No expressions or conditionals.
+When the entire value is a single template variable, numeric conversion is attempted.
 """
 
 from __future__ import annotations
@@ -18,6 +20,7 @@ from rule_preprocessor.errors import PreprocessorError
 REQUIRED_LOCALES = ["en", "en-x-tlh"]
 
 _VARIABLE_RE = re.compile(r"\$\(([^)]+)\)")
+_PURE_VARIABLE_RE = re.compile(r"^\$\([^)]+\)$")
 
 
 def _build_context(definition: Any = None, profile: Any = None, expansion: Any = None) -> dict[str, str]:
@@ -25,6 +28,8 @@ def _build_context(definition: Any = None, profile: Any = None, expansion: Any =
     context: dict[str, str] = {}
     if definition:
         context["definition.id"] = definition.id
+        if hasattr(definition, "hands") and definition.hands is not None:
+            context["definition.hands"] = str(definition.hands)
         for locale, translation in definition.translations.items():
             for field, value in translation.items():
                 if isinstance(value, str):
@@ -54,9 +59,18 @@ def substitute(value: Any, context: dict[str, str]) -> Any:
     """Recursively substitute $(...) variables in a data structure.
 
     Handles strings, lists, dicts, and passes through other types unchanged.
+    When the entire value is a single template variable, attempts numeric conversion
+    so that YAML number fields remain numbers in the output JSON.
     """
     if isinstance(value, str):
-        return substitute_string(value, context)
+        result = substitute_string(value, context)
+        # Pure template variable → try numeric conversion
+        if _PURE_VARIABLE_RE.match(value):
+            try:
+                return int(result)
+            except ValueError:
+                pass
+        return result
     if isinstance(value, list):
         return [substitute(item, context) for item in value]
     if isinstance(value, dict):

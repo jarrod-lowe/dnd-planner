@@ -75,6 +75,7 @@ class Definition:
     ui: dict[str, Any] | None = None
     vars: dict[str, Any] | None = None
     requires: list[str] | None = None
+    hands: int | None = None
 
 
 @dataclass

@@ -1,0 +1,26 @@
+name: 'Hands - Shield Hand Usage Persists Across Turns'
+description: >
+  After donning a shield and ending the turn, the hand usage persists.
+  hands.remaining stays at 1 on the next turn.
+
+ruleGroups:
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/shield
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          hands.remaining: 2
+  - addOffer:
+      id: don-shield
+      assert:
+        facts:
+          armor.shield.equipped: 1
+          hands.remaining: 1
+  - endTurn:
+      assert:
+        facts:
+          armor.shield.equipped: 1
+          hands.remaining: 1
