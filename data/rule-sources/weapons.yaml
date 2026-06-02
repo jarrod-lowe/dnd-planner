@@ -41,12 +41,17 @@ definitions:
       damageDie:
         default:
           number: 4
+      extraHands:
+        default:
+          number: 0
       damageBonus:
         capture: true
         default:
           fact: attack.dagger.damageBonus
     payload:
       phase: normal
+      after:
+        - group: __effects__
       group: [__planned__]
       activities: []
     translations:
@@ -117,12 +122,17 @@ definitions:
       damageDie:
         default:
           number: 12
+      extraHands:
+        default:
+          number: 0
       damageBonus:
         capture: true
         default:
           fact: attack.greataxe.damageBonus
     payload:
       phase: normal
+      after:
+        - group: __effects__
       group: [__planned__]
       activities: []
     translations:
@@ -191,12 +201,17 @@ definitions:
       damageDie:
         default:
           number: 6
+      extraHands:
+        default:
+          number: 0
       damageBonus:
         capture: true
         default:
           fact: attack.javelin.damageBonus
     payload:
       phase: normal
+      after:
+        - group: __effects__
       group: [__planned__]
       activities: []
     translations:
@@ -245,12 +260,17 @@ definitions:
       damageDie:
         default:
           number: 6
+      extraHands:
+        default:
+          number: 0
       damageBonus:
         capture: true
         default:
           fact: attack.scimitar.damageBonus
     payload:
       phase: normal
+      after:
+        - group: __effects__
       group: [__planned__]
       activities: []
     translations:
@@ -262,6 +282,75 @@ definitions:
         name: Scimitar
         description: Scimitar
         keywords: [scimitar, nuH, jey']
+
+  - id: spear
+    kind: option
+    tags: [attack, weapon, melee]
+    requires: [spear, hands]
+    hands: 1
+    traits:
+      weapon.versatile: true
+      weapon.throwable: true
+    ui:
+      name: rule.dnd-5e-2024.attacks.spear.name
+      disadvantageFact: attack.str.disadvantage
+      annotationLabels: [attack.any, attack.melee, attack.weapon, dice.any, property.versatile]
+      primaryControl:
+        type: dice-line
+        ranges: { var: ranges }
+        advantage: { fact: attack.str.disadvantage }
+        dice:
+          - expression: d20
+            bonus: { var: hitBonus }
+          - expression: { var: damageDie }
+            bonus: { var: damageBonus }
+            damageType: { string: piercing }
+    vars:
+      ranges:
+        default:
+          array:
+            - distance: 5
+              type: melee
+              label: 1H
+            - distance: 5
+              type: melee
+              label: 2H
+              damageDie: 8
+              extraHands: 1
+            - distance: 20
+              type: thrown
+            - distance: 60
+              type: thrown
+              disadvantage: true
+      hitBonus:
+        capture: true
+        default:
+          fact: attack.spear.hitBonus
+      damageDie:
+        default:
+          number: 6
+      extraHands:
+        default:
+          number: 0
+      damageBonus:
+        capture: true
+        default:
+          fact: attack.spear.damageBonus
+    payload:
+      phase: normal
+      after:
+        - group: __effects__
+      group: [__planned__]
+      activities: []
+    translations:
+      en:
+        name: Spear
+        description: Spear
+        keywords: [spear, weapon, attack]
+      en-x-tlh:
+        name: yan
+        description: yan
+        keywords: [yan, nuH, jey']
 
 profiles:
   - id: use-action
@@ -320,6 +409,25 @@ profiles:
               operator: lessThan
               value: 0
           id: error-check
+        - type: numberSet
+          target:
+            fact: attack.$(definition.id).extraHandsNeeded
+          source:
+            var: extraHands
+          id: extra-hands-fact
+        - type: setAdd
+          target:
+            var: errors
+          source:
+            string: rule.dnd-5e-2024.attacks.versatile.no-free-hand
+          when:
+            - fact: attack.$(definition.id).extraHandsNeeded
+              operator: greaterThan
+              value: 0
+            - fact: hands.remaining
+              operator: lessThan
+              value: 1
+          id: extra-hands-check
     emit:
       mode: offerRule
 
@@ -388,6 +496,25 @@ profiles:
               operator: lessThan
               value: 0
           id: error-check
+        - type: numberSet
+          target:
+            fact: attack.$(definition.id).extraHandsNeeded
+          source:
+            var: extraHands
+          id: extra-hands-fact
+        - type: setAdd
+          target:
+            var: errors
+          source:
+            string: rule.dnd-5e-2024.attacks.versatile.no-free-hand
+          when:
+            - fact: attack.$(definition.id).extraHandsNeeded
+              operator: greaterThan
+              value: 0
+            - fact: hands.remaining
+              operator: lessThan
+              value: 1
+          id: extra-hands-check
     emit:
       mode: offerRule
 
@@ -451,6 +578,25 @@ profiles:
               operator: lessThan
               value: 0
           id: error-check
+        - type: numberSet
+          target:
+            fact: attack.$(definition.id).extraHandsNeeded
+          source:
+            var: extraHands
+          id: extra-hands-fact
+        - type: setAdd
+          target:
+            var: errors
+          source:
+            string: rule.dnd-5e-2024.attacks.versatile.no-free-hand
+          when:
+            - fact: attack.$(definition.id).extraHandsNeeded
+              operator: greaterThan
+              value: 0
+            - fact: hands.remaining
+              operator: lessThan
+              value: 1
+          id: extra-hands-check
     emit:
       mode: offerRule
 

@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: spear
+    requires:
+      - attacks
+      - hands
+    translations:
+      en:
+        name: Spear
+        description: Attack rules for the spear, a simple melee weapon dealing 1d6 piercing (versatile 1d8)
+        keywords: [attack, spear, weapon, melee, throwable, versatile, damage]
+      en-x-tlh:
+        name: yan
+        description: yan 'ej jey' naQ
+        keywords: [jey', yan, nuH]
+    rules:
+      # Compute spear hit bonus = STR modifier + proficiency bonus
+      - id: compute-spear-hit-bonus
+        phase: normal
+        activities:
+          - type: numberSum
+            target:
+              fact: attack.spear.hitBonus
+            sources:
+              - fact: str.modifier
+              - fact: proficiency.bonus
+
+      # Compute spear damage bonus = STR modifier
+      - id: compute-spear-damage-bonus
+        phase: normal
+        activities:
+          - type: numberCopy
+            source:
+              fact: str.modifier
+            target:
+              fact: attack.spear.damageBonus

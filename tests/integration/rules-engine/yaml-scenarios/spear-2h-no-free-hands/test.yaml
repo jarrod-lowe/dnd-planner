@@ -1,0 +1,60 @@
+name: 'Spear 2H No Free Hands Error'
+description: >
+  When a spear attack is planned with extraHands selection set to 1 (2H mode)
+  and hands.remaining is 0 (dagger also equipped), the plan item should have
+  an error in varsRuntime.errors indicating insufficient hands for 2H attack.
+
+ruleGroups:
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spear
+  - dnd-5e-2024/dagger
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          hands.remaining: 2
+        offers:
+          exists:
+            - don-spear
+            - don-dagger
+
+  - addOffer:
+      id: don-dagger
+      assert:
+        facts:
+          hands.remaining: 1
+          weapon.dagger.equipped: 1
+
+  - addOffer:
+      id: don-spear
+      assert:
+        facts:
+          hands.remaining: 0
+          weapon.spear.equipped: 1
+        offers:
+          exists:
+            - spear-use-action
+
+  - addOffer:
+      id: spear-use-action
+      assert:
+        planErrors:
+          - id: spear-use-action
+            errors: []
+
+  - updateSelections:
+      id: spear-use-action
+      selections:
+        extraHands: 1
+      assert:
+        planErrors:
+          - id: spear-use-action
+            errors:
+              - rule.dnd-5e-2024.attacks.versatile.no-free-hand

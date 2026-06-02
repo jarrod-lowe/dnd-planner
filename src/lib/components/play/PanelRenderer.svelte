@@ -193,10 +193,21 @@
 
   const matchingAnnotations = $derived(getMatchingAnnotations(annotationLabels, activeAnnotations));
 
-  const gwfActive = $derived(
-    matchingAnnotations.some(
-      (ann) => ann.rider?.label === 'rule.dnd-5e-2024.fighting-style-great-weapon.rider'
-    )
+  const gwfRiderLabel = 'rule.dnd-5e-2024.fighting-style-great-weapon.rider';
+
+  const gwfActive = $derived(matchingAnnotations.some((ann) => ann.rider?.label === gwfRiderLabel));
+
+  // For versatile weapons, GWF only applies when 2H range is selected (extraHands > 0).
+  // Gate both the gwfActive prop and the displayed annotations.
+  const isVersatileWeapon = $derived(annotationLabels.includes('property.versatile'));
+  const selectionExtraHands = $derived((selections?.extraHands as number) ?? 0);
+  const effectiveGwfActive = $derived(gwfActive && (!isVersatileWeapon || selectionExtraHands > 0));
+
+  // Filter out GWF annotation when versatile weapon is not in 2H mode
+  const displayAnnotations = $derived(
+    effectiveGwfActive
+      ? matchingAnnotations
+      : matchingAnnotations.filter((ann) => ann.rider?.label !== gwfRiderLabel)
   );
 
   const visibleFollowups = $derived(
@@ -227,7 +238,7 @@
     const modifiers: string[] = [];
     if (result.mode === 'advantage') modifiers.push($t('play.toast.modifier.advantage'));
     if (result.mode === 'disadvantage') modifiers.push($t('play.toast.modifier.disadvantage'));
-    for (const ann of matchingAnnotations) {
+    for (const ann of displayAnnotations) {
       if (ann.rider?.type === 'dice' || ann.rider?.type === 'modifier') {
         modifiers.push($t(ann.rider.label));
       }
@@ -289,7 +300,7 @@
         {selections}
         {onSelectionChange}
         onRoll={handleDiceRoll}
-        {gwfActive}
+        gwfActive={effectiveGwfActive}
       />
     </div>
   {/if}
@@ -352,7 +363,7 @@
         {selections}
         {onSelectionChange}
         onRoll={handleDiceRoll}
-        {gwfActive}
+        gwfActive={effectiveGwfActive}
       />
     </div>
   {/if}
@@ -411,9 +422,9 @@
       {/each}
     </div>
   {/each}
-  {#if matchingAnnotations.length > 0}
+  {#if displayAnnotations.length > 0}
     <div class="panel-renderer__annotations" role="note">
-      {#each matchingAnnotations as annotation (annotation.key)}
+      {#each displayAnnotations as annotation (annotation.key)}
         <span class="panel-renderer__annotation">{$t(annotation.key)}</span>
       {/each}
     </div>

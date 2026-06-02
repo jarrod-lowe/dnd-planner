@@ -120,6 +120,12 @@ export interface RangeEntry {
   distance: number;
   type: string;
   disadvantage?: boolean;
+  /** Display label appended to range (e.g., "1H", "2H" for versatile weapons) */
+  label?: string;
+  /** Override the damage die for this range (e.g., 8 for d8 when using two hands) */
+  damageDie?: number;
+  /** Additional free hands required beyond what the weapon already consumes */
+  extraHands?: number;
 }
 
 export interface Source {
