@@ -1,0 +1,12 @@
+name: 'Paladin: Prepared spells at level 3'
+description: 'A level 3 paladin can prepare 4 spells (2 base + 1 from level 2 + 1 from level 3)'
+ruleGroups:
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-level3
+steps:
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.prepared.max: 4

@@ -1,0 +1,14 @@
+name: 'Paladin: Proficiency bonus at level 5'
+description: 'A level 5 paladin has a proficiency bonus of 3 (2 base + 1 from level 5)'
+ruleGroups:
+  - dnd-5e-2024/proficiency
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-level4
+  - class-paladin/class-paladin-level5
+steps:
+  - evaluate:
+      assert:
+        facts:
+          proficiency.bonus: 3

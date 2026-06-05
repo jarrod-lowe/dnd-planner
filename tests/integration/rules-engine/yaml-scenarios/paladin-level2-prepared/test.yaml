@@ -1,0 +1,11 @@
+name: 'Paladin: Prepared spells at level 2'
+description: 'A level 2 paladin can prepare 3 spells (2 base + 1 from level 2)'
+ruleGroups:
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+steps:
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.prepared.max: 3
