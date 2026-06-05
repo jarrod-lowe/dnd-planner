@@ -352,6 +352,77 @@ definitions:
         description: yan
         keywords: [yan, nuH, jey']
 
+  - id: spear-plus1
+    kind: option
+    tags: [attack, weapon, melee]
+    requires: [spear-plus1, hands]
+    hands: 1
+    traits:
+      weapon.versatile: true
+      weapon.throwable: true
+      weapon.magical: true
+    ui:
+      name: rule.dnd-5e-2024.attacks.spear-plus1.name
+      disadvantageFact: attack.str.disadvantage
+      annotationLabels:
+        [attack.any, attack.melee, attack.weapon, dice.any, property.versatile, property.magical]
+      primaryControl:
+        type: dice-line
+        ranges: { var: ranges }
+        advantage: { fact: attack.str.disadvantage }
+        dice:
+          - expression: d20
+            bonus: { var: hitBonus }
+          - expression: { var: damageDie }
+            bonus: { var: damageBonus }
+            damageType: { string: piercing }
+    vars:
+      ranges:
+        default:
+          array:
+            - distance: 5
+              type: melee
+              label: 1H
+            - distance: 5
+              type: melee
+              label: 2H
+              damageDie: 8
+              extraHands: 1
+            - distance: 20
+              type: thrown
+            - distance: 60
+              type: thrown
+              disadvantage: true
+      hitBonus:
+        capture: true
+        default:
+          fact: attack.spear-plus1.hitBonus
+      damageDie:
+        default:
+          number: 6
+      extraHands:
+        default:
+          number: 0
+      damageBonus:
+        capture: true
+        default:
+          fact: attack.spear-plus1.damageBonus
+    payload:
+      phase: normal
+      after:
+        - group: __effects__
+      group: [__planned__]
+      activities: []
+    translations:
+      en:
+        name: Spear +1
+        description: Spear +1
+        keywords: [spear, weapon, attack, magical]
+      en-x-tlh:
+        name: yan cha'
+        description: yan cha'
+        keywords: [yan, cha', nuH, jey']
+
 profiles:
   - id: use-action
     match:

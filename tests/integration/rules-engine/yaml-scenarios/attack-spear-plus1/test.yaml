@@ -1,0 +1,97 @@
+name: 'Spear +1 Attack'
+description: >
+  Spear +1 offer appears in action-attack section, consumes an action
+  when added to plan. Attack facts (hitBonus, damageBonus) include the +1
+  enhancement bonus. hitBonus = STR modifier + proficiency + 1, damageBonus =
+  STR modifier + 1. The weapon is magical (annotation badge displayed).
+  damageDie is 6 (1d6). Ranges include 1H/2H melee and thrown options.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spear-plus1
+
+initialEffects:
+  - id: effect-spear-plus1
+    phase: normal
+    group: [equipment-state]
+    activities:
+      - type: numberSet
+        target:
+          fact: weapon.spear-plus1.equipped
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          actions.max: 1
+          actions.remaining: 1
+        offers:
+          exists:
+            - set-strength
+            - spear-plus1-use-action
+          notExists: []
+        offerVars:
+          - id: spear-plus1-use-action
+            vars:
+              ranges:
+                default:
+                  array:
+                    - distance: 5
+                      type: melee
+                      label: 1H
+                    - distance: 5
+                      type: melee
+                      label: 2H
+                      damageDie: 8
+                      extraHands: 1
+                    - distance: 20
+                      type: thrown
+                    - distance: 60
+                      type: thrown
+                      disadvantage: true
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.spear-plus1.magical
+
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 16
+      assert:
+        facts:
+          str.value: 16
+          str.modifier: 3
+          attack.spear-plus1.hitBonus: 4
+          attack.spear-plus1.damageBonus: 4
+
+  - addOffer:
+      id: spear-plus1-use-action
+      assert:
+        facts:
+          actions.remaining: 0
+        offers:
+          exists:
+            - free-action
+          illegal:
+            - help-action
+            - spear-plus1-use-action
+
+  - endTurn:
+      assert:
+        facts:
+          actions.max: 1
+          actions.remaining: 1
+        offers:
+          exists:
+            - free-action
+            - help-action
+            - spear-plus1-use-action
