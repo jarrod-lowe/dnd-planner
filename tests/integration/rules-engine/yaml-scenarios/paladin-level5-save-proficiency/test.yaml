@@ -1,0 +1,19 @@
+name: 'Paladin: Save proficiency at level 5'
+description: 'A level 5 paladin has proficiency bonus 3 applied to Wis and Cha saves'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-level4
+  - class-paladin/class-paladin-level5
+steps:
+  - evaluate:
+      assert:
+        facts:
+          proficiency.bonus: 3
+          wis.save.proficient: 1
+          cha.save.proficient: 1
+          wis.save: 3
+          cha.save: 3
