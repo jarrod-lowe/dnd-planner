@@ -50,6 +50,16 @@ ruleGroups:
             source:
               var: conAtLevel
 
+      # Prepared Spell Capacity - Level 2 Paladin adds 1 more prepared spell
+      - id: paladin-level2-prepared-max
+        phase: early
+        activities:
+          - type: numberIncrement
+            target:
+              fact: spellcasting.prepared.max
+            source:
+              number: 1
+
       # Lay on Hands Pool - Level 2 Paladin adds 5 more points
       - id: paladin-level2-lay-on-hands-pool
         phase: early
