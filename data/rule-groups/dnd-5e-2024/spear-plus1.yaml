@@ -1,0 +1,47 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: spear-plus1
+    requires:
+      - attacks
+      - hands
+    translations:
+      en:
+        name: Spear +1
+        description: Attack rules for a +1 spear, a magical simple melee weapon dealing 1d6+1 piercing (versatile 1d8+1)
+        keywords: [attack, spear, weapon, melee, throwable, versatile, damage, magical]
+      en-x-tlh:
+        name: yan cha'
+        description: yan 'ej jey' naQ cha'
+        keywords: [jey', yan, nuH]
+    rules:
+      # Compute spear+1 hit bonus = STR modifier + proficiency bonus + 1 (enhancement)
+      - id: compute-spear-plus1-hit-bonus
+        phase: normal
+        activities:
+          - type: numberSum
+            target:
+              fact: attack.spear-plus1.hitBonus
+            sources:
+              - fact: str.modifier
+              - fact: proficiency.bonus
+              - number: 1
+
+      # Compute spear+1 damage bonus = STR modifier + 1 (enhancement)
+      - id: compute-spear-plus1-damage-bonus
+        phase: normal
+        activities:
+          - type: numberSum
+            target:
+              fact: attack.spear-plus1.damageBonus
+            sources:
+              - fact: str.modifier
+              - number: 1
+
+      # Mark the weapon as magical
+      - id: annotate-spear-plus1-magical
+        phase: normal
+        activities:
+          - type: annotate
+            key: rule.dnd-5e-2024.spear-plus1.magical
+            targets:
+              - property.magical

@@ -689,6 +689,9 @@
         "spear": {
           "name": "yan"
         },
+        "spear-plus1": {
+          "name": "yan cha'"
+        },
         "activation": {
           "no_action": "DIvI' tu'lu'be'",
           "no_reaction": "DIvI' cha' tu'lu'be'",
@@ -720,6 +723,9 @@
       "fighting-style-great-weapon": {
         "annotation": "nuH jen Suv: wa' cha' wej DIch",
         "rider": "nuH jen Suv"
+      },
+      "spear-plus1": {
+        "magical": "mIgh"
       },
       "feat-alert": {
         "annotation-swap": "valwI': DIvI' SuvwI' DIch DIch",
@@ -812,6 +818,9 @@
         "don-spear": {
           "name": "Don yan"
         },
+        "don-spear-plus1": {
+          "name": "Don yan cha'"
+        },
         "dagger": {
           "already-equipped": "Dagger is already equipped",
           "no-hands": "not enough ghopDu'"
@@ -832,6 +841,10 @@
           "already-equipped": "yan is already equipped",
           "no-hands": "not enough ghopDu'"
         },
+        "spear-plus1": {
+          "already-equipped": "yan cha' is already equipped",
+          "no-hands": "not enough ghopDu'"
+        },
         "effect-dagger": {
           "name": "Dagger"
         },
@@ -846,6 +859,9 @@
         },
         "effect-spear": {
           "name": "yan"
+        },
+        "effect-spear-plus1": {
+          "name": "yan cha'"
         }
       }
     }

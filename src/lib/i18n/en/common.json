@@ -689,6 +689,9 @@
         "spear": {
           "name": "Spear"
         },
+        "spear-plus1": {
+          "name": "Spear +1"
+        },
         "activation": {
           "no_action": "No action available",
           "no_reaction": "No reaction available",
@@ -720,6 +723,9 @@
       "fighting-style-great-weapon": {
         "annotation": "Great Weapon Fighting: 1s and 2s count as 3",
         "rider": "Great Weapon Fighting"
+      },
+      "spear-plus1": {
+        "magical": "Magical"
       },
       "feat-alert": {
         "annotation-swap": "Alert: May swap initiative with an ally",
@@ -812,6 +818,9 @@
         "don-spear": {
           "name": "Don Spear"
         },
+        "don-spear-plus1": {
+          "name": "Don Spear +1"
+        },
         "dagger": {
           "already-equipped": "Dagger is already equipped",
           "no-hands": "Not enough hands to equip a dagger"
@@ -832,6 +841,10 @@
           "already-equipped": "Spear is already equipped",
           "no-hands": "Not enough hands to equip a spear"
         },
+        "spear-plus1": {
+          "already-equipped": "Spear +1 is already equipped",
+          "no-hands": "Not enough hands to equip a Spear +1"
+        },
         "effect-dagger": {
           "name": "Dagger"
         },
@@ -846,6 +859,9 @@
         },
         "effect-spear": {
           "name": "Spear"
+        },
+        "effect-spear-plus1": {
+          "name": "Spear +1"
         }
       }
     }
