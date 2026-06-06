@@ -388,13 +388,11 @@ ruleGroups:
                 # Each level's steed effect has hardcoded stats.
                 # Only one is created (the when condition is mutually exclusive).
 
-                # L2 Steed Effect
+                # L2 Steed Resources (early phase: stats + resources, no self-advertise)
                 - type: advertiseEffect
-                  rule:
-                    id: effect-steed
-                    phase: normal
-                    after:
-                      - group: __planned__
+                  rule: &steed-resources-l2
+                    id: effect-steed-resources
+                    phase: early
                     ui:
                       section: mount
                       name: rule.spell-find-steed.effect-steed.name
@@ -498,6 +496,22 @@ ruleGroups:
                           fact: companion.steed.bonusActions.remaining
                         source:
                           number: 1
+                      # No self-advertise — re-created each turn by effect-steed
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 2
+
+                # L2 Steed Offers (normal phase: offers + self-advertise + re-advertise resources)
+                - type: advertiseEffect
+                  rule:
+                    id: effect-steed
+                    phase: normal
+                    after:
+                      - group: __planned__
+                    ui:
+                      name: rule.spell-find-steed.effect-steed.name
+                    activities:
                       - type: offerRule
                         legalWhen:
                           - condition:
@@ -506,6 +520,9 @@ ruleGroups:
                               value: 0
                         rule:
                           id: offer-steed-dummy-action
+                          group:
+                            - __planned__
+                            - action
                           ui:
                             section: steed-action
                             name: rule.spell-find-steed.offer-steed-dummy-action.name
@@ -527,6 +544,9 @@ ruleGroups:
                               value: 0
                         rule:
                           id: offer-steed-dummy-bonus
+                          group:
+                            - __planned__
+                            - bonus-action
                           ui:
                             section: steed-bonus-action
                             name: rule.spell-find-steed.offer-steed-dummy-bonus.name
@@ -548,6 +568,9 @@ ruleGroups:
                               value: 0
                         rule:
                           id: offer-dismiss-steed
+                          group:
+                            - __planned__
+                            - action
                           ui:
                             section: steed-action
                             name: rule.spell-find-steed.offer-dismiss-steed.name
@@ -572,18 +595,22 @@ ruleGroups:
                           - fact: companion.steed.dismissed
                             operator: equals
                             value: 0
+                      - type: advertiseEffect
+                        rule: *steed-resources-l2
+                        when:
+                          - fact: companion.steed.dismissed
+                            operator: equals
+                            value: 0
                   when:
                     - fact: find-steed.selectedLevel
                       operator: equals
                       value: 2
 
-                # L3 Steed Effect
+                # L3 Steed Resources (early phase: stats + resources, no self-advertise)
                 - type: advertiseEffect
-                  rule:
-                    id: effect-steed
-                    phase: normal
-                    after:
-                      - group: __planned__
+                  rule: &steed-resources-l3
+                    id: effect-steed-resources
+                    phase: early
                     ui:
                       section: mount
                       name: rule.spell-find-steed.effect-steed.name
@@ -687,6 +714,21 @@ ruleGroups:
                           fact: companion.steed.bonusActions.remaining
                         source:
                           number: 1
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 3
+
+                # L3 Steed Offers (normal phase: offers + self-advertise + re-advertise resources)
+                - type: advertiseEffect
+                  rule:
+                    id: effect-steed
+                    phase: normal
+                    after:
+                      - group: __planned__
+                    ui:
+                      name: rule.spell-find-steed.effect-steed.name
+                    activities:
                       - type: offerRule
                         legalWhen:
                           - condition:
@@ -695,6 +737,9 @@ ruleGroups:
                               value: 0
                         rule:
                           id: offer-steed-dummy-action
+                          group:
+                            - __planned__
+                            - action
                           ui:
                             section: steed-action
                             name: rule.spell-find-steed.offer-steed-dummy-action.name
@@ -716,6 +761,9 @@ ruleGroups:
                               value: 0
                         rule:
                           id: offer-steed-dummy-bonus
+                          group:
+                            - __planned__
+                            - bonus-action
                           ui:
                             section: steed-bonus-action
                             name: rule.spell-find-steed.offer-steed-dummy-bonus.name
@@ -737,6 +785,9 @@ ruleGroups:
                               value: 0
                         rule:
                           id: offer-dismiss-steed
+                          group:
+                            - __planned__
+                            - action
                           ui:
                             section: steed-action
                             name: rule.spell-find-steed.offer-dismiss-steed.name
@@ -761,18 +812,22 @@ ruleGroups:
                           - fact: companion.steed.dismissed
                             operator: equals
                             value: 0
+                      - type: advertiseEffect
+                        rule: *steed-resources-l3
+                        when:
+                          - fact: companion.steed.dismissed
+                            operator: equals
+                            value: 0
                   when:
                     - fact: find-steed.selectedLevel
                       operator: equals
                       value: 3
 
-                # L4 Steed Effect (gains fly)
+                # L4 Steed Resources (early phase: stats + resources, no self-advertise)
                 - type: advertiseEffect
-                  rule:
-                    id: effect-steed
-                    phase: normal
-                    after:
-                      - group: __planned__
+                  rule: &steed-resources-l4
+                    id: effect-steed-resources
+                    phase: early
                     ui:
                       section: mount
                       name: rule.spell-find-steed.effect-steed.name
@@ -886,6 +941,22 @@ ruleGroups:
                           fact: companion.steed.bonusActions.remaining
                         source:
                           number: 1
+                      # No self-advertise — re-created each turn by effect-steed
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 4
+
+                # L4 Steed Offers (normal phase: offers + self-advertise + re-advertise resources)
+                - type: advertiseEffect
+                  rule:
+                    id: effect-steed
+                    phase: normal
+                    after:
+                      - group: __planned__
+                    ui:
+                      name: rule.spell-find-steed.effect-steed.name
+                    activities:
                       - type: offerRule
                         legalWhen:
                           - condition:
@@ -894,6 +965,9 @@ ruleGroups:
                               value: 0
                         rule:
                           id: offer-steed-dummy-action
+                          group:
+                            - __planned__
+                            - action
                           ui:
                             section: steed-action
                             name: rule.spell-find-steed.offer-steed-dummy-action.name
@@ -915,6 +989,9 @@ ruleGroups:
                               value: 0
                         rule:
                           id: offer-steed-dummy-bonus
+                          group:
+                            - __planned__
+                            - bonus-action
                           ui:
                             section: steed-bonus-action
                             name: rule.spell-find-steed.offer-steed-dummy-bonus.name
@@ -936,6 +1013,9 @@ ruleGroups:
                               value: 0
                         rule:
                           id: offer-dismiss-steed
+                          group:
+                            - __planned__
+                            - action
                           ui:
                             section: steed-action
                             name: rule.spell-find-steed.offer-dismiss-steed.name
@@ -960,18 +1040,22 @@ ruleGroups:
                           - fact: companion.steed.dismissed
                             operator: equals
                             value: 0
+                      - type: advertiseEffect
+                        rule: *steed-resources-l4
+                        when:
+                          - fact: companion.steed.dismissed
+                            operator: equals
+                            value: 0
                   when:
                     - fact: find-steed.selectedLevel
                       operator: equals
                       value: 4
 
-                # L5 Steed Effect
+                # L5 Steed Resources (early phase: stats + resources, no self-advertise)
                 - type: advertiseEffect
-                  rule:
-                    id: effect-steed
-                    phase: normal
-                    after:
-                      - group: __planned__
+                  rule: &steed-resources-l5
+                    id: effect-steed-resources
+                    phase: early
                     ui:
                       section: mount
                       name: rule.spell-find-steed.effect-steed.name
@@ -1085,6 +1169,22 @@ ruleGroups:
                           fact: companion.steed.bonusActions.remaining
                         source:
                           number: 1
+                      # No self-advertise — re-created each turn by effect-steed
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 5
+
+                # L5 Steed Offers (normal phase: offers + self-advertise + re-advertise resources)
+                - type: advertiseEffect
+                  rule:
+                    id: effect-steed
+                    phase: normal
+                    after:
+                      - group: __planned__
+                    ui:
+                      name: rule.spell-find-steed.effect-steed.name
+                    activities:
                       - type: offerRule
                         legalWhen:
                           - condition:
@@ -1093,6 +1193,9 @@ ruleGroups:
                               value: 0
                         rule:
                           id: offer-steed-dummy-action
+                          group:
+                            - __planned__
+                            - action
                           ui:
                             section: steed-action
                             name: rule.spell-find-steed.offer-steed-dummy-action.name
@@ -1114,6 +1217,9 @@ ruleGroups:
                               value: 0
                         rule:
                           id: offer-steed-dummy-bonus
+                          group:
+                            - __planned__
+                            - bonus-action
                           ui:
                             section: steed-bonus-action
                             name: rule.spell-find-steed.offer-steed-dummy-bonus.name
@@ -1135,6 +1241,9 @@ ruleGroups:
                               value: 0
                         rule:
                           id: offer-dismiss-steed
+                          group:
+                            - __planned__
+                            - action
                           ui:
                             section: steed-action
                             name: rule.spell-find-steed.offer-dismiss-steed.name
@@ -1155,6 +1264,12 @@ ruleGroups:
                                 number: 1
                       - type: advertiseEffect
                         self: true
+                        when:
+                          - fact: companion.steed.dismissed
+                            operator: equals
+                            value: 0
+                      - type: advertiseEffect
+                        rule: *steed-resources-l5
                         when:
                           - fact: companion.steed.dismissed
                             operator: equals

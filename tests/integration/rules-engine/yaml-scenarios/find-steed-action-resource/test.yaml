@@ -1,0 +1,66 @@
+name: 'Find Steed Action Resource'
+description: 'Steed action resource is consumed correctly when planned'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-find-steed
+initialEffects:
+  - id: test-grant-level2-slot
+    phase: early
+    group:
+      - spellcasting-slots-set
+    activities:
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.total
+        source:
+          number: 1
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.remaining
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+steps:
+  # Cast Find Steed
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - cast-find-steed
+  - addOffer:
+      id: cast-find-steed
+  # End turn to commit the steed effect
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-steed
+        facts:
+          companion.steed.summoned: 1
+          companion.steed.actions.remaining: 1
+  # Next turn: steed action should be available
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - offer-steed-dummy-action
+        facts:
+          companion.steed.actions.remaining: 1
+  # Add steed action to plan
+  - addOffer:
+      id: offer-steed-dummy-action
+      assert:
+        facts:
+          companion.steed.actions.remaining: 0
+  # Re-evaluate: resource should stay at 0 (not reset to 1)
+  - evaluate:
+      assert:
+        facts:
+          companion.steed.actions.remaining: 0
