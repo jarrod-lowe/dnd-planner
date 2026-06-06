@@ -12,7 +12,13 @@
   import { peekDetail, getDetail } from '$lib/details/index';
   import type { ItemDetail } from '$lib/details/types';
   import type { PlannedItem } from '$lib/play/types';
-  import type { AvailableRuleEntry, Annotation, Facts, ActionCostTag, Rule } from '$lib/rules-engine';
+  import type {
+    AvailableRuleEntry,
+    Annotation,
+    Facts,
+    ActionCostTag,
+    Rule
+  } from '$lib/rules-engine';
 
   interface Props {
     item: PlannedItem;

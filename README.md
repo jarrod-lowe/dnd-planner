@@ -364,7 +364,7 @@ The architecture supports:
 - De-duplicate icon sources in code
 - Handle multiple steeds properly
 - Find Steed steed's actual actions & abilities
-  - remove the word "steed" from steed topbar and resource entries
+  - remove the word "steed" from steed top-bar and resource entries
   - fix 3x otherworldly steed entries in active; and the need to remove 2 to remove it
   - doesn't work if there aren't L2 spell slots?
   - movement
