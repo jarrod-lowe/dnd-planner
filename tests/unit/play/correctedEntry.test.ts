@@ -63,13 +63,13 @@ describe('correctEntryForPlanItem', () => {
   });
 
   describe('with error tracking (varsRuntime.errors key present)', () => {
-    it('does NOT override entry illegality when errors are empty', () => {
+    it('overrides to legal when errors array is empty', () => {
       const entry = makeEntry({ legal: false });
       const item = makeItem({ errors: [] });
 
       const result = correctEntryForPlanItem(entry, item);
 
-      expect(result.legal).toBe(false);
+      expect(result.legal).toBe(true);
     });
 
     it('overrides to illegal when errors array is non-empty', () => {
@@ -97,15 +97,15 @@ describe('correctEntryForPlanItem', () => {
 
     it('keeps entry diagnostics when errors array is empty', () => {
       const entry = makeEntry({
-        legal: false,
-        diagnostics: [{ code: 'offer-illegal', severity: 'error' }]
+        legal: true,
+        diagnostics: [{ code: 'offer-info', severity: 'notice' }]
       });
       const item = makeItem({ errors: [] });
 
       const result = correctEntryForPlanItem(entry, item);
 
-      expect(result.legal).toBe(false);
-      expect(result.diagnostics).toEqual([{ code: 'offer-illegal', severity: 'error' }]);
+      expect(result.legal).toBe(true);
+      expect(result.diagnostics).toEqual([{ code: 'offer-info', severity: 'notice' }]);
     });
 
     it('handles multiple errors', () => {

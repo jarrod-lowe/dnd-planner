@@ -885,7 +885,22 @@ ruleGroups:
                           fact: companion.steed.bonusActions.remaining
                         source:
                           number: 1
-                      # Steed action offers (early phase: checked before planned items consume resources)
+                      # No self-advertise — re-created each turn by effect-steed
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 2
+
+                # L2 Steed Offers (normal phase: offers + self-advertise + re-advertise resources)
+                - type: advertiseEffect
+                  rule:
+                    id: effect-steed
+                    phase: normal
+                    after:
+                      - group: __planned__
+                    ui:
+                      name: rule.spell-find-steed.effect-steed.name
+                    activities:
                       - type: offerRule
                         legalWhen:
                           - condition:
@@ -900,8 +915,6 @@ ruleGroups:
                           group:
                             - __planned__
                             - action
-                          after:
-                            - group: spellcasting
                           ui:
                             section: action
                             subject: steed
@@ -940,8 +953,6 @@ ruleGroups:
                           group:
                             - __planned__
                             - bonus-action
-                          after:
-                            - group: spellcasting
                           ui:
                             section: bonus-action
                             subject: steed
@@ -966,22 +977,6 @@ ruleGroups:
                                 - fact: companion.steed.bonusActions.remaining
                                   operator: lessThan
                                   value: 0
-                      # No self-advertise — re-created each turn by effect-steed
-                  when:
-                    - fact: find-steed.selectedLevel
-                      operator: equals
-                      value: 2
-
-                # L2 Steed Offers (normal phase: offers + self-advertise + re-advertise resources)
-                - type: advertiseEffect
-                  rule:
-                    id: effect-steed
-                    phase: normal
-                    after:
-                      - group: __planned__
-                    ui:
-                      name: rule.spell-find-steed.effect-steed.name
-                    activities:
                       - type: offerRule
                         legalWhen:
                           - condition:
@@ -1142,7 +1137,21 @@ ruleGroups:
                           fact: companion.steed.bonusActions.remaining
                         source:
                           number: 1
-                      # Steed action offers (early phase: checked before planned items consume resources)
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 3
+
+                # L3 Steed Offers (normal phase: offers + self-advertise + re-advertise resources)
+                - type: advertiseEffect
+                  rule:
+                    id: effect-steed
+                    phase: normal
+                    after:
+                      - group: __planned__
+                    ui:
+                      name: rule.spell-find-steed.effect-steed.name
+                    activities:
                       - type: offerRule
                         legalWhen:
                           - condition:
@@ -1157,8 +1166,6 @@ ruleGroups:
                           group:
                             - __planned__
                             - action
-                          after:
-                            - group: spellcasting
                           ui:
                             section: action
                             subject: steed
@@ -1197,8 +1204,6 @@ ruleGroups:
                           group:
                             - __planned__
                             - bonus-action
-                          after:
-                            - group: spellcasting
                           ui:
                             section: bonus-action
                             subject: steed
@@ -1223,21 +1228,6 @@ ruleGroups:
                                 - fact: companion.steed.bonusActions.remaining
                                   operator: lessThan
                                   value: 0
-                  when:
-                    - fact: find-steed.selectedLevel
-                      operator: equals
-                      value: 3
-
-                # L3 Steed Offers (normal phase: offers + self-advertise + re-advertise resources)
-                - type: advertiseEffect
-                  rule:
-                    id: effect-steed
-                    phase: normal
-                    after:
-                      - group: __planned__
-                    ui:
-                      name: rule.spell-find-steed.effect-steed.name
-                    activities:
                       - type: offerRule
                         legalWhen:
                           - condition:
@@ -1408,7 +1398,22 @@ ruleGroups:
                           fact: companion.steed.bonusActions.remaining
                         source:
                           number: 1
-                      # Steed action offers (early phase: checked before planned items consume resources)
+                      # No self-advertise — re-created each turn by effect-steed
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 4
+
+                # L4 Steed Offers (normal phase: offers + self-advertise + re-advertise resources)
+                - type: advertiseEffect
+                  rule:
+                    id: effect-steed
+                    phase: normal
+                    after:
+                      - group: __planned__
+                    ui:
+                      name: rule.spell-find-steed.effect-steed.name
+                    activities:
                       - type: offerRule
                         legalWhen:
                           - condition:
@@ -1423,8 +1428,6 @@ ruleGroups:
                           group:
                             - __planned__
                             - action
-                          after:
-                            - group: spellcasting
                           ui:
                             section: action
                             subject: steed
@@ -1463,8 +1466,6 @@ ruleGroups:
                           group:
                             - __planned__
                             - bonus-action
-                          after:
-                            - group: spellcasting
                           ui:
                             section: bonus-action
                             subject: steed
@@ -1489,22 +1490,6 @@ ruleGroups:
                                 - fact: companion.steed.bonusActions.remaining
                                   operator: lessThan
                                   value: 0
-                      # No self-advertise — re-created each turn by effect-steed
-                  when:
-                    - fact: find-steed.selectedLevel
-                      operator: equals
-                      value: 4
-
-                # L4 Steed Offers (normal phase: offers + self-advertise + re-advertise resources)
-                - type: advertiseEffect
-                  rule:
-                    id: effect-steed
-                    phase: normal
-                    after:
-                      - group: __planned__
-                    ui:
-                      name: rule.spell-find-steed.effect-steed.name
-                    activities:
                       - type: offerRule
                         legalWhen:
                           - condition:
@@ -1675,7 +1660,22 @@ ruleGroups:
                           fact: companion.steed.bonusActions.remaining
                         source:
                           number: 1
-                      # Steed action offers (early phase: checked before planned items consume resources)
+                      # No self-advertise — re-created each turn by effect-steed
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 5
+
+                # L5 Steed Offers (normal phase: offers + self-advertise + re-advertise resources)
+                - type: advertiseEffect
+                  rule:
+                    id: effect-steed
+                    phase: normal
+                    after:
+                      - group: __planned__
+                    ui:
+                      name: rule.spell-find-steed.effect-steed.name
+                    activities:
                       - type: offerRule
                         legalWhen:
                           - condition:
@@ -1690,8 +1690,6 @@ ruleGroups:
                           group:
                             - __planned__
                             - action
-                          after:
-                            - group: spellcasting
                           ui:
                             section: action
                             subject: steed
@@ -1730,8 +1728,6 @@ ruleGroups:
                           group:
                             - __planned__
                             - bonus-action
-                          after:
-                            - group: spellcasting
                           ui:
                             section: bonus-action
                             subject: steed
@@ -1756,22 +1752,6 @@ ruleGroups:
                                 - fact: companion.steed.bonusActions.remaining
                                   operator: lessThan
                                   value: 0
-                      # No self-advertise — re-created each turn by effect-steed
-                  when:
-                    - fact: find-steed.selectedLevel
-                      operator: equals
-                      value: 5
-
-                # L5 Steed Offers (normal phase: offers + self-advertise + re-advertise resources)
-                - type: advertiseEffect
-                  rule:
-                    id: effect-steed
-                    phase: normal
-                    after:
-                      - group: __planned__
-                    ui:
-                      name: rule.spell-find-steed.effect-steed.name
-                    activities:
                       - type: offerRule
                         legalWhen:
                           - condition:
