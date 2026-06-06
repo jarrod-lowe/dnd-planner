@@ -23,6 +23,15 @@ ruleGroups:
               total: character.movement.total
               remaining: character.movement.remaining
               section: resources
+          resources:
+            - type: usedMax
+              label: play.stats.movement
+              total: character.movement.total
+              remaining: character.movement.remaining
+          topBar:
+            - type: value
+              label: play.topBar.speed
+              fact: character.movement.remaining
         activities:
           - type: numberCopy
             source:

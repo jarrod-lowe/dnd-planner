@@ -4,17 +4,18 @@
   import UserDropdown from '$lib/components/UserDropdown.svelte';
   import type { Character } from '$lib/character/types';
   import type {
-    StatEntry,
-    StatEntryValue,
-    StatEntryModifier,
-    StatEntryUsedMax
-  } from '$lib/play/extractStats';
+    UiEntry,
+    UiEntryUsedMax,
+    UiEntryValue,
+    UiEntryConcentration,
+    UiEntryAbility
+  } from '$lib/play/extractTopBar';
   import type { Facts } from '$lib/rules-engine';
   import type { UiLayout } from '$lib/ui/uiPrefsStore.svelte';
 
   interface Props {
     character: Character;
-    stats: StatEntry[];
+    topBarEntries: UiEntry[];
     facts: Facts;
     email: string | null;
     onLogout: () => void;
@@ -36,7 +37,7 @@
 
   let {
     character,
-    stats,
+    topBarEntries,
     facts,
     email,
     onLogout,
@@ -58,67 +59,53 @@
 
   let showAbilities = $state(false);
 
-  const ABILITY_NAMES = new Set([
-    'play.stats.str',
-    'play.stats.dex',
-    'play.stats.con',
-    'play.stats.int',
-    'play.stats.wis',
-    'play.stats.cha'
-  ]);
-
-  const hpStat = $derived(
-    stats.find(
-      (s): s is StatEntryUsedMax =>
-        s.type === 'usedMax' && s.name === 'play.stats.hp' && s.section === 'resources'
-    )
+  // Filter entries by active subject (undefined = player)
+  const subjectFiltered = $derived(
+    topBarEntries.filter((e) => e.subject === activeSubject)
   );
 
-  const acStat = $derived(
-    stats.find(
-      (s): s is StatEntryValue =>
-        s.type === 'value' && s.name === 'play.stats.ac' && s.section === 'abilities'
-    )
+  // Derive entries by type from subject-filtered list
+  const hpEntry = $derived(
+    subjectFiltered.find((e): e is UiEntryUsedMax => e.type === 'usedMax')
+  );
+  const valueEntries = $derived(
+    subjectFiltered.filter((e): e is UiEntryValue => e.type === 'value')
+  );
+  const concEntry = $derived(
+    subjectFiltered.find((e): e is UiEntryConcentration => e.type === 'concentration')
+  );
+  const abilityEntry = $derived(
+    subjectFiltered.find((e): e is UiEntryAbility => e.type === 'ability')
   );
 
-  const speedStat = $derived(
-    stats.find(
-      (s): s is StatEntryUsedMax =>
-        s.type === 'usedMax' && s.name === 'play.stats.movement' && s.section === 'resources'
-    )
+  // HP resolved values
+  const hpCurrent = $derived(
+    hpEntry ? Number(facts[hpEntry.remaining] ?? 0) : undefined
   );
-
-  const concStat = $derived(
-    stats.find(
-      (s): s is StatEntryUsedMax =>
-        s.type === 'usedMax' && s.name === 'play.stats.concentration' && s.section === 'magic'
-    )
+  const hpMax = $derived(
+    hpEntry ? Number(facts[hpEntry.total] ?? 0) : undefined
   );
-
-  const abilityStats = $derived(
-    stats.filter((s): s is StatEntryModifier => s.type === 'modifier' && ABILITY_NAMES.has(s.name))
-  );
-
-  const hpCurrent = $derived(hpStat ? Number(facts[hpStat.remaining] ?? 0) : undefined);
-  const hpMax = $derived(hpStat ? Number(facts[hpStat.total] ?? 0) : undefined);
   const hpPercent = $derived(
     hpCurrent !== undefined && hpMax !== undefined && hpMax > 0
       ? Math.round((hpCurrent / hpMax) * 100)
       : undefined
   );
-  const acValue = $derived(acStat ? String(facts[acStat.fact] ?? '?') : undefined);
-  const speedValue = $derived(speedStat ? String(facts[speedStat.remaining] ?? '?') : undefined);
+  const hpVisible = $derived(hpEntry !== undefined && facts[hpEntry.remaining] !== undefined && facts[hpEntry.total] !== undefined);
+
+  // Concentration state
   const concActive = $derived(!!concentrationEffectName);
 
+  // Abilities resolved values
   const abilitiesLine = $derived(
-    abilityStats
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .map((s) => {
-        const mod = Number(facts[s.fact] ?? 0);
-        const label = $t(s.name);
-        return `${label}${mod >= 0 ? '+' : ''}${mod}`;
-      })
-      .join(' · ')
+    abilityEntry
+      ? abilityEntry.abilities
+          .map((a) => {
+            const mod = Number(facts[a.fact] ?? 0);
+            const label = $t(a.name);
+            return `${label}${mod >= 0 ? '+' : ''}${mod}`;
+          })
+          .join(' · ')
+      : ''
   );
 </script>
 
@@ -179,15 +166,16 @@
         </div>
       {/if}
 
-      {#if hpCurrent !== undefined && hpMax !== undefined}
+      {#if hpEntry && hpVisible}
+        {@const entry = hpEntry}
         <div
           class="intent-top-bar__chip intent-top-bar__chip--hp"
-          aria-label="{$t('play.topBar.hp')} {$t('play.topBar.hpValue', {
+          aria-label="{$t(entry.label)} {$t('play.topBar.hpValue', {
             current: hpCurrent,
             max: hpMax
           })}"
         >
-          <span class="intent-top-bar__chip-label">{$t('play.topBar.hp')}</span>
+          <span class="intent-top-bar__chip-label">{$t(entry.label)}</span>
           <span class="intent-top-bar__chip-value">{hpCurrent}/{hpMax}</span>
           {#if hpPercent !== undefined}
             <div
@@ -203,27 +191,24 @@
         </div>
       {/if}
 
-      {#if acValue !== undefined}
-        <div class="intent-top-bar__chip" aria-label="{$t('play.topBar.ac')} {acValue}">
-          <span class="intent-top-bar__chip-label">{$t('play.topBar.ac')}</span>
-          <span class="intent-top-bar__chip-value">{acValue}</span>
-        </div>
-      {/if}
+      {#each valueEntries as entry (entry.label)}
+        {@const value = facts[entry.fact]}
+        {#if value !== undefined}
+          <div class="intent-top-bar__chip" aria-label="{$t(entry.label)} {value}">
+            <span class="intent-top-bar__chip-label">{$t(entry.label)}</span>
+            <span class="intent-top-bar__chip-value">{value}</span>
+          </div>
+        {/if}
+      {/each}
 
-      {#if speedValue !== undefined}
-        <div class="intent-top-bar__chip" aria-label="{$t('play.topBar.speed')} {speedValue}">
-          <span class="intent-top-bar__chip-label">{$t('play.topBar.speed')}</span>
-          <span class="intent-top-bar__chip-value">{speedValue}</span>
-        </div>
-      {/if}
-
-      {#if concStat}
+      {#if concEntry}
+        {@const entry = concEntry}
         <div
           class="intent-top-bar__chip intent-top-bar__chip--conc"
           class:intent-top-bar__chip--conc-active={concActive}
-          aria-label="{$t('play.topBar.conc')}: {concActive
-            ? (concentrationEffectName ?? $t('play.topBar.concActive'))
-            : $t('play.topBar.concNone')}"
+          aria-label="{$t(entry.label)}: {concActive
+            ? (concentrationEffectName ?? $t(entry.activeLabel))
+            : $t(entry.noneLabel)}"
         >
           <span class="intent-top-bar__chip-label">
             <svg
@@ -236,26 +221,26 @@
                 d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"
               />
             </svg>
-            {$t('play.topBar.conc')}
+            {$t(entry.label)}
           </span>
           <span class="intent-top-bar__chip-value">
             {#if concActive && concentrationEffectName}
               {concentrationEffectName}
             {:else if concActive}
-              {$t('play.topBar.concActive')}
+              {$t(entry.activeLabel)}
             {:else}
-              {$t('play.topBar.concNone')}
+              {$t(entry.noneLabel)}
             {/if}
           </span>
         </div>
       {/if}
 
-      {#if abilityStats.length > 0}
+      {#if abilityEntry}
         <button
           type="button"
           class="intent-top-bar__chip intent-top-bar__chip--abilities"
           aria-expanded={showAbilities}
-          aria-label={$t('play.topBar.abilities')}
+          aria-label={$t(abilityEntry.label)}
           onclick={() => (showAbilities = !showAbilities)}
         >
           <span class="intent-top-bar__chip-value">{abilitiesLine}</span>
@@ -293,13 +278,13 @@
     </nav>
   </div>
 
-  {#if showAbilities && abilityStats.length > 0}
+  {#if showAbilities && abilityEntry}
     <div class="intent-top-bar__abilities-detail" transition:slide={{ duration: 150 }}>
-      {#each abilityStats as stat (stat.name)}
-        {@const mod = Number(facts[stat.fact] ?? 0)}
-        {@const prof = stat.proficiencyFact ? Number(facts[stat.proficiencyFact] ?? 0) : 0}
+      {#each abilityEntry.abilities as ability (ability.name)}
+        {@const mod = Number(facts[ability.fact] ?? 0)}
+        {@const prof = ability.proficiencyFact ? Number(facts[ability.proficiencyFact] ?? 0) : 0}
         <div class="intent-top-bar__ability">
-          <span class="intent-top-bar__ability-label">{$t(stat.name)}</span>
+          <span class="intent-top-bar__ability-label">{$t(ability.name)}</span>
           <span class="intent-top-bar__ability-value">{mod >= 0 ? '+' : ''}{mod}</span>
           {#if prof > 0}
             <span class="intent-top-bar__ability-prof" aria-label={$t('play.topBar.proficient')}>

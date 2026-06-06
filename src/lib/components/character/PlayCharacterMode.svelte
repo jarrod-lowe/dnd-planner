@@ -18,7 +18,6 @@
   import { getConcentrationEffectName } from '$lib/play/effectUtils';
   import { getCompanionView, setCompanionView } from '$lib/play/companionStore.svelte';
   import { getSubject } from '$lib/play/subjectUtils';
-  import type { StatEntry } from '$lib/play/extractStats';
 
   interface Props {
     character: Character;
@@ -111,23 +110,6 @@
     }
   });
 
-  // Stats for the active subject: collect from all effects matching the subject
-  const filteredStats = $derived.by(() => {
-    if (!activeSubject) return playStore.state.stats;
-    const result: StatEntry[] = [];
-    for (const effect of currentEffects) {
-      const ui = effect.ui as Record<string, unknown> | undefined;
-      const uiStats = ui?.stats;
-      if (!Array.isArray(uiStats)) continue;
-      for (const stat of uiStats) {
-        if ((stat as Record<string, unknown>).subject === activeSubject) {
-          result.push(stat as StatEntry);
-        }
-      }
-    }
-    return result;
-  });
-
   const committedEffectIds = $derived(playStore.state.effects.map((e) => e.id));
 
   // Handle choice tap - add to plan
@@ -167,7 +149,7 @@
   {#if uiPrefsStore.state.layout === 'intent'}
     <IntentTopBar
       {character}
-      stats={filteredStats}
+      topBarEntries={playStore.state.topBarEntries}
       facts={playStore.state.facts}
       {email}
       {onLogout}
@@ -220,10 +202,11 @@
           onEndTurn={() => playStore.endTurn()}
         />
         <Ledger
-          stats={filteredStats}
+          resourceEntries={playStore.state.resourceEntries}
           facts={playStore.state.facts}
           status={playStore.state.engineOutput?.status}
           viewLabel={activeSubject ? `play.companion.${activeSubject}` : undefined}
+          activeSubject={activeSubject}
         />
       </div>
     {/if}

@@ -22,6 +22,11 @@ ruleGroups:
               total: divinity.total
               remaining: divinity.remaining
               section: resources
+          resources:
+            - type: usedMax
+              label: play.stats.divinity
+              total: divinity.total
+              remaining: divinity.remaining
 
       # Divinity reset on Long Rest
       - id: divinity-reset

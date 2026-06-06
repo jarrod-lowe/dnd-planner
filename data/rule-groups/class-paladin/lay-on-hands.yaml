@@ -22,6 +22,11 @@ ruleGroups:
               total: layOnHands.pool.total
               remaining: layOnHands.pool.remaining
               section: resources
+          resources:
+            - type: usedMax
+              label: play.stats.layOnHands
+              total: layOnHands.pool.total
+              remaining: layOnHands.pool.remaining
 
       # Lay on Hands Pool - reset on Long Rest
       - id: loh-pool-reset

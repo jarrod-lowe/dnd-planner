@@ -38,6 +38,11 @@ ruleGroups:
               total: savageAttacker.max
               remaining: savageAttacker.remaining
               section: resources
+          resources:
+            - type: usedMax
+              label: play.stats.savageAttacker
+              total: savageAttacker.max
+              remaining: savageAttacker.remaining
         activities:
           - type: numberSet
             target:

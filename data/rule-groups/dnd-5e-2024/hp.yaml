@@ -192,3 +192,13 @@ ruleGroups:
               total: hp.max
               remaining: hp.current
               section: resources
+          topBar:
+            - type: usedMax
+              label: play.topBar.hp
+              total: hp.max
+              remaining: hp.current
+          resources:
+            - type: usedMax
+              label: play.stats.hp
+              total: hp.max
+              remaining: hp.current

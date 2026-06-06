@@ -237,6 +237,20 @@
                 "$ref": "#/definitions/statEntry"
               }
             },
+            "topBar": {
+              "type": "array",
+              "description": "Entries to display in the top bar",
+              "items": {
+                "$ref": "#/definitions/topBarEntry"
+              }
+            },
+            "resources": {
+              "type": "array",
+              "description": "Entries to display in the resources ledger",
+              "items": {
+                "$ref": "#/definitions/topBarEntry"
+              }
+            },
             "disadvantageFact": {
               "type": "string",
               "description": "Fact path indicating disadvantage on this roll"
@@ -931,6 +945,152 @@
           },
           "then": {
             "required": ["total", "remaining", "dieSize"]
+          }
+        }
+      ]
+    },
+    "topBarEntry": {
+      "type": "object",
+      "required": ["type", "label"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["usedMax", "value", "modifier", "hitDie", "concentration", "ability"],
+          "description": "Display type for the entry"
+        },
+        "label": {
+          "type": "string",
+          "description": "i18n key for the entry label"
+        },
+        "nameParams": {
+          "type": "object",
+          "description": "Parameters for i18n template interpolation",
+          "additionalProperties": true
+        },
+        "total": {
+          "type": "string",
+          "description": "Fact path for total/max value (usedMax, hitDie types)"
+        },
+        "remaining": {
+          "type": "string",
+          "description": "Fact path for remaining value (usedMax, hitDie types)"
+        },
+        "fact": {
+          "type": "string",
+          "description": "Fact path for display value (value, modifier types)"
+        },
+        "proficiencyFact": {
+          "type": "string",
+          "description": "Fact path for proficiency indicator (modifier type)"
+        },
+        "dieSize": {
+          "type": "integer",
+          "description": "Die size for hitDie type (e.g., 6, 8, 10, 12)"
+        },
+        "activeLabel": {
+          "type": "string",
+          "description": "i18n key for active state label (concentration type)"
+        },
+        "noneLabel": {
+          "type": "string",
+          "description": "i18n key for inactive state label (concentration type)"
+        },
+        "abilities": {
+          "type": "array",
+          "description": "Ability entries for the abilities chip (ability type)",
+          "items": {
+            "type": "object",
+            "required": ["name", "fact"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "i18n key for ability name"
+              },
+              "fact": {
+                "type": "string",
+                "description": "Fact path for modifier value"
+              },
+              "proficiencyFact": {
+                "type": "string",
+                "description": "Fact path for proficiency indicator"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "usedMax"
+              }
+            }
+          },
+          "then": {
+            "required": ["total", "remaining"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "value"
+              }
+            }
+          },
+          "then": {
+            "required": ["fact"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "modifier"
+              }
+            }
+          },
+          "then": {
+            "required": ["fact"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "hitDie"
+              }
+            }
+          },
+          "then": {
+            "required": ["total", "remaining", "dieSize"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "concentration"
+              }
+            }
+          },
+          "then": {
+            "required": ["activeLabel", "noneLabel"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ability"
+              }
+            }
+          },
+          "then": {
+            "required": ["abilities"]
           }
         }
       ]

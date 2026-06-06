@@ -5,6 +5,7 @@ import type { PlannedItem, PlayState } from './types';
 import { debounce } from './debounce';
 import { resolveInitialSelections } from './resolveInitialSelections';
 import { extractStats } from './extractStats';
+import { extractTopBarEntries, extractResourceEntries } from './extractTopBar';
 import { decrementCountDowns } from './countDown';
 import { deriveVerbFromRule } from './stepUtils';
 import { locale, t } from '$lib/i18n';
@@ -32,7 +33,9 @@ const initialState: PlayState = {
   facts: {},
   effects: [],
   currentCharacterId: null,
-  stats: []
+  stats: [],
+  topBarEntries: [],
+  resourceEntries: []
 };
 
 // Reactive state
@@ -43,7 +46,13 @@ function generateInstanceId(): string {
 }
 
 function recalculateStats(): void {
-  state = { ...state, stats: extractStats(state.ruleGroups) };
+  const allRules = [...state.ruleGroups, ...state.effects];
+  state = {
+    ...state,
+    stats: extractStats(allRules),
+    topBarEntries: extractTopBarEntries(allRules),
+    resourceEntries: extractResourceEntries(allRules)
+  };
 }
 
 // Module-level, plain Map (not $state). Replaced entirely each performEvaluation().

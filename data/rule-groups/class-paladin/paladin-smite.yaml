@@ -44,6 +44,11 @@ ruleGroups:
               total: paladinSmite.total
               remaining: paladinSmite.remaining
               section: resources
+          resources:
+            - type: usedMax
+              label: play.stats.paladinSmite
+              total: paladinSmite.total
+              remaining: paladinSmite.remaining
 
       # Reset on Long Rest
       - id: paladin-smite-reset
