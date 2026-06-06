@@ -1077,11 +1077,11 @@
       "ac": "AC",
       "todo": "TODO",
       "steed": {
-        "hp": "Steed HP",
-        "ac": "Steed AC",
-        "speed": "Steed Speed",
-        "actions": "Steed Actions",
-        "bonusActions": "Steed Bonus"
+        "hp": "HP",
+        "ac": "AC",
+        "speed": "SPD",
+        "actions": "Actions",
+        "bonusActions": "Bonus Action"
       },
       "sections": {
         "resources": "Resources",
