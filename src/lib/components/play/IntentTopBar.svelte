@@ -29,9 +29,9 @@
     currentLayout: UiLayout;
     onSwitchLayout: (layout: UiLayout) => void;
     concentrationEffectName?: string;
-    hasSteed?: boolean;
-    isSteedView?: boolean;
-    onSwitchView?: (view: 'player' | 'steed') => void;
+    availableSubjects?: string[];
+    activeSubject?: string;
+    onSwitchSubject?: (subject: string | undefined) => void;
   }
 
   let {
@@ -51,9 +51,9 @@
     currentLayout,
     onSwitchLayout,
     concentrationEffectName,
-    hasSteed = false,
-    isSteedView = false,
-    onSwitchView
+    availableSubjects = [],
+    activeSubject,
+    onSwitchSubject
   }: Props = $props();
 
   let showAbilities = $state(false);
@@ -150,28 +150,32 @@
     </div>
 
     <div class="intent-top-bar__chips">
-      {#if hasSteed && onSwitchView}
+      {#if availableSubjects.length > 0 && onSwitchSubject}
         <div
           class="intent-top-bar__seg"
           role="radiogroup"
-          aria-label={$t('play.topBar.viewPlayer') + ' / ' + $t('play.topBar.viewSteed')}
+          aria-label={$t('play.topBar.viewPlayer') +
+            ' / ' +
+            availableSubjects.map((s) => $t(`play.companion.${s}`)).join(' / ')}
         >
           <button
             type="button"
             class="intent-top-bar__seg-btn"
-            class:intent-top-bar__seg-btn--active={!isSteedView}
+            class:intent-top-bar__seg-btn--active={!activeSubject}
             role="radio"
-            aria-checked={!isSteedView}
-            onclick={() => onSwitchView('player')}>{$t('play.topBar.viewPlayer')}</button
+            aria-checked={!activeSubject}
+            onclick={() => onSwitchSubject(undefined)}>{$t('play.topBar.viewPlayer')}</button
           >
-          <button
-            type="button"
-            class="intent-top-bar__seg-btn"
-            class:intent-top-bar__seg-btn--active={isSteedView}
-            role="radio"
-            aria-checked={isSteedView}
-            onclick={() => onSwitchView('steed')}>{$t('play.topBar.viewSteed')}</button
-          >
+          {#each availableSubjects as subject (subject)}
+            <button
+              type="button"
+              class="intent-top-bar__seg-btn"
+              class:intent-top-bar__seg-btn--active={activeSubject === subject}
+              role="radio"
+              aria-checked={activeSubject === subject}
+              onclick={() => onSwitchSubject(subject)}>{$t(`play.companion.${subject}`)}</button
+            >
+          {/each}
         </div>
       {/if}
 

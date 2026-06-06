@@ -1290,6 +1290,9 @@
       "viewPlayer": "👤 You",
       "viewSteed": "🐴 Steed"
     },
+    "companion": {
+      "steed": "🐴 Steed"
+    },
     "topBar": {
       "hp": "HP",
       "ac": "AC",
@@ -1305,6 +1308,9 @@
       "hpValue": "{{current}} / {{max}}",
       "viewPlayer": "👤 You",
       "viewSteed": "🐴 Sargh"
+    },
+    "companion": {
+      "steed": "🐴 Sargh"
     },
     "verbs": {
       "ATTACK": "ATTACK",

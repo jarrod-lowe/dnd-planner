@@ -312,7 +312,8 @@ ruleGroups:
                     after:
                       - group: spellcasting
                     ui:
-                      section: steed-action
+                      section: action
+                      subject: steed
                       name: rule.spell-find-steed.offer-steed-dummy-action.name
                       actionCost: [action]
                       intents:
@@ -355,7 +356,8 @@ ruleGroups:
                     after:
                       - group: spellcasting
                     ui:
-                      section: steed-bonus-action
+                      section: bonus-action
+                      subject: steed
                       name: rule.spell-find-steed.offer-steed-dummy-bonus.name
                       actionCost: [bonus]
                       intents:
@@ -400,7 +402,8 @@ ruleGroups:
                     after:
                       - group: spellcasting
                     ui:
-                      section: steed-action
+                      section: action
+                      subject: steed
                       name: rule.spell-find-steed.offer-steed-dummy-action.name
                       actionCost: [action]
                       intents:
@@ -443,7 +446,8 @@ ruleGroups:
                     after:
                       - group: spellcasting
                     ui:
-                      section: steed-bonus-action
+                      section: bonus-action
+                      subject: steed
                       name: rule.spell-find-steed.offer-steed-dummy-bonus.name
                       actionCost: [bonus]
                       intents:
@@ -488,7 +492,8 @@ ruleGroups:
                     after:
                       - group: spellcasting
                     ui:
-                      section: steed-action
+                      section: action
+                      subject: steed
                       name: rule.spell-find-steed.offer-steed-dummy-action.name
                       actionCost: [action]
                       intents:
@@ -531,7 +536,8 @@ ruleGroups:
                     after:
                       - group: spellcasting
                     ui:
-                      section: steed-bonus-action
+                      section: bonus-action
+                      subject: steed
                       name: rule.spell-find-steed.offer-steed-dummy-bonus.name
                       actionCost: [bonus]
                       intents:
@@ -576,7 +582,8 @@ ruleGroups:
                     after:
                       - group: spellcasting
                     ui:
-                      section: steed-action
+                      section: action
+                      subject: steed
                       name: rule.spell-find-steed.offer-steed-dummy-action.name
                       actionCost: [action]
                       intents:
@@ -619,7 +626,8 @@ ruleGroups:
                     after:
                       - group: spellcasting
                     ui:
-                      section: steed-bonus-action
+                      section: bonus-action
+                      subject: steed
                       name: rule.spell-find-steed.offer-steed-dummy-bonus.name
                       actionCost: [bonus]
                       intents:
@@ -777,25 +785,30 @@ ruleGroups:
                           type: usedMax
                           total: companion.steed.hp.max
                           remaining: companion.steed.hp.current
-                          section: steed-resources
+                          section: resources
+                          subject: steed
                         - name: play.stats.steed.ac
                           type: value
                           fact: companion.steed.ac.value
-                          section: steed-resources
+                          section: resources
+                          subject: steed
                         - name: play.stats.steed.speed
                           type: value
                           fact: companion.steed.speed
-                          section: steed-resources
+                          section: resources
+                          subject: steed
                         - name: play.stats.steed.actions
                           type: usedMax
                           total: companion.steed.actions.max
                           remaining: companion.steed.actions.remaining
-                          section: steed-resources
+                          section: resources
+                          subject: steed
                         - name: play.stats.steed.bonusActions
                           type: usedMax
                           total: companion.steed.bonusActions.max
                           remaining: companion.steed.bonusActions.remaining
-                          section: steed-resources
+                          section: resources
+                          subject: steed
                     activities:
                       - type: numberSet
                         target:
@@ -903,7 +916,8 @@ ruleGroups:
                             - __planned__
                             - action
                           ui:
-                            section: steed-action
+                            section: action
+                            subject: steed
                             name: rule.spell-find-steed.offer-steed-dummy-action.name
                             actionCost: [action]
                             intents:
@@ -940,7 +954,8 @@ ruleGroups:
                             - __planned__
                             - bonus-action
                           ui:
-                            section: steed-bonus-action
+                            section: bonus-action
+                            subject: steed
                             name: rule.spell-find-steed.offer-steed-dummy-bonus.name
                             actionCost: [bonus]
                             intents:
@@ -974,7 +989,8 @@ ruleGroups:
                             - __planned__
                             - action
                           ui:
-                            section: steed-action
+                            section: action
+                            subject: steed
                             name: rule.spell-find-steed.offer-dismiss-steed.name
                             actionCost: [action]
                             intents:
@@ -1021,25 +1037,30 @@ ruleGroups:
                           type: usedMax
                           total: companion.steed.hp.max
                           remaining: companion.steed.hp.current
-                          section: steed-resources
+                          section: resources
+                          subject: steed
                         - name: play.stats.steed.ac
                           type: value
                           fact: companion.steed.ac.value
-                          section: steed-resources
+                          section: resources
+                          subject: steed
                         - name: play.stats.steed.speed
                           type: value
                           fact: companion.steed.speed
-                          section: steed-resources
+                          section: resources
+                          subject: steed
                         - name: play.stats.steed.actions
                           type: usedMax
                           total: companion.steed.actions.max
                           remaining: companion.steed.actions.remaining
-                          section: steed-resources
+                          section: resources
+                          subject: steed
                         - name: play.stats.steed.bonusActions
                           type: usedMax
                           total: companion.steed.bonusActions.max
                           remaining: companion.steed.bonusActions.remaining
-                          section: steed-resources
+                          section: resources
+                          subject: steed
                     activities:
                       - type: numberSet
                         target:
@@ -1146,7 +1167,8 @@ ruleGroups:
                             - __planned__
                             - action
                           ui:
-                            section: steed-action
+                            section: action
+                            subject: steed
                             name: rule.spell-find-steed.offer-steed-dummy-action.name
                             actionCost: [action]
                             intents:
@@ -1183,7 +1205,8 @@ ruleGroups:
                             - __planned__
                             - bonus-action
                           ui:
-                            section: steed-bonus-action
+                            section: bonus-action
+                            subject: steed
                             name: rule.spell-find-steed.offer-steed-dummy-bonus.name
                             actionCost: [bonus]
                             intents:
@@ -1217,7 +1240,8 @@ ruleGroups:
                             - __planned__
                             - action
                           ui:
-                            section: steed-action
+                            section: action
+                            subject: steed
                             name: rule.spell-find-steed.offer-dismiss-steed.name
                             actionCost: [action]
                             intents:
@@ -1264,25 +1288,30 @@ ruleGroups:
                           type: usedMax
                           total: companion.steed.hp.max
                           remaining: companion.steed.hp.current
-                          section: steed-resources
+                          section: resources
+                          subject: steed
                         - name: play.stats.steed.ac
                           type: value
                           fact: companion.steed.ac.value
-                          section: steed-resources
+                          section: resources
+                          subject: steed
                         - name: play.stats.steed.speed
                           type: value
                           fact: companion.steed.speed
-                          section: steed-resources
+                          section: resources
+                          subject: steed
                         - name: play.stats.steed.actions
                           type: usedMax
                           total: companion.steed.actions.max
                           remaining: companion.steed.actions.remaining
-                          section: steed-resources
+                          section: resources
+                          subject: steed
                         - name: play.stats.steed.bonusActions
                           type: usedMax
                           total: companion.steed.bonusActions.max
                           remaining: companion.steed.bonusActions.remaining
-                          section: steed-resources
+                          section: resources
+                          subject: steed
                     activities:
                       - type: numberSet
                         target:
@@ -1400,7 +1429,8 @@ ruleGroups:
                             - __planned__
                             - action
                           ui:
-                            section: steed-action
+                            section: action
+                            subject: steed
                             name: rule.spell-find-steed.offer-steed-dummy-action.name
                             actionCost: [action]
                             intents:
@@ -1437,7 +1467,8 @@ ruleGroups:
                             - __planned__
                             - bonus-action
                           ui:
-                            section: steed-bonus-action
+                            section: bonus-action
+                            subject: steed
                             name: rule.spell-find-steed.offer-steed-dummy-bonus.name
                             actionCost: [bonus]
                             intents:
@@ -1471,7 +1502,8 @@ ruleGroups:
                             - __planned__
                             - action
                           ui:
-                            section: steed-action
+                            section: action
+                            subject: steed
                             name: rule.spell-find-steed.offer-dismiss-steed.name
                             actionCost: [action]
                             intents:
@@ -1518,25 +1550,30 @@ ruleGroups:
                           type: usedMax
                           total: companion.steed.hp.max
                           remaining: companion.steed.hp.current
-                          section: steed-resources
+                          section: resources
+                          subject: steed
                         - name: play.stats.steed.ac
                           type: value
                           fact: companion.steed.ac.value
-                          section: steed-resources
+                          section: resources
+                          subject: steed
                         - name: play.stats.steed.speed
                           type: value
                           fact: companion.steed.speed
-                          section: steed-resources
+                          section: resources
+                          subject: steed
                         - name: play.stats.steed.actions
                           type: usedMax
                           total: companion.steed.actions.max
                           remaining: companion.steed.actions.remaining
-                          section: steed-resources
+                          section: resources
+                          subject: steed
                         - name: play.stats.steed.bonusActions
                           type: usedMax
                           total: companion.steed.bonusActions.max
                           remaining: companion.steed.bonusActions.remaining
-                          section: steed-resources
+                          section: resources
+                          subject: steed
                     activities:
                       - type: numberSet
                         target:
@@ -1654,7 +1691,8 @@ ruleGroups:
                             - __planned__
                             - action
                           ui:
-                            section: steed-action
+                            section: action
+                            subject: steed
                             name: rule.spell-find-steed.offer-steed-dummy-action.name
                             actionCost: [action]
                             intents:
@@ -1691,7 +1729,8 @@ ruleGroups:
                             - __planned__
                             - bonus-action
                           ui:
-                            section: steed-bonus-action
+                            section: bonus-action
+                            subject: steed
                             name: rule.spell-find-steed.offer-steed-dummy-bonus.name
                             actionCost: [bonus]
                             intents:
@@ -1725,7 +1764,8 @@ ruleGroups:
                             - __planned__
                             - action
                           ui:
-                            section: steed-action
+                            section: action
+                            subject: steed
                             name: rule.spell-find-steed.offer-dismiss-steed.name
                             actionCost: [action]
                             intents:

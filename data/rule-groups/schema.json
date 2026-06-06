@@ -210,6 +210,10 @@
               "type": "string",
               "description": "UI section label"
             },
+            "subject": {
+              "type": "string",
+              "description": "Companion subject identifier (e.g., 'steed'). Absent means player."
+            },
             "name": {
               "type": "string",
               "description": "i18n key for display name"
@@ -869,6 +873,10 @@
         "section": {
           "type": "string",
           "description": "Section name for grouping stats in the UI"
+        },
+        "subject": {
+          "type": "string",
+          "description": "Companion subject identifier (e.g., 'steed'). Absent means player."
         },
         "modifierFact": {
           "type": "string",
