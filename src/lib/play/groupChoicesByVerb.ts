@@ -78,12 +78,14 @@ export function findDefaultEntryForVerb(
   entries: AvailableRuleEntry[],
   verb: Verb
 ): AvailableRuleEntry | null {
+  let firstForVerb: AvailableRuleEntry | null = null;
   for (const entry of entries) {
     if (deriveVerbFromRule(entry.rule) === verb) {
-      return entry;
+      if (entry.legal) return entry;
+      if (!firstForVerb) firstForVerb = entry;
     }
   }
-  return null;
+  return firstForVerb;
 }
 
 /**

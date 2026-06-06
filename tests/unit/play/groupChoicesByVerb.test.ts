@@ -137,6 +137,18 @@ describe('findDefaultEntryForVerb', () => {
     expect(result!.rule.id).toBe('greataxe');
   });
 
+  it('prefers legal entry over an illegal entry that appears first', () => {
+    const entries = [
+      makeEntry('sword', { intents: { ATTACK: 'weapons' }, legal: false }),
+      makeEntry('dagger', { intents: { ATTACK: 'weapons' }, legal: true })
+    ];
+
+    const result = findDefaultEntryForVerb(entries, 'ATTACK');
+
+    expect(result).not.toBeNull();
+    expect(result!.rule.id).toBe('dagger');
+  });
+
   it('returns first illegal entry when no legal entries exist', () => {
     const entries = [makeEntry('greataxe', { intents: { ATTACK: 'weapons' }, legal: false })];
 
