@@ -362,6 +362,16 @@ The architecture supports:
 - Radiant and Bludgeoning symbols look very similar
 - Alert feat is not the only option for Human origin feat
 - De-duplicate icon sources in code
+- Handle multiple steeds properly
+- Find Steed steed's actual actions & abilities
+  - movement
+  - Type selection (fiend, fey, celestial)
+  - Life Bond
+  - Type-specific bonus action
+  - Otherworldly slam
+  - Show steed in the left panel in its choices
+  - Rolls for ability checks, skill checks, and ability saves
+  - Hit Dice
 
 ### Low Priority
 

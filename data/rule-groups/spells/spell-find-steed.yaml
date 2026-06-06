@@ -277,6 +277,375 @@ ruleGroups:
                       operator: lessThan
                       value: 0
 
+                # === Steed facts for same-turn use ===
+                - type: numberSet
+                  target:
+                    fact: companion.steed.summoned
+                  source:
+                    number: 1
+                - type: numberSet
+                  target:
+                    fact: companion.steed.actions.remaining
+                  source:
+                    number: 1
+                - type: numberSet
+                  target:
+                    fact: companion.steed.bonusActions.remaining
+                  source:
+                    number: 1
+
+                # === Same-turn steed action offers (L2) ===
+                - type: offerRule
+                  legalWhen:
+                    - condition:
+                        fact: companion.steed.actions.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.offer-steed-dummy-action.no_actions
+                          severity: error
+                  rule:
+                    id: offer-steed-dummy-action
+                    group:
+                      - __planned__
+                      - action
+                    after:
+                      - group: spellcasting
+                    ui:
+                      section: steed-action
+                      name: rule.spell-find-steed.offer-steed-dummy-action.name
+                      actionCost: [action]
+                      intents:
+                        ATTACK: brawl
+                    activities:
+                      - *error-clear
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.actions.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.offer-steed-dummy-action.no_actions
+                        when:
+                          - fact: companion.steed.actions.remaining
+                            operator: lessThan
+                            value: 0
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 2
+                - type: offerRule
+                  legalWhen:
+                    - condition:
+                        fact: companion.steed.bonusActions.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.offer-steed-dummy-bonus.no_bonus_actions
+                          severity: error
+                  rule:
+                    id: offer-steed-dummy-bonus
+                    group:
+                      - __planned__
+                      - bonus-action
+                    after:
+                      - group: spellcasting
+                    ui:
+                      section: steed-bonus-action
+                      name: rule.spell-find-steed.offer-steed-dummy-bonus.name
+                      actionCost: [bonus]
+                      intents:
+                        AID: evade
+                    activities:
+                      - *error-clear
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.bonusActions.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.offer-steed-dummy-bonus.no_bonus_actions
+                        when:
+                          - fact: companion.steed.bonusActions.remaining
+                            operator: lessThan
+                            value: 0
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 2
+
+                # === Same-turn steed action offers (L3) ===
+                - type: offerRule
+                  legalWhen:
+                    - condition:
+                        fact: companion.steed.actions.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.offer-steed-dummy-action.no_actions
+                          severity: error
+                  rule:
+                    id: offer-steed-dummy-action
+                    group:
+                      - __planned__
+                      - action
+                    after:
+                      - group: spellcasting
+                    ui:
+                      section: steed-action
+                      name: rule.spell-find-steed.offer-steed-dummy-action.name
+                      actionCost: [action]
+                      intents:
+                        ATTACK: brawl
+                    activities:
+                      - *error-clear
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.actions.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.offer-steed-dummy-action.no_actions
+                        when:
+                          - fact: companion.steed.actions.remaining
+                            operator: lessThan
+                            value: 0
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 3
+                - type: offerRule
+                  legalWhen:
+                    - condition:
+                        fact: companion.steed.bonusActions.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.offer-steed-dummy-bonus.no_bonus_actions
+                          severity: error
+                  rule:
+                    id: offer-steed-dummy-bonus
+                    group:
+                      - __planned__
+                      - bonus-action
+                    after:
+                      - group: spellcasting
+                    ui:
+                      section: steed-bonus-action
+                      name: rule.spell-find-steed.offer-steed-dummy-bonus.name
+                      actionCost: [bonus]
+                      intents:
+                        AID: evade
+                    activities:
+                      - *error-clear
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.bonusActions.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.offer-steed-dummy-bonus.no_bonus_actions
+                        when:
+                          - fact: companion.steed.bonusActions.remaining
+                            operator: lessThan
+                            value: 0
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 3
+
+                # === Same-turn steed action offers (L4) ===
+                - type: offerRule
+                  legalWhen:
+                    - condition:
+                        fact: companion.steed.actions.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.offer-steed-dummy-action.no_actions
+                          severity: error
+                  rule:
+                    id: offer-steed-dummy-action
+                    group:
+                      - __planned__
+                      - action
+                    after:
+                      - group: spellcasting
+                    ui:
+                      section: steed-action
+                      name: rule.spell-find-steed.offer-steed-dummy-action.name
+                      actionCost: [action]
+                      intents:
+                        ATTACK: brawl
+                    activities:
+                      - *error-clear
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.actions.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.offer-steed-dummy-action.no_actions
+                        when:
+                          - fact: companion.steed.actions.remaining
+                            operator: lessThan
+                            value: 0
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 4
+                - type: offerRule
+                  legalWhen:
+                    - condition:
+                        fact: companion.steed.bonusActions.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.offer-steed-dummy-bonus.no_bonus_actions
+                          severity: error
+                  rule:
+                    id: offer-steed-dummy-bonus
+                    group:
+                      - __planned__
+                      - bonus-action
+                    after:
+                      - group: spellcasting
+                    ui:
+                      section: steed-bonus-action
+                      name: rule.spell-find-steed.offer-steed-dummy-bonus.name
+                      actionCost: [bonus]
+                      intents:
+                        AID: evade
+                    activities:
+                      - *error-clear
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.bonusActions.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.offer-steed-dummy-bonus.no_bonus_actions
+                        when:
+                          - fact: companion.steed.bonusActions.remaining
+                            operator: lessThan
+                            value: 0
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 4
+
+                # === Same-turn steed action offers (L5) ===
+                - type: offerRule
+                  legalWhen:
+                    - condition:
+                        fact: companion.steed.actions.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.offer-steed-dummy-action.no_actions
+                          severity: error
+                  rule:
+                    id: offer-steed-dummy-action
+                    group:
+                      - __planned__
+                      - action
+                    after:
+                      - group: spellcasting
+                    ui:
+                      section: steed-action
+                      name: rule.spell-find-steed.offer-steed-dummy-action.name
+                      actionCost: [action]
+                      intents:
+                        ATTACK: brawl
+                    activities:
+                      - *error-clear
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.actions.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.offer-steed-dummy-action.no_actions
+                        when:
+                          - fact: companion.steed.actions.remaining
+                            operator: lessThan
+                            value: 0
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 5
+                - type: offerRule
+                  legalWhen:
+                    - condition:
+                        fact: companion.steed.bonusActions.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.offer-steed-dummy-bonus.no_bonus_actions
+                          severity: error
+                  rule:
+                    id: offer-steed-dummy-bonus
+                    group:
+                      - __planned__
+                      - bonus-action
+                    after:
+                      - group: spellcasting
+                    ui:
+                      section: steed-bonus-action
+                      name: rule.spell-find-steed.offer-steed-dummy-bonus.name
+                      actionCost: [bonus]
+                      intents:
+                        AID: evade
+                    activities:
+                      - *error-clear
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.bonusActions.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.offer-steed-dummy-bonus.no_bonus_actions
+                        when:
+                          - fact: companion.steed.bonusActions.remaining
+                            operator: lessThan
+                            value: 0
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 5
+
                 # === Slot persistence effects (L2-L5) ===
                 - type: advertiseEffect
                   rule:
@@ -525,6 +894,9 @@ ruleGroups:
                               fact: companion.steed.actions.remaining
                               operator: greaterThan
                               value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.offer-steed-dummy-action.no_actions
+                                severity: error
                         rule:
                           id: offer-steed-dummy-action
                           group:
@@ -537,18 +909,31 @@ ruleGroups:
                             intents:
                               ATTACK: brawl
                           activities:
+                            - *error-clear
                             - type: numberIncrement
                               target:
                                 fact: companion.steed.actions.remaining
                               source:
                                 number: 1
                               subtract: true
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.offer-steed-dummy-action.no_actions
+                              when:
+                                - fact: companion.steed.actions.remaining
+                                  operator: lessThan
+                                  value: 0
                       - type: offerRule
                         legalWhen:
                           - condition:
                               fact: companion.steed.bonusActions.remaining
                               operator: greaterThan
                               value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.offer-steed-dummy-bonus.no_bonus_actions
+                                severity: error
                         rule:
                           id: offer-steed-dummy-bonus
                           group:
@@ -561,12 +946,22 @@ ruleGroups:
                             intents:
                               AID: evade
                           activities:
+                            - *error-clear
                             - type: numberIncrement
                               target:
                                 fact: companion.steed.bonusActions.remaining
                               source:
                                 number: 1
                               subtract: true
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.offer-steed-dummy-bonus.no_bonus_actions
+                              when:
+                                - fact: companion.steed.bonusActions.remaining
+                                  operator: lessThan
+                                  value: 0
                       - type: offerRule
                         legalWhen:
                           - condition:
@@ -742,6 +1137,9 @@ ruleGroups:
                               fact: companion.steed.actions.remaining
                               operator: greaterThan
                               value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.offer-steed-dummy-action.no_actions
+                                severity: error
                         rule:
                           id: offer-steed-dummy-action
                           group:
@@ -754,18 +1152,31 @@ ruleGroups:
                             intents:
                               ATTACK: brawl
                           activities:
+                            - *error-clear
                             - type: numberIncrement
                               target:
                                 fact: companion.steed.actions.remaining
                               source:
                                 number: 1
                               subtract: true
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.offer-steed-dummy-action.no_actions
+                              when:
+                                - fact: companion.steed.actions.remaining
+                                  operator: lessThan
+                                  value: 0
                       - type: offerRule
                         legalWhen:
                           - condition:
                               fact: companion.steed.bonusActions.remaining
                               operator: greaterThan
                               value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.offer-steed-dummy-bonus.no_bonus_actions
+                                severity: error
                         rule:
                           id: offer-steed-dummy-bonus
                           group:
@@ -778,12 +1189,22 @@ ruleGroups:
                             intents:
                               AID: evade
                           activities:
+                            - *error-clear
                             - type: numberIncrement
                               target:
                                 fact: companion.steed.bonusActions.remaining
                               source:
                                 number: 1
                               subtract: true
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.offer-steed-dummy-bonus.no_bonus_actions
+                              when:
+                                - fact: companion.steed.bonusActions.remaining
+                                  operator: lessThan
+                                  value: 0
                       - type: offerRule
                         legalWhen:
                           - condition:
@@ -970,6 +1391,9 @@ ruleGroups:
                               fact: companion.steed.actions.remaining
                               operator: greaterThan
                               value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.offer-steed-dummy-action.no_actions
+                                severity: error
                         rule:
                           id: offer-steed-dummy-action
                           group:
@@ -982,18 +1406,31 @@ ruleGroups:
                             intents:
                               ATTACK: brawl
                           activities:
+                            - *error-clear
                             - type: numberIncrement
                               target:
                                 fact: companion.steed.actions.remaining
                               source:
                                 number: 1
                               subtract: true
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.offer-steed-dummy-action.no_actions
+                              when:
+                                - fact: companion.steed.actions.remaining
+                                  operator: lessThan
+                                  value: 0
                       - type: offerRule
                         legalWhen:
                           - condition:
                               fact: companion.steed.bonusActions.remaining
                               operator: greaterThan
                               value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.offer-steed-dummy-bonus.no_bonus_actions
+                                severity: error
                         rule:
                           id: offer-steed-dummy-bonus
                           group:
@@ -1006,12 +1443,22 @@ ruleGroups:
                             intents:
                               AID: evade
                           activities:
+                            - *error-clear
                             - type: numberIncrement
                               target:
                                 fact: companion.steed.bonusActions.remaining
                               source:
                                 number: 1
                               subtract: true
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.offer-steed-dummy-bonus.no_bonus_actions
+                              when:
+                                - fact: companion.steed.bonusActions.remaining
+                                  operator: lessThan
+                                  value: 0
                       - type: offerRule
                         legalWhen:
                           - condition:
@@ -1198,6 +1645,9 @@ ruleGroups:
                               fact: companion.steed.actions.remaining
                               operator: greaterThan
                               value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.offer-steed-dummy-action.no_actions
+                                severity: error
                         rule:
                           id: offer-steed-dummy-action
                           group:
@@ -1210,18 +1660,31 @@ ruleGroups:
                             intents:
                               ATTACK: brawl
                           activities:
+                            - *error-clear
                             - type: numberIncrement
                               target:
                                 fact: companion.steed.actions.remaining
                               source:
                                 number: 1
                               subtract: true
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.offer-steed-dummy-action.no_actions
+                              when:
+                                - fact: companion.steed.actions.remaining
+                                  operator: lessThan
+                                  value: 0
                       - type: offerRule
                         legalWhen:
                           - condition:
                               fact: companion.steed.bonusActions.remaining
                               operator: greaterThan
                               value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.offer-steed-dummy-bonus.no_bonus_actions
+                                severity: error
                         rule:
                           id: offer-steed-dummy-bonus
                           group:
@@ -1234,12 +1697,22 @@ ruleGroups:
                             intents:
                               AID: evade
                           activities:
+                            - *error-clear
                             - type: numberIncrement
                               target:
                                 fact: companion.steed.bonusActions.remaining
                               source:
                                 number: 1
                               subtract: true
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.offer-steed-dummy-bonus.no_bonus_actions
+                              when:
+                                - fact: companion.steed.bonusActions.remaining
+                                  operator: lessThan
+                                  value: 0
                       - type: offerRule
                         legalWhen:
                           - condition:
