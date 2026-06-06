@@ -15,9 +15,10 @@
   import EffectsColumn from '../play/EffectsColumn.svelte';
   import type { Character } from '$lib/character/types';
   import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
-  import { getConcentrationEffectName, isMountEffect } from '$lib/play/effectUtils';
+  import { getConcentrationEffectName } from '$lib/play/effectUtils';
   import { getCompanionView, setCompanionView } from '$lib/play/companionStore.svelte';
   import { getSubject } from '$lib/play/subjectUtils';
+  import type { StatEntry } from '$lib/play/extractStats';
 
   interface Props {
     character: Character;
@@ -86,7 +87,6 @@
   });
 
   // Steed / companion detection
-  const mountEffect = $derived(currentEffects.find((e) => isMountEffect(e)));
   const companionView = $derived(getCompanionView());
   const activeSubject = $derived(companionView === 'player' ? undefined : companionView);
 
@@ -111,17 +111,22 @@
     }
   });
 
-  // Extract steed stats from the mount effect's ui.stats
-  const steedStats = $derived.by(() => {
-    if (!mountEffect) return [];
-    const ui = mountEffect.ui as Record<string, unknown> | undefined;
-    const uiStats = ui?.stats;
-    if (!Array.isArray(uiStats)) return [];
-    return uiStats;
+  // Stats for the active subject: collect from all effects matching the subject
+  const filteredStats = $derived.by(() => {
+    if (!activeSubject) return playStore.state.stats;
+    const result: StatEntry[] = [];
+    for (const effect of currentEffects) {
+      const ui = effect.ui as Record<string, unknown> | undefined;
+      const uiStats = ui?.stats;
+      if (!Array.isArray(uiStats)) continue;
+      for (const stat of uiStats) {
+        if ((stat as Record<string, unknown>).subject === activeSubject) {
+          result.push(stat as StatEntry);
+        }
+      }
+    }
+    return result;
   });
-
-  // Stats switch based on companion view (controls Ledger only)
-  const filteredStats = $derived(activeSubject ? steedStats : playStore.state.stats);
 
   const committedEffectIds = $derived(playStore.state.effects.map((e) => e.id));
 
