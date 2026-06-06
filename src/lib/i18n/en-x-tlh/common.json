@@ -19,6 +19,27 @@
         "name": "chal"
       }
     },
+    "spell-find-steed": {
+      "offer-find-steed": {
+        "name": "Sargh Sam",
+        "no_action": "DIvI' tu'lu'be'",
+        "no_slots": "mugh laH tu'lu'be'",
+        "no_spellcasting": "mugh DIvI' tu'lu'be'",
+        "already_mounted": "Sargh DIch Sam"
+      },
+      "effect-steed": {
+        "name": "Sargh"
+      },
+      "offer-steed-dummy-action": {
+        "name": "Sargh HIv"
+      },
+      "offer-steed-dummy-bonus": {
+        "name": "Sargh Quv"
+      },
+      "offer-dismiss-steed": {
+        "name": "Sargh mup"
+      }
+    },
     "spell-sleep": {
       "offer-sleep": {
         "name": "Qong",
@@ -1073,6 +1094,13 @@
       "hp": "HP",
       "ac": "DIch Jun",
       "todo": "TODO",
+      "steed": {
+        "hp": "Sargh HP",
+        "ac": "Sargh DIch Jun",
+        "speed": "Sargh Do",
+        "actions": "Sargh DIvI'",
+        "bonusActions": "Sargh Quv"
+      },
       "sections": {
         "resources": "DIvI' Duj",
         "stats": "DIvI'",
@@ -1235,7 +1263,8 @@
         "BUFF": "BUFF",
         "DEBUFF": "DEBUFF",
         "ITEM": "ITEM",
-        "BUILD": "BUILD"
+        "BUILD": "BUILD",
+        "MOUNT": "MOUNT"
       },
       "dismiss": "Dismiss effect",
       "reminder": "Reminder: action needed",
@@ -1255,7 +1284,9 @@
     },
     "ledger": {
       "title": "Resources",
-      "overBudget": "Over budget"
+      "overBudget": "Over budget",
+      "viewPlayer": "👤 You",
+      "viewSteed": "🐴 Steed"
     },
     "topBar": {
       "hp": "HP",
@@ -1269,7 +1300,9 @@
       "proficientDotHalf": "○",
       "proficientDotFull": "●",
       "proficientDotDouble": "◉",
-      "hpValue": "{{current}} / {{max}}"
+      "hpValue": "{{current}} / {{max}}",
+      "viewPlayer": "👤 You",
+      "viewSteed": "🐴 Sargh"
     },
     "verbs": {
       "ATTACK": "ATTACK",
@@ -1300,7 +1333,8 @@
         "default": "OTHER",
         "self": "SELF",
         "ally": "ALLY",
-        "area": "AREA"
+        "area": "AREA",
+        "summon": "Summon"
       },
       "CONTROL": {
         "default": "OTHER",
@@ -1368,6 +1402,8 @@
     },
     "addRow": {
       "title": "ADD ACTION",
+      "label": "+ ADD",
+      "steedSublabel": "Steed",
       "planGroup": "PLAN →",
       "recordGroup": "RECORD →",
       "buildGroup": "BUILD →",

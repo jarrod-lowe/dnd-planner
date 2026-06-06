@@ -1,0 +1,1287 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: spell-find-steed
+    requires:
+      - spellcasting
+    translations:
+      en:
+        name: Find Steed
+        description: >-
+          Level 2 conjuration spell. Summons an otherworldly steed that serves
+          as your loyal mount. The steed has stats that scale with the slot
+          level used.
+        keywords: [spell, level2, find steed, steed, action, conjuration, paladin, mount]
+      en-x-tlh:
+        name: Sargh Sam
+        description: >-
+          DIch level 2 conjuration. Sargh DIch Sam DIch DIch DIch.
+        keywords: [spell, level2, sargh sam, steed, action, mount]
+    detail:
+      key: spell/find-steed
+      source: srd52
+      translations:
+        en:
+          meta: 'Level 2 Conjuration (Paladin)'
+          fields:
+            - { labelKey: rules.field.castingTime, value: 'Action' }
+            - { labelKey: rules.field.range, value: '30 feet' }
+            - { labelKey: rules.field.components, value: 'V, S' }
+            - { labelKey: rules.field.duration, value: 'Instantaneous' }
+          body: |
+            You summon a spirit that assumes the form of a loyal, mighty mount.
+            Appearing in an unoccupied space within range, the steed takes on a
+            form you choose: a **warhorse**, a **pony**, a **camel**, an **elk**,
+            or a **mastiff**. The steed has the statistics of the chosen form,
+            though it is a celestial, fey, or fiend (your choice). In addition,
+            the steed understands your languages, and you can ride it while it
+            acts on your turn.
+
+            While mounted on the steed, you can make any spell you cast that
+            targets only you also target the steed.
+
+            When the steed drops to 0 hit points, it disappears, leaving behind
+            no physical form. You can also dismiss the steed at any time as an
+            action, causing it to disappear.
+    rules:
+      # Compute eligible Find Steed slot count (levels 2-5)
+      - id: compute-find-steed-eligible-slots
+        phase: normal
+        group:
+          - find-steed-slots-computed
+        activities:
+          - type: numberSum
+            target:
+              fact: find-steed.eligibleSlotsRemaining
+            sources:
+              - fact: spellcasting.slots.level2.remaining
+              - fact: spellcasting.slots.level3.remaining
+              - fact: spellcasting.slots.level4.remaining
+              - fact: spellcasting.slots.level5.remaining
+
+      # Compute lowest available slot level (L2-L5)
+      - id: compute-find-steed-lowest-slot
+        phase: normal
+        group:
+          - find-steed-slots-computed
+        activities:
+          - type: numberSet
+            target:
+              fact: find-steed.lowestAvailableSlotLevel
+            source:
+              number: 5
+            when:
+              - fact: spellcasting.slots.level5.remaining
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target:
+              fact: find-steed.lowestAvailableSlotLevel
+            source:
+              number: 4
+            when:
+              - fact: spellcasting.slots.level4.remaining
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target:
+              fact: find-steed.lowestAvailableSlotLevel
+            source:
+              number: 3
+            when:
+              - fact: spellcasting.slots.level3.remaining
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target:
+              fact: find-steed.lowestAvailableSlotLevel
+            source:
+              number: 2
+            when:
+              - fact: spellcasting.slots.level2.remaining
+                operator: greaterThan
+                value: 0
+
+      # Offer Find Steed (action spell)
+      - id: offer-find-steed
+        after:
+          - group: __planned__
+          - group: spellcasting
+          - group: find-steed-slots-computed
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: actions.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-find-steed.offer-find-steed.no_action
+                    severity: error
+              - condition:
+                  fact: find-steed.eligibleSlotsRemaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-find-steed.offer-find-steed.no_slots
+                    severity: error
+              - condition:
+                  fact: spellcasting.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-find-steed.offer-find-steed.no_spellcasting
+                    severity: error
+              - condition:
+                  fact: companion.steed.summoned
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-find-steed.offer-find-steed.already_mounted
+                    severity: error
+            rule:
+              id: cast-find-steed
+              group:
+                - __planned__
+                - spellcasting
+              ui:
+                section: action-spell
+                name: rule.spell-find-steed.offer-find-steed.name
+                actionCost: [action, L2]
+                intents:
+                  AID: summon
+              vars:
+                slotLevel:
+                  capture: true
+                  default:
+                    fact: find-steed.lowestAvailableSlotLevel
+              activities:
+                # Consume action
+                - type: numberIncrement
+                  target:
+                    fact: actions.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                # Consume spellcasting resource
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-find-steed.offer-find-steed.no_action
+                  when:
+                    - fact: actions.remaining
+                      operator: lessThan
+                      value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-find-steed.offer-find-steed.no_spellcasting
+                  when:
+                    - fact: spellcasting.remaining
+                      operator: lessThan
+                      value: 0
+                # Bridge var to fact for conditional slot consumption
+                - type: numberSet
+                  target:
+                    fact: find-steed.selectedLevel
+                  source:
+                    var: slotLevel
+                # Consume L2 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level2.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 2
+                # Consume L3 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level3.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 3
+                # Consume L4 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level4.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 4
+                # Consume L5 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level5.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 5
+                # Track slot consumption errors
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-find-steed.offer-find-steed.no_slots
+                  when:
+                    - fact: spellcasting.slots.level2.remaining
+                      operator: lessThan
+                      value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-find-steed.offer-find-steed.no_slots
+                  when:
+                    - fact: spellcasting.slots.level3.remaining
+                      operator: lessThan
+                      value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-find-steed.offer-find-steed.no_slots
+                  when:
+                    - fact: spellcasting.slots.level4.remaining
+                      operator: lessThan
+                      value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-find-steed.offer-find-steed.no_slots
+                  when:
+                    - fact: spellcasting.slots.level5.remaining
+                      operator: lessThan
+                      value: 0
+
+                # === Slot persistence effects (L2-L5) ===
+                - type: advertiseEffect
+                  rule:
+                    id: effect-steed-slot-l2
+                    ui:
+                      name: play.slotEffect.l2
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level2.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 2
+                - type: advertiseEffect
+                  rule:
+                    id: effect-steed-slot-l3
+                    ui:
+                      name: play.slotEffect.l3
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level3.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 3
+                - type: advertiseEffect
+                  rule:
+                    id: effect-steed-slot-l4
+                    ui:
+                      name: play.slotEffect.l4
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level4.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 4
+                - type: advertiseEffect
+                  rule:
+                    id: effect-steed-slot-l5
+                    ui:
+                      name: play.slotEffect.l5
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level5.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 5
+
+                # === Steed effects (per level, self-contained) ===
+                # Each level's steed effect has hardcoded stats.
+                # Only one is created (the when condition is mutually exclusive).
+
+                # L2 Steed Resources (early phase: stats + resources, no self-advertise)
+                - type: advertiseEffect
+                  rule: &steed-resources-l2
+                    id: effect-steed-resources
+                    phase: early
+                    ui:
+                      section: mount
+                      name: rule.spell-find-steed.effect-steed.name
+                      stats:
+                        - name: play.stats.steed.hp
+                          type: usedMax
+                          total: companion.steed.hp.max
+                          remaining: companion.steed.hp.current
+                          section: steed-resources
+                        - name: play.stats.steed.ac
+                          type: value
+                          fact: companion.steed.ac.value
+                          section: steed-resources
+                        - name: play.stats.steed.speed
+                          type: value
+                          fact: companion.steed.speed
+                          section: steed-resources
+                        - name: play.stats.steed.actions
+                          type: usedMax
+                          total: companion.steed.actions.max
+                          remaining: companion.steed.actions.remaining
+                          section: steed-resources
+                        - name: play.stats.steed.bonusActions
+                          type: usedMax
+                          total: companion.steed.bonusActions.max
+                          remaining: companion.steed.bonusActions.remaining
+                          section: steed-resources
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.summoned
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.ac.value
+                        source:
+                          number: 12
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.hp.max
+                        source:
+                          number: 25
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.hp.current
+                        source:
+                          number: 25
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.speed
+                        source:
+                          number: 60
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.str
+                        source:
+                          number: 18
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.dex
+                        source:
+                          number: 12
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.con
+                        source:
+                          number: 14
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.int
+                        source:
+                          number: 6
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.wis
+                        source:
+                          number: 12
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.cha
+                        source:
+                          number: 8
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.actions.max
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.actions.remaining
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.bonusActions.max
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.bonusActions.remaining
+                        source:
+                          number: 1
+                      # No self-advertise — re-created each turn by effect-steed
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 2
+
+                # L2 Steed Offers (normal phase: offers + self-advertise + re-advertise resources)
+                - type: advertiseEffect
+                  rule:
+                    id: effect-steed
+                    phase: normal
+                    after:
+                      - group: __planned__
+                    ui:
+                      name: rule.spell-find-steed.effect-steed.name
+                    activities:
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.actions.remaining
+                              operator: greaterThan
+                              value: 0
+                        rule:
+                          id: offer-steed-dummy-action
+                          group:
+                            - __planned__
+                            - action
+                          ui:
+                            section: steed-action
+                            name: rule.spell-find-steed.offer-steed-dummy-action.name
+                            actionCost: [action]
+                            intents:
+                              ATTACK: brawl
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.actions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.bonusActions.remaining
+                              operator: greaterThan
+                              value: 0
+                        rule:
+                          id: offer-steed-dummy-bonus
+                          group:
+                            - __planned__
+                            - bonus-action
+                          ui:
+                            section: steed-bonus-action
+                            name: rule.spell-find-steed.offer-steed-dummy-bonus.name
+                            actionCost: [bonus]
+                            intents:
+                              AID: evade
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.bonusActions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: actions.remaining
+                              operator: greaterThan
+                              value: 0
+                        rule:
+                          id: offer-dismiss-steed
+                          group:
+                            - __planned__
+                            - action
+                          ui:
+                            section: steed-action
+                            name: rule.spell-find-steed.offer-dismiss-steed.name
+                            actionCost: [action]
+                            intents:
+                              HANDLE: dismiss
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: actions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: numberSet
+                              target:
+                                fact: companion.steed.dismissed
+                              source:
+                                number: 1
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: companion.steed.dismissed
+                            operator: equals
+                            value: 0
+                      - type: advertiseEffect
+                        rule: *steed-resources-l2
+                        when:
+                          - fact: companion.steed.dismissed
+                            operator: equals
+                            value: 0
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 2
+
+                # L3 Steed Resources (early phase: stats + resources, no self-advertise)
+                - type: advertiseEffect
+                  rule: &steed-resources-l3
+                    id: effect-steed-resources
+                    phase: early
+                    ui:
+                      section: mount
+                      name: rule.spell-find-steed.effect-steed.name
+                      stats:
+                        - name: play.stats.steed.hp
+                          type: usedMax
+                          total: companion.steed.hp.max
+                          remaining: companion.steed.hp.current
+                          section: steed-resources
+                        - name: play.stats.steed.ac
+                          type: value
+                          fact: companion.steed.ac.value
+                          section: steed-resources
+                        - name: play.stats.steed.speed
+                          type: value
+                          fact: companion.steed.speed
+                          section: steed-resources
+                        - name: play.stats.steed.actions
+                          type: usedMax
+                          total: companion.steed.actions.max
+                          remaining: companion.steed.actions.remaining
+                          section: steed-resources
+                        - name: play.stats.steed.bonusActions
+                          type: usedMax
+                          total: companion.steed.bonusActions.max
+                          remaining: companion.steed.bonusActions.remaining
+                          section: steed-resources
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.summoned
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.ac.value
+                        source:
+                          number: 13
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.hp.max
+                        source:
+                          number: 35
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.hp.current
+                        source:
+                          number: 35
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.speed
+                        source:
+                          number: 60
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.str
+                        source:
+                          number: 18
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.dex
+                        source:
+                          number: 12
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.con
+                        source:
+                          number: 14
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.int
+                        source:
+                          number: 6
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.wis
+                        source:
+                          number: 12
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.cha
+                        source:
+                          number: 8
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.actions.max
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.actions.remaining
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.bonusActions.max
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.bonusActions.remaining
+                        source:
+                          number: 1
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 3
+
+                # L3 Steed Offers (normal phase: offers + self-advertise + re-advertise resources)
+                - type: advertiseEffect
+                  rule:
+                    id: effect-steed
+                    phase: normal
+                    after:
+                      - group: __planned__
+                    ui:
+                      name: rule.spell-find-steed.effect-steed.name
+                    activities:
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.actions.remaining
+                              operator: greaterThan
+                              value: 0
+                        rule:
+                          id: offer-steed-dummy-action
+                          group:
+                            - __planned__
+                            - action
+                          ui:
+                            section: steed-action
+                            name: rule.spell-find-steed.offer-steed-dummy-action.name
+                            actionCost: [action]
+                            intents:
+                              ATTACK: brawl
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.actions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.bonusActions.remaining
+                              operator: greaterThan
+                              value: 0
+                        rule:
+                          id: offer-steed-dummy-bonus
+                          group:
+                            - __planned__
+                            - bonus-action
+                          ui:
+                            section: steed-bonus-action
+                            name: rule.spell-find-steed.offer-steed-dummy-bonus.name
+                            actionCost: [bonus]
+                            intents:
+                              AID: evade
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.bonusActions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: actions.remaining
+                              operator: greaterThan
+                              value: 0
+                        rule:
+                          id: offer-dismiss-steed
+                          group:
+                            - __planned__
+                            - action
+                          ui:
+                            section: steed-action
+                            name: rule.spell-find-steed.offer-dismiss-steed.name
+                            actionCost: [action]
+                            intents:
+                              HANDLE: dismiss
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: actions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: numberSet
+                              target:
+                                fact: companion.steed.dismissed
+                              source:
+                                number: 1
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: companion.steed.dismissed
+                            operator: equals
+                            value: 0
+                      - type: advertiseEffect
+                        rule: *steed-resources-l3
+                        when:
+                          - fact: companion.steed.dismissed
+                            operator: equals
+                            value: 0
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 3
+
+                # L4 Steed Resources (early phase: stats + resources, no self-advertise)
+                - type: advertiseEffect
+                  rule: &steed-resources-l4
+                    id: effect-steed-resources
+                    phase: early
+                    ui:
+                      section: mount
+                      name: rule.spell-find-steed.effect-steed.name
+                      stats:
+                        - name: play.stats.steed.hp
+                          type: usedMax
+                          total: companion.steed.hp.max
+                          remaining: companion.steed.hp.current
+                          section: steed-resources
+                        - name: play.stats.steed.ac
+                          type: value
+                          fact: companion.steed.ac.value
+                          section: steed-resources
+                        - name: play.stats.steed.speed
+                          type: value
+                          fact: companion.steed.speed
+                          section: steed-resources
+                        - name: play.stats.steed.actions
+                          type: usedMax
+                          total: companion.steed.actions.max
+                          remaining: companion.steed.actions.remaining
+                          section: steed-resources
+                        - name: play.stats.steed.bonusActions
+                          type: usedMax
+                          total: companion.steed.bonusActions.max
+                          remaining: companion.steed.bonusActions.remaining
+                          section: steed-resources
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.summoned
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.ac.value
+                        source:
+                          number: 14
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.hp.max
+                        source:
+                          number: 45
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.hp.current
+                        source:
+                          number: 45
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.speed
+                        source:
+                          number: 60
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.fly.can
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.speed.fly
+                        source:
+                          number: 60
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.str
+                        source:
+                          number: 18
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.dex
+                        source:
+                          number: 12
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.con
+                        source:
+                          number: 14
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.int
+                        source:
+                          number: 6
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.wis
+                        source:
+                          number: 12
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.cha
+                        source:
+                          number: 8
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.actions.max
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.actions.remaining
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.bonusActions.max
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.bonusActions.remaining
+                        source:
+                          number: 1
+                      # No self-advertise — re-created each turn by effect-steed
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 4
+
+                # L4 Steed Offers (normal phase: offers + self-advertise + re-advertise resources)
+                - type: advertiseEffect
+                  rule:
+                    id: effect-steed
+                    phase: normal
+                    after:
+                      - group: __planned__
+                    ui:
+                      name: rule.spell-find-steed.effect-steed.name
+                    activities:
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.actions.remaining
+                              operator: greaterThan
+                              value: 0
+                        rule:
+                          id: offer-steed-dummy-action
+                          group:
+                            - __planned__
+                            - action
+                          ui:
+                            section: steed-action
+                            name: rule.spell-find-steed.offer-steed-dummy-action.name
+                            actionCost: [action]
+                            intents:
+                              ATTACK: brawl
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.actions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.bonusActions.remaining
+                              operator: greaterThan
+                              value: 0
+                        rule:
+                          id: offer-steed-dummy-bonus
+                          group:
+                            - __planned__
+                            - bonus-action
+                          ui:
+                            section: steed-bonus-action
+                            name: rule.spell-find-steed.offer-steed-dummy-bonus.name
+                            actionCost: [bonus]
+                            intents:
+                              AID: evade
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.bonusActions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: actions.remaining
+                              operator: greaterThan
+                              value: 0
+                        rule:
+                          id: offer-dismiss-steed
+                          group:
+                            - __planned__
+                            - action
+                          ui:
+                            section: steed-action
+                            name: rule.spell-find-steed.offer-dismiss-steed.name
+                            actionCost: [action]
+                            intents:
+                              HANDLE: dismiss
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: actions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: numberSet
+                              target:
+                                fact: companion.steed.dismissed
+                              source:
+                                number: 1
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: companion.steed.dismissed
+                            operator: equals
+                            value: 0
+                      - type: advertiseEffect
+                        rule: *steed-resources-l4
+                        when:
+                          - fact: companion.steed.dismissed
+                            operator: equals
+                            value: 0
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 4
+
+                # L5 Steed Resources (early phase: stats + resources, no self-advertise)
+                - type: advertiseEffect
+                  rule: &steed-resources-l5
+                    id: effect-steed-resources
+                    phase: early
+                    ui:
+                      section: mount
+                      name: rule.spell-find-steed.effect-steed.name
+                      stats:
+                        - name: play.stats.steed.hp
+                          type: usedMax
+                          total: companion.steed.hp.max
+                          remaining: companion.steed.hp.current
+                          section: steed-resources
+                        - name: play.stats.steed.ac
+                          type: value
+                          fact: companion.steed.ac.value
+                          section: steed-resources
+                        - name: play.stats.steed.speed
+                          type: value
+                          fact: companion.steed.speed
+                          section: steed-resources
+                        - name: play.stats.steed.actions
+                          type: usedMax
+                          total: companion.steed.actions.max
+                          remaining: companion.steed.actions.remaining
+                          section: steed-resources
+                        - name: play.stats.steed.bonusActions
+                          type: usedMax
+                          total: companion.steed.bonusActions.max
+                          remaining: companion.steed.bonusActions.remaining
+                          section: steed-resources
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.summoned
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.ac.value
+                        source:
+                          number: 15
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.hp.max
+                        source:
+                          number: 55
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.hp.current
+                        source:
+                          number: 55
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.speed
+                        source:
+                          number: 60
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.fly.can
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.speed.fly
+                        source:
+                          number: 60
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.str
+                        source:
+                          number: 18
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.dex
+                        source:
+                          number: 12
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.con
+                        source:
+                          number: 14
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.int
+                        source:
+                          number: 6
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.wis
+                        source:
+                          number: 12
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.cha
+                        source:
+                          number: 8
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.actions.max
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.actions.remaining
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.bonusActions.max
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.bonusActions.remaining
+                        source:
+                          number: 1
+                      # No self-advertise — re-created each turn by effect-steed
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 5
+
+                # L5 Steed Offers (normal phase: offers + self-advertise + re-advertise resources)
+                - type: advertiseEffect
+                  rule:
+                    id: effect-steed
+                    phase: normal
+                    after:
+                      - group: __planned__
+                    ui:
+                      name: rule.spell-find-steed.effect-steed.name
+                    activities:
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.actions.remaining
+                              operator: greaterThan
+                              value: 0
+                        rule:
+                          id: offer-steed-dummy-action
+                          group:
+                            - __planned__
+                            - action
+                          ui:
+                            section: steed-action
+                            name: rule.spell-find-steed.offer-steed-dummy-action.name
+                            actionCost: [action]
+                            intents:
+                              ATTACK: brawl
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.actions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.bonusActions.remaining
+                              operator: greaterThan
+                              value: 0
+                        rule:
+                          id: offer-steed-dummy-bonus
+                          group:
+                            - __planned__
+                            - bonus-action
+                          ui:
+                            section: steed-bonus-action
+                            name: rule.spell-find-steed.offer-steed-dummy-bonus.name
+                            actionCost: [bonus]
+                            intents:
+                              AID: evade
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.bonusActions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: actions.remaining
+                              operator: greaterThan
+                              value: 0
+                        rule:
+                          id: offer-dismiss-steed
+                          group:
+                            - __planned__
+                            - action
+                          ui:
+                            section: steed-action
+                            name: rule.spell-find-steed.offer-dismiss-steed.name
+                            actionCost: [action]
+                            intents:
+                              HANDLE: dismiss
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: actions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: numberSet
+                              target:
+                                fact: companion.steed.dismissed
+                              source:
+                                number: 1
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: companion.steed.dismissed
+                            operator: equals
+                            value: 0
+                      - type: advertiseEffect
+                        rule: *steed-resources-l5
+                        when:
+                          - fact: companion.steed.dismissed
+                            operator: equals
+                            value: 0
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 5

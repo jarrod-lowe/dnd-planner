@@ -6,7 +6,15 @@ export interface DurationState {
   nearExpiry: boolean;
 }
 
-export type EffectKind = 'CONC' | 'ONGOING' | 'SENSE' | 'BUFF' | 'DEBUFF' | 'ITEM' | 'BUILD';
+export type EffectKind =
+  | 'CONC'
+  | 'ONGOING'
+  | 'SENSE'
+  | 'BUFF'
+  | 'DEBUFF'
+  | 'ITEM'
+  | 'BUILD'
+  | 'MOUNT';
 export type ChipState = 'rest' | 'pending' | 'expiring';
 
 /**
@@ -69,6 +77,7 @@ export function getEffectKind(rule: Rule): EffectKind {
 
   if (ui.section === 'senses') return 'SENSE';
   if (ui.section === 'configuration') return 'ITEM';
+  if (ui.section === 'mount') return 'MOUNT';
   return 'ONGOING';
 }
 
@@ -110,6 +119,14 @@ export function getConcentrationEffectName(effects: Rule[]): string | null {
 export function isHiddenEffect(rule: Rule): boolean {
   const ui = rule.ui as Record<string, unknown> | undefined;
   return ui?.hidden === true;
+}
+
+/**
+ * Checks if an effect rule represents a mount/companion (steed).
+ */
+export function isMountEffect(rule: Rule): boolean {
+  const ui = rule.ui as Record<string, unknown> | undefined;
+  return ui?.section === 'mount';
 }
 
 /**

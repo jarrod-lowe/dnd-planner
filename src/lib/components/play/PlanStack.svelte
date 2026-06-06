@@ -13,6 +13,8 @@
     entries: AvailableRuleEntry[];
     facts: Facts;
     activeAnnotations: Annotation[];
+    hasSteed?: boolean;
+    steedEntries?: AvailableRuleEntry[];
     onAddToPlan: (entry: AvailableRuleEntry) => void;
     onRemoveFromPlan: (instanceId: string) => void;
     onMovePlanItem: (instanceId: string, direction: 'up' | 'down') => void;
@@ -26,6 +28,8 @@
     entries,
     facts,
     activeAnnotations,
+    hasSteed = false,
+    steedEntries = [],
     onAddToPlan,
     onRemoveFromPlan,
     onMovePlanItem,
@@ -62,6 +66,14 @@
   // Group entries by verb for computing alternatives
   const verbGroups = $derived(groupChoicesByVerb(entries));
   const verbGroupMap = $derived(new Map(verbGroups.map((g) => [g.verb, g])));
+
+  // Player-only entries for the player +ADD picker (exclude steed sections)
+  const playerEntries = $derived(
+    entries.filter((entry) => {
+      const section = entry.rule?.ui?.section as string | undefined;
+      return !section?.startsWith('steed-');
+    })
+  );
 
   function getAlternatives(verb: Verb, currentRuleId: string): AvailableRuleEntry[] {
     const group = verbGroupMap.get(verb);
@@ -112,7 +124,15 @@
     {/each}
   </div>
 
-  <AddRowPicker {entries} onAddStep={onAddToPlan} />
+  <AddRowPicker entries={playerEntries} onAddStep={onAddToPlan} />
+
+  {#if hasSteed && steedEntries.length > 0}
+    <AddRowPicker
+      entries={steedEntries}
+      onAddStep={onAddToPlan}
+      sublabel="play.addRow.steedSublabel"
+    />
+  {/if}
 
   <div class="plan-stack__footer">
     <button

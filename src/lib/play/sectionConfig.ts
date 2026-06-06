@@ -15,6 +15,9 @@ export const SECTION_ORDER: string[] = [
   'ongoing',
   'reaction',
   'free',
+  'mount',
+  'steed-action',
+  'steed-bonus-action',
   'rest',
   'senses'
 ];
@@ -30,5 +33,6 @@ export const STAT_SECTION_ORDER: string[] = [
   'skills',
   'passive',
   'abilities',
-  'magic'
+  'magic',
+  'steed-resources'
 ];

@@ -1,0 +1,73 @@
+name: 'Find Steed Dismiss'
+description: 'Dismissing the steed sets dismissed flag, effect is removed after end of turn'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-find-steed
+initialEffects:
+  - id: test-grant-level2-slot
+    phase: early
+    group:
+      - spellcasting-slots-set
+    activities:
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.total
+        source:
+          number: 1
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.remaining
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+steps:
+  # Cast Find Steed first
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - cast-find-steed
+  - addOffer:
+      id: cast-find-steed
+      assert:
+        facts:
+          actions.remaining: 0
+          spellcasting.slots.level2.remaining: 0
+  # End turn to commit the steed effect
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-steed
+        facts:
+          companion.steed.summoned: 1
+          companion.steed.dismissed: 0
+  # Next turn: evaluate to see dismiss offer
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - offer-dismiss-steed
+  # Dismiss the steed
+  - addOffer:
+      id: offer-dismiss-steed
+      assert:
+        facts:
+          companion.steed.dismissed: 1
+  # End turn: steed effect should be gone (dismissed stops self-advertise)
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-steed-slot-l2
+          notExists:
+            - effect-steed
+        facts:
+          companion.steed.summoned: 0

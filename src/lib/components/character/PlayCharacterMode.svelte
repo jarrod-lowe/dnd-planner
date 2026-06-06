@@ -14,7 +14,8 @@
   import EffectsColumn from '../play/EffectsColumn.svelte';
   import type { Character } from '$lib/character/types';
   import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
-  import { getConcentrationEffectName } from '$lib/play/effectUtils';
+  import { getConcentrationEffectName, isMountEffect } from '$lib/play/effectUtils';
+  import { getCompanionView, setCompanionView, isSteedView } from '$lib/play/companionStore.svelte';
 
   interface Props {
     character: Character;
@@ -82,6 +83,39 @@
     return key ? $t(key) : undefined;
   });
 
+  // Steed / companion detection
+  const mountEffect = $derived(currentEffects.find((e) => isMountEffect(e)));
+  const hasSteed = $derived(!!mountEffect);
+  const companionView = $derived(getCompanionView());
+  const viewingSteed = $derived(hasSteed && isSteedView());
+
+  // Auto-switch to player view when steed is dismissed
+  $effect(() => {
+    if (!hasSteed && companionView === 'steed') {
+      setCompanionView('player');
+    }
+  });
+
+  // Extract steed stats from the mount effect's ui.stats
+  const steedStats = $derived.by(() => {
+    if (!mountEffect) return [];
+    const ui = mountEffect.ui as Record<string, unknown> | undefined;
+    const uiStats = ui?.stats;
+    if (!Array.isArray(uiStats)) return [];
+    return uiStats;
+  });
+
+  // Steed-specific entries (used by PlanStack for steed +ADD picker)
+  const steedEntries = $derived(
+    availableRules.filter((entry) => {
+      const section = entry.rule?.ui?.section as string | undefined;
+      return section?.startsWith('steed-');
+    })
+  );
+
+  // Stats switch based on companion view (controls Ledger only)
+  const filteredStats = $derived(viewingSteed ? steedStats : playStore.state.stats);
+
   const committedEffectIds = $derived(playStore.state.effects.map((e) => e.id));
 
   // Handle choice tap - add to plan
@@ -121,7 +155,7 @@
   {#if uiPrefsStore.state.layout === 'intent'}
     <IntentTopBar
       {character}
-      stats={playStore.state.stats}
+      stats={filteredStats}
       facts={playStore.state.facts}
       {email}
       {onLogout}
@@ -136,6 +170,9 @@
       currentLayout={uiPrefsStore.state.layout}
       onSwitchLayout={(l) => uiPrefsStore.setLayout(l)}
       concentrationEffectName={concentrationName}
+      {hasSteed}
+      isSteedView={viewingSteed}
+      onSwitchView={setCompanionView}
     />
     {#if playStore.state.isLoadingRuleGroups}
       <div class="play-character__loading">{$t('play.choices.loading')}</div>
@@ -157,6 +194,8 @@
           entries={availableRules}
           facts={playStore.state.facts}
           {activeAnnotations}
+          {hasSteed}
+          {steedEntries}
           onAddToPlan={handleChoiceTap}
           onRemoveFromPlan={handleRemove}
           onMovePlanItem={(id, dir) => playStore.movePlanItem(id, dir)}
@@ -165,9 +204,14 @@
           onEndTurn={() => playStore.endTurn()}
         />
         <Ledger
-          stats={playStore.state.stats}
+          stats={filteredStats}
           facts={playStore.state.facts}
           status={playStore.state.engineOutput?.status}
+          viewLabel={hasSteed
+            ? viewingSteed
+              ? 'play.ledger.viewSteed'
+              : 'play.ledger.viewPlayer'
+            : undefined}
         />
       </div>
     {/if}

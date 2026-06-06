@@ -7,9 +7,10 @@
     stats: StatEntry[];
     facts: Facts;
     status?: Status;
+    viewLabel?: string;
   }
 
-  let { stats, facts, status }: Props = $props();
+  let { stats, facts, status, viewLabel }: Props = $props();
 
   const RESOURCE_SECTIONS = new Set(['resources']);
 
@@ -34,7 +35,12 @@
 </script>
 
 <div class="ledger" role="region" aria-label={$t('play.ledger.title')}>
-  <span class="ledger__header">{$t('play.ledger.title')}</span>
+  <div class="ledger__title">
+    <span class="ledger__header">{$t('play.ledger.title')}</span>
+    {#if viewLabel}
+      <span class="ledger__view-label">{$t(viewLabel)}</span>
+    {/if}
+  </div>
 
   {#if isOverBudget}
     <span class="ledger__warn-badge" role="alert">
@@ -70,6 +76,12 @@
     flex-wrap: wrap;
   }
 
+  .ledger__title {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+
   .ledger__header {
     font-family: var(--font-body);
     font-size: var(--font-size-xs);
@@ -78,6 +90,14 @@
     letter-spacing: 0.1em;
     color: var(--md-sys-color-on-surface-variant);
     flex-shrink: 0;
+  }
+
+  .ledger__view-label {
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    color: var(--md-sys-color-primary);
+    letter-spacing: 0.04em;
   }
 
   .ledger__warn-badge {
