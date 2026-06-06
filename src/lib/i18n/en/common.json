@@ -1489,11 +1489,5 @@
         "long": "Long Rest"
       }
     }
-  },
-  "ui": {
-    "layout": {
-      "switchToIntent": "Switch to Intent Stack",
-      "switchToClassic": "Switch to Classic Layout"
-    }
   }
 }

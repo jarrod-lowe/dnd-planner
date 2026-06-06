@@ -38,6 +38,8 @@ vi.mock('$lib/play/playStore.svelte', () => ({
         isLoadingRuleGroups: false,
         ruleGroupError: null,
         ruleGroups: [],
+        topBarEntries: [],
+        resourceEntries: [],
         engineOutput: {
           status: { ok: true, legal: true, applicable: true },
           facts: {
@@ -46,6 +48,8 @@ vi.mock('$lib/play/playStore.svelte', () => ({
           },
           collections: {},
           availableRules: [],
+          annotations: [],
+          effects: [],
           diagnostics: { errors: [], warnings: [], notices: [] },
           trace: {
             appliedRuleIds: [],
@@ -77,27 +81,26 @@ vi.mock('$lib/play/playStore.svelte', () => ({
   }
 }));
 
-// Mock child components to avoid complex rendering
-// Don't mock PlayLayout - we need it to render the snippets for integration testing
-// vi.mock('$lib/components/play/PlayLayout.svelte', () => ({
-//   default: vi.fn().mockImplementation(() => class MockPlayLayout {})
-// }));
-
-// Don't mock StatsColumn - we want to test the actual integration
-// vi.mock('$lib/components/play/StatsColumn.svelte', () => ({
-//   default: vi.fn()
-// }));
-
-vi.mock('$lib/components/play/ChoicesColumn.svelte', () => ({
+// Mock child components
+vi.mock('$lib/components/play/IntentTopBar.svelte', () => ({
   default: vi.fn()
 }));
 
-vi.mock('$lib/components/play/PlanColumn.svelte', () => ({
+vi.mock('$lib/components/play/ActiveStateStrip.svelte', () => ({
   default: vi.fn()
 }));
 
-vi.mock('$lib/components/play/EffectsColumn.svelte', () => ({
+vi.mock('$lib/components/play/PlanStack.svelte', () => ({
   default: vi.fn()
+}));
+
+vi.mock('$lib/components/play/Ledger.svelte', () => ({
+  default: vi.fn()
+}));
+
+vi.mock('$lib/play/companionStore.svelte', () => ({
+  getCompanionView: vi.fn(() => 'player'),
+  setCompanionView: vi.fn()
 }));
 
 import PlayCharacterMode from '$lib/components/character/PlayCharacterMode.svelte';
@@ -148,11 +151,31 @@ describe('PlayCharacterMode', () => {
     expect(container.querySelector('.play-character')).toBeTruthy();
   });
 
-  it('passes stats and facts from playStore to StatsColumn', () => {
-    // PlayCharacterMode should pass playStore.state.stats and playStore.state.facts
-    // to StatsColumn, not compute them manually
+  it('shows loading state when isLoadingRuleGroups is true', async () => {
+    vi.mock('$lib/play/playStore.svelte', () => ({
+      playStore: {
+        get state() {
+          return {
+            isLoadingRuleGroups: true,
+            ruleGroupError: null,
+            topBarEntries: [],
+            resourceEntries: [],
+            effects: [],
+            plannedItems: [],
+            facts: {},
+            stats: [],
+            engineOutput: null,
+            isEvaluating: false
+          };
+        },
+        loadRuleGroups: mockFns.loadRuleGroups
+      }
+    }));
 
-    mount(PlayCharacterMode, {
+    const { default: PlayCharacterModeLocal } =
+      await import('$lib/components/character/PlayCharacterMode.svelte');
+
+    mount(PlayCharacterModeLocal, {
       target: container,
       props: {
         character: mockCharacter,
@@ -160,13 +183,6 @@ describe('PlayCharacterMode', () => {
       }
     });
 
-    // StatsColumn receives stats=[] and facts from playStore
-    // With empty stats, it shows TODO
-    const statsColumn = container.querySelector('.stats-column');
-    expect(statsColumn).toBeTruthy();
-
-    // With empty stats array, TODO should show
-    const todoElement = container.querySelector('.stats-column__todo');
-    expect(todoElement).toBeTruthy();
+    expect(container.querySelector('.play-character__loading')).toBeTruthy();
   });
 });

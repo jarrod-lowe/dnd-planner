@@ -84,8 +84,6 @@ describe('IntentTopBar', () => {
         facts,
         email: 'test@example.com',
         onLogout: vi.fn(),
-        currentLayout: 'intent',
-        onSwitchLayout: vi.fn(),
         ...extraProps
       }
     });
