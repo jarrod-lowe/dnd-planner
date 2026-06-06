@@ -131,6 +131,13 @@ ruleGroups:
                 illegalDiagnostics:
                   - code: rule.spell-find-steed.offer-find-steed.no_spellcasting
                     severity: error
+              - condition:
+                  fact: companion.steed.summoned
+                  operator: equals
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-find-steed.offer-find-steed.already_mounted
+                    severity: error
             rule:
               id: cast-find-steed
               group:

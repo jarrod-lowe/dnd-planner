@@ -24,7 +24,8 @@
         "name": "Sargh Sam",
         "no_action": "DIvI' tu'lu'be'",
         "no_slots": "mugh laH tu'lu'be'",
-        "no_spellcasting": "mugh DIvI' tu'lu'be'"
+        "no_spellcasting": "mugh DIvI' tu'lu'be'",
+        "already_mounted": "Sargh DIch Sam"
       },
       "effect-steed": {
         "name": "Sargh"

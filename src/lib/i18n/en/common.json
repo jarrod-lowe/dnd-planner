@@ -24,7 +24,8 @@
         "name": "Find Steed",
         "no_action": "No action available",
         "no_slots": "No L2+ spell slots remaining",
-        "no_spellcasting": "Already cast a spell this turn"
+        "no_spellcasting": "Already cast a spell this turn",
+        "already_mounted": "Already have a steed"
       },
       "effect-steed": {
         "name": "Otherworldly Steed"
