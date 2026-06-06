@@ -13,6 +13,9 @@
     entries: AvailableRuleEntry[];
     facts: Facts;
     activeAnnotations: Annotation[];
+    hasSteed?: boolean;
+    steedItems?: PlannedItem[];
+    steedEntries?: AvailableRuleEntry[];
     onAddToPlan: (entry: AvailableRuleEntry) => void;
     onRemoveFromPlan: (instanceId: string) => void;
     onMovePlanItem: (instanceId: string, direction: 'up' | 'down') => void;
@@ -26,6 +29,9 @@
     entries,
     facts,
     activeAnnotations,
+    hasSteed = false,
+    steedItems = [],
+    steedEntries = [],
     onAddToPlan,
     onRemoveFromPlan,
     onMovePlanItem,
@@ -63,8 +69,34 @@
   const verbGroups = $derived(groupChoicesByVerb(entries));
   const verbGroupMap = $derived(new Map(verbGroups.map((g) => [g.verb, g])));
 
+  // Steed entries by id for lookup
+  const steedEntryById = $derived.by(() => {
+    const result: Record<string, AvailableRuleEntry> = {};
+    for (const entry of steedEntries) {
+      result[entry.rule.id] = entry;
+    }
+    return result;
+  });
+
+  const steedItemsWithEntries = $derived(
+    steedItems.map((item) => {
+      const entry = steedEntryById[item.originalRuleId ?? item.rule.id];
+      if (!entry) return { item, entry: null };
+      return { item, entry: correctEntryForPlanItem(entry, item) };
+    })
+  );
+
+  const steedVerbGroups = $derived(groupChoicesByVerb(steedEntries));
+  const steedVerbGroupMap = $derived(new Map(steedVerbGroups.map((g) => [g.verb, g])));
+
   function getAlternatives(verb: Verb, currentRuleId: string): AvailableRuleEntry[] {
     const group = verbGroupMap.get(verb);
+    if (!group) return [];
+    return group.entries.filter((e) => e.rule.id !== currentRuleId);
+  }
+
+  function getSteedAlternatives(verb: Verb, currentRuleId: string): AvailableRuleEntry[] {
+    const group = steedVerbGroupMap.get(verb);
     if (!group) return [];
     return group.entries.filter((e) => e.rule.id !== currentRuleId);
   }
@@ -112,7 +144,39 @@
     {/each}
   </div>
 
+  {#if hasSteed && steedItemsWithEntries.length > 0}
+    <div class="plan-stack__rows" role="list">
+      {#each steedItemsWithEntries as { item, entry }, i (item.instanceId)}
+        {#if entry}
+          <div role="listitem">
+            <PlanRow
+              {item}
+              {entry}
+              {facts}
+              {activeAnnotations}
+              alternatives={correctedAlternatives(
+                item,
+                getSteedAlternatives(item.verb, item.originalRuleId ?? '')
+              )}
+              canMoveUp={i > 0}
+              canMoveDown={i < steedItems.length - 1}
+              onSelectionChange={(selections) => onSelectionChange(item.instanceId, selections)}
+              onRemove={() => onRemoveFromPlan(item.instanceId)}
+              onMoveUp={() => onMovePlanItem(item.instanceId, 'up')}
+              onMoveDown={() => onMovePlanItem(item.instanceId, 'down')}
+              onSwapAlternative={(alt) => onSwapPlanItemRule(item.instanceId, alt)}
+            />
+          </div>
+        {/if}
+      {/each}
+    </div>
+  {/if}
+
   <AddRowPicker {entries} onAddStep={onAddToPlan} />
+
+  {#if hasSteed && steedEntries.length > 0}
+    <AddRowPicker entries={steedEntries} onAddStep={onAddToPlan} sublabel="play.addRow.steedSublabel" />
+  {/if}
 
   <div class="plan-stack__footer">
     <button

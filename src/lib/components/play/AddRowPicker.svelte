@@ -12,9 +12,10 @@
   interface Props {
     entries: AvailableRuleEntry[];
     onAddStep: (entry: AvailableRuleEntry) => void;
+    sublabel?: string;
   }
 
-  let { entries, onAddStep }: Props = $props();
+  let { entries, onAddStep, sublabel }: Props = $props();
 
   const verbGroupDefs = [
     { labelKey: 'play.addRow.planGroup', verbs: PLAN_VERBS },
@@ -87,10 +88,15 @@
   aria-label={$t('play.addRow.title')}
 >
   <div class="add-row-picker__stripe" aria-hidden="true">
-    <span class="add-row-picker__stripe-label">+ ADD</span>
+    <span class="add-row-picker__stripe-label">{$t('play.addRow.label')}</span>
+    {#if sublabel}
+      <span class="add-row-picker__stripe-sublabel">{$t(sublabel)}</span>
+    {/if}
   </div>
   <div class="add-row-picker__main" bind:this={mainEl}>
     {#each verbGroupDefs as groupDef (groupDef.labelKey)}
+      {@const hasAny = groupDef.verbs.some((v) => verbGroupMap.has(v))}
+      {#if hasAny}
       <div class="add-row-picker__group">
         <span class="add-row-picker__group-label">{$t(groupDef.labelKey)}</span>
         <div class="add-row-picker__verbs" role="group" aria-label={$t(groupDef.labelKey)}>
@@ -122,6 +128,7 @@
           {/each}
         </div>
       </div>
+      {/if}
     {/each}
     {#if openTooltipVerb && tooltipStyle}
       <span class="add-row-picker__tooltip" style={tooltipStyle}
@@ -142,8 +149,9 @@
 
   .add-row-picker__stripe {
     display: flex;
-    align-items: flex-start;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
     width: 6.875rem;
     flex-shrink: 0;
     padding: var(--spacing-sm);
@@ -158,6 +166,14 @@
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .add-row-picker__stripe-sublabel {
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--md-sys-color-primary);
+    margin-top: 2px;
   }
 
   .add-row-picker__main {

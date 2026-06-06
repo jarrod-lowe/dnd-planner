@@ -1,0 +1,65 @@
+name: 'Find Steed Upcast'
+description: 'Casting Find Steed with a L4 slot gives higher stats and fly speed'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-find-steed
+initialEffects:
+  - id: test-grant-level4-slot
+    phase: early
+    group:
+      - spellcasting-slots-set
+    activities:
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level4.total
+        source:
+          number: 1
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level4.remaining
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+steps:
+  # Verify L4 slot is available
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.slots.level4.remaining: 1
+  # Cast Find Steed using L4 slot
+  - addOffer:
+      id: cast-find-steed
+      selections:
+        slotLevel: 4
+      assert:
+        facts:
+          spellcasting.slots.level4.remaining: 0
+  # End turn: effect committed, L4 stats computed
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-steed
+            - effect-steed-slot-l4
+        facts:
+          companion.steed.summoned: 1
+          companion.steed.hp.max: 45
+          companion.steed.hp.current: 45
+          companion.steed.ac.value: 14
+          companion.steed.speed: 60
+          companion.steed.fly.can: 1
+          companion.steed.speed.fly: 60
+          # Ability scores are constant regardless of slot level
+          companion.steed.str: 18
+          companion.steed.dex: 12
+          companion.steed.con: 14
+          companion.steed.int: 6
+          companion.steed.wis: 12
+          companion.steed.cha: 8

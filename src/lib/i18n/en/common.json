@@ -19,6 +19,26 @@
         "name": "Sanctuary"
       }
     },
+    "spell-find-steed": {
+      "offer-find-steed": {
+        "name": "Find Steed",
+        "no_action": "No action available",
+        "no_slots": "No L2+ spell slots remaining",
+        "no_spellcasting": "Already cast a spell this turn"
+      },
+      "effect-steed": {
+        "name": "Otherworldly Steed"
+      },
+      "offer-steed-dummy-action": {
+        "name": "Steed Attack"
+      },
+      "offer-steed-dummy-bonus": {
+        "name": "Steed Bonus"
+      },
+      "offer-dismiss-steed": {
+        "name": "Dismiss Steed"
+      }
+    },
     "spell-sleep": {
       "offer-sleep": {
         "name": "Sleep",
@@ -1053,6 +1073,13 @@
       "hp": "HP",
       "ac": "AC",
       "todo": "TODO",
+      "steed": {
+        "hp": "Steed HP",
+        "ac": "Steed AC",
+        "speed": "Steed Speed",
+        "actions": "Steed Actions",
+        "bonusActions": "Steed Bonus"
+      },
       "sections": {
         "resources": "Resources",
         "stats": "Stats",
@@ -1235,7 +1262,8 @@
         "BUFF": "BUFF",
         "DEBUFF": "DEBUFF",
         "ITEM": "ITEM",
-        "BUILD": "BUILD"
+        "BUILD": "BUILD",
+        "MOUNT": "MOUNT"
       },
       "dismiss": "Dismiss effect",
       "reminder": "Reminder: action needed",
@@ -1255,7 +1283,9 @@
     },
     "ledger": {
       "title": "Resources",
-      "overBudget": "Over budget"
+      "overBudget": "Over budget",
+      "viewPlayer": "👤 You",
+      "viewSteed": "🐴 Steed"
     },
     "topBar": {
       "hp": "HP",
@@ -1269,7 +1299,9 @@
       "proficientDotHalf": "○",
       "proficientDotFull": "●",
       "proficientDotDouble": "◉",
-      "hpValue": "{{current}} / {{max}}"
+      "hpValue": "{{current}} / {{max}}",
+      "viewPlayer": "👤 You",
+      "viewSteed": "🐴 Steed"
     },
     "verbs": {
       "ATTACK": "Attack",
@@ -1300,7 +1332,8 @@
         "default": "Other",
         "self": "Self",
         "ally": "Ally",
-        "area": "Area"
+        "area": "Area",
+        "summon": "Summon"
       },
       "CONTROL": {
         "default": "Other",
@@ -1368,6 +1401,8 @@
     },
     "addRow": {
       "title": "Add Action",
+      "label": "+ ADD",
+      "steedSublabel": "Steed",
       "planGroup": "plan →",
       "recordGroup": "record →",
       "buildGroup": "build →",

@@ -60,6 +60,7 @@ vi.mock('$lib/play/playStore.svelte', () => ({
           }
         },
         isEvaluating: false,
+        effects: [],
         plannedItems: [],
         facts: {
           'character.movement.remaining': 25,

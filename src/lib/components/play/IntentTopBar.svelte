@@ -29,6 +29,9 @@
     currentLayout: UiLayout;
     onSwitchLayout: (layout: UiLayout) => void;
     concentrationEffectName?: string;
+    hasSteed?: boolean;
+    isSteedView?: boolean;
+    onSwitchView?: (view: 'player' | 'steed') => void;
   }
 
   let {
@@ -47,7 +50,10 @@
     showDownloadCharacter = false,
     currentLayout,
     onSwitchLayout,
-    concentrationEffectName
+    concentrationEffectName,
+    hasSteed = false,
+    isSteedView = false,
+    onSwitchView
   }: Props = $props();
 
   let showAbilities = $state(false);
@@ -144,6 +150,27 @@
     </div>
 
     <div class="intent-top-bar__chips">
+      {#if hasSteed && onSwitchView}
+        <div class="intent-top-bar__seg" role="radiogroup" aria-label={$t('play.topBar.viewPlayer') + ' / ' + $t('play.topBar.viewSteed')}>
+          <button
+            type="button"
+            class="intent-top-bar__seg-btn"
+            class:intent-top-bar__seg-btn--active={!isSteedView}
+            role="radio"
+            aria-checked={!isSteedView}
+            onclick={() => onSwitchView('player')}
+          >{$t('play.topBar.viewPlayer')}</button>
+          <button
+            type="button"
+            class="intent-top-bar__seg-btn"
+            class:intent-top-bar__seg-btn--active={isSteedView}
+            role="radio"
+            aria-checked={isSteedView}
+            onclick={() => onSwitchView('steed')}
+          >{$t('play.topBar.viewSteed')}</button>
+        </div>
+      {/if}
+
       {#if hpCurrent !== undefined && hpMax !== undefined}
         <div
           class="intent-top-bar__chip intent-top-bar__chip--hp"
@@ -430,6 +457,52 @@
 
   .intent-top-bar__chip--conc-active .intent-top-bar__conc-icon {
     color: var(--md-sys-color-primary);
+  }
+
+  .intent-top-bar__seg {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .intent-top-bar__seg-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: none;
+    background: transparent;
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--md-sys-color-on-surface-variant);
+    cursor: pointer;
+    transition:
+      background-color var(--transition-fast),
+      color var(--transition-fast);
+  }
+
+  .intent-top-bar__seg-btn:not(:first-child) {
+    border-top: 1px solid var(--md-sys-color-outline);
+  }
+
+  .intent-top-bar__seg-btn--active {
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+  }
+
+  .intent-top-bar__seg-btn:not(.intent-top-bar__seg-btn--active):hover {
+    background: var(--md-sys-color-surface-container-high);
+  }
+
+  .intent-top-bar__seg-btn:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: -2px;
   }
 
   .intent-top-bar__chip--abilities {
