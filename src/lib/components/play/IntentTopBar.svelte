@@ -60,14 +60,10 @@
   let showAbilities = $state(false);
 
   // Filter entries by active subject (undefined = player)
-  const subjectFiltered = $derived(
-    topBarEntries.filter((e) => e.subject === activeSubject)
-  );
+  const subjectFiltered = $derived(topBarEntries.filter((e) => e.subject === activeSubject));
 
   // Derive entries by type from subject-filtered list
-  const hpEntry = $derived(
-    subjectFiltered.find((e): e is UiEntryUsedMax => e.type === 'usedMax')
-  );
+  const hpEntry = $derived(subjectFiltered.find((e): e is UiEntryUsedMax => e.type === 'usedMax'));
   const valueEntries = $derived(
     subjectFiltered.filter((e): e is UiEntryValue => e.type === 'value')
   );
@@ -79,18 +75,18 @@
   );
 
   // HP resolved values
-  const hpCurrent = $derived(
-    hpEntry ? Number(facts[hpEntry.remaining] ?? 0) : undefined
-  );
-  const hpMax = $derived(
-    hpEntry ? Number(facts[hpEntry.total] ?? 0) : undefined
-  );
+  const hpCurrent = $derived(hpEntry ? Number(facts[hpEntry.remaining] ?? 0) : undefined);
+  const hpMax = $derived(hpEntry ? Number(facts[hpEntry.total] ?? 0) : undefined);
   const hpPercent = $derived(
     hpCurrent !== undefined && hpMax !== undefined && hpMax > 0
       ? Math.round((hpCurrent / hpMax) * 100)
       : undefined
   );
-  const hpVisible = $derived(hpEntry !== undefined && facts[hpEntry.remaining] !== undefined && facts[hpEntry.total] !== undefined);
+  const hpVisible = $derived(
+    hpEntry !== undefined &&
+      facts[hpEntry.remaining] !== undefined &&
+      facts[hpEntry.total] !== undefined
+  );
 
   // Concentration state
   const concActive = $derived(!!concentrationEffectName);

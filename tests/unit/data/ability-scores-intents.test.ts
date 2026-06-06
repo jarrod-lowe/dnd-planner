@@ -72,6 +72,21 @@ describe('ability-scores intent sub-buckets', () => {
     }
   });
 
+  describe('topBar uses saving-throw proficiency flags (not modifiers)', () => {
+    it('proficiencyFact for each ability uses .proficient flag', () => {
+      const resetRule = rules.find((r) => r.id === 'str-value-reset');
+      const topBar = resetRule?.ui?.topBar as
+        | Array<{ type: string; abilities?: Array<{ name: string; proficiencyFact?: string }> }>
+        | undefined;
+      expect(topBar).toBeDefined();
+      const abilityEntry = topBar?.find((e) => e.type === 'ability');
+      expect(abilityEntry?.abilities).toBeDefined();
+      for (const ability of abilityEntry?.abilities ?? []) {
+        expect(ability.proficiencyFact).toMatch(/\.proficient$/);
+      }
+    });
+  });
+
   describe('skill proficiency rules map to PROFICIENCY:skill', () => {
     const skills = [
       'athletics',

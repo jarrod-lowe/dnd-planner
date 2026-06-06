@@ -49,8 +49,14 @@
 
   <div class="ledger__cells">
     {#each visibleEntries as entry (entry.label + JSON.stringify(entry.nameParams))}
-      {@const total = entry.type === 'hitDie' ? Number(facts[entry.total] ?? 0) : Number(facts[(entry as UiEntryUsedMax).total] ?? 0)}
-      {@const remaining = entry.type === 'hitDie' ? Number(facts[entry.remaining] ?? 0) : Number(facts[(entry as UiEntryUsedMax).remaining] ?? 0)}
+      {@const total =
+        entry.type === 'hitDie'
+          ? Number(facts[entry.total] ?? 0)
+          : Number(facts[(entry as UiEntryUsedMax).total] ?? 0)}
+      {@const remaining =
+        entry.type === 'hitDie'
+          ? Number(facts[entry.remaining] ?? 0)
+          : Number(facts[(entry as UiEntryUsedMax).remaining] ?? 0)}
       <div
         class="ledger__cell"
         class:ledger__cell--muted={remaining === total && !isOverBudget}

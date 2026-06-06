@@ -189,7 +189,12 @@ describe('extractUiEntries — subject stamping', () => {
         ui: {
           subject: 'steed',
           topBar: [
-            { type: 'usedMax', label: 'play.stats.steed.hp', total: 'companion.steed.hp.max', remaining: 'companion.steed.hp.current' }
+            {
+              type: 'usedMax',
+              label: 'play.stats.steed.hp',
+              total: 'companion.steed.hp.max',
+              remaining: 'companion.steed.hp.current'
+            }
           ]
         }
       }
@@ -233,7 +238,12 @@ describe('extractUiEntries — subject stamping', () => {
         ui: {
           subject: 'steed',
           topBar: [
-            { type: 'usedMax', label: 'play.stats.steed.hp', total: 'companion.steed.hp.max', remaining: 'companion.steed.hp.current' }
+            {
+              type: 'usedMax',
+              label: 'play.stats.steed.hp',
+              total: 'companion.steed.hp.max',
+              remaining: 'companion.steed.hp.current'
+            }
           ]
         }
       }
@@ -255,7 +265,12 @@ describe('extractUiEntries — subject stamping', () => {
         ui: {
           subject: 'steed',
           resources: [
-            { type: 'usedMax', label: 'play.stats.steed.hp', total: 'companion.steed.hp.max', remaining: 'companion.steed.hp.current' }
+            {
+              type: 'usedMax',
+              label: 'play.stats.steed.hp',
+              total: 'companion.steed.hp.max',
+              remaining: 'companion.steed.hp.current'
+            }
           ]
         }
       }
@@ -402,7 +417,12 @@ describe('extractResourceEntries', () => {
         activities: [],
         ui: {
           resources: [
-            { type: 'usedMax', label: 'play.stats.actions', total: 'actions.max', remaining: 'actions.remaining' }
+            {
+              type: 'usedMax',
+              label: 'play.stats.actions',
+              total: 'actions.max',
+              remaining: 'actions.remaining'
+            }
           ]
         }
       }
@@ -438,10 +458,7 @@ describe('resolveEntryValue', () => {
     const { resolveEntryValue } = await import('$lib/play/extractTopBar');
     const facts: Facts = { 'ac.value': 16 };
     expect(
-      resolveEntryValue(
-        { type: 'value', label: 'play.topBar.ac', fact: 'ac.value' },
-        facts
-      )
+      resolveEntryValue({ type: 'value', label: 'play.topBar.ac', fact: 'ac.value' }, facts)
     ).toBe('16');
   });
 
@@ -459,12 +476,9 @@ describe('resolveEntryValue', () => {
   it('returns negative signed modifier', async () => {
     const { resolveEntryValue } = await import('$lib/play/extractTopBar');
     const facts: Facts = { 'skill.value': -2 };
-    expect(
-      resolveEntryValue(
-        { type: 'modifier', label: 'x', fact: 'skill.value' },
-        facts
-      )
-    ).toBe('-2');
+    expect(resolveEntryValue({ type: 'modifier', label: 'x', fact: 'skill.value' }, facts)).toBe(
+      '-2'
+    );
   });
 
   it('returns remaining/total dX for hitDie', async () => {
@@ -523,25 +537,19 @@ describe('isEntryVisible', () => {
   it('returns true for value when fact exists', async () => {
     const { isEntryVisible } = await import('$lib/play/extractTopBar');
     const facts: Facts = { 'ac.value': 16 };
-    expect(
-      isEntryVisible({ type: 'value', label: 'x', fact: 'ac.value' }, facts)
-    ).toBe(true);
+    expect(isEntryVisible({ type: 'value', label: 'x', fact: 'ac.value' }, facts)).toBe(true);
   });
 
   it('returns false for value when fact missing', async () => {
     const { isEntryVisible } = await import('$lib/play/extractTopBar');
     const facts: Facts = {};
-    expect(
-      isEntryVisible({ type: 'value', label: 'x', fact: 'ac.value' }, facts)
-    ).toBe(false);
+    expect(isEntryVisible({ type: 'value', label: 'x', fact: 'ac.value' }, facts)).toBe(false);
   });
 
   it('returns true for modifier when fact exists', async () => {
     const { isEntryVisible } = await import('$lib/play/extractTopBar');
     const facts: Facts = { 'skill.value': 5 };
-    expect(
-      isEntryVisible({ type: 'modifier', label: 'x', fact: 'skill.value' }, facts)
-    ).toBe(true);
+    expect(isEntryVisible({ type: 'modifier', label: 'x', fact: 'skill.value' }, facts)).toBe(true);
   });
 
   it('returns true for hitDie when total fact exists and is non-zero', async () => {

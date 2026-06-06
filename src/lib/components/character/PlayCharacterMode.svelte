@@ -206,7 +206,7 @@
           facts={playStore.state.facts}
           status={playStore.state.engineOutput?.status}
           viewLabel={activeSubject ? `play.companion.${activeSubject}` : undefined}
-          activeSubject={activeSubject}
+          {activeSubject}
         />
       </div>
     {/if}

@@ -102,6 +102,7 @@ function performEvaluation(): void {
     isEvaluating: false,
     facts: output.facts
   };
+  recalculateStats();
 }
 
 function getAlternativeEntries(instanceId: string): AvailableRuleEntry[] {

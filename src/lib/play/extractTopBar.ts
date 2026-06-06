@@ -165,15 +165,11 @@ export function extractUiEntries(
   );
 }
 
-export function extractTopBarEntries(
-  rules: { ui?: Record<string, unknown> }[]
-): UiEntry[] {
+export function extractTopBarEntries(rules: { ui?: Record<string, unknown> }[]): UiEntry[] {
   return extractUiEntries(rules, 'topBar');
 }
 
-export function extractResourceEntries(
-  rules: { ui?: Record<string, unknown> }[]
-): UiEntry[] {
+export function extractResourceEntries(rules: { ui?: Record<string, unknown> }[]): UiEntry[] {
   return extractUiEntries(rules, 'resources');
 }
 

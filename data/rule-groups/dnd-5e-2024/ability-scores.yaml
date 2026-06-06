@@ -38,22 +38,22 @@ ruleGroups:
               abilities:
                 - name: play.stats.str
                   fact: str.modifier
-                  proficiencyFact: str.save
+                  proficiencyFact: str.save.proficient
                 - name: play.stats.dex
                   fact: dex.modifier
-                  proficiencyFact: dex.save
+                  proficiencyFact: dex.save.proficient
                 - name: play.stats.con
                   fact: con.modifier
-                  proficiencyFact: con.save
+                  proficiencyFact: con.save.proficient
                 - name: play.stats.int
                   fact: int.modifier
-                  proficiencyFact: int.save
+                  proficiencyFact: int.save.proficient
                 - name: play.stats.wis
                   fact: wis.modifier
-                  proficiencyFact: wis.save
+                  proficiencyFact: wis.save.proficient
                 - name: play.stats.cha
                   fact: cha.modifier
-                  proficiencyFact: cha.save
+                  proficiencyFact: cha.save.proficient
 
       - id: str-save-modifier
         phase: normal
