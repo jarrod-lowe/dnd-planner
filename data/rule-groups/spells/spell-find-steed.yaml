@@ -395,10 +395,6 @@ ruleGroups:
                     phase: normal
                     after:
                       - group: __planned__
-                    when:
-                      - fact: rest.long
-                        operator: equals
-                        value: 0
                     ui:
                       section: mount
                       name: rule.spell-find-steed.effect-steed.name
@@ -576,9 +572,6 @@ ruleGroups:
                           - fact: companion.steed.dismissed
                             operator: equals
                             value: 0
-                          - fact: rest.long
-                            operator: equals
-                            value: 0
                   when:
                     - fact: find-steed.selectedLevel
                       operator: equals
@@ -591,10 +584,6 @@ ruleGroups:
                     phase: normal
                     after:
                       - group: __planned__
-                    when:
-                      - fact: rest.long
-                        operator: equals
-                        value: 0
                     ui:
                       section: mount
                       name: rule.spell-find-steed.effect-steed.name
@@ -772,9 +761,6 @@ ruleGroups:
                           - fact: companion.steed.dismissed
                             operator: equals
                             value: 0
-                          - fact: rest.long
-                            operator: equals
-                            value: 0
                   when:
                     - fact: find-steed.selectedLevel
                       operator: equals
@@ -787,10 +773,6 @@ ruleGroups:
                     phase: normal
                     after:
                       - group: __planned__
-                    when:
-                      - fact: rest.long
-                        operator: equals
-                        value: 0
                     ui:
                       section: mount
                       name: rule.spell-find-steed.effect-steed.name
@@ -978,9 +960,6 @@ ruleGroups:
                           - fact: companion.steed.dismissed
                             operator: equals
                             value: 0
-                          - fact: rest.long
-                            operator: equals
-                            value: 0
                   when:
                     - fact: find-steed.selectedLevel
                       operator: equals
@@ -993,10 +972,6 @@ ruleGroups:
                     phase: normal
                     after:
                       - group: __planned__
-                    when:
-                      - fact: rest.long
-                        operator: equals
-                        value: 0
                     ui:
                       section: mount
                       name: rule.spell-find-steed.effect-steed.name
@@ -1182,9 +1157,6 @@ ruleGroups:
                         self: true
                         when:
                           - fact: companion.steed.dismissed
-                            operator: equals
-                            value: 0
-                          - fact: rest.long
                             operator: equals
                             value: 0
                   when:
