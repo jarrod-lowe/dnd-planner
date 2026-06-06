@@ -88,9 +88,7 @@
   // Steed / companion detection
   const mountEffect = $derived(currentEffects.find((e) => isMountEffect(e)));
   const companionView = $derived(getCompanionView());
-  const activeSubject = $derived(
-    companionView === 'player' ? undefined : companionView
-  );
+  const activeSubject = $derived(companionView === 'player' ? undefined : companionView);
 
   // Compute available subjects dynamically from entries and effects
   const availableSubjects = $derived.by(() => {
@@ -220,9 +218,7 @@
           stats={filteredStats}
           facts={playStore.state.facts}
           status={playStore.state.engineOutput?.status}
-          viewLabel={activeSubject
-            ? `play.companion.${activeSubject}`
-            : undefined}
+          viewLabel={activeSubject ? `play.companion.${activeSubject}` : undefined}
         />
       </div>
     {/if}

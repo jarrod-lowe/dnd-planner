@@ -154,7 +154,9 @@
         <div
           class="intent-top-bar__seg"
           role="radiogroup"
-          aria-label={$t('play.topBar.viewPlayer') + ' / ' + availableSubjects.map((s) => $t(`play.companion.${s}`)).join(' / ')}
+          aria-label={$t('play.topBar.viewPlayer') +
+            ' / ' +
+            availableSubjects.map((s) => $t(`play.companion.${s}`)).join(' / ')}
         >
           <button
             type="button"
@@ -171,8 +173,7 @@
               class:intent-top-bar__seg-btn--active={activeSubject === subject}
               role="radio"
               aria-checked={activeSubject === subject}
-              onclick={() => onSwitchSubject(subject)}
-              >{$t(`play.companion.${subject}`)}</button
+              onclick={() => onSwitchSubject(subject)}>{$t(`play.companion.${subject}`)}</button
             >
           {/each}
         </div>

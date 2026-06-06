@@ -36,7 +36,12 @@ import PlanStack from '$lib/components/play/PlanStack.svelte';
 import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-engine';
 import type { PlannedItem } from '$lib/play/types';
 
-function makeEntry(id: string, section: string, verb: string = 'ATTACK', subject?: string): AvailableRuleEntry {
+function makeEntry(
+  id: string,
+  section: string,
+  verb: string = 'ATTACK',
+  subject?: string
+): AvailableRuleEntry {
   const ui: Record<string, unknown> = { section, name: id, intents: { [verb]: 'default' } };
   if (subject) ui.subject = subject;
   return {
@@ -51,7 +56,12 @@ function makeEntry(id: string, section: string, verb: string = 'ATTACK', subject
   };
 }
 
-function makeItem(ruleId: string, section: string, verb: string = 'ATTACK', subject?: string): PlannedItem {
+function makeItem(
+  ruleId: string,
+  section: string,
+  verb: string = 'ATTACK',
+  subject?: string
+): PlannedItem {
   const ui: Record<string, unknown> = { section, name: ruleId };
   if (subject) ui.subject = subject;
   return {
