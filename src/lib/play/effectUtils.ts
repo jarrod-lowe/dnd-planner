@@ -6,7 +6,15 @@ export interface DurationState {
   nearExpiry: boolean;
 }
 
-export type EffectKind = 'CONC' | 'ONGOING' | 'SENSE' | 'BUFF' | 'DEBUFF' | 'ITEM' | 'BUILD' | 'MOUNT';
+export type EffectKind =
+  | 'CONC'
+  | 'ONGOING'
+  | 'SENSE'
+  | 'BUFF'
+  | 'DEBUFF'
+  | 'ITEM'
+  | 'BUILD'
+  | 'MOUNT';
 export type ChipState = 'rest' | 'pending' | 'expiring';
 
 /**

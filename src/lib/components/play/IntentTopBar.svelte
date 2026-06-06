@@ -151,23 +151,27 @@
 
     <div class="intent-top-bar__chips">
       {#if hasSteed && onSwitchView}
-        <div class="intent-top-bar__seg" role="radiogroup" aria-label={$t('play.topBar.viewPlayer') + ' / ' + $t('play.topBar.viewSteed')}>
+        <div
+          class="intent-top-bar__seg"
+          role="radiogroup"
+          aria-label={$t('play.topBar.viewPlayer') + ' / ' + $t('play.topBar.viewSteed')}
+        >
           <button
             type="button"
             class="intent-top-bar__seg-btn"
             class:intent-top-bar__seg-btn--active={!isSteedView}
             role="radio"
             aria-checked={!isSteedView}
-            onclick={() => onSwitchView('player')}
-          >{$t('play.topBar.viewPlayer')}</button>
+            onclick={() => onSwitchView('player')}>{$t('play.topBar.viewPlayer')}</button
+          >
           <button
             type="button"
             class="intent-top-bar__seg-btn"
             class:intent-top-bar__seg-btn--active={isSteedView}
             role="radio"
             aria-checked={isSteedView}
-            onclick={() => onSwitchView('steed')}
-          >{$t('play.topBar.viewSteed')}</button>
+            onclick={() => onSwitchView('steed')}>{$t('play.topBar.viewSteed')}</button
+          >
         </div>
       {/if}
 

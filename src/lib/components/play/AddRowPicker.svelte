@@ -97,37 +97,37 @@
     {#each verbGroupDefs as groupDef (groupDef.labelKey)}
       {@const hasAny = groupDef.verbs.some((v) => verbGroupMap.has(v))}
       {#if hasAny}
-      <div class="add-row-picker__group">
-        <span class="add-row-picker__group-label">{$t(groupDef.labelKey)}</span>
-        <div class="add-row-picker__verbs" role="group" aria-label={$t(groupDef.labelKey)}>
-          {#each groupDef.verbs as verb (verb)}
-            {@const group = verbGroupMap.get(verb)}
-            {#if group}
-              {@const hasLegal = group.entries.some((e) => e.legal)}
-              <button
-                type="button"
-                class="add-row-picker__verb"
-                class:add-row-picker__verb--illegal={!hasLegal}
-                onclick={(e) => handleVerbClick(verb, hasLegal, e)}
-                aria-label={hasLegal
-                  ? $t(verbLabelKey(verb))
-                  : `${$t(verbLabelKey(verb))} — ${$t('play.addRow.illegalTag')}`}
-              >
-                {$t(verbLabelKey(verb))}
-                {#if !hasLegal}
-                  <span class="add-row-picker__illegal-tag" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path
-                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
-                      />
-                    </svg>
-                  </span>
-                {/if}
-              </button>
-            {/if}
-          {/each}
+        <div class="add-row-picker__group">
+          <span class="add-row-picker__group-label">{$t(groupDef.labelKey)}</span>
+          <div class="add-row-picker__verbs" role="group" aria-label={$t(groupDef.labelKey)}>
+            {#each groupDef.verbs as verb (verb)}
+              {@const group = verbGroupMap.get(verb)}
+              {#if group}
+                {@const hasLegal = group.entries.some((e) => e.legal)}
+                <button
+                  type="button"
+                  class="add-row-picker__verb"
+                  class:add-row-picker__verb--illegal={!hasLegal}
+                  onclick={(e) => handleVerbClick(verb, hasLegal, e)}
+                  aria-label={hasLegal
+                    ? $t(verbLabelKey(verb))
+                    : `${$t(verbLabelKey(verb))} — ${$t('play.addRow.illegalTag')}`}
+                >
+                  {$t(verbLabelKey(verb))}
+                  {#if !hasLegal}
+                    <span class="add-row-picker__illegal-tag" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                          d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+                        />
+                      </svg>
+                    </span>
+                  {/if}
+                </button>
+              {/if}
+            {/each}
+          </div>
         </div>
-      </div>
       {/if}
     {/each}
     {#if openTooltipVerb && tooltipStyle}

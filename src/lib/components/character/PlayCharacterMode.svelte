@@ -15,11 +15,7 @@
   import type { Character } from '$lib/character/types';
   import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
   import { getConcentrationEffectName, isMountEffect } from '$lib/play/effectUtils';
-  import {
-    getCompanionView,
-    setCompanionView,
-    isSteedView
-  } from '$lib/play/companionStore.svelte';
+  import { getCompanionView, setCompanionView, isSteedView } from '$lib/play/companionStore.svelte';
 
   interface Props {
     character: Character;
@@ -206,8 +202,8 @@
           facts={playStore.state.facts}
           {activeAnnotations}
           {hasSteed}
-          steedItems={steedItems}
-          steedEntries={steedEntries}
+          {steedItems}
+          {steedEntries}
           onAddToPlan={handleChoiceTap}
           onRemoveFromPlan={handleRemove}
           onMovePlanItem={(id, dir) => playStore.movePlanItem(id, dir)}
@@ -219,7 +215,11 @@
           stats={filteredStats}
           facts={playStore.state.facts}
           status={playStore.state.engineOutput?.status}
-          viewLabel={hasSteed ? (viewingSteed ? 'play.ledger.viewSteed' : 'play.ledger.viewPlayer') : undefined}
+          viewLabel={hasSteed
+            ? viewingSteed
+              ? 'play.ledger.viewSteed'
+              : 'play.ledger.viewPlayer'
+            : undefined}
         />
       </div>
     {/if}

@@ -175,7 +175,11 @@
   <AddRowPicker {entries} onAddStep={onAddToPlan} />
 
   {#if hasSteed && steedEntries.length > 0}
-    <AddRowPicker entries={steedEntries} onAddStep={onAddToPlan} sublabel="play.addRow.steedSublabel" />
+    <AddRowPicker
+      entries={steedEntries}
+      onAddStep={onAddToPlan}
+      sublabel="play.addRow.steedSublabel"
+    />
   {/if}
 
   <div class="plan-stack__footer">

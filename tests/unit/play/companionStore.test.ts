@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { getCompanionView, setCompanionView, isSteedView, resetCompanionView } from '$lib/play/companionStore.svelte';
+import {
+  getCompanionView,
+  setCompanionView,
+  isSteedView,
+  resetCompanionView
+} from '$lib/play/companionStore.svelte';
 
 describe('companionStore', () => {
   it('defaults to player view', () => {
