@@ -328,6 +328,16 @@ ruleGroups:
                     - fact: spellcasting.slots.level5.remaining
                       operator: lessThan
                       value: 0
+                # No eligible slot was resolved (selectedLevel < 2 means no L2+ slot available)
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-find-steed.offer-find-steed.no_slots
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: lessThan
+                      value: 2
 
                 # === Steed facts for same-turn use ===
                 - type: numberSet
