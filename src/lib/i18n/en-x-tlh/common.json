@@ -1097,11 +1097,11 @@
       "ac": "DIch Jun",
       "todo": "TODO",
       "steed": {
-        "hp": "Sargh HP",
-        "ac": "Sargh DIch Jun",
-        "speed": "Sargh Do",
-        "actions": "Sargh DIvI'",
-        "bonusActions": "Sargh Quv"
+        "hp": "HP",
+        "ac": "DIch Jun",
+        "speed": "SPD",
+        "actions": "DIvI'",
+        "bonusActions": "DIvI' latlh"
       },
       "sections": {
         "resources": "DIvI' Duj",
