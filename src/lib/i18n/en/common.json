@@ -31,10 +31,12 @@
         "name": "Otherworldly Steed"
       },
       "offer-steed-dummy-action": {
-        "name": "Steed Attack"
+        "name": "Steed Attack",
+        "no_actions": "Steed has no actions remaining"
       },
       "offer-steed-dummy-bonus": {
-        "name": "Steed Bonus"
+        "name": "Steed Bonus",
+        "no_bonus_actions": "Steed has no bonus actions remaining"
       },
       "offer-dismiss-steed": {
         "name": "Dismiss Steed"
