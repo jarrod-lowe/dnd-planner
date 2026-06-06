@@ -3084,4 +3084,92 @@ describe('playStore', () => {
       }
     });
   });
+
+  describe('effect mutations recalculate derived UI', () => {
+    function makeEngineOutput(): EngineOutput {
+      return {
+        status: { ok: true, legal: true, applicable: true },
+        facts: {},
+        collections: {},
+        availableRules: [],
+        diagnostics: { errors: [], warnings: [], notices: [] },
+        trace: {
+          appliedRuleIds: [],
+          appliedActivityIds: [],
+          providedCapabilities: [],
+          emittedEvents: []
+        },
+        effects: [],
+        next: {
+          schemaVersion: 1,
+          rules: { standing: [], planned: [], effects: [] },
+          state: { facts: {} }
+        }
+      } as EngineOutput;
+    }
+
+    const effectWithTopBar: Rule = {
+      id: 'steed-effect',
+      activities: [],
+      ui: { topBar: [{ type: 'value', label: 'Steed HP', fact: 'steed.hp' }] }
+    };
+
+    it('updates topBarEntries after addFollowupEffect', async () => {
+      vi.mocked(evaluate).mockReturnValue(makeEngineOutput());
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      playStore.addFollowupEffect(effectWithTopBar);
+
+      expect(playStore.state.topBarEntries).toHaveLength(1);
+      expect(playStore.state.topBarEntries[0]).toMatchObject({
+        label: 'Steed HP',
+        fact: 'steed.hp'
+      });
+    });
+
+    it('updates topBarEntries after removeEffect', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      const mockApiPost = vi.mocked(apiPost);
+      vi.mocked(evaluate).mockReturnValue(makeEngineOutput());
+
+      mockApiGet
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ ruleGroups: [] }) } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ effects: JSON.stringify([effectWithTopBar]) })
+        } as Response);
+      mockApiPost.mockResolvedValue({ ok: true, status: 204 } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      await playStore.loadRuleGroups('char-1');
+
+      expect(playStore.state.topBarEntries).toHaveLength(1);
+
+      playStore.removeEffect('steed-effect');
+
+      expect(playStore.state.topBarEntries).toHaveLength(0);
+    });
+
+    it('updates topBarEntries after endTurn commits effects from engine output', async () => {
+      const mockEvaluate = vi.mocked(evaluate);
+      const output = makeEngineOutput();
+      output.effects = [effectWithTopBar];
+      mockEvaluate.mockReturnValue(output);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      playStore.addToPlan({ id: 'some-action', activities: [] });
+      vi.advanceTimersByTime(300);
+
+      expect(playStore.state.topBarEntries).toHaveLength(0);
+
+      playStore.endTurn();
+
+      expect(playStore.state.topBarEntries).toHaveLength(1);
+      expect(playStore.state.topBarEntries[0]).toMatchObject({ label: 'Steed HP' });
+    });
+  });
 });

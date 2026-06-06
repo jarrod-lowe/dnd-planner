@@ -1,5 +1,6 @@
 import type { Rule, EngineOutput, Facts, Verb } from '$lib/rules-engine';
 import type { StatEntry } from '$lib/play/extractStats';
+import type { TopBarEntry, UiEntry } from '$lib/play/extractTopBar';
 
 /**
  * Represents a single item in the user's plan.
@@ -46,4 +47,8 @@ export interface PlayState {
   currentCharacterId: string | null;
   /** Stats declarations extracted from standing rules for display in stats column */
   stats: StatEntry[];
+  /** Top bar entries extracted from standing rules for display in the intent top bar */
+  topBarEntries: TopBarEntry[];
+  /** Resource entries extracted from standing rules for display in the ledger */
+  resourceEntries: UiEntry[];
 }

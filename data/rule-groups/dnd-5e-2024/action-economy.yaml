@@ -25,6 +25,11 @@ ruleGroups:
               total: actions.max
               remaining: actions.remaining
               section: resources
+          resources:
+            - type: usedMax
+              label: play.stats.actions
+              total: actions.max
+              remaining: actions.remaining
         activities:
           - type: numberSet
             source:
@@ -56,6 +61,11 @@ ruleGroups:
               total: bonusActions.max
               remaining: bonusActions.remaining
               section: resources
+          resources:
+            - type: usedMax
+              label: play.stats.bonusActions
+              total: bonusActions.max
+              remaining: bonusActions.remaining
         activities:
           - type: numberSet
             source:
@@ -88,6 +98,11 @@ ruleGroups:
               total: reactions.max
               remaining: reactions.remaining
               section: resources
+          resources:
+            - type: usedMax
+              label: play.stats.reactions
+              total: reactions.max
+              remaining: reactions.remaining
         activities:
           - type: numberIncrement
             source:

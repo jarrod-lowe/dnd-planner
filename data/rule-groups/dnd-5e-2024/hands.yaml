@@ -23,6 +23,11 @@ ruleGroups:
               total: hands.max
               remaining: hands.remaining
               section: resources
+          resources:
+            - type: usedMax
+              label: play.stats.hands
+              total: hands.max
+              remaining: hands.remaining
         activities:
           - type: numberSet
             source:

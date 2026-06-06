@@ -1,36 +1,35 @@
 <script lang="ts">
   import { t } from '$lib/i18n';
-  import type { StatEntry, StatEntryUsedMax } from '$lib/play/extractStats';
+  import type { UiEntry, UiEntryUsedMax, UiEntryHitDie } from '$lib/play/extractTopBar';
+  import { isEntryVisible, resolveEntryValue } from '$lib/play/extractTopBar';
   import type { Facts, Status } from '$lib/rules-engine';
 
   interface Props {
-    stats: StatEntry[];
+    resourceEntries: UiEntry[];
     facts: Facts;
     status?: Status;
     viewLabel?: string;
+    activeSubject?: string;
   }
 
-  let { stats, facts, status, viewLabel }: Props = $props();
+  let { resourceEntries, facts, status, viewLabel, activeSubject }: Props = $props();
 
-  const RESOURCE_SECTIONS = new Set(['resources']);
-
-  const resourceEntries = $derived(
-    stats.filter(
-      (s): s is StatEntryUsedMax => s.type === 'usedMax' && RESOURCE_SECTIONS.has(s.section)
-    )
+  const visibleEntries = $derived(
+    resourceEntries
+      .filter((e) => e.subject === activeSubject)
+      .filter(
+        (e): e is UiEntryUsedMax | UiEntryHitDie =>
+          (e.type === 'usedMax' || e.type === 'hitDie') && isEntryVisible(e, facts)
+      )
   );
 
   const isOverBudget = $derived(status !== undefined && status.legal === false);
 
-  function getValues(stat: StatEntryUsedMax) {
-    const total = Number(facts[stat.total] ?? 0);
-    const remaining = Number(facts[stat.remaining] ?? 0);
-    return { total, remaining };
-  }
-
-  function labelFor(stat: StatEntry): string {
-    const params = stat.nameParams ?? {};
-    return $t(stat.name, params);
+  function labelFor(entry: UiEntry): string {
+    if (entry.nameParams && Object.keys(entry.nameParams).length > 0) {
+      return $t(entry.label, entry.nameParams);
+    }
+    return $t(entry.label);
   }
 </script>
 
@@ -49,16 +48,23 @@
   {/if}
 
   <div class="ledger__cells">
-    {#each resourceEntries as stat (stat.name + JSON.stringify(stat.nameParams))}
-      {@const values = getValues(stat)}
+    {#each visibleEntries as entry (entry.label + JSON.stringify(entry.nameParams))}
+      {@const total =
+        entry.type === 'hitDie'
+          ? Number(facts[entry.total] ?? 0)
+          : Number(facts[(entry as UiEntryUsedMax).total] ?? 0)}
+      {@const remaining =
+        entry.type === 'hitDie'
+          ? Number(facts[entry.remaining] ?? 0)
+          : Number(facts[(entry as UiEntryUsedMax).remaining] ?? 0)}
       <div
         class="ledger__cell"
-        class:ledger__cell--muted={values.remaining === values.total && !isOverBudget}
-        class:ledger__cell--warn={isOverBudget && values.remaining < values.total}
-        aria-label="{labelFor(stat)}: {values.remaining} of {values.total}"
+        class:ledger__cell--muted={remaining === total && !isOverBudget}
+        class:ledger__cell--warn={isOverBudget && remaining < total}
+        aria-label="{labelFor(entry)}: {remaining} of {total}"
       >
-        <span class="ledger__cell-label">{labelFor(stat)}</span>
-        <span class="ledger__cell-value">{values.remaining}/{values.total}</span>
+        <span class="ledger__cell-label">{labelFor(entry)}</span>
+        <span class="ledger__cell-value">{resolveEntryValue(entry, facts)}</span>
       </div>
     {/each}
   </div>

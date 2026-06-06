@@ -46,6 +46,31 @@ ruleGroups:
               total: hitDie.d12.total
               remaining: hitDie.d12.remaining
               section: resources
+          resources:
+            - type: hitDie
+              label: play.stats.hitDie
+              nameParams: { dieSize: 6 }
+              total: hitDie.d6.total
+              remaining: hitDie.d6.remaining
+              dieSize: 6
+            - type: hitDie
+              label: play.stats.hitDie
+              nameParams: { dieSize: 8 }
+              total: hitDie.d8.total
+              remaining: hitDie.d8.remaining
+              dieSize: 8
+            - type: hitDie
+              label: play.stats.hitDie
+              nameParams: { dieSize: 10 }
+              total: hitDie.d10.total
+              remaining: hitDie.d10.remaining
+              dieSize: 10
+            - type: hitDie
+              label: play.stats.hitDie
+              nameParams: { dieSize: 12 }
+              total: hitDie.d12.total
+              remaining: hitDie.d12.remaining
+              dieSize: 12
         activities:
           - type: numberCopy
             source:

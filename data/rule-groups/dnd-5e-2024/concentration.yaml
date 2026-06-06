@@ -21,6 +21,11 @@ ruleGroups:
               total: concentration.max
               remaining: concentration.remaining
               section: magic
+          topBar:
+            - type: concentration
+              label: play.topBar.conc
+              activeLabel: play.topBar.concActive
+              noneLabel: play.topBar.concNone
         activities:
           - type: numberSet
             source:

@@ -102,3 +102,7 @@ ruleGroups:
               type: value
               fact: ac.value
               section: abilities
+          topBar:
+            - type: value
+              label: play.topBar.ac
+              fact: ac.value

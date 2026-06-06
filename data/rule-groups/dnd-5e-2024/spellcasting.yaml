@@ -25,6 +25,11 @@ ruleGroups:
               total: spellcasting.max
               remaining: spellcasting.remaining
               section: resources
+          resources:
+            - type: usedMax
+              label: play.stats.spellcasting
+              total: spellcasting.max
+              remaining: spellcasting.remaining
         activities:
           - type: numberSet
             source:

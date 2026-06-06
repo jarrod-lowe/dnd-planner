@@ -780,6 +780,7 @@ ruleGroups:
                     ui:
                       section: mount
                       name: rule.spell-find-steed.effect-steed.name
+                      subject: steed
                       stats:
                         - name: play.stats.steed.hp
                           type: usedMax
@@ -809,6 +810,30 @@ ruleGroups:
                           remaining: companion.steed.bonusActions.remaining
                           section: resources
                           subject: steed
+                      topBar:
+                        - type: usedMax
+                          label: play.stats.steed.hp
+                          total: companion.steed.hp.max
+                          remaining: companion.steed.hp.current
+                        - type: value
+                          label: play.stats.steed.ac
+                          fact: companion.steed.ac.value
+                        - type: value
+                          label: play.stats.steed.speed
+                          fact: companion.steed.speed
+                      resources:
+                        - type: usedMax
+                          label: play.stats.steed.hp
+                          total: companion.steed.hp.max
+                          remaining: companion.steed.hp.current
+                        - type: usedMax
+                          label: play.stats.steed.actions
+                          total: companion.steed.actions.max
+                          remaining: companion.steed.actions.remaining
+                        - type: usedMax
+                          label: play.stats.steed.bonusActions
+                          total: companion.steed.bonusActions.max
+                          remaining: companion.steed.bonusActions.remaining
                     activities:
                       - type: numberSet
                         target:
@@ -1032,6 +1057,7 @@ ruleGroups:
                     ui:
                       section: mount
                       name: rule.spell-find-steed.effect-steed.name
+                      subject: steed
                       stats:
                         - name: play.stats.steed.hp
                           type: usedMax
@@ -1061,6 +1087,30 @@ ruleGroups:
                           remaining: companion.steed.bonusActions.remaining
                           section: resources
                           subject: steed
+                      topBar:
+                        - type: usedMax
+                          label: play.stats.steed.hp
+                          total: companion.steed.hp.max
+                          remaining: companion.steed.hp.current
+                        - type: value
+                          label: play.stats.steed.ac
+                          fact: companion.steed.ac.value
+                        - type: value
+                          label: play.stats.steed.speed
+                          fact: companion.steed.speed
+                      resources:
+                        - type: usedMax
+                          label: play.stats.steed.hp
+                          total: companion.steed.hp.max
+                          remaining: companion.steed.hp.current
+                        - type: usedMax
+                          label: play.stats.steed.actions
+                          total: companion.steed.actions.max
+                          remaining: companion.steed.actions.remaining
+                        - type: usedMax
+                          label: play.stats.steed.bonusActions
+                          total: companion.steed.bonusActions.max
+                          remaining: companion.steed.bonusActions.remaining
                     activities:
                       - type: numberSet
                         target:
@@ -1283,6 +1333,7 @@ ruleGroups:
                     ui:
                       section: mount
                       name: rule.spell-find-steed.effect-steed.name
+                      subject: steed
                       stats:
                         - name: play.stats.steed.hp
                           type: usedMax
@@ -1312,6 +1363,30 @@ ruleGroups:
                           remaining: companion.steed.bonusActions.remaining
                           section: resources
                           subject: steed
+                      topBar:
+                        - type: usedMax
+                          label: play.stats.steed.hp
+                          total: companion.steed.hp.max
+                          remaining: companion.steed.hp.current
+                        - type: value
+                          label: play.stats.steed.ac
+                          fact: companion.steed.ac.value
+                        - type: value
+                          label: play.stats.steed.speed
+                          fact: companion.steed.speed
+                      resources:
+                        - type: usedMax
+                          label: play.stats.steed.hp
+                          total: companion.steed.hp.max
+                          remaining: companion.steed.hp.current
+                        - type: usedMax
+                          label: play.stats.steed.actions
+                          total: companion.steed.actions.max
+                          remaining: companion.steed.actions.remaining
+                        - type: usedMax
+                          label: play.stats.steed.bonusActions
+                          total: companion.steed.bonusActions.max
+                          remaining: companion.steed.bonusActions.remaining
                     activities:
                       - type: numberSet
                         target:
@@ -1545,6 +1620,7 @@ ruleGroups:
                     ui:
                       section: mount
                       name: rule.spell-find-steed.effect-steed.name
+                      subject: steed
                       stats:
                         - name: play.stats.steed.hp
                           type: usedMax
@@ -1574,6 +1650,30 @@ ruleGroups:
                           remaining: companion.steed.bonusActions.remaining
                           section: resources
                           subject: steed
+                      topBar:
+                        - type: usedMax
+                          label: play.stats.steed.hp
+                          total: companion.steed.hp.max
+                          remaining: companion.steed.hp.current
+                        - type: value
+                          label: play.stats.steed.ac
+                          fact: companion.steed.ac.value
+                        - type: value
+                          label: play.stats.steed.speed
+                          fact: companion.steed.speed
+                      resources:
+                        - type: usedMax
+                          label: play.stats.steed.hp
+                          total: companion.steed.hp.max
+                          remaining: companion.steed.hp.current
+                        - type: usedMax
+                          label: play.stats.steed.actions
+                          total: companion.steed.actions.max
+                          remaining: companion.steed.actions.remaining
+                        - type: usedMax
+                          label: play.stats.steed.bonusActions
+                          total: companion.steed.bonusActions.max
+                          remaining: companion.steed.bonusActions.remaining
                     activities:
                       - type: numberSet
                         target:
