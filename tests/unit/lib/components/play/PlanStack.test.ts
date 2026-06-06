@@ -197,4 +197,54 @@ describe('PlanStack', () => {
     expect(altTexts).toContain('attack-bow');
     expect(altTexts).not.toContain('steed-attack');
   });
+
+  it('passes onFollowup through so followup buttons appear for rules with met conditions', () => {
+    const item = makeItem('attack-javelin', 'action', 'ATTACK');
+    const entryWithFollowup: AvailableRuleEntry = {
+      rule: {
+        id: 'attack-javelin',
+        phase: 'normal',
+        verb: 'ATTACK' as never,
+        activities: [],
+        ui: {
+          section: 'action',
+          name: 'attack-javelin',
+          intents: { ATTACK: 'default' },
+          followups: [
+            {
+              type: 'effect',
+              condition: { fact: 'attack.javelin.mastery', operator: 'equals', value: 1 },
+              button: 'rule.dnd-5e-2024.attacks.javelin-slow.button',
+              addRule: {
+                target: 'effect',
+                rule: { id: 'effect-javelin-slow', activities: [] }
+              }
+            }
+          ]
+        }
+      },
+      legal: true
+    };
+    const onFollowup = vi.fn();
+
+    mount(PlanStack, {
+      target: container,
+      props: {
+        items: [item],
+        entries: [entryWithFollowup],
+        facts: { 'attack.javelin.mastery': 1 } as unknown as Facts,
+        activeAnnotations: [],
+        onAddToPlan: noop,
+        onRemoveFromPlan: noop,
+        onMovePlanItem: noop,
+        onSelectionChange: noop,
+        onSwapPlanItemRule: noop,
+        onEndTurn: noop,
+        onFollowup
+      }
+    });
+
+    const followupButton = container.querySelector('.panel-renderer__followup-button');
+    expect(followupButton).toBeTruthy();
+  });
 });

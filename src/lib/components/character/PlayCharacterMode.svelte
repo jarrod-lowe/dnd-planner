@@ -111,14 +111,6 @@
   }
 
   // Handle plan item controls
-  function handleMoveUp(instanceId: string): void {
-    playStore.movePlanItem(instanceId, 'up');
-  }
-
-  function handleMoveDown(instanceId: string): void {
-    playStore.movePlanItem(instanceId, 'down');
-  }
-
   function handleRemove(instanceId: string): void {
     playStore.removeFromPlan(instanceId);
   }
@@ -189,6 +181,7 @@
         onMovePlanItem={(id, dir) => playStore.movePlanItem(id, dir)}
         onSelectionChange={handleSelectionChange}
         onSwapPlanItemRule={(id, entry) => playStore.swapPlanItemRule(id, entry)}
+        onFollowup={(rule) => playStore.addFollowupEffect(rule)}
         onEndTurn={() => playStore.endTurn()}
       />
       <Ledger

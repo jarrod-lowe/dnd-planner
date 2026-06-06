@@ -8,7 +8,7 @@
   import { groupChoicesByVerb } from '$lib/play/groupChoicesByVerb';
   import { getSubject } from '$lib/play/subjectUtils';
   import type { PlannedItem } from '$lib/play/types';
-  import type { AvailableRuleEntry, Annotation, Facts, Verb } from '$lib/rules-engine';
+  import type { AvailableRuleEntry, Annotation, Facts, Rule, Verb } from '$lib/rules-engine';
 
   interface Props {
     items: PlannedItem[];
@@ -21,6 +21,7 @@
     onSelectionChange: (instanceId: string, selections: Record<string, unknown>) => void;
     onSwapPlanItemRule: (instanceId: string, entry: AvailableRuleEntry) => void;
     onEndTurn: () => void;
+    onFollowup?: (rule: Rule) => void;
   }
 
   let {
@@ -33,7 +34,8 @@
     onMovePlanItem,
     onSelectionChange,
     onSwapPlanItemRule,
-    onEndTurn
+    onEndTurn,
+    onFollowup
   }: Props = $props();
 
   const entryById = $derived.by(() => {
@@ -131,6 +133,7 @@
             onMoveUp={() => onMovePlanItem(item.instanceId, 'up')}
             onMoveDown={() => onMovePlanItem(item.instanceId, 'down')}
             onSwapAlternative={(alt) => onSwapPlanItemRule(item.instanceId, alt)}
+            {onFollowup}
           />
         </div>
       {/if}

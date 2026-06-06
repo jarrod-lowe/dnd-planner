@@ -12,7 +12,7 @@
   import { peekDetail, getDetail } from '$lib/details/index';
   import type { ItemDetail } from '$lib/details/types';
   import type { PlannedItem } from '$lib/play/types';
-  import type { AvailableRuleEntry, Annotation, Facts, ActionCostTag } from '$lib/rules-engine';
+  import type { AvailableRuleEntry, Annotation, Facts, ActionCostTag, Rule } from '$lib/rules-engine';
 
   interface Props {
     item: PlannedItem;
@@ -27,6 +27,7 @@
     onMoveUp?: () => void;
     onMoveDown?: () => void;
     onSwapAlternative?: (entry: AvailableRuleEntry) => void;
+    onFollowup?: (rule: Rule) => void;
   }
 
   let {
@@ -41,7 +42,8 @@
     onRemove,
     onMoveUp,
     onMoveDown,
-    onSwapAlternative
+    onSwapAlternative,
+    onFollowup
   }: Props = $props();
 
   let collapsed = $state(false);
@@ -303,6 +305,7 @@
           selections={item.rule.selections}
           {activeAnnotations}
           {onSelectionChange}
+          {onFollowup}
         />
       </div>
 
