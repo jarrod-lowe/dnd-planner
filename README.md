@@ -337,13 +337,11 @@ The architecture supports:
 - Fix quotas
 - Weapon: Thrown (item count) [Javelin=6]
 - Limit Cleave to once per turn
-- Don/Doff & Hands
 - Finish Help
 - Tools (proficiency)
 - Periapt of Wound Closure
 - Configuration done (to make all configuration illegal)
 - Two weapon fighting
-- Prepared spells restrictions
 - Use and restoration of hit die
 - Paladin Oath of Redemption Level 3
   - Better tests for Divinity Points behaviour including double use of Divinity-using actions (bug?)
@@ -352,7 +350,6 @@ The architecture supports:
   - Also check they are correct
 - Thunderous Smite & Divine Smite: Should depend specifically on MELEE or UNARMED attacks
   - Javelin should only mention them when in 5ft mode
-- Feat: Savage Attack
 - Increase {skill} needs illegal marker in Planned column
 - Ready (with spell concentration rules)
 - Rename "Spellcasting" to "Magic"
@@ -364,7 +361,6 @@ The architecture supports:
 - De-duplicate icon sources in code
 - Handle multiple steeds properly
 - Find Steed steed's actual actions & abilities
-  - remove the word "steed" from steed top-bar and resource entries
   - fix 3x otherworldly steed entries in active; and the need to remove 2 to remove it
   - doesn't work if there aren't L2 spell slots?
   - movement
@@ -375,6 +371,8 @@ The architecture supports:
   - Show steed in the left panel in its choices
   - Rolls for ability checks, skill checks, and ability saves
   - Hit Dice
+- Shorten resources names
+- Change display of stats (str, etc)
 
 ### Low Priority
 
