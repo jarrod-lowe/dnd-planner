@@ -7,6 +7,7 @@
   import { getMatchingAnnotations } from '$lib/play/annotations';
   import { extractPanelDescriptor } from './panel-renderer/extractPanelDescriptor';
   import { getSubBucket, subBucketLabelKey } from '$lib/play/groupChoicesByVerb';
+  import { getSubject } from '$lib/play/subjectUtils';
   import { closeActiveTooltip, registerTooltipClose } from './tooltipSingleton';
   import { peekDetail, getDetail } from '$lib/details/index';
   import type { ItemDetail } from '$lib/details/types';
@@ -108,6 +109,12 @@
 
   const verbLabel = $derived($t(`play.verbs.${verb}`));
 
+  const subjectLabel = $derived.by(() => {
+    const subject = getSubject(rule);
+    if (!subject) return undefined;
+    return $t(`play.addRow.${subject}Sublabel`);
+  });
+
   const groupedAlternatives = $derived.by(() => {
     const buckets: Record<string, AvailableRuleEntry[]> = {};
     for (const alt of alternatives) {
@@ -186,6 +193,9 @@
     <span class="plan-row__verb-label">
       {verbLabel}
     </span>
+    {#if subjectLabel}
+      <span class="plan-row__subject-label">{subjectLabel}</span>
+    {/if}
     {#if hasDetail}
       <button
         type="button"
@@ -385,6 +395,14 @@
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--md-sys-color-on-surface-variant);
+    text-align: center;
+  }
+
+  .plan-row__subject-label {
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--md-sys-color-primary);
     text-align: center;
   }
 

@@ -4,7 +4,7 @@ export function correctEntryForPlanItem(
   entry: AvailableRuleEntry,
   item: { rule: Rule }
 ): AvailableRuleEntry {
-  const errors = (item.rule.varsRuntime?.errors as string[] | undefined) || [];
+  const errors = (item.rule.varsRuntime?.errors as string[] | undefined) ?? [];
   const hasErrors = errors.length > 0;
 
   return {

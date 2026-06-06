@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { SvelteSet } from 'svelte/reactivity';
   import { t } from '$lib/i18n';
   import { playStore } from '$lib/play/playStore.svelte';
   import { uiPrefsStore } from '$lib/ui/uiPrefsStore.svelte';
@@ -15,7 +16,8 @@
   import type { Character } from '$lib/character/types';
   import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
   import { getConcentrationEffectName, isMountEffect } from '$lib/play/effectUtils';
-  import { getCompanionView, setCompanionView, isSteedView } from '$lib/play/companionStore.svelte';
+  import { getCompanionView, setCompanionView } from '$lib/play/companionStore.svelte';
+  import { getSubject } from '$lib/play/subjectUtils';
 
   interface Props {
     character: Character;
@@ -85,13 +87,28 @@
 
   // Steed / companion detection
   const mountEffect = $derived(currentEffects.find((e) => isMountEffect(e)));
-  const hasSteed = $derived(!!mountEffect);
   const companionView = $derived(getCompanionView());
-  const viewingSteed = $derived(hasSteed && isSteedView());
+  const activeSubject = $derived(
+    companionView === 'player' ? undefined : companionView
+  );
 
-  // Auto-switch to player view when steed is dismissed
+  // Compute available subjects dynamically from entries and effects
+  const availableSubjects = $derived.by(() => {
+    const subjects = new SvelteSet<string>();
+    for (const entry of availableRules) {
+      const subject = getSubject(entry.rule);
+      if (subject) subjects.add(subject);
+    }
+    for (const effect of currentEffects) {
+      const subject = getSubject(effect);
+      if (subject) subjects.add(subject);
+    }
+    return [...subjects];
+  });
+
+  // Auto-switch to player view when current subject is no longer available
   $effect(() => {
-    if (!hasSteed && companionView === 'steed') {
+    if (activeSubject && !availableSubjects.includes(activeSubject)) {
       setCompanionView('player');
     }
   });
@@ -105,16 +122,8 @@
     return uiStats;
   });
 
-  // Steed-specific entries (used by PlanStack for steed +ADD picker)
-  const steedEntries = $derived(
-    availableRules.filter((entry) => {
-      const section = entry.rule?.ui?.section as string | undefined;
-      return section?.startsWith('steed-');
-    })
-  );
-
   // Stats switch based on companion view (controls Ledger only)
-  const filteredStats = $derived(viewingSteed ? steedStats : playStore.state.stats);
+  const filteredStats = $derived(activeSubject ? steedStats : playStore.state.stats);
 
   const committedEffectIds = $derived(playStore.state.effects.map((e) => e.id));
 
@@ -170,9 +179,15 @@
       currentLayout={uiPrefsStore.state.layout}
       onSwitchLayout={(l) => uiPrefsStore.setLayout(l)}
       concentrationEffectName={concentrationName}
-      {hasSteed}
-      isSteedView={viewingSteed}
-      onSwitchView={setCompanionView}
+      {availableSubjects}
+      {activeSubject}
+      onSwitchSubject={(subject) => {
+        if (subject === undefined) {
+          setCompanionView('player');
+        } else {
+          setCompanionView(subject);
+        }
+      }}
     />
     {#if playStore.state.isLoadingRuleGroups}
       <div class="play-character__loading">{$t('play.choices.loading')}</div>
@@ -194,8 +209,6 @@
           entries={availableRules}
           facts={playStore.state.facts}
           {activeAnnotations}
-          {hasSteed}
-          {steedEntries}
           onAddToPlan={handleChoiceTap}
           onRemoveFromPlan={handleRemove}
           onMovePlanItem={(id, dir) => playStore.movePlanItem(id, dir)}
@@ -207,10 +220,8 @@
           stats={filteredStats}
           facts={playStore.state.facts}
           status={playStore.state.engineOutput?.status}
-          viewLabel={hasSteed
-            ? viewingSteed
-              ? 'play.ledger.viewSteed'
-              : 'play.ledger.viewPlayer'
+          viewLabel={activeSubject
+            ? `play.companion.${activeSubject}`
             : undefined}
         />
       </div>

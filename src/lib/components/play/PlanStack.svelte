@@ -1,10 +1,12 @@
 <script lang="ts">
   import { t } from '$lib/i18n';
+  import { SvelteMap } from 'svelte/reactivity';
   import { playStore } from '$lib/play/playStore.svelte';
   import { correctEntryForPlanItem } from '$lib/play/correctedEntry';
   import PlanRow from './PlanRow.svelte';
   import AddRowPicker from './AddRowPicker.svelte';
   import { groupChoicesByVerb } from '$lib/play/groupChoicesByVerb';
+  import { getSubject } from '$lib/play/subjectUtils';
   import type { PlannedItem } from '$lib/play/types';
   import type { AvailableRuleEntry, Annotation, Facts, Verb } from '$lib/rules-engine';
 
@@ -13,8 +15,6 @@
     entries: AvailableRuleEntry[];
     facts: Facts;
     activeAnnotations: Annotation[];
-    hasSteed?: boolean;
-    steedEntries?: AvailableRuleEntry[];
     onAddToPlan: (entry: AvailableRuleEntry) => void;
     onRemoveFromPlan: (instanceId: string) => void;
     onMovePlanItem: (instanceId: string, direction: 'up' | 'down') => void;
@@ -28,8 +28,6 @@
     entries,
     facts,
     activeAnnotations,
-    hasSteed = false,
-    steedEntries = [],
     onAddToPlan,
     onRemoveFromPlan,
     onMovePlanItem,
@@ -67,18 +65,33 @@
   const verbGroups = $derived(groupChoicesByVerb(entries));
   const verbGroupMap = $derived(new Map(verbGroups.map((g) => [g.verb, g])));
 
-  // Player-only entries for the player +ADD picker (exclude steed sections)
-  const playerEntries = $derived(
-    entries.filter((entry) => {
-      const section = entry.rule?.ui?.section as string | undefined;
-      return !section?.startsWith('steed-');
-    })
-  );
+  // Group entries by subject for dynamic +ADD pickers
+  const entriesBySubject = $derived.by(() => {
+    const groups = new SvelteMap<string | undefined, AvailableRuleEntry[]>();
+    for (const entry of entries) {
+      const subject = getSubject(entry.rule);
+      if (!groups.has(subject)) groups.set(subject, []);
+      groups.get(subject)!.push(entry);
+    }
+    // Sort: undefined (player) first, then alphabetically
+    const sorted = [...groups.entries()].sort(([a], [b]) => {
+      if (a === undefined) return -1;
+      if (b === undefined) return 1;
+      return a.localeCompare(b);
+    });
+    return sorted;
+  });
 
-  function getAlternatives(verb: Verb, currentRuleId: string): AvailableRuleEntry[] {
+  function getAlternatives(
+    verb: Verb,
+    currentRuleId: string,
+    currentSubject: string | undefined
+  ): AvailableRuleEntry[] {
     const group = verbGroupMap.get(verb);
     if (!group) return [];
-    return group.entries.filter((e) => e.rule.id !== currentRuleId);
+    return group.entries.filter(
+      (e) => e.rule.id !== currentRuleId && getSubject(e.rule) === currentSubject
+    );
   }
 
   function correctedAlternatives(
@@ -109,7 +122,7 @@
             {activeAnnotations}
             alternatives={correctedAlternatives(
               item,
-              getAlternatives(item.verb, item.originalRuleId ?? '')
+              getAlternatives(item.verb, item.originalRuleId ?? '', getSubject(item.rule))
             )}
             canMoveUp={i > 0}
             canMoveDown={i < items.length - 1}
@@ -124,15 +137,15 @@
     {/each}
   </div>
 
-  <AddRowPicker entries={playerEntries} onAddStep={onAddToPlan} />
-
-  {#if hasSteed && steedEntries.length > 0}
-    <AddRowPicker
-      entries={steedEntries}
-      onAddStep={onAddToPlan}
-      sublabel="play.addRow.steedSublabel"
-    />
-  {/if}
+  {#each entriesBySubject as [subject, subjectEntries] (subject ?? 'player')}
+    {#if subjectEntries.length > 0}
+      <AddRowPicker
+        entries={subjectEntries}
+        onAddStep={onAddToPlan}
+        sublabel={subject ? `play.addRow.${subject}Sublabel` : undefined}
+      />
+    {/if}
+  {/each}
 
   <div class="plan-stack__footer">
     <button

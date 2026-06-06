@@ -9,6 +9,7 @@ const translations: Record<string, string> = {
   'play.addRow.planGroup': 'plan →',
   'play.addRow.recordGroup': 'record →',
   'play.addRow.buildGroup': 'build →',
+  'play.addRow.steedSublabel': 'Steed',
   'play.plan.endTurn': 'End Turn'
 };
 
@@ -35,27 +36,31 @@ import PlanStack from '$lib/components/play/PlanStack.svelte';
 import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-engine';
 import type { PlannedItem } from '$lib/play/types';
 
-function makeEntry(id: string, section: string, verb: string = 'ATTACK'): AvailableRuleEntry {
+function makeEntry(id: string, section: string, verb: string = 'ATTACK', subject?: string): AvailableRuleEntry {
+  const ui: Record<string, unknown> = { section, name: id, intents: { [verb]: 'default' } };
+  if (subject) ui.subject = subject;
   return {
     rule: {
       id,
       phase: 'normal',
       verb: verb as never,
-      ui: { section, name: id },
+      ui,
       activities: []
     },
     legal: true
   };
 }
 
-function makeItem(ruleId: string, section: string, verb: string = 'ATTACK'): PlannedItem {
+function makeItem(ruleId: string, section: string, verb: string = 'ATTACK', subject?: string): PlannedItem {
+  const ui: Record<string, unknown> = { section, name: ruleId };
+  if (subject) ui.subject = subject;
   return {
     instanceId: `inst-${ruleId}`,
     rule: {
       id: ruleId,
       phase: 'normal',
       verb: verb as never,
-      ui: { section, name: ruleId },
+      ui,
       activities: []
     },
     verb: verb as never,
@@ -73,12 +78,12 @@ describe('PlanStack', () => {
     vi.clearAllMocks();
   });
 
-  it('does not duplicate steed items when hasSteed is true', () => {
+  it('does not duplicate steed items in plan rows', () => {
     const playerItem = makeItem('attack-sword', 'action', 'ATTACK');
-    const steedItem = makeItem('steed-attack', 'steed-action', 'ATTACK');
+    const steedItem = makeItem('steed-attack', 'action', 'ATTACK', 'steed');
 
     const playerEntry = makeEntry('attack-sword', 'action', 'ATTACK');
-    const steedEntry = makeEntry('steed-attack', 'steed-action', 'ATTACK');
+    const steedEntry = makeEntry('steed-attack', 'action', 'ATTACK', 'steed');
 
     mount(PlanStack, {
       target: container,
@@ -87,8 +92,6 @@ describe('PlanStack', () => {
         entries: [playerEntry, steedEntry],
         facts: {} as Facts,
         activeAnnotations: [] as Annotation[],
-        hasSteed: true,
-        steedEntries: [steedEntry],
         onAddToPlan: noop,
         onRemoveFromPlan: noop,
         onMovePlanItem: noop,
@@ -108,19 +111,17 @@ describe('PlanStack', () => {
     expect(planRows.length).toBe(2);
   });
 
-  it('does not duplicate steed entries in +ADD pickers', () => {
+  it('creates separate +ADD pickers per subject', () => {
     const playerEntry = makeEntry('attack-sword', 'action', 'ATTACK');
-    const steedEntry = makeEntry('steed-attack', 'steed-action', 'ATTACK');
+    const steedEntry = makeEntry('steed-attack', 'action', 'ATTACK', 'steed');
 
     mount(PlanStack, {
       target: container,
       props: {
         items: [],
-        entries: [playerEntry],
+        entries: [playerEntry, steedEntry],
         facts: {} as Facts,
         activeAnnotations: [] as Annotation[],
-        hasSteed: true,
-        steedEntries: [steedEntry],
         onAddToPlan: noop,
         onRemoveFromPlan: noop,
         onMovePlanItem: noop,
@@ -133,5 +134,57 @@ describe('PlanStack', () => {
     // There should be exactly 2 AddRowPickers (player + steed)
     const pickers = container.querySelectorAll('.add-row-picker');
     expect(pickers.length).toBe(2);
+  });
+
+  it('shows only one picker when all entries are player entries', () => {
+    const playerEntry = makeEntry('attack-sword', 'action', 'ATTACK');
+
+    mount(PlanStack, {
+      target: container,
+      props: {
+        items: [],
+        entries: [playerEntry],
+        facts: {} as Facts,
+        activeAnnotations: [] as Annotation[],
+        onAddToPlan: noop,
+        onRemoveFromPlan: noop,
+        onMovePlanItem: noop,
+        onSelectionChange: noop,
+        onSwapPlanItemRule: noop,
+        onEndTurn: noop
+      }
+    });
+
+    const pickers = container.querySelectorAll('.add-row-picker');
+    expect(pickers.length).toBe(1);
+  });
+
+  it('filters alternatives by subject', () => {
+    const playerItem = makeItem('attack-sword', 'action', 'ATTACK');
+    const playerEntry = makeEntry('attack-sword', 'action', 'ATTACK');
+    const playerAlt = makeEntry('attack-bow', 'action', 'ATTACK');
+    const steedEntry = makeEntry('steed-attack', 'action', 'ATTACK', 'steed');
+
+    mount(PlanStack, {
+      target: container,
+      props: {
+        items: [playerItem],
+        entries: [playerEntry, playerAlt, steedEntry],
+        facts: {} as Facts,
+        activeAnnotations: [] as Annotation[],
+        onAddToPlan: noop,
+        onRemoveFromPlan: noop,
+        onMovePlanItem: noop,
+        onSelectionChange: noop,
+        onSwapPlanItemRule: noop,
+        onEndTurn: noop
+      }
+    });
+
+    // The player's alternatives should only include player entries, not steed
+    const altButtons = container.querySelectorAll('.plan-row__alt-btn');
+    const altTexts = Array.from(altButtons).map((el) => el.textContent?.trim());
+    expect(altTexts).toContain('attack-bow');
+    expect(altTexts).not.toContain('steed-attack');
   });
 });

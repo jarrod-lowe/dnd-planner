@@ -1,4 +1,4 @@
-type CompanionView = 'player' | 'steed';
+type CompanionView = string; // 'player' for player view, or any subject string
 
 let activeView: CompanionView = $state('player');
 
