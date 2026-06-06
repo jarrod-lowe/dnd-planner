@@ -1492,11 +1492,5 @@
         "long": "DIvI' tIQ"
       }
     }
-  },
-  "ui": {
-    "layout": {
-      "switchToIntent": "Switch to Intent Stack",
-      "switchToClassic": "Switch to Classic Layout"
-    }
   }
 }

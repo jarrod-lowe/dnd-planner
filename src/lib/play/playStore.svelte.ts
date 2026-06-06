@@ -4,7 +4,6 @@ import type { Rule, AvailableRuleEntry } from '$lib/rules-engine';
 import type { PlannedItem, PlayState } from './types';
 import { debounce } from './debounce';
 import { resolveInitialSelections } from './resolveInitialSelections';
-import { extractStats } from './extractStats';
 import { extractTopBarEntries, extractResourceEntries } from './extractTopBar';
 import { decrementCountDowns } from './countDown';
 import { deriveVerbFromRule } from './stepUtils';
@@ -33,7 +32,6 @@ const initialState: PlayState = {
   facts: {},
   effects: [],
   currentCharacterId: null,
-  stats: [],
   topBarEntries: [],
   resourceEntries: []
 };
@@ -49,7 +47,6 @@ function recalculateStats(): void {
   const allRules = [...state.ruleGroups, ...state.effects];
   state = {
     ...state,
-    stats: extractStats(allRules),
     topBarEntries: extractTopBarEntries(allRules),
     resourceEntries: extractResourceEntries(allRules)
   };

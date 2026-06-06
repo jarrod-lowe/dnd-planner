@@ -11,7 +11,6 @@
     UiEntryAbility
   } from '$lib/play/extractTopBar';
   import type { Facts } from '$lib/rules-engine';
-  import type { UiLayout } from '$lib/ui/uiPrefsStore.svelte';
 
   interface Props {
     character: Character;
@@ -27,8 +26,6 @@
     showViewFacts?: boolean;
     onDownloadCharacter?: () => void;
     showDownloadCharacter?: boolean;
-    currentLayout: UiLayout;
-    onSwitchLayout: (layout: UiLayout) => void;
     concentrationEffectName?: string;
     availableSubjects?: string[];
     activeSubject?: string;
@@ -49,8 +46,6 @@
     showViewFacts = false,
     onDownloadCharacter,
     showDownloadCharacter = false,
-    currentLayout,
-    onSwitchLayout,
     concentrationEffectName,
     availableSubjects = [],
     activeSubject,
@@ -267,9 +262,6 @@
         {showViewFacts}
         {onDownloadCharacter}
         {showDownloadCharacter}
-        showLayoutToggle={true}
-        {currentLayout}
-        {onSwitchLayout}
       />
     </nav>
   </div>

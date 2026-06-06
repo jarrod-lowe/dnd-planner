@@ -1,5 +1,4 @@
 import type { Rule, EngineOutput, Facts, Verb } from '$lib/rules-engine';
-import type { StatEntry } from '$lib/play/extractStats';
 import type { TopBarEntry, UiEntry } from '$lib/play/extractTopBar';
 
 /**
@@ -45,8 +44,6 @@ export interface PlayState {
   effects: Rule[];
   /** ID of the currently loaded character, set during loadRuleGroups */
   currentCharacterId: string | null;
-  /** Stats declarations extracted from standing rules for display in stats column */
-  stats: StatEntry[];
   /** Top bar entries extracted from standing rules for display in the intent top bar */
   topBarEntries: TopBarEntry[];
   /** Resource entries extracted from standing rules for display in the ledger */

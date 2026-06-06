@@ -19,9 +19,6 @@
     showViewFacts?: boolean;
     onDownloadCharacter?: () => void;
     showDownloadCharacter?: boolean;
-    showLayoutToggle?: boolean;
-    currentLayout?: 'classic' | 'intent';
-    onSwitchLayout?: (layout: 'classic' | 'intent') => void;
   }
 
   let {
@@ -35,10 +32,7 @@
     onViewFacts,
     showViewFacts = false,
     onDownloadCharacter,
-    showDownloadCharacter = false,
-    showLayoutToggle = false,
-    currentLayout = 'classic',
-    onSwitchLayout
+    showDownloadCharacter = false
   }: Props = $props();
 </script>
 
@@ -92,9 +86,6 @@
       {showViewFacts}
       {onDownloadCharacter}
       {showDownloadCharacter}
-      {showLayoutToggle}
-      {currentLayout}
-      {onSwitchLayout}
     />
   </nav>
 </header>
