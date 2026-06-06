@@ -105,17 +105,10 @@
     return uiStats;
   });
 
-  // Steed-specific entries and items (always extracted, used by PlanStack)
+  // Steed-specific entries (used by PlanStack for steed +ADD picker)
   const steedEntries = $derived(
     availableRules.filter((entry) => {
       const section = entry.rule?.ui?.section as string | undefined;
-      return section?.startsWith('steed-');
-    })
-  );
-
-  const steedItems = $derived(
-    playStore.state.plannedItems.filter((item) => {
-      const section = item.rule?.ui?.section as string | undefined;
       return section?.startsWith('steed-');
     })
   );
@@ -202,7 +195,6 @@
           facts={playStore.state.facts}
           {activeAnnotations}
           {hasSteed}
-          {steedItems}
           {steedEntries}
           onAddToPlan={handleChoiceTap}
           onRemoveFromPlan={handleRemove}
