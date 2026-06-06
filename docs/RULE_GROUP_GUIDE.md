@@ -659,6 +659,48 @@ Key points:
 - The effect expires when its `when` condition is false.
 - Effects get unique IDs with numeric suffixes to avoid collisions.
 
+### Pattern: Spell with SRD Detail (Flip Button)
+
+**Use when:** A spell has SRD reference text that should be viewable via the flip button on the action card.
+
+Two things must **both** be present — the detail JSON will NOT cause a flip button to appear without `detailKey` on the rule:
+
+**1. `detail:` section on the rule group** (compiled to `static/details/en/{key}.json` by `scripts/publish_details.py` / `make build`):
+
+```yaml
+detail:
+  key: spell/my-spell # matches the static asset path
+  source: srd52
+  translations:
+    en:
+      meta: 'Level N School (Class)'
+      fields:
+        - { labelKey: rules.field.castingTime, value: 'Action' }
+        - { labelKey: rules.field.range, value: '30 feet' }
+        - { labelKey: rules.field.components, value: 'V, S' }
+        - { labelKey: rules.field.duration, value: 'Instantaneous' }
+      body: |
+        Spell description text here. **Bold** and *italic* are supported.
+        Blank lines between paragraphs. Bullet items start with `- `.
+```
+
+**2. `detailKey` on every rule `ui:` where the flip button should appear:**
+
+```yaml
+# On the cast rule (shows flip when the spell is offered):
+ui:
+  section: action-spell
+  name: rule.my-spell.cast-my-spell.name
+  detailKey: spell/my-spell        # must match detail.key above
+
+# On the persistent effect rule (shows flip while the effect is active):
+ui:
+  name: rule.my-spell.effect-my-spell.name
+  detailKey: spell/my-spell
+```
+
+After adding or changing the `detail:` section, run `make build` to regenerate the static asset.
+
 ---
 
 ## 7. Conventions
@@ -878,6 +920,7 @@ Add suitable tests into `yaml-scenarios` when creating new rules.
 7. User-facing strings use i18n keys, not hardcoded text
 8. The `*error-clear` anchor is used before any `setAdd` to the `errors` var
 9. New rule groups are reachable via SEED#, `requires`, or manual selection (see Section 4)
+10. Spells with a `detail:` section also have `detailKey: {key}` on the cast rule's `ui:` and on any persistent effect rule's `ui:` — the detail JSON alone is not enough to show the flip button
 
 ---
 
