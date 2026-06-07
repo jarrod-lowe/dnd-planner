@@ -23,6 +23,11 @@ ruleGroups:
               fact: hp.max
             source:
               number: 0
+          - type: numberSet
+            target:
+              fact: hp.base.max
+            source:
+              number: 0
 
       # HP Copy - after all class levels contribute, copy max to current
       - id: hp-copy
@@ -48,6 +53,8 @@ ruleGroups:
               id: set-hp-modifier-max
               group:
                 - __planned__
+              after:
+                - group: hp-set
               ui:
                 section: free
                 name: rule.dnd-5e-2024.hp.set-hp-modifier-max.name
@@ -74,11 +81,12 @@ ruleGroups:
                     fact: hp.modifier.max
                   source:
                     var: modifier
-                - type: numberIncrement
+                - type: numberSum
                   target:
                     fact: hp.max
-                  source:
-                    var: modifier
+                  sources:
+                    - fact: hp.base.max
+                    - fact: hp.modifier.max
                 - type: advertiseEffect
                   rule:
                     id: effect-hp-modifier-max
@@ -102,11 +110,12 @@ ruleGroups:
                           fact: hp.modifier.max
                         source:
                           var: modifier
-                      - type: numberIncrement
+                      - type: numberSum
                         target:
                           fact: hp.max
-                        source:
-                          var: modifier
+                        sources:
+                          - fact: hp.base.max
+                          - fact: hp.modifier.max
                       - type: advertiseEffect
                         self: true
 

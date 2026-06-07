@@ -1,5 +1,5 @@
-name: 'Find Steed Action Resource'
-description: 'Steed action resource is consumed correctly when planned'
+name: 'Find Steed Same Turn Dash'
+description: 'Dashing the steed on the same turn Find Steed is cast (before endTurn) grants full Dash movement (60 base + 60 dash = 120)'
 ruleGroups:
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
@@ -28,39 +28,27 @@ initialEffects:
       - type: advertiseEffect
         self: true
 steps:
-  # Cast Find Steed
+  # Verify Find Steed is available
   - evaluate:
       assert:
         offers:
           exists:
             - cast-find-steed
+  # Cast Find Steed but do NOT end turn
   - addOffer:
       id: cast-find-steed
-  # End turn to commit the steed effect
-  - endTurn:
       assert:
-        effects:
-          exists:
-            - effect-steed
         facts:
           companion.steed.summoned: 1
           companion.steed.actions.remaining: 1
-  # Next turn: steed action should be available
-  - evaluate:
-      assert:
         offers:
           exists:
-            - steed-dodge
-        facts:
-          companion.steed.actions.remaining: 1
-  # Add steed action to plan
+            - steed-dash
+  # Same-turn Dash: 60 base + 60 dash = 120, consumes steed action
   - addOffer:
-      id: steed-dodge
+      id: steed-dash
       assert:
         facts:
-          companion.steed.actions.remaining: 0
-  # Re-evaluate: resource should stay at 0 (not reset to 1)
-  - evaluate:
-      assert:
-        facts:
+          companion.steed.movement.total: 120
+          companion.steed.movement.remaining: 120
           companion.steed.actions.remaining: 0

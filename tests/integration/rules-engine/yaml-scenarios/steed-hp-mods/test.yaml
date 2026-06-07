@@ -1,5 +1,5 @@
-name: 'Find Steed Action Resource'
-description: 'Steed action resource is consumed correctly when planned'
+name: 'Steed HP Modifications'
+description: 'Steed can record damage and healing, modifying companion.steed.hp.current with persistent effects'
 ruleGroups:
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
@@ -28,39 +28,46 @@ initialEffects:
       - type: advertiseEffect
         self: true
 steps:
-  # Cast Find Steed
+  # Verify Find Steed is available
   - evaluate:
       assert:
         offers:
           exists:
             - cast-find-steed
+  # Cast Find Steed
   - addOffer:
       id: cast-find-steed
-  # End turn to commit the steed effect
   - endTurn:
       assert:
-        effects:
-          exists:
-            - effect-steed
         facts:
-          companion.steed.summoned: 1
-          companion.steed.actions.remaining: 1
-  # Next turn: steed action should be available
+          companion.steed.hp.max: 25
+          companion.steed.hp.current: 25
+  # Next turn: damage and heal offers available
   - evaluate:
       assert:
         offers:
           exists:
-            - steed-dodge
-        facts:
-          companion.steed.actions.remaining: 1
-  # Add steed action to plan
+            - steed-record-damage
+            - steed-record-heal
+  # Record 10 damage
   - addOffer:
-      id: steed-dodge
+      id: steed-record-damage
+      selections:
+        amount: 10
       assert:
         facts:
-          companion.steed.actions.remaining: 0
-  # Re-evaluate: resource should stay at 0 (not reset to 1)
-  - evaluate:
+          companion.steed.hp.current: 15
+  # Record 5 healing
+  - addOffer:
+      id: steed-record-heal
+      selections:
+        amount: 5
       assert:
         facts:
-          companion.steed.actions.remaining: 0
+          companion.steed.hp.current: 20
+  # End turn: HP mods persist
+  - endTurn:
+      assert:
+        facts:
+          companion.steed.hp.max: 25
+          companion.steed.hp.current: 20

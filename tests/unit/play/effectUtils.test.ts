@@ -7,7 +7,8 @@ import {
   getChipState,
   isHiddenEffect,
   getEffectDisplayValue,
-  getEffectLevel
+  getEffectLevel,
+  getBaseEffectId
 } from '$lib/play/effectUtils';
 import type { Rule } from '$lib/rules-engine';
 import type { Facts } from '$lib/rules-engine';
@@ -25,6 +26,24 @@ const selfAdvertiseActivity = {
   type: 'advertiseEffect' as const,
   self: true
 };
+
+describe('getBaseEffectId', () => {
+  it('strips numeric suffix from effect ID', () => {
+    expect(getBaseEffectId('effect-steed-3')).toBe('effect-steed');
+  });
+
+  it('strips suffix from multi-hyphen effect ID', () => {
+    expect(getBaseEffectId('effect-steed-hp-damage-12')).toBe('effect-steed-hp-damage');
+  });
+
+  it('returns unchanged ID when no numeric suffix', () => {
+    expect(getBaseEffectId('effect-bless')).toBe('effect-bless');
+  });
+
+  it('handles ID with only a counter suffix', () => {
+    expect(getBaseEffectId('foo-0')).toBe('foo');
+  });
+});
 
 describe('getDurationState', () => {
   it('returns null for rules without ui', () => {

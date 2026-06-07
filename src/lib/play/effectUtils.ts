@@ -144,6 +144,15 @@ export function getChipState(effect: Rule, facts: Facts): ChipState {
   return 'rest';
 }
 
+/**
+ * Extracts the base ID from an effect ID that may have a counter suffix.
+ * The rules engine appends `-{counter}` when advertising effects.
+ */
+export function getBaseEffectId(effectId: string): string {
+  const match = effectId.match(/^(.+)-(\d+)$/);
+  return match ? match[1] : effectId;
+}
+
 export function getEffectDisplayValue(rule: Rule, facts: Facts): string | null {
   const ui = rule.ui as Record<string, unknown> | undefined;
   if (!ui) return null;

@@ -1,5 +1,5 @@
-name: 'Find Steed Action Resource'
-description: 'Steed action resource is consumed correctly when planned'
+name: 'Steed Disappears at Zero HP'
+description: 'When steed HP reaches 0, the steed effect stops self-advertising and steed is no longer summoned'
 ruleGroups:
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
@@ -36,7 +36,6 @@ steps:
             - cast-find-steed
   - addOffer:
       id: cast-find-steed
-  # End turn to commit the steed effect
   - endTurn:
       assert:
         effects:
@@ -44,23 +43,28 @@ steps:
             - effect-steed
         facts:
           companion.steed.summoned: 1
-          companion.steed.actions.remaining: 1
-  # Next turn: steed action should be available
+          companion.steed.hp.max: 25
+          companion.steed.hp.current: 25
+  # Next turn: record damage equal to max HP
   - evaluate:
       assert:
         offers:
           exists:
-            - steed-dodge
-        facts:
-          companion.steed.actions.remaining: 1
-  # Add steed action to plan
+            - steed-record-damage
   - addOffer:
-      id: steed-dodge
+      id: steed-record-damage
+      selections:
+        amount: 25
       assert:
         facts:
-          companion.steed.actions.remaining: 0
-  # Re-evaluate: resource should stay at 0 (not reset to 1)
-  - evaluate:
+          companion.steed.hp.current: 0
+  # End turn: steed should disappear (HP at 0 stops self-advertise)
+  # Child effects (damage recording, HP modifiers) must also be cleaned up
+  - endTurn:
       assert:
+        effects:
+          notExists:
+            - effect-steed
+            - effect-steed-hp-damage
         facts:
-          companion.steed.actions.remaining: 0
+          companion.steed.summoned: 0

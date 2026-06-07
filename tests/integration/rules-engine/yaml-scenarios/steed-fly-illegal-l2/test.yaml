@@ -1,5 +1,5 @@
-name: 'Find Steed Action Resource'
-description: 'Steed action resource is consumed correctly when planned'
+name: 'Steed Fly Illegal L2'
+description: 'Steed cannot fly at L2 - fly offer is illegal with cannot_fly diagnostic'
 ruleGroups:
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
@@ -28,39 +28,32 @@ initialEffects:
       - type: advertiseEffect
         self: true
 steps:
-  # Cast Find Steed
+  # Verify Find Steed is available
   - evaluate:
       assert:
         offers:
           exists:
             - cast-find-steed
+  # Cast Find Steed at L2
   - addOffer:
       id: cast-find-steed
-  # End turn to commit the steed effect
   - endTurn:
       assert:
-        effects:
-          exists:
-            - effect-steed
         facts:
           companion.steed.summoned: 1
-          companion.steed.actions.remaining: 1
-  # Next turn: steed action should be available
+          companion.steed.fly.can: 0
+  # Next turn: fly offer should be illegal (cannot fly at L2)
   - evaluate:
       assert:
         offers:
-          exists:
-            - steed-dodge
-        facts:
-          companion.steed.actions.remaining: 1
-  # Add steed action to plan
+          illegal:
+            - steed-move-fly
+  # Adding the fly offer should show the cannot_fly error in plan errors
   - addOffer:
-      id: steed-dodge
+      id: steed-move-fly
       assert:
-        facts:
-          companion.steed.actions.remaining: 0
-  # Re-evaluate: resource should stay at 0 (not reset to 1)
-  - evaluate:
-      assert:
-        facts:
-          companion.steed.actions.remaining: 0
+        planErrors:
+          - id: steed-move-fly
+            index: 0
+            errors:
+              - rule.spell-find-steed.steed-move-fly.cannot_fly

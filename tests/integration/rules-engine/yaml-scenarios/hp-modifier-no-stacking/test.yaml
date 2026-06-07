@@ -1,0 +1,98 @@
+name: 'HP Modifier No Stacking'
+description: 'Max HP modifier does not stack per-use or per-turn; recalculates from base via numberSum'
+ruleGroups:
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/ability-scores
+  - class-paladin/class-paladin-level1
+steps:
+  # Base: hp.max = 10 (paladin d10), hp.current = 10
+  - evaluate:
+      assert:
+        facts:
+          hp.max: 10
+          hp.current: 10
+
+  # Set max HP modifier to +5
+  - addOffer:
+      id: set-hp-modifier-max
+      selections:
+        modifier: 5
+      assert:
+        facts:
+          hp.modifier.max: 5
+          hp.max: 15
+
+  # End turn — hp.max should NOT grow (numberSum is idempotent)
+  - endTurn:
+      assert:
+        facts:
+          hp.max: 15
+          hp.modifier.max: 5
+        effects:
+          exists:
+            - effect-hp-modifier-max
+
+  # Next turn — hp.max should still be 15
+  - evaluate:
+      assert:
+        facts:
+          hp.max: 15
+          hp.modifier.max: 5
+  - endTurn:
+      assert:
+        facts:
+          hp.max: 15
+
+  # Change modifier from +5 to +10
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - set-hp-modifier-max
+  - addOffer:
+      id: set-hp-modifier-max
+      selections:
+        modifier: 10
+      assert:
+        facts:
+          hp.modifier.max: 10
+          hp.max: 20
+  - endTurn:
+      assert:
+        facts:
+          hp.max: 20
+          hp.modifier.max: 10
+
+  # Next turn — still 20 (numberSum wins regardless of how many effects exist)
+  - evaluate:
+      assert:
+        facts:
+          hp.max: 20
+  - endTurn:
+      assert:
+        facts:
+          hp.max: 20
+
+  # Negative modifier
+  - addOffer:
+      id: set-hp-modifier-max
+      selections:
+        modifier: -3
+      assert:
+        facts:
+          hp.modifier.max: -3
+          hp.max: 7
+  - endTurn:
+      assert:
+        facts:
+          hp.max: 7
+
+  # Reset to 0
+  - addOffer:
+      id: set-hp-modifier-max
+      selections:
+        modifier: 0
+      assert:
+        facts:
+          hp.modifier.max: 0
+          hp.max: 10

@@ -362,12 +362,11 @@ The architecture supports:
 - Handle multiple steeds properly
 - Find Steed steed's actual actions & abilities
   - fix 3x otherworldly steed entries in active; and the need to remove 2 to remove it
-  - movement
   - Type selection (fiend, fey, celestial)
   - Type-specific bonus action
   - Otherworldly slam
-  - Rolls for ability checks, skill checks, and ability saves
   - Hit Dice
+  - stats display
 - Shorten resources names
 - Change display of stats (str, etc)
 
