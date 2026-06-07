@@ -2423,6 +2423,8 @@ ruleGroups:
                           id: steed-record-heal
                           group:
                             - __planned__
+                          after:
+                            - group: __effects__
                           ui:
                             section: free
                             subject: steed
@@ -2502,6 +2504,8 @@ ruleGroups:
                           id: steed-set-hp-modifier-max
                           group:
                             - __planned__
+                          after:
+                            - group: __effects__
                           ui:
                             section: free
                             subject: steed
@@ -2582,6 +2586,8 @@ ruleGroups:
                           id: steed-set-hp-modifier-current
                           group:
                             - __planned__
+                          after:
+                            - group: __effects__
                           ui:
                             section: free
                             subject: steed
@@ -4051,6 +4057,8 @@ ruleGroups:
                           id: steed-record-heal
                           group:
                             - __planned__
+                          after:
+                            - group: __effects__
                           ui:
                             section: free
                             subject: steed
@@ -4130,6 +4138,8 @@ ruleGroups:
                           id: steed-set-hp-modifier-max
                           group:
                             - __planned__
+                          after:
+                            - group: __effects__
                           ui:
                             section: free
                             subject: steed
@@ -4210,6 +4220,8 @@ ruleGroups:
                           id: steed-set-hp-modifier-current
                           group:
                             - __planned__
+                          after:
+                            - group: __effects__
                           ui:
                             section: free
                             subject: steed
@@ -5690,6 +5702,8 @@ ruleGroups:
                           id: steed-record-heal
                           group:
                             - __planned__
+                          after:
+                            - group: __effects__
                           ui:
                             section: free
                             subject: steed
@@ -5769,6 +5783,8 @@ ruleGroups:
                           id: steed-set-hp-modifier-max
                           group:
                             - __planned__
+                          after:
+                            - group: __effects__
                           ui:
                             section: free
                             subject: steed
@@ -5849,6 +5865,8 @@ ruleGroups:
                           id: steed-set-hp-modifier-current
                           group:
                             - __planned__
+                          after:
+                            - group: __effects__
                           ui:
                             section: free
                             subject: steed
@@ -7329,6 +7347,8 @@ ruleGroups:
                           id: steed-record-heal
                           group:
                             - __planned__
+                          after:
+                            - group: __effects__
                           ui:
                             section: free
                             subject: steed
@@ -7408,6 +7428,8 @@ ruleGroups:
                           id: steed-set-hp-modifier-max
                           group:
                             - __planned__
+                          after:
+                            - group: __effects__
                           ui:
                             section: free
                             subject: steed
@@ -7488,6 +7510,8 @@ ruleGroups:
                           id: steed-set-hp-modifier-current
                           group:
                             - __planned__
+                          after:
+                            - group: __effects__
                           ui:
                             section: free
                             subject: steed
