@@ -1642,19 +1642,22 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-str.name
+                            name: planner.record.save.str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -1665,7 +1668,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -1681,20 +1684,23 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-dex.name
+                            name: planner.record.save.dex
                             packBehind: steed-save-str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -1705,7 +1711,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -1721,20 +1727,23 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-con.name
+                            name: planner.record.save.con
                             packBehind: steed-save-str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -1745,7 +1754,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -1761,20 +1770,23 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-int.name
+                            name: planner.record.save.int
                             packBehind: steed-save-str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -1785,7 +1797,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -1801,20 +1813,23 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-wis.name
+                            name: planner.record.save.wis
                             packBehind: steed-save-str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -1825,7 +1840,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -1841,20 +1856,23 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-cha.name
+                            name: planner.record.save.cha
                             packBehind: steed-save-str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -1865,7 +1883,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -2354,6 +2372,10 @@ ruleGroups:
                                 var: amount
                               subtract: true
                             - type: advertiseEffect
+                              when:
+                                - fact: companion.steed.hp.current
+                                  operator: greaterThan
+                                  value: 0
                               rule:
                                 id: effect-steed-hp-damage
                                 ui:
@@ -2363,6 +2385,12 @@ ruleGroups:
                                 phase: normal
                                 when:
                                   - fact: rest.long
+                                    operator: equals
+                                    value: 0
+                                  - fact: companion.steed.hp.current
+                                    operator: greaterThan
+                                    value: 0
+                                  - fact: companion.steed.dismissed
                                     operator: equals
                                     value: 0
                                 vars:
@@ -2381,6 +2409,12 @@ ruleGroups:
                                     self: true
                                     when:
                                       - fact: rest.long
+                                        operator: equals
+                                        value: 0
+                                      - fact: companion.steed.hp.current
+                                        operator: greaterThan
+                                        value: 0
+                                      - fact: companion.steed.dismissed
                                         operator: equals
                                         value: 0
                       # Record Heal
@@ -2415,6 +2449,10 @@ ruleGroups:
                               subtract: false
                               max: companion.steed.hp.max
                             - type: advertiseEffect
+                              when:
+                                - fact: companion.steed.hp.current
+                                  operator: greaterThan
+                                  value: 0
                               rule:
                                 id: effect-steed-hp-heal
                                 ui:
@@ -2424,6 +2462,12 @@ ruleGroups:
                                 phase: normal
                                 when:
                                   - fact: rest.long
+                                    operator: equals
+                                    value: 0
+                                  - fact: companion.steed.hp.current
+                                    operator: greaterThan
+                                    value: 0
+                                  - fact: companion.steed.dismissed
                                     operator: equals
                                     value: 0
                                 vars:
@@ -2443,6 +2487,12 @@ ruleGroups:
                                     self: true
                                     when:
                                       - fact: rest.long
+                                        operator: equals
+                                        value: 0
+                                      - fact: companion.steed.hp.current
+                                        operator: greaterThan
+                                        value: 0
+                                      - fact: companion.steed.dismissed
                                         operator: equals
                                         value: 0
                       # === HP Modifiers ===
@@ -2482,6 +2532,10 @@ ruleGroups:
                               source:
                                 var: modifier
                             - type: advertiseEffect
+                              when:
+                                - fact: companion.steed.hp.current
+                                  operator: greaterThan
+                                  value: 0
                               rule:
                                 id: effect-steed-hp-modifier-max
                                 ui:
@@ -2490,6 +2544,13 @@ ruleGroups:
                                   section: health
                                   subject: steed
                                 phase: normal
+                                when:
+                                  - fact: companion.steed.hp.current
+                                    operator: greaterThan
+                                    value: 0
+                                  - fact: companion.steed.dismissed
+                                    operator: equals
+                                    value: 0
                                 vars:
                                   modifier:
                                     capture: true
@@ -2508,6 +2569,13 @@ ruleGroups:
                                       var: modifier
                                   - type: advertiseEffect
                                     self: true
+                                    when:
+                                      - fact: companion.steed.hp.current
+                                        operator: greaterThan
+                                        value: 0
+                                      - fact: companion.steed.dismissed
+                                        operator: equals
+                                        value: 0
                       # Current HP Modifier
                       - type: offerRule
                         rule:
@@ -2544,6 +2612,10 @@ ruleGroups:
                               source:
                                 var: modifier
                             - type: advertiseEffect
+                              when:
+                                - fact: companion.steed.hp.current
+                                  operator: greaterThan
+                                  value: 0
                               rule:
                                 id: effect-steed-hp-modifier-current
                                 ui:
@@ -2552,6 +2624,13 @@ ruleGroups:
                                   section: health
                                   subject: steed
                                 phase: normal
+                                when:
+                                  - fact: companion.steed.hp.current
+                                    operator: greaterThan
+                                    value: 0
+                                  - fact: companion.steed.dismissed
+                                    operator: equals
+                                    value: 0
                                 vars:
                                   modifier:
                                     capture: true
@@ -2570,6 +2649,13 @@ ruleGroups:
                                       var: modifier
                                   - type: advertiseEffect
                                     self: true
+                                    when:
+                                      - fact: companion.steed.hp.current
+                                        operator: greaterThan
+                                        value: 0
+                                      - fact: companion.steed.dismissed
+                                        operator: equals
+                                        value: 0
                       # === Note ===
                       - type: offerRule
                         rule:
@@ -2629,11 +2715,17 @@ ruleGroups:
                           - fact: companion.steed.dismissed
                             operator: equals
                             value: 0
+                          - fact: companion.steed.hp.current
+                            operator: greaterThan
+                            value: 0
                       - type: advertiseEffect
                         rule: *steed-resources-l2
                         when:
                           - fact: companion.steed.dismissed
                             operator: equals
+                            value: 0
+                          - fact: companion.steed.hp.current
+                            operator: greaterThan
                             value: 0
                   when:
                     - fact: find-steed.selectedLevel
@@ -3178,19 +3270,22 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-str.name
+                            name: planner.record.save.str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -3201,7 +3296,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -3217,20 +3312,23 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-dex.name
+                            name: planner.record.save.dex
                             packBehind: steed-save-str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -3241,7 +3339,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -3257,20 +3355,23 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-con.name
+                            name: planner.record.save.con
                             packBehind: steed-save-str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -3281,7 +3382,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -3297,20 +3398,23 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-int.name
+                            name: planner.record.save.int
                             packBehind: steed-save-str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -3321,7 +3425,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -3337,20 +3441,23 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-wis.name
+                            name: planner.record.save.wis
                             packBehind: steed-save-str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -3361,7 +3468,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -3377,20 +3484,23 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-cha.name
+                            name: planner.record.save.cha
                             packBehind: steed-save-str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -3401,7 +3511,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -3890,6 +4000,10 @@ ruleGroups:
                                 var: amount
                               subtract: true
                             - type: advertiseEffect
+                              when:
+                                - fact: companion.steed.hp.current
+                                  operator: greaterThan
+                                  value: 0
                               rule:
                                 id: effect-steed-hp-damage
                                 ui:
@@ -3899,6 +4013,12 @@ ruleGroups:
                                 phase: normal
                                 when:
                                   - fact: rest.long
+                                    operator: equals
+                                    value: 0
+                                  - fact: companion.steed.hp.current
+                                    operator: greaterThan
+                                    value: 0
+                                  - fact: companion.steed.dismissed
                                     operator: equals
                                     value: 0
                                 vars:
@@ -3917,6 +4037,12 @@ ruleGroups:
                                     self: true
                                     when:
                                       - fact: rest.long
+                                        operator: equals
+                                        value: 0
+                                      - fact: companion.steed.hp.current
+                                        operator: greaterThan
+                                        value: 0
+                                      - fact: companion.steed.dismissed
                                         operator: equals
                                         value: 0
                       # Record Heal
@@ -3951,6 +4077,10 @@ ruleGroups:
                               subtract: false
                               max: companion.steed.hp.max
                             - type: advertiseEffect
+                              when:
+                                - fact: companion.steed.hp.current
+                                  operator: greaterThan
+                                  value: 0
                               rule:
                                 id: effect-steed-hp-heal
                                 ui:
@@ -3960,6 +4090,12 @@ ruleGroups:
                                 phase: normal
                                 when:
                                   - fact: rest.long
+                                    operator: equals
+                                    value: 0
+                                  - fact: companion.steed.hp.current
+                                    operator: greaterThan
+                                    value: 0
+                                  - fact: companion.steed.dismissed
                                     operator: equals
                                     value: 0
                                 vars:
@@ -3979,6 +4115,12 @@ ruleGroups:
                                     self: true
                                     when:
                                       - fact: rest.long
+                                        operator: equals
+                                        value: 0
+                                      - fact: companion.steed.hp.current
+                                        operator: greaterThan
+                                        value: 0
+                                      - fact: companion.steed.dismissed
                                         operator: equals
                                         value: 0
                       # === HP Modifiers ===
@@ -4018,6 +4160,10 @@ ruleGroups:
                               source:
                                 var: modifier
                             - type: advertiseEffect
+                              when:
+                                - fact: companion.steed.hp.current
+                                  operator: greaterThan
+                                  value: 0
                               rule:
                                 id: effect-steed-hp-modifier-max
                                 ui:
@@ -4026,6 +4172,13 @@ ruleGroups:
                                   section: health
                                   subject: steed
                                 phase: normal
+                                when:
+                                  - fact: companion.steed.hp.current
+                                    operator: greaterThan
+                                    value: 0
+                                  - fact: companion.steed.dismissed
+                                    operator: equals
+                                    value: 0
                                 vars:
                                   modifier:
                                     capture: true
@@ -4044,6 +4197,13 @@ ruleGroups:
                                       var: modifier
                                   - type: advertiseEffect
                                     self: true
+                                    when:
+                                      - fact: companion.steed.hp.current
+                                        operator: greaterThan
+                                        value: 0
+                                      - fact: companion.steed.dismissed
+                                        operator: equals
+                                        value: 0
                       # Current HP Modifier
                       - type: offerRule
                         rule:
@@ -4080,6 +4240,10 @@ ruleGroups:
                               source:
                                 var: modifier
                             - type: advertiseEffect
+                              when:
+                                - fact: companion.steed.hp.current
+                                  operator: greaterThan
+                                  value: 0
                               rule:
                                 id: effect-steed-hp-modifier-current
                                 ui:
@@ -4088,6 +4252,13 @@ ruleGroups:
                                   section: health
                                   subject: steed
                                 phase: normal
+                                when:
+                                  - fact: companion.steed.hp.current
+                                    operator: greaterThan
+                                    value: 0
+                                  - fact: companion.steed.dismissed
+                                    operator: equals
+                                    value: 0
                                 vars:
                                   modifier:
                                     capture: true
@@ -4106,6 +4277,13 @@ ruleGroups:
                                       var: modifier
                                   - type: advertiseEffect
                                     self: true
+                                    when:
+                                      - fact: companion.steed.hp.current
+                                        operator: greaterThan
+                                        value: 0
+                                      - fact: companion.steed.dismissed
+                                        operator: equals
+                                        value: 0
                       # === Note ===
                       - type: offerRule
                         rule:
@@ -4165,11 +4343,17 @@ ruleGroups:
                           - fact: companion.steed.dismissed
                             operator: equals
                             value: 0
+                          - fact: companion.steed.hp.current
+                            operator: greaterThan
+                            value: 0
                       - type: advertiseEffect
                         rule: *steed-resources-l3
                         when:
                           - fact: companion.steed.dismissed
                             operator: equals
+                            value: 0
+                          - fact: companion.steed.hp.current
+                            operator: greaterThan
                             value: 0
                   when:
                     - fact: find-steed.selectedLevel
@@ -4725,19 +4909,22 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-str.name
+                            name: planner.record.save.str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -4748,7 +4935,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -4764,20 +4951,23 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-dex.name
+                            name: planner.record.save.dex
                             packBehind: steed-save-str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -4788,7 +4978,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -4804,20 +4994,23 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-con.name
+                            name: planner.record.save.con
                             packBehind: steed-save-str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -4828,7 +5021,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -4844,20 +5037,23 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-int.name
+                            name: planner.record.save.int
                             packBehind: steed-save-str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -4868,7 +5064,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -4884,20 +5080,23 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-wis.name
+                            name: planner.record.save.wis
                             packBehind: steed-save-str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -4908,7 +5107,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -4924,20 +5123,23 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-cha.name
+                            name: planner.record.save.cha
                             packBehind: steed-save-str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -4948,7 +5150,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -5437,6 +5639,10 @@ ruleGroups:
                                 var: amount
                               subtract: true
                             - type: advertiseEffect
+                              when:
+                                - fact: companion.steed.hp.current
+                                  operator: greaterThan
+                                  value: 0
                               rule:
                                 id: effect-steed-hp-damage
                                 ui:
@@ -5446,6 +5652,12 @@ ruleGroups:
                                 phase: normal
                                 when:
                                   - fact: rest.long
+                                    operator: equals
+                                    value: 0
+                                  - fact: companion.steed.hp.current
+                                    operator: greaterThan
+                                    value: 0
+                                  - fact: companion.steed.dismissed
                                     operator: equals
                                     value: 0
                                 vars:
@@ -5464,6 +5676,12 @@ ruleGroups:
                                     self: true
                                     when:
                                       - fact: rest.long
+                                        operator: equals
+                                        value: 0
+                                      - fact: companion.steed.hp.current
+                                        operator: greaterThan
+                                        value: 0
+                                      - fact: companion.steed.dismissed
                                         operator: equals
                                         value: 0
                       # Record Heal
@@ -5498,6 +5716,10 @@ ruleGroups:
                               subtract: false
                               max: companion.steed.hp.max
                             - type: advertiseEffect
+                              when:
+                                - fact: companion.steed.hp.current
+                                  operator: greaterThan
+                                  value: 0
                               rule:
                                 id: effect-steed-hp-heal
                                 ui:
@@ -5507,6 +5729,12 @@ ruleGroups:
                                 phase: normal
                                 when:
                                   - fact: rest.long
+                                    operator: equals
+                                    value: 0
+                                  - fact: companion.steed.hp.current
+                                    operator: greaterThan
+                                    value: 0
+                                  - fact: companion.steed.dismissed
                                     operator: equals
                                     value: 0
                                 vars:
@@ -5526,6 +5754,12 @@ ruleGroups:
                                     self: true
                                     when:
                                       - fact: rest.long
+                                        operator: equals
+                                        value: 0
+                                      - fact: companion.steed.hp.current
+                                        operator: greaterThan
+                                        value: 0
+                                      - fact: companion.steed.dismissed
                                         operator: equals
                                         value: 0
                       # === HP Modifiers ===
@@ -5565,6 +5799,10 @@ ruleGroups:
                               source:
                                 var: modifier
                             - type: advertiseEffect
+                              when:
+                                - fact: companion.steed.hp.current
+                                  operator: greaterThan
+                                  value: 0
                               rule:
                                 id: effect-steed-hp-modifier-max
                                 ui:
@@ -5573,6 +5811,13 @@ ruleGroups:
                                   section: health
                                   subject: steed
                                 phase: normal
+                                when:
+                                  - fact: companion.steed.hp.current
+                                    operator: greaterThan
+                                    value: 0
+                                  - fact: companion.steed.dismissed
+                                    operator: equals
+                                    value: 0
                                 vars:
                                   modifier:
                                     capture: true
@@ -5591,6 +5836,13 @@ ruleGroups:
                                       var: modifier
                                   - type: advertiseEffect
                                     self: true
+                                    when:
+                                      - fact: companion.steed.hp.current
+                                        operator: greaterThan
+                                        value: 0
+                                      - fact: companion.steed.dismissed
+                                        operator: equals
+                                        value: 0
                       # Current HP Modifier
                       - type: offerRule
                         rule:
@@ -5627,6 +5879,10 @@ ruleGroups:
                               source:
                                 var: modifier
                             - type: advertiseEffect
+                              when:
+                                - fact: companion.steed.hp.current
+                                  operator: greaterThan
+                                  value: 0
                               rule:
                                 id: effect-steed-hp-modifier-current
                                 ui:
@@ -5635,6 +5891,13 @@ ruleGroups:
                                   section: health
                                   subject: steed
                                 phase: normal
+                                when:
+                                  - fact: companion.steed.hp.current
+                                    operator: greaterThan
+                                    value: 0
+                                  - fact: companion.steed.dismissed
+                                    operator: equals
+                                    value: 0
                                 vars:
                                   modifier:
                                     capture: true
@@ -5653,6 +5916,13 @@ ruleGroups:
                                       var: modifier
                                   - type: advertiseEffect
                                     self: true
+                                    when:
+                                      - fact: companion.steed.hp.current
+                                        operator: greaterThan
+                                        value: 0
+                                      - fact: companion.steed.dismissed
+                                        operator: equals
+                                        value: 0
                       # === Note ===
                       - type: offerRule
                         rule:
@@ -5712,11 +5982,17 @@ ruleGroups:
                           - fact: companion.steed.dismissed
                             operator: equals
                             value: 0
+                          - fact: companion.steed.hp.current
+                            operator: greaterThan
+                            value: 0
                       - type: advertiseEffect
                         rule: *steed-resources-l4
                         when:
                           - fact: companion.steed.dismissed
                             operator: equals
+                            value: 0
+                          - fact: companion.steed.hp.current
+                            operator: greaterThan
                             value: 0
                   when:
                     - fact: find-steed.selectedLevel
@@ -6272,19 +6548,22 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-str.name
+                            name: planner.record.save.str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -6295,7 +6574,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -6311,20 +6590,23 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-dex.name
+                            name: planner.record.save.dex
                             packBehind: steed-save-str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -6335,7 +6617,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -6351,20 +6633,23 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-con.name
+                            name: planner.record.save.con
                             packBehind: steed-save-str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -6375,7 +6660,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -6391,20 +6676,23 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-int.name
+                            name: planner.record.save.int
                             packBehind: steed-save-str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -6415,7 +6703,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -6431,20 +6719,23 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-wis.name
+                            name: planner.record.save.wis
                             packBehind: steed-save-str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -6455,7 +6746,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -6471,20 +6762,23 @@ ruleGroups:
                           ui:
                             section: free
                             subject: steed
-                            name: rule.spell-find-steed.steed-save-cha.name
+                            name: planner.record.save.cha
                             packBehind: steed-save-str
                             primaryControl:
                               type: dice-line
                               dice:
                                 - expression: d20
                                   bonus: { var: rollBonus }
-                              secondaryControl:
-                                type: segmented
-                                var: passed
-                                options:
-                                  - { key: none }
-                                  - { key: passed }
-                                  - { key: failed }
+                            secondaryControl:
+                              type: segmented
+                              var: passed
+                              options:
+                                - value: -1
+                                  label: planner.record.outcome.none
+                                - value: 1
+                                  label: planner.record.passed
+                                - value: 0
+                                  label: planner.record.failed
                             intents: { SAVE: you }
                             actionCost: []
                           vars:
@@ -6495,7 +6789,7 @@ ruleGroups:
                             passed:
                               capture: true
                               default:
-                                string: none
+                                number: -1
                           activities:
                             - type: numberSet
                               target:
@@ -6984,6 +7278,10 @@ ruleGroups:
                                 var: amount
                               subtract: true
                             - type: advertiseEffect
+                              when:
+                                - fact: companion.steed.hp.current
+                                  operator: greaterThan
+                                  value: 0
                               rule:
                                 id: effect-steed-hp-damage
                                 ui:
@@ -6993,6 +7291,12 @@ ruleGroups:
                                 phase: normal
                                 when:
                                   - fact: rest.long
+                                    operator: equals
+                                    value: 0
+                                  - fact: companion.steed.hp.current
+                                    operator: greaterThan
+                                    value: 0
+                                  - fact: companion.steed.dismissed
                                     operator: equals
                                     value: 0
                                 vars:
@@ -7011,6 +7315,12 @@ ruleGroups:
                                     self: true
                                     when:
                                       - fact: rest.long
+                                        operator: equals
+                                        value: 0
+                                      - fact: companion.steed.hp.current
+                                        operator: greaterThan
+                                        value: 0
+                                      - fact: companion.steed.dismissed
                                         operator: equals
                                         value: 0
                       # Record Heal
@@ -7045,6 +7355,10 @@ ruleGroups:
                               subtract: false
                               max: companion.steed.hp.max
                             - type: advertiseEffect
+                              when:
+                                - fact: companion.steed.hp.current
+                                  operator: greaterThan
+                                  value: 0
                               rule:
                                 id: effect-steed-hp-heal
                                 ui:
@@ -7054,6 +7368,12 @@ ruleGroups:
                                 phase: normal
                                 when:
                                   - fact: rest.long
+                                    operator: equals
+                                    value: 0
+                                  - fact: companion.steed.hp.current
+                                    operator: greaterThan
+                                    value: 0
+                                  - fact: companion.steed.dismissed
                                     operator: equals
                                     value: 0
                                 vars:
@@ -7073,6 +7393,12 @@ ruleGroups:
                                     self: true
                                     when:
                                       - fact: rest.long
+                                        operator: equals
+                                        value: 0
+                                      - fact: companion.steed.hp.current
+                                        operator: greaterThan
+                                        value: 0
+                                      - fact: companion.steed.dismissed
                                         operator: equals
                                         value: 0
                       # === HP Modifiers ===
@@ -7112,6 +7438,10 @@ ruleGroups:
                               source:
                                 var: modifier
                             - type: advertiseEffect
+                              when:
+                                - fact: companion.steed.hp.current
+                                  operator: greaterThan
+                                  value: 0
                               rule:
                                 id: effect-steed-hp-modifier-max
                                 ui:
@@ -7120,6 +7450,13 @@ ruleGroups:
                                   section: health
                                   subject: steed
                                 phase: normal
+                                when:
+                                  - fact: companion.steed.hp.current
+                                    operator: greaterThan
+                                    value: 0
+                                  - fact: companion.steed.dismissed
+                                    operator: equals
+                                    value: 0
                                 vars:
                                   modifier:
                                     capture: true
@@ -7138,6 +7475,13 @@ ruleGroups:
                                       var: modifier
                                   - type: advertiseEffect
                                     self: true
+                                    when:
+                                      - fact: companion.steed.hp.current
+                                        operator: greaterThan
+                                        value: 0
+                                      - fact: companion.steed.dismissed
+                                        operator: equals
+                                        value: 0
                       # Current HP Modifier
                       - type: offerRule
                         rule:
@@ -7174,6 +7518,10 @@ ruleGroups:
                               source:
                                 var: modifier
                             - type: advertiseEffect
+                              when:
+                                - fact: companion.steed.hp.current
+                                  operator: greaterThan
+                                  value: 0
                               rule:
                                 id: effect-steed-hp-modifier-current
                                 ui:
@@ -7182,6 +7530,13 @@ ruleGroups:
                                   section: health
                                   subject: steed
                                 phase: normal
+                                when:
+                                  - fact: companion.steed.hp.current
+                                    operator: greaterThan
+                                    value: 0
+                                  - fact: companion.steed.dismissed
+                                    operator: equals
+                                    value: 0
                                 vars:
                                   modifier:
                                     capture: true
@@ -7200,6 +7555,13 @@ ruleGroups:
                                       var: modifier
                                   - type: advertiseEffect
                                     self: true
+                                    when:
+                                      - fact: companion.steed.hp.current
+                                        operator: greaterThan
+                                        value: 0
+                                      - fact: companion.steed.dismissed
+                                        operator: equals
+                                        value: 0
                       # === Note ===
                       - type: offerRule
                         rule:
@@ -7259,11 +7621,17 @@ ruleGroups:
                           - fact: companion.steed.dismissed
                             operator: equals
                             value: 0
+                          - fact: companion.steed.hp.current
+                            operator: greaterThan
+                            value: 0
                       - type: advertiseEffect
                         rule: *steed-resources-l5
                         when:
                           - fact: companion.steed.dismissed
                             operator: equals
+                            value: 0
+                          - fact: companion.steed.hp.current
+                            operator: greaterThan
                             value: 0
                   when:
                     - fact: find-steed.selectedLevel

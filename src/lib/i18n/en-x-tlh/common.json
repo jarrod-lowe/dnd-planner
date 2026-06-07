@@ -63,24 +63,6 @@
         "name": "Chegh",
         "no_actions": "Sargh DIv DIch"
       },
-      "steed-save-str": {
-        "name": "HoS DIv"
-      },
-      "steed-save-dex": {
-        "name": "Do DIv"
-      },
-      "steed-save-con": {
-        "name": "DIch DIv"
-      },
-      "steed-save-int": {
-        "name": "'et DIv"
-      },
-      "steed-save-wis": {
-        "name": "Sov DIv"
-      },
-      "steed-save-cha": {
-        "name": "Quv DIv"
-      },
       "steed-record-damage": {
         "name": "DIv DIch",
         "effect": {

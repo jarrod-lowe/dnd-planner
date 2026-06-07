@@ -63,24 +63,6 @@
         "name": "Disengage",
         "no_actions": "Steed has no actions remaining"
       },
-      "steed-save-str": {
-        "name": "STR Save"
-      },
-      "steed-save-dex": {
-        "name": "DEX Save"
-      },
-      "steed-save-con": {
-        "name": "CON Save"
-      },
-      "steed-save-int": {
-        "name": "INT Save"
-      },
-      "steed-save-wis": {
-        "name": "WIS Save"
-      },
-      "steed-save-cha": {
-        "name": "CHA Save"
-      },
       "steed-record-damage": {
         "name": "Record Damage",
         "effect": {

@@ -1,0 +1,70 @@
+name: 'Steed Disappears at Zero HP'
+description: 'When steed HP reaches 0, the steed effect stops self-advertising and steed is no longer summoned'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-find-steed
+initialEffects:
+  - id: test-grant-level2-slot
+    phase: early
+    group:
+      - spellcasting-slots-set
+    activities:
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.total
+        source:
+          number: 1
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.remaining
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+steps:
+  # Cast Find Steed
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - cast-find-steed
+  - addOffer:
+      id: cast-find-steed
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-steed
+        facts:
+          companion.steed.summoned: 1
+          companion.steed.hp.max: 25
+          companion.steed.hp.current: 25
+  # Next turn: record damage equal to max HP
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - steed-record-damage
+  - addOffer:
+      id: steed-record-damage
+      selections:
+        amount: 25
+      assert:
+        facts:
+          companion.steed.hp.current: 0
+  # End turn: steed should disappear (HP at 0 stops self-advertise)
+  # Child effects (damage recording, HP modifiers) must also be cleaned up
+  - endTurn:
+      assert:
+        effects:
+          notExists:
+            - effect-steed
+            - effect-steed-hp-damage
+        facts:
+          companion.steed.summoned: 0
