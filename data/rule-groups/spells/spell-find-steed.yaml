@@ -404,6 +404,24 @@ ruleGroups:
                     fact: companion.steed.bonusActions.remaining
                   source:
                     number: 1
+                # Initialize speed/movement same-turn so a same-turn Dash grants
+                # movement. The persisted effect-steed-resources only applies from
+                # the next turn; ground speed is 60 at every slot level (L2-L5).
+                - type: numberSet
+                  target:
+                    fact: companion.steed.speed
+                  source:
+                    number: 60
+                - type: numberSet
+                  target:
+                    fact: companion.steed.movement.total
+                  source:
+                    number: 60
+                - type: numberSet
+                  target:
+                    fact: companion.steed.movement.remaining
+                  source:
+                    number: 60
 
                 # === Same-turn steed action offers (L2) ===
                 - type: offerRule
