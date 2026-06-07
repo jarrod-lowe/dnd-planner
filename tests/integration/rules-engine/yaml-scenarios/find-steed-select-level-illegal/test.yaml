@@ -1,0 +1,57 @@
+name: 'Find Steed - Illegal When Selected Level Has No Remaining Slots'
+description: >-
+  If the player selects L3 but only L2 slots remain, the planned action should
+  be illegal with a no_slots error. The overall offer is still legal (L2 is available).
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-find-steed
+initialEffects:
+  - id: test-grant-slots
+    phase: early
+    group:
+      - spellcasting-slots-set
+    activities:
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.total
+        source:
+          number: 1
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.remaining
+        source:
+          number: 1
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level3.total
+        source:
+          number: 1
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level3.remaining
+        source:
+          number: 0
+      - type: advertiseEffect
+        self: true
+steps:
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - cast-find-steed
+  - addOffer:
+      id: cast-find-steed
+      selections:
+        slotLevel: 3
+      assert:
+        planErrors:
+          - id: cast-find-steed
+            index: 0
+            errors:
+              - rule.spell-find-steed.offer-find-steed.no_slots
