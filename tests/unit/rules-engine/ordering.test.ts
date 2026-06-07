@@ -555,3 +555,93 @@ describe('validateOrdering auto-group suppression', () => {
     expect(diagnostics[0].message).not.toContain('_auto.');
   });
 });
+
+describe('validateCrossPhaseOrdering auto-group suppression', () => {
+  it('suppresses CROSS_PHASE_DEPENDENCY for _auto.* groups', () => {
+    const rules: Rule[] = [
+      {
+        id: 'early-reader',
+        phase: 'early',
+        after: [{ group: '_auto.fact.heroicInspiration.consumed' }],
+        activities: []
+      },
+      {
+        id: 'normal-writer',
+        phase: 'normal',
+        group: ['_auto.fact.heroicInspiration.consumed'],
+        activities: []
+      }
+    ];
+
+    const diagnostics = validateCrossPhaseOrdering(rules, 'normal');
+
+    expect(diagnostics).toHaveLength(0);
+  });
+
+  it('still errors for non-auto cross-phase dependencies', () => {
+    const rules: Rule[] = [
+      {
+        id: 'early-rule',
+        phase: 'early',
+        after: [{ group: 'normal-group' }],
+        activities: []
+      },
+      {
+        id: 'normal-rule',
+        phase: 'normal',
+        group: ['normal-group'],
+        activities: []
+      }
+    ];
+
+    const diagnostics = validateCrossPhaseOrdering(rules, 'normal');
+
+    expect(diagnostics).toHaveLength(1);
+    expect(diagnostics[0].code).toBe('CROSS_PHASE_DEPENDENCY');
+  });
+
+  it('suppresses only _auto.* when mixed with regular cross-phase deps', () => {
+    const rules: Rule[] = [
+      {
+        id: 'early-rule',
+        phase: 'early',
+        after: [{ group: '_auto.fact.X' }, { group: 'normal-group' }],
+        activities: []
+      },
+      {
+        id: 'normal-writer',
+        phase: 'normal',
+        group: ['_auto.fact.X', 'normal-group'],
+        activities: []
+      }
+    ];
+
+    const diagnostics = validateCrossPhaseOrdering(rules, 'normal');
+
+    expect(diagnostics).toHaveLength(1);
+    expect(diagnostics[0].code).toBe('CROSS_PHASE_DEPENDENCY');
+    expect(diagnostics[0].message).toContain('normal-group');
+    expect(diagnostics[0].message).not.toContain('_auto.');
+  });
+
+  it('allows _auto.* same-phase dependencies without error', () => {
+    const rules: Rule[] = [
+      {
+        id: 'reader',
+        phase: 'normal',
+        after: [{ group: '_auto.fact.str.value' }],
+        activities: []
+      },
+      {
+        id: 'writer',
+        phase: 'normal',
+        group: ['_auto.fact.str.value'],
+        activities: []
+      }
+    ];
+
+    const diagnostics = validateCrossPhaseOrdering(rules, 'normal');
+
+    expect(diagnostics).toHaveLength(0);
+  });
+});

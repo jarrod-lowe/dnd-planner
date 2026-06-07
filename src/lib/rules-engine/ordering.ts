@@ -346,6 +346,11 @@ export function validateCrossPhaseOrdering(rules: Rule[], _phase: Phase): Diagno
     const afterDeps = rule.after ?? [];
 
     for (const dep of afterDeps) {
+      // Skip auto-groups — they enforce same-phase read-after-write ordering
+      // and are intentionally cross-phase (writers may be in different phases).
+      // Missing-group suppression in validateOrdering already handles these.
+      if (dep.group.startsWith('_auto.')) continue;
+
       const phases = groupPhases.get(dep.group);
       if (phases === undefined) continue; // Missing group caught by validateOrdering
 
