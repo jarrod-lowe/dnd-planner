@@ -119,6 +119,11 @@ ruleGroups:
             target:
               fact: find-steed.lowestAvailableSlotLevel
             source:
+              number: 2
+          - type: numberSet
+            target:
+              fact: find-steed.lowestAvailableSlotLevel
+            source:
               number: 5
             when:
               - fact: spellcasting.slots.level5.remaining
