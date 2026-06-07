@@ -7,7 +7,7 @@ import type {
   Phase
 } from './types';
 import { createBuiltinFunctionRegistry } from './functions';
-import { buildGroupStates, validateOrdering } from './ordering';
+import { buildGroupStates, validateOrdering, validateCrossPhaseOrdering } from './ordering';
 import { executePhase } from './phases';
 import { buildOutput } from './output';
 
@@ -110,6 +110,8 @@ export function evaluate(input: EngineInput): EngineOutput {
   for (const phase of ['early', 'normal', 'safeguard'] as Phase[]) {
     phaseDiagnostics.push(...validateOrdering(phaseRules[phase], phase));
   }
+  // Cross-phase validation: detect rules depending on groups from later phases
+  phaseDiagnostics.push(...validateCrossPhaseOrdering(allRules, 'normal'));
 
   // 3. Create function registry (unused in v1 but required for completeness)
   createBuiltinFunctionRegistry();

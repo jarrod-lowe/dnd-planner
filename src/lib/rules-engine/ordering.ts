@@ -239,7 +239,7 @@ export function validateOrdering(rules: Rule[], phase: Phase): Diagnostic[] {
     for (const dep of afterDeps) {
       // Check if group exists
       if (!existingGroups.has(dep.group)) {
-        // Suppress warnings for auto-groups (may reference groups from other phases)
+        // Suppress diagnostics for auto-groups (may reference groups from other phases)
         if (!dep.group.startsWith('_auto.')) {
           diagnostics.push({
             code: 'MISSING_GROUP',
