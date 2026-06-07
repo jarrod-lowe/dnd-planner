@@ -239,7 +239,7 @@ export function validateOrdering(rules: Rule[], phase: Phase): Diagnostic[] {
     for (const dep of afterDeps) {
       // Check if group exists
       if (!existingGroups.has(dep.group)) {
-        // Suppress warnings for auto-groups (may reference groups from other phases)
+        // Suppress diagnostics for auto-groups (may reference groups from other phases)
         if (!dep.group.startsWith('_auto.')) {
           diagnostics.push({
             code: 'MISSING_GROUP',
@@ -322,19 +322,23 @@ export function validateOrdering(rules: Rule[], phase: Phase): Diagnostic[] {
  *
  * @calledBy evaluate (evaluate.ts) - during initialization
  */
-export function validateCrossPhaseOrdering(rules: Rule[], phase: Phase): Diagnostic[] {
+export function validateCrossPhaseOrdering(rules: Rule[], _phase: Phase): Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
 
-  // Build map of group -> phase
-  const groupPhases = new Map<string, Phase>();
+  // Build map of group -> ALL phases it exists in (groups are phase-local,
+  // so the same name can legitimately appear in multiple phases)
+  const groupPhases = new Map<string, Set<Phase>>();
   for (const rule of rules) {
     const rulePhase = rule.phase ?? 'normal';
     for (const groupName of rule.group ?? []) {
-      groupPhases.set(groupName, rulePhase);
+      if (!groupPhases.has(groupName)) {
+        groupPhases.set(groupName, new Set());
+      }
+      groupPhases.get(groupName)!.add(rulePhase);
     }
   }
 
-  const phaseOrder = { early: 0, normal: 1, safeguard: 2 };
+  const phaseOrder: Record<Phase, number> = { early: 0, normal: 1, safeguard: 2 };
 
   // Check each rule's after dependencies
   for (const rule of rules) {
@@ -342,15 +346,23 @@ export function validateCrossPhaseOrdering(rules: Rule[], phase: Phase): Diagnos
     const afterDeps = rule.after ?? [];
 
     for (const dep of afterDeps) {
-      const depPhase = groupPhases.get(dep.group);
-      if (depPhase === undefined) continue; // Missing group caught by validateOrdering
+      // Skip auto-groups — they enforce same-phase read-after-write ordering
+      // and are intentionally cross-phase (writers may be in different phases).
+      // Missing-group suppression in validateOrdering already handles these.
+      if (dep.group.startsWith('_auto.')) continue;
 
-      // Rule cannot depend on a group from a later phase
-      if (phaseOrder[depPhase] > phaseOrder[rulePhase]) {
+      const phases = groupPhases.get(dep.group);
+      if (phases === undefined) continue; // Missing group caught by validateOrdering
+
+      // Error if the group exists ONLY in phases later than the rule's phase.
+      // If it exists in the same phase or an earlier phase, it's valid.
+      const onlyInLaterPhases = [...phases].every((p) => phaseOrder[p] > phaseOrder[rulePhase]);
+      if (onlyInLaterPhases) {
+        const laterPhases = [...phases].join(', ');
         diagnostics.push({
           code: 'CROSS_PHASE_DEPENDENCY',
           severity: 'error',
-          message: `Rule "${rule.id}" in phase "${rulePhase}" depends on group "${dep.group}" from later phase "${depPhase}"`
+          message: `Rule "${rule.id}" in phase "${rulePhase}" depends on group "${dep.group}" which only exists in later phase(s): ${laterPhases}`
         });
       }
     }
