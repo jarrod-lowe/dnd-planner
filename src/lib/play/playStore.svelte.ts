@@ -6,6 +6,7 @@ import { debounce } from './debounce';
 import { resolveInitialSelections } from './resolveInitialSelections';
 import { extractTopBarEntries, extractResourceEntries } from './extractTopBar';
 import { decrementCountDowns } from './countDown';
+import { getBaseEffectId } from './effectUtils';
 import { deriveVerbFromRule } from './stepUtils';
 import { locale, t } from '$lib/i18n';
 import { prefetchDetailsForEffects } from '$lib/details/rehydrate';
@@ -706,7 +707,17 @@ function getDependents(ruleGroupId: string): string[] {
 }
 
 function removeEffect(ruleId: string): void {
-  const updated = state.effects.filter((rule) => rule.id !== ruleId);
+  const targetEffect = state.effects.find((rule) => rule.id === ruleId);
+
+  const shouldRemove = (rule: Rule): boolean => {
+    if (rule.id === ruleId) return true;
+    if (targetEffect?.cascadeRemove) {
+      return targetEffect.cascadeRemove.includes(getBaseEffectId(rule.id));
+    }
+    return false;
+  };
+
+  const updated = state.effects.filter((rule) => !shouldRemove(rule));
   state = { ...state, effects: updated };
   performEvaluation();
 

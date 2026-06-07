@@ -398,6 +398,13 @@
           },
           "description": "Groups this rule belongs to"
         },
+        "cascadeRemove": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Base IDs of effects to also remove when this effect is manually removed from the UI"
+        },
         "activities": {
           "type": "array",
           "items": {

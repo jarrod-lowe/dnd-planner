@@ -1311,6 +1311,12 @@ ruleGroups:
                 - type: advertiseEffect
                   rule:
                     id: effect-steed
+                    cascadeRemove:
+                      - effect-steed-resources
+                      - effect-steed-hp-damage
+                      - effect-steed-hp-heal
+                      - effect-steed-hp-modifier-max
+                      - effect-steed-hp-modifier-current
                     phase: normal
                     ui:
                       name: rule.spell-find-steed.effect-steed.name
@@ -2945,6 +2951,12 @@ ruleGroups:
                 - type: advertiseEffect
                   rule:
                     id: effect-steed
+                    cascadeRemove:
+                      - effect-steed-resources
+                      - effect-steed-hp-damage
+                      - effect-steed-hp-heal
+                      - effect-steed-hp-modifier-max
+                      - effect-steed-hp-modifier-current
                     phase: normal
                     ui:
                       name: rule.spell-find-steed.effect-steed.name
@@ -4590,6 +4602,12 @@ ruleGroups:
                 - type: advertiseEffect
                   rule:
                     id: effect-steed
+                    cascadeRemove:
+                      - effect-steed-resources
+                      - effect-steed-hp-damage
+                      - effect-steed-hp-heal
+                      - effect-steed-hp-modifier-max
+                      - effect-steed-hp-modifier-current
                     phase: normal
                     ui:
                       name: rule.spell-find-steed.effect-steed.name
@@ -6235,6 +6253,12 @@ ruleGroups:
                 - type: advertiseEffect
                   rule:
                     id: effect-steed
+                    cascadeRemove:
+                      - effect-steed-resources
+                      - effect-steed-hp-damage
+                      - effect-steed-hp-heal
+                      - effect-steed-hp-modifier-max
+                      - effect-steed-hp-modifier-current
                     phase: normal
                     ui:
                       name: rule.spell-find-steed.effect-steed.name
