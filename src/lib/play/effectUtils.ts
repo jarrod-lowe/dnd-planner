@@ -149,8 +149,8 @@ export function getChipState(effect: Rule, facts: Facts): ChipState {
  * The rules engine appends `-{counter}` when advertising effects.
  */
 export function getBaseEffectId(effectId: string): string {
-	const match = effectId.match(/^(.+)-(\d+)$/);
-	return match ? match[1] : effectId;
+  const match = effectId.match(/^(.+)-(\d+)$/);
+  return match ? match[1] : effectId;
 }
 
 export function getEffectDisplayValue(rule: Rule, facts: Facts): string | null {
