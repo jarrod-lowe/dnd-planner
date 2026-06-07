@@ -38,6 +38,76 @@
         "name": "Sargh Quv",
         "no_bonus_actions": "Sargh Quv DIch"
       },
+      "steed-move-walk": {
+        "name": "YIt",
+        "out_of_movement": "Do tu'lu'be'"
+      },
+      "steed-move-rough-terrain": {
+        "name": "DeQ DIch",
+        "out_of_movement": "Do tu'lu'be'"
+      },
+      "steed-move-fly": {
+        "name": "Peng",
+        "cannot_fly": "Sargh peng DIch",
+        "out_of_movement": "Do tu'lu'be'"
+      },
+      "steed-dash": {
+        "name": "Do naQ",
+        "no_actions": "Sargh DIv DIch"
+      },
+      "steed-dodge": {
+        "name": "Dol",
+        "no_actions": "Sargh DIv DIch"
+      },
+      "steed-disengage": {
+        "name": "Chegh",
+        "no_actions": "Sargh DIv DIch"
+      },
+      "steed-save-str": {
+        "name": "HoS DIv"
+      },
+      "steed-save-dex": {
+        "name": "Do DIv"
+      },
+      "steed-save-con": {
+        "name": "DIch DIv"
+      },
+      "steed-save-int": {
+        "name": "'et DIv"
+      },
+      "steed-save-wis": {
+        "name": "Sov DIv"
+      },
+      "steed-save-cha": {
+        "name": "Quv DIv"
+      },
+      "steed-record-damage": {
+        "name": "DIv DIch",
+        "effect": {
+          "name": "Sargh DIv"
+        }
+      },
+      "steed-record-heal": {
+        "name": "DIv DIch",
+        "effect": {
+          "name": "Sargh MoH"
+        }
+      },
+      "steed-set-hp-modifier-max": {
+        "name": "nIv DIch nIv DIch"
+      },
+      "steed-set-hp-modifier-current": {
+        "name": "nIv DIch DaH"
+      },
+      "steed-effect-hp-modifier-max": {
+        "name": "nIv DIch nIv DIch"
+      },
+      "steed-effect-hp-modifier-current": {
+        "name": "nIv DIch DaH"
+      },
+      "steed-note": {
+        "name": "QIn"
+      },
       "offer-dismiss-steed": {
         "name": "Sargh mup"
       },
@@ -1104,7 +1174,8 @@
         "ac": "DIch Jun",
         "speed": "SPD",
         "actions": "DIvI'",
-        "bonusActions": "DIvI' latlh"
+        "bonusActions": "DIvI' latlh",
+        "movement": "Do"
       },
       "sections": {
         "resources": "DIvI' Duj",

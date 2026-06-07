@@ -79,6 +79,8 @@ steps:
           companion.steed.bonusActions.remaining: 1
         offers:
           exists:
-            - offer-steed-dummy-action
-            - offer-steed-dummy-bonus
+            - steed-move-walk
+            - steed-dodge
+            - steed-disengage
+            - steed-dash
             - offer-dismiss-steed

@@ -1,5 +1,5 @@
-name: 'Find Steed Action Resource'
-description: 'Steed action resource is consumed correctly when planned'
+name: 'Steed Movement Walk'
+description: 'Steed can walk using its own movement pool. Movement resets each turn.'
 ruleGroups:
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
@@ -28,39 +28,54 @@ initialEffects:
       - type: advertiseEffect
         self: true
 steps:
-  # Cast Find Steed
+  # Verify Find Steed is available
   - evaluate:
       assert:
         offers:
           exists:
             - cast-find-steed
+  # Cast Find Steed
   - addOffer:
       id: cast-find-steed
-  # End turn to commit the steed effect
   - endTurn:
       assert:
-        effects:
-          exists:
-            - effect-steed
         facts:
           companion.steed.summoned: 1
-          companion.steed.actions.remaining: 1
-  # Next turn: steed action should be available
+          companion.steed.speed: 60
+          companion.steed.movement.total: 60
+          companion.steed.movement.remaining: 60
+  # Next turn: movement reset, walk offer available
+  - evaluate:
+      assert:
+        facts:
+          companion.steed.movement.total: 60
+          companion.steed.movement.remaining: 60
+        offers:
+          exists:
+            - steed-move-walk
+  # Walk 30 feet
+  - addOffer:
+      id: steed-move-walk
+      selections:
+        distance: 30
+      assert:
+        facts:
+          companion.steed.movement.remaining: 30
+  # Walk remaining 30 feet
+  - addOffer:
+      id: steed-move-walk
+      assert:
+        facts:
+          companion.steed.movement.remaining: 0
+  # Walk should be illegal now (no movement remaining)
   - evaluate:
       assert:
         offers:
-          exists:
-            - steed-dodge
-        facts:
-          companion.steed.actions.remaining: 1
-  # Add steed action to plan
-  - addOffer:
-      id: steed-dodge
+          illegal:
+            - steed-move-walk
+  # End turn: movement resets
+  - endTurn:
       assert:
         facts:
-          companion.steed.actions.remaining: 0
-  # Re-evaluate: resource should stay at 0 (not reset to 1)
-  - evaluate:
-      assert:
-        facts:
-          companion.steed.actions.remaining: 0
+          companion.steed.movement.total: 60
+          companion.steed.movement.remaining: 60

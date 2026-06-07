@@ -1,0 +1,83 @@
+name: 'Steed HP Modifiers'
+description: 'Steed can set max HP and current HP modifiers with persistent effects'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-find-steed
+initialEffects:
+  - id: test-grant-level2-slot
+    phase: early
+    group:
+      - spellcasting-slots-set
+    activities:
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.total
+        source:
+          number: 1
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.remaining
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+steps:
+  # Cast Find Steed at L2
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - cast-find-steed
+  - addOffer:
+      id: cast-find-steed
+  - endTurn:
+      assert:
+        facts:
+          companion.steed.summoned: 1
+          companion.steed.hp.max: 25
+          companion.steed.hp.current: 25
+  # Next turn: HP modifier offers should exist
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - steed-set-hp-modifier-max
+            - steed-set-hp-modifier-current
+  # Set max HP modifier to +5
+  - addOffer:
+      id: steed-set-hp-modifier-max
+      selections:
+        modifier: 5
+      assert:
+        facts:
+          companion.steed.hp.modifier.max: 5
+          companion.steed.hp.max: 30
+          companion.steed.hp.current: 25
+  # Set current HP modifier to -3
+  - addOffer:
+      id: steed-set-hp-modifier-current
+      selections:
+        modifier: -3
+      assert:
+        facts:
+          companion.steed.hp.modifier.current: -3
+          companion.steed.hp.max: 30
+          companion.steed.hp.current: 22
+  # End turn: modifiers should persist via effects
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-steed-hp-modifier-max
+            - effect-steed-hp-modifier-current
+        facts:
+          companion.steed.hp.modifier.max: 5
+          companion.steed.hp.modifier.current: -3
+          companion.steed.hp.max: 30
+          companion.steed.hp.current: 22

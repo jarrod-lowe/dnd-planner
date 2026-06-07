@@ -49,29 +49,29 @@ steps:
       assert:
         offers:
           exists:
-            - offer-steed-dummy-action
+            - steed-dodge
   - addOffer:
-      id: offer-steed-dummy-action
+      id: steed-dodge
       assert:
         facts:
           companion.steed.actions.remaining: 0
         # First action should have no errors (legal)
         planErrors:
-          - id: offer-steed-dummy-action
+          - id: steed-dodge
             index: 0
             errors: []
   # Add second steed action - should be illegal with error reason
   - addOffer:
-      id: offer-steed-dummy-action
+      id: steed-dodge
       assert:
         facts:
           companion.steed.actions.remaining: -1
         # Second action should have error (illegal)
         planErrors:
-          - id: offer-steed-dummy-action
+          - id: steed-dodge
             index: 0
             errors: []
-          - id: offer-steed-dummy-action
+          - id: steed-dodge
             index: 1
             errors:
-              - rule.spell-find-steed.offer-steed-dummy-action.no_actions
+              - rule.spell-find-steed.steed-dodge.no_actions

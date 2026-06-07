@@ -1,5 +1,5 @@
-name: 'Find Steed Action Resource'
-description: 'Steed action resource is consumed correctly when planned'
+name: 'Steed Saving Throws'
+description: 'Steed has save rollers for all 6 abilities with correct modifiers from stat block'
 ruleGroups:
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
@@ -28,39 +28,32 @@ initialEffects:
       - type: advertiseEffect
         self: true
 steps:
-  # Cast Find Steed
+  # Verify Find Steed is available
   - evaluate:
       assert:
         offers:
           exists:
             - cast-find-steed
+  # Cast Find Steed
   - addOffer:
       id: cast-find-steed
-  # End turn to commit the steed effect
   - endTurn:
       assert:
-        effects:
-          exists:
-            - effect-steed
         facts:
-          companion.steed.summoned: 1
-          companion.steed.actions.remaining: 1
-  # Next turn: steed action should be available
+          companion.steed.str.modifier: 4
+          companion.steed.dex.modifier: 1
+          companion.steed.con.modifier: 2
+          companion.steed.int.modifier: -2
+          companion.steed.wis.modifier: 1
+          companion.steed.cha.modifier: -1
+  # Next turn: all save offers available
   - evaluate:
       assert:
         offers:
           exists:
-            - steed-dodge
-        facts:
-          companion.steed.actions.remaining: 1
-  # Add steed action to plan
-  - addOffer:
-      id: steed-dodge
-      assert:
-        facts:
-          companion.steed.actions.remaining: 0
-  # Re-evaluate: resource should stay at 0 (not reset to 1)
-  - evaluate:
-      assert:
-        facts:
-          companion.steed.actions.remaining: 0
+            - steed-save-str
+            - steed-save-dex
+            - steed-save-con
+            - steed-save-int
+            - steed-save-wis
+            - steed-save-cha

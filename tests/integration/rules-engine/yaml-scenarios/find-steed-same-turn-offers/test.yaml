@@ -45,5 +45,6 @@ steps:
         # Steed action offers should be available for same-turn use
         offers:
           exists:
-            - offer-steed-dummy-action
-            - offer-steed-dummy-bonus
+            - steed-dash
+            - steed-dodge
+            - steed-disengage

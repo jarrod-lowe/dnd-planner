@@ -38,6 +38,76 @@
         "name": "Steed Bonus",
         "no_bonus_actions": "Steed has no bonus actions remaining"
       },
+      "steed-move-walk": {
+        "name": "Walk",
+        "out_of_movement": "No movement remaining"
+      },
+      "steed-move-rough-terrain": {
+        "name": "Rough Terrain",
+        "out_of_movement": "No movement remaining"
+      },
+      "steed-move-fly": {
+        "name": "Fly",
+        "cannot_fly": "Steed cannot fly",
+        "out_of_movement": "No movement remaining"
+      },
+      "steed-dash": {
+        "name": "Dash",
+        "no_actions": "Steed has no actions remaining"
+      },
+      "steed-dodge": {
+        "name": "Dodge",
+        "no_actions": "Steed has no actions remaining"
+      },
+      "steed-disengage": {
+        "name": "Disengage",
+        "no_actions": "Steed has no actions remaining"
+      },
+      "steed-save-str": {
+        "name": "STR Save"
+      },
+      "steed-save-dex": {
+        "name": "DEX Save"
+      },
+      "steed-save-con": {
+        "name": "CON Save"
+      },
+      "steed-save-int": {
+        "name": "INT Save"
+      },
+      "steed-save-wis": {
+        "name": "WIS Save"
+      },
+      "steed-save-cha": {
+        "name": "CHA Save"
+      },
+      "steed-record-damage": {
+        "name": "Record Damage",
+        "effect": {
+          "name": "Steed Damage"
+        }
+      },
+      "steed-record-heal": {
+        "name": "Record Healing",
+        "effect": {
+          "name": "Steed Healing"
+        }
+      },
+      "steed-set-hp-modifier-max": {
+        "name": "Set Max HP Modifier"
+      },
+      "steed-set-hp-modifier-current": {
+        "name": "Set Current HP Modifier"
+      },
+      "steed-effect-hp-modifier-max": {
+        "name": "Max HP Modifier"
+      },
+      "steed-effect-hp-modifier-current": {
+        "name": "Current HP Modifier"
+      },
+      "steed-note": {
+        "name": "Note"
+      },
       "offer-dismiss-steed": {
         "name": "Dismiss Steed"
       },
@@ -1084,7 +1154,8 @@
         "ac": "AC",
         "speed": "SPD",
         "actions": "Actions",
-        "bonusActions": "Bonus Action"
+        "bonusActions": "Bonus Action",
+        "movement": "Move"
       },
       "sections": {
         "resources": "Resources",
