@@ -157,6 +157,45 @@ ruleGroups:
                 operator: greaterThan
                 value: 0
 
+      # Compute highest available slot level (L2-L5, based on total > 0)
+      - id: compute-find-steed-highest-slot
+        phase: normal
+        group:
+          - find-steed-slots-computed
+        activities:
+          - type: numberSet
+            target:
+              fact: find-steed.highestSlotLevel
+            source:
+              number: 2
+          - type: numberSet
+            target:
+              fact: find-steed.highestSlotLevel
+            source:
+              number: 3
+            when:
+              - fact: spellcasting.slots.level3.total
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target:
+              fact: find-steed.highestSlotLevel
+            source:
+              number: 4
+            when:
+              - fact: spellcasting.slots.level4.total
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target:
+              fact: find-steed.highestSlotLevel
+            source:
+              number: 5
+            when:
+              - fact: spellcasting.slots.level5.total
+                operator: greaterThan
+                value: 0
+
       # Offer Find Steed (action spell)
       - id: offer-find-steed
         after:
