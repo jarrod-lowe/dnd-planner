@@ -1192,6 +1192,11 @@ ruleGroups:
                           number: 12
                       - type: numberSet
                         target:
+                          fact: companion.steed.hp.base.max
+                        source:
+                          number: 25
+                      - type: numberSet
+                        target:
                           fact: companion.steed.hp.max
                         source:
                           number: 25
@@ -2536,11 +2541,12 @@ ruleGroups:
                                 fact: companion.steed.hp.modifier.max
                               source:
                                 var: modifier
-                            - type: numberIncrement
+                            - type: numberSum
                               target:
                                 fact: companion.steed.hp.max
-                              source:
-                                var: modifier
+                              sources:
+                                - fact: companion.steed.hp.base.max
+                                - fact: companion.steed.hp.modifier.max
                             - type: advertiseEffect
                               when:
                                 - fact: companion.steed.hp.current
@@ -2572,11 +2578,12 @@ ruleGroups:
                                       fact: companion.steed.hp.modifier.max
                                     source:
                                       var: modifier
-                                  - type: numberIncrement
+                                  - type: numberSum
                                     target:
                                       fact: companion.steed.hp.max
-                                    source:
-                                      var: modifier
+                                    sources:
+                                      - fact: companion.steed.hp.base.max
+                                      - fact: companion.steed.hp.modifier.max
                                   - type: advertiseEffect
                                     self: true
                                     when:
@@ -2831,6 +2838,11 @@ ruleGroups:
                           fact: companion.steed.ac.value
                         source:
                           number: 13
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.hp.base.max
+                        source:
+                          number: 35
                       - type: numberSet
                         target:
                           fact: companion.steed.hp.max
@@ -4176,11 +4188,12 @@ ruleGroups:
                                 fact: companion.steed.hp.modifier.max
                               source:
                                 var: modifier
-                            - type: numberIncrement
+                            - type: numberSum
                               target:
                                 fact: companion.steed.hp.max
-                              source:
-                                var: modifier
+                              sources:
+                                - fact: companion.steed.hp.base.max
+                                - fact: companion.steed.hp.modifier.max
                             - type: advertiseEffect
                               when:
                                 - fact: companion.steed.hp.current
@@ -4212,11 +4225,12 @@ ruleGroups:
                                       fact: companion.steed.hp.modifier.max
                                     source:
                                       var: modifier
-                                  - type: numberIncrement
+                                  - type: numberSum
                                     target:
                                       fact: companion.steed.hp.max
-                                    source:
-                                      var: modifier
+                                    sources:
+                                      - fact: companion.steed.hp.base.max
+                                      - fact: companion.steed.hp.modifier.max
                                   - type: advertiseEffect
                                     self: true
                                     when:
@@ -4471,6 +4485,11 @@ ruleGroups:
                           fact: companion.steed.ac.value
                         source:
                           number: 14
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.hp.base.max
+                        source:
+                          number: 45
                       - type: numberSet
                         target:
                           fact: companion.steed.hp.max
@@ -5827,11 +5846,12 @@ ruleGroups:
                                 fact: companion.steed.hp.modifier.max
                               source:
                                 var: modifier
-                            - type: numberIncrement
+                            - type: numberSum
                               target:
                                 fact: companion.steed.hp.max
-                              source:
-                                var: modifier
+                              sources:
+                                - fact: companion.steed.hp.base.max
+                                - fact: companion.steed.hp.modifier.max
                             - type: advertiseEffect
                               when:
                                 - fact: companion.steed.hp.current
@@ -5863,11 +5883,12 @@ ruleGroups:
                                       fact: companion.steed.hp.modifier.max
                                     source:
                                       var: modifier
-                                  - type: numberIncrement
+                                  - type: numberSum
                                     target:
                                       fact: companion.steed.hp.max
-                                    source:
-                                      var: modifier
+                                    sources:
+                                      - fact: companion.steed.hp.base.max
+                                      - fact: companion.steed.hp.modifier.max
                                   - type: advertiseEffect
                                     self: true
                                     when:
@@ -6122,6 +6143,11 @@ ruleGroups:
                           fact: companion.steed.ac.value
                         source:
                           number: 15
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.hp.base.max
+                        source:
+                          number: 55
                       - type: numberSet
                         target:
                           fact: companion.steed.hp.max
@@ -7478,11 +7504,12 @@ ruleGroups:
                                 fact: companion.steed.hp.modifier.max
                               source:
                                 var: modifier
-                            - type: numberIncrement
+                            - type: numberSum
                               target:
                                 fact: companion.steed.hp.max
-                              source:
-                                var: modifier
+                              sources:
+                                - fact: companion.steed.hp.base.max
+                                - fact: companion.steed.hp.modifier.max
                             - type: advertiseEffect
                               when:
                                 - fact: companion.steed.hp.current
@@ -7514,11 +7541,12 @@ ruleGroups:
                                       fact: companion.steed.hp.modifier.max
                                     source:
                                       var: modifier
-                                  - type: numberIncrement
+                                  - type: numberSum
                                     target:
                                       fact: companion.steed.hp.max
-                                    source:
-                                      var: modifier
+                                    sources:
+                                      - fact: companion.steed.hp.base.max
+                                      - fact: companion.steed.hp.modifier.max
                                   - type: advertiseEffect
                                     self: true
                                     when:

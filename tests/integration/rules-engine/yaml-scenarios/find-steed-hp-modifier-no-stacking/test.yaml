@@ -1,0 +1,175 @@
+name: 'Find Steed HP Modifier No Stacking'
+description: 'Max HP modifier does not stack per-use or per-turn; recalculates from base via numberSum'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-find-steed
+initialEffects:
+  - id: test-grant-level2-slot
+    phase: early
+    group:
+      - spellcasting-slots-set
+    activities:
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.total
+        source:
+          number: 1
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.remaining
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+steps:
+  # Cast Find Steed
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - cast-find-steed
+  - addOffer:
+      id: cast-find-steed
+  # End turn to commit the steed effect
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-steed
+        facts:
+          companion.steed.summoned: 1
+          companion.steed.hp.max: 25
+          companion.steed.hp.current: 25
+
+  # --- Max HP Modifier: basic set ---
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - steed-set-hp-modifier-max
+  # Set max HP modifier to +5
+  - addOffer:
+      id: steed-set-hp-modifier-max
+      selections:
+        modifier: 5
+      assert:
+        facts:
+          companion.steed.hp.modifier.max: 5
+          companion.steed.hp.max: 30
+  # End turn — hp.max should NOT grow (numberSum is idempotent)
+  - endTurn:
+      assert:
+        facts:
+          companion.steed.hp.max: 30
+          companion.steed.hp.modifier.max: 5
+        effects:
+          exists:
+            - effect-steed-hp-modifier-max
+
+  # Next turn — hp.max should still be 30, not 35
+  - evaluate:
+      assert:
+        facts:
+          companion.steed.hp.max: 30
+          companion.steed.hp.modifier.max: 5
+  # End turn again — still 30
+  - endTurn:
+      assert:
+        facts:
+          companion.steed.hp.max: 30
+
+  # --- Max HP Modifier: change replaces (multiple effects coexist but numberSum is idempotent) ---
+  # Change modifier from +5 to +10
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - steed-set-hp-modifier-max
+  - addOffer:
+      id: steed-set-hp-modifier-max
+      selections:
+        modifier: 10
+      assert:
+        facts:
+          companion.steed.hp.modifier.max: 10
+          companion.steed.hp.max: 35
+  - endTurn:
+      assert:
+        facts:
+          companion.steed.hp.max: 35
+          companion.steed.hp.modifier.max: 10
+
+  # Next turn — still 35 (newest effect's numberSum wins)
+  - evaluate:
+      assert:
+        facts:
+          companion.steed.hp.max: 35
+          companion.steed.hp.modifier.max: 10
+  - endTurn:
+      assert:
+        facts:
+          companion.steed.hp.max: 35
+
+  # --- Max HP Modifier: negative ---
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - steed-set-hp-modifier-max
+  - addOffer:
+      id: steed-set-hp-modifier-max
+      selections:
+        modifier: -5
+      assert:
+        facts:
+          companion.steed.hp.modifier.max: -5
+          companion.steed.hp.max: 20
+  - endTurn:
+      assert:
+        facts:
+          companion.steed.hp.max: 20
+
+  # Reset modifier to 0
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - steed-set-hp-modifier-max
+  - addOffer:
+      id: steed-set-hp-modifier-max
+      selections:
+        modifier: 0
+      assert:
+        facts:
+          companion.steed.hp.modifier.max: 0
+          companion.steed.hp.max: 25
+
+  # --- Dismissal cleans up ---
+  - endTurn:
+      assert:
+        facts:
+          companion.steed.hp.max: 25
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - offer-dismiss-steed
+  - addOffer:
+      id: offer-dismiss-steed
+      assert:
+        facts:
+          companion.steed.dismissed: 1
+  - endTurn:
+      assert:
+        effects:
+          notExists:
+            - effect-steed
+            - effect-steed-hp-modifier-max
+        facts:
+          companion.steed.summoned: 0
