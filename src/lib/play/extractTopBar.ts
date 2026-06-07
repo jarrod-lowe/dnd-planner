@@ -45,6 +45,7 @@ export interface UiEntryAbility extends UiEntryBase {
   abilities: Array<{
     name: string;
     fact: string;
+    saveFact?: string;
     proficiencyFact?: string;
   }>;
 }
@@ -123,6 +124,8 @@ export function isUiEntry(entry: unknown): entry is UiEntry {
         a !== null &&
         typeof (a as Record<string, unknown>).name === 'string' &&
         typeof (a as Record<string, unknown>).fact === 'string' &&
+        ((a as Record<string, unknown>).saveFact === undefined ||
+          typeof (a as Record<string, unknown>).saveFact === 'string') &&
         ((a as Record<string, unknown>).proficiencyFact === undefined ||
           typeof (a as Record<string, unknown>).proficiencyFact === 'string')
     );

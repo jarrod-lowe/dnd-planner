@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { slide } from 'svelte/transition';
   import { t } from '$lib/i18n';
   import UserDropdown from '$lib/components/UserDropdown.svelte';
   import type { Character } from '$lib/character/types';
@@ -52,8 +51,6 @@
     onSwitchSubject
   }: Props = $props();
 
-  let showAbilities = $state(false);
-
   // Filter entries by active subject (undefined = player)
   const subjectFiltered = $derived(topBarEntries.filter((e) => e.subject === activeSubject));
 
@@ -85,19 +82,6 @@
 
   // Concentration state
   const concActive = $derived(!!concentrationEffectName);
-
-  // Abilities resolved values
-  const abilitiesLine = $derived(
-    abilityEntry
-      ? abilityEntry.abilities
-          .map((a) => {
-            const mod = Number(facts[a.fact] ?? 0);
-            const label = $t(a.name);
-            return `${label}${mod >= 0 ? '+' : ''}${mod}`;
-          })
-          .join(' · ')
-      : ''
-  );
 </script>
 
 <header class="intent-top-bar">
@@ -227,27 +211,35 @@
       {/if}
 
       {#if abilityEntry}
-        <button
-          type="button"
+        <div
           class="intent-top-bar__chip intent-top-bar__chip--abilities"
-          aria-expanded={showAbilities}
-          aria-label={$t(abilityEntry.label)}
-          onclick={() => (showAbilities = !showAbilities)}
+          aria-label="{$t(abilityEntry.label)}: {abilityEntry.abilities
+            .map((a) => {
+              const mod = Number(facts[a.fact] ?? 0);
+              const save = a.saveFact !== undefined ? Number(facts[a.saveFact] ?? 0) : undefined;
+              const modStr = `${mod >= 0 ? '+' : ''}${mod}`;
+              const saveStr = save !== undefined ? `/${save >= 0 ? '+' : ''}${save}` : '';
+              return `${$t(a.name)} ${modStr}${saveStr}`;
+            })
+            .join(' ')}"
         >
-          <span class="intent-top-bar__chip-value">{abilitiesLine}</span>
-          <svg
-            class="intent-top-bar__chevron"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            {#if showAbilities}
-              <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />
-            {:else}
-              <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z" />
-            {/if}
-          </svg>
-        </button>
+          {#each abilityEntry.abilities as ability, i (ability.name)}
+            {@const mod = Number(facts[ability.fact] ?? 0)}
+            {@const save =
+              ability.saveFact !== undefined ? Number(facts[ability.saveFact] ?? 0) : undefined}
+            <div
+              class="intent-top-bar__ability-col"
+              class:intent-top-bar__ability-col--last={i === abilityEntry.abilities.length - 1}
+            >
+              <span class="intent-top-bar__ability-name">{$t(ability.name)}</span>
+              <span class="intent-top-bar__ability-stat">
+                {mod >= 0 ? '+' : ''}{mod}{save !== undefined
+                  ? `/${save >= 0 ? '+' : ''}${save}`
+                  : ''}
+              </span>
+            </div>
+          {/each}
+        </div>
       {/if}
     </div>
 
@@ -265,26 +257,6 @@
       />
     </nav>
   </div>
-
-  {#if showAbilities && abilityEntry}
-    <div class="intent-top-bar__abilities-detail" transition:slide={{ duration: 150 }}>
-      {#each abilityEntry.abilities as ability (ability.name)}
-        {@const mod = Number(facts[ability.fact] ?? 0)}
-        {@const prof = ability.proficiencyFact ? Number(facts[ability.proficiencyFact] ?? 0) : 0}
-        <div class="intent-top-bar__ability">
-          <span class="intent-top-bar__ability-label">{$t(ability.name)}</span>
-          <span class="intent-top-bar__ability-value">{mod >= 0 ? '+' : ''}{mod}</span>
-          {#if prof > 0}
-            <span class="intent-top-bar__ability-prof" aria-label={$t('play.topBar.proficient')}>
-              {#if prof >= 2}{$t('play.topBar.proficientDotDouble')}{:else if prof >= 1}{$t(
-                  'play.topBar.proficientDotFull'
-                )}{:else}{$t('play.topBar.proficientDotHalf')}{/if}
-            </span>
-          {/if}
-        </div>
-      {/each}
-    </div>
-  {/if}
 </header>
 
 <style>
@@ -487,65 +459,43 @@
   }
 
   .intent-top-bar__chip--abilities {
-    cursor: pointer;
-    background: var(--md-sys-color-surface-container-high);
-    transition: background-color var(--transition-fast);
+    padding: 0;
+    gap: 0;
+    align-items: stretch;
   }
 
-  .intent-top-bar__chip--abilities:hover {
-    background: var(--md-sys-color-surface-container-highest);
+  .intent-top-bar__ability-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-right: 1px solid var(--md-sys-color-outline-variant);
   }
 
-  .intent-top-bar__chip--abilities:focus-visible {
-    outline: 2px solid var(--md-sys-color-primary);
-    outline-offset: 2px;
+  .intent-top-bar__ability-col--last {
+    border-right: none;
   }
 
-  .intent-top-bar__chevron {
-    width: 1rem;
-    height: 1rem;
+  .intent-top-bar__ability-name {
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     color: var(--md-sys-color-on-surface-variant);
-    transition: transform var(--transition-fast);
+  }
+
+  .intent-top-bar__ability-stat {
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    white-space: nowrap;
   }
 
   .intent-top-bar__menu {
     flex-shrink: 0;
     margin-left: auto;
-  }
-
-  .intent-top-bar__abilities-detail {
-    display: flex;
-    gap: var(--spacing-lg);
-    padding: var(--spacing-sm) var(--spacing-md);
-    border-top: 1px solid var(--md-sys-color-outline-variant);
-    margin: var(--spacing-sm) calc(-1 * var(--spacing-md)) 0;
-    padding-left: var(--spacing-md);
-    background: var(--md-sys-color-surface-container);
-  }
-
-  .intent-top-bar__ability {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-  }
-
-  .intent-top-bar__ability-label {
-    font-family: var(--font-display);
-    font-size: var(--font-size-xs);
-    font-weight: 600;
-    color: var(--md-sys-color-on-surface-variant);
-    text-transform: uppercase;
-  }
-
-  .intent-top-bar__ability-value {
-    font-family: var(--font-body);
-    font-size: var(--font-size-sm);
-    font-weight: 600;
-    color: var(--md-sys-color-on-surface);
-  }
-
-  .intent-top-bar__ability-prof {
-    color: var(--md-sys-color-primary);
-    font-size: var(--font-size-xs);
   }
 </style>
