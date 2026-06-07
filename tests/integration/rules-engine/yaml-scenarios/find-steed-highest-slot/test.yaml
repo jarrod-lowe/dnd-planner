@@ -1,5 +1,7 @@
-name: 'Find Steed - Illegal When Plan Consumes All Eligible Slots'
-description: 'Find Steed should be illegal after the plan consumes all L2+ spell slots'
+name: 'Find Steed - Highest Slot Level Computation'
+description: >-
+  find-steed.highestSlotLevel should be the highest slot level with total > 0,
+  regardless of remaining. A character with L2 and L3 totals should resolve to 3.
 ruleGroups:
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
@@ -10,7 +12,7 @@ ruleGroups:
   - class-paladin/class-paladin-level1
   - spells/spell-find-steed
 initialEffects:
-  - id: test-grant-level2-slot
+  - id: test-grant-l2-and-l3-slots
     phase: early
     group:
       - spellcasting-slots-set
@@ -19,10 +21,20 @@ initialEffects:
         target:
           fact: spellcasting.slots.level2.total
         source:
-          number: 1
+          number: 2
       - type: numberSet
         target:
           fact: spellcasting.slots.level2.remaining
+        source:
+          number: 2
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level3.total
+        source:
+          number: 1
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level3.remaining
         source:
           number: 1
       - type: advertiseEffect
@@ -31,16 +43,4 @@ steps:
   - evaluate:
       assert:
         facts:
-          spellcasting.slots.level2.remaining: 1
-        offers:
-          legal:
-            - cast-find-steed
-  - addOffer:
-      id: cast-find-steed
-      assert:
-        facts:
-          find-steed.eligibleSlotsRemaining: 0
-          find-steed.lowestAvailableSlotLevel: 2
-        offers:
-          illegal:
-            - cast-find-steed
+          find-steed.highestSlotLevel: 3

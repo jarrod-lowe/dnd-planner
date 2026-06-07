@@ -119,6 +119,11 @@ ruleGroups:
             target:
               fact: find-steed.lowestAvailableSlotLevel
             source:
+              number: 2
+          - type: numberSet
+            target:
+              fact: find-steed.lowestAvailableSlotLevel
+            source:
               number: 5
             when:
               - fact: spellcasting.slots.level5.remaining
@@ -149,6 +154,45 @@ ruleGroups:
               number: 2
             when:
               - fact: spellcasting.slots.level2.remaining
+                operator: greaterThan
+                value: 0
+
+      # Compute highest available slot level (L2-L5, based on total > 0)
+      - id: compute-find-steed-highest-slot
+        phase: normal
+        group:
+          - find-steed-slots-computed
+        activities:
+          - type: numberSet
+            target:
+              fact: find-steed.highestSlotLevel
+            source:
+              number: 2
+          - type: numberSet
+            target:
+              fact: find-steed.highestSlotLevel
+            source:
+              number: 3
+            when:
+              - fact: spellcasting.slots.level3.total
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target:
+              fact: find-steed.highestSlotLevel
+            source:
+              number: 4
+            when:
+              - fact: spellcasting.slots.level4.total
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target:
+              fact: find-steed.highestSlotLevel
+            source:
+              number: 5
+            when:
+              - fact: spellcasting.slots.level5.total
                 operator: greaterThan
                 value: 0
 
@@ -197,10 +241,15 @@ ruleGroups:
               ui:
                 section: action-spell
                 name: rule.spell-find-steed.offer-find-steed.name
-                actionCost: [action, L2]
+                actionCost: [action]
                 detailKey: spell/find-steed
                 intents:
                   AID: summon
+                primaryControl:
+                  type: slider
+                  var: slotLevel
+                  min: { number: 2 }
+                  max: { fact: find-steed.highestSlotLevel }
               vars:
                 slotLevel:
                   capture: true
