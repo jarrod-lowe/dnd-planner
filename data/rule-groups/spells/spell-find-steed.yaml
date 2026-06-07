@@ -2005,3 +2005,19 @@ ruleGroups:
                     - fact: find-steed.selectedLevel
                       operator: equals
                       value: 5
+
+      # === Life Bond annotation ===
+      # When the steed is summoned, annotate the Record Healing panel to remind
+      # the player that the steed also regains HP from spell healing within 5 ft.
+      - id: annotate-life-bond
+        after:
+          - group: __planned__
+        activities:
+          - type: annotate
+            when:
+              - fact: companion.steed.summoned
+                operator: equals
+                value: 1
+            key: rule.spell-find-steed.annotate-life-bond.text
+            targets:
+              - healing.any

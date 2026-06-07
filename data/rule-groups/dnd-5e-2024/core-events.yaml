@@ -107,6 +107,7 @@ ruleGroups:
               ui:
                 section: free
                 name: planner.record.heal
+                annotationLabels: [healing.any]
                 primaryControl:
                   type: slider
                   var: amount
