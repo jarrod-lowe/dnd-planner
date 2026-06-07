@@ -1227,7 +1227,8 @@
     "error": {
       "loadRuleGroups": "Failed to load character data",
       "loadEffects": "Failed to load effects",
-      "saveEffects": "Failed to save effects"
+      "saveEffects": "Failed to save effects",
+      "engineCycle": "Rules engine error: dependency cycle detected. Some actions may be unavailable."
     },
     "toast": {
       "rollType": {

@@ -1,6 +1,13 @@
-import type { EngineInput, EngineOutput, WorkingState, RuleContext } from './types';
+import type {
+  EngineInput,
+  EngineOutput,
+  WorkingState,
+  RuleContext,
+  Diagnostic,
+  Phase
+} from './types';
 import { createBuiltinFunctionRegistry } from './functions';
-import { buildGroupStates } from './ordering';
+import { buildGroupStates, validateOrdering } from './ordering';
 import { executePhase } from './phases';
 import { buildOutput } from './output';
 
@@ -87,20 +94,22 @@ export function evaluate(input: EngineInput): EngineOutput {
   const allRules = [...input.rules.standing, ...input.rules.planned, ...effectsWithGroup];
 
   // Build groups per phase (kept separate to prevent cross-phase auto-group collisions)
-  const phaseGroups = {
-    early: buildGroupStates(
-      allRules.filter((r) => (r.phase ?? 'normal') === 'early'),
-      'early'
-    ),
-    normal: buildGroupStates(
-      allRules.filter((r) => (r.phase ?? 'normal') === 'normal'),
-      'normal'
-    ),
-    safeguard: buildGroupStates(
-      allRules.filter((r) => (r.phase ?? 'normal') === 'safeguard'),
-      'safeguard'
-    )
+  const phaseRules = {
+    early: allRules.filter((r) => (r.phase ?? 'normal') === 'early'),
+    normal: allRules.filter((r) => (r.phase ?? 'normal') === 'normal'),
+    safeguard: allRules.filter((r) => (r.phase ?? 'normal') === 'safeguard')
   };
+  const phaseGroups = {
+    early: buildGroupStates(phaseRules.early, 'early'),
+    normal: buildGroupStates(phaseRules.normal, 'normal'),
+    safeguard: buildGroupStates(phaseRules.safeguard, 'safeguard')
+  };
+
+  // 2b. Validate ordering constraints — detect dependency cycles before execution
+  const phaseDiagnostics: Diagnostic[] = [];
+  for (const phase of ['early', 'normal', 'safeguard'] as Phase[]) {
+    phaseDiagnostics.push(...validateOrdering(phaseRules[phase], phase));
+  }
 
   // 3. Create function registry (unused in v1 but required for completeness)
   createBuiltinFunctionRegistry();
@@ -121,5 +130,5 @@ export function evaluate(input: EngineInput): EngineOutput {
   executePhase('safeguard', context);
 
   // 5. Build and return output
-  return buildOutput(input, workingState);
+  return buildOutput(input, workingState, phaseDiagnostics);
 }

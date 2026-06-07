@@ -187,6 +187,8 @@ export type Condition = FactExistenceCondition | FactComparisonCondition | Event
 export interface Diagnostic {
   code: string;
   severity: 'error' | 'warning' | 'notice';
+  /** Human-readable description of the diagnostic (optional) */
+  message?: string;
 }
 
 /**

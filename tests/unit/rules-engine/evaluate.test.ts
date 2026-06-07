@@ -1113,4 +1113,84 @@ describe('evaluate', () => {
       expect(result.facts['result']).toBeUndefined();
     });
   });
+
+  describe('dependency cycle detection', () => {
+    it('reports error when __planned__ and __effects__ groups form a cycle', () => {
+      // Regression: effect-steed (group: __effects__, after: __planned__) and
+      // record-heal (group: __planned__, after: __effects__) created a deadlock.
+      // The iterative resolver silently skipped both, causing most offerRules
+      // to never execute and the +ADD panel to empty.
+
+      // An effect that waits for __planned__ to settle (like effect-steed)
+      const effectWaitsForPlanned: Rule = {
+        id: 'effect-waits-for-planned',
+        phase: 'normal',
+        // __effects__ group is auto-assigned, but we need it explicitly
+        // so the dependency graph includes the edge
+        group: ['__effects__'],
+        after: [{ group: '__planned__' }],
+        activities: [
+          {
+            id: 'offer-effect-action',
+            type: 'offerRule',
+            rule: {
+              id: 'offered-effect-action',
+              group: ['__planned__', 'action'],
+              ui: { section: 'action', name: 'Effect Action' },
+              actionCost: ['action'],
+              activities: []
+            }
+          }
+        ]
+      };
+
+      // A planned rule that waits for __effects__ to settle (like record-heal)
+      const plannedWaitsForEffects: Rule = {
+        id: 'planned-waits-for-effects',
+        group: ['__planned__'],
+        after: [{ group: '__effects__' }],
+        activities: [
+          {
+            id: 'do-something',
+            type: 'numberSet',
+            target: { fact: 'result' },
+            source: { number: 42 }
+          }
+        ]
+      };
+
+      // A standing offer that should still appear in availableRules
+      const standingOffer: Rule = {
+        id: 'standing-offer',
+        after: [{ group: '__planned__' }],
+        activities: [
+          {
+            id: 'offer',
+            type: 'offerRule',
+            rule: {
+              id: 'offered-standing',
+              activities: []
+            }
+          }
+        ]
+      };
+
+      const result = evaluate({
+        schemaVersion: 1,
+        rules: {
+          standing: [standingOffer],
+          planned: [plannedWaitsForEffects],
+          effects: [effectWaitsForPlanned]
+        },
+        state: { facts: {} }
+      });
+
+      // The cycle should be detected and reported as an error
+      expect(result.diagnostics.errors.length).toBeGreaterThan(0);
+      const hasCycleError = result.diagnostics.errors.some(
+        (e) => e.code === 'CYCLE' || e.message?.includes('cycle') || e.message?.includes('Cycle')
+      );
+      expect(hasCycleError).toBe(true);
+    });
+  });
 });

@@ -46,6 +46,11 @@
   // Get available rules from engine output
   const availableRules = $derived(playStore.state.engineOutput?.availableRules ?? []);
 
+  // Check for engine-level errors (cycles, deadlocks)
+  const hasEngineErrors = $derived(
+    (playStore.state.engineOutput?.diagnostics.errors.length ?? 0) > 0
+  );
+
   // Collect active annotations from engine output
   const activeAnnotations = $derived(playStore.state.engineOutput?.annotations ?? []);
 
@@ -162,6 +167,9 @@
     <div class="play-character__error">{$t('play.error.loadRuleGroups')}</div>
   {:else}
     <div class="play-character__intent-body">
+      {#if hasEngineErrors}
+        <div class="play-character__engine-error" role="alert">{$t('play.error.engineCycle')}</div>
+      {/if}
       <ActiveStateStrip
         effects={currentEffects}
         facts={playStore.state.facts}
@@ -218,6 +226,17 @@
 
   .play-character__error {
     color: var(--md-sys-color-error);
+  }
+
+  .play-character__engine-error {
+    flex-shrink: 0;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    color: var(--md-sys-color-on-error-container);
+    background: var(--md-sys-color-error-container);
+    border-radius: var(--radius-sm);
+    text-align: center;
   }
 
   .play-character__intent-body {
