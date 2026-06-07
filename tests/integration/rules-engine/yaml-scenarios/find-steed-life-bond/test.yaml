@@ -1,0 +1,67 @@
+name: 'Find Steed Life Bond Annotation'
+description: >
+  When the steed is summoned, the Life Bond annotation appears on the Record Healing
+  panel. The annotation reminds the player that the steed also regains HP from spell
+  healing within 5 ft. The annotation does NOT appear when no steed is summoned.
+
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-find-steed
+
+initialEffects:
+  - id: test-grant-level2-slot
+    phase: early
+    group:
+      - spellcasting-slots-set
+    activities:
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.total
+        source:
+          number: 1
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.remaining
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+
+steps:
+  # Initially no steed is summoned - annotation should NOT appear
+  - evaluate:
+      assert:
+        facts:
+          companion.steed.summoned: 0
+        annotations:
+          notExists:
+            - rule.spell-find-steed.annotate-life-bond.text
+  # Cast Find Steed
+  - addOffer:
+      id: cast-find-steed
+      assert:
+        facts:
+          actions.remaining: 0
+          spellcasting.slots.level2.remaining: 0
+  # End turn: steed effect is committed, steed is now summoned
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-steed
+        facts:
+          companion.steed.summoned: 1
+  # Now steed is summoned - Life Bond annotation should appear
+  - evaluate:
+      assert:
+        facts:
+          companion.steed.summoned: 1
+        annotations:
+          exists:
+            - rule.spell-find-steed.annotate-life-bond.text
