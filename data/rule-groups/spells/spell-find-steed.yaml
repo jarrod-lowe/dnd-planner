@@ -1180,6 +1180,27 @@ ruleGroups:
                           label: play.stats.steed.movement
                           total: companion.steed.movement.total
                           remaining: companion.steed.movement.remaining
+                        - type: ability
+                          label: play.topBar.abilities
+                          abilities:
+                            - name: play.stats.str
+                              fact: companion.steed.str.modifier
+                              saveFact: companion.steed.str.save
+                            - name: play.stats.dex
+                              fact: companion.steed.dex.modifier
+                              saveFact: companion.steed.dex.save
+                            - name: play.stats.con
+                              fact: companion.steed.con.modifier
+                              saveFact: companion.steed.con.save
+                            - name: play.stats.int
+                              fact: companion.steed.int.modifier
+                              saveFact: companion.steed.int.save
+                            - name: play.stats.wis
+                              fact: companion.steed.wis.modifier
+                              saveFact: companion.steed.wis.save
+                            - name: play.stats.cha
+                              fact: companion.steed.cha.modifier
+                              saveFact: companion.steed.cha.save
                       resources:
                         - type: usedMax
                           label: play.stats.steed.hp
@@ -1303,6 +1324,36 @@ ruleGroups:
                         sources:
                           - fact: companion.steed.cha
                         target:
+                          fact: companion.steed.cha.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.str.save
+                        source:
+                          fact: companion.steed.str.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.dex.save
+                        source:
+                          fact: companion.steed.dex.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.con.save
+                        source:
+                          fact: companion.steed.con.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.int.save
+                        source:
+                          fact: companion.steed.int.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.wis.save
+                        source:
+                          fact: companion.steed.wis.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.cha.save
+                        source:
                           fact: companion.steed.cha.modifier
                       - type: numberSet
                         target:
@@ -2828,6 +2879,27 @@ ruleGroups:
                           label: play.stats.steed.movement
                           total: companion.steed.movement.total
                           remaining: companion.steed.movement.remaining
+                        - type: ability
+                          label: play.topBar.abilities
+                          abilities:
+                            - name: play.stats.str
+                              fact: companion.steed.str.modifier
+                              saveFact: companion.steed.str.save
+                            - name: play.stats.dex
+                              fact: companion.steed.dex.modifier
+                              saveFact: companion.steed.dex.save
+                            - name: play.stats.con
+                              fact: companion.steed.con.modifier
+                              saveFact: companion.steed.con.save
+                            - name: play.stats.int
+                              fact: companion.steed.int.modifier
+                              saveFact: companion.steed.int.save
+                            - name: play.stats.wis
+                              fact: companion.steed.wis.modifier
+                              saveFact: companion.steed.wis.save
+                            - name: play.stats.cha
+                              fact: companion.steed.cha.modifier
+                              saveFact: companion.steed.cha.save
                       resources:
                         - type: usedMax
                           label: play.stats.steed.hp
@@ -2951,6 +3023,36 @@ ruleGroups:
                         sources:
                           - fact: companion.steed.cha
                         target:
+                          fact: companion.steed.cha.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.str.save
+                        source:
+                          fact: companion.steed.str.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.dex.save
+                        source:
+                          fact: companion.steed.dex.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.con.save
+                        source:
+                          fact: companion.steed.con.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.int.save
+                        source:
+                          fact: companion.steed.int.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.wis.save
+                        source:
+                          fact: companion.steed.wis.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.cha.save
+                        source:
                           fact: companion.steed.cha.modifier
                       - type: numberSet
                         target:
@@ -4475,6 +4577,27 @@ ruleGroups:
                           label: play.stats.steed.movement
                           total: companion.steed.movement.total
                           remaining: companion.steed.movement.remaining
+                        - type: ability
+                          label: play.topBar.abilities
+                          abilities:
+                            - name: play.stats.str
+                              fact: companion.steed.str.modifier
+                              saveFact: companion.steed.str.save
+                            - name: play.stats.dex
+                              fact: companion.steed.dex.modifier
+                              saveFact: companion.steed.dex.save
+                            - name: play.stats.con
+                              fact: companion.steed.con.modifier
+                              saveFact: companion.steed.con.save
+                            - name: play.stats.int
+                              fact: companion.steed.int.modifier
+                              saveFact: companion.steed.int.save
+                            - name: play.stats.wis
+                              fact: companion.steed.wis.modifier
+                              saveFact: companion.steed.wis.save
+                            - name: play.stats.cha
+                              fact: companion.steed.cha.modifier
+                              saveFact: companion.steed.cha.save
                       resources:
                         - type: usedMax
                           label: play.stats.steed.hp
@@ -4608,6 +4731,36 @@ ruleGroups:
                         sources:
                           - fact: companion.steed.cha
                         target:
+                          fact: companion.steed.cha.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.str.save
+                        source:
+                          fact: companion.steed.str.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.dex.save
+                        source:
+                          fact: companion.steed.dex.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.con.save
+                        source:
+                          fact: companion.steed.con.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.int.save
+                        source:
+                          fact: companion.steed.int.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.wis.save
+                        source:
+                          fact: companion.steed.wis.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.cha.save
+                        source:
                           fact: companion.steed.cha.modifier
                       - type: numberSet
                         target:
@@ -6133,6 +6286,27 @@ ruleGroups:
                           label: play.stats.steed.movement
                           total: companion.steed.movement.total
                           remaining: companion.steed.movement.remaining
+                        - type: ability
+                          label: play.topBar.abilities
+                          abilities:
+                            - name: play.stats.str
+                              fact: companion.steed.str.modifier
+                              saveFact: companion.steed.str.save
+                            - name: play.stats.dex
+                              fact: companion.steed.dex.modifier
+                              saveFact: companion.steed.dex.save
+                            - name: play.stats.con
+                              fact: companion.steed.con.modifier
+                              saveFact: companion.steed.con.save
+                            - name: play.stats.int
+                              fact: companion.steed.int.modifier
+                              saveFact: companion.steed.int.save
+                            - name: play.stats.wis
+                              fact: companion.steed.wis.modifier
+                              saveFact: companion.steed.wis.save
+                            - name: play.stats.cha
+                              fact: companion.steed.cha.modifier
+                              saveFact: companion.steed.cha.save
                       resources:
                         - type: usedMax
                           label: play.stats.steed.hp
@@ -6266,6 +6440,36 @@ ruleGroups:
                         sources:
                           - fact: companion.steed.cha
                         target:
+                          fact: companion.steed.cha.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.str.save
+                        source:
+                          fact: companion.steed.str.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.dex.save
+                        source:
+                          fact: companion.steed.dex.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.con.save
+                        source:
+                          fact: companion.steed.con.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.int.save
+                        source:
+                          fact: companion.steed.int.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.wis.save
+                        source:
+                          fact: companion.steed.wis.modifier
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.cha.save
+                        source:
                           fact: companion.steed.cha.modifier
                       - type: numberSet
                         target:

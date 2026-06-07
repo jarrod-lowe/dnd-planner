@@ -203,24 +203,38 @@ describe('IntentTopBar', () => {
     expect(concChip?.textContent).toContain('Bless');
   });
 
-  it('renders abilities chip from ability entry with facts', () => {
+  it('renders abilities chip as a non-interactive div with two-line columns', () => {
     renderComponent(
       [
         {
           type: 'ability',
           label: 'play.topBar.abilities',
           abilities: [
-            { name: 'play.stats.str', fact: 'str.modifier' },
-            { name: 'play.stats.dex', fact: 'dex.modifier' }
+            { name: 'play.stats.str', fact: 'str.modifier', saveFact: 'str.save' },
+            { name: 'play.stats.dex', fact: 'dex.modifier', saveFact: 'dex.save' }
           ]
         } satisfies UiEntry
       ],
-      { 'str.modifier': 3, 'dex.modifier': 1 }
+      { 'str.modifier': 3, 'dex.modifier': 1, 'str.save': 5, 'dex.save': 3 }
     );
     const abilityChip = container.querySelector('.intent-top-bar__chip--abilities');
     expect(abilityChip).toBeTruthy();
-    expect(abilityChip?.textContent).toContain('STR+3');
-    expect(abilityChip?.textContent).toContain('DEX+1');
+    // Must be a div, not an interactive button
+    expect(abilityChip?.tagName).toBe('DIV');
+    // Each ability should appear in its own column
+    const cols = abilityChip?.querySelectorAll('.intent-top-bar__ability-col');
+    expect(cols?.length).toBe(2);
+    // Name on top, stat below
+    expect(cols?.[0].querySelector('.intent-top-bar__ability-name')?.textContent).toBe('STR');
+    expect(cols?.[0].querySelector('.intent-top-bar__ability-stat')?.textContent?.trim()).toBe(
+      '+3/+5'
+    );
+    expect(cols?.[1].querySelector('.intent-top-bar__ability-name')?.textContent).toBe('DEX');
+    expect(cols?.[1].querySelector('.intent-top-bar__ability-stat')?.textContent?.trim()).toBe(
+      '+1/+3'
+    );
+    // No expand/collapse section
+    expect(container.querySelector('.intent-top-bar__abilities-detail')).toBeNull();
   });
 
   it('renders chips in canonical order (hp, value, concentration, ability)', () => {

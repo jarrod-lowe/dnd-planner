@@ -1017,6 +1017,10 @@
                 "type": "string",
                 "description": "Fact path for modifier value"
               },
+              "saveFact": {
+                "type": "string",
+                "description": "Fact path for saving throw modifier value"
+              },
               "proficiencyFact": {
                 "type": "string",
                 "description": "Fact path for proficiency indicator"

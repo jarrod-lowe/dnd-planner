@@ -76,13 +76,31 @@ describe('ability-scores intent sub-buckets', () => {
     it('proficiencyFact for each ability uses .proficient flag', () => {
       const resetRule = rules.find((r) => r.id === 'str-value-reset');
       const topBar = resetRule?.ui?.topBar as
-        | Array<{ type: string; abilities?: Array<{ name: string; proficiencyFact?: string }> }>
+        | Array<{
+            type: string;
+            abilities?: Array<{ name: string; proficiencyFact?: string; saveFact?: string }>;
+          }>
         | undefined;
       expect(topBar).toBeDefined();
       const abilityEntry = topBar?.find((e) => e.type === 'ability');
       expect(abilityEntry?.abilities).toBeDefined();
       for (const ability of abilityEntry?.abilities ?? []) {
         expect(ability.proficiencyFact).toMatch(/\.proficient$/);
+      }
+    });
+
+    it('saveFact for each ability points to the save modifier fact', () => {
+      const resetRule = rules.find((r) => r.id === 'str-value-reset');
+      const topBar = resetRule?.ui?.topBar as
+        | Array<{
+            type: string;
+            abilities?: Array<{ name: string; saveFact?: string }>;
+          }>
+        | undefined;
+      const abilityEntry = topBar?.find((e) => e.type === 'ability');
+      expect(abilityEntry?.abilities).toBeDefined();
+      for (const ability of abilityEntry?.abilities ?? []) {
+        expect(ability.saveFact).toMatch(/\.save$/);
       }
     });
   });
