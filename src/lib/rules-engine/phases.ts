@@ -145,4 +145,25 @@ export function processRulesInOrder(rules: Rule[], context: RuleContext): void {
       madeProgress = true;
     }
   }
+
+  // Detect unprocessed rules (deadlocked due to unsatisfied dependencies)
+  for (const rule of rules) {
+    if (!processed.has(rule.id)) {
+      const unresolvedAfter = (rule.after ?? [])
+        .filter((dep) => {
+          const gs = context.groups.get(dep.group);
+          return gs && !gs.settled;
+        })
+        .map((dep) => dep.group);
+      context.workingState.annotations.push({
+        key: 'engine.deadlock',
+        targets: [rule.id],
+        rider: {
+          label: `Rule "${rule.id}" could not execute: deadlocked on groups [${unresolvedAfter.join(', ')}]`,
+          type: 'effect',
+          legal: false
+        }
+      });
+    }
+  }
 }

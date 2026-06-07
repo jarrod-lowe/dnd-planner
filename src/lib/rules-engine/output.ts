@@ -1,4 +1,12 @@
-import type { Diagnostics, EngineInput, EngineOutput, Rule, Status, WorkingState } from './types';
+import type {
+  Diagnostic,
+  Diagnostics,
+  EngineInput,
+  EngineOutput,
+  Rule,
+  Status,
+  WorkingState
+} from './types';
 
 /**
  * Builds the replayable next input from current state.
@@ -71,8 +79,19 @@ export function getPersistableEffects(workingState: WorkingState): Rule[] {
  * @calls buildNextInput
  * @calledBy evaluate (evaluate.ts)
  */
-export function buildOutput(input: EngineInput, workingState: WorkingState): EngineOutput {
+export function buildOutput(
+  input: EngineInput,
+  workingState: WorkingState,
+  phaseDiagnostics: Diagnostic[] = []
+): EngineOutput {
   const diagnostics: Diagnostics = { errors: [], warnings: [], notices: [] };
+
+  // Merge phase-level diagnostics (cycle detection, ordering violations)
+  for (const d of phaseDiagnostics) {
+    if (d.severity === 'error') diagnostics.errors.push(d);
+    else if (d.severity === 'warning') diagnostics.warnings.push(d);
+    else diagnostics.notices.push(d);
+  }
 
   return {
     status: buildStatus(workingState, diagnostics),

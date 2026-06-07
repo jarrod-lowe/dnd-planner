@@ -1032,8 +1032,6 @@ ruleGroups:
                   rule:
                     id: effect-steed
                     phase: normal
-                    after:
-                      - group: __planned__
                     ui:
                       name: rule.spell-find-steed.effect-steed.name
                       detailKey: spell/find-steed
@@ -1309,8 +1307,6 @@ ruleGroups:
                   rule:
                     id: effect-steed
                     phase: normal
-                    after:
-                      - group: __planned__
                     ui:
                       name: rule.spell-find-steed.effect-steed.name
                       detailKey: spell/find-steed
@@ -1597,8 +1593,6 @@ ruleGroups:
                   rule:
                     id: effect-steed
                     phase: normal
-                    after:
-                      - group: __planned__
                     ui:
                       name: rule.spell-find-steed.effect-steed.name
                       detailKey: spell/find-steed
@@ -1885,8 +1879,6 @@ ruleGroups:
                   rule:
                     id: effect-steed
                     phase: normal
-                    after:
-                      - group: __planned__
                     ui:
                       name: rule.spell-find-steed.effect-steed.name
                       detailKey: spell/find-steed
