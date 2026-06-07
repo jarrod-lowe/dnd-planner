@@ -150,7 +150,17 @@ ruleGroups:
               number: 10
           - type: numberIncrement
             target:
+              fact: hp.base.max
+            source:
+              number: 10
+          - type: numberIncrement
+            target:
               fact: hp.max
+            source:
+              fact: con.modifier
+          - type: numberIncrement
+            target:
+              fact: hp.base.max
             source:
               fact: con.modifier
 

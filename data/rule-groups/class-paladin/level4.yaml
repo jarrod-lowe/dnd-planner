@@ -45,7 +45,17 @@ ruleGroups:
               number: 6
           - type: numberIncrement
             target:
+              fact: hp.base.max
+            source:
+              number: 6
+          - type: numberIncrement
+            target:
               fact: hp.max
+            source:
+              var: conAtLevel
+          - type: numberIncrement
+            target:
+              fact: hp.base.max
             source:
               var: conAtLevel
 
