@@ -364,7 +364,6 @@ The architecture supports:
   - fix 3x otherworldly steed entries in active; and the need to remove 2 to remove it
   - movement
   - Type selection (fiend, fey, celestial)
-  - Life Bond
   - Type-specific bonus action
   - Otherworldly slam
   - Rolls for ability checks, skill checks, and ability saves
