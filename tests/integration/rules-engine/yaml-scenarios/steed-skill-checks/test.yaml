@@ -47,6 +47,12 @@ steps:
           companion.steed.int.modifier: -2
           companion.steed.wis.modifier: 1
           companion.steed.cha.modifier: -1
+          companion.steed.str.save: 4
+          companion.steed.dex.save: 1
+          companion.steed.con.save: 2
+          companion.steed.int.save: -2
+          companion.steed.wis.save: 1
+          companion.steed.cha.save: -1
   # Next turn: all 18 skill check offers should exist
   - evaluate:
       assert:
