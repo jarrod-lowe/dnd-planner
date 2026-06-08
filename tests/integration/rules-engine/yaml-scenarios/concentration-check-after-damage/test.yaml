@@ -12,6 +12,9 @@ ruleGroups:
   - dnd-5e-2024/core-events
 steps:
   - evaluate:
+  - addOffer:
+      id: prepare-bless
+  - evaluate:
       assert:
         facts:
           actions.remaining: 1

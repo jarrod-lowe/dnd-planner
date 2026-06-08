@@ -15,7 +15,148 @@ ruleGroups:
         description: >-
           DIch bonus action. DIch DIvI' DIvI' DIvI' 1d4 radiant DIvI'.
         keywords: [paladin, quv, radiant, DIvI']
+    detail:
+      key: spell/divine-favour
+      source: srd52
+      translations:
+        en:
+          meta: 'Level 1 Transmutation (Paladin)'
+          fields:
+            - { labelKey: rules.field.castingTime, value: 'Bonus Action' }
+            - { labelKey: rules.field.range, value: 'Self' }
+            - { labelKey: rules.field.components, value: 'V, S' }
+            - { labelKey: rules.field.duration, value: '1 minute' }
+          body: |
+            Until the spell ends, your attacks with weapons deal an extra 1d4
+            Radiant damage on a hit.
     rules:
+      # Offer to prepare Divine Favour (Build → Prepare → L1)
+      - id: prepare-divine-favour-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: spell.l1.divineFavour.prepared
+                  operator: notEquals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-divine-favour.prepare-divine-favour-offer.already_prepared
+                    severity: error
+              - condition:
+                  fact: spellcasting.prepared.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-divine-favour.prepare-divine-favour-offer.max_prepared
+                    severity: error
+            rule:
+              id: prepare-divine-favour
+              phase: normal
+              group:
+                - __planned__
+              ui:
+                section: configuration
+                name: rule.spell-divine-favour.prepare-divine-favour-offer.name
+                intents: { PREPARE: L1 }
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: spell.l1.divineFavour.prepared
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.prepared.count
+                  source:
+                    number: 1
+                - type: advertiseEffect
+                  rule:
+                    id: effect-divine-favour-prepared
+                    ui:
+                      name: rule.spell-divine-favour.effect-divine-favour-prepared.name
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spell-l1-divine-favour-removal-set
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: spell.l1.divineFavour.prepared
+                        source:
+                          number: 1
+                        when:
+                          - fact: spell.l1.divineFavour.removing
+                            operator: equals
+                            value: 0
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.prepared.count
+                        source:
+                          number: 1
+                        when:
+                          - fact: spell.l1.divineFavour.removing
+                            operator: equals
+                            value: 0
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: spell.l1.divineFavour.removing
+                            operator: equals
+                            value: 0
+
+      # Offer to unprepare Divine Favour
+      - id: unprepare-divine-favour-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: spell.l1.divineFavour.prepared
+                  operator: equals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-divine-favour.unprepare-divine-favour-offer.not_prepared
+                    severity: error
+            rule:
+              id: unprepare-divine-favour
+              ui:
+                section: configuration
+                name: rule.spell-divine-favour.unprepare-divine-favour-offer.name
+                intents: { PREPARE: L1 }
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: spell.l1.divineFavour.prepared
+                  source:
+                    number: 0
+                - type: numberSet
+                  target:
+                    fact: spell.l1.divineFavour.removing
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.prepared.count
+                  source:
+                    number: 1
+                  subtract: true
+                - type: advertiseEffect
+                  rule:
+                    id: effect-divine-favour-removing
+                    ui:
+                      name: rule.spell-divine-favour.effect-divine-favour-removing.name
+                      hidden: true
+                    phase: early
+                    group:
+                      - spell-l1-divine-favour-removal-set
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: spell.l1.divineFavour.removing
+                        source:
+                          number: 1
+
       # Compute eligible spell slots (level 1 only, no upcasting)
       - id: compute-divine-favour-eligible-slots
         phase: normal
@@ -30,6 +171,10 @@ ruleGroups:
 
       # Offer Divine Favour (bonus action spell)
       - id: offer-divine-favour
+        when:
+          - fact: spell.l1.divineFavour.prepared
+            operator: equals
+            value: 1
         after:
           - group: __planned__
           - group: spellcasting
@@ -67,6 +212,7 @@ ruleGroups:
               ui:
                 section: bonus-action-spell
                 name: rule.spell-divine-favour.offer-divine-favour.name
+                detailKey: spell/divine-favour
                 intents:
                   ATTACK: spells
                 actionCost: [bonus, L1]

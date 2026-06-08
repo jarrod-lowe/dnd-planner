@@ -8,6 +8,9 @@ ruleGroups:
   - spells/spell-create-and-destroy-water
 steps:
   - evaluate:
+  - addOffer:
+      id: prepare-create-and-destroy-water
+  - evaluate:
       assert:
         facts:
           spellcasting.slots.level1.remaining: 2

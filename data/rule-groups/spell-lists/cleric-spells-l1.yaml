@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: cleric-spells-l1
+    requires:
+      - spell-bless
+      - spell-command
+      - spell-create-and-destroy-water
+      - spell-protection-from-evil-and-good
+      - spell-sanctuary
+    translations:
+      en:
+        name: Cleric Spells Level 1
+        description: Level 1 spells available to Clerics
+        keywords: [cleric, spells, level1]
+      en-x-tlh:
+        name: Cleric Spells Level 1
+        description: Cleric level 1 jupmey
+        keywords: [cleric, jupmey, level1]
+    rules: []

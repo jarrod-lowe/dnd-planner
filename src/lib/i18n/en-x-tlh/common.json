@@ -6,6 +6,21 @@
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
         "no_slots": "mugh laH tu'lu'be'"
+      },
+      "prepare-command-offer": {
+        "name": "ra' mugh chenmoH",
+        "max_prepared": "mugh DIvI' nIb",
+        "already_prepared": "ra' already prepared"
+      },
+      "unprepare-command-offer": {
+        "name": "ra' mugh lISmoH",
+        "not_prepared": "ra' not prepared"
+      },
+      "effect-command-prepared": {
+        "name": "ra' Prepared"
+      },
+      "effect-command-removing": {
+        "name": "Removing ra'"
       }
     },
     "spell-sanctuary": {
@@ -17,6 +32,21 @@
       },
       "effect-sanctuary": {
         "name": "chal"
+      },
+      "prepare-sanctuary-offer": {
+        "name": "chal mugh chenmoH",
+        "max_prepared": "mugh DIvI' nIb",
+        "already_prepared": "chal already prepared"
+      },
+      "unprepare-sanctuary-offer": {
+        "name": "chal mugh lISmoH",
+        "not_prepared": "chal not prepared"
+      },
+      "effect-sanctuary-prepared": {
+        "name": "chal Prepared"
+      },
+      "effect-sanctuary-removing": {
+        "name": "Removing chal"
       }
     },
     "spell-find-steed": {
@@ -95,6 +125,21 @@
       },
       "annotate-life-bond": {
         "text": "yIn DIch: Sargh DIvI' DIch (vagh 'uy' DIch, mugh level 1+) [manual]"
+      },
+      "prepare-find-steed-offer": {
+        "name": "Sargh Sam mugh chenmoH",
+        "max_prepared": "mugh DIvI' nIb",
+        "already_prepared": "Sargh Sam already prepared"
+      },
+      "unprepare-find-steed-offer": {
+        "name": "Sargh Sam mugh lISmoH",
+        "not_prepared": "Sargh Sam not prepared"
+      },
+      "effect-find-steed-prepared": {
+        "name": "Sargh Sam Prepared"
+      },
+      "effect-find-steed-removing": {
+        "name": "Removing Sargh Sam"
       }
     },
     "spell-sleep": {
@@ -132,6 +177,21 @@
         "no_attack": "DIch nuH DIvI' tu'lu'be'",
         "no_slots": "mugh laH tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'"
+      },
+      "prepare-thunderous-smite-offer": {
+        "name": "raQ muHta mugh chenmoH",
+        "max_prepared": "mugh DIvI' nIb",
+        "already_prepared": "raQ muHta already prepared"
+      },
+      "unprepare-thunderous-smite-offer": {
+        "name": "raQ muHta mugh lISmoH",
+        "not_prepared": "raQ muHta not prepared"
+      },
+      "effect-thunderous-smite-prepared": {
+        "name": "raQ muHta Prepared"
+      },
+      "effect-thunderous-smite-removing": {
+        "name": "Removing raQ muHta"
       }
     },
     "spell-protection-from-evil-and-good": {
@@ -144,6 +204,21 @@
       },
       "effect-protection-from-evil-and-good": {
         "name": "mIgh Do' Ha'DIbaH je"
+      },
+      "prepare-protection-from-evil-and-good-offer": {
+        "name": "mIgh Do' Ha'DIbaH je mugh chenmoH",
+        "max_prepared": "mugh DIvI' nIb",
+        "already_prepared": "mIgh Do' Ha'DIbaH je already prepared"
+      },
+      "unprepare-protection-from-evil-and-good-offer": {
+        "name": "mIgh Do' Ha'DIbaH je mugh lISmoH",
+        "not_prepared": "mIgh Do' Ha'DIbaH je not prepared"
+      },
+      "effect-protection-from-evil-and-good-prepared": {
+        "name": "mIgh Do' Ha'DIbaH je Prepared"
+      },
+      "effect-protection-from-evil-and-good-removing": {
+        "name": "Removing mIgh Do' Ha'DIbaH je"
       }
     },
     "spell-bless": {
@@ -156,6 +231,21 @@
       },
       "effect-bless": {
         "name": "DIch"
+      },
+      "prepare-bless-offer": {
+        "name": "DIch mugh chenmoH",
+        "max_prepared": "mugh DIvI' nIb",
+        "already_prepared": "DIch already prepared"
+      },
+      "unprepare-bless-offer": {
+        "name": "DIch mugh lISmoH",
+        "not_prepared": "DIch not prepared"
+      },
+      "effect-bless-prepared": {
+        "name": "DIch Prepared"
+      },
+      "effect-bless-removing": {
+        "name": "Removing DIch"
       }
     },
     "spell-divine-favour": {
@@ -176,6 +266,21 @@
       "offer-use-divine-favour": {
         "not_active": "quv DIvI'be'",
         "no_attack": "DIch DIvI' lo'nIS"
+      },
+      "prepare-divine-favour-offer": {
+        "name": "quv mugh chenmoH",
+        "max_prepared": "mugh DIvI' nIb",
+        "already_prepared": "quv already prepared"
+      },
+      "unprepare-divine-favour-offer": {
+        "name": "quv mugh lISmoH",
+        "not_prepared": "quv not prepared"
+      },
+      "effect-divine-favour-prepared": {
+        "name": "quv Prepared"
+      },
+      "effect-divine-favour-removing": {
+        "name": "Removing quv"
       }
     },
     "spell-create-and-destroy-water": {
@@ -186,6 +291,21 @@
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
         "no_slots": "mugh laH tu'lu'be'"
+      },
+      "prepare-create-and-destroy-water-offer": {
+        "name": "bIQ chenmoH 'ej HochHom mugh chenmoH",
+        "max_prepared": "mugh DIvI' nIb",
+        "already_prepared": "bIQ chenmoH 'ej HochHom already prepared"
+      },
+      "unprepare-create-and-destroy-water-offer": {
+        "name": "bIQ chenmoH 'ej HochHom mugh lISmoH",
+        "not_prepared": "bIQ chenmoH 'ej HochHom not prepared"
+      },
+      "effect-create-and-destroy-water-prepared": {
+        "name": "bIQ chenmoH 'ej HochHom Prepared"
+      },
+      "effect-create-and-destroy-water-removing": {
+        "name": "Removing bIQ chenmoH 'ej HochHom"
       }
     },
     "class-paladin-lay-on-hands": {

@@ -366,7 +366,6 @@ The architecture supports:
   - Type-specific bonus action
   - Otherworldly slam
   - Hit Dice
-  - stats display
 - Shorten resources names
 - Change display of stats (str, etc)
 

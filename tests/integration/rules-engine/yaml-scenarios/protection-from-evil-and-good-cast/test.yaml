@@ -12,6 +12,9 @@ ruleGroups:
   - spells/spell-protection-from-evil-and-good
 steps:
   - evaluate:
+  - addOffer:
+      id: prepare-protection-from-evil-and-good
+  - evaluate:
       assert:
         facts:
           spellcasting.remaining: 1

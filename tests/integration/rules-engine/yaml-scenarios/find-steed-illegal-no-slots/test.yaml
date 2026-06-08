@@ -29,6 +29,9 @@ initialEffects:
         self: true
 steps:
   - evaluate:
+  - addOffer:
+      id: prepare-find-steed
+  - evaluate:
       assert:
         facts:
           spellcasting.slots.level2.remaining: 1

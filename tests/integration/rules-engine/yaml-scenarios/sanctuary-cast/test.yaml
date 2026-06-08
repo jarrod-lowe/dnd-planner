@@ -11,6 +11,9 @@ ruleGroups:
   - spells/spell-sanctuary
 steps:
   - evaluate:
+  - addOffer:
+      id: prepare-sanctuary
+  - evaluate:
       assert:
         facts:
           bonusActions.remaining: 1

@@ -1,0 +1,34 @@
+name: 'Divine Favour Prepare'
+description: 'Cast offer requires preparation first; prepare/unprepare lifecycle works'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-divine-favour
+steps:
+  # TC1: Before preparing, cast-divine-favour is absent; prepare offer exists
+  - evaluate:
+      assert:
+        facts:
+          spell.l1.divineFavour.prepared: 0
+        offers:
+          notExists:
+            - cast-divine-favour
+          exists:
+            - prepare-divine-favour
+  # TC2: After preparing, cast-divine-favour becomes available
+  - addOffer:
+      id: prepare-divine-favour
+      assert:
+        facts:
+          spell.l1.divineFavour.prepared: 1
+          spellcasting.prepared.count: 1
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - cast-divine-favour

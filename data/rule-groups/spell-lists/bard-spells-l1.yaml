@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: bard-spells-l1
+    requires:
+      - spell-command
+      - spell-sleep
+    translations:
+      en:
+        name: Bard Spells Level 1
+        description: Level 1 spells available to Bards
+        keywords: [bard, spells, level1]
+      en-x-tlh:
+        name: Bard Spells Level 1
+        description: Bard level 1 jupmey
+        keywords: [bard, jupmey, level1]
+    rules: []

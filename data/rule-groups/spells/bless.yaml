@@ -16,7 +16,152 @@ ruleGroups:
         description: >-
           DIch level 1 action. DIch DIvI' 2+SL. buQ, 1 rep. +1d4 DIvI' DIvI'.
         keywords: [spell, level1, DIch, action, buQ]
+    detail:
+      key: spell/bless
+      source: srd52
+      translations:
+        en:
+          meta: 'Level 1 Enchantment (Cleric, Paladin)'
+          fields:
+            - { labelKey: rules.field.castingTime, value: 'Action' }
+            - { labelKey: rules.field.range, value: '30 feet' }
+            - { labelKey: rules.field.components, value: 'V, S, M (a Holy Symbol worth 5+ GP)' }
+            - { labelKey: rules.field.duration, value: 'Concentration, up to 1 minute' }
+          body: |
+            You bless up to three creatures within range. Whenever a target makes
+            an attack roll or a saving throw before the spell ends, the target adds
+            1d4 to the attack roll or save.
+
+            *Using a Higher-Level Spell Slot.* You can target one additional creature
+            for each spell slot level above 1.
     rules:
+      # Offer to prepare Bless (Build → Prepare → L1)
+      - id: prepare-bless-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: spell.l1.bless.prepared
+                  operator: notEquals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-bless.prepare-bless-offer.already_prepared
+                    severity: error
+              - condition:
+                  fact: spellcasting.prepared.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-bless.prepare-bless-offer.max_prepared
+                    severity: error
+            rule:
+              id: prepare-bless
+              phase: normal
+              group:
+                - __planned__
+              ui:
+                section: configuration
+                name: rule.spell-bless.prepare-bless-offer.name
+                intents: { PREPARE: L1 }
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: spell.l1.bless.prepared
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.prepared.count
+                  source:
+                    number: 1
+                - type: advertiseEffect
+                  rule:
+                    id: effect-bless-prepared
+                    ui:
+                      name: rule.spell-bless.effect-bless-prepared.name
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spell-l1-bless-removal-set
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: spell.l1.bless.prepared
+                        source:
+                          number: 1
+                        when:
+                          - fact: spell.l1.bless.removing
+                            operator: equals
+                            value: 0
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.prepared.count
+                        source:
+                          number: 1
+                        when:
+                          - fact: spell.l1.bless.removing
+                            operator: equals
+                            value: 0
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: spell.l1.bless.removing
+                            operator: equals
+                            value: 0
+
+      # Offer to unprepare Bless
+      - id: unprepare-bless-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: spell.l1.bless.prepared
+                  operator: equals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-bless.unprepare-bless-offer.not_prepared
+                    severity: error
+            rule:
+              id: unprepare-bless
+              ui:
+                section: configuration
+                name: rule.spell-bless.unprepare-bless-offer.name
+                intents: { PREPARE: L1 }
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: spell.l1.bless.prepared
+                  source:
+                    number: 0
+                - type: numberSet
+                  target:
+                    fact: spell.l1.bless.removing
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.prepared.count
+                  source:
+                    number: 1
+                  subtract: true
+                - type: advertiseEffect
+                  rule:
+                    id: effect-bless-removing
+                    ui:
+                      name: rule.spell-bless.effect-bless-removing.name
+                      hidden: true
+                    phase: early
+                    group:
+                      - spell-l1-bless-removal-set
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: spell.l1.bless.removing
+                        source:
+                          number: 1
+
       # Compute eligible bless slot count (levels 1-5)
       - id: compute-bless-eligible-slots
         phase: normal
@@ -88,6 +233,10 @@ ruleGroups:
 
       # Offer Bless (action spell)
       - id: offer-bless
+        when:
+          - fact: spell.l1.bless.prepared
+            operator: equals
+            value: 1
         after:
           - group: action
           - group: spellcasting
@@ -133,6 +282,7 @@ ruleGroups:
               ui:
                 section: action-spell
                 name: rule.spell-bless.offer-bless.name
+                detailKey: spell/bless
                 information:
                   - type: text
                     label: play.information.saveDc

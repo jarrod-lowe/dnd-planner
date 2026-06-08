@@ -11,6 +11,9 @@ ruleGroups:
   - spells/spell-command
 steps:
   - evaluate:
+  - addOffer:
+      id: prepare-command
+  - evaluate:
       assert:
         facts:
           actions.remaining: 1

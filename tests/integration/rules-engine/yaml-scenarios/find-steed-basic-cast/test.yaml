@@ -28,6 +28,9 @@ initialEffects:
       - type: advertiseEffect
         self: true
 steps:
+  - evaluate:
+  - addOffer:
+      id: prepare-find-steed
   # Verify initial state: Find Steed offer exists and is legal
   - evaluate:
       assert:

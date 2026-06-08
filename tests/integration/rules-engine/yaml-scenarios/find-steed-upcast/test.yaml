@@ -28,6 +28,9 @@ initialEffects:
       - type: advertiseEffect
         self: true
 steps:
+  - evaluate:
+  - addOffer:
+      id: prepare-find-steed
   # Verify L4 slot is available
   - evaluate:
       assert:

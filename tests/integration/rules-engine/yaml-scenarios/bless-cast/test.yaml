@@ -12,6 +12,9 @@ ruleGroups:
   - spells/spell-bless
 steps:
   - evaluate:
+  - addOffer:
+      id: prepare-bless
+  - evaluate:
       assert:
         facts:
           actions.remaining: 1

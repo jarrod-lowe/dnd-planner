@@ -41,6 +41,9 @@ initialEffects:
         self: true
 steps:
   - evaluate:
+  - addOffer:
+      id: prepare-find-steed
+  - evaluate:
       assert:
         offers:
           legal:

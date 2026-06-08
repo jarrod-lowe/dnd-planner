@@ -34,6 +34,9 @@ initialEffects:
         self: true
 
 steps:
+  - evaluate:
+  - addOffer:
+      id: prepare-find-steed
   # Initially no steed is summoned - annotation should NOT appear
   - evaluate:
       assert:

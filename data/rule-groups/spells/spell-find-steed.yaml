@@ -94,6 +94,133 @@ ruleGroups:
             creature within 5 feet of the steed regains a number of Hit Points
             equal to 2d8 plus the spell's level.
     rules:
+      # Offer to prepare Find Steed (Build → Prepare → L2)
+      - id: prepare-find-steed-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: spell.l2.findSteed.prepared
+                  operator: notEquals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-find-steed.prepare-find-steed-offer.already_prepared
+                    severity: error
+              - condition:
+                  fact: spellcasting.prepared.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-find-steed.prepare-find-steed-offer.max_prepared
+                    severity: error
+            rule:
+              id: prepare-find-steed
+              phase: normal
+              group:
+                - __planned__
+              ui:
+                section: configuration
+                name: rule.spell-find-steed.prepare-find-steed-offer.name
+                intents: { PREPARE: L2 }
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: spell.l2.findSteed.prepared
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.prepared.count
+                  source:
+                    number: 1
+                - type: advertiseEffect
+                  rule:
+                    id: effect-find-steed-prepared
+                    ui:
+                      name: rule.spell-find-steed.effect-find-steed-prepared.name
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spell-l2-find-steed-removal-set
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: spell.l2.findSteed.prepared
+                        source:
+                          number: 1
+                        when:
+                          - fact: spell.l2.findSteed.removing
+                            operator: equals
+                            value: 0
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.prepared.count
+                        source:
+                          number: 1
+                        when:
+                          - fact: spell.l2.findSteed.removing
+                            operator: equals
+                            value: 0
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: spell.l2.findSteed.removing
+                            operator: equals
+                            value: 0
+
+      # Offer to unprepare Find Steed
+      - id: unprepare-find-steed-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: spell.l2.findSteed.prepared
+                  operator: equals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-find-steed.unprepare-find-steed-offer.not_prepared
+                    severity: error
+            rule:
+              id: unprepare-find-steed
+              ui:
+                section: configuration
+                name: rule.spell-find-steed.unprepare-find-steed-offer.name
+                intents: { PREPARE: L2 }
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: spell.l2.findSteed.prepared
+                  source:
+                    number: 0
+                - type: numberSet
+                  target:
+                    fact: spell.l2.findSteed.removing
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.prepared.count
+                  source:
+                    number: 1
+                  subtract: true
+                - type: advertiseEffect
+                  rule:
+                    id: effect-find-steed-removing
+                    ui:
+                      name: rule.spell-find-steed.effect-find-steed-removing.name
+                      hidden: true
+                    phase: early
+                    group:
+                      - spell-l2-find-steed-removal-set
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: spell.l2.findSteed.removing
+                        source:
+                          number: 1
+
       # Compute eligible Find Steed slot count (levels 2-5)
       - id: compute-find-steed-eligible-slots
         phase: normal
@@ -198,6 +325,10 @@ ruleGroups:
 
       # Offer Find Steed (action spell)
       - id: offer-find-steed
+        when:
+          - fact: spell.l2.findSteed.prepared
+            operator: equals
+            value: 1
         after:
           - group: __planned__
           - group: spellcasting

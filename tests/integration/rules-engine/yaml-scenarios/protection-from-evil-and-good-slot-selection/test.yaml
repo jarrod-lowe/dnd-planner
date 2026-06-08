@@ -30,6 +30,9 @@ initialEffects:
         self: true
 steps:
   - evaluate:
+  - addOffer:
+      id: prepare-protection-from-evil-and-good
+  - evaluate:
       assert:
         facts:
           spellcasting.slots.level1.remaining: 2
