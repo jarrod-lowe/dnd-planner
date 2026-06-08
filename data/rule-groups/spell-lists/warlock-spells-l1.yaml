@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: warlock-spells-l1
+    requires:
+      - spell-protection-from-evil-and-good
+    translations:
+      en:
+        name: Warlock Spells Level 1
+        description: Level 1 spells available to Warlocks
+        keywords: [warlock, spells, level1]
+      en-x-tlh:
+        name: Warlock Spells Level 1
+        description: Warlock level 1 jupmey
+        keywords: [warlock, jupmey, level1]
+    rules: []

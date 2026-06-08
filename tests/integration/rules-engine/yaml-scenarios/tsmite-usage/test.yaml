@@ -13,6 +13,9 @@ ruleGroups:
   - spells/spell-thunderous-smite
 steps:
   - evaluate:
+  - addOffer:
+      id: prepare-thunderous-smite
+  - evaluate:
       assert:
         facts:
           actions.remaining: 1

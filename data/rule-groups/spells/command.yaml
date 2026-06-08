@@ -15,7 +15,166 @@ ruleGroups:
         description: >-
           ra' level 1 action. wa' DIvI' ra'. WIS ra'. DIch.
         keywords: [spell, level1, ra', action]
+    detail:
+      key: spell/command
+      source: srd52
+      translations:
+        en:
+          meta: 'Level 1 Enchantment (Bard, Cleric, Paladin)'
+          fields:
+            - { labelKey: rules.field.castingTime, value: 'Action' }
+            - { labelKey: rules.field.range, value: '60 feet' }
+            - { labelKey: rules.field.components, value: 'V' }
+            - { labelKey: rules.field.duration, value: 'Instantaneous' }
+          body: |
+            You speak a one-word command to a creature you can see within range.
+            The target must succeed on a Wisdom saving throw or follow the command
+            on its next turn. Choose the command from these options:
+
+            **Approach.** The target moves toward you by the shortest and most
+            direct route, ending its turn if it moves within 5 feet of you.
+
+            **Drop.** The target drops whatever it is holding and then ends its
+            turn.
+
+            **Flee.** The target spends its turn moving away from you by the
+            fastest available means.
+
+            **Grovel.** The target has the Prone condition and then ends its turn.
+
+            **Halt.** On its turn, the target doesn't move and takes no action or
+            Bonus Action.
+
+            *Using a Higher-Level Spell Slot.* You can affect one additional
+            creature for each spell slot level above 1.
     rules:
+      # Offer to prepare Command (Build → Prepare → L1)
+      - id: prepare-command-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: spell.l1.command.prepared
+                  operator: notEquals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-command.prepare-command-offer.already_prepared
+                    severity: error
+              - condition:
+                  fact: spellcasting.prepared.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-command.prepare-command-offer.max_prepared
+                    severity: error
+            rule:
+              id: prepare-command
+              phase: normal
+              group:
+                - __planned__
+              ui:
+                section: configuration
+                name: rule.spell-command.prepare-command-offer.name
+                intents: { PREPARE: L1 }
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: spell.l1.command.prepared
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.prepared.count
+                  source:
+                    number: 1
+                - type: advertiseEffect
+                  rule:
+                    id: effect-command-prepared
+                    ui:
+                      name: rule.spell-command.effect-command-prepared.name
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spell-l1-command-removal-set
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: spell.l1.command.prepared
+                        source:
+                          number: 1
+                        when:
+                          - fact: spell.l1.command.removing
+                            operator: equals
+                            value: 0
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.prepared.count
+                        source:
+                          number: 1
+                        when:
+                          - fact: spell.l1.command.removing
+                            operator: equals
+                            value: 0
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: spell.l1.command.removing
+                            operator: equals
+                            value: 0
+
+      # Offer to unprepare Command
+      - id: unprepare-command-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: spell.l1.command.prepared
+                  operator: equals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-command.unprepare-command-offer.not_prepared
+                    severity: error
+            rule:
+              id: unprepare-command
+              ui:
+                section: configuration
+                name: rule.spell-command.unprepare-command-offer.name
+                intents: { PREPARE: L1 }
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: spell.l1.command.prepared
+                  source:
+                    number: 0
+                - type: numberSet
+                  target:
+                    fact: spell.l1.command.removing
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.prepared.count
+                  source:
+                    number: 1
+                  subtract: true
+                - type: advertiseEffect
+                  rule:
+                    id: effect-command-removing
+                    ui:
+                      name: rule.spell-command.effect-command-removing.name
+                      hidden: true
+                    phase: early
+                    group:
+                      - spell-l1-command-removal-set
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: spell.l1.command.removing
+                        source:
+                          number: 1
+
       # Compute eligible command slot count (levels 1-5)
       - id: compute-command-eligible-slots
         phase: normal
@@ -87,6 +246,10 @@ ruleGroups:
 
       # Offer Command (action spell)
       - id: offer-command
+        when:
+          - fact: spell.l1.command.prepared
+            operator: equals
+            value: 1
         after:
           - group: action
           - group: spellcasting
@@ -125,6 +288,7 @@ ruleGroups:
               ui:
                 section: action-spell
                 name: rule.spell-command.offer-command.name
+                detailKey: spell/command
                 showDC: true
                 saveType: WIS
                 saveFact: spellcasting.saveDC

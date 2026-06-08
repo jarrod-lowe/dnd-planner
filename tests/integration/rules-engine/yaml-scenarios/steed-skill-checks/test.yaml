@@ -28,6 +28,9 @@ initialEffects:
       - type: advertiseEffect
         self: true
 steps:
+  - evaluate:
+  - addOffer:
+      id: prepare-find-steed
   # Cast Find Steed at L2
   - evaluate:
       assert:

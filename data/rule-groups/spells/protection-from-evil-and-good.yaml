@@ -27,7 +27,154 @@ ruleGroups:
           rep.
         keywords:
           [spell, level1, mIgh-Do'-Ha'DIbaH-je, action, abjuration, buQ]
+    detail:
+      key: spell/protection-from-evil-and-good
+      source: srd52
+      translations:
+        en:
+          meta: 'Level 1 Abjuration (Cleric, Druid, Paladin, Warlock, Wizard)'
+          fields:
+            - { labelKey: rules.field.castingTime, value: 'Action' }
+            - { labelKey: rules.field.range, value: 'Touch' }
+            - { labelKey: rules.field.components, value: 'V, S, M (a flask of Holy Water worth 25+ GP, which the spell consumes)' }
+            - { labelKey: rules.field.duration, value: 'Concentration, up to 10 minutes' }
+          body: |
+            Until the spell ends, one willing creature you touch is protected
+            against creatures that are Aberrations, Celestials, Elementals, Fey,
+            Fiends, and Undead. The protection grants several benefits. Creatures
+            of those types have Disadvantage on attack rolls against the target.
+            The target also can't be possessed by or gain the Charmed or Frightened
+            conditions from them. If the target is already possessed, Charmed, or
+            Frightened by such a creature, the target has Advantage on any new
+            saving throw against the relevant effect.
     rules:
+      # Offer to prepare Protection from Evil and Good (Build → Prepare → L1)
+      - id: prepare-protection-from-evil-and-good-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: spell.l1.protectionFromEvilAndGood.prepared
+                  operator: notEquals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-protection-from-evil-and-good.prepare-protection-from-evil-and-good-offer.already_prepared
+                    severity: error
+              - condition:
+                  fact: spellcasting.prepared.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-protection-from-evil-and-good.prepare-protection-from-evil-and-good-offer.max_prepared
+                    severity: error
+            rule:
+              id: prepare-protection-from-evil-and-good
+              phase: normal
+              group:
+                - __planned__
+              ui:
+                section: configuration
+                name: rule.spell-protection-from-evil-and-good.prepare-protection-from-evil-and-good-offer.name
+                intents: { PREPARE: L1 }
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: spell.l1.protectionFromEvilAndGood.prepared
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.prepared.count
+                  source:
+                    number: 1
+                - type: advertiseEffect
+                  rule:
+                    id: effect-protection-from-evil-and-good-prepared
+                    ui:
+                      name: rule.spell-protection-from-evil-and-good.effect-protection-from-evil-and-good-prepared.name
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spell-l1-protection-from-evil-and-good-removal-set
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: spell.l1.protectionFromEvilAndGood.prepared
+                        source:
+                          number: 1
+                        when:
+                          - fact: spell.l1.protectionFromEvilAndGood.removing
+                            operator: equals
+                            value: 0
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.prepared.count
+                        source:
+                          number: 1
+                        when:
+                          - fact: spell.l1.protectionFromEvilAndGood.removing
+                            operator: equals
+                            value: 0
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: spell.l1.protectionFromEvilAndGood.removing
+                            operator: equals
+                            value: 0
+
+      # Offer to unprepare Protection from Evil and Good
+      - id: unprepare-protection-from-evil-and-good-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: spell.l1.protectionFromEvilAndGood.prepared
+                  operator: equals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-protection-from-evil-and-good.unprepare-protection-from-evil-and-good-offer.not_prepared
+                    severity: error
+            rule:
+              id: unprepare-protection-from-evil-and-good
+              ui:
+                section: configuration
+                name: rule.spell-protection-from-evil-and-good.unprepare-protection-from-evil-and-good-offer.name
+                intents: { PREPARE: L1 }
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: spell.l1.protectionFromEvilAndGood.prepared
+                  source:
+                    number: 0
+                - type: numberSet
+                  target:
+                    fact: spell.l1.protectionFromEvilAndGood.removing
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.prepared.count
+                  source:
+                    number: 1
+                  subtract: true
+                - type: advertiseEffect
+                  rule:
+                    id: effect-protection-from-evil-and-good-removing
+                    ui:
+                      name: rule.spell-protection-from-evil-and-good.effect-protection-from-evil-and-good-removing.name
+                      hidden: true
+                    phase: early
+                    group:
+                      - spell-l1-protection-from-evil-and-good-removal-set
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: spell.l1.protectionFromEvilAndGood.removing
+                        source:
+                          number: 1
+
       # Compute eligible slot count (levels 1-5)
       - id: compute-protection-from-evil-and-good-eligible-slots
         phase: normal
@@ -99,6 +246,10 @@ ruleGroups:
 
       # Offer Protection from Evil and Good (action spell)
       - id: offer-protection-from-evil-and-good
+        when:
+          - fact: spell.l1.protectionFromEvilAndGood.prepared
+            operator: equals
+            value: 1
         after:
           - group: __planned__
           - group: action
@@ -144,6 +295,7 @@ ruleGroups:
               ui:
                 section: action-spell
                 name: rule.spell-protection-from-evil-and-good.offer-protection-from-evil-and-good.name
+                detailKey: spell/protection-from-evil-and-good
                 showDC: true
                 information:
                   - type: text

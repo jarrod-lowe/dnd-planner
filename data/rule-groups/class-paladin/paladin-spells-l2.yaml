@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: paladin-spells-l2
+    requires:
+      - spell-find-steed
+    translations:
+      en:
+        name: Paladin Spells Level 2
+        description: Level 2 spells available to Paladins
+        keywords: [paladin, spells, level2]
+      en-x-tlh:
+        name: Paladin Spells Level 2
+        description: Paladin level 2 jupmey
+        keywords: [paladin, jupmey, level2]
+    rules: []

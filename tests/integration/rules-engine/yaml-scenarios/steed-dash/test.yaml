@@ -28,6 +28,9 @@ initialEffects:
       - type: advertiseEffect
         self: true
 steps:
+  - evaluate:
+  - addOffer:
+      id: prepare-find-steed
   # Verify Find Steed is available
   - evaluate:
       assert:

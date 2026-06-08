@@ -1,0 +1,35 @@
+name: 'Protection from Evil and Good Prepare'
+description: 'Cast offer requires preparation first; prepare/unprepare lifecycle works'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/concentration
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-protection-from-evil-and-good
+steps:
+  # TC1: Before preparing, cast offer is absent; prepare offer exists
+  - evaluate:
+      assert:
+        facts:
+          spell.l1.protectionFromEvilAndGood.prepared: 0
+        offers:
+          notExists:
+            - cast-protection-from-evil-and-good
+          exists:
+            - prepare-protection-from-evil-and-good
+  # TC2: After preparing, cast offer becomes available
+  - addOffer:
+      id: prepare-protection-from-evil-and-good
+      assert:
+        facts:
+          spell.l1.protectionFromEvilAndGood.prepared: 1
+          spellcasting.prepared.count: 1
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - cast-protection-from-evil-and-good

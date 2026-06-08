@@ -6,6 +6,21 @@
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
         "no_slots": "No spell slots remaining"
+      },
+      "prepare-command-offer": {
+        "name": "Prepare Command",
+        "max_prepared": "Maximum prepared spells reached",
+        "already_prepared": "Command is already prepared"
+      },
+      "unprepare-command-offer": {
+        "name": "Unprepare Command",
+        "not_prepared": "Command is not prepared"
+      },
+      "effect-command-prepared": {
+        "name": "Command Prepared"
+      },
+      "effect-command-removing": {
+        "name": "Removing Command"
       }
     },
     "spell-sanctuary": {
@@ -17,6 +32,21 @@
       },
       "effect-sanctuary": {
         "name": "Sanctuary"
+      },
+      "prepare-sanctuary-offer": {
+        "name": "Prepare Sanctuary",
+        "max_prepared": "Maximum prepared spells reached",
+        "already_prepared": "Sanctuary is already prepared"
+      },
+      "unprepare-sanctuary-offer": {
+        "name": "Unprepare Sanctuary",
+        "not_prepared": "Sanctuary is not prepared"
+      },
+      "effect-sanctuary-prepared": {
+        "name": "Sanctuary Prepared"
+      },
+      "effect-sanctuary-removing": {
+        "name": "Removing Sanctuary"
       }
     },
     "spell-find-steed": {
@@ -95,6 +125,21 @@
       },
       "annotate-life-bond": {
         "text": "Life Bond: Steed also regains HP (within 5 ft, from a level 1+ spell) [manual]"
+      },
+      "prepare-find-steed-offer": {
+        "name": "Prepare Find Steed",
+        "max_prepared": "Maximum prepared spells reached",
+        "already_prepared": "Find Steed is already prepared"
+      },
+      "unprepare-find-steed-offer": {
+        "name": "Unprepare Find Steed",
+        "not_prepared": "Find Steed is not prepared"
+      },
+      "effect-find-steed-prepared": {
+        "name": "Find Steed Prepared"
+      },
+      "effect-find-steed-removing": {
+        "name": "Removing Find Steed"
       }
     },
     "spell-sleep": {
@@ -132,6 +177,21 @@
         "no_attack": "You must take the Attack action first",
         "no_slots": "No spell slots remaining",
         "no_spellcasting": "Already cast a spell this turn"
+      },
+      "prepare-thunderous-smite-offer": {
+        "name": "Prepare Thunderous Smite",
+        "max_prepared": "Maximum prepared spells reached",
+        "already_prepared": "Thunderous Smite is already prepared"
+      },
+      "unprepare-thunderous-smite-offer": {
+        "name": "Unprepare Thunderous Smite",
+        "not_prepared": "Thunderous Smite is not prepared"
+      },
+      "effect-thunderous-smite-prepared": {
+        "name": "Thunderous Smite Prepared"
+      },
+      "effect-thunderous-smite-removing": {
+        "name": "Removing Thunderous Smite"
       }
     },
     "spell-protection-from-evil-and-good": {
@@ -144,6 +204,21 @@
       },
       "effect-protection-from-evil-and-good": {
         "name": "Protection from Evil and Good"
+      },
+      "prepare-protection-from-evil-and-good-offer": {
+        "name": "Prepare Protection from Evil and Good",
+        "max_prepared": "Maximum prepared spells reached",
+        "already_prepared": "Protection from Evil and Good is already prepared"
+      },
+      "unprepare-protection-from-evil-and-good-offer": {
+        "name": "Unprepare Protection from Evil and Good",
+        "not_prepared": "Protection from Evil and Good is not prepared"
+      },
+      "effect-protection-from-evil-and-good-prepared": {
+        "name": "Protection from Evil and Good Prepared"
+      },
+      "effect-protection-from-evil-and-good-removing": {
+        "name": "Removing Protection from Evil and Good"
       }
     },
     "spell-bless": {
@@ -156,6 +231,21 @@
       },
       "effect-bless": {
         "name": "Bless"
+      },
+      "prepare-bless-offer": {
+        "name": "Prepare Bless",
+        "max_prepared": "Maximum prepared spells reached",
+        "already_prepared": "Bless is already prepared"
+      },
+      "unprepare-bless-offer": {
+        "name": "Unprepare Bless",
+        "not_prepared": "Bless is not prepared"
+      },
+      "effect-bless-prepared": {
+        "name": "Bless Prepared"
+      },
+      "effect-bless-removing": {
+        "name": "Removing Bless"
       }
     },
     "spell-divine-favour": {
@@ -176,6 +266,21 @@
       "offer-use-divine-favour": {
         "not_active": "Divine Favour is not active",
         "no_attack": "You must take the Attack action first"
+      },
+      "prepare-divine-favour-offer": {
+        "name": "Prepare Divine Favour",
+        "max_prepared": "Maximum prepared spells reached",
+        "already_prepared": "Divine Favour is already prepared"
+      },
+      "unprepare-divine-favour-offer": {
+        "name": "Unprepare Divine Favour",
+        "not_prepared": "Divine Favour is not prepared"
+      },
+      "effect-divine-favour-prepared": {
+        "name": "Divine Favour Prepared"
+      },
+      "effect-divine-favour-removing": {
+        "name": "Removing Divine Favour"
       }
     },
     "spell-create-and-destroy-water": {
@@ -186,6 +291,21 @@
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
         "no_slots": "No level 1 spell slots remaining"
+      },
+      "prepare-create-and-destroy-water-offer": {
+        "name": "Prepare Create and Destroy Water",
+        "max_prepared": "Maximum prepared spells reached",
+        "already_prepared": "Create and Destroy Water is already prepared"
+      },
+      "unprepare-create-and-destroy-water-offer": {
+        "name": "Unprepare Create and Destroy Water",
+        "not_prepared": "Create and Destroy Water is not prepared"
+      },
+      "effect-create-and-destroy-water-prepared": {
+        "name": "Create and Destroy Water Prepared"
+      },
+      "effect-create-and-destroy-water-removing": {
+        "name": "Removing Create and Destroy Water"
       }
     },
     "class-paladin-lay-on-hands": {

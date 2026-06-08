@@ -1,0 +1,52 @@
+name: 'Find Steed Prepare'
+description: 'Cast offer requires preparation first; prepare/unprepare lifecycle works'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-find-steed
+initialEffects:
+  - id: test-grant-level2-slot
+    phase: early
+    group:
+      - spellcasting-slots-set
+    activities:
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.total
+        source:
+          number: 1
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.remaining
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+steps:
+  # TC1: Before preparing, cast-find-steed is absent; prepare offer exists
+  - evaluate:
+      assert:
+        facts:
+          spell.l2.findSteed.prepared: 0
+        offers:
+          notExists:
+            - cast-find-steed
+          exists:
+            - prepare-find-steed
+  # TC2: After preparing, cast-find-steed becomes available
+  - addOffer:
+      id: prepare-find-steed
+      assert:
+        facts:
+          spell.l2.findSteed.prepared: 1
+          spellcasting.prepared.count: 1
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - cast-find-steed

@@ -29,6 +29,9 @@ initialEffects:
         self: true
 steps:
   - evaluate:
+  - addOffer:
+      id: prepare-sanctuary
+  - evaluate:
       assert:
         facts:
           spellcasting.slots.level1.remaining: 2

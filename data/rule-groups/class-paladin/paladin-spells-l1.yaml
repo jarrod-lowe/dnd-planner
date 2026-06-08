@@ -2,7 +2,10 @@
 ruleGroups:
   - id: paladin-spells-l1
     requires:
-      - spell-sleep
+      - spell-bless
+      - spell-command
+      - spell-divine-favour
+      - spell-protection-from-evil-and-good
     translations:
       en:
         name: Paladin Spells Level 1

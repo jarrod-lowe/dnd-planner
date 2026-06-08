@@ -1,0 +1,34 @@
+name: 'Create and Destroy Water Prepare'
+description: 'Cast offer requires preparation first; prepare/unprepare lifecycle works'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-create-and-destroy-water
+steps:
+  # TC1: Before preparing, cast offer is absent; prepare offer exists
+  - evaluate:
+      assert:
+        facts:
+          spell.l1.createAndDestroyWater.prepared: 0
+        offers:
+          notExists:
+            - cast-create-and-destroy-water
+          exists:
+            - prepare-create-and-destroy-water
+  # TC2: After preparing, cast offer becomes available
+  - addOffer:
+      id: prepare-create-and-destroy-water
+      assert:
+        facts:
+          spell.l1.createAndDestroyWater.prepared: 1
+          spellcasting.prepared.count: 1
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - cast-create-and-destroy-water

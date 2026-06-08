@@ -15,7 +15,152 @@ ruleGroups:
         description: >-
           DIch level 1 bonus action. DIch chal DIvI' DIvI' DIvI'.
         keywords: [spell, level1, chal, bonus action]
+    detail:
+      key: spell/sanctuary
+      source: srd52
+      translations:
+        en:
+          meta: 'Level 1 Abjuration (Cleric)'
+          fields:
+            - { labelKey: rules.field.castingTime, value: 'Bonus Action' }
+            - { labelKey: rules.field.range, value: '30 feet' }
+            - { labelKey: rules.field.components, value: 'V, S, M (a shard of glass from a mirror)' }
+            - { labelKey: rules.field.duration, value: '1 minute' }
+          body: |
+            You ward a creature within range. Until the spell ends, any creature
+            who targets the warded creature with an attack roll or a damaging spell
+            must succeed on a Wisdom saving throw or either choose a new target or
+            lose the attack or spell. This spell doesn't protect the warded
+            creature from areas of effect. The spell ends if the warded creature
+            makes an attack roll, casts a spell, or deals damage.
     rules:
+      # Offer to prepare Sanctuary (Build → Prepare → L1)
+      - id: prepare-sanctuary-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: spell.l1.sanctuary.prepared
+                  operator: notEquals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-sanctuary.prepare-sanctuary-offer.already_prepared
+                    severity: error
+              - condition:
+                  fact: spellcasting.prepared.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-sanctuary.prepare-sanctuary-offer.max_prepared
+                    severity: error
+            rule:
+              id: prepare-sanctuary
+              phase: normal
+              group:
+                - __planned__
+              ui:
+                section: configuration
+                name: rule.spell-sanctuary.prepare-sanctuary-offer.name
+                intents: { PREPARE: L1 }
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: spell.l1.sanctuary.prepared
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.prepared.count
+                  source:
+                    number: 1
+                - type: advertiseEffect
+                  rule:
+                    id: effect-sanctuary-prepared
+                    ui:
+                      name: rule.spell-sanctuary.effect-sanctuary-prepared.name
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spell-l1-sanctuary-removal-set
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: spell.l1.sanctuary.prepared
+                        source:
+                          number: 1
+                        when:
+                          - fact: spell.l1.sanctuary.removing
+                            operator: equals
+                            value: 0
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.prepared.count
+                        source:
+                          number: 1
+                        when:
+                          - fact: spell.l1.sanctuary.removing
+                            operator: equals
+                            value: 0
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: spell.l1.sanctuary.removing
+                            operator: equals
+                            value: 0
+
+      # Offer to unprepare Sanctuary
+      - id: unprepare-sanctuary-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: spell.l1.sanctuary.prepared
+                  operator: equals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-sanctuary.unprepare-sanctuary-offer.not_prepared
+                    severity: error
+            rule:
+              id: unprepare-sanctuary
+              ui:
+                section: configuration
+                name: rule.spell-sanctuary.unprepare-sanctuary-offer.name
+                intents: { PREPARE: L1 }
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: spell.l1.sanctuary.prepared
+                  source:
+                    number: 0
+                - type: numberSet
+                  target:
+                    fact: spell.l1.sanctuary.removing
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.prepared.count
+                  source:
+                    number: 1
+                  subtract: true
+                - type: advertiseEffect
+                  rule:
+                    id: effect-sanctuary-removing
+                    ui:
+                      name: rule.spell-sanctuary.effect-sanctuary-removing.name
+                      hidden: true
+                    phase: early
+                    group:
+                      - spell-l1-sanctuary-removal-set
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: spell.l1.sanctuary.removing
+                        source:
+                          number: 1
+
       # Compute eligible sanctuary slot count (levels 1-5)
       - id: compute-sanctuary-eligible-slots
         phase: normal
@@ -87,6 +232,10 @@ ruleGroups:
 
       # Offer Sanctuary (bonus action)
       - id: offer-sanctuary
+        when:
+          - fact: spell.l1.sanctuary.prepared
+            operator: equals
+            value: 1
         after:
           - group: __planned__
           - group: spellcasting
@@ -123,6 +272,7 @@ ruleGroups:
               ui:
                 section: bonus-action-spell
                 name: rule.spell-sanctuary.offer-sanctuary.name
+                detailKey: spell/sanctuary
                 showDC: true
                 information:
                   - type: text

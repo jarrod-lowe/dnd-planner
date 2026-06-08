@@ -12,6 +12,9 @@ ruleGroups:
   - class-paladin/class-paladin-level1
   - spells/spell-bless
 steps:
+  - evaluate:
+  - addOffer:
+      id: prepare-bless
   # Verify initial state: paladin has heavy armor proficiency and spellcasting
   - evaluate:
       assert:

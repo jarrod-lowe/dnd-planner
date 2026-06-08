@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: sorcerer-spells-l1
+    requires:
+      - spell-sleep
+    translations:
+      en:
+        name: Sorcerer Spells Level 1
+        description: Level 1 spells available to Sorcerers
+        keywords: [sorcerer, spells, level1]
+      en-x-tlh:
+        name: Sorcerer Spells Level 1
+        description: Sorcerer level 1 jupmey
+        keywords: [sorcerer, jupmey, level1]
+    rules: []

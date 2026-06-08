@@ -11,6 +11,9 @@ ruleGroups:
   - spells/spell-find-steed
 steps:
   - evaluate:
+  - addOffer:
+      id: prepare-find-steed
+  - evaluate:
       assert:
         facts:
           spellcasting.slots.level1.remaining: 2

@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: wizard-spells-l1
+    requires:
+      - spell-protection-from-evil-and-good
+      - spell-sleep
+    translations:
+      en:
+        name: Wizard Spells Level 1
+        description: Level 1 spells available to Wizards
+        keywords: [wizard, spells, level1]
+      en-x-tlh:
+        name: Wizard Spells Level 1
+        description: Wizard level 1 jupmey
+        keywords: [wizard, jupmey, level1]
+    rules: []

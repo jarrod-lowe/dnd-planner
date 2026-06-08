@@ -16,7 +16,154 @@ ruleGroups:
         description: >-
           DIch level 1 bonus action. DIch nuH DIch DIvI' 2d6 thunder DIvI'.
         keywords: [spell, level1, raQ, bonus action]
+    detail:
+      key: spell/thunderous-smite
+      source: custom
+      translations:
+        en:
+          meta: 'Level 1 Evocation (Paladin)'
+          fields:
+            - { labelKey: rules.field.castingTime, value: 'Bonus Action, after a Melee weapon or Unarmed hit' }
+            - { labelKey: rules.field.range, value: 'Self' }
+            - { labelKey: rules.field.components, value: 'V' }
+            - { labelKey: rules.field.duration, value: 'Instantaneous' }
+          body: |
+            Your attack is audibly accompanied by a thunderous sound that can be
+            heard up to 300 feet away. The target takes 2d6 thunder damage.
+            Targets who are creatures, if they fail a strength saving throw
+            against your spell save DC, are also pushed 10 feet away from you
+            and knocked prone.
+            
+            *Using a Higher-Level Spell Slot.* The extra Thunder damage increases
+            by 1d6 for each spell slot level above 1.
     rules:
+      # Offer to prepare Thunderous Smite (Build → Prepare → L1)
+      - id: prepare-thunderous-smite-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: spell.l1.thunderousSmite.prepared
+                  operator: notEquals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-thunderous-smite.prepare-thunderous-smite-offer.already_prepared
+                    severity: error
+              - condition:
+                  fact: spellcasting.prepared.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-thunderous-smite.prepare-thunderous-smite-offer.max_prepared
+                    severity: error
+            rule:
+              id: prepare-thunderous-smite
+              phase: normal
+              group:
+                - __planned__
+              ui:
+                section: configuration
+                name: rule.spell-thunderous-smite.prepare-thunderous-smite-offer.name
+                intents: { PREPARE: L1 }
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: spell.l1.thunderousSmite.prepared
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.prepared.count
+                  source:
+                    number: 1
+                - type: advertiseEffect
+                  rule:
+                    id: effect-thunderous-smite-prepared
+                    ui:
+                      name: rule.spell-thunderous-smite.effect-thunderous-smite-prepared.name
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spell-l1-thunderous-smite-removal-set
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: spell.l1.thunderousSmite.prepared
+                        source:
+                          number: 1
+                        when:
+                          - fact: spell.l1.thunderousSmite.removing
+                            operator: equals
+                            value: 0
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.prepared.count
+                        source:
+                          number: 1
+                        when:
+                          - fact: spell.l1.thunderousSmite.removing
+                            operator: equals
+                            value: 0
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: spell.l1.thunderousSmite.removing
+                            operator: equals
+                            value: 0
+
+      # Offer to unprepare Thunderous Smite
+      - id: unprepare-thunderous-smite-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: spell.l1.thunderousSmite.prepared
+                  operator: equals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-thunderous-smite.unprepare-thunderous-smite-offer.not_prepared
+                    severity: error
+            rule:
+              id: unprepare-thunderous-smite
+              ui:
+                section: configuration
+                name: rule.spell-thunderous-smite.unprepare-thunderous-smite-offer.name
+                intents: { PREPARE: L1 }
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: spell.l1.thunderousSmite.prepared
+                  source:
+                    number: 0
+                - type: numberSet
+                  target:
+                    fact: spell.l1.thunderousSmite.removing
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.prepared.count
+                  source:
+                    number: 1
+                  subtract: true
+                - type: advertiseEffect
+                  rule:
+                    id: effect-thunderous-smite-removing
+                    ui:
+                      name: rule.spell-thunderous-smite.effect-thunderous-smite-removing.name
+                      hidden: true
+                    phase: early
+                    group:
+                      - spell-l1-thunderous-smite-removal-set
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: spell.l1.thunderousSmite.removing
+                        source:
+                          number: 1
+
       # Compute eligible thunderous smite slot count (levels 1-5)
       - id: compute-tsmite-eligible-slots
         phase: normal
@@ -133,6 +280,10 @@ ruleGroups:
 
       # Offer Thunderous Smite (bonus action, gated on attack action taken)
       - id: offer-thunderous-smite
+        when:
+          - fact: spell.l1.thunderousSmite.prepared
+            operator: equals
+            value: 1
         after:
           - group: __planned__
           - group: spellcasting
@@ -167,6 +318,7 @@ ruleGroups:
               ui:
                 section: bonus-action-spell
                 name: rule.spell-thunderous-smite.offer-thunderous-smite.name
+                detailKey: spell/thunderous-smite
                 dieSides: 6
                 showDC: true
                 saveType: STR
@@ -492,6 +644,10 @@ ruleGroups:
 
       # Annotate melee/unarmed attacks when Thunderous Smite is available
       - id: annotate-thunderous-smite
+        when:
+          - fact: spell.l1.thunderousSmite.prepared
+            operator: equals
+            value: 1
         after:
           - group: __planned__
           - group: spellcasting

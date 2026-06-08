@@ -12,6 +12,9 @@ ruleGroups:
   - class-paladin/class-paladin-level1
   - spells/spell-divine-favour
 steps:
+  - evaluate:
+  - addOffer:
+      id: prepare-divine-favour
   # Initial state: spell is available
   - evaluate:
       assert:
