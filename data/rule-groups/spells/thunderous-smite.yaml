@@ -23,16 +23,17 @@ ruleGroups:
         en:
           meta: 'Level 1 Evocation (Paladin)'
           fields:
-            - { labelKey: rules.field.castingTime, value: 'Bonus Action, after a hit' }
+            - { labelKey: rules.field.castingTime, value: 'Bonus Action, after a Melee weapon or Unarmed hit' }
             - { labelKey: rules.field.range, value: 'Self' }
             - { labelKey: rules.field.components, value: 'V' }
             - { labelKey: rules.field.duration, value: 'Instantaneous' }
           body: |
-            You cast this spell immediately after hitting a target with a melee
-            weapon attack or an Unarmed Strike. The hit deals an extra 2d6 Thunder
-            damage. The target must succeed on a Strength saving throw (DC 13) or
-            be pushed 10 feet away and have the Prone condition.
-
+            Your attack is audibly accompanied by a thunderous sound that can be
+            heard up to 300 feet away. The target takes 2d6 thunder damage.
+            Targets who are creatures, if they fail a strength saving throw
+            against your spell save DC, are also pushed 10 feet away from you
+            and knocked prone.
+            
             *Using a Higher-Level Spell Slot.* The extra Thunder damage increases
             by 1d6 for each spell slot level above 1.
     rules:
