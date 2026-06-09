@@ -701,6 +701,81 @@ ui:
 
 After adding or changing the `detail:` section, run `make build` to regenerate the static asset.
 
+### Pattern: Always-Prepared (Granted) Spells
+
+**Use when:** A class/subclass/species feature grants a spell that is always
+prepared and does not count against the character's prepared-spell limit (e.g.
+Paladin's Divine Smite from level 2).
+
+The spell itself stays a normal preparable spell (`spells/<spell>.yaml` with the
+usual prepare/unprepare/cast rules). The granting feature layers "always
+prepared" on top via two facts:
+
+- `spell.l{N}.{key}.prepared = 1` — marks it prepared (gates the cast offer)
+- `spell.l{N}.{key}.alwaysPrepared = 1` — marks the grant as permanent
+
+**1. Grant rule** (in the feature's rule group — runs every evaluation because
+the feature is always assigned, so no persistent effect is needed):
+
+```yaml
+# class-paladin/paladin-smite.yaml — Paladin L2 grants Divine Smite
+- id: paladin-smite-always-prepared
+  phase: early
+  group:
+    - always-prepared-set
+  activities:
+    - type: numberSet
+      target: { fact: spell.l1.divineSmite.prepared }
+      source: { number: 1 }
+    - type: numberSet
+      target: { fact: spell.l1.divineSmite.alwaysPrepared }
+      source: { number: 1 }
+```
+
+This does **not** touch `spellcasting.prepared.count`, so the grant is free. The
+spell's own prepare offer self-hides (its legality requires `prepared != 1`).
+
+**2. Unprepare guard** (on the spell's unprepare offer) — prevents the player
+unpreparing a granted spell:
+
+```yaml
+legalWhen:
+  - condition: { fact: spell.l1.divineSmite.prepared, operator: equals, value: 1 }
+    illegalDiagnostics: [{ code: rule.spell-divine-smite.unprepare-divine-smite-offer.not_prepared, severity: error }]
+  - condition: { fact: spell.l1.divineSmite.alwaysPrepared, operator: notEquals, value: 1 }
+    illegalDiagnostics: [{ code: rule.spell-divine-smite.unprepare-divine-smite-offer.always_prepared, severity: error }]
+```
+
+Any spell that may be granted always-prepared must include this `alwaysPrepared`
+guard on its unprepare offer.
+
+> Edge case: if a caster manually prepares the spell (spending a prepared-spell
+> slot) and later gains the always-prepared grant, the spent slot is not
+> refunded and the spell can no longer be unprepared. This is accepted.
+
+### Pattern: Free Casts Per Long Rest (Spell Resource)
+
+**Use when:** A feature lets a spell be cast a limited number of times per long
+rest without a spell slot (e.g. Paladin's free Divine Smite once per long rest).
+
+Model the free uses as a resource granted by the feature, and offer it inside
+the spell's normal cast offer as **slot "level 0"** so there is a single cast
+option rather than a duplicate.
+
+- Feature grants the resource: `{ability}.total`/`{ability}.remaining` (set in an
+  early-phase rule), with a long-rest reset that copies `total` → `remaining`,
+  and a persistent effect (advertised by the cast) that keeps `remaining` at the
+  spent value until `rest.long == 1`. (See `class-paladin/paladin-smite.yaml`.)
+- The spell's cast offer computes a slider `min` of `0` when a free use is
+  available (else `1`) via a fact, and gates legality on
+  `slots + freeUses > 0`. Selecting level `0` consumes the free use instead of a
+  slot. Non-holders never have the resource, so the level-0 notch never appears
+  for them. (See `spells/divine-smite.yaml`.)
+
+Because the free use only changes which resource is spent — not whether a spell
+is being cast — the cast still consumes the bonus action and the
+`spellcasting.remaining` "one spell per turn" resource in both cases.
+
 ---
 
 ## 7. Conventions
@@ -813,7 +888,7 @@ legalWhen:
       operator: greaterThan
       value: 0
     illegalDiagnostics:
-      - code: rule.class-paladin-divine-smite.offer-divine-smite.no_bonus_action
+      - code: rule.spell-divine-smite.offer-divine-smite.no_bonus_action
         severity: error
 
 # Annotate rule uses the same anchors
@@ -821,7 +896,7 @@ legalWhen:
   after:
     - group: __planned__
     - group: spellcasting
-    - group: smite-slots-computed
+    - group: smite-resources-computed
   activities:
     - type: annotate
       when:
@@ -829,7 +904,7 @@ legalWhen:
         - *ds-has-attack-action
         - *ds-has-smite-slots
         - *ds-has-spellcasting
-      key: rule.class-paladin-divine-smite.annotation
+      key: rule.spell-divine-smite.annotation
       targets: [attack.melee, attack.unarmed]
 ```
 

@@ -12,8 +12,7 @@ ruleGroups:
   - dnd-5e-2024/attacks
   - dnd-5e-2024/spellcasting
   - class-paladin/class-paladin-level1
-  - class-paladin/class-paladin-level2
-  - class-paladin/class-paladin-divine-smite
+  - spells/spell-divine-smite
 initialEffects:
   # Grant a level 2 spell slot (simulating higher paladin level)
   - id: test-grant-level2-slot
@@ -34,8 +33,10 @@ initialEffects:
       - type: advertiseEffect
         self: true
 steps:
-  # Initial state: 2 L1 slots, 1 L2 slot
-  - evaluate:
+  # Prepare first; initial state: 2 L1 slots, 1 L2 slot
+  - evaluate: {}
+  - addOffer:
+      id: prepare-divine-smite
       assert:
         facts:
           bonusActions.remaining: 1
@@ -53,7 +54,7 @@ steps:
           spellcasting.slots.level1.remaining: 2
           spellcasting.slots.level2.remaining: 1
   - addOffer:
-      id: divine-smite
+      id: cast-divine-smite
       selections:
         slotLevel: 1
       assert:
@@ -67,7 +68,7 @@ steps:
         facts:
           spellcasting.slots.level1.remaining: 1
   - addOffer:
-      id: divine-smite
+      id: cast-divine-smite
       selections:
         slotLevel: 1
       assert:
@@ -97,13 +98,13 @@ steps:
           spellcasting.slots.level2.remaining: 1
         offers:
           legal:
-            - divine-smite
+            - cast-divine-smite
   # Add smite WITHOUT specifying slotLevel — tests the real default path.
-  # resolveInitialSelections will capture slotLevel from the default source.
-  # With the fix (default.fact: smite.lowestAvailableSlotLevel), this captures 2.
+  # resolveInitialSelections captures slotLevel from smite.defaultLevel,
+  # which (with no free use) equals smite.lowestAvailableSlotLevel = 2.
   # L1 stays at 0, L2 is consumed.
   - addOffer:
-      id: divine-smite
+      id: cast-divine-smite
       assert:
         facts:
           bonusActions.remaining: 0

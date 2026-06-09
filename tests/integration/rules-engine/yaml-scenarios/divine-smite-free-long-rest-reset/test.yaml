@@ -1,5 +1,5 @@
-name: 'Paladin Smite - Long Rest Reset'
-description: 'Long Rest restores paladinSmite.remaining to 1 and makes Paladin Smite usable again'
+name: 'Divine Smite - Free Use Long Rest Reset'
+description: 'Long Rest restores the once-per-long-rest free Divine Smite'
 ruleGroups:
   - species-human/species-human
   - dnd-5e-2024/action-economy
@@ -11,10 +11,10 @@ ruleGroups:
   - dnd-5e-2024/spellcasting
   - class-paladin/class-paladin-level1
   - class-paladin/class-paladin-level2
-  - class-paladin/class-paladin-divine-smite
   - class-paladin/class-paladin-paladin-smite
+  - spells/spell-divine-smite
 steps:
-  # Turn 1: Attack then use Paladin Smite
+  # Turn 1: attack then spend the free smite
   - evaluate:
       assert:
         facts:
@@ -22,7 +22,9 @@ steps:
   - addOffer:
       id: unarmed-strike-use-action
   - addOffer:
-      id: paladin-smite
+      id: cast-divine-smite
+      selections:
+        slotLevel: 0
       assert:
         facts:
           paladinSmite.remaining: 0
@@ -30,7 +32,7 @@ steps:
       assert:
         facts:
           paladinSmite.remaining: 0
-  # Turn 2: Paladin Smite still used
+  # Turn 2: still spent, then take a long rest
   - evaluate:
       assert:
         facts:
@@ -44,17 +46,9 @@ steps:
       assert:
         facts:
           paladinSmite.remaining: 1
-  # Turn 3: Paladin Smite is available again
+  # Turn 3: free smite available again
   - evaluate:
       assert:
         facts:
           paladinSmite.total: 1
           paladinSmite.remaining: 1
-  - addOffer:
-      id: unarmed-strike-use-action
-      assert:
-        facts:
-          attack.last.activation.action: 1
-        offers:
-          legal:
-            - paladin-smite

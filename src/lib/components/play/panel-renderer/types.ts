@@ -52,6 +52,9 @@ export interface SliderControl extends ControlBase {
   max?: ValueSource;
   step?: number;
   unit?: string;
+  // When set to 'spellLevel', the displayed value renders as "Free Use" (0) or
+  // "Level N" (>=1) instead of a raw number. Used by spell upcast sliders.
+  valueFormat?: string;
 }
 
 export interface SelectOption {

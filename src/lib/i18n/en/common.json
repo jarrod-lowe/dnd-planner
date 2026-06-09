@@ -194,6 +194,41 @@
         "name": "Removing Thunderous Smite"
       }
     },
+    "spell-divine-smite": {
+      "annotation": "Divine Smite available",
+      "offer-divine-smite": {
+        "name": "Divine Smite",
+        "no_bonus_action": "No bonus action available",
+        "no_attack": "You must take the Attack action first",
+        "no_resource": "No spell slots or free uses remaining",
+        "no_spellcasting": "Already cast a spell this turn",
+        "no_free_use": "No free uses remaining",
+        "no_l1_slots": "No Level 1 spell slots remaining",
+        "no_l2_slots": "No Level 2 spell slots remaining",
+        "no_l3_slots": "No Level 3 spell slots remaining",
+        "no_l4_slots": "No Level 4 spell slots remaining",
+        "no_l5_slots": "No Level 5 spell slots remaining"
+      },
+      "prepare-divine-smite-offer": {
+        "name": "Prepare Divine Smite",
+        "max_prepared": "Maximum prepared spells reached",
+        "already_prepared": "Divine Smite is already prepared"
+      },
+      "unprepare-divine-smite-offer": {
+        "name": "Unprepare Divine Smite",
+        "not_prepared": "Divine Smite is not prepared",
+        "always_prepared": "Divine Smite is always prepared and cannot be unprepared"
+      },
+      "effect-divine-smite-prepared": {
+        "name": "Divine Smite Prepared"
+      },
+      "effect-divine-smite-removing": {
+        "name": "Removing Divine Smite"
+      },
+      "effect-divine-smite-free": {
+        "name": "Free Divine Smite Used"
+      }
+    },
     "spell-protection-from-evil-and-good": {
       "offer-protection-from-evil-and-good": {
         "name": "Protection from Evil and Good",
@@ -324,20 +359,6 @@
         "insufficient_pool": "Need 5 Lay on Hands points"
       }
     },
-    "class-paladin-paladin-smite": {
-      "paladin-smite": {
-        "name": "Paladin Smite"
-      },
-      "effect-paladin-smite": {
-        "name": "Paladin Smite Used"
-      },
-      "annotation": "Paladin Smite available",
-      "offer-paladin-smite": {
-        "no_bonus_action": "No bonus action available",
-        "no_attack": "You must take the Attack action first",
-        "already_used": "Already used this rest"
-      }
-    },
     "class-paladin-divinity": {
       "divine-sense": {
         "name": "Divine Sense",
@@ -376,18 +397,6 @@
       },
       "effect-emissary-of-peace-divinity": {
         "name": "Emissary of Peace (Divinity)"
-      }
-    },
-    "class-paladin-divine-smite": {
-      "divine-smite": {
-        "name": "Divine Smite"
-      },
-      "annotation": "Divine Smite available",
-      "offer-divine-smite": {
-        "no_bonus_action": "No bonus action available",
-        "no_attack": "You must take the Attack action first",
-        "no_slots": "No spell slots remaining",
-        "no_spellcasting": "Already cast a spell this turn"
       }
     },
     "dnd-5e-2024": {
@@ -1426,6 +1435,10 @@
       "l3": "L3 Spell Slot Expended",
       "l4": "L4 Spell Slot Expended",
       "l5": "L5 Spell Slot Expended"
+    },
+    "slider": {
+      "freeUse": "Free Use",
+      "level": "Level {{level}}"
     },
     "activeState": {
       "title": "Active State",

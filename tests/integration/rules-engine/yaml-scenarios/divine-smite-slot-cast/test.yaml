@@ -1,5 +1,5 @@
-name: 'Divine Smite - Usage'
-description: 'Using Divine Smite consumes a bonus action and a spell slot'
+name: 'Divine Smite - Slot Cast'
+description: 'A prepared Divine Smite (no free use) consumes a bonus action, spellcasting, and a spell slot'
 ruleGroups:
   - species-human/species-human
   - dnd-5e-2024/action-economy
@@ -10,29 +10,31 @@ ruleGroups:
   - dnd-5e-2024/attacks
   - dnd-5e-2024/spellcasting
   - class-paladin/class-paladin-level1
-  - class-paladin/class-paladin-level2
-  - class-paladin/class-paladin-divine-smite
+  - spells/spell-divine-smite
 steps:
-  - evaluate:
+  # Prepare first
+  - evaluate: {}
+  - addOffer:
+      id: prepare-divine-smite
       assert:
         facts:
+          spell.l1.divineSmite.prepared: 1
           bonusActions.remaining: 1
           spellcasting.remaining: 1
           spellcasting.slots.level1.remaining: 2
-        offers:
-          exists:
-            - unarmed-strike-use-action
+          paladinSmite.remaining: 0
+  # Attack first (prerequisite for smite)
   - addOffer:
       id: unarmed-strike-use-action
       assert:
         facts:
           attack.last.activation.action: 1
-          spellcasting.remaining: 1
         offers:
-          exists:
-            - divine-smite
+          legal:
+            - cast-divine-smite
+  # Cast with a level 1 slot
   - addOffer:
-      id: divine-smite
+      id: cast-divine-smite
       selections:
         slotLevel: 1
       assert:
@@ -40,3 +42,4 @@ steps:
           bonusActions.remaining: 0
           spellcasting.remaining: 0
           spellcasting.slots.level1.remaining: 1
+          paladinSmite.remaining: 0

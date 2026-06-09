@@ -2,6 +2,7 @@
   import { resolveValueSource } from './resolveValueSource';
   import type { SliderControl } from './types';
   import type { Facts, VarDefinition } from '$lib/rules-engine';
+  import { t } from '$lib/i18n';
 
   interface Props {
     control: SliderControl;
@@ -37,6 +38,16 @@
     localValue = resolvedValue ?? min;
   });
 
+  // Spell upcast sliders render the value as "Free Use" (0) / "Level N" (>=1)
+  // instead of a raw number; everything else keeps the plain numeric + unit.
+  const displayValue = $derived(
+    control.valueFormat === 'spellLevel'
+      ? localValue === 0
+        ? $t('play.slider.freeUse')
+        : $t('play.slider.level', { level: localValue })
+      : `${localValue}${unit ? ` ${unit}` : ''}`
+  );
+
   function handleChange(e: Event): void {
     const target = e.target as HTMLInputElement;
     const newValue = Number(target.value);
@@ -56,7 +67,7 @@
     oninput={editable ? handleChange : undefined}
     aria-label={control.var}
   />
-  <span class="panel-renderer__slider-value">{localValue}{unit ? ` ${unit}` : ''}</span>
+  <span class="panel-renderer__slider-value">{displayValue}</span>
 </div>
 
 <style>

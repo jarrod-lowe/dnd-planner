@@ -1,5 +1,5 @@
 name: 'Divine Smite - Illegal No Slots'
-description: 'Divine Smite is illegal when all spell slots are exhausted'
+description: 'A prepared Divine Smite (no free use) is illegal when all spell slots are exhausted'
 ruleGroups:
   - species-human/species-human
   - dnd-5e-2024/action-economy
@@ -10,10 +10,11 @@ ruleGroups:
   - dnd-5e-2024/attacks
   - dnd-5e-2024/spellcasting
   - class-paladin/class-paladin-level1
-  - class-paladin/class-paladin-level2
-  - class-paladin/class-paladin-divine-smite
+  - spells/spell-divine-smite
 steps:
-  - evaluate:
+  - evaluate: {}
+  - addOffer:
+      id: prepare-divine-smite
       assert:
         facts:
           bonusActions.remaining: 1
@@ -29,7 +30,7 @@ steps:
           spellcasting.slots.level1.remaining: 2
   # Use smite to consume one L1 slot
   - addOffer:
-      id: divine-smite
+      id: cast-divine-smite
       selections:
         slotLevel: 1
       assert:
@@ -48,7 +49,7 @@ steps:
           spellcasting.remaining: 1
           spellcasting.slots.level1.remaining: 1
   - addOffer:
-      id: divine-smite
+      id: cast-divine-smite
       selections:
         slotLevel: 1
       assert:
@@ -67,4 +68,4 @@ steps:
           spellcasting.slots.level1.remaining: 0
         offers:
           illegal:
-            - divine-smite
+            - cast-divine-smite

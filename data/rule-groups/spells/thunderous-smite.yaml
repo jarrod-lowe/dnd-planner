@@ -326,7 +326,8 @@ ruleGroups:
                   type: slider
                   var: slotLevel
                   min: { number: 1 }
-                  max: { number: 5 }
+                  max: { fact: spellcasting.maxSlotLevel }
+                  valueFormat: spellLevel
                 information:
                   - type: text
                     label: play.information.saveDc

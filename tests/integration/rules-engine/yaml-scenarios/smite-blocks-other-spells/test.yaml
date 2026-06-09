@@ -9,11 +9,12 @@ ruleGroups:
   - dnd-5e-2024/attacks
   - dnd-5e-2024/spellcasting
   - class-paladin/class-paladin-level1
-  - class-paladin/class-paladin-level2
-  - class-paladin/class-paladin-divine-smite
+  - spells/spell-divine-smite
   - spells/spell-create-and-destroy-water
 steps:
-  - evaluate:
+  - evaluate: {}
+  - addOffer:
+      id: prepare-divine-smite
   - addOffer:
       id: prepare-create-and-destroy-water
   - evaluate:
@@ -35,7 +36,7 @@ steps:
           spellcasting.remaining: 1
   # Smite consumes the spellcasting resource
   - addOffer:
-      id: divine-smite
+      id: cast-divine-smite
       selections:
         slotLevel: 1
       assert:

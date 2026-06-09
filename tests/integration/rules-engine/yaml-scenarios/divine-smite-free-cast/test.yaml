@@ -1,5 +1,5 @@
-name: 'Paladin Smite - Usage'
-description: 'Using Paladin Smite consumes a bonus action but NOT a spell slot or spellcasting resource. paladinSmite.remaining goes to 0.'
+name: 'Divine Smite - Free Cast'
+description: 'Paladin L2 free Divine Smite (slot level 0) consumes the free use and a bonus action, but no spell slot'
 ruleGroups:
   - species-human/species-human
   - dnd-5e-2024/action-economy
@@ -11,39 +11,36 @@ ruleGroups:
   - dnd-5e-2024/spellcasting
   - class-paladin/class-paladin-level1
   - class-paladin/class-paladin-level2
-  - class-paladin/class-paladin-divine-smite
   - class-paladin/class-paladin-paladin-smite
+  - spells/spell-divine-smite
 steps:
-  # Initially, paladinSmite.remaining should be 1
   - evaluate:
       assert:
         facts:
-          bonusActions.remaining: 1
-          spellcasting.remaining: 1
-          spellcasting.slots.level1.remaining: 2
           paladinSmite.remaining: 1
+          spellcasting.slots.level1.remaining: 2
         offers:
-          exists:
-            - unarmed-strike-use-action
           illegal:
-            - paladin-smite
+            - cast-divine-smite
   # Attack first (prerequisite)
   - addOffer:
       id: unarmed-strike-use-action
       assert:
         facts:
           attack.last.activation.action: 1
-          spellcasting.remaining: 1
-          paladinSmite.remaining: 1
         offers:
           legal:
-            - paladin-smite
-  # Use Paladin Smite
+            - cast-divine-smite
+  # Cast the free smite (level 0)
   - addOffer:
-      id: paladin-smite
+      id: cast-divine-smite
+      selections:
+        slotLevel: 0
       assert:
         facts:
           bonusActions.remaining: 0
           paladinSmite.remaining: 0
-          spellcasting.remaining: 1
+          # No spell slot consumed by the free use
           spellcasting.slots.level1.remaining: 2
+          # Casting Divine Smite still counts as your spell for the turn
+          spellcasting.remaining: 0

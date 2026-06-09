@@ -171,6 +171,57 @@ describe('PanelRenderer - slider control', () => {
     expect(valueSpan.textContent).toContain('10');
   });
 
+  const createSpellLevelSliderEntry = (): AvailableRuleEntry => {
+    const base = createSliderEntry();
+    return {
+      ...base,
+      rule: {
+        ...base.rule,
+        ui: {
+          ...base.rule.ui,
+          primaryControl: {
+            type: 'slider',
+            var: 'distance',
+            min: { number: 0 },
+            max: { number: 5 },
+            valueFormat: 'spellLevel'
+          }
+        }
+      } as Rule
+    };
+  };
+
+  // NOTE: the test harness mocks i18n so $t(key) returns the key itself
+  // (see tests/setup.ts). These assert that valueFormat selects the correct
+  // translation key per value; the rendered text is the key, not the label.
+  it('uses the free-use translation key for value 0 when valueFormat is spellLevel', () => {
+    const entry = createSpellLevelSliderEntry();
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {}, selections: { distance: 0 } }
+    });
+    const valueSpan = container.querySelector('.panel-renderer__slider-value') as HTMLSpanElement;
+    expect(valueSpan.textContent?.trim()).toBe('play.slider.freeUse');
+  });
+
+  it('uses the level translation key for value N>=1 when valueFormat is spellLevel', () => {
+    const entry = createSpellLevelSliderEntry();
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {}, selections: { distance: 2 } }
+    });
+    const valueSpan = container.querySelector('.panel-renderer__slider-value') as HTMLSpanElement;
+    expect(valueSpan.textContent?.trim()).toBe('play.slider.level');
+  });
+
+  it('shows the raw number when no valueFormat is set', () => {
+    const entry = createSliderEntry();
+    const facts = { 'character.movement.remaining': 20, 'character.movement.total': 30 };
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts }
+    });
+    const valueSpan = container.querySelector('.panel-renderer__slider-value') as HTMLSpanElement;
+    expect(valueSpan.textContent?.trim()).toBe('20');
+  });
+
   it('keeps each slider independent when multiple exist', () => {
     // Two sliders: walk (distance) and secondary slider
     const entry = createSliderEntry({

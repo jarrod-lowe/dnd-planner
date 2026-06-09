@@ -1,5 +1,5 @@
 name: 'Divine Smite - Legal With Higher Slot Only'
-description: 'Divine Smite is legal when level 1 slots are exhausted but a higher-level slot is available'
+description: 'A prepared Divine Smite is legal when level 1 slots are exhausted but a higher-level slot is available'
 ruleGroups:
   - dnd-5e-2024/action-economy
   - dnd-5e-2024/free-actions
@@ -9,8 +9,7 @@ ruleGroups:
   - dnd-5e-2024/attacks
   - dnd-5e-2024/spellcasting
   - class-paladin/class-paladin-level1
-  - class-paladin/class-paladin-level2
-  - class-paladin/class-paladin-divine-smite
+  - spells/spell-divine-smite
 initialEffects:
   # Simulate having a level 2 spell slot (e.g., from a higher paladin level)
   - id: test-grant-level2-slot
@@ -31,14 +30,18 @@ initialEffects:
       - type: advertiseEffect
         self: true
 steps:
-  # Initial state: 2 L1 slots, 1 L2 slot
-  - evaluate:
+  # Prepare first
+  - evaluate: {}
+  - addOffer:
+      id: prepare-divine-smite
       assert:
         facts:
           bonusActions.remaining: 1
           spellcasting.remaining: 1
           spellcasting.slots.level1.remaining: 2
           spellcasting.slots.level2.remaining: 1
+          # Highest slot level by total capacity (the granted L2 slot)
+          spellcasting.maxSlotLevel: 2
   # Attack first (required for smite)
   - addOffer:
       id: unarmed-strike-use-action
@@ -51,10 +54,10 @@ steps:
           spellcasting.slots.level2.remaining: 1
         offers:
           legal:
-            - divine-smite
+            - cast-divine-smite
   # Smite using L1 slot (first)
   - addOffer:
-      id: divine-smite
+      id: cast-divine-smite
       selections:
         slotLevel: 1
       assert:
@@ -75,7 +78,7 @@ steps:
           spellcasting.slots.level1.remaining: 1
           spellcasting.slots.level2.remaining: 1
   - addOffer:
-      id: divine-smite
+      id: cast-divine-smite
       selections:
         slotLevel: 1
       assert:
@@ -97,4 +100,4 @@ steps:
           spellcasting.slots.level2.remaining: 1
         offers:
           legal:
-            - divine-smite
+            - cast-divine-smite

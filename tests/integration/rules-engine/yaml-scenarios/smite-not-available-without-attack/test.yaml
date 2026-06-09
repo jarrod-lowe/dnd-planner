@@ -1,5 +1,5 @@
 name: 'Divine Smite - Illegal Without Attack'
-description: 'Divine Smite is illegal when no Attack action has been taken'
+description: 'A prepared Divine Smite is illegal when no Attack action has been taken'
 ruleGroups:
   - species-human/species-human
   - dnd-5e-2024/action-economy
@@ -10,8 +10,7 @@ ruleGroups:
   - dnd-5e-2024/attacks
   - dnd-5e-2024/spellcasting
   - class-paladin/class-paladin-level1
-  - class-paladin/class-paladin-level2
-  - class-paladin/class-paladin-divine-smite
+  - spells/spell-divine-smite
 steps:
   - evaluate:
       assert:
@@ -19,6 +18,9 @@ steps:
           bonusActions.remaining: 1
           spellcasting.remaining: 1
           spellcasting.slots.level1.remaining: 2
+  - addOffer:
+      id: prepare-divine-smite
+      assert:
         offers:
           illegal:
-            - divine-smite
+            - cast-divine-smite

@@ -1,0 +1,53 @@
+name: 'Divine Smite - Free Then Slot'
+description: 'After the free use is spent, Divine Smite can still be cast with a spell slot'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-paladin-smite
+  - spells/spell-divine-smite
+steps:
+  # Turn 1: attack then free smite
+  - evaluate: {}
+  - addOffer:
+      id: unarmed-strike-use-action
+  - addOffer:
+      id: cast-divine-smite
+      selections:
+        slotLevel: 0
+      assert:
+        facts:
+          paladinSmite.remaining: 0
+          spellcasting.slots.level1.remaining: 2
+  - endTurn: {}
+  # Turn 2: free use gone, but a slot cast still works
+  - evaluate:
+      assert:
+        facts:
+          paladinSmite.remaining: 0
+          # The "Free Use" notch (level 0) stays on the slider because the
+          # feature is still owned; it just warns when picked and is no longer
+          # the default (which falls back to the lowest available slot level).
+          smite.minSlotLevel: 0
+          smite.defaultLevel: 1
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        offers:
+          legal:
+            - cast-divine-smite
+  - addOffer:
+      id: cast-divine-smite
+      selections:
+        slotLevel: 1
+      assert:
+        facts:
+          paladinSmite.remaining: 0
+          spellcasting.slots.level1.remaining: 1
