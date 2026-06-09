@@ -222,6 +222,34 @@ describe('PanelRenderer - slider control', () => {
     expect(valueSpan.textContent?.trim()).toBe('20');
   });
 
+  it('exposes the formatted spell-level value to assistive tech via aria-valuetext', () => {
+    const entry = createSpellLevelSliderEntry();
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {}, selections: { distance: 0 } }
+    });
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+    expect(slider.getAttribute('aria-valuetext')).toBe('play.slider.freeUse');
+  });
+
+  it('updates aria-valuetext to the level label for N>=1', () => {
+    const entry = createSpellLevelSliderEntry();
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {}, selections: { distance: 2 } }
+    });
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+    expect(slider.getAttribute('aria-valuetext')).toBe('play.slider.level');
+  });
+
+  it('sets aria-valuetext to the numeric display when no valueFormat is set', () => {
+    const entry = createSliderEntry();
+    const facts = { 'character.movement.remaining': 20, 'character.movement.total': 30 };
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts }
+    });
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+    expect(slider.getAttribute('aria-valuetext')).toBe('20');
+  });
+
   it('keeps each slider independent when multiple exist', () => {
     // Two sliders: walk (distance) and secondary slider
     const entry = createSliderEntry({

@@ -66,6 +66,7 @@
     disabled={!editable}
     oninput={editable ? handleChange : undefined}
     aria-label={control.var}
+    aria-valuetext={displayValue}
   />
   <span class="panel-renderer__slider-value">{displayValue}</span>
 </div>
