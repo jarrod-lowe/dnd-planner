@@ -1,8 +1,11 @@
 # yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: class-paladin-paladin-smite
+    # Granted by taking Paladin level 2 (class-paladin-level2 requires this group).
+    # Depend only on the Divine Smite spell — depending back on level 2 would
+    # create a requires cycle that blocks removal of either in Manage Rules.
     requires:
-      - class-paladin-level2
+      - spell-divine-smite
     translations:
       en:
         name: Paladin's Smite
