@@ -756,9 +756,31 @@ legalWhen:
 Any spell that may be granted always-prepared must include this `alwaysPrepared`
 guard on its unprepare offer.
 
-> Edge case: if a caster manually prepares the spell (spending a prepared-spell
-> slot) and later gains the always-prepared grant, the spent slot is not
-> refunded and the spell can no longer be unprepared. This is accepted.
+**3. Retire a prior manual preparation.** If a caster manually prepared the spell
+(its persistent `effect-{spell}-prepared` keeps incrementing
+`spellcasting.prepared.count` each evaluation) and later gains the grant, that
+effect must stop contributing — otherwise it permanently consumes a prepared
+slot. Guard the effect's count increment and its self re-advertisement on
+`alwaysPrepared != 1`, and order the effect `after: always-prepared-set` so the
+grant's flag is set first:
+
+```yaml
+# inside effect-{spell}-prepared
+after:
+  - group: always-prepared-set
+activities:
+  - type: numberIncrement
+    target: { fact: spellcasting.prepared.count }
+    source: { number: 1 }
+    when:
+      - { fact: spell.l1.divineSmite.removing, operator: equals, value: 0 }
+      - { fact: spell.l1.divineSmite.alwaysPrepared, operator: notEquals, value: 1 }
+  - type: advertiseEffect # self-sustain only while not granted
+    self: true
+    when:
+      - { fact: spell.l1.divineSmite.removing, operator: equals, value: 0 }
+      - { fact: spell.l1.divineSmite.alwaysPrepared, operator: notEquals, value: 1 }
+```
 
 ### Pattern: Free Casts Per Long Rest (Spell Resource)
 

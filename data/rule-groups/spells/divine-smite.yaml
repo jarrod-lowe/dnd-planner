@@ -83,6 +83,7 @@ ruleGroups:
                     phase: early
                     after:
                       - group: spell-l1-divine-smite-removal-set
+                      - group: always-prepared-set
                     activities:
                       - type: numberSet
                         target:
@@ -93,6 +94,10 @@ ruleGroups:
                           - fact: spell.l1.divineSmite.removing
                             operator: equals
                             value: 0
+                      # Stop counting against the prepared limit once a feature
+                      # grants this spell always-prepared (alwaysPrepared == 1),
+                      # otherwise a manual L1 preparation would permanently waste
+                      # a prepared slot after the grant activates.
                       - type: numberIncrement
                         target:
                           fact: spellcasting.prepared.count
@@ -102,12 +107,20 @@ ruleGroups:
                           - fact: spell.l1.divineSmite.removing
                             operator: equals
                             value: 0
+                          - fact: spell.l1.divineSmite.alwaysPrepared
+                            operator: notEquals
+                            value: 1
+                      # Retire the effect once always-prepared takes over (the
+                      # grant then sustains the prepared fact each evaluation).
                       - type: advertiseEffect
                         self: true
                         when:
                           - fact: spell.l1.divineSmite.removing
                             operator: equals
                             value: 0
+                          - fact: spell.l1.divineSmite.alwaysPrepared
+                            operator: notEquals
+                            value: 1
 
       # Offer to unprepare Divine Smite
       # (illegal when granted always-prepared by a feature, e.g. Paladin L2)
