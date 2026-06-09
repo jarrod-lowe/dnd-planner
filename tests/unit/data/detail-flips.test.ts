@@ -25,7 +25,10 @@ interface RuleLike {
 interface DetailBlock {
   key: string;
   source: string;
-  translations: Record<string, { meta?: string; fields?: { labelKey: string; value: string }[]; body?: string }>;
+  translations: Record<
+    string,
+    { meta?: string; fields?: { labelKey: string; value: string }[]; body?: string }
+  >;
 }
 
 interface RuleGroup {
@@ -44,7 +47,8 @@ function findYamlFiles(dir: string): string[] {
     if (entry.name === '_shared') continue;
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) files.push(...findYamlFiles(full));
-    else if (entry.isFile() && (entry.name.endsWith('.yaml') || entry.name.endsWith('.yml'))) files.push(full);
+    else if (entry.isFile() && (entry.name.endsWith('.yaml') || entry.name.endsWith('.yml')))
+      files.push(full);
   }
   return files;
 }
@@ -63,7 +67,11 @@ function collectDetailKeys(rule: RuleLike | undefined, out: string[]): void {
 function hasI18nKey(root: unknown, dotted: string): boolean {
   let node: unknown = root;
   for (const segment of dotted.split('.')) {
-    if (typeof node !== 'object' || node === null || !(segment in (node as Record<string, unknown>))) {
+    if (
+      typeof node !== 'object' ||
+      node === null ||
+      !(segment in (node as Record<string, unknown>))
+    ) {
       return false;
     }
     node = (node as Record<string, unknown>)[segment];
@@ -77,7 +85,7 @@ const EXPECTED_FLIPS = [
   'class-feature/divine-sense',
   'equipment/leather-armor',
   'equipment/shield',
-  'equipment/splint-armor',
+  'equipment/splint-armor'
 ] as const;
 
 describe('detail flip wiring', () => {
@@ -114,7 +122,10 @@ describe('detail flip wiring', () => {
 
   it('expected combat-facing features are each referenced by a rule', () => {
     const unwired = EXPECTED_FLIPS.filter((k) => !referencedKeys.has(k));
-    expect(unwired, `detail blocks defined but no rule carries the detailKey: ${unwired.join(', ')}`).toEqual([]);
+    expect(
+      unwired,
+      `detail blocks defined but no rule carries the detailKey: ${unwired.join(', ')}`
+    ).toEqual([]);
   });
 
   it('every detail block has en body text', () => {
@@ -132,8 +143,10 @@ describe('detail flip wiring', () => {
     for (const [key, block] of definedKeys) {
       for (const locale of Object.keys(block.translations ?? {})) {
         for (const field of block.translations[locale]?.fields ?? []) {
-          if (!hasI18nKey(enCommon, field.labelKey)) missing.push(`${key}: ${field.labelKey} missing in en`);
-          if (!hasI18nKey(tlhCommon, field.labelKey)) missing.push(`${key}: ${field.labelKey} missing in en-x-tlh`);
+          if (!hasI18nKey(enCommon, field.labelKey))
+            missing.push(`${key}: ${field.labelKey} missing in en`);
+          if (!hasI18nKey(tlhCommon, field.labelKey))
+            missing.push(`${key}: ${field.labelKey} missing in en-x-tlh`);
         }
       }
     }
