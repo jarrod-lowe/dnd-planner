@@ -44,6 +44,7 @@ ruleGroups:
                 section: action-attack
                 packBehind: unarmed-strike-use-action
                 name: rule.dnd-5e-2024.shove.shove-action.name
+                description: rule.dnd-5e-2024.shove.shove-action.description
                 vsKey: play.choices.contested.vsStrDex
                 outcomeKey: play.choices.shove.outcome
                 primaryControl:

@@ -205,6 +205,7 @@ ruleGroups:
               ui:
                 section: action-spell
                 name: rule.spell-create-and-destroy-water.cast-create-and-destroy-water.name
+                description: rule.spell-create-and-destroy-water.cast-create-and-destroy-water.description
                 detailKey: spell/create-and-destroy-water
                 intents:
                   HANDLE: consume

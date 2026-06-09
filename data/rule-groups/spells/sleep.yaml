@@ -286,6 +286,7 @@ ruleGroups:
               ui:
                 section: action-spell
                 name: rule.spell-sleep.offer-sleep.name
+                description: rule.spell-sleep.offer-sleep.description
                 detailKey: spell/sleep
                 showDC: true
                 information:

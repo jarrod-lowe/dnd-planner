@@ -218,6 +218,10 @@
               "type": "string",
               "description": "i18n key for display name"
             },
+            "description": {
+              "type": "string",
+              "description": "i18n key for a short reminder shown directly under the panel title"
+            },
             "packBehind": {
               "type": "string",
               "description": "Rule ID to pack this choice behind (collapsible group)"

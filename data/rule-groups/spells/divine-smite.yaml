@@ -414,6 +414,7 @@ ruleGroups:
               ui:
                 section: bonus-action-spell
                 name: rule.spell-divine-smite.offer-divine-smite.name
+                description: rule.spell-divine-smite.offer-divine-smite.description
                 detailKey: spell/divine-smite
                 dieSides: 8
                 primaryControl:

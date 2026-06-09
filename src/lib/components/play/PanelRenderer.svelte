@@ -57,6 +57,10 @@
     descriptor.name ? $t(descriptor.name) : entry.rule.description || entry.rule.id
   );
 
+  const displayDescription = $derived(
+    descriptor.description ? $t(descriptor.description) : undefined
+  );
+
   const hasWarning = $derived(!entry.legal || !entry.applicable);
   const warningType = $derived(
     !entry.legal ? ('illegal' as const) : !entry.applicable ? ('inapplicable' as const) : null
@@ -278,6 +282,9 @@
   <div class="panel-renderer__header">
     <span class="panel-renderer__title">{displayName}</span>
   </div>
+  {#if displayDescription}
+    <p class="panel-renderer__description">{displayDescription}</p>
+  {/if}
   {#if primarySlider}
     <div class="panel-renderer__control">
       <PanelSlider
@@ -546,6 +553,13 @@
     font-size: var(--font-size-md);
     font-weight: 500;
     color: var(--md-sys-color-on-surface);
+  }
+
+  .panel-renderer__description {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    color: var(--md-sys-color-on-surface-variant);
   }
 
   /* Actions positioned at top-right inside panel */

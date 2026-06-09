@@ -372,6 +372,7 @@ ruleGroups:
               ui:
                 section: action-spell
                 name: rule.spell-find-steed.offer-find-steed.name
+                description: rule.spell-find-steed.offer-find-steed.description
                 actionCost: [action]
                 detailKey: spell/find-steed
                 intents:
