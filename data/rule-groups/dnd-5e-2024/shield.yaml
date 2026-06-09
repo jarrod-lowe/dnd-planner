@@ -13,6 +13,21 @@ ruleGroups:
         name: DIch
         description: DIch naQ, DIvI' 2 DIch Jun
         keywords: [DIch, Jun]
+    detail:
+      key: equipment/shield
+      source: srd52
+      translations:
+        en:
+          meta: 'Shield'
+          fields:
+            - { labelKey: rules.field.armorClass, value: '+2' }
+            - { labelKey: rules.field.weight, value: '6 lb.' }
+            - { labelKey: rules.field.donDoff, value: 'Utilize action to don or doff' }
+          body: |
+            A Shield increases your Armor Class by 2 while you wield it.
+
+            You gain the Armor Class benefit of a Shield only if you have
+            training with it. You can wield only one Shield at a time.
     rules:
       - id: don-shield-offer
         after:
@@ -53,6 +68,7 @@ ruleGroups:
               ui:
                 section: equip
                 name: rule.dnd-5e-2024.shield.don-shield.name
+                detailKey: equipment/shield
                 intents: { EQUIP: armor }
                 actionCost: []
               activities:
@@ -105,6 +121,7 @@ ruleGroups:
                       - ac-components
                     ui:
                       name: rule.dnd-5e-2024.shield.effect-shield.name
+                      detailKey: equipment/shield
                     activities:
                       - type: numberIncrement
                         target:
