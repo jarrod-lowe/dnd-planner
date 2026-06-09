@@ -1,0 +1,21 @@
+name: 'Divine Smite - Cap Computed Regardless Of Group Order'
+description: >-
+  smite.maxCastLevel must be computed from spellcasting.maxSlotLevel even when the
+  spell rule group is evaluated before spellcasting (the cap copy must wait on
+  spellcasting-computed). Lists the spell group first to exercise the ordering.
+ruleGroups:
+  - spells/spell-divine-smite
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - dnd-5e-2024/spellcasting
+steps:
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.slots.level1.total: 2
+          spellcasting.maxSlotLevel: 1
+          smite.maxCastLevel: 1

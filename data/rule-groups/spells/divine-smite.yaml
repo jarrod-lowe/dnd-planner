@@ -302,6 +302,8 @@ ruleGroups:
         phase: normal
         after:
           - group: smite-slots-computed
+          # Needs spellcasting.maxSlotLevel settled before copying the cap
+          - group: spellcasting-computed
         group:
           - smite-resources-computed
         activities:

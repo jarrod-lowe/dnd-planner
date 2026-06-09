@@ -184,6 +184,9 @@ ruleGroups:
       # Cascade from high to low so the lowest available level overwrites
       - id: compute-tsmite-lowest-slot
         phase: normal
+        after:
+          # Needs spellcasting.maxSlotLevel settled before copying the cap
+          - group: spellcasting-computed
         group:
           - tsmite-slots-computed
         activities:
