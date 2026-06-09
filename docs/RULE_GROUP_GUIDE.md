@@ -741,9 +741,16 @@ unpreparing a granted spell:
 ```yaml
 legalWhen:
   - condition: { fact: spell.l1.divineSmite.prepared, operator: equals, value: 1 }
-    illegalDiagnostics: [{ code: rule.spell-divine-smite.unprepare-divine-smite-offer.not_prepared, severity: error }]
+    illegalDiagnostics:
+      [{ code: rule.spell-divine-smite.unprepare-divine-smite-offer.not_prepared, severity: error }]
   - condition: { fact: spell.l1.divineSmite.alwaysPrepared, operator: notEquals, value: 1 }
-    illegalDiagnostics: [{ code: rule.spell-divine-smite.unprepare-divine-smite-offer.always_prepared, severity: error }]
+    illegalDiagnostics:
+      [
+        {
+          code: rule.spell-divine-smite.unprepare-divine-smite-offer.always_prepared,
+          severity: error
+        }
+      ]
 ```
 
 Any spell that may be granted always-prepared must include this `alwaysPrepared`
