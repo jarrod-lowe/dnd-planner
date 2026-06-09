@@ -5,6 +5,7 @@ ruleGroups:
       - spell-bless
       - spell-command
       - spell-divine-favour
+      - spell-divine-smite
       - spell-protection-from-evil-and-good
     translations:
       en:

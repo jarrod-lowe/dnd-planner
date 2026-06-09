@@ -1,0 +1,19 @@
+name: 'Thunderous Smite - Cap Computed Regardless Of Group Order'
+description: >-
+  tsmite.maxCastLevel must be computed from spellcasting.maxSlotLevel even when
+  the spell rule group is evaluated before spellcasting.
+ruleGroups:
+  - spells/spell-thunderous-smite
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - dnd-5e-2024/spellcasting
+steps:
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.maxSlotLevel: 1
+          tsmite.maxCastLevel: 1

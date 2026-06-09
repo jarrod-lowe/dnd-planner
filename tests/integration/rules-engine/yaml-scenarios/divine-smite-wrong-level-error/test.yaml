@@ -1,0 +1,29 @@
+name: 'Divine Smite - Specific Slot-Level Error'
+description: 'Planning Divine Smite at a level with no slot reports the specific "No Level N spell slots remaining" error'
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - spells/spell-divine-smite
+steps:
+  - evaluate: {}
+  - addOffer:
+      id: prepare-divine-smite
+  - addOffer:
+      id: unarmed-strike-use-action
+  # Force a level-2 cast though only level-1 slots exist
+  - addOffer:
+      id: cast-divine-smite
+      selections:
+        slotLevel: 2
+      assert:
+        planErrors:
+          - id: cast-divine-smite
+            errors:
+              - rule.spell-divine-smite.offer-divine-smite.no_l2_slots

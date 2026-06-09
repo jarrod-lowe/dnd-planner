@@ -1,0 +1,27 @@
+name: 'Divine Smite Prepare'
+description: 'Divine Smite is a normal preparable spell; cast offer requires preparation first'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-divine-smite
+steps:
+  # Before preparing: prepare offer exists; spell not prepared
+  - evaluate:
+      assert:
+        facts:
+          spell.l1.divineSmite.prepared: 0
+        offers:
+          exists:
+            - prepare-divine-smite
+  # After preparing: prepared flag set, prep count incremented
+  - addOffer:
+      id: prepare-divine-smite
+      assert:
+        facts:
+          spell.l1.divineSmite.prepared: 1
+          spellcasting.prepared.count: 1

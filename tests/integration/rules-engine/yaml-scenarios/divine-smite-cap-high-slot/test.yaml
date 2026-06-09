@@ -1,0 +1,40 @@
+name: 'Divine Smite - Cap Slider At Handled Level'
+description: >-
+  Divine Smite only implements slot levels 1-5, so even when a (multiclass) caster
+  has a level 6+ slot, the cast slider max is capped at 5.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - spells/spell-divine-smite
+initialEffects:
+  # Simulate a level 6 spell slot from a multiclass full caster
+  - id: test-grant-level6-slot
+    phase: early
+    group:
+      - spellcasting-slots-set
+    activities:
+      - type: numberSet
+        target: { fact: spellcasting.slots.level6.total }
+        source: { number: 1 }
+      - type: numberSet
+        target: { fact: spellcasting.slots.level6.remaining }
+        source: { number: 1 }
+      - type: advertiseEffect
+        self: true
+steps:
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.slots.level1.total: 2
+          spellcasting.slots.level6.total: 1
+          # Highest slot level by total capacity is 6...
+          spellcasting.maxSlotLevel: 6
+          # ...but Divine Smite caps its slider at the highest handled level (5)
+          smite.maxCastLevel: 5

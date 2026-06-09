@@ -1,0 +1,33 @@
+name: 'Divine Smite - Manual Prepare Then Granted Always-Prepared'
+description: >-
+  A leftover manual-preparation effect must stop consuming a prepared-spell slot
+  once Divine Smite is granted always-prepared at Paladin L2 (it should not count
+  against the prepared-spell limit).
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-paladin-smite
+  - spells/spell-divine-smite
+steps:
+  # Inject a leftover L1 manual preparation: planning the prepare action makes it
+  # advertise the persistent effect-divine-smite-prepared. (At L2 the offer is
+  # illegal, but the harness still lets us plan it to recreate the real effect.)
+  - evaluate: {}
+  - addOffer:
+      id: prepare-divine-smite
+  - endTurn: {}
+  # With the always-prepared grant active, the leftover effect must NOT keep
+  # contributing to the prepared count.
+  - evaluate:
+      assert:
+        facts:
+          spell.l1.divineSmite.prepared: 1
+          spell.l1.divineSmite.alwaysPrepared: 1
+          spellcasting.prepared.count: 0

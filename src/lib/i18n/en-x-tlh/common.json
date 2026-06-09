@@ -194,6 +194,41 @@
         "name": "Removing raQ muHta"
       }
     },
+    "spell-divine-smite": {
+      "annotation": "quv Qaw' chen",
+      "offer-divine-smite": {
+        "name": "quv Qaw'",
+        "no_bonus_action": "Quv DIvI' tu'lu'be'",
+        "no_attack": "DIch nuH DIvI' tu'lu'be'",
+        "no_resource": "mugh laH free je tu'lu'be'",
+        "no_spellcasting": "mugh DIvI' tu'lu'be'",
+        "no_free_use": "lo'Ha' tu'lu'be'",
+        "no_l1_slots": "patlh 1 mugh laH tu'lu'be'",
+        "no_l2_slots": "patlh 2 mugh laH tu'lu'be'",
+        "no_l3_slots": "patlh 3 mugh laH tu'lu'be'",
+        "no_l4_slots": "patlh 4 mugh laH tu'lu'be'",
+        "no_l5_slots": "patlh 5 mugh laH tu'lu'be'"
+      },
+      "prepare-divine-smite-offer": {
+        "name": "quv Qaw' mugh chenmoH",
+        "max_prepared": "mugh DIvI' nIb",
+        "already_prepared": "quv Qaw' already prepared"
+      },
+      "unprepare-divine-smite-offer": {
+        "name": "quv Qaw' mugh lISmoH",
+        "not_prepared": "quv Qaw' not prepared",
+        "always_prepared": "quv Qaw' reH mugh, lISlaH'be'"
+      },
+      "effect-divine-smite-prepared": {
+        "name": "quv Qaw' Prepared"
+      },
+      "effect-divine-smite-removing": {
+        "name": "Removing quv Qaw'"
+      },
+      "effect-divine-smite-free": {
+        "name": "quv Qaw' free lo'pu'"
+      }
+    },
     "spell-protection-from-evil-and-good": {
       "offer-protection-from-evil-and-good": {
         "name": "mIgh Do' Ha'DIbaH je",
@@ -324,20 +359,6 @@
         "insufficient_pool": "ghop Du vagh DIvI'"
       }
     },
-    "class-paladin-paladin-smite": {
-      "paladin-smite": {
-        "name": "DIch Qaw'"
-      },
-      "effect-paladin-smite": {
-        "name": "DIch Qaw' lo'pu'"
-      },
-      "annotation": "DIch Qaw' chen",
-      "offer-paladin-smite": {
-        "no_bonus_action": "DIvI' latlh tu'lu'be'",
-        "no_attack": "DIch DIvI' DIch tu'lu'be'",
-        "already_used": "DIvI' lo'pu'"
-      }
-    },
     "class-paladin-divinity": {
       "divine-sense": {
         "name": "quv DIch",
@@ -376,18 +397,6 @@
       },
       "effect-emissary-of-peace-divinity": {
         "name": "rojDuy (DIvI')"
-      }
-    },
-    "class-paladin-divine-smite": {
-      "divine-smite": {
-        "name": "quv Qaw'"
-      },
-      "annotation": "quv Qaw' chen",
-      "offer-divine-smite": {
-        "no_bonus_action": "DIvI' latlh tu'lu'be'",
-        "no_attack": "DIch DIvI' DIch tu'lu'be'",
-        "no_slots": "mugh laH tu'lu'be'",
-        "no_spellcasting": "DIvI' mugh DIvI' tu'lu'be'"
       }
     },
     "dnd-5e-2024": {
@@ -1426,6 +1435,10 @@
       "l3": "DIvI' L3 mugh",
       "l4": "DIvI' L4 mugh",
       "l5": "DIvI' L5 mugh"
+    },
+    "slider": {
+      "freeUse": "lo'Ha'",
+      "level": "patlh {{level}}"
     },
     "activeState": {
       "title": "Active State",

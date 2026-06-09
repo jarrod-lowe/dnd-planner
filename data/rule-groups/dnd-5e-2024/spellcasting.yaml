@@ -210,3 +210,75 @@ ruleGroups:
             source:
               fact: spellcasting.prepared.count
             subtract: true
+
+      # Highest spell slot level the character has, by total capacity (whether or
+      # not any remain). Used as the max for spell upcast sliders. Cascade low to
+      # high so the highest level with total > 0 wins; 0 if no slots at all.
+      - id: compute-max-slot-level
+        phase: normal
+        group:
+          - spellcasting-computed
+        activities:
+          - type: numberSet
+            target: { fact: spellcasting.maxSlotLevel }
+            source: { number: 1 }
+            when:
+              - fact: spellcasting.slots.level1.total
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target: { fact: spellcasting.maxSlotLevel }
+            source: { number: 2 }
+            when:
+              - fact: spellcasting.slots.level2.total
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target: { fact: spellcasting.maxSlotLevel }
+            source: { number: 3 }
+            when:
+              - fact: spellcasting.slots.level3.total
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target: { fact: spellcasting.maxSlotLevel }
+            source: { number: 4 }
+            when:
+              - fact: spellcasting.slots.level4.total
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target: { fact: spellcasting.maxSlotLevel }
+            source: { number: 5 }
+            when:
+              - fact: spellcasting.slots.level5.total
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target: { fact: spellcasting.maxSlotLevel }
+            source: { number: 6 }
+            when:
+              - fact: spellcasting.slots.level6.total
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target: { fact: spellcasting.maxSlotLevel }
+            source: { number: 7 }
+            when:
+              - fact: spellcasting.slots.level7.total
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target: { fact: spellcasting.maxSlotLevel }
+            source: { number: 8 }
+            when:
+              - fact: spellcasting.slots.level8.total
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target: { fact: spellcasting.maxSlotLevel }
+            source: { number: 9 }
+            when:
+              - fact: spellcasting.slots.level9.total
+                operator: greaterThan
+                value: 0

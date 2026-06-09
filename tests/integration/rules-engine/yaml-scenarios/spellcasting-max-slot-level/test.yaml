@@ -1,0 +1,17 @@
+name: 'Spellcasting - Max Slot Level'
+description: 'spellcasting.maxSlotLevel reflects the highest slot level the player has by total capacity'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+steps:
+  # A level 1 paladin has only level 1 slots
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.slots.level1.total: 2
+          spellcasting.maxSlotLevel: 1

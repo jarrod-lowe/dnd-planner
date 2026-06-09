@@ -25,6 +25,7 @@ interface Rule {
 
 interface RuleGroup {
   id: string;
+  requires?: string[];
   translations: Record<SupportedLocale, Translation>;
   rules?: Rule[];
 }
@@ -194,5 +195,51 @@ describe('rule groups translations', () => {
     }
 
     expect(missing, `Effects missing ui.name: ${missing.join(', ')}`).toEqual([]);
+  });
+});
+
+describe('rule group dependencies', () => {
+  const dataDir = path.resolve(process.cwd(), 'data/rule-groups');
+  const requiresById = new Map<string, string[]>();
+
+  beforeAll(() => {
+    const sharedDefs = loadSharedDefinitions(dataDir);
+    for (const file of findYamlFiles(dataDir)) {
+      const data = loadYamlFile(file, sharedDefs);
+      if (!data.ruleGroups) continue;
+      for (const rg of data.ruleGroups) {
+        requiresById.set(rg.id, rg.requires ?? []);
+      }
+    }
+  });
+
+  // A `requires` cycle makes getDependents() report mutually-required groups as
+  // each other's dependents, which blocks removal of either in Manage Rules.
+  it('has no cycles in the requires graph', () => {
+    const cycles: string[] = [];
+    const VISITING = 1;
+    const DONE = 2;
+    const state = new Map<string, number>();
+
+    const visit = (id: string, stack: string[]): void => {
+      const cycleStart = stack.indexOf(id);
+      if (cycleStart !== -1) {
+        cycles.push([...stack.slice(cycleStart), id].join(' -> '));
+        return;
+      }
+      if (state.get(id) === DONE) return;
+      state.set(id, VISITING);
+      for (const dep of requiresById.get(id) ?? []) {
+        // Only follow edges to groups we actually loaded.
+        if (requiresById.has(dep)) visit(dep, [...stack, id]);
+      }
+      state.set(id, DONE);
+    };
+
+    for (const id of requiresById.keys()) {
+      if (state.get(id) !== DONE) visit(id, []);
+    }
+
+    expect(cycles, `requires cycles detected: ${cycles.join('; ')}`).toEqual([]);
   });
 });

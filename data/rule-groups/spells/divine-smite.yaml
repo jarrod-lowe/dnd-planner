@@ -1,21 +1,187 @@
 # yaml-language-server: $schema=../schema.json
 ruleGroups:
-  - id: class-paladin-divine-smite
+  - id: spell-divine-smite
     requires:
-      - class-paladin-level2
+      - spellcasting
     translations:
       en:
         name: Divine Smite
         description: >-
-          Paladin Level 2 bonus action. When you hit with a melee weapon or
-          unarmed strike, expend a spell slot to deal radiant damage.
-        keywords: [paladin, divine, smite, radiant, damage, bonus action]
+          Level 1 bonus action spell. After hitting with a melee weapon or
+          unarmed strike, deal an extra 2d8 radiant damage. Upcasting adds +1d8
+          per level.
+        keywords: [spell, level1, divine, smite, radiant, damage, bonus action]
       en-x-tlh:
         name: quv Qaw'
         description: >-
-          DIch level 2 bonus action. DIch nuH DIch DIvI' DIvI' DIvI'.
-        keywords: [paladin, quv, Qaw']
+          DIch level 1 bonus action. DIch nuH DIch DIvI' 2d8 radiant DIvI'.
+        keywords: [spell, level1, quv, Qaw', bonus action]
+    detail:
+      key: spell/divine-smite
+      source: srd52
+      translations:
+        en:
+          meta: 'Level 1 Evocation (Paladin)'
+          fields:
+            - { labelKey: rules.field.castingTime, value: 'Bonus Action, after a Melee weapon or Unarmed hit' }
+            - { labelKey: rules.field.range, value: 'Self' }
+            - { labelKey: rules.field.components, value: 'V' }
+            - { labelKey: rules.field.duration, value: 'Instantaneous' }
+          body: |
+            The target takes an extra 2d8 Radiant damage from your attack. The
+            damage increases by 1d8 if the target is a Fiend or an Undead.
+
+            *Using a Higher-Level Spell Slot.* The extra damage increases by 1d8
+            for each spell slot level above 1.
     rules:
+      # Offer to prepare Divine Smite (Build → Prepare → L1)
+      - id: prepare-divine-smite-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: spell.l1.divineSmite.prepared
+                  operator: notEquals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-divine-smite.prepare-divine-smite-offer.already_prepared
+                    severity: error
+              - condition:
+                  fact: spellcasting.prepared.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-divine-smite.prepare-divine-smite-offer.max_prepared
+                    severity: error
+            rule:
+              id: prepare-divine-smite
+              phase: normal
+              group:
+                - __planned__
+              ui:
+                section: configuration
+                name: rule.spell-divine-smite.prepare-divine-smite-offer.name
+                intents: { PREPARE: L1 }
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: spell.l1.divineSmite.prepared
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.prepared.count
+                  source:
+                    number: 1
+                - type: advertiseEffect
+                  rule:
+                    id: effect-divine-smite-prepared
+                    ui:
+                      name: rule.spell-divine-smite.effect-divine-smite-prepared.name
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spell-l1-divine-smite-removal-set
+                      - group: always-prepared-set
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: spell.l1.divineSmite.prepared
+                        source:
+                          number: 1
+                        when:
+                          - fact: spell.l1.divineSmite.removing
+                            operator: equals
+                            value: 0
+                      # Stop counting against the prepared limit once a feature
+                      # grants this spell always-prepared (alwaysPrepared == 1),
+                      # otherwise a manual L1 preparation would permanently waste
+                      # a prepared slot after the grant activates.
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.prepared.count
+                        source:
+                          number: 1
+                        when:
+                          - fact: spell.l1.divineSmite.removing
+                            operator: equals
+                            value: 0
+                          - fact: spell.l1.divineSmite.alwaysPrepared
+                            operator: notEquals
+                            value: 1
+                      # Retire the effect once always-prepared takes over (the
+                      # grant then sustains the prepared fact each evaluation).
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: spell.l1.divineSmite.removing
+                            operator: equals
+                            value: 0
+                          - fact: spell.l1.divineSmite.alwaysPrepared
+                            operator: notEquals
+                            value: 1
+
+      # Offer to unprepare Divine Smite
+      # (illegal when granted always-prepared by a feature, e.g. Paladin L2)
+      - id: unprepare-divine-smite-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: spell.l1.divineSmite.prepared
+                  operator: equals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-divine-smite.unprepare-divine-smite-offer.not_prepared
+                    severity: error
+              - condition:
+                  fact: spell.l1.divineSmite.alwaysPrepared
+                  operator: notEquals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-divine-smite.unprepare-divine-smite-offer.always_prepared
+                    severity: error
+            rule:
+              id: unprepare-divine-smite
+              ui:
+                section: configuration
+                name: rule.spell-divine-smite.unprepare-divine-smite-offer.name
+                intents: { PREPARE: L1 }
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: spell.l1.divineSmite.prepared
+                  source:
+                    number: 0
+                - type: numberSet
+                  target:
+                    fact: spell.l1.divineSmite.removing
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.prepared.count
+                  source:
+                    number: 1
+                  subtract: true
+                - type: advertiseEffect
+                  rule:
+                    id: effect-divine-smite-removing
+                    ui:
+                      name: rule.spell-divine-smite.effect-divine-smite-removing.name
+                      hidden: true
+                    phase: early
+                    group:
+                      - spell-l1-divine-smite-removal-set
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: spell.l1.divineSmite.removing
+                        source:
+                          number: 1
+
       # Compute eligible smite slot count (levels 1-5)
       - id: compute-smite-eligible-slots
         phase: normal
@@ -130,47 +296,132 @@ ruleGroups:
                 operator: greaterThan
                 value: 0
 
-      # Offer Divine Smite (bonus action, gated on attack action taken)
+      # Combine the free once-per-long-rest use with spell slots.
+      # The free use is offered as slot "level 0" (2d8, no slot expended).
+      - id: compute-smite-resources
+        phase: normal
+        after:
+          - group: smite-slots-computed
+          # Needs spellcasting.maxSlotLevel settled before copying the cap
+          - group: spellcasting-computed
+        group:
+          - smite-resources-computed
+        activities:
+          # Total castable resources = eligible slots + free uses
+          - type: numberSum
+            target:
+              fact: smite.anyResourceRemaining
+            sources:
+              - fact: smite.eligibleSlotsRemaining
+              - fact: paladinSmite.remaining
+          # Default slider position: lowest slot, unless a free use is available
+          - type: numberCopy
+            source:
+              fact: smite.lowestAvailableSlotLevel
+            target:
+              fact: smite.defaultLevel
+          # Minimum slider position: 1, unless the character owns the free-use
+          # feature (paladinSmite.total > 0). Keyed on total — not remaining — so
+          # the "Free Use" (level 0) notch stays on the slider even once spent;
+          # picking it then warns (no_free_use) and it is not the default.
+          - type: numberSet
+            target:
+              fact: smite.minSlotLevel
+            source:
+              number: 1
+          - type: numberSet
+            target:
+              fact: smite.minSlotLevel
+            source:
+              number: 0
+            when:
+              - fact: paladinSmite.total
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target:
+              fact: smite.defaultLevel
+            source:
+              number: 0
+            when:
+              - fact: paladinSmite.remaining
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target:
+              fact: smite.defaultDieCount
+            source:
+              number: 2
+            when:
+              - fact: paladinSmite.remaining
+                operator: greaterThan
+                value: 0
+          # Cap the slider at the highest slot level this spell actually handles
+          # (1-5). spellcasting.maxSlotLevel can be 6-9 for a multiclass full
+          # caster, but the cast activities only consume/validate levels 1-5.
+          - type: numberCopy
+            source:
+              fact: spellcasting.maxSlotLevel
+            target:
+              fact: smite.maxCastLevel
+          - type: numberSet
+            target:
+              fact: smite.maxCastLevel
+            source:
+              number: 5
+            when:
+              - fact: spellcasting.maxSlotLevel
+                operator: greaterThan
+                value: 5
+
+      # Offer Divine Smite (bonus action, gated on preparation + attack action)
       - id: offer-divine-smite
+        when:
+          - fact: spell.l1.divineSmite.prepared
+            operator: equals
+            value: 1
         after:
           - group: __planned__
           - group: spellcasting
-          - group: smite-slots-computed
+          - group: smite-resources-computed
         activities:
           - type: offerRule
             legalWhen:
               - condition: *has-bonus-action
                 illegalDiagnostics:
-                  - code: rule.class-paladin-divine-smite.offer-divine-smite.no_bonus_action
+                  - code: rule.spell-divine-smite.offer-divine-smite.no_bonus_action
                     severity: error
               - condition: *has-attack-action
                 illegalDiagnostics:
-                  - code: rule.class-paladin-divine-smite.offer-divine-smite.no_attack
+                  - code: rule.spell-divine-smite.offer-divine-smite.no_attack
                     severity: error
-              - condition: &ds-has-smite-slots
-                  fact: smite.eligibleSlotsRemaining
+              - condition: &ds-has-resource
+                  fact: smite.anyResourceRemaining
                   operator: greaterThan
                   value: 0
                 illegalDiagnostics:
-                  - code: rule.class-paladin-divine-smite.offer-divine-smite.no_slots
+                  - code: rule.spell-divine-smite.offer-divine-smite.no_resource
                     severity: error
               - condition: *has-spellcasting
                 illegalDiagnostics:
-                  - code: rule.class-paladin-divine-smite.offer-divine-smite.no_spellcasting
+                  - code: rule.spell-divine-smite.offer-divine-smite.no_spellcasting
                     severity: error
             rule:
-              id: divine-smite
+              id: cast-divine-smite
               group:
                 - __planned__
                 - spellcasting
               ui:
-                section: bonus-action-other
-                name: rule.class-paladin-divine-smite.divine-smite.name
+                section: bonus-action-spell
+                name: rule.spell-divine-smite.offer-divine-smite.name
+                detailKey: spell/divine-smite
+                dieSides: 8
                 primaryControl:
                   type: slider
                   var: slotLevel
-                  min: { number: 1 }
-                  max: { number: 5 }
+                  min: { fact: smite.minSlotLevel }
+                  max: { fact: smite.maxCastLevel }
+                  valueFormat: spellLevel
                 intents:
                   ATTACK: spells
                 actionCost: [bonus]
@@ -178,7 +429,7 @@ ruleGroups:
                 slotLevel:
                   capture: true
                   default:
-                    fact: smite.lowestAvailableSlotLevel
+                    fact: smite.defaultLevel
                 dieCount:
                   capture: true
                   default:
@@ -191,7 +442,7 @@ ruleGroups:
                   source:
                     number: 1
                   subtract: true
-                # Consume spellcasting resource
+                # Consume spellcasting resource (casting a spell)
                 - type: numberIncrement
                   target:
                     fact: spellcasting.remaining
@@ -204,7 +455,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.class-paladin-divine-smite.offer-divine-smite.no_bonus_action
+                    string: rule.spell-divine-smite.offer-divine-smite.no_bonus_action
                   when:
                     - fact: bonusActions.remaining
                       operator: lessThan
@@ -213,7 +464,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.class-paladin-divine-smite.offer-divine-smite.no_spellcasting
+                    string: rule.spell-divine-smite.offer-divine-smite.no_spellcasting
                   when:
                     - fact: spellcasting.remaining
                       operator: lessThan
@@ -222,17 +473,62 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.class-paladin-divine-smite.offer-divine-smite.no_attack
+                    string: rule.spell-divine-smite.offer-divine-smite.no_attack
                   when:
                     - fact: attack.last.activation.action
                       operator: lessThan
                       value: 1
-                # Bridge var to fact for conditional slot consumption
+                # Bridge var to fact for conditional consumption
                 - type: numberSet
                   target:
                     fact: smite.selectedLevel
                   source:
                     var: slotLevel
+                # Free use (level 0): consume the once-per-long-rest use, no slot.
+                # Decrement (rather than set 0) so an over-use goes negative and
+                # is caught by the no_free_use error below.
+                - type: numberIncrement
+                  target:
+                    fact: paladinSmite.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    - fact: smite.selectedLevel
+                      operator: equals
+                      value: 0
+                # Persist the spent free use across turns (until a long rest)
+                - type: advertiseEffect
+                  rule:
+                    id: effect-divine-smite-free
+                    ui:
+                      name: rule.spell-divine-smite.effect-divine-smite-free.name
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: paladin-smite-set
+                    group:
+                      - paladin-smite-effect
+                    when:
+                      - fact: rest.long
+                        operator: equals
+                        value: 0
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: paladinSmite.remaining
+                        source:
+                          number: 0
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
+                  when:
+                    - fact: smite.selectedLevel
+                      operator: equals
+                      value: 0
                 # Consume L1 slot
                 - type: numberIncrement
                   target:
@@ -288,12 +584,21 @@ ruleGroups:
                     - fact: smite.selectedLevel
                       operator: equals
                       value: 5
-                # Track slot consumption errors
+                # Track resource consumption errors (specific per resource)
                 - type: setAdd
                   target:
                     var: errors
                   source:
-                    string: rule.class-paladin-divine-smite.offer-divine-smite.no_slots
+                    string: rule.spell-divine-smite.offer-divine-smite.no_free_use
+                  when:
+                    - fact: paladinSmite.remaining
+                      operator: lessThan
+                      value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-divine-smite.offer-divine-smite.no_l1_slots
                   when:
                     - fact: spellcasting.slots.level1.remaining
                       operator: lessThan
@@ -302,7 +607,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.class-paladin-divine-smite.offer-divine-smite.no_slots
+                    string: rule.spell-divine-smite.offer-divine-smite.no_l2_slots
                   when:
                     - fact: spellcasting.slots.level2.remaining
                       operator: lessThan
@@ -311,7 +616,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.class-paladin-divine-smite.offer-divine-smite.no_slots
+                    string: rule.spell-divine-smite.offer-divine-smite.no_l3_slots
                   when:
                     - fact: spellcasting.slots.level3.remaining
                       operator: lessThan
@@ -320,7 +625,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.class-paladin-divine-smite.offer-divine-smite.no_slots
+                    string: rule.spell-divine-smite.offer-divine-smite.no_l4_slots
                   when:
                     - fact: spellcasting.slots.level4.remaining
                       operator: lessThan
@@ -329,7 +634,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.class-paladin-divine-smite.offer-divine-smite.no_slots
+                    string: rule.spell-divine-smite.offer-divine-smite.no_l5_slots
                   when:
                     - fact: spellcasting.slots.level5.remaining
                       operator: lessThan
@@ -337,7 +642,7 @@ ruleGroups:
                 # Persist L1 slot consumption across turns
                 - type: advertiseEffect
                   rule:
-                    id: effect-smite-l1
+                    id: effect-divine-smite-slot-l1
                     ui:
                       name: play.slotEffect.l1
                       hidden: true
@@ -366,7 +671,7 @@ ruleGroups:
                 # Persist L2 slot consumption across turns
                 - type: advertiseEffect
                   rule:
-                    id: effect-smite-l2
+                    id: effect-divine-smite-slot-l2
                     ui:
                       name: play.slotEffect.l2
                       hidden: true
@@ -395,7 +700,7 @@ ruleGroups:
                 # Persist L3 slot consumption across turns
                 - type: advertiseEffect
                   rule:
-                    id: effect-smite-l3
+                    id: effect-divine-smite-slot-l3
                     ui:
                       name: play.slotEffect.l3
                       hidden: true
@@ -424,7 +729,7 @@ ruleGroups:
                 # Persist L4 slot consumption across turns
                 - type: advertiseEffect
                   rule:
-                    id: effect-smite-l4
+                    id: effect-divine-smite-slot-l4
                     ui:
                       name: play.slotEffect.l4
                       hidden: true
@@ -453,7 +758,7 @@ ruleGroups:
                 # Persist L5 slot consumption across turns
                 - type: advertiseEffect
                   rule:
-                    id: effect-smite-l5
+                    id: effect-divine-smite-slot-l5
                     ui:
                       name: play.slotEffect.l5
                       hidden: true
@@ -482,16 +787,20 @@ ruleGroups:
 
       # Annotate melee/unarmed attacks when Divine Smite is available
       - id: annotate-divine-smite
+        when:
+          - fact: spell.l1.divineSmite.prepared
+            operator: equals
+            value: 1
         after:
           - group: __planned__
           - group: spellcasting
-          - group: smite-slots-computed
+          - group: smite-resources-computed
         activities:
           - type: annotate
             when:
               - *has-bonus-action
               - *has-attack-action
-              - *ds-has-smite-slots
+              - *ds-has-resource
               - *has-spellcasting
-            key: rule.class-paladin-divine-smite.annotation
+            key: rule.spell-divine-smite.annotation
             targets: [attack.melee, attack.unarmed]

@@ -1,22 +1,46 @@
 # yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: class-paladin-paladin-smite
+    # Granted by taking Paladin level 2 (class-paladin-level2 requires this group).
+    # Depend only on the Divine Smite spell — depending back on level 2 would
+    # create a requires cycle that blocks removal of either in Manage Rules.
     requires:
-      - class-paladin-divine-smite
+      - spell-divine-smite
     translations:
       en:
-        name: Paladin Smite
+        name: Paladin's Smite
         description: >-
-          You can use Divine Smite once per Long Rest without expending a spell
-          slot. Deals 2d8 radiant damage.
-        keywords: [paladin, smite, radiant, damage, bonus action, free]
+          You always have the Divine Smite spell prepared (it does not count
+          against your prepared-spell limit), and you can cast it once per Long
+          Rest without expending a spell slot.
+        keywords: [paladin, smite, radiant, damage, bonus action, free, prepared]
       en-x-tlh:
         name: DIch Qaw'
         description: >-
-          DIch Qaw' wa' DIch Long Rest DIvI' DIvI' DIvI'.
+          reH quv Qaw' mugh SoH; wa' Long Rest mugh laH lo'Ha' DIvI' laH.
         keywords: [paladin, Qaw', DIch]
     rules:
-      # Set total uses and initialize remaining
+      # Divine Smite is always prepared for a Paladin from level 2.
+      # This grant does NOT consume a prepared-spell slot
+      # (spellcasting.prepared.count is untouched) and the alwaysPrepared flag
+      # blocks the Unprepare offer in spells/divine-smite.yaml.
+      - id: paladin-smite-always-prepared
+        phase: early
+        group:
+          - always-prepared-set
+        activities:
+          - type: numberSet
+            target:
+              fact: spell.l1.divineSmite.prepared
+            source:
+              number: 1
+          - type: numberSet
+            target:
+              fact: spell.l1.divineSmite.alwaysPrepared
+            source:
+              number: 1
+
+      # Set total free uses and initialize remaining
       - id: paladin-smite-set-total
         phase: early
         group:
@@ -66,115 +90,3 @@ ruleGroups:
               fact: paladinSmite.total
             target:
               fact: paladinSmite.remaining
-
-      # Offer Paladin Smite (bonus action, gated on attack action taken)
-      - id: offer-paladin-smite
-        after:
-          - group: __planned__
-          - group: paladin-smite-set
-        activities:
-          - type: offerRule
-            legalWhen:
-              - condition: *has-bonus-action
-                illegalDiagnostics:
-                  - code: rule.class-paladin-paladin-smite.offer-paladin-smite.no_bonus_action
-                    severity: error
-              - condition: *has-attack-action
-                illegalDiagnostics:
-                  - code: rule.class-paladin-paladin-smite.offer-paladin-smite.no_attack
-                    severity: error
-              - condition: &ps-has-paladin-smite-remaining
-                  fact: paladinSmite.remaining
-                  operator: greaterThan
-                  value: 0
-                illegalDiagnostics:
-                  - code: rule.class-paladin-paladin-smite.offer-paladin-smite.already_used
-                    severity: error
-            rule:
-              id: paladin-smite
-              group:
-                - __planned__
-              ui:
-                section: bonus-action-other
-                name: rule.class-paladin-paladin-smite.paladin-smite.name
-                intents:
-                  ATTACK: spells
-                actionCost: [bonus]
-              vars:
-                dieCount:
-                  capture: true
-                  default:
-                    number: 2
-              activities:
-                # Consume bonus action
-                - type: numberIncrement
-                  target:
-                    fact: bonusActions.remaining
-                  source:
-                    number: 1
-                  subtract: true
-                # Error tracking
-                - *error-clear
-                - type: setAdd
-                  target:
-                    var: errors
-                  source:
-                    string: rule.class-paladin-paladin-smite.offer-paladin-smite.no_bonus_action
-                  when:
-                    - fact: bonusActions.remaining
-                      operator: lessThan
-                      value: 0
-                - type: setAdd
-                  target:
-                    var: errors
-                  source:
-                    string: rule.class-paladin-paladin-smite.offer-paladin-smite.no_attack
-                  when:
-                    - fact: attack.last.activation.action
-                      operator: lessThan
-                      value: 1
-                # Set paladinSmite.remaining to 0
-                - type: numberSet
-                  target:
-                    fact: paladinSmite.remaining
-                  source:
-                    number: 0
-                # Persist consumption across turns
-                - type: advertiseEffect
-                  rule:
-                    id: effect-paladin-smite
-                    ui:
-                      name: rule.class-paladin-paladin-smite.effect-paladin-smite.name
-                    phase: early
-                    group:
-                      - paladin-smite-effect
-                    when:
-                      - fact: rest.long
-                        operator: equals
-                        value: 0
-                    activities:
-                      - type: numberSet
-                        target:
-                          fact: paladinSmite.remaining
-                        source:
-                          number: 0
-                      - type: advertiseEffect
-                        self: true
-                        when:
-                          - fact: rest.long
-                            operator: equals
-                            value: 0
-
-      # Annotate melee/unarmed attacks when Paladin Smite is available
-      - id: annotate-paladin-smite
-        after:
-          - group: __planned__
-          - group: paladin-smite-set
-        activities:
-          - type: annotate
-            when:
-              - *has-bonus-action
-              - *has-attack-action
-              - *ps-has-paladin-smite-remaining
-            key: rule.class-paladin-paladin-smite.annotation
-            targets: [attack.melee, attack.unarmed]

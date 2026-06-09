@@ -381,6 +381,7 @@ ruleGroups:
                   var: slotLevel
                   min: { number: 2 }
                   max: { fact: find-steed.highestSlotLevel }
+                  valueFormat: spellLevel
               vars:
                 slotLevel:
                   capture: true
