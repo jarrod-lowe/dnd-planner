@@ -354,6 +354,23 @@ ruleGroups:
               - fact: paladinSmite.remaining
                 operator: greaterThan
                 value: 0
+          # Cap the slider at the highest slot level this spell actually handles
+          # (1-5). spellcasting.maxSlotLevel can be 6-9 for a multiclass full
+          # caster, but the cast activities only consume/validate levels 1-5.
+          - type: numberCopy
+            source:
+              fact: spellcasting.maxSlotLevel
+            target:
+              fact: smite.maxCastLevel
+          - type: numberSet
+            target:
+              fact: smite.maxCastLevel
+            source:
+              number: 5
+            when:
+              - fact: spellcasting.maxSlotLevel
+                operator: greaterThan
+                value: 5
 
       # Offer Divine Smite (bonus action, gated on preparation + attack action)
       - id: offer-divine-smite
@@ -401,7 +418,7 @@ ruleGroups:
                   type: slider
                   var: slotLevel
                   min: { fact: smite.minSlotLevel }
-                  max: { fact: spellcasting.maxSlotLevel }
+                  max: { fact: smite.maxCastLevel }
                   valueFormat: spellLevel
                 intents:
                   ATTACK: spells

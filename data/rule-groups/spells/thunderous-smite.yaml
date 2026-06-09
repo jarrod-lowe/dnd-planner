@@ -277,6 +277,22 @@ ruleGroups:
               - fact: spellcasting.slots.level1.remaining
                 operator: greaterThan
                 value: 0
+          # Cap the slider at the highest slot level this spell actually handles
+          # (1-5); spellcasting.maxSlotLevel can be 6-9 for a multiclass caster.
+          - type: numberCopy
+            source:
+              fact: spellcasting.maxSlotLevel
+            target:
+              fact: tsmite.maxCastLevel
+          - type: numberSet
+            target:
+              fact: tsmite.maxCastLevel
+            source:
+              number: 5
+            when:
+              - fact: spellcasting.maxSlotLevel
+                operator: greaterThan
+                value: 5
 
       # Offer Thunderous Smite (bonus action, gated on attack action taken)
       - id: offer-thunderous-smite
@@ -326,7 +342,7 @@ ruleGroups:
                   type: slider
                   var: slotLevel
                   min: { number: 1 }
-                  max: { fact: spellcasting.maxSlotLevel }
+                  max: { fact: tsmite.maxCastLevel }
                   valueFormat: spellLevel
                 information:
                   - type: text
