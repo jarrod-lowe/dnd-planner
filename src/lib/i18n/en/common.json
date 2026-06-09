@@ -1208,7 +1208,12 @@
       "range": "Range",
       "components": "Components",
       "duration": "Duration",
-      "source": "Source"
+      "source": "Source",
+      "armorClass": "Armor Class",
+      "strength": "Strength",
+      "stealth": "Stealth",
+      "weight": "Weight",
+      "donDoff": "Don / Doff"
     },
     "mode": "Rules",
     "return": {

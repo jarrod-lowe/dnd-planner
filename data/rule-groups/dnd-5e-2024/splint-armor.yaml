@@ -12,6 +12,29 @@ ruleGroups:
         name: DIch Sep
         description: DIch Sep naQ, DIvI' 17, Do DIvI' pagh, HoS 15 DIron pagh Do 10 DIvI'
         keywords: [DIch, Sep, Jun]
+    detail:
+      key: equipment/splint-armor
+      source: srd52
+      translations:
+        en:
+          meta: 'Heavy Armor'
+          fields:
+            - { labelKey: rules.field.armorClass, value: '17' }
+            - { labelKey: rules.field.strength, value: 'Str 15' }
+            - { labelKey: rules.field.stealth, value: 'Disadvantage' }
+            - { labelKey: rules.field.weight, value: '60 lb.' }
+            - { labelKey: rules.field.donDoff, value: '10 minutes to don, 5 minutes to doff' }
+          body: |
+            Splint Armor is Heavy Armor: your Armor Class is 17, regardless of
+            your Dexterity modifier.
+
+            If the armor's Strength requirement (Strength 15) exceeds your
+            Strength score, your Speed is reduced by 10 feet. You have
+            Disadvantage on Dexterity (Stealth) checks while wearing it.
+
+            If you lack training with Heavy armor, you have Disadvantage on any
+            D20 Test that involves Strength or Dexterity, and you can't cast
+            spells. You can wear only one suit of armor at a time.
     rules:
       # Offer to don splint armor
       - id: don-splint-armor-offer
@@ -39,6 +62,7 @@ ruleGroups:
               ui:
                 section: equip
                 name: rule.dnd-5e-2024.splint-armor.don-splint-armor.name
+                detailKey: equipment/splint-armor
                 intents: { EQUIP: armor }
                 actionCost: [move]
               activities:
@@ -160,6 +184,7 @@ ruleGroups:
                       - ac-components
                     ui:
                       name: rule.dnd-5e-2024.splint-armor.effect-splint-armor.name
+                      detailKey: equipment/splint-armor
                     activities:
                       # AC: set base to 17, zero Dex bonus
                       - type: numberSet

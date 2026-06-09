@@ -12,6 +12,25 @@ ruleGroups:
         name: DIch Jun
         description: DIch Jun nob DIvI'
         keywords: [DIch, Jun]
+    detail:
+      key: equipment/leather-armor
+      source: srd52
+      translations:
+        en:
+          meta: 'Light Armor'
+          fields:
+            - { labelKey: rules.field.armorClass, value: '11 + Dex modifier' }
+            - { labelKey: rules.field.stealth, value: 'Normal' }
+            - { labelKey: rules.field.weight, value: '10 lb.' }
+            - { labelKey: rules.field.donDoff, value: '1 minute to don or doff' }
+          body: |
+            Leather Armor is Light Armor: your base Armor Class equals 11 plus
+            your Dexterity modifier.
+
+            If you wear Light, Medium, or Heavy armor and lack training with it,
+            you have Disadvantage on any D20 Test that involves Strength or
+            Dexterity, and you can't cast spells. You can wear only one suit of
+            armor at a time.
     rules:
       # Offer to don leather armor
       - id: don-leather-armor-offer
@@ -38,6 +57,7 @@ ruleGroups:
               ui:
                 section: equip
                 name: rule.dnd-5e-2024.leather-armor.don-leather-armor.name
+                detailKey: equipment/leather-armor
                 intents: { EQUIP: armor }
                 actionCost: []
               activities:
@@ -143,6 +163,7 @@ ruleGroups:
                       - ac-components
                     ui:
                       name: rule.dnd-5e-2024.leather-armor.effect-leather-armor.name
+                      detailKey: equipment/leather-armor
                     activities:
                       - type: numberSet
                         target:

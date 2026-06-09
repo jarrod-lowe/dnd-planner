@@ -1208,7 +1208,12 @@
       "range": "chuS",
       "components": "DIch",
       "duration": "DIvI' poH",
-      "source": "chu'"
+      "source": "chu'",
+      "armorClass": "Jun DIch",
+      "strength": "HoS",
+      "stealth": "So'",
+      "weight": "'ugh",
+      "donDoff": "tuQ / tuQHa'"
     },
     "mode": "Chut",
     "return": {
