@@ -1,8 +1,8 @@
 name: 'Find Steed - Free Cast per Long Rest'
 description: >-
   Paladin L5 Faithful Steed feature grants one free Find Steed cast per Long
-  Rest. The cast offer is available even with no L2+ slots, and consuming the
-  free use decrements the resource without touching spell slots.
+  Rest. The slider shows a "Free Use" notch at level 0 alongside L2-L5 slots.
+  Selecting level 0 consumes the free use without touching any spell slot.
 ruleGroups:
   - species-human/species-human
   - dnd-5e-2024/action-economy
@@ -30,10 +30,12 @@ steps:
           spell.l2.findSteed.alwaysPrepared: 1
           # Free use + L2 slots = at least 3 resources
           find-steed.anyResourceRemaining: 3
+          # Default should be free use (0) when available
+          find-steed.defaultLevel: 0
         offers:
           exists:
             - cast-find-steed
-  # Consume the free cast (slotLevel 0 = free use, no slot)
+  # Consume the free cast (level 0 = free use, no slot)
   - addOffer:
       id: cast-find-steed
       selections:

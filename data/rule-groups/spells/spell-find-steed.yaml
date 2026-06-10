@@ -345,7 +345,6 @@ ruleGroups:
                 value: 0
 
       # Combine the free once-per-long-rest use with spell slots.
-      # The free use is offered as slot "level 0" (no slot expended).
       - id: compute-find-steed-resources
         phase: normal
         after:
@@ -367,25 +366,6 @@ ruleGroups:
               fact: find-steed.lowestAvailableSlotLevel
             target:
               fact: find-steed.defaultLevel
-          # Minimum slider position: 2, unless the character owns the free-use
-          # feature (paladinFindSteed.total > 0). Keyed on total — not
-          # remaining — so the "Free Use" (level 0) notch stays on the slider
-          # even once spent; picking it then warns (no_free_use) and it is not
-          # the default.
-          - type: numberSet
-            target:
-              fact: find-steed.minSlotLevel
-            source:
-              number: 2
-          - type: numberSet
-            target:
-              fact: find-steed.minSlotLevel
-            source:
-              number: 0
-            when:
-              - fact: paladinFindSteed.total
-                operator: greaterThan
-                value: 0
           - type: numberSet
             target:
               fact: find-steed.defaultLevel
@@ -454,8 +434,17 @@ ruleGroups:
                 primaryControl:
                   type: slider
                   var: slotLevel
-                  min: { fact: find-steed.minSlotLevel }
-                  max: { fact: find-steed.highestSlotLevel }
+                  notches:
+                    - value: 0
+                      enabled: { fact: paladinFindSteed.total }
+                    - value: 2
+                      enabled: { fact: spellcasting.slots.level2.total }
+                    - value: 3
+                      enabled: { fact: spellcasting.slots.level3.total }
+                    - value: 4
+                      enabled: { fact: spellcasting.slots.level4.total }
+                    - value: 5
+                      enabled: { fact: spellcasting.slots.level5.total }
                   valueFormat: spellLevel
               vars:
                 slotLevel:
@@ -638,16 +627,6 @@ ruleGroups:
                     - fact: spellcasting.slots.level5.remaining
                       operator: lessThan
                       value: 0
-                # No eligible slot was resolved (selectedLevel < 2 means no L2+ slot available)
-                - type: setAdd
-                  target:
-                    var: errors
-                  source:
-                    string: rule.spell-find-steed.offer-find-steed.no_slots
-                  when:
-                    - fact: find-steed.selectedLevel
-                      operator: lessThan
-                      value: 2
 
                 # === Steed facts for same-turn use ===
                 - type: numberSet
