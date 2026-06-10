@@ -1014,7 +1014,7 @@
         },
         "use-hi": {
           "name": "Use Heroic Inspiration",
-          "description": "Spend Heroic Inspiration to reroll a d20"
+          "description": "Spend Heroic Inspiration to reroll any die"
         },
         "use-hi-offer": {
           "no_inspiration": "No Heroic Inspiration available"
