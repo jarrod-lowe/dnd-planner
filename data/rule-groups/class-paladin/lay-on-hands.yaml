@@ -90,6 +90,7 @@ ruleGroups:
               ui:
                 section: bonus-action-other
                 name: rule.class-paladin-lay-on-hands.loh-heal.name
+                description: rule.class-paladin-lay-on-hands.loh-heal.description
                 detailKey: class-feature/lay-on-hands
                 sliderMin: 1
                 primaryControl:
@@ -208,6 +209,7 @@ ruleGroups:
               ui:
                 section: bonus-action-other
                 name: rule.class-paladin-lay-on-hands.loh-purify-poison.name
+                description: rule.class-paladin-lay-on-hands.loh-purify-poison.description
                 detailKey: class-feature/lay-on-hands
                 intents:
                   AID: self

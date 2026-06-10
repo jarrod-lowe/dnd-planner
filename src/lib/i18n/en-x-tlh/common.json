@@ -3,6 +3,7 @@
     "spell-command": {
       "offer-command": {
         "name": "ra'",
+        "description": "60ft | WIS ra' | wa' mu' ra' lob",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
         "no_slots": "mugh laH tu'lu'be'"
@@ -26,6 +27,7 @@
     "spell-sanctuary": {
       "offer-sanctuary": {
         "name": "chal",
+        "description": "30ft | WIS ra' | jagh HIvlaHbe' | 10 rep",
         "no_bonus_action": "Quv DIvI' tu'lu'be'",
         "no_slots": "mugh laH tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'"
@@ -52,6 +54,7 @@
     "spell-find-steed": {
       "offer-find-steed": {
         "name": "Sargh Sam",
+        "description": "Sargh DIch yISam",
         "no_action": "DIvI' tu'lu'be'",
         "no_slots": "mugh laH tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
@@ -145,6 +148,7 @@
     "spell-sleep": {
       "offer-sleep": {
         "name": "Qong",
+        "description": "60ft | WIS ra' pagh roj; cha'logh luj: Qong | 10 rep",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
         "already_concentrating": "buQ DIvI'",
@@ -173,6 +177,7 @@
       "annotation": "raQ muHta chen",
       "offer-thunderous-smite": {
         "name": "raQ muHta",
+        "description": "nuH DIch tlhej | +2d6 thunder | STR ra' pagh puv 10ft 'ej DoH",
         "no_bonus_action": "Quv DIvI' tu'lu'be'",
         "no_attack": "DIch nuH DIvI' tu'lu'be'",
         "no_slots": "mugh laH tu'lu'be'",
@@ -198,6 +203,7 @@
       "annotation": "quv Qaw' chen",
       "offer-divine-smite": {
         "name": "quv Qaw'",
+        "description": "nuH DIch tlhej | +2d8 radiant (+1d8 DIvI' Hoch)",
         "no_bonus_action": "Quv DIvI' tu'lu'be'",
         "no_attack": "DIch nuH DIvI' tu'lu'be'",
         "no_resource": "mugh laH free je tu'lu'be'",
@@ -232,6 +238,7 @@
     "spell-protection-from-evil-and-good": {
       "offer-protection-from-evil-and-good": {
         "name": "mIgh Do' Ha'DIbaH je",
+        "description": "Hot | 10 tup | mIgh Do' Ha'DIbaH je DIvI'",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
         "already_concentrating": "buQ DIvI'",
@@ -259,6 +266,7 @@
     "spell-bless": {
       "offer-bless": {
         "name": "DIch",
+        "description": "30ft | 10 rep | DIvI' +1d4 DIvI' DIvI'",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
         "already_concentrating": "buQ DIvI'",
@@ -286,6 +294,7 @@
     "spell-divine-favour": {
       "offer-divine-favour": {
         "name": "quv",
+        "description": "10 rep | nuH +1d4 radiant",
         "already_active": "quv DIvI'",
         "no_bonus_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
@@ -320,7 +329,8 @@
     },
     "spell-create-and-destroy-water": {
       "cast-create-and-destroy-water": {
-        "name": "bIQ chenmoH 'ej HochHom"
+        "name": "bIQ chenmoH 'ej HochHom",
+        "description": "10 gal bIQ chenmoH pagh Qaw'"
       },
       "offer-create-and-destroy-water": {
         "no_action": "DIvI' tu'lu'be'",
@@ -345,14 +355,16 @@
     },
     "class-paladin-lay-on-hands": {
       "loh-heal": {
-        "name": "DIch (ghop Du)"
+        "name": "DIch (ghop Du)",
+        "description": "Hot | yoH HP chenmoH"
       },
       "offer-loh-heal": {
         "no_bonus_action": "DIvI' latlh tu'lu'be'",
         "pool_empty": "ghop Du chenmoH tu'lu'be'"
       },
       "loh-purify-poison": {
-        "name": "DIvI' ghop Du"
+        "name": "DIvI' ghop Du",
+        "description": "Hot | 5 DIvI' | tar Qaw'"
       },
       "offer-loh-purify-poison": {
         "no_bonus_action": "DIvI' latlh tu'lu'be'",
@@ -378,7 +390,7 @@
     "class-paladin-oath-redemption-level3": {
       "rebuke-the-violent": {
         "name": "qIpDIch",
-        "description": "DIvI' cha' | 30ft | wIS DIvI' — DIch: DIch qIp, DIch: puS qIp"
+        "description": "30ft | wIS DIvI' — DIch: DIch qIp, DIch: puS qIp"
       },
       "offer-rebuke-the-violent": {
         "no_reaction": "DIvI' cha' tu'lu'be'",
@@ -777,7 +789,8 @@
       },
       "dash": {
         "dash-action": {
-          "name": "Do naQ"
+          "name": "Do naQ",
+          "description": "Do' DIvI' chel"
         },
         "action-dash-offer": {
           "no_action": "DIvI' tu'lu'be'"
@@ -785,49 +798,57 @@
       },
       "simple-actions": {
         "disengage-action": {
-          "name": "DIvI' DIch"
+          "name": "DIvI' DIch",
+          "description": "DoH 'ej HIv chaw'be'"
         },
         "action-disengage-offer": {
           "no_action": "DIvI' tu'lu'be'"
         },
         "dodge-action": {
-          "name": "DIvI' pel"
+          "name": "DIvI' pel",
+          "description": "SoH HIv DIvI' DIvI'"
         },
         "action-dodge-offer": {
           "no_action": "DIvI' tu'lu'be'"
         },
         "improvise-action": {
-          "name": "DIvI' chu'"
+          "name": "DIvI' chu'",
+          "description": "latlh Qu' nID"
         },
         "action-improvise-offer": {
           "no_action": "DIvI' tu'lu'be'"
         },
         "influence-action": {
-          "name": "DIvI' Quv"
+          "name": "DIvI' Quv",
+          "description": "DIvI' Quv, toj, pagh ghIj"
         },
         "action-influence-offer": {
           "no_action": "DIvI' tu'lu'be'"
         },
         "search-action": {
-          "name": "DIvI' nej"
+          "name": "DIvI' nej",
+          "description": "legh, 'Ij, pagh Sam"
         },
         "action-search-offer": {
           "no_action": "DIvI' tu'lu'be'"
         },
         "study-action": {
-          "name": "DIvI' laD"
+          "name": "DIvI' laD",
+          "description": "DIvI' qaw pagh nej"
         },
         "action-study-offer": {
           "no_action": "DIvI' tu'lu'be'"
         },
         "utilize-action": {
-          "name": "DIvI' lo'"
+          "name": "DIvI' lo'",
+          "description": "Doch DIvI' lo'"
         },
         "action-utilize-offer": {
           "no_action": "DIvI' tu'lu'be'"
         },
         "interact-action": {
-          "name": "DIvI' DIch"
+          "name": "DIvI' DIch",
+          "description": "latlh Doch DIvI'"
         },
         "action-interact-offer": {
           "no_action": "DIvI' tu'lu'be'"
@@ -835,7 +856,8 @@
       },
       "grapple": {
         "grapple-action": {
-          "name": "DIvI' qop"
+          "name": "DIvI' qop",
+          "description": "STR/DEX ra' | jagh qop"
         },
         "action-grapple-offer": {
           "no_action": "DIvI' tu'lu'be'"
@@ -843,7 +865,8 @@
       },
       "shove": {
         "shove-action": {
-          "name": "DIvI' puv"
+          "name": "DIvI' puv",
+          "description": "STR/DEX ra' | puv 5ft pagh DoH"
         },
         "action-shove-offer": {
           "no_action": "DIvI' tu'lu'be'"

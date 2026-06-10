@@ -288,6 +288,7 @@ ruleGroups:
               ui:
                 section: action-spell
                 name: rule.spell-command.offer-command.name
+                description: rule.spell-command.offer-command.description
                 detailKey: spell/command
                 showDC: true
                 saveType: WIS

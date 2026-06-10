@@ -31,6 +31,7 @@ ruleGroups:
               ui:
                 section: action-other
                 name: rule.dnd-5e-2024.simple-actions.disengage-action.name
+                description: rule.dnd-5e-2024.simple-actions.disengage-action.description
                 intents: { DEFEND: evade }
                 actionCost: [action]
               group:
@@ -74,6 +75,7 @@ ruleGroups:
               ui:
                 section: action-other
                 name: rule.dnd-5e-2024.simple-actions.dodge-action.name
+                description: rule.dnd-5e-2024.simple-actions.dodge-action.description
                 packBehind: disengage-action
                 intents: { DEFEND: evade }
                 actionCost: [action]
@@ -118,6 +120,7 @@ ruleGroups:
               ui:
                 section: action-other
                 name: rule.dnd-5e-2024.simple-actions.improvise-action.name
+                description: rule.dnd-5e-2024.simple-actions.improvise-action.description
                 packBehind: disengage-action
                 intents: { HANDLE: gear }
                 actionCost: [action]
@@ -162,6 +165,7 @@ ruleGroups:
               ui:
                 section: action-other
                 name: rule.dnd-5e-2024.simple-actions.influence-action.name
+                description: rule.dnd-5e-2024.simple-actions.influence-action.description
                 packBehind: disengage-action
                 intents: { AID: ally }
                 actionCost: [action]
@@ -206,6 +210,7 @@ ruleGroups:
               ui:
                 section: action-other
                 name: rule.dnd-5e-2024.simple-actions.search-action.name
+                description: rule.dnd-5e-2024.simple-actions.search-action.description
                 packBehind: disengage-action
                 intents: { INSPECT: sense }
                 actionCost: [action]
@@ -250,6 +255,7 @@ ruleGroups:
               ui:
                 section: action-other
                 name: rule.dnd-5e-2024.simple-actions.study-action.name
+                description: rule.dnd-5e-2024.simple-actions.study-action.description
                 packBehind: disengage-action
                 intents: { INSPECT: check }
                 actionCost: [action]
@@ -294,6 +300,7 @@ ruleGroups:
               ui:
                 section: action-other
                 name: rule.dnd-5e-2024.simple-actions.utilize-action.name
+                description: rule.dnd-5e-2024.simple-actions.utilize-action.description
                 packBehind: disengage-action
                 intents: { HANDLE: gear }
                 actionCost: [action]
@@ -338,6 +345,7 @@ ruleGroups:
               ui:
                 section: action-other
                 name: rule.dnd-5e-2024.simple-actions.interact-action.name
+                description: rule.dnd-5e-2024.simple-actions.interact-action.description
                 packBehind: disengage-action
                 intents: { HANDLE: gear }
                 actionCost: [action]

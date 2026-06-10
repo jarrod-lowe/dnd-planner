@@ -295,6 +295,7 @@ ruleGroups:
               ui:
                 section: action-spell
                 name: rule.spell-protection-from-evil-and-good.offer-protection-from-evil-and-good.name
+                description: rule.spell-protection-from-evil-and-good.offer-protection-from-evil-and-good.description
                 detailKey: spell/protection-from-evil-and-good
                 showDC: true
                 information:

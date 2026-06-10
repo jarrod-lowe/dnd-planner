@@ -3,6 +3,7 @@
     "spell-command": {
       "offer-command": {
         "name": "Command",
+        "description": "60ft | WIS save | Target obeys a one-word command",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
         "no_slots": "No spell slots remaining"
@@ -26,6 +27,7 @@
     "spell-sanctuary": {
       "offer-sanctuary": {
         "name": "Sanctuary",
+        "description": "30ft | WIS save | Foes can't attack the warded creature | 10 rnds",
         "no_bonus_action": "No bonus action available",
         "no_slots": "No spell slots remaining",
         "no_spellcasting": "Already cast a spell this turn"
@@ -52,6 +54,7 @@
     "spell-find-steed": {
       "offer-find-steed": {
         "name": "Find Steed",
+        "description": "Summon a loyal otherworldly steed",
         "no_action": "No action available",
         "no_slots": "No L2+ spell slots remaining",
         "no_spellcasting": "Already cast a spell this turn",
@@ -145,6 +148,7 @@
     "spell-sleep": {
       "offer-sleep": {
         "name": "Sleep",
+        "description": "60ft | WIS save or Incapacitated; 2nd fail: Unconscious | 10 rnds",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
         "already_concentrating": "Already concentrating",
@@ -173,6 +177,7 @@
       "annotation": "Thunderous Smite available",
       "offer-thunderous-smite": {
         "name": "Thunderous Smite",
+        "description": "After a melee hit | +2d6 thunder | STR save or pushed 10ft & prone",
         "no_bonus_action": "No bonus action available",
         "no_attack": "You must take the Attack action first",
         "no_slots": "No spell slots remaining",
@@ -198,6 +203,7 @@
       "annotation": "Divine Smite available",
       "offer-divine-smite": {
         "name": "Divine Smite",
+        "description": "After a melee hit | +2d8 radiant (+1d8 per extra slot level)",
         "no_bonus_action": "No bonus action available",
         "no_attack": "You must take the Attack action first",
         "no_resource": "No spell slots or free uses remaining",
@@ -232,6 +238,7 @@
     "spell-protection-from-evil-and-good": {
       "offer-protection-from-evil-and-good": {
         "name": "Protection from Evil and Good",
+        "description": "Touch | 10 min | Warded vs aberrations, fiends, undead & more",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
         "already_concentrating": "Already concentrating",
@@ -259,6 +266,7 @@
     "spell-bless": {
       "offer-bless": {
         "name": "Bless",
+        "description": "30ft | 10 rnds | Allies gain +1d4 to attacks & saves",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
         "already_concentrating": "Already concentrating",
@@ -286,6 +294,7 @@
     "spell-divine-favour": {
       "offer-divine-favour": {
         "name": "Divine Favour",
+        "description": "10 rnds | Weapon hits deal +1d4 radiant",
         "already_active": "Divine Favour is already active",
         "no_bonus_action": "No bonus action available",
         "no_spellcasting": "Already cast a spell this turn",
@@ -320,7 +329,8 @@
     },
     "spell-create-and-destroy-water": {
       "cast-create-and-destroy-water": {
-        "name": "Create and Destroy Water"
+        "name": "Create and Destroy Water",
+        "description": "Create or destroy up to 10 gallons of water"
       },
       "offer-create-and-destroy-water": {
         "no_action": "No action available",
@@ -345,14 +355,16 @@
     },
     "class-paladin-lay-on-hands": {
       "loh-heal": {
-        "name": "Heal (LoH)"
+        "name": "Heal (LoH)",
+        "description": "Touch | Spend pool points to restore HP"
       },
       "offer-loh-heal": {
         "no_bonus_action": "No bonus action available",
         "pool_empty": "Lay on Hands pool is empty"
       },
       "loh-purify-poison": {
-        "name": "Purify Poison (LoH)"
+        "name": "Purify Poison (LoH)",
+        "description": "Touch | Spend 5 points to end the Poisoned condition"
       },
       "offer-loh-purify-poison": {
         "no_bonus_action": "No bonus action available",
@@ -378,7 +390,7 @@
     "class-paladin-oath-redemption-level3": {
       "rebuke-the-violent": {
         "name": "Rebuke the Violent",
-        "description": "Reaction | 30ft | WIS save — Fail: full radiant damage, Success: half damage"
+        "description": "30ft | WIS save — Fail: full radiant damage, Success: half damage"
       },
       "offer-rebuke-the-violent": {
         "no_reaction": "No reaction available",
@@ -777,7 +789,8 @@
       },
       "dash": {
         "dash-action": {
-          "name": "Dash"
+          "name": "Dash",
+          "description": "Gain extra movement equal to your Speed"
         },
         "action-dash-offer": {
           "no_action": "No action available"
@@ -785,49 +798,57 @@
       },
       "simple-actions": {
         "disengage-action": {
-          "name": "Disengage"
+          "name": "Disengage",
+          "description": "Your move doesn't provoke opportunity attacks"
         },
         "action-disengage-offer": {
           "no_action": "No action available"
         },
         "dodge-action": {
-          "name": "Dodge"
+          "name": "Dodge",
+          "description": "Attackers have disadvantage until your next turn"
         },
         "action-dodge-offer": {
           "no_action": "No action available"
         },
         "improvise-action": {
-          "name": "Improvise"
+          "name": "Improvise",
+          "description": "Attempt something not covered by another action"
         },
         "action-improvise-offer": {
           "no_action": "No action available"
         },
         "influence-action": {
-          "name": "Influence"
+          "name": "Influence",
+          "description": "Persuade, deceive, or intimidate a creature"
         },
         "action-influence-offer": {
           "no_action": "No action available"
         },
         "search-action": {
-          "name": "Search"
+          "name": "Search",
+          "description": "Look, listen, or otherwise detect something"
         },
         "action-search-offer": {
           "no_action": "No action available"
         },
         "study-action": {
-          "name": "Study"
+          "name": "Study",
+          "description": "Recall or research lore about a topic"
         },
         "action-study-offer": {
           "no_action": "No action available"
         },
         "utilize-action": {
-          "name": "Utilize"
+          "name": "Utilize",
+          "description": "Use a nonmagical object"
         },
         "action-utilize-offer": {
           "no_action": "No action available"
         },
         "interact-action": {
-          "name": "Interact"
+          "name": "Interact",
+          "description": "Interact with a second object this turn"
         },
         "action-interact-offer": {
           "no_action": "No action available"
@@ -835,7 +856,8 @@
       },
       "grapple": {
         "grapple-action": {
-          "name": "Grapple"
+          "name": "Grapple",
+          "description": "STR or DEX save vs your DC — target Grappled"
         },
         "action-grapple-offer": {
           "no_action": "No action available"
@@ -843,7 +865,8 @@
       },
       "shove": {
         "shove-action": {
-          "name": "Shove"
+          "name": "Shove",
+          "description": "STR or DEX save vs your DC — push 5ft or knock prone"
         },
         "action-shove-offer": {
           "no_action": "No action available"

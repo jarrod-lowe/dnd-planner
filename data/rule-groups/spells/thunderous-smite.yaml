@@ -337,6 +337,7 @@ ruleGroups:
               ui:
                 section: bonus-action-spell
                 name: rule.spell-thunderous-smite.offer-thunderous-smite.name
+                description: rule.spell-thunderous-smite.offer-thunderous-smite.description
                 detailKey: spell/thunderous-smite
                 dieSides: 6
                 showDC: true

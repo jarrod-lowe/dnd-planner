@@ -49,6 +49,7 @@ ruleGroups:
               ui:
                 section: reaction
                 name: rule.class-paladin-oath-redemption-level3.rebuke-the-violent.name
+                description: rule.class-paladin-oath-redemption-level3.rebuke-the-violent.description
                 intents:
                   DEFEND: ward
                 actionCost: [reaction, CD]
@@ -140,9 +141,7 @@ ruleGroups:
               ui:
                 section: bonus-action-other
                 name: rule.class-paladin-oath-redemption-level3.emissary-of-peace.name
-                information:
-                  - type: text
-                    label: rule.class-paladin-oath-redemption-level3.emissary-of-peace.description
+                description: rule.class-paladin-oath-redemption-level3.emissary-of-peace.description
                 intents:
                   AID: self
                 actionCost: [bonus, CD]

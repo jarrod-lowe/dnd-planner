@@ -112,6 +112,7 @@ export type Information = TextInformation | CountdownInformation;
 export interface PanelDescriptor {
   section?: string;
   name?: string;
+  description?: string;
   annotationLabels?: string[];
   primaryControl?: Control;
   secondaryControl?: Control;

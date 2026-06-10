@@ -30,6 +30,7 @@ ruleGroups:
               ui:
                 section: action-other
                 name: rule.dnd-5e-2024.dash.dash-action.name
+                description: rule.dnd-5e-2024.dash.dash-action.description
                 intents: { MOVE: dash }
                 actionCost: [action]
               group:

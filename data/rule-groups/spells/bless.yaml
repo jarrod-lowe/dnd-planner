@@ -282,6 +282,7 @@ ruleGroups:
               ui:
                 section: action-spell
                 name: rule.spell-bless.offer-bless.name
+                description: rule.spell-bless.offer-bless.description
                 detailKey: spell/bless
                 information:
                   - type: text

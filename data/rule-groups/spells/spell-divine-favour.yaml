@@ -212,6 +212,7 @@ ruleGroups:
               ui:
                 section: bonus-action-spell
                 name: rule.spell-divine-favour.offer-divine-favour.name
+                description: rule.spell-divine-favour.offer-divine-favour.description
                 detailKey: spell/divine-favour
                 intents:
                   ATTACK: spells

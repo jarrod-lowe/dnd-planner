@@ -131,10 +131,8 @@ ruleGroups:
               ui:
                 section: bonus-action-other
                 name: rule.class-paladin-divinity.divine-sense.name
+                description: rule.class-paladin-divinity.divine-sense.description
                 detailKey: class-feature/divine-sense
-                information:
-                  - type: text
-                    label: rule.class-paladin-divinity.divine-sense.description
                 intents:
                   INSPECT: sense
                 actionCost: [bonus, CD]
