@@ -64,13 +64,11 @@
       "effect-steed": {
         "name": "Sargh"
       },
-      "offer-steed-dummy-action": {
-        "name": "Sargh HIv",
-        "no_actions": "Sargh DIv DIch"
-      },
-      "offer-steed-dummy-bonus": {
-        "name": "Sargh Quv",
-        "no_bonus_actions": "Sargh Quv DIch"
+      "steed-slam": {
+        "name": "Sargh Qob",
+        "description": "HIv | 5 'uj | 1d8 + DIv level wIb DIch",
+        "no_actions": "Sargh DIv DIch",
+        "no_reaction": "DIch tu'lu'be'"
       },
       "steed-move-walk": {
         "name": "YIt",
