@@ -95,7 +95,7 @@
       },
       "steed-dodge": {
         "name": "Dol",
-        "description": "Sargh HIv DIvI' DIvI'",
+        "description": "Sargh HIv DIvI' DIvI'; Sargh DEX ra' DIvI' DIvI'",
         "no_actions": "Sargh DIv DIch"
       },
       "steed-disengage": {
@@ -824,7 +824,7 @@
         },
         "dodge-action": {
           "name": "DIvI' pel",
-          "description": "SoH HIv DIvI' DIvI'"
+          "description": "SoH HIv DIvI' DIvI'; SoH DEX ra' DIvI' DIvI'"
         },
         "action-dodge-offer": {
           "no_action": "DIvI' tu'lu'be'"

@@ -95,7 +95,7 @@
       },
       "steed-dodge": {
         "name": "Dodge",
-        "description": "Attacks against the steed have disadvantage",
+        "description": "Attackers have disadvantage; steed gains advantage on DEX saves",
         "no_actions": "Steed has no actions remaining"
       },
       "steed-disengage": {
@@ -824,7 +824,7 @@
         },
         "dodge-action": {
           "name": "Dodge",
-          "description": "Attackers have disadvantage until your next turn"
+          "description": "Attackers have disadvantage; you gain advantage on DEX saves"
         },
         "action-dodge-offer": {
           "no_action": "No action available"
