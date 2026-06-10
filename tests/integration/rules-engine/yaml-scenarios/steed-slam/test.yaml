@@ -1,5 +1,5 @@
 name: 'Steed Otherworldly Slam'
-description: 'Steed can use Otherworldly Slam attack, consuming its action; also available as reaction'
+description: 'Steed can use Otherworldly Slam attack, consuming its action; also available as reaction using steed reaction'
 ruleGroups:
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
@@ -45,6 +45,7 @@ steps:
       assert:
         facts:
           companion.steed.actions.remaining: 1
+          companion.steed.reactions.remaining: 1
           reactions.remaining: 1
         offers:
           exists:
@@ -65,12 +66,13 @@ steps:
             - steed-slam
           exists:
             - steed-slam-reaction
-  # Slam reaction: consumes player reaction
+  # Slam reaction: consumes steed reaction (not player's)
   - addOffer:
       id: steed-slam-reaction
       assert:
         facts:
-          reactions.remaining: 0
+          companion.steed.reactions.remaining: 0
+          reactions.remaining: 1
   # Both slam offers should now be illegal
   - evaluate:
       assert:

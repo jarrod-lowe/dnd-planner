@@ -672,6 +672,11 @@ ruleGroups:
                     fact: companion.steed.bonusActions.remaining
                   source:
                     number: 1
+                - type: numberSet
+                  target:
+                    fact: companion.steed.reactions.remaining
+                  source:
+                    number: 1
                 # Initialize speed/movement same-turn so a same-turn Dash grants
                 # movement. The persisted effect-steed-resources only applies from
                 # the next turn; ground speed is 60 at every slot level (L2-L5).
@@ -1947,6 +1952,11 @@ ruleGroups:
                           fact: companion.steed.bonusActions.remaining
                         source:
                           number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.reactions.remaining
+                        source:
+                          number: 1
                       # No self-advertise — re-created each turn by effect-steed
                   when:
                     - fact: find-steed.selectedLevel
@@ -2234,7 +2244,7 @@ ruleGroups:
                       - type: offerRule
                         legalWhen:
                           - condition:
-                              fact: reactions.remaining
+                              fact: companion.steed.reactions.remaining
                               operator: greaterThan
                               value: 0
                             illegalDiagnostics:
@@ -2280,7 +2290,7 @@ ruleGroups:
                           activities:
                             - type: numberIncrement
                               target:
-                                fact: reactions.remaining
+                                fact: companion.steed.reactions.remaining
                               source:
                                 number: 1
                               subtract: true
@@ -4068,7 +4078,7 @@ ruleGroups:
                       - type: offerRule
                         legalWhen:
                           - condition:
-                              fact: reactions.remaining
+                              fact: companion.steed.reactions.remaining
                               operator: greaterThan
                               value: 0
                             illegalDiagnostics:
@@ -4114,7 +4124,7 @@ ruleGroups:
                           activities:
                             - type: numberIncrement
                               target:
-                                fact: reactions.remaining
+                                fact: companion.steed.reactions.remaining
                               source:
                                 number: 1
                               subtract: true
@@ -5626,6 +5636,11 @@ ruleGroups:
                           fact: companion.steed.bonusActions.remaining
                         source:
                           number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.reactions.remaining
+                        source:
+                          number: 1
                       # No self-advertise — re-created each turn by effect-steed
                   when:
                     - fact: find-steed.selectedLevel
@@ -5913,7 +5928,7 @@ ruleGroups:
                       - type: offerRule
                         legalWhen:
                           - condition:
-                              fact: reactions.remaining
+                              fact: companion.steed.reactions.remaining
                               operator: greaterThan
                               value: 0
                             illegalDiagnostics:
@@ -5959,7 +5974,7 @@ ruleGroups:
                           activities:
                             - type: numberIncrement
                               target:
-                                fact: reactions.remaining
+                                fact: companion.steed.reactions.remaining
                               source:
                                 number: 1
                               subtract: true
@@ -7471,6 +7486,11 @@ ruleGroups:
                           fact: companion.steed.bonusActions.remaining
                         source:
                           number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.reactions.remaining
+                        source:
+                          number: 1
                       # No self-advertise — re-created each turn by effect-steed
                   when:
                     - fact: find-steed.selectedLevel
@@ -7758,7 +7778,7 @@ ruleGroups:
                       - type: offerRule
                         legalWhen:
                           - condition:
-                              fact: reactions.remaining
+                              fact: companion.steed.reactions.remaining
                               operator: greaterThan
                               value: 0
                             illegalDiagnostics:
@@ -7804,7 +7824,7 @@ ruleGroups:
                           activities:
                             - type: numberIncrement
                               target:
-                                fact: reactions.remaining
+                                fact: companion.steed.reactions.remaining
                               source:
                                 number: 1
                               subtract: true
