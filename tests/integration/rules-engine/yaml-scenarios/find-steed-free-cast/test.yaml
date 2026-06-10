@@ -1,0 +1,62 @@
+name: 'Find Steed - Free Cast per Long Rest'
+description: >-
+  Paladin L5 Faithful Steed feature grants one free Find Steed cast per Long
+  Rest. The slider shows a "Free Use" notch at level 0 alongside L2-L5 slots.
+  Selecting level 0 consumes the free use without touching any spell slot.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-level4
+  - class-paladin/class-paladin-level5
+  - class-paladin/class-paladin-paladin-find-steed
+  - spells/spell-find-steed
+steps:
+  # With L2 slots available (from level5), free-use resource is initialised
+  - evaluate:
+      assert:
+        facts:
+          paladinFindSteed.total: 1
+          paladinFindSteed.remaining: 1
+          spell.l2.findSteed.prepared: 1
+          spell.l2.findSteed.alwaysPrepared: 1
+          # Free use + L2 slots = at least 3 resources
+          find-steed.anyResourceRemaining: 3
+          # Default should be free use (0) when available
+          find-steed.defaultLevel: 0
+        offers:
+          exists:
+            - cast-find-steed
+  # Consume the free cast (level 0 = free use, no slot)
+  - addOffer:
+      id: cast-find-steed
+      selections:
+        slotLevel: 0
+    assert:
+      facts:
+        paladinFindSteed.remaining: 0
+        # L2 slots should be untouched (2 from level5)
+        spellcasting.slots.level2.remaining: 2
+        # Free-use mapped to level 2 for steed effects
+        find-steed.wasFreeUse: 1
+        find-steed.selectedLevel: 2
+  # End turn to persist advertised effects (steed resources, main steed effect)
+  - endTurn: {}
+  - evaluate:
+      assert:
+        facts:
+          # Steed should be summoned with L2 stats after turn persists effects
+          companion.steed.summoned: 1
+          companion.steed.ac.value: 12
+          companion.steed.hp.max: 25
+          companion.steed.hp.current: 25
+          # Slot should still be untouched (no slot persistence effect was created)
+          spellcasting.slots.level2.remaining: 2

@@ -1,0 +1,37 @@
+name: 'Oath of Redemption - Manual Prepare Then Granted Always-Prepared'
+description: >-
+  A leftover manual-preparation effect must stop consuming a prepared-spell slot
+  once Sleep is granted always-prepared at Oath of Redemption L3 (it should not
+  count against the prepared-spell limit).
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/concentration
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-divinity
+  - class-paladin/class-paladin-oath-redemption-level3
+  - spells/spell-sleep
+  - spells/spell-sanctuary
+steps:
+  # Inject a leftover manual preparation: planning the prepare action makes it
+  # advertise the persistent effect-sleep-prepared.
+  - evaluate: {}
+  - addOffer:
+      id: prepare-sleep
+  - endTurn: {}
+  # With the always-prepared grant active, the leftover effect must NOT keep
+  # contributing to the prepared count.
+  - evaluate:
+      assert:
+        facts:
+          spell.l1.sleep.prepared: 1
+          spell.l1.sleep.alwaysPrepared: 1
+          spellcasting.prepared.count: 0

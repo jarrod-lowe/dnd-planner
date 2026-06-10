@@ -20,6 +20,46 @@ ruleGroups:
           Emissary of Peace rojDuy
         keywords: [paladin, oath, redemption, level3, DIvI', rebuke, rojDuy]
     rules:
+      # Sleep is always prepared for Oath of Redemption from level 3.
+      # This grant does NOT consume a prepared-spell slot
+      # (spellcasting.prepared.count is untouched) and the alwaysPrepared flag
+      # blocks the Unprepare offer in spells/sleep.yaml.
+      - id: oath-redemption-sleep-always-prepared
+        phase: early
+        group:
+          - always-prepared-set
+        activities:
+          - type: numberSet
+            target:
+              fact: spell.l1.sleep.prepared
+            source:
+              number: 1
+          - type: numberSet
+            target:
+              fact: spell.l1.sleep.alwaysPrepared
+            source:
+              number: 1
+
+      # Sanctuary is always prepared for Oath of Redemption from level 3.
+      # This grant does NOT consume a prepared-spell slot
+      # (spellcasting.prepared.count is untouched) and the alwaysPrepared flag
+      # blocks the Unprepare offer in spells/sanctuary.yaml.
+      - id: oath-redemption-sanctuary-always-prepared
+        phase: early
+        group:
+          - always-prepared-set
+        activities:
+          - type: numberSet
+            target:
+              fact: spell.l1.sanctuary.prepared
+            source:
+              number: 1
+          - type: numberSet
+            target:
+              fact: spell.l1.sanctuary.alwaysPrepared
+            source:
+              number: 1
+
       # Offer Rebuke the Violent (reaction + 1 divinity point)
       - id: offer-rebuke-the-violent
         after:

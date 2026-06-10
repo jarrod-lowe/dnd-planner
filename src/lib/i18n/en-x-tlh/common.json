@@ -58,7 +58,8 @@
         "no_action": "DIvI' tu'lu'be'",
         "no_slots": "mugh laH tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
-        "already_mounted": "Sargh DIch Sam"
+        "already_mounted": "Sargh DIch Sam",
+        "no_free_use": "lo'Ha' tu'lu'be'"
       },
       "effect-steed": {
         "name": "Sargh"
@@ -136,13 +137,17 @@
       },
       "unprepare-find-steed-offer": {
         "name": "Sargh Sam mugh lISmoH",
-        "not_prepared": "Sargh Sam not prepared"
+        "not_prepared": "Sargh Sam not prepared",
+        "always_prepared": "Sargh Sam reH mugh"
       },
       "effect-find-steed-prepared": {
         "name": "Sargh Sam Prepared"
       },
       "effect-find-steed-removing": {
         "name": "Removing Sargh Sam"
+      },
+      "effect-find-steed-free": {
+        "name": "Sargh Sam lo'Ha'"
       }
     },
     "spell-sleep": {
@@ -1296,6 +1301,7 @@
       "layOnHands": "ghop Du",
       "savageAttacker": "Qaw' SuvwI'",
       "paladinSmite": "DIch Qaw'",
+      "paladinFindSteed": "Sargh Sam quv",
       "divinity": "quv DIvI'",
       "spellcasting": "mugh DIvI'",
       "spellLevel": "mugh DIvI' L{{level}}",

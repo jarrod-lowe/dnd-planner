@@ -143,6 +143,7 @@ ruleGroups:
                     phase: early
                     after:
                       - group: spell-l2-find-steed-removal-set
+                      - group: always-prepared-set
                     activities:
                       - type: numberSet
                         target:
@@ -153,6 +154,10 @@ ruleGroups:
                           - fact: spell.l2.findSteed.removing
                             operator: equals
                             value: 0
+                      # Stop counting against the prepared limit once a feature
+                      # grants this spell always-prepared (alwaysPrepared == 1),
+                      # otherwise a manual L2 preparation would permanently waste
+                      # a prepared slot after the grant activates.
                       - type: numberIncrement
                         target:
                           fact: spellcasting.prepared.count
@@ -162,14 +167,23 @@ ruleGroups:
                           - fact: spell.l2.findSteed.removing
                             operator: equals
                             value: 0
+                          - fact: spell.l2.findSteed.alwaysPrepared
+                            operator: notEquals
+                            value: 1
+                      # Retire the effect once always-prepared takes over (the
+                      # grant then sustains the prepared fact each evaluation).
                       - type: advertiseEffect
                         self: true
                         when:
                           - fact: spell.l2.findSteed.removing
                             operator: equals
                             value: 0
+                          - fact: spell.l2.findSteed.alwaysPrepared
+                            operator: notEquals
+                            value: 1
 
       # Offer to unprepare Find Steed
+      # (illegal when granted always-prepared by a feature, e.g. Paladin L5)
       - id: unprepare-find-steed-offer
         activities:
           - type: offerRule
@@ -180,6 +194,13 @@ ruleGroups:
                   value: 1
                 illegalDiagnostics:
                   - code: rule.spell-find-steed.unprepare-find-steed-offer.not_prepared
+                    severity: error
+              - condition:
+                  fact: spell.l2.findSteed.alwaysPrepared
+                  operator: notEquals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-find-steed.unprepare-find-steed-offer.always_prepared
                     severity: error
             rule:
               id: unprepare-find-steed
@@ -323,6 +344,38 @@ ruleGroups:
                 operator: greaterThan
                 value: 0
 
+      # Combine the free once-per-long-rest use with spell slots.
+      - id: compute-find-steed-resources
+        phase: normal
+        after:
+          - group: find-steed-slots-computed
+          - group: spellcasting-computed
+        group:
+          - find-steed-resources-computed
+        activities:
+          # Total castable resources = eligible slots + free uses
+          - type: numberSum
+            target:
+              fact: find-steed.anyResourceRemaining
+            sources:
+              - fact: find-steed.eligibleSlotsRemaining
+              - fact: paladinFindSteed.remaining
+          # Default slider position: lowest slot, unless a free use is available
+          - type: numberCopy
+            source:
+              fact: find-steed.lowestAvailableSlotLevel
+            target:
+              fact: find-steed.defaultLevel
+          - type: numberSet
+            target:
+              fact: find-steed.defaultLevel
+            source:
+              number: 0
+            when:
+              - fact: paladinFindSteed.remaining
+                operator: greaterThan
+                value: 0
+
       # Offer Find Steed (action spell)
       - id: offer-find-steed
         when:
@@ -333,6 +386,7 @@ ruleGroups:
           - group: __planned__
           - group: spellcasting
           - group: find-steed-slots-computed
+          - group: find-steed-resources-computed
         activities:
           - type: offerRule
             legalWhen:
@@ -343,8 +397,8 @@ ruleGroups:
                 illegalDiagnostics:
                   - code: rule.spell-find-steed.offer-find-steed.no_action
                     severity: error
-              - condition:
-                  fact: find-steed.eligibleSlotsRemaining
+              - condition: &fs-has-resource
+                  fact: find-steed.anyResourceRemaining
                   operator: greaterThan
                   value: 0
                 illegalDiagnostics:
@@ -380,14 +434,23 @@ ruleGroups:
                 primaryControl:
                   type: slider
                   var: slotLevel
-                  min: { number: 2 }
-                  max: { fact: find-steed.highestSlotLevel }
+                  notches:
+                    - value: 0
+                      enabled: { fact: paladinFindSteed.total }
+                    - value: 2
+                      enabled: { fact: spellcasting.slots.level2.total }
+                    - value: 3
+                      enabled: { fact: spellcasting.slots.level3.total }
+                    - value: 4
+                      enabled: { fact: spellcasting.slots.level4.total }
+                    - value: 5
+                      enabled: { fact: spellcasting.slots.level5.total }
                   valueFormat: spellLevel
               vars:
                 slotLevel:
                   capture: true
                   default:
-                    fact: find-steed.lowestAvailableSlotLevel
+                    fact: find-steed.defaultLevel
               activities:
                 # Consume action
                 - type: numberIncrement
@@ -429,6 +492,51 @@ ruleGroups:
                     fact: find-steed.selectedLevel
                   source:
                     var: slotLevel
+                # Free use (level 0): consume the once-per-long-rest use, no slot.
+                # Decrement (rather than set 0) so an over-use goes negative and
+                # is caught by the no_free_use error below.
+                - type: numberIncrement
+                  target:
+                    fact: paladinFindSteed.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 0
+                # Persist the spent free use across turns (until a long rest)
+                - type: advertiseEffect
+                  rule:
+                    id: effect-find-steed-free
+                    ui:
+                      name: rule.spell-find-steed.effect-find-steed-free.name
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: paladin-find-steed-set
+                    group:
+                      - paladin-find-steed-effect
+                    when:
+                      - fact: rest.long
+                        operator: equals
+                        value: 0
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: paladinFindSteed.remaining
+                        source:
+                          number: 0
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 0
                 # Consume L2 slot
                 - type: numberIncrement
                   target:
@@ -478,6 +586,15 @@ ruleGroups:
                   target:
                     var: errors
                   source:
+                    string: rule.spell-find-steed.offer-find-steed.no_free_use
+                  when:
+                    - fact: paladinFindSteed.remaining
+                      operator: lessThan
+                      value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
                     string: rule.spell-find-steed.offer-find-steed.no_slots
                   when:
                     - fact: spellcasting.slots.level2.remaining
@@ -510,16 +627,29 @@ ruleGroups:
                     - fact: spellcasting.slots.level5.remaining
                       operator: lessThan
                       value: 0
-                # No eligible slot was resolved (selectedLevel < 2 means no L2+ slot available)
-                - type: setAdd
+
+                # === Free-use → level-2 mapping ===
+                # After slot consumption (which correctly skipped level 0),
+                # mark the free use and map selectedLevel to 2 so all downstream
+                # steed effects (offers, resources, persistence) fire as L2.
+                - type: numberSet
                   target:
-                    var: errors
+                    fact: find-steed.wasFreeUse
                   source:
-                    string: rule.spell-find-steed.offer-find-steed.no_slots
+                    number: 1
                   when:
                     - fact: find-steed.selectedLevel
-                      operator: lessThan
-                      value: 2
+                      operator: equals
+                      value: 0
+                - type: numberSet
+                  target:
+                    fact: find-steed.selectedLevel
+                  source:
+                    number: 2
+                  when:
+                    - fact: find-steed.wasFreeUse
+                      operator: equals
+                      value: 1
 
                 # === Steed facts for same-turn use ===
                 - type: numberSet
@@ -1165,6 +1295,9 @@ ruleGroups:
                     - fact: find-steed.selectedLevel
                       operator: equals
                       value: 2
+                    - fact: find-steed.wasFreeUse
+                      operator: notEquals
+                      value: 1
                 - type: advertiseEffect
                   rule:
                     id: effect-steed-slot-l3

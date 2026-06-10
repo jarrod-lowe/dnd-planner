@@ -83,6 +83,7 @@ ruleGroups:
                     phase: early
                     after:
                       - group: spell-l1-sanctuary-removal-set
+                      - group: always-prepared-set
                     activities:
                       - type: numberSet
                         target:
@@ -93,6 +94,10 @@ ruleGroups:
                           - fact: spell.l1.sanctuary.removing
                             operator: equals
                             value: 0
+                      # Stop counting against the prepared limit once a feature
+                      # grants this spell always-prepared (alwaysPrepared == 1),
+                      # otherwise a manual L1 preparation would permanently waste
+                      # a prepared slot after the grant activates.
                       - type: numberIncrement
                         target:
                           fact: spellcasting.prepared.count
@@ -102,14 +107,23 @@ ruleGroups:
                           - fact: spell.l1.sanctuary.removing
                             operator: equals
                             value: 0
+                          - fact: spell.l1.sanctuary.alwaysPrepared
+                            operator: notEquals
+                            value: 1
+                      # Retire the effect once always-prepared takes over (the
+                      # grant then sustains the prepared fact each evaluation).
                       - type: advertiseEffect
                         self: true
                         when:
                           - fact: spell.l1.sanctuary.removing
                             operator: equals
                             value: 0
+                          - fact: spell.l1.sanctuary.alwaysPrepared
+                            operator: notEquals
+                            value: 1
 
       # Offer to unprepare Sanctuary
+      # (illegal when granted always-prepared by a feature, e.g. Oath of Redemption L3)
       - id: unprepare-sanctuary-offer
         activities:
           - type: offerRule
@@ -120,6 +134,13 @@ ruleGroups:
                   value: 1
                 illegalDiagnostics:
                   - code: rule.spell-sanctuary.unprepare-sanctuary-offer.not_prepared
+                    severity: error
+              - condition:
+                  fact: spell.l1.sanctuary.alwaysPrepared
+                  operator: notEquals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-sanctuary.unprepare-sanctuary-offer.always_prepared
                     severity: error
             rule:
               id: unprepare-sanctuary

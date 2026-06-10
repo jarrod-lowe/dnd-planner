@@ -1,0 +1,36 @@
+name: 'Find Steed - Manual Prepare Then Granted Always-Prepared'
+description: >-
+  A leftover manual-preparation effect must stop consuming a prepared-spell slot
+  once Find Steed is granted always-prepared at Paladin L5 (it should not count
+  against the prepared-spell limit).
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-level4
+  - class-paladin/class-paladin-level5
+  - class-paladin/class-paladin-paladin-find-steed
+  - spells/spell-find-steed
+steps:
+  # Inject a leftover manual preparation: planning the prepare action makes it
+  # advertise the persistent effect-find-steed-prepared.
+  - evaluate: {}
+  - addOffer:
+      id: prepare-find-steed
+  - endTurn: {}
+  # With the always-prepared grant active, the leftover effect must NOT keep
+  # contributing to the prepared count.
+  - evaluate:
+      assert:
+        facts:
+          spell.l2.findSteed.prepared: 1
+          spell.l2.findSteed.alwaysPrepared: 1
+          spellcasting.prepared.count: 0

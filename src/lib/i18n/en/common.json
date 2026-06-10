@@ -58,7 +58,8 @@
         "no_action": "No action available",
         "no_slots": "No L2+ spell slots remaining",
         "no_spellcasting": "Already cast a spell this turn",
-        "already_mounted": "Already have a steed"
+        "already_mounted": "Already have a steed",
+        "no_free_use": "No free uses remaining"
       },
       "effect-steed": {
         "name": "Otherworldly Steed"
@@ -136,13 +137,17 @@
       },
       "unprepare-find-steed-offer": {
         "name": "Unprepare Find Steed",
-        "not_prepared": "Find Steed is not prepared"
+        "not_prepared": "Find Steed is not prepared",
+        "always_prepared": "Find Steed is always prepared"
       },
       "effect-find-steed-prepared": {
         "name": "Find Steed Prepared"
       },
       "effect-find-steed-removing": {
         "name": "Removing Find Steed"
+      },
+      "effect-find-steed-free": {
+        "name": "Find Steed Free Cast"
       }
     },
     "spell-sleep": {
@@ -1276,6 +1281,7 @@
       "layOnHands": "Lay on Hands",
       "savageAttacker": "Savage Attacker",
       "paladinSmite": "Paladin Smite",
+      "paladinFindSteed": "Faithful Steed",
       "divinity": "Divinity",
       "spellcasting": "Spellcast",
       "spellLevel": "Spell L{{level}}",
