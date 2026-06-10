@@ -344,6 +344,58 @@ ruleGroups:
                 operator: greaterThan
                 value: 0
 
+      # Combine the free once-per-long-rest use with spell slots.
+      # The free use is offered as slot "level 0" (no slot expended).
+      - id: compute-find-steed-resources
+        phase: normal
+        after:
+          - group: find-steed-slots-computed
+          - group: spellcasting-computed
+        group:
+          - find-steed-resources-computed
+        activities:
+          # Total castable resources = eligible slots + free uses
+          - type: numberSum
+            target:
+              fact: find-steed.anyResourceRemaining
+            sources:
+              - fact: find-steed.eligibleSlotsRemaining
+              - fact: paladinFindSteed.remaining
+          # Default slider position: lowest slot, unless a free use is available
+          - type: numberCopy
+            source:
+              fact: find-steed.lowestAvailableSlotLevel
+            target:
+              fact: find-steed.defaultLevel
+          # Minimum slider position: 2, unless the character owns the free-use
+          # feature (paladinFindSteed.total > 0). Keyed on total — not
+          # remaining — so the "Free Use" (level 0) notch stays on the slider
+          # even once spent; picking it then warns (no_free_use) and it is not
+          # the default.
+          - type: numberSet
+            target:
+              fact: find-steed.minSlotLevel
+            source:
+              number: 2
+          - type: numberSet
+            target:
+              fact: find-steed.minSlotLevel
+            source:
+              number: 0
+            when:
+              - fact: paladinFindSteed.total
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target:
+              fact: find-steed.defaultLevel
+            source:
+              number: 0
+            when:
+              - fact: paladinFindSteed.remaining
+                operator: greaterThan
+                value: 0
+
       # Offer Find Steed (action spell)
       - id: offer-find-steed
         when:
@@ -354,6 +406,7 @@ ruleGroups:
           - group: __planned__
           - group: spellcasting
           - group: find-steed-slots-computed
+          - group: find-steed-resources-computed
         activities:
           - type: offerRule
             legalWhen:
@@ -364,8 +417,8 @@ ruleGroups:
                 illegalDiagnostics:
                   - code: rule.spell-find-steed.offer-find-steed.no_action
                     severity: error
-              - condition:
-                  fact: find-steed.eligibleSlotsRemaining
+              - condition: &fs-has-resource
+                  fact: find-steed.anyResourceRemaining
                   operator: greaterThan
                   value: 0
                 illegalDiagnostics:
@@ -401,14 +454,14 @@ ruleGroups:
                 primaryControl:
                   type: slider
                   var: slotLevel
-                  min: { number: 2 }
+                  min: { fact: find-steed.minSlotLevel }
                   max: { fact: find-steed.highestSlotLevel }
                   valueFormat: spellLevel
               vars:
                 slotLevel:
                   capture: true
                   default:
-                    fact: find-steed.lowestAvailableSlotLevel
+                    fact: find-steed.defaultLevel
               activities:
                 # Consume action
                 - type: numberIncrement
@@ -450,6 +503,51 @@ ruleGroups:
                     fact: find-steed.selectedLevel
                   source:
                     var: slotLevel
+                # Free use (level 0): consume the once-per-long-rest use, no slot.
+                # Decrement (rather than set 0) so an over-use goes negative and
+                # is caught by the no_free_use error below.
+                - type: numberIncrement
+                  target:
+                    fact: paladinFindSteed.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 0
+                # Persist the spent free use across turns (until a long rest)
+                - type: advertiseEffect
+                  rule:
+                    id: effect-find-steed-free
+                    ui:
+                      name: rule.spell-find-steed.effect-find-steed-free.name
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: paladin-find-steed-set
+                    group:
+                      - paladin-find-steed-effect
+                    when:
+                      - fact: rest.long
+                        operator: equals
+                        value: 0
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: paladinFindSteed.remaining
+                        source:
+                          number: 0
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 0
                 # Consume L2 slot
                 - type: numberIncrement
                   target:
@@ -495,6 +593,15 @@ ruleGroups:
                       operator: equals
                       value: 5
                 # Track slot consumption errors
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-find-steed.offer-find-steed.no_free_use
+                  when:
+                    - fact: paladinFindSteed.remaining
+                      operator: lessThan
+                      value: 0
                 - type: setAdd
                   target:
                     var: errors

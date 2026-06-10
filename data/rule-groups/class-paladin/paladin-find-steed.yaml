@@ -12,11 +12,11 @@ ruleGroups:
         description: >-
           You always have the Find Steed spell prepared (it does not count
           against your prepared-spell limit).
-        keywords: [paladin, steed, mount, prepared]
+        keywords: [paladin, steed, mount, prepared, free]
       en-x-tlh:
         name: Sargh Sam Segh
         description: >-
-          reH Sargh Sam mugh SoH; DIch DIvI' mugh laH.
+          reH Sargh Sam mugh SoH; wa' Long Rest DIch mugh laH lo'Ha'.
         keywords: [paladin, sargh, sam]
     rules:
       # Find Steed is always prepared for a Paladin from level 5.
@@ -38,3 +38,54 @@ ruleGroups:
               fact: spell.l2.findSteed.alwaysPrepared
             source:
               number: 1
+
+      # Set total free uses and initialize remaining
+      - id: paladin-find-steed-set-total
+        phase: early
+        group:
+          - paladin-find-steed-set
+        activities:
+          - type: numberIncrement
+            target:
+              fact: paladinFindSteed.total
+            source:
+              number: 1
+          - type: numberIncrement
+            target:
+              fact: paladinFindSteed.remaining
+            source:
+              number: 1
+
+      # UI stats display
+      - id: paladin-find-steed-ui
+        phase: early
+        activities: []
+        ui:
+          stats:
+            - name: play.stats.paladinFindSteed
+              type: usedMax
+              total: paladinFindSteed.total
+              remaining: paladinFindSteed.remaining
+              section: resources
+          resources:
+            - type: usedMax
+              label: play.stats.paladinFindSteed
+              total: paladinFindSteed.total
+              remaining: paladinFindSteed.remaining
+
+      # Reset on Long Rest
+      - id: paladin-find-steed-reset
+        phase: early
+        after:
+          - group: paladin-find-steed-set
+          - group: paladin-find-steed-effect
+        when:
+          - fact: rest.long
+            operator: equals
+            value: 1
+        activities:
+          - type: numberCopy
+            source:
+              fact: paladinFindSteed.total
+            target:
+              fact: paladinFindSteed.remaining
