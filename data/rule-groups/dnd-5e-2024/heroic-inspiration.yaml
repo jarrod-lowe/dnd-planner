@@ -61,6 +61,7 @@ ruleGroups:
               ui:
                 section: other
                 name: rule.dnd-5e-2024.heroic-inspiration.grant-hi.name
+                description: rule.dnd-5e-2024.heroic-inspiration.grant-hi.description
                 intents: { AID: self }
                 actionCost: []
               activities:
@@ -102,6 +103,7 @@ ruleGroups:
               ui:
                 section: other
                 name: rule.dnd-5e-2024.heroic-inspiration.use-hi.name
+                description: rule.dnd-5e-2024.heroic-inspiration.use-hi.description
                 intents: { AID: self }
                 actionCost: []
               activities:

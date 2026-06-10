@@ -24,6 +24,7 @@ ruleGroups:
               ui:
                 section: free
                 name: rule.dnd-5e-2024.free-actions.free-action.name
+                description: rule.dnd-5e-2024.free-actions.free-action.description
                 intents: { HANDLE: gear }
                 actionCost: []
               activities: []
@@ -48,6 +49,7 @@ ruleGroups:
               ui:
                 section: action-other
                 name: rule.dnd-5e-2024.free-actions.help-action.name
+                description: rule.dnd-5e-2024.free-actions.help-action.description
                 intents: { AID: ally }
                 actionCost: [action]
               group:

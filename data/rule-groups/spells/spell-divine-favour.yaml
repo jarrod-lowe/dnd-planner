@@ -371,6 +371,7 @@ ruleGroups:
               ui:
                 section: free
                 name: rule.spell-divine-favour.use-divine-favour.name
+                description: rule.spell-divine-favour.use-divine-favour.description
                 primaryControl:
                   type: dice-line
                   dice:

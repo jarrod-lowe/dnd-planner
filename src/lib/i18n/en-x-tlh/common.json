@@ -74,27 +74,33 @@
       },
       "steed-move-walk": {
         "name": "YIt",
+        "description": "Sargh YIt, Do' 'aD",
         "out_of_movement": "Do tu'lu'be'"
       },
       "steed-move-rough-terrain": {
         "name": "DeQ DIch",
+        "description": "Sargh DeQ DIch — Hoch qam cha'",
         "out_of_movement": "Do tu'lu'be'"
       },
       "steed-move-fly": {
         "name": "Peng",
+        "description": "Sargh peng, peng Do' lo'",
         "cannot_fly": "Sargh peng DIch",
         "out_of_movement": "Do tu'lu'be'"
       },
       "steed-dash": {
         "name": "Do naQ",
+        "description": "Sargh Do' chel, Do' 'aD rur",
         "no_actions": "Sargh DIv DIch"
       },
       "steed-dodge": {
         "name": "Dol",
+        "description": "Sargh HIv DIvI' DIvI'; Sargh DEX ra' DIvI' DIvI'",
         "no_actions": "Sargh DIv DIch"
       },
       "steed-disengage": {
         "name": "Chegh",
+        "description": "Sargh leng HIv chaw'be'",
         "no_actions": "Sargh DIv DIch"
       },
       "steed-record-damage": {
@@ -310,7 +316,8 @@
       },
       "annotation": "quv DIvI'",
       "use-divine-favour": {
-        "name": "quv lo'"
+        "name": "quv lo'",
+        "description": "quv +1d4 radiant nuH DIch chel"
       },
       "offer-use-divine-favour": {
         "not_active": "quv DIvI'be'",
@@ -429,10 +436,12 @@
       "proficiency": {},
       "movement": {
         "move-walk": {
-          "name": "Do"
+          "name": "Do",
+          "description": "Do' 'aD Do"
         },
         "move-rough-terrain": {
-          "name": "Do (qIb)"
+          "name": "Do (qIb)",
+          "description": "qIb DIch — Hoch qam cha'"
         },
         "action-move-walk-offer": {
           "out_of_movement": "Do tu'lu'be'"
@@ -441,14 +450,16 @@
           "out_of_movement": "Do tu'lu'be'"
         },
         "move-swim": {
-          "name": "Do (bIQ)"
+          "name": "Do (bIQ)",
+          "description": "bIQ — Hoch qam cha', bIQ Do' Hutlh"
         },
         "action-move-swim-offer": {
           "cannot_swim": "bIQ DaDolaHbe'",
           "out_of_movement": "Do tu'lu'be'"
         },
         "move-fly": {
-          "name": "Do (peng)"
+          "name": "Do (peng)",
+          "description": "peng Do' lo'"
         },
         "action-move-fly-offer": {
           "cannot_fly": "peng DaDolaHbe'",
@@ -783,10 +794,12 @@
       },
       "free-actions": {
         "free-action": {
-          "name": "Free Action"
+          "name": "Free Action",
+          "description": "DIch DIvI' nap (jatlh, Doch woD)"
         },
         "help-action": {
-          "name": "QaH"
+          "name": "QaH",
+          "description": "DIvI' DIvI' DIvI' nob"
         },
         "action-help-offer": {
           "no_action": "DIvI' tu'lu'be'"
@@ -811,7 +824,7 @@
         },
         "dodge-action": {
           "name": "DIvI' pel",
-          "description": "SoH HIv DIvI' DIvI'"
+          "description": "SoH HIv DIvI' DIvI'; SoH DEX ra' DIvI' DIvI'"
         },
         "action-dodge-offer": {
           "no_action": "DIvI' tu'lu'be'"
@@ -879,7 +892,8 @@
       },
       "attacks": {
         "unarmed-strike": {
-          "name": "nuH DIvI'"
+          "name": "nuH DIvI'",
+          "description": "DIvI' — 1 + STR bludgeoning, pagh qop/puv"
         },
         "attack-unarmed-strike-offer": {
           "no_action": "DIvI' tu'lu'be'"
@@ -952,7 +966,8 @@
       },
       "initiative": {
         "roll-initiative": {
-          "name": "DIvI' chuwI'"
+          "name": "DIvI' chuwI'",
+          "description": "d20 + DEX chuw, DIvI' SIch"
         }
       },
       "fighting-style-great-weapon": {
@@ -972,7 +987,8 @@
       "feat-savage-attacker": {
         "annotation": "Qaw' SuvwI': wa' DIch damage dice reroll",
         "savage-attacker-use": {
-          "name": "Qaw' SuvwI' lo'"
+          "name": "Qaw' SuvwI' lo'",
+          "description": "wa'logh: nuH DIvI' DIvI' choH, wej wIv"
         },
         "offer-savage-attacker": {
           "already_used": "DIch lo'lu'pu'",
@@ -990,13 +1006,15 @@
           "name": "SuvwI' SubchI'"
         },
         "grant-hi": {
-          "name": "SubchI' SuvwI' nob"
+          "name": "SubchI' SuvwI' nob",
+          "description": "DIch SubchI' SuvwI' nob"
         },
         "grant-hi-offer": {
           "already_has": "SubchI' SuvwI' ghaj"
         },
         "use-hi": {
-          "name": "SuvwI' SubchI' lo'"
+          "name": "SuvwI' SubchI' lo'",
+          "description": "SubchI' SuvwI' lo', Hoch DIch choH"
         },
         "use-hi-offer": {
           "no_inspiration": "SuvwI' SubchI' tu'lu'be'"

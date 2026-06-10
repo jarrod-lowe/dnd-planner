@@ -88,6 +88,7 @@ ruleGroups:
               ui:
                 section: free
                 name: rule.dnd-5e-2024.feat-savage-attacker.savage-attacker-use.name
+                description: rule.dnd-5e-2024.feat-savage-attacker.savage-attacker-use.description
                 detailKey: feat/savage-attacker
                 intents:
                   ATTACK: brawl

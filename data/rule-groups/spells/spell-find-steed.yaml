@@ -707,6 +707,7 @@ ruleGroups:
                       section: action
                       subject: steed
                       name: rule.spell-find-steed.steed-dash.name
+                      description: rule.spell-find-steed.steed-dash.description
                       intents: { MOVE: dash }
                       actionCost: [action]
                     vars: {}
@@ -761,6 +762,7 @@ ruleGroups:
                       section: action-other
                       subject: steed
                       name: rule.spell-find-steed.steed-dodge.name
+                      description: rule.spell-find-steed.steed-dodge.description
                       intents: { DEFEND: evade }
                       actionCost: [action]
                     vars: {}
@@ -805,6 +807,7 @@ ruleGroups:
                       section: action-other
                       subject: steed
                       name: rule.spell-find-steed.steed-disengage.name
+                      description: rule.spell-find-steed.steed-disengage.description
                       packBehind: steed-dodge
                       intents: { DEFEND: evade }
                       actionCost: [action]
@@ -852,6 +855,7 @@ ruleGroups:
                       section: action
                       subject: steed
                       name: rule.spell-find-steed.steed-dash.name
+                      description: rule.spell-find-steed.steed-dash.description
                       intents: { MOVE: dash }
                       actionCost: [action]
                     vars: {}
@@ -906,6 +910,7 @@ ruleGroups:
                       section: action-other
                       subject: steed
                       name: rule.spell-find-steed.steed-dodge.name
+                      description: rule.spell-find-steed.steed-dodge.description
                       intents: { DEFEND: evade }
                       actionCost: [action]
                     vars: {}
@@ -950,6 +955,7 @@ ruleGroups:
                       section: action-other
                       subject: steed
                       name: rule.spell-find-steed.steed-disengage.name
+                      description: rule.spell-find-steed.steed-disengage.description
                       packBehind: steed-dodge
                       intents: { DEFEND: evade }
                       actionCost: [action]
@@ -997,6 +1003,7 @@ ruleGroups:
                       section: action
                       subject: steed
                       name: rule.spell-find-steed.steed-dash.name
+                      description: rule.spell-find-steed.steed-dash.description
                       intents: { MOVE: dash }
                       actionCost: [action]
                     vars: {}
@@ -1051,6 +1058,7 @@ ruleGroups:
                       section: action-other
                       subject: steed
                       name: rule.spell-find-steed.steed-dodge.name
+                      description: rule.spell-find-steed.steed-dodge.description
                       intents: { DEFEND: evade }
                       actionCost: [action]
                     vars: {}
@@ -1095,6 +1103,7 @@ ruleGroups:
                       section: action-other
                       subject: steed
                       name: rule.spell-find-steed.steed-disengage.name
+                      description: rule.spell-find-steed.steed-disengage.description
                       packBehind: steed-dodge
                       intents: { DEFEND: evade }
                       actionCost: [action]
@@ -1142,6 +1151,7 @@ ruleGroups:
                       section: action
                       subject: steed
                       name: rule.spell-find-steed.steed-dash.name
+                      description: rule.spell-find-steed.steed-dash.description
                       intents: { MOVE: dash }
                       actionCost: [action]
                     vars: {}
@@ -1196,6 +1206,7 @@ ruleGroups:
                       section: action-other
                       subject: steed
                       name: rule.spell-find-steed.steed-dodge.name
+                      description: rule.spell-find-steed.steed-dodge.description
                       intents: { DEFEND: evade }
                       actionCost: [action]
                     vars: {}
@@ -1240,6 +1251,7 @@ ruleGroups:
                       section: action-other
                       subject: steed
                       name: rule.spell-find-steed.steed-disengage.name
+                      description: rule.spell-find-steed.steed-disengage.description
                       packBehind: steed-dodge
                       intents: { DEFEND: evade }
                       actionCost: [action]
@@ -1697,6 +1709,7 @@ ruleGroups:
                             section: move
                             subject: steed
                             name: rule.spell-find-steed.steed-move-walk.name
+                            description: rule.spell-find-steed.steed-move-walk.description
                             primaryControl:
                               type: slider
                               var: distance
@@ -1746,6 +1759,7 @@ ruleGroups:
                             section: move
                             subject: steed
                             name: rule.spell-find-steed.steed-move-rough-terrain.name
+                            description: rule.spell-find-steed.steed-move-rough-terrain.description
                             packBehind: steed-move-walk
                             primaryControl:
                               type: slider
@@ -1809,6 +1823,7 @@ ruleGroups:
                             section: move
                             subject: steed
                             name: rule.spell-find-steed.steed-move-fly.name
+                            description: rule.spell-find-steed.steed-move-fly.description
                             packBehind: steed-move-walk
                             primaryControl:
                               type: slider
@@ -1869,6 +1884,7 @@ ruleGroups:
                             section: action
                             subject: steed
                             name: rule.spell-find-steed.steed-dash.name
+                            description: rule.spell-find-steed.steed-dash.description
                             intents: { MOVE: dash }
                             actionCost: [action]
                           vars: {}
@@ -1918,6 +1934,7 @@ ruleGroups:
                             section: action-other
                             subject: steed
                             name: rule.spell-find-steed.steed-dodge.name
+                            description: rule.spell-find-steed.steed-dodge.description
                             intents: { DEFEND: evade }
                             actionCost: [action]
                           vars: {}
@@ -1957,6 +1974,7 @@ ruleGroups:
                             section: action-other
                             subject: steed
                             name: rule.spell-find-steed.steed-disengage.name
+                            description: rule.spell-find-steed.steed-disengage.description
                             packBehind: steed-dodge
                             intents: { DEFEND: evade }
                             actionCost: [action]
@@ -3395,6 +3413,7 @@ ruleGroups:
                             section: move
                             subject: steed
                             name: rule.spell-find-steed.steed-move-walk.name
+                            description: rule.spell-find-steed.steed-move-walk.description
                             primaryControl:
                               type: slider
                               var: distance
@@ -3444,6 +3463,7 @@ ruleGroups:
                             section: move
                             subject: steed
                             name: rule.spell-find-steed.steed-move-rough-terrain.name
+                            description: rule.spell-find-steed.steed-move-rough-terrain.description
                             packBehind: steed-move-walk
                             primaryControl:
                               type: slider
@@ -3507,6 +3527,7 @@ ruleGroups:
                             section: move
                             subject: steed
                             name: rule.spell-find-steed.steed-move-fly.name
+                            description: rule.spell-find-steed.steed-move-fly.description
                             packBehind: steed-move-walk
                             primaryControl:
                               type: slider
@@ -3567,6 +3588,7 @@ ruleGroups:
                             section: action
                             subject: steed
                             name: rule.spell-find-steed.steed-dash.name
+                            description: rule.spell-find-steed.steed-dash.description
                             intents: { MOVE: dash }
                             actionCost: [action]
                           vars: {}
@@ -3616,6 +3638,7 @@ ruleGroups:
                             section: action-other
                             subject: steed
                             name: rule.spell-find-steed.steed-dodge.name
+                            description: rule.spell-find-steed.steed-dodge.description
                             intents: { DEFEND: evade }
                             actionCost: [action]
                           vars: {}
@@ -3655,6 +3678,7 @@ ruleGroups:
                             section: action-other
                             subject: steed
                             name: rule.spell-find-steed.steed-disengage.name
+                            description: rule.spell-find-steed.steed-disengage.description
                             packBehind: steed-dodge
                             intents: { DEFEND: evade }
                             actionCost: [action]
@@ -5104,6 +5128,7 @@ ruleGroups:
                             section: move
                             subject: steed
                             name: rule.spell-find-steed.steed-move-walk.name
+                            description: rule.spell-find-steed.steed-move-walk.description
                             primaryControl:
                               type: slider
                               var: distance
@@ -5153,6 +5178,7 @@ ruleGroups:
                             section: move
                             subject: steed
                             name: rule.spell-find-steed.steed-move-rough-terrain.name
+                            description: rule.spell-find-steed.steed-move-rough-terrain.description
                             packBehind: steed-move-walk
                             primaryControl:
                               type: slider
@@ -5216,6 +5242,7 @@ ruleGroups:
                             section: move
                             subject: steed
                             name: rule.spell-find-steed.steed-move-fly.name
+                            description: rule.spell-find-steed.steed-move-fly.description
                             packBehind: steed-move-walk
                             primaryControl:
                               type: slider
@@ -5276,6 +5303,7 @@ ruleGroups:
                             section: action
                             subject: steed
                             name: rule.spell-find-steed.steed-dash.name
+                            description: rule.spell-find-steed.steed-dash.description
                             intents: { MOVE: dash }
                             actionCost: [action]
                           vars: {}
@@ -5325,6 +5353,7 @@ ruleGroups:
                             section: action-other
                             subject: steed
                             name: rule.spell-find-steed.steed-dodge.name
+                            description: rule.spell-find-steed.steed-dodge.description
                             intents: { DEFEND: evade }
                             actionCost: [action]
                           vars: {}
@@ -5364,6 +5393,7 @@ ruleGroups:
                             section: action-other
                             subject: steed
                             name: rule.spell-find-steed.steed-disengage.name
+                            description: rule.spell-find-steed.steed-disengage.description
                             packBehind: steed-dodge
                             intents: { DEFEND: evade }
                             actionCost: [action]
@@ -6813,6 +6843,7 @@ ruleGroups:
                             section: move
                             subject: steed
                             name: rule.spell-find-steed.steed-move-walk.name
+                            description: rule.spell-find-steed.steed-move-walk.description
                             primaryControl:
                               type: slider
                               var: distance
@@ -6862,6 +6893,7 @@ ruleGroups:
                             section: move
                             subject: steed
                             name: rule.spell-find-steed.steed-move-rough-terrain.name
+                            description: rule.spell-find-steed.steed-move-rough-terrain.description
                             packBehind: steed-move-walk
                             primaryControl:
                               type: slider
@@ -6925,6 +6957,7 @@ ruleGroups:
                             section: move
                             subject: steed
                             name: rule.spell-find-steed.steed-move-fly.name
+                            description: rule.spell-find-steed.steed-move-fly.description
                             packBehind: steed-move-walk
                             primaryControl:
                               type: slider
@@ -6985,6 +7018,7 @@ ruleGroups:
                             section: action
                             subject: steed
                             name: rule.spell-find-steed.steed-dash.name
+                            description: rule.spell-find-steed.steed-dash.description
                             intents: { MOVE: dash }
                             actionCost: [action]
                           vars: {}
@@ -7034,6 +7068,7 @@ ruleGroups:
                             section: action-other
                             subject: steed
                             name: rule.spell-find-steed.steed-dodge.name
+                            description: rule.spell-find-steed.steed-dodge.description
                             intents: { DEFEND: evade }
                             actionCost: [action]
                           vars: {}
@@ -7073,6 +7108,7 @@ ruleGroups:
                             section: action-other
                             subject: steed
                             name: rule.spell-find-steed.steed-disengage.name
+                            description: rule.spell-find-steed.steed-disengage.description
                             packBehind: steed-dodge
                             intents: { DEFEND: evade }
                             actionCost: [action]

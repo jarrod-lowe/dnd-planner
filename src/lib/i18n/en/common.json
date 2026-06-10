@@ -74,27 +74,33 @@
       },
       "steed-move-walk": {
         "name": "Walk",
+        "description": "Move the steed up to its Speed",
         "out_of_movement": "No movement remaining"
       },
       "steed-move-rough-terrain": {
         "name": "Rough Terrain",
+        "description": "Steed in difficult terrain — each foot costs 2",
         "out_of_movement": "No movement remaining"
       },
       "steed-move-fly": {
         "name": "Fly",
+        "description": "Steed flies using its Fly Speed",
         "cannot_fly": "Steed cannot fly",
         "out_of_movement": "No movement remaining"
       },
       "steed-dash": {
         "name": "Dash",
+        "description": "Steed gains extra movement equal to its Speed",
         "no_actions": "Steed has no actions remaining"
       },
       "steed-dodge": {
         "name": "Dodge",
+        "description": "Attackers have disadvantage; steed gains advantage on DEX saves",
         "no_actions": "Steed has no actions remaining"
       },
       "steed-disengage": {
         "name": "Disengage",
+        "description": "Steed's movement won't provoke opportunity attacks",
         "no_actions": "Steed has no actions remaining"
       },
       "steed-record-damage": {
@@ -310,7 +316,8 @@
       },
       "annotation": "Divine Favour available",
       "use-divine-favour": {
-        "name": "Use Divine Favour"
+        "name": "Use Divine Favour",
+        "description": "Add Divine Favour's +1d4 radiant to this weapon hit"
       },
       "offer-use-divine-favour": {
         "not_active": "Divine Favour is not active",
@@ -429,10 +436,12 @@
       "proficiency": {},
       "movement": {
         "move-walk": {
-          "name": "Walk"
+          "name": "Walk",
+          "description": "Move on foot, up to your Speed"
         },
         "move-rough-terrain": {
-          "name": "Trudge"
+          "name": "Trudge",
+          "description": "Difficult terrain — each foot of movement costs 2"
         },
         "action-move-walk-offer": {
           "out_of_movement": "Out of movement"
@@ -441,14 +450,16 @@
           "out_of_movement": "Out of movement"
         },
         "move-swim": {
-          "name": "Swim"
+          "name": "Swim",
+          "description": "Swim — each foot costs 2 without a Swim Speed"
         },
         "action-move-swim-offer": {
           "cannot_swim": "You cannot swim",
           "out_of_movement": "Out of movement"
         },
         "move-fly": {
-          "name": "Fly"
+          "name": "Fly",
+          "description": "Fly using your Fly Speed"
         },
         "action-move-fly-offer": {
           "cannot_fly": "You cannot fly",
@@ -783,10 +794,12 @@
       },
       "free-actions": {
         "free-action": {
-          "name": "Free Action"
+          "name": "Free Action",
+          "description": "A trivial free interaction (speak, drop an item)"
         },
         "help-action": {
-          "name": "Help"
+          "name": "Help",
+          "description": "Give an ally advantage on an attack or ability check"
         },
         "action-help-offer": {
           "no_action": "No action available"
@@ -811,7 +824,7 @@
         },
         "dodge-action": {
           "name": "Dodge",
-          "description": "Attackers have disadvantage until your next turn"
+          "description": "Attackers have disadvantage; you gain advantage on DEX saves"
         },
         "action-dodge-offer": {
           "no_action": "No action available"
@@ -879,7 +892,8 @@
       },
       "attacks": {
         "unarmed-strike": {
-          "name": "Unarmed Strike"
+          "name": "Unarmed Strike",
+          "description": "Melee — 1 + STR bludgeoning, or use to Grapple/Shove"
         },
         "attack-unarmed-strike-offer": {
           "no_action": "No action available"
@@ -952,7 +966,8 @@
       },
       "initiative": {
         "roll-initiative": {
-          "name": "Roll Initiative"
+          "name": "Roll Initiative",
+          "description": "Roll d20 + DEX to set turn order"
         }
       },
       "fighting-style-great-weapon": {
@@ -972,7 +987,8 @@
       "feat-savage-attacker": {
         "annotation": "Savage Attacker: Reroll damage dice once per turn",
         "savage-attacker-use": {
-          "name": "Use Savage Attacker"
+          "name": "Use Savage Attacker",
+          "description": "Once per turn: reroll a weapon's damage dice, keep either"
         },
         "offer-savage-attacker": {
           "already_used": "Already used this turn",
@@ -990,13 +1006,15 @@
           "name": "Heroic Inspiration"
         },
         "grant-hi": {
-          "name": "Grant Heroic Inspiration"
+          "name": "Grant Heroic Inspiration",
+          "description": "Give this character Heroic Inspiration"
         },
         "grant-hi-offer": {
           "already_has": "Already have Heroic Inspiration"
         },
         "use-hi": {
-          "name": "Use Heroic Inspiration"
+          "name": "Use Heroic Inspiration",
+          "description": "Spend Heroic Inspiration to reroll any die"
         },
         "use-hi-offer": {
           "no_inspiration": "No Heroic Inspiration available"

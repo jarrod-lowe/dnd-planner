@@ -86,6 +86,7 @@ ruleGroups:
               ui:
                 section: move
                 name: rule.dnd-5e-2024.movement.move-walk.name
+                description: rule.dnd-5e-2024.movement.move-walk.description
                 primaryControl:
                   type: slider
                   var: distance
@@ -146,6 +147,7 @@ ruleGroups:
               ui:
                 section: move
                 name: rule.dnd-5e-2024.movement.move-rough-terrain.name
+                description: rule.dnd-5e-2024.movement.move-rough-terrain.description
                 packBehind: move-walk
                 primaryControl:
                   type: slider
@@ -229,6 +231,7 @@ ruleGroups:
               ui:
                 section: move
                 name: rule.dnd-5e-2024.movement.move-swim.name
+                description: rule.dnd-5e-2024.movement.move-swim.description
                 packBehind: move-walk
                 primaryControl:
                   type: slider
@@ -311,6 +314,7 @@ ruleGroups:
               ui:
                 section: move
                 name: rule.dnd-5e-2024.movement.move-swim.name
+                description: rule.dnd-5e-2024.movement.move-swim.description
                 packBehind: move-walk
                 primaryControl:
                   type: slider
@@ -391,6 +395,7 @@ ruleGroups:
               ui:
                 section: move
                 name: rule.dnd-5e-2024.movement.move-fly.name
+                description: rule.dnd-5e-2024.movement.move-fly.description
                 packBehind: move-walk
                 primaryControl:
                   type: slider
