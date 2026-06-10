@@ -1,0 +1,95 @@
+name: 'Calm Emotions Prepare'
+description: 'Preparing and unpreparing Calm Emotions with persistent effect lifecycle'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/concentration
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-calm-emotions
+steps:
+  # TC1: Initially both offers exist, unprepare is illegal (not prepared)
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.prepared.max: 2
+          spellcasting.prepared.count: 0
+          spellcasting.prepared.remaining: 2
+          spell.l2.calmEmotions.prepared: 0
+        offers:
+          exists:
+            - prepare-calm-emotions
+            - unprepare-calm-emotions
+          illegal:
+            - unprepare-calm-emotions
+  # TC2: Prepare Calm Emotions — both offers still exist, prepare now illegal
+  - addOffer:
+      id: prepare-calm-emotions
+      assert:
+        facts:
+          spell.l2.calmEmotions.prepared: 1
+          spellcasting.prepared.count: 1
+          spellcasting.prepared.remaining: 1
+        offers:
+          exists:
+            - prepare-calm-emotions
+            - unprepare-calm-emotions
+          illegal:
+            - prepare-calm-emotions
+  # TC3: End turn to persist effects
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-calm-emotions-prepared
+  # After preparing: prepare illegal, unprepare legal
+  - evaluate:
+      assert:
+        facts:
+          spell.l2.calmEmotions.prepared: 1
+          spellcasting.prepared.count: 1
+          spellcasting.prepared.remaining: 1
+        offers:
+          exists:
+            - prepare-calm-emotions
+            - unprepare-calm-emotions
+          illegal:
+            - prepare-calm-emotions
+  # TC4: Unprepare Calm Emotions — both offers still exist, unprepare now illegal
+  - addOffer:
+      id: unprepare-calm-emotions
+      assert:
+        facts:
+          spell.l2.calmEmotions.prepared: 0
+          spell.l2.calmEmotions.removing: 1
+          spellcasting.prepared.count: 0
+          spellcasting.prepared.remaining: 2
+        offers:
+          exists:
+            - prepare-calm-emotions
+            - unprepare-calm-emotions
+          illegal:
+            - unprepare-calm-emotions
+  # End turn - persist removal effect into effects list
+  - endTurn: {}
+  # End turn again - removal effect fires, prepare effect expires
+  - endTurn: {}
+  # TC5: After unpreparing: unprepare illegal, prepare legal
+  - evaluate:
+      assert:
+        facts:
+          spell.l2.calmEmotions.prepared: 0
+          spellcasting.prepared.count: 0
+          spellcasting.prepared.remaining: 2
+        effects:
+          notExists:
+            - effect-calm-emotions-prepared
+        offers:
+          exists:
+            - prepare-calm-emotions
+            - unprepare-calm-emotions
+          illegal:
+            - unprepare-calm-emotions

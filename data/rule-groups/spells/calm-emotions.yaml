@@ -1,73 +1,81 @@
 # yaml-language-server: $schema=../schema.json
 ruleGroups:
-  - id: spell-bless
+  - id: spell-calm-emotions
     requires:
       - spellcasting
       - concentration
     translations:
       en:
-        name: Bless
+        name: Calm Emotions
         description: >-
-          Level 1 action spell (30ft). Target 2+SL creatures. Concentration,
-          up to 1 minute (10 rounds). +1d4 to attack rolls and saving throws.
-        keywords: [spell, level1, bless, action, enchantment, concentration]
+          Level 2 action spell (60ft). Humanoids in a 20ft-radius Sphere make a
+          CHA save or gain immunity to Charmed/Frightened, or become
+          Indifferent. Concentration, up to 1 minute (10 rounds).
+        keywords: [spell, level2, calm emotions, action, enchantment, concentration, bard, cleric]
       en-x-tlh:
-        name: DIch
+        name: tam tIq
         description: >-
-          DIch level 1 action. DIch DIvI' 2+SL. buQ, 1 rep. +1d4 DIvI' DIvI'.
-        keywords: [spell, level1, DIch, action, buQ]
+          DIch level 2 action (60ft). Sphere Humanoid CHA DIch. buQ, 1 rep
+          (10 rounds).
+        keywords: [spell, level2, tam tIq, action, buQ]
     detail:
-      key: spell/bless
+      key: spell/calm-emotions
       source: srd52
       translations:
         en:
-          meta: 'Level 1 Enchantment (Cleric, Paladin)'
+          meta: 'Level 2 Enchantment (Bard, Cleric)'
           fields:
             - { labelKey: rules.field.castingTime, value: 'Action' }
-            - { labelKey: rules.field.range, value: '30 feet' }
-            - { labelKey: rules.field.components, value: 'V, S, M (a Holy Symbol worth 5+ GP)' }
+            - { labelKey: rules.field.range, value: '60 feet' }
+            - { labelKey: rules.field.components, value: 'V, S' }
             - { labelKey: rules.field.duration, value: 'Concentration, up to 1 minute' }
           body: |
-            You bless up to three creatures within range. Whenever a target makes
-            an attack roll or a saving throw before the spell ends, the target adds
-            1d4 to the attack roll or save.
+            Each Humanoid in a 20-foot-radius Sphere centered on a point you choose
+            within range must succeed on a **Charisma saving throw** or be affected
+            by one of the following effects (choose for each creature):
 
-            *Using a Higher-Level Spell Slot.* You can target one additional creature
-            for each spell slot level above 1.
+            - The creature has Immunity to the Charmed and Frightened conditions
+              until the spell ends. If the creature was already Charmed or
+              Frightened, those conditions are suppressed for the duration.
+
+            - The creature becomes Indifferent about creatures of your choice that
+              it's Hostile toward. This indifference ends if the target takes damage
+              or witnesses its allies taking damage. When the spell ends, the
+              creature's attitude returns to normal.
     rules:
-      # Offer to prepare Bless (Build → Prepare → L1)
-      - id: prepare-bless-offer
+      # Offer to prepare Calm Emotions (Build → Prepare → L2)
+      - id: prepare-calm-emotions-offer
         activities:
           - type: offerRule
             legalWhen:
               - condition:
-                  fact: spell.l1.bless.prepared
+                  fact: spell.l2.calmEmotions.prepared
                   operator: notEquals
                   value: 1
                 illegalDiagnostics:
-                  - code: rule.spell-bless.prepare-bless-offer.already_prepared
+                  - code: rule.spell-calm-emotions.prepare-calm-emotions-offer.already_prepared
                     severity: error
               - condition:
                   fact: spellcasting.prepared.remaining
                   operator: greaterThan
                   value: 0
                 illegalDiagnostics:
-                  - code: rule.spell-bless.prepare-bless-offer.max_prepared
+                  - code: rule.spell-calm-emotions.prepare-calm-emotions-offer.max_prepared
                     severity: error
             rule:
-              id: prepare-bless
+              id: prepare-calm-emotions
               phase: normal
               group:
                 - __planned__
               ui:
                 section: configuration
-                name: rule.spell-bless.prepare-bless-offer.name
-                intents: { PREPARE: L1 }
+                name: rule.spell-calm-emotions.prepare-calm-emotions-offer.name
+                intents: { PREPARE: L2 }
                 actionCost: []
               activities:
                 - type: numberSet
                   target:
-                    fact: spell.l1.bless.prepared
+                    fact: spell.l2.calmEmotions.prepared
                   source:
                     number: 1
                 - type: numberIncrement
@@ -77,67 +85,88 @@ ruleGroups:
                     number: 1
                 - type: advertiseEffect
                   rule:
-                    id: effect-bless-prepared
+                    id: effect-calm-emotions-prepared
                     ui:
-                      name: rule.spell-bless.effect-bless-prepared.name
+                      name: rule.spell-calm-emotions.effect-calm-emotions-prepared.name
                       hidden: true
                     phase: early
                     after:
-                      - group: spell-l1-bless-removal-set
+                      - group: spell-l2-calmEmotions-removal-set
+                      - group: always-prepared-set
                     activities:
                       - type: numberSet
                         target:
-                          fact: spell.l1.bless.prepared
+                          fact: spell.l2.calmEmotions.prepared
                         source:
                           number: 1
                         when:
-                          - fact: spell.l1.bless.removing
+                          - fact: spell.l2.calmEmotions.removing
                             operator: equals
                             value: 0
+                      # Stop counting against the prepared limit once a feature
+                      # grants this spell always-prepared (alwaysPrepared == 1),
+                      # otherwise a manual L2 preparation would permanently waste
+                      # a prepared slot after the grant activates.
                       - type: numberIncrement
                         target:
                           fact: spellcasting.prepared.count
                         source:
                           number: 1
                         when:
-                          - fact: spell.l1.bless.removing
+                          - fact: spell.l2.calmEmotions.removing
                             operator: equals
                             value: 0
+                          - fact: spell.l2.calmEmotions.alwaysPrepared
+                            operator: notEquals
+                            value: 1
+                      # Retire the effect once always-prepared takes over (the
+                      # grant then sustains the prepared fact each evaluation).
                       - type: advertiseEffect
                         self: true
                         when:
-                          - fact: spell.l1.bless.removing
+                          - fact: spell.l2.calmEmotions.removing
                             operator: equals
                             value: 0
+                          - fact: spell.l2.calmEmotions.alwaysPrepared
+                            operator: notEquals
+                            value: 1
 
-      # Offer to unprepare Bless
-      - id: unprepare-bless-offer
+      # Offer to unprepare Calm Emotions
+      # (illegal when granted always-prepared by a feature)
+      - id: unprepare-calm-emotions-offer
         activities:
           - type: offerRule
             legalWhen:
               - condition:
-                  fact: spell.l1.bless.prepared
+                  fact: spell.l2.calmEmotions.prepared
                   operator: equals
                   value: 1
                 illegalDiagnostics:
-                  - code: rule.spell-bless.unprepare-bless-offer.not_prepared
+                  - code: rule.spell-calm-emotions.unprepare-calm-emotions-offer.not_prepared
+                    severity: error
+              - condition:
+                  fact: spell.l2.calmEmotions.alwaysPrepared
+                  operator: notEquals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-calm-emotions.unprepare-calm-emotions-offer.always_prepared
                     severity: error
             rule:
-              id: unprepare-bless
+              id: unprepare-calm-emotions
               ui:
                 section: configuration
-                name: rule.spell-bless.unprepare-bless-offer.name
-                intents: { PREPARE: L1 }
+                name: rule.spell-calm-emotions.unprepare-calm-emotions-offer.name
+                intents: { PREPARE: L2 }
                 actionCost: []
               activities:
                 - type: numberSet
                   target:
-                    fact: spell.l1.bless.prepared
+                    fact: spell.l2.calmEmotions.prepared
                   source:
                     number: 0
                 - type: numberSet
                   target:
-                    fact: spell.l1.bless.removing
+                    fact: spell.l2.calmEmotions.removing
                   source:
                     number: 1
                 - type: numberIncrement
@@ -148,46 +177,45 @@ ruleGroups:
                   subtract: true
                 - type: advertiseEffect
                   rule:
-                    id: effect-bless-removing
+                    id: effect-calm-emotions-removing
                     ui:
-                      name: rule.spell-bless.effect-bless-removing.name
+                      name: rule.spell-calm-emotions.effect-calm-emotions-removing.name
                       hidden: true
                     phase: early
                     group:
-                      - spell-l1-bless-removal-set
+                      - spell-l2-calmEmotions-removal-set
                     activities:
                       - type: numberSet
                         target:
-                          fact: spell.l1.bless.removing
+                          fact: spell.l2.calmEmotions.removing
                         source:
                           number: 1
 
-      # Compute eligible bless slot count (levels 1-5)
-      - id: compute-bless-eligible-slots
+      # Compute eligible Calm Emotions slot count (levels 2-5)
+      - id: compute-calm-emotions-eligible-slots
         phase: normal
         group:
-          - bless-slots-computed
+          - calmEmotions-slots-computed
         activities:
           - type: numberSum
             target:
-              fact: bless.eligibleSlotsRemaining
+              fact: calmEmotions.eligibleSlotsRemaining
             sources:
-              - fact: spellcasting.slots.level1.remaining
               - fact: spellcasting.slots.level2.remaining
               - fact: spellcasting.slots.level3.remaining
               - fact: spellcasting.slots.level4.remaining
               - fact: spellcasting.slots.level5.remaining
 
-      # Compute lowest available slot level
+      # Compute lowest available slot level (2-5)
       # Cascade from high to low so the lowest available level overwrites
-      - id: compute-bless-lowest-slot
+      - id: compute-calm-emotions-lowest-slot
         phase: normal
         group:
-          - bless-slots-computed
+          - calmEmotions-slots-computed
         activities:
           - type: numberSet
             target:
-              fact: bless.lowestAvailableSlotLevel
+              fact: calmEmotions.lowestAvailableSlotLevel
             source:
               number: 5
             when:
@@ -196,7 +224,7 @@ ruleGroups:
                 value: 0
           - type: numberSet
             target:
-              fact: bless.lowestAvailableSlotLevel
+              fact: calmEmotions.lowestAvailableSlotLevel
             source:
               number: 4
             when:
@@ -205,7 +233,7 @@ ruleGroups:
                 value: 0
           - type: numberSet
             target:
-              fact: bless.lowestAvailableSlotLevel
+              fact: calmEmotions.lowestAvailableSlotLevel
             source:
               number: 3
             when:
@@ -214,34 +242,25 @@ ruleGroups:
                 value: 0
           - type: numberSet
             target:
-              fact: bless.lowestAvailableSlotLevel
+              fact: calmEmotions.lowestAvailableSlotLevel
             source:
               number: 2
             when:
               - fact: spellcasting.slots.level2.remaining
                 operator: greaterThan
                 value: 0
-          - type: numberSet
-            target:
-              fact: bless.lowestAvailableSlotLevel
-            source:
-              number: 1
-            when:
-              - fact: spellcasting.slots.level1.remaining
-                operator: greaterThan
-                value: 0
 
-      # Offer Bless (action spell)
-      - id: offer-bless
+      # Offer Calm Emotions (action spell)
+      - id: offer-calm-emotions
         when:
-          - fact: spell.l1.bless.prepared
+          - fact: spell.l2.calmEmotions.prepared
             operator: equals
             value: 1
         after:
+          - group: __planned__
           - group: action
           - group: spellcasting
-          - group: __planned__
-          - group: bless-slots-computed
+          - group: calmEmotions-slots-computed
         activities:
           - type: offerRule
             legalWhen:
@@ -250,40 +269,41 @@ ruleGroups:
                   operator: greaterThan
                   value: 0
                 illegalDiagnostics:
-                  - code: rule.spell-bless.offer-bless.no_action
+                  - code: rule.spell-calm-emotions.offer-calm-emotions.no_action
                     severity: error
               - condition:
                   fact: spellcasting.remaining
                   operator: greaterThan
                   value: 0
                 illegalDiagnostics:
-                  - code: rule.spell-bless.offer-bless.no_spellcasting
+                  - code: rule.spell-calm-emotions.offer-calm-emotions.no_spellcasting
                     severity: error
               - condition:
                   fact: concentration.remaining
                   operator: greaterThan
                   value: 0
                 illegalDiagnostics:
-                  - code: rule.spell-bless.offer-bless.already_concentrating
+                  - code: rule.spell-calm-emotions.offer-calm-emotions.already_concentrating
                     severity: error
               - condition:
-                  fact: bless.eligibleSlotsRemaining
+                  fact: calmEmotions.eligibleSlotsRemaining
                   operator: greaterThan
                   value: 0
                 illegalDiagnostics:
-                  - code: rule.spell-bless.offer-bless.no_slots
+                  - code: rule.spell-calm-emotions.offer-calm-emotions.no_slots
                     severity: error
             rule:
-              id: cast-bless
+              id: cast-calm-emotions
               group:
                 - __planned__
                 - action
                 - spellcasting
               ui:
                 section: action-spell
-                name: rule.spell-bless.offer-bless.name
-                description: rule.spell-bless.offer-bless.description
-                detailKey: spell/bless
+                name: rule.spell-calm-emotions.offer-calm-emotions.name
+                description: rule.spell-calm-emotions.offer-calm-emotions.description
+                detailKey: spell/calm-emotions
+                showDC: true
                 information:
                   - type: text
                     label: play.information.saveDc
@@ -291,13 +311,22 @@ ruleGroups:
                       saveType: { fact: spellcasting.saveAbility }
                       dc: { fact: spellcasting.saveDC }
                 intents:
-                  AID: ally
-                actionCost: [action, conc, L1]
+                  CONTROL: area
+                actionCost: [action, conc, L2]
+                primaryControl:
+                  type: slider
+                  var: slotLevel
+                  notches:
+                    - { value: 2, enabled: { fact: spellcasting.slots.level2.total } }
+                    - { value: 3, enabled: { fact: spellcasting.slots.level3.total } }
+                    - { value: 4, enabled: { fact: spellcasting.slots.level4.total } }
+                    - { value: 5, enabled: { fact: spellcasting.slots.level5.total } }
+                  valueFormat: spellLevel
               vars:
                 slotLevel:
                   capture: true
                   default:
-                    fact: bless.lowestAvailableSlotLevel
+                    fact: calmEmotions.lowestAvailableSlotLevel
               activities:
                 # Consume action
                 - type: numberIncrement
@@ -326,7 +355,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.spell-bless.offer-bless.no_action
+                    string: rule.spell-calm-emotions.offer-calm-emotions.no_action
                   when:
                     - fact: actions.remaining
                       operator: lessThan
@@ -335,7 +364,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.spell-bless.offer-bless.no_spellcasting
+                    string: rule.spell-calm-emotions.offer-calm-emotions.no_spellcasting
                   when:
                     - fact: spellcasting.remaining
                       operator: lessThan
@@ -344,7 +373,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.spell-bless.offer-bless.already_concentrating
+                    string: rule.spell-calm-emotions.offer-calm-emotions.already_concentrating
                   when:
                     - fact: concentration.remaining
                       operator: lessThan
@@ -352,20 +381,9 @@ ruleGroups:
                 # Bridge var to fact for conditional slot consumption
                 - type: numberSet
                   target:
-                    fact: bless.selectedLevel
+                    fact: calmEmotions.selectedLevel
                   source:
                     var: slotLevel
-                # Consume L1 slot
-                - type: numberIncrement
-                  target:
-                    fact: spellcasting.slots.level1.remaining
-                  source:
-                    number: 1
-                  subtract: true
-                  when:
-                    - fact: bless.selectedLevel
-                      operator: equals
-                      value: 1
                 # Consume L2 slot
                 - type: numberIncrement
                   target:
@@ -374,7 +392,7 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    - fact: bless.selectedLevel
+                    - fact: calmEmotions.selectedLevel
                       operator: equals
                       value: 2
                 # Consume L3 slot
@@ -385,7 +403,7 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    - fact: bless.selectedLevel
+                    - fact: calmEmotions.selectedLevel
                       operator: equals
                       value: 3
                 # Consume L4 slot
@@ -396,7 +414,7 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    - fact: bless.selectedLevel
+                    - fact: calmEmotions.selectedLevel
                       operator: equals
                       value: 4
                 # Consume L5 slot
@@ -407,7 +425,7 @@ ruleGroups:
                     number: 1
                   subtract: true
                   when:
-                    - fact: bless.selectedLevel
+                    - fact: calmEmotions.selectedLevel
                       operator: equals
                       value: 5
                 # Track slot consumption errors
@@ -415,16 +433,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.spell-bless.offer-bless.no_slots
-                  when:
-                    - fact: spellcasting.slots.level1.remaining
-                      operator: lessThan
-                      value: 0
-                - type: setAdd
-                  target:
-                    var: errors
-                  source:
-                    string: rule.spell-bless.offer-bless.no_slots
+                    string: rule.spell-calm-emotions.offer-calm-emotions.no_slots
                   when:
                     - fact: spellcasting.slots.level2.remaining
                       operator: lessThan
@@ -433,7 +442,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.spell-bless.offer-bless.no_slots
+                    string: rule.spell-calm-emotions.offer-calm-emotions.no_slots
                   when:
                     - fact: spellcasting.slots.level3.remaining
                       operator: lessThan
@@ -442,7 +451,7 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.spell-bless.offer-bless.no_slots
+                    string: rule.spell-calm-emotions.offer-calm-emotions.no_slots
                   when:
                     - fact: spellcasting.slots.level4.remaining
                       operator: lessThan
@@ -451,44 +460,15 @@ ruleGroups:
                   target:
                     var: errors
                   source:
-                    string: rule.spell-bless.offer-bless.no_slots
+                    string: rule.spell-calm-emotions.offer-calm-emotions.no_slots
                   when:
                     - fact: spellcasting.slots.level5.remaining
                       operator: lessThan
                       value: 0
-                # Persist L1 slot consumption across turns
-                - type: advertiseEffect
-                  rule:
-                    id: effect-bless-slot-l1
-                    ui:
-                      name: play.slotEffect.l1
-                      hidden: true
-                    phase: early
-                    after:
-                      - group: spellcasting-slots-set
-                    group:
-                      - spell-slot-effect
-                    activities:
-                      - type: numberIncrement
-                        target:
-                          fact: spellcasting.slots.level1.remaining
-                        source:
-                          number: 1
-                        subtract: true
-                      - type: advertiseEffect
-                        self: true
-                        when:
-                          - fact: rest.long
-                            operator: equals
-                            value: 0
-                  when:
-                    - fact: bless.selectedLevel
-                      operator: equals
-                      value: 1
                 # Persist L2 slot consumption across turns
                 - type: advertiseEffect
                   rule:
-                    id: effect-bless-slot-l2
+                    id: effect-calm-emotions-slot-l2
                     ui:
                       name: play.slotEffect.l2
                       hidden: true
@@ -511,13 +491,13 @@ ruleGroups:
                             operator: equals
                             value: 0
                   when:
-                    - fact: bless.selectedLevel
+                    - fact: calmEmotions.selectedLevel
                       operator: equals
                       value: 2
                 # Persist L3 slot consumption across turns
                 - type: advertiseEffect
                   rule:
-                    id: effect-bless-slot-l3
+                    id: effect-calm-emotions-slot-l3
                     ui:
                       name: play.slotEffect.l3
                       hidden: true
@@ -540,13 +520,13 @@ ruleGroups:
                             operator: equals
                             value: 0
                   when:
-                    - fact: bless.selectedLevel
+                    - fact: calmEmotions.selectedLevel
                       operator: equals
                       value: 3
                 # Persist L4 slot consumption across turns
                 - type: advertiseEffect
                   rule:
-                    id: effect-bless-slot-l4
+                    id: effect-calm-emotions-slot-l4
                     ui:
                       name: play.slotEffect.l4
                       hidden: true
@@ -569,13 +549,13 @@ ruleGroups:
                             operator: equals
                             value: 0
                   when:
-                    - fact: bless.selectedLevel
+                    - fact: calmEmotions.selectedLevel
                       operator: equals
                       value: 4
                 # Persist L5 slot consumption across turns
                 - type: advertiseEffect
                   rule:
-                    id: effect-bless-slot-l5
+                    id: effect-calm-emotions-slot-l5
                     ui:
                       name: play.slotEffect.l5
                       hidden: true
@@ -598,13 +578,13 @@ ruleGroups:
                             operator: equals
                             value: 0
                   when:
-                    - fact: bless.selectedLevel
+                    - fact: calmEmotions.selectedLevel
                       operator: equals
                       value: 5
-                # Create persistent Bless effect (10 rounds, concentration)
+                # Create persistent Calm Emotions effect (10 rounds, CHA save, concentration)
                 - type: advertiseEffect
                   rule:
-                    id: effect-bless
+                    id: effect-calm-emotions
                     phase: early
                     after:
                       - group: spellcasting-slots-set
@@ -617,9 +597,12 @@ ruleGroups:
                         value: 0
                     ui:
                       section: ongoing
-                      name: rule.spell-bless.effect-bless.name
+                      name: rule.spell-calm-emotions.effect-calm-emotions.name
+                      detailKey: spell/calm-emotions
                       countDown: 10
                       duration: 10
+                      saveType: CHA
+                      saveFact: spellcasting.saveDC
                       information:
                         - type: countdown
                           filled: { number: 10 }
@@ -627,6 +610,7 @@ ruleGroups:
                         - type: text
                           label: play.information.saveDc
                           labelValues:
+                            saveType: { fact: spellcasting.saveAbility }
                             dc: { fact: spellcasting.saveDC }
                     activities:
                       - type: numberIncrement

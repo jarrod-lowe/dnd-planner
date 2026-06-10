@@ -1,0 +1,65 @@
+name: 'Calm Emotions - Planned Item Illegal While Concentrating'
+description: >-
+  Casting Calm Emotions, then planning a second cast while concentration is
+  still held, marks the second planned item illegal with an already_concentrating
+  error. A slot remains, so no_slots does not co-fire.
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/concentration
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-calm-emotions
+initialEffects:
+  - id: test-grant-level2-slots
+    phase: early
+    group:
+      - spellcasting-slots-set
+    activities:
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.total
+        source:
+          number: 2
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.remaining
+        source:
+          number: 2
+      - type: advertiseEffect
+        self: true
+steps:
+  - evaluate:
+  - addOffer:
+      id: prepare-calm-emotions
+  - endTurn: {}
+  # Turn 1: cast Calm Emotions, starting concentration
+  - addOffer:
+      id: cast-calm-emotions
+      assert:
+        facts:
+          concentration.remaining: 0
+          spellcasting.slots.level2.remaining: 1
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-calm-emotions
+  # Turn 2: still concentrating; planning a second cast is illegal (concentration),
+  # but a slot still remains so no_slots does not fire.
+  - evaluate:
+      assert:
+        facts:
+          concentration.remaining: 0
+          spellcasting.slots.level2.remaining: 1
+  - addOffer:
+      id: cast-calm-emotions
+      assert:
+        planErrors:
+          - id: cast-calm-emotions
+            index: 0
+            errors:
+              - rule.spell-calm-emotions.offer-calm-emotions.already_concentrating

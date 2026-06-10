@@ -1,0 +1,50 @@
+name: 'Protection from Evil and Good - Planned Item Illegal While Concentrating'
+description: >-
+  Casting Protection from Evil and Good, then planning a second cast while
+  concentration is still held, marks the second planned item illegal with an
+  already_concentrating error.
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/concentration
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-protection-from-evil-and-good
+steps:
+  - evaluate:
+  - addOffer:
+      id: prepare-protection-from-evil-and-good
+  - evaluate:
+      assert:
+        facts:
+          concentration.remaining: 1
+        offers:
+          exists:
+            - cast-protection-from-evil-and-good
+  - addOffer:
+      id: cast-protection-from-evil-and-good
+      assert:
+        facts:
+          concentration.remaining: 0
+          spellcasting.slots.level1.remaining: 1
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-protection-from-evil-and-good
+  - evaluate:
+      assert:
+        facts:
+          concentration.remaining: 0
+          spellcasting.slots.level1.remaining: 1
+  - addOffer:
+      id: cast-protection-from-evil-and-good
+      assert:
+        planErrors:
+          - id: cast-protection-from-evil-and-good
+            index: 0
+            errors:
+              - rule.spell-protection-from-evil-and-good.offer-protection-from-evil-and-good.already_concentrating

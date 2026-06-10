@@ -184,6 +184,35 @@
         "not_prepared": "Sleep is not prepared"
       }
     },
+    "spell-calm-emotions": {
+      "offer-calm-emotions": {
+        "name": "Calm Emotions",
+        "description": "60ft | CHA save or immune to Charmed/Frightened, or Indifferent | 10 rnds",
+        "no_action": "No action available",
+        "no_spellcasting": "Already cast a spell this turn",
+        "already_concentrating": "Already concentrating",
+        "no_slots": "No spell slots remaining"
+      },
+      "effect-calm-emotions": {
+        "name": "Calm Emotions"
+      },
+      "effect-calm-emotions-prepared": {
+        "name": "Calm Emotions Prepared"
+      },
+      "effect-calm-emotions-removing": {
+        "name": "Removing Calm Emotions"
+      },
+      "prepare-calm-emotions-offer": {
+        "name": "Prepare Calm Emotions",
+        "max_prepared": "Maximum prepared spells reached",
+        "already_prepared": "Calm Emotions is already prepared"
+      },
+      "unprepare-calm-emotions-offer": {
+        "name": "Unprepare Calm Emotions",
+        "not_prepared": "Calm Emotions is not prepared",
+        "always_prepared": "Calm Emotions is always prepared"
+      }
+    },
     "spell-thunderous-smite": {
       "annotation": "Thunderous Smite available",
       "offer-thunderous-smite": {
@@ -1640,7 +1669,8 @@
         "skill": "Skill"
       },
       "PREPARE": {
-        "L1": "Level 1"
+        "L1": "Level 1",
+        "L2": "Level 2"
       },
       "EQUIP": {
         "weapons": "Weapons",
