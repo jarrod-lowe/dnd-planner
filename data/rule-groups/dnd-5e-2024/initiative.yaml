@@ -47,6 +47,7 @@ ruleGroups:
               ui:
                 section: free
                 name: rule.dnd-5e-2024.initiative.roll-initiative.name
+                description: rule.dnd-5e-2024.initiative.roll-initiative.description
                 disadvantageFact: initiative.disadvantage
                 primaryControl:
                   type: dice-line

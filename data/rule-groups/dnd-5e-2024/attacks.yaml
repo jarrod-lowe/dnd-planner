@@ -64,6 +64,7 @@ ruleGroups:
               ui:
                 section: action-attack
                 name: rule.dnd-5e-2024.attacks.unarmed-strike.name
+                description: rule.dnd-5e-2024.attacks.unarmed-strike.description
                 intents: { ATTACK: brawl }
                 actionCost: [action]
                 disadvantageFact: attack.str.disadvantage
@@ -134,6 +135,7 @@ ruleGroups:
               ui:
                 section: reaction
                 name: rule.dnd-5e-2024.attacks.unarmed-strike.name
+                description: rule.dnd-5e-2024.attacks.unarmed-strike.description
                 intents: { DEFEND: brawl }
                 actionCost: [reaction]
                 disadvantageFact: attack.str.disadvantage
