@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: class-paladin-paladin-find-steed
+    # Granted by taking Paladin level 5 (class-paladin-level5 requires this group).
+    # Depend only on the Find Steed spell — depending back on level 5 would
+    # create a requires cycle that blocks removal of either in Manage Rules.
+    requires:
+      - spell-find-steed
+    translations:
+      en:
+        name: Paladin's Steed
+        description: >-
+          You always have the Find Steed spell prepared (it does not count
+          against your prepared-spell limit).
+        keywords: [paladin, steed, mount, prepared]
+      en-x-tlh:
+        name: Sargh Sam Segh
+        description: >-
+          reH Sargh Sam mugh SoH; DIch DIvI' mugh laH.
+        keywords: [paladin, sargh, sam]
+    rules:
+      # Find Steed is always prepared for a Paladin from level 5.
+      # This grant does NOT consume a prepared-spell slot
+      # (spellcasting.prepared.count is untouched) and the alwaysPrepared flag
+      # blocks the Unprepare offer in spells/spell-find-steed.yaml.
+      - id: paladin-find-steed-always-prepared
+        phase: early
+        group:
+          - always-prepared-set
+        activities:
+          - type: numberSet
+            target:
+              fact: spell.l2.findSteed.prepared
+            source:
+              number: 1
+          - type: numberSet
+            target:
+              fact: spell.l2.findSteed.alwaysPrepared
+            source:
+              number: 1

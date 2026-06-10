@@ -96,7 +96,7 @@ terraform/environment/prod/.stamp: terraform/environment/prod \
 setup-state: terraform/environment/state/.apply
 setup-aws: terraform/environment/aws/.apply
 setup-github: terraform/environment/github/.apply
-deploy-test: validate-test test build go-build push-test sync-rule-groups
+deploy-test: terraform/environment/test/.apply validate-test test build go-build push-test sync-rule-groups
 #deploy-prod: terraform/environment/prod/.apply # - this runs in a pipeline instead
 
 # ============================================

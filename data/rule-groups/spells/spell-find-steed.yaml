@@ -143,6 +143,7 @@ ruleGroups:
                     phase: early
                     after:
                       - group: spell-l2-find-steed-removal-set
+                      - group: always-prepared-set
                     activities:
                       - type: numberSet
                         target:
@@ -153,6 +154,10 @@ ruleGroups:
                           - fact: spell.l2.findSteed.removing
                             operator: equals
                             value: 0
+                      # Stop counting against the prepared limit once a feature
+                      # grants this spell always-prepared (alwaysPrepared == 1),
+                      # otherwise a manual L2 preparation would permanently waste
+                      # a prepared slot after the grant activates.
                       - type: numberIncrement
                         target:
                           fact: spellcasting.prepared.count
@@ -162,14 +167,23 @@ ruleGroups:
                           - fact: spell.l2.findSteed.removing
                             operator: equals
                             value: 0
+                          - fact: spell.l2.findSteed.alwaysPrepared
+                            operator: notEquals
+                            value: 1
+                      # Retire the effect once always-prepared takes over (the
+                      # grant then sustains the prepared fact each evaluation).
                       - type: advertiseEffect
                         self: true
                         when:
                           - fact: spell.l2.findSteed.removing
                             operator: equals
                             value: 0
+                          - fact: spell.l2.findSteed.alwaysPrepared
+                            operator: notEquals
+                            value: 1
 
       # Offer to unprepare Find Steed
+      # (illegal when granted always-prepared by a feature, e.g. Paladin L5)
       - id: unprepare-find-steed-offer
         activities:
           - type: offerRule
@@ -180,6 +194,13 @@ ruleGroups:
                   value: 1
                 illegalDiagnostics:
                   - code: rule.spell-find-steed.unprepare-find-steed-offer.not_prepared
+                    severity: error
+              - condition:
+                  fact: spell.l2.findSteed.alwaysPrepared
+                  operator: notEquals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-find-steed.unprepare-find-steed-offer.always_prepared
                     severity: error
             rule:
               id: unprepare-find-steed

@@ -1,0 +1,36 @@
+name: 'Oath of Redemption L3 - Sleep and Sanctuary Always Prepared'
+description: >-
+  Oath of Redemption L3 grants Sleep and Sanctuary always-prepared without
+  spending a prepared-spell slot, and they cannot be unprepared
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/concentration
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-divinity
+  - class-paladin/class-paladin-oath-redemption-level3
+  - spells/spell-sleep
+  - spells/spell-sanctuary
+steps:
+  - evaluate:
+      assert:
+        facts:
+          spell.l1.sleep.prepared: 1
+          spell.l1.sleep.alwaysPrepared: 1
+          spell.l1.sanctuary.prepared: 1
+          spell.l1.sanctuary.alwaysPrepared: 1
+          # Granted for free — does not consume prepared-spell slots
+          spellcasting.prepared.count: 0
+        offers:
+          # Cannot unprepare always-prepared spells
+          illegal:
+            - unprepare-sleep
+            - unprepare-sanctuary
