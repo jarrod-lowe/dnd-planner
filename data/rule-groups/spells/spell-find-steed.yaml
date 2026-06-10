@@ -628,6 +628,29 @@ ruleGroups:
                       operator: lessThan
                       value: 0
 
+                # === Free-use → level-2 mapping ===
+                # After slot consumption (which correctly skipped level 0),
+                # mark the free use and map selectedLevel to 2 so all downstream
+                # steed effects (offers, resources, persistence) fire as L2.
+                - type: numberSet
+                  target:
+                    fact: find-steed.wasFreeUse
+                  source:
+                    number: 1
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 0
+                - type: numberSet
+                  target:
+                    fact: find-steed.selectedLevel
+                  source:
+                    number: 2
+                  when:
+                    - fact: find-steed.wasFreeUse
+                      operator: equals
+                      value: 1
+
                 # === Steed facts for same-turn use ===
                 - type: numberSet
                   target:
@@ -1272,6 +1295,9 @@ ruleGroups:
                     - fact: find-steed.selectedLevel
                       operator: equals
                       value: 2
+                    - fact: find-steed.wasFreeUse
+                      operator: notEquals
+                      value: 1
                 - type: advertiseEffect
                   rule:
                     id: effect-steed-slot-l3
