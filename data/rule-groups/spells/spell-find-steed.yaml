@@ -2238,7 +2238,7 @@ ruleGroups:
                               operator: greaterThan
                               value: 0
                             illegalDiagnostics:
-                              - code: rule.spell-find-steed.steed-slam-reaction.no_reaction
+                              - code: rule.spell-find-steed.steed-slam.no_reaction
                                 severity: error
                         rule:
                           id: steed-slam-reaction
@@ -4072,7 +4072,7 @@ ruleGroups:
                               operator: greaterThan
                               value: 0
                             illegalDiagnostics:
-                              - code: rule.spell-find-steed.steed-slam-reaction.no_reaction
+                              - code: rule.spell-find-steed.steed-slam.no_reaction
                                 severity: error
                         rule:
                           id: steed-slam-reaction
@@ -5917,7 +5917,7 @@ ruleGroups:
                               operator: greaterThan
                               value: 0
                             illegalDiagnostics:
-                              - code: rule.spell-find-steed.steed-slam-reaction.no_reaction
+                              - code: rule.spell-find-steed.steed-slam.no_reaction
                                 severity: error
                         rule:
                           id: steed-slam-reaction
@@ -7762,7 +7762,7 @@ ruleGroups:
                               operator: greaterThan
                               value: 0
                             illegalDiagnostics:
-                              - code: rule.spell-find-steed.steed-slam-reaction.no_reaction
+                              - code: rule.spell-find-steed.steed-slam.no_reaction
                                 severity: error
                         rule:
                           id: steed-slam-reaction
