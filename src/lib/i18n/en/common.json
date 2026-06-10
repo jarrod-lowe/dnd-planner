@@ -148,7 +148,7 @@
     "spell-sleep": {
       "offer-sleep": {
         "name": "Sleep",
-        "description": "60ft | WIS save or fall unconscious | 10 rnds",
+        "description": "60ft | WIS save or Incapacitated; 2nd fail: Unconscious | 10 rnds",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
         "already_concentrating": "Already concentrating",
@@ -364,7 +364,7 @@
       },
       "loh-purify-poison": {
         "name": "Purify Poison (LoH)",
-        "description": "Touch | Spend 5 points to end a disease or poison"
+        "description": "Touch | Spend 5 points to end the Poisoned condition"
       },
       "offer-loh-purify-poison": {
         "no_bonus_action": "No bonus action available",
@@ -857,7 +857,7 @@
       "grapple": {
         "grapple-action": {
           "name": "Grapple",
-          "description": "Athletics vs Athletics/Acrobatics — target Grappled"
+          "description": "STR or DEX save vs your DC — target Grappled"
         },
         "action-grapple-offer": {
           "no_action": "No action available"
@@ -866,7 +866,7 @@
       "shove": {
         "shove-action": {
           "name": "Shove",
-          "description": "Athletics vs Athletics/Acrobatics — push 5ft or knock prone"
+          "description": "STR or DEX save vs your DC — push 5ft or knock prone"
         },
         "action-shove-offer": {
           "no_action": "No action available"

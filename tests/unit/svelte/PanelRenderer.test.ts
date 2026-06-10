@@ -24,4 +24,22 @@ describe('PanelRenderer description', () => {
     });
     expect(container.querySelector('.panel-renderer__description')).toBeNull();
   });
+
+  it('includes the description in the picker accessible name (non-editable)', () => {
+    const { container } = render(PanelRenderer, {
+      props: { entry: makeEntry({ name: 'rule.x.name', description: 'rule.x.description' }) }
+    });
+    const panel = container.querySelector('.panel-renderer');
+    const descriptionText = container.querySelector('.panel-renderer__description')!.textContent!;
+    expect(panel?.getAttribute('role')).toBe('button');
+    expect(panel?.getAttribute('aria-label')).toContain(descriptionText);
+  });
+
+  it('omits a description fragment from the accessible name when absent', () => {
+    const { container } = render(PanelRenderer, {
+      props: { entry: makeEntry({ name: 'rule.x.name' }) }
+    });
+    const panel = container.querySelector('.panel-renderer');
+    expect(panel?.getAttribute('aria-label')).not.toContain('. ');
+  });
 });

@@ -270,6 +270,7 @@
   tabindex={!editable ? 0 : undefined}
   aria-label={!editable
     ? displayName +
+      (displayDescription ? `. ${displayDescription}` : '') +
       (hasWarning && warningType
         ? ` (${warningMessage ?? $t(warningType === 'illegal' ? 'play.choices.illegal' : 'play.choices.inapplicable')})`
         : '')

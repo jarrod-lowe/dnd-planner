@@ -148,7 +148,7 @@
     "spell-sleep": {
       "offer-sleep": {
         "name": "Qong",
-        "description": "60ft | WIS ra' pagh Qong | 10 rep",
+        "description": "60ft | WIS ra' pagh roj; cha'logh luj: Qong | 10 rep",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
         "already_concentrating": "buQ DIvI'",
@@ -857,7 +857,7 @@
       "grapple": {
         "grapple-action": {
           "name": "DIvI' qop",
-          "description": "Athletics ra' | jagh qop"
+          "description": "STR/DEX ra' | jagh qop"
         },
         "action-grapple-offer": {
           "no_action": "DIvI' tu'lu'be'"
@@ -866,7 +866,7 @@
       "shove": {
         "shove-action": {
           "name": "DIvI' puv",
-          "description": "Athletics ra' | puv 5ft pagh DoH"
+          "description": "STR/DEX ra' | puv 5ft pagh DoH"
         },
         "action-shove-offer": {
           "no_action": "DIvI' tu'lu'be'"
