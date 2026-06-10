@@ -184,6 +184,35 @@
         "not_prepared": "Qong not prepared"
       }
     },
+    "spell-calm-emotions": {
+      "offer-calm-emotions": {
+        "name": "tam tIq",
+        "description": "60ft | CHA ra' pagh charmed/frightened Qaw', pagh tam | 10 rep",
+        "no_action": "DIvI' tu'lu'be'",
+        "no_spellcasting": "mugh DIvI' tu'lu'be'",
+        "already_concentrating": "buQ DIvI'",
+        "no_slots": "mugh laH tu'lu'be'"
+      },
+      "effect-calm-emotions": {
+        "name": "tam tIq"
+      },
+      "effect-calm-emotions-prepared": {
+        "name": "tam tIq Prepared"
+      },
+      "effect-calm-emotions-removing": {
+        "name": "Removing tam tIq"
+      },
+      "prepare-calm-emotions-offer": {
+        "name": "Prepare tam tIq",
+        "max_prepared": "mugh DIvI' nIb",
+        "already_prepared": "tam tIq already prepared"
+      },
+      "unprepare-calm-emotions-offer": {
+        "name": "Unprepare tam tIq",
+        "not_prepared": "tam tIq not prepared",
+        "always_prepared": "tam tIq always prepared"
+      }
+    },
     "spell-thunderous-smite": {
       "annotation": "raQ muHta chen",
       "offer-thunderous-smite": {
@@ -1643,7 +1672,8 @@
         "skill": "Skill"
       },
       "PREPARE": {
-        "L1": "Level 1"
+        "L1": "Level 1",
+        "L2": "Level 2"
       },
       "EQUIP": {
         "weapons": "WEAPONS",

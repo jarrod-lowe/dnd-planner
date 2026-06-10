@@ -366,6 +366,15 @@ ruleGroups:
                     - fact: spellcasting.remaining
                       operator: lessThan
                       value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-sleep.offer-sleep.already_concentrating
+                  when:
+                    - fact: concentration.remaining
+                      operator: lessThan
+                      value: 0
                 # Bridge var to fact for conditional slot consumption
                 - type: numberSet
                   target:

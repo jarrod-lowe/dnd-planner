@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: bard-spells-l2
+    requires:
+      - spell-calm-emotions
+    translations:
+      en:
+        name: Bard Spells Level 2
+        description: Level 2 spells available to Bards
+        keywords: [bard, spells, level2]
+      en-x-tlh:
+        name: Bard Spells Level 2
+        description: Bard level 2 jupmey
+        keywords: [bard, jupmey, level2]
+    rules: []

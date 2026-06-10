@@ -1,0 +1,49 @@
+name: 'Bless - Planned Item Illegal While Concentrating'
+description: >-
+  Casting Bless, then planning a second cast while concentration is still held,
+  marks the second planned item illegal with an already_concentrating error.
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/concentration
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-bless
+steps:
+  - evaluate:
+  - addOffer:
+      id: prepare-bless
+  - evaluate:
+      assert:
+        facts:
+          concentration.remaining: 1
+        offers:
+          exists:
+            - cast-bless
+  - addOffer:
+      id: cast-bless
+      assert:
+        facts:
+          concentration.remaining: 0
+          spellcasting.slots.level1.remaining: 1
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-bless
+  - evaluate:
+      assert:
+        facts:
+          concentration.remaining: 0
+          spellcasting.slots.level1.remaining: 1
+  - addOffer:
+      id: cast-bless
+      assert:
+        planErrors:
+          - id: cast-bless
+            index: 0
+            errors:
+              - rule.spell-bless.offer-bless.already_concentrating
