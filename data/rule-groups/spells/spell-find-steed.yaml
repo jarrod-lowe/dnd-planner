@@ -662,6 +662,12 @@ ruleGroups:
                     fact: companion.steed.spellLevel
                   source:
                     fact: find-steed.selectedLevel
+                - type: numberSum
+                  target:
+                    fact: companion.steed.slam.hitBonus
+                  sources:
+                    - fact: cha.modifier
+                    - fact: proficiency.bonus
                 - type: numberSet
                   target:
                     fact: companion.steed.actions.remaining
@@ -738,7 +744,7 @@ ruleGroups:
                       hitBonus:
                         capture: true
                         default:
-                          fact: spellcasting.modifier
+                          fact: companion.steed.slam.hitBonus
                       damageDie:
                         default:
                           number: 8
@@ -957,7 +963,7 @@ ruleGroups:
                       hitBonus:
                         capture: true
                         default:
-                          fact: spellcasting.modifier
+                          fact: companion.steed.slam.hitBonus
                       damageDie:
                         default:
                           number: 8
@@ -1176,7 +1182,7 @@ ruleGroups:
                       hitBonus:
                         capture: true
                         default:
-                          fact: spellcasting.modifier
+                          fact: companion.steed.slam.hitBonus
                       damageDie:
                         default:
                           number: 8
@@ -1395,7 +1401,7 @@ ruleGroups:
                       hitBonus:
                         capture: true
                         default:
-                          fact: spellcasting.modifier
+                          fact: companion.steed.slam.hitBonus
                       damageDie:
                         default:
                           number: 8
