@@ -851,7 +851,7 @@ ruleGroups:
                         type: dice-line
                         dice:
                           - sides: 8
-                          - sides: 8
+                            count: 2
                             bonus: { var: spellLevel }
                     vars:
                       spellLevel:
@@ -1148,7 +1148,7 @@ ruleGroups:
                         type: dice-line
                         dice:
                           - sides: 8
-                          - sides: 8
+                            count: 2
                             bonus: { var: spellLevel }
                     vars:
                       spellLevel:
@@ -1445,7 +1445,7 @@ ruleGroups:
                         type: dice-line
                         dice:
                           - sides: 8
-                          - sides: 8
+                            count: 2
                             bonus: { var: spellLevel }
                     vars:
                       spellLevel:
@@ -1742,7 +1742,7 @@ ruleGroups:
                         type: dice-line
                         dice:
                           - sides: 8
-                          - sides: 8
+                            count: 2
                             bonus: { var: spellLevel }
                     vars:
                       spellLevel:

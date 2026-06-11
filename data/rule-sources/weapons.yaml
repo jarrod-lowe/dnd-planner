@@ -18,9 +18,9 @@ definitions:
         ranges: { var: ranges }
         advantage: { fact: attack.str.disadvantage }
         dice:
-          - expression: d20
+          - sides: 20
             bonus: { var: hitBonus }
-          - expression: { var: damageDie }
+          - sides: { var: damageDie }
             bonus: { var: damageBonus }
             damageType: { string: piercing }
     vars:
@@ -89,9 +89,9 @@ definitions:
         ranges: { var: ranges }
         advantage: { fact: attack.str.disadvantage }
         dice:
-          - expression: d20
+          - sides: 20
             bonus: { var: hitBonus }
-          - expression: { var: damageDie }
+          - sides: { var: damageDie }
             bonus: { var: damageBonus }
             damageType: { string: slashing }
       secondaryControl:
@@ -104,9 +104,9 @@ definitions:
           button: rule.dnd-5e-2024.attacks.greataxe-cleave.button
         ranges: { var: ranges }
         dice:
-          - expression: d20
+          - sides: 20
             bonus: { var: hitBonus }
-          - expression: { var: damageDie }
+          - sides: { var: damageDie }
             bonus: { var: damageBonus }
             damageType: { string: slashing }
     vars:
@@ -178,9 +178,9 @@ definitions:
         ranges: { var: ranges }
         advantage: { fact: attack.str.disadvantage }
         dice:
-          - expression: d20
+          - sides: 20
             bonus: { var: hitBonus }
-          - expression: { var: damageDie }
+          - sides: { var: damageDie }
             bonus: { var: damageBonus }
             damageType: { string: piercing }
     vars:
@@ -242,9 +242,9 @@ definitions:
         ranges: { var: ranges }
         advantage: { fact: attack.dex.disadvantage }
         dice:
-          - expression: d20
+          - sides: 20
             bonus: { var: hitBonus }
-          - expression: { var: damageDie }
+          - sides: { var: damageDie }
             bonus: { var: damageBonus }
             damageType: { string: slashing }
     vars:
@@ -300,9 +300,9 @@ definitions:
         ranges: { var: ranges }
         advantage: { fact: attack.str.disadvantage }
         dice:
-          - expression: d20
+          - sides: 20
             bonus: { var: hitBonus }
-          - expression: { var: damageDie }
+          - sides: { var: damageDie }
             bonus: { var: damageBonus }
             damageType: { string: piercing }
     vars:
@@ -371,9 +371,9 @@ definitions:
         ranges: { var: ranges }
         advantage: { fact: attack.str.disadvantage }
         dice:
-          - expression: d20
+          - sides: 20
             bonus: { var: hitBonus }
-          - expression: { var: damageDie }
+          - sides: { var: damageDie }
             bonus: { var: damageBonus }
             damageType: { string: piercing }
     vars:
