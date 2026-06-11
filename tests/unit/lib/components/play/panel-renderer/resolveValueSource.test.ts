@@ -1,7 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  resolveValueSource
-} from '$lib/components/play/panel-renderer/resolveValueSource';
+import { resolveValueSource } from '$lib/components/play/panel-renderer/resolveValueSource';
 
 describe('resolveValueSource', () => {
   it('resolves a fact reference', () => {

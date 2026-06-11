@@ -67,7 +67,9 @@
       <span class="dice-toast__equals"> = </span>
       <span class="dice-toast__total">{result.total}</span>
     {:else if hasBonus}
-      <span class={natClass(result.natural)}>{result.rolls ? result.rolls.join(' + ') : result.natural}</span>
+      <span class={natClass(result.natural)}
+        >{result.rolls ? result.rolls.join(' + ') : result.natural}</span
+      >
       {#if result.bonus! > 0}
         <span class="dice-toast__bonus"> + {result.bonus}</span>
       {:else}
@@ -76,7 +78,9 @@
       <span class="dice-toast__equals"> = </span>
       <span class="dice-toast__total">{result.total}</span>
     {:else}
-      <span class={natClass(result.natural)}>{result.rolls ? result.rolls.join(' + ') : result.natural}</span>
+      <span class={natClass(result.natural)}
+        >{result.rolls ? result.rolls.join(' + ') : result.natural}</span
+      >
     {/if}
 
     {#if damageTypeKey}
