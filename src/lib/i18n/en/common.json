@@ -1387,6 +1387,7 @@
         "actions": "Actions",
         "bonusActions": "Bonus Action",
         "healingTouch": "Healing Touch",
+        "feyStep": "Fey Step",
         "movement": "Move"
       },
       "sections": {
