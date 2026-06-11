@@ -890,6 +890,30 @@ ruleGroups:
                           - fact: companion.steed.healingTouch.remaining
                             operator: lessThan
                             value: 0
+                      - type: advertiseEffect
+                        rule:
+                          id: effect-steed-healing-touch-use
+                          phase: early
+                          when:
+                            - fact: rest.long
+                              operator: equals
+                              value: 0
+                          ui:
+                            name: rule.spell-find-steed.steed-healing-touch.name
+                            hidden: true
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.healingTouch.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: advertiseEffect
+                              self: true
+                              when:
+                                - fact: rest.long
+                                  operator: equals
+                                  value: 0
                   when:
                     - fact: find-steed.selectedLevel
                       operator: equals
@@ -1187,6 +1211,30 @@ ruleGroups:
                           - fact: companion.steed.healingTouch.remaining
                             operator: lessThan
                             value: 0
+                      - type: advertiseEffect
+                        rule:
+                          id: effect-steed-healing-touch-use
+                          phase: early
+                          when:
+                            - fact: rest.long
+                              operator: equals
+                              value: 0
+                          ui:
+                            name: rule.spell-find-steed.steed-healing-touch.name
+                            hidden: true
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.healingTouch.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: advertiseEffect
+                              self: true
+                              when:
+                                - fact: rest.long
+                                  operator: equals
+                                  value: 0
                   when:
                     - fact: find-steed.selectedLevel
                       operator: equals
@@ -1484,6 +1532,30 @@ ruleGroups:
                           - fact: companion.steed.healingTouch.remaining
                             operator: lessThan
                             value: 0
+                      - type: advertiseEffect
+                        rule:
+                          id: effect-steed-healing-touch-use
+                          phase: early
+                          when:
+                            - fact: rest.long
+                              operator: equals
+                              value: 0
+                          ui:
+                            name: rule.spell-find-steed.steed-healing-touch.name
+                            hidden: true
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.healingTouch.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: advertiseEffect
+                              self: true
+                              when:
+                                - fact: rest.long
+                                  operator: equals
+                                  value: 0
                   when:
                     - fact: find-steed.selectedLevel
                       operator: equals
@@ -1781,6 +1853,30 @@ ruleGroups:
                           - fact: companion.steed.healingTouch.remaining
                             operator: lessThan
                             value: 0
+                      - type: advertiseEffect
+                        rule:
+                          id: effect-steed-healing-touch-use
+                          phase: early
+                          when:
+                            - fact: rest.long
+                              operator: equals
+                              value: 0
+                          ui:
+                            name: rule.spell-find-steed.steed-healing-touch.name
+                            hidden: true
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.healingTouch.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: advertiseEffect
+                              self: true
+                              when:
+                                - fact: rest.long
+                                  operator: equals
+                                  value: 0
                   when:
                     - fact: find-steed.selectedLevel
                       operator: equals
