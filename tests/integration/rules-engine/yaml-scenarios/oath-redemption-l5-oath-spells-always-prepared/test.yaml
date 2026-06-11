@@ -1,0 +1,40 @@
+name: 'Oath of Redemption L5 - Calm Emotions and Hold Person Always Prepared'
+description: >-
+  Oath of Redemption L5 grants Calm Emotions and Hold Person always-prepared
+  without spending a prepared-spell slot, and they cannot be unprepared
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/concentration
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-level4
+  - class-paladin/class-paladin-level5
+  - class-paladin/class-paladin-divinity
+  - class-paladin/class-paladin-oath-redemption-level3
+  - class-paladin/class-paladin-oath-redemption-level4
+  - class-paladin/class-paladin-oath-redemption-level5
+  - spells/spell-calm-emotions
+  - spells/spell-hold-person
+steps:
+  - evaluate:
+      assert:
+        facts:
+          spell.l2.calmEmotions.prepared: 1
+          spell.l2.calmEmotions.alwaysPrepared: 1
+          spell.l2.holdPerson.prepared: 1
+          spell.l2.holdPerson.alwaysPrepared: 1
+          # Granted for free — does not consume prepared-spell slots
+          spellcasting.prepared.count: 0
+        offers:
+          # Cannot unprepare always-prepared spells
+          illegal:
+            - unprepare-calm-emotions
+            - unprepare-hold-person
