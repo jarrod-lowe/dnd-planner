@@ -180,7 +180,7 @@ ruleGroups:
                 primaryControl:
                   type: dice-line
                   dice:
-                    - expression: d20
+                    - sides: 20
                       bonus: { var: saveBonus }
                 secondaryControl:
                   type: segmented
@@ -226,7 +226,7 @@ ruleGroups:
                 primaryControl:
                   type: dice-line
                   dice:
-                    - expression: d20
+                    - sides: 20
                       bonus: { var: saveBonus }
                 secondaryControl:
                   type: segmented
@@ -272,7 +272,7 @@ ruleGroups:
                 primaryControl:
                   type: dice-line
                   dice:
-                    - expression: d20
+                    - sides: 20
                       bonus: { var: saveBonus }
                 secondaryControl:
                   type: segmented
@@ -318,7 +318,7 @@ ruleGroups:
                 primaryControl:
                   type: dice-line
                   dice:
-                    - expression: d20
+                    - sides: 20
                       bonus: { var: saveBonus }
                 secondaryControl:
                   type: segmented
@@ -364,7 +364,7 @@ ruleGroups:
                 primaryControl:
                   type: dice-line
                   dice:
-                    - expression: d20
+                    - sides: 20
                       bonus: { var: saveBonus }
                 secondaryControl:
                   type: segmented
@@ -410,7 +410,7 @@ ruleGroups:
                 primaryControl:
                   type: dice-line
                   dice:
-                    - expression: d20
+                    - sides: 20
                       bonus: { var: saveBonus }
                 secondaryControl:
                   type: segmented
@@ -457,7 +457,7 @@ ruleGroups:
                 primaryControl:
                   type: dice-line
                   dice:
-                    - expression: d20
+                    - sides: 20
                   annotationLabels: [dice.any]
                 intents:
                   CHECK: skill

@@ -55,15 +55,15 @@ describe('save rules structure', () => {
     }
   });
 
-  it('all save dice have d20 expression with saveBonus var', () => {
+  it('all save dice have d20 sides with saveBonus var', () => {
     for (const ability of abilities) {
       const offerRule = rules.find((r) => r.id === `offer-record-save-${ability}`);
       const offerActivity = offerRule!.activities!.find((a) => a.type === 'offerRule');
       const pc = offerActivity!.rule!.ui!.primaryControl as {
-        dice: { expression: string; bonus: { var: string } }[];
+        dice: { sides: number; bonus: { var: string } }[];
       };
       expect(pc.dice).toHaveLength(1);
-      expect(pc.dice[0].expression).toBe('d20');
+      expect(pc.dice[0].sides).toBe(20);
       expect(pc.dice[0].bonus.var).toBe('saveBonus');
     }
   });

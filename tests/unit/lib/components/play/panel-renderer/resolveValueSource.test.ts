@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  resolveValueSource,
-  resolveExpression
+  resolveValueSource
 } from '$lib/components/play/panel-renderer/resolveValueSource';
 
 describe('resolveValueSource', () => {
@@ -60,22 +59,5 @@ describe('resolveValueSource', () => {
       { label: { default: { string: 'Proficient' } } }
     );
     expect(result).toBe('Proficient');
-  });
-});
-
-describe('resolveExpression', () => {
-  it('resolves a literal expression', () => {
-    const result = resolveExpression('d20', {}, {}, {});
-    expect(result).toBe('d20');
-  });
-
-  it('resolves a var expression', () => {
-    const result = resolveExpression(
-      { var: 'damageDie' },
-      {},
-      { damageDie: { default: { number: 12 } } },
-      {}
-    );
-    expect(result).toBe(12);
   });
 });

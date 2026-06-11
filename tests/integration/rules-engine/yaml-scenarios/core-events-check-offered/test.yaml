@@ -16,5 +16,5 @@ steps:
               primaryControl:
                 type: dice-line
                 dice:
-                  - expression: d20
+                  - sides: 20
                 annotationLabels: [dice.any]

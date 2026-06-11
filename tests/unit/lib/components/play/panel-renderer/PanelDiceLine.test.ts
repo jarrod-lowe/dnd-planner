@@ -13,7 +13,7 @@ const createDiceLineEntry = (): AvailableRuleEntry => ({
       name: 'rule.dnd-5e-2024.initiative.name',
       primaryControl: {
         type: 'dice-line',
-        dice: [{ expression: 'd20', bonus: { var: 'initiativeBonus' } }]
+        dice: [{ sides: 20, bonus: { var: 'initiativeBonus' } }]
       }
     },
     vars: {
@@ -37,9 +37,9 @@ const createAttackEntry = (): AvailableRuleEntry => ({
         type: 'dice-line',
         ranges: { var: 'ranges' },
         dice: [
-          { expression: 'd20', bonus: { var: 'hitBonus' } },
+          { sides: 20, bonus: { var: 'hitBonus' } },
           {
-            expression: { var: 'damageDie' },
+            sides: { var: 'damageDie' },
             bonus: { var: 'damageBonus' },
             damageType: { string: 'slashing' }
           }
@@ -130,7 +130,7 @@ describe('PanelRenderer - dice-line control', () => {
           name: 'Simple Roll',
           primaryControl: {
             type: 'dice-line',
-            dice: [{ expression: 'd20' }]
+            dice: [{ sides: 20 }]
           }
         }
       } as Rule,
@@ -265,7 +265,7 @@ describe('PanelRenderer - dice-line control', () => {
     // Read-only chips are spans, not buttons, so no click handler
     const span = container.querySelector('.panel-renderer__die-chip');
     expect(span?.tagName).toBe('SPAN');
-    // Content should still be the expression, not a rolled number
+    // Content should still be the sides label, not a rolled number
     expect(container.textContent).toContain('d20');
     expect(container.textContent).toContain('+3');
   });
@@ -293,7 +293,7 @@ describe('PanelRenderer - dice-line control', () => {
           name: 'Zero Die',
           primaryControl: {
             type: 'dice-line',
-            dice: [{ expression: 'd0' }]
+            dice: [{ sides: 0 }]
           }
         }
       } as Rule,

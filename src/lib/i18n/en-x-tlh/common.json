@@ -101,6 +101,12 @@
         "description": "Sargh leng HIv chaw'be'",
         "no_actions": "Sargh DIv DIch"
       },
+      "steed-healing-touch": {
+        "name": "Qop Du",
+        "description": "Sargh DIv vagh 'uy' 2d8 + mugh level HP",
+        "no_bonus_action": "Sargh DIv latlh tu'lu'be'",
+        "no_uses": "Qop Du lo'pu' DIch"
+      },
       "steed-record-damage": {
         "name": "DIv DIch",
         "effect": {
@@ -1394,6 +1400,7 @@
         "speed": "SPD",
         "actions": "DIvI'",
         "bonusActions": "DIvI' latlh",
+        "healingTouch": "Qop Du",
         "movement": "Do"
       },
       "sections": {

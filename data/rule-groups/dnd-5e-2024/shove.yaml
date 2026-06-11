@@ -51,7 +51,7 @@ ruleGroups:
                   type: dice-line
                   annotationLabels: [dice.any]
                   dice:
-                    - expression: d20
+                    - sides: 20
                       bonus: { var: dc }
                 intents: { ATTACK: brawl }
                 actionCost: [action]
