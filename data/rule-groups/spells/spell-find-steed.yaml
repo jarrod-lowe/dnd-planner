@@ -3792,6 +3792,11 @@ ruleGroups:
                           fact: companion.steed.bonusActions.remaining
                         source:
                           number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.reactions.remaining
+                        source:
+                          number: 1
                   when:
                     - fact: find-steed.selectedLevel
                       operator: equals
