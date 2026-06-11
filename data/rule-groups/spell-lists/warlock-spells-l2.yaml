@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: warlock-spells-l2
+    requires:
+      - spell-hold-person
+    translations:
+      en:
+        name: Warlock Spells Level 2
+        description: Level 2 spells available to Warlocks
+        keywords: [warlock, spells, level2]
+      en-x-tlh:
+        name: Warlock Spells Level 2
+        description: Warlock level 2 jupmey
+        keywords: [warlock, jupmey, level2]
+    rules: []

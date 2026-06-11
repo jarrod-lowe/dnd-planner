@@ -3,6 +3,7 @@ ruleGroups:
   - id: bard-spells-l2
     requires:
       - spell-calm-emotions
+      - spell-hold-person
     translations:
       en:
         name: Bard Spells Level 2

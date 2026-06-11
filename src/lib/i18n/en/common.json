@@ -211,6 +211,35 @@
         "always_prepared": "Calm Emotions is always prepared"
       }
     },
+    "spell-hold-person": {
+      "offer-hold-person": {
+        "name": "Hold Person",
+        "description": "60ft | WIS save or Paralyzed; repeats save each turn | 10 rnds",
+        "no_action": "No action available",
+        "no_spellcasting": "Already cast a spell this turn",
+        "already_concentrating": "Already concentrating",
+        "no_slots": "No spell slots remaining"
+      },
+      "effect-hold-person": {
+        "name": "Hold Person"
+      },
+      "effect-hold-person-prepared": {
+        "name": "Hold Person Prepared"
+      },
+      "effect-hold-person-removing": {
+        "name": "Removing Hold Person"
+      },
+      "prepare-hold-person-offer": {
+        "name": "Prepare Hold Person",
+        "max_prepared": "Maximum prepared spells reached",
+        "already_prepared": "Hold Person is already prepared"
+      },
+      "unprepare-hold-person-offer": {
+        "name": "Unprepare Hold Person",
+        "not_prepared": "Hold Person is not prepared",
+        "always_prepared": "Hold Person is always prepared"
+      }
+    },
     "spell-thunderous-smite": {
       "annotation": "Thunderous Smite available",
       "offer-thunderous-smite": {

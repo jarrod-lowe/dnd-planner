@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: druid-spells-l2
+    requires:
+      - spell-hold-person
+    translations:
+      en:
+        name: Druid Spells Level 2
+        description: Level 2 spells available to Druids
+        keywords: [druid, spells, level2]
+      en-x-tlh:
+        name: Druid Spells Level 2
+        description: Druid level 2 jupmey
+        keywords: [druid, jupmey, level2]
+    rules: []
