@@ -14,7 +14,7 @@ const createEntryWithAnnotations = (): AvailableRuleEntry => ({
       annotationLabels: ['attack.any', 'attack.melee'],
       primaryControl: {
         type: 'dice-line',
-        dice: [{ expression: 'd20', bonus: { var: 'hitBonus' } }]
+        dice: [{ sides: 20, bonus: { var: 'hitBonus' } }]
       }
     },
     vars: { hitBonus: { default: { number: 5 } } }
@@ -67,12 +67,12 @@ describe('PanelRenderer - annotations', () => {
           name: 'rule.two-controls.name',
           primaryControl: {
             type: 'dice-line',
-            dice: [{ expression: 'd20' }],
+            dice: [{ sides: 20 }],
             annotationLabels: ['attack.any']
           },
           secondaryControl: {
             type: 'dice-line',
-            dice: [{ expression: 'd6' }],
+            dice: [{ sides: 6 }],
             annotationLabels: ['damage.melee']
           }
         }

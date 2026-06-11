@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { resolveValueSource, resolveExpression } from './resolveValueSource';
+  import { resolveValueSource } from './resolveValueSource';
   import DamageTypeIcon from './DamageTypeIcon.svelte';
   import type { DiceLineControl, DiceEntry, RollResult } from './types';
   import type { Facts, VarDefinition } from '$lib/rules-engine';
@@ -102,11 +102,15 @@
   function formatDieExpression(die: DiceEntry): string {
     // Check for range-based damage die override (versatile weapons)
     if (die.damageType && currentRange?.damageDie) {
-      return `d${currentRange.damageDie}`;
+      const ct = die.count && die.count > 1 ? `${die.count}` : '';
+      return `${ct}d${currentRange.damageDie}`;
     }
-    const expr = resolveExpression(die.expression, facts, vars, selections);
-    if (typeof expr === 'number') return `d${expr}`;
-    return expr ?? '';
+    let sides: number | undefined;
+    if (typeof die.sides === 'number') sides = die.sides;
+    else sides = resolveValueSource(die.sides, facts, vars, selections) as number | undefined;
+    if (typeof sides !== 'number') return '';
+    const ct = die.count && die.count > 1 ? `${die.count}` : '';
+    return `${ct}d${sides}`;
   }
 
   function formatDamageType(die: DiceEntry): string {
@@ -132,12 +136,9 @@
     if (die.damageType && currentRange?.damageDie) {
       return currentRange.damageDie;
     }
-    const expr = resolveExpression(die.expression, facts, vars, selections);
-    if (typeof expr === 'string' && expr.startsWith('d')) {
-      const parsed = parseInt(expr.slice(1), 10);
-      return isNaN(parsed) ? undefined : parsed;
-    }
-    if (typeof expr === 'number') return expr;
+    if (typeof die.sides === 'number') return die.sides;
+    const resolved = resolveValueSource(die.sides, facts, vars, selections) as number | undefined;
+    if (typeof resolved === 'number') return resolved;
     return undefined;
   }
 
@@ -145,29 +146,46 @@
     return getDieSides(die) === 20;
   }
 
+  function rollMultiple(sides: number, count: number): number[] {
+    const rolls: number[] = [];
+    for (let i = 0; i < count; i++) {
+      rolls.push(Math.floor(Math.random() * sides) + 1);
+    }
+    return rolls;
+  }
+
   function handleRoll(dieIndex: number, mode?: RollMode): void {
     if (!editable) return;
     const die = control.dice[dieIndex];
     const sides = getDieSides(die);
     if (sides === undefined || sides < 0) return;
+    const count = die.count ?? 1;
     const bonus = (resolveValueSource(die.bonus, facts, vars, selections) as number) ?? 0;
     const rollModeToUse = mode ?? (sides === 20 ? effectiveRollMode : 'normal');
     let natural: number;
+    let rolls: number[] | undefined;
     let droppedRoll: number | undefined;
     if (sides === 0) {
       natural = 0;
     } else if (rollModeToUse === 'advantage') {
-      const r1 = Math.floor(Math.random() * sides) + 1;
-      const r2 = Math.floor(Math.random() * sides) + 1;
-      natural = Math.max(r1, r2);
-      droppedRoll = Math.min(r1, r2);
+      const r1 = rollMultiple(sides, count);
+      const r2 = rollMultiple(sides, count);
+      const s1 = r1.reduce((a, b) => a + b, 0);
+      const s2 = r2.reduce((a, b) => a + b, 0);
+      natural = Math.max(s1, s2);
+      droppedRoll = Math.min(s1, s2);
+      rolls = s1 >= s2 ? r1 : r2;
     } else if (rollModeToUse === 'disadvantage') {
-      const r1 = Math.floor(Math.random() * sides) + 1;
-      const r2 = Math.floor(Math.random() * sides) + 1;
-      natural = Math.min(r1, r2);
-      droppedRoll = Math.max(r1, r2);
+      const r1 = rollMultiple(sides, count);
+      const r2 = rollMultiple(sides, count);
+      const s1 = r1.reduce((a, b) => a + b, 0);
+      const s2 = r2.reduce((a, b) => a + b, 0);
+      natural = Math.min(s1, s2);
+      droppedRoll = Math.max(s1, s2);
+      rolls = s1 <= s2 ? r1 : r2;
     } else {
-      natural = Math.floor(Math.random() * sides) + 1;
+      rolls = rollMultiple(sides, count);
+      natural = rolls.reduce((a, b) => a + b, 0);
     }
     // Apply Great Weapon Fighting: damage die rolls of 1 or 2 count as 3
     let gwfFloor: number | undefined;
@@ -183,6 +201,8 @@
       droppedRoll,
       bonus: bonus !== 0 ? bonus : undefined,
       sides,
+      count: count > 1 ? count : undefined,
+      rolls: count > 1 ? rolls : undefined,
       damageType: damageTypeStr,
       gwfFloor
     };

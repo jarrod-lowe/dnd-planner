@@ -30,13 +30,3 @@ export function resolveValueSource(
   if (source.array !== undefined) return source.array;
   return undefined;
 }
-
-export function resolveExpression(
-  expression: string | { var: string },
-  facts: Facts,
-  vars: VarDefs,
-  selections?: Selections
-): string | number | undefined {
-  if (typeof expression === 'string') return expression;
-  return resolveValueSource({ var: expression.var }, facts, vars, selections) as number | undefined;
-}

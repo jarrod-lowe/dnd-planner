@@ -34,6 +34,6 @@ steps:
                   - dice.any
                   - dice.initiative
                 dice:
-                  - expression: d20
+                  - sides: 20
                     bonus:
                       var: alertBonus

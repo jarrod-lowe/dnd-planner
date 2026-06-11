@@ -24,9 +24,9 @@ const createVersatileSpearEntry = (): AvailableRuleEntry => ({
         type: 'dice-line',
         ranges: { var: 'ranges' },
         dice: [
-          { expression: 'd20', bonus: { var: 'hitBonus' } },
+          { sides: 20, bonus: { var: 'hitBonus' } },
           {
-            expression: { var: 'damageDie' },
+            sides: { var: 'damageDie' },
             bonus: { var: 'damageBonus' },
             damageType: { string: 'piercing' }
           }

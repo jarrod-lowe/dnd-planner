@@ -21,8 +21,8 @@ const createEntryWithSecondary = (
       ...secondaryControlBase,
       type: 'dice-line' as const,
       dice: [
-        { expression: 'd20', bonus: { var: 'hitBonus' } },
-        { expression: { var: 'damageDie' }, bonus: { var: 'damageBonus' } }
+        { sides: 20, bonus: { var: 'hitBonus' } },
+        { sides: { var: 'damageDie' }, bonus: { var: 'damageBonus' } }
       ]
     };
   } else if (secondaryType === 'slider') {
@@ -50,8 +50,8 @@ const createEntryWithSecondary = (
         primaryControl: {
           type: 'dice-line',
           dice: [
-            { expression: 'd20', bonus: { var: 'hitBonus' } },
-            { expression: { var: 'damageDie' }, bonus: { var: 'damageBonus' } }
+            { sides: 20, bonus: { var: 'hitBonus' } },
+            { sides: { var: 'damageDie' }, bonus: { var: 'damageBonus' } }
           ]
         },
         secondaryControl,
@@ -77,13 +77,13 @@ const createEntryWithSecondaryNoEnabled = (): AvailableRuleEntry => ({
       name: 'rule.attacks.greataxe.name',
       primaryControl: {
         type: 'dice-line',
-        dice: [{ expression: 'd20', bonus: { var: 'hitBonus' } }]
+        dice: [{ sides: 20, bonus: { var: 'hitBonus' } }]
       },
       secondaryControl: {
         type: 'dice-line',
         dice: [
-          { expression: 'd20', bonus: { var: 'hitBonus' } },
-          { expression: { var: 'damageDie' }, bonus: { var: 'damageBonus' } }
+          { sides: 20, bonus: { var: 'hitBonus' } },
+          { sides: { var: 'damageDie' }, bonus: { var: 'damageBonus' } }
         ]
       },
       vars: {
@@ -196,7 +196,7 @@ describe('PanelRenderer - secondary control', () => {
             name: 'rule.simple.name',
             primaryControl: {
               type: 'dice-line',
-              dice: [{ expression: 'd20' }]
+              dice: [{ sides: 20 }]
             }
           }
         } as Rule,
@@ -278,7 +278,7 @@ describe('PanelRenderer - secondary control', () => {
             name: 'rule.test.name',
             primaryControl: {
               type: 'dice-line',
-              dice: [{ expression: 'd20', bonus: { var: 'primaryBonus' } }]
+              dice: [{ sides: 20, bonus: { var: 'primaryBonus' } }]
             },
             secondaryControl: {
               type: 'dice-line',
@@ -286,7 +286,7 @@ describe('PanelRenderer - secondary control', () => {
                 condition: { fact: 'feat.active', operator: 'equals', value: 1 }
               },
               label: 'rule.test.secondary-label',
-              dice: [{ expression: 'd20', bonus: { var: 'secondaryBonus' } }]
+              dice: [{ sides: 20, bonus: { var: 'secondaryBonus' } }]
             },
             vars: {
               primaryBonus: { default: { number: 3 } },

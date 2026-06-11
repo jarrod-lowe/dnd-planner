@@ -53,7 +53,7 @@ ruleGroups:
                   type: dice-line
                   annotationLabels: [dice.any, dice.initiative]
                   dice:
-                    - expression: d20
+                    - sides: 20
                       bonus: { var: rollBonus }
                   advantage: { fact: initiative.disadvantage }
                 secondaryControl:
@@ -66,7 +66,7 @@ ruleGroups:
                   label: rule.dnd-5e-2024.feat-alert.initiative-proficiency.button
                   annotationLabels: [dice.any, dice.initiative]
                   dice:
-                    - expression: d20
+                    - sides: 20
                       bonus: { var: alertBonus }
                 intents: { INSPECT: sense }
                 actionCost: []

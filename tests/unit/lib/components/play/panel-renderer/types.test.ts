@@ -35,7 +35,7 @@ describe('Panel renderer types', () => {
   it('DiceLineControl has required fields', () => {
     const control: DiceLineControl = {
       type: 'dice-line',
-      dice: [{ expression: 'd20', bonus: { var: 'hitBonus' } }]
+      dice: [{ sides: 20, bonus: { var: 'hitBonus' } }]
     };
     expect(control.type).toBe('dice-line');
     expect(control.dice).toHaveLength(1);
@@ -97,7 +97,7 @@ describe('Panel renderer types', () => {
       name: 'rule.attacks.greataxe.name',
       primaryControl: {
         type: 'dice-line',
-        dice: [{ expression: 'd20', bonus: { var: 'hitBonus' } }]
+        dice: [{ sides: 20, bonus: { var: 'hitBonus' } }]
       },
       information: [{ type: 'text', label: 'some.key' }]
     };

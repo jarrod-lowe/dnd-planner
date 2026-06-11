@@ -101,6 +101,12 @@
         "description": "Steed's movement won't provoke opportunity attacks",
         "no_actions": "Steed has no actions remaining"
       },
+      "steed-healing-touch": {
+        "name": "Healing Touch",
+        "description": "Heal a creature within 5 ft for 2d8 + spell level HP",
+        "no_bonus_action": "Steed has no bonus action remaining",
+        "no_uses": "Healing Touch already used this rest"
+      },
       "steed-record-damage": {
         "name": "Record Damage",
         "effect": {
@@ -1374,6 +1380,7 @@
         "speed": "SPD",
         "actions": "Actions",
         "bonusActions": "Bonus Action",
+        "healingTouch": "Healing Touch",
         "movement": "Move"
       },
       "sections": {

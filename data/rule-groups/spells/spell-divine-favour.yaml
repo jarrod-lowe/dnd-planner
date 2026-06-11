@@ -375,7 +375,7 @@ ruleGroups:
                 primaryControl:
                   type: dice-line
                   dice:
-                    - expression: d4
+                    - sides: 4
                       damageType: { string: radiant }
                 intents:
                   ATTACK: spells

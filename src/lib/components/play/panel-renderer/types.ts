@@ -10,6 +10,10 @@ export interface RollResult {
   bonus?: number;
   /** Die sides (20, 12, 6, etc.) */
   sides?: number;
+  /** Individual die results when rolling multiple dice (count > 1) */
+  rolls?: number[];
+  /** Number of dice rolled (when > 1) */
+  count?: number;
   /** Resolved damage type string (e.g. "slashing") */
   damageType?: string;
   /** Original die value (1 or 2) before GWF floor applied */
@@ -25,7 +29,10 @@ export interface ValueSource {
 }
 
 export interface DiceEntry {
-  expression: string | { var: string };
+  /** Die sides (e.g. 20 for d20, 8 for d8). Can be a number or a var reference. */
+  sides: number | { var: string };
+  /** Number of dice to roll (default 1). */
+  count?: number;
   bonus?: ValueSource;
   damageType?: ValueSource;
 }
