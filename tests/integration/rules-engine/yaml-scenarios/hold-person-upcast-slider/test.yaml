@@ -40,6 +40,16 @@ steps:
         offerUi:
           - id: cast-hold-person
             ui:
+              # Single-target control (one Humanoid), not an area effect
+              intents:
+                CONTROL: single
+              # Target makes a fixed Wisdom save (not the caster's ability)
+              information:
+                - type: text
+                  label: play.information.saveDc
+                  labelValues:
+                    saveType: { string: WIS }
+                    dc: { fact: spellcasting.saveDC }
               primaryControl:
                 type: slider
                 var: slotLevel

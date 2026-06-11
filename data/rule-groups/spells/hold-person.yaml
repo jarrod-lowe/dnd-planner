@@ -303,10 +303,10 @@ ruleGroups:
                   - type: text
                     label: play.information.saveDc
                     labelValues:
-                      saveType: { fact: spellcasting.saveAbility }
+                      saveType: { string: WIS }
                       dc: { fact: spellcasting.saveDC }
                 intents:
-                  CONTROL: area
+                  CONTROL: single
                 actionCost: [action, conc, L2]
                 primaryControl:
                   type: slider
@@ -617,7 +617,7 @@ ruleGroups:
                         - type: text
                           label: play.information.saveDc
                           labelValues:
-                            saveType: { fact: spellcasting.saveAbility }
+                            saveType: { string: WIS }
                             dc: { fact: spellcasting.saveDC }
                     activities:
                       - type: numberIncrement
