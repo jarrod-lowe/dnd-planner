@@ -107,6 +107,12 @@
         "no_bonus_action": "Sargh DIv latlh tu'lu'be'",
         "no_uses": "Qop Du lo'pu' DIch"
       },
+      "steed-fey-step": {
+        "name": "DIv Dol",
+        "description": "Sargh DIv wa' 60 'uy' DIv",
+        "no_bonus_action": "Sargh DIv latlh tu'lu'be'",
+        "no_uses": "DIv Dol lo'pu' DIch"
+      },
       "steed-record-damage": {
         "name": "DIv DIch",
         "effect": {
