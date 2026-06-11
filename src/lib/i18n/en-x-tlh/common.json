@@ -211,6 +211,35 @@
         "always_prepared": "tam tIq always prepared"
       }
     },
+    "spell-hold-person": {
+      "offer-hold-person": {
+        "name": "nuv mevmoH",
+        "description": "60ft | WIS ra' pagh Qam Qaw', repeat DIch | 10 rep",
+        "no_action": "DIvI' tu'lu'be'",
+        "no_spellcasting": "mugh DIvI' tu'lu'be'",
+        "already_concentrating": "buQ DIvI'",
+        "no_slots": "mugh laH tu'lu'be'"
+      },
+      "effect-hold-person": {
+        "name": "nuv mevmoH"
+      },
+      "effect-hold-person-prepared": {
+        "name": "nuv mevmoH Prepared"
+      },
+      "effect-hold-person-removing": {
+        "name": "Removing nuv mevmoH"
+      },
+      "prepare-hold-person-offer": {
+        "name": "Prepare nuv mevmoH",
+        "max_prepared": "mugh DIvI' nIb",
+        "already_prepared": "nuv mevmoH already prepared"
+      },
+      "unprepare-hold-person-offer": {
+        "name": "Unprepare nuv mevmoH",
+        "not_prepared": "nuv mevmoH not prepared",
+        "always_prepared": "nuv mevmoH always prepared"
+      }
+    },
     "spell-thunderous-smite": {
       "annotation": "raQ muHta chen",
       "offer-thunderous-smite": {

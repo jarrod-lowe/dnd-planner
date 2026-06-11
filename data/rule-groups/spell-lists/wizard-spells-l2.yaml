@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: wizard-spells-l2
+    requires:
+      - spell-hold-person
+    translations:
+      en:
+        name: Wizard Spells Level 2
+        description: Level 2 spells available to Wizards
+        keywords: [wizard, spells, level2]
+      en-x-tlh:
+        name: Wizard Spells Level 2
+        description: Wizard level 2 jupmey
+        keywords: [wizard, jupmey, level2]
+    rules: []

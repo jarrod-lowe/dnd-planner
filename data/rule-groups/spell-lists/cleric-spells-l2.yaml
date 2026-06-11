@@ -3,6 +3,7 @@ ruleGroups:
   - id: cleric-spells-l2
     requires:
       - spell-calm-emotions
+      - spell-hold-person
     translations:
       en:
         name: Cleric Spells Level 2
