@@ -379,6 +379,8 @@ ruleGroups:
       # Set Healing Touch remaining each turn (additive; use effect subtracts)
       - id: steed-healing-touch-set
         phase: early
+        group:
+          - steed-healing-touch-set
         when:
           - fact: companion.steed.summoned
             operator: equals
@@ -393,6 +395,8 @@ ruleGroups:
       # Set Fey Step remaining each turn (additive; use effect subtracts)
       - id: steed-fey-step-set
         phase: early
+        group:
+          - steed-fey-step-set
         when:
           - fact: companion.steed.summoned
             operator: equals
