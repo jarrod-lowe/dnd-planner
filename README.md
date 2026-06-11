@@ -364,8 +364,10 @@ The architecture supports:
   - fix 3x otherworldly steed entries in active; and the need to remove 2 to remove it
   - Type selection (fiend, fey, celestial)
   - Type-specific bonus action
-  - Otherworldly slam
   - Hit Dice
+  - Player mount/dismount move
+  - Otherworldly Slam should not be available while mounted
+  - Help, Ready, Search, Hide, Utilise, ...; while not mounted
 - Shorten resources names
 - Change display of stats (str, etc)
 

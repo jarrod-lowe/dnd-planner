@@ -64,13 +64,11 @@
       "effect-steed": {
         "name": "Otherworldly Steed"
       },
-      "offer-steed-dummy-action": {
-        "name": "Steed Attack",
-        "no_actions": "Steed has no actions remaining"
-      },
-      "offer-steed-dummy-bonus": {
-        "name": "Steed Bonus",
-        "no_bonus_actions": "Steed has no bonus actions remaining"
+      "steed-slam": {
+        "name": "Otherworldly Slam",
+        "description": "Melee Attack | Reach 5 ft | 1d8 + spell level Radiant damage",
+        "no_actions": "Steed has no actions remaining",
+        "no_reaction": "No reaction available"
       },
       "steed-move-walk": {
         "name": "Walk",

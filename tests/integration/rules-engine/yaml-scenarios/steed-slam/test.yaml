@@ -1,0 +1,81 @@
+name: 'Steed Otherworldly Slam'
+description: 'Steed can use Otherworldly Slam attack, consuming its action; also available as reaction using steed reaction'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-find-steed
+initialEffects:
+  - id: test-grant-level2-slot
+    phase: early
+    group:
+      - spellcasting-slots-set
+    activities:
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.total
+        source:
+          number: 1
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.remaining
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+steps:
+  - evaluate: {}
+  - addOffer:
+      id: prepare-find-steed
+  # Cast Find Steed
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - cast-find-steed
+  - addOffer:
+      id: cast-find-steed
+  - endTurn: {}
+  # Next turn: slam action and reaction offers available
+  - evaluate:
+      assert:
+        facts:
+          companion.steed.actions.remaining: 1
+          companion.steed.reactions.remaining: 1
+          reactions.remaining: 1
+        offers:
+          exists:
+            - steed-slam
+            - steed-slam-reaction
+  # Slam action: consumes steed action
+  - addOffer:
+      id: steed-slam
+      assert:
+        facts:
+          companion.steed.actions.remaining: 0
+  # Slam action should now be illegal (no steed actions)
+  # But reaction should still be available
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - steed-slam
+          exists:
+            - steed-slam-reaction
+  # Slam reaction: consumes steed reaction (not player's)
+  - addOffer:
+      id: steed-slam-reaction
+      assert:
+        facts:
+          companion.steed.reactions.remaining: 0
+          reactions.remaining: 1
+  # Both slam offers should now be illegal
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - steed-slam-reaction

@@ -659,12 +659,28 @@ ruleGroups:
                     number: 1
                 - type: numberSet
                   target:
+                    fact: companion.steed.spellLevel
+                  source:
+                    fact: find-steed.selectedLevel
+                - type: numberSum
+                  target:
+                    fact: companion.steed.slam.hitBonus
+                  sources:
+                    - fact: cha.modifier
+                    - fact: proficiency.bonus
+                - type: numberSet
+                  target:
                     fact: companion.steed.actions.remaining
                   source:
                     number: 1
                 - type: numberSet
                   target:
                     fact: companion.steed.bonusActions.remaining
+                  source:
+                    number: 1
+                - type: numberSet
+                  target:
+                    fact: companion.steed.reactions.remaining
                   source:
                     number: 1
                 # Initialize speed/movement same-turn so a same-turn Dash grants
@@ -687,6 +703,77 @@ ruleGroups:
                     number: 60
 
                 # === Same-turn steed action offers (L2) ===
+                # Otherworldly Slam (attack)
+                - type: offerRule
+                  legalWhen:
+                    - condition:
+                        fact: companion.steed.actions.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.steed-slam.no_actions
+                          severity: error
+                  rule:
+                    id: steed-slam
+                    group:
+                      - __planned__
+                      - action
+                    after:
+                      - group: spellcasting
+                    ui:
+                      section: action-attack
+                      subject: steed
+                      name: rule.spell-find-steed.steed-slam.name
+                      description: rule.spell-find-steed.steed-slam.description
+                      detailKey: action/otherworldly-slam
+                      intents: { ATTACK: brawl }
+                      actionCost: [action]
+                      annotationLabels: [attack.any, attack.melee]
+                      primaryControl:
+                        type: dice-line
+                        ranges:
+                          - distance: 5
+                            type: melee
+                        dice:
+                          - expression: d20
+                            bonus: { var: hitBonus }
+                          - expression: { var: damageDie }
+                            bonus: { var: damageBonus }
+                            damageType: { string: radiant }
+                    vars:
+                      hitBonus:
+                        capture: true
+                        default:
+                          fact: companion.steed.slam.hitBonus
+                      damageDie:
+                        default:
+                          number: 8
+                      damageBonus:
+                        capture: true
+                        default:
+                          fact: find-steed.selectedLevel
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.actions.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - *error-clear
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.steed-slam.no_actions
+                        when:
+                          - fact: companion.steed.actions.remaining
+                            operator: lessThan
+                            value: 0
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 2
+                # Dash
                 - type: offerRule
                   legalWhen:
                     - condition:
@@ -835,6 +922,77 @@ ruleGroups:
                       value: 2
 
                 # === Same-turn steed action offers (L3) ===
+                # Otherworldly Slam (attack)
+                - type: offerRule
+                  legalWhen:
+                    - condition:
+                        fact: companion.steed.actions.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.steed-slam.no_actions
+                          severity: error
+                  rule:
+                    id: steed-slam
+                    group:
+                      - __planned__
+                      - action
+                    after:
+                      - group: spellcasting
+                    ui:
+                      section: action-attack
+                      subject: steed
+                      name: rule.spell-find-steed.steed-slam.name
+                      description: rule.spell-find-steed.steed-slam.description
+                      detailKey: action/otherworldly-slam
+                      intents: { ATTACK: brawl }
+                      actionCost: [action]
+                      annotationLabels: [attack.any, attack.melee]
+                      primaryControl:
+                        type: dice-line
+                        ranges:
+                          - distance: 5
+                            type: melee
+                        dice:
+                          - expression: d20
+                            bonus: { var: hitBonus }
+                          - expression: { var: damageDie }
+                            bonus: { var: damageBonus }
+                            damageType: { string: radiant }
+                    vars:
+                      hitBonus:
+                        capture: true
+                        default:
+                          fact: companion.steed.slam.hitBonus
+                      damageDie:
+                        default:
+                          number: 8
+                      damageBonus:
+                        capture: true
+                        default:
+                          fact: find-steed.selectedLevel
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.actions.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - *error-clear
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.steed-slam.no_actions
+                        when:
+                          - fact: companion.steed.actions.remaining
+                            operator: lessThan
+                            value: 0
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 3
+                # Dash
                 - type: offerRule
                   legalWhen:
                     - condition:
@@ -983,6 +1141,77 @@ ruleGroups:
                       value: 3
 
                 # === Same-turn steed action offers (L4) ===
+                # Otherworldly Slam (attack)
+                - type: offerRule
+                  legalWhen:
+                    - condition:
+                        fact: companion.steed.actions.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.steed-slam.no_actions
+                          severity: error
+                  rule:
+                    id: steed-slam
+                    group:
+                      - __planned__
+                      - action
+                    after:
+                      - group: spellcasting
+                    ui:
+                      section: action-attack
+                      subject: steed
+                      name: rule.spell-find-steed.steed-slam.name
+                      description: rule.spell-find-steed.steed-slam.description
+                      detailKey: action/otherworldly-slam
+                      intents: { ATTACK: brawl }
+                      actionCost: [action]
+                      annotationLabels: [attack.any, attack.melee]
+                      primaryControl:
+                        type: dice-line
+                        ranges:
+                          - distance: 5
+                            type: melee
+                        dice:
+                          - expression: d20
+                            bonus: { var: hitBonus }
+                          - expression: { var: damageDie }
+                            bonus: { var: damageBonus }
+                            damageType: { string: radiant }
+                    vars:
+                      hitBonus:
+                        capture: true
+                        default:
+                          fact: companion.steed.slam.hitBonus
+                      damageDie:
+                        default:
+                          number: 8
+                      damageBonus:
+                        capture: true
+                        default:
+                          fact: find-steed.selectedLevel
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.actions.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - *error-clear
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.steed-slam.no_actions
+                        when:
+                          - fact: companion.steed.actions.remaining
+                            operator: lessThan
+                            value: 0
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 4
+                # Dash
                 - type: offerRule
                   legalWhen:
                     - condition:
@@ -1131,6 +1360,77 @@ ruleGroups:
                       value: 4
 
                 # === Same-turn steed action offers (L5) ===
+                # Otherworldly Slam (attack)
+                - type: offerRule
+                  legalWhen:
+                    - condition:
+                        fact: companion.steed.actions.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.steed-slam.no_actions
+                          severity: error
+                  rule:
+                    id: steed-slam
+                    group:
+                      - __planned__
+                      - action
+                    after:
+                      - group: spellcasting
+                    ui:
+                      section: action-attack
+                      subject: steed
+                      name: rule.spell-find-steed.steed-slam.name
+                      description: rule.spell-find-steed.steed-slam.description
+                      detailKey: action/otherworldly-slam
+                      intents: { ATTACK: brawl }
+                      actionCost: [action]
+                      annotationLabels: [attack.any, attack.melee]
+                      primaryControl:
+                        type: dice-line
+                        ranges:
+                          - distance: 5
+                            type: melee
+                        dice:
+                          - expression: d20
+                            bonus: { var: hitBonus }
+                          - expression: { var: damageDie }
+                            bonus: { var: damageBonus }
+                            damageType: { string: radiant }
+                    vars:
+                      hitBonus:
+                        capture: true
+                        default:
+                          fact: companion.steed.slam.hitBonus
+                      damageDie:
+                        default:
+                          number: 8
+                      damageBonus:
+                        capture: true
+                        default:
+                          fact: find-steed.selectedLevel
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.actions.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - *error-clear
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.steed-slam.no_actions
+                        when:
+                          - fact: companion.steed.actions.remaining
+                            operator: lessThan
+                            value: 0
+                  when:
+                    - fact: find-steed.selectedLevel
+                      operator: equals
+                      value: 5
+                # Dash
                 - type: offerRule
                   legalWhen:
                     - condition:
@@ -1504,6 +1804,11 @@ ruleGroups:
                           number: 1
                       - type: numberSet
                         target:
+                          fact: companion.steed.spellLevel
+                        source:
+                          number: 2
+                      - type: numberSet
+                        target:
                           fact: companion.steed.ac.value
                         source:
                           number: 12
@@ -1651,6 +1956,11 @@ ruleGroups:
                       - type: numberSet
                         target:
                           fact: companion.steed.bonusActions.remaining
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.reactions.remaining
                         source:
                           number: 1
                       # No self-advertise — re-created each turn by effect-steed
@@ -1864,7 +2174,132 @@ ruleGroups:
                                 - fact: companion.steed.fly.can
                                   operator: lessThan
                                   value: 1
+                      # === Compute hit bonus (spell attack modifier = spellcasting modifier + proficiency) ===
+                      - type: numberSum
+                        target:
+                          fact: companion.steed.slam.hitBonus
+                        sources:
+                          - fact: cha.modifier
+                          - fact: proficiency.bonus
                       # === Action Offers ===
+                      # Otherworldly Slam (attack)
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.actions.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-slam.no_actions
+                                severity: error
+                        rule:
+                          id: steed-slam
+                          group:
+                            - __planned__
+                            - action
+                          ui:
+                            section: action-attack
+                            subject: steed
+                            name: rule.spell-find-steed.steed-slam.name
+                            description: rule.spell-find-steed.steed-slam.description
+                            detailKey: action/otherworldly-slam
+                            intents: { ATTACK: brawl }
+                            actionCost: [action]
+                            annotationLabels: [attack.any, attack.melee]
+                            primaryControl:
+                              type: dice-line
+                              ranges:
+                                - distance: 5
+                                  type: melee
+                              dice:
+                                - expression: d20
+                                  bonus: { var: hitBonus }
+                                - expression: { var: damageDie }
+                                  bonus: { var: damageBonus }
+                                  damageType: { string: radiant }
+                          vars:
+                            hitBonus:
+                              capture: true
+                              default:
+                                fact: companion.steed.slam.hitBonus
+                            damageDie:
+                              default:
+                                number: 8
+                            damageBonus:
+                              capture: true
+                              default:
+                                fact: companion.steed.spellLevel
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.actions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - *error-clear
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.steed-slam.no_actions
+                              when:
+                                - fact: companion.steed.actions.remaining
+                                  operator: lessThan
+                                  value: 0
+                      # Otherworldly Slam (reaction)
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.reactions.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-slam.no_reaction
+                                severity: error
+                        rule:
+                          id: steed-slam-reaction
+                          group:
+                            - __planned__
+                            - reaction
+                          ui:
+                            section: reaction
+                            subject: steed
+                            name: rule.spell-find-steed.steed-slam.name
+                            description: rule.spell-find-steed.steed-slam.description
+                            detailKey: action/otherworldly-slam
+                            intents: { DEFEND: brawl }
+                            actionCost: [reaction]
+                            annotationLabels: [attack.any, attack.melee]
+                            primaryControl:
+                              type: dice-line
+                              ranges:
+                                - distance: 5
+                                  type: melee
+                              dice:
+                                - expression: d20
+                                  bonus: { var: hitBonus }
+                                - expression: { var: damageDie }
+                                  bonus: { var: damageBonus }
+                                  damageType: { string: radiant }
+                          vars:
+                            hitBonus:
+                              capture: true
+                              default:
+                                fact: companion.steed.slam.hitBonus
+                            damageDie:
+                              default:
+                                number: 8
+                            damageBonus:
+                              capture: true
+                              default:
+                                fact: companion.steed.spellLevel
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.reactions.remaining
+                              source:
+                                number: 1
+                              subtract: true
                       # Dash
                       - type: offerRule
                         legalWhen:
@@ -3209,6 +3644,11 @@ ruleGroups:
                           number: 1
                       - type: numberSet
                         target:
+                          fact: companion.steed.spellLevel
+                        source:
+                          number: 3
+                      - type: numberSet
+                        target:
                           fact: companion.steed.ac.value
                         source:
                           number: 13
@@ -3356,6 +3796,11 @@ ruleGroups:
                       - type: numberSet
                         target:
                           fact: companion.steed.bonusActions.remaining
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.reactions.remaining
                         source:
                           number: 1
                   when:
@@ -3568,7 +4013,132 @@ ruleGroups:
                                 - fact: companion.steed.fly.can
                                   operator: lessThan
                                   value: 1
+                      # === Compute hit bonus (spell attack modifier = spellcasting modifier + proficiency) ===
+                      - type: numberSum
+                        target:
+                          fact: companion.steed.slam.hitBonus
+                        sources:
+                          - fact: cha.modifier
+                          - fact: proficiency.bonus
                       # === Action Offers ===
+                      # Otherworldly Slam (attack)
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.actions.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-slam.no_actions
+                                severity: error
+                        rule:
+                          id: steed-slam
+                          group:
+                            - __planned__
+                            - action
+                          ui:
+                            section: action-attack
+                            subject: steed
+                            name: rule.spell-find-steed.steed-slam.name
+                            description: rule.spell-find-steed.steed-slam.description
+                            detailKey: action/otherworldly-slam
+                            intents: { ATTACK: brawl }
+                            actionCost: [action]
+                            annotationLabels: [attack.any, attack.melee]
+                            primaryControl:
+                              type: dice-line
+                              ranges:
+                                - distance: 5
+                                  type: melee
+                              dice:
+                                - expression: d20
+                                  bonus: { var: hitBonus }
+                                - expression: { var: damageDie }
+                                  bonus: { var: damageBonus }
+                                  damageType: { string: radiant }
+                          vars:
+                            hitBonus:
+                              capture: true
+                              default:
+                                fact: companion.steed.slam.hitBonus
+                            damageDie:
+                              default:
+                                number: 8
+                            damageBonus:
+                              capture: true
+                              default:
+                                fact: companion.steed.spellLevel
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.actions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - *error-clear
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.steed-slam.no_actions
+                              when:
+                                - fact: companion.steed.actions.remaining
+                                  operator: lessThan
+                                  value: 0
+                      # Otherworldly Slam (reaction)
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.reactions.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-slam.no_reaction
+                                severity: error
+                        rule:
+                          id: steed-slam-reaction
+                          group:
+                            - __planned__
+                            - reaction
+                          ui:
+                            section: reaction
+                            subject: steed
+                            name: rule.spell-find-steed.steed-slam.name
+                            description: rule.spell-find-steed.steed-slam.description
+                            detailKey: action/otherworldly-slam
+                            intents: { DEFEND: brawl }
+                            actionCost: [reaction]
+                            annotationLabels: [attack.any, attack.melee]
+                            primaryControl:
+                              type: dice-line
+                              ranges:
+                                - distance: 5
+                                  type: melee
+                              dice:
+                                - expression: d20
+                                  bonus: { var: hitBonus }
+                                - expression: { var: damageDie }
+                                  bonus: { var: damageBonus }
+                                  damageType: { string: radiant }
+                          vars:
+                            hitBonus:
+                              capture: true
+                              default:
+                                fact: companion.steed.slam.hitBonus
+                            damageDie:
+                              default:
+                                number: 8
+                            damageBonus:
+                              capture: true
+                              default:
+                                fact: companion.steed.spellLevel
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.reactions.remaining
+                              source:
+                                number: 1
+                              subtract: true
                       # Dash
                       - type: offerRule
                         legalWhen:
@@ -4913,6 +5483,11 @@ ruleGroups:
                           number: 1
                       - type: numberSet
                         target:
+                          fact: companion.steed.spellLevel
+                        source:
+                          number: 4
+                      - type: numberSet
+                        target:
                           fact: companion.steed.ac.value
                         source:
                           number: 14
@@ -5070,6 +5645,11 @@ ruleGroups:
                       - type: numberSet
                         target:
                           fact: companion.steed.bonusActions.remaining
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.reactions.remaining
                         source:
                           number: 1
                       # No self-advertise — re-created each turn by effect-steed
@@ -5283,7 +5863,132 @@ ruleGroups:
                                 - fact: companion.steed.fly.can
                                   operator: lessThan
                                   value: 1
+                      # === Compute hit bonus (spell attack modifier = spellcasting modifier + proficiency) ===
+                      - type: numberSum
+                        target:
+                          fact: companion.steed.slam.hitBonus
+                        sources:
+                          - fact: cha.modifier
+                          - fact: proficiency.bonus
                       # === Action Offers ===
+                      # Otherworldly Slam (attack)
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.actions.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-slam.no_actions
+                                severity: error
+                        rule:
+                          id: steed-slam
+                          group:
+                            - __planned__
+                            - action
+                          ui:
+                            section: action-attack
+                            subject: steed
+                            name: rule.spell-find-steed.steed-slam.name
+                            description: rule.spell-find-steed.steed-slam.description
+                            detailKey: action/otherworldly-slam
+                            intents: { ATTACK: brawl }
+                            actionCost: [action]
+                            annotationLabels: [attack.any, attack.melee]
+                            primaryControl:
+                              type: dice-line
+                              ranges:
+                                - distance: 5
+                                  type: melee
+                              dice:
+                                - expression: d20
+                                  bonus: { var: hitBonus }
+                                - expression: { var: damageDie }
+                                  bonus: { var: damageBonus }
+                                  damageType: { string: radiant }
+                          vars:
+                            hitBonus:
+                              capture: true
+                              default:
+                                fact: companion.steed.slam.hitBonus
+                            damageDie:
+                              default:
+                                number: 8
+                            damageBonus:
+                              capture: true
+                              default:
+                                fact: companion.steed.spellLevel
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.actions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - *error-clear
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.steed-slam.no_actions
+                              when:
+                                - fact: companion.steed.actions.remaining
+                                  operator: lessThan
+                                  value: 0
+                      # Otherworldly Slam (reaction)
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.reactions.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-slam.no_reaction
+                                severity: error
+                        rule:
+                          id: steed-slam-reaction
+                          group:
+                            - __planned__
+                            - reaction
+                          ui:
+                            section: reaction
+                            subject: steed
+                            name: rule.spell-find-steed.steed-slam.name
+                            description: rule.spell-find-steed.steed-slam.description
+                            detailKey: action/otherworldly-slam
+                            intents: { DEFEND: brawl }
+                            actionCost: [reaction]
+                            annotationLabels: [attack.any, attack.melee]
+                            primaryControl:
+                              type: dice-line
+                              ranges:
+                                - distance: 5
+                                  type: melee
+                              dice:
+                                - expression: d20
+                                  bonus: { var: hitBonus }
+                                - expression: { var: damageDie }
+                                  bonus: { var: damageBonus }
+                                  damageType: { string: radiant }
+                          vars:
+                            hitBonus:
+                              capture: true
+                              default:
+                                fact: companion.steed.slam.hitBonus
+                            damageDie:
+                              default:
+                                number: 8
+                            damageBonus:
+                              capture: true
+                              default:
+                                fact: companion.steed.spellLevel
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.reactions.remaining
+                              source:
+                                number: 1
+                              subtract: true
                       # Dash
                       - type: offerRule
                         legalWhen:
@@ -6628,6 +7333,11 @@ ruleGroups:
                           number: 1
                       - type: numberSet
                         target:
+                          fact: companion.steed.spellLevel
+                        source:
+                          number: 5
+                      - type: numberSet
+                        target:
                           fact: companion.steed.ac.value
                         source:
                           number: 15
@@ -6785,6 +7495,11 @@ ruleGroups:
                       - type: numberSet
                         target:
                           fact: companion.steed.bonusActions.remaining
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.reactions.remaining
                         source:
                           number: 1
                       # No self-advertise — re-created each turn by effect-steed
@@ -6998,7 +7713,132 @@ ruleGroups:
                                 - fact: companion.steed.fly.can
                                   operator: lessThan
                                   value: 1
+                      # === Compute hit bonus (spell attack modifier = spellcasting modifier + proficiency) ===
+                      - type: numberSum
+                        target:
+                          fact: companion.steed.slam.hitBonus
+                        sources:
+                          - fact: cha.modifier
+                          - fact: proficiency.bonus
                       # === Action Offers ===
+                      # Otherworldly Slam (attack)
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.actions.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-slam.no_actions
+                                severity: error
+                        rule:
+                          id: steed-slam
+                          group:
+                            - __planned__
+                            - action
+                          ui:
+                            section: action-attack
+                            subject: steed
+                            name: rule.spell-find-steed.steed-slam.name
+                            description: rule.spell-find-steed.steed-slam.description
+                            detailKey: action/otherworldly-slam
+                            intents: { ATTACK: brawl }
+                            actionCost: [action]
+                            annotationLabels: [attack.any, attack.melee]
+                            primaryControl:
+                              type: dice-line
+                              ranges:
+                                - distance: 5
+                                  type: melee
+                              dice:
+                                - expression: d20
+                                  bonus: { var: hitBonus }
+                                - expression: { var: damageDie }
+                                  bonus: { var: damageBonus }
+                                  damageType: { string: radiant }
+                          vars:
+                            hitBonus:
+                              capture: true
+                              default:
+                                fact: companion.steed.slam.hitBonus
+                            damageDie:
+                              default:
+                                number: 8
+                            damageBonus:
+                              capture: true
+                              default:
+                                fact: companion.steed.spellLevel
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.actions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - *error-clear
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.steed-slam.no_actions
+                              when:
+                                - fact: companion.steed.actions.remaining
+                                  operator: lessThan
+                                  value: 0
+                      # Otherworldly Slam (reaction)
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.reactions.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-slam.no_reaction
+                                severity: error
+                        rule:
+                          id: steed-slam-reaction
+                          group:
+                            - __planned__
+                            - reaction
+                          ui:
+                            section: reaction
+                            subject: steed
+                            name: rule.spell-find-steed.steed-slam.name
+                            description: rule.spell-find-steed.steed-slam.description
+                            detailKey: action/otherworldly-slam
+                            intents: { DEFEND: brawl }
+                            actionCost: [reaction]
+                            annotationLabels: [attack.any, attack.melee]
+                            primaryControl:
+                              type: dice-line
+                              ranges:
+                                - distance: 5
+                                  type: melee
+                              dice:
+                                - expression: d20
+                                  bonus: { var: hitBonus }
+                                - expression: { var: damageDie }
+                                  bonus: { var: damageBonus }
+                                  damageType: { string: radiant }
+                          vars:
+                            hitBonus:
+                              capture: true
+                              default:
+                                fact: companion.steed.slam.hitBonus
+                            damageDie:
+                              default:
+                                number: 8
+                            damageBonus:
+                              capture: true
+                              default:
+                                fact: companion.steed.spellLevel
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.reactions.remaining
+                              source:
+                                number: 1
+                              subtract: true
                       # Dash
                       - type: offerRule
                         legalWhen:
@@ -8253,3 +9093,21 @@ ruleGroups:
             key: rule.spell-find-steed.annotate-life-bond.text
             targets:
               - healing.any
+  - id: otherworldly-slam-detail
+    translations:
+      en:
+        name: Otherworldly Slam
+        description: 'Detail text for the Otherworldly Slam action'
+        keywords: [otherworldly slam, steed, attack]
+      en-x-tlh:
+        name: Otherworldly Slam
+        description: 'Detail text for the Otherworldly Slam action'
+        keywords: [otherworldly slam, steed]
+    detail:
+      key: action/otherworldly-slam
+      source: srd52
+      translations:
+        en:
+          meta: 'Otherworldly Steed Action'
+          body: |-
+            *Otherworldly Slam.* Melee Attack Roll: Bonus equals your spell attack modifier, reach 5 ft. *Hit:* 1d8 plus the spell's level of Radiant (Celestial), Psychic (Fey), or Necrotic (Fiend) damage.
