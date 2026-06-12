@@ -113,6 +113,7 @@ only affects `use-action`; reaction/bonus-action attacks are untouched.
 ## Checklist
 
 ### RED — failing scenario tests first
+
 - [x] `extra-attack-greataxe`: extraAttacks.max=1, greataxe equipped — 1st attack
       spends action + extraRemaining=1, 2nd legal/free, 3rd illegal; annotation present.
 - [x] `extra-attack-unarmed`: same via unarmed cost path.
@@ -125,6 +126,7 @@ only affects `use-action`; reaction/bonus-action attacks are untouched.
       missing annotation before implementation.)
 
 ### GREEN — implement
+
 - [x] action-economy.yaml: extraRemaining reset, ea-canattack compute, annotate.
 - [x] i18n annotation key (en + en-x-tlh).
 - [x] attacks.yaml: unarmed use-action 5-step cost + offer legalWhen/after.
@@ -134,6 +136,7 @@ only affects `use-action`; reaction/bonus-action attacks are untouched.
 - [x] Make RED scenarios pass. (308/308 scenarios pass.)
 
 ### Verify
+
 - [x] `make test` green (validate, security, schema, unit, rules, e2e, lint — EXIT=0).
 - [x] `make sync-rule-groups` (78 rule groups updated on test table).
       `make deploy-test` not required — no Lambda/Go/infra changes, rules-only.
@@ -166,6 +169,7 @@ Two defects the user found in the live app:
    already correct.
 
 ### Fixes (done)
+
 - [x] `action-economy.yaml`: `extra-attack-annotate` `when` →
       `attackAction.extraRemaining > 0` (shown only while a follow-up is available).
 - [x] i18n: annotation text simplified to "Extra Attack: you can attack again"
@@ -174,6 +178,7 @@ Two defects the user found in the live app:
       over-commit) to `unarmed-strike-use-action`, mirroring the weapons profile.
 
 ### Tests (done)
+
 - [x] Updated `extra-attack-greataxe` / `extra-attack-paladin-level5` annotation
       assertions (notExists before 1st attack, exists after 1st, notExists after 2nd).
 - [x] Added `extra-attack-unarmed-overcommit` (planErrors: indexes 0/1 empty,
@@ -181,6 +186,7 @@ Two defects the user found in the live app:
 - [x] `make test` green; `make sync-rule-groups` (38 groups updated).
 
 ### Live verification (done)
+
 - [x] On a freshly-reloaded L5 Paladin: annotation appears only after the first
       attack and disappears once both attacks are committed; planning a third
       Unarmed Strike flags ONLY the third "No action available" — the first two
