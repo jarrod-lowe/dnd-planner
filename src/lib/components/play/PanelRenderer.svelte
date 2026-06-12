@@ -57,9 +57,21 @@
     descriptor.name ? $t(descriptor.name) : entry.rule.description || entry.rule.id
   );
 
-  const displayDescription = $derived(
-    descriptor.description ? $t(descriptor.description) : undefined
-  );
+  const displayDescription = $derived.by(() => {
+    if (!descriptor.description) return undefined;
+    if (descriptor.descriptionValues) {
+      const params: Record<string, string> = {};
+      for (const [key, source] of Object.entries(descriptor.descriptionValues)) {
+        const resolved = resolveValueSource(source, facts, vars, selections);
+        if (resolved !== undefined) {
+          // Resolve through $t() first (the value is typically an i18n key)
+          params[key] = typeof resolved === 'string' ? $t(resolved) : String(resolved);
+        }
+      }
+      return $t(descriptor.description, params);
+    }
+    return $t(descriptor.description);
+  });
 
   const hasWarning = $derived(!entry.legal || !entry.applicable);
   const warningType = $derived(

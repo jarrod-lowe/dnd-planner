@@ -7,6 +7,7 @@ export function extractPanelDescriptor(rule: Rule): PanelDescriptor {
     section: ui.section as string | undefined,
     name: ui.name as string | undefined,
     description: ui.description as string | undefined,
+    descriptionValues: ui.descriptionValues as PanelDescriptor['descriptionValues'],
     annotationLabels: ui.annotationLabels as string[] | undefined,
     primaryControl: ui.primaryControl as PanelDescriptor['primaryControl'],
     secondaryControl: ui.secondaryControl as PanelDescriptor['secondaryControl'],
