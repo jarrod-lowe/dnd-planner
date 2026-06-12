@@ -5454,6 +5454,11 @@ ruleGroups:
                           fact: companion.steed.feyStep.total
                         source:
                           number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.fellGlare.total
+                        source:
+                          number: 1
                   when:
                     - fact: find-steed.selectedLevel
                       operator: equals
