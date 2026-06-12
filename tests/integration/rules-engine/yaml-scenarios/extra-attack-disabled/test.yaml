@@ -1,0 +1,51 @@
+name: 'Extra Attack - Disabled (Regression)'
+description: >
+  Without Extra Attack (extraAttacks.max unset / 0), behaviour is identical to
+  vanilla: a single Attack action, the second attack illegal, the extra-attack
+  budget never opens, and no Extra Attack annotation is shown.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/greataxe
+
+initialEffects:
+  - id: effect-greataxe
+    phase: normal
+    group: [equipment-state]
+    activities:
+      - type: numberSet
+        target:
+          fact: weapon.greataxe.equipped
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          actions.remaining: 1
+          extraAttacks.max: 0
+          attackAction.extraRemaining: 0
+        offers:
+          legal:
+            - greataxe-use-action
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.attacks.extra-attack.annotation
+
+  - addOffer:
+      id: greataxe-use-action
+      assert:
+        facts:
+          actions.remaining: 0
+          attackAction.extraRemaining: 0
+        offers:
+          illegal:
+            - greataxe-use-action

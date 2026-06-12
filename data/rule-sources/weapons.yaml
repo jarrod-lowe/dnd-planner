@@ -431,6 +431,10 @@ profiles:
       section: action-attack
       intents: { ATTACK: weapons }
       actionCost: [action]
+      # Marks this as an Attack-action attack (unioned with the weapon's labels).
+      # The Extra Attack annotation targets attack.action so it appears only on
+      # action attacks, not the reaction/bonus-action profiles.
+      annotationLabels: [attack.action]
     gating:
       when:
         - fact: weapon.$(definition.id).equipped
@@ -438,22 +442,68 @@ profiles:
           value: 1
       legalWhen:
         - condition:
-            fact: actions.remaining
-            operator: greaterThan
-            value: 0
+            fact: attackAction.canAttack
+            operator: equals
+            value: 1
           illegalDiagnostics:
             - code: rule.dnd-5e-2024.attacks.activation.no_action
               severity: error
     wrapper:
       group: [action]
       activitiesBefore:
+        # Snapshot pre-state so the branch below sees pre-mutation values.
+        - type: numberCopy
+          source:
+            fact: attackAction.extraRemaining
+          target:
+            fact: attackAction.wasExtra
+          id: snapshot-extra
+        - type: numberCopy
+          source:
+            fact: actions.remaining
+          target:
+            fact: attackAction.actionsBefore
+          id: snapshot-actions
+        # Free follow-up (Extra Attack): spend an extra-attack charge, no action.
+        - type: numberIncrement
+          target:
+            fact: attackAction.extraRemaining
+          source:
+            number: 1
+          subtract: true
+          when:
+            - fact: attackAction.wasExtra
+              operator: greaterThan
+              value: 0
+          id: spend-extra
+        # New Attack action: spend an action.
         - type: numberIncrement
           target:
             fact: actions.remaining
           source:
             number: 1
           subtract: true
+          when:
+            - fact: attackAction.wasExtra
+              operator: lessThanOrEqual
+              value: 0
           id: action-cost
+        # Refill the follow-up budget for this Attack action. Guarded on
+        # actionsBefore > 0 so a force-planned over-committed attack does not
+        # re-open the budget.
+        - type: numberCopy
+          source:
+            fact: extraAttacks.max
+          target:
+            fact: attackAction.extraRemaining
+          when:
+            - fact: attackAction.wasExtra
+              operator: lessThanOrEqual
+              value: 0
+            - fact: attackAction.actionsBefore
+              operator: greaterThan
+              value: 0
+          id: refill-extra
         - type: numberSet
           target:
             fact: attack.last.activation.action
@@ -476,8 +526,11 @@ profiles:
           source:
             string: rule.dnd-5e-2024.attacks.activation.no_action
           when:
-            - fact: actions.remaining
-              operator: lessThan
+            - fact: attackAction.wasExtra
+              operator: lessThanOrEqual
+              value: 0
+            - fact: attackAction.actionsBefore
+              operator: lessThanOrEqual
               value: 0
           id: error-check
         - type: numberSet
@@ -787,6 +840,7 @@ expansions:
       after:
         - group: option-capabilities
         - group: equipment-state
+        - group: ea-canattack
       translations:
         en:
           name: '$(definition.translations.en.name)'

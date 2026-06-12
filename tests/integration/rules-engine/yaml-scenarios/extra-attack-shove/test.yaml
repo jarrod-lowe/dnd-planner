@@ -1,0 +1,56 @@
+name: 'Extra Attack - Shove as a free follow-up'
+description: >
+  With Extra Attack (extraAttacks.max=1), an Unarmed Strike spends the action and
+  opens a follow-up; a Shove can then be taken as the free follow-up. A third
+  attack is illegal.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/shove
+
+initialEffects:
+  - id: effect-grant-extra-attack
+    phase: early
+    activities:
+      - type: numberSet
+        target:
+          fact: extraAttacks.max
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+
+steps:
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - unarmed-strike-use-action
+            - shove-action
+
+  # First attack spends the action, opens one free follow-up.
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          actions.remaining: 0
+          attackAction.extraRemaining: 1
+        offers:
+          legal:
+            - shove-action
+
+  # Shove as the free follow-up.
+  - addOffer:
+      id: shove-action
+      assert:
+        facts:
+          attackAction.extraRemaining: 0
+        offers:
+          illegal:
+            - shove-action
+            - unarmed-strike-use-action

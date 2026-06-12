@@ -1016,6 +1016,9 @@
         },
         "versatile": {
           "no-free-hand": "Not enough free hands for two-handed attack"
+        },
+        "extra-attack": {
+          "annotation": "Extra Attack: you can attack again"
         }
       },
       "hp": {
@@ -1651,7 +1654,8 @@
         "self": "Self",
         "ally": "Ally",
         "area": "Area",
-        "summon": "Summon"
+        "summon": "Summon",
+        "heal": "Heal"
       },
       "CONTROL": {
         "default": "Other",
@@ -1662,7 +1666,8 @@
         "default": "Other",
         "evade": "Evade",
         "ward": "Ward",
-        "weapons": "Weapons"
+        "weapons": "Weapons",
+        "brawl": "Brawl"
       },
       "MOVE": {
         "default": "Other",
@@ -1700,7 +1705,9 @@
         "default": "Rest",
         "rest": "Rest"
       },
-      "NOTE": {},
+      "NOTE": {
+        "freeform": "Note"
+      },
       "STAT": {
         "set": "Set",
         "increase": "Increase"

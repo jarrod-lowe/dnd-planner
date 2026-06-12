@@ -1,0 +1,83 @@
+name: 'Extra Attack - Over-commit Guard'
+description: >
+  With Extra Attack (extraAttacks.max=1), force-planning a third attack (which
+  is illegal) must not re-open the follow-up budget. The third attack spends
+  past zero actions, the budget stays at 0, the offer stays illegal, and the
+  third planned item carries the no_action error.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/greataxe
+
+initialEffects:
+  - id: effect-greataxe
+    phase: normal
+    group: [equipment-state]
+    activities:
+      - type: numberSet
+        target:
+          fact: weapon.greataxe.equipped
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+  - id: effect-grant-extra-attack
+    phase: early
+    activities:
+      - type: numberSet
+        target:
+          fact: extraAttacks.max
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+
+steps:
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - greataxe-use-action
+
+  # First attack: spends the action, opens one free follow-up.
+  - addOffer:
+      id: greataxe-use-action
+      assert:
+        facts:
+          actions.remaining: 0
+          attackAction.extraRemaining: 1
+        offers:
+          legal:
+            - greataxe-use-action
+
+  # Second attack: consumes the follow-up.
+  - addOffer:
+      id: greataxe-use-action
+      assert:
+        facts:
+          actions.remaining: 0
+          attackAction.extraRemaining: 0
+        offers:
+          illegal:
+            - greataxe-use-action
+
+  # Third (force-planned) attack: illegal, must NOT re-open the budget.
+  - addOffer:
+      id: greataxe-use-action
+      assert:
+        facts:
+          actions.remaining: -1
+          attackAction.extraRemaining: 0
+        offers:
+          illegal:
+            - greataxe-use-action
+        planErrors:
+          - id: greataxe-use-action
+            index: 2
+            errors:
+              - rule.dnd-5e-2024.attacks.activation.no_action
