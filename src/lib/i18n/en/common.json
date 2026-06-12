@@ -1590,7 +1590,7 @@
     },
     "information": {
       "saveDc": "{{saveType}} Save DC {{dc}}",
-      "aidBonus": "+{{hp}} HP max & current ({{base}}+ creatures)"
+      "aidBonus": "+{{hp}} HP"
     },
     "slotEffect": {
       "l1": "L1 Spell Slot Expended",

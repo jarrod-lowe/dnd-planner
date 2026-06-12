@@ -1590,7 +1590,7 @@
     },
     "information": {
       "saveDc": "{{saveType}} DIvI' {{dc}}",
-      "aidBonus": "+{{hp}} HP ({{base}}+ creatures)"
+      "aidBonus": "+{{hp}} HP"
     },
     "slotEffect": {
       "l1": "DIvI' L1 mugh",

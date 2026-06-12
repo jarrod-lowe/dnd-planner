@@ -283,8 +283,7 @@ ruleGroups:
                   - type: text
                     label: play.information.aidBonus
                     labelValues:
-                      hp: { number: 5 }
-                      base: { number: 3 }
+                      hp: { string: "5" }
                 intents:
                   AID: ally
                 actionCost: [action, L2]
