@@ -59,14 +59,19 @@
         "no_slots": "No L2+ spell slots remaining",
         "no_spellcasting": "Already cast a spell this turn",
         "already_mounted": "Already have a steed",
-        "no_free_use": "No free uses remaining"
+        "no_free_use": "No free uses remaining",
+        "creature-type": {
+          "celestial": "Celestial",
+          "fey": "Fey",
+          "fiend": "Fiend"
+        }
       },
       "effect-steed": {
         "name": "Otherworldly Steed"
       },
       "steed-slam": {
         "name": "Otherworldly Slam",
-        "description": "Melee Attack | Reach 5 ft | 1d8 + spell level Radiant damage",
+        "description": "Melee Attack | Reach 5 ft | 1d8 + spell level {{damageType}} damage",
         "no_actions": "Steed has no actions remaining",
         "no_reaction": "No reaction available"
       },

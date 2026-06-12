@@ -222,6 +222,11 @@
               "type": "string",
               "description": "i18n key for a short reminder shown directly under the panel title"
             },
+            "descriptionValues": {
+              "type": "object",
+              "description": "Dynamic values to interpolate into the description. Keys are placeholder names, values are ValueSource objects resolved at render time.",
+              "additionalProperties": true
+            },
             "packBehind": {
               "type": "string",
               "description": "Rule ID to pack this choice behind (collapsible group)"

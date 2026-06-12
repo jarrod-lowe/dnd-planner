@@ -59,14 +59,19 @@
         "no_slots": "mugh laH tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
         "already_mounted": "Sargh DIch Sam",
-        "no_free_use": "lo'Ha' tu'lu'be'"
+        "no_free_use": "lo'Ha' tu'lu'be'",
+        "creature-type": {
+          "celestial": "Celestial",
+          "fey": "Fey",
+          "fiend": "Fiend"
+        }
       },
       "effect-steed": {
         "name": "Sargh"
       },
       "steed-slam": {
         "name": "Sargh Qob",
-        "description": "HIv | 5 'uj | 1d8 + DIv level wIb DIch",
+        "description": "HIv | 5 'uj | 1d8 + DIv level {{damageType}} DIch",
         "no_actions": "Sargh DIv DIch",
         "no_reaction": "DIch tu'lu'be'"
       },

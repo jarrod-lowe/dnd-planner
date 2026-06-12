@@ -129,6 +129,7 @@ export interface PanelDescriptor {
   section?: string;
   name?: string;
   description?: string;
+  descriptionValues?: Record<string, ValueSource>;
   annotationLabels?: string[];
   primaryControl?: Control;
   secondaryControl?: Control;

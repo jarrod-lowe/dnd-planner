@@ -557,11 +557,25 @@ ruleGroups:
                     - value: 5
                       enabled: { fact: spellcasting.slots.level5.total }
                   valueFormat: spellLevel
+                secondaryControl:
+                  type: segmented
+                  var: creatureType
+                  options:
+                    - value: 0
+                      label: rule.spell-find-steed.offer-find-steed.creature-type.celestial
+                    - value: 1
+                      label: rule.spell-find-steed.offer-find-steed.creature-type.fey
+                    - value: 2
+                      label: rule.spell-find-steed.offer-find-steed.creature-type.fiend
               vars:
                 slotLevel:
                   capture: true
                   default:
                     fact: find-steed.defaultLevel
+                creatureType:
+                  capture: true
+                  default:
+                    number: 0
               activities:
                 # Consume action
                 - type: numberIncrement
@@ -603,6 +617,66 @@ ruleGroups:
                     fact: find-steed.selectedLevel
                   source:
                     var: slotLevel
+                # Creature type facts
+                - type: numberSet
+                  target:
+                    fact: companion.steed.creatureType
+                  source:
+                    var: creatureType
+                - type: stringSet
+                  target:
+                    fact: companion.steed.damageType
+                  source:
+                    string: radiant
+                  when:
+                    - fact: companion.steed.creatureType
+                      operator: equals
+                      value: 0
+                - type: stringSet
+                  target:
+                    fact: companion.steed.damageType
+                  source:
+                    string: psychic
+                  when:
+                    - fact: companion.steed.creatureType
+                      operator: equals
+                      value: 1
+                - type: stringSet
+                  target:
+                    fact: companion.steed.damageType
+                  source:
+                    string: necrotic
+                  when:
+                    - fact: companion.steed.creatureType
+                      operator: equals
+                      value: 2
+                - type: stringSet
+                  target:
+                    fact: companion.steed.damageTypeLabel
+                  source:
+                    string: damage-type.radiant
+                  when:
+                    - fact: companion.steed.creatureType
+                      operator: equals
+                      value: 0
+                - type: stringSet
+                  target:
+                    fact: companion.steed.damageTypeLabel
+                  source:
+                    string: damage-type.psychic
+                  when:
+                    - fact: companion.steed.creatureType
+                      operator: equals
+                      value: 1
+                - type: stringSet
+                  target:
+                    fact: companion.steed.damageTypeLabel
+                  source:
+                    string: damage-type.necrotic
+                  when:
+                    - fact: companion.steed.creatureType
+                      operator: equals
+                      value: 2
                 # Free use (level 0): consume the once-per-long-rest use, no slot.
                 # Decrement (rather than set 0) so an over-use goes negative and
                 # is caught by the no_free_use error below.
@@ -866,6 +940,8 @@ ruleGroups:
                       subject: steed
                       name: rule.spell-find-steed.steed-slam.name
                       description: rule.spell-find-steed.steed-slam.description
+                      descriptionValues:
+                        damageType: { fact: companion.steed.damageTypeLabel }
                       detailKey: action/otherworldly-slam
                       intents: { ATTACK: brawl }
                       actionCost: [action]
@@ -880,7 +956,7 @@ ruleGroups:
                             bonus: { var: hitBonus }
                           - sides: { var: damageDie }
                             bonus: { var: damageBonus }
-                            damageType: { string: radiant }
+                            damageType: { fact: companion.steed.damageType }
                     vars:
                       hitBonus:
                         capture: true
@@ -1372,6 +1448,8 @@ ruleGroups:
                       subject: steed
                       name: rule.spell-find-steed.steed-slam.name
                       description: rule.spell-find-steed.steed-slam.description
+                      descriptionValues:
+                        damageType: { fact: companion.steed.damageTypeLabel }
                       detailKey: action/otherworldly-slam
                       intents: { ATTACK: brawl }
                       actionCost: [action]
@@ -1386,7 +1464,7 @@ ruleGroups:
                             bonus: { var: hitBonus }
                           - sides: { var: damageDie }
                             bonus: { var: damageBonus }
-                            damageType: { string: radiant }
+                            damageType: { fact: companion.steed.damageType }
                     vars:
                       hitBonus:
                         capture: true
@@ -1878,6 +1956,8 @@ ruleGroups:
                       subject: steed
                       name: rule.spell-find-steed.steed-slam.name
                       description: rule.spell-find-steed.steed-slam.description
+                      descriptionValues:
+                        damageType: { fact: companion.steed.damageTypeLabel }
                       detailKey: action/otherworldly-slam
                       intents: { ATTACK: brawl }
                       actionCost: [action]
@@ -1892,7 +1972,7 @@ ruleGroups:
                             bonus: { var: hitBonus }
                           - sides: { var: damageDie }
                             bonus: { var: damageBonus }
-                            damageType: { string: radiant }
+                            damageType: { fact: companion.steed.damageType }
                     vars:
                       hitBonus:
                         capture: true
@@ -2384,6 +2464,8 @@ ruleGroups:
                       subject: steed
                       name: rule.spell-find-steed.steed-slam.name
                       description: rule.spell-find-steed.steed-slam.description
+                      descriptionValues:
+                        damageType: { fact: companion.steed.damageTypeLabel }
                       detailKey: action/otherworldly-slam
                       intents: { ATTACK: brawl }
                       actionCost: [action]
@@ -2398,7 +2480,7 @@ ruleGroups:
                             bonus: { var: hitBonus }
                           - sides: { var: damageDie }
                             bonus: { var: damageBonus }
-                            damageType: { string: radiant }
+                            damageType: { fact: companion.steed.damageType }
                     vars:
                       hitBonus:
                         capture: true
@@ -3115,6 +3197,11 @@ ruleGroups:
                           label: play.stats.steed.fellGlare
                           total: companion.steed.fellGlare.total
                           remaining: companion.steed.fellGlare.remaining
+                    vars:
+                      creatureType:
+                        capture: true
+                        default:
+                          number: 0
                     activities:
                       - type: numberSet
                         target:
@@ -3126,6 +3213,66 @@ ruleGroups:
                           fact: companion.steed.spellLevel
                         source:
                           number: 2
+                      # Creature type facts (propagated from cast selection)
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.creatureType
+                        source:
+                          var: creatureType
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageType
+                        source:
+                          string: radiant
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 0
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageType
+                        source:
+                          string: psychic
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 1
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageType
+                        source:
+                          string: necrotic
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 2
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageTypeLabel
+                        source:
+                          string: damage-type.radiant
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 0
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageTypeLabel
+                        source:
+                          string: damage-type.psychic
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 1
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageTypeLabel
+                        source:
+                          string: damage-type.necrotic
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 2
                       - type: numberSet
                         target:
                           fact: companion.steed.ac.value
@@ -3536,6 +3683,8 @@ ruleGroups:
                             subject: steed
                             name: rule.spell-find-steed.steed-slam.name
                             description: rule.spell-find-steed.steed-slam.description
+                            descriptionValues:
+                              damageType: { fact: companion.steed.damageTypeLabel }
                             detailKey: action/otherworldly-slam
                             intents: { ATTACK: brawl }
                             actionCost: [action]
@@ -3550,7 +3699,7 @@ ruleGroups:
                                   bonus: { var: hitBonus }
                                 - sides: { var: damageDie }
                                   bonus: { var: damageBonus }
-                                  damageType: { string: radiant }
+                                  damageType: { fact: companion.steed.damageType }
                           vars:
                             hitBonus:
                               capture: true
@@ -3600,6 +3749,8 @@ ruleGroups:
                             subject: steed
                             name: rule.spell-find-steed.steed-slam.name
                             description: rule.spell-find-steed.steed-slam.description
+                            descriptionValues:
+                              damageType: { fact: companion.steed.damageTypeLabel }
                             detailKey: action/otherworldly-slam
                             intents: { DEFEND: brawl }
                             actionCost: [reaction]
@@ -3614,7 +3765,7 @@ ruleGroups:
                                   bonus: { var: hitBonus }
                                 - sides: { var: damageDie }
                                   bonus: { var: damageBonus }
-                                  damageType: { string: radiant }
+                                  damageType: { fact: companion.steed.damageType }
                           vars:
                             hitBonus:
                               capture: true
@@ -5277,6 +5428,11 @@ ruleGroups:
                           label: play.stats.steed.fellGlare
                           total: companion.steed.fellGlare.total
                           remaining: companion.steed.fellGlare.remaining
+                    vars:
+                      creatureType:
+                        capture: true
+                        default:
+                          number: 0
                     activities:
                       - type: numberSet
                         target:
@@ -5288,6 +5444,66 @@ ruleGroups:
                           fact: companion.steed.spellLevel
                         source:
                           number: 3
+                      # Creature type facts (propagated from cast selection)
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.creatureType
+                        source:
+                          var: creatureType
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageType
+                        source:
+                          string: radiant
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 0
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageType
+                        source:
+                          string: psychic
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 1
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageType
+                        source:
+                          string: necrotic
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 2
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageTypeLabel
+                        source:
+                          string: damage-type.radiant
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 0
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageTypeLabel
+                        source:
+                          string: damage-type.psychic
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 1
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageTypeLabel
+                        source:
+                          string: damage-type.necrotic
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 2
                       - type: numberSet
                         target:
                           fact: companion.steed.ac.value
@@ -5697,6 +5913,8 @@ ruleGroups:
                             subject: steed
                             name: rule.spell-find-steed.steed-slam.name
                             description: rule.spell-find-steed.steed-slam.description
+                            descriptionValues:
+                              damageType: { fact: companion.steed.damageTypeLabel }
                             detailKey: action/otherworldly-slam
                             intents: { ATTACK: brawl }
                             actionCost: [action]
@@ -5711,7 +5929,7 @@ ruleGroups:
                                   bonus: { var: hitBonus }
                                 - sides: { var: damageDie }
                                   bonus: { var: damageBonus }
-                                  damageType: { string: radiant }
+                                  damageType: { fact: companion.steed.damageType }
                           vars:
                             hitBonus:
                               capture: true
@@ -5761,6 +5979,8 @@ ruleGroups:
                             subject: steed
                             name: rule.spell-find-steed.steed-slam.name
                             description: rule.spell-find-steed.steed-slam.description
+                            descriptionValues:
+                              damageType: { fact: companion.steed.damageTypeLabel }
                             detailKey: action/otherworldly-slam
                             intents: { DEFEND: brawl }
                             actionCost: [reaction]
@@ -5775,7 +5995,7 @@ ruleGroups:
                                   bonus: { var: hitBonus }
                                 - sides: { var: damageDie }
                                   bonus: { var: damageBonus }
-                                  damageType: { string: radiant }
+                                  damageType: { fact: companion.steed.damageType }
                           vars:
                             hitBonus:
                               capture: true
@@ -7438,6 +7658,11 @@ ruleGroups:
                           label: play.stats.steed.fellGlare
                           total: companion.steed.fellGlare.total
                           remaining: companion.steed.fellGlare.remaining
+                    vars:
+                      creatureType:
+                        capture: true
+                        default:
+                          number: 0
                     activities:
                       - type: numberSet
                         target:
@@ -7449,6 +7674,66 @@ ruleGroups:
                           fact: companion.steed.spellLevel
                         source:
                           number: 4
+                      # Creature type facts (propagated from cast selection)
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.creatureType
+                        source:
+                          var: creatureType
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageType
+                        source:
+                          string: radiant
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 0
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageType
+                        source:
+                          string: psychic
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 1
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageType
+                        source:
+                          string: necrotic
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 2
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageTypeLabel
+                        source:
+                          string: damage-type.radiant
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 0
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageTypeLabel
+                        source:
+                          string: damage-type.psychic
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 1
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageTypeLabel
+                        source:
+                          string: damage-type.necrotic
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 2
                       - type: numberSet
                         target:
                           fact: companion.steed.ac.value
@@ -7869,6 +8154,8 @@ ruleGroups:
                             subject: steed
                             name: rule.spell-find-steed.steed-slam.name
                             description: rule.spell-find-steed.steed-slam.description
+                            descriptionValues:
+                              damageType: { fact: companion.steed.damageTypeLabel }
                             detailKey: action/otherworldly-slam
                             intents: { ATTACK: brawl }
                             actionCost: [action]
@@ -7883,7 +8170,7 @@ ruleGroups:
                                   bonus: { var: hitBonus }
                                 - sides: { var: damageDie }
                                   bonus: { var: damageBonus }
-                                  damageType: { string: radiant }
+                                  damageType: { fact: companion.steed.damageType }
                           vars:
                             hitBonus:
                               capture: true
@@ -7933,6 +8220,8 @@ ruleGroups:
                             subject: steed
                             name: rule.spell-find-steed.steed-slam.name
                             description: rule.spell-find-steed.steed-slam.description
+                            descriptionValues:
+                              damageType: { fact: companion.steed.damageTypeLabel }
                             detailKey: action/otherworldly-slam
                             intents: { DEFEND: brawl }
                             actionCost: [reaction]
@@ -7947,7 +8236,7 @@ ruleGroups:
                                   bonus: { var: hitBonus }
                                 - sides: { var: damageDie }
                                   bonus: { var: damageBonus }
-                                  damageType: { string: radiant }
+                                  damageType: { fact: companion.steed.damageType }
                           vars:
                             hitBonus:
                               capture: true
@@ -9610,6 +9899,11 @@ ruleGroups:
                           label: play.stats.steed.fellGlare
                           total: companion.steed.fellGlare.total
                           remaining: companion.steed.fellGlare.remaining
+                    vars:
+                      creatureType:
+                        capture: true
+                        default:
+                          number: 0
                     activities:
                       - type: numberSet
                         target:
@@ -9621,6 +9915,66 @@ ruleGroups:
                           fact: companion.steed.spellLevel
                         source:
                           number: 5
+                      # Creature type facts (propagated from cast selection)
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.creatureType
+                        source:
+                          var: creatureType
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageType
+                        source:
+                          string: radiant
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 0
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageType
+                        source:
+                          string: psychic
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 1
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageType
+                        source:
+                          string: necrotic
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 2
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageTypeLabel
+                        source:
+                          string: damage-type.radiant
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 0
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageTypeLabel
+                        source:
+                          string: damage-type.psychic
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 1
+                      - type: stringSet
+                        target:
+                          fact: companion.steed.damageTypeLabel
+                        source:
+                          string: damage-type.necrotic
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 2
                       - type: numberSet
                         target:
                           fact: companion.steed.ac.value
@@ -10041,6 +10395,8 @@ ruleGroups:
                             subject: steed
                             name: rule.spell-find-steed.steed-slam.name
                             description: rule.spell-find-steed.steed-slam.description
+                            descriptionValues:
+                              damageType: { fact: companion.steed.damageTypeLabel }
                             detailKey: action/otherworldly-slam
                             intents: { ATTACK: brawl }
                             actionCost: [action]
@@ -10055,7 +10411,7 @@ ruleGroups:
                                   bonus: { var: hitBonus }
                                 - sides: { var: damageDie }
                                   bonus: { var: damageBonus }
-                                  damageType: { string: radiant }
+                                  damageType: { fact: companion.steed.damageType }
                           vars:
                             hitBonus:
                               capture: true
@@ -10105,6 +10461,8 @@ ruleGroups:
                             subject: steed
                             name: rule.spell-find-steed.steed-slam.name
                             description: rule.spell-find-steed.steed-slam.description
+                            descriptionValues:
+                              damageType: { fact: companion.steed.damageTypeLabel }
                             detailKey: action/otherworldly-slam
                             intents: { DEFEND: brawl }
                             actionCost: [reaction]
@@ -10119,7 +10477,7 @@ ruleGroups:
                                   bonus: { var: hitBonus }
                                 - sides: { var: damageDie }
                                   bonus: { var: damageBonus }
-                                  damageType: { string: radiant }
+                                  damageType: { fact: companion.steed.damageType }
                           vars:
                             hitBonus:
                               capture: true
