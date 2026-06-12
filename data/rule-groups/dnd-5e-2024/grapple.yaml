@@ -23,18 +23,21 @@ ruleGroups:
               - fact: proficiency.bonus
               - fact: str.modifier
 
-      # Offer grapple as an action
+      # Offer grapple as an action. A Grapple is an Unarmed Strike option and
+      # counts as an attack within the Attack action, so it participates in the
+      # Extra Attack budget like other action attacks.
       - id: action-grapple-offer
         after:
           - group: action
           - group: __planned__
+          - group: ea-canattack
         activities:
           - type: offerRule
             legalWhen:
               - condition:
-                  fact: actions.remaining
-                  operator: greaterThan
-                  value: 0
+                  fact: attackAction.canAttack
+                  operator: equals
+                  value: 1
                 illegalDiagnostics:
                   - code: rule.dnd-5e-2024.grapple.action-grapple-offer.no_action
                     severity: error
@@ -47,6 +50,7 @@ ruleGroups:
                 description: rule.dnd-5e-2024.grapple.grapple-action.description
                 vsKey: play.choices.contested.vsStrDex
                 outcomeKey: play.choices.grapple.grappled
+                annotationLabels: [attack.action]
                 primaryControl:
                   type: dice-line
                   annotationLabels: [dice.any]
@@ -64,12 +68,55 @@ ruleGroups:
                 - __planned__
                 - action
               activities:
+                # Extra Attack budget: spend a free follow-up if one is open,
+                # otherwise spend an action and open the follow-up budget.
+                - type: numberCopy
+                  source:
+                    fact: attackAction.extraRemaining
+                  target:
+                    fact: attackAction.wasExtra
+                  id: snapshot-extra
+                - type: numberCopy
+                  source:
+                    fact: actions.remaining
+                  target:
+                    fact: attackAction.actionsBefore
+                  id: snapshot-actions
+                - type: numberIncrement
+                  target:
+                    fact: attackAction.extraRemaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    - fact: attackAction.wasExtra
+                      operator: greaterThan
+                      value: 0
+                  id: spend-extra
                 - type: numberIncrement
                   target:
                     fact: actions.remaining
                   source:
                     number: 1
                   subtract: true
+                  when:
+                    - fact: attackAction.wasExtra
+                      operator: lessThanOrEqual
+                      value: 0
+                  id: action-cost
+                - type: numberCopy
+                  source:
+                    fact: extraAttacks.max
+                  target:
+                    fact: attackAction.extraRemaining
+                  when:
+                    - fact: attackAction.wasExtra
+                      operator: lessThanOrEqual
+                      value: 0
+                    - fact: attackAction.actionsBefore
+                      operator: greaterThan
+                      value: 0
+                  id: refill-extra
                 - *error-clear
                 - type: setAdd
                   target:
@@ -77,6 +124,9 @@ ruleGroups:
                   source:
                     string: rule.dnd-5e-2024.grapple.action-grapple-offer.no_action
                   when:
-                    - fact: actions.remaining
-                      operator: lessThan
+                    - fact: attackAction.wasExtra
+                      operator: lessThanOrEqual
+                      value: 0
+                    - fact: attackAction.actionsBefore
+                      operator: lessThanOrEqual
                       value: 0

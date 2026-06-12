@@ -1,0 +1,55 @@
+name: 'Extra Attack - Unarmed Strike'
+description: >
+  Extra Attack also applies to the unarmed-strike Attack action. With
+  extraAttacks.max=1, one unarmed strike spends the action and opens a free
+  follow-up; the second is legal and free; a third is illegal.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+
+initialEffects:
+  - id: effect-grant-extra-attack
+    phase: early
+    activities:
+      - type: numberSet
+        target:
+          fact: extraAttacks.max
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          actions.remaining: 1
+          attackAction.extraRemaining: 0
+        offers:
+          legal:
+            - unarmed-strike-use-action
+
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          actions.remaining: 0
+          attackAction.extraRemaining: 1
+        offers:
+          legal:
+            - unarmed-strike-use-action
+
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          actions.remaining: 0
+          attackAction.extraRemaining: 0
+        offers:
+          illegal:
+            - unarmed-strike-use-action

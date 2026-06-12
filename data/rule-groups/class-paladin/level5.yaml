@@ -8,12 +8,12 @@ ruleGroups:
     translations:
       en:
         name: Paladin Level 5
-        description: Paladin class features at level 5, including an additional hit die, expanded spell slots, and increased proficiency
-        keywords: [paladin, class, level5]
+        description: Paladin class features at level 5, including Extra Attack, an additional hit die, expanded spell slots, and increased proficiency
+        keywords: [paladin, class, level5, extra attack]
       en-x-tlh:
         name: Paladin Level 5
-        description: Paladin Segh level 5, chel Du chelSlot ghop Du valwI' chel
-        keywords: [paladin, segh, level5]
+        description: Paladin Segh level 5, jey' chu', chel Du chelSlot ghop Du valwI' chel
+        keywords: [paladin, segh, level5, jey' chu']
     rules:
       # Hit Die - Level 5 Paladin adds 1d10
       - id: paladin-level5-hit-die
@@ -60,6 +60,18 @@ ruleGroups:
               fact: hp.base.max
             source:
               var: conAtLevel
+
+      # Extra Attack - Level 5 Paladin can attack twice when taking the Attack
+      # action. Grants one extra attack per Attack action via the shared
+      # extraAttacks.max budget (numberIncrement so it stacks like reactions).
+      - id: paladin-level5-extra-attack
+        phase: early
+        activities:
+          - type: numberIncrement
+            target:
+              fact: extraAttacks.max
+            source:
+              number: 1
 
       # Proficiency Bonus - Level 5 Paladin adds +1
       - id: paladin-level5-proficiency

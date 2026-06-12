@@ -1,0 +1,69 @@
+name: 'Extra Attack - Unarmed Over-commit Flags Only the Third'
+description: >
+  With Extra Attack (extraAttacks.max=1), two Unarmed Strikes are legal off a
+  single action. Force-planning a third must flag ONLY the third as illegal —
+  the first two remain legal. This requires per-item error tracking on the
+  unarmed strike so the frontend trusts each item's own errors rather than the
+  hypothetical "could this be re-added" legality (which would flag all three).
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+
+initialEffects:
+  - id: effect-grant-extra-attack
+    phase: early
+    activities:
+      - type: numberSet
+        target:
+          fact: extraAttacks.max
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+
+steps:
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - unarmed-strike-use-action
+
+  # First attack: spends the action, opens one free follow-up. Legal.
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          actions.remaining: 0
+          attackAction.extraRemaining: 1
+
+  # Second attack: consumes the free follow-up. Legal.
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          attackAction.extraRemaining: 0
+
+  # Third (force-planned) attack: over-commit. Only this item is illegal;
+  # the first two carry no errors.
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          actions.remaining: -1
+          attackAction.extraRemaining: 0
+        planErrors:
+          - id: unarmed-strike-use-action
+            index: 0
+            errors: []
+          - id: unarmed-strike-use-action
+            index: 1
+            errors: []
+          - id: unarmed-strike-use-action
+            index: 2
+            errors:
+              - rule.dnd-5e-2024.attacks.activation.no_action
