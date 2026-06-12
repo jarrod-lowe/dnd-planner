@@ -1668,7 +1668,8 @@
         "default": "OTHER",
         "evade": "EVADE",
         "ward": "WARD",
-        "weapons": "WEAPONS"
+        "weapons": "WEAPONS",
+        "brawl": "Brawl"
       },
       "MOVE": {
         "default": "OTHER",
