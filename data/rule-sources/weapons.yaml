@@ -431,6 +431,10 @@ profiles:
       section: action-attack
       intents: { ATTACK: weapons }
       actionCost: [action]
+      # Marks this as an Attack-action attack (unioned with the weapon's labels).
+      # The Extra Attack annotation targets attack.action so it appears only on
+      # action attacks, not the reaction/bonus-action profiles.
+      annotationLabels: [attack.action]
     gating:
       when:
         - fact: weapon.$(definition.id).equipped

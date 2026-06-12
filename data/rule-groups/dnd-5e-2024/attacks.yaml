@@ -69,7 +69,7 @@ ruleGroups:
                 intents: { ATTACK: brawl }
                 actionCost: [action]
                 disadvantageFact: attack.str.disadvantage
-                annotationLabels: [attack.any, attack.melee, attack.unarmed, dice.any]
+                annotationLabels: [attack.any, attack.melee, attack.unarmed, dice.any, attack.action]
                 primaryControl:
                   type: dice-line
                   ranges:

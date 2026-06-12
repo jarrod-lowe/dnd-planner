@@ -1,0 +1,69 @@
+name: 'Extra Attack - Grapple participates in the budget'
+description: >
+  Grapple and Shove are Unarmed Strike options and count as attacks within the
+  Attack action. With Extra Attack (extraAttacks.max=1), grappling first opens
+  the follow-up budget, and a grapple can be taken as the free follow-up after
+  another attack. Also checks the Extra Attack annotation label scoping: the
+  action attack carries attack.action while the reaction attack does not.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/grapple
+
+initialEffects:
+  - id: effect-grant-extra-attack
+    phase: early
+    activities:
+      - type: numberSet
+        target:
+          fact: extraAttacks.max
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+
+steps:
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - unarmed-strike-use-action
+            - grapple-action
+        # Annotation label scoping (Finding 2): the action attack offers carry
+        # attack.action; the reaction attack offer does not.
+        offerUi:
+          - id: unarmed-strike-use-action
+            ui:
+              annotationLabels: [attack.any, attack.melee, attack.unarmed, dice.any, attack.action]
+          - id: unarmed-strike-use-reaction
+            ui:
+              annotationLabels: [attack.any, attack.melee, attack.unarmed, dice.any, attack.reaction]
+
+  # Grapple first: spends the action and opens one free follow-up.
+  - addOffer:
+      id: grapple-action
+      assert:
+        facts:
+          actions.remaining: 0
+          attackAction.extraRemaining: 1
+        offers:
+          legal:
+            - unarmed-strike-use-action
+            - grapple-action
+
+  # Take the free follow-up (unarmed strike) — no action remained, but the
+  # extra-attack budget covers it.
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          attackAction.extraRemaining: 0
+        offers:
+          illegal:
+            - unarmed-strike-use-action
+            - grapple-action

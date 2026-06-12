@@ -68,4 +68,29 @@ describe('getMatchingAnnotations', () => {
       { key: 'bonus.annotation' }
     ]);
   });
+
+  it('scopes the Extra Attack annotation to action attacks via attack.action', () => {
+    const extraAttack: Annotation[] = [
+      { key: 'rule.dnd-5e-2024.attacks.extra-attack.annotation', targets: ['attack.action'] }
+    ];
+    // Action attack (unarmed-strike-use-action) carries attack.action → matches.
+    expect(
+      getMatchingAnnotations(
+        ['attack.any', 'attack.melee', 'attack.unarmed', 'dice.any', 'attack.action'],
+        extraAttack
+      )
+    ).toEqual([{ key: 'rule.dnd-5e-2024.attacks.extra-attack.annotation' }]);
+    // Reaction attack lacks attack.action → does not match (Extra Attack does
+    // not apply to reactions).
+    expect(
+      getMatchingAnnotations(
+        ['attack.any', 'attack.melee', 'attack.unarmed', 'dice.any', 'attack.reaction'],
+        extraAttack
+      )
+    ).toEqual([]);
+    // Bonus-action light attack lacks attack.action → does not match.
+    expect(
+      getMatchingAnnotations(['attack.any', 'attack.melee', 'attack.weapon', 'dice.any'], extraAttack)
+    ).toEqual([]);
+  });
 });

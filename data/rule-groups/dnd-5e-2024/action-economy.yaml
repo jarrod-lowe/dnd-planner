@@ -174,7 +174,9 @@ ruleGroups:
       # Remind the player that an Extra Attack follow-up is available. Shown only
       # once the Attack action has been taken and a follow-up charge remains
       # (extraRemaining > 0) — not before the first attack, and not on the swing
-      # that exhausts the budget. Targets melee / weapon / unarmed attack choices.
+      # that exhausts the budget. Targets attack.action so it appears only on
+      # Attack-action attacks (weapon / unarmed / grapple / shove), not on
+      # reaction or bonus-action attacks which cannot use the budget.
       - id: extra-attack-annotate
         phase: normal
         after:
@@ -186,4 +188,4 @@ ruleGroups:
         activities:
           - type: annotate
             key: rule.dnd-5e-2024.attacks.extra-attack.annotation
-            targets: [attack.melee, attack.weapon, attack.unarmed]
+            targets: [attack.action]

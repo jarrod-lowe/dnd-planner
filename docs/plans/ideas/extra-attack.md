@@ -193,3 +193,43 @@ Two defects the user found in the live app:
       stay legal. (Note: a stale browser session from prior testing initially
       masked the fix; a page reload resolved it. A summoned steed was dismissed
       during testing — unrelated to the fix.)
+
+---
+
+# Round 3 — Code-review findings (codex bot)
+
+Two P2 findings on the PR, both in scope ("unarmed attacks of all kinds"):
+
+1. **Grapple/Shove didn't participate in the Extra Attack budget.** They gated on
+   `actions.remaining > 0` and always spent an action, so a grapple/shove could
+   not be the free follow-up and grappling first never opened the budget.
+2. **Annotation over-showed on reaction/bonus attacks.** It targeted
+   `[attack.melee, attack.weapon, attack.unarmed]`, which the reaction and
+   bonus-action offers also carry.
+
+### Fixes (done)
+- [x] `grapple.yaml` + `shove.yaml`: replaced the single action-cost with the
+      shared 5-step budget logic (snapshot → spend-extra-or-action → guarded
+      refill + over-commit error), `legalWhen` → `attackAction.canAttack == 1`,
+      offer `after` += `ea-canattack`, and added `annotationLabels: [attack.action]`.
+- [x] Introduced an `attack.action` label on Attack-action offers only:
+      `use-action` weapon profile (`weapons.yaml`, unioned via the preprocessor's
+      `annotationLabels` merge), the unarmed action offer (`attacks.yaml`), and
+      grapple/shove. Retargeted the annotation to `targets: [attack.action]` so it
+      no longer matches reaction/bonus offers (which carry `attack.reaction` /
+      neither). Verified in generated YAML: weapon `use-action` has `attack.action`,
+      reaction profile has `attack.reaction` only.
+
+### Tests (done)
+- [x] `extra-attack-grapple` scenario: grapple opens the budget; a follow-up
+      (unarmed or grapple) is free; both illegal once spent. Includes `offerUi`
+      assertions (action offer has `attack.action`, reaction offer does not).
+- [x] `extra-attack-shove` scenario: shove usable as the free follow-up.
+- [x] `annotations.test.ts`: `getMatchingAnnotations` — extra-attack annotation
+      (`targets: [attack.action]`) matches action attacks, not reaction/bonus.
+- [x] `make test` green; `make sync-rule-groups` (80 groups updated).
+
+### Live verification (done)
+- [x] Fresh-reloaded L5 Paladin: after taking an attack, Grapple and Shove show
+      as legal free follow-ups (no "No action available"), and the Extra Attack
+      annotation is present.
