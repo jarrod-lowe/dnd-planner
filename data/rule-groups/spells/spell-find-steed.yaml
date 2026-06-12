@@ -1092,8 +1092,15 @@ ruleGroups:
                     - fact: find-steed.selectedLevel
                       operator: equals
                       value: 2
+                    - fact: companion.steed.creatureType
+                      operator: equals
+                      value: 0
                 # Fey Step (same-turn, L2)
                 - type: offerRule
+                  when:
+                    - fact: companion.steed.creatureType
+                      operator: equals
+                      value: 1
                   legalWhen:
                     - condition:
                         fact: companion.steed.bonusActions.remaining
@@ -1182,6 +1189,10 @@ ruleGroups:
                                   value: 0
                 # Fell Glare (same-turn, L2)
                 - type: offerRule
+                  when:
+                    - fact: companion.steed.creatureType
+                      operator: equals
+                      value: 2
                   legalWhen:
                     - condition:
                         fact: companion.steed.bonusActions.remaining
@@ -1600,8 +1611,15 @@ ruleGroups:
                     - fact: find-steed.selectedLevel
                       operator: equals
                       value: 3
+                    - fact: companion.steed.creatureType
+                      operator: equals
+                      value: 0
                 # Fey Step (same-turn, L3)
                 - type: offerRule
+                  when:
+                    - fact: companion.steed.creatureType
+                      operator: equals
+                      value: 1
                   legalWhen:
                     - condition:
                         fact: companion.steed.bonusActions.remaining
@@ -1690,6 +1708,10 @@ ruleGroups:
                                   value: 0
                 # Fell Glare (same-turn, L3)
                 - type: offerRule
+                  when:
+                    - fact: companion.steed.creatureType
+                      operator: equals
+                      value: 2
                   legalWhen:
                     - condition:
                         fact: companion.steed.bonusActions.remaining
@@ -2108,8 +2130,15 @@ ruleGroups:
                     - fact: find-steed.selectedLevel
                       operator: equals
                       value: 4
+                    - fact: companion.steed.creatureType
+                      operator: equals
+                      value: 0
                 # Fey Step (same-turn, L4)
                 - type: offerRule
+                  when:
+                    - fact: companion.steed.creatureType
+                      operator: equals
+                      value: 1
                   legalWhen:
                     - condition:
                         fact: companion.steed.bonusActions.remaining
@@ -2198,6 +2227,10 @@ ruleGroups:
                                   value: 0
                 # Fell Glare (same-turn, L4)
                 - type: offerRule
+                  when:
+                    - fact: companion.steed.creatureType
+                      operator: equals
+                      value: 2
                   legalWhen:
                     - condition:
                         fact: companion.steed.bonusActions.remaining
@@ -2616,8 +2649,15 @@ ruleGroups:
                     - fact: find-steed.selectedLevel
                       operator: equals
                       value: 5
+                    - fact: companion.steed.creatureType
+                      operator: equals
+                      value: 0
                 # Fey Step (same-turn, L5)
                 - type: offerRule
+                  when:
+                    - fact: companion.steed.creatureType
+                      operator: equals
+                      value: 1
                   legalWhen:
                     - condition:
                         fact: companion.steed.bonusActions.remaining
@@ -2706,6 +2746,10 @@ ruleGroups:
                                   value: 0
                 # Fell Glare (same-turn, L5)
                 - type: offerRule
+                  when:
+                    - fact: companion.steed.creatureType
+                      operator: equals
+                      value: 2
                   legalWhen:
                     - condition:
                         fact: companion.steed.bonusActions.remaining
@@ -3787,6 +3831,10 @@ ruleGroups:
                               subtract: true
                       # Healing Touch (bonus action, 1/LR)
                       - type: offerRule
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 0
                         legalWhen:
                           - condition:
                               fact: companion.steed.bonusActions.remaining
@@ -3883,6 +3931,10 @@ ruleGroups:
                                         value: 0
                       # Fey Step (bonus action, 1/LR)
                       - type: offerRule
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 1
                         legalWhen:
                           - condition:
                               fact: companion.steed.bonusActions.remaining
@@ -3969,6 +4021,10 @@ ruleGroups:
                                         value: 0
                       # Fell Glare (bonus action, 1/LR)
                       - type: offerRule
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 2
                         legalWhen:
                           - condition:
                               fact: companion.steed.bonusActions.remaining
@@ -6017,6 +6073,10 @@ ruleGroups:
                               subtract: true
                       # Healing Touch (bonus action, 1/LR)
                       - type: offerRule
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 0
                         legalWhen:
                           - condition:
                               fact: companion.steed.bonusActions.remaining
@@ -6113,6 +6173,10 @@ ruleGroups:
                                         value: 0
                       # Fey Step (bonus action, 1/LR)
                       - type: offerRule
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 1
                         legalWhen:
                           - condition:
                               fact: companion.steed.bonusActions.remaining
@@ -6199,6 +6263,10 @@ ruleGroups:
                                         value: 0
                       # Fell Glare (bonus action, 1/LR)
                       - type: offerRule
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 2
                         legalWhen:
                           - condition:
                               fact: companion.steed.bonusActions.remaining
@@ -8258,6 +8326,10 @@ ruleGroups:
                               subtract: true
                       # Healing Touch (bonus action, 1/LR)
                       - type: offerRule
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 0
                         legalWhen:
                           - condition:
                               fact: companion.steed.bonusActions.remaining
@@ -8354,6 +8426,10 @@ ruleGroups:
                                         value: 0
                       # Fey Step (bonus action, 1/LR)
                       - type: offerRule
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 1
                         legalWhen:
                           - condition:
                               fact: companion.steed.bonusActions.remaining
@@ -8440,6 +8516,10 @@ ruleGroups:
                                         value: 0
                       # Fell Glare (bonus action, 1/LR)
                       - type: offerRule
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 2
                         legalWhen:
                           - condition:
                               fact: companion.steed.bonusActions.remaining
@@ -10499,6 +10579,10 @@ ruleGroups:
                               subtract: true
                       # Healing Touch (bonus action, 1/LR)
                       - type: offerRule
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 0
                         legalWhen:
                           - condition:
                               fact: companion.steed.bonusActions.remaining
@@ -10595,6 +10679,10 @@ ruleGroups:
                                         value: 0
                       # Fey Step (bonus action, 1/LR)
                       - type: offerRule
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 1
                         legalWhen:
                           - condition:
                               fact: companion.steed.bonusActions.remaining
@@ -10681,6 +10769,10 @@ ruleGroups:
                                         value: 0
                       # Fell Glare (bonus action, 1/LR)
                       - type: offerRule
+                        when:
+                          - fact: companion.steed.creatureType
+                            operator: equals
+                            value: 2
                         legalWhen:
                           - condition:
                               fact: companion.steed.bonusActions.remaining

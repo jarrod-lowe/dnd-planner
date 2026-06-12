@@ -1,5 +1,5 @@
-name: 'Steed Fey Step same-turn use'
-description: 'Using Fey Step on the same turn as casting Find Steed persists the 1/LR usage across turns'
+name: 'Find Steed Celestial variant offers only Healing Touch'
+description: 'A Celestial (default) Otherworldly Steed offers Healing Touch, not Fey Step or Fell Glare, both on the cast turn and on later turns'
 ruleGroups:
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
@@ -31,38 +31,30 @@ steps:
   - evaluate: {}
   - addOffer:
       id: prepare-find-steed
-  # Cast Find Steed
   - evaluate:
       assert:
         offers:
           exists:
             - cast-find-steed
+  # Cast Find Steed (default creature type 0 = Celestial)
   - addOffer:
       id: cast-find-steed
-      selections:
-        creatureType: 1
-  # Same turn: fey step is available
+  # Same turn: only Healing Touch is offered
   - evaluate:
       assert:
-        facts:
-          companion.steed.bonusActions.remaining: 1
-          companion.steed.feyStep.remaining: 1
         offers:
           exists:
+            - steed-healing-touch
+          notExists:
             - steed-fey-step
-  # Use fey step on the same turn
-  - addOffer:
-      id: steed-fey-step
-      assert:
-        facts:
-          companion.steed.bonusActions.remaining: 0
-          companion.steed.feyStep.remaining: 0
-  # End turn, next turn: still used up (effect persists)
+            - steed-fell-glare
+  # Later turn: still only Healing Touch (persistent offer)
   - endTurn: {}
   - evaluate:
       assert:
-        facts:
-          companion.steed.feyStep.remaining: 0
         offers:
-          illegal:
+          exists:
+            - steed-healing-touch
+          notExists:
             - steed-fey-step
+            - steed-fell-glare

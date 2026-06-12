@@ -39,6 +39,8 @@ steps:
             - cast-find-steed
   - addOffer:
       id: cast-find-steed
+      selections:
+        creatureType: 2
   - endTurn: {}
   # Next turn: fell glare offer available
   - evaluate:
