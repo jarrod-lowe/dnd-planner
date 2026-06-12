@@ -1589,8 +1589,7 @@
       }
     },
     "information": {
-      "saveDc": "{{saveType}} DIvI' {{dc}}",
-      "aidBonus": "+{{hp}} HP per slot level"
+      "saveDc": "{{saveType}} DIvI' {{dc}}"
     },
     "slotEffect": {
       "l1": "DIvI' L1 mugh",

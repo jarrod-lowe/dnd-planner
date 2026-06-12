@@ -278,11 +278,6 @@ ruleGroups:
                 name: rule.spell-aid.offer-aid.name
                 description: rule.spell-aid.offer-aid.description
                 detailKey: spell/aid
-                information:
-                  - type: text
-                    label: play.information.aidBonus
-                    labelValues:
-                      hp: { string: "5" }
                 intents:
                   AID: ally
                 actionCost: [action, L2]

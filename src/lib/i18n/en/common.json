@@ -1589,8 +1589,7 @@
       }
     },
     "information": {
-      "saveDc": "{{saveType}} Save DC {{dc}}",
-      "aidBonus": "+{{hp}} HP per slot level"
+      "saveDc": "{{saveType}} Save DC {{dc}}"
     },
     "slotEffect": {
       "l1": "L1 Spell Slot Expended",
