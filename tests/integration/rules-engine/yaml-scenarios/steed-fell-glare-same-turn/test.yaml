@@ -1,0 +1,66 @@
+name: 'Steed Fell Glare same-turn use'
+description: 'Using Fell Glare on the same turn as casting Find Steed persists the 1/LR usage across turns'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-find-steed
+initialEffects:
+  - id: test-grant-level2-slot
+    phase: early
+    group:
+      - spellcasting-slots-set
+    activities:
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.total
+        source:
+          number: 1
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.remaining
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+steps:
+  - evaluate: {}
+  - addOffer:
+      id: prepare-find-steed
+  # Cast Find Steed
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - cast-find-steed
+  - addOffer:
+      id: cast-find-steed
+  # Same turn: fell glare is available
+  - evaluate:
+      assert:
+        facts:
+          companion.steed.bonusActions.remaining: 1
+          companion.steed.fellGlare.remaining: 1
+        offers:
+          exists:
+            - steed-fell-glare
+  # Use fell glare on the same turn
+  - addOffer:
+      id: steed-fell-glare
+      assert:
+        facts:
+          companion.steed.bonusActions.remaining: 0
+          companion.steed.fellGlare.remaining: 0
+  # End turn, next turn: still used up (effect persists)
+  - endTurn: {}
+  - evaluate:
+      assert:
+        facts:
+          companion.steed.fellGlare.remaining: 0
+        offers:
+          illegal:
+            - steed-fell-glare

@@ -113,6 +113,12 @@
         "no_bonus_action": "Steed has no bonus action remaining",
         "no_uses": "Fey Step already used this rest"
       },
+      "steed-fell-glare": {
+        "name": "Fell Glare",
+        "description": "Force a WIS save (DC = spell save DC) on one creature within 60 ft; Frightened on failure",
+        "no_bonus_action": "Steed has no bonus action remaining",
+        "no_uses": "Fell Glare already used this rest"
+      },
       "steed-record-damage": {
         "name": "Record Damage",
         "effect": {
@@ -1391,6 +1397,7 @@
         "bonusActions": "Bonus Action",
         "healingTouch": "Healing Touch",
         "feyStep": "Fey Step",
+        "fellGlare": "Fell Glare",
         "movement": "Move"
       },
       "sections": {
