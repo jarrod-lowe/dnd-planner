@@ -1654,7 +1654,8 @@
         "self": "Self",
         "ally": "Ally",
         "area": "Area",
-        "summon": "Summon"
+        "summon": "Summon",
+        "heal": "Heal"
       },
       "CONTROL": {
         "default": "Other",
@@ -1704,7 +1705,9 @@
         "default": "Rest",
         "rest": "Rest"
       },
-      "NOTE": {},
+      "NOTE": {
+        "freeform": "Note"
+      },
       "STAT": {
         "set": "Set",
         "increase": "Increase"
