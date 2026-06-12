@@ -208,6 +208,7 @@ Two P2 findings on the PR, both in scope ("unarmed attacks of all kinds"):
    bonus-action offers also carry.
 
 ### Fixes (done)
+
 - [x] `grapple.yaml` + `shove.yaml`: replaced the single action-cost with the
       shared 5-step budget logic (snapshot → spend-extra-or-action → guarded
       refill + over-commit error), `legalWhen` → `attackAction.canAttack == 1`,
@@ -221,6 +222,7 @@ Two P2 findings on the PR, both in scope ("unarmed attacks of all kinds"):
       reaction profile has `attack.reaction` only.
 
 ### Tests (done)
+
 - [x] `extra-attack-grapple` scenario: grapple opens the budget; a follow-up
       (unarmed or grapple) is free; both illegal once spent. Includes `offerUi`
       assertions (action offer has `attack.action`, reaction offer does not).
@@ -230,6 +232,7 @@ Two P2 findings on the PR, both in scope ("unarmed attacks of all kinds"):
 - [x] `make test` green; `make sync-rule-groups` (80 groups updated).
 
 ### Live verification (done)
+
 - [x] Fresh-reloaded L5 Paladin: after taking an attack, Grapple and Shove show
       as legal free follow-ups (no "No action available"), and the Extra Attack
       annotation is present.

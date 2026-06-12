@@ -42,7 +42,8 @@ steps:
               annotationLabels: [attack.any, attack.melee, attack.unarmed, dice.any, attack.action]
           - id: unarmed-strike-use-reaction
             ui:
-              annotationLabels: [attack.any, attack.melee, attack.unarmed, dice.any, attack.reaction]
+              annotationLabels:
+                [attack.any, attack.melee, attack.unarmed, dice.any, attack.reaction]
 
   # Grapple first: spends the action and opens one free follow-up.
   - addOffer:

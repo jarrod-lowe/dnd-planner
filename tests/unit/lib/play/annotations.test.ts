@@ -90,7 +90,10 @@ describe('getMatchingAnnotations', () => {
     ).toEqual([]);
     // Bonus-action light attack lacks attack.action → does not match.
     expect(
-      getMatchingAnnotations(['attack.any', 'attack.melee', 'attack.weapon', 'dice.any'], extraAttack)
+      getMatchingAnnotations(
+        ['attack.any', 'attack.melee', 'attack.weapon', 'dice.any'],
+        extraAttack
+      )
     ).toEqual([]);
   });
 });
