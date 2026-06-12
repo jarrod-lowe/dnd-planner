@@ -21,7 +21,7 @@ From `static/details/en/spell/find-steed.json`:
 
 > Whenever you cast the spell, choose the steed's creature type—Celestial, Fey, or Fiend—which determines certain traits in the stat block.
 
-> *Otherworldly Slam.* Melee Attack Roll: Bonus equals your spell attack modifier, reach 5 ft. *Hit:* 1d8 plus the spell's level of Radiant (Celestial), Psychic (Fey), or Necrotic (Fiend) damage.
+> _Otherworldly Slam._ Melee Attack Roll: Bonus equals your spell attack modifier, reach 5 ft. _Hit:_ 1d8 plus the spell's level of Radiant (Celestial), Psychic (Fey), or Necrotic (Fiend) damage.
 
 ## Implementation Notes
 
