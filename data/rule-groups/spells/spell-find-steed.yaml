@@ -450,6 +450,43 @@ ruleGroups:
             target:
               fact: companion.steed.healingTouch.remaining
 
+      # Set Fell Glare remaining each turn (additive; use effect subtracts)
+      - id: steed-fell-glare-set
+        phase: early
+        group:
+          - steed-fell-glare-set
+        after:
+          - group: __effects__
+        when:
+          - fact: companion.steed.summoned
+            operator: equals
+            value: 1
+        activities:
+          - type: numberIncrement
+            target:
+              fact: companion.steed.fellGlare.remaining
+            source:
+              number: 1
+
+      # Reset Fell Glare on Long Rest
+      - id: steed-fell-glare-reset
+        phase: early
+        after:
+          - group: steed-fell-glare-set
+        when:
+          - fact: companion.steed.summoned
+            operator: equals
+            value: 1
+          - fact: rest.long
+            operator: equals
+            value: 1
+        activities:
+          - type: numberCopy
+            source:
+              fact: companion.steed.fellGlare.total
+            target:
+              fact: companion.steed.fellGlare.remaining
+
       # Offer Find Steed (action spell)
       - id: offer-find-steed
         when:
@@ -777,6 +814,16 @@ ruleGroups:
                     fact: companion.steed.feyStep.remaining
                   source:
                     number: 1
+                - type: numberSet
+                  target:
+                    fact: companion.steed.fellGlare.total
+                  source:
+                    number: 1
+                - type: numberSet
+                  target:
+                    fact: companion.steed.fellGlare.remaining
+                  source:
+                    number: 1
                 # Initialize speed/movement same-turn so a same-turn Dash grants
                 # movement. The persisted effect-steed-resources only applies from
                 # the next turn; ground speed is 60 at every slot level (L2-L5).
@@ -1048,6 +1095,103 @@ ruleGroups:
                             - type: numberIncrement
                               target:
                                 fact: companion.steed.feyStep.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: advertiseEffect
+                              self: true
+                              when:
+                                - fact: rest.long
+                                  operator: equals
+                                  value: 0
+                # Fell Glare (same-turn, L2)
+                - type: offerRule
+                  legalWhen:
+                    - condition:
+                        fact: companion.steed.bonusActions.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.steed-fell-glare.no_bonus_action
+                          severity: error
+                    - condition:
+                        fact: companion.steed.fellGlare.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.steed-fell-glare.no_uses
+                          severity: error
+                  rule:
+                    id: steed-fell-glare
+                    group:
+                      - __planned__
+                    after:
+                      - group: spellcasting
+                    ui:
+                      section: bonus-action-other
+                      subject: steed
+                      name: rule.spell-find-steed.steed-fell-glare.name
+                      description: rule.spell-find-steed.steed-fell-glare.description
+                      detailKey: action/fell-glare
+                      showDC: true
+                      saveType: WIS
+                      saveFact: spellcasting.saveDC
+                      information:
+                        - type: text
+                          label: play.information.saveDc
+                          labelValues:
+                            saveType: { string: WIS }
+                            dc: { fact: spellcasting.saveDC }
+                      intents: { CONTROL: single }
+                      actionCost: [bonus]
+                    vars: {}
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.bonusActions.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.fellGlare.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - *error-clear
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.steed-fell-glare.no_bonus_action
+                        when:
+                          - fact: companion.steed.bonusActions.remaining
+                            operator: lessThan
+                            value: 0
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.steed-fell-glare.no_uses
+                        when:
+                          - fact: companion.steed.fellGlare.remaining
+                            operator: lessThan
+                            value: 0
+                      - type: advertiseEffect
+                        rule:
+                          id: effect-steed-fell-glare-use
+                          phase: early
+                          when:
+                            - fact: rest.long
+                              operator: equals
+                              value: 0
+                          ui:
+                            name: rule.spell-find-steed.steed-fell-glare.name
+                            hidden: true
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.fellGlare.remaining
                               source:
                                 number: 1
                               subtract: true
@@ -1466,6 +1610,103 @@ ruleGroups:
                                 - fact: rest.long
                                   operator: equals
                                   value: 0
+                # Fell Glare (same-turn, L3)
+                - type: offerRule
+                  legalWhen:
+                    - condition:
+                        fact: companion.steed.bonusActions.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.steed-fell-glare.no_bonus_action
+                          severity: error
+                    - condition:
+                        fact: companion.steed.fellGlare.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.steed-fell-glare.no_uses
+                          severity: error
+                  rule:
+                    id: steed-fell-glare
+                    group:
+                      - __planned__
+                    after:
+                      - group: spellcasting
+                    ui:
+                      section: bonus-action-other
+                      subject: steed
+                      name: rule.spell-find-steed.steed-fell-glare.name
+                      description: rule.spell-find-steed.steed-fell-glare.description
+                      detailKey: action/fell-glare
+                      showDC: true
+                      saveType: WIS
+                      saveFact: spellcasting.saveDC
+                      information:
+                        - type: text
+                          label: play.information.saveDc
+                          labelValues:
+                            saveType: { string: WIS }
+                            dc: { fact: spellcasting.saveDC }
+                      intents: { CONTROL: single }
+                      actionCost: [bonus]
+                    vars: {}
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.bonusActions.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.fellGlare.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - *error-clear
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.steed-fell-glare.no_bonus_action
+                        when:
+                          - fact: companion.steed.bonusActions.remaining
+                            operator: lessThan
+                            value: 0
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.steed-fell-glare.no_uses
+                        when:
+                          - fact: companion.steed.fellGlare.remaining
+                            operator: lessThan
+                            value: 0
+                      - type: advertiseEffect
+                        rule:
+                          id: effect-steed-fell-glare-use
+                          phase: early
+                          when:
+                            - fact: rest.long
+                              operator: equals
+                              value: 0
+                          ui:
+                            name: rule.spell-find-steed.steed-fell-glare.name
+                            hidden: true
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.fellGlare.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: advertiseEffect
+                              self: true
+                              when:
+                                - fact: rest.long
+                                  operator: equals
+                                  value: 0
                 # Dash
                 - type: offerRule
                   legalWhen:
@@ -1866,6 +2107,103 @@ ruleGroups:
                             - type: numberIncrement
                               target:
                                 fact: companion.steed.feyStep.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: advertiseEffect
+                              self: true
+                              when:
+                                - fact: rest.long
+                                  operator: equals
+                                  value: 0
+                # Fell Glare (same-turn, L4)
+                - type: offerRule
+                  legalWhen:
+                    - condition:
+                        fact: companion.steed.bonusActions.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.steed-fell-glare.no_bonus_action
+                          severity: error
+                    - condition:
+                        fact: companion.steed.fellGlare.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.steed-fell-glare.no_uses
+                          severity: error
+                  rule:
+                    id: steed-fell-glare
+                    group:
+                      - __planned__
+                    after:
+                      - group: spellcasting
+                    ui:
+                      section: bonus-action-other
+                      subject: steed
+                      name: rule.spell-find-steed.steed-fell-glare.name
+                      description: rule.spell-find-steed.steed-fell-glare.description
+                      detailKey: action/fell-glare
+                      showDC: true
+                      saveType: WIS
+                      saveFact: spellcasting.saveDC
+                      information:
+                        - type: text
+                          label: play.information.saveDc
+                          labelValues:
+                            saveType: { string: WIS }
+                            dc: { fact: spellcasting.saveDC }
+                      intents: { CONTROL: single }
+                      actionCost: [bonus]
+                    vars: {}
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.bonusActions.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.fellGlare.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - *error-clear
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.steed-fell-glare.no_bonus_action
+                        when:
+                          - fact: companion.steed.bonusActions.remaining
+                            operator: lessThan
+                            value: 0
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.steed-fell-glare.no_uses
+                        when:
+                          - fact: companion.steed.fellGlare.remaining
+                            operator: lessThan
+                            value: 0
+                      - type: advertiseEffect
+                        rule:
+                          id: effect-steed-fell-glare-use
+                          phase: early
+                          when:
+                            - fact: rest.long
+                              operator: equals
+                              value: 0
+                          ui:
+                            name: rule.spell-find-steed.steed-fell-glare.name
+                            hidden: true
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.fellGlare.remaining
                               source:
                                 number: 1
                               subtract: true
@@ -2284,6 +2622,103 @@ ruleGroups:
                                 - fact: rest.long
                                   operator: equals
                                   value: 0
+                # Fell Glare (same-turn, L5)
+                - type: offerRule
+                  legalWhen:
+                    - condition:
+                        fact: companion.steed.bonusActions.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.steed-fell-glare.no_bonus_action
+                          severity: error
+                    - condition:
+                        fact: companion.steed.fellGlare.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.steed-fell-glare.no_uses
+                          severity: error
+                  rule:
+                    id: steed-fell-glare
+                    group:
+                      - __planned__
+                    after:
+                      - group: spellcasting
+                    ui:
+                      section: bonus-action-other
+                      subject: steed
+                      name: rule.spell-find-steed.steed-fell-glare.name
+                      description: rule.spell-find-steed.steed-fell-glare.description
+                      detailKey: action/fell-glare
+                      showDC: true
+                      saveType: WIS
+                      saveFact: spellcasting.saveDC
+                      information:
+                        - type: text
+                          label: play.information.saveDc
+                          labelValues:
+                            saveType: { string: WIS }
+                            dc: { fact: spellcasting.saveDC }
+                      intents: { CONTROL: single }
+                      actionCost: [bonus]
+                    vars: {}
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.bonusActions.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.fellGlare.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - *error-clear
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.steed-fell-glare.no_bonus_action
+                        when:
+                          - fact: companion.steed.bonusActions.remaining
+                            operator: lessThan
+                            value: 0
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.steed-fell-glare.no_uses
+                        when:
+                          - fact: companion.steed.fellGlare.remaining
+                            operator: lessThan
+                            value: 0
+                      - type: advertiseEffect
+                        rule:
+                          id: effect-steed-fell-glare-use
+                          phase: early
+                          when:
+                            - fact: rest.long
+                              operator: equals
+                              value: 0
+                          ui:
+                            name: rule.spell-find-steed.steed-fell-glare.name
+                            hidden: true
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.fellGlare.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: advertiseEffect
+                              self: true
+                              when:
+                                - fact: rest.long
+                                  operator: equals
+                                  value: 0
                 # Dash
                 - type: offerRule
                   legalWhen:
@@ -2609,6 +3044,12 @@ ruleGroups:
                           remaining: companion.steed.feyStep.remaining
                           section: resources
                           subject: steed
+                        - name: play.stats.steed.fellGlare
+                          type: usedMax
+                          total: companion.steed.fellGlare.total
+                          remaining: companion.steed.fellGlare.remaining
+                          section: resources
+                          subject: steed
                       topBar:
                         - type: usedMax
                           label: play.stats.steed.hp
@@ -2670,6 +3111,10 @@ ruleGroups:
                           label: play.stats.steed.feyStep
                           total: companion.steed.feyStep.total
                           remaining: companion.steed.feyStep.remaining
+                        - type: usedMax
+                          label: play.stats.steed.fellGlare
+                          total: companion.steed.fellGlare.total
+                          remaining: companion.steed.fellGlare.remaining
                     activities:
                       - type: numberSet
                         target:
@@ -2845,6 +3290,11 @@ ruleGroups:
                       - type: numberSet
                         target:
                           fact: companion.steed.feyStep.total
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.fellGlare.total
                         source:
                           number: 1
                       # No self-advertise — re-created each turn by effect-steed
@@ -3357,6 +3807,101 @@ ruleGroups:
                                   - type: numberIncrement
                                     target:
                                       fact: companion.steed.feyStep.remaining
+                                    source:
+                                      number: 1
+                                    subtract: true
+                                  - type: advertiseEffect
+                                    self: true
+                                    when:
+                                      - fact: rest.long
+                                        operator: equals
+                                        value: 0
+                      # Fell Glare (bonus action, 1/LR)
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.bonusActions.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-fell-glare.no_bonus_action
+                                severity: error
+                          - condition:
+                              fact: companion.steed.fellGlare.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-fell-glare.no_uses
+                                severity: error
+                        rule:
+                          id: steed-fell-glare
+                          group:
+                            - __planned__
+                          ui:
+                            section: bonus-action-other
+                            subject: steed
+                            name: rule.spell-find-steed.steed-fell-glare.name
+                            description: rule.spell-find-steed.steed-fell-glare.description
+                            detailKey: action/fell-glare
+                            showDC: true
+                            saveType: WIS
+                            saveFact: spellcasting.saveDC
+                            information:
+                              - type: text
+                                label: play.information.saveDc
+                                labelValues:
+                                  saveType: { string: WIS }
+                                  dc: { fact: spellcasting.saveDC }
+                            intents: { CONTROL: single }
+                            actionCost: [bonus]
+                          vars: {}
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.bonusActions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.fellGlare.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - *error-clear
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.steed-fell-glare.no_bonus_action
+                              when:
+                                - fact: companion.steed.bonusActions.remaining
+                                  operator: lessThan
+                                  value: 0
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.steed-fell-glare.no_uses
+                              when:
+                                - fact: companion.steed.fellGlare.remaining
+                                  operator: lessThan
+                                  value: 0
+                            - type: advertiseEffect
+                              rule:
+                                id: effect-steed-fell-glare-use
+                                phase: early
+                                when:
+                                  - fact: rest.long
+                                    operator: equals
+                                    value: 0
+                                ui:
+                                  name: rule.spell-find-steed.steed-fell-glare.name
+                                  hidden: true
+                                activities:
+                                  - type: numberIncrement
+                                    target:
+                                      fact: companion.steed.fellGlare.remaining
                                     source:
                                       number: 1
                                     subtract: true
@@ -4661,6 +5206,12 @@ ruleGroups:
                           remaining: companion.steed.feyStep.remaining
                           section: resources
                           subject: steed
+                        - name: play.stats.steed.fellGlare
+                          type: usedMax
+                          total: companion.steed.fellGlare.total
+                          remaining: companion.steed.fellGlare.remaining
+                          section: resources
+                          subject: steed
                       topBar:
                         - type: usedMax
                           label: play.stats.steed.hp
@@ -4722,6 +5273,10 @@ ruleGroups:
                           label: play.stats.steed.feyStep
                           total: companion.steed.feyStep.total
                           remaining: companion.steed.feyStep.remaining
+                        - type: usedMax
+                          label: play.stats.steed.fellGlare
+                          total: companion.steed.fellGlare.total
+                          remaining: companion.steed.fellGlare.remaining
                     activities:
                       - type: numberSet
                         target:
@@ -5408,6 +5963,101 @@ ruleGroups:
                                   - type: numberIncrement
                                     target:
                                       fact: companion.steed.feyStep.remaining
+                                    source:
+                                      number: 1
+                                    subtract: true
+                                  - type: advertiseEffect
+                                    self: true
+                                    when:
+                                      - fact: rest.long
+                                        operator: equals
+                                        value: 0
+                      # Fell Glare (bonus action, 1/LR)
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.bonusActions.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-fell-glare.no_bonus_action
+                                severity: error
+                          - condition:
+                              fact: companion.steed.fellGlare.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-fell-glare.no_uses
+                                severity: error
+                        rule:
+                          id: steed-fell-glare
+                          group:
+                            - __planned__
+                          ui:
+                            section: bonus-action-other
+                            subject: steed
+                            name: rule.spell-find-steed.steed-fell-glare.name
+                            description: rule.spell-find-steed.steed-fell-glare.description
+                            detailKey: action/fell-glare
+                            showDC: true
+                            saveType: WIS
+                            saveFact: spellcasting.saveDC
+                            information:
+                              - type: text
+                                label: play.information.saveDc
+                                labelValues:
+                                  saveType: { string: WIS }
+                                  dc: { fact: spellcasting.saveDC }
+                            intents: { CONTROL: single }
+                            actionCost: [bonus]
+                          vars: {}
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.bonusActions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.fellGlare.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - *error-clear
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.steed-fell-glare.no_bonus_action
+                              when:
+                                - fact: companion.steed.bonusActions.remaining
+                                  operator: lessThan
+                                  value: 0
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.steed-fell-glare.no_uses
+                              when:
+                                - fact: companion.steed.fellGlare.remaining
+                                  operator: lessThan
+                                  value: 0
+                            - type: advertiseEffect
+                              rule:
+                                id: effect-steed-fell-glare-use
+                                phase: early
+                                when:
+                                  - fact: rest.long
+                                    operator: equals
+                                    value: 0
+                                ui:
+                                  name: rule.spell-find-steed.steed-fell-glare.name
+                                  hidden: true
+                                activities:
+                                  - type: numberIncrement
+                                    target:
+                                      fact: companion.steed.fellGlare.remaining
                                     source:
                                       number: 1
                                     subtract: true
@@ -6712,6 +7362,12 @@ ruleGroups:
                           remaining: companion.steed.feyStep.remaining
                           section: resources
                           subject: steed
+                        - name: play.stats.steed.fellGlare
+                          type: usedMax
+                          total: companion.steed.fellGlare.total
+                          remaining: companion.steed.fellGlare.remaining
+                          section: resources
+                          subject: steed
                       topBar:
                         - type: usedMax
                           label: play.stats.steed.hp
@@ -6773,6 +7429,10 @@ ruleGroups:
                           label: play.stats.steed.feyStep
                           total: companion.steed.feyStep.total
                           remaining: companion.steed.feyStep.remaining
+                        - type: usedMax
+                          label: play.stats.steed.fellGlare
+                          total: companion.steed.fellGlare.total
+                          remaining: companion.steed.fellGlare.remaining
                     activities:
                       - type: numberSet
                         target:
@@ -6958,6 +7618,11 @@ ruleGroups:
                       - type: numberSet
                         target:
                           fact: companion.steed.feyStep.total
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.fellGlare.total
                         source:
                           number: 1
                       # No self-advertise — re-created each turn by effect-steed
@@ -7470,6 +8135,101 @@ ruleGroups:
                                   - type: numberIncrement
                                     target:
                                       fact: companion.steed.feyStep.remaining
+                                    source:
+                                      number: 1
+                                    subtract: true
+                                  - type: advertiseEffect
+                                    self: true
+                                    when:
+                                      - fact: rest.long
+                                        operator: equals
+                                        value: 0
+                      # Fell Glare (bonus action, 1/LR)
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.bonusActions.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-fell-glare.no_bonus_action
+                                severity: error
+                          - condition:
+                              fact: companion.steed.fellGlare.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-fell-glare.no_uses
+                                severity: error
+                        rule:
+                          id: steed-fell-glare
+                          group:
+                            - __planned__
+                          ui:
+                            section: bonus-action-other
+                            subject: steed
+                            name: rule.spell-find-steed.steed-fell-glare.name
+                            description: rule.spell-find-steed.steed-fell-glare.description
+                            detailKey: action/fell-glare
+                            showDC: true
+                            saveType: WIS
+                            saveFact: spellcasting.saveDC
+                            information:
+                              - type: text
+                                label: play.information.saveDc
+                                labelValues:
+                                  saveType: { string: WIS }
+                                  dc: { fact: spellcasting.saveDC }
+                            intents: { CONTROL: single }
+                            actionCost: [bonus]
+                          vars: {}
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.bonusActions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.fellGlare.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - *error-clear
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.steed-fell-glare.no_bonus_action
+                              when:
+                                - fact: companion.steed.bonusActions.remaining
+                                  operator: lessThan
+                                  value: 0
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.steed-fell-glare.no_uses
+                              when:
+                                - fact: companion.steed.fellGlare.remaining
+                                  operator: lessThan
+                                  value: 0
+                            - type: advertiseEffect
+                              rule:
+                                id: effect-steed-fell-glare-use
+                                phase: early
+                                when:
+                                  - fact: rest.long
+                                    operator: equals
+                                    value: 0
+                                ui:
+                                  name: rule.spell-find-steed.steed-fell-glare.name
+                                  hidden: true
+                                activities:
+                                  - type: numberIncrement
+                                    target:
+                                      fact: companion.steed.fellGlare.remaining
                                     source:
                                       number: 1
                                     subtract: true
@@ -8774,6 +9534,12 @@ ruleGroups:
                           remaining: companion.steed.feyStep.remaining
                           section: resources
                           subject: steed
+                        - name: play.stats.steed.fellGlare
+                          type: usedMax
+                          total: companion.steed.fellGlare.total
+                          remaining: companion.steed.fellGlare.remaining
+                          section: resources
+                          subject: steed
                       topBar:
                         - type: usedMax
                           label: play.stats.steed.hp
@@ -8835,6 +9601,10 @@ ruleGroups:
                           label: play.stats.steed.feyStep
                           total: companion.steed.feyStep.total
                           remaining: companion.steed.feyStep.remaining
+                        - type: usedMax
+                          label: play.stats.steed.fellGlare
+                          total: companion.steed.fellGlare.total
+                          remaining: companion.steed.fellGlare.remaining
                     activities:
                       - type: numberSet
                         target:
@@ -9020,6 +9790,11 @@ ruleGroups:
                       - type: numberSet
                         target:
                           fact: companion.steed.feyStep.total
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.fellGlare.total
                         source:
                           number: 1
                       # No self-advertise — re-created each turn by effect-steed
@@ -9532,6 +10307,101 @@ ruleGroups:
                                   - type: numberIncrement
                                     target:
                                       fact: companion.steed.feyStep.remaining
+                                    source:
+                                      number: 1
+                                    subtract: true
+                                  - type: advertiseEffect
+                                    self: true
+                                    when:
+                                      - fact: rest.long
+                                        operator: equals
+                                        value: 0
+                      # Fell Glare (bonus action, 1/LR)
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.bonusActions.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-fell-glare.no_bonus_action
+                                severity: error
+                          - condition:
+                              fact: companion.steed.fellGlare.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-fell-glare.no_uses
+                                severity: error
+                        rule:
+                          id: steed-fell-glare
+                          group:
+                            - __planned__
+                          ui:
+                            section: bonus-action-other
+                            subject: steed
+                            name: rule.spell-find-steed.steed-fell-glare.name
+                            description: rule.spell-find-steed.steed-fell-glare.description
+                            detailKey: action/fell-glare
+                            showDC: true
+                            saveType: WIS
+                            saveFact: spellcasting.saveDC
+                            information:
+                              - type: text
+                                label: play.information.saveDc
+                                labelValues:
+                                  saveType: { string: WIS }
+                                  dc: { fact: spellcasting.saveDC }
+                            intents: { CONTROL: single }
+                            actionCost: [bonus]
+                          vars: {}
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.bonusActions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.fellGlare.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - *error-clear
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.steed-fell-glare.no_bonus_action
+                              when:
+                                - fact: companion.steed.bonusActions.remaining
+                                  operator: lessThan
+                                  value: 0
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.steed-fell-glare.no_uses
+                              when:
+                                - fact: companion.steed.fellGlare.remaining
+                                  operator: lessThan
+                                  value: 0
+                            - type: advertiseEffect
+                              rule:
+                                id: effect-steed-fell-glare-use
+                                phase: early
+                                when:
+                                  - fact: rest.long
+                                    operator: equals
+                                    value: 0
+                                ui:
+                                  name: rule.spell-find-steed.steed-fell-glare.name
+                                  hidden: true
+                                activities:
+                                  - type: numberIncrement
+                                    target:
+                                      fact: companion.steed.fellGlare.remaining
                                     source:
                                       number: 1
                                     subtract: true
@@ -10849,3 +11719,21 @@ ruleGroups:
           meta: 'Otherworldly Steed Bonus Action'
           body: |-
             *Fey Step (Fey Only; Recharges after a Long Rest).* The steed teleports, along with its rider, to an unoccupied space of your choice up to 60 feet away from itself.
+  - id: fell-glare-detail
+    translations:
+      en:
+        name: Fell Glare
+        description: 'Detail text for the Fell Glare bonus action'
+        keywords: [fell glare, steed, bonus action, fiend, frightened, save]
+      en-x-tlh:
+        name: Fell Glare
+        description: 'Detail text for the Fell Glare bonus action'
+        keywords: [fell glare, steed, bonus action, frightened]
+    detail:
+      key: action/fell-glare
+      source: srd52
+      translations:
+        en:
+          meta: 'Otherworldly Steed Bonus Action'
+          body: |-
+            *Fell Glare (Fiend Only; Recharges after a Long Rest).* *Wisdom Saving Throw:* DC equals your spell save DC, one creature within 60 feet the steed can see. *Failure:* The target has the Frightened condition until the end of your next turn.
