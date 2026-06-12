@@ -1,0 +1,85 @@
+name: 'Extra Attack - Greataxe'
+description: >
+  With Extra Attack (extraAttacks.max=1), taking the Attack action with a
+  greataxe lets the character attack twice off a single action. The first
+  attack spends the action and opens a free follow-up (extraRemaining=1);
+  the second attack is legal and free (extraRemaining back to 0); a third
+  attack is illegal. An Extra Attack annotation appears on attack choices.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/greataxe
+
+initialEffects:
+  - id: effect-greataxe
+    phase: normal
+    group: [equipment-state]
+    activities:
+      - type: numberSet
+        target:
+          fact: weapon.greataxe.equipped
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+  - id: effect-grant-extra-attack
+    phase: early
+    activities:
+      - type: numberSet
+        target:
+          fact: extraAttacks.max
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          actions.remaining: 1
+          extraAttacks.max: 1
+          attackAction.extraRemaining: 0
+        offers:
+          legal:
+            - greataxe-use-action
+        # No follow-up available yet — annotation must not show before the
+        # Attack action is taken.
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.attacks.extra-attack.annotation
+
+  # First attack: spends the action, opens one free follow-up. Now a follow-up
+  # is available, so the annotation shows.
+  - addOffer:
+      id: greataxe-use-action
+      assert:
+        facts:
+          actions.remaining: 0
+          attackAction.extraRemaining: 1
+        offers:
+          legal:
+            - greataxe-use-action
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.attacks.extra-attack.annotation
+
+  # Second attack: consumes the free follow-up, no action spent. No follow-up
+  # remains, so the annotation must no longer show.
+  - addOffer:
+      id: greataxe-use-action
+      assert:
+        facts:
+          actions.remaining: 0
+          attackAction.extraRemaining: 0
+        offers:
+          illegal:
+            - greataxe-use-action
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.attacks.extra-attack.annotation

@@ -1016,6 +1016,9 @@
         },
         "versatile": {
           "no-free-hand": "Not enough free hands for two-handed attack"
+        },
+        "extra-attack": {
+          "annotation": "Extra Attack: you can attack again"
         }
       },
       "hp": {

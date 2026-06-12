@@ -121,3 +121,69 @@ ruleGroups:
               fact: reactions.max
             target:
               fact: reactions.remaining
+
+      # Extra Attack budget - free follow-up attacks left in the current
+      # Attack-action chain. Reset to 0 each turn. extraAttacks.max (the number
+      # of extra attacks granted per Attack action) is left undefined here and
+      # raised via numberIncrement by class features (e.g. Paladin L5), mirroring
+      # the reaction-max pattern so multiple sources stack without ordering.
+      - id: extra-attack-reset
+        phase: early
+        activities:
+          - type: numberSet
+            source:
+              number: 0
+            target:
+              fact: attackAction.extraRemaining
+
+      # Compute whether an Attack action is available: legal if a normal action
+      # remains OR a free follow-up attack remains. legalWhen entries are AND-ed
+      # with no native OR, so the attack offers gate on this computed fact.
+      # Runs after planned attacks settle so it reflects spent actions/budget.
+      - id: extra-attack-can-attack
+        phase: normal
+        after:
+          - group: __planned__
+        group:
+          - ea-canattack
+        activities:
+          - type: numberSet
+            source:
+              number: 0
+            target:
+              fact: attackAction.canAttack
+          - type: numberSet
+            source:
+              number: 1
+            target:
+              fact: attackAction.canAttack
+            when:
+              - fact: actions.remaining
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            source:
+              number: 1
+            target:
+              fact: attackAction.canAttack
+            when:
+              - fact: attackAction.extraRemaining
+                operator: greaterThan
+                value: 0
+
+      # Remind the player that an Extra Attack follow-up is available. Shown only
+      # once the Attack action has been taken and a follow-up charge remains
+      # (extraRemaining > 0) — not before the first attack, and not on the swing
+      # that exhausts the budget. Targets melee / weapon / unarmed attack choices.
+      - id: extra-attack-annotate
+        phase: normal
+        after:
+          - group: __planned__
+        when:
+          - fact: attackAction.extraRemaining
+            operator: greaterThan
+            value: 0
+        activities:
+          - type: annotate
+            key: rule.dnd-5e-2024.attacks.extra-attack.annotation
+            targets: [attack.melee, attack.weapon, attack.unarmed]

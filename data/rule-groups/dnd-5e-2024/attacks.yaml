@@ -46,13 +46,14 @@ ruleGroups:
       - id: unarmed-strike-use-action-offer
         after:
           - group: option-capabilities
+          - group: ea-canattack
         activities:
           - type: offerRule
             legalWhen:
               - condition:
-                  fact: actions.remaining
-                  operator: greaterThan
-                  value: 0
+                  fact: attackAction.canAttack
+                  operator: equals
+                  value: 1
                 illegalDiagnostics:
                   - code: rule.dnd-5e-2024.attacks.activation.no_action
                     severity: error
@@ -95,19 +96,86 @@ ruleGroups:
                     fact: attack.unarmed.damageBonus
               phase: normal
               activities:
+                # Snapshot pre-state so the branch below sees pre-mutation values.
+                - type: numberCopy
+                  source:
+                    fact: attackAction.extraRemaining
+                  target:
+                    fact: attackAction.wasExtra
+                  id: snapshot-extra
+                - type: numberCopy
+                  source:
+                    fact: actions.remaining
+                  target:
+                    fact: attackAction.actionsBefore
+                  id: snapshot-actions
+                # Free follow-up: spend an extra-attack charge, no action.
+                - type: numberIncrement
+                  target:
+                    fact: attackAction.extraRemaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    - fact: attackAction.wasExtra
+                      operator: greaterThan
+                      value: 0
+                  id: spend-extra
+                # New Attack action: spend an action.
                 - type: numberIncrement
                   target:
                     fact: actions.remaining
                   source:
                     number: 1
                   subtract: true
+                  when:
+                    - fact: attackAction.wasExtra
+                      operator: lessThanOrEqual
+                      value: 0
                   id: action-cost
+                # Refill the follow-up budget for this new Attack action. Guarded
+                # on actionsBefore > 0 so a force-planned over-committed attack
+                # does not re-open the budget.
+                - type: numberCopy
+                  source:
+                    fact: extraAttacks.max
+                  target:
+                    fact: attackAction.extraRemaining
+                  when:
+                    - fact: attackAction.wasExtra
+                      operator: lessThanOrEqual
+                      value: 0
+                    - fact: attackAction.actionsBefore
+                      operator: greaterThan
+                      value: 0
+                  id: refill-extra
                 - type: numberSet
                   target:
                     fact: attack.last.activation.action
                   source:
                     number: 1
                   id: action-flag
+                # Per-item error tracking. The presence of the `errors` key makes
+                # the UI trust this item's own errors for legality (see
+                # correctEntryForPlanItem), so an over-commit flags only the
+                # offending swing rather than every planned unarmed strike.
+                - type: setClear
+                  target:
+                    var: errors
+                  id: error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.attacks.activation.no_action
+                  when:
+                    - fact: attackAction.wasExtra
+                      operator: lessThanOrEqual
+                      value: 0
+                    - fact: attackAction.actionsBefore
+                      operator: lessThanOrEqual
+                      value: 0
+                  id: error-check
 
       # === Unarmed Strike as reaction ===
       - id: unarmed-strike-use-reaction-offer
