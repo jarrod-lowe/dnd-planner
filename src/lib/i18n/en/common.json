@@ -107,6 +107,12 @@
         "no_bonus_action": "Steed has no bonus action remaining",
         "no_uses": "Healing Touch already used this rest"
       },
+      "steed-fey-step": {
+        "name": "Fey Step",
+        "description": "Teleport steed and rider up to 60 ft",
+        "no_bonus_action": "Steed has no bonus action remaining",
+        "no_uses": "Fey Step already used this rest"
+      },
       "steed-record-damage": {
         "name": "Record Damage",
         "effect": {
@@ -1381,6 +1387,7 @@
         "actions": "Actions",
         "bonusActions": "Bonus Action",
         "healingTouch": "Healing Touch",
+        "feyStep": "Fey Step",
         "movement": "Move"
       },
       "sections": {

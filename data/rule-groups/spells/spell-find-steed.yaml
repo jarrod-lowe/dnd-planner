@@ -379,6 +379,10 @@ ruleGroups:
       # Set Healing Touch remaining each turn (additive; use effect subtracts)
       - id: steed-healing-touch-set
         phase: early
+        group:
+          - steed-healing-touch-set
+        after:
+          - group: __effects__
         when:
           - fact: companion.steed.summoned
             operator: equals
@@ -389,6 +393,43 @@ ruleGroups:
               fact: companion.steed.healingTouch.remaining
             source:
               number: 1
+
+      # Set Fey Step remaining each turn (additive; use effect subtracts)
+      - id: steed-fey-step-set
+        phase: early
+        group:
+          - steed-fey-step-set
+        after:
+          - group: __effects__
+        when:
+          - fact: companion.steed.summoned
+            operator: equals
+            value: 1
+        activities:
+          - type: numberIncrement
+            target:
+              fact: companion.steed.feyStep.remaining
+            source:
+              number: 1
+
+      # Reset Fey Step on Long Rest
+      - id: steed-fey-step-reset
+        phase: early
+        after:
+          - group: steed-fey-step-set
+        when:
+          - fact: companion.steed.summoned
+            operator: equals
+            value: 1
+          - fact: rest.long
+            operator: equals
+            value: 1
+        activities:
+          - type: numberCopy
+            source:
+              fact: companion.steed.feyStep.total
+            target:
+              fact: companion.steed.feyStep.remaining
 
       # Reset Healing Touch on Long Rest
       - id: steed-healing-touch-reset
@@ -726,6 +767,16 @@ ruleGroups:
                     fact: companion.steed.healingTouch.remaining
                   source:
                     number: 1
+                - type: numberSet
+                  target:
+                    fact: companion.steed.feyStep.total
+                  source:
+                    number: 1
+                - type: numberSet
+                  target:
+                    fact: companion.steed.feyStep.remaining
+                  source:
+                    number: 1
                 # Initialize speed/movement same-turn so a same-turn Dash grants
                 # movement. The persisted effect-steed-resources only applies from
                 # the next turn; ground speed is 60 at every slot level (L2-L5).
@@ -918,6 +969,94 @@ ruleGroups:
                     - fact: find-steed.selectedLevel
                       operator: equals
                       value: 2
+                # Fey Step (same-turn, L2)
+                - type: offerRule
+                  legalWhen:
+                    - condition:
+                        fact: companion.steed.bonusActions.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.steed-fey-step.no_bonus_action
+                          severity: error
+                    - condition:
+                        fact: companion.steed.feyStep.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.steed-fey-step.no_uses
+                          severity: error
+                  rule:
+                    id: steed-fey-step
+                    group:
+                      - __planned__
+                    after:
+                      - group: spellcasting
+                    ui:
+                      section: bonus-action-other
+                      subject: steed
+                      name: rule.spell-find-steed.steed-fey-step.name
+                      description: rule.spell-find-steed.steed-fey-step.description
+                      detailKey: action/fey-step
+                      intents: { MOVE: travel }
+                      actionCost: [bonus]
+                    vars: {}
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.bonusActions.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.feyStep.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - *error-clear
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.steed-fey-step.no_bonus_action
+                        when:
+                          - fact: companion.steed.bonusActions.remaining
+                            operator: lessThan
+                            value: 0
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.steed-fey-step.no_uses
+                        when:
+                          - fact: companion.steed.feyStep.remaining
+                            operator: lessThan
+                            value: 0
+                      - type: advertiseEffect
+                        rule:
+                          id: effect-steed-fey-step-use
+                          phase: early
+                          when:
+                            - fact: rest.long
+                              operator: equals
+                              value: 0
+                          ui:
+                            name: rule.spell-find-steed.steed-fey-step.name
+                            hidden: true
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.feyStep.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: advertiseEffect
+                              self: true
+                              when:
+                                - fact: rest.long
+                                  operator: equals
+                                  value: 0
                 # Dash
                 - type: offerRule
                   legalWhen:
@@ -1239,6 +1378,94 @@ ruleGroups:
                     - fact: find-steed.selectedLevel
                       operator: equals
                       value: 3
+                # Fey Step (same-turn, L3)
+                - type: offerRule
+                  legalWhen:
+                    - condition:
+                        fact: companion.steed.bonusActions.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.steed-fey-step.no_bonus_action
+                          severity: error
+                    - condition:
+                        fact: companion.steed.feyStep.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.steed-fey-step.no_uses
+                          severity: error
+                  rule:
+                    id: steed-fey-step
+                    group:
+                      - __planned__
+                    after:
+                      - group: spellcasting
+                    ui:
+                      section: bonus-action-other
+                      subject: steed
+                      name: rule.spell-find-steed.steed-fey-step.name
+                      description: rule.spell-find-steed.steed-fey-step.description
+                      detailKey: action/fey-step
+                      intents: { MOVE: travel }
+                      actionCost: [bonus]
+                    vars: {}
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.bonusActions.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.feyStep.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - *error-clear
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.steed-fey-step.no_bonus_action
+                        when:
+                          - fact: companion.steed.bonusActions.remaining
+                            operator: lessThan
+                            value: 0
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.steed-fey-step.no_uses
+                        when:
+                          - fact: companion.steed.feyStep.remaining
+                            operator: lessThan
+                            value: 0
+                      - type: advertiseEffect
+                        rule:
+                          id: effect-steed-fey-step-use
+                          phase: early
+                          when:
+                            - fact: rest.long
+                              operator: equals
+                              value: 0
+                          ui:
+                            name: rule.spell-find-steed.steed-fey-step.name
+                            hidden: true
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.feyStep.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: advertiseEffect
+                              self: true
+                              when:
+                                - fact: rest.long
+                                  operator: equals
+                                  value: 0
                 # Dash
                 - type: offerRule
                   legalWhen:
@@ -1560,6 +1787,94 @@ ruleGroups:
                     - fact: find-steed.selectedLevel
                       operator: equals
                       value: 4
+                # Fey Step (same-turn, L4)
+                - type: offerRule
+                  legalWhen:
+                    - condition:
+                        fact: companion.steed.bonusActions.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.steed-fey-step.no_bonus_action
+                          severity: error
+                    - condition:
+                        fact: companion.steed.feyStep.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.steed-fey-step.no_uses
+                          severity: error
+                  rule:
+                    id: steed-fey-step
+                    group:
+                      - __planned__
+                    after:
+                      - group: spellcasting
+                    ui:
+                      section: bonus-action-other
+                      subject: steed
+                      name: rule.spell-find-steed.steed-fey-step.name
+                      description: rule.spell-find-steed.steed-fey-step.description
+                      detailKey: action/fey-step
+                      intents: { MOVE: travel }
+                      actionCost: [bonus]
+                    vars: {}
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.bonusActions.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.feyStep.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - *error-clear
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.steed-fey-step.no_bonus_action
+                        when:
+                          - fact: companion.steed.bonusActions.remaining
+                            operator: lessThan
+                            value: 0
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.steed-fey-step.no_uses
+                        when:
+                          - fact: companion.steed.feyStep.remaining
+                            operator: lessThan
+                            value: 0
+                      - type: advertiseEffect
+                        rule:
+                          id: effect-steed-fey-step-use
+                          phase: early
+                          when:
+                            - fact: rest.long
+                              operator: equals
+                              value: 0
+                          ui:
+                            name: rule.spell-find-steed.steed-fey-step.name
+                            hidden: true
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.feyStep.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: advertiseEffect
+                              self: true
+                              when:
+                                - fact: rest.long
+                                  operator: equals
+                                  value: 0
                 # Dash
                 - type: offerRule
                   legalWhen:
@@ -1881,6 +2196,94 @@ ruleGroups:
                     - fact: find-steed.selectedLevel
                       operator: equals
                       value: 5
+                # Fey Step (same-turn, L5)
+                - type: offerRule
+                  legalWhen:
+                    - condition:
+                        fact: companion.steed.bonusActions.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.steed-fey-step.no_bonus_action
+                          severity: error
+                    - condition:
+                        fact: companion.steed.feyStep.remaining
+                        operator: greaterThan
+                        value: 0
+                      illegalDiagnostics:
+                        - code: rule.spell-find-steed.steed-fey-step.no_uses
+                          severity: error
+                  rule:
+                    id: steed-fey-step
+                    group:
+                      - __planned__
+                    after:
+                      - group: spellcasting
+                    ui:
+                      section: bonus-action-other
+                      subject: steed
+                      name: rule.spell-find-steed.steed-fey-step.name
+                      description: rule.spell-find-steed.steed-fey-step.description
+                      detailKey: action/fey-step
+                      intents: { MOVE: travel }
+                      actionCost: [bonus]
+                    vars: {}
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.bonusActions.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: numberIncrement
+                        target:
+                          fact: companion.steed.feyStep.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - *error-clear
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.steed-fey-step.no_bonus_action
+                        when:
+                          - fact: companion.steed.bonusActions.remaining
+                            operator: lessThan
+                            value: 0
+                      - type: setAdd
+                        target:
+                          var: errors
+                        source:
+                          string: rule.spell-find-steed.steed-fey-step.no_uses
+                        when:
+                          - fact: companion.steed.feyStep.remaining
+                            operator: lessThan
+                            value: 0
+                      - type: advertiseEffect
+                        rule:
+                          id: effect-steed-fey-step-use
+                          phase: early
+                          when:
+                            - fact: rest.long
+                              operator: equals
+                              value: 0
+                          ui:
+                            name: rule.spell-find-steed.steed-fey-step.name
+                            hidden: true
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.feyStep.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: advertiseEffect
+                              self: true
+                              when:
+                                - fact: rest.long
+                                  operator: equals
+                                  value: 0
                 # Dash
                 - type: offerRule
                   legalWhen:
@@ -2200,6 +2603,12 @@ ruleGroups:
                           remaining: companion.steed.healingTouch.remaining
                           section: resources
                           subject: steed
+                        - name: play.stats.steed.feyStep
+                          type: usedMax
+                          total: companion.steed.feyStep.total
+                          remaining: companion.steed.feyStep.remaining
+                          section: resources
+                          subject: steed
                       topBar:
                         - type: usedMax
                           label: play.stats.steed.hp
@@ -2257,6 +2666,10 @@ ruleGroups:
                           label: play.stats.steed.healingTouch
                           total: companion.steed.healingTouch.total
                           remaining: companion.steed.healingTouch.remaining
+                        - type: usedMax
+                          label: play.stats.steed.feyStep
+                          total: companion.steed.feyStep.total
+                          remaining: companion.steed.feyStep.remaining
                     activities:
                       - type: numberSet
                         target:
@@ -2427,6 +2840,11 @@ ruleGroups:
                       - type: numberSet
                         target:
                           fact: companion.steed.healingTouch.total
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.feyStep.total
                         source:
                           number: 1
                       # No self-advertise — re-created each turn by effect-steed
@@ -2853,6 +3271,92 @@ ruleGroups:
                                   - type: numberIncrement
                                     target:
                                       fact: companion.steed.healingTouch.remaining
+                                    source:
+                                      number: 1
+                                    subtract: true
+                                  - type: advertiseEffect
+                                    self: true
+                                    when:
+                                      - fact: rest.long
+                                        operator: equals
+                                        value: 0
+                      # Fey Step (bonus action, 1/LR)
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.bonusActions.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-fey-step.no_bonus_action
+                                severity: error
+                          - condition:
+                              fact: companion.steed.feyStep.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-fey-step.no_uses
+                                severity: error
+                        rule:
+                          id: steed-fey-step
+                          group:
+                            - __planned__
+                          ui:
+                            section: bonus-action-other
+                            subject: steed
+                            name: rule.spell-find-steed.steed-fey-step.name
+                            description: rule.spell-find-steed.steed-fey-step.description
+                            detailKey: action/fey-step
+                            intents: { MOVE: travel }
+                            actionCost: [bonus]
+                          vars: {}
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.bonusActions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.feyStep.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - *error-clear
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.steed-fey-step.no_bonus_action
+                              when:
+                                - fact: companion.steed.bonusActions.remaining
+                                  operator: lessThan
+                                  value: 0
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.steed-fey-step.no_uses
+                              when:
+                                - fact: companion.steed.feyStep.remaining
+                                  operator: lessThan
+                                  value: 0
+                            - type: advertiseEffect
+                              rule:
+                                id: effect-steed-fey-step-use
+                                phase: early
+                                when:
+                                  - fact: rest.long
+                                    operator: equals
+                                    value: 0
+                                ui:
+                                  name: rule.spell-find-steed.steed-fey-step.name
+                                  hidden: true
+                                activities:
+                                  - type: numberIncrement
+                                    target:
+                                      fact: companion.steed.feyStep.remaining
                                     source:
                                       number: 1
                                     subtract: true
@@ -4151,6 +4655,12 @@ ruleGroups:
                           remaining: companion.steed.healingTouch.remaining
                           section: resources
                           subject: steed
+                        - name: play.stats.steed.feyStep
+                          type: usedMax
+                          total: companion.steed.feyStep.total
+                          remaining: companion.steed.feyStep.remaining
+                          section: resources
+                          subject: steed
                       topBar:
                         - type: usedMax
                           label: play.stats.steed.hp
@@ -4208,6 +4718,10 @@ ruleGroups:
                           label: play.stats.steed.healingTouch
                           total: companion.steed.healingTouch.total
                           remaining: companion.steed.healingTouch.remaining
+                        - type: usedMax
+                          label: play.stats.steed.feyStep
+                          total: companion.steed.feyStep.total
+                          remaining: companion.steed.feyStep.remaining
                     activities:
                       - type: numberSet
                         target:
@@ -4378,6 +4892,11 @@ ruleGroups:
                       - type: numberSet
                         target:
                           fact: companion.steed.healingTouch.total
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.feyStep.total
                         source:
                           number: 1
                   when:
@@ -4803,6 +5322,92 @@ ruleGroups:
                                   - type: numberIncrement
                                     target:
                                       fact: companion.steed.healingTouch.remaining
+                                    source:
+                                      number: 1
+                                    subtract: true
+                                  - type: advertiseEffect
+                                    self: true
+                                    when:
+                                      - fact: rest.long
+                                        operator: equals
+                                        value: 0
+                      # Fey Step (bonus action, 1/LR)
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.bonusActions.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-fey-step.no_bonus_action
+                                severity: error
+                          - condition:
+                              fact: companion.steed.feyStep.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-fey-step.no_uses
+                                severity: error
+                        rule:
+                          id: steed-fey-step
+                          group:
+                            - __planned__
+                          ui:
+                            section: bonus-action-other
+                            subject: steed
+                            name: rule.spell-find-steed.steed-fey-step.name
+                            description: rule.spell-find-steed.steed-fey-step.description
+                            detailKey: action/fey-step
+                            intents: { MOVE: travel }
+                            actionCost: [bonus]
+                          vars: {}
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.bonusActions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.feyStep.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - *error-clear
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.steed-fey-step.no_bonus_action
+                              when:
+                                - fact: companion.steed.bonusActions.remaining
+                                  operator: lessThan
+                                  value: 0
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.steed-fey-step.no_uses
+                              when:
+                                - fact: companion.steed.feyStep.remaining
+                                  operator: lessThan
+                                  value: 0
+                            - type: advertiseEffect
+                              rule:
+                                id: effect-steed-fey-step-use
+                                phase: early
+                                when:
+                                  - fact: rest.long
+                                    operator: equals
+                                    value: 0
+                                ui:
+                                  name: rule.spell-find-steed.steed-fey-step.name
+                                  hidden: true
+                                activities:
+                                  - type: numberIncrement
+                                    target:
+                                      fact: companion.steed.feyStep.remaining
                                     source:
                                       number: 1
                                     subtract: true
@@ -6101,6 +6706,12 @@ ruleGroups:
                           remaining: companion.steed.healingTouch.remaining
                           section: resources
                           subject: steed
+                        - name: play.stats.steed.feyStep
+                          type: usedMax
+                          total: companion.steed.feyStep.total
+                          remaining: companion.steed.feyStep.remaining
+                          section: resources
+                          subject: steed
                       topBar:
                         - type: usedMax
                           label: play.stats.steed.hp
@@ -6158,6 +6769,10 @@ ruleGroups:
                           label: play.stats.steed.healingTouch
                           total: companion.steed.healingTouch.total
                           remaining: companion.steed.healingTouch.remaining
+                        - type: usedMax
+                          label: play.stats.steed.feyStep
+                          total: companion.steed.feyStep.total
+                          remaining: companion.steed.feyStep.remaining
                     activities:
                       - type: numberSet
                         target:
@@ -6338,6 +6953,11 @@ ruleGroups:
                       - type: numberSet
                         target:
                           fact: companion.steed.healingTouch.total
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.feyStep.total
                         source:
                           number: 1
                       # No self-advertise — re-created each turn by effect-steed
@@ -6764,6 +7384,92 @@ ruleGroups:
                                   - type: numberIncrement
                                     target:
                                       fact: companion.steed.healingTouch.remaining
+                                    source:
+                                      number: 1
+                                    subtract: true
+                                  - type: advertiseEffect
+                                    self: true
+                                    when:
+                                      - fact: rest.long
+                                        operator: equals
+                                        value: 0
+                      # Fey Step (bonus action, 1/LR)
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.bonusActions.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-fey-step.no_bonus_action
+                                severity: error
+                          - condition:
+                              fact: companion.steed.feyStep.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-fey-step.no_uses
+                                severity: error
+                        rule:
+                          id: steed-fey-step
+                          group:
+                            - __planned__
+                          ui:
+                            section: bonus-action-other
+                            subject: steed
+                            name: rule.spell-find-steed.steed-fey-step.name
+                            description: rule.spell-find-steed.steed-fey-step.description
+                            detailKey: action/fey-step
+                            intents: { MOVE: travel }
+                            actionCost: [bonus]
+                          vars: {}
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.bonusActions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.feyStep.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - *error-clear
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.steed-fey-step.no_bonus_action
+                              when:
+                                - fact: companion.steed.bonusActions.remaining
+                                  operator: lessThan
+                                  value: 0
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.steed-fey-step.no_uses
+                              when:
+                                - fact: companion.steed.feyStep.remaining
+                                  operator: lessThan
+                                  value: 0
+                            - type: advertiseEffect
+                              rule:
+                                id: effect-steed-fey-step-use
+                                phase: early
+                                when:
+                                  - fact: rest.long
+                                    operator: equals
+                                    value: 0
+                                ui:
+                                  name: rule.spell-find-steed.steed-fey-step.name
+                                  hidden: true
+                                activities:
+                                  - type: numberIncrement
+                                    target:
+                                      fact: companion.steed.feyStep.remaining
                                     source:
                                       number: 1
                                     subtract: true
@@ -8062,6 +8768,12 @@ ruleGroups:
                           remaining: companion.steed.healingTouch.remaining
                           section: resources
                           subject: steed
+                        - name: play.stats.steed.feyStep
+                          type: usedMax
+                          total: companion.steed.feyStep.total
+                          remaining: companion.steed.feyStep.remaining
+                          section: resources
+                          subject: steed
                       topBar:
                         - type: usedMax
                           label: play.stats.steed.hp
@@ -8119,6 +8831,10 @@ ruleGroups:
                           label: play.stats.steed.healingTouch
                           total: companion.steed.healingTouch.total
                           remaining: companion.steed.healingTouch.remaining
+                        - type: usedMax
+                          label: play.stats.steed.feyStep
+                          total: companion.steed.feyStep.total
+                          remaining: companion.steed.feyStep.remaining
                     activities:
                       - type: numberSet
                         target:
@@ -8299,6 +9015,11 @@ ruleGroups:
                       - type: numberSet
                         target:
                           fact: companion.steed.healingTouch.total
+                        source:
+                          number: 1
+                      - type: numberSet
+                        target:
+                          fact: companion.steed.feyStep.total
                         source:
                           number: 1
                       # No self-advertise — re-created each turn by effect-steed
@@ -8725,6 +9446,92 @@ ruleGroups:
                                   - type: numberIncrement
                                     target:
                                       fact: companion.steed.healingTouch.remaining
+                                    source:
+                                      number: 1
+                                    subtract: true
+                                  - type: advertiseEffect
+                                    self: true
+                                    when:
+                                      - fact: rest.long
+                                        operator: equals
+                                        value: 0
+                      # Fey Step (bonus action, 1/LR)
+                      - type: offerRule
+                        legalWhen:
+                          - condition:
+                              fact: companion.steed.bonusActions.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-fey-step.no_bonus_action
+                                severity: error
+                          - condition:
+                              fact: companion.steed.feyStep.remaining
+                              operator: greaterThan
+                              value: 0
+                            illegalDiagnostics:
+                              - code: rule.spell-find-steed.steed-fey-step.no_uses
+                                severity: error
+                        rule:
+                          id: steed-fey-step
+                          group:
+                            - __planned__
+                          ui:
+                            section: bonus-action-other
+                            subject: steed
+                            name: rule.spell-find-steed.steed-fey-step.name
+                            description: rule.spell-find-steed.steed-fey-step.description
+                            detailKey: action/fey-step
+                            intents: { MOVE: travel }
+                            actionCost: [bonus]
+                          vars: {}
+                          activities:
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.bonusActions.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - type: numberIncrement
+                              target:
+                                fact: companion.steed.feyStep.remaining
+                              source:
+                                number: 1
+                              subtract: true
+                            - *error-clear
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.steed-fey-step.no_bonus_action
+                              when:
+                                - fact: companion.steed.bonusActions.remaining
+                                  operator: lessThan
+                                  value: 0
+                            - type: setAdd
+                              target:
+                                var: errors
+                              source:
+                                string: rule.spell-find-steed.steed-fey-step.no_uses
+                              when:
+                                - fact: companion.steed.feyStep.remaining
+                                  operator: lessThan
+                                  value: 0
+                            - type: advertiseEffect
+                              rule:
+                                id: effect-steed-fey-step-use
+                                phase: early
+                                when:
+                                  - fact: rest.long
+                                    operator: equals
+                                    value: 0
+                                ui:
+                                  name: rule.spell-find-steed.steed-fey-step.name
+                                  hidden: true
+                                activities:
+                                  - type: numberIncrement
+                                    target:
+                                      fact: companion.steed.feyStep.remaining
                                     source:
                                       number: 1
                                     subtract: true
@@ -10024,3 +10831,21 @@ ruleGroups:
           meta: 'Otherworldly Steed Bonus Action'
           body: |-
             *Healing Touch (Celestial Only; Recharges after a Long Rest).* One creature within 5 feet of the steed regains a number of Hit Points equal to 2d8 plus the spell's level.
+  - id: fey-step-detail
+    translations:
+      en:
+        name: Fey Step
+        description: 'Detail text for the Fey Step bonus action'
+        keywords: [fey step, steed, bonus action, fey, teleport]
+      en-x-tlh:
+        name: Fey Step
+        description: 'Detail text for the Fey Step bonus action'
+        keywords: [fey step, steed, bonus action, teleport]
+    detail:
+      key: action/fey-step
+      source: srd52
+      translations:
+        en:
+          meta: 'Otherworldly Steed Bonus Action'
+          body: |-
+            *Fey Step (Fey Only; Recharges after a Long Rest).* The steed teleports, along with its rider, to an unoccupied space of your choice up to 60 feet away from itself.
