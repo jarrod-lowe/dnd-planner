@@ -2,6 +2,7 @@
 ruleGroups:
   - id: druid-spells-l2
     requires:
+      - spell-aid
       - spell-hold-person
     translations:
       en:

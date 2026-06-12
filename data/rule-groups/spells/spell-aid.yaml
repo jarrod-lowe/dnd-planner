@@ -7,32 +7,31 @@ ruleGroups:
       en:
         name: Aid
         description: >-
-          Level 2 action spell (touch). +5 HP max & current to 3 creatures
-          (+1/level). 8 hours.
-        keywords: [spell, level2, aid, action, abjuration, cleric, paladin]
+          Level 2 action spell (30ft). +5 HP per slot level to 3 creatures.
+          8 hours.
+        keywords: [spell, level2, aid, action, abjuration, bard, cleric, druid, paladin, ranger]
       en-x-tlh:
         name: QaH
         description: >-
-          DIch level 2 action (touch). +5 HP max pagh 3 creatures (+1/level). 8 rep.
+          DIch level 2 action (30ft). +5 HP per slot level 3 creatures. 8 rep.
         keywords: [spell, level2, QaH, action]
     detail:
       key: spell/aid
       source: srd52
       translations:
         en:
-          meta: 'Level 2 Abjuration (Cleric, Paladin)'
+          meta: 'Level 2 Abjuration (Bard, Cleric, Druid, Paladin, Ranger)'
           fields:
             - { labelKey: rules.field.castingTime, value: 'Action' }
-            - { labelKey: rules.field.range, value: 'Touch' }
-            - { labelKey: rules.field.components, value: 'V, S, M (a tiny strip of white cloth)' }
+            - { labelKey: rules.field.range, value: '30 feet' }
+            - { labelKey: rules.field.components, value: 'V, S, M (a strip of white cloth)' }
             - { labelKey: rules.field.duration, value: '8 hours' }
           body: |
-            Your spell bolsters your allies with toughness and resolve. Choose up
-            to three creatures within range. Each target's hit point maximum and
-            current hit points increase by 5 for the duration.
+            Choose up to three creatures within range. Each target's Hit Point
+            maximum and current Hit Points increase by 5 for the duration.
 
-            *Using a Higher-Level Spell Slot.* You can target one additional
-            creature for each spell slot level above 2.
+            **Using a Higher-Level Spell Slot.** Each target's Hit Points
+            increase by 5 for each spell slot level above 2.
     rules:
       # Offer to prepare Aid (Build → Prepare → L2)
       - id: prepare-aid-offer

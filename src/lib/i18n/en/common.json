@@ -266,7 +266,7 @@
     "spell-aid": {
       "offer-aid": {
         "name": "Aid",
-        "description": "Touch | +5 HP max & current, 3 creatures (+1/level) | 8 hours",
+        "description": "30ft | +5 HP per slot level to 3 creatures | 8 hours",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
         "no_slots": "No spell slots remaining"
@@ -1590,7 +1590,7 @@
     },
     "information": {
       "saveDc": "{{saveType}} Save DC {{dc}}",
-      "aidBonus": "+{{hp}} HP"
+      "aidBonus": "+{{hp}} HP per slot level"
     },
     "slotEffect": {
       "l1": "L1 Spell Slot Expended",

@@ -266,7 +266,7 @@
     "spell-aid": {
       "offer-aid": {
         "name": "QaH",
-        "description": "touch | +5 HP max pagh 3 creatures (+1/level) | 8 rep",
+        "description": "30ft | +5 HP per slot level 3 creatures | 8 rep",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
         "no_slots": "mugh laH tu'lu'be'"
@@ -1590,7 +1590,7 @@
     },
     "information": {
       "saveDc": "{{saveType}} DIvI' {{dc}}",
-      "aidBonus": "+{{hp}} HP"
+      "aidBonus": "+{{hp}} HP per slot level"
     },
     "slotEffect": {
       "l1": "DIvI' L1 mugh",
