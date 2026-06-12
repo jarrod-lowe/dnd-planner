@@ -381,6 +381,8 @@ ruleGroups:
         phase: early
         group:
           - steed-healing-touch-set
+        after:
+          - group: __effects__
         when:
           - fact: companion.steed.summoned
             operator: equals
@@ -397,6 +399,8 @@ ruleGroups:
         phase: early
         group:
           - steed-fey-step-set
+        after:
+          - group: __effects__
         when:
           - fact: companion.steed.summoned
             operator: equals
