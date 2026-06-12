@@ -1,0 +1,47 @@
+name: 'Aid Prepare'
+description: 'Can prepare and unprepare Aid; prepared fact tracks correctly'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-aid
+initialEffects:
+  - id: test-grant-level2-slot
+    phase: early
+    group:
+      - spellcasting-slots-set
+    activities:
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.total
+        source:
+          number: 1
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.remaining
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+steps:
+  - evaluate:
+  # Prepare Aid
+  - addOffer:
+      id: prepare-aid
+  # Aid prepared
+  - evaluate:
+      assert:
+        facts:
+          spell.l2.aid.prepared: 1
+  # Unprepare Aid
+  - addOffer:
+      id: unprepare-aid
+  # Aid unprepared
+  - evaluate:
+      assert:
+        facts:
+          spell.l2.aid.prepared: 0

@@ -1,0 +1,552 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: spell-aid
+    requires:
+      - spellcasting
+    translations:
+      en:
+        name: Aid
+        description: >-
+          Level 2 action spell (touch). +5 HP max & current to 3 creatures
+          (+1/level). 8 hours.
+        keywords: [spell, level2, aid, action, abjuration, cleric, paladin]
+      en-x-tlh:
+        name: QaH
+        description: >-
+          DIch level 2 action (touch). +5 HP max pagh 3 creatures (+1/level). 8 rep.
+        keywords: [spell, level2, QaH, action]
+    detail:
+      key: spell/aid
+      source: srd52
+      translations:
+        en:
+          meta: 'Level 2 Abjuration (Cleric, Paladin)'
+          fields:
+            - { labelKey: rules.field.castingTime, value: 'Action' }
+            - { labelKey: rules.field.range, value: 'Touch' }
+            - { labelKey: rules.field.components, value: 'V, S, M (a tiny strip of white cloth)' }
+            - { labelKey: rules.field.duration, value: '8 hours' }
+          body: |
+            Your spell bolsters your allies with toughness and resolve. Choose up
+            to three creatures within range. Each target's hit point maximum and
+            current hit points increase by 5 for the duration.
+
+            *Using a Higher-Level Spell Slot.* You can target one additional
+            creature for each spell slot level above 2.
+    rules:
+      # Offer to prepare Aid (Build → Prepare → L2)
+      - id: prepare-aid-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: spell.l2.aid.prepared
+                  operator: notEquals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-aid.prepare-aid-offer.already_prepared
+                    severity: error
+              - condition:
+                  fact: spellcasting.prepared.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-aid.prepare-aid-offer.max_prepared
+                    severity: error
+            rule:
+              id: prepare-aid
+              phase: normal
+              group:
+                - __planned__
+              ui:
+                section: configuration
+                name: rule.spell-aid.prepare-aid-offer.name
+                intents: { PREPARE: L2 }
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: spell.l2.aid.prepared
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.prepared.count
+                  source:
+                    number: 1
+                - type: advertiseEffect
+                  rule:
+                    id: effect-aid-prepared
+                    ui:
+                      name: rule.spell-aid.effect-aid-prepared.name
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spell-l2-aid-removal-set
+                      - group: always-prepared-set
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: spell.l2.aid.prepared
+                        source:
+                          number: 1
+                        when:
+                          - fact: spell.l2.aid.removing
+                            operator: equals
+                            value: 0
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.prepared.count
+                        source:
+                          number: 1
+                        when:
+                          - fact: spell.l2.aid.removing
+                            operator: equals
+                            value: 0
+                          - fact: spell.l2.aid.alwaysPrepared
+                            operator: notEquals
+                            value: 1
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: spell.l2.aid.removing
+                            operator: equals
+                            value: 0
+                          - fact: spell.l2.aid.alwaysPrepared
+                            operator: notEquals
+                            value: 1
+
+      # Offer to unprepare Aid
+      - id: unprepare-aid-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: spell.l2.aid.prepared
+                  operator: equals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-aid.unprepare-aid-offer.not_prepared
+                    severity: error
+              - condition:
+                  fact: spell.l2.aid.alwaysPrepared
+                  operator: notEquals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-aid.unprepare-aid-offer.always_prepared
+                    severity: error
+            rule:
+              id: unprepare-aid
+              ui:
+                section: configuration
+                name: rule.spell-aid.unprepare-aid-offer.name
+                intents: { PREPARE: L2 }
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: spell.l2.aid.prepared
+                  source:
+                    number: 0
+                - type: numberSet
+                  target:
+                    fact: spell.l2.aid.removing
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.prepared.count
+                  source:
+                    number: 1
+                  subtract: true
+                - type: advertiseEffect
+                  rule:
+                    id: effect-aid-removing
+                    ui:
+                      name: rule.spell-aid.effect-aid-removing.name
+                      hidden: true
+                    phase: early
+                    group:
+                      - spell-l2-aid-removal-set
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: spell.l2.aid.removing
+                        source:
+                          number: 1
+
+      # Compute eligible Aid slot count (levels 2-5)
+      - id: compute-aid-eligible-slots
+        phase: normal
+        group:
+          - aid-slots-computed
+        activities:
+          - type: numberSum
+            target:
+              fact: aid.eligibleSlotsRemaining
+            sources:
+              - fact: spellcasting.slots.level2.remaining
+              - fact: spellcasting.slots.level3.remaining
+              - fact: spellcasting.slots.level4.remaining
+              - fact: spellcasting.slots.level5.remaining
+
+      # Compute lowest available slot level (2-5)
+      - id: compute-aid-lowest-slot
+        phase: normal
+        group:
+          - aid-slots-computed
+        activities:
+          - type: numberSet
+            target:
+              fact: aid.lowestAvailableSlotLevel
+            source:
+              number: 5
+            when:
+              - fact: spellcasting.slots.level5.remaining
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target:
+              fact: aid.lowestAvailableSlotLevel
+            source:
+              number: 4
+            when:
+              - fact: spellcasting.slots.level4.remaining
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target:
+              fact: aid.lowestAvailableSlotLevel
+            source:
+              number: 3
+            when:
+              - fact: spellcasting.slots.level3.remaining
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target:
+              fact: aid.lowestAvailableSlotLevel
+            source:
+              number: 2
+            when:
+              - fact: spellcasting.slots.level2.remaining
+                operator: greaterThan
+                value: 0
+
+      # Offer Aid (action spell, no concentration)
+      - id: offer-aid
+        when:
+          - fact: spell.l2.aid.prepared
+            operator: equals
+            value: 1
+        after:
+          - group: __planned__
+          - group: action
+          - group: spellcasting
+          - group: aid-slots-computed
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: actions.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-aid.offer-aid.no_action
+                    severity: error
+              - condition:
+                  fact: spellcasting.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-aid.offer-aid.no_spellcasting
+                    severity: error
+              - condition:
+                  fact: aid.eligibleSlotsRemaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-aid.offer-aid.no_slots
+                    severity: error
+            rule:
+              id: cast-aid
+              group:
+                - __planned__
+                - action
+                - spellcasting
+              ui:
+                section: action-spell
+                name: rule.spell-aid.offer-aid.name
+                description: rule.spell-aid.offer-aid.description
+                detailKey: spell/aid
+                information:
+                  - type: text
+                    label: play.information.aidBonus
+                    labelValues:
+                      hp: { number: 5 }
+                      base: { number: 3 }
+                intents:
+                  AID: ally
+                actionCost: [action, L2]
+                primaryControl:
+                  type: slider
+                  var: slotLevel
+                  notches:
+                    - { value: 2, enabled: { fact: spellcasting.slots.level2.total } }
+                    - { value: 3, enabled: { fact: spellcasting.slots.level3.total } }
+                    - { value: 4, enabled: { fact: spellcasting.slots.level4.total } }
+                    - { value: 5, enabled: { fact: spellcasting.slots.level5.total } }
+                  valueFormat: spellLevel
+              vars:
+                slotLevel:
+                  capture: true
+                  default:
+                    fact: aid.lowestAvailableSlotLevel
+              activities:
+                # Consume action
+                - type: numberIncrement
+                  target:
+                    fact: actions.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                # Consume spellcasting resource
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-aid.offer-aid.no_action
+                  when:
+                    - fact: actions.remaining
+                      operator: lessThan
+                      value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-aid.offer-aid.no_spellcasting
+                  when:
+                    - fact: spellcasting.remaining
+                      operator: lessThan
+                      value: 0
+                # Bridge var to fact for conditional slot consumption
+                - type: numberSet
+                  target:
+                    fact: aid.selectedLevel
+                  source:
+                    var: slotLevel
+                # Consume L2 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level2.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    - fact: aid.selectedLevel
+                      operator: equals
+                      value: 2
+                # Consume L3 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level3.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    - fact: aid.selectedLevel
+                      operator: equals
+                      value: 3
+                # Consume L4 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level4.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    - fact: aid.selectedLevel
+                      operator: equals
+                      value: 4
+                # Consume L5 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level5.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    - fact: aid.selectedLevel
+                      operator: equals
+                      value: 5
+                # Track slot consumption errors
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-aid.offer-aid.no_slots
+                  when:
+                    - fact: spellcasting.slots.level2.remaining
+                      operator: lessThan
+                      value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-aid.offer-aid.no_slots
+                  when:
+                    - fact: spellcasting.slots.level3.remaining
+                      operator: lessThan
+                      value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-aid.offer-aid.no_slots
+                  when:
+                    - fact: spellcasting.slots.level4.remaining
+                      operator: lessThan
+                      value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-aid.offer-aid.no_slots
+                  when:
+                    - fact: spellcasting.slots.level5.remaining
+                      operator: lessThan
+                      value: 0
+                # No castable slot level resolved
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-aid.offer-aid.no_slots
+                  when:
+                    - fact: aid.selectedLevel
+                      operator: lessThan
+                      value: 2
+                # Persist L2 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-aid-slot-l2
+                    ui:
+                      name: play.slotEffect.l2
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level2.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
+                  when:
+                    - fact: aid.selectedLevel
+                      operator: equals
+                      value: 2
+                # Persist L3 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-aid-slot-l3
+                    ui:
+                      name: play.slotEffect.l3
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level3.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
+                  when:
+                    - fact: aid.selectedLevel
+                      operator: equals
+                      value: 3
+                # Persist L4 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-aid-slot-l4
+                    ui:
+                      name: play.slotEffect.l4
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level4.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
+                  when:
+                    - fact: aid.selectedLevel
+                      operator: equals
+                      value: 4
+                # Persist L5 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-aid-slot-l5
+                    ui:
+                      name: play.slotEffect.l5
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level5.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
+                  when:
+                    - fact: aid.selectedLevel
+                      operator: equals
+                      value: 5
