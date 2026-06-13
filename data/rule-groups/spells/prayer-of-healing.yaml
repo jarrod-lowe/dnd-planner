@@ -1,0 +1,779 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: spell-prayer-of-healing
+    requires:
+      - spellcasting
+    translations:
+      en:
+        name: Prayer of Healing
+        description: >-
+          Level 2 action spell (30ft). Up to 5 creatures gain a Short Rest's
+          benefits and regain 2d8 Hit Points. Upcasting adds +1d8 per level.
+        keywords: [spell, level2, prayer, healing, abjuration, action]
+      en-x-tlh:
+        name: Qor' nIvbogh
+        description: >-
+          DIch level 2 action. vagh creatures regain 2d8 HP. nIvbogh +1d8.
+        keywords: [spell, level2, Qor', nIvbogh, action]
+    detail:
+      key: spell/prayer-of-healing
+      source: srd52
+      translations:
+        en:
+          meta: 'Level 2 Abjuration (Cleric, Paladin)'
+          fields:
+            - { labelKey: rules.field.castingTime, value: '10 minutes' }
+            - { labelKey: rules.field.range, value: '30 feet' }
+            - { labelKey: rules.field.components, value: 'V' }
+            - { labelKey: rules.field.duration, value: 'Instantaneous' }
+          body: |
+            Up to five creatures of your choice who remain within range for the
+            spell's entire casting gain the benefits of a Short Rest and also
+            regain 2d8 Hit Points. A creature can't be affected by this spell
+            again until that creature finishes a Long Rest.
+
+            *Using a Higher-Level Spell Slot.* The healing increases by 1d8 for
+            each spell slot level above 2.
+    rules:
+      # Offer to prepare Prayer of Healing (Build → Prepare → L2)
+      - id: prepare-prayer-of-healing-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: spell.l2.prayerOfHealing.prepared
+                  operator: notEquals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-prayer-of-healing.prepare-prayer-of-healing-offer.already_prepared
+                    severity: error
+              - condition:
+                  fact: spellcasting.prepared.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-prayer-of-healing.prepare-prayer-of-healing-offer.max_prepared
+                    severity: error
+            rule:
+              id: prepare-prayer-of-healing
+              phase: normal
+              group:
+                - __planned__
+              ui:
+                section: configuration
+                name: rule.spell-prayer-of-healing.prepare-prayer-of-healing-offer.name
+                intents: { PREPARE: L2 }
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: spell.l2.prayerOfHealing.prepared
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.prepared.count
+                  source:
+                    number: 1
+                - type: advertiseEffect
+                  rule:
+                    id: effect-prayer-of-healing-prepared
+                    ui:
+                      name: rule.spell-prayer-of-healing.effect-prayer-of-healing-prepared.name
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spell-l2-prayer-of-healing-removal-set
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: spell.l2.prayerOfHealing.prepared
+                        source:
+                          number: 1
+                        when:
+                          - fact: spell.l2.prayerOfHealing.removing
+                            operator: equals
+                            value: 0
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.prepared.count
+                        source:
+                          number: 1
+                        when:
+                          - fact: spell.l2.prayerOfHealing.removing
+                            operator: equals
+                            value: 0
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: spell.l2.prayerOfHealing.removing
+                            operator: equals
+                            value: 0
+
+      # Offer to unprepare Prayer of Healing
+      - id: unprepare-prayer-of-healing-offer
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: spell.l2.prayerOfHealing.prepared
+                  operator: equals
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.spell-prayer-of-healing.unprepare-prayer-of-healing-offer.not_prepared
+                    severity: error
+            rule:
+              id: unprepare-prayer-of-healing
+              ui:
+                section: configuration
+                name: rule.spell-prayer-of-healing.unprepare-prayer-of-healing-offer.name
+                intents: { PREPARE: L2 }
+                actionCost: []
+              activities:
+                - type: numberSet
+                  target:
+                    fact: spell.l2.prayerOfHealing.prepared
+                  source:
+                    number: 0
+                - type: numberSet
+                  target:
+                    fact: spell.l2.prayerOfHealing.removing
+                  source:
+                    number: 1
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.prepared.count
+                  source:
+                    number: 1
+                  subtract: true
+                - type: advertiseEffect
+                  rule:
+                    id: effect-prayer-of-healing-removing
+                    ui:
+                      name: rule.spell-prayer-of-healing.effect-prayer-of-healing-removing.name
+                      hidden: true
+                    phase: early
+                    group:
+                      - spell-l2-prayer-of-healing-removal-set
+                    activities:
+                      - type: numberSet
+                        target:
+                          fact: spell.l2.prayerOfHealing.removing
+                        source:
+                          number: 1
+
+      # Compute eligible slot count (levels 2-9)
+      - id: compute-prayer-of-healing-eligible-slots
+        phase: normal
+        group:
+          - prayer-of-healing-slots-computed
+        activities:
+          - type: numberSum
+            target:
+              fact: prayerOfHealing.eligibleSlotsRemaining
+            sources:
+              - fact: spellcasting.slots.level2.remaining
+              - fact: spellcasting.slots.level3.remaining
+              - fact: spellcasting.slots.level4.remaining
+              - fact: spellcasting.slots.level5.remaining
+              - fact: spellcasting.slots.level6.remaining
+              - fact: spellcasting.slots.level7.remaining
+              - fact: spellcasting.slots.level8.remaining
+              - fact: spellcasting.slots.level9.remaining
+
+      # Compute lowest available slot level (2-9)
+      # Cascade from high to low so the lowest available level overwrites
+      - id: compute-prayer-of-healing-lowest-slot
+        phase: normal
+        group:
+          - prayer-of-healing-slots-computed
+        activities:
+          - type: numberSet
+            target:
+              fact: prayerOfHealing.lowestAvailableSlotLevel
+            source:
+              number: 9
+            when:
+              - fact: spellcasting.slots.level9.remaining
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target:
+              fact: prayerOfHealing.lowestAvailableSlotLevel
+            source:
+              number: 8
+            when:
+              - fact: spellcasting.slots.level8.remaining
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target:
+              fact: prayerOfHealing.lowestAvailableSlotLevel
+            source:
+              number: 7
+            when:
+              - fact: spellcasting.slots.level7.remaining
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target:
+              fact: prayerOfHealing.lowestAvailableSlotLevel
+            source:
+              number: 6
+            when:
+              - fact: spellcasting.slots.level6.remaining
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target:
+              fact: prayerOfHealing.lowestAvailableSlotLevel
+            source:
+              number: 5
+            when:
+              - fact: spellcasting.slots.level5.remaining
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target:
+              fact: prayerOfHealing.lowestAvailableSlotLevel
+            source:
+              number: 4
+            when:
+              - fact: spellcasting.slots.level4.remaining
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target:
+              fact: prayerOfHealing.lowestAvailableSlotLevel
+            source:
+              number: 3
+            when:
+              - fact: spellcasting.slots.level3.remaining
+                operator: greaterThan
+                value: 0
+          - type: numberSet
+            target:
+              fact: prayerOfHealing.lowestAvailableSlotLevel
+            source:
+              number: 2
+            when:
+              - fact: spellcasting.slots.level2.remaining
+                operator: greaterThan
+                value: 0
+
+      # Offer Prayer of Healing (action spell)
+      - id: offer-prayer-of-healing
+        when:
+          - fact: spell.l2.prayerOfHealing.prepared
+            operator: equals
+            value: 1
+        after:
+          - group: action
+          - group: spellcasting
+          - group: __planned__
+          - group: prayer-of-healing-slots-computed
+        activities:
+          - type: offerRule
+            legalWhen:
+              - condition:
+                  fact: actions.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-prayer-of-healing.offer-prayer-of-healing.no_action
+                    severity: error
+              - condition:
+                  fact: spellcasting.remaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-prayer-of-healing.offer-prayer-of-healing.no_spellcasting
+                    severity: error
+              - condition:
+                  fact: prayerOfHealing.eligibleSlotsRemaining
+                  operator: greaterThan
+                  value: 0
+                illegalDiagnostics:
+                  - code: rule.spell-prayer-of-healing.offer-prayer-of-healing.no_slots
+                    severity: error
+            rule:
+              id: cast-prayer-of-healing
+              group:
+                - __planned__
+                - action
+                - spellcasting
+              ui:
+                section: action-spell
+                name: rule.spell-prayer-of-healing.offer-prayer-of-healing.name
+                description: rule.spell-prayer-of-healing.offer-prayer-of-healing.description
+                detailKey: spell/prayer-of-healing
+                # Slot-level slider. Uses explicit notches (not min/max) gated on
+                # the character actually owning each slot level, so it never shows
+                # a "Free Use" (value 0) notch, opens at L2, and grows to higher
+                # levels as the character gains those slots. (Paladins simply never
+                # have level6-9 totals, so those notches stay hidden for them.)
+                primaryControl:
+                  type: slider
+                  var: slotLevel
+                  notches:
+                    - { value: 2, enabled: { fact: spellcasting.slots.level2.total } }
+                    - { value: 3, enabled: { fact: spellcasting.slots.level3.total } }
+                    - { value: 4, enabled: { fact: spellcasting.slots.level4.total } }
+                    - { value: 5, enabled: { fact: spellcasting.slots.level5.total } }
+                    - { value: 6, enabled: { fact: spellcasting.slots.level6.total } }
+                    - { value: 7, enabled: { fact: spellcasting.slots.level7.total } }
+                    - { value: 8, enabled: { fact: spellcasting.slots.level8.total } }
+                    - { value: 9, enabled: { fact: spellcasting.slots.level9.total } }
+                  valueFormat: spellLevel
+                # Healing dice roller. The die count tracks the slot-level
+                # slider above: N d8 at slot level N (2d8 base + 1d8 per level
+                # above 2 == L d8). Updates live as the slider moves.
+                secondaryControl:
+                  type: dice-line
+                  label: rule.spell-prayer-of-healing.offer-prayer-of-healing.healLabel
+                  dice:
+                    - sides: 8
+                      count: { var: slotLevel }
+                      unit: hp
+                intents:
+                  AID: ally
+                actionCost: [action, L2]
+              vars:
+                slotLevel:
+                  capture: true
+                  default:
+                    fact: prayerOfHealing.lowestAvailableSlotLevel
+              activities:
+                # Consume action
+                - type: numberIncrement
+                  target:
+                    fact: actions.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                # Consume spellcasting resource
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                # Error tracking
+                - *error-clear
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-prayer-of-healing.offer-prayer-of-healing.no_action
+                  when:
+                    - fact: actions.remaining
+                      operator: lessThan
+                      value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-prayer-of-healing.offer-prayer-of-healing.no_spellcasting
+                  when:
+                    - fact: spellcasting.remaining
+                      operator: lessThan
+                      value: 0
+                # Bridge var to fact for conditional slot consumption
+                - type: numberSet
+                  target:
+                    fact: prayerOfHealing.selectedLevel
+                  source:
+                    var: slotLevel
+                # Consume L2 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level2.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    - fact: prayerOfHealing.selectedLevel
+                      operator: equals
+                      value: 2
+                # Consume L3 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level3.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    - fact: prayerOfHealing.selectedLevel
+                      operator: equals
+                      value: 3
+                # Consume L4 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level4.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    - fact: prayerOfHealing.selectedLevel
+                      operator: equals
+                      value: 4
+                # Consume L5 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level5.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    - fact: prayerOfHealing.selectedLevel
+                      operator: equals
+                      value: 5
+                # Consume L6 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level6.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    - fact: prayerOfHealing.selectedLevel
+                      operator: equals
+                      value: 6
+                # Consume L7 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level7.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    - fact: prayerOfHealing.selectedLevel
+                      operator: equals
+                      value: 7
+                # Consume L8 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level8.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    - fact: prayerOfHealing.selectedLevel
+                      operator: equals
+                      value: 8
+                # Consume L9 slot
+                - type: numberIncrement
+                  target:
+                    fact: spellcasting.slots.level9.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    - fact: prayerOfHealing.selectedLevel
+                      operator: equals
+                      value: 9
+                # Track slot consumption errors (over-spend goes negative)
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-prayer-of-healing.offer-prayer-of-healing.no_slots
+                  when:
+                    - fact: spellcasting.slots.level2.remaining
+                      operator: lessThan
+                      value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-prayer-of-healing.offer-prayer-of-healing.no_slots
+                  when:
+                    - fact: spellcasting.slots.level3.remaining
+                      operator: lessThan
+                      value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-prayer-of-healing.offer-prayer-of-healing.no_slots
+                  when:
+                    - fact: spellcasting.slots.level4.remaining
+                      operator: lessThan
+                      value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-prayer-of-healing.offer-prayer-of-healing.no_slots
+                  when:
+                    - fact: spellcasting.slots.level5.remaining
+                      operator: lessThan
+                      value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-prayer-of-healing.offer-prayer-of-healing.no_slots
+                  when:
+                    - fact: spellcasting.slots.level6.remaining
+                      operator: lessThan
+                      value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-prayer-of-healing.offer-prayer-of-healing.no_slots
+                  when:
+                    - fact: spellcasting.slots.level7.remaining
+                      operator: lessThan
+                      value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-prayer-of-healing.offer-prayer-of-healing.no_slots
+                  when:
+                    - fact: spellcasting.slots.level8.remaining
+                      operator: lessThan
+                      value: 0
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.spell-prayer-of-healing.offer-prayer-of-healing.no_slots
+                  when:
+                    - fact: spellcasting.slots.level9.remaining
+                      operator: lessThan
+                      value: 0
+                # Persist L2 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-prayer-of-healing-slot-l2
+                    ui:
+                      name: play.slotEffect.l2
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level2.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
+                  when:
+                    - fact: prayerOfHealing.selectedLevel
+                      operator: equals
+                      value: 2
+                # Persist L3 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-prayer-of-healing-slot-l3
+                    ui:
+                      name: play.slotEffect.l3
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level3.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
+                  when:
+                    - fact: prayerOfHealing.selectedLevel
+                      operator: equals
+                      value: 3
+                # Persist L4 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-prayer-of-healing-slot-l4
+                    ui:
+                      name: play.slotEffect.l4
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level4.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
+                  when:
+                    - fact: prayerOfHealing.selectedLevel
+                      operator: equals
+                      value: 4
+                # Persist L5 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-prayer-of-healing-slot-l5
+                    ui:
+                      name: play.slotEffect.l5
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level5.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
+                  when:
+                    - fact: prayerOfHealing.selectedLevel
+                      operator: equals
+                      value: 5
+                # Persist L6 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-prayer-of-healing-slot-l6
+                    ui:
+                      name: play.slotEffect.l6
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level6.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
+                  when:
+                    - fact: prayerOfHealing.selectedLevel
+                      operator: equals
+                      value: 6
+                # Persist L7 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-prayer-of-healing-slot-l7
+                    ui:
+                      name: play.slotEffect.l7
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level7.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
+                  when:
+                    - fact: prayerOfHealing.selectedLevel
+                      operator: equals
+                      value: 7
+                # Persist L8 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-prayer-of-healing-slot-l8
+                    ui:
+                      name: play.slotEffect.l8
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level8.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
+                  when:
+                    - fact: prayerOfHealing.selectedLevel
+                      operator: equals
+                      value: 8
+                # Persist L9 slot consumption across turns
+                - type: advertiseEffect
+                  rule:
+                    id: effect-prayer-of-healing-slot-l9
+                    ui:
+                      name: play.slotEffect.l9
+                      hidden: true
+                    phase: early
+                    after:
+                      - group: spellcasting-slots-set
+                    group:
+                      - spell-slot-effect
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: spellcasting.slots.level9.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true
+                        when:
+                          - fact: rest.long
+                            operator: equals
+                            value: 0
+                  when:
+                    - fact: prayerOfHealing.selectedLevel
+                      operator: equals
+                      value: 9

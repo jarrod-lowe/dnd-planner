@@ -159,6 +159,39 @@ describe('PanelDiceLine - onRoll callback', () => {
     expect(onRoll).not.toHaveBeenCalled();
   });
 
+  it('fires onRoll carrying the unit for a healing die', async () => {
+    const entry: AvailableRuleEntry = {
+      rule: {
+        id: 'cast-prayer-of-healing',
+        description: 'Prayer of Healing',
+        activities: [],
+        ui: {
+          section: 'action-spell',
+          name: 'Prayer of Healing',
+          primaryControl: {
+            type: 'dice-line',
+            dice: [{ sides: 8, count: 2, unit: 'hp' }]
+          }
+        }
+      } as Rule,
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    };
+    const onRoll = vi.fn();
+    vi.spyOn(Math, 'random').mockReturnValue(0.5); // floor(0.5*8)+1 = 5 per die
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {}, onRoll }
+    });
+    const chip = container.querySelector('.panel-renderer__die-chip');
+    await fireEvent.click(chip!);
+    expect(onRoll).toHaveBeenCalledTimes(1);
+    const [result] = onRoll.mock.calls[0];
+    expect(result.total).toBe(10);
+    expect(result.count).toBe(2);
+    expect(result.unit).toBe('hp');
+  });
+
   it('fires onRoll with bonus undefined when no bonus', async () => {
     const entry: AvailableRuleEntry = {
       rule: {

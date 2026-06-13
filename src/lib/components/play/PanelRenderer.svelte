@@ -257,7 +257,8 @@
         rollType,
         result,
         modifiers: modifiers.length > 0 ? modifiers : undefined,
-        damageTypeKey: result.damageType
+        damageTypeKey: result.damageType,
+        unitKey: result.unit
       },
       duration: 4000,
       unstyled: true

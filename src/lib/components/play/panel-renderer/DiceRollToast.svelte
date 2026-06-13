@@ -9,9 +9,10 @@
     result: RollResult;
     modifiers?: string[];
     damageTypeKey?: string;
+    unitKey?: string;
   }
 
-  let { title, rollType, result, modifiers, damageTypeKey }: Props = $props();
+  let { title, rollType, result, modifiers, damageTypeKey, unitKey }: Props = $props();
 
   function natClass(natural: number): string {
     if (result.sides === 20 && natural === 20) return 'dice-toast__nat--crit';
@@ -81,6 +82,10 @@
       <span class={natClass(result.natural)}
         >{result.rolls ? result.rolls.join(' + ') : result.natural}</span
       >
+      {#if result.rolls && result.rolls.length > 1}
+        <span class="dice-toast__equals"> = </span>
+        <span class="dice-toast__total">{result.total}</span>
+      {/if}
     {/if}
 
     {#if damageTypeKey}
@@ -88,6 +93,8 @@
         <DamageTypeIcon type={damageTypeKey} />
       </span>
       <span class="dice-toast__damage-name">{$t(`damage-type.${damageTypeKey}`)}</span>
+    {:else if unitKey}
+      <span class="dice-toast__unit">{$t(`play.toast.unit.${unitKey}`)}</span>
     {/if}
   </div>
 
@@ -188,6 +195,12 @@
     color: var(--md-sys-color-on-surface-variant);
     font-size: var(--font-size-xs);
     margin-left: 0.15rem;
+  }
+
+  .dice-toast__unit {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: var(--font-size-xs);
+    margin-left: 0.25rem;
   }
 
   .dice-toast__paren {

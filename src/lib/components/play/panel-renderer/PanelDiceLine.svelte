@@ -99,17 +99,24 @@
     return `${value}`;
   }
 
+  function getDieCount(die: DiceEntry): number {
+    if (die.count === undefined) return 1;
+    if (typeof die.count === 'number') return die.count;
+    const resolved = resolveValueSource(die.count, facts, vars, selections) as number | undefined;
+    return typeof resolved === 'number' && resolved > 0 ? Math.floor(resolved) : 1;
+  }
+
   function formatDieExpression(die: DiceEntry): string {
+    const count = getDieCount(die);
+    const ct = count > 1 ? `${count}` : '';
     // Check for range-based damage die override (versatile weapons)
     if (die.damageType && currentRange?.damageDie) {
-      const ct = die.count && die.count > 1 ? `${die.count}` : '';
       return `${ct}d${currentRange.damageDie}`;
     }
     let sides: number | undefined;
     if (typeof die.sides === 'number') sides = die.sides;
     else sides = resolveValueSource(die.sides, facts, vars, selections) as number | undefined;
     if (typeof sides !== 'number') return '';
-    const ct = die.count && die.count > 1 ? `${die.count}` : '';
     return `${ct}d${sides}`;
   }
 
@@ -159,7 +166,7 @@
     const die = control.dice[dieIndex];
     const sides = getDieSides(die);
     if (sides === undefined || sides < 0) return;
-    const count = die.count ?? 1;
+    const count = getDieCount(die);
     const bonus = (resolveValueSource(die.bonus, facts, vars, selections) as number) ?? 0;
     const rollModeToUse = mode ?? (sides === 20 ? effectiveRollMode : 'normal');
     let natural: number;
@@ -204,6 +211,7 @@
       count: count > 1 ? count : undefined,
       rolls: count > 1 ? rolls : undefined,
       damageType: damageTypeStr,
+      unit: die.unit,
       gwfFloor
     };
     rollResults[dieIndex] = result;
