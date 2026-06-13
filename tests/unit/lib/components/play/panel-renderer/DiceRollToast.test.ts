@@ -271,4 +271,64 @@ describe('DiceRollToast', () => {
     // dropped only appears for advantage/disadvantage or GWF
     expect(dropped).toBeNull();
   });
+
+  // === Multi-die, no-bonus total (e.g. 2d8 healing) ===
+
+  it('shows the total for a multi-die roll with no bonus', () => {
+    const result: RollResult = { total: 8, natural: 8, sides: 8, rolls: [5, 3], count: 2 };
+    const { container } = render(DiceRollToast, {
+      props: { title: 'Prayer of Healing', rollType: 'Roll', result }
+    });
+    // Shows each die, an equals, and the total
+    expect(container.textContent).toContain('5 + 3');
+    expect(container.textContent).toContain('=');
+    const total = container.querySelector('.dice-toast__total');
+    expect(total).toBeTruthy();
+    expect(total?.textContent).toContain('8');
+  });
+
+  it('does not add an equals/total for a single-die roll with no bonus', () => {
+    const result: RollResult = { total: 6, natural: 6, sides: 8 };
+    const { container } = render(DiceRollToast, {
+      props: { title: 'Heal', rollType: 'Roll', result }
+    });
+    expect(container.textContent).toContain('6');
+    expect(container.querySelector('.dice-toast__total')).toBeNull();
+    expect(container.textContent).not.toContain('=');
+  });
+
+  // === Unit (e.g. HP for healing) ===
+
+  it('renders the unit after the total when unitKey is provided', () => {
+    const result: RollResult = { total: 8, natural: 8, sides: 8, rolls: [5, 3], count: 2 };
+    const { container } = render(DiceRollToast, {
+      props: { title: 'Prayer of Healing', rollType: 'Roll', result, unitKey: 'hp' }
+    });
+    // i18n mock returns the key
+    expect(container.textContent).toContain('play.toast.unit.hp');
+    expect(container.querySelector('.dice-toast__unit')).toBeTruthy();
+  });
+
+  it('does not render the unit when no unitKey', () => {
+    const result: RollResult = { total: 8, natural: 8, sides: 8, rolls: [5, 3], count: 2 };
+    const { container } = render(DiceRollToast, {
+      props: { title: 'Prayer of Healing', rollType: 'Roll', result }
+    });
+    expect(container.querySelector('.dice-toast__unit')).toBeNull();
+  });
+
+  it('prefers the damage type over a unit when both are present', () => {
+    const result: RollResult = { total: 11, natural: 8, bonus: 3, sides: 12 };
+    const { container } = render(DiceRollToast, {
+      props: {
+        title: 'Greataxe',
+        rollType: 'Damage',
+        result,
+        damageTypeKey: 'slashing',
+        unitKey: 'hp'
+      }
+    });
+    expect(container.querySelector('.dice-toast__damage-icon')).toBeTruthy();
+    expect(container.querySelector('.dice-toast__unit')).toBeNull();
+  });
 });

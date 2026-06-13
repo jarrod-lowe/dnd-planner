@@ -406,6 +406,31 @@
         "name": "Removing DIch"
       }
     },
+    "spell-prayer-of-healing": {
+      "offer-prayer-of-healing": {
+        "name": "Qor' nIvbogh",
+        "description": "30ft | vagh jupmey regain 2d8 HP (+1d8 nIvbogh)",
+        "healLabel": "vor",
+        "no_action": "DIvI' tu'lu'be'",
+        "no_spellcasting": "mugh DIvI' tu'lu'be'",
+        "no_slots": "mugh laH tu'lu'be'"
+      },
+      "prepare-prayer-of-healing-offer": {
+        "name": "Qor' nIvbogh mugh chenmoH",
+        "max_prepared": "mugh DIvI' nIb",
+        "already_prepared": "Qor' nIvbogh already prepared"
+      },
+      "unprepare-prayer-of-healing-offer": {
+        "name": "Qor' nIvbogh mugh lISmoH",
+        "not_prepared": "Qor' nIvbogh not prepared"
+      },
+      "effect-prayer-of-healing-prepared": {
+        "name": "Qor' nIvbogh Prepared"
+      },
+      "effect-prayer-of-healing-removing": {
+        "name": "Removing Qor' nIvbogh"
+      }
+    },
     "spell-divine-favour": {
       "offer-divine-favour": {
         "name": "quv",
@@ -1586,6 +1611,9 @@
       "modifier": {
         "advantage": "Advantage",
         "disadvantage": "Disadvantage"
+      },
+      "unit": {
+        "hp": "HP"
       }
     },
     "information": {
@@ -1597,7 +1625,11 @@
       "l2": "DIvI' L2 mugh",
       "l3": "DIvI' L3 mugh",
       "l4": "DIvI' L4 mugh",
-      "l5": "DIvI' L5 mugh"
+      "l5": "DIvI' L5 mugh",
+      "l6": "DIvI' L6 mugh",
+      "l7": "DIvI' L7 mugh",
+      "l8": "DIvI' L8 mugh",
+      "l9": "DIvI' L9 mugh"
     },
     "slider": {
       "freeUse": "lo'Ha'",

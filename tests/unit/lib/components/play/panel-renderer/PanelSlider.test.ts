@@ -334,4 +334,93 @@ describe('PanelRenderer - slider control', () => {
       expect(onSelectionChange).toHaveBeenCalledWith({ slotLevel: 2 });
     });
   });
+
+  // === Gated notches (spell-slot upcast sliders, e.g. Prayer of Healing) ===
+  // A notch only renders when its `enabled` fact is truthy. With no value-0
+  // notch the slider never shows "Free Use", opens at L2, and grows as the
+  // character gains higher slots.
+
+  const createSlotNotchSliderEntry = (): AvailableRuleEntry => ({
+    rule: {
+      id: 'cast-prayer-of-healing',
+      description: 'Prayer of Healing',
+      activities: [],
+      ui: {
+        section: 'action-spell',
+        name: 'Prayer of Healing',
+        primaryControl: {
+          type: 'slider',
+          var: 'slotLevel',
+          notches: [
+            { value: 2, enabled: { fact: 'spellcasting.slots.level2.total' } },
+            { value: 3, enabled: { fact: 'spellcasting.slots.level3.total' } },
+            { value: 4, enabled: { fact: 'spellcasting.slots.level4.total' } }
+          ],
+          valueFormat: 'spellLevel'
+        }
+      },
+      vars: {
+        slotLevel: { default: { fact: 'prayerOfHealing.lowestAvailableSlotLevel' } }
+      }
+    } as Rule,
+    legal: true,
+    applicable: true,
+    diagnostics: []
+  });
+
+  it('shows L2 (not Free Use) when the character only has L2 slots', () => {
+    const entry = createSlotNotchSliderEntry();
+    const facts = {
+      'spellcasting.slots.level2.total': 1,
+      'prayerOfHealing.lowestAvailableSlotLevel': 2
+    };
+    const { container } = render(PanelRenderer, { props: { entry, editable: true, facts } });
+    const valueSpan = container.querySelector('.panel-renderer__slider-value') as HTMLSpanElement;
+    // i18n mock returns the key; spellLevel value >= 1 uses the "level" key
+    expect(valueSpan.textContent?.trim()).toBe('play.slider.level');
+    expect(valueSpan.textContent?.trim()).not.toBe('play.slider.freeUse');
+  });
+
+  it('collapses to a single active notch when only one slot level is owned', () => {
+    const entry = createSlotNotchSliderEntry();
+    const facts = {
+      'spellcasting.slots.level2.total': 1,
+      'prayerOfHealing.lowestAvailableSlotLevel': 2
+    };
+    const { container } = render(PanelRenderer, { props: { entry, editable: true, facts } });
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+    // Notch sliders index 0..(activeNotches.length - 1); one active notch => max 0
+    expect(slider.min).toBe('0');
+    expect(slider.max).toBe('0');
+  });
+
+  it('expands the notch range as higher slot levels are gained', () => {
+    const entry = createSlotNotchSliderEntry();
+    const facts = {
+      'spellcasting.slots.level2.total': 1,
+      'spellcasting.slots.level3.total': 1,
+      'prayerOfHealing.lowestAvailableSlotLevel': 2
+    };
+    const { container } = render(PanelRenderer, { props: { entry, editable: true, facts } });
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+    // Two active notches (L2, L3) => index range 0..1
+    expect(slider.max).toBe('1');
+  });
+
+  it('selecting the second notch reports its slot-level value (L3), not its index', async () => {
+    const entry = createSlotNotchSliderEntry();
+    const facts = {
+      'spellcasting.slots.level2.total': 1,
+      'spellcasting.slots.level3.total': 1,
+      'prayerOfHealing.lowestAvailableSlotLevel': 2
+    };
+    const onSelectionChange = vi.fn();
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts, onSelectionChange }
+    });
+    const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+    slider.value = '1'; // second active notch
+    await fireEvent.input(slider);
+    expect(onSelectionChange).toHaveBeenCalledWith({ slotLevel: 3 });
+  });
 });

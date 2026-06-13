@@ -1,0 +1,89 @@
+name: 'Prayer of Healing Cast'
+description: 'Casting Prayer of Healing consumes action, spellcasting, and an L2 spell slot; slot consumption persists across turns'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-prayer-of-healing
+initialEffects:
+  - id: test-grant-level2-slot
+    phase: early
+    group:
+      - spellcasting-slots-set
+    activities:
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.total
+        source:
+          number: 1
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.remaining
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+steps:
+  - evaluate:
+  - addOffer:
+      id: prepare-prayer-of-healing
+  - evaluate:
+      assert:
+        facts:
+          actions.remaining: 1
+          spellcasting.remaining: 1
+          spellcasting.slots.level2.remaining: 1
+          # Lowest castable level the slider/dice default to (the base, L2).
+          prayerOfHealing.lowestAvailableSlotLevel: 2
+        offers:
+          exists:
+            - cast-prayer-of-healing
+        # The slot-level slider uses gated notches (not min/max), so it never
+        # shows "Free Use" and only offers levels the character actually has.
+        offerUi:
+          - id: cast-prayer-of-healing
+            ui:
+              primaryControl:
+                type: slider
+                var: slotLevel
+                notches:
+                  - { value: 2, enabled: { fact: spellcasting.slots.level2.total } }
+                  - { value: 3, enabled: { fact: spellcasting.slots.level3.total } }
+                  - { value: 4, enabled: { fact: spellcasting.slots.level4.total } }
+                  - { value: 5, enabled: { fact: spellcasting.slots.level5.total } }
+                  - { value: 6, enabled: { fact: spellcasting.slots.level6.total } }
+                  - { value: 7, enabled: { fact: spellcasting.slots.level7.total } }
+                  - { value: 8, enabled: { fact: spellcasting.slots.level8.total } }
+                  - { value: 9, enabled: { fact: spellcasting.slots.level9.total } }
+                valueFormat: spellLevel
+              # Healing dice count scales with the chosen slot level (L d8).
+              secondaryControl:
+                type: dice-line
+                label: rule.spell-prayer-of-healing.offer-prayer-of-healing.healLabel
+                dice:
+                  - sides: 8
+                    count: { var: slotLevel }
+                    unit: hp
+  # Cast at the default (L2) slot
+  - addOffer:
+      id: cast-prayer-of-healing
+      assert:
+        facts:
+          actions.remaining: 0
+          spellcasting.remaining: 0
+          spellcasting.slots.level2.remaining: 0
+          # Must stay at the base (2) even though the L2 slot is now spent —
+          # otherwise the dice count (count: {var: slotLevel}) collapses to 1d8.
+          prayerOfHealing.lowestAvailableSlotLevel: 2
+  # End turn: slot consumption persists
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-prayer-of-healing-slot-l2
+        facts:
+          spellcasting.slots.level2.remaining: 0

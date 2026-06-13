@@ -4,6 +4,7 @@ ruleGroups:
     requires:
       - spell-aid
       - spell-find-steed
+      - spell-prayer-of-healing
     translations:
       en:
         name: Paladin Spells Level 2

@@ -5,6 +5,7 @@ ruleGroups:
       - spell-aid
       - spell-calm-emotions
       - spell-hold-person
+      - spell-prayer-of-healing
     translations:
       en:
         name: Cleric Spells Level 2

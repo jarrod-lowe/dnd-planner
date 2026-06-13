@@ -406,6 +406,31 @@
         "name": "Removing Bless"
       }
     },
+    "spell-prayer-of-healing": {
+      "offer-prayer-of-healing": {
+        "name": "Prayer of Healing",
+        "description": "30ft | Up to 5 allies regain 2d8 HP (+1d8 per slot level above 2)",
+        "healLabel": "Heal",
+        "no_action": "No action available",
+        "no_spellcasting": "Already cast a spell this turn",
+        "no_slots": "No spell slots remaining"
+      },
+      "prepare-prayer-of-healing-offer": {
+        "name": "Prepare Prayer of Healing",
+        "max_prepared": "Maximum prepared spells reached",
+        "already_prepared": "Prayer of Healing is already prepared"
+      },
+      "unprepare-prayer-of-healing-offer": {
+        "name": "Unprepare Prayer of Healing",
+        "not_prepared": "Prayer of Healing is not prepared"
+      },
+      "effect-prayer-of-healing-prepared": {
+        "name": "Prayer of Healing Prepared"
+      },
+      "effect-prayer-of-healing-removing": {
+        "name": "Removing Prayer of Healing"
+      }
+    },
     "spell-divine-favour": {
       "offer-divine-favour": {
         "name": "Divine Favour",
@@ -1586,6 +1611,9 @@
       "modifier": {
         "advantage": "Advantage",
         "disadvantage": "Disadvantage"
+      },
+      "unit": {
+        "hp": "HP"
       }
     },
     "information": {
@@ -1597,7 +1625,11 @@
       "l2": "L2 Spell Slot Expended",
       "l3": "L3 Spell Slot Expended",
       "l4": "L4 Spell Slot Expended",
-      "l5": "L5 Spell Slot Expended"
+      "l5": "L5 Spell Slot Expended",
+      "l6": "L6 Spell Slot Expended",
+      "l7": "L7 Spell Slot Expended",
+      "l8": "L8 Spell Slot Expended",
+      "l9": "L9 Spell Slot Expended"
     },
     "slider": {
       "freeUse": "Free Use",

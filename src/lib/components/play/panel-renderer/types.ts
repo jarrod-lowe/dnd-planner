@@ -16,6 +16,8 @@ export interface RollResult {
   count?: number;
   /** Resolved damage type string (e.g. "slashing") */
   damageType?: string;
+  /** Unit key for non-damage rolls (e.g. "hp" for healing) */
+  unit?: string;
   /** Original die value (1 or 2) before GWF floor applied */
   gwfFloor?: number;
 }
@@ -35,10 +37,16 @@ export interface ValueSource {
 export interface DiceEntry {
   /** Die sides (e.g. 20 for d20, 8 for d8). Can be a number or a var reference. */
   sides: number | { var: string };
-  /** Number of dice to roll (default 1). */
-  count?: number;
+  /**
+   * Number of dice to roll (default 1). Either a fixed number, or a
+   * ValueSource resolved from a var/fact/selection at render time (e.g. a
+   * spell whose dice scale with the chosen slot level).
+   */
+  count?: number | ValueSource;
   bonus?: ValueSource;
   damageType?: ValueSource;
+  /** Unit key for non-damage rolls (e.g. "hp" for healing). */
+  unit?: string;
 }
 
 export interface ControlBase {
