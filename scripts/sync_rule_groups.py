@@ -85,6 +85,20 @@ def extract_fact_reads_writes(
     emitting effect would create a __effects__ -> _auto.fact.X -> __effects__
     dependency cycle. The offered sub-rule still gets its own auto-groups when
     processed independently.
+
+    Why this does not stale offer legality: legalWhen is evaluated in the
+    offering effect's phase, and auto-groups are phase-local. A fact read by an
+    effect-offered rule's legalWhen must have its baseline established in an
+    EARLIER phase than the offering effect (cross-phase ordering guarantees that
+    settles first), so the only same-phase _auto.fact.X writers are the planned
+    consumers of that fact — which a pre-consumption legality check must NOT
+    wait for anyway. Suppressing the dep therefore removes exactly the cyclic
+    edge without losing correct legality.
+
+    INVARIANT (rule authors): a fact read by an effect-offered rule's legalWhen
+    must be baselined in an earlier phase than the offering effect, never by a
+    same-phase effect. (See docs/RULE_GROUP_GUIDE.md; guarded by the
+    steed-fell-glare integration scenario.)
     """
     reads: set[str] = set()
     writes: set[str] = set()

@@ -1,5 +1,12 @@
 name: 'Steed Fell Glare'
-description: 'Steed can use Fell Glare (bonus action, 1/LR); offer exists, consumes bonus action, tracks 1/LR, illegal when used up, resets on long rest'
+description: >
+  Steed can use Fell Glare (bonus action, 1/LR); offer exists, consumes bonus
+  action, tracks 1/LR, illegal when used up, resets on long rest.
+  Also a regression guard for the effect-offered legalWhen ordering invariant:
+  effect-steed (normal) offers Fell Glare whose legalWhen reads charge facts
+  baselined in the early phase. status.ok must stay true (no __effects__ /
+  _auto.fact.X dependency cycle) AND legality must reflect the early-phase
+  baseline (legal when charges remain, illegal when exhausted).
 ruleGroups:
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
@@ -45,6 +52,8 @@ steps:
   # Next turn: fell glare offer available
   - evaluate:
       assert:
+        status:
+          ok: true
         facts:
           companion.steed.bonusActions.remaining: 1
           companion.steed.fellGlare.total: 1
@@ -62,6 +71,8 @@ steps:
   # Fell glare should now be illegal (no uses and no bonus action)
   - evaluate:
       assert:
+        status:
+          ok: true
         offers:
           illegal:
             - steed-fell-glare
