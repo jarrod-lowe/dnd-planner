@@ -281,4 +281,57 @@ describe('PanelRenderer - slider control', () => {
     // Secondary slider should show 10 (from facts, no selection)
     expect(sliders[1].value).toBe('10');
   });
+
+  describe('notch-based slider selection sync', () => {
+    const createNotchSliderEntry = (): AvailableRuleEntry => ({
+      rule: {
+        id: 'cast-aid',
+        description: 'Aid',
+        activities: [],
+        ui: {
+          section: 'action-spell',
+          name: 'rule.spell-aid.offer-aid.name',
+          primaryControl: {
+            type: 'slider',
+            var: 'slotLevel',
+            notches: [
+              { value: 2, enabled: { fact: 'spellcasting.slots.level2.total' } },
+              { value: 3, enabled: { fact: 'spellcasting.slots.level3.total' } },
+              { value: 4, enabled: { fact: 'spellcasting.slots.level4.total' } },
+              { value: 5, enabled: { fact: 'spellcasting.slots.level5.total' } }
+            ],
+            valueFormat: 'spellLevel'
+          }
+        },
+        vars: {
+          slotLevel: {
+            capture: true,
+            default: { fact: 'aid.lowestAvailableSlotLevel' }
+          }
+        }
+      } as Rule,
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    });
+
+    it('syncs selection to first active notch when selection value does not match any notch', () => {
+      const entry = createNotchSliderEntry();
+      // Facts make all notches active, but aid.lowestAvailableSlotLevel is absent
+      const facts = {
+        'spellcasting.slots.level2.total': 3,
+        'spellcasting.slots.level3.total': 2,
+        'spellcasting.slots.level4.total': 1,
+        'spellcasting.slots.level5.total': 1
+      };
+      // slotLevel=0 from resolveInitialSelections defaulting missing fact to 0
+      const selections = { slotLevel: 0 };
+      const onSelectionChange = vi.fn();
+      render(PanelRenderer, {
+        props: { entry, editable: true, facts, selections, onSelectionChange }
+      });
+      // The slider should sync selections to the first active notch value (2)
+      expect(onSelectionChange).toHaveBeenCalledWith({ slotLevel: 2 });
+    });
+  });
 });

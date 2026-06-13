@@ -144,26 +144,17 @@
     (
       descriptor.information?.filter((info): info is TextInformation => info.type === 'text') ?? []
     ).map((info) => {
-      let text = $t(info.label);
       if (info.labelValues) {
-        const resolvedValues: string[] = [];
+        const params: Record<string, string> = {};
         for (const [key, source] of Object.entries(info.labelValues)) {
           const resolved = resolveValueSource(source, facts, vars, selections);
           if (resolved !== undefined) {
-            const placeholder = `{{${key}}}`;
-            const value = String(resolved);
-            if (text.includes(placeholder)) {
-              text = text.replace(placeholder, value);
-            } else {
-              resolvedValues.push(value);
-            }
+            params[key] = String(resolved);
           }
         }
-        if (resolvedValues.length > 0) {
-          text = text + ' ' + resolvedValues.join(' ');
-        }
+        return $t(info.label, params);
       }
-      return text;
+      return $t(info.label);
     })
   );
 

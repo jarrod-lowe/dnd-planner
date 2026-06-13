@@ -26,6 +26,10 @@ export interface ValueSource {
   number?: number;
   string?: string;
   array?: unknown[];
+  /** Multiply the resolved numeric value by this factor. */
+  scale?: number;
+  /** Add this to the resolved value (after scale). */
+  offset?: number;
 }
 
 export interface DiceEntry {

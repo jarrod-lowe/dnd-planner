@@ -11,22 +11,29 @@ export function resolveValueSource(
   selections?: Selections
 ): number | string | unknown[] | undefined {
   if (!source) return undefined;
-  if (source.number !== undefined) return source.number;
-  if (source.string !== undefined) return source.string;
-  if (source.fact !== undefined) return facts[source.fact];
-  if (source.var !== undefined) {
+  let result: number | string | unknown[] | undefined;
+  if (source.number !== undefined) result = source.number;
+  else if (source.string !== undefined) result = source.string;
+  else if (source.fact !== undefined) result = facts[source.fact];
+  else if (source.var !== undefined) {
     if (selections && selections[source.var] !== undefined) {
-      return selections[source.var];
+      result = selections[source.var];
+    } else {
+      const varDef = vars[source.var];
+      if (!varDef) return undefined;
+      const def = varDef.default;
+      if (def.number !== undefined) result = def.number;
+      else if (def.string !== undefined) result = def.string;
+      else if (def.fact !== undefined) result = facts[def.fact];
+      else if (def.array !== undefined) result = def.array;
+      else return undefined;
     }
-    const varDef = vars[source.var];
-    if (!varDef) return undefined;
-    const def = varDef.default;
-    if (def.number !== undefined) return def.number;
-    if (def.string !== undefined) return def.string;
-    if (def.fact !== undefined) return facts[def.fact];
-    if (def.array !== undefined) return def.array;
-    return undefined;
+  } else if (source.array !== undefined) result = source.array;
+  else return undefined;
+
+  if (typeof result === 'number' && (source.scale !== undefined || source.offset !== undefined)) {
+    result = result * (source.scale ?? 1) + (source.offset ?? 0);
   }
-  if (source.array !== undefined) return source.array;
-  return undefined;
+
+  return result;
 }
