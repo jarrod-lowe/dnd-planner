@@ -1044,6 +1044,17 @@ Add suitable tests into `yaml-scenarios` when creating new rules.
 | `setAdd`          | Add string to var array       | `target.var`, `source.string`                  |
 | `advertiseEffect` | Persistent cross-turn effect  | `rule` or `self: true`                         |
 
+> **Effect-offered `legalWhen` ordering invariant.** When an `advertiseEffect`
+> (or `generateRule`) rule offers a sub-rule via `offerRule`, that sub-rule's
+> `legalWhen` fact reads do **not** add an auto-`after` to the emitting effect
+> (doing so would form an `__effects__ → _auto.fact.X → __effects__` cycle with
+> the planned actions that consume `X`). For the offer's legality to be correct,
+> any fact read by an effect-offered rule's `legalWhen` **must be baselined in an
+> earlier phase than the offering effect** (e.g. set in `early` when the effect
+> is `normal`) — never by a same-phase effect. The same-phase writers of such a
+> fact are the planned consumers, which a pre-consumption legality check must not
+> wait for. (Guarded by the `steed-fell-glare` integration scenario.)
+
 ### Named Functions (numberFunction)
 
 | Function         | Description                       | `args`       |

@@ -268,6 +268,25 @@ class TestComputeCategoryHashWithSharedDefinitions:
         # Hashes should differ because shared defs are included
         assert hash1 != hash2
 
+    def test_hash_changes_when_transform_version_changes(self, tmp_path, monkeypatch):
+        """Hash must change when the rule-transform logic version changes, even
+        if the source YAML is identical. Otherwise a change to the auto-group
+        transform logic is silently skipped on sync (stale deploy)."""
+        import sync_rule_groups
+
+        category_dir = tmp_path / "category"
+        category_dir.mkdir()
+        rule_file = category_dir / "test.yaml"
+        rule_file.write_text("ruleGroups: []\n")
+
+        monkeypatch.setattr(sync_rule_groups, "RULE_TRANSFORM_VERSION", 1)
+        hash1 = compute_category_hash(category_dir)
+
+        monkeypatch.setattr(sync_rule_groups, "RULE_TRANSFORM_VERSION", 2)
+        hash2 = compute_category_hash(category_dir)
+
+        assert hash1 != hash2
+
 
 class TestExtractFactReadsWrites:
     """Tests for the extract_fact_reads_writes function."""
@@ -432,6 +451,34 @@ class TestExtractFactReadsWrites:
         assert reads == {"str.value"}
         assert writes == set()
 
+    def test_offer_rule_legal_when_excluded_for_effects(self):
+        """For effect rules, a nested offer's legalWhen reads must NOT count as
+        reads of the parent effect — an effect forms the baseline and cannot
+        order itself after planned-mutated facts (would create a __effects__
+        dependency cycle)."""
+        rule = {
+            "id": "test",
+            "activities": [
+                {
+                    "type": "offerRule",
+                    "legalWhen": [
+                        {
+                            "condition": {
+                                "fact": "actions.remaining",
+                                "operator": "greaterThan",
+                                "value": 0,
+                            },
+                            "illegalDiagnostics": [{"code": "test", "severity": "error"}],
+                        }
+                    ],
+                    "rule": {"id": "nested", "activities": []},
+                }
+            ],
+        }
+        reads, writes = extract_fact_reads_writes(rule, include_offer_legalwhen=False)
+        assert reads == set()
+        assert writes == set()
+
     def test_source_condition_reads_fact(self):
         """source.condition.fact counts as a read."""
         rule = {
@@ -569,6 +616,137 @@ class TestAddAutoGroups:
         assert not any(
             a["group"] == "_auto.fact.proficiency.bonus" for a in rule.get("after", [])
         )
+
+    def test_effect_offer_legalwhen_does_not_order_effect(self):
+        """A rule advertised as an effect that offers a sub-rule whose legalWhen
+        reads a fact must NOT gain an auto-after on that fact (it would create a
+        __effects__ dependency cycle with planned action-consumers). The offered
+        sub-rule still manages its own ordering."""
+        standing = {
+            "id": "standing",
+            "activities": [
+                {
+                    "type": "advertiseEffect",
+                    "rule": {
+                        "id": "effect-thing",
+                        "activities": [
+                            {
+                                "type": "offerRule",
+                                "legalWhen": [
+                                    {
+                                        "condition": {
+                                            "fact": "actions.remaining",
+                                            "operator": "greaterThan",
+                                            "value": 0,
+                                        },
+                                        "illegalDiagnostics": [
+                                            {"code": "test", "severity": "error"}
+                                        ],
+                                    }
+                                ],
+                                "rule": {
+                                    "id": "offered-action",
+                                    "activities": [
+                                        {
+                                            "type": "numberIncrement",
+                                            "target": {"fact": "actions.remaining"},
+                                            "source": {"number": 1},
+                                            "subtract": True,
+                                        }
+                                    ],
+                                },
+                            }
+                        ],
+                    },
+                }
+            ],
+        }
+        add_auto_groups(standing)
+        effect = standing["activities"][0]["rule"]
+        assert not any(
+            a["group"] == "_auto.fact.actions.remaining" for a in effect.get("after", [])
+        ), "effect must not order after a planned-mutated fact from an offer's legalWhen"
+
+    def test_non_effect_offer_legalwhen_still_orders_parent(self):
+        """A non-effect (standing) rule offering a sub-rule whose legalWhen reads
+        a fact STILL gains the auto-after — existing behavior is preserved for
+        standing offers."""
+        standing = {
+            "id": "standing-offer",
+            "activities": [
+                {
+                    "type": "offerRule",
+                    "legalWhen": [
+                        {
+                            "condition": {
+                                "fact": "actions.remaining",
+                                "operator": "greaterThan",
+                                "value": 0,
+                            },
+                            "illegalDiagnostics": [{"code": "test", "severity": "error"}],
+                        }
+                    ],
+                    "rule": {"id": "offered", "activities": []},
+                }
+            ],
+        }
+        add_auto_groups(standing)
+        assert any(
+            a["group"] == "_auto.fact.actions.remaining" for a in standing.get("after", [])
+        )
+
+    def test_generated_rule_offer_legalwhen_does_not_order_generated_rule(self):
+        """A generateRule child is persisted into next.rules.effects (see
+        getPersistableEffects in output.ts) and auto-joined to __effects__ on the
+        next evaluation, so it is an effect for auto-grouping. A sub-rule it
+        offers whose legalWhen reads a planned-mutated fact must NOT add an
+        auto-after to the generated rule (that would recreate the
+        __effects__ / _auto.fact.X cycle)."""
+        standing = {
+            "id": "standing",
+            "activities": [
+                {
+                    "type": "generateRule",
+                    "rule": {
+                        "id": "generated-thing",
+                        "phase": "safeguard",
+                        "activities": [
+                            {
+                                "type": "offerRule",
+                                "legalWhen": [
+                                    {
+                                        "condition": {
+                                            "fact": "actions.remaining",
+                                            "operator": "greaterThan",
+                                            "value": 0,
+                                        },
+                                        "illegalDiagnostics": [
+                                            {"code": "test", "severity": "error"}
+                                        ],
+                                    }
+                                ],
+                                "rule": {
+                                    "id": "offered-action",
+                                    "activities": [
+                                        {
+                                            "type": "numberIncrement",
+                                            "target": {"fact": "actions.remaining"},
+                                            "source": {"number": 1},
+                                            "subtract": True,
+                                        }
+                                    ],
+                                },
+                            }
+                        ],
+                    },
+                }
+            ],
+        }
+        add_auto_groups(standing)
+        generated = standing["activities"][0]["rule"]
+        assert not any(
+            a["group"] == "_auto.fact.actions.remaining" for a in generated.get("after", [])
+        ), "generated rule must not order after a planned-mutated fact from an offer's legalWhen"
 
     def test_multiple_writes_get_multiple_groups(self):
         """Rule that writes multiple facts gets multiple groups."""

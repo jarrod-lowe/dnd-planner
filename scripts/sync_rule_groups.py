@@ -40,6 +40,14 @@ SCORE_NAME_MATCH = "0002"
 SCORE_KEYWORD_MATCH = "0001"
 PREFIX_MIN_LENGTH = 3
 AUTO_GROUP_PREFIX = "_auto.fact."
+
+# Version of the rule-output transform logic (auto-group computation in
+# add_auto_groups / extract_fact_reads_writes, and any other transform applied
+# to rules before upload). This is mixed into compute_category_hash so that a
+# change to the transform logic invalidates the per-category content hash and
+# forces a re-sync — even when the source YAML is unchanged. BUMP THIS whenever
+# the transform logic changes in a way that alters the synced output.
+RULE_TRANSFORM_VERSION = 2
 PREFIX_MAX_LENGTH = 6
 
 # Supported locales for translations - must match schema.json
@@ -60,12 +68,37 @@ def _add_fact_from_source(source: dict[str, Any], reads: set[str]) -> None:
         _add_fact_from_condition(source["condition"], reads)
 
 
-def extract_fact_reads_writes(rule: dict[str, Any]) -> tuple[set[str], set[str]]:
+def extract_fact_reads_writes(
+    rule: dict[str, Any], include_offer_legalwhen: bool = True
+) -> tuple[set[str], set[str]]:
     """
     Extract fact reads and writes from a single rule's conditions and activities.
 
     Does NOT recurse into nested rules (offerRule, generateRule, advertiseEffect).
     Returns (reads, writes) sets of fact name strings.
+
+    When include_offer_legalwhen is False, a nested offerRule's legalWhen
+    conditions are NOT counted as reads of this rule. This is used for effect
+    rules: an effect forms the baseline (it is auto-joined to the __effects__
+    group) and must not order itself after facts mutated by planned actions
+    (e.g. actions.remaining). Attributing an offer's legalWhen reads to the
+    emitting effect would create a __effects__ -> _auto.fact.X -> __effects__
+    dependency cycle. The offered sub-rule still gets its own auto-groups when
+    processed independently.
+
+    Why this does not stale offer legality: legalWhen is evaluated in the
+    offering effect's phase, and auto-groups are phase-local. A fact read by an
+    effect-offered rule's legalWhen must have its baseline established in an
+    EARLIER phase than the offering effect (cross-phase ordering guarantees that
+    settles first), so the only same-phase _auto.fact.X writers are the planned
+    consumers of that fact — which a pre-consumption legality check must NOT
+    wait for anyway. Suppressing the dep therefore removes exactly the cyclic
+    edge without losing correct legality.
+
+    INVARIANT (rule authors): a fact read by an effect-offered rule's legalWhen
+    must be baselined in an earlier phase than the offering effect, never by a
+    same-phase effect. (See docs/RULE_GROUP_GUIDE.md; guarded by the
+    steed-fell-glare integration scenario.)
     """
     reads: set[str] = set()
     writes: set[str] = set()
@@ -99,8 +132,8 @@ def extract_fact_reads_writes(rule: dict[str, Any]) -> tuple[set[str], set[str]]
             if "max" in activity and isinstance(activity["max"], str):
                 reads.add(activity["max"])
 
-        # offerRule: legalWhen conditions
-        if activity_type == "offerRule":
+        # offerRule: legalWhen conditions (skipped for effect rules — see docstring)
+        if activity_type == "offerRule" and include_offer_legalwhen:
             for entry in activity.get("legalWhen", []):
                 condition = entry.get("condition", {})
                 _add_fact_from_condition(condition, reads)
@@ -120,7 +153,7 @@ def extract_fact_reads_writes(rule: dict[str, Any]) -> tuple[set[str], set[str]]
     return reads, writes
 
 
-def add_auto_groups(rule: dict[str, Any]) -> None:
+def add_auto_groups(rule: dict[str, Any], is_effect: bool = False) -> None:
     """
     Add auto-groups and auto-afters to a rule based on its fact reads/writes.
 
@@ -129,9 +162,18 @@ def add_auto_groups(rule: dict[str, Any]) -> None:
     - Reads AND writes same fact -> group only (writer, no after)
 
     Recurses into nested rules in offerRule, generateRule, advertiseEffect.
-    Each nesting level is processed independently.
+    Each nesting level is processed independently. The nested rule of an
+    advertiseEffect OR a generateRule is itself an effect (is_effect=True) —
+    both are persisted into next.rules.effects and auto-joined to __effects__
+    on the next evaluation. The nested rule of an offerRule is not an effect
+    (it becomes a planned rule and manages its own ordering).
+
+    For effect rules (is_effect=True), a nested offerRule's legalWhen reads do
+    NOT contribute to this effect's auto-after — see extract_fact_reads_writes.
     """
-    reads, writes = extract_fact_reads_writes(rule)
+    reads, writes = extract_fact_reads_writes(
+        rule, include_offer_legalwhen=not is_effect
+    )
 
     # Ensure lists exist (YAML empty key parses as None, not [])
     if not rule.get("group"):
@@ -163,12 +205,21 @@ def add_auto_groups(rule: dict[str, Any]) -> None:
     if not rule["after"]:
         del rule["after"]
 
-    # Recurse into nested rules (each level independent)
+    # Recurse into nested rules (each level independent). advertiseEffect and
+    # generateRule children both become __effects__ members on the next
+    # evaluation (advertiseEffect → advertisedEffects, generateRule →
+    # generatedRules; both flow into next.rules.effects via getPersistableEffects
+    # in output.ts, which evaluate.ts auto-joins to __effects__), so they are
+    # effects for auto-grouping. offerRule children become planned rules and
+    # manage their own ordering, so they are not effects.
     for activity in rule.get("activities", []):
         activity_type = activity.get("type", "")
         if activity_type in ("offerRule", "generateRule", "advertiseEffect"):
             if "rule" in activity:
-                add_auto_groups(activity["rule"])
+                add_auto_groups(
+                    activity["rule"],
+                    is_effect=activity_type in ("advertiseEffect", "generateRule"),
+                )
 
 
 def standardize_term(text: str) -> str:
@@ -417,8 +468,15 @@ def load_shared_definitions(category_path: Path) -> str:
 
 
 def compute_category_hash(category_path: Path) -> str:
-    """Compute a combined hash of all YAML files in a category."""
+    """Compute a combined hash of all YAML files in a category.
+
+    Includes RULE_TRANSFORM_VERSION so that changes to the rule-output transform
+    logic (not just the source YAML) invalidate the hash and force a re-sync.
+    """
     hasher = hashlib.sha256()
+
+    hasher.update(b"__transform_version__")
+    hasher.update(str(RULE_TRANSFORM_VERSION).encode())
 
     shared_defs = load_shared_definitions(category_path)
     if shared_defs:
