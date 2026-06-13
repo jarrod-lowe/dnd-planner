@@ -66,11 +66,7 @@ describe('resolveValueSource', () => {
     });
 
     it('multiplies a fact value by scale', () => {
-      const result = resolveValueSource(
-        { fact: 'slotLevel', scale: 5 },
-        { slotLevel: 4 },
-        {}
-      );
+      const result = resolveValueSource({ fact: 'slotLevel', scale: 5 }, { slotLevel: 4 }, {});
       expect(result).toBe(20);
     });
 

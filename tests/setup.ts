@@ -23,17 +23,19 @@ vi.mock('sveltekit-i18n', () => {
   return {
     default: class MockI18n {
       t = {
-        subscribe: vi.fn((fn: (value: (key: string, params?: Record<string, string>) => string) => void) => {
-          fn((key: string, params?: Record<string, string>) => {
-            const template = translations[key] ?? key;
-            if (!params) return template;
-            return Object.entries(params).reduce(
-              (text, [k, v]) => text.replaceAll(`{{${k}}}`, v),
-              template
-            );
-          });
-          return { unsubscribe: vi.fn() };
-        })
+        subscribe: vi.fn(
+          (fn: (value: (key: string, params?: Record<string, string>) => string) => void) => {
+            fn((key: string, params?: Record<string, string>) => {
+              const template = translations[key] ?? key;
+              if (!params) return template;
+              return Object.entries(params).reduce(
+                (text, [k, v]) => text.replaceAll(`{{${k}}}`, v),
+                template
+              );
+            });
+            return { unsubscribe: vi.fn() };
+          }
+        )
       };
       locale = {
         subscribe: vi.fn((fn: (value: string) => void) => {
