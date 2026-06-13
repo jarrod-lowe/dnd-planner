@@ -149,9 +149,10 @@ def add_auto_groups(rule: dict[str, Any], is_effect: bool = False) -> None:
 
     Recurses into nested rules in offerRule, generateRule, advertiseEffect.
     Each nesting level is processed independently. The nested rule of an
-    advertiseEffect is itself an effect (is_effect=True); nested rules of
-    offerRule/generateRule are not effects (they become planned/generated
-    rules and manage their own ordering).
+    advertiseEffect OR a generateRule is itself an effect (is_effect=True) —
+    both are persisted into next.rules.effects and auto-joined to __effects__
+    on the next evaluation. The nested rule of an offerRule is not an effect
+    (it becomes a planned rule and manages its own ordering).
 
     For effect rules (is_effect=True), a nested offerRule's legalWhen reads do
     NOT contribute to this effect's auto-after — see extract_fact_reads_writes.
@@ -190,14 +191,20 @@ def add_auto_groups(rule: dict[str, Any], is_effect: bool = False) -> None:
     if not rule["after"]:
         del rule["after"]
 
-    # Recurse into nested rules (each level independent). Only advertiseEffect
-    # children are themselves effects; offerRule/generateRule children are not.
+    # Recurse into nested rules (each level independent). advertiseEffect and
+    # generateRule children both become __effects__ members on the next
+    # evaluation (advertiseEffect → advertisedEffects, generateRule →
+    # generatedRules; both flow into next.rules.effects via getPersistableEffects
+    # in output.ts, which evaluate.ts auto-joins to __effects__), so they are
+    # effects for auto-grouping. offerRule children become planned rules and
+    # manage their own ordering, so they are not effects.
     for activity in rule.get("activities", []):
         activity_type = activity.get("type", "")
         if activity_type in ("offerRule", "generateRule", "advertiseEffect"):
             if "rule" in activity:
                 add_auto_groups(
-                    activity["rule"], is_effect=(activity_type == "advertiseEffect")
+                    activity["rule"],
+                    is_effect=activity_type in ("advertiseEffect", "generateRule"),
                 )
 
 

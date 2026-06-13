@@ -695,6 +695,59 @@ class TestAddAutoGroups:
             a["group"] == "_auto.fact.actions.remaining" for a in standing.get("after", [])
         )
 
+    def test_generated_rule_offer_legalwhen_does_not_order_generated_rule(self):
+        """A generateRule child is persisted into next.rules.effects (see
+        getPersistableEffects in output.ts) and auto-joined to __effects__ on the
+        next evaluation, so it is an effect for auto-grouping. A sub-rule it
+        offers whose legalWhen reads a planned-mutated fact must NOT add an
+        auto-after to the generated rule (that would recreate the
+        __effects__ / _auto.fact.X cycle)."""
+        standing = {
+            "id": "standing",
+            "activities": [
+                {
+                    "type": "generateRule",
+                    "rule": {
+                        "id": "generated-thing",
+                        "phase": "safeguard",
+                        "activities": [
+                            {
+                                "type": "offerRule",
+                                "legalWhen": [
+                                    {
+                                        "condition": {
+                                            "fact": "actions.remaining",
+                                            "operator": "greaterThan",
+                                            "value": 0,
+                                        },
+                                        "illegalDiagnostics": [
+                                            {"code": "test", "severity": "error"}
+                                        ],
+                                    }
+                                ],
+                                "rule": {
+                                    "id": "offered-action",
+                                    "activities": [
+                                        {
+                                            "type": "numberIncrement",
+                                            "target": {"fact": "actions.remaining"},
+                                            "source": {"number": 1},
+                                            "subtract": True,
+                                        }
+                                    ],
+                                },
+                            }
+                        ],
+                    },
+                }
+            ],
+        }
+        add_auto_groups(standing)
+        generated = standing["activities"][0]["rule"]
+        assert not any(
+            a["group"] == "_auto.fact.actions.remaining" for a in generated.get("after", [])
+        ), "generated rule must not order after a planned-mutated fact from an offer's legalWhen"
+
     def test_multiple_writes_get_multiple_groups(self):
         """Rule that writes multiple facts gets multiple groups."""
         rule = {
