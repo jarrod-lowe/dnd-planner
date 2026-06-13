@@ -1004,7 +1004,7 @@
       "grapple": {
         "grapple-action": {
           "name": "DIvI' qop",
-          "description": "STR/DEX ra' | jagh qop"
+          "description": "DIvI' 5ft | STR pagh DEX ra' DC | qop"
         },
         "action-grapple-offer": {
           "no_action": "DIvI' tu'lu'be'"
@@ -1013,7 +1013,7 @@
       "shove": {
         "shove-action": {
           "name": "DIvI' puv",
-          "description": "STR/DEX ra' | puv 5ft pagh DoH"
+          "description": "DIvI' 5ft | STR pagh DEX ra' DC | puv 5ft pagh DoH"
         },
         "action-shove-offer": {
           "no_action": "DIvI' tu'lu'be'"
@@ -1022,13 +1022,14 @@
       "attacks": {
         "unarmed-strike": {
           "name": "nuH DIvI'",
-          "description": "DIvI' — 1 + STR bludgeoning, pagh qop/puv"
+          "description": "DIvI' 5ft | 1 + STR bludgeoning | pagh qop / puv"
         },
         "attack-unarmed-strike-offer": {
           "no_action": "DIvI' tu'lu'be'"
         },
         "greataxe": {
-          "name": "nuH jen"
+          "name": "nuH jen",
+          "description": "1d12 slashing | Heavy, Two-Handed | Cleave"
         },
         "greataxe-cleave": {
           "button": "Cleave"
@@ -1040,13 +1041,15 @@
           "no_action": "DIvI' tu'lu'be'"
         },
         "dagger": {
-          "name": "nejwI'"
+          "name": "nejwI'",
+          "description": "1d4 piercing | Finesse, Light, Thrown 20/60 | Nick"
         },
         "dagger-mastery": {
           "name": "nejwI' Mastery (Nick)"
         },
         "javelin": {
-          "name": "Javelin"
+          "name": "Javelin",
+          "description": "1d6 piercing | Thrown 30/120 | Slow"
         },
         "javelin-mastery": {
           "name": "Javelin Mastery (Slow)"
@@ -1059,16 +1062,19 @@
           "no_action": "DIvI' tu'lu'be'"
         },
         "scimitar": {
-          "name": "Scimitar"
+          "name": "Scimitar",
+          "description": "1d6 slashing | Finesse, Light | Nick"
         },
         "scimitar-mastery": {
           "name": "Scimitar Mastery (Nick)"
         },
         "spear": {
-          "name": "yan"
+          "name": "yan",
+          "description": "1d6 piercing (1d8 two-handed) | Thrown 20/60, Versatile"
         },
         "spear-plus1": {
-          "name": "yan cha'"
+          "name": "yan cha'",
+          "description": "1d6 piercing (1d8 two-handed) | Thrown 20/60 | +1 HIv 'ej Qaw'"
         },
         "activation": {
           "no_action": "DIvI' tu'lu'be'",
@@ -1391,7 +1397,12 @@
       "strength": "HoS",
       "stealth": "So'",
       "weight": "'ugh",
-      "donDoff": "tuQ / tuQHa'"
+      "donDoff": "tuQ / tuQHa'",
+      "damage": "Qaw'",
+      "properties": "Dotlh",
+      "mastery": "Mastery",
+      "cost": "Huch",
+      "dc": "DC"
     },
     "mode": "Chut",
     "return": {

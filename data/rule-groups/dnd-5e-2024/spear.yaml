@@ -13,6 +13,24 @@ ruleGroups:
         name: yan
         description: yan 'ej jey' naQ
         keywords: [jey', yan, nuH]
+    detail:
+      key: weapon/spear
+      source: custom
+      translations:
+        en:
+          meta: 'Simple Melee Weapon'
+          fields:
+            - { labelKey: rules.field.damage, value: '1d6 piercing (1d8 two-handed)' }
+            - { labelKey: rules.field.properties, value: 'Thrown (Range 20/60), Versatile (1d8)' }
+            - { labelKey: rules.field.mastery, value: 'Sap' }
+            - { labelKey: rules.field.weight, value: '3 lb.' }
+            - { labelKey: rules.field.cost, value: '1 GP' }
+          body: |
+            One of the oldest weapons known, the spear is cheap, simple, and
+            brutally effective. Held in one hand it forms the backbone of any
+            shield wall; set in two it strikes with greater force. It can be
+            hurled after a fleeing foe, making it as versatile as it is
+            ubiquitous.
     rules:
       # Compute spear hit bonus = STR modifier + proficiency bonus
       - id: compute-spear-hit-bonus

@@ -13,6 +13,23 @@ ruleGroups:
         name: Javelin
         description: Javelin 'ej jey' naQ
         keywords: [jey', Javelin, nuH]
+    detail:
+      key: weapon/javelin
+      source: custom
+      translations:
+        en:
+          meta: 'Simple Melee Weapon'
+          fields:
+            - { labelKey: rules.field.damage, value: '1d6 piercing' }
+            - { labelKey: rules.field.properties, value: 'Thrown (Range 30/120)' }
+            - { labelKey: rules.field.mastery, value: 'Slow' }
+            - { labelKey: rules.field.weight, value: '2 lb.' }
+            - { labelKey: rules.field.cost, value: '5 SP' }
+          body: |
+            A simple thrusting spear built to be thrown, the javelin is the
+            soldier's answer to a foe just out of reach. It is cheap enough to
+            carry several and sturdy enough to recover after a fight. Thrown or
+            thrust, it is as at home in a skirmish line as in a shield wall.
     rules:
       # Compute javelin hit bonus = STR modifier + proficiency bonus
       - id: compute-javelin-hit-bonus
