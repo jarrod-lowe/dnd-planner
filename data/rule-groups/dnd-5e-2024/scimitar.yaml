@@ -13,6 +13,24 @@ ruleGroups:
         name: Scimitar
         description: Scimitar 'ej jey' naQ
         keywords: [jey', scimitar, nuH]
+    detail:
+      key: weapon/scimitar
+      source: custom
+      translations:
+        en:
+          meta: 'Martial Melee Weapon'
+          fields:
+            - { labelKey: rules.field.damage, value: '1d6 slashing' }
+            - { labelKey: rules.field.properties, value: 'Finesse, Light' }
+            - { labelKey: rules.field.mastery, value: 'Nick' }
+            - { labelKey: rules.field.weight, value: '3 lb.' }
+            - { labelKey: rules.field.cost, value: '25 GP' }
+          body: |
+            A curved, single-edged blade favoured by lightly armoured duelists,
+            the scimitar prizes speed over bulk. Its Finesse balance suits a
+            dancer's footwork, and being Light it flows into a rapid second
+            strike beside a companion blade. It is a staple of southern warriors
+            and nimble skirmishers alike.
     rules:
       # Compute scimitar finesse bonus = max(STR modifier, DEX modifier)
       - id: compute-scimitar-finesse-bonus

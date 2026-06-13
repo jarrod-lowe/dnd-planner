@@ -429,6 +429,8 @@ profiles:
       tags: [attack]
     ui:
       section: action-attack
+      detailKey: weapon/$(definition.id)
+      description: rule.dnd-5e-2024.attacks.$(definition.id).description
       intents: { ATTACK: weapons }
       actionCost: [action]
       # Marks this as an Attack-action attack (unioned with the weapon's labels).
@@ -729,6 +731,7 @@ profiles:
       tags: [weapon]
     ui:
       section: equip
+      detailKey: weapon/$(definition.id)
       name: rule.dnd-5e-2024.weapon-don.don-$(definition.id).name
       intents: { EQUIP: weapons }
       actionCost: []

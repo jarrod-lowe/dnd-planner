@@ -13,6 +13,25 @@ ruleGroups:
         name: Dagger
         description: Dagger 'ej jey' naQ
         keywords: [jey', dagger, nuH]
+    detail:
+      key: weapon/dagger
+      source: custom
+      translations:
+        en:
+          meta: 'Simple Melee Weapon'
+          fields:
+            - { labelKey: rules.field.damage, value: '1d4 piercing' }
+            - { labelKey: rules.field.properties, value: 'Finesse, Light, Thrown (Range 20/60)' }
+            - { labelKey: rules.field.mastery, value: 'Nick' }
+            - { labelKey: rules.field.weight, value: '1 lb.' }
+            - { labelKey: rules.field.cost, value: '2 GP' }
+          body: |
+            A short blade small enough to hide in a boot or sleeve, the dagger is
+            a favourite sidearm of rogues and a common backup for anyone. Its
+            Finesse balance lets the nimble strike as surely as the strong, and
+            being Light it pairs neatly with another one-handed weapon for a
+            quick off-hand jab. It can be hurled in a pinch, though it carries
+            poorly past a few paces.
     rules:
       # Compute dagger hit bonus = STR or DEX modifier (finesse) + proficiency bonus
       - id: compute-dagger-hit-bonus

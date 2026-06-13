@@ -13,6 +13,21 @@ ruleGroups:
         name: yan cha'
         description: yan 'ej jey' naQ cha'
         keywords: [jey', yan, nuH]
+    detail:
+      key: weapon/spear-plus1
+      source: srd52
+      translations:
+        en:
+          meta: 'Magic Weapon, Uncommon (+1)'
+          fields:
+            - { labelKey: rules.field.damage, value: '1d6 piercing (1d8 two-handed)' }
+            - { labelKey: rules.field.properties, value: 'Thrown (Range 20/60), Versatile (1d8)' }
+            - { labelKey: rules.field.mastery, value: 'Sap' }
+            - { labelKey: rules.field.weight, value: '3 lb.' }
+          body: |
+            You have a bonus to attack rolls and damage rolls made with this
+            magic weapon. The bonus is determined by the weapon's rarity; this
+            spear is Uncommon, so the bonus is +1.
     rules:
       # Compute spear+1 hit bonus = STR modifier + proficiency bonus + 1 (enhancement)
       - id: compute-spear-plus1-hit-bonus
