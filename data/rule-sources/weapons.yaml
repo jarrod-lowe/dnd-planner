@@ -563,6 +563,8 @@ profiles:
     filterRanges: melee
     ui:
       section: reaction
+      detailKey: weapon/$(definition.id)
+      description: rule.dnd-5e-2024.attacks.$(definition.id).description
       intents: { DEFEND: weapons }
       actionCost: [reaction]
       annotationLabels:
@@ -651,6 +653,8 @@ profiles:
         weapon.light: true
     ui:
       section: bonus-action
+      detailKey: weapon/$(definition.id)
+      description: rule.dnd-5e-2024.attacks.$(definition.id).description
       intents: { ATTACK: weapons }
       actionCost: [bonus]
     gating:
@@ -783,6 +787,7 @@ profiles:
             group: [equipment-state]
             ui:
               name: rule.dnd-5e-2024.weapon-don.effect-$(definition.id).name
+              detailKey: weapon/$(definition.id)
             activities:
               - type: numberSet
                 target:
