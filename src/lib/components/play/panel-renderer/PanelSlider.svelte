@@ -52,14 +52,23 @@
   let localValue = $state(0);
   let localIndex = $state(0);
   $effect(() => {
+    let syncedValue: number;
     if (activeNotches) {
       const idx = (activeNotches as SliderNotch[]).findIndex(
         (n: SliderNotch) => n.value === (resolvedValue ?? 0)
       );
       localIndex = idx >= 0 ? idx : 0;
-      localValue = (activeNotches as SliderNotch[])[localIndex]?.value ?? 0;
+      syncedValue = (activeNotches as SliderNotch[])[localIndex]?.value ?? 0;
+      localValue = syncedValue;
     } else {
-      localValue = resolvedValue ?? min;
+      syncedValue = resolvedValue ?? min;
+      localValue = syncedValue;
+    }
+    // Sync selections when the displayed value doesn't match what's in selections.
+    // Use the local variable to avoid tracking localValue as a dependency.
+    const currentSelection = selections?.[control.var];
+    if (syncedValue !== currentSelection) {
+      onSelectionChange?.({ [control.var]: syncedValue });
     }
   });
 

@@ -263,6 +263,31 @@
         "always_prepared": "Hold Person is always prepared"
       }
     },
+    "spell-aid": {
+      "offer-aid": {
+        "name": "Aid",
+        "description": "30ft | +5 HP per slot level to 3 creatures | 8 hours",
+        "no_action": "No action available",
+        "no_spellcasting": "Already cast a spell this turn",
+        "no_slots": "No spell slots remaining"
+      },
+      "prepare-aid-offer": {
+        "name": "Prepare Aid",
+        "max_prepared": "Maximum prepared spells reached",
+        "already_prepared": "Aid is already prepared"
+      },
+      "unprepare-aid-offer": {
+        "name": "Unprepare Aid",
+        "not_prepared": "Aid is not prepared",
+        "always_prepared": "Aid is always prepared"
+      },
+      "effect-aid-prepared": {
+        "name": "Aid Prepared"
+      },
+      "effect-aid-removing": {
+        "name": "Removing Aid"
+      }
+    },
     "spell-thunderous-smite": {
       "annotation": "Thunderous Smite available",
       "offer-thunderous-smite": {
@@ -1564,7 +1589,8 @@
       }
     },
     "information": {
-      "saveDc": "{{saveType}} Save DC {{dc}}"
+      "saveDc": "{{saveType}} Save DC {{dc}}",
+      "aidBonus": "+{{hp}} HP"
     },
     "slotEffect": {
       "l1": "L1 Spell Slot Expended",

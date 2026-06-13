@@ -263,6 +263,31 @@
         "always_prepared": "nuv mevmoH always prepared"
       }
     },
+    "spell-aid": {
+      "offer-aid": {
+        "name": "QaH",
+        "description": "30ft | +5 HP per slot level 3 creatures | 8 rep",
+        "no_action": "DIvI' tu'lu'be'",
+        "no_spellcasting": "mugh DIvI' tu'lu'be'",
+        "no_slots": "mugh laH tu'lu'be'"
+      },
+      "prepare-aid-offer": {
+        "name": "Prepare QaH",
+        "max_prepared": "mugh DIvI' nIb",
+        "already_prepared": "QaH already prepared"
+      },
+      "unprepare-aid-offer": {
+        "name": "Unprepare QaH",
+        "not_prepared": "QaH not prepared",
+        "always_prepared": "QaH always prepared"
+      },
+      "effect-aid-prepared": {
+        "name": "QaH Prepared"
+      },
+      "effect-aid-removing": {
+        "name": "Removing QaH"
+      }
+    },
     "spell-thunderous-smite": {
       "annotation": "raQ muHta chen",
       "offer-thunderous-smite": {
@@ -1564,7 +1589,8 @@
       }
     },
     "information": {
-      "saveDc": "{{saveType}} DIvI' {{dc}}"
+      "saveDc": "{{saveType}} DIvI' {{dc}}",
+      "aidBonus": "+{{hp}} HP"
     },
     "slotEffect": {
       "l1": "DIvI' L1 mugh",

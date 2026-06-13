@@ -2,6 +2,7 @@
 ruleGroups:
   - id: paladin-spells-l2
     requires:
+      - spell-aid
       - spell-find-steed
     translations:
       en:

@@ -2,6 +2,7 @@
 ruleGroups:
   - id: cleric-spells-l2
     requires:
+      - spell-aid
       - spell-calm-emotions
       - spell-hold-person
     translations:
