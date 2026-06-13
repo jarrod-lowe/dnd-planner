@@ -113,6 +113,16 @@ export function evaluate(input: EngineInput): EngineOutput {
   // Cross-phase validation: detect rules depending on groups from later phases
   phaseDiagnostics.push(...validateCrossPhaseOrdering(allRules, 'normal'));
 
+  // Surface dependency cycles to the console so they can be diagnosed directly
+  // from the browser (the UI banner only shows a generic message). The CYCLE
+  // diagnostic message already contains the offending path, e.g.
+  // "Dependency cycle detected: A -> B -> C -> A".
+  for (const d of phaseDiagnostics) {
+    if (d.code === 'CYCLE') {
+      console.warn(`[rules-engine] ${d.message}`);
+    }
+  }
+
   // 3. Create function registry (unused in v1 but required for completeness)
   createBuiltinFunctionRegistry();
 

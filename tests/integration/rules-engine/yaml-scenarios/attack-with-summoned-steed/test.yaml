@@ -1,0 +1,86 @@
+name: 'Weapon Attack With Summoned Steed (no dependency cycle)'
+description: >
+  Regression for the dependency-cycle bug: a paladin with a steed summoned on a
+  previous turn (steed effects persisted into __effects__) selects a weapon
+  attack (Spear +1). The planned attack rule lives in __planned__ with
+  after: __effects__. This must NOT produce a dependency-cycle diagnostic —
+  status.ok must remain true and the attack must consume an action normally.
+
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spear-plus1
+  - class-paladin/class-paladin-level1
+  - spells/spell-find-steed
+
+initialEffects:
+  # Equip the Spear +1 so the weapon attack offer appears.
+  - id: effect-spear-plus1
+    phase: normal
+    group: [equipment-state]
+    activities:
+      - type: numberSet
+        target:
+          fact: weapon.spear-plus1.equipped
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+  # Grant a level-2 slot so Find Steed can be cast.
+  - id: test-grant-level2-slot
+    phase: early
+    group:
+      - spellcasting-slots-set
+    activities:
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.total
+        source:
+          number: 1
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level2.remaining
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+
+steps:
+  # --- Turn 1: summon the steed ---
+  - evaluate:
+  - addOffer:
+      id: prepare-find-steed
+  - addOffer:
+      id: cast-find-steed
+      assert:
+        facts:
+          spellcasting.slots.level2.remaining: 0
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-steed
+        facts:
+          companion.steed.summoned: 1
+
+  # --- Turn 2: steed effects are now persisted in __effects__. Selecting a
+  # weapon attack must not create a dependency cycle. ---
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 16
+      assert:
+        facts:
+          str.modifier: 3
+  - addOffer:
+      id: spear-plus1-use-action
+      assert:
+        status:
+          ok: true
+        facts:
+          actions.remaining: 0
