@@ -939,6 +939,37 @@ legalWhen:
 
 Annotations are produced by the engine when all `when` conditions pass. Use YAML anchors (`&name` / `*name`) to share conditions between `legalWhen` and the annotate rule's `when` — avoiding duplication. The annotation `key` must be an i18n key with translations in both locales.
 
+### Dice-Line Controls (`ui.primaryControl` / `ui.secondaryControl`)
+
+A `dice-line` control renders one or more tappable dice chips — e.g. an attack's to-hit d20 plus its damage die, or a saving-throw d20. Each entry in its `dice[]` array is one die:
+
+```yaml
+primaryControl:
+  type: dice-line
+  ranges: { var: ranges } # optional (melee/thrown/etc.)
+  advantage: { fact: attack.str.disadvantage } # optional
+  dice:
+    - sides: 20
+      bonus: { var: hitBonus }
+      purpose: to-hit
+    - sides: { var: damageDie }
+      bonus: { var: damageBonus }
+      damageType: { string: slashing }
+      purpose: damage
+```
+
+**`purpose` is required on every die** and is enforced by the schema (`make validate-rules-schema` rejects a die without it). It declares the die's semantic role so the UI can label and (later) group rolls by intent rather than guessing from the die size. Use one of:
+
+| `purpose` | Use for                                                       |
+| --------- | ------------------------------------------------------------- |
+| `to-hit`  | Attack rolls — weapon, unarmed, spell attacks, shove, grapple |
+| `damage`  | Any die that deals damage (carries `damageType`)              |
+| `healing` | Any die that restores HP (healing spells and abilities)       |
+| `save`    | Saving throws                                                 |
+| `check`   | Ability checks, skill checks, initiative                      |
+
+Author `purpose` by intent, not by inference: a healing die is `healing` even if it omits `unit: hp`, and an attack's d20 is `to-hit` (not `check`). The roll toast label and each chip's accessible name are both derived from this field.
+
 ### Translations
 
 Every rule group must have translations for both supported locales:
@@ -1138,3 +1169,4 @@ Phase: normal
 - Not capturing variables that need to keep their values (e.g. slider max's)
 - Not making sure activities apply from both planned choices and active effects where required
 - Forgetting to `make deploy-test` or `make sync-rule-groups` to update the database
+- Forgetting `purpose` on a `dice-line` die — every die needs one of `to-hit`, `damage`, `healing`, `save`, `check` (enforced by the schema; `make validate-rules-schema` will reject the file)

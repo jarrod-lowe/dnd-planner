@@ -1,5 +1,11 @@
 export type RollMode = 'normal' | 'advantage' | 'disadvantage';
 
+/**
+ * Semantic role of a die within a dice-line. Authored per die so the UI can
+ * label/group rolls by intent rather than inferring from die size or damageType.
+ */
+export type DicePurpose = 'to-hit' | 'damage' | 'healing' | 'save' | 'check';
+
 export interface RollResult {
   total: number;
   natural: number;
@@ -18,6 +24,8 @@ export interface RollResult {
   damageType?: string;
   /** Unit key for non-damage rolls (e.g. "hp" for healing) */
   unit?: string;
+  /** Semantic role of this roll, mirrored from the authored die. */
+  purpose?: DicePurpose;
   /** Original die value (1 or 2) before GWF floor applied */
   gwfFloor?: number;
 }
@@ -53,6 +61,8 @@ export interface DiceEntry {
   unit?: string;
   /** Optional i18n key rendered as a small label before this chip (e.g. "Fiend/Undead"). */
   label?: string;
+  /** Semantic role of this die (e.g. "to-hit", "damage", "healing", "save", "check"). */
+  purpose?: DicePurpose;
 }
 
 export interface ControlBase {

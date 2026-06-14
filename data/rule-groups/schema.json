@@ -313,12 +313,62 @@
             "primaryControl": {
               "type": "object",
               "description": "Primary UI control configuration (e.g., dice-line, slider)",
-              "additionalProperties": true
+              "additionalProperties": true,
+              "allOf": [
+                {
+                  "if": {
+                    "properties": { "type": { "const": "dice-line" } },
+                    "required": ["type"]
+                  },
+                  "then": {
+                    "required": ["dice"],
+                    "properties": {
+                      "dice": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": ["purpose"],
+                          "properties": {
+                            "purpose": {
+                              "enum": ["to-hit", "damage", "healing", "save", "check"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
             },
             "secondaryControl": {
               "type": "object",
               "description": "Secondary UI control configuration",
-              "additionalProperties": true
+              "additionalProperties": true,
+              "allOf": [
+                {
+                  "if": {
+                    "properties": { "type": { "const": "dice-line" } },
+                    "required": ["type"]
+                  },
+                  "then": {
+                    "required": ["dice"],
+                    "properties": {
+                      "dice": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": ["purpose"],
+                          "properties": {
+                            "purpose": {
+                              "enum": ["to-hit", "damage", "healing", "save", "check"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
             },
             "information": {
               "type": "array",

@@ -954,9 +954,11 @@ ruleGroups:
                         dice:
                           - sides: 20
                             bonus: { var: hitBonus }
+                            purpose: to-hit
                           - sides: { var: damageDie }
                             bonus: { var: damageBonus }
                             damageType: { fact: companion.steed.damageType }
+                            purpose: damage
                     vars:
                       hitBonus:
                         capture: true
@@ -1027,6 +1029,7 @@ ruleGroups:
                           - sides: 8
                             count: 2
                             bonus: { var: spellLevel }
+                            purpose: healing
                     vars:
                       spellLevel:
                         capture: true
@@ -1473,9 +1476,11 @@ ruleGroups:
                         dice:
                           - sides: 20
                             bonus: { var: hitBonus }
+                            purpose: to-hit
                           - sides: { var: damageDie }
                             bonus: { var: damageBonus }
                             damageType: { fact: companion.steed.damageType }
+                            purpose: damage
                     vars:
                       hitBonus:
                         capture: true
@@ -1546,6 +1551,7 @@ ruleGroups:
                           - sides: 8
                             count: 2
                             bonus: { var: spellLevel }
+                            purpose: healing
                     vars:
                       spellLevel:
                         capture: true
@@ -1992,9 +1998,11 @@ ruleGroups:
                         dice:
                           - sides: 20
                             bonus: { var: hitBonus }
+                            purpose: to-hit
                           - sides: { var: damageDie }
                             bonus: { var: damageBonus }
                             damageType: { fact: companion.steed.damageType }
+                            purpose: damage
                     vars:
                       hitBonus:
                         capture: true
@@ -2065,6 +2073,7 @@ ruleGroups:
                           - sides: 8
                             count: 2
                             bonus: { var: spellLevel }
+                            purpose: healing
                     vars:
                       spellLevel:
                         capture: true
@@ -2511,9 +2520,11 @@ ruleGroups:
                         dice:
                           - sides: 20
                             bonus: { var: hitBonus }
+                            purpose: to-hit
                           - sides: { var: damageDie }
                             bonus: { var: damageBonus }
                             damageType: { fact: companion.steed.damageType }
+                            purpose: damage
                     vars:
                       hitBonus:
                         capture: true
@@ -2584,6 +2595,7 @@ ruleGroups:
                           - sides: 8
                             count: 2
                             bonus: { var: spellLevel }
+                            purpose: healing
                     vars:
                       spellLevel:
                         capture: true
@@ -3741,9 +3753,11 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: hitBonus }
+                                  purpose: to-hit
                                 - sides: { var: damageDie }
                                   bonus: { var: damageBonus }
                                   damageType: { fact: companion.steed.damageType }
+                                  purpose: damage
                           vars:
                             hitBonus:
                               capture: true
@@ -3807,9 +3821,11 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: hitBonus }
+                                  purpose: to-hit
                                 - sides: { var: damageDie }
                                   bonus: { var: damageBonus }
                                   damageType: { fact: companion.steed.damageType }
+                                  purpose: damage
                           vars:
                             hitBonus:
                               capture: true
@@ -3868,6 +3884,7 @@ ruleGroups:
                                 - sides: 8
                                   count: 2
                                   bonus: { var: spellLevel }
+                                  purpose: healing
                           vars:
                             spellLevel:
                               capture: true
@@ -4265,6 +4282,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -4308,6 +4326,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -4351,6 +4370,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -4394,6 +4414,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -4437,6 +4458,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -4480,6 +4502,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -4524,6 +4547,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -4549,6 +4573,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -4574,6 +4599,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -4599,6 +4625,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -4624,6 +4651,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -4649,6 +4677,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -4674,6 +4703,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -4699,6 +4729,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -4724,6 +4755,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -4749,6 +4781,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -4774,6 +4807,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -4799,6 +4833,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -4824,6 +4859,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -4849,6 +4885,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -4874,6 +4911,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -4899,6 +4937,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -4924,6 +4963,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -4949,6 +4989,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -5983,9 +6024,11 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: hitBonus }
+                                  purpose: to-hit
                                 - sides: { var: damageDie }
                                   bonus: { var: damageBonus }
                                   damageType: { fact: companion.steed.damageType }
+                                  purpose: damage
                           vars:
                             hitBonus:
                               capture: true
@@ -6049,9 +6092,11 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: hitBonus }
+                                  purpose: to-hit
                                 - sides: { var: damageDie }
                                   bonus: { var: damageBonus }
                                   damageType: { fact: companion.steed.damageType }
+                                  purpose: damage
                           vars:
                             hitBonus:
                               capture: true
@@ -6110,6 +6155,7 @@ ruleGroups:
                                 - sides: 8
                                   count: 2
                                   bonus: { var: spellLevel }
+                                  purpose: healing
                           vars:
                             spellLevel:
                               capture: true
@@ -6507,6 +6553,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -6550,6 +6597,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -6593,6 +6641,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -6636,6 +6685,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -6679,6 +6729,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -6722,6 +6773,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -6766,6 +6818,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -6791,6 +6844,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -6816,6 +6870,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -6841,6 +6896,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -6866,6 +6922,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -6891,6 +6948,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -6916,6 +6974,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -6941,6 +7000,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -6966,6 +7026,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -6991,6 +7052,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -7016,6 +7078,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -7041,6 +7104,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -7066,6 +7130,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -7091,6 +7156,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -7116,6 +7182,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -7141,6 +7208,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -7166,6 +7234,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -7191,6 +7260,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -8236,9 +8306,11 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: hitBonus }
+                                  purpose: to-hit
                                 - sides: { var: damageDie }
                                   bonus: { var: damageBonus }
                                   damageType: { fact: companion.steed.damageType }
+                                  purpose: damage
                           vars:
                             hitBonus:
                               capture: true
@@ -8302,9 +8374,11 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: hitBonus }
+                                  purpose: to-hit
                                 - sides: { var: damageDie }
                                   bonus: { var: damageBonus }
                                   damageType: { fact: companion.steed.damageType }
+                                  purpose: damage
                           vars:
                             hitBonus:
                               capture: true
@@ -8363,6 +8437,7 @@ ruleGroups:
                                 - sides: 8
                                   count: 2
                                   bonus: { var: spellLevel }
+                                  purpose: healing
                           vars:
                             spellLevel:
                               capture: true
@@ -8760,6 +8835,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -8803,6 +8879,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -8846,6 +8923,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -8889,6 +8967,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -8932,6 +9011,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -8975,6 +9055,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -9019,6 +9100,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -9044,6 +9126,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -9069,6 +9152,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -9094,6 +9178,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -9119,6 +9204,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -9144,6 +9230,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -9169,6 +9256,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -9194,6 +9282,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -9219,6 +9308,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -9244,6 +9334,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -9269,6 +9360,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -9294,6 +9386,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -9319,6 +9412,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -9344,6 +9438,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -9369,6 +9464,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -9394,6 +9490,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -9419,6 +9516,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -9444,6 +9542,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -10489,9 +10588,11 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: hitBonus }
+                                  purpose: to-hit
                                 - sides: { var: damageDie }
                                   bonus: { var: damageBonus }
                                   damageType: { fact: companion.steed.damageType }
+                                  purpose: damage
                           vars:
                             hitBonus:
                               capture: true
@@ -10555,9 +10656,11 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: hitBonus }
+                                  purpose: to-hit
                                 - sides: { var: damageDie }
                                   bonus: { var: damageBonus }
                                   damageType: { fact: companion.steed.damageType }
+                                  purpose: damage
                           vars:
                             hitBonus:
                               capture: true
@@ -10616,6 +10719,7 @@ ruleGroups:
                                 - sides: 8
                                   count: 2
                                   bonus: { var: spellLevel }
+                                  purpose: healing
                           vars:
                             spellLevel:
                               capture: true
@@ -11013,6 +11117,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -11056,6 +11161,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -11099,6 +11205,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -11142,6 +11249,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -11185,6 +11293,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -11228,6 +11337,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: save
                             secondaryControl:
                               type: segmented
                               var: passed
@@ -11272,6 +11382,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -11297,6 +11408,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -11322,6 +11434,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -11347,6 +11460,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -11372,6 +11486,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -11397,6 +11512,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -11422,6 +11538,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -11447,6 +11564,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -11472,6 +11590,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -11497,6 +11616,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -11522,6 +11642,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -11547,6 +11668,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -11572,6 +11694,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -11597,6 +11720,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -11622,6 +11746,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -11647,6 +11772,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -11672,6 +11798,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:
@@ -11697,6 +11824,7 @@ ruleGroups:
                               dice:
                                 - sides: 20
                                   bonus: { var: rollBonus }
+                                  purpose: check
                             intents: { CHECK: skill }
                             actionCost: []
                           vars:

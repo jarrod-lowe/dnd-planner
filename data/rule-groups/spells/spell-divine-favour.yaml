@@ -377,6 +377,7 @@ ruleGroups:
                   dice:
                     - sides: 4
                       damageType: { string: radiant }
+                      purpose: damage
                 intents:
                   ATTACK: spells
                 actionCost: []

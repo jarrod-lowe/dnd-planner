@@ -37,3 +37,4 @@ steps:
                   - sides: 20
                     bonus:
                       var: alertBonus
+                    purpose: check

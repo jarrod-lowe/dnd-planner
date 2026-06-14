@@ -281,4 +281,59 @@ describe('validateRules', () => {
       expect(result.valid).toBe(true);
     });
   });
+
+  test('dice-line die without purpose fails validation', async () => {
+    const { validateRules } = await import('$lib/rules/validateRules');
+    const rules = [
+      {
+        id: 'no-purpose',
+        activities: [{ type: 'numberSet', target: { fact: 'x' }, source: { number: 1 } }],
+        ui: {
+          primaryControl: {
+            type: 'dice-line',
+            dice: [{ sides: 20, bonus: { var: 'hitBonus' } }]
+          }
+        }
+      }
+    ];
+    const result = await validateRules(rules);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some((e) => e.message.includes('purpose'))).toBe(true);
+  });
+
+  test('dice-line die with an invalid purpose value fails validation', async () => {
+    const { validateRules } = await import('$lib/rules/validateRules');
+    const rules = [
+      {
+        id: 'bad-purpose',
+        activities: [{ type: 'numberSet', target: { fact: 'x' }, source: { number: 1 } }],
+        ui: {
+          primaryControl: {
+            type: 'dice-line',
+            dice: [{ sides: 20, purpose: 'totally-hit' }]
+          }
+        }
+      }
+    ];
+    const result = await validateRules(rules);
+    expect(result.valid).toBe(false);
+  });
+
+  test('dice-line die with a valid purpose passes validation', async () => {
+    const { validateRules } = await import('$lib/rules/validateRules');
+    const rules = [
+      {
+        id: 'good-purpose',
+        activities: [{ type: 'numberSet', target: { fact: 'x' }, source: { number: 1 } }],
+        ui: {
+          secondaryControl: {
+            type: 'dice-line',
+            dice: [{ sides: 8, count: 2, purpose: 'healing' }]
+          }
+        }
+      }
+    ];
+    const result = await validateRules(rules);
+    expect(result.valid).toBe(true);
+  });
 });

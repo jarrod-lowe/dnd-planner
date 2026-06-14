@@ -68,6 +68,7 @@ steps:
                   - sides: 8
                     count: { var: slotLevel }
                     unit: hp
+                    purpose: healing
   # Cast at the default (L2) slot
   - addOffer:
       id: cast-prayer-of-healing

@@ -4,6 +4,7 @@
   import WarningIndicator from './WarningIndicator.svelte';
   import { extractPanelDescriptor } from './panel-renderer/extractPanelDescriptor';
   import { resolveValueSource } from './panel-renderer/resolveValueSource';
+  import { rollTypeKey } from './panel-renderer/rollType';
   import PanelSlider from './panel-renderer/PanelSlider.svelte';
   import PanelDiceLine from './panel-renderer/PanelDiceLine.svelte';
   import PanelSelect from './panel-renderer/PanelSelect.svelte';
@@ -235,12 +236,7 @@
   function handleDiceRoll(result: RollResult, _dieIndex: number) {
     onRoll?.(result, _dieIndex);
 
-    const rollType =
-      result.sides === 20
-        ? $t('play.toast.rollType.check')
-        : result.damageType
-          ? $t('play.toast.rollType.damage')
-          : $t('play.toast.rollType.roll');
+    const rollType = $t(rollTypeKey(result.purpose, result));
 
     const modifiers: string[] = [];
     if (result.mode === 'advantage') modifiers.push($t('play.toast.modifier.advantage'));

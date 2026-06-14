@@ -1618,7 +1618,10 @@
       "rollType": {
         "check": "Check",
         "damage": "Damage",
-        "roll": "Roll"
+        "healing": "Healing",
+        "roll": "Roll",
+        "save": "Save",
+        "to-hit": "To-Hit"
       },
       "modifier": {
         "advantage": "Advantage",

@@ -66,6 +66,37 @@ describe('PanelRenderer - dice-line control', () => {
     expect(container.textContent).toContain('+3');
   });
 
+  it("leads the to-hit chip's accessible name with its purpose label", () => {
+    const entry: AvailableRuleEntry = {
+      rule: {
+        id: 'greataxe',
+        description: 'Greataxe',
+        activities: [],
+        ui: {
+          section: 'action-attack',
+          name: 'rule.attacks.greataxe.name',
+          primaryControl: {
+            type: 'dice-line',
+            dice: [{ sides: 20, bonus: { var: 'hitBonus' }, purpose: 'to-hit' }]
+          }
+        },
+        vars: { hitBonus: { default: { number: 5 } } }
+      } as Rule,
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    };
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {} }
+    });
+    const chip = container.querySelector('.panel-renderer__die-chip') as HTMLButtonElement;
+    const label = chip.getAttribute('aria-label');
+    expect(label).toBeTruthy();
+    // Translations aren't loaded in the test env, so $t yields the key; assert
+    // the purpose's rollType key leads the accessible name.
+    expect(label).toContain('play.toast.rollType.to-hit');
+  });
+
   it('renders attack with range, hit, and damage', () => {
     const entry = createAttackEntry();
     const { container } = render(PanelRenderer, { props: { entry, editable: true, facts: {} } });

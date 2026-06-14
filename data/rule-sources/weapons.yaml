@@ -20,8 +20,10 @@ definitions:
         dice:
           - sides: 20
             bonus: { var: hitBonus }
+            purpose: to-hit
           - sides: { var: damageDie }
             bonus: { var: damageBonus }
+            purpose: damage
             damageType: { string: piercing }
     vars:
       ranges:
@@ -91,8 +93,10 @@ definitions:
         dice:
           - sides: 20
             bonus: { var: hitBonus }
+            purpose: to-hit
           - sides: { var: damageDie }
             bonus: { var: damageBonus }
+            purpose: damage
             damageType: { string: slashing }
       secondaryControl:
         type: dice-line
@@ -106,8 +110,10 @@ definitions:
         dice:
           - sides: 20
             bonus: { var: hitBonus }
+            purpose: to-hit
           - sides: { var: damageDie }
             bonus: { var: damageBonus }
+            purpose: damage
             damageType: { string: slashing }
     vars:
       ranges:
@@ -180,8 +186,10 @@ definitions:
         dice:
           - sides: 20
             bonus: { var: hitBonus }
+            purpose: to-hit
           - sides: { var: damageDie }
             bonus: { var: damageBonus }
+            purpose: damage
             damageType: { string: piercing }
     vars:
       ranges:
@@ -244,8 +252,10 @@ definitions:
         dice:
           - sides: 20
             bonus: { var: hitBonus }
+            purpose: to-hit
           - sides: { var: damageDie }
             bonus: { var: damageBonus }
+            purpose: damage
             damageType: { string: slashing }
     vars:
       ranges:
@@ -302,8 +312,10 @@ definitions:
         dice:
           - sides: 20
             bonus: { var: hitBonus }
+            purpose: to-hit
           - sides: { var: damageDie }
             bonus: { var: damageBonus }
+            purpose: damage
             damageType: { string: piercing }
     vars:
       ranges:
@@ -373,8 +385,10 @@ definitions:
         dice:
           - sides: 20
             bonus: { var: hitBonus }
+            purpose: to-hit
           - sides: { var: damageDie }
             bonus: { var: damageBonus }
+            purpose: damage
             damageType: { string: piercing }
     vars:
       ranges:
