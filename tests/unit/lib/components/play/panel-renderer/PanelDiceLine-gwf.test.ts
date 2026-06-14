@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
-import { tick } from 'svelte';
 import PanelRenderer from '$lib/components/play/PanelRenderer.svelte';
 import type { AvailableRuleEntry, Rule, Annotation } from '$lib/rules-engine';
 
@@ -52,13 +51,6 @@ const gwfAnnotation: Annotation = {
     type: 'modifier'
   }
 };
-
-// Simulate a 300ms long-press on a chip to open the roll-mode popover.
-async function longPress(chip: Element): Promise<void> {
-  await fireEvent.pointerDown(chip);
-  vi.advanceTimersByTime(300);
-  await tick();
-}
 
 describe('PanelDiceLine - Great Weapon Fighting', () => {
   it('applies GWF floor when damage die rolls 1', async () => {
@@ -144,7 +136,6 @@ describe('PanelDiceLine - Great Weapon Fighting', () => {
   });
 
   it('floors each die on a critical GWF roll (per-die, not the sum)', async () => {
-    vi.useFakeTimers();
     const entry = createGreataxeEntry();
     const onRoll = vi.fn();
     // Crit doubles 1d12 to 2d12; both dice roll 1 (random=0). GWF must floor
@@ -153,11 +144,9 @@ describe('PanelDiceLine - Great Weapon Fighting', () => {
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts: {}, onRoll, activeAnnotations: [gwfAnnotation] }
     });
-    const chips = container.querySelectorAll('.panel-renderer__die-chip');
-    await longPress(chips[1]); // damage die
-    const critItem = Array.from(container.querySelectorAll('.panel-renderer__popover-item')).find(
-      (b) => b.getAttribute('aria-label')?.includes('play.choices.attack.critical')
-    )!;
+    const critItem = container
+      .querySelector<HTMLElement>('.panel-renderer__popover[data-die-index="1"]')!
+      .querySelector('[data-crit-mode="critical"]')!;
     await fireEvent.click(critItem);
 
     const [result] = onRoll.mock.calls[0];

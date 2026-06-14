@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
-import { tick } from 'svelte';
 import PanelRenderer from '$lib/components/play/PanelRenderer.svelte';
 import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
 
@@ -59,24 +58,22 @@ const createHealingEntry = (): AvailableRuleEntry => ({
   diagnostics: []
 });
 
-// Simulate a 300ms long-press on a chip, which opens the roll-mode popover.
-async function longPress(chip: Element): Promise<void> {
-  await fireEvent.pointerDown(chip);
-  vi.advanceTimersByTime(300);
-  await tick();
-}
+// Each die's roll-mode menu is always in the DOM (inside its popover). Scope
+// queries to a specific die via the popover's data-die-index.
+const popoverFor = (container: HTMLElement, dieIndex: number) =>
+  container.querySelector<HTMLElement>(`.panel-renderer__popover[data-die-index="${dieIndex}"]`);
+const itemsFor = (container: HTMLElement, dieIndex: number) =>
+  Array.from(
+    popoverFor(container, dieIndex)?.querySelectorAll('.panel-renderer__popover-item') ?? []
+  );
 
 describe('PanelDiceLine - critical damage selector', () => {
-  it('shows Normal and the 💥 critical symbol (not advantage/disadvantage) on a damage chip', async () => {
-    vi.useFakeTimers();
+  it('shows Normal and the 💥 critical symbol (not advantage/disadvantage) on a damage chip', () => {
     const entry = createAttackEntry();
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts: {} }
     });
-    const chips = container.querySelectorAll('.panel-renderer__die-chip');
-    await longPress(chips[1]); // damage chip
-
-    const items = Array.from(container.querySelectorAll('.panel-renderer__popover-item'));
+    const items = itemsFor(container, 1); // damage die's menu
     const text = items.map((b) => b.textContent ?? '').join(' ');
     expect(items.length).toBe(2);
     expect(text).not.toContain('Advantage');
@@ -91,34 +88,25 @@ describe('PanelDiceLine - critical damage selector', () => {
     expect(critItem!.textContent).toContain('play.choices.attack.critical');
   });
 
-  it('still shows advantage/normal/disadvantage on a d20 chip', async () => {
-    vi.useFakeTimers();
+  it('still shows advantage/normal/disadvantage on a d20 chip', () => {
     const entry = createAttackEntry();
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts: {} }
     });
-    const chips = container.querySelectorAll('.panel-renderer__die-chip');
-    await longPress(chips[0]); // d20 to-hit chip
-
-    const items = container.querySelectorAll('.panel-renderer__popover-item');
-    expect(items.length).toBe(3);
+    expect(itemsFor(container, 0).length).toBe(3); // d20 to-hit's menu
   });
 
-  it('does not show Critical on a healing chip', async () => {
-    vi.useFakeTimers();
+  it('does not show Critical on a healing chip', () => {
     const entry = createHealingEntry();
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts: {} }
     });
-    const chip = container.querySelector('.panel-renderer__die-chip')!;
-    await longPress(chip);
-
-    const text = container.textContent ?? '';
-    expect(text).not.toContain('play.choices.attack.critical');
+    // Healing/utility dice have no options trigger and no popover at all.
+    expect(container.querySelector('.panel-renderer__popover')).toBeNull();
+    expect(container.textContent ?? '').not.toContain('play.choices.attack.critical');
   });
 
   it('doubles the dice count on Critical without changing the bonus', async () => {
-    vi.useFakeTimers();
     const entry = createAttackEntry();
     const onRoll = vi.fn();
     // floor(0.5 * 12) + 1 = 7 per die; crit rolls 2 dice => 14 + 3 = 17
@@ -126,11 +114,8 @@ describe('PanelDiceLine - critical damage selector', () => {
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts: {}, onRoll }
     });
-    const chips = container.querySelectorAll('.panel-renderer__die-chip');
-    await longPress(chips[1]);
-
-    const critItem = Array.from(container.querySelectorAll('.panel-renderer__popover-item')).find(
-      (b) => b.getAttribute('aria-label')?.includes('play.choices.attack.critical')
+    const critItem = itemsFor(container, 1).find((b) =>
+      b.getAttribute('aria-label')?.includes('play.choices.attack.critical')
     )!;
     await fireEvent.click(critItem);
 
@@ -144,7 +129,6 @@ describe('PanelDiceLine - critical damage selector', () => {
   });
 
   it('rolls the base count on Normal selection', async () => {
-    vi.useFakeTimers();
     const entry = createAttackEntry();
     const onRoll = vi.fn();
     // floor(0.5 * 12) + 1 = 7 => 7 + 3 = 10 (single die)
@@ -152,11 +136,8 @@ describe('PanelDiceLine - critical damage selector', () => {
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts: {}, onRoll }
     });
-    const chips = container.querySelectorAll('.panel-renderer__die-chip');
-    await longPress(chips[1]);
-
-    const normalItem = Array.from(container.querySelectorAll('.panel-renderer__popover-item')).find(
-      (b) => (b.textContent ?? '').includes('play.choices.attack.normal')
+    const normalItem = itemsFor(container, 1).find((b) =>
+      (b.textContent ?? '').includes('play.choices.attack.normal')
     )!;
     await fireEvent.click(normalItem);
 
@@ -166,7 +147,6 @@ describe('PanelDiceLine - critical damage selector', () => {
   });
 
   it('resets to normal after a critical roll', async () => {
-    vi.useFakeTimers();
     const entry = createAttackEntry();
     const onRoll = vi.fn();
     vi.spyOn(Math, 'random').mockReturnValue(0.5);
@@ -174,17 +154,16 @@ describe('PanelDiceLine - critical damage selector', () => {
       props: { entry, editable: true, facts: {}, onRoll }
     });
     const chips = container.querySelectorAll('.panel-renderer__die-chip');
-    // Roll a crit.
-    await longPress(chips[1]);
-    const critItem = Array.from(container.querySelectorAll('.panel-renderer__popover-item')).find(
-      (b) => b.getAttribute('aria-label')?.includes('play.choices.attack.critical')
+    // Roll a crit via the damage menu.
+    const critItem = itemsFor(container, 1).find((b) =>
+      b.getAttribute('aria-label')?.includes('play.choices.attack.critical')
     )!;
     await fireEvent.click(critItem);
     expect(onRoll.mock.calls.at(-1)![0].critical).toBe(true);
 
-    // A subsequent normal tap rolls base dice. The long-press guard swallows the
-    // first chip click (it follows the long-press), so the second click rolls.
-    await fireEvent.click(chips[1]);
+    // A subsequent plain tap on the damage chip rolls base dice (the crit
+    // selection is one-shot; the split-button trigger replaced the old
+    // long-press guard, so a single tap rolls normally).
     await fireEvent.click(chips[1]);
 
     const [lastResult] = onRoll.mock.calls.at(-1)!;
@@ -193,16 +172,14 @@ describe('PanelDiceLine - critical damage selector', () => {
   });
 
   it('shows the CRIT badge and crit-damage class on the rolled damage chip', async () => {
-    vi.useFakeTimers();
     const entry = createAttackEntry();
     vi.spyOn(Math, 'random').mockReturnValue(0.5);
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts: {} }
     });
     const chips = container.querySelectorAll('.panel-renderer__die-chip');
-    await longPress(chips[1]);
-    const critItem = Array.from(container.querySelectorAll('.panel-renderer__popover-item')).find(
-      (b) => b.getAttribute('aria-label')?.includes('play.choices.attack.critical')
+    const critItem = itemsFor(container, 1).find((b) =>
+      b.getAttribute('aria-label')?.includes('play.choices.attack.critical')
     )!;
     await fireEvent.click(critItem);
 

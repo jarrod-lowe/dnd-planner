@@ -1570,6 +1570,8 @@
         "damage": "DIch",
         "roll": "DIvI'",
         "reroll": "DIvI'qa'",
+        "rollMode": "DIvI' mIw",
+        "optionsLabel": "DIvI' wIv {{label}}",
         "nat20": "DIch naQ!",
         "nat1": "DIch Hutlh!",
         "advantage": "DIvI' Dung",
