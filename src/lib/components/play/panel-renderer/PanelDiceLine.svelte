@@ -74,6 +74,20 @@
     defaultRollMode !== 'normal' && rollMode === 'normal' ? defaultRollMode : rollMode
   );
 
+  // Signature of every die's resolved sides x count. Changes whenever the
+  // dice you would roll change (slot-level slider, versatile range switch,
+  // etc.). Used to invalidate stale roll results below.
+  const diceSignature = $derived(
+    control.dice.map((d) => `${getDieSides(d) ?? ''}x${getDieCount(d)}`).join('|')
+  );
+  // A roll total is only meaningful for the dice that produced it; clear stale
+  // results when the resolved dice change so a chip never shows a total that no
+  // longer matches its current expression.
+  $effect(() => {
+    void diceSignature;
+    rollResults = {};
+  });
+
   function handleRangeTap(): void {
     if (!editable || !ranges || ranges.length <= 1) return;
     rangeIndex = (rangeIndex + 1) % ranges.length;
@@ -318,6 +332,9 @@
         {#if editable}
           <button
             class="panel-renderer__die-chip"
+            aria-label={part.die!.label
+              ? `${$t(part.die!.label)} ${formatDieChip(part.die!, part.dieIndex!)}`
+              : undefined}
             class:panel-renderer__die-chip--crit={rollResults[part.dieIndex!]?.natural === 20}
             class:panel-renderer__die-chip--fumble={rollResults[part.dieIndex!]?.natural === 1}
             class:panel-renderer__die-chip--adv={rollResults[part.dieIndex!]?.mode === 'advantage'}

@@ -107,4 +107,39 @@ describe('PanelRenderer - Divine Smite dice-line', () => {
 
     vi.restoreAllMocks();
   });
+
+  it('clears a stale roll when the slot level changes', async () => {
+    // Roll at L1 (2d8), then move the slider to L5 (6d8): the stale L1 total
+    // must be invalidated so the chip shows the current expression again.
+    vi.spyOn(Math, 'random').mockReturnValue(0.5); // each d8 = 5; 2 dice => 10
+    const entry = createSmiteEntry();
+    const { container, rerender } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {}, selections: { slotLevel: 1 } }
+    });
+    const chips = container.querySelectorAll('button.panel-renderer__die-chip');
+    await fireEvent.click(chips[0]);
+    expect(chips[0].textContent).toBe('10');
+
+    await rerender({
+      entry: createSmiteEntry(),
+      editable: true,
+      facts: {},
+      selections: { slotLevel: 5 }
+    });
+    const chipsAfter = container.querySelectorAll('button.panel-renderer__die-chip');
+    expect(chipsAfter[0].textContent).toBe('6d8'); // expression, not stale "10"
+    vi.restoreAllMocks();
+  });
+
+  it('includes the Fiend/Undead label in its chip button accessible name', () => {
+    const entry = createSmiteEntry();
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {}, selections: { slotLevel: 2 } }
+    });
+    const chips = container.querySelectorAll('button.panel-renderer__die-chip');
+    // Default chip: no label -> no aria-label override (name is its dice text).
+    expect(chips[0].getAttribute('aria-label')).toBeFalsy();
+    // Fiend/Undead chip: label is composed into the accessible name.
+    expect(chips[1].getAttribute('aria-label')).toContain('fiendUndeadLabel');
+  });
 });
