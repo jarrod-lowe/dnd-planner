@@ -1576,7 +1576,9 @@
         "disadvantage": "Disadvantage",
         "advantageResult": "with advantage",
         "disadvantageResult": "with disadvantage",
-        "normal": "Normal"
+        "normal": "Normal",
+        "critical": "Critical",
+        "criticalSymbol": "💥"
       },
       "smite": {
         "roll": "Roll",

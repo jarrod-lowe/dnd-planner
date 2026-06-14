@@ -1576,7 +1576,9 @@
         "disadvantage": "DIvI' bIng",
         "advantageResult": "DIvI' Dung",
         "disadvantageResult": "DIvI' bIng",
-        "normal": "motlh"
+        "normal": "motlh",
+        "critical": "DIch naQ",
+        "criticalSymbol": "💥"
       },
       "smite": {
         "roll": "DIvI'",
