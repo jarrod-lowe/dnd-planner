@@ -319,6 +319,7 @@
       "offer-divine-smite": {
         "name": "quv Qaw'",
         "description": "nuH DIch tlhej | +2d8 radiant (+1d8 DIvI' Hoch)",
+        "fiendUndeadLabel": "mIgh Do' Ha'DIbaH",
         "no_bonus_action": "Quv DIvI' tu'lu'be'",
         "no_attack": "DIch nuH DIvI' tu'lu'be'",
         "no_resource": "mugh laH free je tu'lu'be'",

@@ -108,6 +108,59 @@ describe('resolveValueSource', () => {
     });
   });
 
+  describe('min/max clamp', () => {
+    it('clamps a result below min up to min', () => {
+      // Divine Smite regular: slotLevel + 1, but free use (0) must stay 2d8.
+      const result = resolveValueSource(
+        { var: 'slotLevel', offset: 1, min: 2 },
+        {},
+        { slotLevel: { default: { number: 0 } } },
+        { slotLevel: 0 }
+      );
+      expect(result).toBe(2);
+    });
+
+    it('does not clamp a result at or above min', () => {
+      expect(
+        resolveValueSource(
+          { var: 'slotLevel', offset: 1, min: 2 },
+          {},
+          { slotLevel: { default: { number: 1 } } },
+          { slotLevel: 1 }
+        )
+      ).toBe(2);
+      expect(
+        resolveValueSource(
+          { var: 'slotLevel', offset: 1, min: 2 },
+          {},
+          { slotLevel: { default: { number: 5 } } },
+          { slotLevel: 5 }
+        )
+      ).toBe(6);
+    });
+
+    it('clamps a result above max down to max', () => {
+      expect(resolveValueSource({ number: 10, max: 5 }, {}, {})).toBe(5);
+    });
+
+    it('applies clamp after scale and offset', () => {
+      // 3 * 2 + 1 = 7, clamped to max 5
+      expect(resolveValueSource({ number: 3, scale: 2, offset: 1, min: 0, max: 5 }, {}, {})).toBe(
+        5
+      );
+      // 1 * 2 + -5 = -3, clamped up to min 0
+      expect(resolveValueSource({ number: 1, scale: 2, offset: -5, min: 0 }, {}, {})).toBe(0);
+    });
+
+    it('leaves non-numeric results unclamped', () => {
+      expect(resolveValueSource({ string: 'radiant', min: 2, max: 5 }, {}, {})).toBe('radiant');
+    });
+
+    it('does not clamp when min/max absent (backward compatible)', () => {
+      expect(resolveValueSource({ number: 100 }, {}, {})).toBe(100);
+    });
+  });
+
   it('ignores scale and offset on non-numeric values', () => {
     const result = resolveValueSource({ string: 'hello', scale: 5, offset: -3 }, {}, {});
     expect(result).toBe('hello');

@@ -312,6 +312,9 @@
         <span class="panel-renderer__disadv-indicator" aria-label="Disadvantage">▼</span>
       {/if}
       <div class="panel-renderer__chip-wrapper">
+        {#if part.die!.label}
+          <span class="panel-renderer__die-label">{$t(part.die!.label)}</span>
+        {/if}
         {#if editable}
           <button
             class="panel-renderer__die-chip"
@@ -414,6 +417,14 @@
     background: var(--md-sys-color-surface-container-highest);
   }
 
+  .panel-renderer__die-label {
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    color: var(--md-sys-color-on-surface-variant);
+    margin-right: var(--spacing-xs);
+    white-space: nowrap;
+  }
+
   .panel-renderer__disadv-indicator {
     font-family: var(--font-body);
     font-size: var(--font-size-sm);
@@ -423,6 +434,7 @@
   .panel-renderer__chip-wrapper {
     position: relative;
     display: inline-flex;
+    align-items: center;
   }
 
   .panel-renderer__die-chip {

@@ -319,6 +319,7 @@
       "offer-divine-smite": {
         "name": "Divine Smite",
         "description": "After a melee hit | +2d8 radiant (+1d8 per extra slot level)",
+        "fiendUndeadLabel": "Fiend/Undead",
         "no_bonus_action": "No bonus action available",
         "no_attack": "You must take the Attack action first",
         "no_resource": "No spell slots or free uses remaining",

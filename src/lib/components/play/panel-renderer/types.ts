@@ -32,6 +32,10 @@ export interface ValueSource {
   scale?: number;
   /** Add this to the resolved value (after scale). */
   offset?: number;
+  /** Clamp the final numeric result to at least this value (applied after scale+offset). */
+  min?: number;
+  /** Clamp the final numeric result to at most this value (applied after scale+offset). */
+  max?: number;
 }
 
 export interface DiceEntry {
@@ -47,6 +51,8 @@ export interface DiceEntry {
   damageType?: ValueSource;
   /** Unit key for non-damage rolls (e.g. "hp" for healing). */
   unit?: string;
+  /** Optional i18n key rendered as a small label before this chip (e.g. "Fiend/Undead"). */
+  label?: string;
 }
 
 export interface ControlBase {

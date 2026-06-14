@@ -423,6 +423,23 @@ ruleGroups:
                   min: { fact: smite.minSlotLevel }
                   max: { fact: smite.maxCastLevel }
                   valueFormat: spellLevel
+                # Damage dice roller. Two chips, both tracking the slot-level
+                # slider live via { var: slotLevel }:
+                #  - Damage (unlabelled): slotLevel + 1 dice, floored at 2 (free
+                #    use & L1 both 2d8; L5 = 6d8). The min:2 clamp covers the
+                #    free-use case (slotLevel 0 -> 0+1=1 -> clamped to 2).
+                #  - Fiend/Undead: one more die than Damage (slotLevel + 2,
+                #    floored at 3). Both deal radiant damage.
+                secondaryControl:
+                  type: dice-line
+                  dice:
+                    - sides: 8
+                      count: { var: slotLevel, offset: 1, min: 2 }
+                      damageType: { string: radiant }
+                    - sides: 8
+                      count: { var: slotLevel, offset: 2, min: 3 }
+                      label: rule.spell-divine-smite.offer-divine-smite.fiendUndeadLabel
+                      damageType: { string: radiant }
                 intents:
                   ATTACK: spells
                 actionCost: [bonus]
@@ -431,6 +448,9 @@ ruleGroups:
                   capture: true
                   default:
                     fact: smite.defaultLevel
+                # Retained for compatibility with the compute-smite-* rules and
+                # the smite.defaultDieCount scenario assertions; the dice roller
+                # above derives its count live from slotLevel instead.
                 dieCount:
                   capture: true
                   default:

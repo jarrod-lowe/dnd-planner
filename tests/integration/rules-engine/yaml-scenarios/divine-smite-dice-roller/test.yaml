@@ -1,0 +1,59 @@
+name: 'Divine Smite - Damage dice roller'
+description: >-
+  cast-divine-smite offers a two-chip damage dice-line (regular damage +
+  Fiend/Undead) whose die counts track the slot-level slider. Regular uses
+  slotLevel + 1 floored at 2 (free use & L1 = 2d8); Fiend/Undead uses one more
+  die (slotLevel + 2, floored at 3).
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - spells/spell-divine-smite
+initialEffects:
+  # Grant a level 1 spell slot so Divine Smite has a resource to consume.
+  - id: test-grant-level1-slot
+    phase: early
+    group:
+      - spellcasting-slots-set
+    activities:
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level1.total
+        source:
+          number: 1
+      - type: numberSet
+        target:
+          fact: spellcasting.slots.level1.remaining
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+steps:
+  - evaluate: {}
+  - addOffer:
+      id: prepare-divine-smite
+  - addOffer:
+      id: unarmed-strike-use-action
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - cast-divine-smite
+        offerUi:
+          - id: cast-divine-smite
+            ui:
+              secondaryControl:
+                type: dice-line
+                dice:
+                  - sides: 8
+                    count: { var: slotLevel, offset: 1, min: 2 }
+                    damageType: { string: radiant }
+                  - sides: 8
+                    count: { var: slotLevel, offset: 2, min: 3 }
+                    label: rule.spell-divine-smite.offer-divine-smite.fiendUndeadLabel
+                    damageType: { string: radiant }
