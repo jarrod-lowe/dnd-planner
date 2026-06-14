@@ -216,6 +216,7 @@
     let natural: number;
     let rolls: number[] | undefined;
     let droppedRoll: number | undefined;
+    let gwfFloor: number | undefined;
     if (sides === 0) {
       natural = 0;
     } else if (rollModeToUse === 'advantage') {
@@ -236,15 +237,19 @@
       rolls = s1 <= s2 ? r1 : r2;
     } else {
       rolls = rollMultiple(sides, rolledCount);
+      // Apply Great Weapon Fighting per-die: each damage-die roll of 1 or 2
+      // counts as 3, floored before summing so crits and other multi-die rolls
+      // total correctly. Single-die keeps the (orig | 3) toast format via
+      // gwfFloor; multi-die stores the floored rolls for the breakdown.
+      if (gwfActive && die.damageType && sides > 2 && rolls.some((r) => r <= 2)) {
+        if (rolledCount === 1) {
+          gwfFloor = rolls[0];
+          rolls = [3];
+        } else {
+          rolls = rolls.map((r) => (r <= 2 ? 3 : r));
+        }
+      }
       natural = rolls.reduce((a, b) => a + b, 0);
-    }
-    // Apply Great Weapon Fighting: damage die rolls of 1 or 2 count as 3.
-    // Note: GWF checks the summed natural, so a crit's extra dice (sum > 2)
-    // effectively bypass it — a pre-existing per-die limitation, not fixed here.
-    let gwfFloor: number | undefined;
-    if (gwfActive && die.damageType && sides > 2 && (natural === 1 || natural === 2)) {
-      gwfFloor = natural;
-      natural = 3;
     }
     const damageTypeStr = formatDamageType(die) || undefined;
     const result: RollResult = {
