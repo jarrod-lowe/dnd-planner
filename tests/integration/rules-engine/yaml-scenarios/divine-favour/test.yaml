@@ -66,6 +66,7 @@ steps:
                 dice:
                   - sides: 4
                     damageType: { string: radiant }
+                    purpose: damage
 
   # Use Divine Favour - free, no resource cost
   - addOffer:

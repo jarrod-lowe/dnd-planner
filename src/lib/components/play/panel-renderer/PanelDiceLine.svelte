@@ -1,5 +1,6 @@
 <script lang="ts">
   import { resolveValueSource } from './resolveValueSource';
+  import { rollTypeKey } from './rollType';
   import DamageTypeIcon from './DamageTypeIcon.svelte';
   import type { DiceLineControl, DiceEntry, RollResult } from './types';
   import type { Facts, VarDefinition } from '$lib/rules-engine';
@@ -152,6 +153,23 @@
     return text;
   }
 
+  /**
+   * Accessible name for a die chip. Leads with the roll's purpose label (e.g.
+   * "To-Hit") when authored, followed by any cosmetic label, then the chip text.
+   * Returns undefined when there is nothing to prefix so the button falls back
+   * to its text content as the accessible name.
+   */
+  function dieAriaLabel(die: DiceEntry, dieIndex: number): string | undefined {
+    const prefix = [
+      die.purpose ? $t(rollTypeKey(die.purpose)) : undefined,
+      die.label ? $t(die.label) : undefined
+    ]
+      .filter(Boolean)
+      .join(' ');
+    if (!prefix) return undefined;
+    return `${prefix} ${formatDieChip(die, dieIndex)}`;
+  }
+
   function getDieSides(die: DiceEntry): number | undefined {
     // Check for range-based damage die override (versatile weapons)
     if (die.damageType && currentRange?.damageDie) {
@@ -226,6 +244,7 @@
       rolls: count > 1 ? rolls : undefined,
       damageType: damageTypeStr,
       unit: die.unit,
+      purpose: die.purpose,
       gwfFloor
     };
     rollResults[dieIndex] = result;
@@ -332,9 +351,7 @@
         {#if editable}
           <button
             class="panel-renderer__die-chip"
-            aria-label={part.die!.label
-              ? `${$t(part.die!.label)} ${formatDieChip(part.die!, part.dieIndex!)}`
-              : undefined}
+            aria-label={dieAriaLabel(part.die!, part.dieIndex!)}
             class:panel-renderer__die-chip--crit={rollResults[part.dieIndex!]?.natural === 20}
             class:panel-renderer__die-chip--fumble={rollResults[part.dieIndex!]?.natural === 1}
             class:panel-renderer__die-chip--adv={rollResults[part.dieIndex!]?.mode === 'advantage'}

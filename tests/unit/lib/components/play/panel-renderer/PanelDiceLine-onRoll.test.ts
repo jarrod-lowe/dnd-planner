@@ -96,6 +96,50 @@ describe('PanelDiceLine - onRoll callback', () => {
     expect(dieIndex).toBe(1);
   });
 
+  it('fires onRoll carrying the purpose authored on the die', async () => {
+    const entry: AvailableRuleEntry = {
+      rule: {
+        id: 'greataxe',
+        description: 'Greataxe',
+        activities: [],
+        ui: {
+          section: 'action-attack',
+          name: 'rule.attacks.greataxe.name',
+          primaryControl: {
+            type: 'dice-line',
+            dice: [
+              { sides: 20, bonus: { var: 'hitBonus' }, purpose: 'to-hit' },
+              {
+                sides: { var: 'damageDie' },
+                bonus: { var: 'damageBonus' },
+                damageType: { string: 'slashing' },
+                purpose: 'damage'
+              }
+            ]
+          }
+        },
+        vars: {
+          hitBonus: { default: { number: 5 } },
+          damageDie: { default: { number: 12 } },
+          damageBonus: { default: { number: 3 } }
+        }
+      } as Rule,
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    };
+    const onRoll = vi.fn();
+    vi.spyOn(Math, 'random').mockReturnValue(0.8); // floor(0.8*20)+1 = 17
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {}, onRoll }
+    });
+    const chips = container.querySelectorAll('.panel-renderer__die-chip');
+    await fireEvent.click(chips[0]); // to-hit die
+    expect(onRoll).toHaveBeenCalledTimes(1);
+    const [toHitResult] = onRoll.mock.calls[0];
+    expect(toHitResult.purpose).toBe('to-hit');
+  });
+
   it('fires onRoll with droppedRoll for disadvantage', async () => {
     const entry = createAttackEntry();
     entry.rule = {

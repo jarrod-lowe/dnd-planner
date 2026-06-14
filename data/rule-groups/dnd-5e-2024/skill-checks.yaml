@@ -31,6 +31,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: rollBonus }
+                      purpose: check
                   advantage: { fact: skill.acrobatics.disadvantage }
                 intents: { CHECK: skill }
                 actionCost: []
@@ -62,6 +63,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: rollBonus }
+                      purpose: check
                   advantage: { fact: skill.animal-handling.disadvantage }
                 intents: { CHECK: skill }
                 actionCost: []
@@ -93,6 +95,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: rollBonus }
+                      purpose: check
                   advantage: { fact: skill.arcana.disadvantage }
                 intents: { CHECK: skill }
                 actionCost: []
@@ -124,6 +127,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: rollBonus }
+                      purpose: check
                   advantage: { fact: skill.athletics.disadvantage }
                 intents: { CHECK: skill }
                 actionCost: []
@@ -155,6 +159,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: rollBonus }
+                      purpose: check
                   advantage: { fact: skill.deception.disadvantage }
                 intents: { CHECK: skill }
                 actionCost: []
@@ -186,6 +191,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: rollBonus }
+                      purpose: check
                   advantage: { fact: skill.history.disadvantage }
                 intents: { CHECK: skill }
                 actionCost: []
@@ -217,6 +223,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: rollBonus }
+                      purpose: check
                   advantage: { fact: skill.insight.disadvantage }
                 intents: { CHECK: skill }
                 actionCost: []
@@ -248,6 +255,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: rollBonus }
+                      purpose: check
                   advantage: { fact: skill.intimidation.disadvantage }
                 intents: { CHECK: skill }
                 actionCost: []
@@ -279,6 +287,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: rollBonus }
+                      purpose: check
                   advantage: { fact: skill.investigation.disadvantage }
                 intents: { CHECK: skill }
                 actionCost: []
@@ -310,6 +319,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: rollBonus }
+                      purpose: check
                   advantage: { fact: skill.medicine.disadvantage }
                 intents: { CHECK: skill }
                 actionCost: []
@@ -341,6 +351,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: rollBonus }
+                      purpose: check
                   advantage: { fact: skill.nature.disadvantage }
                 intents: { CHECK: skill }
                 actionCost: []
@@ -372,6 +383,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: rollBonus }
+                      purpose: check
                   advantage: { fact: skill.perception.disadvantage }
                 intents: { CHECK: skill }
                 actionCost: []
@@ -403,6 +415,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: rollBonus }
+                      purpose: check
                   advantage: { fact: skill.performance.disadvantage }
                 intents: { CHECK: skill }
                 actionCost: []
@@ -434,6 +447,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: rollBonus }
+                      purpose: check
                   advantage: { fact: skill.persuasion.disadvantage }
                 intents: { CHECK: skill }
                 actionCost: []
@@ -465,6 +479,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: rollBonus }
+                      purpose: check
                   advantage: { fact: skill.religion.disadvantage }
                 intents: { CHECK: skill }
                 actionCost: []
@@ -496,6 +511,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: rollBonus }
+                      purpose: check
                   advantage: { fact: skill.sleight-of-hand.disadvantage }
                 intents: { CHECK: skill }
                 actionCost: []
@@ -527,6 +543,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: rollBonus }
+                      purpose: check
                   advantage: { fact: skill.stealth.disadvantage }
                 intents: { CHECK: skill }
                 actionCost: []
@@ -558,6 +575,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: rollBonus }
+                      purpose: check
                   advantage: { fact: skill.survival.disadvantage }
                 intents: { CHECK: skill }
                 actionCost: []

@@ -335,6 +335,7 @@ ruleGroups:
                     - sides: 8
                       count: { var: slotLevel }
                       unit: hp
+                      purpose: healing
                 intents:
                   AID: ally
                 actionCost: [action, L2]

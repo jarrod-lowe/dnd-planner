@@ -53,7 +53,9 @@ steps:
                   - sides: 8
                     count: { var: slotLevel, offset: 1, min: 2 }
                     damageType: { string: radiant }
+                    purpose: damage
                   - sides: 8
                     count: { var: slotLevel, offset: 2, min: 3 }
                     label: rule.spell-divine-smite.offer-divine-smite.fiendUndeadLabel
                     damageType: { string: radiant }
+                    purpose: damage

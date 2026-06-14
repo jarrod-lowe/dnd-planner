@@ -115,9 +115,11 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: hitBonus }
+                      purpose: to-hit
                     - sides: { var: damageDie }
                       bonus: { var: damageBonus }
                       damageType: { string: bludgeoning }
+                      purpose: damage
               vars:
                 hitBonus:
                   capture: true
@@ -254,9 +256,11 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: hitBonus }
+                      purpose: to-hit
                     - sides: { var: damageDie }
                       bonus: { var: damageBonus }
                       damageType: { string: bludgeoning }
+                      purpose: damage
               vars:
                 hitBonus:
                   capture: true

@@ -73,6 +73,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: dc }
+                      purpose: to-hit
                 intents: { ATTACK: brawl }
                 actionCost: [action]
               vars:

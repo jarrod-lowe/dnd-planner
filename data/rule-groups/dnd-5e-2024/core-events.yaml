@@ -182,6 +182,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: saveBonus }
+                      purpose: save
                 secondaryControl:
                   type: segmented
                   var: passed
@@ -228,6 +229,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: saveBonus }
+                      purpose: save
                 secondaryControl:
                   type: segmented
                   var: passed
@@ -274,6 +276,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: saveBonus }
+                      purpose: save
                 secondaryControl:
                   type: segmented
                   var: passed
@@ -320,6 +323,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: saveBonus }
+                      purpose: save
                 secondaryControl:
                   type: segmented
                   var: passed
@@ -366,6 +370,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: saveBonus }
+                      purpose: save
                 secondaryControl:
                   type: segmented
                   var: passed
@@ -412,6 +417,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: saveBonus }
+                      purpose: save
                 secondaryControl:
                   type: segmented
                   var: passed
@@ -458,6 +464,7 @@ ruleGroups:
                   type: dice-line
                   dice:
                     - sides: 20
+                      purpose: check
                   annotationLabels: [dice.any]
                 intents:
                   CHECK: skill

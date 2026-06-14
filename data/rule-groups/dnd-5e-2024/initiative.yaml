@@ -55,6 +55,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: rollBonus }
+                      purpose: check
                   advantage: { fact: initiative.disadvantage }
                 secondaryControl:
                   type: dice-line
@@ -68,6 +69,7 @@ ruleGroups:
                   dice:
                     - sides: 20
                       bonus: { var: alertBonus }
+                      purpose: check
                 intents: { INSPECT: sense }
                 actionCost: []
               vars:

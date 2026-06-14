@@ -19,6 +19,7 @@ steps:
                   - sides: 20
                     bonus:
                       var: saveBonus
+                    purpose: save
               secondaryControl:
                 type: segmented
                 var: passed
