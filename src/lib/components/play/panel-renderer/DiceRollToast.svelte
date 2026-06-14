@@ -88,6 +88,12 @@
       {/if}
     {/if}
 
+    {#if result.critical}
+      <span class="dice-toast__crit" aria-label={$t('play.choices.attack.critical')}
+        >{$t('play.choices.attack.criticalSymbol')}</span
+      >
+    {/if}
+
     {#if damageTypeKey}
       <span class="dice-toast__damage-icon">
         <DamageTypeIcon type={damageTypeKey} />
@@ -168,6 +174,11 @@
     border-radius: 999px;
     padding: 0 0.375rem;
     font-weight: 700;
+  }
+
+  .dice-toast__crit {
+    margin-left: var(--spacing-xs);
+    font-size: var(--font-size-sm);
   }
 
   .dice-toast__modifiers {

@@ -1,6 +1,14 @@
 export type RollMode = 'normal' | 'advantage' | 'disadvantage';
 
 /**
+ * Critical-hit mode for damage dice. On 'critical' the number of dice rolled is
+ * doubled (the modifier is not). Parallel to {@link RollMode} but on a separate
+ * axis: a roll is either adv/disadv (d20) or normal/critical (damage), never
+ * both, because the two apply to different die types.
+ */
+export type CritMode = 'normal' | 'critical';
+
+/**
  * Semantic role of a die within a dice-line. Authored per die so the UI can
  * label/group rolls by intent rather than inferring from die size or damageType.
  */
@@ -10,6 +18,8 @@ export interface RollResult {
   total: number;
   natural: number;
   mode?: RollMode;
+  /** True when this damage roll was a critical hit (dice doubled, modifier not). */
+  critical?: boolean;
   /** The roll that was NOT kept (for advantage/disadvantage) */
   droppedRoll?: number;
   /** Resolved bonus value */

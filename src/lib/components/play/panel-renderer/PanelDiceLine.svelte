@@ -2,7 +2,7 @@
   import { resolveValueSource } from './resolveValueSource';
   import { rollTypeKey } from './rollType';
   import DamageTypeIcon from './DamageTypeIcon.svelte';
-  import type { DiceLineControl, DiceEntry, RollResult } from './types';
+  import type { CritMode, DiceLineControl, DiceEntry, RollResult } from './types';
   import type { Facts, VarDefinition } from '$lib/rules-engine';
   import { t } from '$lib/i18n';
 
@@ -162,7 +162,8 @@
   function dieAriaLabel(die: DiceEntry, dieIndex: number): string | undefined {
     const prefix = [
       die.purpose ? $t(rollTypeKey(die.purpose)) : undefined,
-      die.label ? $t(die.label) : undefined
+      die.label ? $t(die.label) : undefined,
+      rollResults[dieIndex]?.critical ? $t('play.choices.attack.critical') : undefined
     ]
       .filter(Boolean)
       .join(' ');
@@ -185,6 +186,13 @@
     return getDieSides(die) === 20;
   }
 
+  // A damage die is eligible for the Normal/Critical selector: not a d20, and
+  // either authored as damage or carrying a damage type. Excludes healing dice
+  // (purpose 'healing' / unit 'hp', no damageType).
+  function isDamageDie(die: DiceEntry): boolean {
+    return !isD20(die) && (die.purpose === 'damage' || !!formatDamageType(die));
+  }
+
   function rollMultiple(sides: number, count: number): number[] {
     const rolls: number[] = [];
     for (let i = 0; i < count; i++) {
@@ -193,55 +201,67 @@
     return rolls;
   }
 
-  function handleRoll(dieIndex: number, mode?: RollMode): void {
+  function handleRoll(dieIndex: number, mode?: RollMode, crit?: CritMode): void {
     if (!editable) return;
     const die = control.dice[dieIndex];
     const sides = getDieSides(die);
     if (sides === undefined || sides < 0) return;
     const count = getDieCount(die);
+    // Critical hits double the dice rolled, not the modifier. Adv/disadv only
+    // apply to the d20 (never crit), so rolledCount === count there.
+    const isCrit = crit === 'critical';
+    const rolledCount = isCrit ? count * 2 : count;
     const bonus = (resolveValueSource(die.bonus, facts, vars, selections) as number) ?? 0;
     const rollModeToUse = mode ?? (sides === 20 ? effectiveRollMode : 'normal');
     let natural: number;
     let rolls: number[] | undefined;
     let droppedRoll: number | undefined;
+    let gwfFloor: number | undefined;
     if (sides === 0) {
       natural = 0;
     } else if (rollModeToUse === 'advantage') {
-      const r1 = rollMultiple(sides, count);
-      const r2 = rollMultiple(sides, count);
+      const r1 = rollMultiple(sides, rolledCount);
+      const r2 = rollMultiple(sides, rolledCount);
       const s1 = r1.reduce((a, b) => a + b, 0);
       const s2 = r2.reduce((a, b) => a + b, 0);
       natural = Math.max(s1, s2);
       droppedRoll = Math.min(s1, s2);
       rolls = s1 >= s2 ? r1 : r2;
     } else if (rollModeToUse === 'disadvantage') {
-      const r1 = rollMultiple(sides, count);
-      const r2 = rollMultiple(sides, count);
+      const r1 = rollMultiple(sides, rolledCount);
+      const r2 = rollMultiple(sides, rolledCount);
       const s1 = r1.reduce((a, b) => a + b, 0);
       const s2 = r2.reduce((a, b) => a + b, 0);
       natural = Math.min(s1, s2);
       droppedRoll = Math.max(s1, s2);
       rolls = s1 <= s2 ? r1 : r2;
     } else {
-      rolls = rollMultiple(sides, count);
+      rolls = rollMultiple(sides, rolledCount);
+      // Apply Great Weapon Fighting per-die: each damage-die roll of 1 or 2
+      // counts as 3, floored before summing so crits and other multi-die rolls
+      // total correctly. Single-die keeps the (orig | 3) toast format via
+      // gwfFloor; multi-die stores the floored rolls for the breakdown.
+      if (gwfActive && die.damageType && sides > 2 && rolls.some((r) => r <= 2)) {
+        if (rolledCount === 1) {
+          gwfFloor = rolls[0];
+          rolls = [3];
+        } else {
+          rolls = rolls.map((r) => (r <= 2 ? 3 : r));
+        }
+      }
       natural = rolls.reduce((a, b) => a + b, 0);
-    }
-    // Apply Great Weapon Fighting: damage die rolls of 1 or 2 count as 3
-    let gwfFloor: number | undefined;
-    if (gwfActive && die.damageType && sides > 2 && (natural === 1 || natural === 2)) {
-      gwfFloor = natural;
-      natural = 3;
     }
     const damageTypeStr = formatDamageType(die) || undefined;
     const result: RollResult = {
       total: natural + bonus,
       natural,
       mode: sides === 20 ? rollModeToUse : undefined,
+      critical: isCrit || undefined,
       droppedRoll,
       bonus: bonus !== 0 ? bonus : undefined,
       sides,
-      count: count > 1 ? count : undefined,
-      rolls: count > 1 ? rolls : undefined,
+      count: rolledCount > 1 ? rolledCount : undefined,
+      rolls: rolledCount > 1 ? rolls : undefined,
       damageType: damageTypeStr,
       unit: die.unit,
       purpose: die.purpose,
@@ -294,6 +314,13 @@
     popoverDieIndex = -1;
     rollMode = mode;
     handleRoll(di, mode);
+  }
+
+  function handleCritSelect(mode: CritMode): void {
+    const di = popoverDieIndex;
+    showAdvPopover = false;
+    popoverDieIndex = -1;
+    handleRoll(di, undefined, mode);
   }
 
   function handlePopoverDismiss(): void {
@@ -357,6 +384,7 @@
             class:panel-renderer__die-chip--adv={rollResults[part.dieIndex!]?.mode === 'advantage'}
             class:panel-renderer__die-chip--disadv={rollResults[part.dieIndex!]?.mode ===
               'disadvantage'}
+            class:panel-renderer__die-chip--crit-damage={rollResults[part.dieIndex!]?.critical}
             type="button"
             data-die-index={part.dieIndex}
             bind:this={chipRefs[part.dieIndex!]}
@@ -365,37 +393,62 @@
             onpointerleave={cancelLongPress}
             onclick={() => handleChipClick(part.dieIndex!)}
           >
-            {formatDieChip(part.die!, part.dieIndex!)}
+            {formatDieChip(part.die!, part.dieIndex!)}{#if rollResults[part.dieIndex!]?.critical}
+              <span class="panel-renderer__crit-badge" aria-hidden="true">
+                {$t('play.choices.attack.criticalSymbol')}
+              </span>
+            {/if}
           </button>
         {:else}
           <span class="panel-renderer__die-chip">{formatDieChip(part.die!, part.dieIndex!)}</span>
         {/if}
         {#if showAdvPopover && popoverDieIndex === part.dieIndex}
           <div class="panel-renderer__popover" role="menu" aria-label="Roll mode">
-            <button
-              type="button"
-              class="panel-renderer__popover-item"
-              role="menuitem"
-              onclick={() => handlePopoverSelect('advantage')}
-            >
-              ▲ Advantage
-            </button>
-            <button
-              type="button"
-              class="panel-renderer__popover-item"
-              role="menuitem"
-              onclick={() => handlePopoverSelect('normal')}
-            >
-              — Normal
-            </button>
-            <button
-              type="button"
-              class="panel-renderer__popover-item"
-              role="menuitem"
-              onclick={() => handlePopoverSelect('disadvantage')}
-            >
-              ▼ Disadvantage
-            </button>
+            {#if isDamageDie(part.die!)}
+              <button
+                type="button"
+                class="panel-renderer__popover-item"
+                role="menuitem"
+                onclick={() => handleCritSelect('normal')}
+              >
+                {$t('play.choices.attack.normal')}
+              </button>
+              <button
+                type="button"
+                class="panel-renderer__popover-item"
+                role="menuitem"
+                aria-label={$t('play.choices.attack.critical')}
+                onclick={() => handleCritSelect('critical')}
+              >
+                {$t('play.choices.attack.criticalSymbol')}
+                {$t('play.choices.attack.critical')}
+              </button>
+            {:else}
+              <button
+                type="button"
+                class="panel-renderer__popover-item"
+                role="menuitem"
+                onclick={() => handlePopoverSelect('advantage')}
+              >
+                ▲ Advantage
+              </button>
+              <button
+                type="button"
+                class="panel-renderer__popover-item"
+                role="menuitem"
+                onclick={() => handlePopoverSelect('normal')}
+              >
+                — Normal
+              </button>
+              <button
+                type="button"
+                class="panel-renderer__popover-item"
+                role="menuitem"
+                onclick={() => handlePopoverSelect('disadvantage')}
+              >
+                ▼ Disadvantage
+              </button>
+            {/if}
           </div>
           <button
             type="button"
@@ -504,6 +557,17 @@
     color: var(--md-sys-color-on-error);
     background: var(--md-sys-color-error);
     border-color: var(--md-sys-color-error);
+  }
+
+  /* Critical damage: distinct tertiary accent border so it never collides with
+     the d20 nat-20 primary-fill crit style. */
+  .panel-renderer__die-chip--crit-damage {
+    border-color: var(--md-sys-color-tertiary);
+  }
+
+  .panel-renderer__crit-badge {
+    font-size: var(--font-size-md);
+    margin-left: var(--spacing-xs);
   }
 
   .panel-renderer__popover-backdrop {

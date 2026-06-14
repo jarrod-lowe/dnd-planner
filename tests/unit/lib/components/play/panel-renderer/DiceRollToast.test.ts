@@ -331,4 +331,34 @@ describe('DiceRollToast', () => {
     expect(container.querySelector('.dice-toast__damage-icon')).toBeTruthy();
     expect(container.querySelector('.dice-toast__unit')).toBeNull();
   });
+
+  // === Critical damage ===
+
+  it('renders a critical tag when result.critical', () => {
+    const result: RollResult = {
+      total: 17,
+      natural: 14,
+      bonus: 3,
+      sides: 12,
+      rolls: [7, 7],
+      count: 2,
+      critical: true
+    };
+    const { container } = render(DiceRollToast, {
+      props: { title: 'Greataxe', rollType: 'Damage', result, damageTypeKey: 'slashing' }
+    });
+    const crit = container.querySelector('.dice-toast__crit');
+    expect(crit).toBeTruthy();
+    // The tag shows the crit symbol (via i18n); its accessible name carries the word.
+    expect(crit?.getAttribute('aria-label')).toContain('play.choices.attack.critical');
+    expect(crit?.textContent).toContain('play.choices.attack.criticalSymbol');
+  });
+
+  it('does not render a critical tag when result.critical is absent', () => {
+    const result: RollResult = { total: 10, natural: 7, bonus: 3, sides: 12 };
+    const { container } = render(DiceRollToast, {
+      props: { title: 'Greataxe', rollType: 'Damage', result, damageTypeKey: 'slashing' }
+    });
+    expect(container.querySelector('.dice-toast__crit')).toBeNull();
+  });
 });
