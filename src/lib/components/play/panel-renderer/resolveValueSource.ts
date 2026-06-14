@@ -31,8 +31,16 @@ export function resolveValueSource(
   } else if (source.array !== undefined) result = source.array;
   else return undefined;
 
-  if (typeof result === 'number' && (source.scale !== undefined || source.offset !== undefined)) {
+  if (
+    typeof result === 'number' &&
+    (source.scale !== undefined ||
+      source.offset !== undefined ||
+      source.min !== undefined ||
+      source.max !== undefined)
+  ) {
     result = result * (source.scale ?? 1) + (source.offset ?? 0);
+    if (source.min !== undefined && result < source.min) result = source.min;
+    if (source.max !== undefined && result > source.max) result = source.max;
   }
 
   return result;

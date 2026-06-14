@@ -32,6 +32,29 @@ describe('Panel renderer types', () => {
     expect(vs.string).toBe('melee');
   });
 
+  it('ValueSource supports min and max clamps', () => {
+    const vs: ValueSource = { var: 'slotLevel', offset: 1, min: 2, max: 6 };
+    expect(vs.min).toBe(2);
+    expect(vs.max).toBe(6);
+  });
+
+  it('DiceEntry supports a per-die label (i18n key)', () => {
+    const control: DiceLineControl = {
+      type: 'dice-line',
+      dice: [
+        {
+          sides: 8,
+          count: { var: 'slotLevel', offset: 1, min: 2 },
+          label: 'rule.spell-divine-smite.offer-divine-smite.fiendUndeadLabel',
+          damageType: { string: 'radiant' }
+        }
+      ]
+    };
+    expect(control.dice[0].label).toBe(
+      'rule.spell-divine-smite.offer-divine-smite.fiendUndeadLabel'
+    );
+  });
+
   it('DiceLineControl has required fields', () => {
     const control: DiceLineControl = {
       type: 'dice-line',

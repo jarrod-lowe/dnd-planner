@@ -74,6 +74,20 @@
     defaultRollMode !== 'normal' && rollMode === 'normal' ? defaultRollMode : rollMode
   );
 
+  // Signature of every die's resolved sides x count. Changes whenever the
+  // dice you would roll change (slot-level slider, versatile range switch,
+  // etc.). Used to invalidate stale roll results below.
+  const diceSignature = $derived(
+    control.dice.map((d) => `${getDieSides(d) ?? ''}x${getDieCount(d)}`).join('|')
+  );
+  // A roll total is only meaningful for the dice that produced it; clear stale
+  // results when the resolved dice change so a chip never shows a total that no
+  // longer matches its current expression.
+  $effect(() => {
+    void diceSignature;
+    rollResults = {};
+  });
+
   function handleRangeTap(): void {
     if (!editable || !ranges || ranges.length <= 1) return;
     rangeIndex = (rangeIndex + 1) % ranges.length;
@@ -312,9 +326,15 @@
         <span class="panel-renderer__disadv-indicator" aria-label="Disadvantage">▼</span>
       {/if}
       <div class="panel-renderer__chip-wrapper">
+        {#if part.die!.label}
+          <span class="panel-renderer__die-label">{$t(part.die!.label)}</span>
+        {/if}
         {#if editable}
           <button
             class="panel-renderer__die-chip"
+            aria-label={part.die!.label
+              ? `${$t(part.die!.label)} ${formatDieChip(part.die!, part.dieIndex!)}`
+              : undefined}
             class:panel-renderer__die-chip--crit={rollResults[part.dieIndex!]?.natural === 20}
             class:panel-renderer__die-chip--fumble={rollResults[part.dieIndex!]?.natural === 1}
             class:panel-renderer__die-chip--adv={rollResults[part.dieIndex!]?.mode === 'advantage'}
@@ -414,6 +434,14 @@
     background: var(--md-sys-color-surface-container-highest);
   }
 
+  .panel-renderer__die-label {
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    color: var(--md-sys-color-on-surface-variant);
+    margin-right: var(--spacing-xs);
+    white-space: nowrap;
+  }
+
   .panel-renderer__disadv-indicator {
     font-family: var(--font-body);
     font-size: var(--font-size-sm);
@@ -423,6 +451,7 @@
   .panel-renderer__chip-wrapper {
     position: relative;
     display: inline-flex;
+    align-items: center;
   }
 
   .panel-renderer__die-chip {
