@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import { t } from '$lib/i18n';
   import { PLAN_VERBS, RECORD_VERBS, BUILD_VERBS } from '$lib/play/verbConfig';
   import {
@@ -7,6 +8,7 @@
     verbLabelKey
   } from '$lib/play/groupChoicesByVerb';
   import { closeActiveTooltip, registerTooltipClose } from './tooltipSingleton';
+  import QuickSearch from './QuickSearch.svelte';
   import type { AvailableRuleEntry, Verb } from '$lib/rules-engine';
 
   interface Props {
@@ -37,6 +39,25 @@
   let openTooltipVerb: Verb | null = $state(null);
   let mainEl: HTMLDivElement | undefined = $state();
   let tooltipStyle = $state('');
+
+  let searchOpen = $state(false);
+  let triggerEl: HTMLButtonElement | undefined = $state();
+  let rootEl: HTMLDivElement | undefined = $state();
+
+  function openSearch() {
+    searchOpen = true;
+  }
+
+  async function closeSearch() {
+    searchOpen = false;
+    await tick();
+    triggerEl?.focus();
+  }
+
+  function handlePick(entry: AvailableRuleEntry) {
+    onAddStep(entry);
+    void closeSearch();
+  }
 
   function closeLocalTooltip() {
     openTooltipVerb = null;
@@ -72,9 +93,12 @@
     }
   }
 
-  function handleWindowClick() {
+  function handleWindowClick(e: MouseEvent) {
     if (openTooltipVerb) {
       closeLocalTooltip();
+    }
+    if (searchOpen && rootEl && !rootEl.contains(e.target as Node)) {
+      void closeSearch();
     }
   }
 </script>
@@ -86,54 +110,73 @@
   class:add-row-picker--tooltip-open={openTooltipVerb !== null}
   role="region"
   aria-label={$t('play.addRow.title')}
+  bind:this={rootEl}
 >
-  <div class="add-row-picker__stripe" aria-hidden="true">
-    <span class="add-row-picker__stripe-label">{$t('play.addRow.label')}</span>
+  <div class="add-row-picker__stripe">
+    <span class="add-row-picker__stripe-label" aria-hidden="true">{$t('play.addRow.label')}</span>
     {#if sublabel}
-      <span class="add-row-picker__stripe-sublabel">{$t(sublabel)}</span>
+      <span class="add-row-picker__stripe-sublabel" aria-hidden="true">{$t(sublabel)}</span>
     {/if}
+    <button
+      type="button"
+      class="add-row-picker__search-trigger"
+      aria-label={$t('play.quickSearch.trigger')}
+      aria-expanded={searchOpen}
+      onclick={openSearch}
+      bind:this={triggerEl}
+    >
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path
+          d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z"
+        />
+      </svg>
+    </button>
   </div>
   <div class="add-row-picker__main" bind:this={mainEl}>
-    {#each verbGroupDefs as groupDef (groupDef.labelKey)}
-      {@const hasAny = groupDef.verbs.some((v) => verbGroupMap.has(v))}
-      {#if hasAny}
-        <div class="add-row-picker__group">
-          <span class="add-row-picker__group-label">{$t(groupDef.labelKey)}</span>
-          <div class="add-row-picker__verbs" role="group" aria-label={$t(groupDef.labelKey)}>
-            {#each groupDef.verbs as verb (verb)}
-              {@const group = verbGroupMap.get(verb)}
-              {#if group}
-                {@const hasLegal = group.entries.some((e) => e.legal)}
-                <button
-                  type="button"
-                  class="add-row-picker__verb"
-                  class:add-row-picker__verb--illegal={!hasLegal}
-                  onclick={(e) => handleVerbClick(verb, hasLegal, e)}
-                  aria-label={hasLegal
-                    ? $t(verbLabelKey(verb))
-                    : `${$t(verbLabelKey(verb))} — ${$t('play.addRow.illegalTag')}`}
-                >
-                  {$t(verbLabelKey(verb))}
-                  {#if !hasLegal}
-                    <span class="add-row-picker__illegal-tag" aria-hidden="true">
-                      <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                          d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
-                        />
-                      </svg>
-                    </span>
-                  {/if}
-                </button>
-              {/if}
-            {/each}
+    {#if searchOpen}
+      <QuickSearch {entries} onPick={handlePick} onClose={closeSearch} />
+    {:else}
+      {#each verbGroupDefs as groupDef (groupDef.labelKey)}
+        {@const hasAny = groupDef.verbs.some((v) => verbGroupMap.has(v))}
+        {#if hasAny}
+          <div class="add-row-picker__group">
+            <span class="add-row-picker__group-label">{$t(groupDef.labelKey)}</span>
+            <div class="add-row-picker__verbs" role="group" aria-label={$t(groupDef.labelKey)}>
+              {#each groupDef.verbs as verb (verb)}
+                {@const group = verbGroupMap.get(verb)}
+                {#if group}
+                  {@const hasLegal = group.entries.some((e) => e.legal)}
+                  <button
+                    type="button"
+                    class="add-row-picker__verb"
+                    class:add-row-picker__verb--illegal={!hasLegal}
+                    onclick={(e) => handleVerbClick(verb, hasLegal, e)}
+                    aria-label={hasLegal
+                      ? $t(verbLabelKey(verb))
+                      : `${$t(verbLabelKey(verb))} — ${$t('play.addRow.illegalTag')}`}
+                  >
+                    {$t(verbLabelKey(verb))}
+                    {#if !hasLegal}
+                      <span class="add-row-picker__illegal-tag" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                          <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+                          />
+                        </svg>
+                      </span>
+                    {/if}
+                  </button>
+                {/if}
+              {/each}
+            </div>
           </div>
-        </div>
+        {/if}
+      {/each}
+      {#if openTooltipVerb && tooltipStyle}
+        <span class="add-row-picker__tooltip" style={tooltipStyle}
+          >{$t('play.addRow.illegalTag')}</span
+        >
       {/if}
-    {/each}
-    {#if openTooltipVerb && tooltipStyle}
-      <span class="add-row-picker__tooltip" style={tooltipStyle}
-        >{$t('play.addRow.illegalTag')}</span
-      >
     {/if}
   </div>
 </div>
@@ -174,6 +217,39 @@
     font-weight: 600;
     color: var(--md-sys-color-primary);
     margin-top: 2px;
+  }
+
+  .add-row-picker__search-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    margin-top: var(--spacing-xs);
+    padding: 0;
+    background: var(--md-sys-color-surface-container-high);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--radius-sm);
+    color: var(--md-sys-color-on-surface-variant);
+    cursor: pointer;
+    transition:
+      background-color var(--transition-fast),
+      border-color var(--transition-fast);
+  }
+
+  .add-row-picker__search-trigger:hover {
+    background: var(--md-sys-color-surface-container-highest);
+    border-color: var(--md-sys-color-outline);
+  }
+
+  .add-row-picker__search-trigger:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: 2px;
+  }
+
+  .add-row-picker__search-trigger svg {
+    width: 1.5rem;
+    height: 1.5rem;
   }
 
   .add-row-picker__main {

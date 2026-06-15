@@ -3,6 +3,7 @@
     "spell-command": {
       "offer-command": {
         "name": "Command",
+        "keywords": "compel order force control enchantment",
         "description": "60ft | WIS save | Target obeys a one-word command",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
@@ -10,11 +11,13 @@
       },
       "prepare-command-offer": {
         "name": "Prepare Command",
+        "keywords": "compel order force control enchantment",
         "max_prepared": "Maximum prepared spells reached",
         "already_prepared": "Command is already prepared"
       },
       "unprepare-command-offer": {
         "name": "Unprepare Command",
+        "keywords": "compel order force control enchantment",
         "not_prepared": "Command is not prepared"
       },
       "effect-command-prepared": {
@@ -27,6 +30,7 @@
     "spell-sanctuary": {
       "offer-sanctuary": {
         "name": "Sanctuary",
+        "keywords": "protect ward shield abjuration safe",
         "description": "30ft | WIS save | Foes can't attack the warded creature | 10 rnds",
         "no_bonus_action": "No bonus action available",
         "no_slots": "No spell slots remaining",
@@ -37,11 +41,13 @@
       },
       "prepare-sanctuary-offer": {
         "name": "Prepare Sanctuary",
+        "keywords": "protect ward shield abjuration safe",
         "max_prepared": "Maximum prepared spells reached",
         "already_prepared": "Sanctuary is already prepared"
       },
       "unprepare-sanctuary-offer": {
         "name": "Unprepare Sanctuary",
+        "keywords": "protect ward shield abjuration safe",
         "not_prepared": "Sanctuary is not prepared"
       },
       "effect-sanctuary-prepared": {
@@ -54,6 +60,7 @@
     "spell-find-steed": {
       "offer-find-steed": {
         "name": "Find Steed",
+        "keywords": "summon mount horse companion conjure",
         "description": "Summon a loyal otherworldly steed",
         "no_action": "No action available",
         "no_slots": "No L2+ spell slots remaining",
@@ -71,76 +78,90 @@
       },
       "steed-slam": {
         "name": "Otherworldly Slam",
+        "keywords": "attack hooves melee bludgeon",
         "description": "Melee Attack | Reach 5 ft | 1d8 + spell level {{damageType}} damage",
         "no_actions": "Steed has no actions remaining",
         "no_reaction": "No reaction available"
       },
       "steed-move-walk": {
         "name": "Walk",
+        "keywords": "movement move step",
         "description": "Move the steed up to its Speed",
         "out_of_movement": "No movement remaining"
       },
       "steed-move-rough-terrain": {
         "name": "Rough Terrain",
+        "keywords": "movement move difficult",
         "description": "Steed in difficult terrain — each foot costs 2",
         "out_of_movement": "No movement remaining"
       },
       "steed-move-fly": {
         "name": "Fly",
+        "keywords": "movement move flight air",
         "description": "Steed flies using its Fly Speed",
         "cannot_fly": "Steed cannot fly",
         "out_of_movement": "No movement remaining"
       },
       "steed-dash": {
         "name": "Dash",
+        "keywords": "run sprint movement",
         "description": "Steed gains extra movement equal to its Speed",
         "no_actions": "Steed has no actions remaining"
       },
       "steed-dodge": {
         "name": "Dodge",
+        "keywords": "defend evade avoid",
         "description": "Attackers have disadvantage; steed gains advantage on DEX saves",
         "no_actions": "Steed has no actions remaining"
       },
       "steed-disengage": {
         "name": "Disengage",
+        "keywords": "retreat avoid opportunity",
         "description": "Steed's movement won't provoke opportunity attacks",
         "no_actions": "Steed has no actions remaining"
       },
       "steed-healing-touch": {
         "name": "Healing Touch",
+        "keywords": "heal restore hit points cure",
         "description": "Heal a creature within 5 ft for 2d8 + spell level HP",
         "no_bonus_action": "Steed has no bonus action remaining",
         "no_uses": "Healing Touch already used this rest"
       },
       "steed-fey-step": {
         "name": "Fey Step",
+        "keywords": "teleport blink move short",
         "description": "Teleport steed and rider up to 60 ft",
         "no_bonus_action": "Steed has no bonus action remaining",
         "no_uses": "Fey Step already used this rest"
       },
       "steed-fell-glare": {
         "name": "Fell Glare",
+        "keywords": "frighten fear gaze control",
         "description": "Force a WIS save (DC = spell save DC) on one creature within 60 ft; Frightened on failure",
         "no_bonus_action": "Steed has no bonus action remaining",
         "no_uses": "Fell Glare already used this rest"
       },
       "steed-record-damage": {
         "name": "Record Damage",
+        "keywords": "hit points health damage",
         "effect": {
           "name": "Steed Damage"
         }
       },
       "steed-record-heal": {
         "name": "Record Healing",
+        "keywords": "hit points health heal restore",
         "effect": {
           "name": "Steed Healing"
         }
       },
       "steed-set-hp-modifier-max": {
-        "name": "Set Max HP Modifier"
+        "name": "Set Max HP Modifier",
+        "keywords": "hit points health maximum adjust"
       },
       "steed-set-hp-modifier-current": {
-        "name": "Set Current HP Modifier"
+        "name": "Set Current HP Modifier",
+        "keywords": "hit points health adjust"
       },
       "steed-effect-hp-modifier-max": {
         "name": "Max HP Modifier"
@@ -149,21 +170,25 @@
         "name": "Current HP Modifier"
       },
       "steed-note": {
-        "name": "Note"
+        "name": "Note",
+        "keywords": "note record text"
       },
       "offer-dismiss-steed": {
-        "name": "Dismiss Steed"
+        "name": "Dismiss Steed",
+        "keywords": "dismiss mount companion send away"
       },
       "annotate-life-bond": {
         "text": "Life Bond: Steed also regains HP (within 5 ft, from a level 1+ spell) [manual]"
       },
       "prepare-find-steed-offer": {
         "name": "Prepare Find Steed",
+        "keywords": "summon mount horse companion conjure",
         "max_prepared": "Maximum prepared spells reached",
         "already_prepared": "Find Steed is already prepared"
       },
       "unprepare-find-steed-offer": {
         "name": "Unprepare Find Steed",
+        "keywords": "summon mount horse companion conjure",
         "not_prepared": "Find Steed is not prepared",
         "always_prepared": "Find Steed is always prepared"
       },
@@ -180,6 +205,7 @@
     "spell-sleep": {
       "offer-sleep": {
         "name": "Sleep",
+        "keywords": "knock unconscious incapacitate control enchantment",
         "description": "60ft | WIS save or Incapacitated; 2nd fail: Unconscious | 10 rnds",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
@@ -197,17 +223,20 @@
       },
       "prepare-sleep-offer": {
         "name": "Prepare Sleep",
+        "keywords": "knock unconscious incapacitate control enchantment",
         "max_prepared": "Maximum prepared spells reached",
         "already_prepared": "Sleep is already prepared"
       },
       "unprepare-sleep-offer": {
         "name": "Unprepare Sleep",
+        "keywords": "knock unconscious incapacitate control enchantment",
         "not_prepared": "Sleep is not prepared"
       }
     },
     "spell-calm-emotions": {
       "offer-calm-emotions": {
         "name": "Calm Emotions",
+        "keywords": "charm fear pacify soothe control enchantment",
         "description": "60ft | CHA save or immune to Charmed/Frightened, or Indifferent | 10 rnds",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
@@ -225,11 +254,13 @@
       },
       "prepare-calm-emotions-offer": {
         "name": "Prepare Calm Emotions",
+        "keywords": "charm fear pacify soothe control enchantment",
         "max_prepared": "Maximum prepared spells reached",
         "already_prepared": "Calm Emotions is already prepared"
       },
       "unprepare-calm-emotions-offer": {
         "name": "Unprepare Calm Emotions",
+        "keywords": "charm fear pacify soothe control enchantment",
         "not_prepared": "Calm Emotions is not prepared",
         "always_prepared": "Calm Emotions is always prepared"
       }
@@ -237,6 +268,7 @@
     "spell-hold-person": {
       "offer-hold-person": {
         "name": "Hold Person",
+        "keywords": "paralyse paralyze stun freeze control humanoid",
         "description": "60ft | WIS save or Paralyzed; repeats save each turn | 10 rnds",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
@@ -254,11 +286,13 @@
       },
       "prepare-hold-person-offer": {
         "name": "Prepare Hold Person",
+        "keywords": "paralyse paralyze stun freeze control humanoid",
         "max_prepared": "Maximum prepared spells reached",
         "already_prepared": "Hold Person is already prepared"
       },
       "unprepare-hold-person-offer": {
         "name": "Unprepare Hold Person",
+        "keywords": "paralyse paralyze stun freeze control humanoid",
         "not_prepared": "Hold Person is not prepared",
         "always_prepared": "Hold Person is always prepared"
       }
@@ -266,6 +300,7 @@
     "spell-aid": {
       "offer-aid": {
         "name": "Aid",
+        "keywords": "heal hit points boost maximum buff support",
         "description": "30ft | +5 HP per slot level to 3 creatures | 8 hours",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
@@ -273,11 +308,13 @@
       },
       "prepare-aid-offer": {
         "name": "Prepare Aid",
+        "keywords": "heal hit points boost maximum buff support",
         "max_prepared": "Maximum prepared spells reached",
         "already_prepared": "Aid is already prepared"
       },
       "unprepare-aid-offer": {
         "name": "Unprepare Aid",
+        "keywords": "heal hit points boost maximum buff support",
         "not_prepared": "Aid is not prepared",
         "always_prepared": "Aid is always prepared"
       },
@@ -292,6 +329,7 @@
       "annotation": "Thunderous Smite available",
       "offer-thunderous-smite": {
         "name": "Thunderous Smite",
+        "keywords": "smite thunder damage push knock",
         "description": "After a melee hit | +2d6 thunder | STR save or pushed 10ft & prone",
         "no_bonus_action": "No bonus action available",
         "no_attack": "You must take the Attack action first",
@@ -300,11 +338,13 @@
       },
       "prepare-thunderous-smite-offer": {
         "name": "Prepare Thunderous Smite",
+        "keywords": "smite thunder damage push knock",
         "max_prepared": "Maximum prepared spells reached",
         "already_prepared": "Thunderous Smite is already prepared"
       },
       "unprepare-thunderous-smite-offer": {
         "name": "Unprepare Thunderous Smite",
+        "keywords": "smite thunder damage push knock",
         "not_prepared": "Thunderous Smite is not prepared"
       },
       "effect-thunderous-smite-prepared": {
@@ -318,6 +358,7 @@
       "annotation": "Divine Smite available",
       "offer-divine-smite": {
         "name": "Divine Smite",
+        "keywords": "smite radiant damage burst nova",
         "description": "After a melee hit | +2d8 radiant (+1d8 per extra slot level)",
         "fiendUndeadLabel": "Fiend/Undead",
         "no_bonus_action": "No bonus action available",
@@ -333,11 +374,13 @@
       },
       "prepare-divine-smite-offer": {
         "name": "Prepare Divine Smite",
+        "keywords": "smite radiant damage burst nova",
         "max_prepared": "Maximum prepared spells reached",
         "already_prepared": "Divine Smite is already prepared"
       },
       "unprepare-divine-smite-offer": {
         "name": "Unprepare Divine Smite",
+        "keywords": "smite radiant damage burst nova",
         "not_prepared": "Divine Smite is not prepared",
         "always_prepared": "Divine Smite is always prepared and cannot be unprepared"
       },
@@ -354,6 +397,7 @@
     "spell-protection-from-evil-and-good": {
       "offer-protection-from-evil-and-good": {
         "name": "Protection from Evil and Good",
+        "keywords": "ward defend shield abjuration protect",
         "description": "Touch | 10 min | Warded vs aberrations, fiends, undead & more",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
@@ -365,11 +409,13 @@
       },
       "prepare-protection-from-evil-and-good-offer": {
         "name": "Prepare Protection from Evil and Good",
+        "keywords": "ward defend shield abjuration protect",
         "max_prepared": "Maximum prepared spells reached",
         "already_prepared": "Protection from Evil and Good is already prepared"
       },
       "unprepare-protection-from-evil-and-good-offer": {
         "name": "Unprepare Protection from Evil and Good",
+        "keywords": "ward defend shield abjuration protect",
         "not_prepared": "Protection from Evil and Good is not prepared"
       },
       "effect-protection-from-evil-and-good-prepared": {
@@ -382,6 +428,7 @@
     "spell-bless": {
       "offer-bless": {
         "name": "Bless",
+        "keywords": "buff bonus attack save support d4",
         "description": "30ft | 10 rnds | Allies gain +1d4 to attacks & saves",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
@@ -393,11 +440,13 @@
       },
       "prepare-bless-offer": {
         "name": "Prepare Bless",
+        "keywords": "buff bonus attack save support d4",
         "max_prepared": "Maximum prepared spells reached",
         "already_prepared": "Bless is already prepared"
       },
       "unprepare-bless-offer": {
         "name": "Unprepare Bless",
+        "keywords": "buff bonus attack save support d4",
         "not_prepared": "Bless is not prepared"
       },
       "effect-bless-prepared": {
@@ -410,6 +459,7 @@
     "spell-prayer-of-healing": {
       "offer-prayer-of-healing": {
         "name": "Prayer of Healing",
+        "keywords": "heal restore hit points group rest",
         "description": "30ft | Up to 5 allies regain 2d8 HP (+1d8 per slot level above 2)",
         "healLabel": "Heal",
         "no_action": "No action available",
@@ -418,11 +468,13 @@
       },
       "prepare-prayer-of-healing-offer": {
         "name": "Prepare Prayer of Healing",
+        "keywords": "heal restore hit points group rest",
         "max_prepared": "Maximum prepared spells reached",
         "already_prepared": "Prayer of Healing is already prepared"
       },
       "unprepare-prayer-of-healing-offer": {
         "name": "Unprepare Prayer of Healing",
+        "keywords": "heal restore hit points group rest",
         "not_prepared": "Prayer of Healing is not prepared"
       },
       "effect-prayer-of-healing-prepared": {
@@ -435,6 +487,7 @@
     "spell-divine-favour": {
       "offer-divine-favour": {
         "name": "Divine Favour",
+        "keywords": "smite radiant damage weapon buff favor",
         "description": "10 rnds | Weapon hits deal +1d4 radiant",
         "already_active": "Divine Favour is already active",
         "no_bonus_action": "No bonus action available",
@@ -447,6 +500,7 @@
       "annotation": "Divine Favour available",
       "use-divine-favour": {
         "name": "Use Divine Favour",
+        "keywords": "smite radiant damage weapon buff favor",
         "description": "Add Divine Favour's +1d4 radiant to this weapon hit"
       },
       "offer-use-divine-favour": {
@@ -455,11 +509,13 @@
       },
       "prepare-divine-favour-offer": {
         "name": "Prepare Divine Favour",
+        "keywords": "smite radiant damage weapon buff favor",
         "max_prepared": "Maximum prepared spells reached",
         "already_prepared": "Divine Favour is already prepared"
       },
       "unprepare-divine-favour-offer": {
         "name": "Unprepare Divine Favour",
+        "keywords": "smite radiant damage weapon buff favor",
         "not_prepared": "Divine Favour is not prepared"
       },
       "effect-divine-favour-prepared": {
@@ -472,6 +528,7 @@
     "spell-create-and-destroy-water": {
       "cast-create-and-destroy-water": {
         "name": "Create and Destroy Water",
+        "keywords": "water create destroy utility",
         "description": "Create or destroy up to 10 gallons of water"
       },
       "offer-create-and-destroy-water": {
@@ -481,11 +538,13 @@
       },
       "prepare-create-and-destroy-water-offer": {
         "name": "Prepare Create and Destroy Water",
+        "keywords": "water create destroy utility",
         "max_prepared": "Maximum prepared spells reached",
         "already_prepared": "Create and Destroy Water is already prepared"
       },
       "unprepare-create-and-destroy-water-offer": {
         "name": "Unprepare Create and Destroy Water",
+        "keywords": "water create destroy utility",
         "not_prepared": "Create and Destroy Water is not prepared"
       },
       "effect-create-and-destroy-water-prepared": {
@@ -498,6 +557,7 @@
     "class-paladin-lay-on-hands": {
       "loh-heal": {
         "name": "Heal (LoH)",
+        "keywords": "heal restore hit points touch cure",
         "description": "Touch | Spend pool points to restore HP"
       },
       "offer-loh-heal": {
@@ -506,6 +566,7 @@
       },
       "loh-purify-poison": {
         "name": "Purify Poison (LoH)",
+        "keywords": "cure poison disease cleanse",
         "description": "Touch | Spend 5 points to end the Poisoned condition"
       },
       "offer-loh-purify-poison": {
@@ -516,6 +577,7 @@
     "class-paladin-divinity": {
       "divine-sense": {
         "name": "Divine Sense",
+        "keywords": "detect sense undead fiend celestial",
         "description": "60ft | 10min | Detect Celestials, Fiends, Undead"
       },
       "offer-divine-sense": {
@@ -532,6 +594,7 @@
     "class-paladin-oath-redemption-level3": {
       "rebuke-the-violent": {
         "name": "Rebuke the Violent",
+        "keywords": "reaction retaliate radiant damage",
         "description": "30ft | WIS save — Fail: full radiant damage, Success: half damage"
       },
       "offer-rebuke-the-violent": {
@@ -543,6 +606,7 @@
       },
       "emissary-of-peace": {
         "name": "Emissary of Peace",
+        "keywords": "buff persuasion charisma",
         "description": "10min | +5 Persuasion"
       },
       "offer-emissary-of-peace": {
@@ -567,10 +631,12 @@
       "movement": {
         "move-walk": {
           "name": "Walk",
+          "keywords": "movement move step",
           "description": "Move on foot, up to your Speed"
         },
         "move-rough-terrain": {
           "name": "Trudge",
+          "keywords": "movement move difficult slow",
           "description": "Difficult terrain — each foot of movement costs 2"
         },
         "action-move-walk-offer": {
@@ -581,6 +647,7 @@
         },
         "move-swim": {
           "name": "Swim",
+          "keywords": "movement move water",
           "description": "Swim — each foot costs 2 without a Swim Speed"
         },
         "action-move-swim-offer": {
@@ -589,6 +656,7 @@
         },
         "move-fly": {
           "name": "Fly",
+          "keywords": "movement move flight air",
           "description": "Fly using your Fly Speed"
         },
         "action-move-fly-offer": {
@@ -598,7 +666,8 @@
       },
       "ability-scores": {
         "set-strength": {
-          "name": "Set Strength"
+          "name": "Set Strength",
+          "keywords": "ability score stat muscle melee carry power"
         },
         "set-strength-offer": {
           "already_set": "Strength already set"
@@ -607,7 +676,8 @@
           "name": "Strength {{score}}"
         },
         "set-dexterity": {
-          "name": "Set Dexterity"
+          "name": "Set Dexterity",
+          "keywords": "ability score stat agility finesse reflex"
         },
         "set-dexterity-offer": {
           "already_set": "Dexterity already set"
@@ -616,7 +686,8 @@
           "name": "Dexterity {{score}}"
         },
         "set-constitution": {
-          "name": "Set Constitution"
+          "name": "Set Constitution",
+          "keywords": "ability score stat health stamina endurance hit points"
         },
         "set-constitution-offer": {
           "already_set": "Constitution already set"
@@ -625,7 +696,8 @@
           "name": "Constitution {{score}}"
         },
         "set-intelligence": {
-          "name": "Set Intelligence"
+          "name": "Set Intelligence",
+          "keywords": "ability score stat knowledge reason logic"
         },
         "set-intelligence-offer": {
           "already_set": "Intelligence already set"
@@ -634,7 +706,8 @@
           "name": "Intelligence {{score}}"
         },
         "set-wisdom": {
-          "name": "Set Wisdom"
+          "name": "Set Wisdom",
+          "keywords": "ability score stat insight awareness perception"
         },
         "set-wisdom-offer": {
           "already_set": "Wisdom already set"
@@ -643,7 +716,8 @@
           "name": "Wisdom {{score}}"
         },
         "set-charisma": {
-          "name": "Set Charisma"
+          "name": "Set Charisma",
+          "keywords": "ability score stat presence social persuasion"
         },
         "set-charisma-offer": {
           "already_set": "Charisma already set"
@@ -652,7 +726,8 @@
           "name": "Charisma {{score}}"
         },
         "increase-strength": {
-          "name": "Increase Strength"
+          "name": "Increase Strength",
+          "keywords": "ability score stat boost muscle melee carry power"
         },
         "increase-strength-offer": {
           "max_score": "Strength is already at maximum (20)"
@@ -661,7 +736,8 @@
           "name": "STR +1"
         },
         "increase-dexterity": {
-          "name": "Increase Dexterity"
+          "name": "Increase Dexterity",
+          "keywords": "ability score stat boost agility finesse reflex"
         },
         "increase-dexterity-offer": {
           "max_score": "Dexterity is already at maximum (20)"
@@ -670,7 +746,8 @@
           "name": "DEX +1"
         },
         "increase-constitution": {
-          "name": "Increase Constitution"
+          "name": "Increase Constitution",
+          "keywords": "ability score stat boost health stamina endurance hit points"
         },
         "increase-constitution-offer": {
           "max_score": "Constitution is already at maximum (20)"
@@ -679,7 +756,8 @@
           "name": "CON +1"
         },
         "increase-intelligence": {
-          "name": "Increase Intelligence"
+          "name": "Increase Intelligence",
+          "keywords": "ability score stat boost knowledge reason logic"
         },
         "increase-intelligence-offer": {
           "max_score": "Intelligence is already at maximum (20)"
@@ -688,7 +766,8 @@
           "name": "INT +1"
         },
         "increase-wisdom": {
-          "name": "Increase Wisdom"
+          "name": "Increase Wisdom",
+          "keywords": "ability score stat boost insight awareness perception"
         },
         "increase-wisdom-offer": {
           "max_score": "Wisdom is already at maximum (20)"
@@ -697,7 +776,8 @@
           "name": "WIS +1"
         },
         "increase-charisma": {
-          "name": "Increase Charisma"
+          "name": "Increase Charisma",
+          "keywords": "ability score stat boost presence social persuasion"
         },
         "increase-charisma-offer": {
           "max_score": "Charisma is already at maximum (20)"
@@ -706,7 +786,8 @@
           "name": "CHA +1"
         },
         "proficiency-str": {
-          "name": "Proficiency - STR Save"
+          "name": "Proficiency - STR Save",
+          "keywords": "saving throw save proficiency strength"
         },
         "proficiency-str-offer": {
           "already_proficient": "Already proficient in STR saves"
@@ -715,7 +796,8 @@
           "name": "STR Save Proficiency"
         },
         "proficiency-dex": {
-          "name": "Proficiency - DEX Save"
+          "name": "Proficiency - DEX Save",
+          "keywords": "saving throw save proficiency dexterity"
         },
         "proficiency-dex-offer": {
           "already_proficient": "Already proficient in DEX saves"
@@ -724,7 +806,8 @@
           "name": "DEX Save Proficiency"
         },
         "proficiency-con": {
-          "name": "Proficiency - CON Save"
+          "name": "Proficiency - CON Save",
+          "keywords": "saving throw save proficiency constitution"
         },
         "proficiency-con-offer": {
           "already_proficient": "Already proficient in CON saves"
@@ -733,7 +816,8 @@
           "name": "CON Save Proficiency"
         },
         "proficiency-int": {
-          "name": "Proficiency - INT Save"
+          "name": "Proficiency - INT Save",
+          "keywords": "saving throw save proficiency intelligence"
         },
         "proficiency-int-offer": {
           "already_proficient": "Already proficient in INT saves"
@@ -742,7 +826,8 @@
           "name": "INT Save Proficiency"
         },
         "proficiency-wis": {
-          "name": "Proficiency - WIS Save"
+          "name": "Proficiency - WIS Save",
+          "keywords": "saving throw save proficiency wisdom"
         },
         "proficiency-wis-offer": {
           "already_proficient": "Already proficient in WIS saves"
@@ -751,7 +836,8 @@
           "name": "WIS Save Proficiency"
         },
         "proficiency-cha": {
-          "name": "Proficiency - CHA Save"
+          "name": "Proficiency - CHA Save",
+          "keywords": "saving throw save proficiency charisma"
         },
         "proficiency-cha-offer": {
           "already_proficient": "Already proficient in CHA saves"
@@ -760,7 +846,8 @@
           "name": "CHA Save Proficiency"
         },
         "proficiency-athletics": {
-          "name": "Proficiency - Athletics"
+          "name": "Proficiency - Athletics",
+          "keywords": "skill proficiency train expertise"
         },
         "athletics-proficiency-offer": {
           "already_proficient": "Already proficient in Athletics"
@@ -769,7 +856,8 @@
           "name": "Athletics Proficiency"
         },
         "proficiency-acrobatics": {
-          "name": "Proficiency - Acrobatics"
+          "name": "Proficiency - Acrobatics",
+          "keywords": "skill proficiency train expertise"
         },
         "acrobatics-proficiency-offer": {
           "already_proficient": "Already proficient in Acrobatics"
@@ -778,7 +866,8 @@
           "name": "Acrobatics Proficiency"
         },
         "proficiency-animal-handling": {
-          "name": "Proficiency - Animal Handling"
+          "name": "Proficiency - Animal Handling",
+          "keywords": "skill proficiency train expertise"
         },
         "animal-handling-proficiency-offer": {
           "already_proficient": "Already proficient in Animal Handling"
@@ -787,7 +876,8 @@
           "name": "Animal Handling Proficiency"
         },
         "proficiency-arcana": {
-          "name": "Proficiency - Arcana"
+          "name": "Proficiency - Arcana",
+          "keywords": "skill proficiency train expertise"
         },
         "arcana-proficiency-offer": {
           "already_proficient": "Already proficient in Arcana"
@@ -796,7 +886,8 @@
           "name": "Arcana Proficiency"
         },
         "proficiency-deception": {
-          "name": "Proficiency - Deception"
+          "name": "Proficiency - Deception",
+          "keywords": "skill proficiency train expertise"
         },
         "deception-proficiency-offer": {
           "already_proficient": "Already proficient in Deception"
@@ -805,7 +896,8 @@
           "name": "Deception Proficiency"
         },
         "proficiency-history": {
-          "name": "Proficiency - History"
+          "name": "Proficiency - History",
+          "keywords": "skill proficiency train expertise"
         },
         "history-proficiency-offer": {
           "already_proficient": "Already proficient in History"
@@ -814,7 +906,8 @@
           "name": "History Proficiency"
         },
         "proficiency-insight": {
-          "name": "Proficiency - Insight"
+          "name": "Proficiency - Insight",
+          "keywords": "skill proficiency train expertise"
         },
         "insight-proficiency-offer": {
           "already_proficient": "Already proficient in Insight"
@@ -823,7 +916,8 @@
           "name": "Insight Proficiency"
         },
         "proficiency-intimidation": {
-          "name": "Proficiency - Intimidation"
+          "name": "Proficiency - Intimidation",
+          "keywords": "skill proficiency train expertise"
         },
         "intimidation-proficiency-offer": {
           "already_proficient": "Already proficient in Intimidation"
@@ -832,7 +926,8 @@
           "name": "Intimidation Proficiency"
         },
         "proficiency-investigation": {
-          "name": "Proficiency - Investigation"
+          "name": "Proficiency - Investigation",
+          "keywords": "skill proficiency train expertise"
         },
         "investigation-proficiency-offer": {
           "already_proficient": "Already proficient in Investigation"
@@ -841,7 +936,8 @@
           "name": "Investigation Proficiency"
         },
         "proficiency-medicine": {
-          "name": "Proficiency - Medicine"
+          "name": "Proficiency - Medicine",
+          "keywords": "skill proficiency train expertise"
         },
         "medicine-proficiency-offer": {
           "already_proficient": "Already proficient in Medicine"
@@ -850,7 +946,8 @@
           "name": "Medicine Proficiency"
         },
         "proficiency-nature": {
-          "name": "Proficiency - Nature"
+          "name": "Proficiency - Nature",
+          "keywords": "skill proficiency train expertise"
         },
         "nature-proficiency-offer": {
           "already_proficient": "Already proficient in Nature"
@@ -859,7 +956,8 @@
           "name": "Nature Proficiency"
         },
         "proficiency-perception": {
-          "name": "Proficiency - Perception"
+          "name": "Proficiency - Perception",
+          "keywords": "skill proficiency train expertise"
         },
         "perception-proficiency-offer": {
           "already_proficient": "Already proficient in Perception"
@@ -868,7 +966,8 @@
           "name": "Perception Proficiency"
         },
         "proficiency-performance": {
-          "name": "Proficiency - Performance"
+          "name": "Proficiency - Performance",
+          "keywords": "skill proficiency train expertise"
         },
         "performance-proficiency-offer": {
           "already_proficient": "Already proficient in Performance"
@@ -877,7 +976,8 @@
           "name": "Performance Proficiency"
         },
         "proficiency-persuasion": {
-          "name": "Proficiency - Persuasion"
+          "name": "Proficiency - Persuasion",
+          "keywords": "skill proficiency train expertise"
         },
         "persuasion-proficiency-offer": {
           "already_proficient": "Already proficient in Persuasion"
@@ -886,7 +986,8 @@
           "name": "Persuasion Proficiency"
         },
         "proficiency-religion": {
-          "name": "Proficiency - Religion"
+          "name": "Proficiency - Religion",
+          "keywords": "skill proficiency train expertise"
         },
         "religion-proficiency-offer": {
           "already_proficient": "Already proficient in Religion"
@@ -895,7 +996,8 @@
           "name": "Religion Proficiency"
         },
         "proficiency-sleight-of-hand": {
-          "name": "Proficiency - Sleight of Hand"
+          "name": "Proficiency - Sleight of Hand",
+          "keywords": "skill proficiency train expertise"
         },
         "sleight-of-hand-proficiency-offer": {
           "already_proficient": "Already proficient in Sleight of Hand"
@@ -904,7 +1006,8 @@
           "name": "Sleight of Hand Proficiency"
         },
         "proficiency-stealth": {
-          "name": "Proficiency - Stealth"
+          "name": "Proficiency - Stealth",
+          "keywords": "skill proficiency train expertise"
         },
         "stealth-proficiency-offer": {
           "already_proficient": "Already proficient in Stealth"
@@ -913,7 +1016,8 @@
           "name": "Stealth Proficiency"
         },
         "proficiency-survival": {
-          "name": "Proficiency - Survival"
+          "name": "Proficiency - Survival",
+          "keywords": "skill proficiency train expertise"
         },
         "survival-proficiency-offer": {
           "already_proficient": "Already proficient in Survival"
@@ -925,10 +1029,12 @@
       "free-actions": {
         "free-action": {
           "name": "Free Action",
+          "keywords": "free misc other quick",
           "description": "A trivial free interaction (speak, drop an item)"
         },
         "help-action": {
           "name": "Help",
+          "keywords": "assist aid advantage support",
           "description": "Give an ally advantage on an attack or ability check"
         },
         "action-help-offer": {
@@ -938,6 +1044,7 @@
       "dash": {
         "dash-action": {
           "name": "Dash",
+          "keywords": "run sprint speed extra movement",
           "description": "Gain extra movement equal to your Speed"
         },
         "action-dash-offer": {
@@ -947,6 +1054,7 @@
       "simple-actions": {
         "disengage-action": {
           "name": "Disengage",
+          "keywords": "retreat avoid opportunity withdraw",
           "description": "Your move doesn't provoke opportunity attacks"
         },
         "action-disengage-offer": {
@@ -954,6 +1062,7 @@
         },
         "dodge-action": {
           "name": "Dodge",
+          "keywords": "defend evade avoid",
           "description": "Attackers have disadvantage; you gain advantage on DEX saves"
         },
         "action-dodge-offer": {
@@ -961,6 +1070,7 @@
         },
         "improvise-action": {
           "name": "Improvise",
+          "keywords": "improvise object other misc",
           "description": "Attempt something not covered by another action"
         },
         "action-improvise-offer": {
@@ -968,6 +1078,7 @@
         },
         "influence-action": {
           "name": "Influence",
+          "keywords": "persuade intimidate deceive social charm",
           "description": "Persuade, deceive, or intimidate a creature"
         },
         "action-influence-offer": {
@@ -975,6 +1086,7 @@
         },
         "search-action": {
           "name": "Search",
+          "keywords": "look find perception detect",
           "description": "Look, listen, or otherwise detect something"
         },
         "action-search-offer": {
@@ -982,6 +1094,7 @@
         },
         "study-action": {
           "name": "Study",
+          "keywords": "recall lore knowledge learn",
           "description": "Recall or research lore about a topic"
         },
         "action-study-offer": {
@@ -989,6 +1102,7 @@
         },
         "utilize-action": {
           "name": "Utilize",
+          "keywords": "object item use device",
           "description": "Use a nonmagical object"
         },
         "action-utilize-offer": {
@@ -996,6 +1110,7 @@
         },
         "interact-action": {
           "name": "Interact",
+          "keywords": "object item use grab handle",
           "description": "Interact with a second object this turn"
         },
         "action-interact-offer": {
@@ -1005,6 +1120,7 @@
       "grapple": {
         "grapple-action": {
           "name": "Grapple",
+          "keywords": "grab grab hold restrain wrestle clinch",
           "description": "Melee 5ft | STR or DEX save vs your DC | target Grappled"
         },
         "action-grapple-offer": {
@@ -1014,6 +1130,7 @@
       "shove": {
         "shove-action": {
           "name": "Shove",
+          "keywords": "push knock prone topple",
           "description": "Melee 5ft | STR or DEX save vs your DC | push 5ft or knock Prone"
         },
         "action-shove-offer": {
@@ -1023,6 +1140,7 @@
       "attacks": {
         "unarmed-strike": {
           "name": "Unarmed Strike",
+          "keywords": "punch fist kick brawl melee hit",
           "description": "Melee 5ft | 1 + STR bludgeoning | or Grapple / Shove"
         },
         "attack-unarmed-strike-offer": {
@@ -1030,6 +1148,7 @@
         },
         "greataxe": {
           "name": "Greataxe",
+          "keywords": "heavy two-handed cleave chop martial",
           "description": "1d12 slashing | Heavy, Two-Handed | Cleave"
         },
         "greataxe-cleave": {
@@ -1043,6 +1162,7 @@
         },
         "dagger": {
           "name": "Dagger",
+          "keywords": "knife blade light finesse thrown stab",
           "description": "1d4 piercing | Finesse, Light, Thrown 20/60 | Nick"
         },
         "dagger-mastery": {
@@ -1050,6 +1170,7 @@
         },
         "javelin": {
           "name": "Javelin",
+          "keywords": "thrown ranged polearm throw",
           "description": "1d6 piercing | Thrown 30/120 | Slow"
         },
         "javelin-mastery": {
@@ -1064,6 +1185,7 @@
         },
         "scimitar": {
           "name": "Scimitar",
+          "keywords": "sword curved blade light finesse slash",
           "description": "1d6 slashing | Finesse, Light | Nick"
         },
         "scimitar-mastery": {
@@ -1071,10 +1193,12 @@
         },
         "spear": {
           "name": "Spear",
+          "keywords": "polearm thrust reach thrown melee",
           "description": "1d6 piercing (1d8 two-handed) | Thrown 20/60, Versatile"
         },
         "spear-plus1": {
           "name": "Spear +1",
+          "keywords": "polearm thrust magic enchanted plus one",
           "description": "1d6 piercing (1d8 two-handed) | Thrown 20/60 | +1 attack & damage"
         },
         "activation": {
@@ -1091,10 +1215,12 @@
       },
       "hp": {
         "set-hp-modifier-max": {
-          "name": "Max HP Modifier"
+          "name": "Max HP Modifier",
+          "keywords": "hit points health maximum adjust"
         },
         "set-hp-modifier-current": {
-          "name": "HP Modifier"
+          "name": "HP Modifier",
+          "keywords": "hit points health damage heal adjust"
         },
         "effect-hp-modifier-max": {
           "name": "Max HP {{score}}"
@@ -1106,6 +1232,7 @@
       "initiative": {
         "roll-initiative": {
           "name": "Roll Initiative",
+          "keywords": "combat order start turn",
           "description": "Roll d20 + DEX to set turn order"
         }
       },
@@ -1127,6 +1254,7 @@
         "annotation": "Savage Attacker: Reroll damage dice once per turn",
         "savage-attacker-use": {
           "name": "Use Savage Attacker",
+          "keywords": "reroll damage feat",
           "description": "Once per turn: reroll a weapon's damage dice, keep either"
         },
         "offer-savage-attacker": {
@@ -1146,6 +1274,7 @@
         },
         "grant-hi": {
           "name": "Grant Heroic Inspiration",
+          "keywords": "grant luck reroll advantage",
           "description": "Give this character Heroic Inspiration"
         },
         "grant-hi-offer": {
@@ -1153,6 +1282,7 @@
         },
         "use-hi": {
           "name": "Use Heroic Inspiration",
+          "keywords": "spend luck reroll advantage",
           "description": "Spend Heroic Inspiration to reroll any die"
         },
         "use-hi-offer": {
@@ -1161,7 +1291,8 @@
       },
       "leather-armor": {
         "don-leather-armor": {
-          "name": "Don Leather Armor"
+          "name": "Don Leather Armor",
+          "keywords": "equip wear armour light protection"
         },
         "don-leather-armor-offer": {
           "already-equipped": "Leather armor is already equipped"
@@ -1172,7 +1303,8 @@
       },
       "splint-armor": {
         "don-splint-armor": {
-          "name": "Don Splint Armor"
+          "name": "Don Splint Armor",
+          "keywords": "equip wear armour heavy protection"
         },
         "don-splint-armor-offer": {
           "already-equipped": "Splint armor is already equipped"
@@ -1183,7 +1315,8 @@
       },
       "shield": {
         "don-shield": {
-          "name": "Don Shield"
+          "name": "Don Shield",
+          "keywords": "equip wear block defend protection"
         },
         "don-shield-offer": {
           "already-equipped": "Shield is already equipped",
@@ -1196,22 +1329,28 @@
       },
       "weapon-don": {
         "don-dagger": {
-          "name": "Don Dagger"
+          "name": "Don Dagger",
+          "keywords": "equip wield draw hold ready knife blade"
         },
         "don-greataxe": {
-          "name": "Don Greataxe"
+          "name": "Don Greataxe",
+          "keywords": "equip wield draw hold ready axe"
         },
         "don-javelin": {
-          "name": "Don Javelin"
+          "name": "Don Javelin",
+          "keywords": "equip wield draw hold ready thrown"
         },
         "don-scimitar": {
-          "name": "Don Scimitar"
+          "name": "Don Scimitar",
+          "keywords": "equip wield draw hold ready sword"
         },
         "don-spear": {
-          "name": "Don Spear"
+          "name": "Don Spear",
+          "keywords": "equip wield draw hold ready polearm"
         },
         "don-spear-plus1": {
-          "name": "Don Spear +1"
+          "name": "Don Spear +1",
+          "keywords": "equip wield draw hold ready polearm magic"
         },
         "dagger": {
           "already-equipped": "Dagger is already equipped",
@@ -1825,6 +1964,20 @@
       "collapse": "Hide options",
       "emptyBucket": "No options available",
       "illegalTag": "All options illegal"
+    },
+    "quickSearch": {
+      "title": "Search options",
+      "trigger": "Search options",
+      "back": "Back",
+      "dismiss": "Close search",
+      "field": "Search query",
+      "helper": "Type by name or what it does — e.g. heal, axe, fire, ranged.",
+      "noMatch": "No matches — try fewer letters.",
+      "more": "+{{count}} more · keep typing",
+      "matchCount": "{{count}} matches",
+      "backspaceKey": "Backspace",
+      "clearKey": "Clear search",
+      "clearLabel": "clear"
     },
     "planRow": {
       "orInstead": "or instead",
