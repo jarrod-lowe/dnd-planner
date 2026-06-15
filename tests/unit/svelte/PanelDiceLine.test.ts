@@ -40,11 +40,18 @@ describe('PanelDiceLine', () => {
     expect(main(container, 0)).not.toBe(trigger(container, 0));
   });
 
-  it('the options trigger has aria-haspopup and a sibling popover', () => {
+  it('the options trigger announces a menu that controls its popover', () => {
     const { container } = render(PanelDiceLine, { props: baseProps });
-    expect(trigger(container, 0)?.getAttribute('aria-haspopup')).toBe('true');
+    expect(trigger(container, 0)?.getAttribute('aria-haspopup')).toBe('menu');
     expect(trigger(container, 0)?.getAttribute('aria-controls')).toBe(popover(container, 0)?.id);
     expect(popover(container, 0)).toBeTruthy();
+  });
+
+  it('exposes the popover as a menu of menuitems', () => {
+    const { container } = render(PanelDiceLine, { props: baseProps });
+    expect(popover(container, 0)?.getAttribute('role')).toBe('menu');
+    expect(popover(container, 0)!.querySelectorAll('[role="menuitem"]').length).toBe(3);
+    expect(popover(container, 1)!.querySelectorAll('[role="menuitem"]').length).toBe(2);
   });
 
   it('exposes the d20 roll-mode options as i18n-keyed buttons', () => {
@@ -115,14 +122,16 @@ describe('PanelDiceLine', () => {
     const { container } = render(PanelDiceLine, { props: baseProps });
     const t = trigger(container, 0)!;
     expect(t.getAttribute('aria-expanded')).toBe('false');
-    await fireEvent.click(t);
+    // ArrowDown opens the menu (the keyboard path that sets state in JS; the
+    // popovertarget click path is browser-only and can't run in jsdom).
+    await fireEvent.keyDown(t, { key: 'ArrowDown' });
     expect(t.getAttribute('aria-expanded')).toBe('true');
   });
 
   it('dismisses the popover when a nested container scrolls', async () => {
     const { container } = render(PanelDiceLine, { props: baseProps });
     const t = trigger(container, 0)!;
-    await fireEvent.click(t);
+    await fireEvent.keyDown(t, { key: 'ArrowDown' });
     expect(t.getAttribute('aria-expanded')).toBe('true');
     // Scroll events don't bubble; the dice line lives inside nested overflow
     // containers, so a capture-phase listener must catch this and dismiss.

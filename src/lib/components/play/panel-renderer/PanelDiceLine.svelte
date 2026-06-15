@@ -61,6 +61,9 @@
   const popoverRefs: Record<number, PopoverElement> = $state({});
   const triggerRefs: Record<number, HTMLElement> = $state({});
   let openedByKeyboard = false;
+  // Which end of the menu to focus when a keyboard open lands (ArrowDown → first,
+  // ArrowUp → last). Set by onTriggerKeydown, consumed by the toggle handler.
+  let pendingFocusEnd: 'first' | 'last' = 'first';
 
   const chipRefs: Record<number, HTMLElement> = $state({});
 
@@ -307,9 +310,7 @@
         // Already open, or unsupported (e.g. jsdom) — state still tracks open.
       }
     }
-    if (openedByKeyboard) {
-      popover?.querySelector('button')?.focus();
-    }
+    // Focus + positioning happen in the toggle handler (fires on a real open).
   }
 
   function closeOptions(dieIndex: number): void {
@@ -360,19 +361,67 @@
     if (newState === 'closed') {
       if (openDieIndex === dieIndex) openDieIndex = -1;
     } else if (newState === 'open') {
+      openDieIndex = dieIndex;
       positionPopover(dieIndex);
+      if (openedByKeyboard) focusMenuItem(dieIndex, pendingFocusEnd);
     }
   }
 
-  function markKeyboardOpen(event: KeyboardEvent): void {
-    if (
-      event.key === 'Enter' ||
-      event.key === ' ' ||
-      event.key === 'Spacebar' ||
-      event.key === 'ArrowDown'
-    ) {
+  // Keyboard handling for the menu trigger. Enter/Space toggle natively via
+  // popovertarget (we just flag keyboard activation so the toggle handler focuses
+  // the first item). ArrowDown/ArrowUp open the menu and focus the first/last item.
+  function onTriggerKeydown(event: KeyboardEvent, dieIndex: number): void {
+    if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
       openedByKeyboard = true;
+      return;
     }
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      openedByKeyboard = true;
+      pendingFocusEnd = event.key === 'ArrowDown' ? 'first' : 'last';
+      if (openDieIndex !== dieIndex) {
+        openOptions(dieIndex);
+      } else {
+        focusMenuItem(dieIndex, pendingFocusEnd);
+      }
+    }
+  }
+
+  // ARIA menu keyboard model inside the open popover: arrows cycle, Home/End jump,
+  // Escape closes and returns focus to the trigger. Enter/Space select natively.
+  function onMenuKeydown(event: KeyboardEvent, dieIndex: number): void {
+    const popover = popoverRefs[dieIndex];
+    if (!popover) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeOptions(dieIndex);
+      triggerRefs[dieIndex]?.focus();
+      return;
+    }
+    const items = Array.from(popover.querySelectorAll('[role="menuitem"]'));
+    if (items.length === 0) return;
+    const currentIndex = items.indexOf(document.activeElement as Element);
+    let nextIndex: number;
+    if (event.key === 'ArrowDown') {
+      nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % items.length;
+    } else if (event.key === 'ArrowUp') {
+      nextIndex =
+        currentIndex < 0 ? items.length - 1 : (currentIndex - 1 + items.length) % items.length;
+    } else if (event.key === 'Home') {
+      nextIndex = 0;
+    } else if (event.key === 'End') {
+      nextIndex = items.length - 1;
+    } else {
+      return;
+    }
+    event.preventDefault();
+    (items[nextIndex] as HTMLElement).focus();
+  }
+
+  function focusMenuItem(dieIndex: number, end: 'first' | 'last'): void {
+    const items = popoverRefs[dieIndex]?.querySelectorAll('[role="menuitem"]');
+    if (!items || items.length === 0) return;
+    (items[end === 'first' ? 0 : items.length - 1] as HTMLElement).focus();
   }
 
   function markPointerOpen(): void {
@@ -484,7 +533,8 @@
               class="panel-renderer__options-trigger"
               type="button"
               data-die-index={part.dieIndex}
-              aria-haspopup="true"
+              popovertarget="{uid}-popover-{part.dieIndex}"
+              aria-haspopup="menu"
               aria-expanded={openDieIndex === part.dieIndex}
               aria-controls="{uid}-popover-{part.dieIndex}"
               aria-label={$t('play.choices.attack.optionsLabel', {
@@ -493,9 +543,8 @@
                   formatDieChip(part.die!, part.dieIndex!)
               })}
               bind:this={triggerRefs[part.dieIndex!]}
-              onkeydown={markKeyboardOpen}
               onpointerdown={markPointerOpen}
-              onclick={() => openOptions(part.dieIndex!)}
+              onkeydown={(e) => onTriggerKeydown(e, part.dieIndex!)}
             >
               <svg class="panel-renderer__chevron" aria-hidden="true" viewBox="0 0 16 16">
                 <path
@@ -513,15 +562,18 @@
               class="panel-renderer__popover"
               data-die-index={part.dieIndex}
               popover="auto"
-              role="group"
+              role="menu"
+              tabindex="-1"
               aria-label={$t('play.choices.attack.rollMode')}
               bind:this={popoverRefs[part.dieIndex!]}
               ontoggle={(e) => handlePopoverToggle(part.dieIndex!, e)}
+              onkeydown={(e) => onMenuKeydown(e, part.dieIndex!)}
             >
               {#if isDamageDie(part.die!)}
                 <button
                   type="button"
                   class="panel-renderer__popover-item"
+                  role="menuitem"
                   data-crit-mode="normal"
                   onclick={() => selectCritMode(part.dieIndex!, 'normal')}
                 >
@@ -530,6 +582,7 @@
                 <button
                   type="button"
                   class="panel-renderer__popover-item"
+                  role="menuitem"
                   data-crit-mode="critical"
                   aria-label={$t('play.choices.attack.critical')}
                   onclick={() => selectCritMode(part.dieIndex!, 'critical')}
@@ -541,6 +594,7 @@
                 <button
                   type="button"
                   class="panel-renderer__popover-item"
+                  role="menuitem"
                   data-roll-mode="advantage"
                   onclick={() => selectRollMode(part.dieIndex!, 'advantage')}
                 >
@@ -549,6 +603,7 @@
                 <button
                   type="button"
                   class="panel-renderer__popover-item"
+                  role="menuitem"
                   data-roll-mode="normal"
                   onclick={() => selectRollMode(part.dieIndex!, 'normal')}
                 >
@@ -557,6 +612,7 @@
                 <button
                   type="button"
                   class="panel-renderer__popover-item"
+                  role="menuitem"
                   data-roll-mode="disadvantage"
                   onclick={() => selectRollMode(part.dieIndex!, 'disadvantage')}
                 >
