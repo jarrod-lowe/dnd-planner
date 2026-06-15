@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import PanelDiceLine from '$lib/components/play/panel-renderer/PanelDiceLine.svelte';
 import type { DiceLineControl } from '$lib/components/play/panel-renderer/types';
 
@@ -116,5 +117,19 @@ describe('PanelDiceLine', () => {
     expect(t.getAttribute('aria-expanded')).toBe('false');
     await fireEvent.click(t);
     expect(t.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('dismisses the popover when a nested container scrolls', async () => {
+    const { container } = render(PanelDiceLine, { props: baseProps });
+    const t = trigger(container, 0)!;
+    await fireEvent.click(t);
+    expect(t.getAttribute('aria-expanded')).toBe('true');
+    // Scroll events don't bubble; the dice line lives inside nested overflow
+    // containers, so a capture-phase listener must catch this and dismiss.
+    container
+      .querySelector('.panel-renderer__dice-line')!
+      .dispatchEvent(new Event('scroll', { bubbles: false }));
+    await tick();
+    expect(t.getAttribute('aria-expanded')).toBe('false');
   });
 });

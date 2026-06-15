@@ -367,7 +367,7 @@ The architecture supports:
   - Otherworldly Slam should not be available while mounted
   - Help, Ready, Search, Hide, Utilise, ...; while not mounted
 - Shorten resources names
-- Change display of stats (str, etc)
+- Check for hard-coded english everywhere
 
 ### Low Priority
 

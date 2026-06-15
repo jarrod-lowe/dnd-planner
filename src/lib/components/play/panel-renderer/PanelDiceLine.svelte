@@ -324,6 +324,18 @@
     openDieIndex = -1;
   }
 
+  // The popover is position:fixed, so a scroll of any ancestor container
+  // (plan-stack, intent-stack, active-state strip — scroll doesn't bubble, so
+  // none of these reach a plain window listener) would leave the menu detached
+  // from its trigger. Listen on the capture phase from the window — it descends
+  // to every descendant, catching all such containers — and dismiss.
+  $effect(() => {
+    if (openDieIndex < 0) return;
+    const dismiss = (): void => closeOptions(openDieIndex);
+    window.addEventListener('scroll', dismiss, true);
+    return () => window.removeEventListener('scroll', dismiss, true);
+  });
+
   function selectRollMode(dieIndex: number, mode: RollMode): void {
     closeOptions(dieIndex);
     handleRoll(dieIndex, mode);
@@ -411,7 +423,7 @@
   });
 </script>
 
-<svelte:window onscroll={repositionIfOpen} onresize={repositionIfOpen} />
+<svelte:window onresize={repositionIfOpen} />
 
 <div class="panel-renderer__dice-line" role="group">
   {#each parts as part, i (i)}
