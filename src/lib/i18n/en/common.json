@@ -1570,6 +1570,8 @@
         "damage": "Damage",
         "roll": "Roll",
         "reroll": "Re-roll",
+        "rollMode": "Roll mode",
+        "optionsLabel": "Roll options for {{label}}",
         "nat20": "Critical hit!",
         "nat1": "Critical miss!",
         "advantage": "Advantage",

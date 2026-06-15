@@ -2,6 +2,7 @@
   import { resolveValueSource } from './resolveValueSource';
   import { rollTypeKey } from './rollType';
   import DamageTypeIcon from './DamageTypeIcon.svelte';
+  import { nextDiceLineId } from './diceLineId';
   import type { CritMode, DiceLineControl, DiceEntry, RollResult } from './types';
   import type { Facts, VarDefinition } from '$lib/rules-engine';
   import { t } from '$lib/i18n';
@@ -30,6 +31,10 @@
 
   void _onSelectionChange;
 
+  // Unique per component instance so two dice-line panels on the same page don't
+  // collide on popover/trigger ids (which would also break aria-controls).
+  const uid = nextDiceLineId();
+
   type RollMode = 'normal' | 'advantage' | 'disadvantage';
 
   interface RangeEntry {
@@ -46,10 +51,19 @@
   );
   let rollResults = $state<Record<number, RollResult>>({});
   let rollMode = $state<RollMode>('normal');
-  let showAdvPopover = $state(false);
-  let popoverDieIndex = $state(-1);
-  let longPressTimer: ReturnType<typeof setTimeout> | null = null;
-  let didLongPress = $state(false);
+  let openDieIndex = $state(-1);
+  // The Popover API methods are absent in jsdom and older browsers; typed as
+  // optional so the guarded calls below compile and no-op where unsupported.
+  type PopoverElement = HTMLElement & {
+    showPopover?: () => void;
+    hidePopover?: () => void;
+  };
+  const popoverRefs: Record<number, PopoverElement> = $state({});
+  const triggerRefs: Record<number, HTMLElement> = $state({});
+  let openedByKeyboard = false;
+  // Which end of the menu to focus when a keyboard open lands (ArrowDown → first,
+  // ArrowUp → last). Set by onTriggerKeydown, consumed by the toggle handler.
+  let pendingFocusEnd: 'first' | 'last' = 'first';
 
   const chipRefs: Record<number, HTMLElement> = $state({});
 
@@ -193,6 +207,13 @@
     return !isD20(die) && (die.purpose === 'damage' || !!formatDamageType(die));
   }
 
+  // A die earns a split-button options trigger only when it has meaningful roll
+  // modes: d20 rolls offer advantage/disadvantage, damage dice offer
+  // normal/critical. Healing and other utility dice just roll.
+  function hasOptions(die: DiceEntry): boolean {
+    return isD20(die) || isDamageDie(die);
+  }
+
   function rollMultiple(sides: number, count: number): number[] {
     const rolls: number[] = [];
     for (let i = 0; i < count; i++) {
@@ -279,53 +300,159 @@
     }
   }
 
-  const LONG_PRESS_MS = 300;
-
-  function handlePointerDown(dieIndex: number): void {
-    if (!editable) return;
-    didLongPress = false;
-    longPressTimer = setTimeout(() => {
-      longPressTimer = null;
-      didLongPress = true;
-      popoverDieIndex = dieIndex;
-      showAdvPopover = true;
-    }, LONG_PRESS_MS);
+  function openOptions(dieIndex: number): void {
+    openDieIndex = dieIndex;
+    const popover = popoverRefs[dieIndex];
+    if (popover && typeof popover.showPopover === 'function') {
+      try {
+        popover.showPopover();
+      } catch {
+        // Already open, or unsupported (e.g. jsdom) — state still tracks open.
+      }
+    }
+    // Focus + positioning happen in the toggle handler (fires on a real open).
   }
 
-  function cancelLongPress(): void {
-    if (longPressTimer !== null) {
-      clearTimeout(longPressTimer);
-      longPressTimer = null;
+  function closeOptions(dieIndex: number): void {
+    const popover = popoverRefs[dieIndex];
+    if (popover && typeof popover.hidePopover === 'function') {
+      try {
+        popover.hidePopover();
+      } catch {
+        // Unsupported — fall through to the state reset below.
+      }
+    }
+    openDieIndex = -1;
+  }
+
+  // The popover is position:fixed, so a scroll of any ancestor container
+  // (plan-stack, intent-stack, active-state strip — scroll doesn't bubble, so
+  // none of these reach a plain window listener) would leave the menu detached
+  // from its trigger. Listen on the capture phase from the window — it descends
+  // to every descendant, catching all such containers — and dismiss.
+  $effect(() => {
+    if (openDieIndex < 0) return;
+    const dismiss = (): void => closeOptions(openDieIndex);
+    window.addEventListener('scroll', dismiss, true);
+    return () => window.removeEventListener('scroll', dismiss, true);
+  });
+
+  function selectRollMode(dieIndex: number, mode: RollMode): void {
+    closeOptions(dieIndex);
+    handleRoll(dieIndex, mode);
+    triggerRefs[dieIndex]?.focus();
+  }
+
+  function selectCritMode(dieIndex: number, mode: CritMode): void {
+    closeOptions(dieIndex);
+    handleRoll(dieIndex, undefined, mode);
+    triggerRefs[dieIndex]?.focus();
+  }
+
+  interface PopoverToggleEvent {
+    newState: 'open' | 'closed';
+  }
+
+  // `toggle` fires for native open AND close (light-dismiss / Esc), so keep
+  // `openDieIndex` in sync with the browser here rather than managing every
+  // close path ourselves.
+  function handlePopoverToggle(dieIndex: number, event: Event): void {
+    const newState = (event as unknown as PopoverToggleEvent).newState;
+    if (newState === 'closed') {
+      if (openDieIndex === dieIndex) openDieIndex = -1;
+    } else if (newState === 'open') {
+      openDieIndex = dieIndex;
+      positionPopover(dieIndex);
+      if (openedByKeyboard) focusMenuItem(dieIndex, pendingFocusEnd);
     }
   }
 
-  function handleChipClick(dieIndex: number): void {
-    cancelLongPress();
-    if (didLongPress) {
-      didLongPress = false;
+  // Keyboard handling for the menu trigger. Enter/Space toggle natively via
+  // popovertarget (we just flag keyboard activation so the toggle handler focuses
+  // the first item). ArrowDown/ArrowUp open the menu and focus the first/last item.
+  function onTriggerKeydown(event: KeyboardEvent, dieIndex: number): void {
+    if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
+      openedByKeyboard = true;
       return;
     }
-    handleRoll(dieIndex);
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      openedByKeyboard = true;
+      pendingFocusEnd = event.key === 'ArrowDown' ? 'first' : 'last';
+      if (openDieIndex !== dieIndex) {
+        openOptions(dieIndex);
+      } else {
+        focusMenuItem(dieIndex, pendingFocusEnd);
+      }
+    }
   }
 
-  function handlePopoverSelect(mode: RollMode): void {
-    const di = popoverDieIndex;
-    showAdvPopover = false;
-    popoverDieIndex = -1;
-    rollMode = mode;
-    handleRoll(di, mode);
+  // ARIA menu keyboard model inside the open popover: arrows cycle, Home/End jump,
+  // Escape closes and returns focus to the trigger. Enter/Space select natively.
+  function onMenuKeydown(event: KeyboardEvent, dieIndex: number): void {
+    const popover = popoverRefs[dieIndex];
+    if (!popover) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeOptions(dieIndex);
+      triggerRefs[dieIndex]?.focus();
+      return;
+    }
+    const items = Array.from(popover.querySelectorAll('[role="menuitem"]'));
+    if (items.length === 0) return;
+    const currentIndex = items.indexOf(document.activeElement as Element);
+    let nextIndex: number;
+    if (event.key === 'ArrowDown') {
+      nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % items.length;
+    } else if (event.key === 'ArrowUp') {
+      nextIndex =
+        currentIndex < 0 ? items.length - 1 : (currentIndex - 1 + items.length) % items.length;
+    } else if (event.key === 'Home') {
+      nextIndex = 0;
+    } else if (event.key === 'End') {
+      nextIndex = items.length - 1;
+    } else {
+      return;
+    }
+    event.preventDefault();
+    (items[nextIndex] as HTMLElement).focus();
   }
 
-  function handleCritSelect(mode: CritMode): void {
-    const di = popoverDieIndex;
-    showAdvPopover = false;
-    popoverDieIndex = -1;
-    handleRoll(di, undefined, mode);
+  function focusMenuItem(dieIndex: number, end: 'first' | 'last'): void {
+    const items = popoverRefs[dieIndex]?.querySelectorAll('[role="menuitem"]');
+    if (!items || items.length === 0) return;
+    (items[end === 'first' ? 0 : items.length - 1] as HTMLElement).focus();
   }
 
-  function handlePopoverDismiss(): void {
-    showAdvPopover = false;
-    popoverDieIndex = -1;
+  function markPointerOpen(): void {
+    openedByKeyboard = false;
+  }
+
+  function repositionIfOpen(): void {
+    if (openDieIndex >= 0) positionPopover(openDieIndex);
+  }
+
+  // Native popovers render in the top layer with no inherent anchor; clamp the
+  // menu below (or above) its trigger within the viewport. A no-op in jsdom,
+  // where getBoundingClientRect is all zeros.
+  function positionPopover(dieIndex: number): void {
+    const trigger = triggerRefs[dieIndex];
+    const popover = popoverRefs[dieIndex];
+    if (!trigger || !popover) return;
+    const triggerRect = trigger.getBoundingClientRect();
+    if (triggerRect.width === 0 && triggerRect.height === 0) return;
+    const gap = 4;
+    const padding = 6;
+    const width = popover.offsetWidth;
+    const height = popover.offsetHeight;
+    let left = triggerRect.right - width;
+    left = Math.max(padding, Math.min(left, window.innerWidth - width - padding));
+    let top = triggerRect.bottom + gap;
+    if (top + height > window.innerHeight - padding) {
+      top = triggerRect.top - height - gap;
+    }
+    popover.style.left = `${Math.max(padding, left)}px`;
+    popover.style.top = `${Math.max(padding, top)}px`;
   }
 
   const parts = $derived.by<
@@ -344,6 +471,8 @@
     return result;
   });
 </script>
+
+<svelte:window onresize={repositionIfOpen} />
 
 <div class="panel-renderer__dice-line" role="group">
   {#each parts as part, i (i)}
@@ -368,6 +497,7 @@
       {/if}
     {:else}
       {@const dieIsD20 = isD20(part.die!)}
+      {@const dieHasOptions = hasOptions(part.die!)}
       {#if defaultRollMode !== 'normal' && dieIsD20}
         <span class="panel-renderer__disadv-indicator" aria-label="Disadvantage">▼</span>
       {/if}
@@ -375,7 +505,123 @@
         {#if part.die!.label}
           <span class="panel-renderer__die-label">{$t(part.die!.label)}</span>
         {/if}
-        {#if editable}
+        {#if editable && dieHasOptions}
+          <div class="panel-renderer__chip-split">
+            <button
+              class="panel-renderer__die-chip panel-renderer__die-chip--main"
+              aria-label={dieAriaLabel(part.die!, part.dieIndex!)}
+              class:panel-renderer__die-chip--crit={rollResults[part.dieIndex!]?.natural === 20}
+              class:panel-renderer__die-chip--fumble={rollResults[part.dieIndex!]?.natural === 1}
+              class:panel-renderer__die-chip--adv={rollResults[part.dieIndex!]?.mode ===
+                'advantage'}
+              class:panel-renderer__die-chip--disadv={rollResults[part.dieIndex!]?.mode ===
+                'disadvantage'}
+              class:panel-renderer__die-chip--crit-damage={rollResults[part.dieIndex!]?.critical}
+              type="button"
+              data-die-index={part.dieIndex}
+              bind:this={chipRefs[part.dieIndex!]}
+              onclick={() => handleRoll(part.dieIndex!)}
+            >
+              {formatDieChip(part.die!, part.dieIndex!)}{#if rollResults[part.dieIndex!]?.critical}
+                <span class="panel-renderer__crit-badge" aria-hidden="true">
+                  {$t('play.choices.attack.criticalSymbol')}
+                </span>
+              {/if}
+            </button>
+            <button
+              id="{uid}-trigger-{part.dieIndex}"
+              class="panel-renderer__options-trigger"
+              type="button"
+              data-die-index={part.dieIndex}
+              popovertarget="{uid}-popover-{part.dieIndex}"
+              aria-haspopup="menu"
+              aria-expanded={openDieIndex === part.dieIndex}
+              aria-controls="{uid}-popover-{part.dieIndex}"
+              aria-label={$t('play.choices.attack.optionsLabel', {
+                label:
+                  dieAriaLabel(part.die!, part.dieIndex!) ??
+                  formatDieChip(part.die!, part.dieIndex!)
+              })}
+              bind:this={triggerRefs[part.dieIndex!]}
+              onpointerdown={markPointerOpen}
+              onkeydown={(e) => onTriggerKeydown(e, part.dieIndex!)}
+            >
+              <svg class="panel-renderer__chevron" aria-hidden="true" viewBox="0 0 16 16">
+                <path
+                  d="M4 6l4 4 4-4"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
+            <div
+              id="{uid}-popover-{part.dieIndex}"
+              class="panel-renderer__popover"
+              data-die-index={part.dieIndex}
+              popover="auto"
+              role="menu"
+              tabindex="-1"
+              aria-label={$t('play.choices.attack.rollMode')}
+              bind:this={popoverRefs[part.dieIndex!]}
+              ontoggle={(e) => handlePopoverToggle(part.dieIndex!, e)}
+              onkeydown={(e) => onMenuKeydown(e, part.dieIndex!)}
+            >
+              {#if isDamageDie(part.die!)}
+                <button
+                  type="button"
+                  class="panel-renderer__popover-item"
+                  role="menuitem"
+                  data-crit-mode="normal"
+                  onclick={() => selectCritMode(part.dieIndex!, 'normal')}
+                >
+                  {$t('play.choices.attack.normal')}
+                </button>
+                <button
+                  type="button"
+                  class="panel-renderer__popover-item"
+                  role="menuitem"
+                  data-crit-mode="critical"
+                  aria-label={$t('play.choices.attack.critical')}
+                  onclick={() => selectCritMode(part.dieIndex!, 'critical')}
+                >
+                  {$t('play.choices.attack.criticalSymbol')}
+                  {$t('play.choices.attack.critical')}
+                </button>
+              {:else}
+                <button
+                  type="button"
+                  class="panel-renderer__popover-item"
+                  role="menuitem"
+                  data-roll-mode="advantage"
+                  onclick={() => selectRollMode(part.dieIndex!, 'advantage')}
+                >
+                  {$t('play.choices.attack.advantage')}
+                </button>
+                <button
+                  type="button"
+                  class="panel-renderer__popover-item"
+                  role="menuitem"
+                  data-roll-mode="normal"
+                  onclick={() => selectRollMode(part.dieIndex!, 'normal')}
+                >
+                  {$t('play.choices.attack.normal')}
+                </button>
+                <button
+                  type="button"
+                  class="panel-renderer__popover-item"
+                  role="menuitem"
+                  data-roll-mode="disadvantage"
+                  onclick={() => selectRollMode(part.dieIndex!, 'disadvantage')}
+                >
+                  {$t('play.choices.attack.disadvantage')}
+                </button>
+              {/if}
+            </div>
+          </div>
+        {:else if editable}
           <button
             class="panel-renderer__die-chip"
             aria-label={dieAriaLabel(part.die!, part.dieIndex!)}
@@ -388,10 +634,7 @@
             type="button"
             data-die-index={part.dieIndex}
             bind:this={chipRefs[part.dieIndex!]}
-            onpointerdown={() => handlePointerDown(part.dieIndex!)}
-            onpointerup={cancelLongPress}
-            onpointerleave={cancelLongPress}
-            onclick={() => handleChipClick(part.dieIndex!)}
+            onclick={() => handleRoll(part.dieIndex!)}
           >
             {formatDieChip(part.die!, part.dieIndex!)}{#if rollResults[part.dieIndex!]?.critical}
               <span class="panel-renderer__crit-badge" aria-hidden="true">
@@ -401,61 +644,6 @@
           </button>
         {:else}
           <span class="panel-renderer__die-chip">{formatDieChip(part.die!, part.dieIndex!)}</span>
-        {/if}
-        {#if showAdvPopover && popoverDieIndex === part.dieIndex}
-          <div class="panel-renderer__popover" role="menu" aria-label="Roll mode">
-            {#if isDamageDie(part.die!)}
-              <button
-                type="button"
-                class="panel-renderer__popover-item"
-                role="menuitem"
-                onclick={() => handleCritSelect('normal')}
-              >
-                {$t('play.choices.attack.normal')}
-              </button>
-              <button
-                type="button"
-                class="panel-renderer__popover-item"
-                role="menuitem"
-                aria-label={$t('play.choices.attack.critical')}
-                onclick={() => handleCritSelect('critical')}
-              >
-                {$t('play.choices.attack.criticalSymbol')}
-                {$t('play.choices.attack.critical')}
-              </button>
-            {:else}
-              <button
-                type="button"
-                class="panel-renderer__popover-item"
-                role="menuitem"
-                onclick={() => handlePopoverSelect('advantage')}
-              >
-                ▲ Advantage
-              </button>
-              <button
-                type="button"
-                class="panel-renderer__popover-item"
-                role="menuitem"
-                onclick={() => handlePopoverSelect('normal')}
-              >
-                — Normal
-              </button>
-              <button
-                type="button"
-                class="panel-renderer__popover-item"
-                role="menuitem"
-                onclick={() => handlePopoverSelect('disadvantage')}
-              >
-                ▼ Disadvantage
-              </button>
-            {/if}
-          </div>
-          <button
-            type="button"
-            class="panel-renderer__popover-backdrop"
-            onclick={handlePopoverDismiss}
-            aria-label="Close"
-          ></button>
         {/if}
       </div>
       {#if !dieIsD20 && formatDamageType(part.die!)}
@@ -570,30 +758,87 @@
     margin-left: var(--spacing-xs);
   }
 
-  .panel-renderer__popover-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 9;
-    background: transparent;
-    border: none;
-    padding: 0;
-    cursor: default;
+  .panel-renderer__chip-split {
+    display: inline-flex;
+    align-items: stretch;
+    isolation: isolate;
   }
 
+  .panel-renderer__die-chip--main {
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  }
+
+  /* The right half of a split chip: a distinct element (not a .die-chip) so
+     tests and code that expect one die-chip per die keep working. Shares the
+     chip's surface styling but is narrower and rounds only its right corners. */
+  .panel-renderer__options-trigger {
+    font-family: var(--font-body);
+    font-size: var(--font-size-md);
+    color: var(--md-sys-color-on-surface);
+    background: var(--md-sys-color-surface-container);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    margin-inline-start: -1px;
+    padding: var(--spacing-xs);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .panel-renderer__options-trigger:hover {
+    background: var(--md-sys-color-surface-container-highest);
+  }
+
+  .panel-renderer__chevron {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+
+  /* The trigger sits immediately beside the main chip, so match roll-state
+     styling via an adjacent-sibling selector — the chevron fills with the
+     crit/fumble colour instead of looking detached. The main chip styles itself
+     via the .die-chip--* rules above. */
+  .panel-renderer__die-chip--crit + .panel-renderer__options-trigger {
+    color: var(--md-sys-color-on-primary);
+    background: var(--md-sys-color-primary);
+    border-color: var(--md-sys-color-primary);
+  }
+
+  .panel-renderer__die-chip--fumble + .panel-renderer__options-trigger {
+    color: var(--md-sys-color-on-error);
+    background: var(--md-sys-color-error);
+    border-color: var(--md-sys-color-error);
+  }
+
+  .panel-renderer__die-chip--crit-damage + .panel-renderer__options-trigger {
+    border-color: var(--md-sys-color-tertiary);
+  }
+
+  /* Native popover. Only apply `display` under :popover-open — setting it on the
+     base rule would override the UA's display:none for a closed popover and leave
+     the menu permanently visible. The ::backdrop stays transparent for
+     light-dismiss. */
   .panel-renderer__popover {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    z-index: 10;
-    display: flex;
+    position: fixed;
+    inset: auto;
+    margin: 0;
     flex-direction: column;
     gap: 1px;
-    margin-top: var(--spacing-xs);
     background: var(--md-sys-color-surface-container-high);
     border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: var(--radius-sm);
     box-shadow: var(--shadow-sm);
     overflow: hidden;
+  }
+
+  .panel-renderer__popover:popover-open {
+    display: flex;
+  }
+
+  .panel-renderer__popover::backdrop {
+    background: transparent;
   }
 
   .panel-renderer__popover-item {
