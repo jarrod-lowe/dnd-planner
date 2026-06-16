@@ -17,7 +17,9 @@ vi.mock('sveltekit-i18n', () => {
   // Minimal set of translation templates used by unit tests
   const translations: Record<string, string> = {
     'play.information.saveDc': '{{saveType}} Save DC {{dc}}',
-    'play.information.aidBonus': '+{{hp}} HP'
+    'play.information.aidBonus': '+{{hp}} HP',
+    'play.quickSearch.matchCount': '{{count}} matches',
+    'play.quickSearch.more': '+{{count}} more · keep typing'
   };
 
   return {

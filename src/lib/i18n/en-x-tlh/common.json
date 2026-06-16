@@ -3,6 +3,7 @@
     "spell-command": {
       "offer-command": {
         "name": "ra'",
+        "keywords": "compel order force control enchantment",
         "description": "60ft | WIS ra' | wa' mu' ra' lob",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
@@ -10,11 +11,13 @@
       },
       "prepare-command-offer": {
         "name": "ra' mugh chenmoH",
+        "keywords": "compel order force control enchantment",
         "max_prepared": "mugh DIvI' nIb",
         "already_prepared": "ra' already prepared"
       },
       "unprepare-command-offer": {
         "name": "ra' mugh lISmoH",
+        "keywords": "compel order force control enchantment",
         "not_prepared": "ra' not prepared"
       },
       "effect-command-prepared": {
@@ -27,6 +30,7 @@
     "spell-sanctuary": {
       "offer-sanctuary": {
         "name": "chal",
+        "keywords": "protect ward shield abjuration safe",
         "description": "30ft | WIS ra' | jagh HIvlaHbe' | 10 rep",
         "no_bonus_action": "Quv DIvI' tu'lu'be'",
         "no_slots": "mugh laH tu'lu'be'",
@@ -37,11 +41,13 @@
       },
       "prepare-sanctuary-offer": {
         "name": "chal mugh chenmoH",
+        "keywords": "protect ward shield abjuration safe",
         "max_prepared": "mugh DIvI' nIb",
         "already_prepared": "chal already prepared"
       },
       "unprepare-sanctuary-offer": {
         "name": "chal mugh lISmoH",
+        "keywords": "protect ward shield abjuration safe",
         "not_prepared": "chal not prepared"
       },
       "effect-sanctuary-prepared": {
@@ -54,6 +60,7 @@
     "spell-find-steed": {
       "offer-find-steed": {
         "name": "Sargh Sam",
+        "keywords": "summon mount horse companion conjure",
         "description": "Sargh DIch yISam",
         "no_action": "DIvI' tu'lu'be'",
         "no_slots": "mugh laH tu'lu'be'",
@@ -71,76 +78,90 @@
       },
       "steed-slam": {
         "name": "Sargh Qob",
+        "keywords": "attack hooves melee bludgeon",
         "description": "HIv | 5 'uj | 1d8 + DIv level {{damageType}} DIch",
         "no_actions": "Sargh DIv DIch",
         "no_reaction": "DIch tu'lu'be'"
       },
       "steed-move-walk": {
         "name": "YIt",
+        "keywords": "movement move step",
         "description": "Sargh YIt, Do' 'aD",
         "out_of_movement": "Do tu'lu'be'"
       },
       "steed-move-rough-terrain": {
         "name": "DeQ DIch",
+        "keywords": "movement move difficult",
         "description": "Sargh DeQ DIch — Hoch qam cha'",
         "out_of_movement": "Do tu'lu'be'"
       },
       "steed-move-fly": {
         "name": "Peng",
+        "keywords": "movement move flight air",
         "description": "Sargh peng, peng Do' lo'",
         "cannot_fly": "Sargh peng DIch",
         "out_of_movement": "Do tu'lu'be'"
       },
       "steed-dash": {
         "name": "Do naQ",
+        "keywords": "run sprint movement",
         "description": "Sargh Do' chel, Do' 'aD rur",
         "no_actions": "Sargh DIv DIch"
       },
       "steed-dodge": {
         "name": "Dol",
+        "keywords": "defend evade avoid",
         "description": "Sargh HIv DIvI' DIvI'; Sargh DEX ra' DIvI' DIvI'",
         "no_actions": "Sargh DIv DIch"
       },
       "steed-disengage": {
         "name": "Chegh",
+        "keywords": "retreat avoid opportunity",
         "description": "Sargh leng HIv chaw'be'",
         "no_actions": "Sargh DIv DIch"
       },
       "steed-healing-touch": {
         "name": "Qop Du",
+        "keywords": "heal restore hit points cure",
         "description": "Sargh DIv vagh 'uy' 2d8 + mugh level HP",
         "no_bonus_action": "Sargh DIv latlh tu'lu'be'",
         "no_uses": "Qop Du lo'pu' DIch"
       },
       "steed-fey-step": {
         "name": "DIv Dol",
+        "keywords": "teleport blink move short",
         "description": "Sargh DIv wa' 60 'uy' DIv",
         "no_bonus_action": "Sargh DIv latlh tu'lu'be'",
         "no_uses": "DIv Dol lo'pu' DIch"
       },
       "steed-fell-glare": {
         "name": "So' Qoy",
+        "keywords": "frighten fear gaze control",
         "description": "Sargh So' Qoy wa' 60 'uy' WIS DIv; Qoy DIch So' DIch",
         "no_bonus_action": "Sargh DIv latlh tu'lu'be'",
         "no_uses": "So' Qoy lo'pu' DIch"
       },
       "steed-record-damage": {
         "name": "DIv DIch",
+        "keywords": "hit points health damage",
         "effect": {
           "name": "Sargh DIv"
         }
       },
       "steed-record-heal": {
         "name": "DIv DIch",
+        "keywords": "hit points health heal restore",
         "effect": {
           "name": "Sargh MoH"
         }
       },
       "steed-set-hp-modifier-max": {
-        "name": "nIv DIch nIv DIch"
+        "name": "nIv DIch nIv DIch",
+        "keywords": "hit points health maximum adjust"
       },
       "steed-set-hp-modifier-current": {
-        "name": "nIv DIch DaH"
+        "name": "nIv DIch DaH",
+        "keywords": "hit points health adjust"
       },
       "steed-effect-hp-modifier-max": {
         "name": "nIv DIch nIv DIch"
@@ -149,21 +170,25 @@
         "name": "nIv DIch DaH"
       },
       "steed-note": {
-        "name": "QIn"
+        "name": "QIn",
+        "keywords": "note record text"
       },
       "offer-dismiss-steed": {
-        "name": "Sargh mup"
+        "name": "Sargh mup",
+        "keywords": "dismiss mount companion send away"
       },
       "annotate-life-bond": {
         "text": "yIn DIch: Sargh DIvI' DIch (vagh 'uy' DIch, mugh level 1+) [manual]"
       },
       "prepare-find-steed-offer": {
         "name": "Sargh Sam mugh chenmoH",
+        "keywords": "summon mount horse companion conjure",
         "max_prepared": "mugh DIvI' nIb",
         "already_prepared": "Sargh Sam already prepared"
       },
       "unprepare-find-steed-offer": {
         "name": "Sargh Sam mugh lISmoH",
+        "keywords": "summon mount horse companion conjure",
         "not_prepared": "Sargh Sam not prepared",
         "always_prepared": "Sargh Sam reH mugh"
       },
@@ -180,6 +205,7 @@
     "spell-sleep": {
       "offer-sleep": {
         "name": "Qong",
+        "keywords": "knock unconscious incapacitate control enchantment",
         "description": "60ft | WIS ra' pagh roj; cha'logh luj: Qong | 10 rep",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
@@ -197,17 +223,20 @@
       },
       "prepare-sleep-offer": {
         "name": "Prepare Qong",
+        "keywords": "knock unconscious incapacitate control enchantment",
         "max_prepared": "mugh DIvI' nIb",
         "already_prepared": "Qong already prepared"
       },
       "unprepare-sleep-offer": {
         "name": "Unprepare Qong",
+        "keywords": "knock unconscious incapacitate control enchantment",
         "not_prepared": "Qong not prepared"
       }
     },
     "spell-calm-emotions": {
       "offer-calm-emotions": {
         "name": "tam tIq",
+        "keywords": "charm fear pacify soothe control enchantment",
         "description": "60ft | CHA ra' pagh charmed/frightened Qaw', pagh tam | 10 rep",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
@@ -225,11 +254,13 @@
       },
       "prepare-calm-emotions-offer": {
         "name": "Prepare tam tIq",
+        "keywords": "charm fear pacify soothe control enchantment",
         "max_prepared": "mugh DIvI' nIb",
         "already_prepared": "tam tIq already prepared"
       },
       "unprepare-calm-emotions-offer": {
         "name": "Unprepare tam tIq",
+        "keywords": "charm fear pacify soothe control enchantment",
         "not_prepared": "tam tIq not prepared",
         "always_prepared": "tam tIq always prepared"
       }
@@ -237,6 +268,7 @@
     "spell-hold-person": {
       "offer-hold-person": {
         "name": "nuv mevmoH",
+        "keywords": "paralyse paralyze stun freeze control humanoid",
         "description": "60ft | WIS ra' pagh Qam Qaw', repeat DIch | 10 rep",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
@@ -254,11 +286,13 @@
       },
       "prepare-hold-person-offer": {
         "name": "Prepare nuv mevmoH",
+        "keywords": "paralyse paralyze stun freeze control humanoid",
         "max_prepared": "mugh DIvI' nIb",
         "already_prepared": "nuv mevmoH already prepared"
       },
       "unprepare-hold-person-offer": {
         "name": "Unprepare nuv mevmoH",
+        "keywords": "paralyse paralyze stun freeze control humanoid",
         "not_prepared": "nuv mevmoH not prepared",
         "always_prepared": "nuv mevmoH always prepared"
       }
@@ -266,6 +300,7 @@
     "spell-aid": {
       "offer-aid": {
         "name": "QaH",
+        "keywords": "heal hit points boost maximum buff support",
         "description": "30ft | +5 HP per slot level 3 creatures | 8 rep",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
@@ -273,11 +308,13 @@
       },
       "prepare-aid-offer": {
         "name": "Prepare QaH",
+        "keywords": "heal hit points boost maximum buff support",
         "max_prepared": "mugh DIvI' nIb",
         "already_prepared": "QaH already prepared"
       },
       "unprepare-aid-offer": {
         "name": "Unprepare QaH",
+        "keywords": "heal hit points boost maximum buff support",
         "not_prepared": "QaH not prepared",
         "always_prepared": "QaH always prepared"
       },
@@ -292,6 +329,7 @@
       "annotation": "raQ muHta chen",
       "offer-thunderous-smite": {
         "name": "raQ muHta",
+        "keywords": "smite thunder damage push knock",
         "description": "nuH DIch tlhej | +2d6 thunder | STR ra' pagh puv 10ft 'ej DoH",
         "no_bonus_action": "Quv DIvI' tu'lu'be'",
         "no_attack": "DIch nuH DIvI' tu'lu'be'",
@@ -300,11 +338,13 @@
       },
       "prepare-thunderous-smite-offer": {
         "name": "raQ muHta mugh chenmoH",
+        "keywords": "smite thunder damage push knock",
         "max_prepared": "mugh DIvI' nIb",
         "already_prepared": "raQ muHta already prepared"
       },
       "unprepare-thunderous-smite-offer": {
         "name": "raQ muHta mugh lISmoH",
+        "keywords": "smite thunder damage push knock",
         "not_prepared": "raQ muHta not prepared"
       },
       "effect-thunderous-smite-prepared": {
@@ -318,6 +358,7 @@
       "annotation": "quv Qaw' chen",
       "offer-divine-smite": {
         "name": "quv Qaw'",
+        "keywords": "smite radiant damage burst nova",
         "description": "nuH DIch tlhej | +2d8 radiant (+1d8 DIvI' Hoch)",
         "fiendUndeadLabel": "mIgh Do' Ha'DIbaH",
         "no_bonus_action": "Quv DIvI' tu'lu'be'",
@@ -333,11 +374,13 @@
       },
       "prepare-divine-smite-offer": {
         "name": "quv Qaw' mugh chenmoH",
+        "keywords": "smite radiant damage burst nova",
         "max_prepared": "mugh DIvI' nIb",
         "already_prepared": "quv Qaw' already prepared"
       },
       "unprepare-divine-smite-offer": {
         "name": "quv Qaw' mugh lISmoH",
+        "keywords": "smite radiant damage burst nova",
         "not_prepared": "quv Qaw' not prepared",
         "always_prepared": "quv Qaw' reH mugh, lISlaH'be'"
       },
@@ -354,6 +397,7 @@
     "spell-protection-from-evil-and-good": {
       "offer-protection-from-evil-and-good": {
         "name": "mIgh Do' Ha'DIbaH je",
+        "keywords": "ward defend shield abjuration protect",
         "description": "Hot | 10 tup | mIgh Do' Ha'DIbaH je DIvI'",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
@@ -365,11 +409,13 @@
       },
       "prepare-protection-from-evil-and-good-offer": {
         "name": "mIgh Do' Ha'DIbaH je mugh chenmoH",
+        "keywords": "ward defend shield abjuration protect",
         "max_prepared": "mugh DIvI' nIb",
         "already_prepared": "mIgh Do' Ha'DIbaH je already prepared"
       },
       "unprepare-protection-from-evil-and-good-offer": {
         "name": "mIgh Do' Ha'DIbaH je mugh lISmoH",
+        "keywords": "ward defend shield abjuration protect",
         "not_prepared": "mIgh Do' Ha'DIbaH je not prepared"
       },
       "effect-protection-from-evil-and-good-prepared": {
@@ -382,6 +428,7 @@
     "spell-bless": {
       "offer-bless": {
         "name": "DIch",
+        "keywords": "buff bonus attack save support d4",
         "description": "30ft | 10 rep | DIvI' +1d4 DIvI' DIvI'",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
@@ -393,11 +440,13 @@
       },
       "prepare-bless-offer": {
         "name": "DIch mugh chenmoH",
+        "keywords": "buff bonus attack save support d4",
         "max_prepared": "mugh DIvI' nIb",
         "already_prepared": "DIch already prepared"
       },
       "unprepare-bless-offer": {
         "name": "DIch mugh lISmoH",
+        "keywords": "buff bonus attack save support d4",
         "not_prepared": "DIch not prepared"
       },
       "effect-bless-prepared": {
@@ -410,6 +459,7 @@
     "spell-prayer-of-healing": {
       "offer-prayer-of-healing": {
         "name": "Qor' nIvbogh",
+        "keywords": "heal restore hit points group rest",
         "description": "30ft | vagh jupmey regain 2d8 HP (+1d8 nIvbogh)",
         "healLabel": "vor",
         "no_action": "DIvI' tu'lu'be'",
@@ -418,11 +468,13 @@
       },
       "prepare-prayer-of-healing-offer": {
         "name": "Qor' nIvbogh mugh chenmoH",
+        "keywords": "heal restore hit points group rest",
         "max_prepared": "mugh DIvI' nIb",
         "already_prepared": "Qor' nIvbogh already prepared"
       },
       "unprepare-prayer-of-healing-offer": {
         "name": "Qor' nIvbogh mugh lISmoH",
+        "keywords": "heal restore hit points group rest",
         "not_prepared": "Qor' nIvbogh not prepared"
       },
       "effect-prayer-of-healing-prepared": {
@@ -435,6 +487,7 @@
     "spell-divine-favour": {
       "offer-divine-favour": {
         "name": "quv",
+        "keywords": "smite radiant damage weapon buff favor",
         "description": "10 rep | nuH +1d4 radiant",
         "already_active": "quv DIvI'",
         "no_bonus_action": "DIvI' tu'lu'be'",
@@ -447,6 +500,7 @@
       "annotation": "quv DIvI'",
       "use-divine-favour": {
         "name": "quv lo'",
+        "keywords": "smite radiant damage weapon buff favor",
         "description": "quv +1d4 radiant nuH DIch chel"
       },
       "offer-use-divine-favour": {
@@ -455,11 +509,13 @@
       },
       "prepare-divine-favour-offer": {
         "name": "quv mugh chenmoH",
+        "keywords": "smite radiant damage weapon buff favor",
         "max_prepared": "mugh DIvI' nIb",
         "already_prepared": "quv already prepared"
       },
       "unprepare-divine-favour-offer": {
         "name": "quv mugh lISmoH",
+        "keywords": "smite radiant damage weapon buff favor",
         "not_prepared": "quv not prepared"
       },
       "effect-divine-favour-prepared": {
@@ -472,6 +528,7 @@
     "spell-create-and-destroy-water": {
       "cast-create-and-destroy-water": {
         "name": "bIQ chenmoH 'ej HochHom",
+        "keywords": "water create destroy utility",
         "description": "10 gal bIQ chenmoH pagh Qaw'"
       },
       "offer-create-and-destroy-water": {
@@ -481,11 +538,13 @@
       },
       "prepare-create-and-destroy-water-offer": {
         "name": "bIQ chenmoH 'ej HochHom mugh chenmoH",
+        "keywords": "water create destroy utility",
         "max_prepared": "mugh DIvI' nIb",
         "already_prepared": "bIQ chenmoH 'ej HochHom already prepared"
       },
       "unprepare-create-and-destroy-water-offer": {
         "name": "bIQ chenmoH 'ej HochHom mugh lISmoH",
+        "keywords": "water create destroy utility",
         "not_prepared": "bIQ chenmoH 'ej HochHom not prepared"
       },
       "effect-create-and-destroy-water-prepared": {
@@ -498,6 +557,7 @@
     "class-paladin-lay-on-hands": {
       "loh-heal": {
         "name": "DIch (ghop Du)",
+        "keywords": "heal restore hit points touch cure",
         "description": "Hot | yoH HP chenmoH"
       },
       "offer-loh-heal": {
@@ -506,6 +566,7 @@
       },
       "loh-purify-poison": {
         "name": "DIvI' ghop Du",
+        "keywords": "cure poison disease cleanse",
         "description": "Hot | 5 DIvI' | tar Qaw'"
       },
       "offer-loh-purify-poison": {
@@ -516,6 +577,7 @@
     "class-paladin-divinity": {
       "divine-sense": {
         "name": "quv DIch",
+        "keywords": "detect sense undead fiend celestial",
         "description": "60ft | 10min | Detect Celestials, Fiends, Undead"
       },
       "offer-divine-sense": {
@@ -532,6 +594,7 @@
     "class-paladin-oath-redemption-level3": {
       "rebuke-the-violent": {
         "name": "qIpDIch",
+        "keywords": "reaction retaliate radiant damage",
         "description": "30ft | wIS DIvI' — DIch: DIch qIp, DIch: puS qIp"
       },
       "offer-rebuke-the-violent": {
@@ -543,6 +606,7 @@
       },
       "emissary-of-peace": {
         "name": "rojDuy",
+        "keywords": "buff persuasion charisma",
         "description": "10min | +5 rarchuq"
       },
       "offer-emissary-of-peace": {
@@ -567,10 +631,12 @@
       "movement": {
         "move-walk": {
           "name": "Do",
+          "keywords": "movement move step",
           "description": "Do' 'aD Do"
         },
         "move-rough-terrain": {
           "name": "Do (qIb)",
+          "keywords": "movement move difficult slow",
           "description": "qIb DIch — Hoch qam cha'"
         },
         "action-move-walk-offer": {
@@ -581,6 +647,7 @@
         },
         "move-swim": {
           "name": "Do (bIQ)",
+          "keywords": "movement move water",
           "description": "bIQ — Hoch qam cha', bIQ Do' Hutlh"
         },
         "action-move-swim-offer": {
@@ -589,6 +656,7 @@
         },
         "move-fly": {
           "name": "Do (peng)",
+          "keywords": "movement move flight air",
           "description": "peng Do' lo'"
         },
         "action-move-fly-offer": {
@@ -598,7 +666,8 @@
       },
       "ability-scores": {
         "set-strength": {
-          "name": "HoS"
+          "name": "HoS",
+          "keywords": "ability score stat muscle melee carry power"
         },
         "set-strength-offer": {
           "already_set": "HoS DIvI'"
@@ -607,7 +676,8 @@
           "name": "HoS {{score}}"
         },
         "set-dexterity": {
-          "name": "Do"
+          "name": "Do",
+          "keywords": "ability score stat agility finesse reflex"
         },
         "set-dexterity-offer": {
           "already_set": "Do DIvI'"
@@ -616,7 +686,8 @@
           "name": "Do {{score}}"
         },
         "set-constitution": {
-          "name": "'et"
+          "name": "'et",
+          "keywords": "ability score stat health stamina endurance hit points"
         },
         "set-constitution-offer": {
           "already_set": "'et DIvI'"
@@ -625,7 +696,8 @@
           "name": "'et {{score}}"
         },
         "set-intelligence": {
-          "name": "val"
+          "name": "val",
+          "keywords": "ability score stat knowledge reason logic"
         },
         "set-intelligence-offer": {
           "already_set": "val DIvI'"
@@ -634,7 +706,8 @@
           "name": "val {{score}}"
         },
         "set-wisdom": {
-          "name": "Sov"
+          "name": "Sov",
+          "keywords": "ability score stat insight awareness perception"
         },
         "set-wisdom-offer": {
           "already_set": "Sov DIvI'"
@@ -643,7 +716,8 @@
           "name": "Sov {{score}}"
         },
         "set-charisma": {
-          "name": "Quv"
+          "name": "Quv",
+          "keywords": "ability score stat presence social persuasion"
         },
         "set-charisma-offer": {
           "already_set": "Quv DIvI'"
@@ -652,7 +726,8 @@
           "name": "Quv {{score}}"
         },
         "increase-strength": {
-          "name": "HoS 'egh"
+          "name": "HoS 'egh",
+          "keywords": "ability score stat boost muscle melee carry power"
         },
         "increase-strength-offer": {
           "max_score": "HoS nIvDIch 'oS"
@@ -661,7 +736,8 @@
           "name": "HoS +wa'"
         },
         "increase-dexterity": {
-          "name": "Do 'egh"
+          "name": "Do 'egh",
+          "keywords": "ability score stat boost agility finesse reflex"
         },
         "increase-dexterity-offer": {
           "max_score": "Do nIvDIch 'oS"
@@ -670,7 +746,8 @@
           "name": "Do +wa'"
         },
         "increase-constitution": {
-          "name": "'et 'egh"
+          "name": "'et 'egh",
+          "keywords": "ability score stat boost health stamina endurance hit points"
         },
         "increase-constitution-offer": {
           "max_score": "'et nIvDIch 'oS"
@@ -679,7 +756,8 @@
           "name": "'et +wa'"
         },
         "increase-intelligence": {
-          "name": "val 'egh"
+          "name": "val 'egh",
+          "keywords": "ability score stat boost knowledge reason logic"
         },
         "increase-intelligence-offer": {
           "max_score": "val nIvDIch 'oS"
@@ -688,7 +766,8 @@
           "name": "val +wa'"
         },
         "increase-wisdom": {
-          "name": "Sov 'egh"
+          "name": "Sov 'egh",
+          "keywords": "ability score stat boost insight awareness perception"
         },
         "increase-wisdom-offer": {
           "max_score": "Sov nIvDIch 'oS"
@@ -697,7 +776,8 @@
           "name": "Sov +wa'"
         },
         "increase-charisma": {
-          "name": "Quv 'egh"
+          "name": "Quv 'egh",
+          "keywords": "ability score stat boost presence social persuasion"
         },
         "increase-charisma-offer": {
           "max_score": "Quv nIvDIch 'oS"
@@ -706,7 +786,8 @@
           "name": "Quv +wa'"
         },
         "proficiency-str": {
-          "name": "valwI' - HoS toDval"
+          "name": "valwI' - HoS toDval",
+          "keywords": "saving throw save proficiency strength"
         },
         "proficiency-str-offer": {
           "already_proficient": "HoS toDval already"
@@ -715,7 +796,8 @@
           "name": "HoS toDval valwI'"
         },
         "proficiency-dex": {
-          "name": "valwI' - Do toDval"
+          "name": "valwI' - Do toDval",
+          "keywords": "saving throw save proficiency dexterity"
         },
         "proficiency-dex-offer": {
           "already_proficient": "Do toDval already"
@@ -724,7 +806,8 @@
           "name": "Do toDval valwI'"
         },
         "proficiency-con": {
-          "name": "valwI' - 'et toDval"
+          "name": "valwI' - 'et toDval",
+          "keywords": "saving throw save proficiency constitution"
         },
         "proficiency-con-offer": {
           "already_proficient": "'et toDval already"
@@ -733,7 +816,8 @@
           "name": "'et toDval valwI'"
         },
         "proficiency-int": {
-          "name": "valwI' - val toDval"
+          "name": "valwI' - val toDval",
+          "keywords": "saving throw save proficiency intelligence"
         },
         "proficiency-int-offer": {
           "already_proficient": "val toDval already"
@@ -742,7 +826,8 @@
           "name": "val toDval valwI'"
         },
         "proficiency-wis": {
-          "name": "valwI' - Sov toDval"
+          "name": "valwI' - Sov toDval",
+          "keywords": "saving throw save proficiency wisdom"
         },
         "proficiency-wis-offer": {
           "already_proficient": "Sov toDval already"
@@ -751,7 +836,8 @@
           "name": "Sov toDval valwI'"
         },
         "proficiency-cha": {
-          "name": "valwI' - Quv toDval"
+          "name": "valwI' - Quv toDval",
+          "keywords": "saving throw save proficiency charisma"
         },
         "proficiency-cha-offer": {
           "already_proficient": "Quv toDval already"
@@ -760,7 +846,8 @@
           "name": "Quv toDval valwI'"
         },
         "proficiency-athletics": {
-          "name": "valwI' - Suv"
+          "name": "valwI' - Suv",
+          "keywords": "skill proficiency train expertise"
         },
         "athletics-proficiency-offer": {
           "already_proficient": "Suv valwI' already"
@@ -769,7 +856,8 @@
           "name": "Suv valwI'"
         },
         "proficiency-acrobatics": {
-          "name": "valwI' - yIqIm"
+          "name": "valwI' - yIqIm",
+          "keywords": "skill proficiency train expertise"
         },
         "acrobatics-proficiency-offer": {
           "already_proficient": "yIqIm valwI' already"
@@ -778,7 +866,8 @@
           "name": "yIqIm valwI'"
         },
         "proficiency-animal-handling": {
-          "name": "valwI' - Ha'DIbaH SeH"
+          "name": "valwI' - Ha'DIbaH SeH",
+          "keywords": "skill proficiency train expertise"
         },
         "animal-handling-proficiency-offer": {
           "already_proficient": "Ha'DIbaH SeH valwI' already"
@@ -787,7 +876,8 @@
           "name": "Ha'DIbaH SeH valwI'"
         },
         "proficiency-arcana": {
-          "name": "valwI' - mughlaH"
+          "name": "valwI' - mughlaH",
+          "keywords": "skill proficiency train expertise"
         },
         "arcana-proficiency-offer": {
           "already_proficient": "mughlaH valwI' already"
@@ -796,7 +886,8 @@
           "name": "mughlaH valwI'"
         },
         "proficiency-deception": {
-          "name": "valwI' - nIch"
+          "name": "valwI' - nIch",
+          "keywords": "skill proficiency train expertise"
         },
         "deception-proficiency-offer": {
           "already_proficient": "nIch valwI' already"
@@ -805,7 +896,8 @@
           "name": "nIch valwI'"
         },
         "proficiency-history": {
-          "name": "valwI' - qun"
+          "name": "valwI' - qun",
+          "keywords": "skill proficiency train expertise"
         },
         "history-proficiency-offer": {
           "already_proficient": "qun valwI' already"
@@ -814,7 +906,8 @@
           "name": "qun valwI'"
         },
         "proficiency-insight": {
-          "name": "valwI' - Qob"
+          "name": "valwI' - Qob",
+          "keywords": "skill proficiency train expertise"
         },
         "insight-proficiency-offer": {
           "already_proficient": "Qob valwI' already"
@@ -823,7 +916,8 @@
           "name": "Qob valwI'"
         },
         "proficiency-intimidation": {
-          "name": "valwI' - HIv"
+          "name": "valwI' - HIv",
+          "keywords": "skill proficiency train expertise"
         },
         "intimidation-proficiency-offer": {
           "already_proficient": "HIv valwI' already"
@@ -832,7 +926,8 @@
           "name": "HIv valwI'"
         },
         "proficiency-investigation": {
-          "name": "valwI' - nej"
+          "name": "valwI' - nej",
+          "keywords": "skill proficiency train expertise"
         },
         "investigation-proficiency-offer": {
           "already_proficient": "nej valwI' already"
@@ -841,7 +936,8 @@
           "name": "nej valwI'"
         },
         "proficiency-medicine": {
-          "name": "valwI' - Qel"
+          "name": "valwI' - Qel",
+          "keywords": "skill proficiency train expertise"
         },
         "medicine-proficiency-offer": {
           "already_proficient": "Qel valwI' already"
@@ -850,7 +946,8 @@
           "name": "Qel valwI'"
         },
         "proficiency-nature": {
-          "name": "valwI' - Doch"
+          "name": "valwI' - Doch",
+          "keywords": "skill proficiency train expertise"
         },
         "nature-proficiency-offer": {
           "already_proficient": "Doch valwI' already"
@@ -859,7 +956,8 @@
           "name": "Doch valwI'"
         },
         "proficiency-perception": {
-          "name": "valwI' - legh"
+          "name": "valwI' - legh",
+          "keywords": "skill proficiency train expertise"
         },
         "perception-proficiency-offer": {
           "already_proficient": "legh valwI' already"
@@ -868,7 +966,8 @@
           "name": "legh valwI'"
         },
         "proficiency-performance": {
-          "name": "valwI' - chel"
+          "name": "valwI' - chel",
+          "keywords": "skill proficiency train expertise"
         },
         "performance-proficiency-offer": {
           "already_proficient": "chel valwI' already"
@@ -877,7 +976,8 @@
           "name": "chel valwI'"
         },
         "proficiency-persuasion": {
-          "name": "valwI' - QIch"
+          "name": "valwI' - QIch",
+          "keywords": "skill proficiency train expertise"
         },
         "persuasion-proficiency-offer": {
           "already_proficient": "QIch valwI' already"
@@ -886,7 +986,8 @@
           "name": "QIch valwI'"
         },
         "proficiency-religion": {
-          "name": "valwI' - Den"
+          "name": "valwI' - Den",
+          "keywords": "skill proficiency train expertise"
         },
         "religion-proficiency-offer": {
           "already_proficient": "Den valwI' already"
@@ -895,7 +996,8 @@
           "name": "Den valwI'"
         },
         "proficiency-sleight-of-hand": {
-          "name": "valwI' - nich"
+          "name": "valwI' - nich",
+          "keywords": "skill proficiency train expertise"
         },
         "sleight-of-hand-proficiency-offer": {
           "already_proficient": "nich valwI' already"
@@ -904,7 +1006,8 @@
           "name": "nich valwI'"
         },
         "proficiency-stealth": {
-          "name": "valwI' - So'"
+          "name": "valwI' - So'",
+          "keywords": "skill proficiency train expertise"
         },
         "stealth-proficiency-offer": {
           "already_proficient": "So' valwI' already"
@@ -913,7 +1016,8 @@
           "name": "So' valwI'"
         },
         "proficiency-survival": {
-          "name": "valwI' - taH"
+          "name": "valwI' - taH",
+          "keywords": "skill proficiency train expertise"
         },
         "survival-proficiency-offer": {
           "already_proficient": "taH valwI' already"
@@ -925,10 +1029,12 @@
       "free-actions": {
         "free-action": {
           "name": "Free Action",
+          "keywords": "free misc other quick",
           "description": "DIch DIvI' nap (jatlh, Doch woD)"
         },
         "help-action": {
           "name": "QaH",
+          "keywords": "assist aid advantage support",
           "description": "DIvI' DIvI' DIvI' nob"
         },
         "action-help-offer": {
@@ -938,6 +1044,7 @@
       "dash": {
         "dash-action": {
           "name": "Do naQ",
+          "keywords": "run sprint speed extra movement",
           "description": "Do' DIvI' chel"
         },
         "action-dash-offer": {
@@ -947,6 +1054,7 @@
       "simple-actions": {
         "disengage-action": {
           "name": "DIvI' DIch",
+          "keywords": "retreat avoid opportunity withdraw",
           "description": "DoH 'ej HIv chaw'be'"
         },
         "action-disengage-offer": {
@@ -954,6 +1062,7 @@
         },
         "dodge-action": {
           "name": "DIvI' pel",
+          "keywords": "defend evade avoid",
           "description": "SoH HIv DIvI' DIvI'; SoH DEX ra' DIvI' DIvI'"
         },
         "action-dodge-offer": {
@@ -961,6 +1070,7 @@
         },
         "improvise-action": {
           "name": "DIvI' chu'",
+          "keywords": "improvise object other misc",
           "description": "latlh Qu' nID"
         },
         "action-improvise-offer": {
@@ -968,6 +1078,7 @@
         },
         "influence-action": {
           "name": "DIvI' Quv",
+          "keywords": "persuade intimidate deceive social charm",
           "description": "DIvI' Quv, toj, pagh ghIj"
         },
         "action-influence-offer": {
@@ -975,6 +1086,7 @@
         },
         "search-action": {
           "name": "DIvI' nej",
+          "keywords": "look find perception detect",
           "description": "legh, 'Ij, pagh Sam"
         },
         "action-search-offer": {
@@ -982,6 +1094,7 @@
         },
         "study-action": {
           "name": "DIvI' laD",
+          "keywords": "recall lore knowledge learn",
           "description": "DIvI' qaw pagh nej"
         },
         "action-study-offer": {
@@ -989,6 +1102,7 @@
         },
         "utilize-action": {
           "name": "DIvI' lo'",
+          "keywords": "object item use device",
           "description": "Doch DIvI' lo'"
         },
         "action-utilize-offer": {
@@ -996,6 +1110,7 @@
         },
         "interact-action": {
           "name": "DIvI' DIch",
+          "keywords": "object item use grab handle",
           "description": "latlh Doch DIvI'"
         },
         "action-interact-offer": {
@@ -1005,6 +1120,7 @@
       "grapple": {
         "grapple-action": {
           "name": "DIvI' qop",
+          "keywords": "grab grab hold restrain wrestle clinch",
           "description": "DIvI' 5ft | STR pagh DEX ra' DC | qop"
         },
         "action-grapple-offer": {
@@ -1014,6 +1130,7 @@
       "shove": {
         "shove-action": {
           "name": "DIvI' puv",
+          "keywords": "push knock prone topple",
           "description": "DIvI' 5ft | STR pagh DEX ra' DC | puv 5ft pagh DoH"
         },
         "action-shove-offer": {
@@ -1023,6 +1140,7 @@
       "attacks": {
         "unarmed-strike": {
           "name": "nuH DIvI'",
+          "keywords": "punch fist kick brawl melee hit",
           "description": "DIvI' 5ft | 1 + STR bludgeoning | pagh qop / puv"
         },
         "attack-unarmed-strike-offer": {
@@ -1030,6 +1148,7 @@
         },
         "greataxe": {
           "name": "nuH jen",
+          "keywords": "heavy two-handed cleave chop martial",
           "description": "1d12 slashing | Heavy, Two-Handed | Cleave"
         },
         "greataxe-cleave": {
@@ -1043,6 +1162,7 @@
         },
         "dagger": {
           "name": "nejwI'",
+          "keywords": "knife blade light finesse thrown stab",
           "description": "1d4 piercing | Finesse, Light, Thrown 20/60 | Nick"
         },
         "dagger-mastery": {
@@ -1050,6 +1170,7 @@
         },
         "javelin": {
           "name": "Javelin",
+          "keywords": "thrown ranged polearm throw",
           "description": "1d6 piercing | Thrown 30/120 | Slow"
         },
         "javelin-mastery": {
@@ -1064,6 +1185,7 @@
         },
         "scimitar": {
           "name": "Scimitar",
+          "keywords": "sword curved blade light finesse slash",
           "description": "1d6 slashing | Finesse, Light | Nick"
         },
         "scimitar-mastery": {
@@ -1071,10 +1193,12 @@
         },
         "spear": {
           "name": "yan",
+          "keywords": "polearm thrust reach thrown melee",
           "description": "1d6 piercing (1d8 two-handed) | Thrown 20/60, Versatile"
         },
         "spear-plus1": {
           "name": "yan cha'",
+          "keywords": "polearm thrust magic enchanted plus one",
           "description": "1d6 piercing (1d8 two-handed) | Thrown 20/60 | +1 HIv 'ej Qaw'"
         },
         "activation": {
@@ -1091,10 +1215,12 @@
       },
       "hp": {
         "set-hp-modifier-max": {
-          "name": "DIch DIvI' chenmoH"
+          "name": "DIch DIvI' chenmoH",
+          "keywords": "hit points health maximum adjust"
         },
         "set-hp-modifier-current": {
-          "name": "DIch DIvI'"
+          "name": "DIch DIvI'",
+          "keywords": "hit points health damage heal adjust"
         },
         "effect-hp-modifier-max": {
           "name": "DIch DIvI' chenmoH {{score}}"
@@ -1106,6 +1232,7 @@
       "initiative": {
         "roll-initiative": {
           "name": "DIvI' chuwI'",
+          "keywords": "combat order start turn",
           "description": "d20 + DEX chuw, DIvI' SIch"
         }
       },
@@ -1127,6 +1254,7 @@
         "annotation": "Qaw' SuvwI': wa' DIch damage dice reroll",
         "savage-attacker-use": {
           "name": "Qaw' SuvwI' lo'",
+          "keywords": "reroll damage feat",
           "description": "wa'logh: nuH DIvI' DIvI' choH, wej wIv"
         },
         "offer-savage-attacker": {
@@ -1146,6 +1274,7 @@
         },
         "grant-hi": {
           "name": "SubchI' SuvwI' nob",
+          "keywords": "grant luck reroll advantage",
           "description": "DIch SubchI' SuvwI' nob"
         },
         "grant-hi-offer": {
@@ -1153,6 +1282,7 @@
         },
         "use-hi": {
           "name": "SuvwI' SubchI' lo'",
+          "keywords": "spend luck reroll advantage",
           "description": "SubchI' SuvwI' lo', Hoch DIch choH"
         },
         "use-hi-offer": {
@@ -1161,7 +1291,8 @@
       },
       "leather-armor": {
         "don-leather-armor": {
-          "name": "DIch Jun tuQ"
+          "name": "DIch Jun tuQ",
+          "keywords": "equip wear armour light protection"
         },
         "don-leather-armor-offer": {
           "already-equipped": "DIch Jun tuQtaH"
@@ -1172,7 +1303,8 @@
       },
       "splint-armor": {
         "don-splint-armor": {
-          "name": "DIch Sep tuQ"
+          "name": "DIch Sep tuQ",
+          "keywords": "equip wear armour heavy protection"
         },
         "don-splint-armor-offer": {
           "already-equipped": "DIch Sep tuQtaH"
@@ -1183,7 +1315,8 @@
       },
       "shield": {
         "don-shield": {
-          "name": "DIch tuQ"
+          "name": "DIch tuQ",
+          "keywords": "equip wear block defend protection"
         },
         "don-shield-offer": {
           "already-equipped": "DIch tuQtaH",
@@ -1196,22 +1329,28 @@
       },
       "weapon-don": {
         "don-dagger": {
-          "name": "Don Dagger"
+          "name": "Don Dagger",
+          "keywords": "equip wield draw hold ready knife blade"
         },
         "don-greataxe": {
-          "name": "Don nuH jen"
+          "name": "Don nuH jen",
+          "keywords": "equip wield draw hold ready axe"
         },
         "don-javelin": {
-          "name": "Don Javelin"
+          "name": "Don Javelin",
+          "keywords": "equip wield draw hold ready thrown"
         },
         "don-scimitar": {
-          "name": "Don Scimitar"
+          "name": "Don Scimitar",
+          "keywords": "equip wield draw hold ready sword"
         },
         "don-spear": {
-          "name": "Don yan"
+          "name": "Don yan",
+          "keywords": "equip wield draw hold ready polearm"
         },
         "don-spear-plus1": {
-          "name": "Don yan cha'"
+          "name": "Don yan cha'",
+          "keywords": "equip wield draw hold ready polearm magic"
         },
         "dagger": {
           "already-equipped": "Dagger is already equipped",
@@ -1695,7 +1834,7 @@
       "viewSteed": "🐴 Steed"
     },
     "companion": {
-      "steed": "🐴 Steed"
+      "steed": "🐴 Sargh"
     },
     "topBar": {
       "hp": "HP",
@@ -1712,9 +1851,6 @@
       "hpValue": "{{current}} / {{max}}",
       "viewPlayer": "👤 You",
       "viewSteed": "🐴 Sargh"
-    },
-    "companion": {
-      "steed": "🐴 Sargh"
     },
     "verbs": {
       "ATTACK": "ATTACK",
@@ -1828,6 +1964,20 @@
       "collapse": "HIDE OPTIONS",
       "emptyBucket": "NO OPTIONS AVAILABLE",
       "illegalTag": "All options illegal"
+    },
+    "quickSearch": {
+      "title": "Search options",
+      "trigger": "Search options",
+      "back": "Back",
+      "dismiss": "Close search",
+      "field": "Search query",
+      "helper": "Type by name or what it does — e.g. heal, axe, fire, ranged.",
+      "noMatch": "No matches — try fewer letters.",
+      "more": "+{{count}} more · keep typing",
+      "matchCount": "{{count}} matches",
+      "backspaceKey": "Backspace",
+      "clearKey": "Clear search",
+      "clearLabel": "clear"
     },
     "planRow": {
       "orInstead": "OR INSTEAD",

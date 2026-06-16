@@ -368,6 +368,7 @@ The architecture supports:
   - Help, Ready, Search, Hide, Utilise, ...; while not mounted
 - Shorten resources names
 - Check for hard-coded english everywhere
+- make search keywords be explicitly defined in yaml (currently they are implicitly the same as the ui.name, but sub .name for .keywords)
 
 ### Low Priority
 
