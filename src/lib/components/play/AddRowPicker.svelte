@@ -48,8 +48,9 @@
     searchOpen = true;
   }
 
-  async function closeSearch() {
+  async function closeSearch(restoreFocus = true) {
     searchOpen = false;
+    if (!restoreFocus) return;
     await tick();
     triggerEl?.focus();
   }
@@ -98,7 +99,7 @@
       closeLocalTooltip();
     }
     if (searchOpen && rootEl && !rootEl.contains(e.target as Node)) {
-      void closeSearch();
+      void closeSearch(false);
     }
   }
 </script>
@@ -134,7 +135,7 @@
   </div>
   <div class="add-row-picker__main" bind:this={mainEl}>
     {#if searchOpen}
-      <QuickSearch {entries} onPick={handlePick} onClose={closeSearch} />
+      <QuickSearch {entries} onPick={handlePick} onClose={() => closeSearch()} />
     {:else}
       {#each verbGroupDefs as groupDef (groupDef.labelKey)}
         {@const hasAny = groupDef.verbs.some((v) => verbGroupMap.has(v))}

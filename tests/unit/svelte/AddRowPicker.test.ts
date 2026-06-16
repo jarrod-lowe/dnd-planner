@@ -64,4 +64,22 @@ describe('AddRowPicker quick search', () => {
     expect(container.querySelector('.quick-search')).toBeNull();
     expect(document.activeElement).toBe(trigger(container));
   });
+
+  it('closing via outside-click does not steal focus from the clicked element', async () => {
+    const { container } = render(AddRowPicker, { props: { entries, onAddStep: vi.fn() } });
+    await fireEvent.click(trigger(container)!);
+    await tick();
+
+    const outside = document.createElement('button');
+    document.body.appendChild(outside);
+    outside.focus();
+    await fireEvent.click(outside);
+    await tick();
+
+    expect(container.querySelector('.quick-search')).toBeNull();
+    expect(document.activeElement).toBe(outside);
+    expect(document.activeElement).not.toBe(trigger(container));
+
+    outside.remove();
+  });
 });
