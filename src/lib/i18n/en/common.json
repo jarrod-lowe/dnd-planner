@@ -48,7 +48,8 @@
       "unprepare-sanctuary-offer": {
         "name": "Unprepare Sanctuary",
         "keywords": "protect ward shield abjuration safe",
-        "not_prepared": "Sanctuary is not prepared"
+        "not_prepared": "Sanctuary is not prepared",
+        "always_prepared": "Sanctuary is always prepared"
       },
       "effect-sanctuary-prepared": {
         "name": "Sanctuary Prepared"
@@ -230,7 +231,8 @@
       "unprepare-sleep-offer": {
         "name": "Unprepare Sleep",
         "keywords": "knock unconscious incapacitate control enchantment",
-        "not_prepared": "Sleep is not prepared"
+        "not_prepared": "Sleep is not prepared",
+        "always_prepared": "Sleep is always prepared"
       }
     },
     "spell-calm-emotions": {
