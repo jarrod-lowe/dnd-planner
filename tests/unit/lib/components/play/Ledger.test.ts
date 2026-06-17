@@ -123,7 +123,39 @@ describe('Ledger', () => {
     expect(cells.length).toBe(0);
   });
 
-  it('applies muted style when remaining equals total', () => {
+  it('applies muted style when remaining is zero (depleted)', () => {
+    renderComponent(
+      [
+        {
+          type: 'usedMax',
+          label: 'play.stats.actions',
+          total: 'actions.max',
+          remaining: 'actions.remaining'
+        } satisfies UiEntry
+      ],
+      { 'actions.max': 1, 'actions.remaining': 0 }
+    );
+    const cell = container.querySelector('.ledger__cell--muted');
+    expect(cell).toBeTruthy();
+  });
+
+  it('applies muted style when remaining is negative (overdrawn)', () => {
+    renderComponent(
+      [
+        {
+          type: 'usedMax',
+          label: 'play.stats.actions',
+          total: 'actions.max',
+          remaining: 'actions.remaining'
+        } satisfies UiEntry
+      ],
+      { 'actions.max': 2, 'actions.remaining': -2 }
+    );
+    const cell = container.querySelector('.ledger__cell--muted');
+    expect(cell).toBeTruthy();
+  });
+
+  it('does not apply muted style when remaining equals total (full = available)', () => {
     renderComponent(
       [
         {
@@ -136,7 +168,7 @@ describe('Ledger', () => {
       { 'actions.max': 1, 'actions.remaining': 1 }
     );
     const cell = container.querySelector('.ledger__cell--muted');
-    expect(cell).toBeTruthy();
+    expect(cell).toBeNull();
   });
 
   it('applies warning style when over budget and remaining < total', () => {
