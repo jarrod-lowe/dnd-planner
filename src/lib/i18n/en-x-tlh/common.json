@@ -1833,7 +1833,31 @@
       "title": "Resources",
       "overBudget": "Over budget",
       "viewPlayer": "👤 You",
-      "viewSteed": "🐴 Steed"
+      "viewSteed": "🐴 Steed",
+      "short": {
+        "actions": "ACT",
+        "bonusActions": "BON",
+        "reactions": "RXN",
+        "hp": "HP",
+        "movement": "SPD",
+        "hands": "HAND",
+        "hitDie": "HD",
+        "spellcasting": "Magic",
+        "divinity": "CD",
+        "layOnHands": "LoH",
+        "paladinSmite": "Smite",
+        "paladinFindSteed": "Steed",
+        "savageAttacker": "Savage",
+        "steed": {
+          "hp": "HP",
+          "movement": "MOV",
+          "actions": "ACT",
+          "bonusActions": "BON",
+          "healingTouch": "Heal",
+          "feyStep": "Fey",
+          "fellGlare": "Glare"
+        }
+      }
     },
     "companion": {
       "steed": "🐴 Sargh"

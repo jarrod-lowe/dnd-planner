@@ -176,6 +176,42 @@ export function extractResourceEntries(rules: { ui?: Record<string, unknown> }[]
   return extractUiEntries(rules, 'resources');
 }
 
+// ── Resource short labels (resources panel) ──
+
+/**
+ * Maps a resource entry's full i18n label key to a compact short-label key
+ * (under `play.ledger.short.*`) for the resources panel. Entries without a
+ * short form return `undefined`, so the caller can fall back to the long label.
+ * Explicit (rather than convention-derived) so unknown labels never render a
+ * raw dotted key path.
+ */
+const RESOURCE_SHORT_LABELS: Record<string, string> = {
+  'play.stats.actions': 'play.ledger.short.actions',
+  'play.stats.bonusActions': 'play.ledger.short.bonusActions',
+  'play.stats.reactions': 'play.ledger.short.reactions',
+  'play.stats.hp': 'play.ledger.short.hp',
+  'play.stats.movement': 'play.ledger.short.movement',
+  'play.stats.hands': 'play.ledger.short.hands',
+  'play.stats.hitDie': 'play.ledger.short.hitDie',
+  'play.stats.spellcasting': 'play.ledger.short.spellcasting',
+  'play.stats.divinity': 'play.ledger.short.divinity',
+  'play.stats.layOnHands': 'play.ledger.short.layOnHands',
+  'play.stats.paladinSmite': 'play.ledger.short.paladinSmite',
+  'play.stats.paladinFindSteed': 'play.ledger.short.paladinFindSteed',
+  'play.stats.savageAttacker': 'play.ledger.short.savageAttacker',
+  'play.stats.steed.hp': 'play.ledger.short.steed.hp',
+  'play.stats.steed.movement': 'play.ledger.short.steed.movement',
+  'play.stats.steed.actions': 'play.ledger.short.steed.actions',
+  'play.stats.steed.bonusActions': 'play.ledger.short.steed.bonusActions',
+  'play.stats.steed.healingTouch': 'play.ledger.short.steed.healingTouch',
+  'play.stats.steed.feyStep': 'play.ledger.short.steed.feyStep',
+  'play.stats.steed.fellGlare': 'play.ledger.short.steed.fellGlare'
+};
+
+export function resourceShortLabelKey(label: string): string | undefined {
+  return RESOURCE_SHORT_LABELS[label];
+}
+
 // ── Shared Value Resolution ──
 
 export function resolveEntryValue(entry: UiEntry, facts: Facts): string {

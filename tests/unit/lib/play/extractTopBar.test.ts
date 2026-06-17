@@ -586,3 +586,63 @@ describe('isEntryVisible', () => {
     ).toBe(false);
   });
 });
+
+describe('resourceShortLabelKey', () => {
+  it('maps player action-economy and core resources to short keys', async () => {
+    const { resourceShortLabelKey } = await import('$lib/play/extractTopBar');
+    expect(resourceShortLabelKey('play.stats.actions')).toBe('play.ledger.short.actions');
+    expect(resourceShortLabelKey('play.stats.bonusActions')).toBe('play.ledger.short.bonusActions');
+    expect(resourceShortLabelKey('play.stats.reactions')).toBe('play.ledger.short.reactions');
+    expect(resourceShortLabelKey('play.stats.hp')).toBe('play.ledger.short.hp');
+    expect(resourceShortLabelKey('play.stats.movement')).toBe('play.ledger.short.movement');
+    expect(resourceShortLabelKey('play.stats.hands')).toBe('play.ledger.short.hands');
+    expect(resourceShortLabelKey('play.stats.hitDie')).toBe('play.ledger.short.hitDie');
+  });
+
+  it('maps class and feat resources to short keys', async () => {
+    const { resourceShortLabelKey } = await import('$lib/play/extractTopBar');
+    expect(resourceShortLabelKey('play.stats.spellcasting')).toBe('play.ledger.short.spellcasting');
+    expect(resourceShortLabelKey('play.stats.divinity')).toBe('play.ledger.short.divinity');
+    expect(resourceShortLabelKey('play.stats.layOnHands')).toBe('play.ledger.short.layOnHands');
+    expect(resourceShortLabelKey('play.stats.paladinSmite')).toBe('play.ledger.short.paladinSmite');
+    expect(resourceShortLabelKey('play.stats.paladinFindSteed')).toBe(
+      'play.ledger.short.paladinFindSteed'
+    );
+    expect(resourceShortLabelKey('play.stats.savageAttacker')).toBe(
+      'play.ledger.short.savageAttacker'
+    );
+  });
+
+  it('maps steed (companion) resources to short keys', async () => {
+    const { resourceShortLabelKey } = await import('$lib/play/extractTopBar');
+    expect(resourceShortLabelKey('play.stats.steed.hp')).toBe('play.ledger.short.steed.hp');
+    expect(resourceShortLabelKey('play.stats.steed.movement')).toBe(
+      'play.ledger.short.steed.movement'
+    );
+    expect(resourceShortLabelKey('play.stats.steed.actions')).toBe(
+      'play.ledger.short.steed.actions'
+    );
+    expect(resourceShortLabelKey('play.stats.steed.bonusActions')).toBe(
+      'play.ledger.short.steed.bonusActions'
+    );
+    expect(resourceShortLabelKey('play.stats.steed.healingTouch')).toBe(
+      'play.ledger.short.steed.healingTouch'
+    );
+    expect(resourceShortLabelKey('play.stats.steed.feyStep')).toBe(
+      'play.ledger.short.steed.feyStep'
+    );
+    expect(resourceShortLabelKey('play.stats.steed.fellGlare')).toBe(
+      'play.ledger.short.steed.fellGlare'
+    );
+  });
+
+  it('returns undefined for labels that have no short form', async () => {
+    const { resourceShortLabelKey } = await import('$lib/play/extractTopBar');
+    // Non-resource / top-bar stat labels must fall back to the long label.
+    expect(resourceShortLabelKey('play.stats.spellLevel')).toBeUndefined();
+    expect(resourceShortLabelKey('play.stats.spellSaveDC')).toBeUndefined();
+    expect(resourceShortLabelKey('play.stats.steed.ac')).toBeUndefined();
+    expect(resourceShortLabelKey('play.stats.steed.speed')).toBeUndefined();
+    expect(resourceShortLabelKey('something.unrelated')).toBeUndefined();
+  });
+});
