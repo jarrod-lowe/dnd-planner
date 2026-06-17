@@ -1,0 +1,55 @@
+name: 'Grapple - target fails save, Grappling effect persists'
+description: >
+  Grapple is a save vs the grappler's DC, not a roll. When the target FAILS its
+  STR/DEX save (passed=0), Grapple persists a Grappling effect that keeps a hand
+  consumed across turns. Releasing the grapple (removeEffect) frees the hand.
+  Grapple still counts as an attack (consumes the action).
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/grapple
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          hands.remaining: 2
+        offers:
+          exists:
+            - grapple-action
+
+  # Attempt the grapple; the target fails its save (passed=0). This turn the
+  # attempt consumes a hand and the action.
+  - addOffer:
+      id: grapple-action
+      selections:
+        passed: 0
+      assert:
+        facts:
+          actions.remaining: 0
+          hands.remaining: 1
+
+  # After endTurn the action is reclaimed but the Grappling effect persists and
+  # keeps consuming a hand each turn.
+  - endTurn:
+      assert:
+        facts:
+          actions.remaining: 1
+          hands.remaining: 1
+        effects:
+          exists:
+            - effect-grappling
+
+  # Releasing the grapple frees the hand.
+  - removeEffect:
+      id: effect-grappling
+      assert:
+        facts:
+          hands.remaining: 2
+        effects:
+          notExists:
+            - effect-grappling

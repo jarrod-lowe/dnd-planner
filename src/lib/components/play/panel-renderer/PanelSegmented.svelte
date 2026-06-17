@@ -1,5 +1,6 @@
 <script lang="ts">
   import { resolveValueSource } from './resolveValueSource';
+  import { nextSegmentedId } from './segmentedId';
   import type { SegmentedControl } from './types';
   import type { Facts, VarDefinition } from '$lib/rules-engine';
   import { t } from '$lib/i18n';
@@ -15,6 +16,11 @@
 
   let { control, editable, facts, vars, selections = {}, onSelectionChange }: Props = $props();
 
+  // Unique prefix so two controls sharing the same `var` (e.g. Grapple and a
+  // save record both use "passed") don't collide on input ids, label[for]
+  // associations, the radio name, or the prefix label's id.
+  const uid = nextSegmentedId();
+
   const selectedValue = $derived(resolveValueSource({ var: control.var }, facts, vars, selections));
 
   function handleChange(value: number): void {
@@ -22,40 +28,72 @@
   }
 </script>
 
-<fieldset class="panel-renderer__segmented">
-  {#each control.options as option (option.value)}
-    {#if editable}
-      {@const inputId = `${control.var}-${option.value}`}
-      <div class="panel-renderer__segment-wrapper">
-        <input
-          type="radio"
-          name={control.var}
-          id={inputId}
-          value={option.value}
-          class="panel-renderer__segment-input"
-          checked={selectedValue === option.value}
-          onchange={() => handleChange(option.value)}
-        />
-        <label
-          for={inputId}
-          class="panel-renderer__segment"
+<div class="panel-renderer__segmented-row">
+  {#if control.prefix}
+    <span id={`${uid}-prefix`} class="panel-renderer__segmented-prefix">
+      {$t(control.prefix)}
+    </span>
+  {/if}
+  <fieldset
+    class="panel-renderer__segmented"
+    aria-labelledby={control.prefix ? `${uid}-prefix` : undefined}
+  >
+    {#each control.options as option (option.value)}
+      {#if editable}
+        {@const inputId = `${uid}-${option.value}`}
+        <div class="panel-renderer__segment-wrapper">
+          <input
+            type="radio"
+            name={uid}
+            id={inputId}
+            value={option.value}
+            class="panel-renderer__segment-input"
+            checked={selectedValue === option.value}
+            onchange={() => handleChange(option.value)}
+          />
+          <label
+            for={inputId}
+            class="panel-renderer__segment"
+            class:panel-renderer__segment--active={selectedValue === option.value}
+          >
+            {$t(option.label)}
+          </label>
+        </div>
+      {:else}
+        <span
+          class="panel-renderer__segment panel-renderer__segment--readonly"
           class:panel-renderer__segment--active={selectedValue === option.value}
         >
           {$t(option.label)}
-        </label>
-      </div>
-    {:else}
-      <span
-        class="panel-renderer__segment panel-renderer__segment--readonly"
-        class:panel-renderer__segment--active={selectedValue === option.value}
-      >
-        {$t(option.label)}
-      </span>
-    {/if}
-  {/each}
-</fieldset>
+        </span>
+      {/if}
+    {/each}
+  </fieldset>
+</div>
 
 <style>
+  .panel-renderer__segmented-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+
+  .panel-renderer__segmented-prefix {
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    color: var(--md-sys-color-on-surface-variant);
+    white-space: nowrap;
+  }
+
+  .panel-renderer__segmented-prefix::after {
+    content: ':';
+  }
+
+  .panel-renderer__segmented-row .panel-renderer__segmented {
+    flex: 1;
+    min-width: 0;
+  }
+
   .panel-renderer__segmented {
     display: flex;
     gap: 1px;

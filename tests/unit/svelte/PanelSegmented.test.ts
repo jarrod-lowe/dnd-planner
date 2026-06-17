@@ -21,6 +21,13 @@ const baseProps = {
   selections: {}
 };
 
+// A segmented control with an optional prefix label (e.g. Grapple's "Target:"
+// outcome marker, where the save belongs to the target, not the player).
+const prefixedControl: SegmentedControl = {
+  ...baseControl,
+  prefix: 'play.choices.grapple.target'
+};
+
 describe('PanelSegmented', () => {
   it('renders three radio inputs', () => {
     const { container } = render(PanelSegmented, { props: baseProps });
@@ -91,5 +98,48 @@ describe('PanelSegmented', () => {
     expect(inputs[0].checked).toBe(false);
     expect(inputs[1].checked).toBe(true);
     expect(inputs[2].checked).toBe(false);
+  });
+
+  it('renders the prefix label before the segments when control has prefix', () => {
+    const { container } = render(PanelSegmented, {
+      props: { ...baseProps, control: prefixedControl }
+    });
+    const prefix = container.querySelector('.panel-renderer__segmented-prefix');
+    // Mock i18n returns the key as the rendered text.
+    expect(prefix?.textContent).toBe('play.choices.grapple.target');
+  });
+
+  it('uses the prefix as the fieldset accessible name', () => {
+    const { container } = render(PanelSegmented, {
+      props: { ...baseProps, control: prefixedControl }
+    });
+    const fieldset = container.querySelector('fieldset');
+    const prefix = container.querySelector('.panel-renderer__segmented-prefix');
+    // The prefix span's id and the fieldset's aria-labelledby must agree so the
+    // group is announced under the prefix label.
+    const labelledby = fieldset?.getAttribute('aria-labelledby');
+    expect(labelledby).toBeTruthy();
+    expect(prefix?.id).toBe(labelledby);
+  });
+
+  it('uses unique element ids and radio names across instances sharing the same var', () => {
+    // Grapple and a save record both use var "passed"; their input/label ids and
+    // radio names must not collide, or label[for] associations cross up and the
+    // two groups behave as one native radio group (picking one deselects the
+    // other). Each instance must own a distinct id and name.
+    const { container: a } = render(PanelSegmented, { props: baseProps });
+    const { container: b } = render(PanelSegmented, { props: baseProps });
+    const aInput = a.querySelector('input[type="radio"]')!;
+    const bInput = b.querySelector('input[type="radio"]')!;
+    expect(aInput.id).not.toBe(bInput.id);
+    expect(aInput.name).not.toBe(bInput.name);
+  });
+
+  it('renders no prefix and no aria-labelledby when prefix is absent', () => {
+    // Guards the save-record and find-steed uses, which pass no prefix.
+    const { container } = render(PanelSegmented, { props: baseProps });
+    expect(container.querySelector('.panel-renderer__segmented-prefix')).toBeNull();
+    const fieldset = container.querySelector('fieldset');
+    expect(fieldset?.getAttribute('aria-labelledby')).toBeNull();
   });
 });

@@ -38,6 +38,8 @@ ruleGroups:
       # Hands - reset remaining at start of turn
       - id: hands-reset
         phase: early
+        group:
+          - hands-reset
         after:
           - group: hands-max
         activities:

@@ -1,0 +1,41 @@
+name: 'Grapple - target saves, no Grappling effect'
+description: >
+  When the target SUCCEEDS on its STR/DEX save (passed=1) the grapple does not
+  take hold: no Grappling effect is created, so the hand consumed for the attempt
+  this turn is freed on the next turn.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/grapple
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          hands.remaining: 2
+        offers:
+          exists:
+            - grapple-action
+
+  # Attempt the grapple; the target saves (passed=1). The attempt still consumes
+  # a hand for this turn.
+  - addOffer:
+      id: grapple-action
+      selections:
+        passed: 1
+      assert:
+        facts:
+          hands.remaining: 1
+
+  # No Grappling effect is created, so the hand frees at next turn reset.
+  - endTurn:
+      assert:
+        facts:
+          hands.remaining: 2
+        effects:
+          notExists:
+            - effect-grappling
