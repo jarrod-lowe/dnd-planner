@@ -1972,8 +1972,7 @@
     "quickSearch": {
       "title": "Search options",
       "trigger": "Search options",
-      "back": "Back",
-      "dismiss": "Close search",
+      "exit": "Exit search",
       "field": "Search query",
       "helper": "Type by name or what it does — e.g. heal, axe, fire, ranged.",
       "noMatch": "No matches — try fewer letters.",

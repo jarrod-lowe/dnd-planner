@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import { t } from '$lib/i18n';
+  import { SEARCH_PATH } from '$lib/icons';
   import { extractPanelDescriptor } from './panel-renderer/extractPanelDescriptor';
   import { deriveVerbFromRule } from '$lib/play/stepUtils';
   import { verbLabelKey } from '$lib/play/groupChoicesByVerb';
@@ -17,13 +17,11 @@
   interface Props {
     entries: AvailableRuleEntry[];
     onPick: (entry: AvailableRuleEntry) => void;
-    onClose: () => void;
   }
 
-  let { entries, onPick, onClose }: Props = $props();
+  let { entries, onPick }: Props = $props();
 
   let query = $state('');
-  let backButton: HTMLButtonElement | undefined = $state();
   let wellEl: HTMLDivElement | undefined = $state();
   let openTooltipId: string | null = $state(null);
   let tooltipStyle = $state('');
@@ -131,10 +129,6 @@
     const item = shown.find((i) => i.entry.rule.id === openTooltipId);
     return item ? illegalMessage(item) : '';
   });
-
-  onMount(() => {
-    backButton?.focus();
-  });
 </script>
 
 <svelte:window onclick={handleWindowClick} />
@@ -142,23 +136,9 @@
 <div class="quick-search" role="group" aria-label={$t('play.quickSearch.title')}>
   <!-- A. Query field -->
   <div class="quick-search__field">
-    <button
-      type="button"
-      class="quick-search__control"
-      data-action="back"
-      aria-label={$t('play.quickSearch.back')}
-      onclick={onClose}
-      bind:this={backButton}
-    >
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
-      </svg>
-    </button>
     <span class="quick-search__glyph" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="currentColor">
-        <path
-          d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z"
-        />
+        <path d={SEARCH_PATH} />
       </svg>
     </span>
     <output class="quick-search__query" aria-label={$t('play.quickSearch.field')}
@@ -167,19 +147,6 @@
     <span class="quick-search__count" aria-live="polite">
       {$t('play.quickSearch.matchCount', { count: String(matches.length) })}
     </span>
-    <button
-      type="button"
-      class="quick-search__control"
-      data-action="dismiss"
-      aria-label={$t('play.quickSearch.dismiss')}
-      onclick={onClose}
-    >
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path
-          d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
-        />
-      </svg>
-    </button>
   </div>
 
   <!-- B. Results well (fixed height) -->
@@ -323,35 +290,6 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-xs);
-  }
-
-  .quick-search__control {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 2.75rem;
-    min-height: 2.75rem;
-    padding: 0;
-    background: transparent;
-    border: none;
-    color: var(--md-sys-color-on-surface-variant);
-    cursor: pointer;
-    border-radius: var(--radius-sm);
-    transition: background-color var(--transition-fast);
-  }
-
-  .quick-search__control:hover {
-    background: var(--md-sys-color-surface-container-highest);
-  }
-
-  .quick-search__control:focus-visible {
-    outline: 2px solid var(--md-sys-color-primary);
-    outline-offset: 2px;
-  }
-
-  .quick-search__control svg {
-    width: 1.5rem;
-    height: 1.5rem;
   }
 
   .quick-search__glyph {

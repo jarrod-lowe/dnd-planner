@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { tick } from 'svelte';
   import { t } from '$lib/i18n';
   import { PLAN_VERBS, RECORD_VERBS, BUILD_VERBS } from '$lib/play/verbConfig';
   import {
@@ -8,7 +7,7 @@
     verbLabelKey
   } from '$lib/play/groupChoicesByVerb';
   import { closeActiveTooltip, registerTooltipClose } from './tooltipSingleton';
-  import { EYE_OPEN_PATH, EYE_OFF_PATH } from '$lib/icons';
+  import { EYE_OPEN_PATH, EYE_OFF_PATH, SEARCH_PATH, SEARCH_STRIKE_PATH } from '$lib/icons';
   import QuickSearch from './QuickSearch.svelte';
   import type { AvailableRuleEntry, Verb } from '$lib/rules-engine';
 
@@ -50,23 +49,16 @@
   let tooltipStyle = $state('');
 
   let searchOpen = $state(false);
-  let triggerEl: HTMLButtonElement | undefined = $state();
-  let rootEl: HTMLDivElement | undefined = $state();
 
-  function openSearch() {
-    searchOpen = true;
-  }
-
-  async function closeSearch(restoreFocus = true) {
-    searchOpen = false;
-    if (!restoreFocus) return;
-    await tick();
-    triggerEl?.focus();
+  // Search mode is sticky: once chosen for a panel it stays until the user toggles it
+  // off via the search icon. Picking a result, evaluation re-renders, and outside clicks
+  // all leave it open.
+  function toggleSearch() {
+    searchOpen = !searchOpen;
   }
 
   function handlePick(entry: AvailableRuleEntry) {
     onAddStep(entry);
-    void closeSearch();
   }
 
   function closeLocalTooltip() {
@@ -103,12 +95,9 @@
     }
   }
 
-  function handleWindowClick(e: MouseEvent) {
+  function handleWindowClick() {
     if (openTooltipVerb) {
       closeLocalTooltip();
-    }
-    if (searchOpen && rootEl && !rootEl.contains(e.target as Node)) {
-      void closeSearch(false);
     }
   }
 </script>
@@ -120,7 +109,6 @@
   class:add-row-picker--tooltip-open={openTooltipVerb !== null}
   role="region"
   aria-label={$t('play.addRow.title')}
-  bind:this={rootEl}
 >
   <div class="add-row-picker__stripe">
     <span class="add-row-picker__stripe-label" aria-hidden="true">{$t('play.addRow.label')}</span>
@@ -130,15 +118,15 @@
     <button
       type="button"
       class="add-row-picker__search-trigger"
-      aria-label={$t('play.quickSearch.trigger')}
+      aria-label={searchOpen ? $t('play.quickSearch.exit') : $t('play.quickSearch.trigger')}
       aria-expanded={searchOpen}
-      onclick={openSearch}
-      bind:this={triggerEl}
+      onclick={toggleSearch}
     >
       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path
-          d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.49 4.49 0 0 1 9.5 14z"
-        />
+        <path d={SEARCH_PATH} />
+        {#if searchOpen}
+          <path d={SEARCH_STRIKE_PATH} />
+        {/if}
       </svg>
     </button>
     <button
@@ -155,7 +143,7 @@
   </div>
   <div class="add-row-picker__main" bind:this={mainEl}>
     {#if searchOpen}
-      <QuickSearch entries={visibleEntries} onPick={handlePick} onClose={() => closeSearch()} />
+      <QuickSearch entries={visibleEntries} onPick={handlePick} />
     {:else}
       {#each verbGroupDefs as groupDef (groupDef.labelKey)}
         {@const hasAny = groupDef.verbs.some((v) => verbGroupMap.has(v))}
