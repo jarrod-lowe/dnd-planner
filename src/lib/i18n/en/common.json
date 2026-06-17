@@ -1979,7 +1979,8 @@
       "matchCount": "{{count}} matches",
       "backspaceKey": "Backspace",
       "clearKey": "Clear search",
-      "clearLabel": "clear"
+      "clearLabel": "clear",
+      "illegal": "Illegal"
     },
     "planRow": {
       "orInstead": "or instead",

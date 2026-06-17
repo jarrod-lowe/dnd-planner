@@ -11,6 +11,7 @@
     whyBadge,
     type SearchOption
   } from '$lib/play/quickSearch';
+  import { closeActiveTooltip, registerTooltipClose } from './tooltipSingleton';
   import type { AvailableRuleEntry } from '$lib/rules-engine';
 
   interface Props {
@@ -23,6 +24,9 @@
 
   let query = $state('');
   let backButton: HTMLButtonElement | undefined = $state();
+  let wellEl: HTMLDivElement | undefined = $state();
+  let openTooltipId: string | null = $state(null);
+  let tooltipStyle = $state('');
 
   const PAD_ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'].map((row) => row.split(''));
 
@@ -78,17 +82,62 @@
     return whyBadge(query, item.option);
   }
 
+  function illegalMessage(item: SearchItem): string {
+    return item.entry.diagnostics.map((d) => $t(d.code)).join('\n');
+  }
+
   function resultAriaLabel(item: SearchItem): string {
     const badge = badgeFor(item);
-    return badge
+    const base = badge
       ? `${item.option.name} — ${item.verbLabel} — ${badge}`
       : `${item.option.name} — ${item.verbLabel}`;
+    if (item.entry.legal) return base;
+    return `${base} — ${illegalMessage(item) || $t('play.quickSearch.illegal')}`;
   }
+
+  function closeLocalTooltip() {
+    openTooltipId = null;
+    tooltipStyle = '';
+    registerTooltipClose(null);
+  }
+
+  function toggleTooltip(id: string, e: MouseEvent) {
+    e.stopPropagation();
+    if (openTooltipId === id) {
+      closeLocalTooltip();
+    } else {
+      closeActiveTooltip();
+      openTooltipId = id;
+      registerTooltipClose(closeLocalTooltip);
+      const icon = e.currentTarget as HTMLElement;
+      if (wellEl && icon) {
+        const iconRect = icon.getBoundingClientRect();
+        const containerRect = wellEl.getBoundingClientRect();
+        const left = iconRect.left + iconRect.width / 2 - containerRect.left;
+        const top = iconRect.bottom - containerRect.top + 4;
+        tooltipStyle = `left:${left}px;top:${top}px;transform:translateX(-50%)`;
+      }
+    }
+  }
+
+  function handleWindowClick() {
+    if (openTooltipId) {
+      closeLocalTooltip();
+    }
+  }
+
+  const openTooltipMessage = $derived.by(() => {
+    if (!openTooltipId) return '';
+    const item = shown.find((i) => i.entry.rule.id === openTooltipId);
+    return item ? illegalMessage(item) : '';
+  });
 
   onMount(() => {
     backButton?.focus();
   });
 </script>
+
+<svelte:window onclick={handleWindowClick} />
 
 <div class="quick-search" role="group" aria-label={$t('play.quickSearch.title')}>
   <!-- A. Query field -->
@@ -134,7 +183,11 @@
   </div>
 
   <!-- B. Results well (fixed height) -->
-  <div class="quick-search__well">
+  <div
+    class="quick-search__well"
+    class:quick-search__well--tooltip-open={openTooltipId !== null}
+    bind:this={wellEl}
+  >
     {#if wellState === 'empty'}
       <p class="quick-search__hint" data-state="empty">{$t('play.quickSearch.helper')}</p>
     {:else if wellState === 'no-match'}
@@ -146,10 +199,26 @@
           <button
             type="button"
             class="quick-search__result"
+            class:quick-search__result--illegal={!item.entry.legal}
             aria-label={resultAriaLabel(item)}
             onclick={() => onPick(item.entry)}
           >
-            <span class="quick-search__result-name">{item.option.name}</span>
+            <span class="quick-search__result-name">
+              {#if !item.entry.legal}
+                <span
+                  class="quick-search__result-illegal-tag"
+                  aria-hidden="true"
+                  onclick={(e) => toggleTooltip(item.entry.rule.id, e)}
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+                    />
+                  </svg>
+                </span>
+              {/if}
+              {item.option.name}
+            </span>
             <span class="quick-search__result-meta">
               <span class="quick-search__result-verb">{item.verbLabel}</span>
               {#if badge}
@@ -172,6 +241,11 @@
         </p>
       {/if}
     </div>
+    {#if openTooltipId && tooltipStyle && openTooltipMessage}
+      <span class="quick-search__result-tooltip" style={tooltipStyle} aria-hidden="true"
+        >{openTooltipMessage}</span
+      >
+    {/if}
   </div>
 
   <!-- C. QWERTY pad (fixed) -->
@@ -333,9 +407,14 @@
   /* B. Results well (fixed height) */
   /* Constant footprint: 3 result rows (2.75rem each) + gaps + the overflow line. */
   .quick-search__well {
+    position: relative;
     display: flex;
     flex-direction: column;
     height: 10.5rem;
+  }
+
+  .quick-search__well--tooltip-open {
+    z-index: var(--z-dropdown);
   }
 
   .quick-search__results {
@@ -393,7 +472,43 @@
     outline-offset: 2px;
   }
 
+  .quick-search__result--illegal {
+    border-style: dashed;
+  }
+
+  .quick-search__result-illegal-tag {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    display: inline-flex;
+    pointer-events: auto;
+  }
+
+  .quick-search__result-illegal-tag svg {
+    width: 1rem;
+    height: 1rem;
+    color: var(--md-sys-color-error);
+  }
+
+  .quick-search__result-tooltip {
+    position: absolute;
+    white-space: pre;
+    max-width: 100%;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--md-sys-color-outline);
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-md);
+    z-index: var(--z-dropdown);
+    pointer-events: none;
+  }
+
   .quick-search__result-name {
+    position: relative;
     font-weight: 600;
     line-height: 1.3;
     white-space: nowrap;
