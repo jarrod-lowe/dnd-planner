@@ -8,12 +8,17 @@ import type { AvailableRuleEntry } from '$lib/rules-engine';
 // entry whose ui.name is a friendly string surfaces that string as its display
 // name (and as its search haystack). Keyword keys are absent from the mock, so
 // they resolve to the key and are treated as "no keywords" by the component.
-function makeEntry(id: string, name: string, verb = 'ATTACK'): AvailableRuleEntry {
+function makeEntry(
+  id: string,
+  name: string,
+  verb = 'ATTACK',
+  opts: { legal?: boolean; diagnostics?: { code: string }[] } = {}
+): AvailableRuleEntry {
   return {
     rule: { id, ui: { name, intents: { [verb]: 'default' } } },
-    legal: true,
+    legal: opts.legal ?? true,
     applicable: true,
-    diagnostics: []
+    diagnostics: opts.diagnostics ?? []
   } as unknown as AvailableRuleEntry;
 }
 
@@ -127,6 +132,68 @@ describe('QuickSearch', () => {
     await fireEvent.click(results(container)[0] as HTMLElement);
     expect(onPick).toHaveBeenCalledTimes(1);
     expect(onPick.mock.calls[0][0].rule.id).toBe('dagger');
+  });
+
+  it('marks an illegal result with the illegal class and icon, legal results without', async () => {
+    const entries = [
+      makeEntry('greataxe', 'Greataxe'),
+      makeEntry('dagger', 'Dagger', 'ATTACK', {
+        legal: false,
+        diagnostics: [{ code: 'Not enough actions' }]
+      })
+    ];
+    const { container } = render(QuickSearch, {
+      props: { entries, onPick: vi.fn(), onClose: vi.fn() }
+    });
+    await fireEvent.click(key(container, 'a')!); // matches both
+    await tick();
+    const cells = results(container);
+    const greataxeCell = Array.from(cells).find((c) => c.textContent?.includes('Greataxe'))!;
+    const daggerCell = Array.from(cells).find((c) => c.textContent?.includes('Dagger'))!;
+    expect(daggerCell.classList.contains('quick-search__result--illegal')).toBe(true);
+    expect(daggerCell.querySelector('.quick-search__result-illegal-tag')).toBeTruthy();
+    expect(greataxeCell.classList.contains('quick-search__result--illegal')).toBe(false);
+    expect(greataxeCell.querySelector('.quick-search__result-illegal-tag')).toBeNull();
+  });
+
+  it('puts the diagnostic reason in the illegal result aria-label', async () => {
+    const entries = [
+      makeEntry('dagger', 'Dagger', 'ATTACK', {
+        legal: false,
+        diagnostics: [{ code: 'Not enough actions' }]
+      })
+    ];
+    const { container } = render(QuickSearch, {
+      props: { entries, onPick: vi.fn(), onClose: vi.fn() }
+    });
+    await fireEvent.click(key(container, 'd')!);
+    await tick();
+    expect(results(container)[0].getAttribute('aria-label')).toContain('Not enough actions');
+  });
+
+  it('shows the reason tooltip on icon click without picking; body click still picks', async () => {
+    const onPick = vi.fn();
+    const entries = [
+      makeEntry('dagger', 'Dagger', 'ATTACK', {
+        legal: false,
+        diagnostics: [{ code: 'Not enough actions' }]
+      })
+    ];
+    const { container } = render(QuickSearch, {
+      props: { entries, onPick, onClose: vi.fn() }
+    });
+    await fireEvent.click(key(container, 'd')!);
+    await tick();
+    const tag = container.querySelector('.quick-search__result-illegal-tag') as HTMLElement;
+    await fireEvent.click(tag);
+    await tick();
+    expect(container.querySelector('.quick-search__result-tooltip')?.textContent).toContain(
+      'Not enough actions'
+    );
+    expect(onPick).not.toHaveBeenCalled();
+
+    await fireEvent.click(results(container)[0] as HTMLElement);
+    expect(onPick).toHaveBeenCalledTimes(1);
   });
 
   it('calls onClose for the back and dismiss controls', async () => {
