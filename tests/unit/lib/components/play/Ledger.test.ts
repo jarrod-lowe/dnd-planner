@@ -11,7 +11,10 @@ const translations: Record<string, string> = {
   'play.stats.hp': 'HP',
   'play.stats.actions': 'Actions',
   'play.stats.hitDie': 'Hit Die',
-  'play.companion.steed': 'Steed'
+  'play.companion.steed': 'Steed',
+  'play.ledger.short.hp': 'HP',
+  'play.ledger.short.actions': 'ACT',
+  'play.ledger.short.hitDie': 'HD'
 };
 
 // The i18n mock returns the key as text for unmatched keys, and appends params when present
@@ -165,8 +168,13 @@ describe('Ledger', () => {
       ],
       { 'actions.max': 1, 'actions.remaining': 0 }
     );
+    const cell = container.querySelector('.ledger__cell');
     const label = container.querySelector('.ledger__cell-label');
-    expect(label?.textContent).toBe('Actions');
+    // Visible label is the compact short form...
+    expect(label?.textContent).toBe('ACT');
+    // ...while the full name is preserved for screen readers and hover.
+    expect(cell?.getAttribute('title')).toBe('Actions');
+    expect(cell?.getAttribute('aria-label')).toBe('Actions: 0 of 1');
   });
 
   it('uses nameParams for parameterized labels', () => {
@@ -184,7 +192,7 @@ describe('Ledger', () => {
       { 'hitDie.d8.total': 5, 'hitDie.d8.remaining': 3 }
     );
     const label = container.querySelector('.ledger__cell-label');
-    expect(label?.textContent).toContain('Hit Die');
+    expect(label?.textContent).toBe('HD');
   });
 
   it('renders multiple resource entries', () => {

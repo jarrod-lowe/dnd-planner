@@ -1,7 +1,11 @@
 <script lang="ts">
   import { t } from '$lib/i18n';
   import type { UiEntry, UiEntryUsedMax, UiEntryHitDie } from '$lib/play/extractTopBar';
-  import { isEntryVisible, resolveEntryValue } from '$lib/play/extractTopBar';
+  import {
+    isEntryVisible,
+    resolveEntryValue,
+    resourceShortLabelKey
+  } from '$lib/play/extractTopBar';
   import type { Facts, Status } from '$lib/rules-engine';
 
   interface Props {
@@ -30,6 +34,17 @@
       return $t(entry.label, entry.nameParams);
     }
     return $t(entry.label);
+  }
+
+  // Compact label for the resources panel. Falls back to the full label when no
+  // short form exists. The full label is still exposed via aria-label/title.
+  function shortLabelFor(entry: UiEntry): string {
+    const shortKey = resourceShortLabelKey(entry.label);
+    if (!shortKey) return labelFor(entry);
+    if (entry.nameParams && Object.keys(entry.nameParams).length > 0) {
+      return $t(shortKey, entry.nameParams);
+    }
+    return $t(shortKey);
   }
 </script>
 
@@ -62,8 +77,9 @@
         class:ledger__cell--muted={remaining === total && !isOverBudget}
         class:ledger__cell--warn={isOverBudget && remaining < total}
         aria-label="{labelFor(entry)}: {remaining} of {total}"
+        title={labelFor(entry)}
       >
-        <span class="ledger__cell-label">{labelFor(entry)}</span>
+        <span class="ledger__cell-label">{shortLabelFor(entry)}</span>
         <span class="ledger__cell-value">{resolveEntryValue(entry, facts)}</span>
       </div>
     {/each}
