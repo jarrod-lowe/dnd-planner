@@ -1,0 +1,40 @@
+name: 'Grapple - illegal when a normal-phase effect occupies all hands'
+description: >
+  Regression for the concern that the grapple offer (which waits only on
+  action/__planned__/ea-canattack) might read hands.remaining BEFORE a
+  normal-phase hand-consuming effect (e.g. an equipped shield's effect) has
+  decremented it. A normal-phase effect occupying both hands must make the
+  grapple offer illegal, not briefly legal.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/grapple
+
+# A normal-phase effect occupying both hands (same phase as effect-shield), so
+# hands.remaining is 0 only after this effect runs.
+initialEffects:
+  - id: effect-occupy-hands-normal
+    phase: normal
+    activities:
+      - type: numberIncrement
+        target:
+          fact: hands.remaining
+        source:
+          number: 2
+        subtract: true
+      - type: advertiseEffect
+        self: true
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          actions.remaining: 1
+          hands.remaining: 0
+        offers:
+          illegal:
+            - grapple-action

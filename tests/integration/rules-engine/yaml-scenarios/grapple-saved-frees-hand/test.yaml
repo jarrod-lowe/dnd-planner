@@ -1,0 +1,63 @@
+name: 'Grapple - a saved grapple frees the hand for a follow-up'
+description: >
+  With Extra Attack and two free hands, a grapple the target SAVES against
+  (passed=1) consumes the attack budget but NOT a hand, so a follow-up grapple
+  is still legal and is the one that consumes the hand. Regression for the case
+  where an unconditionally-consumed hand wrongly blocked same-turn follow-ups.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/grapple
+
+initialEffects:
+  - id: effect-grant-extra-attack
+    phase: early
+    activities:
+      - type: numberSet
+        target:
+          fact: extraAttacks.max
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          hands.remaining: 2
+        offers:
+          legal:
+            - grapple-action
+
+  # First grapple: target saves (passed=1). It spends the action and opens the
+  # Extra Attack budget, but does NOT consume a hand.
+  - addOffer:
+      id: grapple-action
+      selections:
+        passed: 1
+      assert:
+        facts:
+          actions.remaining: 0
+          attackAction.extraRemaining: 1
+          hands.remaining: 2
+        # Follow-up grapple is still legal: a free attack remains and the hand
+        # is still free.
+        offers:
+          legal:
+            - grapple-action
+
+  # Follow-up grapple (unresolved). It spends the extra attack and consumes the
+  # (still-free) hand.
+  - addOffer:
+      id: grapple-action
+      assert:
+        facts:
+          attackAction.extraRemaining: 0
+          hands.remaining: 1

@@ -71,6 +71,10 @@ ruleGroups:
           - group: action
           - group: __planned__
           - group: ea-canattack
+          # Wait for hand-consuming effects (equipped shield/weapon effects, which
+          # auto-join __effects__) to settle before reading hands.remaining, so a
+          # character with no free hand sees Grapple as illegal.
+          - group: __effects__
         activities:
           - type: offerRule
             legalWhen:
@@ -179,9 +183,19 @@ ruleGroups:
                       operator: greaterThan
                       value: 0
                   id: refill-extra
-                # Consume a hand for the grapple attempt this turn. The persistent
-                # Grappling effect (advertised below on a failed save) re-consumes
-                # the hand on subsequent turns.
+                # Bridge the captured target-outcome to a fact first, so the hand
+                # cost below can gate on it (fact-only `when`).
+                - type: numberSet
+                  source:
+                    var: passed
+                  target:
+                    fact: grapple.passed
+                  id: bridge-passed
+                # A hand is occupied while the grapple is attempted (passed=-1) or
+                # holding (passed=0), but NOT when the target saved (passed=1),
+                # since nothing is held. The persistent Grappling effect
+                # (advertised below on a failed save) re-consumes the hand on
+                # subsequent turns.
                 - type: numberCopy
                   source:
                     fact: hands.remaining
@@ -194,6 +208,10 @@ ruleGroups:
                   source:
                     number: 1
                   subtract: true
+                  when:
+                    - fact: grapple.passed
+                      operator: notEquals
+                      value: 1
                   id: consume-hand
                 - *error-clear
                 - type: setAdd
@@ -217,14 +235,9 @@ ruleGroups:
                     - fact: grapple.handsBefore
                       operator: lessThan
                       value: 1
-                # Bridge the captured target-outcome to a fact so the fact-only
-                # `when` below can gate the effect on it.
-                - type: numberSet
-                  source:
-                    var: passed
-                  target:
-                    fact: grapple.passed
-                  id: bridge-passed
+                    - fact: grapple.passed
+                      operator: notEquals
+                      value: 1
                 # Target failed its STR/DEX save (passed == 0) -> the grapple took
                 # hold. Persist a Grappling effect that keeps the hand consumed
                 # until released (the player dismisses the chip). It runs in the
