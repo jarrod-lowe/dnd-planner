@@ -74,7 +74,7 @@
           : Number(facts[(entry as UiEntryUsedMax).remaining] ?? 0)}
       <div
         class="ledger__cell"
-        class:ledger__cell--muted={remaining === total && !isOverBudget}
+        class:ledger__cell--muted={remaining <= 0 && !isOverBudget}
         class:ledger__cell--warn={isOverBudget && remaining < total}
         aria-label="{labelFor(entry)}: {remaining} of {total}"
         title={labelFor(entry)}
