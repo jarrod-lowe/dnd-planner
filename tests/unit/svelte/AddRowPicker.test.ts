@@ -4,19 +4,29 @@ import { tick } from 'svelte';
 import AddRowPicker from '$lib/components/play/AddRowPicker.svelte';
 import type { AvailableRuleEntry } from '$lib/rules-engine';
 
-function makeEntry(id: string, name: string, verb = 'ATTACK'): AvailableRuleEntry {
+function makeEntry(id: string, name: string, verb = 'ATTACK', legal = true): AvailableRuleEntry {
   return {
     rule: { id, ui: { name, intents: { [verb]: 'default' } } },
-    legal: true,
+    legal,
     applicable: true,
-    diagnostics: []
+    diagnostics: legal ? [] : ['rules.illegal.test']
   } as unknown as AvailableRuleEntry;
 }
 
 const entries = [makeEntry('greataxe', 'Greataxe'), makeEntry('dagger', 'Dagger')];
 
+// ATTACK has legal options; DEFEND has only an illegal option ("Daze").
+const mixedEntries = [
+  makeEntry('greataxe', 'Greataxe'),
+  makeEntry('dagger', 'Dagger'),
+  makeEntry('daze', 'Daze', 'DEFEND', false)
+];
+
 const trigger = (c: HTMLElement) =>
   c.querySelector<HTMLButtonElement>('.add-row-picker__search-trigger');
+
+const eyeToggle = (c: HTMLElement) =>
+  c.querySelector<HTMLButtonElement>('.add-row-picker__toggle-illegal');
 
 describe('AddRowPicker quick search', () => {
   it('renders a search trigger button with a localised aria-label', () => {
@@ -81,5 +91,67 @@ describe('AddRowPicker quick search', () => {
     expect(document.activeElement).not.toBe(trigger(container));
 
     outside.remove();
+  });
+});
+
+describe('AddRowPicker illegal-options eye toggle', () => {
+  it('renders the eye toggle closed by default with a localised aria-label', () => {
+    const { container } = render(AddRowPicker, {
+      props: { entries: mixedEntries, onAddStep: vi.fn() }
+    });
+    const eye = eyeToggle(container);
+    expect(eye).toBeInstanceOf(HTMLButtonElement);
+    expect(eye!.getAttribute('aria-pressed')).toBe('false');
+    expect(eye!.getAttribute('aria-label')).toBe('play.addRow.showIllegal');
+  });
+
+  it('hides verb buttons that have only illegal options while closed', () => {
+    const { container } = render(AddRowPicker, {
+      props: { entries: mixedEntries, onAddStep: vi.fn() }
+    });
+    expect(container.querySelector('.add-row-picker__verb--illegal')).toBeNull();
+  });
+
+  it('reveals illegal verb buttons after opening the eye', async () => {
+    const { container } = render(AddRowPicker, {
+      props: { entries: mixedEntries, onAddStep: vi.fn() }
+    });
+    await fireEvent.click(eyeToggle(container)!);
+    await tick();
+    const eye = eyeToggle(container);
+    expect(eye!.getAttribute('aria-pressed')).toBe('true');
+    expect(eye!.getAttribute('aria-label')).toBe('play.addRow.hideIllegal');
+    expect(container.querySelector('.add-row-picker__verb--illegal')).toBeTruthy();
+  });
+
+  it('hides illegal results in quick search while closed and reveals them when opened', async () => {
+    const { container } = render(AddRowPicker, {
+      props: { entries: mixedEntries, onAddStep: vi.fn() }
+    });
+    await fireEvent.click(trigger(container)!);
+    await tick();
+    // Query "da" matches both "Dagger" (legal) and "Daze" (illegal).
+    await fireEvent.click(container.querySelector('button[data-key="d"]')!);
+    await fireEvent.click(container.querySelector('button[data-key="a"]')!);
+    await tick();
+    expect(container.querySelector('.quick-search__result--illegal')).toBeNull();
+
+    await fireEvent.click(eyeToggle(container)!);
+    await tick();
+    expect(container.querySelector('.quick-search__result--illegal')).toBeTruthy();
+  });
+
+  it('stays in quick search mode when the eye is toggled', async () => {
+    const { container } = render(AddRowPicker, {
+      props: { entries: mixedEntries, onAddStep: vi.fn() }
+    });
+    await fireEvent.click(trigger(container)!);
+    await tick();
+    expect(container.querySelector('.quick-search')).toBeTruthy();
+
+    await fireEvent.click(eyeToggle(container)!);
+    await tick();
+    expect(container.querySelector('.quick-search')).toBeTruthy();
+    expect(container.querySelector('.add-row-picker__verbs')).toBeNull();
   });
 });

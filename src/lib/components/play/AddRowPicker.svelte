@@ -8,6 +8,7 @@
     verbLabelKey
   } from '$lib/play/groupChoicesByVerb';
   import { closeActiveTooltip, registerTooltipClose } from './tooltipSingleton';
+  import { EYE_OPEN_PATH, EYE_OFF_PATH } from '$lib/icons';
   import QuickSearch from './QuickSearch.svelte';
   import type { AvailableRuleEntry, Verb } from '$lib/rules-engine';
 
@@ -26,11 +27,19 @@
   ];
 
   const allVerbs = [...PLAN_VERBS, ...RECORD_VERBS, ...BUILD_VERBS];
-  const verbGroups = $derived(groupChoicesByVerb(entries, allVerbs));
+
+  // Eye toggle: when closed (default), illegal options are hidden entirely; when open,
+  // they reappear with their existing illegal markers. State is per-picker, not persisted.
+  // The icon is a single stable <path> whose `d` swaps reactively — using {#if} here would
+  // detach the clicked node mid-event and trip the outside-click handler into closing search.
+  let showIllegal = $state(false);
+  const visibleEntries = $derived(showIllegal ? entries : entries.filter((e) => e.legal));
+
+  const verbGroups = $derived(groupChoicesByVerb(visibleEntries, allVerbs));
   const verbGroupMap = $derived(new Map(verbGroups.map((g) => [g.verb, g])));
 
   function handleVerbTap(verb: Verb) {
-    const defaultEntry = findDefaultEntryForVerb(entries, verb);
+    const defaultEntry = findDefaultEntryForVerb(visibleEntries, verb);
     if (defaultEntry) {
       onAddStep(defaultEntry);
     }
@@ -132,10 +141,21 @@
         />
       </svg>
     </button>
+    <button
+      type="button"
+      class="add-row-picker__toggle-illegal"
+      aria-pressed={showIllegal}
+      aria-label={showIllegal ? $t('play.addRow.hideIllegal') : $t('play.addRow.showIllegal')}
+      onclick={() => (showIllegal = !showIllegal)}
+    >
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d={showIllegal ? EYE_OPEN_PATH : EYE_OFF_PATH} />
+      </svg>
+    </button>
   </div>
   <div class="add-row-picker__main" bind:this={mainEl}>
     {#if searchOpen}
-      <QuickSearch {entries} onPick={handlePick} onClose={() => closeSearch()} />
+      <QuickSearch entries={visibleEntries} onPick={handlePick} onClose={() => closeSearch()} />
     {:else}
       {#each verbGroupDefs as groupDef (groupDef.labelKey)}
         {@const hasAny = groupDef.verbs.some((v) => verbGroupMap.has(v))}
@@ -251,6 +271,42 @@
   .add-row-picker__search-trigger svg {
     width: 1.5rem;
     height: 1.5rem;
+  }
+
+  .add-row-picker__toggle-illegal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    margin-top: var(--spacing-xs);
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--md-sys-color-on-surface-variant);
+    cursor: pointer;
+    transition:
+      background-color var(--transition-fast),
+      color var(--transition-fast);
+  }
+
+  .add-row-picker__toggle-illegal svg {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .add-row-picker__toggle-illegal:hover {
+    background: var(--md-sys-color-surface-container-high);
+  }
+
+  .add-row-picker__toggle-illegal:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: 2px;
+  }
+
+  .add-row-picker__toggle-illegal[aria-pressed='true'] {
+    color: var(--md-sys-color-primary);
   }
 
   .add-row-picker__main {

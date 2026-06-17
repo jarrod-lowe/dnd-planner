@@ -1965,7 +1965,9 @@
       "expand": "SHOW OPTIONS",
       "collapse": "HIDE OPTIONS",
       "emptyBucket": "NO OPTIONS AVAILABLE",
-      "illegalTag": "All options illegal"
+      "illegalTag": "All options illegal",
+      "showIllegal": "Show illegal options",
+      "hideIllegal": "Hide illegal options"
     },
     "quickSearch": {
       "title": "Search options",
