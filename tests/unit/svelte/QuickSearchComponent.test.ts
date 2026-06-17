@@ -35,7 +35,7 @@ const results = (c: HTMLElement) => c.querySelectorAll('.quick-search__result');
 describe('QuickSearch', () => {
   it('renders the query field, results well, and QWERTY pad of native buttons', () => {
     const { container } = render(QuickSearch, {
-      props: { entries: sample, onPick: vi.fn(), onClose: vi.fn() }
+      props: { entries: sample, onPick: vi.fn() }
     });
     expect(container.querySelector('.quick-search__query')).toBeTruthy();
     expect(container.querySelector('.quick-search__well')).toBeTruthy();
@@ -52,7 +52,7 @@ describe('QuickSearch', () => {
 
   it('shows helper text and no results for an empty query', () => {
     const { container } = render(QuickSearch, {
-      props: { entries: sample, onPick: vi.fn(), onClose: vi.fn() }
+      props: { entries: sample, onPick: vi.fn() }
     });
     expect(container.querySelector('[data-state="empty"]')).toBeTruthy();
     expect(results(container)).toHaveLength(0);
@@ -60,7 +60,7 @@ describe('QuickSearch', () => {
 
   it('filters results as letters are tapped on the pad', async () => {
     const { container } = render(QuickSearch, {
-      props: { entries: sample, onPick: vi.fn(), onClose: vi.fn() }
+      props: { entries: sample, onPick: vi.fn() }
     });
     await fireEvent.click(key(container, 'd')!);
     await tick();
@@ -70,7 +70,7 @@ describe('QuickSearch', () => {
 
   it('announces the match count in an aria-live=polite region', async () => {
     const { container } = render(QuickSearch, {
-      props: { entries: sample, onPick: vi.fn(), onClose: vi.fn() }
+      props: { entries: sample, onPick: vi.fn() }
     });
     const count = container.querySelector('[aria-live="polite"]');
     expect(count).toBeTruthy();
@@ -81,7 +81,7 @@ describe('QuickSearch', () => {
 
   it('disables a dead key via the real disabled attribute', async () => {
     const { container } = render(QuickSearch, {
-      props: { entries: sample, onPick: vi.fn(), onClose: vi.fn() }
+      props: { entries: sample, onPick: vi.fn() }
     });
     await fireEvent.click(key(container, 'd')!); // query "d" -> Dagger
     await tick();
@@ -91,7 +91,7 @@ describe('QuickSearch', () => {
 
   it('backspace and clear edit the query', async () => {
     const { container } = render(QuickSearch, {
-      props: { entries: sample, onPick: vi.fn(), onClose: vi.fn() }
+      props: { entries: sample, onPick: vi.fn() }
     });
     await fireEvent.click(key(container, 'd')!);
     await fireEvent.click(key(container, 'a')!);
@@ -104,7 +104,7 @@ describe('QuickSearch', () => {
 
   it('shows a no-match state when nothing matches', async () => {
     const { container } = render(QuickSearch, {
-      props: { entries: [makeEntry('greataxe', 'Greataxe')], onPick: vi.fn(), onClose: vi.fn() }
+      props: { entries: [makeEntry('greataxe', 'Greataxe')], onPick: vi.fn() }
     });
     await fireEvent.click(key(container, 'q')!); // "q" not in Greataxe
     await tick();
@@ -114,7 +114,7 @@ describe('QuickSearch', () => {
   it('caps the well at 9 results and shows a +N more footer on overflow', async () => {
     const many = Array.from({ length: 12 }, (_, i) => makeEntry(`axe-${i}`, `Axe ${i}`));
     const { container } = render(QuickSearch, {
-      props: { entries: many, onPick: vi.fn(), onClose: vi.fn() }
+      props: { entries: many, onPick: vi.fn() }
     });
     await fireEvent.click(key(container, 'a')!); // all 12 match "a"
     await tick();
@@ -125,7 +125,7 @@ describe('QuickSearch', () => {
   it('calls onPick with the entry when a result is tapped', async () => {
     const onPick = vi.fn();
     const { container } = render(QuickSearch, {
-      props: { entries: sample, onPick, onClose: vi.fn() }
+      props: { entries: sample, onPick }
     });
     await fireEvent.click(key(container, 'd')!);
     await tick();
@@ -143,7 +143,7 @@ describe('QuickSearch', () => {
       })
     ];
     const { container } = render(QuickSearch, {
-      props: { entries, onPick: vi.fn(), onClose: vi.fn() }
+      props: { entries, onPick: vi.fn() }
     });
     await fireEvent.click(key(container, 'a')!); // matches both
     await tick();
@@ -164,7 +164,7 @@ describe('QuickSearch', () => {
       })
     ];
     const { container } = render(QuickSearch, {
-      props: { entries, onPick: vi.fn(), onClose: vi.fn() }
+      props: { entries, onPick: vi.fn() }
     });
     await fireEvent.click(key(container, 'd')!);
     await tick();
@@ -180,7 +180,7 @@ describe('QuickSearch', () => {
       })
     ];
     const { container } = render(QuickSearch, {
-      props: { entries, onPick, onClose: vi.fn() }
+      props: { entries, onPick }
     });
     await fireEvent.click(key(container, 'd')!);
     await tick();
@@ -194,15 +194,5 @@ describe('QuickSearch', () => {
 
     await fireEvent.click(results(container)[0] as HTMLElement);
     expect(onPick).toHaveBeenCalledTimes(1);
-  });
-
-  it('calls onClose for the back and dismiss controls', async () => {
-    const onClose = vi.fn();
-    const { container } = render(QuickSearch, {
-      props: { entries: sample, onPick: vi.fn(), onClose }
-    });
-    await fireEvent.click(container.querySelector('button[data-action="back"]')!);
-    await fireEvent.click(container.querySelector('button[data-action="dismiss"]')!);
-    expect(onClose).toHaveBeenCalledTimes(2);
   });
 });

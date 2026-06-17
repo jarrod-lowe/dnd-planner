@@ -48,7 +48,7 @@ describe('AddRowPicker quick search', () => {
     expect(container.querySelector('.add-row-picker__verbs')).toBeNull();
   });
 
-  it('adds the picked entry and closes, restoring focus to the trigger', async () => {
+  it('adds the picked entry and stays in search mode', async () => {
     const onAddStep = vi.fn();
     const { container } = render(AddRowPicker, { props: { entries, onAddStep } });
     await fireEvent.click(trigger(container)!);
@@ -59,23 +59,10 @@ describe('AddRowPicker quick search', () => {
     await tick();
     expect(onAddStep).toHaveBeenCalledTimes(1);
     expect(onAddStep.mock.calls[0][0].rule.id).toBe('dagger');
-    expect(container.querySelector('.quick-search')).toBeNull();
-    expect(document.activeElement).toBe(trigger(container));
+    expect(container.querySelector('.quick-search')).toBeTruthy();
   });
 
-  it('closing via back adds nothing and restores focus to the trigger', async () => {
-    const onAddStep = vi.fn();
-    const { container } = render(AddRowPicker, { props: { entries, onAddStep } });
-    await fireEvent.click(trigger(container)!);
-    await tick();
-    await fireEvent.click(container.querySelector('button[data-action="back"]')!);
-    await tick();
-    expect(onAddStep).not.toHaveBeenCalled();
-    expect(container.querySelector('.quick-search')).toBeNull();
-    expect(document.activeElement).toBe(trigger(container));
-  });
-
-  it('closing via outside-click does not steal focus from the clicked element', async () => {
+  it('keeps search open when clicking outside the panel', async () => {
     const { container } = render(AddRowPicker, { props: { entries, onAddStep: vi.fn() } });
     await fireEvent.click(trigger(container)!);
     await tick();
@@ -86,11 +73,23 @@ describe('AddRowPicker quick search', () => {
     await fireEvent.click(outside);
     await tick();
 
-    expect(container.querySelector('.quick-search')).toBeNull();
-    expect(document.activeElement).toBe(outside);
-    expect(document.activeElement).not.toBe(trigger(container));
+    expect(container.querySelector('.quick-search')).toBeTruthy();
 
     outside.remove();
+  });
+
+  it('toggles back to verb view via the search trigger, and labels it as exit while open', async () => {
+    const { container } = render(AddRowPicker, { props: { entries, onAddStep: vi.fn() } });
+    await fireEvent.click(trigger(container)!);
+    await tick();
+    expect(container.querySelector('.quick-search')).toBeTruthy();
+    expect(trigger(container)!.getAttribute('aria-label')).toBe('play.quickSearch.exit');
+
+    await fireEvent.click(trigger(container)!);
+    await tick();
+    expect(container.querySelector('.quick-search')).toBeNull();
+    expect(container.querySelector('.add-row-picker__verbs')).toBeTruthy();
+    expect(trigger(container)!.getAttribute('aria-label')).toBe('play.quickSearch.trigger');
   });
 });
 
