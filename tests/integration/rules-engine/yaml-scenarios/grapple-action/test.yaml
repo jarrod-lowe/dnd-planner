@@ -1,14 +1,16 @@
 name: 'Grapple Action'
 description: >
   Grapple action offer appears in action-attack section, consumes an action
-  when added to plan. Grapple DC is computed as 8 + proficiency bonus + STR
-  modifier. After endTurn, actions reset and grapple is available again.
+  when added to plan, and consumes a hand for the attempt. Grapple DC is computed
+  as 8 + proficiency bonus + STR modifier. After endTurn, actions reset and
+  grapple is available again.
 
 ruleGroups:
   - dnd-5e-2024/action-economy
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/core-events
+  - dnd-5e-2024/hands
   - dnd-5e-2024/grapple
 
 steps:
@@ -17,6 +19,8 @@ steps:
         facts:
           actions.max: 1
           actions.remaining: 1
+          hands.max: 2
+          hands.remaining: 2
           grapple.dc: 8
         offers:
           exists:
@@ -38,6 +42,7 @@ steps:
       assert:
         facts:
           actions.remaining: 0
+          hands.remaining: 1
         offers:
           illegal:
             - grapple-action

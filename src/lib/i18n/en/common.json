@@ -1123,10 +1123,14 @@
         "grapple-action": {
           "name": "Grapple",
           "keywords": "grab grab hold restrain wrestle clinch",
-          "description": "Melee 5ft | STR or DEX save vs your DC | target Grappled"
+          "description": "Melee 5ft | STR or DEX save vs your DC | target Grappled (escapes via Athletics or Acrobatics vs your DC)"
+        },
+        "effect-grappling": {
+          "name": "Grappling"
         },
         "action-grapple-offer": {
-          "no_action": "No action available"
+          "no_action": "No action available",
+          "no_hand": "No free hand"
         }
       },
       "shove": {
@@ -1732,7 +1736,8 @@
         "vsStrDex": "STR/DEX"
       },
       "grapple": {
-        "grappled": "Grappled"
+        "grappled": "Grappled",
+        "target": "Target"
       },
       "shove": {
         "outcome": "Push 5ft or Prone"

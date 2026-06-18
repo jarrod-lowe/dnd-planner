@@ -1,6 +1,8 @@
 # yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: grapple
+    requires:
+      - hands
     translations:
       en:
         name: Grapple
@@ -69,6 +71,10 @@ ruleGroups:
           - group: action
           - group: __planned__
           - group: ea-canattack
+          # Wait for hand-consuming effects (equipped shield/weapon effects, which
+          # auto-join __effects__) to settle before reading hands.remaining, so a
+          # character with no free hand sees Grapple as illegal.
+          - group: __effects__
         activities:
           - type: offerRule
             legalWhen:
@@ -79,6 +85,14 @@ ruleGroups:
                 illegalDiagnostics:
                   - code: rule.dnd-5e-2024.grapple.action-grapple-offer.no_action
                     severity: error
+              # One grapple per hand: a free hand is required to grab the target.
+              - condition:
+                  fact: hands.remaining
+                  operator: greaterThanOrEqual
+                  value: 1
+                illegalDiagnostics:
+                  - code: rule.dnd-5e-2024.grapple.action-grapple-offer.no_hand
+                    severity: error
             rule:
               id: grapple-action
               ui:
@@ -87,23 +101,41 @@ ruleGroups:
                 name: rule.dnd-5e-2024.grapple.grapple-action.name
                 description: rule.dnd-5e-2024.grapple.grapple-action.description
                 detailKey: attack/grapple
-                vsKey: play.choices.contested.vsStrDex
-                outcomeKey: play.choices.grapple.grappled
                 annotationLabels: [attack.action]
-                primaryControl:
-                  type: dice-line
-                  annotationLabels: [dice.any]
-                  dice:
-                    - sides: 20
-                      bonus: { var: dc }
-                      purpose: to-hit
+                # Grapple is a save vs the grappler's DC, not an attack roll, so
+                # the row shows the DC (no dice roller) plus a target-outcome marker.
+                information:
+                  - type: text
+                    label: play.information.saveDc
+                    labelValues:
+                      saveType: { string: 'STR/DEX' }
+                      dc: { fact: grapple.dc }
+                secondaryControl:
+                  type: segmented
+                  var: passed
+                  # The save is the target's, not the player's, so label the marker
+                  # to make "Failed" unambiguous (target failed = grappled).
+                  prefix: play.choices.grapple.target
+                  options:
+                    - value: -1
+                      label: planner.record.outcome.none
+                    - value: 1
+                      label: planner.record.passed
+                    - value: 0
+                      label: planner.record.failed
                 intents: { ATTACK: brawl }
                 actionCost: [action]
               vars:
-                dc:
+                passed:
                   capture: true
                   default:
-                    fact: grapple.dc
+                    number: -1
+              # Wait for hand-consuming effects (e.g. equipped shield/weapon
+              # effects, which auto-join __effects__) to settle before reading
+              # hands.remaining, so the plan row's no_hand error reflects the
+              # real free-hand count (mirrors the offer's __effects__ dependency).
+              after:
+                - group: __effects__
               group:
                 - __planned__
                 - action
@@ -157,6 +189,36 @@ ruleGroups:
                       operator: greaterThan
                       value: 0
                   id: refill-extra
+                # Bridge the captured target-outcome to a fact first, so the hand
+                # cost below can gate on it (fact-only `when`).
+                - type: numberSet
+                  source:
+                    var: passed
+                  target:
+                    fact: grapple.passed
+                  id: bridge-passed
+                # A hand is occupied while the grapple is attempted (passed=-1) or
+                # holding (passed=0), but NOT when the target saved (passed=1),
+                # since nothing is held. The persistent Grappling effect
+                # (advertised below on a failed save) re-consumes the hand on
+                # subsequent turns.
+                - type: numberCopy
+                  source:
+                    fact: hands.remaining
+                  target:
+                    fact: grapple.handsBefore
+                  id: snapshot-hand
+                - type: numberIncrement
+                  target:
+                    fact: hands.remaining
+                  source:
+                    number: 1
+                  subtract: true
+                  when:
+                    - fact: grapple.passed
+                      operator: notEquals
+                      value: 1
+                  id: consume-hand
                 - *error-clear
                 - type: setAdd
                   target:
@@ -170,3 +232,45 @@ ruleGroups:
                     - fact: attackAction.actionsBefore
                       operator: lessThanOrEqual
                       value: 0
+                # A free hand is a prerequisite to attempt the grapple regardless
+                # of the save outcome, so this diagnostic is unconditional. Only
+                # the hand occupancy (consume-hand above / Grappling effect) is
+                # skipped when the target saves.
+                - type: setAdd
+                  target:
+                    var: errors
+                  source:
+                    string: rule.dnd-5e-2024.grapple.action-grapple-offer.no_hand
+                  when:
+                    - fact: grapple.handsBefore
+                      operator: lessThan
+                      value: 1
+                # Target failed its STR/DEX save (passed == 0) -> the grapple took
+                # hold. Persist a Grappling effect that keeps the hand consumed
+                # until released (the player dismisses the chip). It runs in the
+                # early phase, after hands-reset, so it re-consumes the hand each
+                # turn before the normal-phase grapple offer re-evaluates legality
+                # (one grapple per hand).
+                - type: advertiseEffect
+                  when:
+                    - fact: grapple.passed
+                      operator: equals
+                      value: 0
+                  rule:
+                    id: effect-grappling
+                    phase: early
+                    after:
+                      - group: hands-reset
+                    ui:
+                      section: ongoing
+                      name: rule.dnd-5e-2024.grapple.effect-grappling.name
+                      detailKey: attack/grapple
+                    activities:
+                      - type: numberIncrement
+                        target:
+                          fact: hands.remaining
+                        source:
+                          number: 1
+                        subtract: true
+                      - type: advertiseEffect
+                        self: true

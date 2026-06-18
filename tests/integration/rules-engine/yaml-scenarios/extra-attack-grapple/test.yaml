@@ -13,6 +13,7 @@ ruleGroups:
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/core-events
   - dnd-5e-2024/attacks
+  - dnd-5e-2024/hands
   - dnd-5e-2024/grapple
 
 initialEffects:

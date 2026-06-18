@@ -1,0 +1,50 @@
+name: 'Grapple - illegal when a normal-phase effect occupies all hands'
+description: >
+  A normal-phase hand-consuming effect (same phase as effect-shield) occupying
+  both hands must make the grapple OFFER illegal, AND — when the illegal grapple
+  is added anyway — the planned grapple-action's no_hand plan error must fire.
+  Both the offer and the planned rule must wait for the __effects__ baseline
+  before reading hands.remaining.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/grapple
+
+# A normal-phase effect occupying both hands (same phase as effect-shield), so
+# hands.remaining is 0 only after this effect runs.
+initialEffects:
+  - id: effect-occupy-hands-normal
+    phase: normal
+    activities:
+      - type: numberIncrement
+        target:
+          fact: hands.remaining
+        source:
+          number: 2
+        subtract: true
+      - type: advertiseEffect
+        self: true
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          actions.remaining: 1
+          hands.remaining: 0
+        offers:
+          illegal:
+            - grapple-action
+
+  # Adding the illegal grapple anyway: the planned grapple-action must also wait
+  # for __effects__ before reading hands, so its no_hand plan error fires.
+  - addOffer:
+      id: grapple-action
+      assert:
+        planErrors:
+          - id: grapple-action
+            errors:
+              - rule.dnd-5e-2024.grapple.action-grapple-offer.no_hand

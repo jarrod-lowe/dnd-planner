@@ -1123,10 +1123,14 @@
         "grapple-action": {
           "name": "DIvI' qop",
           "keywords": "grab grab hold restrain wrestle clinch",
-          "description": "DIvI' 5ft | STR pagh DEX ra' DC | qop"
+          "description": "DIvI' 5ft | STR pagh DEX ra' DC | qop | Athletics pagh Acrobatics ra' DC"
+        },
+        "effect-grappling": {
+          "name": "qop"
         },
         "action-grapple-offer": {
-          "no_action": "DIvI' tu'lu'be'"
+          "no_action": "DIvI' tu'lu'be'",
+          "no_hand": "ghop tu'lu'be'"
         }
       },
       "shove": {
@@ -1732,7 +1736,8 @@
         "vsStrDex": "HoS/Do"
       },
       "grapple": {
-        "grappled": "qop"
+        "grappled": "qop",
+        "target": "DoS"
       },
       "shove": {
         "outcome": "puv pagh ngech"

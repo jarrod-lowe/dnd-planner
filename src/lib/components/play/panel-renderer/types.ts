@@ -126,6 +126,8 @@ export interface SegmentedControl extends ControlBase {
   type: 'segmented';
   var: string;
   options: SegmentedOption[];
+  /** Optional i18n key rendered as a label before the segments (e.g. "Enemy:" for a target's save). */
+  prefix?: string;
 }
 
 export interface SelectControl extends ControlBase {

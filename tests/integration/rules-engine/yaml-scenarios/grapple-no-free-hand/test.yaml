@@ -1,0 +1,41 @@
+name: 'Grapple - illegal with no free hand'
+description: >
+  Grapple requires a free hand ("one grapple per hand"). With both hands
+  occupied it is offered as illegal (no_hand) even when an action is available
+  to attack with.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/grapple
+
+# Both hands occupied (e.g. a two-handed weapon), so hands.remaining is 0 after
+# the per-turn reset. Runs in the early phase after hands-reset, the same way the
+# Grappling effect consumes a hand, so the grapple offer sees the occupied state.
+initialEffects:
+  - id: effect-both-hands-occupied
+    phase: early
+    after:
+      - group: hands-reset
+    activities:
+      - type: numberIncrement
+        target:
+          fact: hands.remaining
+        source:
+          number: 2
+        subtract: true
+      - type: advertiseEffect
+        self: true
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          actions.remaining: 1
+          hands.remaining: 0
+        offers:
+          illegal:
+            - grapple-action
