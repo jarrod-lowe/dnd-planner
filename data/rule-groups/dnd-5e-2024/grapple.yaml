@@ -130,6 +130,12 @@ ruleGroups:
                   capture: true
                   default:
                     number: -1
+              # Wait for hand-consuming effects (e.g. equipped shield/weapon
+              # effects, which auto-join __effects__) to settle before reading
+              # hands.remaining, so the plan row's no_hand error reflects the
+              # real free-hand count (mirrors the offer's __effects__ dependency).
+              after:
+                - group: __effects__
               group:
                 - __planned__
                 - action
@@ -226,6 +232,10 @@ ruleGroups:
                     - fact: attackAction.actionsBefore
                       operator: lessThanOrEqual
                       value: 0
+                # A free hand is a prerequisite to attempt the grapple regardless
+                # of the save outcome, so this diagnostic is unconditional. Only
+                # the hand occupancy (consume-hand above / Grappling effect) is
+                # skipped when the target saves.
                 - type: setAdd
                   target:
                     var: errors
@@ -234,9 +244,6 @@ ruleGroups:
                   when:
                     - fact: grapple.handsBefore
                       operator: lessThan
-                      value: 1
-                    - fact: grapple.passed
-                      operator: notEquals
                       value: 1
                 # Target failed its STR/DEX save (passed == 0) -> the grapple took
                 # hold. Persist a Grappling effect that keeps the hand consumed
