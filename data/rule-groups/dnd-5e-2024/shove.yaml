@@ -64,23 +64,35 @@ ruleGroups:
                 name: rule.dnd-5e-2024.shove.shove-action.name
                 description: rule.dnd-5e-2024.shove.shove-action.description
                 detailKey: attack/shove
-                vsKey: play.choices.contested.vsStrDex
-                outcomeKey: play.choices.shove.outcome
                 annotationLabels: [attack.action]
-                primaryControl:
-                  type: dice-line
-                  annotationLabels: [dice.any]
-                  dice:
-                    - sides: 20
-                      bonus: { var: dc }
-                      purpose: to-hit
+                # Shove is a save vs the shover's DC, not an attack roll, so the
+                # row shows the DC (no dice roller) plus a target-outcome marker.
+                information:
+                  - type: text
+                    label: play.information.saveDc
+                    labelValues:
+                      saveType: { string: 'STR/DEX' }
+                      dc: { fact: shove.dc }
+                secondaryControl:
+                  type: segmented
+                  var: passed
+                  # The save is the target's, not the player's, so label the
+                  # marker to make "Failed" unambiguous (target failed = shoved).
+                  prefix: play.choices.shove.target
+                  options:
+                    - value: -1
+                      label: planner.record.outcome.none
+                    - value: 1
+                      label: planner.record.passed
+                    - value: 0
+                      label: planner.record.failed
                 intents: { ATTACK: brawl }
                 actionCost: [action]
               vars:
-                dc:
+                passed:
                   capture: true
                   default:
-                    fact: shove.dc
+                    number: -1
               group:
                 - __planned__
                 - action
