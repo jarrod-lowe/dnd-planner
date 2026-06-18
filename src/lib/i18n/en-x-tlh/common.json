@@ -1732,15 +1732,12 @@
         "reroll": "DIvI'qa'",
         "slotLevel": "@L{{level}}"
       },
-      "contested": {
-        "vsStrDex": "HoS/Do"
-      },
       "grapple": {
         "grappled": "qop",
         "target": "DoS"
       },
       "shove": {
-        "outcome": "puv pagh ngech"
+        "target": "DoS"
       }
     },
     "plan": {

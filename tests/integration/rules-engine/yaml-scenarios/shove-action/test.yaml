@@ -33,6 +33,28 @@ steps:
           str.modifier: 3
           shove.dc: 11
 
+  # Shove is a target save vs the shover's DC, not an attack roll, so the row
+  # shows the DC (no dice roller) plus a target-outcome marker, like Grapple.
+  - evaluate:
+      assert:
+        offerUi:
+          - id: shove-action
+            ui:
+              information:
+                - type: text
+                  label: play.information.saveDc
+                  labelValues:
+                    saveType: { string: 'STR/DEX' }
+                    dc: { fact: shove.dc }
+              secondaryControl:
+                type: segmented
+                var: passed
+                prefix: play.choices.shove.target
+                options:
+                  - { value: -1, label: planner.record.outcome.none }
+                  - { value: 1, label: planner.record.passed }
+                  - { value: 0, label: planner.record.failed }
+
   - addOffer:
       id: shove-action
       assert:

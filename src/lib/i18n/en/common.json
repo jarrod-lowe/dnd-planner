@@ -1732,15 +1732,12 @@
         "reroll": "Re-roll",
         "slotLevel": "@L{{level}}"
       },
-      "contested": {
-        "vsStrDex": "STR/DEX"
-      },
       "grapple": {
         "grappled": "Grappled",
         "target": "Target"
       },
       "shove": {
-        "outcome": "Push 5ft or Prone"
+        "target": "Target"
       }
     },
     "plan": {
