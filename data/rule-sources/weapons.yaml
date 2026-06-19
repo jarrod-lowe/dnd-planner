@@ -786,6 +786,11 @@ profiles:
               severity: error
     wrapper:
       activitiesAfter:
+        # Clear errors before collecting so stale per-item diagnostics (e.g. the
+        # build-lock error) don't persist across evaluations. Inlined because
+        # rule-source preprocessing does not prepend _shared/definitions.yaml.
+        - type: setClear
+          target: { var: errors }
         - type: numberSet
           target:
             fact: weapon.$(definition.id).equipped
