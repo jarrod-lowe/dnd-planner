@@ -1,0 +1,78 @@
+name: 'Build Lock - locks all BUILD offers'
+description: >
+  Selecting Lock sets build.locked, flipping every BUILD offer (STAT / PROFICIENCY /
+  EQUIP / PREPARE) from legal to illegal so the BUILD group hides behind the eye.
+  Removing the Lock effect from the ledger clears build.locked and restores them.
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/concentration
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-bless
+  - dnd-5e-2024/leather-armor
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/dagger
+  - dnd-5e-2024/build-lock
+
+steps:
+  # Before locking: a representative BUILD offer from each verb is legal.
+  - evaluate:
+      assert:
+        facts:
+          build.locked: 0
+        offers:
+          legal:
+            - set-strength # STAT
+            - proficiency-str # PROFICIENCY
+            - don-leather-armor # EQUIP (armor)
+            - don-dagger # EQUIP (weapon, inlined gate)
+            - prepare-bless # PREPARE
+            - lock
+
+  # Locking flips every BUILD offer (including Lock itself) to illegal.
+  - addOffer:
+      id: lock
+      assert:
+        facts:
+          build.locked: 1
+        offers:
+          illegal:
+            - set-strength
+            - proficiency-str
+            - don-leather-armor
+            - don-dagger
+            - prepare-bless
+            - lock
+
+  # The lock persists as a removable effect across the turn boundary.
+  - endTurn:
+      assert:
+        facts:
+          build.locked: 1
+        effects:
+          exists:
+            - effect-build-locked
+        offers:
+          illegal:
+            - set-strength
+            - don-leather-armor
+            - prepare-bless
+
+  # Removing the Lock effect from the ledger unlocks the build.
+  - removeEffect:
+      id: effect-build-locked
+      assert:
+        facts:
+          build.locked: 0
+        offers:
+          legal:
+            - set-strength
+            - proficiency-str
+            - don-leather-armor
+            - don-dagger
+            - prepare-bless
+            - lock

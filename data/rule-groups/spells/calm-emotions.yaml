@@ -48,6 +48,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: spell.l2.calmEmotions.prepared
                   operator: notEquals
@@ -137,6 +138,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: spell.l2.calmEmotions.prepared
                   operator: equals

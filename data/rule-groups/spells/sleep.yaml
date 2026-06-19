@@ -44,6 +44,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: spell.l1.sleep.prepared
                   operator: notEquals
@@ -133,6 +134,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: spell.l1.sleep.prepared
                   operator: equals

@@ -99,6 +99,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: spell.l2.findSteed.prepared
                   operator: notEquals
@@ -188,6 +189,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: spell.l2.findSteed.prepared
                   operator: equals

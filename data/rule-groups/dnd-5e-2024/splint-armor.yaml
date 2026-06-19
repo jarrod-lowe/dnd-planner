@@ -44,6 +44,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: armor.splint.equipped
                   operator: notEquals
@@ -67,6 +68,7 @@ ruleGroups:
                 actionCost: [move]
               activities:
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target: { var: errors }
                   source: { string: rule.dnd-5e-2024.splint-armor.don-splint-armor-offer.already-equipped }

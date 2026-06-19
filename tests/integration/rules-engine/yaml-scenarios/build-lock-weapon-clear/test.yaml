@@ -1,0 +1,49 @@
+name: 'Build Lock - weapon don clears stale lock error'
+description: >
+  A planned weapon EQUIP (don) must not retain a stale build-lock error after the lock is
+  removed. The don-offer wrapper setAdds to var:errors, so it must setClear first; otherwise
+  varsRuntime.errors persists across evaluations and the planned weapon row stays illegal.
+ruleGroups:
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/dagger
+  - dnd-5e-2024/build-lock
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          build.locked: 0
+        offers:
+          legal:
+            - don-dagger
+
+  # Plan a weapon don while unlocked: no errors.
+  - addOffer:
+      id: don-dagger
+      assert:
+        facts:
+          build.locked: 0
+        planErrors:
+          - id: don-dagger
+            errors: []
+
+  # Lock the build: the planned don picks up the lock error.
+  - addOffer:
+      id: lock
+      assert:
+        facts:
+          build.locked: 1
+        planErrors:
+          - id: don-dagger
+            errors:
+              - rule.dnd-5e-2024.build-lock.locked
+
+  # Remove the lock: the planned don must clear its stale lock error and be legal again.
+  - removeFromPlan:
+      id: lock
+      assert:
+        facts:
+          build.locked: 0
+        planErrors:
+          - id: don-dagger
+            errors: []

@@ -40,6 +40,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: armor.leather.equipped
                   operator: notEquals
@@ -62,6 +63,7 @@ ruleGroups:
                 actionCost: []
               activities:
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target: { var: errors }
                   source: { string: rule.dnd-5e-2024.leather-armor.don-leather-armor-offer.already-equipped }

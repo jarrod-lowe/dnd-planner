@@ -91,6 +91,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: str.value
                   operator: equals
@@ -123,6 +124,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -215,6 +217,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: dex.value
                   operator: equals
@@ -248,6 +251,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -340,6 +344,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: con.value
                   operator: equals
@@ -373,6 +378,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -465,6 +471,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: int.value
                   operator: equals
@@ -498,6 +505,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -590,6 +598,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: wis.value
                   operator: equals
@@ -623,6 +632,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -715,6 +725,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: cha.value
                   operator: equals
@@ -748,6 +759,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -805,6 +817,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: str.value
                   operator: lessThan
@@ -828,6 +841,7 @@ ruleGroups:
                 actionCost: []
               activities:
                 - *error-clear
+                - *lock-error-track
                 - type: numberIncrement
                   target:
                     fact: str.value
@@ -869,6 +883,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: dex.value
                   operator: lessThan
@@ -893,6 +908,7 @@ ruleGroups:
                 actionCost: []
               activities:
                 - *error-clear
+                - *lock-error-track
                 - type: numberIncrement
                   target:
                     fact: dex.value
@@ -934,6 +950,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: con.value
                   operator: lessThan
@@ -958,6 +975,7 @@ ruleGroups:
                 actionCost: []
               activities:
                 - *error-clear
+                - *lock-error-track
                 - type: numberIncrement
                   target:
                     fact: con.value
@@ -999,6 +1017,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: int.value
                   operator: lessThan
@@ -1023,6 +1042,7 @@ ruleGroups:
                 actionCost: []
               activities:
                 - *error-clear
+                - *lock-error-track
                 - type: numberIncrement
                   target:
                     fact: int.value
@@ -1064,6 +1084,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: wis.value
                   operator: lessThan
@@ -1088,6 +1109,7 @@ ruleGroups:
                 actionCost: []
               activities:
                 - *error-clear
+                - *lock-error-track
                 - type: numberIncrement
                   target:
                     fact: wis.value
@@ -1129,6 +1151,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: cha.value
                   operator: lessThan
@@ -1153,6 +1176,7 @@ ruleGroups:
                 actionCost: []
               activities:
                 - *error-clear
+                - *lock-error-track
                 - type: numberIncrement
                   target:
                     fact: cha.value
@@ -1199,6 +1223,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: str.save.proficient
                   operator: equals
@@ -1218,6 +1243,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -1269,6 +1295,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: dex.save.proficient
                   operator: equals
@@ -1289,6 +1316,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -1340,6 +1368,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: con.save.proficient
                   operator: equals
@@ -1360,6 +1389,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -1411,6 +1441,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: int.save.proficient
                   operator: equals
@@ -1431,6 +1462,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -1482,6 +1514,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: wis.save.proficient
                   operator: equals
@@ -1502,6 +1535,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -1553,6 +1587,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: cha.save.proficient
                   operator: equals
@@ -1573,6 +1608,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -1648,6 +1684,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: skill.athletics.proficiency
                   operator: equals
@@ -1674,6 +1711,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -1763,6 +1801,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: skill.acrobatics.proficiency
                   operator: equals
@@ -1788,6 +1827,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -1877,6 +1917,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: skill.animal-handling.proficiency
                   operator: equals
@@ -1903,6 +1944,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -1992,6 +2034,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: skill.arcana.proficiency
                   operator: equals
@@ -2018,6 +2061,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -2107,6 +2151,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: skill.deception.proficiency
                   operator: equals
@@ -2133,6 +2178,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -2222,6 +2268,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: skill.history.proficiency
                   operator: equals
@@ -2248,6 +2295,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -2337,6 +2385,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: skill.insight.proficiency
                   operator: equals
@@ -2363,6 +2412,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -2452,6 +2502,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: skill.intimidation.proficiency
                   operator: equals
@@ -2478,6 +2529,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -2567,6 +2619,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: skill.investigation.proficiency
                   operator: equals
@@ -2593,6 +2646,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -2682,6 +2736,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: skill.medicine.proficiency
                   operator: equals
@@ -2708,6 +2763,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -2797,6 +2853,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: skill.nature.proficiency
                   operator: equals
@@ -2823,6 +2880,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -2912,6 +2970,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: skill.perception.proficiency
                   operator: equals
@@ -2938,6 +2997,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -3027,6 +3087,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: skill.performance.proficiency
                   operator: equals
@@ -3053,6 +3114,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -3142,6 +3204,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: skill.persuasion.proficiency
                   operator: equals
@@ -3168,6 +3231,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -3257,6 +3321,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: skill.religion.proficiency
                   operator: equals
@@ -3283,6 +3348,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -3372,6 +3438,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: skill.sleight-of-hand.proficiency
                   operator: equals
@@ -3398,6 +3465,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -3487,6 +3555,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: skill.stealth.proficiency
                   operator: equals
@@ -3513,6 +3582,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors
@@ -3602,6 +3672,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: skill.survival.proficiency
                   operator: equals
@@ -3628,6 +3699,7 @@ ruleGroups:
               activities:
                 # Error tracking
                 - *error-clear
+                - *lock-error-track
                 - type: setAdd
                   target:
                     var: errors

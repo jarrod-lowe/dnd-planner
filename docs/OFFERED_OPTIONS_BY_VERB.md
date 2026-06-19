@@ -168,6 +168,13 @@ Source files: `data/rule-groups/`, `data/rule-sources/weapons.yaml`
 
 ## BUILD — Character configuration
 
+> **Build lock:** the `Lock` option (`build-lock.yaml`) sets the `build.locked` fact via a
+> removable effect. Every BUILD offer is gated on it with the `*not-locked-legal` legalWhen
+> anchor (`_shared/definitions.yaml`), so locking hides the whole BUILD group behind the eye
+> until the `Build Locked` effect is removed from the ledger. **New BUILD offers must add
+> `*not-locked-legal` to their `legalWhen`** (weapon EQUIP offers inline the condition because
+> rule-source preprocessing does not prepend the shared anchors).
+
 ### STAT
 
 | Sub-verb | Option                | Cost | Source                |
@@ -184,6 +191,7 @@ Source files: `data/rule-groups/`, `data/rule-sources/weapons.yaml`
 | increase | Increase Intelligence | free | `ability-scores.yaml` |
 | increase | Increase Wisdom       | free | `ability-scores.yaml` |
 | increase | Increase Charisma     | free | `ability-scores.yaml` |
+| lock     | Lock                  | free | `build-lock.yaml`     |
 
 ### PROFICIENCY
 

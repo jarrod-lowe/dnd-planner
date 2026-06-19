@@ -621,6 +621,16 @@
     },
     "dnd-5e-2024": {
       "action-economy": {},
+      "build-lock": {
+        "lock": {
+          "name": "Lock",
+          "keywords": "lock build done finish freeze ready"
+        },
+        "effect": {
+          "name": "Build Locked"
+        },
+        "locked": "Character build is locked"
+      },
       "core-events": {
         "effect-hp-damage": {
           "name": "Damage {{score}}"
@@ -1966,7 +1976,8 @@
       },
       "STAT": {
         "set": "Set",
-        "increase": "Increase"
+        "increase": "Increase",
+        "lock": "Lock"
       },
       "PROFICIENCY": {
         "save": "Save",
