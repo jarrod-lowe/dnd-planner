@@ -760,6 +760,16 @@ profiles:
       followups: null
     gating:
       legalWhen:
+        # Build lock: hides this EQUIP offer when the character build is locked.
+        # Inlined (not the *not-locked-legal anchor) because rule-source preprocessing
+        # does not prepend _shared/definitions.yaml.
+        - condition:
+            fact: build.locked
+            operator: equals
+            value: 0
+          illegalDiagnostics:
+            - code: rule.dnd-5e-2024.build-lock.locked
+              severity: error
         - condition:
             fact: weapon.$(definition.id).equipped
             operator: notEquals
@@ -793,6 +803,13 @@ profiles:
           when:
             - fact: hands.remaining
               operator: lessThan
+              value: 0
+        - type: setAdd
+          target: { var: errors }
+          source: { string: rule.dnd-5e-2024.build-lock.locked }
+          when:
+            - fact: build.locked
+              operator: notEquals
               value: 0
         - type: advertiseEffect
           rule:

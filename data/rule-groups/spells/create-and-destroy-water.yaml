@@ -45,6 +45,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: spell.l1.createAndDestroyWater.prepared
                   operator: notEquals
@@ -120,6 +121,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: spell.l1.createAndDestroyWater.prepared
                   operator: equals

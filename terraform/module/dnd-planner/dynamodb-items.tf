@@ -322,6 +322,45 @@ resource "aws_dynamodb_table_item" "char_ability_scores_rulegroup_seed" {
   })
 }
 
+resource "aws_dynamodb_table_item" "char_build_lock_rulegroup_seed" {
+  table_name = aws_dynamodb_table.data.name
+  hash_key   = "PK"
+  range_key  = "SK"
+
+  item = jsonencode({
+    PK = {
+      S = "SEED#CHAR#$(characterId)"
+    }
+    SK = {
+      S = "RULEGROUP#build-lock"
+    }
+    gsiSeedPK = {
+      S = "SEED#CHAR"
+    }
+    type = {
+      S = "CHAR"
+    }
+    characterId = {
+      S = "$(characterId)"
+    }
+    ruleGroupId = {
+      S = "build-lock"
+    }
+    userId = {
+      S = "$(userId)"
+    }
+    enabled = {
+      BOOL = true
+    }
+    createdAt = {
+      S = "$(now)"
+    }
+    updatedAt = {
+      S = "$(now)"
+    }
+  })
+}
+
 resource "aws_dynamodb_table_item" "char_hit_die_rulegroup_seed" {
   table_name = aws_dynamodb_table.data.name
   hash_key   = "PK"

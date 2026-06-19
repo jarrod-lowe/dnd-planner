@@ -42,3 +42,27 @@ sharedRefs:
     fact: attack.last.weapon
     operator: equals
     value: 1
+
+  # Gates every BUILD offer (STAT / PROFICIENCY / PREPARE / EQUIP) on the
+  # build.locked fact. Add `*not-locked-legal` to an offer's legalWhen and
+  # `*lock-error-track` to the offered rule's activities (after *error-clear)
+  # so a locked build hides all BUILD options behind the eye. Set by build-lock.
+  not-locked-legal: &not-locked-legal
+    condition:
+      fact: build.locked
+      operator: equals
+      value: 0
+    illegalDiagnostics:
+      - code: rule.dnd-5e-2024.build-lock.locked
+        severity: error
+
+  lock-error-track: &lock-error-track
+    type: setAdd
+    target:
+      var: errors
+    source:
+      string: rule.dnd-5e-2024.build-lock.locked
+    when:
+      - fact: build.locked
+        operator: notEquals
+        value: 0

@@ -39,6 +39,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: spell.l1.sanctuary.prepared
                   operator: notEquals
@@ -128,6 +129,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: spell.l1.sanctuary.prepared
                   operator: equals

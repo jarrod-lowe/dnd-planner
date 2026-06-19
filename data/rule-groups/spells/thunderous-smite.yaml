@@ -42,6 +42,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: spell.l1.thunderousSmite.prepared
                   operator: notEquals
@@ -117,6 +118,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: spell.l1.thunderousSmite.prepared
                   operator: equals

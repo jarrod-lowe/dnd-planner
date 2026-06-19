@@ -43,6 +43,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: spell.l2.holdPerson.prepared
                   operator: notEquals
@@ -132,6 +133,7 @@ ruleGroups:
         activities:
           - type: offerRule
             legalWhen:
+              - *not-locked-legal
               - condition:
                   fact: spell.l2.holdPerson.prepared
                   operator: equals
