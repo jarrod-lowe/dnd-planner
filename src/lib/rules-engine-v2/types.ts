@@ -18,6 +18,12 @@ export type Facts = Record<string, number>;
  */
 export interface FactReader {
   num(fact: string): number;
+  /**
+   * Whether a fact is present (set). Distinguishes an unset fact from an explicit
+   * 0 — mirrors v1, where statToModifierHandler returns 0 for an undefined score
+   * but statToModifier(0) is -5.
+   */
+  has(fact: string): boolean;
 }
 
 /**

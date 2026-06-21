@@ -48,10 +48,17 @@ export function evaluateSheet(modules: RuleModule[], inputFacts: Facts = {}): Fa
   const path: string[] = [];
 
   // Reading a contributed-but-unsettled fact settles it first (depth-first).
+  const ensureSettled = (name: string): void => {
+    if (contributedFacts.has(name) && !settled.has(name)) settle(name);
+  };
   const reader: FactReader = {
     num: (name) => {
-      if (contributedFacts.has(name) && !settled.has(name)) settle(name);
+      ensureSettled(name);
       return facts[name] ?? 0;
+    },
+    has: (name) => {
+      ensureSettled(name);
+      return Object.prototype.hasOwnProperty.call(facts, name);
     }
   };
 

@@ -93,6 +93,28 @@ describe('v2 dataflow sheet — ordering is structural, not authored', () => {
     expect(() => evaluateSheet([a, b], {})).toThrow(/combine mode/i);
   });
 
+  // v1 parity: statToModifierHandler returns 0 for an undefined (unset) score, so
+  // an unset ability modifier must be 0 — not statToModifier(0) = -5. The
+  // ability-score-set scenario asserts str.modifier: 0 before a score is chosen.
+  it('keeps unset ability modifiers at 0 (undefined -> 0, not -5)', () => {
+    const facts = evaluateSheet([abilityScores], {}); // no scores set
+    for (const a of ['str', 'dex', 'con', 'int', 'wis', 'cha']) {
+      expect(facts[`${a}.modifier`]).toBe(0);
+    }
+  });
+
+  it('derives a set ability modifier', () => {
+    expect(evaluateSheet([abilityScores], { 'str.value': 16 })['str.modifier']).toBe(3);
+    expect(evaluateSheet([abilityScores], { 'int.value': 8 })['int.modifier']).toBe(-1);
+  });
+
+  it('an unset CON keeps hp.base.max at the class base (10), not 5', () => {
+    const facts = evaluateSheet([hp, paladinLevel1, abilityScores], {});
+    expect(facts['con.modifier']).toBe(0);
+    expect(facts['hp.base.max']).toBe(10);
+    expect(facts['hp.max']).toBe(10);
+  });
+
   it('throws on a dependency cycle', () => {
     const a: RuleModule = { id: 'a', derive: () => [{ fact: 'x', value: (f) => f.num('y') }] };
     const b: RuleModule = { id: 'b', derive: () => [{ fact: 'y', value: (f) => f.num('x') }] };

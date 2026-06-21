@@ -14,7 +14,11 @@ const abilityScores: RuleModule = {
   derive: () =>
     ABILITIES.map((a) => ({
       fact: `${a}.modifier`,
-      value: (f) => statToModifier(f.num(`${a}.value`))
+      // v1 parity: an unset score (absent fact) yields modifier 0, not
+      // statToModifier(0) = -5. v1's statToModifierHandler returns 0 for an
+      // undefined input, and the ability-score-set scenario asserts
+      // str.modifier: 0 before a score is chosen.
+      value: (f) => (f.has(`${a}.value`) ? statToModifier(f.num(`${a}.value`)) : 0)
     }))
 };
 
