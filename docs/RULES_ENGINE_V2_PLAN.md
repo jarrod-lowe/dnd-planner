@@ -33,12 +33,12 @@ shapes — the derived character sheet (pure dataflow) and the turn plan (an
 ordered fold over actions) — forcing both through one "mutate facts in phases"
 pipe.
 
-| Pain | v1 mechanism | v2 mechanism |
-|---|---|---|
-| Ordering fragility | manual `phase`/`group`/`after`; vestigial unused `_auto` scaffolding | **dataflow**: a contribution declares the fact it writes + the facts it reads; the engine topo-sorts. No phases, no `after`. |
-| Effects/timing | snapshots (`attackAction.wasExtra`), `advertiseEffect self:true` re-advertisement | **reducer fold** (later actions see earlier state by definition) + **declarative effects** (value + expiry predicate; engine ages them). |
-| Repetition | `spell-find-steed.yaml` 12,324 lines; hand-unrolled L5→L1 cascades | **TS abstraction** — loops/functions/params. |
-| Author complexity | one decision → many sequential conditional activities | rule **returns data**; one logical decision = one function. |
+| Pain               | v1 mechanism                                                                      | v2 mechanism                                                                                                                             |
+| ------------------ | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Ordering fragility | manual `phase`/`group`/`after`; vestigial unused `_auto` scaffolding              | **dataflow**: a contribution declares the fact it writes + the facts it reads; the engine topo-sorts. No phases, no `after`.             |
+| Effects/timing     | snapshots (`attackAction.wasExtra`), `advertiseEffect self:true` re-advertisement | **reducer fold** (later actions see earlier state by definition) + **declarative effects** (value + expiry predicate; engine ages them). |
+| Repetition         | `spell-find-steed.yaml` 12,324 lines; hand-unrolled L5→L1 cascades                | **TS abstraction** — loops/functions/params.                                                                                             |
+| Author complexity  | one decision → many sequential conditional activities                             | rule **returns data**; one logical decision = one function.                                                                              |
 
 ## 3. Target architecture
 
@@ -106,7 +106,7 @@ export default defineRule({
   incidental UI edits use existing theme variables + semantic HTML.
 - **Git** — work on `claude/epic-dijkstra-lxyaep`; never commit on red; never
   commit to `main`; no PR unless explicitly asked; `make test` before "done".
-- **No new processing phases** — v2 *removes* phases in favour of inferred
+- **No new processing phases** — v2 _removes_ phases in favour of inferred
   dataflow, consistent with "use dependencies, don't split phases further".
 - **The rules engine handles rules; the UI handles the interface** — keep the
   clean contract boundary.
@@ -118,7 +118,7 @@ suite**: it asserts on output (`facts` / `offers{legal}` / `effects` /
 `annotations` / `status` / `planErrors`), not on mechanism. So:
 
 1. Build v2 behind the same `evaluate` signature.
-2. **Parity harness** — run *every* existing scenario on **both** engines
+2. **Parity harness** — run _every_ existing scenario on **both** engines
    (old ← YAML data, new ← modules); assert identical output. Wired into
    `make test`.
 3. Re-author rule groups as modules **in the new paradigm** (not auto-translated
@@ -131,13 +131,13 @@ suite**: it asserts on output (`facts` / `offers{legal}` / `effects` /
 
 ## 6. Milestones
 
-| # | Milestone | Exit criteria |
-|---|---|---|
-| **M0** | **Spike / STOP-gate.** Engine core (sheet + reducer + effects) just enough to re-author the *hardest* cases — `hp` / `ability-scores` (pure dataflow) and `divine-smite` (cascade + free-use + persistence + upcast dice + illegal-but-visible). Finalize builder-API types. | Both groups' existing scenarios pass identically via the parity harness; smite is ~dozens of lines. **Go / No-Go decision.** |
-| **M1** | **Engine core + builder API + contract adapter.** Registry; the engine passes; effect aging; `EngineOutput` producer; ESLint confinement (`no-restricted-globals` / `-imports`); purity + termination watchdog. Unit tests (TDD). | Engine unit-tested; parity harness in `make test`; lint blocks banned globals/imports. |
-| **M2** | **Gated-M2 pipeline (infra).** CI precompile → chunks + metadata; `sync-rule-groups` publishes metadata from modules; chunk upload to S3/CDN; client lazy-load by id + version check. Terraform via make targets. Search endpoint unchanged. | A new group loads end-to-end in the test env via a lazy chunk; search still works. |
-| **M3** | **Port all rule groups** (dependency order: core stats → action economy / movement → attacks → spells → weapons [+ retire the Python `rule_preprocessor`]). | 100% of existing scenarios green on v2; new scenarios added. |
-| **M4** | **Cutover & decommission.** Flip the feature flag; migrate persisted effects to ref format; delete old engine / activities / `_auto` / phases / YAML; rewrite `RULES_ENGINE.md` + the authoring guide; update CLAUDE.md pointers. | v2 in the test env; `make test` green; docs updated; old code removed. |
+| #      | Milestone                                                                                                                                                                                                                                                                    | Exit criteria                                                                                                                |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| **M0** | **Spike / STOP-gate.** Engine core (sheet + reducer + effects) just enough to re-author the _hardest_ cases — `hp` / `ability-scores` (pure dataflow) and `divine-smite` (cascade + free-use + persistence + upcast dice + illegal-but-visible). Finalize builder-API types. | Both groups' existing scenarios pass identically via the parity harness; smite is ~dozens of lines. **Go / No-Go decision.** |
+| **M1** | **Engine core + builder API + contract adapter.** Registry; the engine passes; effect aging; `EngineOutput` producer; ESLint confinement (`no-restricted-globals` / `-imports`); purity + termination watchdog. Unit tests (TDD).                                            | Engine unit-tested; parity harness in `make test`; lint blocks banned globals/imports.                                       |
+| **M2** | **Gated-M2 pipeline (infra).** CI precompile → chunks + metadata; `sync-rule-groups` publishes metadata from modules; chunk upload to S3/CDN; client lazy-load by id + version check. Terraform via make targets. Search endpoint unchanged.                                 | A new group loads end-to-end in the test env via a lazy chunk; search still works.                                           |
+| **M3** | **Port all rule groups** (dependency order: core stats → action economy / movement → attacks → spells → weapons [+ retire the Python `rule_preprocessor`]).                                                                                                                  | 100% of existing scenarios green on v2; new scenarios added.                                                                 |
+| **M4** | **Cutover & decommission.** Flip the feature flag; migrate persisted effects to ref format; delete old engine / activities / `_auto` / phases / YAML; rewrite `RULES_ENGINE.md` + the authoring guide; update CLAUDE.md pointers.                                            | v2 in the test env; `make test` green; docs updated; old code removed.                                                       |
 
 ## 7. Testing
 
@@ -153,7 +153,7 @@ suite**: it asserts on output (`facts` / `offers{legal}` / `effects` /
 ## 8. Risks & mitigations
 
 - **Paradigm doesn't fit a rule (the STOP rule):** M0 spikes the worst case
-  *first*; No-Go is a real option before further commitment.
+  _first_; No-Go is a real option before further commitment.
 - **Big-bang runtime flip:** full parity suite as acceptance + feature-flag
   rollback.
 - **Persisted-effects migration:** one-time ref converter; **confirm whether prod

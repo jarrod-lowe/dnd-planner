@@ -59,6 +59,40 @@ describe('v2 dataflow sheet — ordering is structural, not authored', () => {
     expect(facts['hp.current']).toBe(0);
   });
 
+  it('records input-driven conditional dependencies (pull-based, not probe)', () => {
+    // `out` reads `a` only when input `useA` is truthy; `a` is contributed by a
+    // module registered AFTER the consumer. Probe-based discovery (zero-valued)
+    // would take the else branch and miss the dep on `a`, then read it as 0.
+    const consumer: RuleModule = {
+      id: 'consumer',
+      derive: () => [{ fact: 'out', value: (f) => (f.num('useA') ? f.num('a') : 0) }]
+    };
+    const producer: RuleModule = {
+      id: 'producer',
+      derive: () => [{ fact: 'a', value: () => 42 }]
+    };
+    expect(evaluateSheet([consumer, producer], { useA: 1 })['out']).toBe(42);
+    expect(evaluateSheet([consumer, producer], { useA: 0 })['out']).toBe(0);
+  });
+
+  it('rejects duplicate override writers to the same fact (order-independence guard)', () => {
+    const a: RuleModule = { id: 'a', derive: () => [{ fact: 'x', value: () => 1 }] };
+    const b: RuleModule = { id: 'b', derive: () => [{ fact: 'x', value: () => 2 }] };
+    expect(() => evaluateSheet([a, b], {})).toThrow(/override/i);
+  });
+
+  it('rejects conflicting combine modes for the same fact', () => {
+    const a: RuleModule = {
+      id: 'a',
+      derive: () => [{ fact: 'x', combine: 'sum', value: () => 1 }]
+    };
+    const b: RuleModule = {
+      id: 'b',
+      derive: () => [{ fact: 'x', combine: 'max', value: () => 2 }]
+    };
+    expect(() => evaluateSheet([a, b], {})).toThrow(/combine mode/i);
+  });
+
   it('throws on a dependency cycle', () => {
     const a: RuleModule = { id: 'a', derive: () => [{ fact: 'x', value: (f) => f.num('y') }] };
     const b: RuleModule = { id: 'b', derive: () => [{ fact: 'y', value: (f) => f.num('x') }] };

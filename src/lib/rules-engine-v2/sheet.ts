@@ -1,4 +1,4 @@
-import type { Contribution, Facts, FactReader, RuleModule, SheetCtx } from './types';
+import type { Facts, FactReader, RuleModule, SheetCtx, Contribution } from './types';
 
 interface TaggedContribution extends Contribution {
   moduleId: string;
@@ -8,24 +8,29 @@ interface TaggedContribution extends Contribution {
  * Evaluate the dataflow "sheet": derive all character-state facts from the
  * modules' `derive` contributions.
  *
- * Ordering is NOT authored. Each contribution's `value` is run once against a
- * recording reader to discover which facts it reads; the engine topologically
- * sorts facts by those reads and evaluates them in dependency order. A fact with
- * multiple contributors is fully settled (all contributors combined) before any
- * dependent reads it — so "copy-after-settle" needs no `group`/`after` dance.
+ * Ordering is NOT authored. Evaluation is **pull-based**: a fact is settled the
+ * first time it is read. Each contribution's `value` runs against a reader whose
+ * `num(name)` settles `name` on demand before returning it. Because reads happen
+ * during real evaluation (with real values), dependencies hidden behind
+ * input-driven branches are followed correctly — there is no separate
+ * zero-valued probe pass to miss them. A fact with multiple contributors is
+ * fully combined before any dependent observes it, so "copy-after-settle" needs
+ * no `group`/`after` dance.
  *
- * Pure: same (modules, inputFacts) → same result.
+ * Pure: same (modules, inputFacts) → same result, independent of registration
+ * order.
  *
  * @param modules     Rule modules to evaluate (registration order is irrelevant).
  * @param inputFacts  Pre-settled facts with no contributor (e.g. player-set
  *                    ability scores). Treated as immutable sources.
  * @returns The derived fact store.
- * @throws If the dependency graph contains a cycle.
+ * @throws On a dependency cycle, duplicate `override` writers, or conflicting
+ *         combine modes for a single fact.
  */
 export function evaluateSheet(modules: RuleModule[], inputFacts: Facts = {}): Facts {
   const ctx: SheetCtx = { selections: {} };
 
-  // 1. Collect contributions, grouped by target fact.
+  // Collect contributions, grouped by target fact.
   const byFact = new Map<string, TaggedContribution[]>();
   for (const m of modules) {
     if (!m.derive) continue;
@@ -37,59 +42,69 @@ export function evaluateSheet(modules: RuleModule[], inputFacts: Facts = {}): Fa
   }
   const contributedFacts = new Set(byFact.keys());
 
-  // 2. Discover read-dependencies per fact via a probe run. Reads of facts that
-  //    nobody contributes (pure inputs / absent) are settled sources, not edges.
-  const deps = new Map<string, Set<string>>();
-  for (const [fact, contribs] of byFact) {
-    const reads = new Set<string>();
-    const probe: FactReader = {
-      num: (name) => {
-        reads.add(name);
-        return 0;
-      }
-    };
-    for (const c of contribs) c.value(probe);
-    const edges = new Set<string>();
-    for (const r of reads) {
-      if (r !== fact && contributedFacts.has(r)) edges.add(r);
-    }
-    deps.set(fact, edges);
-  }
+  const facts: Facts = { ...inputFacts };
+  const settled = new Set<string>();
+  const visiting = new Set<string>();
+  const path: string[] = [];
 
-  // 3. Topological sort (DFS) with cycle detection.
-  const order: string[] = [];
-  const mark = new Map<string, 'visiting' | 'done'>();
-  const visit = (fact: string, path: string[]): void => {
-    const m = mark.get(fact);
-    if (m === 'done') return;
-    if (m === 'visiting') {
+  // Reading a contributed-but-unsettled fact settles it first (depth-first).
+  const reader: FactReader = {
+    num: (name) => {
+      if (contributedFacts.has(name) && !settled.has(name)) settle(name);
+      return facts[name] ?? 0;
+    }
+  };
+
+  function settle(fact: string): void {
+    if (settled.has(fact)) return;
+    if (visiting.has(fact)) {
       throw new Error(`Dependency cycle detected: ${[...path, fact].join(' -> ')}`);
     }
-    mark.set(fact, 'visiting');
-    for (const dep of deps.get(fact) ?? []) visit(dep, [...path, fact]);
-    mark.set(fact, 'done');
-    order.push(fact);
-  };
-  for (const fact of byFact.keys()) visit(fact, []);
+    visiting.add(fact);
+    path.push(fact);
 
-  // 4. Evaluate in dependency order, combining multiple contributors per fact.
-  const facts: Facts = { ...inputFacts };
-  const reader: FactReader = { num: (name) => facts[name] ?? 0 };
-  for (const fact of order) {
-    const contribs = byFact.get(fact)!;
-    const mode = contribs[0].combine ?? 'override';
-    let result: number;
-    if (mode === 'sum') {
-      result = 0;
-      for (const c of contribs) result += c.value(reader);
-    } else if (mode === 'max') {
-      result = Number.NEGATIVE_INFINITY;
-      for (const c of contribs) result = Math.max(result, c.value(reader));
-    } else {
-      // override: the last registered writer wins
-      result = contribs[contribs.length - 1].value(reader);
-    }
-    facts[fact] = result;
+    facts[fact] = combine(fact, byFact.get(fact)!);
+
+    path.pop();
+    visiting.delete(fact);
+    settled.add(fact);
   }
+
+  function combine(fact: string, contribs: TaggedContribution[]): number {
+    if (contribs.length === 1) {
+      // Single writer: any mode (including the default `override`) is fine.
+      return contribs[0].value(reader);
+    }
+
+    // Multiple writers must agree on a single accumulating mode. `override`
+    // means "one authoritative writer", so duplicates are rejected rather than
+    // resolved by registration order (which would break order-independence).
+    const modes = new Set(contribs.map((c) => c.combine ?? 'override'));
+    const writers = contribs.map((c) => c.moduleId).join(', ');
+    if (modes.has('override')) {
+      throw new Error(
+        `Multiple override writers for fact "${fact}" (writers: ${writers}); ` +
+          `'override' requires a single authoritative writer`
+      );
+    }
+    if (modes.size > 1) {
+      throw new Error(
+        `Conflicting combine mode for fact "${fact}": ${[...modes].join(', ')} (writers: ${writers})`
+      );
+    }
+
+    const mode = [...modes][0];
+    if (mode === 'sum') {
+      let sum = 0;
+      for (const c of contribs) sum += c.value(reader);
+      return sum;
+    }
+    // 'max'
+    let max = Number.NEGATIVE_INFINITY;
+    for (const c of contribs) max = Math.max(max, c.value(reader));
+    return max;
+  }
+
+  for (const fact of contributedFacts) settle(fact);
   return facts;
 }
