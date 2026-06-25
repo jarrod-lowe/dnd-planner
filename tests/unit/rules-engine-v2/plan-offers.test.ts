@@ -38,6 +38,9 @@ describe('v2 plan reducer — ordered fold, no snapshots', () => {
     // The win over v1: no snapshot facts are needed or produced.
     expect('attackAction.wasExtra' in facts).toBe(false);
     expect('attackAction.actionsBefore' in facts).toBe(false);
+
+    // The attack flag stays a boolean 1 across all three swings (not summed to 3).
+    expect(facts['attack.last.activation.action']).toBe(1);
   });
 
   it('without Extra Attack, each swing costs an action (second over-commits)', () => {
@@ -197,5 +200,34 @@ describe('v2 plan — effect-based spends are visible within the turn (Codex pla
     expect(planDiagnostics.get('c1')).toBeUndefined(); // slot available
     expect(planDiagnostics.get('c2')?.[0].code).toBe('no_slot'); // first spend now visible
     expect(facts['spellcasting.slots.level1.remaining']).toBe(-1);
+  });
+});
+
+describe('v2 offers — structural when gate (omit vs. illegal-but-visible)', () => {
+  const gated: RuleModule = {
+    id: 'gated',
+    offer: () => [
+      {
+        id: 'gated-action',
+        when: (f) => f.num('feature.enabled') > 0,
+        apply: () => ({
+          advertise: [{ id: 'u', state: { used: 1 }, expiry: { kind: 'endOfTurn' } }]
+        })
+      }
+    ]
+  };
+
+  it('omits the offer from availableRules when its when gate is false, includes it when true', () => {
+    expect(evaluateOffers([gated], {}).some((o) => o.id === 'gated-action')).toBe(false);
+    expect(
+      evaluateOffers([gated], { 'feature.enabled': 1 }).some((o) => o.id === 'gated-action')
+    ).toBe(true);
+  });
+
+  it('still applies a force-planned gated action (the apply registry ignores when)', () => {
+    const { advertised } = evaluatePlan([gated], {}, [
+      { instanceId: 'g1', ruleId: 'gated-action' }
+    ]);
+    expect(advertised).toHaveLength(1); // found + applied despite when() false at {}
   });
 });

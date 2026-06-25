@@ -48,6 +48,8 @@ export function evaluateOffers(modules: RuleModule[], facts: Facts): OfferEntry[
 
   const entries: OfferEntry[] = [];
   for (const offer of collectOffers(modules)) {
+    // Structural gate: omit entirely when `when` is false (v1's `when`).
+    if (offer.when && !offer.when(reader)) continue;
     let legal = true;
     const diagnostics: Diagnostic[] = [];
     for (const gate of offer.legalWhen ?? []) {

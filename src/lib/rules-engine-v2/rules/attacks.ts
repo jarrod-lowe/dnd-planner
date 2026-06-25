@@ -22,7 +22,7 @@ function applyUnarmedStrike(s: FactReader): ActionResult {
   if (s.num('attackAction.extraRemaining') > 0) {
     // Free follow-up swing.
     return {
-      advertise: [spend({ 'attackAction.extraSpent': 1, 'attack.last.activation.action': 1 })]
+      advertise: [spend({ 'attackAction.extraSpent': 1, 'attack.activation.count': 1 })]
     };
   }
   // New Attack action: spend an action and grant the follow-up budget — unless
@@ -33,7 +33,7 @@ function applyUnarmedStrike(s: FactReader): ActionResult {
       spend({
         'actions.spent': 1,
         'attackAction.extraGranted': granted,
-        'attack.last.activation.action': 1
+        'attack.activation.count': 1
       })
     ]
   };
@@ -45,6 +45,12 @@ const attacks: RuleModule = {
     {
       fact: 'attackAction.extraRemaining',
       value: (f) => f.num('attackAction.extraGranted') - f.num('attackAction.extraSpent')
+    },
+    // Boolean "an attack was made this turn", derived from a summed counter so it
+    // stays 0/1 no matter how many swings happen (flag, not a resource).
+    {
+      fact: 'attack.last.activation.action',
+      value: (f) => (f.num('attack.activation.count') > 0 ? 1 : 0)
     }
   ],
   offer: () => [

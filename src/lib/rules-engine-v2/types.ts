@@ -128,6 +128,14 @@ export interface Offer {
   id: string;
   ui?: Record<string, unknown>;
   vars?: Record<string, unknown>;
+  /**
+   * Structural gate (v1's `when`): when it returns false the offer is OMITTED
+   * from availableRules entirely — e.g. only offer Divine Smite when it is
+   * prepared. Distinct from `legalWhen`, which keeps the offer visible but marks
+   * it illegal. The apply registry still sees every offer, so a force-planned /
+   * stale action whose `when` now fails can still be evaluated.
+   */
+  when?: (f: FactReader) => boolean;
   legalWhen?: LegalWhen[];
   apply?: (state: FactReader, selections: Record<string, unknown>) => ActionResult;
 }
