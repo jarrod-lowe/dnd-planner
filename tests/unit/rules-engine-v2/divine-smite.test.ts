@@ -98,6 +98,15 @@ describe('v2 divine-smite — slot cascade / slider bounds (no free-use feature)
   it('default die count tracks the default level (free use / L1 = 2d8)', () => {
     expect(evaluateSheet(ALL, INPUT)['smite.defaultDieCount']).toBe(2); // free use default
   });
+
+  it('reports zero default dice when no slot or free use remains', () => {
+    // Prepared, but no free-use feature and no slots: nothing castable.
+    const facts = evaluateSheet([spellcasting, divineSmite], {
+      'spell.l1.divineSmite.prepared': 1
+    });
+    expect(facts['smite.anyResourceRemaining']).toBe(0);
+    expect(facts['smite.defaultDieCount']).toBe(0);
+  });
 });
 
 describe('v2 divine-smite — paladin slots + level bounds', () => {

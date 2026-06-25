@@ -54,12 +54,15 @@ const divineSmite: RuleModule = {
       value: (f) => Math.min(f.num('spellcasting.maxSlotLevel'), 5)
     },
     {
-      // Damage dice for the default level: free use (0) and L1 are 2d8, then +1
-      // per level above 1 (L2 -> 3, ... L5 -> 6). Tracks smite.defaultLevel.
+      // Damage dice for the default cast: 2d8 for a free use (level 0) or L1,
+      // then +1 per level above 1 (L2 -> 3, ... L5 -> 6). Zero when nothing is
+      // castable — defaultLevel is also 0 there (no slots, no free use), so it
+      // must not be mistaken for a free-use 2d8.
       fact: 'smite.defaultDieCount',
       value: (f) => {
-        const lvl = f.num('smite.defaultLevel');
-        return lvl === 0 ? 2 : lvl + 1;
+        if (f.num('paladinSmite.remaining') > 0) return 2; // free use
+        const slot = f.num('smite.lowestAvailableSlotLevel');
+        return slot > 0 ? slot + 1 : 0; // a slot, else no resource
       }
     }
   ],
