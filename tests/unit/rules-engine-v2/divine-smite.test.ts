@@ -91,5 +91,10 @@ describe('v2 divine-smite — slot cascade / slider bounds (no free-use feature)
     expect(facts['smite.defaultLevel']).toBe(2);
     expect(facts['smite.minSlotLevel']).toBe(1); // no free-use feature -> no level-0 notch
     expect(facts['smite.maxCastLevel']).toBe(2);
+    expect(facts['smite.defaultDieCount']).toBe(3); // L2 default -> 3d8
+  });
+
+  it('default die count tracks the default level (free use / L1 = 2d8)', () => {
+    expect(evaluateSheet(ALL, INPUT)['smite.defaultDieCount']).toBe(2); // free use default
   });
 });

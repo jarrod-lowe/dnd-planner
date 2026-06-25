@@ -52,6 +52,15 @@ const divineSmite: RuleModule = {
       // Smite handles L1-5 only, even for a multiclass full caster.
       fact: 'smite.maxCastLevel',
       value: (f) => Math.min(f.num('spellcasting.maxSlotLevel'), 5)
+    },
+    {
+      // Damage dice for the default level: free use (0) and L1 are 2d8, then +1
+      // per level above 1 (L2 -> 3, ... L5 -> 6). Tracks smite.defaultLevel.
+      fact: 'smite.defaultDieCount',
+      value: (f) => {
+        const lvl = f.num('smite.defaultLevel');
+        return lvl === 0 ? 2 : lvl + 1;
+      }
     }
   ],
   offer: () => [
