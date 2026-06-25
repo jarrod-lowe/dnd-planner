@@ -1,41 +1,52 @@
-import type { ActionResult, FactReader, RuleModule } from '../types';
+import type { ActionResult, EffectInstance, FactReader, RuleModule } from '../types';
 
 const NO_ACTION = 'rule.dnd-5e-2024.attacks.activation.no_action';
 
+/** A per-turn spend effect: the given fact deltas, expiring at end of turn. */
+const spend = (state: Record<string, number>): EffectInstance => ({
+  id: 'spend',
+  state,
+  expiry: { kind: 'endOfTurn' }
+});
+
 /**
- * Extra-attack resolution as a pure transition over the *current* turn state —
- * the reducer guarantees that state already reflects earlier swings.
+ * Extra-attack resolution over the *current* turn state — the fold re-derives it
+ * to reflect earlier swings. No `attackAction.wasExtra` / `actionsBefore`
+ * snapshots: read the live state and branch.
  *
- * Contrast v1 attacks.yaml, which snapshots `attackAction.wasExtra` and
- * `attackAction.actionsBefore` before mutating, then branches on the snapshots.
- * Here there is nothing to snapshot: read the live state and branch.
+ * The follow-up budget is modelled as `extraRemaining = extraGranted -
+ * extraSpent`, both summed from per-turn effects: a new Attack action grants
+ * `extraAttacks.max`; each extra swing spends 1.
  */
 function applyUnarmedStrike(s: FactReader): ActionResult {
   if (s.num('attackAction.extraRemaining') > 0) {
-    // Free follow-up swing: spend one extra-attack charge from this Attack.
+    // Free follow-up swing.
     return {
-      facts: {
-        'attackAction.extraRemaining': s.num('attackAction.extraRemaining') - 1,
-        'attack.last.activation.action': 1
-      }
+      advertise: [spend({ 'attackAction.extraSpent': 1, 'attack.last.activation.action': 1 })]
     };
   }
-
-  // New Attack action: spend an action and refill the follow-up budget — unless
-  // this over-committed (mirrors v1's actionsBefore > 0 guard). Over-commit
-  // legality comes from the offer's legalWhen, so apply stays a pure transition.
-  const actionsLeft = s.num('actions.remaining') - 1;
+  // New Attack action: spend an action and grant the follow-up budget — unless
+  // this over-committed (no action to spend), mirroring v1's actionsBefore guard.
+  const granted = s.num('actions.remaining') > 0 ? s.num('extraAttacks.max') : 0;
   return {
-    facts: {
-      'actions.remaining': actionsLeft,
-      'attackAction.extraRemaining': actionsLeft >= 0 ? s.num('extraAttacks.max') : 0,
-      'attack.last.activation.action': 1
-    }
+    advertise: [
+      spend({
+        'actions.spent': 1,
+        'attackAction.extraGranted': granted,
+        'attack.last.activation.action': 1
+      })
+    ]
   };
 }
 
 const attacks: RuleModule = {
   id: 'attacks',
+  derive: () => [
+    {
+      fact: 'attackAction.extraRemaining',
+      value: (f) => f.num('attackAction.extraGranted') - f.num('attackAction.extraSpent')
+    }
+  ],
   offer: () => [
     {
       id: 'unarmed-strike-use-action',

@@ -72,13 +72,18 @@ export type Expiry =
   | { kind: 'turns'; remaining: number };
 
 /**
- * A persistent cross-turn effect: a serializable value (not a self-replicating
- * rule). While active it contributes to the sheet via its module's
- * `effectContributions`; it is aged/expired at end of turn.
+ * A persistent or per-turn effect: a serializable value (not a self-replicating
+ * rule), aged/expired at end of turn.
+ *
+ * While active it contributes to the sheet. By default `state` is read as fact
+ * deltas (each `fact: amount` is summed into that fact) — so a spent L1 slot is
+ * `state: { 'spellcasting.slots.level1.spent': 1 }`. For parameterized effects
+ * an owning module (`ruleId`) may instead provide `effectContributions`.
  */
 export interface EffectInstance {
   id: string;
-  ruleId: string;
+  ruleId?: string;
+  /** Fact deltas contributed while active (summed), unless the owning module overrides via effectContributions. */
   state?: Record<string, number>;
   expiry: Expiry;
 }
@@ -95,10 +100,14 @@ export interface Diagnostic {
  * illegal-but-visible on planned items).
  */
 export interface ActionResult {
-  facts: Facts;
-  diagnostics?: Diagnostic[];
-  /** Persistent effects to carry into future turns. */
+  /**
+   * Effects this action contributes — the ONLY way an action changes state.
+   * Per-turn spends use `endOfTurn`, durable ones `untilLongRest`. The fold
+   * re-derives the sheet with effects-so-far before each subsequent action, so
+   * every spend is visible to later actions in the same turn.
+   */
   advertise?: EffectInstance[];
+  diagnostics?: Diagnostic[];
 }
 
 /**

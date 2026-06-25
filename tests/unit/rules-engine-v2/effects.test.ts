@@ -76,14 +76,14 @@ describe('v2 declarative effects — persistent contributions with expiry', () =
               diagnostics: [{ code: 'no_slot', severity: 'error' }]
             }
           ],
-          apply: () => ({ facts: {}, advertise: [longRestSlot('slot:1:x', 1)] })
+          apply: () => ({ advertise: [longRestSlot('slot:1:x', 1)] })
         }
       ]
     };
     const all = [spellcasting, slotSpent, caster];
     const planned: PlannedRef[] = [{ instanceId: 'c1', ruleId: 'cast-l1' }];
 
-    const { advertised } = evaluatePlan(evaluateSheet(all, {}, []), planned, all);
+    const { advertised } = evaluatePlan(all, {}, planned);
     expect(advertised).toHaveLength(1);
 
     const next = endTurn([], advertised, { longRest: false });

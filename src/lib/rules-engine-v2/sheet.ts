@@ -53,14 +53,21 @@ export function evaluateSheet(
     for (const c of m.derive(ctx)) add(c, m.id);
   }
 
-  // Active persistent effects contribute to the sheet too (e.g. a spent slot
-  // adds to `...spent`). They are plain values, not self-replicating rules.
+  // Active effects contribute to the sheet too (e.g. a spent slot adds to
+  // `...spent`). They are plain values, not self-replicating rules. By default
+  // `state` is read as fact deltas (summed); an owning module may override with
+  // `effectContributions` for parameterized effects.
   if (effects.length > 0) {
     const byId = new Map(modules.map((m) => [m.id, m]));
     for (const effect of effects) {
-      const mod = byId.get(effect.ruleId);
-      if (!mod?.effectContributions) continue;
-      for (const c of mod.effectContributions(effect)) add(c, `${mod.id}#${effect.id}`);
+      const mod = effect.ruleId ? byId.get(effect.ruleId) : undefined;
+      if (mod?.effectContributions) {
+        for (const c of mod.effectContributions(effect)) add(c, `${mod.id}#${effect.id}`);
+      } else if (effect.state) {
+        for (const [fact, amount] of Object.entries(effect.state)) {
+          add({ fact, combine: 'sum', value: () => amount }, `effect#${effect.id}`);
+        }
+      }
     }
   }
 
