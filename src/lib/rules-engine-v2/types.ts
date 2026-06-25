@@ -50,10 +50,65 @@ export interface SheetCtx {
 }
 
 /**
- * A rule module. The sheet pass only consumes `derive`; later passes add
- * `offer`/`apply`/`effects`/`annotate` to this interface.
+ * A rule module. The sheet pass consumes `derive`; the plan/offer passes consume
+ * `offer`. Later passes add `effects`/`annotate`.
  */
 export interface RuleModule {
   id: string;
   derive?: (ctx: SheetCtx) => Contribution[];
+  offer?: (ctx: SheetCtx) => Offer[];
+}
+
+/** A legality/diagnostic message (mirrors the v1 contract shape). */
+export interface Diagnostic {
+  code: string;
+  severity: 'error' | 'warning' | 'notice';
+}
+
+/**
+ * The result of applying a planned action: fact deltas to merge into the working
+ * turn state, plus any per-action legality problems (which drive
+ * illegal-but-visible on planned items).
+ */
+export interface ActionResult {
+  facts: Facts;
+  diagnostics?: Diagnostic[];
+}
+
+/**
+ * A legality gate on an offer. If `condition` is false the offer is still shown
+ * but marked illegal, with `diagnostics` attached (illegal-but-visible).
+ */
+export interface LegalWhen {
+  condition: (f: FactReader) => boolean;
+  diagnostics: Diagnostic[];
+}
+
+/**
+ * What a module advertises to the UI. `id`/`ui`/`vars` are plain data so the
+ * existing PanelRenderer keeps working; `apply` is the pure transition run when
+ * this offer is added to the plan.
+ */
+export interface Offer {
+  id: string;
+  ui?: Record<string, unknown>;
+  vars?: Record<string, unknown>;
+  legalWhen?: LegalWhen[];
+  apply?: (state: FactReader, selections: Record<string, unknown>) => ActionResult;
+}
+
+/** UI-facing offer entry (the `apply` is stripped; legality is resolved). */
+export interface OfferEntry {
+  id: string;
+  ui?: Record<string, unknown>;
+  vars?: Record<string, unknown>;
+  legal: boolean;
+  diagnostics: Diagnostic[];
+}
+
+/** A planned action instance: a reference to an offer id plus its selections. */
+export interface PlannedRef {
+  instanceId: string;
+  ruleId: string;
+  selections?: Record<string, unknown>;
 }
