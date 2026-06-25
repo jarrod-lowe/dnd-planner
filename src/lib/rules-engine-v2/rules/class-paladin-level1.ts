@@ -10,7 +10,9 @@ const paladinLevel1: RuleModule = {
   id: 'class-paladin-level1',
   derive: () => [
     { fact: 'proficiency.bonus', combine: 'sum', value: () => 2 },
-    { fact: 'hp.base.max', combine: 'sum', value: (f) => 10 + f.num('con.modifier') }
+    { fact: 'hp.base.max', combine: 'sum', value: (f) => 10 + f.num('con.modifier') },
+    // Paladin level 1 grants two level-1 spell slots.
+    { fact: 'spellcasting.slots.level1.total', combine: 'sum', value: () => 2 }
   ]
 };
 

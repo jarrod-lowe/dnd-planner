@@ -6,6 +6,7 @@ import attacks from '$lib/rules-engine-v2/rules/attacks';
 import spellcasting from '$lib/rules-engine-v2/rules/spellcasting';
 import paladinSmite from '$lib/rules-engine-v2/rules/paladin-smite';
 import divineSmite from '$lib/rules-engine-v2/rules/divine-smite';
+import classPaladinLevel1 from '$lib/rules-engine-v2/rules/class-paladin-level1';
 
 /**
  * M0 spike, increment 3b — Divine Smite end to end.
@@ -96,5 +97,23 @@ describe('v2 divine-smite — slot cascade / slider bounds (no free-use feature)
 
   it('default die count tracks the default level (free use / L1 = 2d8)', () => {
     expect(evaluateSheet(ALL, INPUT)['smite.defaultDieCount']).toBe(2); // free use default
+  });
+});
+
+describe('v2 divine-smite — paladin slots + level bounds', () => {
+  it('class-paladin-level1 grants two level-1 spell slots', () => {
+    const facts = evaluateSheet([spellcasting, classPaladinLevel1], {});
+    expect(facts['spellcasting.slots.level1.total']).toBe(2);
+    expect(facts['spellcasting.maxSlotLevel']).toBe(1);
+  });
+
+  it('rejects a smite selection above level 5 without consuming a high slot', () => {
+    const { facts, planDiagnostics } = evaluatePlan(
+      ALL,
+      { 'spellcasting.slots.level1.total': 2, 'spellcasting.slots.level6.total': 1 },
+      [attack('a1'), smite('s1', 6)]
+    );
+    expect(planDiagnostics.get('s1')?.some((d) => d.code.endsWith('wrong_level'))).toBe(true);
+    expect(facts['spellcasting.slots.level6.remaining']).toBe(1); // untouched
   });
 });

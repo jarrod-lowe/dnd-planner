@@ -135,7 +135,12 @@ const divineSmite: RuleModule = {
         ];
         const diagnostics: Diagnostic[] = [];
 
-        if (level === 0) {
+        if (level < 0 || level > 5) {
+          // Divine Smite only handles levels 0 (free use) through 5; reject a
+          // stale/tampered selection rather than consuming an out-of-range slot
+          // (a multiclass full caster can own L6-9 slots).
+          diagnostics.push({ code: `${D}.wrong_level`, severity: 'error' });
+        } else if (level === 0) {
           // Free use: spend the once-per-long-rest charge, no slot.
           advertise.push({
             id: 'free',
