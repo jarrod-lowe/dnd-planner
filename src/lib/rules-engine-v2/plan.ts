@@ -7,6 +7,7 @@ import type {
   PlannedRef,
   RuleModule
 } from './types';
+import { collectOffers } from './offers';
 
 type ApplyFn = NonNullable<Offer['apply']>;
 
@@ -43,13 +44,12 @@ export function evaluatePlan(
   planned: PlannedRef[],
   modules: RuleModule[]
 ): PlanResult {
-  // Build the action registry: offer id -> apply transition.
+  // Build the action registry: offer id -> apply transition. collectOffers
+  // enforces globally-unique offer ids, so the executed transition can never
+  // depend on module load order.
   const applyById = new Map<string, ApplyFn>();
-  for (const m of modules) {
-    if (!m.offer) continue;
-    for (const offer of m.offer({ selections: {} })) {
-      if (offer.apply) applyById.set(offer.id, offer.apply);
-    }
+  for (const offer of collectOffers(modules)) {
+    if (offer.apply) applyById.set(offer.id, offer.apply);
   }
 
   let facts: Facts = { ...initialFacts };

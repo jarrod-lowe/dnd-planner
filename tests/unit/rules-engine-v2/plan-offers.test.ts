@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { evaluateSheet, evaluatePlan, evaluateOffers } from '$lib/rules-engine-v2';
-import type { PlannedRef } from '$lib/rules-engine-v2';
+import type { PlannedRef, RuleModule } from '$lib/rules-engine-v2';
 import attacks from '$lib/rules-engine-v2/rules/attacks';
 import actionEconomy from '$lib/rules-engine-v2/rules/action-economy';
 
@@ -83,5 +83,20 @@ describe('v2 offers — illegal-but-visible', () => {
     expect(entry).toBeDefined(); // still visible
     expect(entry!.legal).toBe(false); // but illegal
     expect(entry!.diagnostics[0].code).toBe(NO_ACTION);
+  });
+});
+
+describe('v2 offers — unique ids (determinism)', () => {
+  // Two modules advertising the same offer id would make the executed transition
+  // depend on module load order, since a PlannedRef stores only the offer id.
+  const m1: RuleModule = { id: 'm1', offer: () => [{ id: 'dup', apply: () => ({ facts: {} }) }] };
+  const m2: RuleModule = { id: 'm2', offer: () => [{ id: 'dup', apply: () => ({ facts: {} }) }] };
+
+  it('evaluateOffers rejects duplicate offer ids across modules', () => {
+    expect(() => evaluateOffers([m1, m2], {})).toThrow(/duplicate offer id/i);
+  });
+
+  it('evaluatePlan rejects duplicate offer ids across modules', () => {
+    expect(() => evaluatePlan({}, [], [m1, m2])).toThrow(/duplicate offer id/i);
   });
 });
