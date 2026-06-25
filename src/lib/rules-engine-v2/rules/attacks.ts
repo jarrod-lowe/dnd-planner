@@ -22,15 +22,15 @@ function applyUnarmedStrike(s: FactReader): ActionResult {
   }
 
   // New Attack action: spend an action and refill the follow-up budget — unless
-  // this over-committed (mirrors v1's actionsBefore > 0 guard).
+  // this over-committed (mirrors v1's actionsBefore > 0 guard). Over-commit
+  // legality comes from the offer's legalWhen, so apply stays a pure transition.
   const actionsLeft = s.num('actions.remaining') - 1;
   return {
     facts: {
       'actions.remaining': actionsLeft,
       'attackAction.extraRemaining': actionsLeft >= 0 ? s.num('extraAttacks.max') : 0,
       'attack.last.activation.action': 1
-    },
-    diagnostics: actionsLeft < 0 ? [{ code: NO_ACTION, severity: 'error' }] : []
+    }
   };
 }
 

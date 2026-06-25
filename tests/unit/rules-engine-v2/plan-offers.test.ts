@@ -100,3 +100,62 @@ describe('v2 offers — unique ids (determinism)', () => {
     expect(() => evaluatePlan({}, [], [m1, m2])).toThrow(/duplicate offer id/i);
   });
 });
+
+describe('v2 plan — legalWhen flags planned actions illegal (illegal-but-visible)', () => {
+  // A cast offer whose apply only advertises the spent effect and does NOT
+  // re-check the gate. With no slots, the planned item must still be flagged via
+  // legalWhen — and the effect still applies.
+  const caster: RuleModule = {
+    id: 'caster',
+    derive: () => [{ fact: 'spellcasting.slots.level1.remaining', value: () => 0 }],
+    offer: () => [
+      {
+        id: 'cast-x',
+        legalWhen: [
+          {
+            condition: (f) => f.num('spellcasting.slots.level1.remaining') > 0,
+            diagnostics: [{ code: 'no_slot', severity: 'error' }]
+          }
+        ],
+        apply: () => ({
+          facts: {},
+          advertise: [
+            { id: 'e', ruleId: 'caster', state: { level: 1 }, expiry: { kind: 'untilLongRest' } }
+          ]
+        })
+      }
+    ]
+  };
+
+  it('flags a planned action illegal when legalWhen fails, even if apply does not self-check', () => {
+    const baseline = evaluateSheet([caster], {});
+    const { planDiagnostics, advertised } = evaluatePlan(
+      baseline,
+      [{ instanceId: 'p1', ruleId: 'cast-x' }],
+      [caster]
+    );
+    expect(planDiagnostics.get('p1')?.[0].code).toBe('no_slot');
+    expect(advertised).toHaveLength(1); // still applies — illegal-but-visible
+  });
+
+  it('does not duplicate a diagnostic raised by both legalWhen and apply', () => {
+    const dupCaster: RuleModule = {
+      id: 'dup-caster',
+      offer: () => [
+        {
+          id: 'dup-cast',
+          legalWhen: [
+            { condition: () => false, diagnostics: [{ code: 'same', severity: 'error' }] }
+          ],
+          apply: () => ({ facts: {}, diagnostics: [{ code: 'same', severity: 'error' }] })
+        }
+      ]
+    };
+    const { planDiagnostics } = evaluatePlan(
+      {},
+      [{ instanceId: 'd1', ruleId: 'dup-cast' }],
+      [dupCaster]
+    );
+    expect(planDiagnostics.get('d1')).toEqual([{ code: 'same', severity: 'error' }]);
+  });
+});
