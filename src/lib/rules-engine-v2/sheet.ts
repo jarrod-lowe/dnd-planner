@@ -1,4 +1,11 @@
-import type { Facts, FactReader, RuleModule, SheetCtx, Contribution } from './types';
+import type {
+  Contribution,
+  EffectInstance,
+  Facts,
+  FactReader,
+  RuleModule,
+  SheetCtx
+} from './types';
 
 interface TaggedContribution extends Contribution {
   moduleId: string;
@@ -27,19 +34,36 @@ interface TaggedContribution extends Contribution {
  * @throws On a dependency cycle, duplicate `override` writers, or conflicting
  *         combine modes for a single fact.
  */
-export function evaluateSheet(modules: RuleModule[], inputFacts: Facts = {}): Facts {
+export function evaluateSheet(
+  modules: RuleModule[],
+  inputFacts: Facts = {},
+  effects: EffectInstance[] = []
+): Facts {
   const ctx: SheetCtx = { selections: {} };
 
   // Collect contributions, grouped by target fact.
   const byFact = new Map<string, TaggedContribution[]>();
+  const add = (c: Contribution, moduleId: string): void => {
+    const arr = byFact.get(c.fact) ?? [];
+    arr.push({ ...c, moduleId });
+    byFact.set(c.fact, arr);
+  };
   for (const m of modules) {
     if (!m.derive) continue;
-    for (const c of m.derive(ctx)) {
-      const arr = byFact.get(c.fact) ?? [];
-      arr.push({ ...c, moduleId: m.id });
-      byFact.set(c.fact, arr);
+    for (const c of m.derive(ctx)) add(c, m.id);
+  }
+
+  // Active persistent effects contribute to the sheet too (e.g. a spent slot
+  // adds to `...spent`). They are plain values, not self-replicating rules.
+  if (effects.length > 0) {
+    const byId = new Map(modules.map((m) => [m.id, m]));
+    for (const effect of effects) {
+      const mod = byId.get(effect.ruleId);
+      if (!mod?.effectContributions) continue;
+      for (const c of mod.effectContributions(effect)) add(c, `${mod.id}#${effect.id}`);
     }
   }
+
   const contributedFacts = new Set(byFact.keys());
 
   const facts: Facts = { ...inputFacts };

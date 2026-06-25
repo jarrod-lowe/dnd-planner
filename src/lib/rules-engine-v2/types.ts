@@ -57,6 +57,30 @@ export interface RuleModule {
   id: string;
   derive?: (ctx: SheetCtx) => Contribution[];
   offer?: (ctx: SheetCtx) => Offer[];
+  /**
+   * Contributions an ACTIVE persistent effect makes to the sheet (e.g. a spent
+   * spell slot adds +1 to `...spent`). The effect replaces v1's self-advertising
+   * rule: it is just a value that contributes while it lives.
+   */
+  effectContributions?: (effect: EffectInstance) => Contribution[];
+}
+
+/** When a persistent effect ends. */
+export type Expiry =
+  | { kind: 'untilLongRest' }
+  | { kind: 'endOfTurn' }
+  | { kind: 'turns'; remaining: number };
+
+/**
+ * A persistent cross-turn effect: a serializable value (not a self-replicating
+ * rule). While active it contributes to the sheet via its module's
+ * `effectContributions`; it is aged/expired at end of turn.
+ */
+export interface EffectInstance {
+  id: string;
+  ruleId: string;
+  state?: Record<string, number>;
+  expiry: Expiry;
 }
 
 /** A legality/diagnostic message (mirrors the v1 contract shape). */
@@ -73,6 +97,8 @@ export interface Diagnostic {
 export interface ActionResult {
   facts: Facts;
   diagnostics?: Diagnostic[];
+  /** Persistent effects to carry into future turns. */
+  advertise?: EffectInstance[];
 }
 
 /**

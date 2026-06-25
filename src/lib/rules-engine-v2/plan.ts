@@ -1,4 +1,12 @@
-import type { Diagnostic, Facts, FactReader, Offer, PlannedRef, RuleModule } from './types';
+import type {
+  Diagnostic,
+  EffectInstance,
+  Facts,
+  FactReader,
+  Offer,
+  PlannedRef,
+  RuleModule
+} from './types';
 
 type ApplyFn = NonNullable<Offer['apply']>;
 
@@ -7,6 +15,8 @@ export interface PlanResult {
   facts: Facts;
   /** Per-planned-instance legality problems, keyed by instanceId. */
   planDiagnostics: Map<string, Diagnostic[]>;
+  /** Persistent effects advertised by the planned actions this turn. */
+  advertised: EffectInstance[];
 }
 
 /**
@@ -44,6 +54,7 @@ export function evaluatePlan(
 
   let facts: Facts = { ...initialFacts };
   const planDiagnostics = new Map<string, Diagnostic[]>();
+  const advertised: EffectInstance[] = [];
 
   for (const ref of planned) {
     const apply = applyById.get(ref.ruleId);
@@ -57,7 +68,10 @@ export function evaluatePlan(
     if (result.diagnostics && result.diagnostics.length > 0) {
       planDiagnostics.set(ref.instanceId, result.diagnostics);
     }
+    if (result.advertise && result.advertise.length > 0) {
+      advertised.push(...result.advertise);
+    }
   }
 
-  return { facts, planDiagnostics };
+  return { facts, planDiagnostics, advertised };
 }
