@@ -1,9 +1,19 @@
 # Rules Engine v2 — M1 Plan (Engine build-out)
 
-> Status: **DRAFT for review.** Follows M0 (verdict **GO** — see
-> [RULES_ENGINE_V2_PLAN.md](RULES_ENGINE_V2_PLAN.md)).
-> Branch: `claude/rules-engine-v2-m1`, stacked on and PR'd into
-> `claude/epic-dijkstra-lxyaep` (not `main`).
+> Status: **COMPLETE** (2026-06-26). All five workstreams landed on
+> `claude/rules-engine-v2-m1` (PR → `claude/epic-dijkstra-lxyaep`, not `main`).
+> `evaluate()` emits the full contract; registry + annotate + builder API +
+> confinement/purity/watchdog rails + effect-model completeness are in; the
+> parity harness runs the ported-group scenario subset in `make test`. Follows M0
+> (verdict **GO** — see [RULES_ENGINE_V2_PLAN.md](RULES_ENGINE_V2_PLAN.md)).
+>
+> | WS  | Scope                                                              | Status |
+> | --- | ------------------------------------------------------------------ | ------ |
+> | W1  | composed `evaluate()` + contract adapter                           | ✅     |
+> | W2  | registry + annotate pass                                           | ✅     |
+> | W3  | builder API + lint confinement + purity/termination rails          | ✅     |
+> | W4  | effect-model completeness (key replace / stateCombine / permanent) | ✅     |
+> | W5  | parity harness (acceptance gate) in `make test`                    | ✅     |
 
 ## 1. Where M0 left us
 
@@ -130,13 +140,17 @@ right after W1 (it touches the sheet/effect path).
 
 ## 7. Definition of done (M1)
 
-- `evaluate(input): EngineOutput` emits the existing contract; adapter unit-tested.
-- Registry + `annotate` working; `divine-smite` annotation parity.
-- Lint confinement + purity + watchdog in place and in CI.
-- Effect `combine`/`permanent` supported (engine-level), with tests.
-- Parity harness in `make test`, green over the ported-group scenario subset
-  (with a documented skip-list).
-- App still 100% on v1; everything additive. `make test` green.
+- ✅ `evaluate(input): EngineOutput` emits the existing contract; adapter unit-tested.
+- ✅ Registry + `annotate` working; `divine-smite` annotation parity.
+- ✅ Lint confinement + purity + watchdog in place and in CI.
+- ✅ Effect `combine`/`permanent` supported (engine-level), with tests.
+- ✅ Parity harness in `make test`, green over the ported-group scenario subset
+  (3 runnable today: `bonus-action-init`, `paladin-spell-slots`,
+  `spellcasting-base-reset`; 333 skipped+counted, incl. a documented SKIP_BY_NAME
+  for groups-ported-but-offers-not — `hp-paladin-level1`, `hp-with-modifiers`,
+  `hp-modifier-no-stacking`). Coverage grows automatically as M3 ports more.
+- ✅ App still 100% on v1; everything additive. Full vitest suite green
+  (1890 passed, 333 skipped).
 
 ## 8. Out of scope (later milestones)
 
