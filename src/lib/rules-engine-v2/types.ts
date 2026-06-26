@@ -76,7 +76,13 @@ export interface RuleModule {
 export type Expiry =
   | { kind: 'untilLongRest' }
   | { kind: 'endOfTurn' }
-  | { kind: 'turns'; remaining: number };
+  | { kind: 'turns'; remaining: number }
+  /**
+   * Never aged by `endTurn` — survives turns and long rests. For prepared spells
+   * / conditions that persist until explicitly removed (the UI's removeEffect),
+   * not by the clock.
+   */
+  | { kind: 'permanent' };
 
 /**
  * A persistent or per-turn effect: a serializable value (not a self-replicating
@@ -90,8 +96,22 @@ export type Expiry =
 export interface EffectInstance {
   id: string;
   ruleId?: string;
-  /** Fact deltas contributed while active (summed), unless the owning module overrides via effectContributions. */
+  /**
+   * Logical identity for replacement effects. Two effects sharing a `key` do NOT
+   * stack: the newest (advertised-after-committed) evicts the older, both when
+   * the sheet is built and when effects are committed at end of turn — so a
+   * re-applied modifier (set Max HP to +5, then +10) replaces rather than sums.
+   * Keyless effects (the common per-turn spend) never dedupe.
+   */
+  key?: string;
+  /** Fact deltas contributed while active (summed by default), unless the owning module overrides via effectContributions. */
   state?: Record<string, number>;
+  /**
+   * Per-fact combine override for `state` deltas (default `sum`). Lets an effect
+   * contribute `override`/`max` to a fact — e.g. two different floors taking the
+   * `max` rather than summing. Combine conflicts are rejected by the sheet.
+   */
+  stateCombine?: Record<string, CombineMode>;
   expiry: Expiry;
 }
 

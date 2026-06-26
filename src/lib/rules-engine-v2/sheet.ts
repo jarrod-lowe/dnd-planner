@@ -6,6 +6,7 @@ import type {
   RuleModule,
   SheetCtx
 } from './types';
+import { dedupeByKey } from './effects';
 
 interface TaggedContribution extends Contribution {
   moduleId: string;
@@ -54,18 +55,23 @@ export function evaluateSheet(
   }
 
   // Active effects contribute to the sheet too (e.g. a spent slot adds to
-  // `...spent`). They are plain values, not self-replicating rules. By default
-  // `state` is read as fact deltas (summed); an owning module may override with
-  // `effectContributions` for parameterized effects.
+  // `...spent`). They are plain values, not self-replicating rules. Replacement
+  // effects sharing a `key` are first collapsed (newest wins) so they don't
+  // stack. By default `state` is read as fact deltas (summed); a per-fact
+  // `stateCombine` may pick `max`/`override`, and an owning module may override
+  // with `effectContributions` for parameterized effects.
   if (effects.length > 0) {
     const byId = new Map(modules.map((m) => [m.id, m]));
-    for (const effect of effects) {
+    for (const effect of dedupeByKey(effects)) {
       const mod = effect.ruleId ? byId.get(effect.ruleId) : undefined;
       if (mod?.effectContributions) {
         for (const c of mod.effectContributions(effect)) add(c, `${mod.id}#${effect.id}`);
       } else if (effect.state) {
         for (const [fact, amount] of Object.entries(effect.state)) {
-          add({ fact, combine: 'sum', value: () => amount }, `effect#${effect.id}`);
+          add(
+            { fact, combine: effect.stateCombine?.[fact] ?? 'sum', value: () => amount },
+            `effect#${effect.id}`
+          );
         }
       }
     }
