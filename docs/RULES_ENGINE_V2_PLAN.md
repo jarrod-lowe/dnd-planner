@@ -6,8 +6,9 @@
 > annotate, builder API + lint confinement + purity/termination rails,
 > effect-model completeness (key-replace / stateCombine / permanent), and the
 > parity harness in `make test`. M0 on `claude/epic-dijkstra-lxyaep` (PR #354);
-> M1 on `claude/rules-engine-v2-m1` (PR → the epic branch). **M1 plan:**
-> [RULES_ENGINE_V2_M1_PLAN.md](RULES_ENGINE_V2_M1_PLAN.md). **Next: M2.**
+> M1 on `claude/rules-engine-v2-m1` (PR → the epic branch). **Next: M2** (in
+> progress on `claude/rules-engine-v2-m2`, PR → the M1 branch). Plans:
+> [M1](RULES_ENGINE_V2_M1_PLAN.md) · [M2](RULES_ENGINE_V2_M2_PLAN.md).
 
 ## 1. Goal & the one invariant
 
