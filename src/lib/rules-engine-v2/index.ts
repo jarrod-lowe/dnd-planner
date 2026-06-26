@@ -1,5 +1,7 @@
 // Rules Engine v2 — public surface (M1: composed evaluate() + passes).
-export { evaluate } from './engine';
+export { evaluate, type EvaluateOptions } from './engine';
+export { defineRule } from './builder';
+export { EngineTimeoutError, DEFAULT_BUDGET_MS } from './watchdog';
 export { evaluateSheet } from './sheet';
 export { evaluatePlan, type PlanResult } from './plan';
 export { evaluateOffers, collectOffers } from './offers';

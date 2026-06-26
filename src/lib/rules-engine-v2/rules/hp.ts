@@ -1,4 +1,4 @@
-import type { RuleModule } from '../types';
+import { defineRule, type RuleModule } from '../builder';
 
 /**
  * HP derivation. In v1 this needs the hp-reset → (class contributions) → hp-copy
@@ -18,4 +18,4 @@ const hp: RuleModule = {
   ]
 };
 
-export default hp;
+export default defineRule(hp);

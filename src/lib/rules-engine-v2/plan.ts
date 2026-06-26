@@ -1,14 +1,8 @@
-import type {
-  Diagnostic,
-  EffectInstance,
-  Facts,
-  FactReader,
-  Offer,
-  PlannedRef,
-  RuleModule
-} from './types';
+import type { Diagnostic, EffectInstance, Facts, Offer, PlannedRef, RuleModule } from './types';
 import { evaluateSheet } from './sheet';
 import { collectOffers } from './offers';
+import { plainReader } from './reader';
+import { checkDeadline, DEFAULT_BUDGET_MS } from './watchdog';
 
 export interface PlanResult {
   /** Projected turn facts after folding every planned action over the baseline. */
@@ -55,12 +49,17 @@ function dedupeDiagnostics(diagnostics: Diagnostic[]): Diagnostic[] {
  * @param inputFacts Player-set input facts (e.g. ability scores).
  * @param planned    Ordered planned action references.
  * @param committed  Effects persisted from prior turns (default none).
+ * @param deadline   Optional wall-clock deadline (epoch ms); the fold throws
+ *                   EngineTimeoutError if a step starts past it. Omit for no cap.
+ * @param budgetMs   The budget the deadline came from, for the error message.
  */
 export function evaluatePlan(
   modules: RuleModule[],
   inputFacts: Facts,
   planned: PlannedRef[],
-  committed: EffectInstance[] = []
+  committed: EffectInstance[] = [],
+  deadline?: number,
+  budgetMs: number = DEFAULT_BUDGET_MS
 ): PlanResult {
   // Action registry: offer id -> Offer. collectOffers enforces globally-unique
   // offer ids, so the executed transition can never depend on module load order.
@@ -71,12 +70,10 @@ export function evaluatePlan(
   const advertised: EffectInstance[] = [];
 
   for (const ref of planned) {
+    checkDeadline(deadline, 'plan fold', budgetMs);
     // Re-derive the working state reflecting all spends so far this turn.
     const facts = evaluateSheet(modules, inputFacts, [...committed, ...advertised]);
-    const reader: FactReader = {
-      num: (name) => facts[name] ?? 0,
-      has: (name) => Object.prototype.hasOwnProperty.call(facts, name)
-    };
+    const reader = plainReader(facts);
 
     const offer = offerById.get(ref.ruleId);
     if (!offer) continue; // unknown offer (e.g. removed rule group)

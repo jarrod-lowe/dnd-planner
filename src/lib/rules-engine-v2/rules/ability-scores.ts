@@ -1,5 +1,4 @@
-import type { RuleModule } from '../types';
-import { statToModifier } from '../functions';
+import { defineRule, statToModifier, type RuleModule } from '../builder';
 
 const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
 
@@ -22,4 +21,4 @@ const abilityScores: RuleModule = {
     }))
 };
 
-export default abilityScores;
+export default defineRule(abilityScores);

@@ -1,4 +1,4 @@
-import type { RuleModule } from '../types';
+import { defineRule, type RuleModule } from '../builder';
 
 /**
  * Paladin level 1 contributions to the sheet: +2 proficiency and a d10 hit die
@@ -16,4 +16,4 @@ const paladinLevel1: RuleModule = {
   ]
 };
 
-export default paladinLevel1;
+export default defineRule(paladinLevel1);

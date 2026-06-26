@@ -1,4 +1,4 @@
-import type { Contribution, RuleModule } from '../types';
+import { defineRule, type Contribution, type RuleModule } from '../builder';
 
 const LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 
@@ -37,4 +37,4 @@ const spellcasting: RuleModule = {
   ]
 };
 
-export default spellcasting;
+export default defineRule(spellcasting);

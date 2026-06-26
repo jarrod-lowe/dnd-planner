@@ -2,6 +2,13 @@ import type { AvailableRuleEntry, Diagnostic, EngineInput, EngineOutput } from '
 import { evaluatePlan } from './plan';
 import { evaluateOffers } from './offers';
 import { collectAnnotations } from './annotate';
+import { checkDeadline, deadlineFrom, DEFAULT_BUDGET_MS } from './watchdog';
+
+/** Options for a single evaluation. */
+export interface EvaluateOptions {
+  /** Wall-clock budget for the whole evaluation (ms). Defaults to DEFAULT_BUDGET_MS. */
+  budgetMs?: number;
+}
 
 /**
  * The v2 engine entry point: a single pure function composing the passes into
@@ -15,12 +22,16 @@ import { collectAnnotations } from './annotate';
  * resolved against them.
  *
  * Pure: same input → same output. No runtime flip — this is additive; the app
- * still runs the v1 engine.
+ * still runs the v1 engine. A wall-clock budget bounds pathological inputs (see
+ * watchdog.ts); it never trips for real evaluations.
  */
-export function evaluate(input: EngineInput): EngineOutput {
+export function evaluate(input: EngineInput, opts: EvaluateOptions = {}): EngineOutput {
   const { modules, inputFacts = {}, planned = [], committed = [] } = input;
+  const budgetMs = opts.budgetMs ?? DEFAULT_BUDGET_MS;
+  const deadline = deadlineFrom(budgetMs);
 
-  const plan = evaluatePlan(modules, inputFacts, planned, committed);
+  const plan = evaluatePlan(modules, inputFacts, planned, committed, deadline, budgetMs);
+  checkDeadline(deadline, 'offers', budgetMs);
   const offers = evaluateOffers(modules, plan.facts);
 
   const availableRules: AvailableRuleEntry[] = offers.map((o) => ({
@@ -35,6 +46,7 @@ export function evaluate(input: EngineInput): EngineOutput {
     .flat()
     .some((d) => d.severity === 'error');
 
+  checkDeadline(deadline, 'annotate', budgetMs);
   const annotations = collectAnnotations(modules, plan.facts);
 
   return {

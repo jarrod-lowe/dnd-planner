@@ -1,4 +1,4 @@
-import type { RuleModule } from '../types';
+import { defineRule, type RuleModule } from '../builder';
 
 /**
  * Baseline action economy. `remaining = max - spent`, where `spent` is summed
@@ -19,4 +19,4 @@ const actionEconomy: RuleModule = {
   ]
 };
 
-export default actionEconomy;
+export default defineRule(actionEconomy);

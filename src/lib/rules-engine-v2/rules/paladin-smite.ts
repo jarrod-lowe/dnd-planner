@@ -1,4 +1,4 @@
-import type { RuleModule } from '../types';
+import { defineRule, type RuleModule } from '../builder';
 
 /**
  * Paladin's Smite (granted at level 2): Divine Smite is always prepared (free,
@@ -19,4 +19,4 @@ const paladinSmite: RuleModule = {
   ]
 };
 
-export default paladinSmite;
+export default defineRule(paladinSmite);

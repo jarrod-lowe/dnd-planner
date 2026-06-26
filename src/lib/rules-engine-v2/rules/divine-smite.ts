@@ -1,4 +1,11 @@
-import type { ActionResult, Diagnostic, EffectInstance, FactReader, RuleModule } from '../types';
+import {
+  defineRule,
+  type ActionResult,
+  type Diagnostic,
+  type EffectInstance,
+  type FactReader,
+  type RuleModule
+} from '../builder';
 
 const SMITE_LEVELS = [1, 2, 3, 4, 5] as const;
 const RADIANT = 'radiant';
@@ -180,4 +187,4 @@ const divineSmite: RuleModule = {
       : []
 };
 
-export default divineSmite;
+export default defineRule(divineSmite);

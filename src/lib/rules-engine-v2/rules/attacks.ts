@@ -1,4 +1,10 @@
-import type { ActionResult, EffectInstance, FactReader, RuleModule } from '../types';
+import {
+  defineRule,
+  type ActionResult,
+  type EffectInstance,
+  type FactReader,
+  type RuleModule
+} from '../builder';
 
 const NO_ACTION = 'rule.dnd-5e-2024.attacks.activation.no_action';
 
@@ -73,4 +79,4 @@ const attacks: RuleModule = {
   ]
 };
 
-export default attacks;
+export default defineRule(attacks);
