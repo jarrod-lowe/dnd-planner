@@ -50,11 +50,28 @@ export interface SheetCtx {
 }
 
 /**
+ * Search/discovery metadata for a rule group. This is the ONLY part of a module
+ * the search index needs — logic stays in the (lazily-loaded) chunk. `name` /
+ * `description` / `keywords` are i18n keys (keywords resolves to the existing
+ * space-separated term string); `requires` lists prerequisite rule-group ids
+ * (literal, like v1). Resolution of keys → indexed terms happens at publish time
+ * (W4), keeping modules i18n-compliant.
+ */
+export interface RuleMeta {
+  name: string;
+  description: string;
+  keywords: string;
+  requires?: string[];
+}
+
+/**
  * A rule module. The sheet pass consumes `derive`; the plan/offer passes consume
- * `offer`. Later passes add `effects`/`annotate`.
+ * `offer`. Later passes add `effects`/`annotate`. `meta` is the discovery surface
+ * (search index); only user-facing "content" groups need it.
  */
 export interface RuleModule {
   id: string;
+  meta?: RuleMeta;
   derive?: (ctx: SheetCtx) => Contribution[];
   offer?: (ctx: SheetCtx) => Offer[];
   /**

@@ -18,6 +18,7 @@ export { statToModifier } from './functions';
 
 export type {
   RuleModule,
+  RuleMeta,
   Contribution,
   FactReader,
   SheetCtx,

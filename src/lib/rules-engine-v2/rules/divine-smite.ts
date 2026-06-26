@@ -25,6 +25,14 @@ const D = 'rule.spell-divine-smite.offer-divine-smite';
  */
 const divineSmite: RuleModule = {
   id: 'spell-divine-smite',
+  // Discovery metadata for the search index (i18n keys reused from the offer; no
+  // new translations). `requires` mirrors the v1 group prerequisite.
+  meta: {
+    name: `${D}.name`,
+    description: `${D}.description`,
+    keywords: `${D}.keywords`,
+    requires: ['spellcasting']
+  },
   derive: () => [
     {
       fact: 'smite.eligibleSlotsRemaining',

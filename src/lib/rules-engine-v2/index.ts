@@ -8,6 +8,7 @@ export { evaluateOffers, collectOffers } from './offers';
 export { collectAnnotations } from './annotate';
 export { getModule, isRegistered, registeredRuleGroupIds, resolveModules } from './registry';
 export { serializeInput, resolveInput } from './input';
+export { extractMetadata, type MetadataEntry } from './metadata';
 export { endTurn, dedupeByKey, type EndTurnOptions } from './effects';
 export { statToModifier } from './functions';
 export type {
@@ -17,6 +18,7 @@ export type {
   Contribution,
   SheetCtx,
   RuleModule,
+  RuleMeta,
   Diagnostic,
   ActionResult,
   LegalWhen,
