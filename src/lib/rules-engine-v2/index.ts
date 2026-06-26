@@ -1,7 +1,8 @@
-// Rules Engine v2 — public surface (M0 spike: sheet + plan/offers + effects).
+// Rules Engine v2 — public surface (M1: composed evaluate() + passes).
+export { evaluate } from './engine';
 export { evaluateSheet } from './sheet';
 export { evaluatePlan, type PlanResult } from './plan';
-export { evaluateOffers } from './offers';
+export { evaluateOffers, collectOffers } from './offers';
 export { endTurn, type EndTurnOptions } from './effects';
 export { statToModifier } from './functions';
 export type {
@@ -18,5 +19,12 @@ export type {
   OfferEntry,
   PlannedRef,
   Expiry,
-  EffectInstance
+  EffectInstance,
+  Status,
+  OfferRuleDescriptor,
+  AvailableRuleEntry,
+  AnnotationRider,
+  Annotation,
+  EngineInput,
+  EngineOutput
 } from './types';

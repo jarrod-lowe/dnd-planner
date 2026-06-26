@@ -88,6 +88,73 @@ export interface EffectInstance {
   expiry: Expiry;
 }
 
+// === ENGINE I/O (M1) ===
+
+/** Overall evaluation status (mirrors the v1 contract). */
+export interface Status {
+  ok: boolean;
+  legal: boolean;
+  applicable: boolean;
+}
+
+/** The serializable, UI-renderable subset of an offered rule (what PanelRenderer reads). */
+export interface OfferRuleDescriptor {
+  id: string;
+  ui?: Record<string, unknown>;
+  vars?: Record<string, unknown>;
+  description?: string;
+}
+
+/** An offered rule with legality metadata (mirrors v1 AvailableRuleEntry). */
+export interface AvailableRuleEntry {
+  rule: OfferRuleDescriptor;
+  legal: boolean;
+  applicable: boolean;
+  diagnostics: Diagnostic[];
+}
+
+/** Rider chip data on an annotation (mirrors v1). */
+export interface AnnotationRider {
+  label: string;
+  type: 'dice' | 'modifier' | 'effect';
+  costTags?: string[];
+  legal?: boolean;
+  illegalReason?: string;
+}
+
+/** Related-info annotation produced for action panels (mirrors v1). */
+export interface Annotation {
+  key: string;
+  targets: string[];
+  rider?: AnnotationRider;
+}
+
+/**
+ * Complete input to the v2 engine. Modules are passed resolved for now; the
+ * registry (W2) will resolve ruleGroupIds → modules so `next` is serializable.
+ */
+export interface EngineInput {
+  modules: RuleModule[];
+  inputFacts?: Facts;
+  planned?: PlannedRef[];
+  committed?: EffectInstance[];
+}
+
+/** Complete output of the v2 engine, composing all passes. */
+export interface EngineOutput {
+  status: Status;
+  facts: Facts;
+  availableRules: AvailableRuleEntry[];
+  /** Per-planned-instance legality problems, keyed by instanceId. */
+  planDiagnostics: Record<string, Diagnostic[]>;
+  annotations: Annotation[];
+  /** Effects advertised this turn (the UI commits these at end of turn). */
+  effects: EffectInstance[];
+  diagnostics: { errors: Diagnostic[]; warnings: Diagnostic[]; notices: Diagnostic[] };
+  /** Replayable input — re-running it yields an equivalent result. */
+  next: EngineInput;
+}
+
 /** A legality/diagnostic message (mirrors the v1 contract shape). */
 export interface Diagnostic {
   code: string;
