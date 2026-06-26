@@ -26,7 +26,7 @@ export interface EvaluateOptions {
  * watchdog.ts); it never trips for real evaluations.
  */
 export function evaluate(input: EngineInput, opts: EvaluateOptions = {}): EngineOutput {
-  const { modules, inputFacts = {}, planned = [], committed = [] } = input;
+  const { modules, ruleGroupIds, inputFacts = {}, planned = [], committed = [] } = input;
   const budgetMs = opts.budgetMs ?? DEFAULT_BUDGET_MS;
   const deadline = deadlineFrom(budgetMs);
 
@@ -59,6 +59,8 @@ export function evaluate(input: EngineInput, opts: EvaluateOptions = {}): Engine
     annotations,
     effects: plan.advertised,
     diagnostics: { errors: [], warnings: [], notices: [] },
-    next: { modules, inputFacts, planned, committed }
+    // `next` echoes the input: modules for in-memory replay, ruleGroupIds for
+    // serialize/replay-by-id (serializeInput projects to the JSON-safe form).
+    next: { modules, ruleGroupIds, inputFacts, planned, committed }
   };
 }

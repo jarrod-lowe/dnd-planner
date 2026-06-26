@@ -7,6 +7,7 @@ export { evaluatePlan, type PlanResult } from './plan';
 export { evaluateOffers, collectOffers } from './offers';
 export { collectAnnotations } from './annotate';
 export { getModule, isRegistered, registeredRuleGroupIds, resolveModules } from './registry';
+export { serializeInput, resolveInput } from './input';
 export { endTurn, dedupeByKey, type EndTurnOptions } from './effects';
 export { statToModifier } from './functions';
 export type {
@@ -30,5 +31,6 @@ export type {
   AnnotationRider,
   Annotation,
   EngineInput,
-  EngineOutput
+  EngineOutput,
+  SerializableInput
 } from './types';

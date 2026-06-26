@@ -157,11 +157,28 @@ export interface Annotation {
 }
 
 /**
- * Complete input to the v2 engine. Modules are passed resolved for now; the
- * registry (W2) will resolve ruleGroupIds → modules so `next` is serializable.
+ * Complete input to the v2 engine. `evaluate` runs `modules` directly and stays
+ * pure/sync (it never touches the registry, so it doesn't eagerly bundle every
+ * module). `ruleGroupIds` records where those modules came from, when known, so a
+ * turn can be persisted and replayed by id — modules carry functions and do not
+ * survive JSON. Resolution id → modules is an explicit step (`resolveInput`, or
+ * the M2 lazy loader), not something `evaluate` does.
  */
 export interface EngineInput {
   modules: RuleModule[];
+  /** The rule-group ids `modules` were resolved from (provenance for serialize/replay). */
+  ruleGroupIds?: string[];
+  inputFacts?: Facts;
+  planned?: PlannedRef[];
+  committed?: EffectInstance[];
+}
+
+/**
+ * The JSON-safe projection of an `EngineInput`: rule-group ids instead of module
+ * objects. Persist this; rehydrate with `resolveInput` (sync) or the lazy loader.
+ */
+export interface SerializableInput {
+  ruleGroupIds: string[];
   inputFacts?: Facts;
   planned?: PlannedRef[];
   committed?: EffectInstance[];
