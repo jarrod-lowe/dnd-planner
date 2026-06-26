@@ -1,10 +1,21 @@
 # Rules Engine v2 — M2 Plan (gated delivery pipeline)
 
-> Status: **DRAFT for review.** Follows M1 (complete — see
-> [RULES_ENGINE_V2_PLAN.md](RULES_ENGINE_V2_PLAN.md) /
-> [RULES_ENGINE_V2_M1_PLAN.md](RULES_ENGINE_V2_M1_PLAN.md)).
+> Status: **code core done; infra staged** (2026-06-26). Delivery decision:
+> **co-bundled lazy chunks** (A). **W1–W3 complete + unit-tested** on this branch
+> (serializable input, metadata extraction, lazy loading + version gate). **W4–W6
+> are env-gated** (DynamoDB sync, deploy, end-to-end) and cannot be run in this
+> sandbox — staged for CI / a writable test env (see §5). Follows M1 (complete).
 > Branch: `claude/rules-engine-v2-m2`, stacked on and PR'd into
 > `claude/rules-engine-v2-m1` (not `main`). **Do not auto-merge.**
+>
+> | WS  | Scope                                        | Status       |
+> | --- | -------------------------------------------- | ------------ |
+> | W1  | serializable `EngineInput` (#355 carry-over) | ✅           |
+> | W2  | module `meta` + metadata extraction          | ✅           |
+> | W3  | lazy chunk loading + `engineApiVersion` gate | ✅           |
+> | W4  | publish metadata to the search index         | ⏳ needs env |
+> | W5  | infra + CI (co-bundled hosting)              | ⏳ needs env |
+> | W6  | end-to-end proof in the test env             | ⏳ needs env |
 
 ## 1. Goal
 
