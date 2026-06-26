@@ -37,9 +37,14 @@ describe('v2 confinement (source scan)', () => {
   });
 
   it('every rule module imports only the builder API', () => {
+    // Capture every module specifier: `import ... from 'x'`, side-effect
+    // `import 'x'`, re-export `export ... from 'x'`, and dynamic `import('x')`.
+    // A side-effect import has no `from`, so matching only `from` would let
+    // `import '../engine'` smuggle engine internals past both lint and test.
+    const SPECIFIER = /(?:(?:import|export)\b[^'"]*?\bfrom\s*|\bimport\s*\(?\s*)['"]([^'"]+)['"]/g;
     for (const file of files) {
       const src = readFileSync(join(RULES_DIR, file), 'utf8');
-      const sources = [...src.matchAll(/from\s+['"]([^'"]+)['"]/g)].map((m) => m[1]);
+      const sources = [...src.matchAll(SPECIFIER)].map((m) => m[1]);
       for (const s of sources) {
         expect(s, `${file} must import only ../builder, found ${s}`).toBe('../builder');
       }

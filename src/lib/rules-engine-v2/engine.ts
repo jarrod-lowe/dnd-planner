@@ -48,6 +48,8 @@ export function evaluate(input: EngineInput, opts: EvaluateOptions = {}): Engine
 
   checkDeadline(deadline, 'annotate', budgetMs);
   const annotations = collectAnnotations(modules, plan.facts);
+  // Final checkpoint so a slow annotate cannot overrun the budget silently.
+  checkDeadline(deadline, 'done', budgetMs);
 
   return {
     status: { ok: true, legal: !planHasError, applicable: true },

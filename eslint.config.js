@@ -97,10 +97,29 @@ export default [
                 'node:*'
               ],
               message: 'No Node built-ins in rule modules.'
+            },
+            {
+              // Engine internals: rule modules import only ../builder. Listed as
+              // explicit paths (a bare '..' glob matched ../builder itself). The
+              // confinement test enforces the precise allowlist incl. side-effect
+              // imports; this gives the same coverage at lint time.
+              group: [
+                '../sheet',
+                '../plan',
+                '../engine',
+                '../offers',
+                '../effects',
+                '../registry',
+                '../annotate',
+                '../reader',
+                '../watchdog',
+                '../types',
+                '../functions',
+                '../index'
+              ],
+              message:
+                'Rule modules import only the builder API (../builder), not engine internals.'
             }
-            // The precise "import only ../builder" allowlist is enforced by the
-            // confinement test (it parses each module's imports); expressing it
-            // as a lint denylist matched ../builder itself.
           ]
         }
       ],
