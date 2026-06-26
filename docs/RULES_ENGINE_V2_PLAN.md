@@ -1,8 +1,10 @@
 # Rules Engine v2 — Implementation Plan
 
-> Status: **DRAFT for review.** This is a planning artifact, not yet executed.
-> Milestone **M0 is a spike with a built-in STOP gate** — it may end in No-Go by
-> design (see the "if a plan won't work, STOP" critical rule).
+> Status: **M0 complete — verdict GO** (2026-06-25). The spike validated the
+> functional engine on the hardest cases; all four pains have working, tested
+> proofs and `divine-smite` is ~90 lines vs the v1 832. M0 lives on branch
+> `claude/epic-dijkstra-lxyaep` (PR #354). **M1 build-out plan:**
+> [RULES_ENGINE_V2_M1_PLAN.md](RULES_ENGINE_V2_M1_PLAN.md).
 
 ## 1. Goal & the one invariant
 
@@ -131,13 +133,13 @@ suite**: it asserts on output (`facts` / `offers{legal}` / `effects` /
 
 ## 6. Milestones
 
-| #      | Milestone                                                                                                                                                                                                                                                                    | Exit criteria                                                                                                                |
-| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| **M0** | **Spike / STOP-gate.** Engine core (sheet + reducer + effects) just enough to re-author the _hardest_ cases — `hp` / `ability-scores` (pure dataflow) and `divine-smite` (cascade + free-use + persistence + upcast dice + illegal-but-visible). Finalize builder-API types. | Both groups' existing scenarios pass identically via the parity harness; smite is ~dozens of lines. **Go / No-Go decision.** |
-| **M1** | **Engine core + builder API + contract adapter.** Registry; the engine passes; effect aging; `EngineOutput` producer; ESLint confinement (`no-restricted-globals` / `-imports`); purity + termination watchdog. Unit tests (TDD).                                            | Engine unit-tested; parity harness in `make test`; lint blocks banned globals/imports.                                       |
-| **M2** | **Gated-M2 pipeline (infra).** CI precompile → chunks + metadata; `sync-rule-groups` publishes metadata from modules; chunk upload to S3/CDN; client lazy-load by id + version check. Terraform via make targets. Search endpoint unchanged.                                 | A new group loads end-to-end in the test env via a lazy chunk; search still works.                                           |
-| **M3** | **Port all rule groups** (dependency order: core stats → action economy / movement → attacks → spells → weapons [+ retire the Python `rule_preprocessor`]).                                                                                                                  | 100% of existing scenarios green on v2; new scenarios added.                                                                 |
-| **M4** | **Cutover & decommission.** Flip the feature flag; migrate persisted effects to ref format; delete old engine / activities / `_auto` / phases / YAML; rewrite `RULES_ENGINE.md` + the authoring guide; update CLAUDE.md pointers.                                            | v2 in the test env; `make test` green; docs updated; old code removed.                                                       |
+| #      | Milestone                                                                                                                                                                                                                                                                    | Exit criteria                                                                                                                                             |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **M0** | **Spike / STOP-gate.** Engine core (sheet + reducer + effects) just enough to re-author the _hardest_ cases — `hp` / `ability-scores` (pure dataflow) and `divine-smite` (cascade + free-use + persistence + upcast dice + illegal-but-visible). Finalize builder-API types. | ✅ **DONE — verdict GO.** divine-smite ~90 lines vs 832; 1519 unit tests green; engine composition built & stress-tested by ~12 resolved review findings. |
+| **M1** | **Engine core + builder API + contract adapter.** Registry; the engine passes; effect aging; `EngineOutput` producer; ESLint confinement (`no-restricted-globals` / `-imports`); purity + termination watchdog. Unit tests (TDD).                                            | Engine unit-tested; parity harness in `make test`; lint blocks banned globals/imports.                                                                    |
+| **M2** | **Gated-M2 pipeline (infra).** CI precompile → chunks + metadata; `sync-rule-groups` publishes metadata from modules; chunk upload to S3/CDN; client lazy-load by id + version check. Terraform via make targets. Search endpoint unchanged.                                 | A new group loads end-to-end in the test env via a lazy chunk; search still works.                                                                        |
+| **M3** | **Port all rule groups** (dependency order: core stats → action economy / movement → attacks → spells → weapons [+ retire the Python `rule_preprocessor`]).                                                                                                                  | 100% of existing scenarios green on v2; new scenarios added.                                                                                              |
+| **M4** | **Cutover & decommission.** Flip the feature flag; migrate persisted effects to ref format; delete old engine / activities / `_auto` / phases / YAML; rewrite `RULES_ENGINE.md` + the authoring guide; update CLAUDE.md pointers.                                            | v2 in the test env; `make test` green; docs updated; old code removed.                                                                                    |
 
 ## 7. Testing
 
@@ -173,9 +175,15 @@ suite**: it asserts on output (`facts` / `offers{legal}` / `effects` /
   dedicated bucket.
 - Effects migration: convert vs reset (depends on prod state).
 
-## 10. Immediate next step
+## 10. Status & next step
 
-Start **M0**: stand up the engine skeleton + builder-API types and re-author
-`hp` / `ability-scores` and `divine-smite`, validated against their current
-scenarios via the parity harness — i.e. prove the hardest case before building
-anything else.
+**M0: GO** (complete on `claude/epic-dijkstra-lxyaep`, PR #354). The engine
+composition (sheet → re-deriving plan fold → declarative effects → offers) is
+built and tested; `hp` / `ability-scores` / `action-economy` / `attacks` /
+`spellcasting` / `divine-smite` exist as v2 modules; ~12 review findings fixed; 3
+module-parity items deferred to M3 (replacement-effect combine, Divine Smite
+prepare path, full attack UI descriptor).
+
+**Next: M1** — productionize the engine to the full `EngineOutput` contract and
+stand up the parity harness. See
+[RULES_ENGINE_V2_M1_PLAN.md](RULES_ENGINE_V2_M1_PLAN.md).
