@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { extractMetadata } from '$lib/rules-engine-v2';
+import { extractMetadata, ENGINE_API_VERSION } from '$lib/rules-engine-v2';
 
 const en = JSON.parse(
   readFileSync(join(process.cwd(), 'src/lib/i18n/en/common.json'), 'utf8')
@@ -33,6 +33,12 @@ describe('v2 metadata extraction', () => {
       keywords: 'rule.spell-divine-smite.offer-divine-smite.keywords',
       requires: ['spellcasting']
     });
+  });
+
+  it('stamps the engine API version on every entry (for the client version gate)', () => {
+    for (const e of extractMetadata()) {
+      expect(e.engineApiVersion).toBe(ENGINE_API_VERSION);
+    }
   });
 
   it('omits foundational modules that carry no meta', () => {
