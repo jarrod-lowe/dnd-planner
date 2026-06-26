@@ -42,7 +42,9 @@ describe('v2 evaluate() — composed output contract', () => {
     expect(smiteOffer).toBeDefined();
     expect(smiteOffer!.rule.ui?.name).toBe('rule.spell-divine-smite.offer-divine-smite.name');
 
-    // Legal plan, advertised effects present, annotations empty (until W2).
+    // Legal plan, advertised effects present. No annotation here: smite isn't
+    // prepared in this input (and is cast anyway), so divine-smite annotate is
+    // empty — the annotate pass itself is exercised in annotate.test.ts.
     expect(out.status).toEqual({ ok: true, legal: true, applicable: true });
     expect(out.effects.length).toBeGreaterThan(0);
     expect(out.annotations).toEqual([]);

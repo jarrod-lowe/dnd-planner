@@ -1,12 +1,7 @@
-import type {
-  Annotation,
-  AvailableRuleEntry,
-  Diagnostic,
-  EngineInput,
-  EngineOutput
-} from './types';
+import type { AvailableRuleEntry, Diagnostic, EngineInput, EngineOutput } from './types';
 import { evaluatePlan } from './plan';
 import { evaluateOffers } from './offers';
+import { collectAnnotations } from './annotate';
 
 /**
  * The v2 engine entry point: a single pure function composing the passes into
@@ -40,8 +35,7 @@ export function evaluate(input: EngineInput): EngineOutput {
     .flat()
     .some((d) => d.severity === 'error');
 
-  // annotate pass: W2.
-  const annotations: Annotation[] = [];
+  const annotations = collectAnnotations(modules, plan.facts);
 
   return {
     status: { ok: true, legal: !planHasError, applicable: true },

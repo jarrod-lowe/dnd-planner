@@ -165,7 +165,19 @@ const divineSmite: RuleModule = {
         return { advertise, diagnostics };
       }
     }
-  ]
+  ],
+  // Surface the "Divine Smite available" related-info on melee/unarmed attacks,
+  // but only while it is actually castable this turn — prepared, an attack has
+  // been taken, and a bonus action, the one-spell-per-turn, and a resource all
+  // remain. Mirrors the v1 annotate-divine-smite gate exactly.
+  annotate: (f: FactReader) =>
+    f.num('spell.l1.divineSmite.prepared') === 1 &&
+    f.num('bonusActions.remaining') > 0 &&
+    f.num('attack.last.activation.action') >= 1 &&
+    f.num('smite.anyResourceRemaining') > 0 &&
+    f.num('spellcasting.remaining') > 0
+      ? [{ key: 'rule.spell-divine-smite.annotation', targets: ['attack.melee', 'attack.unarmed'] }]
+      : []
 };
 
 export default divineSmite;

@@ -63,6 +63,13 @@ export interface RuleModule {
    * rule: it is just a value that contributes while it lives.
    */
   effectContributions?: (effect: EffectInstance) => Contribution[];
+  /**
+   * Related-info pass: pure function of the final post-plan facts, returning the
+   * annotations to surface (illegal-but-visible riders, "+Nd8 radiant" chips,
+   * etc.). Evaluated once against the settled sheet; the UI matches each
+   * annotation's `targets` against panel `annotationLabels` (unchanged from v1).
+   */
+  annotate?: (f: FactReader) => Annotation[];
 }
 
 /** When a persistent effect ends. */

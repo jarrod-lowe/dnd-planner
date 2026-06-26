@@ -1,4 +1,5 @@
-import type { Diagnostic, Facts, FactReader, Offer, OfferEntry, RuleModule } from './types';
+import type { Diagnostic, Facts, Offer, OfferEntry, RuleModule } from './types';
+import { plainReader } from './reader';
 
 /**
  * Collect every module's offers, enforcing globally-unique offer ids.
@@ -41,10 +42,7 @@ export function collectOffers(modules: RuleModule[]): Offer[] {
  * Pure: same (modules, facts) → same result.
  */
 export function evaluateOffers(modules: RuleModule[], facts: Facts): OfferEntry[] {
-  const reader: FactReader = {
-    num: (name) => facts[name] ?? 0,
-    has: (name) => Object.prototype.hasOwnProperty.call(facts, name)
-  };
+  const reader = plainReader(facts);
 
   const entries: OfferEntry[] = [];
   for (const offer of collectOffers(modules)) {
