@@ -160,6 +160,33 @@ right after W1 (it touches the sheet/effect path).
   attack UI descriptors; retire the Python `rule_preprocessor`).
 - **M4**: runtime flip behind a flag + decommission v1.
 
+### 8a. Carried forward from the M1 PR review (#355)
+
+Codex flagged these on #355. Two were genuine M1 defects and were fixed in
+`e6d98ba` (confinement test missed side-effect imports; watchdog's last
+checkpoint was before `annotate`). The rest are correct observations about wiring
+v2 into the **live** UI/persistence — work M1 deliberately left for later
+(the app still runs v1). Tracked here against the milestone that owns them:
+
+- **M4 — UI/persistence contract adapter** (the cluster; these are "wire v2 into
+  `playStore`/`PanelRenderer`", not M1 defects):
+  - Planned-item legality: map `planDiagnostics` (keyed by instanceId) into the
+    plan row's `varsRuntime.errors` shape (or update the UI contract) so illegal
+    planned items render in the live UI.
+  - Picker / add-to-plan: adapt `availableRules[].rule` (id/ui/vars) ↔ `PlannedRef`
+    so a selected offer can be planned/replayed through `playStore.addToPlan`.
+  - End-Turn persistence: the live path must carry/age committed effects via
+    `endTurn(committed, advertised, {longRest})` — `evaluate().effects` is only the
+    advertised set — and migrate persisted effects to the ref format.
+  - `collections` / `trace`: add to `EngineOutput` only if a consumer needs them
+    (currently nothing in the app reads them — intentional subset for now).
+- **M2/M3 — serializable `EngineInput`**: carry `ruleGroupIds` and resolve via the
+  registry on the way in, so `next` is JSON-replayable (not just in-memory). Lands
+  with the chunk-load-by-id design.
+- **M3 — attack `annotationLabels`**: the real attack offer needs the labels so
+  `getMatchingAnnotations` attaches the Divine Smite rider (subsumed by the
+  already-listed "full attack UI descriptors" item).
+
 ## 9. Guardrails (inherited — see CLAUDE.md)
 
 TDD for every change; i18n keys for all user-facing strings; never run
