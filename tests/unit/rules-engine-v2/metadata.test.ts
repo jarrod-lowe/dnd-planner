@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { extractMetadata, ENGINE_API_VERSION } from '$lib/rules-engine-v2';
+import { ENGINE_API_VERSION } from '$lib/rules-engine-v2';
+import { extractMetadata } from '$lib/rules-engine-v2/metadata';
 
 const en = JSON.parse(
   readFileSync(join(process.cwd(), 'src/lib/i18n/en/common.json'), 'utf8')
@@ -24,10 +25,10 @@ function resolveKey(key: string): unknown {
  */
 describe('v2 metadata extraction', () => {
   it('emits an entry for a content group with its meta + rule-group id', () => {
-    const entry = extractMetadata().find((e) => e.ruleGroupId === 'spells/spell-divine-smite');
+    const entry = extractMetadata().find((e) => e.ruleGroupId === 'spell-divine-smite');
     expect(entry).toBeDefined();
     expect(entry).toMatchObject({
-      ruleGroupId: 'spells/spell-divine-smite',
+      ruleGroupId: 'spell-divine-smite',
       name: 'rule.spell-divine-smite.offer-divine-smite.name',
       description: 'rule.spell-divine-smite.offer-divine-smite.description',
       keywords: 'rule.spell-divine-smite.offer-divine-smite.keywords',
@@ -44,8 +45,8 @@ describe('v2 metadata extraction', () => {
   it('omits foundational modules that carry no meta', () => {
     const ids = extractMetadata().map((e) => e.ruleGroupId);
     // action-economy / hp are engine plumbing, not searchable content.
-    expect(ids).not.toContain('dnd-5e-2024/action-economy');
-    expect(ids).not.toContain('dnd-5e-2024/hp');
+    expect(ids).not.toContain('action-economy');
+    expect(ids).not.toContain('hp');
   });
 
   it('references i18n keys, never literal display text (i18n compliance)', () => {

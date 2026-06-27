@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { buildModuleRuleGroups } from '$lib/rules-engine-v2';
+import { buildModuleRuleGroups } from '$lib/rules-engine-v2/metadata';
 import type { LocaleDict } from '$lib/rules-engine-v2';
 
 /**
@@ -18,11 +18,13 @@ function locale(name: string): LocaleDict {
 const LOCALES = { en: locale('en'), 'en-x-tlh': locale('en-x-tlh') };
 
 describe('v2 W4 metadata publish transform', () => {
-  it('resolves divine-smite into the index shape with split keywords + requires', () => {
+  it('resolves divine-smite into the index shape, keyed by the canonical bare id', () => {
     const groups = buildModuleRuleGroups(LOCALES);
-    const ds = groups.find((g) => g.id === 'spells/spell-divine-smite');
+    // Canonical id (matches the backend / requires), NOT a path-qualified key.
+    const ds = groups.find((g) => g.id === 'spell-divine-smite');
     expect(ds).toBeDefined();
     expect(ds!.requires).toEqual(['spellcasting']);
+    expect(ds!.engineApiVersion).toBeGreaterThanOrEqual(1); // carried through for the version gate
     expect(ds!.translations.en).toEqual({
       name: 'Divine Smite',
       description: 'After a melee hit | +2d8 radiant (+1d8 per extra slot level)',
@@ -42,13 +44,13 @@ describe('v2 W4 metadata publish transform', () => {
   it('falls back to en when a locale lacks the key (no half-populated entry)', () => {
     // A locale dict missing everything should still yield en-resolved text.
     const groups = buildModuleRuleGroups({ en: LOCALES.en, fr: {} });
-    const ds = groups.find((g) => g.id === 'spells/spell-divine-smite')!;
+    const ds = groups.find((g) => g.id === 'spell-divine-smite')!;
     expect(ds.translations.fr.name).toBe('Divine Smite'); // en fallback
     expect(ds.translations.fr.keywords).toContain('smite');
   });
 
   it('produces no entries for modules without meta', () => {
     const ids = buildModuleRuleGroups(LOCALES).map((g) => g.id);
-    expect(ids).not.toContain('dnd-5e-2024/action-economy');
+    expect(ids).not.toContain('action-economy');
   });
 });

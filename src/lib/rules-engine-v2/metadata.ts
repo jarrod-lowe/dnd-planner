@@ -51,6 +51,8 @@ export interface LocaleTranslation {
 export interface ModuleRuleGroup {
   id: string;
   requires: string[];
+  /** Engine version the chunk was built for, so the client can gate before loading. */
+  engineApiVersion: number;
   translations: Record<string, LocaleTranslation>;
 }
 
@@ -90,6 +92,11 @@ export function buildModuleRuleGroups(locales: Record<string, LocaleDict>): Modu
         keywords: typeof kw === 'string' ? kw.split(/\s+/).filter(Boolean) : []
       };
     }
-    return { id: e.ruleGroupId, requires: e.requires ?? [], translations };
+    return {
+      id: e.ruleGroupId,
+      requires: e.requires ?? [],
+      engineApiVersion: e.engineApiVersion,
+      translations
+    };
   });
 }

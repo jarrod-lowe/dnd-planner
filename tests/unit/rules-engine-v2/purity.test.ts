@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { evaluate, getModule, registeredRuleGroupIds, resolveModules } from '$lib/rules-engine-v2';
+import { evaluate } from '$lib/rules-engine-v2';
+import { getModule, registeredRuleGroupIds, resolveModules } from '$lib/rules-engine-v2/registry';
 import type { EngineInput, EngineOutput, Facts, FactReader } from '$lib/rules-engine-v2';
 
 /**

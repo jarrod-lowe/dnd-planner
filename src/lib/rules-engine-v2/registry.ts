@@ -1,4 +1,4 @@
-import type { RuleModule } from './types';
+import type { EngineInput, RuleModule, SerializableInput } from './types';
 import abilityScores from './rules/ability-scores';
 import hp from './rules/hp';
 import classPaladinLevel1 from './rules/class-paladin-level1';
@@ -9,24 +9,29 @@ import paladinSmite from './rules/paladin-smite';
 import divineSmite from './rules/divine-smite';
 
 /**
- * Static rule-group-id -> module registry.
+ * Static ruleGroupId -> module registry, keyed by each module's own `id` — which
+ * is the **canonical** rule-group id the backend uses everywhere (DynamoDB
+ * `ruleGroupId`, `requires`, persisted character assignments, the search index).
+ * Keeping the key === `module.id` means published metadata, lazy loading by id,
+ * and persisted assignments all share one id namespace.
  *
- * Keys are the full ruleGroup references the YAML scenarios use
- * (`<directory>/<group-id>`), so the parity harness (W5) can map a scenario's
- * `ruleGroups` list straight to v2 modules. M2 replaces this hand-written map
- * with `import.meta.glob` + lazy per-character chunks loaded by id; the lookup
- * surface (`getModule`/`resolveModules`) stays the same so callers don't change.
+ * Note the scenarios reference groups as `<directory>/<id>` (a file-location
+ * convention); the parity harness strips that prefix to the canonical id before
+ * resolving here. M2 keeps this hand-written; the lazy chunk loader (lazy.ts)
+ * mirrors these keys.
  */
-const REGISTRY: Record<string, RuleModule> = {
-  'dnd-5e-2024/ability-scores': abilityScores,
-  'dnd-5e-2024/hp': hp,
-  'dnd-5e-2024/action-economy': actionEconomy,
-  'dnd-5e-2024/attacks': attacks,
-  'dnd-5e-2024/spellcasting': spellcasting,
-  'class-paladin/class-paladin-level1': classPaladinLevel1,
-  'class-paladin/class-paladin-paladin-smite': paladinSmite,
-  'spells/spell-divine-smite': divineSmite
-};
+const MODULES: RuleModule[] = [
+  abilityScores,
+  hp,
+  actionEconomy,
+  attacks,
+  spellcasting,
+  classPaladinLevel1,
+  paladinSmite,
+  divineSmite
+];
+
+const REGISTRY: Record<string, RuleModule> = Object.fromEntries(MODULES.map((m) => [m.id, m]));
 
 /** The module for a rule-group id, or undefined if not (yet) ported. */
 export function getModule(ruleGroupId: string): RuleModule | undefined {
@@ -61,4 +66,35 @@ export function resolveModules(ruleGroupIds: string[]): {
     else missing.push(id);
   }
   return { modules, missing };
+}
+
+/** A rehydrated input plus any ids that had no module (surfaced, not swallowed). */
+export interface ResolvedInput {
+  input: EngineInput;
+  /** Ids with no registered module — stale or not-yet-ported. */
+  missing: string[];
+}
+
+/**
+ * Rehydrate a serialized input into a runnable `EngineInput` via the static
+ * registry. Unported/stale ids are returned in `missing` rather than silently
+ * dropped: the engine would otherwise compute facts/offers from only the resolved
+ * subset (while `next` still echoes the full id list), yielding wrong resources.
+ * The caller decides — fall back to v1, warn, or proceed.
+ *
+ * Lives here (not in the registry-free `input.ts`) because it needs the eager
+ * registry; the runtime rehydration path uses the async chunk loader instead.
+ */
+export function resolveInput(serialized: SerializableInput): ResolvedInput {
+  const { modules, missing } = resolveModules(serialized.ruleGroupIds);
+  return {
+    input: {
+      modules,
+      ruleGroupIds: serialized.ruleGroupIds,
+      inputFacts: serialized.inputFacts,
+      planned: serialized.planned,
+      committed: serialized.committed
+    },
+    missing
+  };
 }

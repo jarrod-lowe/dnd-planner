@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { evaluate, endTurn, resolveModules } from '$lib/rules-engine-v2';
+import { evaluate, endTurn } from '$lib/rules-engine-v2';
+import { resolveModules } from '$lib/rules-engine-v2/registry';
 import type {
   Diagnostic,
   EffectInstance,
@@ -331,10 +332,22 @@ function loadConfig(name: string): TestConfig {
   return yaml.load(readFileSync(join(scenariosDir, name, 'test.yaml'), 'utf-8')) as TestConfig;
 }
 
+/**
+ * Scenarios reference groups as `<directory>/<id>` (a file-location convention);
+ * the registry is keyed by the canonical bare id (= module.id), so strip the
+ * directory prefix before resolving.
+ */
+function canonicalId(scenarioGroupId: string): string {
+  return scenarioGroupId.includes('/') ? scenarioGroupId.split('/').pop()! : scenarioGroupId;
+}
+function resolveScenarioGroups(ruleGroups: string[]) {
+  return resolveModules(ruleGroups.map(canonicalId));
+}
+
 /** Why a scenario is skipped, or null if it should run. */
 function skipReason(config: TestConfig, name: string): string | null {
   if (SKIP_BY_NAME[name]) return SKIP_BY_NAME[name];
-  const { missing } = resolveModules(config.ruleGroups ?? []);
+  const { missing } = resolveScenarioGroups(config.ruleGroups ?? []);
   if (missing.length > 0) return `unported groups: ${missing.join(', ')}`;
   if (config.initialEffects && config.initialEffects.length > 0)
     return 'initialEffects use the v1 rule format';
@@ -361,7 +374,7 @@ describe('yaml scenarios — v2 parity', () => {
       continue;
     }
     it(name, () => {
-      const { modules } = resolveModules(config.ruleGroups);
+      const { modules } = resolveScenarioGroups(config.ruleGroups);
       const harness = new V2Harness(modules, config.initialFacts ?? {}, []);
       config.steps.forEach((step, i) => {
         const out = runStep(harness, step);

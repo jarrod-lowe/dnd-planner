@@ -1,13 +1,16 @@
-// M2 / W5 — verify the co-bundled lazy-loading delivery mechanism.
+// M2 / W5 — verify the lazy-loading **mechanism** (NOT deployment readiness).
 //
 // Builds the v2 lazy loader (src/lib/rules-engine-v2/lazy.ts) with Vite and
-// asserts every rule module becomes its OWN chunk via its dynamic import(). This
-// is what makes per-character lazy loading real: a character pulls only its
-// groups' chunks, not the whole rule set. Guards against accidental
-// eager-bundling (e.g. a static import sneaking the registry into the loader).
+// asserts every rule module becomes its OWN chunk via its dynamic import() —
+// i.e. the split points exist and nothing eager-bundles the registry into the
+// loader. Tree-shaking is disabled so the split points show without a consumer.
 //
-// Runs anywhere Vite runs — no AWS, no deploy. Tree-shaking is disabled so the
-// split points are exposed without a consumer keeping them alive.
+// SCOPE / what this does NOT prove: it builds the loader as a standalone entry,
+// so a green run does NOT mean the deployed SvelteKit app ships these chunks. It
+// won't until the app actually imports `loadModules` (M4 wiring) — until then
+// `build/_app/immutable` contains no rule chunks. So do not gate a test deploy on
+// this as "chunks are shipped"; the real shipping check is the SvelteKit build
+// output once v2 is wired in. Runs anywhere Vite runs — no AWS, no deploy.
 import { build } from 'vite';
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -47,4 +50,5 @@ if (missing.length) {
   console.error('✗ Missing per-module chunks (eager-bundling regression?):', missing.join(', '));
   process.exit(1);
 }
-console.log('✓ Every rule module code-splits into its own lazy chunk.');
+console.log('✓ Every rule module code-splits into its own lazy chunk (mechanism only).');
+console.log('  Note: does not prove the SvelteKit app ships them — that needs M4 wiring.');

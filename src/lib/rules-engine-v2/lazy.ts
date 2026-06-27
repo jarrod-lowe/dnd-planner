@@ -13,15 +13,17 @@ import { isEngineCompatible } from './version';
  * `loadModules` caller pulls in only the chunks it asks for. `evaluate` stays
  * sync/pure — resolution happens here, before it.
  */
+// Keyed by canonical ruleGroupId (= each module's `id`), matching the registry
+// and the backend's persisted/published id namespace.
 const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
-  'dnd-5e-2024/ability-scores': () => import('./rules/ability-scores'),
-  'dnd-5e-2024/hp': () => import('./rules/hp'),
-  'dnd-5e-2024/action-economy': () => import('./rules/action-economy'),
-  'dnd-5e-2024/attacks': () => import('./rules/attacks'),
-  'dnd-5e-2024/spellcasting': () => import('./rules/spellcasting'),
-  'class-paladin/class-paladin-level1': () => import('./rules/class-paladin-level1'),
-  'class-paladin/class-paladin-paladin-smite': () => import('./rules/paladin-smite'),
-  'spells/spell-divine-smite': () => import('./rules/divine-smite')
+  'ability-scores': () => import('./rules/ability-scores'),
+  hp: () => import('./rules/hp'),
+  'action-economy': () => import('./rules/action-economy'),
+  attacks: () => import('./rules/attacks'),
+  spellcasting: () => import('./rules/spellcasting'),
+  'class-paladin-level1': () => import('./rules/class-paladin-level1'),
+  'class-paladin-paladin-smite': () => import('./rules/paladin-smite'),
+  'spell-divine-smite': () => import('./rules/divine-smite')
 };
 
 export interface LoadResult {
