@@ -190,6 +190,11 @@ dev: .env.local install static/data/rule-groups/schema.json publish-details
 build: install static/data/rule-groups/schema.json publish-details
 	pnpm build
 
+# Verify the rules-engine-v2 lazy delivery: every rule module code-splits into
+# its own chunk (no eager-bundling). No AWS/deploy needed.
+verify-chunks: install
+	node scripts/verify-chunks.mjs
+
 # Linting
 lint: install
 	pnpm lint

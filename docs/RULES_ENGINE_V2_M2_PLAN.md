@@ -8,14 +8,14 @@
 > Branch: `claude/rules-engine-v2-m2`, stacked on and PR'd into
 > `claude/rules-engine-v2-m1` (not `main`). **Do not auto-merge.**
 >
-> | WS  | Scope                                        | Status       |
-> | --- | -------------------------------------------- | ------------ |
-> | W1  | serializable `EngineInput` (#355 carry-over) | ✅           |
-> | W2  | module `meta` + metadata extraction          | ✅           |
-> | W3  | lazy chunk loading + `engineApiVersion` gate | ✅           |
-> | W4  | publish metadata to the search index         | ⏳ needs env |
-> | W5  | infra + CI (co-bundled hosting)              | ⏳ needs env |
-> | W6  | end-to-end proof in the test env             | ⏳ needs env |
+> | WS  | Scope                                           | Status                                                         |
+> | --- | ----------------------------------------------- | -------------------------------------------------------------- |
+> | W1  | serializable `EngineInput` (#355 carry-over)    | ✅                                                             |
+> | W2  | module `meta` + metadata extraction             | ✅                                                             |
+> | W3  | lazy chunk loading + `engineApiVersion` gate    | ✅                                                             |
+> | W4  | metadata → search-index transform / emit + sync | ✅ transform (tested) · ⏳ emit + DynamoDB sync (env)          |
+> | W5  | co-bundled chunk-splitting / ship to S3+CDN     | ✅ splitting verified (`make verify-chunks`) · ⏳ deploy (env) |
+> | W6  | end-to-end proof in the test env                | ⏳ needs env (+ M4 app-wiring to consume v2)                   |
 
 ## 1. Goal
 
@@ -76,11 +76,12 @@ data search needs; logic stays in the chunk.
 
 ### W3 — Lazy chunk registry + version gate · _mostly testable here_
 
-Add an async loader (`loadModules(ids): Promise<RuleModule[]>`) backed by
-`import.meta.glob` (lazy) so Vite emits one chunk per module. `evaluate` stays
-sync/pure — loading happens **before** it. Add `ENGINE_API_VERSION`; stamp it in
-the metadata; the client refuses/falls back on mismatch. Keep the static
-`resolveModules` for the parity harness (sync). TDD the loader + version gate.
+Add an async loader (`loadModules(ids): Promise<RuleModule[]>`) backed by an
+explicit per-id dynamic `import()` map (cleaner typing than `import.meta.glob`;
+Vite still code-splits each into its own chunk — verified by `make
+verify-chunks`). `evaluate` stays sync/pure — loading happens **before** it. Add
+`ENGINE_API_VERSION`; stamp it in the metadata; the client refuses/falls back on
+mismatch. Keep the static `resolveModules` for the parity harness (sync).
 
 ### W4 — Publish metadata to the search index · _split: build here, sync needs the env_
 
