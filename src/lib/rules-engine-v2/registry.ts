@@ -7,6 +7,7 @@ import attacks from './rules/attacks';
 import spellcasting from './rules/spellcasting';
 import paladinSmite from './rules/paladin-smite';
 import divineSmite from './rules/divine-smite';
+import divineFavour from './rules/divine-favour';
 
 /**
  * Static ruleGroupId -> module registry, keyed by each module's own `id` — which
@@ -28,7 +29,8 @@ const MODULES: RuleModule[] = [
   spellcasting,
   classPaladinLevel1,
   paladinSmite,
-  divineSmite
+  divineSmite,
+  divineFavour
 ];
 
 const REGISTRY: Record<string, RuleModule> = Object.fromEntries(MODULES.map((m) => [m.id, m]));

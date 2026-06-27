@@ -191,3 +191,14 @@ prepare path, full attack UI descriptor).
 **Next: M1** — productionize the engine to the full `EngineOutput` contract and
 stand up the parity harness. See
 [RULES_ENGINE_V2_M1_PLAN.md](RULES_ENGINE_V2_M1_PLAN.md).
+
+**Pre-M3 spike (done):** a second STOP-gate spike on **Divine Favour** — a
+1-minute self-buff, chosen because it stresses the **effect-lifetime** model that
+Divine Smite barely touched. Verdict **GO**: the paradigm holds (faithful port,
+~158 lines vs 386, full contract in one rule). It surfaced one model gap M3 must
+resolve first: the v2 `Expiry` is single-predicate, so it can't express
+"duration **and** ends on a rest" (v1 cancels the buff on any rest), and
+`endTurn` has no short rest. Proposed fix — **multi-predicate expiry (ends when
+the earliest fires) + a `shortRest` option** — is flagged for confirmation, not
+yet implemented. See
+[RULES_ENGINE_V2_M3_SPIKE.md](RULES_ENGINE_V2_M3_SPIKE.md).
