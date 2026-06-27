@@ -8,7 +8,14 @@ export { evaluateOffers, collectOffers } from './offers';
 export { collectAnnotations } from './annotate';
 export { getModule, isRegistered, registeredRuleGroupIds, resolveModules } from './registry';
 export { serializeInput, resolveInput } from './input';
-export { extractMetadata, type MetadataEntry } from './metadata';
+export {
+  extractMetadata,
+  buildModuleRuleGroups,
+  type MetadataEntry,
+  type ModuleRuleGroup,
+  type LocaleTranslation,
+  type LocaleDict
+} from './metadata';
 export { loadModules, lazyRuleGroupIds, type LoadResult } from './lazy';
 export { ENGINE_API_VERSION, isEngineCompatible } from './version';
 export { endTurn, dedupeByKey, type EndTurnOptions } from './effects';
