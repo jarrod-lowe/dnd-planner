@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ENGINE_API_VERSION } from '$lib/rules-engine-v2';
-import { extractMetadata } from '$lib/rules-engine-v2/metadata';
+import { extractMetadata, buildVersionManifest } from '$lib/rules-engine-v2/metadata';
+import { lazyRuleGroupIds } from '$lib/rules-engine-v2';
 
 const en = JSON.parse(
   readFileSync(join(process.cwd(), 'src/lib/i18n/en/common.json'), 'utf8')
@@ -56,6 +57,23 @@ describe('v2 metadata extraction', () => {
         true
       );
     }
+  });
+
+  it('version manifest covers EVERY lazy chunk, including meta-less foundational ones', () => {
+    const manifest = buildVersionManifest();
+    // Foundational chunks have no meta but are lazy-loadable — they must still
+    // have a published version, or they'd bypass the loader's skew gate.
+    for (const id of [
+      'spellcasting',
+      'hp',
+      'action-economy',
+      'ability-scores',
+      'spell-divine-smite'
+    ]) {
+      expect(manifest[id]).toBe(ENGINE_API_VERSION);
+    }
+    // One entry per lazy chunk — the gate covers the full loadable set.
+    expect(Object.keys(manifest).sort()).toEqual(lazyRuleGroupIds().slice().sort());
   });
 
   it('every meta i18n key resolves in en/common.json (no dangling keys)', () => {

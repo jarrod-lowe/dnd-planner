@@ -100,3 +100,18 @@ export function buildModuleRuleGroups(locales: Record<string, LocaleDict>): Modu
     };
   });
 }
+
+/**
+ * Engine version for EVERY lazy-loadable chunk, keyed by canonical ruleGroupId —
+ * not just the searchable ones (only those carry `meta`/translations). The
+ * loader's skew gate treats an absent version as current, so foundational chunks
+ * (`spellcasting`, `hp`, `action-economy`, …) would bypass the gate if they had
+ * no published version. This manifest covers them; the client feeds it to
+ * `loadModules(ids, builtForVersion)`.
+ *
+ * Pure: every registered group → ENGINE_API_VERSION (all chunks build from one
+ * engine).
+ */
+export function buildVersionManifest(): Record<string, number> {
+  return Object.fromEntries(registeredRuleGroupIds().map((id) => [id, ENGINE_API_VERSION]));
+}
