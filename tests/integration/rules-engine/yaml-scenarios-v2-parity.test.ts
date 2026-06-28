@@ -44,7 +44,11 @@ const SKIP_BY_NAME: Record<string, string> = {
   'attack-unarmed-strike': 'attacks hitBonus/damage not ported (attacks wave)',
   'ability-modifier-ordering': 'attacks hitBonus not ported (attacks wave)',
   'divine-smite-prepare': 'prepare/unprepare offers not ported (deferred M3 item)',
-  'divine-favour-prepare': 'prepare/unprepare offers not ported (deferred M3 item)'
+  'divine-favour-prepare': 'prepare/unprepare offers not ported (deferred M3 item)',
+  // Plans use-hi before grant-hi and relies on v1 reordering use AFTER grant
+  // (after: group). v2's plan fold is plan-order-significant by design, so it
+  // yields remaining=1 (can't use what you lack, then grant it) — a deliberate divergence.
+  'hi-use-then-grant': 'relies on v1 intra-turn reordering; v2 plan fold is plan-order (by design)'
 };
 
 // The scenarios expected to run on v2 today. Asserted as an exact set so that a
@@ -99,7 +103,15 @@ const EXPECTED_RUNNABLE = [
   'savage-attacker-no-feat',
   'short-rest-sets-flag',
   'spellcasting-max-slot-level',
-  'unarmed-strike-works-without-weapon'
+  'unarmed-strike-works-without-weapon',
+  // M3 wave A — heroic-inspiration (grant / use / persist via keyed effect)
+  'hi-grant',
+  'hi-grant-then-use',
+  'hi-grant-use-next-turn-effect-gone',
+  'hi-grant-use-twice',
+  'hi-persist-across-turn',
+  'hi-use-illegal-when-none',
+  'hi-use-illegal-when-none-plan-errors'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---
