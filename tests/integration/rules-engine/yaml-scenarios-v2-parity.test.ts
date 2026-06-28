@@ -111,7 +111,12 @@ const EXPECTED_RUNNABLE = [
   'hi-grant-use-twice',
   'hi-persist-across-turn',
   'hi-use-illegal-when-none',
-  'hi-use-illegal-when-none-plan-errors'
+  'hi-use-illegal-when-none-plan-errors',
+  // M3 wave A — ac (base + dex; armor/shield bonuses arrive with their groups)
+  'ac-base-default',
+  'ac-with-dexterity',
+  'ac-with-paladin',
+  'paladin-armor-proficiencies'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---

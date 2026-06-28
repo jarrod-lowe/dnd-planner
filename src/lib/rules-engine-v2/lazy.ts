@@ -18,6 +18,7 @@ import { isEngineCompatible } from './version';
 const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   'ability-scores': () => import('./rules/ability-scores'),
   proficiency: () => import('./rules/proficiency'),
+  ac: () => import('./rules/ac'),
   hp: () => import('./rules/hp'),
   'action-economy': () => import('./rules/action-economy'),
   'free-actions': () => import('./rules/free-actions'),

@@ -8,9 +8,8 @@ import { defineRule, type RuleModule } from '../builder';
  * addition is commutative and the engine settles all contributors before
  * dependents read the total.
  *
- * (Still partial vs the v1 group: hit-die, the lay-on-hands pool, armor
- * proficiencies and prepared-spell capacity port with their dependent groups in
- * later M3 waves.)
+ * (Still partial vs the v1 group: hit-die, the lay-on-hands pool and
+ * prepared-spell capacity port with their dependent groups in later M3 waves.)
  */
 const paladinLevel1: RuleModule = {
   id: 'class-paladin-level1',
@@ -25,7 +24,12 @@ const paladinLevel1: RuleModule = {
     { fact: 'cha.save.proficient', combine: 'sum', value: () => 1 },
     // Charisma is the paladin's spellcasting ability; its modifier feeds the
     // spell save DC (computed by the spellcasting group).
-    { fact: 'spellcasting.modifier', combine: 'sum', value: (f) => f.num('cha.modifier') }
+    { fact: 'spellcasting.modifier', combine: 'sum', value: (f) => f.num('cha.modifier') },
+    // Proficient in all armor and shields.
+    { fact: 'armor.light.proficient', combine: 'sum', value: () => 1 },
+    { fact: 'armor.medium.proficient', combine: 'sum', value: () => 1 },
+    { fact: 'armor.heavy.proficient', combine: 'sum', value: () => 1 },
+    { fact: 'armor.shield.proficient', combine: 'sum', value: () => 1 }
   ]
 };
 
