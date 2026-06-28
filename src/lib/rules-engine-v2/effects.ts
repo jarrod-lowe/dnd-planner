@@ -1,4 +1,4 @@
-import type { EffectInstance, Expiry } from './types';
+import type { EffectInstance, Expiry, ExpirySpec } from './types';
 
 export interface EndTurnOptions {
   /** Whether the turn that just ended was a long rest. */
@@ -28,6 +28,33 @@ function ageCondition(c: Expiry, opts: EndTurnOptions): { expired: boolean; next
     case 'permanent':
       return { expired: false, next: c };
   }
+}
+
+/** Sum an effect set's contributions to one fact (rest flags are simple sums). */
+function sumFact(effects: EffectInstance[], fact: string): number {
+  let total = 0;
+  for (const e of effects) total += e.state?.[fact] ?? 0;
+  return total;
+}
+
+/**
+ * Whether an effect ends on the rest(s) happening this turn: an `untilLongRest`
+ * condition ends on a long rest, `untilShortRest` on a short OR long rest. Used
+ * both to exclude an effect in the evaluation a rest is recorded (the sheet) and
+ * to drop it at endTurn.
+ */
+export function endsOnRest(expiry: ExpirySpec, restLong: boolean, restShort: boolean): boolean {
+  const conditions = Array.isArray(expiry) ? expiry : [expiry];
+  return conditions.some(
+    (c) =>
+      (c.kind === 'untilLongRest' && restLong) ||
+      (c.kind === 'untilShortRest' && (restShort || restLong))
+  );
+}
+
+/** The rest flags an effect set signals (core-events' recorders set these facts). */
+export function restFlagsFrom(effects: EffectInstance[]): { long: boolean; short: boolean } {
+  return { long: sumFact(effects, 'rest.long') > 0, short: sumFact(effects, 'rest.short') > 0 };
 }
 
 /**
@@ -73,11 +100,20 @@ export function endTurn(
   advertised: EffectInstance[],
   opts: EndTurnOptions = {}
 ): EffectInstance[] {
+  const all = dedupeByKey([...committed, ...advertised]);
+  // A rest recorded this turn (a rest.long / rest.short flag effect, as
+  // core-events' recorders advertise) ages the matching scoped effects too, not
+  // just the explicit param — so a planned record-rest expires them.
+  const flags = restFlagsFrom(all);
+  const restOpts: EndTurnOptions = {
+    longRest: !!opts.longRest || flags.long,
+    shortRest: !!opts.shortRest || flags.short
+  };
   const next: EffectInstance[] = [];
-  for (const effect of dedupeByKey([...committed, ...advertised])) {
+  for (const effect of all) {
     const isArray = Array.isArray(effect.expiry);
     const conditions: Expiry[] = Array.isArray(effect.expiry) ? effect.expiry : [effect.expiry];
-    const aged = conditions.map((c) => ageCondition(c, opts));
+    const aged = conditions.map((c) => ageCondition(c, restOpts));
     if (aged.some((a) => a.expired)) continue; // earliest condition to fire ends it
     const nextConditions = aged.map((a) => a.next);
     next.push({ ...effect, expiry: isArray ? nextConditions : nextConditions[0] });

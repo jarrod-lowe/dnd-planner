@@ -6,7 +6,7 @@ import type {
   RuleModule,
   SheetCtx
 } from './types';
-import { dedupeByKey } from './effects';
+import { dedupeByKey, endsOnRest, restFlagsFrom } from './effects';
 
 interface TaggedContribution extends Contribution {
   moduleId: string;
@@ -61,8 +61,17 @@ export function evaluateSheet(
   // `stateCombine` may pick `max`/`override`, and an owning module may override
   // with `effectContributions` for parameterized effects.
   if (effects.length > 0) {
+    const deduped = dedupeByKey(effects);
+    // A rest recorded this evaluation (a rest.long / rest.short fact, from an
+    // input or a recorder effect) restores its scoped effects immediately: they
+    // do not contribute this turn (and endTurn then drops them, so they don't
+    // return next turn). Matches v1's in-evaluation rest.
+    const flags = restFlagsFrom(deduped);
+    const restLong = flags.long || (inputFacts['rest.long'] ?? 0) > 0;
+    const restShort = flags.short || (inputFacts['rest.short'] ?? 0) > 0;
     const byId = new Map(modules.map((m) => [m.id, m]));
-    for (const effect of dedupeByKey(effects)) {
+    for (const effect of deduped) {
+      if (endsOnRest(effect.expiry, restLong, restShort)) continue;
       const mod = effect.ruleId ? byId.get(effect.ruleId) : undefined;
       if (mod?.effectContributions) {
         for (const c of mod.effectContributions(effect)) add(c, `${mod.id}#${effect.id}`);

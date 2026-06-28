@@ -43,6 +43,19 @@ fires) + an `untilShortRest` condition (a long rest ends it too) + a `shortRest`
 option on `endTurn`. Single conditions stay single objects; `endTurn` stays a
 pure fold. This unblocks every duration/rest spell in waves D/E.
 
+## 4b. Rest model (decided)
+
+A rest **applies immediately when recorded** — engine-wide, so the app and the
+parity harness behave identically, and both engines pass the same (v1-authored)
+scenarios that assert restoration right after a planned `record-rest`. Mechanism:
+a recorded rest is a fact (`rest.long` / `rest.short`, set by core-events'
+recorders); the sheet **excludes that rest's scoped effects in the evaluation it
+is recorded** (`untilLongRest` on a long rest; `untilShortRest` on either), and
+`endTurn` then drops them so they don't return next turn. `endTurn`'s explicit
+`longRest` / `shortRest` param is kept for direct callers (unit tests). A long
+rest counts as a short rest too. (Per the user: either timing is fine as long as
+it is consistent — this is the consistent definition chosen.)
+
 ## 5. Port waves (order is a guide; parity coupling may reshuffle)
 
 Each entry is a v1 group → v2 module. Run the parity harness after each.

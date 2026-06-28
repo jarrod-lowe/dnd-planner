@@ -148,3 +148,58 @@ describe('v2 endTurn — short rest + multi-predicate expiry', () => {
     expect(after1[0].expiry).toEqual({ kind: 'turns', remaining: 1 }); // still a single object
   });
 });
+
+/**
+ * M3 — rest model. A rest applies the moment it is recorded: a `rest.long` /
+ * `rest.short` fact (core-events' recorders advertise it) makes the sheet exclude
+ * that rest's scoped effects in the SAME evaluation, so resources read as
+ * restored immediately (matching v1's in-evaluation rest); `endTurn` then drops
+ * them, driven by the same flag. A long rest counts as a short rest too. The
+ * explicit endTurn param stays for direct callers.
+ */
+describe('v2 rest model — recorded rest restores in-eval and ages at endTurn', () => {
+  const spentSlot: EffectInstance = {
+    id: 'slot',
+    state: { 'res.spent': 1 },
+    expiry: { kind: 'untilLongRest' }
+  };
+  const shortBuff: EffectInstance = {
+    id: 'buff',
+    state: { 'b.active': 1 },
+    expiry: { kind: 'untilShortRest' }
+  };
+  const longRestFlag: EffectInstance = {
+    id: 'rest',
+    state: { 'rest.long': 1 },
+    expiry: { kind: 'endOfTurn' }
+  };
+  const shortRestFlag: EffectInstance = {
+    id: 'rest',
+    state: { 'rest.short': 1 },
+    expiry: { kind: 'endOfTurn' }
+  };
+
+  it('excludes untilLongRest effects in the evaluation a long rest is recorded', () => {
+    expect(evaluateSheet([], {}, [spentSlot])['res.spent']).toBe(1); // no rest: spent stands
+    expect(evaluateSheet([], {}, [spentSlot, longRestFlag])['res.spent'] ?? 0).toBe(0); // restored
+  });
+
+  it('a short rest restores untilShortRest effects but not untilLongRest ones', () => {
+    const facts = evaluateSheet([], {}, [shortBuff, spentSlot, shortRestFlag]);
+    expect(facts['b.active'] ?? 0).toBe(0); // short-scoped buff gone
+    expect(facts['res.spent']).toBe(1); // a slot survives a short rest
+  });
+
+  it('a long rest also restores untilShortRest effects (long includes short)', () => {
+    expect(evaluateSheet([], {}, [shortBuff, longRestFlag])['b.active'] ?? 0).toBe(0);
+  });
+
+  it('endTurn drops rest-scoped effects from a recorded rest flag (no explicit param)', () => {
+    const next = endTurn([spentSlot], [longRestFlag]);
+    expect(next.some((e) => e.id === 'slot')).toBe(false);
+  });
+
+  it('still honors the explicit longRest param (direct callers)', () => {
+    expect(endTurn([spentSlot], [], { longRest: true }).some((e) => e.id === 'slot')).toBe(false);
+  });
+});
