@@ -43,6 +43,7 @@ const SKIP_BY_NAME: Record<string, string> = {
   // Groups resolve, but these need features still on the M3 backlog:
   'attack-unarmed-strike': 'attacks hitBonus/damage not ported (attacks wave)',
   'ability-modifier-ordering': 'attacks hitBonus not ported (attacks wave)',
+  'concentration-check-after-damage': 'concentration-check / damage-taken coupling deferred',
   // Human regains Heroic Inspiration on a long rest — needs a passive module to
   // create a PERSISTENT effect from a transient rest event; deferred.
   'hi-human-long-rest-grant': 'human HI-on-long-rest persistence not modelled yet (deferred)',
@@ -149,7 +150,12 @@ const EXPECTED_RUNNABLE = [
   'smite-available-after-attack',
   'smite-illegal-no-bonus-action',
   'smite-illegal-no-slots',
-  'smite-not-available-without-attack'
+  'smite-not-available-without-attack',
+  // M3 — concentration + bless (first concentration spell)
+  'bless-cast',
+  'bless-concentration-blocking',
+  'bless-concentration-illegal-planned',
+  'bless-prepare'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---

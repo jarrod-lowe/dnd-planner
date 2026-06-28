@@ -8,12 +8,14 @@ import layOnHands from './rules/lay-on-hands';
 import actionEconomy from './rules/action-economy';
 import freeActions from './rules/free-actions';
 import coreEvents from './rules/core-events';
+import concentration from './rules/concentration';
 import heroicInspiration from './rules/heroic-inspiration';
 import attacks from './rules/attacks';
 import spellcasting from './rules/spellcasting';
 import paladinSmite from './rules/paladin-smite';
 import divineSmite from './rules/divine-smite';
 import divineFavour from './rules/divine-favour';
+import bless from './rules/bless';
 import speciesHuman from './rules/species-human';
 import movement from './rules/movement';
 
@@ -37,6 +39,7 @@ const MODULES: RuleModule[] = [
   actionEconomy,
   freeActions,
   coreEvents,
+  concentration,
   heroicInspiration,
   attacks,
   spellcasting,
@@ -45,6 +48,7 @@ const MODULES: RuleModule[] = [
   paladinSmite,
   divineSmite,
   divineFavour,
+  bless,
   speciesHuman,
   movement
 ];

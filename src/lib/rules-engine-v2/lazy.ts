@@ -23,6 +23,7 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   'action-economy': () => import('./rules/action-economy'),
   'free-actions': () => import('./rules/free-actions'),
   'core-events': () => import('./rules/core-events'),
+  concentration: () => import('./rules/concentration'),
   'heroic-inspiration': () => import('./rules/heroic-inspiration'),
   attacks: () => import('./rules/attacks'),
   spellcasting: () => import('./rules/spellcasting'),
@@ -31,6 +32,7 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   'class-paladin-paladin-smite': () => import('./rules/paladin-smite'),
   'spell-divine-smite': () => import('./rules/divine-smite'),
   'spell-divine-favour': () => import('./rules/divine-favour'),
+  'spell-bless': () => import('./rules/bless'),
   'species-human': () => import('./rules/species-human'),
   movement: () => import('./rules/movement')
 };
