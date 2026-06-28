@@ -20,6 +20,7 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   proficiency: () => import('./rules/proficiency'),
   hp: () => import('./rules/hp'),
   'action-economy': () => import('./rules/action-economy'),
+  'free-actions': () => import('./rules/free-actions'),
   attacks: () => import('./rules/attacks'),
   spellcasting: () => import('./rules/spellcasting'),
   'class-paladin-level1': () => import('./rules/class-paladin-level1'),

@@ -50,6 +50,11 @@ const EXPECTED_RUNNABLE = [
   'bonus-action-init',
   'paladin-spell-slots',
   'spellcasting-base-reset',
+  // M3 wave A — free-actions (free action + Help)
+  'action-economy-actions-reset-each-turn',
+  'action-economy-free-action',
+  'action-economy-help-action',
+  'action-economy-too-many-actions',
   // M3 wave A — ability-scores + proficiency (and the saveDC / paladin-save adds)
   'ability-increase-affects-skills-saves',
   'ability-increase-basic',
