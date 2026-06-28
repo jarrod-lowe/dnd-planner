@@ -56,6 +56,26 @@ is recorded** (`untilLongRest` on a long rest; `untilShortRest` on either), and
 rest counts as a short rest too. (Per the user: either timing is fine as long as
 it is consistent — this is the consistent definition chosen.)
 
+## 4c. Progress (parity 3 → 84 runnable)
+
+Done: step 0 (multi-predicate expiry) + the rest model; **Wave A foundation**
+(`ability-scores`, `proficiency`, `free-actions`, `core-events`, `ac`,
+`movement`, `species-human`); resources `heroic-inspiration`, `lay-on-hands`;
+`class-paladin-level1` filled out (saves, spell modifier, armor profs, LoH pool,
+prepared max); and **the prepared-spell path** (deferred item #2 below — DONE via
+`builder.preparedSpellOffers`).
+
+Deferred / skip-listed (visible & counted in the harness):
+
+- **Attacks `hitBonus`/damage** — the weapons wave (#3 below).
+- **Human HI-on-long-rest** — needs a passive module to create a _persistent_
+  effect from a transient rest event; revisit with a small engine hook.
+- **`hi-use-then-grant`** — relies on v1 intra-turn reordering; v2 plan fold is
+  plan-order by design (won't change).
+- **Always-prepared count gate edge** — handled at apply time (reads
+  `alwaysPrepared`); the `*-prepared-then-granted` scenarios that exercise it
+  also need later groups (level2 / find-steed / oath), so they unlock there.
+
 ## 5. Port waves (order is a guide; parity coupling may reshuffle)
 
 Each entry is a v1 group → v2 module. Run the parity harness after each.
