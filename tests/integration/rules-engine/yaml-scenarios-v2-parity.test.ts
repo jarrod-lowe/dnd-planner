@@ -46,9 +46,32 @@ const SKIP_BY_NAME: Record<string, string> = {
 // regression (a module dropping out of the registry) fails loudly instead of
 // quietly shrinking coverage.
 const EXPECTED_RUNNABLE = [
+  // M0/M1 baseline
   'bonus-action-init',
   'paladin-spell-slots',
-  'spellcasting-base-reset'
+  'spellcasting-base-reset',
+  // M3 wave A — ability-scores + proficiency (and the saveDC / paladin-save adds)
+  'ability-increase-affects-skills-saves',
+  'ability-increase-basic',
+  'ability-increase-max-illegal',
+  'ability-increase-offer-exists',
+  'ability-increase-past-max',
+  'ability-increase-persists',
+  'ability-score-cannot-set-twice',
+  'ability-score-persists-across-turns',
+  'ability-score-set',
+  'ability-scores-all-six',
+  'acrobatics-skill',
+  'config-offers-legal-without-facts',
+  'paladin-proficiency',
+  'proficiency-base-reset',
+  'save-proficiency',
+  'save-proficiency-persists-across-turns',
+  'save-proficiency-with-paladin',
+  'skill-proficiency',
+  'skill-proficiency-persists-across-turns',
+  'skill-proficiency-with-paladin',
+  'spell-save-dc'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---

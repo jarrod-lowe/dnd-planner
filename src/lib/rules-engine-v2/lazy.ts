@@ -17,6 +17,7 @@ import { isEngineCompatible } from './version';
 // and the backend's persisted/published id namespace.
 const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   'ability-scores': () => import('./rules/ability-scores'),
+  proficiency: () => import('./rules/proficiency'),
   hp: () => import('./rules/hp'),
   'action-economy': () => import('./rules/action-economy'),
   attacks: () => import('./rules/attacks'),

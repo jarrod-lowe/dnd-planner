@@ -33,6 +33,13 @@ const spellcasting: RuleModule = {
         for (const n of LEVELS) if (f.num(`spellcasting.slots.level${n}.total`) > 0) max = n;
         return max;
       }
+    },
+    {
+      // Save DC = 8 + proficiency bonus + spellcasting ability modifier. The
+      // modifier (and which ability it is) is contributed by the casting class
+      // (e.g. class-paladin-level1 → CHA); 0 here means no caster class.
+      fact: 'spellcasting.saveDC',
+      value: (f) => 8 + f.num('proficiency.bonus') + f.num('spellcasting.modifier')
     }
   ]
 };
