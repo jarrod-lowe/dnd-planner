@@ -15,6 +15,7 @@ import paladinSmite from './rules/paladin-smite';
 import divineSmite from './rules/divine-smite';
 import divineFavour from './rules/divine-favour';
 import speciesHuman from './rules/species-human';
+import movement from './rules/movement';
 
 /**
  * Static ruleGroupId -> module registry, keyed by each module's own `id` — which
@@ -44,7 +45,8 @@ const MODULES: RuleModule[] = [
   paladinSmite,
   divineSmite,
   divineFavour,
-  speciesHuman
+  speciesHuman,
+  movement
 ];
 
 const REGISTRY: Record<string, RuleModule> = Object.fromEntries(MODULES.map((m) => [m.id, m]));

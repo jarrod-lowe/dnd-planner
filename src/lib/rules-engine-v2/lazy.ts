@@ -31,7 +31,8 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   'class-paladin-paladin-smite': () => import('./rules/paladin-smite'),
   'spell-divine-smite': () => import('./rules/divine-smite'),
   'spell-divine-favour': () => import('./rules/divine-favour'),
-  'species-human': () => import('./rules/species-human')
+  'species-human': () => import('./rules/species-human'),
+  movement: () => import('./rules/movement')
 };
 
 export interface LoadResult {

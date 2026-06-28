@@ -137,7 +137,18 @@ const EXPECTED_RUNNABLE = [
   'loh-persistence',
   'loh-pool-init',
   'loh-purify-illegal',
-  'loh-purify-usage'
+  'loh-purify-usage',
+  // M3 wave A — movement (walk / rough / swim / fly)
+  'engine-purity-remove-mid',
+  'engine-purity-reorder',
+  'full-paladin-turn',
+  'human-movement-constants',
+  'movement-fly-illegal-for-human',
+  'movement-out-of-movement',
+  'movement-rough-terrain-costs-double',
+  'movement-swim-costly',
+  'movement-walk-consumes-distance',
+  'multiple-movement-types'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---
