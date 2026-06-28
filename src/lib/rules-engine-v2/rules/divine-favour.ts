@@ -28,14 +28,11 @@ const RADIANT = 'radiant';
  * `prepared` is an input fact for the spike (the prepare/unprepare offers are M3
  * proper).
  *
- * KNOWN GAP surfaced by this spike (the reason it was chosen): v1's buff effect
- * re-advertises itself only `when rest.short == 0 && rest.long == 0`, so it ends
- * on ANY rest as well as after 10 rounds. The v2 `Expiry` union has no
- * combinator for "count down N turns AND also end on a rest", and `endTurn`
- * models only a long rest, not a short one. So the `turns: 10` buff below is a
- * faithful port of the *duration* but NOT of the rest-cancellation. The
- * characterization test pins this divergence; see the spike notes for the
- * proposed M3 model change.
+ * The buff ends when the EARLIEST condition fires — 10 rounds OR any rest — via
+ * a multi-predicate `expiry` (M3 step 0), matching v1's buff re-advertise guard
+ * `when rest.short == 0 && rest.long == 0`. (This rest-cancellation was the gap
+ * the spike was chosen to surface; the single-predicate `Expiry` couldn't
+ * express it.)
  */
 const divineFavour: RuleModule = {
   id: 'spell-divine-favour',
@@ -99,14 +96,15 @@ const divineFavour: RuleModule = {
             state: { 'spellcasting.slots.level1.spent': 1 },
             expiry: { kind: 'untilLongRest' }
           },
-          // The buff: lights divineFavour.active for the duration (10 rounds).
-          // Keyed so re-casting refreshes the duration rather than stacking
-          // active to 2 (newest-wins dedupe at sheet-build and endTurn).
+          // The buff: lights divineFavour.active for the duration. Ends when the
+          // EARLIEST fires — 10 rounds OR any rest. Keyed so re-casting refreshes
+          // the duration rather than stacking active to 2 (newest-wins dedupe at
+          // sheet-build and endTurn).
           {
             id: 'buff',
             key: 'divine-favour-buff',
             state: { 'divineFavour.active': 1 },
-            expiry: { kind: 'turns', remaining: 10 }
+            expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]
           }
         ];
         const diagnostics: Diagnostic[] = [];

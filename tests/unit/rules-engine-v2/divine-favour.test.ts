@@ -169,13 +169,14 @@ describe('v2 divine-favour — effect lifetimes (the spike core)', () => {
     expect(evaluateSheet(ALL, PREPARED, afterRest)['spellcasting.slots.level1.remaining']).toBe(2);
   });
 
-  it('KNOWN GAP: the turns-buff survives a long rest (v1 ends it on any rest)', () => {
-    // v1 re-advertises the buff only `when rest.short == 0 && rest.long == 0`, so
-    // a rest ends Divine Favour. The v2 `turns` expiry has no rest-cancellation
-    // (and endTurn models no short rest at all), so the buff wrongly persists.
-    // This assertion PINS the divergence; M3's effect-model change flips it to 0.
+  it('ends the buff on a rest, before its duration (multi-predicate expiry)', () => {
+    // The buff ends when the EARLIEST predicate fires: 10 rounds OR any rest —
+    // matching v1's `when rest.short == 0 && rest.long == 0`. (Was the pre-M3
+    // KNOWN GAP, resolved by the multi-predicate Expiry + shortRest in M3 step 0.)
     const { advertised } = evaluatePlan(ALL, PREPARED, [cast('c1')]);
-    const afterRest = endTurn([], advertised, { longRest: true });
-    expect(evaluateSheet(ALL, PREPARED, afterRest)['divineFavour.active']).toBe(1); // should be 0
+    const afterLong = endTurn([], advertised, { longRest: true });
+    expect(evaluateSheet(ALL, PREPARED, afterLong)['divineFavour.active'] ?? 0).toBe(0);
+    const afterShort = endTurn([], advertised, { shortRest: true });
+    expect(evaluateSheet(ALL, PREPARED, afterShort)['divineFavour.active'] ?? 0).toBe(0);
   });
 });

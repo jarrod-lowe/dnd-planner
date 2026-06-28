@@ -31,7 +31,7 @@ concisely with no new engine concepts.
 
 ## Findings
 
-### 1. HEADLINE GAP — duration **and** rest cancellation (needs an M3 model change)
+### 1. HEADLINE GAP — duration **and** rest cancellation (RESOLVED in M3 step 0)
 
 A 1-minute spell ends when **either** its duration elapses **or** the caster
 takes a rest. v1 encodes this by re-advertising the buff effect only
@@ -50,19 +50,17 @@ type Expiry =
 There is no way to say "count down N turns **and also** end on a rest", and
 `endTurn` models only a **long** rest (no short rest at all). So the spike's
 `turns: 10` buff is a faithful port of the _duration_ but **not** of the
-rest-cancellation. The test pins this divergence explicitly:
+rest-cancellation.
 
-> `KNOWN GAP: the turns-buff survives a long rest (v1 ends it on any rest)` —
-> asserts `divineFavour.active === 1` after a long rest, with a comment that M3's
-> model change flips it to `0`.
-
-**Recommended M3 change (for confirmation, not yet implemented):** make expiry a
-**set of predicates — the effect ends when the earliest fires** (e.g.
-`expiry: Expiry | Expiry[]`), and add a `shortRest` option to `endTurn`
-alongside `longRest`. Divine Favour then becomes
-`expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }, { kind: 'untilLongRest' }]`.
-This also subsumes today's combinations cleanly and keeps `endTurn` a pure fold.
-Per the STOP rule this is flagged for a decision, not improvised here.
+**Resolution (M3 step 0, landed):** expiry is now a **set of conditions — the
+effect ends when the earliest fires** (`ExpirySpec = Expiry | Expiry[]`), with a
+new `untilShortRest` condition (a long rest grants a short rest's benefits too,
+so it ends on either) and a `shortRest` option on `endTurn`. Divine Favour's buff
+is now `expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]`,
+and the test asserts the buff ends on a short **or** long rest before its
+duration. A single condition stays a single object (no array churn), so all prior
+effects are unchanged, and `endTurn` remains a pure fold. See `effects.ts` /
+`types.ts` and the `v2 endTurn — short rest + multi-predicate expiry` tests.
 
 ### 2. Effect-only facts are **absent** (not `0`) when no effect contributes
 
@@ -88,7 +86,8 @@ bulk as the foundation lands. This argues for M3's stated dependency order
 
 ## Status
 
-Spike complete; all checks green (full vitest suite, parity harness, `pnpm lint`
-incl. confinement, `verify-chunks`; svelte-check clean for the new files). On
-branch `claude/rules-engine-v2-m3`. **Decision needed before M3 proper:** approve
-the Finding-1 expiry-model change (multi-predicate expiry + short rest).
+Spike complete, verdict **GO**; all checks green (full vitest suite, parity
+harness, `pnpm lint` incl. confinement, `verify-chunks`; svelte-check clean for
+the new files). On branch `claude/rules-engine-v2-m3`. Finding 1 (the
+expiry-model change) is **approved and landed** as M3 step 0; M3 proper proceeds
+per the plan in [RULES_ENGINE_V2_M3_PLAN.md](RULES_ENGINE_V2_M3_PLAN.md).

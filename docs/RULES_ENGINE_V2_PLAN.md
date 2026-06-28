@@ -202,3 +202,9 @@ resolve first: the v2 `Expiry` is single-predicate, so it can't express
 the earliest fires) + a `shortRest` option** — is flagged for confirmation, not
 yet implemented. See
 [RULES_ENGINE_V2_M3_SPIKE.md](RULES_ENGINE_V2_M3_SPIKE.md).
+
+**Now: M3** — port all rule groups in dependency order (foundation first so
+parity scenarios unlock in waves), the parity harness as the oracle. **Step 0
+(landed):** the multi-predicate expiry model the spike called for (`ExpirySpec`,
+`untilShortRest`, `endTurn` `shortRest`). See
+[RULES_ENGINE_V2_M3_PLAN.md](RULES_ENGINE_V2_M3_PLAN.md).

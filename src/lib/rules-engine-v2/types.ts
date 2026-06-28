@@ -89,9 +89,15 @@ export interface RuleModule {
   annotate?: (f: FactReader) => Annotation[];
 }
 
-/** When a persistent effect ends. */
+/** One condition under which a persistent effect ends. */
 export type Expiry =
   | { kind: 'untilLongRest' }
+  /**
+   * Ends on the next short rest. A long rest grants a short rest's benefits too,
+   * so it also ends an `untilShortRest` effect (whereas `untilLongRest` ends only
+   * on a long rest).
+   */
+  | { kind: 'untilShortRest' }
   | { kind: 'endOfTurn' }
   | { kind: 'turns'; remaining: number }
   /**
@@ -100,6 +106,15 @@ export type Expiry =
    * not by the clock.
    */
   | { kind: 'permanent' };
+
+/**
+ * When an effect ends: a single condition, or several — in which case it ends as
+ * soon as the EARLIEST fires. A duration buff that also ends on a rest is
+ * `[{ kind: 'turns', remaining }, { kind: 'untilShortRest' }]` (v1 modelled this
+ * with a `when rest.short == 0 && rest.long == 0` guard on the buff's
+ * re-advertise). A single condition stays a single object — no array churn.
+ */
+export type ExpirySpec = Expiry | Expiry[];
 
 /**
  * A persistent or per-turn effect: a serializable value (not a self-replicating
@@ -129,7 +144,7 @@ export interface EffectInstance {
    * `max` rather than summing. Combine conflicts are rejected by the sheet.
    */
   stateCombine?: Record<string, CombineMode>;
-  expiry: Expiry;
+  expiry: ExpirySpec;
 }
 
 // === ENGINE I/O (M1) ===

@@ -90,3 +90,61 @@ describe('v2 declarative effects — persistent contributions with expiry', () =
     expect(evaluateSheet(all, {}, next)['spellcasting.slots.level1.remaining']).toBe(1);
   });
 });
+
+/**
+ * M3 / step 0 — short-rest + multi-predicate expiry.
+ *
+ * A duration spell ends when EITHER its clock runs out OR the caster rests (v1's
+ * Divine Favour buff re-advertised only `when rest.short == 0 && rest.long == 0`).
+ * The pre-M3 spike surfaced that the single-predicate `Expiry` couldn't express
+ * this. Expiry is now `Expiry | Expiry[]`: an array ends when the EARLIEST
+ * predicate fires. `endTurn` also gains a `shortRest` flag; a long rest counts as
+ * a short rest too (it grants the same benefits), so `untilShortRest` ends on
+ * either.
+ */
+describe('v2 endTurn — short rest + multi-predicate expiry', () => {
+  // 10-round buff that also ends on any rest, keyed so re-casts replace.
+  const buff = (remaining: number): EffectInstance => ({
+    id: 'buff',
+    key: 'b',
+    state: { active: 1 },
+    expiry: [{ kind: 'turns', remaining }, { kind: 'untilShortRest' }]
+  });
+
+  it('untilShortRest persists a normal turn, ends on a short rest, and on a long rest too', () => {
+    const e: EffectInstance = { id: 's', state: { x: 1 }, expiry: { kind: 'untilShortRest' } };
+    expect(endTurn([e], [], { longRest: false })).toHaveLength(1); // normal turn: kept
+    expect(endTurn([e], [], { shortRest: true })).toHaveLength(0); // short rest: gone
+    expect(endTurn([e], [], { longRest: true })).toHaveLength(0); // long rest includes a short rest
+  });
+
+  it('a multi-predicate effect ends on a rest before its duration elapses', () => {
+    expect(endTurn([buff(10)], [], { shortRest: true })).toHaveLength(0);
+  });
+
+  it('a multi-predicate effect ages by turns when no rest happens, then expires', () => {
+    let committed = [buff(3)];
+    committed = endTurn(committed, [], { longRest: false }); // 3 -> 2
+    expect(committed).toHaveLength(1);
+    committed = endTurn(committed, [], { longRest: false }); // 2 -> 1
+    expect(committed).toHaveLength(1);
+    committed = endTurn(committed, [], { longRest: false }); // 1 -> 0: expires
+    expect(committed).toHaveLength(0);
+  });
+
+  it('decrements the turns predicate in the survivor (it does not reset)', () => {
+    const after1 = endTurn([buff(10)], [], { longRest: false });
+    const expiry = after1[0].expiry;
+    const preds = Array.isArray(expiry) ? expiry : [expiry];
+    expect(preds.find((p) => p.kind === 'turns')).toEqual({ kind: 'turns', remaining: 9 });
+  });
+
+  it('preserves single-predicate shape (backward compatible)', () => {
+    const after1 = endTurn(
+      [{ id: 't', state: { x: 1 }, expiry: { kind: 'turns', remaining: 2 } }],
+      [],
+      {}
+    );
+    expect(after1[0].expiry).toEqual({ kind: 'turns', remaining: 1 }); // still a single object
+  });
+});

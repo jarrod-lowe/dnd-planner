@@ -37,6 +37,7 @@ export type {
   OfferEntry,
   PlannedRef,
   Expiry,
+  ExpirySpec,
   EffectInstance,
   Status,
   OfferRuleDescriptor,

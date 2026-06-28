@@ -1,8 +1,33 @@
-import type { EffectInstance } from './types';
+import type { EffectInstance, Expiry } from './types';
 
 export interface EndTurnOptions {
   /** Whether the turn that just ended was a long rest. */
   longRest?: boolean;
+  /**
+   * Whether the turn that just ended was a short rest. A long rest grants a short
+   * rest's benefits too, so `longRest` also satisfies short-rest expiry — callers
+   * need not set both.
+   */
+  shortRest?: boolean;
+}
+
+/** Whether one expiry condition fires at this turn boundary, and its aged form. */
+function ageCondition(c: Expiry, opts: EndTurnOptions): { expired: boolean; next: Expiry } {
+  switch (c.kind) {
+    case 'endOfTurn':
+      return { expired: true, next: c };
+    case 'untilLongRest':
+      return { expired: !!opts.longRest, next: c };
+    case 'untilShortRest':
+      // A long rest includes a short rest, so either ends it.
+      return { expired: !!opts.shortRest || !!opts.longRest, next: c };
+    case 'turns': {
+      const remaining = c.remaining - 1;
+      return { expired: remaining <= 0, next: { kind: 'turns', remaining } };
+    }
+    case 'permanent':
+      return { expired: false, next: c };
+  }
 }
 
 /**
@@ -35,10 +60,11 @@ export function dedupeByKey(effects: EffectInstance[]): EffectInstance[] {
  * self-advertising (`self: true`) rules: persistence is data the engine ages,
  * not a rule that re-emits itself.
  *
- * - `endOfTurn`     — dropped.
- * - `untilLongRest` — dropped iff this turn was a long rest, else kept.
- * - `turns`         — decremented; dropped when it reaches 0.
- * - `permanent`     — always kept (removed only explicitly, never by the clock).
+ * Each condition (`endOfTurn`, `untilLongRest`, `untilShortRest`, `turns`,
+ * `permanent`) is aged independently; an effect with several conditions ends as
+ * soon as the EARLIEST fires (so a duration buff also ends on a rest). A
+ * surviving effect keeps its conditions with `turns` decremented, preserving the
+ * single-vs-array shape it was authored with.
  *
  * Pure: same (committed, advertised, opts) → same result.
  */
@@ -49,21 +75,12 @@ export function endTurn(
 ): EffectInstance[] {
   const next: EffectInstance[] = [];
   for (const effect of dedupeByKey([...committed, ...advertised])) {
-    switch (effect.expiry.kind) {
-      case 'endOfTurn':
-        break; // expires now
-      case 'untilLongRest':
-        if (!opts.longRest) next.push(effect);
-        break;
-      case 'turns': {
-        const remaining = effect.expiry.remaining - 1;
-        if (remaining > 0) next.push({ ...effect, expiry: { kind: 'turns', remaining } });
-        break;
-      }
-      case 'permanent':
-        next.push(effect); // never aged
-        break;
-    }
+    const isArray = Array.isArray(effect.expiry);
+    const conditions: Expiry[] = Array.isArray(effect.expiry) ? effect.expiry : [effect.expiry];
+    const aged = conditions.map((c) => ageCondition(c, opts));
+    if (aged.some((a) => a.expired)) continue; // earliest condition to fire ends it
+    const nextConditions = aged.map((a) => a.next);
+    next.push({ ...effect, expiry: isArray ? nextConditions : nextConditions[0] });
   }
   return next;
 }
