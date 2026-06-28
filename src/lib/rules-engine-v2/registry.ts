@@ -5,6 +5,7 @@ import hp from './rules/hp';
 import classPaladinLevel1 from './rules/class-paladin-level1';
 import actionEconomy from './rules/action-economy';
 import freeActions from './rules/free-actions';
+import coreEvents from './rules/core-events';
 import attacks from './rules/attacks';
 import spellcasting from './rules/spellcasting';
 import paladinSmite from './rules/paladin-smite';
@@ -29,6 +30,7 @@ const MODULES: RuleModule[] = [
   hp,
   actionEconomy,
   freeActions,
+  coreEvents,
   attacks,
   spellcasting,
   classPaladinLevel1,

@@ -39,7 +39,12 @@ const scenariosDir = join(__dirname, 'yaml-scenarios');
 const SKIP_BY_NAME: Record<string, string> = {
   'hp-paladin-level1': 'set-constitution offer not ported (M3)',
   'hp-with-modifiers': 'set-hp-modifier-* offers not ported (M3)',
-  'hp-modifier-no-stacking': 'set-hp-modifier-max offer not ported (M3)'
+  'hp-modifier-no-stacking': 'set-hp-modifier-max offer not ported (M3)',
+  // Groups resolve, but these need features still on the M3 backlog:
+  'attack-unarmed-strike': 'attacks hitBonus/damage not ported (attacks wave)',
+  'ability-modifier-ordering': 'attacks hitBonus not ported (attacks wave)',
+  'divine-smite-prepare': 'prepare/unprepare offers not ported (deferred M3 item)',
+  'divine-favour-prepare': 'prepare/unprepare offers not ported (deferred M3 item)'
 };
 
 // The scenarios expected to run on v2 today. Asserted as an exact set so that a
@@ -76,7 +81,25 @@ const EXPECTED_RUNNABLE = [
   'skill-proficiency',
   'skill-proficiency-persists-across-turns',
   'skill-proficiency-with-paladin',
-  'spell-save-dc'
+  'spell-save-dc',
+  // M3 wave A — core-events (damage / heal / saves / check / rests / note)
+  'core-events-check-offered',
+  'core-events-damage-offered',
+  'core-events-damage-slider',
+  'core-events-heal-slider',
+  'core-events-note-offered',
+  'core-events-save-select',
+  'damage-and-heal-persist-end-turn',
+  'damage-persists-end-turn',
+  'damage-reduces-hp',
+  'divine-smite-cap-ordering',
+  'heal-increases-hp',
+  'heal-persists-and-caps',
+  'long-rest-sets-flag',
+  'savage-attacker-no-feat',
+  'short-rest-sets-flag',
+  'spellcasting-max-slot-level',
+  'unarmed-strike-works-without-weapon'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---
