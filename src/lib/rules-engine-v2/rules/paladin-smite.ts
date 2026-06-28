@@ -9,7 +9,9 @@ import { defineRule, type RuleModule } from '../builder';
 const paladinSmite: RuleModule = {
   id: 'class-paladin-paladin-smite',
   derive: () => [
-    { fact: 'spell.l1.divineSmite.prepared', value: () => 1 },
+    // `max` so it composes with a manual prepare effect (also `max`) without a
+    // combine conflict — an always-prepared spell reads prepared = 1 either way.
+    { fact: 'spell.l1.divineSmite.prepared', combine: 'max', value: () => 1 },
     { fact: 'spell.l1.divineSmite.alwaysPrepared', value: () => 1 },
     { fact: 'paladinSmite.total', value: () => 1 },
     {

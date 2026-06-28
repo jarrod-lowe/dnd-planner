@@ -32,7 +32,9 @@ const paladinLevel1: RuleModule = {
     { fact: 'armor.shield.proficient', combine: 'sum', value: () => 1 },
     // Lay on Hands pool: 5 × paladin level (5 at level 1). `remaining` is derived
     // by the lay-on-hands group (total − spent).
-    { fact: 'layOnHands.pool.total', combine: 'sum', value: () => 5 }
+    { fact: 'layOnHands.pool.total', combine: 'sum', value: () => 5 },
+    // Prepared-spell capacity: a level-1 paladin can prepare 2 spells.
+    { fact: 'spellcasting.prepared.max', combine: 'sum', value: () => 2 }
   ]
 };
 

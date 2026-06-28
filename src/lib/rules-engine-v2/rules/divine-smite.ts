@@ -1,5 +1,6 @@
 import {
   defineRule,
+  preparedSpellOffers,
   type ActionResult,
   type Diagnostic,
   type EffectInstance,
@@ -82,6 +83,13 @@ const divineSmite: RuleModule = {
     }
   ],
   offer: () => [
+    ...preparedSpellOffers({
+      spellId: 'divine-smite',
+      i18nPrefix: 'rule.spell-divine-smite',
+      preparedFact: 'spell.l1.divineSmite.prepared',
+      alwaysPreparedFact: 'spell.l1.divineSmite.alwaysPrepared',
+      intentLevel: 'L1'
+    }),
     {
       id: 'cast-divine-smite',
       when: (f) => f.num('spell.l1.divineSmite.prepared') === 1,

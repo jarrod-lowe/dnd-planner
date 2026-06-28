@@ -1,5 +1,6 @@
 import {
   defineRule,
+  preparedSpellOffers,
   type ActionResult,
   type Diagnostic,
   type EffectInstance,
@@ -50,6 +51,13 @@ const divineFavour: RuleModule = {
     }
   ],
   offer: () => [
+    ...preparedSpellOffers({
+      spellId: 'divine-favour',
+      i18nPrefix: 'rule.spell-divine-favour',
+      preparedFact: 'spell.l1.divineFavour.prepared',
+      alwaysPreparedFact: 'spell.l1.divineFavour.alwaysPrepared',
+      intentLevel: 'L1'
+    }),
     {
       id: 'cast-divine-favour',
       when: (f) => f.num('spell.l1.divineFavour.prepared') === 1,
@@ -90,9 +98,10 @@ const divineFavour: RuleModule = {
             expiry: { kind: 'endOfTurn' }
           },
           // The L1 slot, spent until a long rest. Unkeyed so it stacks like
-          // Divine Smite's slot — each cast spends its own slot.
+          // Divine Smite's slot — each cast spends its own slot. (id matches the
+          // v1 effect: scenarios assert effect-divine-favour-l1.)
           {
-            id: 'slot',
+            id: 'effect-divine-favour-l1',
             state: { 'spellcasting.slots.level1.spent': 1 },
             expiry: { kind: 'untilLongRest' }
           },
@@ -101,7 +110,8 @@ const divineFavour: RuleModule = {
           // the duration rather than stacking active to 2 (newest-wins dedupe at
           // sheet-build and endTurn).
           {
-            id: 'buff',
+            // id matches the v1 effect (scenarios assert effect-divine-favour).
+            id: 'effect-divine-favour',
             key: 'divine-favour-buff',
             state: { 'divineFavour.active': 1 },
             expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]

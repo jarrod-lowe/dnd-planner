@@ -40,6 +40,13 @@ const spellcasting: RuleModule = {
       // (e.g. class-paladin-level1 → CHA); 0 here means no caster class.
       fact: 'spellcasting.saveDC',
       value: (f) => 8 + f.num('proficiency.bonus') + f.num('spellcasting.modifier')
+    },
+    {
+      // How many more spells can be prepared: capacity (from the class) minus the
+      // count of currently-prepared spells (each prepare offer adds 1, except
+      // always-prepared spells which are free).
+      fact: 'spellcasting.prepared.remaining',
+      value: (f) => f.num('spellcasting.prepared.max') - f.num('spellcasting.prepared.count')
     }
   ]
 };

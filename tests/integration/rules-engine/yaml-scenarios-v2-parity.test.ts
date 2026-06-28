@@ -43,14 +43,6 @@ const SKIP_BY_NAME: Record<string, string> = {
   // Groups resolve, but these need features still on the M3 backlog:
   'attack-unarmed-strike': 'attacks hitBonus/damage not ported (attacks wave)',
   'ability-modifier-ordering': 'attacks hitBonus not ported (attacks wave)',
-  'divine-smite-prepare': 'prepare/unprepare offers not ported (deferred M3 item)',
-  'divine-favour-prepare': 'prepare/unprepare offers not ported (deferred M3 item)',
-  'divine-favour': 'uses prepare-divine-favour (prepare path, deferred M3 item)',
-  'divine-smite-slot-cast': 'uses prepare-divine-smite (prepare path, deferred M3 item)',
-  'smite-available-after-attack': 'uses prepare-divine-smite (prepare path, deferred M3 item)',
-  'smite-illegal-no-bonus-action': 'uses prepare-divine-smite (prepare path, deferred M3 item)',
-  'smite-illegal-no-slots': 'uses prepare-divine-smite (prepare path, deferred M3 item)',
-  'smite-not-available-without-attack': 'uses prepare-divine-smite (prepare path, deferred M3 item)',
   // Human regains Heroic Inspiration on a long rest — needs a passive module to
   // create a PERSISTENT effect from a transient rest event; deferred.
   'hi-human-long-rest-grant': 'human HI-on-long-rest persistence not modelled yet (deferred)',
@@ -148,7 +140,16 @@ const EXPECTED_RUNNABLE = [
   'movement-rough-terrain-costs-double',
   'movement-swim-costly',
   'movement-walk-consumes-distance',
-  'multiple-movement-types'
+  'multiple-movement-types',
+  // M3 — prepare path (prepare/unprepare offers + prepared.count/max/remaining)
+  'divine-favour',
+  'divine-favour-prepare',
+  'divine-smite-prepare',
+  'divine-smite-slot-cast',
+  'smite-available-after-attack',
+  'smite-illegal-no-bonus-action',
+  'smite-illegal-no-slots',
+  'smite-not-available-without-attack'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---
