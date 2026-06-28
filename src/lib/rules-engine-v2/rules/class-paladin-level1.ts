@@ -8,8 +8,8 @@ import { defineRule, type RuleModule } from '../builder';
  * addition is commutative and the engine settles all contributors before
  * dependents read the total.
  *
- * (Still partial vs the v1 group: hit-die, the lay-on-hands pool and
- * prepared-spell capacity port with their dependent groups in later M3 waves.)
+ * (Still partial vs the v1 group: hit-die and prepared-spell capacity port with
+ * their dependent groups in later M3 waves.)
  */
 const paladinLevel1: RuleModule = {
   id: 'class-paladin-level1',
@@ -29,7 +29,10 @@ const paladinLevel1: RuleModule = {
     { fact: 'armor.light.proficient', combine: 'sum', value: () => 1 },
     { fact: 'armor.medium.proficient', combine: 'sum', value: () => 1 },
     { fact: 'armor.heavy.proficient', combine: 'sum', value: () => 1 },
-    { fact: 'armor.shield.proficient', combine: 'sum', value: () => 1 }
+    { fact: 'armor.shield.proficient', combine: 'sum', value: () => 1 },
+    // Lay on Hands pool: 5 × paladin level (5 at level 1). `remaining` is derived
+    // by the lay-on-hands group (total − spent).
+    { fact: 'layOnHands.pool.total', combine: 'sum', value: () => 5 }
   ]
 };
 

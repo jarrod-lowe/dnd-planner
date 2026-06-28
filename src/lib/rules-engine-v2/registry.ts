@@ -4,6 +4,7 @@ import proficiency from './rules/proficiency';
 import ac from './rules/ac';
 import hp from './rules/hp';
 import classPaladinLevel1 from './rules/class-paladin-level1';
+import layOnHands from './rules/lay-on-hands';
 import actionEconomy from './rules/action-economy';
 import freeActions from './rules/free-actions';
 import coreEvents from './rules/core-events';
@@ -13,6 +14,7 @@ import spellcasting from './rules/spellcasting';
 import paladinSmite from './rules/paladin-smite';
 import divineSmite from './rules/divine-smite';
 import divineFavour from './rules/divine-favour';
+import speciesHuman from './rules/species-human';
 
 /**
  * Static ruleGroupId -> module registry, keyed by each module's own `id` — which
@@ -38,9 +40,11 @@ const MODULES: RuleModule[] = [
   attacks,
   spellcasting,
   classPaladinLevel1,
+  layOnHands,
   paladinSmite,
   divineSmite,
-  divineFavour
+  divineFavour,
+  speciesHuman
 ];
 
 const REGISTRY: Record<string, RuleModule> = Object.fromEntries(MODULES.map((m) => [m.id, m]));

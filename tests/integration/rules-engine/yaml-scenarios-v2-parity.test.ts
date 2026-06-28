@@ -45,6 +45,16 @@ const SKIP_BY_NAME: Record<string, string> = {
   'ability-modifier-ordering': 'attacks hitBonus not ported (attacks wave)',
   'divine-smite-prepare': 'prepare/unprepare offers not ported (deferred M3 item)',
   'divine-favour-prepare': 'prepare/unprepare offers not ported (deferred M3 item)',
+  'divine-favour': 'uses prepare-divine-favour (prepare path, deferred M3 item)',
+  'divine-smite-slot-cast': 'uses prepare-divine-smite (prepare path, deferred M3 item)',
+  'smite-available-after-attack': 'uses prepare-divine-smite (prepare path, deferred M3 item)',
+  'smite-illegal-no-bonus-action': 'uses prepare-divine-smite (prepare path, deferred M3 item)',
+  'smite-illegal-no-slots': 'uses prepare-divine-smite (prepare path, deferred M3 item)',
+  'smite-not-available-without-attack': 'uses prepare-divine-smite (prepare path, deferred M3 item)',
+  // Human regains Heroic Inspiration on a long rest — needs a passive module to
+  // create a PERSISTENT effect from a transient rest event; deferred.
+  'hi-human-long-rest-grant': 'human HI-on-long-rest persistence not modelled yet (deferred)',
+  'hi-human-long-rest-no-duplicate': 'human HI-on-long-rest persistence not modelled yet (deferred)',
   // Plans use-hi before grant-hi and relies on v1 reordering use AFTER grant
   // (after: group). v2's plan fold is plan-order-significant by design, so it
   // yields remaining=1 (can't use what you lack, then grant it) — a deliberate divergence.
@@ -116,7 +126,18 @@ const EXPECTED_RUNNABLE = [
   'ac-base-default',
   'ac-with-dexterity',
   'ac-with-paladin',
-  'paladin-armor-proficiencies'
+  'paladin-armor-proficiencies',
+  // M3 wave A — species-human (movement constants) + lay-on-hands (pool, rest reset)
+  'divine-smite-wrong-level-error',
+  'loh-heal-illegal-no-bonus-action',
+  'loh-heal-illegal-pool-empty',
+  'loh-heal-usage',
+  'loh-long-rest-reset',
+  'loh-multiple-uses',
+  'loh-persistence',
+  'loh-pool-init',
+  'loh-purify-illegal',
+  'loh-purify-usage'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---
