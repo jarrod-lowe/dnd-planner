@@ -33,6 +33,7 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   'spell-divine-smite': () => import('./rules/divine-smite'),
   'spell-divine-favour': () => import('./rules/divine-favour'),
   'spell-bless': () => import('./rules/bless'),
+  'spell-thunderous-smite': () => import('./rules/thunderous-smite'),
   'species-human': () => import('./rules/species-human'),
   movement: () => import('./rules/movement')
 };

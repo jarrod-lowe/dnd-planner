@@ -16,6 +16,7 @@ import paladinSmite from './rules/paladin-smite';
 import divineSmite from './rules/divine-smite';
 import divineFavour from './rules/divine-favour';
 import bless from './rules/bless';
+import thunderousSmite from './rules/thunderous-smite';
 import speciesHuman from './rules/species-human';
 import movement from './rules/movement';
 
@@ -49,6 +50,7 @@ const MODULES: RuleModule[] = [
   divineSmite,
   divineFavour,
   bless,
+  thunderousSmite,
   speciesHuman,
   movement
 ];

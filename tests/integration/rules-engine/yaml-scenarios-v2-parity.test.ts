@@ -155,7 +155,14 @@ const EXPECTED_RUNNABLE = [
   'bless-cast',
   'bless-concentration-blocking',
   'bless-concentration-illegal-planned',
-  'bless-prepare'
+  'bless-prepare',
+  // M3 — thunderous-smite (L1 bonus-action on-hit smite)
+  'thunderous-smite-prepare',
+  'tsmite-available-after-attack',
+  'tsmite-cap-ordering',
+  'tsmite-no-slots',
+  'tsmite-not-available-without-attack',
+  'tsmite-usage'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---
