@@ -169,7 +169,12 @@ const EXPECTED_RUNNABLE = [
   'spell-cast',
   'spell-effect-persists',
   'spell-long-rest-resets',
-  'spell-no-slots'
+  'spell-no-slots',
+  // M3 — sanctuary (L1 bonus-action ward, dismissed on rest)
+  'sanctuary-cast',
+  'sanctuary-long-rest-dismissal',
+  'sanctuary-prepare',
+  'sanctuary-rest-dismissal'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---
