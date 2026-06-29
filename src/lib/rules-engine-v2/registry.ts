@@ -19,6 +19,7 @@ import bless from './rules/bless';
 import thunderousSmite from './rules/thunderous-smite';
 import createAndDestroyWater from './rules/create-and-destroy-water';
 import sanctuary from './rules/sanctuary';
+import protectionFromEvilAndGood from './rules/protection-from-evil-and-good';
 import speciesHuman from './rules/species-human';
 import movement from './rules/movement';
 
@@ -55,6 +56,7 @@ const MODULES: RuleModule[] = [
   thunderousSmite,
   createAndDestroyWater,
   sanctuary,
+  protectionFromEvilAndGood,
   speciesHuman,
   movement
 ];

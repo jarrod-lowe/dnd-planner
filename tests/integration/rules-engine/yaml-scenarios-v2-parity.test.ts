@@ -174,7 +174,13 @@ const EXPECTED_RUNNABLE = [
   'sanctuary-cast',
   'sanctuary-long-rest-dismissal',
   'sanctuary-prepare',
-  'sanctuary-rest-dismissal'
+  'sanctuary-rest-dismissal',
+  // M3 — protection-from-evil-and-good (L1 action concentration ward)
+  'protection-from-evil-and-good-cast',
+  'protection-from-evil-and-good-concentration-blocking',
+  'protection-from-evil-and-good-concentration-illegal-planned',
+  'protection-from-evil-and-good-prepare',
+  'protection-from-evil-and-good-rest-dismissal'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---
