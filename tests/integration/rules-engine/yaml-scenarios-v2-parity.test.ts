@@ -162,7 +162,14 @@ const EXPECTED_RUNNABLE = [
   'tsmite-cap-ordering',
   'tsmite-no-slots',
   'tsmite-not-available-without-attack',
-  'tsmite-usage'
+  'tsmite-usage',
+  // M3 — create-and-destroy-water (plain L1 action spell) + generic cast scenarios
+  'create-and-destroy-water-prepare',
+  'smite-blocks-other-spells',
+  'spell-cast',
+  'spell-effect-persists',
+  'spell-long-rest-resets',
+  'spell-no-slots'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---
