@@ -56,7 +56,7 @@ is recorded** (`untilLongRest` on a long rest; `untilShortRest` on either), and
 rest counts as a short rest too. (Per the user: either timing is fine as long as
 it is consistent — this is the consistent definition chosen.)
 
-## 4c. Progress (parity 3 → 138 runnable)
+## 4c. Progress (parity 3 → 140 runnable)
 
 Done: step 0 (multi-predicate expiry) + the rest model; **Wave A foundation**
 (`ability-scores`, `proficiency`, `free-actions`, `core-events`, `ac`,
@@ -87,15 +87,16 @@ Deferred / skip-listed (visible & counted in the harness):
 - **Attacks `hitBonus`/damage** — DONE for the spike weapons (dagger/greataxe set
   `attack.<id>.hitBonus`/`damageBonus`); the unarmed `attack-unarmed-strike` /
   `ability-modifier-ordering` scenarios still need unarmed's own hit/damage port.
-- **Passive-effect-from-rest hook** (blocks two scenarios, same root cause):
-  - **Human HI-on-long-rest** — regain Heroic Inspiration on a long rest.
-  - **Channel Divinity short rest** (`divinity-short-rest-reset`) — regains _one_
-    use on a short rest (all on a long rest); the asymmetry can't be aged
-    per-effect (`untilShortRest` would refund every use).
-  Both need a passive module to emit a _persistent_ effect from the transient
-  `rest.long`/`rest.short` event. The rest of Channel Divinity (pool init, long-rest
-  refill, Divine Sense usage + legality) is ported (`class-paladin-divinity`).
-  Revisit with a small engine hook (e.g. a module `onEvent(rest)` → effects).
+- **Passive-effect-from-rest hook — DONE** (`RuleModule.onRest`): a passive module
+  emits persistent effects when a rest is recorded this turn. `evaluatePlan` detects
+  the rest from the settled facts, appends each module's `onRest` effects, and
+  re-derives so they are visible in-evaluation and commit at end of turn. This
+  unblocked **Channel Divinity short-rest recovery** (`divinity` emits an
+  `untilLongRest` `divinity.recovered` point; `remaining = clamp(total − spent +
+  recovered)`) and **Human HI-on-long-rest** (`species-human` emits a keyed
+  permanent HI effect — same key as the grant, so it does not stack).
+  `hi-human-long-rest-no-duplicate` stays skipped, but now only for its v1-format
+  `initialEffects`, not a missing feature.
 - **`hi-use-then-grant`** — relies on v1 intra-turn reordering; v2 plan fold is
   plan-order by design (won't change).
 - **Always-prepared count gate edge** — handled at apply time (reads

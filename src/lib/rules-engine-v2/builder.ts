@@ -413,6 +413,7 @@ export type {
   ActionResult,
   EffectInstance,
   Expiry,
+  RestKind,
   Annotation,
   AnnotationRider,
   Diagnostic

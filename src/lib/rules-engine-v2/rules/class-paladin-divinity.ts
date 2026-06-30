@@ -3,6 +3,7 @@ import {
   type ActionResult,
   type Diagnostic,
   type EffectInstance,
+  type RestKind,
   type RuleModule
 } from '../builder';
 
@@ -16,13 +17,12 @@ const D = 'rule.class-paladin-divinity';
  * model (those effects are excluded the turn a long rest is recorded and dropped
  * at endTurn).
  *
- * KNOWN GAP — short-rest recovery: Channel Divinity regains *one* use on a short
- * rest (all on a long rest). That asymmetry can't be expressed with per-effect
- * expiry (aging the `untilShortRest` spends would refund *every* use, not one) and
- * needs a passive module to emit a persistent effect from the transient `rest.short`
- * event — the same engine hook the human Heroic-Inspiration-on-long-rest case
- * waits on. So `divinity-short-rest-reset` is skip-listed until that lands; the
- * long-rest / usage / legality paths model cleanly and are covered here.
+ * Short-rest recovery: Channel Divinity regains *one* use on a short rest (all on
+ * a long rest). That asymmetry can't be aged per-effect (aging the spends would
+ * refund *every* use), so it uses the `onRest` hook: a short rest emits an
+ * `untilLongRest` `divinity.recovered` point, and `remaining = clamp(total − spent
+ * + recovered)`. A long rest needs no hook — the spend AND recovery effects (both
+ * `untilLongRest`) age out, refilling the pool to full.
  *
  * Divine Sense is the first option: a bonus action spending 1 point, leaving a
  * removable status reminder (`effect-divine-sense`) plus the spend marker.
@@ -30,8 +30,28 @@ const D = 'rule.class-paladin-divinity';
 const divinity: RuleModule = {
   id: 'class-paladin-divinity',
   derive: () => [
-    { fact: 'divinity.remaining', value: (f) => f.num('divinity.total') - f.num('divinity.spent') }
+    {
+      fact: 'divinity.remaining',
+      value: (f) => {
+        const total = f.num('divinity.total');
+        const net = total - f.num('divinity.spent') + f.num('divinity.recovered');
+        return Math.max(0, Math.min(total, net));
+      }
+    }
   ],
+  // A short rest regains one Channel Divinity use (a long rest refills fully via
+  // the spends/recovery aging out — no hook needed). Keyless so successive short
+  // rests stack; `untilLongRest` so a long rest clears them.
+  onRest: (kind: RestKind): EffectInstance[] =>
+    kind === 'short'
+      ? [
+          {
+            id: 'effect-divinity-short-rest',
+            state: { 'divinity.recovered': 1 },
+            expiry: { kind: 'untilLongRest' }
+          }
+        ]
+      : [],
   offer: () => [
     {
       id: 'divine-sense',

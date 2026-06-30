@@ -87,7 +87,30 @@ export interface RuleModule {
    * annotation's `targets` against panel `annotationLabels` (unchanged from v1).
    */
   annotate?: (f: FactReader) => Annotation[];
+  /**
+   * Passive reaction to a rest recorded THIS turn: return persistent effects to
+   * emit. This is the ONLY way a non-planned module contributes effects — every
+   * other effect comes from a planned offer's `apply`. The engine runs it after
+   * the plan settles (so `facts` reflect the recorded rest), folds the returned
+   * effects back into the sheet (so they are visible in the same evaluation), and
+   * commits them at end of turn.
+   *
+   * It exists because some recoveries can't be aged per-effect: Channel Divinity
+   * regains ONE use on a short rest (so `untilShortRest` spends can't simply age
+   * out — that would refund every use), and a Human regains Heroic Inspiration on
+   * a long rest. Emit a keyed effect to make the grant idempotent (a second rest
+   * does not stack). Pure: a function of the rest kind and the post-plan facts.
+   */
+  onRest?: (kind: RestKind, facts: FactReader) => EffectInstance[];
 }
+
+/**
+ * Which rest was recorded this turn. A long rest also confers a short rest's
+ * benefits, but the engine reports the single highest kind that occurred; a
+ * module that recovers on a short rest handles the long-rest case itself (often
+ * for free, when its spends are `untilLongRest` and simply age out).
+ */
+export type RestKind = 'short' | 'long';
 
 /** One condition under which a persistent effect ends. */
 export type Expiry =

@@ -39,6 +39,7 @@ export type {
   Expiry,
   ExpirySpec,
   EffectInstance,
+  RestKind,
   Status,
   OfferRuleDescriptor,
   AvailableRuleEntry,

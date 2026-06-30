@@ -44,15 +44,10 @@ const SKIP_BY_NAME: Record<string, string> = {
   'attack-unarmed-strike': 'attacks hitBonus/damage not ported (attacks wave)',
   'ability-modifier-ordering': 'attacks hitBonus not ported (attacks wave)',
   'concentration-check-after-damage': 'concentration-check / damage-taken coupling deferred',
-  // Human regains Heroic Inspiration on a long rest — needs a passive module to
-  // create a PERSISTENT effect from a transient rest event; deferred.
-  'hi-human-long-rest-grant': 'human HI-on-long-rest persistence not modelled yet (deferred)',
-  'hi-human-long-rest-no-duplicate': 'human HI-on-long-rest persistence not modelled yet (deferred)',
-  // Channel Divinity regains ONE use on a short rest (all on a long rest); that
-  // asymmetric partial recovery needs a passive module to emit a persistent effect
-  // from the transient rest.short event — the same hook hi-human-long-rest waits
-  // on. Long-rest / usage / legality paths model fine and are covered.
-  'divinity-short-rest-reset': 'short-rest partial recovery needs the passive-effect-from-rest hook (deferred)',
+  // hi-human-long-rest-grant and divinity-short-rest-reset now run via the onRest
+  // hook (a passive module emitting a persistent effect from a rest event).
+  // hi-human-long-rest-no-duplicate stays skipped by the initialEffects rule
+  // (v1-format initialEffects) rather than for a missing feature.
   // Plans use-hi before grant-hi and relies on v1 reordering use AFTER grant
   // (after: group). v2's plan fold is plan-order-significant by design, so it
   // yields remaining=1 (can't use what you lack, then grant it) — a deliberate divergence.
@@ -228,7 +223,11 @@ const EXPECTED_RUNNABLE = [
   'divine-sense-illegal-no-divinity',
   'divine-sense-usage',
   'divinity-init',
-  'divinity-long-rest-reset'
+  'divinity-long-rest-reset',
+  // M3 — the onRest hook (passive module emits a persistent effect from a rest):
+  // Channel Divinity short-rest recovery + Human Heroic Inspiration on a long rest
+  'divinity-short-rest-reset',
+  'hi-human-long-rest-grant'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---

@@ -1,4 +1,12 @@
-import type { Diagnostic, EffectInstance, Facts, Offer, PlannedRef, RuleModule } from './types';
+import type {
+  Diagnostic,
+  EffectInstance,
+  Facts,
+  Offer,
+  PlannedRef,
+  RestKind,
+  RuleModule
+} from './types';
 import { evaluateSheet } from './sheet';
 import { collectOffers } from './offers';
 import { plainReader } from './reader';
@@ -96,7 +104,26 @@ export function evaluatePlan(
     if (deduped.length > 0) planDiagnostics.set(ref.instanceId, deduped);
   }
 
-  // Final projection includes every spend from the plan.
-  const facts = evaluateSheet(modules, inputFacts, [...committed, ...advertised]);
+  // After the plan settles, a rest recorded this turn lets passive modules emit
+  // persistent effects (Channel Divinity recovery, Human Heroic Inspiration on a
+  // long rest) — the one non-planned effect source. Detect the rest from the
+  // settled facts, append each module's `onRest` effects to `advertised`, and
+  // re-derive so they are visible this evaluation and commit at end of turn.
+  checkDeadline(deadline, 'rest hooks', budgetMs);
+  const settled = evaluateSheet(modules, inputFacts, [...committed, ...advertised]);
+  const reader = plainReader(settled);
+  const restKind: RestKind | null =
+    reader.num('rest.long') > 0 ? 'long' : reader.num('rest.short') > 0 ? 'short' : null;
+  if (restKind) {
+    for (const m of modules) {
+      if (!m.onRest) continue;
+      for (const e of m.onRest(restKind, reader)) advertised.push(e);
+    }
+  }
+
+  // Final projection includes every spend from the plan plus any rest effects.
+  const facts = restKind
+    ? evaluateSheet(modules, inputFacts, [...committed, ...advertised])
+    : settled;
   return { facts, planDiagnostics, advertised };
 }
