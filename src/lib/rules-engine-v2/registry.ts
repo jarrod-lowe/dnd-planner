@@ -29,6 +29,7 @@ import protectionFromEvilAndGood from './rules/protection-from-evil-and-good';
 import speciesHuman from './rules/species-human';
 import movement from './rules/movement';
 import leatherArmor from './rules/leather-armor';
+import splintArmor from './rules/splint-armor';
 import shield from './rules/shield';
 import hands from './rules/hands';
 import dagger from './rules/dagger';
@@ -79,6 +80,7 @@ const MODULES: RuleModule[] = [
   speciesHuman,
   movement,
   leatherArmor,
+  splintArmor,
   shield,
   hands,
   dagger,

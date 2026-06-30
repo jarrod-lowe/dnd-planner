@@ -253,7 +253,14 @@ const EXPECTED_RUNNABLE = [
   'shield-not-proficient-warning',
   'hands-shield-persists',
   'hands-shield-uses-1',
-  'hands-two-daggers-then-shield-illegal'
+  'hands-two-daggers-then-shield-illegal',
+  // M3 — splint armor (heavy: AC 17, dex capped to 0, STR<15 speed penalty via a
+  // movement.spent contribution, untrained disadvantage/no-casting)
+  'splint-armor-ac',
+  'splint-armor-disadvantage',
+  'splint-armor-no-speed-penalty-high-str',
+  'splint-armor-speed-penalty-low-str',
+  'paladin-splint-armor-spellcasting'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---
