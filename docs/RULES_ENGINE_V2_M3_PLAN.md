@@ -56,7 +56,7 @@ is recorded** (`untilLongRest` on a long rest; `untilShortRest` on either), and
 rest counts as a short rest too. (Per the user: either timing is fine as long as
 it is consistent — this is the consistent definition chosen.)
 
-## 4c. Progress (parity 3 → 130 runnable)
+## 4c. Progress (parity 3 → 133 runnable)
 
 Done: step 0 (multi-predicate expiry) + the rest model; **Wave A foundation**
 (`ability-scores`, `proficiency`, `free-actions`, `core-events`, `ac`,
@@ -74,7 +74,13 @@ plain function over data (see Wave D); and **paladin level 2**
 (HP, prepared-spell capacity, Lay-on-Hands pool) and finally exercises the Divine
 Smite free-use path (already in the smite module). The CON-at-level capture v1
 did for HP collapses to "count CON once at level 1" in v2's passive-derive model;
-the hit-die contribution is deferred with the hit-die group.
+the hit-die contribution is deferred with the hit-die group. **Paladin level 3**
+(`class-paladin-level3`) follows the same shape (+6 HP, a third L1 slot, +1
+prepared, +5 LoH, +2 Channel Divinity pool — `remaining`s derived by their owning
+groups). Note `paladin-level3-loh-pool` is skip-listed: it omits the
+lay-on-hands group yet asserts `pool.remaining`, which v2 derives there (v1 set
+it directly in the class-level rules); `pool.total` still matches and the
+level2/3 loh scenarios that load the group cover `remaining`.
 
 Deferred / skip-listed (visible & counted in the harness):
 

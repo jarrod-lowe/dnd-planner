@@ -51,7 +51,12 @@ const SKIP_BY_NAME: Record<string, string> = {
   // Plans use-hi before grant-hi and relies on v1 reordering use AFTER grant
   // (after: group). v2's plan fold is plan-order-significant by design, so it
   // yields remaining=1 (can't use what you lack, then grant it) — a deliberate divergence.
-  'hi-use-then-grant': 'relies on v1 intra-turn reordering; v2 plan fold is plan-order (by design)'
+  'hi-use-then-grant': 'relies on v1 intra-turn reordering; v2 plan fold is plan-order (by design)',
+  // Asserts layOnHands.pool.remaining but omits the class-paladin-lay-on-hands
+  // group that derives it in v2 (v1 set remaining directly in the class-level
+  // rules). pool.total still matches; remaining is covered by the level2/3
+  // loh-pool scenarios that do load the group.
+  'paladin-level3-loh-pool': 'omits lay-on-hands group, which derives pool.remaining in v2'
 };
 
 // The scenarios expected to run on v2 today. Asserted as an exact set so that a
@@ -206,7 +211,12 @@ const EXPECTED_RUNNABLE = [
   'hp-paladin-level2',
   'paladin-level2-loh-long-rest',
   'paladin-level2-loh-pool',
-  'paladin-level2-prepared'
+  'paladin-level2-prepared',
+  // M3 — class-paladin-level3 (HP / third L1 slot / prepared / Lay-on-Hands;
+  // the Channel Divinity pool total rides along, remaining derived by its group)
+  'hp-paladin-level3',
+  'paladin-level3-prepared',
+  'paladin-level3-spell-slots'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---
