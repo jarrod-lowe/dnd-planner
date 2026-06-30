@@ -4,6 +4,7 @@ import proficiency from './rules/proficiency';
 import ac from './rules/ac';
 import hp from './rules/hp';
 import classPaladinLevel1 from './rules/class-paladin-level1';
+import classPaladinLevel2 from './rules/class-paladin-level2';
 import layOnHands from './rules/lay-on-hands';
 import actionEconomy from './rules/action-economy';
 import freeActions from './rules/free-actions';
@@ -53,6 +54,7 @@ const MODULES: RuleModule[] = [
   attacks,
   spellcasting,
   classPaladinLevel1,
+  classPaladinLevel2,
   layOnHands,
   paladinSmite,
   divineSmite,

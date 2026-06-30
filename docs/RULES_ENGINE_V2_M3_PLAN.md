@@ -56,7 +56,7 @@ is recorded** (`untilLongRest` on a long rest; `untilShortRest` on either), and
 rest counts as a short rest too. (Per the user: either timing is fine as long as
 it is consistent — this is the consistent definition chosen.)
 
-## 4c. Progress (parity 3 → 121 runnable)
+## 4c. Progress (parity 3 → 130 runnable)
 
 Done: step 0 (multi-predicate expiry) + the rest model; **Wave A foundation**
 (`ability-scores`, `proficiency`, `free-actions`, `core-events`, `ac`,
@@ -68,7 +68,13 @@ spells (`bless`, `thunderous-smite`, `create-and-destroy-water`, `sanctuary`,
 `protection-from-evil-and-good`); and **the weapons spike** (`hands`,
 `dagger`(+`-mastery`), `greataxe`(+`-mastery`)) via `builder.weaponOffers` — the
 definitions × profiles cross-product the Python preprocessor generated is now a
-plain function over data (see Wave D).
+plain function over data (see Wave D); and **paladin level 2**
+(`class-paladin-level2`) — the keystone of the paladin progression (it blocks
+~42 scenarios; level3 a further 32, etc.). It stacks `combine: sum` onto level 1
+(HP, prepared-spell capacity, Lay-on-Hands pool) and finally exercises the Divine
+Smite free-use path (already in the smite module). The CON-at-level capture v1
+did for HP collapses to "count CON once at level 1" in v2's passive-derive model;
+the hit-die contribution is deferred with the hit-die group.
 
 Deferred / skip-listed (visible & counted in the harness):
 

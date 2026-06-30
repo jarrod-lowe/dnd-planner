@@ -194,7 +194,19 @@ const EXPECTED_RUNNABLE = [
   'weapon-don-planned-no-duplicate',
   'weapon-mastery-dagger',
   'weapon-mastery-greataxe',
-  'weapon-stowed-no-attacks'
+  'weapon-stowed-no-attacks',
+  // M3 — class-paladin-level2 (keystone of the paladin progression): the L2 HP /
+  // prepared / Lay-on-Hands bumps, plus the Divine Smite free-use path (already in
+  // the smite module) these scenarios finally exercise
+  'divine-smite-always-prepared',
+  'divine-smite-free-cast',
+  'divine-smite-free-long-rest-reset',
+  'divine-smite-free-then-slot',
+  'divine-smite-prepared-then-granted',
+  'hp-paladin-level2',
+  'paladin-level2-loh-long-rest',
+  'paladin-level2-loh-pool',
+  'paladin-level2-prepared'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---
