@@ -22,6 +22,11 @@ import sanctuary from './rules/sanctuary';
 import protectionFromEvilAndGood from './rules/protection-from-evil-and-good';
 import speciesHuman from './rules/species-human';
 import movement from './rules/movement';
+import hands from './rules/hands';
+import dagger from './rules/dagger';
+import daggerMastery from './rules/dagger-mastery';
+import greataxe from './rules/greataxe';
+import greataxeMastery from './rules/greataxe-mastery';
 
 /**
  * Static ruleGroupId -> module registry, keyed by each module's own `id` — which
@@ -58,7 +63,12 @@ const MODULES: RuleModule[] = [
   sanctuary,
   protectionFromEvilAndGood,
   speciesHuman,
-  movement
+  movement,
+  hands,
+  dagger,
+  daggerMastery,
+  greataxe,
+  greataxeMastery
 ];
 
 const REGISTRY: Record<string, RuleModule> = Object.fromEntries(MODULES.map((m) => [m.id, m]));

@@ -15,7 +15,9 @@ const actionEconomy: RuleModule = {
     {
       fact: 'bonusActions.remaining',
       value: (f) => f.num('bonusActions.max') - f.num('bonusActions.spent')
-    }
+    },
+    { fact: 'reactions.max', value: () => 1 },
+    { fact: 'reactions.remaining', value: (f) => f.num('reactions.max') - f.num('reactions.spent') }
   ]
 };
 

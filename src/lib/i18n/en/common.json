@@ -1171,7 +1171,9 @@
           "button": "Cleave"
         },
         "greataxe-mastery": {
-          "name": "Greataxe Mastery (Cleave)"
+          "name": "Greataxe Mastery (Cleave)",
+          "keywords": "greataxe mastery cleave weapon attack",
+          "description": "Weapon mastery for the greataxe, granting the Cleave property"
         },
         "attack-greataxe-offer": {
           "no_action": "No action available"
@@ -1182,7 +1184,9 @@
           "description": "1d4 piercing | Finesse, Light, Thrown 20/60 | Nick"
         },
         "dagger-mastery": {
-          "name": "Dagger Mastery (Nick)"
+          "name": "Dagger Mastery (Nick)",
+          "keywords": "dagger mastery nick weapon attack",
+          "description": "Weapon mastery for the dagger, granting the Nick property"
         },
         "javelin": {
           "name": "Javelin",

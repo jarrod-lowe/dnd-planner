@@ -57,7 +57,10 @@ const attacks: RuleModule = {
     {
       fact: 'attack.last.activation.action',
       value: (f) => (f.num('attack.activation.count') > 0 ? 1 : 0)
-    }
+    },
+    // Everyone can make a weapon attack as a reaction (Opportunity Attacks); the
+    // weapon reaction offers gate on this capability.
+    { fact: 'capability.attack.reaction.weapon', value: () => 1 }
   ],
   offer: () => [
     {

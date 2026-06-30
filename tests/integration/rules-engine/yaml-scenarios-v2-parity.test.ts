@@ -180,7 +180,21 @@ const EXPECTED_RUNNABLE = [
   'protection-from-evil-and-good-concentration-blocking',
   'protection-from-evil-and-good-concentration-illegal-planned',
   'protection-from-evil-and-good-prepare',
-  'protection-from-evil-and-good-rest-dismissal'
+  'protection-from-evil-and-good-rest-dismissal',
+  // M3 — weapons spike (hands + dagger/greataxe + masteries), replacing the v1
+  // weapon preprocessor with the weaponOffers builder helper
+  'hands-max-default',
+  'hands-reset-each-turn',
+  'hands-weapon-dagger-uses-1',
+  'hands-weapon-greataxe-uses-2',
+  'hands-weapon-persists',
+  'weapon-don-equips',
+  'weapon-don-offer',
+  'weapon-don-planned-attack-visible',
+  'weapon-don-planned-no-duplicate',
+  'weapon-mastery-dagger',
+  'weapon-mastery-greataxe',
+  'weapon-stowed-no-attacks'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---

@@ -38,7 +38,12 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   'spell-sanctuary': () => import('./rules/sanctuary'),
   'spell-protection-from-evil-and-good': () => import('./rules/protection-from-evil-and-good'),
   'species-human': () => import('./rules/species-human'),
-  movement: () => import('./rules/movement')
+  movement: () => import('./rules/movement'),
+  hands: () => import('./rules/hands'),
+  dagger: () => import('./rules/dagger'),
+  'dagger-mastery': () => import('./rules/dagger-mastery'),
+  greataxe: () => import('./rules/greataxe'),
+  'greataxe-mastery': () => import('./rules/greataxe-mastery')
 };
 
 export interface LoadResult {
