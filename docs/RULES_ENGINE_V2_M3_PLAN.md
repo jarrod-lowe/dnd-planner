@@ -56,7 +56,7 @@ is recorded** (`untilLongRest` on a long rest; `untilShortRest` on either), and
 rest counts as a short rest too. (Per the user: either timing is fine as long as
 it is consistent — this is the consistent definition chosen.)
 
-## 4c. Progress (parity 3 → 140 runnable)
+## 4c. Progress (parity 3 → 144 runnable, ~48% of rule groups)
 
 Done: step 0 (multi-predicate expiry) + the rest model; **Wave A foundation**
 (`ability-scores`, `proficiency`, `free-actions`, `core-events`, `ac`,

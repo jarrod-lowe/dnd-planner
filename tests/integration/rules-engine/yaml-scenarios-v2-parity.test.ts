@@ -227,7 +227,13 @@ const EXPECTED_RUNNABLE = [
   // M3 — the onRest hook (passive module emits a persistent effect from a rest):
   // Channel Divinity short-rest recovery + Human Heroic Inspiration on a long rest
   'divinity-short-rest-reset',
-  'hi-human-long-rest-grant'
+  'hi-human-long-rest-grant',
+  // M3 — oath-redemption-level3 Channel Divinity options (first runnable reaction
+  // spend, via Rebuke the Violent) + Emissary of Peace
+  'emissary-of-peace-illegal-no-bonus-action',
+  'emissary-of-peace-illegal-no-divinity',
+  'rebuke-the-violent-illegal-no-divinity',
+  'rebuke-the-violent-usage'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---

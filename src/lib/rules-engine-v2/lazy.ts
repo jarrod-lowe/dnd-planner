@@ -31,6 +31,8 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   'class-paladin-level2': () => import('./rules/class-paladin-level2'),
   'class-paladin-level3': () => import('./rules/class-paladin-level3'),
   'class-paladin-divinity': () => import('./rules/class-paladin-divinity'),
+  'class-paladin-oath-redemption-level3': () =>
+    import('./rules/class-paladin-oath-redemption-level3'),
   'class-paladin-lay-on-hands': () => import('./rules/lay-on-hands'),
   'class-paladin-paladin-smite': () => import('./rules/paladin-smite'),
   'spell-divine-smite': () => import('./rules/divine-smite'),
