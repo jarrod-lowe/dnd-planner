@@ -244,7 +244,16 @@ const EXPECTED_RUNNABLE = [
   'paladin-level5-prepared',
   'paladin-level5-proficiency',
   'paladin-level5-save-proficiency',
-  'paladin-level5-spell-slots'
+  'paladin-level5-spell-slots',
+  // M3 — leather armor + shield (ac group refactored: armor replaces ac.base /
+  // caps dex; untrained-armor disadvantage + no-casting; shield is +2 AC, 1 hand)
+  'leather-armor-ac',
+  'leather-armor-disadvantage',
+  'shield-ac',
+  'shield-not-proficient-warning',
+  'hands-shield-persists',
+  'hands-shield-uses-1',
+  'hands-two-daggers-then-shield-illegal'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---

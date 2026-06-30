@@ -1,5 +1,6 @@
 import type {
   ActionResult,
+  Contribution,
   Diagnostic,
   EffectInstance,
   FactReader,
@@ -387,6 +388,40 @@ export function weaponOffers(def: WeaponDef): Offer[] {
   }
 
   return offers;
+}
+
+// === Armor ===
+
+/**
+ * The d20 tests that suffer disadvantage when you wear armor you lack training
+ * with, plus the spellcasting block (2024 rules). Heavy/medium/light all share
+ * the same penalty set; only the proficiency fact differs.
+ */
+const ARMOR_PENALTY_FACTS = [
+  'attack.str.disadvantage',
+  'attack.dex.disadvantage',
+  'initiative.disadvantage',
+  'skill.acrobatics.disadvantage',
+  'skill.athletics.disadvantage',
+  'skill.sleight-of-hand.disadvantage',
+  'skill.stealth.disadvantage',
+  // Read by spellcasting: a non-zero value zeroes the spell-per-turn budget.
+  'spellcasting.disabled'
+] as const;
+
+/**
+ * Derives that raise the untrained-armor penalties while the given armor is worn
+ * without its proficiency. Each is a flag derived from `armor.<id>.equipped` and
+ * the proficiency fact (so it is conditional on live state, which effect `state`
+ * can't be), combined with `max` so multiple armor sources don't conflict.
+ */
+export function armorTrainingPenalties(armorId: string, proficiencyFact: string): Contribution[] {
+  return ARMOR_PENALTY_FACTS.map((fact) => ({
+    fact,
+    combine: 'max' as const,
+    value: (f: FactReader) =>
+      f.num(`armor.${armorId}.equipped`) === 1 && f.num(proficiencyFact) !== 1 ? 1 : 0
+  }));
 }
 
 /**

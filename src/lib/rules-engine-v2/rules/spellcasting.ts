@@ -13,7 +13,9 @@ const LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 const spellcasting: RuleModule = {
   id: 'spellcasting',
   derive: () => [
-    { fact: 'spellcasting.max', value: () => 1 },
+    // One spell per turn — unless casting is disabled (e.g. wearing armor you lack
+    // training with, which the armor group flags via `spellcasting.disabled`).
+    { fact: 'spellcasting.max', value: (f) => (f.num('spellcasting.disabled') > 0 ? 0 : 1) },
     {
       fact: 'spellcasting.remaining',
       value: (f) => f.num('spellcasting.max') - f.num('spellcasting.spent')

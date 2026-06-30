@@ -28,6 +28,8 @@ import sanctuary from './rules/sanctuary';
 import protectionFromEvilAndGood from './rules/protection-from-evil-and-good';
 import speciesHuman from './rules/species-human';
 import movement from './rules/movement';
+import leatherArmor from './rules/leather-armor';
+import shield from './rules/shield';
 import hands from './rules/hands';
 import dagger from './rules/dagger';
 import daggerMastery from './rules/dagger-mastery';
@@ -76,6 +78,8 @@ const MODULES: RuleModule[] = [
   protectionFromEvilAndGood,
   speciesHuman,
   movement,
+  leatherArmor,
+  shield,
   hands,
   dagger,
   daggerMastery,

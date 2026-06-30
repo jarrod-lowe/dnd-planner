@@ -46,6 +46,8 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   'spell-protection-from-evil-and-good': () => import('./rules/protection-from-evil-and-good'),
   'species-human': () => import('./rules/species-human'),
   movement: () => import('./rules/movement'),
+  'leather-armor': () => import('./rules/leather-armor'),
+  shield: () => import('./rules/shield'),
   hands: () => import('./rules/hands'),
   dagger: () => import('./rules/dagger'),
   'dagger-mastery': () => import('./rules/dagger-mastery'),

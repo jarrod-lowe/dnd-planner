@@ -1,20 +1,32 @@
 import { defineRule, type RuleModule } from '../builder';
 
 /**
- * Armor Class: `ac.value = base (10) + dex bonus + armor + shield + misc`.
+ * Armor Class: `ac.value = base + dex bonus + armor + shield + misc`.
  *
  * v1 used an ac-calculation → ac-dex → ac-components → ac-total cascade of groups
  * to copy-then-sum; here the sum derive simply reads the component facts and the
- * engine orders them. The armor/shield/misc bonuses are contributed by other
- * groups (armor, shield, fighting styles) — 0 until those port. Worn-armor that
- * replaces the base or caps dex is handled when the armor groups port (the dex
- * derive will read an armor-provided cap then). Foundational, so no search meta.
+ * engine orders them.
+ *
+ * Worn armor REPLACES the unarmored base (10) and may CAP the dex bonus — both via
+ * facts only the armor groups set, so there is no second writer to `ac.base` /
+ * `ac.dexBonus` (which would be a combine conflict):
+ *  - `ac.base` = the worn armor's `ac.armorBase` (leather 11, splint 17) if any,
+ *    else 10.
+ *  - `ac.dexBonus` = dex modifier, capped at `ac.dexCap` when an armor sets one
+ *    (heavy armor → 0; there is no `min` combine, so the cap is applied here).
+ * Shield/misc bonuses stay additive. Foundational, so no search meta.
  */
 const ac: RuleModule = {
   id: 'ac',
   derive: () => [
-    { fact: 'ac.base', value: () => 10 },
-    { fact: 'ac.dexBonus', value: (f) => f.num('dex.modifier') },
+    { fact: 'ac.base', value: (f) => (f.has('ac.armorBase') ? f.num('ac.armorBase') : 10) },
+    {
+      fact: 'ac.dexBonus',
+      value: (f) =>
+        f.has('ac.dexCap')
+          ? Math.min(f.num('dex.modifier'), f.num('ac.dexCap'))
+          : f.num('dex.modifier')
+    },
     {
       fact: 'ac.value',
       value: (f) =>
