@@ -233,7 +233,18 @@ const EXPECTED_RUNNABLE = [
   'emissary-of-peace-illegal-no-bonus-action',
   'emissary-of-peace-illegal-no-divinity',
   'rebuke-the-violent-illegal-no-divinity',
-  'rebuke-the-violent-usage'
+  'rebuke-the-violent-usage',
+  // M3 — class-paladin-level4 + level5 (HP / prepared / slots / LoH / proficiency).
+  // Extra Attack has no yaml scenario (all initialEffects-blocked) — it's covered
+  // by tests/unit/rules-engine-v2/extra-attack.test.ts instead.
+  'hp-paladin-level4',
+  'paladin-level4-prepared',
+  'paladin-level4-spell-slots',
+  'hp-paladin-level5',
+  'paladin-level5-prepared',
+  'paladin-level5-proficiency',
+  'paladin-level5-save-proficiency',
+  'paladin-level5-spell-slots'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---
