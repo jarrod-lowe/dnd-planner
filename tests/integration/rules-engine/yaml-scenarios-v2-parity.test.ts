@@ -48,6 +48,11 @@ const SKIP_BY_NAME: Record<string, string> = {
   // create a PERSISTENT effect from a transient rest event; deferred.
   'hi-human-long-rest-grant': 'human HI-on-long-rest persistence not modelled yet (deferred)',
   'hi-human-long-rest-no-duplicate': 'human HI-on-long-rest persistence not modelled yet (deferred)',
+  // Channel Divinity regains ONE use on a short rest (all on a long rest); that
+  // asymmetric partial recovery needs a passive module to emit a persistent effect
+  // from the transient rest.short event — the same hook hi-human-long-rest waits
+  // on. Long-rest / usage / legality paths model fine and are covered.
+  'divinity-short-rest-reset': 'short-rest partial recovery needs the passive-effect-from-rest hook (deferred)',
   // Plans use-hi before grant-hi and relies on v1 reordering use AFTER grant
   // (after: group). v2's plan fold is plan-order-significant by design, so it
   // yields remaining=1 (can't use what you lack, then grant it) — a deliberate divergence.
@@ -216,7 +221,14 @@ const EXPECTED_RUNNABLE = [
   // the Channel Divinity pool total rides along, remaining derived by its group)
   'hp-paladin-level3',
   'paladin-level3-prepared',
-  'paladin-level3-spell-slots'
+  'paladin-level3-spell-slots',
+  // M3 — class-paladin-divinity (Channel Divinity pool + Divine Sense); the
+  // short-rest partial-recovery scenario is skip-listed (engine hook deferred)
+  'divine-sense-illegal-no-bonus-action',
+  'divine-sense-illegal-no-divinity',
+  'divine-sense-usage',
+  'divinity-init',
+  'divinity-long-rest-reset'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---

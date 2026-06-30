@@ -1,0 +1,79 @@
+import {
+  defineRule,
+  type ActionResult,
+  type Diagnostic,
+  type EffectInstance,
+  type RuleModule
+} from '../builder';
+
+const D = 'rule.class-paladin-divinity';
+
+/**
+ * Channel Divinity ("Divinity") — the pool that fuels paladin divine options.
+ * `divinity.total` is contributed by class levels (2 from level 3); here
+ * `remaining = total − spent`, each use advertising an `untilLongRest` effect that
+ * adds to `divinity.spent`, so a long rest refills the pool purely via the rest
+ * model (those effects are excluded the turn a long rest is recorded and dropped
+ * at endTurn).
+ *
+ * KNOWN GAP — short-rest recovery: Channel Divinity regains *one* use on a short
+ * rest (all on a long rest). That asymmetry can't be expressed with per-effect
+ * expiry (aging the `untilShortRest` spends would refund *every* use, not one) and
+ * needs a passive module to emit a persistent effect from the transient `rest.short`
+ * event — the same engine hook the human Heroic-Inspiration-on-long-rest case
+ * waits on. So `divinity-short-rest-reset` is skip-listed until that lands; the
+ * long-rest / usage / legality paths model cleanly and are covered here.
+ *
+ * Divine Sense is the first option: a bonus action spending 1 point, leaving a
+ * removable status reminder (`effect-divine-sense`) plus the spend marker.
+ */
+const divinity: RuleModule = {
+  id: 'class-paladin-divinity',
+  derive: () => [
+    { fact: 'divinity.remaining', value: (f) => f.num('divinity.total') - f.num('divinity.spent') }
+  ],
+  offer: () => [
+    {
+      id: 'divine-sense',
+      ui: {
+        section: 'bonus-action-other',
+        name: `${D}.divine-sense.name`,
+        description: `${D}.divine-sense.description`,
+        detailKey: 'class-feature/divine-sense',
+        intents: { INSPECT: 'sense' },
+        actionCost: ['bonus', 'CD']
+      },
+      legalWhen: [
+        {
+          condition: (f) => f.num('bonusActions.remaining') > 0,
+          diagnostics: [{ code: `${D}.offer-divine-sense.no_bonus_action`, severity: 'error' }]
+        },
+        {
+          condition: (f) => f.num('divinity.remaining') > 0,
+          diagnostics: [{ code: `${D}.offer-divine-sense.no_divinity`, severity: 'error' }]
+        }
+      ],
+      apply: (f): ActionResult => {
+        const diagnostics: Diagnostic[] = [];
+        if (f.num('bonusActions.remaining') <= 0)
+          diagnostics.push({ code: `${D}.offer-divine-sense.no_bonus_action`, severity: 'error' });
+        if (f.num('divinity.remaining') <= 0)
+          diagnostics.push({ code: `${D}.offer-divine-sense.no_divinity`, severity: 'error' });
+        const advertise: EffectInstance[] = [
+          { id: 'cost', state: { 'bonusActions.spent': 1 }, expiry: { kind: 'endOfTurn' } },
+          {
+            id: 'effect-divine-sense-divinity',
+            state: { 'divinity.spent': 1 },
+            expiry: { kind: 'untilLongRest' }
+          },
+          // Status reminder the player clears from the ledger; no fact state, so
+          // removing it never refunds the point (the spend marker above persists).
+          { id: 'effect-divine-sense', expiry: { kind: 'untilLongRest' } }
+        ];
+        return { advertise, diagnostics };
+      }
+    }
+  ]
+};
+
+export default defineRule(divinity);
