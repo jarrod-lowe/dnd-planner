@@ -28,9 +28,21 @@ const speedPenalty: Contribution = {
   value: (f) => (f.num('armor.splint.equipped') === 1 && f.num('str.value') < 15 ? 10 : 0)
 };
 
+// Heavy armor imposes Stealth disadvantage unconditionally (a property of the
+// armor, not a training penalty), so it applies even to a proficient wearer.
+const stealthPenalty: Contribution = {
+  fact: 'skill.stealth.disadvantage',
+  combine: 'max',
+  value: (f) => (f.num('armor.splint.equipped') === 1 ? 1 : 0)
+};
+
 const splintArmor: RuleModule = {
   id: 'splint-armor',
-  derive: () => [...armorTrainingPenalties('splint', 'armor.heavy.proficient'), speedPenalty],
+  derive: () => [
+    ...armorTrainingPenalties('splint', 'armor.heavy.proficient'),
+    speedPenalty,
+    stealthPenalty
+  ],
   offer: () => [
     {
       id: 'don-splint-armor',

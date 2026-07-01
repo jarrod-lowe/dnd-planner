@@ -14,6 +14,7 @@ import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
+import { INITIAL_EFFECTS_V2 } from './initial-effects-v2';
 
 /**
  * M1 / W5 — the parity harness (the acceptance gate).
@@ -122,6 +123,15 @@ const EXPECTED_RUNNABLE = [
   'ability-modifier-ordering',
   'concentration-check-after-damage',
   'spear-2h-no-free-hands',
+  'savage-attacker-usage',
+  // Migrated from v1 initialEffects (see INITIAL_EFFECTS_V2):
+  'leather-armor-already-equipped',
+  'leather-armor-proficient',
+  'splint-armor-already-equipped',
+  'splint-armor-proficient',
+  'shield-already-equipped',
+  'shield-proficient',
+  'shield-with-splint-armor',
   'long-rest-sets-flag',
   'savage-attacker-no-feat',
   'short-rest-sets-flag',
@@ -365,6 +375,11 @@ interface TestConfig {
   description?: string;
   ruleGroups: string[];
   initialFacts?: Facts;
+  /**
+   * v1-format initial effects (rule objects). Only the v1 runner consumes these;
+   * the v2 harness reads the committed-effect translation from `INITIAL_EFFECTS_V2`
+   * (keyed by scenario name) instead, so the shared scenario corpus stays pure v1.
+   */
   initialEffects?: unknown[];
   steps: Record<string, unknown>[];
 }
@@ -645,7 +660,10 @@ function skipReason(config: TestConfig, name: string): string | null {
   if (SKIP_BY_NAME[name]) return SKIP_BY_NAME[name];
   const { missing } = resolveScenarioGroups(config.ruleGroups ?? []);
   if (missing.length > 0) return `unported groups: ${missing.join(', ')}`;
-  if (config.initialEffects && config.initialEffects.length > 0)
+  // A scenario with a v2 translation of its initial effects (INITIAL_EFFECTS_V2)
+  // runs; one that still only has the v1 `initialEffects` block stays skipped
+  // until it is migrated there.
+  if (config.initialEffects && config.initialEffects.length > 0 && !INITIAL_EFFECTS_V2[name])
     return 'initialEffects use the v1 rule format';
   return null;
 }
@@ -671,7 +689,7 @@ describe('yaml scenarios — v2 parity', () => {
     }
     it(name, () => {
       const { modules } = resolveScenarioGroups(config.ruleGroups);
-      const harness = new V2Harness(modules, config.initialFacts ?? {}, []);
+      const harness = new V2Harness(modules, config.initialFacts ?? {}, INITIAL_EFFECTS_V2[name] ?? []);
       config.steps.forEach((step, i) => {
         const out = runStep(harness, step);
         const assert = assertOf(step);
