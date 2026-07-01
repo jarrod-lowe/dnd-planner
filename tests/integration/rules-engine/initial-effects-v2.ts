@@ -191,10 +191,16 @@ export const INITIAL_EFFECTS_V2: Record<string, EffectInstance[]> = {
   'spear-2h-effects-ordering': [weaponEquipped('dagger', 1), weaponEquipped('spear', 1)],
   'spear-2h-reaction-no-free-hands': [weaponEquipped('dagger', 1), weaponEquipped('spear', 1)],
 
-  // NOTE: find-steed-* / steed-* scenarios need the steed SUBSYSTEM (steed action
-  // economy, speed, per-slot-level HP/stats, creature types, abilities) which
-  // find-steed.ts deliberately does not model yet — a feature build, not a fixture
-  // translation. Deferred to its own effort.
+  // === Find Steed (casting) — a granted slot; the free use comes from the group ===
+  'find-steed-basic-cast': [slot(2)],
+  'find-steed-illegal-no-slots': [slot(2)],
+  'find-steed-upcast': [slot(4)],
+  'find-steed-highest-slot': [slot(2, 2), slot(3)],
+  'find-steed-select-level-illegal': [slot(2), slot(3, 1, 0)],
+  'find-steed-action-resource': [slot(2)],
+  'find-steed-two-actions-legality': [slot(2)],
+  'find-steed-same-turn-offers': [slot(2)],
+  'find-steed-same-turn-dash': [slot(2)],
 
   // === Reactions (an equipped weapon; reaction tracked via steps) ===
   'reaction-tracking': [weaponEquipped('greataxe')],
