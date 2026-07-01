@@ -29,6 +29,7 @@ import protectionFromEvilAndGood from './rules/protection-from-evil-and-good';
 import sleep from './rules/sleep';
 import command from './rules/command';
 import paladinSpellsL1 from './rules/paladin-spells-l1';
+import buildLock from './rules/build-lock';
 import speciesHuman from './rules/species-human';
 import movement from './rules/movement';
 import leatherArmor from './rules/leather-armor';
@@ -83,6 +84,7 @@ const MODULES: RuleModule[] = [
   sleep,
   command,
   paladinSpellsL1,
+  buildLock,
   speciesHuman,
   movement,
   leatherArmor,

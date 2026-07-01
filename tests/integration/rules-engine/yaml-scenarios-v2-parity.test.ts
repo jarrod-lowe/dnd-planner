@@ -60,7 +60,12 @@ const SKIP_BY_NAME: Record<string, string> = {
   // Tests v1's `removing` 2-turn unprepare lifecycle (spell.l1.sleep.removing +
   // effect-sleep-prepared/-removing). v2 evicts the prepare effect immediately
   // (same end state), as bless/protection prepare already do. sleep-prepare only.
-  'sleep-prepare': 'v1 `removing` unprepare lifecycle; v2 evicts immediately (same end state)'
+  'sleep-prepare': 'v1 `removing` unprepare lifecycle; v2 evicts immediately (same end state)',
+  // Plans don-dagger THEN lock, then expects the earlier-planned don to retroactively
+  // pick up the lock error. v2's plan fold is plan-order (the don is folded before the
+  // lock sets build.locked), so it does not — the same deliberate divergence as
+  // hi-use-then-grant. The build-lock scenario proper (lock flips the offers) runs.
+  'build-lock-weapon-clear': 'relies on v1 intra-turn reordering; v2 plan fold is plan-order (by design)'
 };
 
 // The scenarios expected to run on v2 today. Asserted as an exact set so that a
@@ -277,7 +282,10 @@ const EXPECTED_RUNNABLE = [
   'oath-redemption-oath-spells-prepared-then-granted',
   // M3 — command (plain L1 action spell + slot cascade, no concentration/effect)
   'command-cast',
-  'command-prepare'
+  'command-prepare',
+  // M3 — build-lock (Lock flips every BUILD offer illegal via a permanent
+  // build.locked effect); build-lock-weapon-clear is skip-listed (plan-order)
+  'build-lock'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---
