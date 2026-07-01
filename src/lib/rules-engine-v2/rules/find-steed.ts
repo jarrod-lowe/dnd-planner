@@ -90,6 +90,45 @@ function steedActivation(id: string, section: string, costFact: string, remainin
   };
 }
 
+// creatureType → its special ability (bonus action, once per long rest).
+const ABILITY_BY_TYPE = [
+  ['healing-touch', 'healingTouch'],
+  ['fey-step', 'feyStep'],
+  ['fell-glare', 'fellGlare']
+] as const;
+
+/**
+ * A creature-type special ability: a steed bonus action that spends the once-per-
+ * long-rest pool, surfaced only for the matching creature type.
+ */
+function steedAbilityOffer(creatureType: number): Offer {
+  const [id, pool] = ABILITY_BY_TYPE[creatureType];
+  const offerId = `steed-${id}`;
+  const noBonus = `${S}.${offerId}.no_bonus_action`;
+  const noUses = `${S}.${offerId}.no_uses`;
+  return {
+    id: offerId,
+    when: (f) => summoned(f) && f.num('companion.steed.creatureType') === creatureType,
+    ui: { section: 'bonus-action', subject: 'steed', name: `${S}.${offerId}.name`, description: `${S}.${offerId}.description`, intents: { ACTION: 'steed' }, actionCost: ['bonus'] },
+    legalWhen: [
+      { condition: (f) => f.num('companion.steed.bonusActions.remaining') > 0, diagnostics: [{ code: noBonus, severity: 'error' }] },
+      { condition: (f) => f.num(`companion.steed.${pool}.remaining`) > 0, diagnostics: [{ code: noUses, severity: 'error' }] }
+    ],
+    apply: (f): ActionResult => {
+      const diagnostics: Diagnostic[] = [];
+      if (f.num('companion.steed.bonusActions.remaining') <= 0) diagnostics.push({ code: noBonus, severity: 'error' });
+      if (f.num(`companion.steed.${pool}.remaining`) <= 0) diagnostics.push({ code: noUses, severity: 'error' });
+      return {
+        advertise: [
+          steedSpend({ 'companion.steed.bonusActions.spent': 1 }),
+          { id: `steed-${pool}-used`, state: { [`companion.steed.${pool}.spent`]: 1 }, expiry: { kind: 'untilLongRest' } }
+        ],
+        diagnostics
+      };
+    }
+  };
+}
+
 /**
  * Find Steed — a Level 2 conjuration that summons an Otherworldly Steed companion
  * (`companion.steed.*`, a namespaced sub-entity). The cast bakes the steed's whole
@@ -283,6 +322,13 @@ const findSteed: RuleModule = {
     },
     steedActivation('steed-dodge', 'action', 'companion.steed.actions.spent', 'companion.steed.actions.remaining'),
     steedActivation('steed-disengage', 'action', 'companion.steed.actions.spent', 'companion.steed.actions.remaining'),
+    // Slam — the steed's melee attack, as an action or a reaction.
+    steedActivation('steed-slam', 'action', 'companion.steed.actions.spent', 'companion.steed.actions.remaining'),
+    steedActivation('steed-slam-reaction', 'reaction', 'companion.steed.reactions.spent', 'companion.steed.reactions.remaining'),
+    // Creature-type special abilities (only the matching type surfaces).
+    steedAbilityOffer(0),
+    steedAbilityOffer(1),
+    steedAbilityOffer(2),
     // Dismiss — the steed vanishes (replaces the summon effect).
     {
       id: 'offer-dismiss-steed',

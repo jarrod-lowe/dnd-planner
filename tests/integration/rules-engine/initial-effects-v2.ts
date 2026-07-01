@@ -204,5 +204,35 @@ export const INITIAL_EFFECTS_V2: Record<string, EffectInstance[]> = {
 
   // === Reactions (an equipped weapon; reaction tracked via steps) ===
   'reaction-tracking': [weaponEquipped('greataxe')],
-  'rebuke-the-violent-illegal-no-reaction': [weaponEquipped('greataxe')]
+  'rebuke-the-violent-illegal-no-reaction': [weaponEquipped('greataxe')],
+
+  // === Steed behaviour (a granted slot; the steed is summoned in a cast step) ===
+  'steed-saves': [slot(2)],
+  'steed-skill-checks': [slot(2)],
+  'steed-movement-walk': [slot(2)],
+  'steed-movement-fly': [slot(4)],
+  'steed-fly-illegal-l2': [slot(2)],
+  'steed-dash': [slot(2)],
+  'steed-dodge-disengage': [slot(2)],
+  'steed-slam': [slot(2)],
+  'steed-slam-upcast': [slot(3)],
+  'steed-note': [slot(2)],
+  'steed-healing-touch': [slot(2)],
+  'steed-fey-step': [slot(2)],
+  'steed-fell-glare': [slot(2)],
+  'steed-fell-glare-same-turn': [slot(2)],
+  'steed-fey-step-same-turn': [slot(2)],
+  'steed-healing-touch-same-turn': [slot(2)],
+  'steed-creature-type-fey': [slot(2)],
+  'steed-creature-type-gating-celestial': [slot(2)],
+  'steed-creature-type-gating-fey': [slot(2)],
+  'steed-creature-type-gating-fiend': [slot(2)],
+  'steed-hp-modifiers': [slot(2)],
+  'steed-hp-mods': [slot(2)],
+  'steed-zero-hp-dismiss': [slot(2)],
+  'find-steed-dismiss': [slot(2)],
+  'find-steed-long-rest': [slot(2)],
+  'find-steed-life-bond': [slot(2)],
+  'find-steed-hp-modifier-no-stacking': [slot(2)],
+  'attack-with-summoned-steed': [slot(2)]
 };
