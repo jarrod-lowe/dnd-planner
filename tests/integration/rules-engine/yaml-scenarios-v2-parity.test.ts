@@ -340,7 +340,14 @@ const EXPECTED_RUNNABLE = [
   // M3 — calm-emotions + hold-person (L2 concentration wards) + oath L5 granting
   // them always-prepared (their own -prepare scenarios use the v1 removing path)
   'oath-redemption-l5-oath-spells-always-prepared',
-  'oath-redemption-l5-oath-spells-prepared-then-granted'
+  'oath-redemption-l5-oath-spells-prepared-then-granted',
+  // M3 — find-steed (companion summon as companion.steed.* facts) + the paladin
+  // free-use/always-prepared feature. Only the L2 summon is reachable; the full
+  // steed stat block + actions are initialEffects-only.
+  'find-steed-always-prepared',
+  'find-steed-free-cast',
+  'find-steed-no-slots-error',
+  'find-steed-prepared-then-granted'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---

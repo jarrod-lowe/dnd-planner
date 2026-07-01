@@ -32,6 +32,8 @@ import command from './rules/command';
 import calmEmotions from './rules/calm-emotions';
 import holdPerson from './rules/hold-person';
 import classPaladinOathRedemptionLevel5 from './rules/class-paladin-oath-redemption-level5';
+import findSteed from './rules/find-steed';
+import paladinFindSteed from './rules/paladin-find-steed';
 import paladinSpellsL1 from './rules/paladin-spells-l1';
 import buildLock from './rules/build-lock';
 import initiative from './rules/initiative';
@@ -107,6 +109,8 @@ const MODULES: RuleModule[] = [
   calmEmotions,
   holdPerson,
   classPaladinOathRedemptionLevel5,
+  findSteed,
+  paladinFindSteed,
   paladinSpellsL1,
   buildLock,
   initiative,
