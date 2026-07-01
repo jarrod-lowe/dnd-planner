@@ -48,6 +48,14 @@ function applyUnarmedStrike(s: FactReader): ActionResult {
 const attacks: RuleModule = {
   id: 'attacks',
   derive: () => [
+    // Unarmed strike to-hit / damage: STR-based, proficient (v1
+    // compute-unarmed-hit-bonus / -damage-bonus). Pure derives over the ability
+    // modifier + proficiency bonus, so ordering vs ability-scores is engine-sorted.
+    {
+      fact: 'attack.unarmed.hitBonus',
+      value: (f) => f.num('str.modifier') + f.num('proficiency.bonus')
+    },
+    { fact: 'attack.unarmed.damageBonus', value: (f) => f.num('str.modifier') },
     {
       fact: 'attackAction.extraRemaining',
       value: (f) => f.num('attackAction.extraGranted') - f.num('attackAction.extraSpent')

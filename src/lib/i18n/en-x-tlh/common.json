@@ -2074,6 +2074,9 @@
     "psychic": "Psychic"
   },
   "planner": {
+    "concentration": {
+      "check": "buQ waH"
+    },
     "record": {
       "damage": "QInvID DIvI'",
       "heal": "DIvI' DIvI'",

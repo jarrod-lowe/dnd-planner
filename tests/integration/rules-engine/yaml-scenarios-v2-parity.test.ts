@@ -37,13 +37,7 @@ const scenariosDir = join(__dirname, 'yaml-scenarios');
 // as v2 modules (ability-score and HP-modifier setters land in M3). Skipped with
 // a reason rather than silently, so the gap is visible and counted.
 const SKIP_BY_NAME: Record<string, string> = {
-  'hp-paladin-level1': 'set-constitution offer not ported (M3)',
-  'hp-with-modifiers': 'set-hp-modifier-* offers not ported (M3)',
-  'hp-modifier-no-stacking': 'set-hp-modifier-max offer not ported (M3)',
   // Groups resolve, but these need features still on the M3 backlog:
-  'attack-unarmed-strike': 'attacks hitBonus/damage not ported (attacks wave)',
-  'ability-modifier-ordering': 'attacks hitBonus not ported (attacks wave)',
-  'concentration-check-after-damage': 'concentration-check / damage-taken coupling deferred',
   // hi-human-long-rest-grant and divinity-short-rest-reset now run via the onRest
   // hook (a passive module emitting a persistent effect from a rest event).
   // hi-human-long-rest-no-duplicate stays skipped by the initialEffects rule
@@ -125,6 +119,12 @@ const EXPECTED_RUNNABLE = [
   'divine-smite-cap-ordering',
   'heal-increases-hp',
   'heal-persists-and-caps',
+  'hp-with-modifiers',
+  'hp-modifier-no-stacking',
+  'hp-paladin-level1',
+  'attack-unarmed-strike',
+  'ability-modifier-ordering',
+  'concentration-check-after-damage',
   'long-rest-sets-flag',
   'savage-attacker-no-feat',
   'short-rest-sets-flag',

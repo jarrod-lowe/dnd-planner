@@ -63,9 +63,9 @@ function restOffer(id: string, fact: string): Offer {
  * clamps the total at the max, so over-heal is bounded without an imperative
  * clamp. Rest recorders set `rest.short` / `rest.long` for the evaluation; v2
  * ages rest-scoped resources at endTurn, so the resource RESET on rest is the
- * concern of the resource groups, not here. Concentration's damage trigger is
- * deferred until the concentration group ports (it has nothing to validate it
- * here). Foundational, so no search meta.
+ * concern of the resource groups, not here. Recording damage while concentrating
+ * also trips `concentration.damage-taken` (the concentration group's check
+ * trigger). Foundational, so no search meta.
  */
 const coreEvents: RuleModule = {
   id: 'core-events',
@@ -80,12 +80,25 @@ const coreEvents: RuleModule = {
         actionCost: []
       },
       vars: { amount: { capture: true, default: { number: 0 } } },
-      apply: (_f, selections): ActionResult => {
+      apply: (f, selections): ActionResult => {
         const amount = typeof selections.amount === 'number' ? selections.amount : 0;
         const advertise: EffectInstance[] = [
           // id matches the v1 effect (scenarios assert effect-hp-damage).
           { id: 'effect-hp-damage', state: { 'hp.modifier.current': -amount }, expiry: { kind: 'untilLongRest' } }
         ];
+        // Taking damage while concentrating (the slot is held → remaining ≤ 0)
+        // trips the concentration group's check trigger. Keyed + endOfTurn so it
+        // lasts only this turn and a planned concentration-check can clear it
+        // (same key, newest wins). Gated on the group being loaded so it never
+        // sets a phantom fact when concentration isn't in play.
+        if (f.has('concentration.remaining') && f.num('concentration.remaining') <= 0) {
+          advertise.push({
+            id: 'concentration-damage-taken',
+            key: 'concentration-damage-taken',
+            state: { 'concentration.damage-taken': 1 },
+            expiry: { kind: 'endOfTurn' }
+          });
+        }
         return { advertise };
       }
     },

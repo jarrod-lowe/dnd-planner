@@ -2074,6 +2074,9 @@
     "psychic": "Psychic"
   },
   "planner": {
+    "concentration": {
+      "check": "Concentration Check"
+    },
     "record": {
       "damage": "Record Damage",
       "heal": "Record Healing",

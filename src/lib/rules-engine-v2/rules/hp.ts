@@ -1,4 +1,31 @@
-import { defineRule, type RuleModule } from '../builder';
+import { defineRule, type ActionResult, type RuleModule } from '../builder';
+
+const H = 'rule.dnd-5e-2024.hp';
+
+/** The captured slider value, or 0 if unset. */
+const modifierOf = (selections: Record<string, unknown>): number =>
+  typeof selections.modifier === 'number' ? selections.modifier : 0;
+
+/**
+ * A manual HP-modifier setter: bakes the captured slider value into a permanent,
+ * KEYED effect so re-using the offer (this turn or a later one) REPLACES rather
+ * than stacks — dedupeByKey keeps the newest, so `hp.max`/`hp.current` always
+ * recompute from base + the single latest modifier (v1's idempotent `numberSum`).
+ */
+const modifierSetter = (fact: string, effectId: string, key: string, name: string, min: number, max: number) => ({
+  id: effectId.replace('effect-', 'set-'),
+  ui: {
+    section: 'free' as const,
+    name,
+    primaryControl: { type: 'slider', var: 'modifier', min: { number: min }, max: { number: max } },
+    intents: { HEALTH: 'hp' },
+    actionCost: [] as string[]
+  },
+  vars: { modifier: { capture: true, default: { number: 0 } } },
+  apply: (_f: unknown, selections: Record<string, unknown>): ActionResult => ({
+    advertise: [{ id: effectId, key, state: { [fact]: modifierOf(selections) }, expiry: { kind: 'permanent' as const } }]
+  })
+});
 
 /**
  * HP derivation. In v1 this needs the hp-reset → (class contributions) → hp-copy
@@ -8,7 +35,8 @@ import { defineRule, type RuleModule } from '../builder';
  *
  * `hp.base.max` is contributed by class levels (combine: sum). `hp.modifier.*`
  * are adjustments contributed by effects (e.g. core-events damage/healing sums
- * into `hp.modifier.current`, negative for damage); they read as 0 here.
+ * into `hp.modifier.current`, negative for damage) or the manual setter offers
+ * below; they read as 0 here.
  *
  * `hp.current` clamps at `hp.max`: damage drives `hp.modifier.current` negative,
  * healing back toward 0, and the `min(0, …)` caps it so over-heal never exceeds
@@ -19,6 +47,17 @@ const hp: RuleModule = {
   derive: () => [
     { fact: 'hp.max', value: (f) => f.num('hp.base.max') + f.num('hp.modifier.max') },
     { fact: 'hp.current', value: (f) => f.num('hp.max') + Math.min(0, f.num('hp.modifier.current')) }
+  ],
+  offer: () => [
+    modifierSetter('hp.modifier.max', 'effect-hp-modifier-max', 'hp-modifier-max', `${H}.set-hp-modifier-max.name`, -10, 30),
+    modifierSetter(
+      'hp.modifier.current',
+      'effect-hp-modifier-current',
+      'hp-modifier-current',
+      `${H}.set-hp-modifier-current.name`,
+      -30,
+      30
+    )
   ]
 };
 

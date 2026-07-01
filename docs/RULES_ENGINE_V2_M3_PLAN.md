@@ -56,7 +56,7 @@ is recorded** (`untilLongRest` on a long rest; `untilShortRest` on either), and
 rest counts as a short rest too. (Per the user: either timing is fine as long as
 it is consistent — this is the consistent definition chosen.)
 
-## 4c. Progress (parity 3 → 208 runnable; ALL rule groups ported)
+## 4c. Progress (parity 3 → 215 runnable; ALL rule groups ported + backlog cleared)
 
 **Milestone reached: every rule group a scenario references now has a v2 module.**
 The parity harness reports **0** scenarios skipped for an unported group — the 128
@@ -98,11 +98,32 @@ lay-on-hands group yet asserts `pool.remaining`, which v2 derives there (v1 set
 it directly in the class-level rules); `pool.total` still matches and the
 level2/3 loh scenarios that load the group cover `remaining`.
 
-Deferred / skip-listed (visible & counted in the harness):
+**Backlog cleared (all runnable-scenario feature gaps now closed — parity 215):**
+The last five skip-listed *runnable* scenarios blocked on un-ported offers/derives
+within ported groups now run against the v1 oracle:
 
-- **Attacks `hitBonus`/damage** — DONE for the spike weapons (dagger/greataxe set
-  `attack.<id>.hitBonus`/`damageBonus`); the unarmed `attack-unarmed-strike` /
-  `ability-modifier-ordering` scenarios still need unarmed's own hit/damage port.
+- **HP-modifier setters** — `hp` now offers `set-hp-modifier-max` /
+  `set-hp-modifier-current` as KEYED permanent effects, so re-use REPLACES rather
+  than stacks (`hp-with-modifiers`, `hp-modifier-no-stacking`). `hp-paladin-level1`
+  was a stale skip (`set-constitution` + the CON→`hp.base.max` fold already existed).
+- **Unarmed `hitBonus`/damage** — DONE (was DONE for the spike weapons; the unarmed
+  `attack.unarmed.hitBonus = str.modifier + proficiency.bonus`, `damageBonus =
+  str.modifier` derives now land too), unblocking `attack-unarmed-strike` /
+  `ability-modifier-ordering`.
+- **Concentration damage trigger — DONE**: core-events' `record-damage` trips a
+  keyed `endOfTurn` `concentration.damage-taken` while concentrating (`remaining ≤
+  0`), and `concentration` surfaces the `concentration-check` offer; recording it
+  clears the marker via the SAME key (newest wins), so no imperative mid-turn
+  subtract is needed (`concentration-check-after-damage`). The earlier "needs more
+  than the effect model" note was an over-estimate — the keyed model covers it.
+
+Only remaining non-`initialEffects` skips are by-design or a scenario artifact:
+`hi-use-then-grant` / `build-lock-weapon-clear` (v1 intra-turn reordering; v2 is
+plan-order); `sleep`/`calm-emotions`/`hold-person-prepare` (v1 `removing` unprepare
+lifecycle; v2 evicts to the same end state); `paladin-level3-loh-pool` /
+`oath-redemption-level4` (scenario omits the lay-on-hands group yet asserts
+`pool.remaining`, which v2 derives there); and `spear-2h-no-free-hands` (the
+versatile two-handed free-hand check, the one still-open `weaponOffers` feature).
 - **Passive-effect-from-rest hook — DONE** (`RuleModule.onRest`): a passive module
   emits persistent effects when a rest is recorded this turn. `evaluatePlan` detects
   the rest from the settled facts, appends each module's `onRest` effects, and
