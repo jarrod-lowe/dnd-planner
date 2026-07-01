@@ -184,5 +184,14 @@ export const INITIAL_EFFECTS_V2: Record<string, EffectInstance[]> = {
   'grapple-no-hand-even-when-saved': [handsOccupied(2)],
   'grapple-saved-frees-hand': [flag('extraAttacks.max')],
   'spear-2h-effects-ordering': [weaponEquipped('dagger', 1), weaponEquipped('spear', 1)],
-  'spear-2h-reaction-no-free-hands': [weaponEquipped('dagger', 1), weaponEquipped('spear', 1)]
+  'spear-2h-reaction-no-free-hands': [weaponEquipped('dagger', 1), weaponEquipped('spear', 1)],
+
+  // NOTE: find-steed-* / steed-* scenarios need the steed SUBSYSTEM (steed action
+  // economy, speed, per-slot-level HP/stats, creature types, abilities) which
+  // find-steed.ts deliberately does not model yet — a feature build, not a fixture
+  // translation. Deferred to its own effort.
+
+  // === Reactions (an equipped weapon; reaction tracked via steps) ===
+  'reaction-tracking': [weaponEquipped('greataxe')],
+  'rebuke-the-violent-illegal-no-reaction': [weaponEquipped('greataxe')]
 };

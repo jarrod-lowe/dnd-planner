@@ -196,6 +196,8 @@ const EXPECTED_RUNNABLE = [
   'grapple-saved-frees-hand',
   'spear-2h-effects-ordering',
   'spear-2h-reaction-no-free-hands',
+  'reaction-tracking',
+  'rebuke-the-violent-illegal-no-reaction',
   'long-rest-sets-flag',
   'savage-attacker-no-feat',
   'short-rest-sets-flag',
