@@ -45,6 +45,7 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   'spell-sanctuary': () => import('./rules/sanctuary'),
   'spell-protection-from-evil-and-good': () => import('./rules/protection-from-evil-and-good'),
   'spell-sleep': () => import('./rules/sleep'),
+  'spell-command': () => import('./rules/command'),
   'paladin-spells-l1': () => import('./rules/paladin-spells-l1'),
   'species-human': () => import('./rules/species-human'),
   movement: () => import('./rules/movement'),

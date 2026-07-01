@@ -274,7 +274,10 @@ const EXPECTED_RUNNABLE = [
   // …and now that Sleep is ported, the oath's always-prepared grant for its oath
   // spells (Sleep + Sanctuary) is exercisable
   'oath-redemption-oath-spells-always-prepared',
-  'oath-redemption-oath-spells-prepared-then-granted'
+  'oath-redemption-oath-spells-prepared-then-granted',
+  // M3 — command (plain L1 action spell + slot cascade, no concentration/effect)
+  'command-cast',
+  'command-prepare'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---
