@@ -36,10 +36,10 @@ const divinitySpend = (id: string): EffectInstance => ({
  *   reaction is an `endOfTurn` spend (resets next turn) while the Divinity point
  *   is an `untilLongRest` spend (`divinity.spent`), so it persists like Divine
  *   Sense and refills on a long rest.
- * - **Emissary of Peace**: a bonus action spending 1 Divinity point. (Its +5
- *   Persuasion buff is omitted for now — `skill.<x>.value` is a single override
- *   derive in ability-scores, so an effect can't add to it without a combine
- *   path; no runnable scenario plans Emissary, so the buff is deferred.)
+ * - **Emissary of Peace**: a bonus action spending 1 Divinity point, granting +5
+ *   Persuasion while active via a removable `effect-emissary-of-peace`
+ *   (`skill.persuasion.value` is a combine:sum fact in ability-scores, so the
+ *   bonus composes with the base skill value).
  */
 const oath: RuleModule = {
   id: 'class-paladin-oath-redemption-level3',
@@ -107,7 +107,9 @@ const oath: RuleModule = {
         return {
           advertise: [
             { id: 'cost', state: { 'bonusActions.spent': 1 }, expiry: { kind: 'endOfTurn' } },
-            divinitySpend('effect-emissary-of-peace-divinity')
+            divinitySpend('effect-emissary-of-peace-divinity'),
+            // +5 Persuasion while active — a removable status effect (untilLongRest).
+            { id: 'effect-emissary-of-peace', state: { 'skill.persuasion.value': 5 }, expiry: { kind: 'untilLongRest' } }
           ],
           diagnostics
         };

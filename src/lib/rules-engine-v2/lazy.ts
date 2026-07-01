@@ -50,6 +50,7 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   'build-lock': () => import('./rules/build-lock'),
   initiative: () => import('./rules/initiative'),
   'passive-skills': () => import('./rules/passive-skills'),
+  'skill-checks': () => import('./rules/skill-checks'),
   'simple-actions': () => import('./rules/simple-actions'),
   dash: () => import('./rules/dash'),
   grapple: () => import('./rules/grapple'),

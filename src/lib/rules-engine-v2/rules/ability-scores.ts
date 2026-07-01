@@ -260,7 +260,10 @@ const abilityScores: RuleModule = {
       contributions.push({
         // Skill = governing ability modifier + proficiency bonus × level
         // (0 / 0.5 / 1 / 2). v1 used a multiply, so half/expertise carry through.
+        // combine:sum so situational bonuses (e.g. Emissary of Peace's +5
+        // Persuasion) can be added by effects without a second-writer conflict.
         fact: `skill.${skill}.value`,
+        combine: 'sum',
         value: (f) =>
           f.num(`${ability}.modifier`) +
           f.num('proficiency.bonus') * f.num(`skill.${skill}.proficiency`)

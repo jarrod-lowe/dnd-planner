@@ -322,7 +322,10 @@ const EXPECTED_RUNNABLE = [
   'weapon-mastery-javelin',
   // M3 — fighting-style-great-weapon + feat-sentinel (flag + annotations)
   'fighting-style-great-weapon',
-  'sentinel-flag-annotations'
+  'sentinel-flag-annotations',
+  // M3 — skill-checks (18 display-only roll offers) + Emissary of Peace's +5
+  // Persuasion (skill.value is now combine:sum so the effect bonus composes)
+  'emissary-of-peace-usage'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---

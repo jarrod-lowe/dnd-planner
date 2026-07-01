@@ -32,6 +32,7 @@ import paladinSpellsL1 from './rules/paladin-spells-l1';
 import buildLock from './rules/build-lock';
 import initiative from './rules/initiative';
 import passiveSkills from './rules/passive-skills';
+import skillChecks from './rules/skill-checks';
 import simpleActions from './rules/simple-actions';
 import dash from './rules/dash';
 import grapple from './rules/grapple';
@@ -101,6 +102,7 @@ const MODULES: RuleModule[] = [
   buildLock,
   initiative,
   passiveSkills,
+  skillChecks,
   simpleActions,
   dash,
   grapple,
