@@ -22,10 +22,21 @@ import type { EffectInstance } from '$lib/rules-engine-v2';
 
 const permanent = { kind: 'permanent' } as const;
 
-/** A weapon held equipped (v1 set only `weapon.<id>.equipped`; no hand consumed). */
-const weaponEquipped = (id: string): EffectInstance => ({
-  id: `effect-${id}`,
-  state: { [`weapon.${id}.equipped`]: 1 },
+/**
+ * A weapon held equipped. `handsSpent` mirrors a v1 fixture that also decremented
+ * `hands.remaining` (v2 derives `remaining = max − spent`); the basic
+ * attack fixtures set only the equipped flag, so it defaults to 0.
+ */
+const weaponEquipped = (id: string, handsSpent = 0): EffectInstance => {
+  const state: Record<string, number> = { [`weapon.${id}.equipped`]: 1 };
+  if (handsSpent > 0) state['hands.spent'] = handsSpent;
+  return { id: `effect-${id}`, state, expiry: permanent };
+};
+
+/** Hands already occupied (v1 decremented `hands.remaining` by `n`). */
+const handsOccupied = (n: number): EffectInstance => ({
+  id: 'effect-hands-occupied',
+  state: { 'hands.spent': n },
   expiry: permanent
 });
 
@@ -47,12 +58,12 @@ const splintEquipped = (): EffectInstance => ({
   expiry: permanent
 });
 
-/** A shield held: +2 AC (v1 fixture consumed no hand). */
-const shieldEquipped = (): EffectInstance => ({
-  id: 'effect-shield',
-  state: { 'ac.shieldBonus': 2, 'armor.shield.equipped': 1 },
-  expiry: permanent
-});
+/** A shield held: +2 AC. `handsSpent` mirrors a fixture that also used a hand. */
+const shieldEquipped = (handsSpent = 0): EffectInstance => {
+  const state: Record<string, number> = { 'ac.shieldBonus': 2, 'armor.shield.equipped': 1 };
+  if (handsSpent > 0) state['hands.spent'] = handsSpent;
+  return { id: 'effect-shield', state, expiry: permanent };
+};
 
 /** A binary training/flag fact granted (e.g. `armor.light.proficient`). */
 const flag = (fact: string, value = 1): EffectInstance => ({
@@ -162,5 +173,16 @@ export const INITIAL_EFFECTS_V2: Record<string, EffectInstance[]> = {
   'smite-default-higher-slot': [slot(2)],
   'smite-legal-higher-slot': [slot(2)],
   'tsmite-cap-high-slot': [slot(6)],
-  'tsmite-upcast': [slot(2)]
+  'tsmite-upcast': [slot(2)],
+
+  // === Hands budget (v1 decremented hands.remaining; v2 sets hands.spent) ===
+  'hands-two-daggers-legal': [shieldEquipped(1)],
+  'hands-shield-then-greataxe-illegal': [shieldEquipped(1)],
+  'hands-greataxe-then-shield-illegal': [weaponEquipped('greataxe', 2)],
+  'grapple-no-free-hand': [handsOccupied(2)],
+  'grapple-no-free-hand-normal-effect': [handsOccupied(2)],
+  'grapple-no-hand-even-when-saved': [handsOccupied(2)],
+  'grapple-saved-frees-hand': [flag('extraAttacks.max')],
+  'spear-2h-effects-ordering': [weaponEquipped('dagger', 1), weaponEquipped('spear', 1)],
+  'spear-2h-reaction-no-free-hands': [weaponEquipped('dagger', 1), weaponEquipped('spear', 1)]
 };
