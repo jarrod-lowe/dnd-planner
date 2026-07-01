@@ -142,6 +142,10 @@ const WEAPON_DON = 'rule.dnd-5e-2024.weapon-don';
 const NO_ACTION = `${ATTACKS}.activation.no_action`;
 const NO_REACTION = `${ATTACKS}.activation.no_reaction`;
 const NO_BONUS_ACTION = `${ATTACKS}.activation.no_bonus_action`;
+const VERSATILE_NO_FREE_HAND = `${ATTACKS}.versatile.no-free-hand`;
+
+/** A versatile weapon has a two-handed band that costs an extra hand. */
+const isVersatile = (def: WeaponDef): boolean => def.ranges.some((r) => (r.extraHands ?? 0) > 0);
 // BUILD_LOCKED is declared above (shared with the prepared-spell offers).
 
 /** One reach/throw band shown on a weapon's dice line. */
@@ -185,11 +189,37 @@ const turnSpend = (state: Record<string, number>): EffectInstance => ({
 
 /** The vars block (dice config) carried by every attack profile of a weapon. */
 function attackVars(def: WeaponDef): Record<string, unknown> {
-  return {
+  const vars: Record<string, unknown> = {
     ranges: { default: { array: def.ranges } },
     hitBonus: { capture: true, default: { fact: `attack.${def.id}.hitBonus` } },
     damageDie: { default: { number: def.damageDie } },
     damageBonus: { capture: true, default: { fact: `attack.${def.id}.damageBonus` } }
+  };
+  // Versatile weapons expose the two-hand grip as a captured selection so the
+  // apply can reject it when no hand is free (see withVersatile).
+  if (isVersatile(def)) vars.extraHands = { capture: true, default: { number: 0 } };
+  return vars;
+}
+
+/**
+ * Wrap an attack's base apply so a versatile weapon gripped two-handed
+ * (`extraHands > 0`) errors when no hand is free (`hands.remaining < 1`) — v1's
+ * `extraHandsNeeded` / `versatile.no-free-hand` check. Non-versatile weapons are
+ * returned unchanged, so their offers keep exactly their prior shape.
+ */
+function withVersatile(
+  def: WeaponDef,
+  base: (f: FactReader) => ActionResult
+): (f: FactReader, selections: Record<string, unknown>) => ActionResult {
+  if (!isVersatile(def)) return base;
+  return (f, selections) => {
+    const r = base(f);
+    const extra = typeof selections?.extraHands === 'number' ? selections.extraHands : 0;
+    const diagnostics: Diagnostic[] = [...(r.diagnostics ?? [])];
+    if (extra > 0 && f.num('hands.remaining') < 1) {
+      diagnostics.push({ code: VERSATILE_NO_FREE_HAND, severity: 'error' });
+    }
+    return { ...r, diagnostics };
   };
 }
 
@@ -353,7 +383,7 @@ export function weaponOffers(def: WeaponDef): Offer[] {
         diagnostics: [{ code: NO_ACTION, severity: 'error' }]
       }
     ],
-    apply: attackActionApply()
+    apply: withVersatile(def, attackActionApply())
   };
 
   const useReaction: Offer = {
@@ -376,7 +406,7 @@ export function weaponOffers(def: WeaponDef): Offer[] {
         diagnostics: [{ code: NO_REACTION, severity: 'error' }]
       }
     ],
-    apply: costApply('reactions.spent', 'reactions.remaining', NO_REACTION)
+    apply: withVersatile(def, costApply('reactions.spent', 'reactions.remaining', NO_REACTION))
   };
 
   const offers: Offer[] = [don, useAction, useReaction];

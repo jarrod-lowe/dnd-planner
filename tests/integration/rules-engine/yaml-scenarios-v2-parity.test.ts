@@ -64,11 +64,7 @@ const SKIP_BY_NAME: Record<string, string> = {
   // pick up the lock error. v2's plan fold is plan-order (the don is folded before the
   // lock sets build.locked), so it does not — the same deliberate divergence as
   // hi-use-then-grant. The build-lock scenario proper (lock flips the offers) runs.
-  'build-lock-weapon-clear': 'relies on v1 intra-turn reordering; v2 plan fold is plan-order (by design)',
-  // The versatile two-handed attack's free-hand check (extraHands selection vs
-  // hands.remaining) is not modelled in weaponOffers yet; the spear's one-handed
-  // don/attack works. Deferred.
-  'spear-2h-no-free-hands': 'versatile two-handed free-hand check not modelled in weaponOffers (deferred)'
+  'build-lock-weapon-clear': 'relies on v1 intra-turn reordering; v2 plan fold is plan-order (by design)'
 };
 
 // The scenarios expected to run on v2 today. Asserted as an exact set so that a
@@ -125,6 +121,7 @@ const EXPECTED_RUNNABLE = [
   'attack-unarmed-strike',
   'ability-modifier-ordering',
   'concentration-check-after-damage',
+  'spear-2h-no-free-hands',
   'long-rest-sets-flag',
   'savage-attacker-no-feat',
   'short-rest-sets-flag',

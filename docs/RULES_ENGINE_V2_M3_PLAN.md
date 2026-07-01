@@ -56,7 +56,7 @@ is recorded** (`untilLongRest` on a long rest; `untilShortRest` on either), and
 rest counts as a short rest too. (Per the user: either timing is fine as long as
 it is consistent — this is the consistent definition chosen.)
 
-## 4c. Progress (parity 3 → 215 runnable; ALL rule groups ported + backlog cleared)
+## 4c. Progress (parity 3 → 216 runnable; ALL rule groups ported + every feature gap closed)
 
 **Milestone reached: every rule group a scenario references now has a v2 module.**
 The parity harness reports **0** scenarios skipped for an unported group — the 128
@@ -117,13 +117,21 @@ within ported groups now run against the v1 oracle:
   subtract is needed (`concentration-check-after-damage`). The earlier "needs more
   than the effect model" note was an over-estimate — the keyed model covers it.
 
-Only remaining non-`initialEffects` skips are by-design or a scenario artifact:
-`hi-use-then-grant` / `build-lock-weapon-clear` (v1 intra-turn reordering; v2 is
-plan-order); `sleep`/`calm-emotions`/`hold-person-prepare` (v1 `removing` unprepare
-lifecycle; v2 evicts to the same end state); `paladin-level3-loh-pool` /
-`oath-redemption-level4` (scenario omits the lay-on-hands group yet asserts
-`pool.remaining`, which v2 derives there); and `spear-2h-no-free-hands` (the
-versatile two-handed free-hand check, the one still-open `weaponOffers` feature).
+- **Versatile two-hand free-hand check — DONE**: `weaponOffers` now exposes
+  `extraHands` as a captured selection on versatile weapons and `withVersatile`
+  errors `versatile.no-free-hand` when the two-hand grip is chosen with no hand
+  free (`extraHands > 0 && hands.remaining < 1`) — v1's `extraHandsNeeded` check
+  (`spear-2h-no-free-hands`). Non-versatile weapons are returned unchanged.
+
+The **7** remaining non-`initialEffects` skips are all by-design or a scenario
+artifact, not feature gaps: `hi-use-then-grant` / `build-lock-weapon-clear` (v1
+intra-turn reordering; v2 is plan-order); `sleep`/`calm-emotions`/
+`hold-person-prepare` (v1 `removing` unprepare lifecycle; v2 evicts to the same
+end state); `paladin-level3-loh-pool` / `oath-redemption-level4` (scenario omits
+the lay-on-hands group yet asserts `pool.remaining`, which v2 derives there). Every
+runnable scenario that could exercise a v2 feature now runs green against the v1
+oracle; the ~114 still-skipped scenarios are all v1-format `initialEffects`
+fixtures (the separate test-migration effort).
 - **Passive-effect-from-rest hook — DONE** (`RuleModule.onRest`): a passive module
   emits persistent effects when a rest is recorded this turn. `evaluatePlan` detects
   the rest from the settled facts, appends each module's `onRest` effects, and
