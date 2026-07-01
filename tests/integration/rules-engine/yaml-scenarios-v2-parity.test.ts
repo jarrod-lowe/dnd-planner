@@ -56,7 +56,11 @@ const SKIP_BY_NAME: Record<string, string> = {
   // group that derives it in v2 (v1 set remaining directly in the class-level
   // rules). pool.total still matches; remaining is covered by the level2/3
   // loh-pool scenarios that do load the group.
-  'paladin-level3-loh-pool': 'omits lay-on-hands group, which derives pool.remaining in v2'
+  'paladin-level3-loh-pool': 'omits lay-on-hands group, which derives pool.remaining in v2',
+  // Tests v1's `removing` 2-turn unprepare lifecycle (spell.l1.sleep.removing +
+  // effect-sleep-prepared/-removing). v2 evicts the prepare effect immediately
+  // (same end state), as bless/protection prepare already do. sleep-prepare only.
+  'sleep-prepare': 'v1 `removing` unprepare lifecycle; v2 evicts immediately (same end state)'
 };
 
 // The scenarios expected to run on v2 today. Asserted as an exact set so that a
@@ -260,7 +264,17 @@ const EXPECTED_RUNNABLE = [
   'splint-armor-disadvantage',
   'splint-armor-no-speed-penalty-high-str',
   'splint-armor-speed-penalty-low-str',
-  'paladin-splint-armor-spellcasting'
+  'paladin-splint-armor-spellcasting',
+  // M3 — sleep (L1 action concentration spell, protection template) + the empty
+  // paladin-spells-l1 spell-list group. sleep-prepare is skip-listed (above).
+  'sleep-cast',
+  'sleep-concentration-blocking',
+  'sleep-concentration-illegal-planned',
+  'sleep-rest-dismissal',
+  // …and now that Sleep is ported, the oath's always-prepared grant for its oath
+  // spells (Sleep + Sanctuary) is exercisable
+  'oath-redemption-oath-spells-always-prepared',
+  'oath-redemption-oath-spells-prepared-then-granted'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---

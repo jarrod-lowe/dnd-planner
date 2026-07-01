@@ -26,6 +26,8 @@ import thunderousSmite from './rules/thunderous-smite';
 import createAndDestroyWater from './rules/create-and-destroy-water';
 import sanctuary from './rules/sanctuary';
 import protectionFromEvilAndGood from './rules/protection-from-evil-and-good';
+import sleep from './rules/sleep';
+import paladinSpellsL1 from './rules/paladin-spells-l1';
 import speciesHuman from './rules/species-human';
 import movement from './rules/movement';
 import leatherArmor from './rules/leather-armor';
@@ -77,6 +79,8 @@ const MODULES: RuleModule[] = [
   createAndDestroyWater,
   sanctuary,
   protectionFromEvilAndGood,
+  sleep,
+  paladinSpellsL1,
   speciesHuman,
   movement,
   leatherArmor,
