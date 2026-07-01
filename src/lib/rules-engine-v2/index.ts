@@ -16,6 +16,12 @@ export { evaluateOffers, collectOffers } from './offers';
 export { collectAnnotations } from './annotate';
 export { serializeInput } from './input';
 export { plannedEntry, plannedEntries, type PlannedEntry } from './adapter';
+export {
+  v1EffectRuleToInstance,
+  migratePersistedEffects,
+  type V1EffectRule,
+  type MigrationResult
+} from './migrate';
 export { loadModules, lazyRuleGroupIds, type LoadResult } from './lazy';
 export { ENGINE_API_VERSION, isEngineCompatible } from './version';
 export { endTurn, dedupeByKey, type EndTurnOptions } from './effects';

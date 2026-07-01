@@ -67,10 +67,18 @@ Four gaps to bridge:
   planned): V1ShapedOutput`: map `availableRules` (descriptor→rule, merge
   `planDiagnostics`+`selections`→`varsRuntime`), pass through `facts`/`annotations`/
   `status`. Unit-tested against fixture v2 outputs. No runtime wiring yet.
-- **W2 — effect format converter (pure, TDD here).** `effectToV1Rule(EffectInstance)`
-  and `v1RuleToEffect(Rule)` (+ a `migratePersistedEffects` batch). Round-trip
-  tested for every effect shape the modules emit (keyed/unkeyed, `state`,
-  `stateCombine`, each `ExpirySpec`). This is the persistence-migration core.
+- **W2 — effect format converter (pure, TDD here) — DONE (mechanical pass).**
+  `src/lib/rules-engine-v2/migrate.ts`: `v1EffectRuleToInstance` +
+  `migratePersistedEffects` convert a persisted v1 effect `Rule` → v2
+  `EffectInstance` (baked `numberSet`→`override`, `numberIncrement`→`sum`,
+  `self`-advertise→`permanent`, `group`→`key`); eval-time (`fact`/`condition`)
+  sources are surfaced in `unresolved`, not dropped. 6 unit tests.
+  **Finding:** this is correct only for the **shared-namespace** effects (build
+  state, buffs, `hp.modifier.*`). Resource effects diverge — v1 sets `*.remaining`
+  directly, v2 derives `remaining = total − spent` — so a **semantic remap** of
+  those to `*.spent` is a W5 layer on top (the same total/remaining/spent mapping
+  `INITIAL_EFFECTS_V2` already encodes for the parity harness), not a mechanical
+  activity→state conversion.
 - **W3 — inputFacts derivation (pure, TDD here).** `characterToInputFacts(persisted
   character + assignments)`: the BUILD-time facts v2 modules read. Cross-checked
   against the parity fixtures' `initialFacts` + `INITIAL_EFFECTS_V2`.
