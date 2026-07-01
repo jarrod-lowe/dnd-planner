@@ -13,7 +13,8 @@ import { defineRule, type EffectInstance, type RestKind, type RuleModule } from 
 const speciesHuman: RuleModule = {
   id: 'species-human',
   derive: () => [
-    { fact: 'character.movement.total', value: () => 30 },
+    // combine:sum so per-turn movement boosts (e.g. Dash) can add to the base.
+    { fact: 'character.movement.total', combine: 'sum', value: () => 30 },
     { fact: 'character.movement.swim.can', value: () => 1 },
     { fact: 'character.movement.swim.cost', value: () => 2 },
     { fact: 'character.movement.fly.can', value: () => 0 }

@@ -296,7 +296,11 @@ const EXPECTED_RUNNABLE = [
   'passive-investigation',
   'simple-action-disengage',
   'simple-action-interact',
-  'simple-actions-all-offered'
+  'simple-actions-all-offered',
+  // M3 — dash (adds base speed to this turn's movement.total; combine:sum)
+  'dash-action-doubles-movement',
+  'dash-after-partial-movement',
+  'dash-illegal-without-action'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---

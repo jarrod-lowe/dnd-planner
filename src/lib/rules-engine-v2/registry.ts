@@ -33,6 +33,7 @@ import buildLock from './rules/build-lock';
 import initiative from './rules/initiative';
 import passiveSkills from './rules/passive-skills';
 import simpleActions from './rules/simple-actions';
+import dash from './rules/dash';
 import speciesHuman from './rules/species-human';
 import movement from './rules/movement';
 import leatherArmor from './rules/leather-armor';
@@ -91,6 +92,7 @@ const MODULES: RuleModule[] = [
   initiative,
   passiveSkills,
   simpleActions,
+  dash,
   speciesHuman,
   movement,
   leatherArmor,
