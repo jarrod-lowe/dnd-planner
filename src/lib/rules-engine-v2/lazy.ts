@@ -48,6 +48,10 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   'spell-protection-from-evil-and-good': () => import('./rules/protection-from-evil-and-good'),
   'spell-sleep': () => import('./rules/sleep'),
   'spell-command': () => import('./rules/command'),
+  'spell-calm-emotions': () => import('./rules/calm-emotions'),
+  'spell-hold-person': () => import('./rules/hold-person'),
+  'class-paladin-oath-redemption-level5': () =>
+    import('./rules/class-paladin-oath-redemption-level5'),
   'paladin-spells-l1': () => import('./rules/paladin-spells-l1'),
   'build-lock': () => import('./rules/build-lock'),
   initiative: () => import('./rules/initiative'),

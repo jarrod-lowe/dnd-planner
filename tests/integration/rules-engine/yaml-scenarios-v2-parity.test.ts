@@ -64,6 +64,8 @@ const SKIP_BY_NAME: Record<string, string> = {
   // effect-sleep-prepared/-removing). v2 evicts the prepare effect immediately
   // (same end state), as bless/protection prepare already do. sleep-prepare only.
   'sleep-prepare': 'v1 `removing` unprepare lifecycle; v2 evicts immediately (same end state)',
+  'calm-emotions-prepare': 'v1 `removing` unprepare lifecycle; v2 evicts immediately (same end state)',
+  'hold-person-prepare': 'v1 `removing` unprepare lifecycle; v2 evicts immediately (same end state)',
   // Plans don-dagger THEN lock, then expects the earlier-planned don to retroactively
   // pick up the lock error. v2's plan fold is plan-order (the don is folded before the
   // lock sets build.locked), so it does not — the same deliberate divergence as
@@ -334,7 +336,11 @@ const EXPECTED_RUNNABLE = [
   // Persuasion (skill.value is now combine:sum so the effect bonus composes)
   'emissary-of-peace-usage',
   // M3 — spear (versatile/thrown; one-handed don works, 2H free-hand check deferred)
-  'hands-weapon-spear-uses-1'
+  'hands-weapon-spear-uses-1',
+  // M3 — calm-emotions + hold-person (L2 concentration wards) + oath L5 granting
+  // them always-prepared (their own -prepare scenarios use the v1 removing path)
+  'oath-redemption-l5-oath-spells-always-prepared',
+  'oath-redemption-l5-oath-spells-prepared-then-granted'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---

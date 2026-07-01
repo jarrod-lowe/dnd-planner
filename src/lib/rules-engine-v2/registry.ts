@@ -29,6 +29,9 @@ import sanctuary from './rules/sanctuary';
 import protectionFromEvilAndGood from './rules/protection-from-evil-and-good';
 import sleep from './rules/sleep';
 import command from './rules/command';
+import calmEmotions from './rules/calm-emotions';
+import holdPerson from './rules/hold-person';
+import classPaladinOathRedemptionLevel5 from './rules/class-paladin-oath-redemption-level5';
 import paladinSpellsL1 from './rules/paladin-spells-l1';
 import buildLock from './rules/build-lock';
 import initiative from './rules/initiative';
@@ -101,6 +104,9 @@ const MODULES: RuleModule[] = [
   protectionFromEvilAndGood,
   sleep,
   command,
+  calmEmotions,
+  holdPerson,
+  classPaladinOathRedemptionLevel5,
   paladinSpellsL1,
   buildLock,
   initiative,
