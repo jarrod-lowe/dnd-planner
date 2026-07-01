@@ -144,6 +144,11 @@ export const INITIAL_EFFECTS_V2: Record<string, EffectInstance[]> = {
   'hold-person-select-level-illegal': [slot(2), slot(3, 1, 0)],
   'hold-person-slot-selection': [slot(2), slot(3)],
   'hold-person-upcast-slider': [slot(2)],
+  // prepare/unprepare scenarios that assert only the final prepared state (no v1
+  // `removing` intermediate), so v2's immediate-evict reproduces them.
+  'aid-prepare': [slot(2)],
+  'prayer-of-healing-prepare': [slot(2)],
+  'find-steed-prepare': [slot(2)],
 
   // === Heroic Inspiration already granted ===
   'hi-annotation': [hiGranted()],
