@@ -10,6 +10,7 @@ import classPaladinLevel4 from './rules/class-paladin-level4';
 import classPaladinLevel5 from './rules/class-paladin-level5';
 import classPaladinDivinity from './rules/class-paladin-divinity';
 import classPaladinOathRedemptionLevel3 from './rules/class-paladin-oath-redemption-level3';
+import classPaladinOathRedemptionLevel4 from './rules/class-paladin-oath-redemption-level4';
 import layOnHands from './rules/lay-on-hands';
 import actionEconomy from './rules/action-economy';
 import freeActions from './rules/free-actions';
@@ -88,6 +89,7 @@ const MODULES: RuleModule[] = [
   classPaladinLevel5,
   classPaladinDivinity,
   classPaladinOathRedemptionLevel3,
+  classPaladinOathRedemptionLevel4,
   layOnHands,
   paladinSmite,
   divineSmite,

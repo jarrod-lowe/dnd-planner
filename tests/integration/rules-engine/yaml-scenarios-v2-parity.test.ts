@@ -57,6 +57,9 @@ const SKIP_BY_NAME: Record<string, string> = {
   // rules). pool.total still matches; remaining is covered by the level2/3
   // loh-pool scenarios that do load the group.
   'paladin-level3-loh-pool': 'omits lay-on-hands group, which derives pool.remaining in v2',
+  // Same as paladin-level3-loh-pool: asserts layOnHands.pool.remaining but omits
+  // the class-paladin-lay-on-hands group that derives it in v2.
+  'oath-redemption-level4': 'omits lay-on-hands group, which derives pool.remaining in v2',
   // Tests v1's `removing` 2-turn unprepare lifecycle (spell.l1.sleep.removing +
   // effect-sleep-prepared/-removing). v2 evicts the prepare effect immediately
   // (same end state), as bless/protection prepare already do. sleep-prepare only.
