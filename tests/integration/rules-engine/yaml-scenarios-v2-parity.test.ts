@@ -285,7 +285,11 @@ const EXPECTED_RUNNABLE = [
   'command-prepare',
   // M3 — build-lock (Lock flips every BUILD offer illegal via a permanent
   // build.locked effect); build-lock-weapon-clear is skip-listed (plan-order)
-  'build-lock'
+  'build-lock',
+  // M3 — initiative (dex-modifier bonus + display-only Roll Initiative offer)
+  'alert-no-feat-no-annotations',
+  'initiative-bonus',
+  'initiative-persists-across-turns'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---

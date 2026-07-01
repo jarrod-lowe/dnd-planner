@@ -30,6 +30,7 @@ import sleep from './rules/sleep';
 import command from './rules/command';
 import paladinSpellsL1 from './rules/paladin-spells-l1';
 import buildLock from './rules/build-lock';
+import initiative from './rules/initiative';
 import speciesHuman from './rules/species-human';
 import movement from './rules/movement';
 import leatherArmor from './rules/leather-armor';
@@ -85,6 +86,7 @@ const MODULES: RuleModule[] = [
   command,
   paladinSpellsL1,
   buildLock,
+  initiative,
   speciesHuman,
   movement,
   leatherArmor,
