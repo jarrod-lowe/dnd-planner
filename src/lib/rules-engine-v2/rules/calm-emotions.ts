@@ -66,6 +66,12 @@ const calmEmotions: RuleModule = {
             labelValues: { saveType: { fact: 'spellcasting.saveAbility' }, dc: { fact: 'spellcasting.saveDC' } }
           }
         ],
+        primaryControl: {
+          type: 'slider',
+          var: 'slotLevel',
+          notches: LEVELS.map((n) => ({ value: n, enabled: { fact: `spellcasting.slots.level${n}.total` } })),
+          valueFormat: 'spellLevel'
+        },
         intents: { CONTROL: 'area' },
         actionCost: ['action', 'conc', 'L2']
       },

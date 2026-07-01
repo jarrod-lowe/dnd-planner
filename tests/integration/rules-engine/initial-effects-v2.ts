@@ -61,6 +61,19 @@ const flag = (fact: string, value = 1): EffectInstance => ({
   expiry: permanent
 });
 
+/**
+ * A spell slot the character owns. v1 fixtures set `total` and `remaining`
+ * directly; v2 derives `remaining = total − spent`, so we set `total` and, when a
+ * fixture starts with a slot already used (`remaining < total`), the matching
+ * `spent`.
+ */
+const slot = (level: number, total = 1, remaining = total): EffectInstance => {
+  const state: Record<string, number> = { [`spellcasting.slots.level${level}.total`]: total };
+  const spent = total - remaining;
+  if (spent > 0) state[`spellcasting.slots.level${level}.spent`] = spent;
+  return { id: `slot-l${level}`, state, expiry: permanent };
+};
+
 export const INITIAL_EFFECTS_V2: Record<string, EffectInstance[]> = {
   // === Armor / shield ===
   'leather-armor-already-equipped': [leatherEquipped()],
@@ -85,5 +98,27 @@ export const INITIAL_EFFECTS_V2: Record<string, EffectInstance[]> = {
   'fighting-style-great-weapon-annotations': [weaponEquipped('greataxe')],
   'savage-attacker-annotations': [weaponEquipped('dagger')],
   'savage-attacker-weapon-only': [weaponEquipped('dagger')],
-  'savage-attacker-usage': [weaponEquipped('dagger')]
+  'savage-attacker-usage': [weaponEquipped('dagger')],
+
+  // === Spell slots (v1 set total+remaining; v2 derives remaining from total − spent) ===
+  'aid-cast': [slot(2)],
+  'prayer-of-healing-cast': [slot(2)],
+  'prayer-of-healing-upcast': [slot(3)],
+  'sanctuary-slot-selection': [slot(2)],
+  'sleep-slot-selection': [slot(2)],
+  'protection-from-evil-and-good-slot-selection': [slot(2)],
+  'calm-emotions-cast': [slot(2)],
+  'calm-emotions-concentration-blocking': [slot(2, 2)],
+  'calm-emotions-concentration-illegal-planned': [slot(2, 2)],
+  'calm-emotions-no-free-slots-illegal': [slot(2, 1, 0)],
+  'calm-emotions-select-level-illegal': [slot(2), slot(3, 1, 0)],
+  'calm-emotions-slot-selection': [slot(2), slot(3)],
+  'calm-emotions-upcast-slider': [slot(2)],
+  'hold-person-cast': [slot(2)],
+  'hold-person-concentration-blocking': [slot(2, 2)],
+  'hold-person-concentration-illegal-planned': [slot(2, 2)],
+  'hold-person-no-free-slots-illegal': [slot(2, 1, 0)],
+  'hold-person-select-level-illegal': [slot(2), slot(3, 1, 0)],
+  'hold-person-slot-selection': [slot(2), slot(3)],
+  'hold-person-upcast-slider': [slot(2)]
 };

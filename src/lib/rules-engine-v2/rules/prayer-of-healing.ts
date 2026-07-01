@@ -35,9 +35,12 @@ const prayerOfHealing: RuleModule = {
       },
       {
         fact: `${SLOTS}.lowestAvailableSlotLevel`,
+        // Floors at the spell's base level (2) when no slot remains, so the
+        // slider default / healing-dice count stay at L2 after the slot is spent
+        // (v1 parity — otherwise the dice count collapses to 1d8).
         value: (f) => {
           for (const n of LEVELS) if (f.num(`spellcasting.slots.level${n}.remaining`) > 0) return n;
-          return 0;
+          return LEVELS[0];
         }
       }
     ];
