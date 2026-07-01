@@ -154,5 +154,13 @@ export const INITIAL_EFFECTS_V2: Record<string, EffectInstance[]> = {
   'extra-attack-paladin-level5': [weaponEquipped('greataxe')],
   'extra-attack-shove': [flag('extraAttacks.max')],
   'extra-attack-unarmed': [flag('extraAttacks.max')],
-  'extra-attack-unarmed-overcommit': [flag('extraAttacks.max')]
+  'extra-attack-unarmed-overcommit': [flag('extraAttacks.max')],
+
+  // === Smites (a granted slot; the free use / always-prepared come from the groups) ===
+  'divine-smite-cap-high-slot': [slot(6)],
+  'divine-smite-dice-roller': [slot(1)],
+  'smite-default-higher-slot': [slot(2)],
+  'smite-legal-higher-slot': [slot(2)],
+  'tsmite-cap-high-slot': [slot(6)],
+  'tsmite-upcast': [slot(2)]
 };
