@@ -56,9 +56,35 @@ is recorded** (`untilLongRest` on a long rest; `untilShortRest` on either), and
 rest counts as a short rest too. (Per the user: either timing is fine as long as
 it is consistent — this is the consistent definition chosen.)
 
-## 4c. Progress (parity 3 → 216 runnable; ALL rule groups ported + every feature gap closed)
+## 4c. Progress (parity 3 → 327 runnable; ALL groups ported + initialEffects migrated)
 
-**Milestone reached: every rule group a scenario references now has a v2 module.**
+**Milestone reached: the whole scenario suite runs on v2** — 327 / 337 runnable,
+the remaining **10 skips all by-design** (v2 plan-order vs v1 intra-turn reordering
+×3; v1 `removing` unprepare lifecycle ×3; two scenarios that omit the lay-on-hands
+group they assert against; and two genuine v2 limitations — a string `damageType`
+fact, since v2 facts are numeric, and a steed's passive self-removal at 0 HP, which
+needs v1's self-advertise/cascadeRemove lifecycle).
+
+The jump from 216 came in two phases after all groups were ported:
+
+1. **Closed every runnable-scenario feature gap** (216 → 224 → … see below): HP-
+   modifier setters, unarmed hit/damage, the concentration damage trigger, the
+   versatile two-hand check.
+2. **Migrated the ~114 v1-format `initialEffects` scenarios** onto the parity
+   harness via a central `INITIAL_EFFECTS_V2` adapter map (keyed by scenario name,
+   holding the v2 committed-effect translation), so the shared corpus stays pure-v1
+   (the v1 runner is untouched at 336/336). The migration surfaced and fixed ~12
+   real v2 bugs against the oracle (splint Stealth disadvantage; javelin Slow
+   followup; prayer-of-healing slot floor; calm-emotions / hold-person upcast
+   sliders; hold-person WIS save; the Extra Attack annotation; unarmed
+   `annotationLabels` + reaction offer) and required **building the Find Steed steed
+   subsystem** in v2 from scratch — a namespaced `companion.steed.*` sub-entity with
+   a slot-scaled stat block baked at cast time (per creature type), a derived
+   per-turn action economy / movement / saves / ability pools, and its full offer
+   set (move, dash, dodge, disengage, the three creature-type abilities, slam,
+   saves, skills, HP modifiers, damage/heal, dismiss-with-cascade).
+
+**Original milestone: every rule group a scenario references now has a v2 module.**
 The parity harness reports **0** scenarios skipped for an unported group — the 128
 remaining skips are all v1-format `initialEffects` or documented plan-order /
 prepare-lifecycle divergences (`SKIP_BY_NAME`), not missing features. The final
