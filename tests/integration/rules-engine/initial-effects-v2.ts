@@ -62,6 +62,18 @@ const flag = (fact: string, value = 1): EffectInstance => ({
 });
 
 /**
+ * Heroic Inspiration already granted — the keyed permanent effect `grant-hi`
+ * advertises. The key matches so a planned `use-hi` (or a long-rest grant)
+ * replaces/dedupes it rather than stacking.
+ */
+const hiGranted = (): EffectInstance => ({
+  id: 'effect-hi-set',
+  key: 'heroic-inspiration',
+  state: { 'heroicInspiration.remaining': 1 },
+  expiry: permanent
+});
+
+/**
  * A spell slot the character owns. v1 fixtures set `total` and `remaining`
  * directly; v2 derives `remaining = total − spent`, so we set `total` and, when a
  * fixture starts with a slot already used (`remaining < total`), the matching
@@ -120,5 +132,17 @@ export const INITIAL_EFFECTS_V2: Record<string, EffectInstance[]> = {
   'hold-person-no-free-slots-illegal': [slot(2, 1, 0)],
   'hold-person-select-level-illegal': [slot(2), slot(3, 1, 0)],
   'hold-person-slot-selection': [slot(2), slot(3)],
-  'hold-person-upcast-slider': [slot(2)]
+  'hold-person-upcast-slider': [slot(2)],
+
+  // === Heroic Inspiration already granted ===
+  'hi-annotation': [hiGranted()],
+  'hi-effect-grant-plan-errors': [hiGranted()],
+  // hi-effect-grant-use is a by-design plan-order divergence (SKIP_BY_NAME), not
+  // migrated: it plans use-hi then grant-hi and expects grant-hi to see the
+  // pre-consumption remaining (v1 phase-order); v2's fold consumes first.
+  'hi-grant-illegal-when-active': [hiGranted()],
+  'hi-use': [hiGranted()],
+  'hi-use-effect-removed': [hiGranted()],
+  'hi-use-twice': [hiGranted()],
+  'hi-human-long-rest-no-duplicate': [hiGranted()]
 };

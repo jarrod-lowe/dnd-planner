@@ -47,6 +47,7 @@ const SKIP_BY_NAME: Record<string, string> = {
   // (after: group). v2's plan fold is plan-order-significant by design, so it
   // yields remaining=1 (can't use what you lack, then grant it) — a deliberate divergence.
   'hi-use-then-grant': 'relies on v1 intra-turn reordering; v2 plan fold is plan-order (by design)',
+  'hi-effect-grant-use': 'relies on v1 intra-turn reordering; v2 plan fold is plan-order (by design)',
   // Asserts layOnHands.pool.remaining but omits the class-paladin-lay-on-hands
   // group that derives it in v2 (v1 set remaining directly in the class-level
   // rules). pool.total still matches; remaining is covered by the level2/3
@@ -165,6 +166,13 @@ const EXPECTED_RUNNABLE = [
   'hold-person-select-level-illegal',
   'hold-person-slot-selection',
   'hold-person-upcast-slider',
+  'hi-annotation',
+  'hi-effect-grant-plan-errors',
+  'hi-grant-illegal-when-active',
+  'hi-use',
+  'hi-use-effect-removed',
+  'hi-use-twice',
+  'hi-human-long-rest-no-duplicate',
   'long-rest-sets-flag',
   'savage-attacker-no-feat',
   'short-rest-sets-flag',
