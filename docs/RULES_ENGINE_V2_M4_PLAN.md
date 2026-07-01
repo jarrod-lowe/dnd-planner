@@ -1,0 +1,115 @@
+# Rules Engine v2 — M4 Plan (cutover & decommission)
+
+Branch `claude/rules-engine-v2-m4` (stacked on the M3 initialEffects-migration
+branch, PR #358). M4 is the final milestone: flip the running app from the v1
+interpreter to the v2 dataflow/plan/effects engine, migrate persisted state, and
+delete v1. After M3 the v2 engine runs essentially the whole scenario suite
+(parity 327/337, the rest by-design); M4 makes it the one that actually runs.
+
+## 1. Goal & exit criteria
+
+- The play UI evaluates through **v2** (behind a flag first, then unconditionally).
+- Persisted character **effects migrate** from the v1 rule format to the v2 ref /
+  `EffectInstance` format, losslessly for every shipped rule group.
+- `make test` green (unit + rules + e2e); v2 proven in the **test env**.
+- The v1 engine, `activities`, `_auto`, phases, and the YAML rule sources are
+  **deleted**; `RULES_ENGINE.md` + the authoring guide are rewritten for v2.
+- No user-visible behaviour change at the cutover (the parity harness is the proof
+  the two engines agree; the 10 by-design deltas are documented + accepted).
+
+## 2. The contract gap (what the adapter must bridge)
+
+The play store (`src/lib/play/playStore.svelte.ts`) is the single runtime call
+site. It calls v1 `evaluate({ rules: { standing, planned, effects }, state:{facts} })`
+and consumes:
+
+- `output.availableRules` — `AvailableRuleEntry[]` where **`entry.rule` is a full
+  `Rule`** (the UI reads `rule.ui`, `rule.vars`, and **`rule.varsRuntime`** for the
+  per-item captured-var values *and* the `errors` set that drives illegal-item
+  styling), `legal`, `applicable`, `diagnostics`.
+- `output.facts` — the projected post-plan facts (top bar, resources, gating).
+- `output.effects` — advertised effects (v1 `Rule[]`), **committed into
+  `state.effects` at End Turn** and persisted to `/api/characters/{id}/effects`.
+- Per-planned-item **hypothetical** re-evaluations (the "alternatives" picker) —
+  one `evaluate` per planned item with that item removed.
+
+v2 `evaluate({ modules, ruleGroupIds, inputFacts, planned, committed })` returns:
+
+- `availableRules` — `AvailableRuleEntry[]` where **`entry.rule` is a lean
+  `OfferRuleDescriptor`** (`id`, `ui`, `vars`, `description`) — no `varsRuntime`,
+  no `activities`.
+- `planDiagnostics: Record<instanceId, Diagnostic[]>` — the per-item legality that
+  v1 folded into `varsRuntime.errors`.
+- `facts`, `annotations`, `status`; and `evaluatePlan(...).advertised` —
+  `EffectInstance[]` (the committed-effect stream).
+
+Four gaps to bridge:
+
+1. **Offer shape.** `OfferRuleDescriptor` → the `Rule`-ish object the UI reads.
+   Fold `planDiagnostics[instanceId]` + captured `selections` back into a
+   `varsRuntime` (errors set + var values) so the existing UI keeps working
+   unchanged. (`collections`/`trace`/`next` are review-cluster items from #355 —
+   add only if a consumer still reads them; grep says the store does not.)
+2. **Effects.** v1 `Rule[]` ⇄ v2 `EffectInstance[]` — for **persistence** (load =
+   old→new, save = new→old until the stored format itself is migrated) and for the
+   End-Turn commit/age step (`endTurn` already exists in v2).
+3. **Inputs.** v1 fetches full rule JSON per group and computes facts from it. v2
+   loads **code-split modules by id** (`loadModules`) and needs **`inputFacts`**
+   (the character-build constants: ability totals, slot totals, proficiency bonus,
+   equipped/prepared flags — everything v1 set via BUILD rules). Deriving
+   `inputFacts` from the persisted character is the biggest single piece.
+4. **Hypotheticals.** The per-item "alternatives" map is a plan-fold variant — v2's
+   `evaluatePlan` over the plan minus one ref; cheaper than v1 (no rule re-parse).
+
+## 3. Increments (ordered; each shippable + testable)
+
+- **W1 — output contract adapter (pure, TDD here).** `adaptV2Output(v2Output,
+  planned): V1ShapedOutput`: map `availableRules` (descriptor→rule, merge
+  `planDiagnostics`+`selections`→`varsRuntime`), pass through `facts`/`annotations`/
+  `status`. Unit-tested against fixture v2 outputs. No runtime wiring yet.
+- **W2 — effect format converter (pure, TDD here).** `effectToV1Rule(EffectInstance)`
+  and `v1RuleToEffect(Rule)` (+ a `migratePersistedEffects` batch). Round-trip
+  tested for every effect shape the modules emit (keyed/unkeyed, `state`,
+  `stateCombine`, each `ExpirySpec`). This is the persistence-migration core.
+- **W3 — inputFacts derivation (pure, TDD here).** `characterToInputFacts(persisted
+  character + assignments)`: the BUILD-time facts v2 modules read. Cross-checked
+  against the parity fixtures' `initialFacts` + `INITIAL_EFFECTS_V2`.
+- **W4 — runtime wiring behind a flag (env-gated to prove).** A `useV2Engine` flag
+  (settings / env). When on, the store: `loadModules(ruleGroupIds)` instead of
+  fetching rule JSON; builds the v2 input; calls v2 `evaluate` + `evaluatePlan`;
+  runs the W1/W2 adapters. v1 path stays default until W6.
+- **W5 — persisted-effect migration (env/CI-gated).** A one-shot migration of
+  stored `/effects` blobs old→new via W2, plus a read-time shim for un-migrated
+  characters. Proven in the **test env** (`make deploy-test`), not here.
+- **W6 — flip + delete (after W1–W5 green in test env).** Default the flag on;
+  then delete `src/lib/rules-engine/` (v1), the `activities`/`_auto`/phase code,
+  `data/rule-sources` + `scripts/rule_preprocessor`, and the YAML groups the app no
+  longer reads. Rewrite `RULES_ENGINE.md` + `docs/RULE_GROUP_GUIDE.md` for the v2
+  builder API; update `CLAUDE.md` pointers. `make test` green with v1 gone.
+
+## 4. Verification boundary (inherited from the M2/M3 plans)
+
+- **Pure here:** W1–W3 (adapters, converters, inputFacts) are unit-testable now;
+  the parity harness remains the behavioural oracle for engine agreement.
+- **Env/CI-gated:** W4 proof, W5 data migration, and the e2e/deploy sign-off run
+  via `make deploy-test` / the pipeline — deferred to the test env, not this repo
+  checkout. W6's deletion lands only once those are green.
+
+## 5. Guardrails (critical — inherited from CLAUDE.md, keep through compactions)
+
+- **TDD** every pure increment (W1–W3): red → green; **never commit on a failing
+  `make test`**. Never commit to `main`; develop on `claude/rules-engine-v2-m4`.
+- **No behaviour change at cutover** — the parity harness (327 runnable) is the
+  agreement proof; the 10 by-design deltas are the accepted, documented set.
+- **I18n / a11y / the CSS Law** for any UI-adapter work — reuse existing keys and
+  theme variables; the adapter feeds the *existing* PanelRenderer unchanged.
+- **Infra only via make targets** (`make deploy-test`, `make sync-rule-groups`);
+  never run `terraform` directly. New rules still go through the yaml runner.
+- **Delete only after green** — W6 removes v1 strictly after W1–W5 pass in the test
+  env, so a regression is always a flag-flip away from the v1 path.
+
+## 6. Out of scope
+
+The M2/W4–W6 items still open in their own row (search-index publish, co-bundled
+hosting infra, the end-to-end test-env proof) are prerequisites the pipeline owns;
+M4 consumes them but does not re-do them.
