@@ -32,11 +32,13 @@ function steedStats(level: number, creatureType: number): Record<string, number>
   const hp = 25 + (level - 2) * 10;
   const canFly = level >= 4 ? 1 : 0;
   const state: Record<string, number> = {
-    'companion.steed.summoned': 1,
+    // `active` is the raw summon flag; `summoned` is derived (active, not
+    // dismissed, HP > 0) so a steed dropped to 0 HP vanishes on its own.
+    'companion.steed.active': 1,
     'companion.steed.dismissed': 0,
     'companion.steed.creatureType': creatureType,
     'companion.steed.ac.value': 12 + (level - 2),
-    'companion.steed.hp.max': hp,
+    'companion.steed.hp.base': hp,
     'companion.steed.speed': 60,
     'companion.steed.movement.base': 60,
     'companion.steed.actions.max': 1,
@@ -66,7 +68,16 @@ export function steedEffect(level: number, creatureType: number): EffectInstance
   };
 }
 
+const active = (f: FactReader): boolean => f.num('companion.steed.active') > 0;
 const summoned = (f: FactReader): boolean => f.num('companion.steed.summoned') > 0;
+
+// The steed's child HP effects, evicted (by key) when the steed is dismissed.
+const STEED_CHILD_EFFECTS = [
+  'effect-steed-hp-modifier-max',
+  'effect-steed-hp-modifier-current',
+  'effect-steed-hp-damage',
+  'effect-steed-hp-heal'
+] as const;
 
 /** Per-turn spend on a steed resource (resets at end of turn). */
 const steedSpend = (state: Record<string, number>): EffectInstance => ({
@@ -129,6 +140,46 @@ function steedAbilityOffer(creatureType: number): Offer {
   };
 }
 
+const STEED_SKILLS = [
+  'acrobatics', 'animal-handling', 'arcana', 'athletics', 'deception', 'history',
+  'insight', 'intimidation', 'investigation', 'medicine', 'nature', 'perception',
+  'performance', 'persuasion', 'religion', 'sleight-of-hand', 'stealth', 'survival'
+] as const;
+
+/** A free record/config offer the steed always has while summoned (no spend). */
+const steedFreeOffer = (id: string, intent: Record<string, string>): Offer => ({
+  id,
+  when: summoned,
+  ui: { section: 'free', subject: 'steed', name: `${S}.${id}.name`, intents: intent, actionCost: [] }
+});
+
+/** Steed HP-modifier setter (keyed permanent — re-use replaces, matching the character's). */
+function steedHpModifier(fact: string, effectId: string, id: string, min: number, max: number): Offer {
+  return {
+    id,
+    when: summoned,
+    ui: {
+      section: 'free',
+      subject: 'steed',
+      name: `${S}.${id}.name`,
+      primaryControl: { type: 'slider', var: 'modifier', min: { number: min }, max: { number: max } },
+      intents: { HEALTH: 'hp' },
+      actionCost: []
+    },
+    vars: { modifier: { capture: true, default: { number: 0 } } },
+    apply: (_f, selections): ActionResult => ({
+      advertise: [
+        {
+          id: effectId,
+          key: effectId,
+          state: { [fact]: typeof selections.modifier === 'number' ? selections.modifier : 0 },
+          expiry: { kind: 'permanent' }
+        }
+      ]
+    })
+  };
+}
+
 /**
  * Find Steed — a Level 2 conjuration that summons an Otherworldly Steed companion
  * (`companion.steed.*`, a namespaced sub-entity). The cast bakes the steed's whole
@@ -175,11 +226,11 @@ const findSteed: RuleModule = {
           f.num('paladinFindSteed.remaining') > 0 ? 0 : f.num('find-steed.lowestAvailableSlotLevel')
       }
     ];
-    // Steed derives — only meaningful while summoned (all read 0 otherwise).
+    // Steed derives — only meaningful while active (all read 0 otherwise).
     for (const a of ABILITIES) {
       c.push({
         fact: `companion.steed.${a}.modifier`,
-        value: (f) => (summoned(f) ? statToModifier(f.num(`companion.steed.${a}`)) : 0)
+        value: (f) => (active(f) ? statToModifier(f.num(`companion.steed.${a}`)) : 0)
       });
       c.push({
         fact: `companion.steed.${a}.save`,
@@ -209,11 +260,21 @@ const findSteed: RuleModule = {
         value: (f) => f.num(`companion.steed.${ability}.total`) - f.num(`companion.steed.${ability}.spent`)
       });
     }
-    // Current HP tracks the max plus any (negative) damage modifier, capped at max.
+    // HP: max = base + max-modifier; current = base + (negative) damage, capped at
+    // base. A steed at 0 HP is no longer summoned (see below).
+    c.push({
+      fact: 'companion.steed.hp.max',
+      value: (f) => (active(f) ? f.num('companion.steed.hp.base') + f.num('companion.steed.hp.modifier.max') : 0)
+    });
     c.push({
       fact: 'companion.steed.hp.current',
       value: (f) =>
-        summoned(f) ? f.num('companion.steed.hp.max') + Math.min(0, f.num('companion.steed.hp.modifier.current')) : 0
+        active(f) ? f.num('companion.steed.hp.base') + Math.min(0, f.num('companion.steed.hp.modifier.current')) : 0
+    });
+    c.push({
+      fact: 'companion.steed.summoned',
+      value: (f) =>
+        active(f) && f.num('companion.steed.dismissed') === 0 && f.num('companion.steed.hp.current') > 0 ? 1 : 0
     });
     return c;
   },
@@ -329,16 +390,50 @@ const findSteed: RuleModule = {
     steedAbilityOffer(0),
     steedAbilityOffer(1),
     steedAbilityOffer(2),
+    // Saving throws, skill checks, and a note — the steed's record offers.
+    ...ABILITIES.map((a) => steedFreeOffer(`steed-save-${a}`, { SAVE: 'steed' })),
+    ...STEED_SKILLS.map((s) => steedFreeOffer(`steed-skill-${s}`, { CHECK: 'steed' })),
+    steedFreeOffer('steed-note', { NOTE: 'freeform' }),
+    // HP: manual max/current modifiers and a damage recorder.
+    steedHpModifier('companion.steed.hp.modifier.max', 'effect-steed-hp-modifier-max', 'steed-set-hp-modifier-max', -10, 30),
+    steedHpModifier('companion.steed.hp.modifier.current', 'effect-steed-hp-modifier-current', 'steed-set-hp-modifier-current', -30, 30),
+    {
+      id: 'steed-record-damage',
+      when: summoned,
+      ui: { section: 'free', subject: 'steed', name: `${S}.steed-record-damage.name`, primaryControl: { type: 'slider', var: 'amount', min: { number: 0 }, max: { fact: 'companion.steed.hp.max' }, unit: 'hp' }, intents: { HEALTH: 'hp' }, actionCost: [] },
+      vars: { amount: { capture: true, default: { number: 0 } } },
+      apply: (_f, selections): ActionResult => ({
+        advertise: [{ id: 'effect-steed-hp-damage', key: 'effect-steed-hp-damage', state: { 'companion.steed.hp.modifier.current': -(typeof selections.amount === 'number' ? selections.amount : 0) }, expiry: { kind: 'untilLongRest' } }]
+      })
+    },
+    {
+      id: 'steed-record-heal',
+      when: summoned,
+      ui: { section: 'free', subject: 'steed', name: `${S}.steed-record-heal.name`, primaryControl: { type: 'slider', var: 'amount', min: { number: 0 }, max: { fact: 'companion.steed.hp.max' }, unit: 'hp' }, intents: { HEALTH: 'hp' }, actionCost: [] },
+      vars: { amount: { capture: true, default: { number: 0 } } },
+      apply: (_f, selections): ActionResult => ({
+        advertise: [{ id: 'effect-steed-hp-heal', key: 'effect-steed-hp-heal', state: { 'companion.steed.hp.modifier.current': typeof selections.amount === 'number' ? selections.amount : 0 }, expiry: { kind: 'untilLongRest' } }]
+      })
+    },
     // Dismiss — the steed vanishes (replaces the summon effect).
     {
       id: 'offer-dismiss-steed',
       when: summoned,
       ui: { section: 'other', subject: 'steed', name: `${S}.offer-dismiss-steed.name`, intents: { ACTION: 'steed' }, actionCost: [] },
+      // Replaces the summon effect (same key) with a bare dismissed marker: `active`
+      // drops, so `summoned` derives to 0 while `dismissed` reads 1. Also evicts the
+      // steed's child HP effects (v1 cascadeRemove) via same-key empty effects.
       apply: (): ActionResult => ({
-        advertise: [{ id: 'effect-steed-dismissed', key: 'steed', state: { 'companion.steed.summoned': 0, 'companion.steed.dismissed': 1 }, expiry: { kind: 'permanent' } }]
+        advertise: [
+          { id: 'effect-steed-dismissed', key: 'steed', state: { 'companion.steed.dismissed': 1 }, expiry: { kind: 'permanent' } },
+          ...STEED_CHILD_EFFECTS.map((k): EffectInstance => ({ id: `evict-${k}`, key: k, expiry: { kind: 'permanent' } }))
+        ]
       })
     }
-  ]
+  ],
+  // The Life Bond feature — surfaced as an informational annotation while the
+  // steed is summoned (damage the steed takes can be shared with the paladin).
+  annotate: (f) => (summoned(f) ? [{ key: `${S}.annotate-life-bond.text`, targets: ['companion.steed'] }] : [])
 };
 
 export default defineRule(findSteed);

@@ -66,7 +66,15 @@ const SKIP_BY_NAME: Record<string, string> = {
   // pick up the lock error. v2's plan fold is plan-order (the don is folded before the
   // lock sets build.locked), so it does not — the same deliberate divergence as
   // hi-use-then-grant. The build-lock scenario proper (lock flips the offers) runs.
-  'build-lock-weapon-clear': 'relies on v1 intra-turn reordering; v2 plan fold is plan-order (by design)'
+  'build-lock-weapon-clear': 'relies on v1 intra-turn reordering; v2 plan fold is plan-order (by design)',
+  // The steed's damage type is a STRING fact ('radiant'/'psychic'/'necrotic'); v2
+  // facts are numeric only (creatureType 0/1/2 is set, the string label is not).
+  'steed-creature-type-fey': 'string fact (companion.steed.damageType) — v2 facts are numeric',
+  // The steed vanishing at 0 HP is v1's self-advertise-gated-on-hp + cascadeRemove
+  // lifecycle; v2 committed effects cannot self-remove when a derived fact crosses
+  // a threshold (there is no per-turn re-advertise hook), so this passive death is
+  // by design not reproduced (explicit dismiss cascades correctly — see no-stacking).
+  'steed-zero-hp-dismiss': 'passive self-removal at 0 HP needs v1 self-advertise/cascadeRemove lifecycle'
 };
 
 // The scenarios expected to run on v2 today. Asserted as an exact set so that a
@@ -210,6 +218,32 @@ const EXPECTED_RUNNABLE = [
   'find-steed-two-actions-legality',
   'find-steed-same-turn-offers',
   'find-steed-same-turn-dash',
+  'find-steed-dismiss',
+  'find-steed-long-rest',
+  'find-steed-life-bond',
+  'find-steed-hp-modifier-no-stacking',
+  'attack-with-summoned-steed',
+  'steed-saves',
+  'steed-skill-checks',
+  'steed-movement-walk',
+  'steed-movement-fly',
+  'steed-fly-illegal-l2',
+  'steed-dash',
+  'steed-dodge-disengage',
+  'steed-slam',
+  'steed-slam-upcast',
+  'steed-note',
+  'steed-healing-touch',
+  'steed-fey-step',
+  'steed-fell-glare',
+  'steed-fell-glare-same-turn',
+  'steed-fey-step-same-turn',
+  'steed-healing-touch-same-turn',
+  'steed-creature-type-gating-celestial',
+  'steed-creature-type-gating-fey',
+  'steed-creature-type-gating-fiend',
+  'steed-hp-modifiers',
+  'steed-hp-mods',
   'long-rest-sets-flag',
   'savage-attacker-no-feat',
   'short-rest-sets-flag',

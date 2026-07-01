@@ -223,13 +223,13 @@ export const INITIAL_EFFECTS_V2: Record<string, EffectInstance[]> = {
   'steed-fell-glare-same-turn': [slot(2)],
   'steed-fey-step-same-turn': [slot(2)],
   'steed-healing-touch-same-turn': [slot(2)],
-  'steed-creature-type-fey': [slot(2)],
+  // steed-creature-type-fey (string damageType fact) and steed-zero-hp-dismiss
+  // (passive self-removal) are SKIP_BY_NAME v2 limitations, not migrated.
   'steed-creature-type-gating-celestial': [slot(2)],
   'steed-creature-type-gating-fey': [slot(2)],
   'steed-creature-type-gating-fiend': [slot(2)],
   'steed-hp-modifiers': [slot(2)],
   'steed-hp-mods': [slot(2)],
-  'steed-zero-hp-dismiss': [slot(2)],
   'find-steed-dismiss': [slot(2)],
   'find-steed-long-rest': [slot(2)],
   'find-steed-life-bond': [slot(2)],
