@@ -81,7 +81,11 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   'scimitar-mastery': () => import('./rules/scimitar-mastery'),
   javelin: () => import('./rules/javelin'),
   'javelin-mastery': () => import('./rules/javelin-mastery'),
-  spear: () => import('./rules/spear')
+  spear: () => import('./rules/spear'),
+  'spear-plus1': () => import('./rules/spear-plus1'),
+  'feat-savage-attacker': () => import('./rules/feat-savage-attacker'),
+  'spell-aid': () => import('./rules/spell-aid'),
+  'spell-prayer-of-healing': () => import('./rules/prayer-of-healing')
 };
 
 export interface LoadResult {

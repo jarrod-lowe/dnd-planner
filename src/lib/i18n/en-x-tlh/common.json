@@ -477,7 +477,8 @@
       "unprepare-prayer-of-healing-offer": {
         "name": "Qor' nIvbogh mugh lISmoH",
         "keywords": "heal restore hit points group rest",
-        "not_prepared": "Qor' nIvbogh not prepared"
+        "not_prepared": "Qor' nIvbogh not prepared",
+        "always_prepared": "Qor' nIvbogh always prepared"
       },
       "effect-prayer-of-healing-prepared": {
         "name": "Qor' nIvbogh Prepared"

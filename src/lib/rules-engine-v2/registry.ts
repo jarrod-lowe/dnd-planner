@@ -62,6 +62,10 @@ import scimitarMastery from './rules/scimitar-mastery';
 import javelin from './rules/javelin';
 import javelinMastery from './rules/javelin-mastery';
 import spear from './rules/spear';
+import spearPlus1 from './rules/spear-plus1';
+import featSavageAttacker from './rules/feat-savage-attacker';
+import spellAid from './rules/spell-aid';
+import prayerOfHealing from './rules/prayer-of-healing';
 
 /**
  * Static ruleGroupId -> module registry, keyed by each module's own `id` — which
@@ -138,7 +142,11 @@ const MODULES: RuleModule[] = [
   scimitarMastery,
   javelin,
   javelinMastery,
-  spear
+  spear,
+  spearPlus1,
+  featSavageAttacker,
+  spellAid,
+  prayerOfHealing
 ];
 
 const REGISTRY: Record<string, RuleModule> = Object.fromEntries(MODULES.map((m) => [m.id, m]));

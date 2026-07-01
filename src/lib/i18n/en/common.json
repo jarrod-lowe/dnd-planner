@@ -477,7 +477,8 @@
       "unprepare-prayer-of-healing-offer": {
         "name": "Unprepare Prayer of Healing",
         "keywords": "heal restore hit points group rest",
-        "not_prepared": "Prayer of Healing is not prepared"
+        "not_prepared": "Prayer of Healing is not prepared",
+        "always_prepared": "Prayer of Healing is always prepared"
       },
       "effect-prayer-of-healing-prepared": {
         "name": "Prayer of Healing Prepared"

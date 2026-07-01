@@ -56,7 +56,23 @@ is recorded** (`untilLongRest` on a long rest; `untilShortRest` on either), and
 rest counts as a short rest too. (Per the user: either timing is fine as long as
 it is consistent — this is the consistent definition chosen.)
 
-## 4c. Progress (parity 3 → 208 runnable, ~94% of rule groups)
+## 4c. Progress (parity 3 → 208 runnable; ALL rule groups ported)
+
+**Milestone reached: every rule group a scenario references now has a v2 module.**
+The parity harness reports **0** scenarios skipped for an unported group — the 128
+remaining skips are all v1-format `initialEffects` or documented plan-order /
+prepare-lifecycle divergences (`SKIP_BY_NAME`), not missing features. The final
+four groups were `initialEffects`-only (no runnable scenario reaches them), so they
+land with focused unit tests (`tests/unit/rules-engine-v2/final-groups.test.ts`)
+instead of harness coverage: `spear-plus1` (magical `weaponOffers` variant, +1 in
+the hit/damage derives + a `property.magical` annotation), `feat-savage-attacker`
+(a one-per-turn reroll resource — `max`=1, `remaining = max − spent`, a free
+weapon-attack rider offer + annotation), and the two self-less L2 heal spells
+`spell-aid` (L2–5 cascade) and `spell-prayer-of-healing` (full L2–9 cascade), both
+on the shared `preparedSpellOffers` + slot-cascade shape. Turning the remaining
+`initialEffects`-format scenarios into runnable v2 fixtures (to grow parity beyond
+208) is the separate test-migration effort, not a porting gap.
+
 
 Done: step 0 (multi-predicate expiry) + the rest model; **Wave A foundation**
 (`ability-scores`, `proficiency`, `free-actions`, `core-events`, `ac`,
@@ -105,7 +121,8 @@ Deferred / skip-listed (visible & counted in the harness):
 
 ## 5. Port waves (order is a guide; parity coupling may reshuffle)
 
-Each entry is a v1 group → v2 module. Run the parity harness after each.
+Each entry is a v1 group → v2 module. Run the parity harness after each. **All
+waves below are now complete** (see §4c); the list is kept as the port record.
 
 - **Wave A — foundation (highest unlock):** `proficiency` (unblocks
   ability-increase + all skills), `free-actions` (action-economy scenarios),
@@ -116,9 +133,9 @@ Each entry is a v1 group → v2 module. Run the parity harness after each.
 - **Wave C — actions & feats:** `dash`, `grapple`, `shove`, `simple-actions`,
   `feat-alert`, `feat-savage-attacker`, `feat-sentinel`,
   `fighting-style-great-weapon`.
-- **Wave D — weapons (retire the Python preprocessor):** `dagger`(+`-mastery`),
-  `greataxe`(+`-mastery`) **DONE**; remaining `javelin`(+`-mastery`),
-  `scimitar`(+`-mastery`), `spear`, `spear-plus1`. The replacement for the
+- **Wave D — weapons (retire the Python preprocessor) DONE:** `dagger`(+`-mastery`),
+  `greataxe`(+`-mastery`), `javelin`(+`-mastery`), `scimitar`(+`-mastery`),
+  `spear`, `spear-plus1` — all ported. The replacement for the
   preprocessor is `builder.weaponOffers(def)`: a weapon is one self-contained
   module (hit/damage derives + `weaponOffers`), where the helper crosses the
   weapon `def` with the don/use-action/use-reaction/use-bonus profiles directly
