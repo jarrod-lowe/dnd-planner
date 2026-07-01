@@ -48,6 +48,10 @@ import dagger from './rules/dagger';
 import daggerMastery from './rules/dagger-mastery';
 import greataxe from './rules/greataxe';
 import greataxeMastery from './rules/greataxe-mastery';
+import scimitar from './rules/scimitar';
+import scimitarMastery from './rules/scimitar-mastery';
+import javelin from './rules/javelin';
+import javelinMastery from './rules/javelin-mastery';
 
 /**
  * Static ruleGroupId -> module registry, keyed by each module's own `id` — which
@@ -110,7 +114,11 @@ const MODULES: RuleModule[] = [
   dagger,
   daggerMastery,
   greataxe,
-  greataxeMastery
+  greataxeMastery,
+  scimitar,
+  scimitarMastery,
+  javelin,
+  javelinMastery
 ];
 
 const REGISTRY: Record<string, RuleModule> = Object.fromEntries(MODULES.map((m) => [m.id, m]));

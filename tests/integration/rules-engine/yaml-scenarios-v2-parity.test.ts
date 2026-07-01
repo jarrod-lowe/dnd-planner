@@ -314,7 +314,12 @@ const EXPECTED_RUNNABLE = [
   'alert-proficiency-bonus-secondary-roll',
   'hit-die-paladin-level1',
   'hit-die-paladin-level2',
-  'hit-die-paladin-level3'
+  'hit-die-paladin-level3',
+  // M3 — scimitar (Light/Finesse: higher of STR/DEX) + javelin (STR, thrown),
+  // both via weaponOffers, plus their mastery flag groups
+  'scimitar-finesse',
+  'weapon-mastery-scimitar',
+  'weapon-mastery-javelin'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---

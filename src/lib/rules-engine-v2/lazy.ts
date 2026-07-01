@@ -65,7 +65,11 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   dagger: () => import('./rules/dagger'),
   'dagger-mastery': () => import('./rules/dagger-mastery'),
   greataxe: () => import('./rules/greataxe'),
-  'greataxe-mastery': () => import('./rules/greataxe-mastery')
+  'greataxe-mastery': () => import('./rules/greataxe-mastery'),
+  scimitar: () => import('./rules/scimitar'),
+  'scimitar-mastery': () => import('./rules/scimitar-mastery'),
+  javelin: () => import('./rules/javelin'),
+  'javelin-mastery': () => import('./rules/javelin-mastery')
 };
 
 export interface LoadResult {
