@@ -71,6 +71,19 @@ export const INITIAL_EFFECTS_V2: Record<string, EffectInstance[]> = {
   'shield-proficient': [flag('armor.shield.proficient')],
   'shield-with-splint-armor': [flag('armor.heavy.proficient'), flag('armor.shield.proficient')],
 
-  // === Weapons (feat riders) ===
+  // === Weapons: an already-equipped weapon (v1 set only weapon.<id>.equipped) ===
+  'attack-greataxe': [weaponEquipped('greataxe')],
+  'attack-javelin': [weaponEquipped('javelin')],
+  'attack-scimitar': [weaponEquipped('scimitar')],
+  'attack-spear': [weaponEquipped('spear')],
+  'attack-spear-plus1': [weaponEquipped('spear-plus1')],
+  'greataxe-cleave-mastery': [weaponEquipped('greataxe')],
+  'javelin-slow-mastery': [weaponEquipped('javelin')],
+  'spear-versatile-damage-die': [weaponEquipped('spear')],
+  'weapon-don-illegal-when-equipped': [weaponEquipped('dagger')],
+  'weapon-donned-attacks-visible': [weaponEquipped('dagger')],
+  'fighting-style-great-weapon-annotations': [weaponEquipped('greataxe')],
+  'savage-attacker-annotations': [weaponEquipped('dagger')],
+  'savage-attacker-weapon-only': [weaponEquipped('dagger')],
   'savage-attacker-usage': [weaponEquipped('dagger')]
 };

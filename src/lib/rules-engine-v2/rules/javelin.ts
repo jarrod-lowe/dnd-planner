@@ -1,6 +1,10 @@
 import { defineRule, weaponOffers, type RuleModule, type WeaponDef } from '../builder';
 
 const P = 'rule.dnd-5e-2024.attacks.javelin';
+const SLOW = 'rule.dnd-5e-2024.attacks.javelin-slow';
+
+/** Slow is surfaced once the javelin-mastery group sets `attack.javelin.mastery`. */
+const masteryCondition = { fact: 'attack.javelin.mastery', operator: 'equals', value: 1 };
 
 const JAVELIN: WeaponDef = {
   id: 'javelin',
@@ -13,7 +17,27 @@ const JAVELIN: WeaponDef = {
     { distance: 30, type: 'thrown' },
     { distance: 120, type: 'thrown', disadvantage: true }
   ],
-  annotationLabels: ['attack.any', 'attack.melee', 'attack.weapon', 'dice.any']
+  annotationLabels: ['attack.any', 'attack.melee', 'attack.weapon', 'dice.any'],
+  // Slow (weapon mastery): on hit, a one-turn speed-reduction effect. The followup
+  // rides the action panel gated on the javelin-mastery fact (like greataxe Cleave).
+  actionUiExtra: {
+    followups: [
+      {
+        type: 'effect',
+        condition: masteryCondition,
+        button: `${SLOW}.button`,
+        addRule: {
+          target: 'effect',
+          rule: {
+            id: 'effect-javelin-slow',
+            ui: { section: 'mastery', name: `${SLOW}.effect-name` },
+            phase: 'normal',
+            activities: []
+          }
+        }
+      }
+    ]
+  }
 };
 
 /**
