@@ -37,6 +37,8 @@ import dash from './rules/dash';
 import grapple from './rules/grapple';
 import shove from './rules/shove';
 import featAlert from './rules/feat-alert';
+import featSentinel from './rules/feat-sentinel';
+import fightingStyleGreatWeapon from './rules/fighting-style-great-weapon';
 import hitDie from './rules/hit-die';
 import speciesHuman from './rules/species-human';
 import movement from './rules/movement';
@@ -104,6 +106,8 @@ const MODULES: RuleModule[] = [
   grapple,
   shove,
   featAlert,
+  featSentinel,
+  fightingStyleGreatWeapon,
   hitDie,
   speciesHuman,
   movement,

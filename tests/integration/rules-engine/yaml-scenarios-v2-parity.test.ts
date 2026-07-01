@@ -319,7 +319,10 @@ const EXPECTED_RUNNABLE = [
   // both via weaponOffers, plus their mastery flag groups
   'scimitar-finesse',
   'weapon-mastery-scimitar',
-  'weapon-mastery-javelin'
+  'weapon-mastery-javelin',
+  // M3 — fighting-style-great-weapon + feat-sentinel (flag + annotations)
+  'fighting-style-great-weapon',
+  'sentinel-flag-annotations'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---
