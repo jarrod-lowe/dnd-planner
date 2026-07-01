@@ -72,7 +72,8 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   scimitar: () => import('./rules/scimitar'),
   'scimitar-mastery': () => import('./rules/scimitar-mastery'),
   javelin: () => import('./rules/javelin'),
-  'javelin-mastery': () => import('./rules/javelin-mastery')
+  'javelin-mastery': () => import('./rules/javelin-mastery'),
+  spear: () => import('./rules/spear')
 };
 
 export interface LoadResult {

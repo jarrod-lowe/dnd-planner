@@ -55,6 +55,7 @@ import scimitar from './rules/scimitar';
 import scimitarMastery from './rules/scimitar-mastery';
 import javelin from './rules/javelin';
 import javelinMastery from './rules/javelin-mastery';
+import spear from './rules/spear';
 
 /**
  * Static ruleGroupId -> module registry, keyed by each module's own `id` — which
@@ -124,7 +125,8 @@ const MODULES: RuleModule[] = [
   scimitar,
   scimitarMastery,
   javelin,
-  javelinMastery
+  javelinMastery,
+  spear
 ];
 
 const REGISTRY: Record<string, RuleModule> = Object.fromEntries(MODULES.map((m) => [m.id, m]));
