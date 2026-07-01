@@ -289,7 +289,14 @@ const EXPECTED_RUNNABLE = [
   // M3 — initiative (dex-modifier bonus + display-only Roll Initiative offer)
   'alert-no-feat-no-annotations',
   'initiative-bonus',
-  'initiative-persists-across-turns'
+  'initiative-persists-across-turns',
+  // M3 — passive-skills (10 + skill) + simple-actions (8 action-cost options)
+  'passive-perception',
+  'passive-insight',
+  'passive-investigation',
+  'simple-action-disengage',
+  'simple-action-interact',
+  'simple-actions-all-offered'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---

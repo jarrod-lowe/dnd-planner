@@ -49,6 +49,8 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   'paladin-spells-l1': () => import('./rules/paladin-spells-l1'),
   'build-lock': () => import('./rules/build-lock'),
   initiative: () => import('./rules/initiative'),
+  'passive-skills': () => import('./rules/passive-skills'),
+  'simple-actions': () => import('./rules/simple-actions'),
   'species-human': () => import('./rules/species-human'),
   movement: () => import('./rules/movement'),
   'leather-armor': () => import('./rules/leather-armor'),
