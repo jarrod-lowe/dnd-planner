@@ -300,7 +300,13 @@ const EXPECTED_RUNNABLE = [
   // M3 — dash (adds base speed to this turn's movement.total; combine:sum)
   'dash-action-doubles-movement',
   'dash-after-partial-movement',
-  'dash-illegal-without-action'
+  'dash-illegal-without-action',
+  // M3 — grapple + shove (Unarmed Strike options; extra-attack spend + save DC;
+  // grapple's outcome marker drives the hand/grappling effect)
+  'grapple-action',
+  'grapple-grappled-effect',
+  'grapple-escaped-no-effect',
+  'shove-action'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---

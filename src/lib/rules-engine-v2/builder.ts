@@ -218,22 +218,43 @@ function diceControl(def: WeaponDef): Record<string, unknown> {
  * and (re)grants the follow-up budget. Over-committing flags `no_action` on the
  * offending swing rather than the whole plan.
  */
-function attackActionApply() {
-  // `attack.activation.count` drives the extra-attack flag (attacks module);
-  // `attack.last.weapon` marks the swing as a weapon attack (feat annotations).
-  const flags = { 'attack.activation.count': 1, 'attack.last.weapon': 1 };
-  return (s: FactReader): ActionResult => {
-    if (s.num('attackAction.extraRemaining') > 0) {
-      return { advertise: [turnSpend({ 'attackAction.extraSpent': 1, ...flags })] };
-    }
-    const granted = s.num('actions.remaining') > 0 ? s.num('extraAttacks.max') : 0;
-    const diagnostics: Diagnostic[] =
-      s.num('actions.remaining') > 0 ? [] : [{ code: NO_ACTION, severity: 'error' }];
+/**
+ * The Attack-action spend shared by every attack that participates in the Extra
+ * Attack budget (weapon/unarmed swings, Grapple, Shove). A free follow-up spends
+ * an `extraRemaining` charge; otherwise it spends the action and (re)grants the
+ * follow-up budget. `attack.activation.count` drives the extra-attack flag; pass
+ * `extra` for attack-kind markers (e.g. `attack.last.weapon`). `overCommitted` is
+ * true when a new Attack action had no action to spend (the caller flags it).
+ */
+export function attackActionSpend(
+  s: FactReader,
+  extra: Record<string, number> = {}
+): { effect: EffectInstance; overCommitted: boolean } {
+  if (s.num('attackAction.extraRemaining') > 0) {
     return {
-      advertise: [
-        turnSpend({ 'actions.spent': 1, 'attackAction.extraGranted': granted, ...flags })
-      ],
-      diagnostics
+      effect: turnSpend({ 'attackAction.extraSpent': 1, 'attack.activation.count': 1, ...extra }),
+      overCommitted: false
+    };
+  }
+  const granted = s.num('actions.remaining') > 0 ? s.num('extraAttacks.max') : 0;
+  return {
+    effect: turnSpend({
+      'actions.spent': 1,
+      'attackAction.extraGranted': granted,
+      'attack.activation.count': 1,
+      ...extra
+    }),
+    overCommitted: s.num('actions.remaining') <= 0
+  };
+}
+
+function attackActionApply() {
+  return (s: FactReader): ActionResult => {
+    // `attack.last.weapon` marks the swing as a weapon attack (feat annotations).
+    const { effect, overCommitted } = attackActionSpend(s, { 'attack.last.weapon': 1 });
+    return {
+      advertise: [effect],
+      diagnostics: overCommitted ? [{ code: NO_ACTION, severity: 'error' }] : []
     };
   };
 }
