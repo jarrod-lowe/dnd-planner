@@ -306,7 +306,15 @@ const EXPECTED_RUNNABLE = [
   'grapple-action',
   'grapple-grappled-effect',
   'grapple-escaped-no-effect',
-  'shove-action'
+  'shove-action',
+  // M3 — feat-alert (initiative-with-proficiency + annotations) and hit-die
+  // (d10 pool from the class levels; remaining = total - spent)
+  'alert-flag-set',
+  'alert-secondary-control-initiative',
+  'alert-proficiency-bonus-secondary-roll',
+  'hit-die-paladin-level1',
+  'hit-die-paladin-level2',
+  'hit-die-paladin-level3'
 ].sort();
 
 // --- Test config types (subset of the v1 runner's schema we drive) ---

@@ -36,6 +36,8 @@ import simpleActions from './rules/simple-actions';
 import dash from './rules/dash';
 import grapple from './rules/grapple';
 import shove from './rules/shove';
+import featAlert from './rules/feat-alert';
+import hitDie from './rules/hit-die';
 import speciesHuman from './rules/species-human';
 import movement from './rules/movement';
 import leatherArmor from './rules/leather-armor';
@@ -97,6 +99,8 @@ const MODULES: RuleModule[] = [
   dash,
   grapple,
   shove,
+  featAlert,
+  hitDie,
   speciesHuman,
   movement,
   leatherArmor,

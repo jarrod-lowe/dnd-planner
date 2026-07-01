@@ -54,6 +54,8 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   dash: () => import('./rules/dash'),
   grapple: () => import('./rules/grapple'),
   shove: () => import('./rules/shove'),
+  'feat-alert': () => import('./rules/feat-alert'),
+  'hit-die': () => import('./rules/hit-die'),
   'species-human': () => import('./rules/species-human'),
   movement: () => import('./rules/movement'),
   'leather-armor': () => import('./rules/leather-armor'),

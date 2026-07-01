@@ -17,6 +17,7 @@ import { defineRule, type RuleModule } from '../builder';
 const paladinLevel5: RuleModule = {
   id: 'class-paladin-level5',
   derive: () => [
+    { fact: 'hitDie.d10.total', combine: 'sum', value: () => 1 },
     { fact: 'hp.base.max', combine: 'sum', value: () => 6 },
     { fact: 'extraAttacks.max', combine: 'sum', value: () => 1 },
     { fact: 'proficiency.bonus', combine: 'sum', value: () => 1 },
