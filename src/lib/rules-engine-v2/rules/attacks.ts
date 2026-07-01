@@ -7,6 +7,9 @@ import {
 } from '../builder';
 
 const NO_ACTION = 'rule.dnd-5e-2024.attacks.activation.no_action';
+const NO_REACTION = 'rule.dnd-5e-2024.attacks.activation.no_reaction';
+const UNARMED = 'rule.dnd-5e-2024.attacks.unarmed-strike';
+const UNARMED_LABELS = ['attack.any', 'attack.melee', 'attack.unarmed', 'dice.any'];
 
 /** A per-turn spend effect: the given fact deltas, expiring at end of turn. */
 const spend = (state: Record<string, number>): EffectInstance => ({
@@ -75,8 +78,9 @@ const attacks: RuleModule = {
       id: 'unarmed-strike-use-action',
       ui: {
         section: 'action-attack',
-        name: 'rule.dnd-5e-2024.attacks.unarmed-strike.name',
-        actionCost: ['action']
+        name: `${UNARMED}.name`,
+        actionCost: ['action'],
+        annotationLabels: [...UNARMED_LABELS, 'attack.action']
       },
       legalWhen: [
         {
@@ -86,8 +90,42 @@ const attacks: RuleModule = {
         }
       ],
       apply: applyUnarmedStrike
+    },
+    {
+      // Unarmed opportunity attack (Opportunity Attacks are weapon attacks). Gated
+      // on the reaction-weapon capability; spends the reaction, not the Attack
+      // action, so it never touches the Extra Attack budget.
+      id: 'unarmed-strike-use-reaction',
+      when: (f) => f.num('capability.attack.reaction.weapon') === 1,
+      ui: {
+        section: 'reaction',
+        name: `${UNARMED}.name`,
+        description: `${UNARMED}.description`,
+        detailKey: 'attack/unarmed-strike',
+        intents: { DEFEND: 'brawl' },
+        actionCost: ['reaction'],
+        disadvantageFact: 'attack.str.disadvantage',
+        annotationLabels: [...UNARMED_LABELS, 'attack.reaction']
+      },
+      legalWhen: [
+        {
+          condition: (f) => f.num('reactions.remaining') > 0,
+          diagnostics: [{ code: NO_REACTION, severity: 'error' }]
+        }
+      ],
+      apply: (f): ActionResult => ({
+        advertise: [spend({ 'reactions.spent': 1, 'attack.last.weapon': 1 })],
+        diagnostics: f.num('reactions.remaining') > 0 ? [] : [{ code: NO_REACTION, severity: 'error' }]
+      })
     }
-  ]
+  ],
+  // Remind the player an Extra Attack follow-up is available — once the Attack
+  // action has been taken and a charge remains (extraRemaining > 0). Targets
+  // attack.action so it shows only on Attack-action attacks (v1 extra-attack-annotate).
+  annotate: (f) =>
+    f.num('attackAction.extraRemaining') > 0
+      ? [{ key: 'rule.dnd-5e-2024.attacks.extra-attack.annotation', targets: ['attack.action'] }]
+      : []
 };
 
 export default defineRule(attacks);

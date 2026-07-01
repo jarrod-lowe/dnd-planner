@@ -144,5 +144,15 @@ export const INITIAL_EFFECTS_V2: Record<string, EffectInstance[]> = {
   'hi-use': [hiGranted()],
   'hi-use-effect-removed': [hiGranted()],
   'hi-use-twice': [hiGranted()],
-  'hi-human-long-rest-no-duplicate': [hiGranted()]
+  'hi-human-long-rest-no-duplicate': [hiGranted()],
+
+  // === Extra Attack (a granted extraAttacks.max and/or an equipped weapon) ===
+  'extra-attack-disabled': [weaponEquipped('greataxe')],
+  'extra-attack-grapple': [flag('extraAttacks.max')],
+  'extra-attack-greataxe': [weaponEquipped('greataxe'), flag('extraAttacks.max')],
+  'extra-attack-overcommit': [weaponEquipped('greataxe'), flag('extraAttacks.max')],
+  'extra-attack-paladin-level5': [weaponEquipped('greataxe')],
+  'extra-attack-shove': [flag('extraAttacks.max')],
+  'extra-attack-unarmed': [flag('extraAttacks.max')],
+  'extra-attack-unarmed-overcommit': [flag('extraAttacks.max')]
 };
