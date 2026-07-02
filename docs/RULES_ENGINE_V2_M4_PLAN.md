@@ -79,9 +79,14 @@ Four gaps to bridge:
   those to `*.spent` is a W5 layer on top (the same total/remaining/spent mapping
   `INITIAL_EFFECTS_V2` already encodes for the parity harness), not a mechanical
   activity→state conversion.
-- **W3 — inputFacts derivation (pure, TDD here).** `characterToInputFacts(persisted
-  character + assignments)`: the BUILD-time facts v2 modules read. Cross-checked
-  against the parity fixtures' `initialFacts` + `INITIAL_EFFECTS_V2`.
+- **W3 — character→input assembler (pure, TDD here) — DONE.**
+  `src/lib/rules-engine-v2/character-input.ts`: `characterToV2Input({ ruleGroupIds,
+  effects })` → a `SerializableInput` (assigned ids → `ruleGroupIds`, effect blob →
+  committed via W2, `inputFacts` empty, `planned` layered on). **Finding:**
+  `inputFacts` is genuinely empty — the v2 build lives in committed effects and the
+  rest is module derives (only ~4 parity scenarios set an input fact, all for
+  effect/derive state), so W3 collapses into the W2-composing assembler rather than
+  a separate BUILD-fact derivation. 4 unit tests.
 - **W4 — runtime wiring behind a flag (env-gated to prove).** A `useV2Engine` flag
   (settings / env). When on, the store: `loadModules(ruleGroupIds)` instead of
   fetching rule JSON; builds the v2 input; calls v2 `evaluate` + `evaluatePlan`;
