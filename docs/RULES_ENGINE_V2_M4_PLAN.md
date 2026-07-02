@@ -102,10 +102,19 @@ Four gaps to bridge:
       duration; v2 `EffectInstance`s carry none, so effects need display metadata —
       e.g. a name/duration derived from the effect id + expiry, or a small per-
       module effect-descriptor map).
-  - **Store wiring (deploy-verified — the one remaining step).** All the pure
-    primitives it needs are built + tested (W1–W5 core). The wiring itself changes
-    `PlayState` and inspects v1 `Rule` internals across the play UI, so it is
-    verified by deploying the branch, not unit tests. Precise recipe:
+  - **Character-sheet sections — NOT NEEDED (contract confirmed).** Grep of the
+    play UI shows the store feeds only `topBarEntries` + `resourceEntries` (+ facts,
+    availableRules, effects) to the components; the `stats`/`skills`/`passive`/
+    `magic`/`abilities` names in `STAT_SECTION_ORDER` are not wired to a separate
+    extractor (abilities render inside the top-bar `ability` entry). So the
+    speculative `deriveCharacterSheet` is unnecessary — `derivePanels` covers it.
+  - **Store wiring — DONE (green here; behaviour deploy-verified).** Rewrote
+    `playStore.svelte.ts` internals to the recipe below. NOTE: the summary's premise
+    that "no store tests exist" was WRONG — `tests/unit/lib/play/playStore.test.ts`
+    is a 62-test suite that asserted the v1 internals; it has been re-pointed at the
+    v2 seam (mocks `./evaluateV2` + `loadModules`, keeps the pure `migrate`/`endTurn`
+    real). Full unit suite green (2319 passed / 10 by-design skips), lint + build
+    green. Recipe as implemented:
     1. **`loadRuleGroups`** — keep the id fetch; add `state.modules =
        (await loadModules(ids)).modules` (async, once per character). Drop the
        per-group rule-JSON `/batch` fetch from the eval path (settings still use
@@ -128,13 +137,45 @@ Four gaps to bridge:
     4. **`endTurn`** — age `state.committed` with v2 `endTurn(committed, advertised,
        {})`; refresh `state.effects` via the display bridge; persist. (Replaces the
        v1 `decrementCountDowns` on `output.effects`.)
-    5. **`recalculateStats`** — delete (top bar/resources now come from the eval
+    5. **`recalculateStats`** — deleted (top bar/resources now come from the eval
        result's `derivePanels` output, not `[...ruleGroups, ...effects]`).
-    - **Remaining display metadata** the wiring surfaces: the character-sheet
-      sections (`magic` spell slots / `abilities` / `stats` / `skills` / `passive`
-      — a `deriveCharacterSheet(facts)` in the same shape as `derivePanels`) and
-      per-effect i18n names for the active-effects strip (the `effectInstanceToRule`
-      name map above).
+    - Also wired: `assignSingleGroup`/`rollbackDeps`/`unassignRuleGroup` add/remove
+      the group's `RuleModule` from `state.modules`; settings-derived effects
+      (`assignRuleGroupWithSettings`) are migrated into `committed`; `addFollowupEffect`
+      migrates its v1 rule into `committed`; `removeEffect` filters `committed`.
+
+### Known cutover gaps (accepted for the flag deploy; validate/close on test)
+
+These are the deliberate degradations baked into the store cutover. None break the
+core play loop (load → stats/resources → plan → end turn); all are advanced-feature
+or cosmetic and are the reason "the PR is the flag" — the test-env deploy is where
+they get eyeballed and prioritised.
+
+1. **Custom rules do not evaluate.** v2 runs code modules, not authored `Rule`
+   objects. Custom rules are still stored, edited (`EditCustomRules`), and exported —
+   they just don't contribute facts/offers under v2. A v2 custom-rule authoring path
+   (or formal drop) is a separate product decision.
+2. **Effect display names fall back to the id.** An `EffectInstance` carries no
+   display name, so the active-effects chip shows the effect id (e.g. `effect-bless`)
+   and the top-bar concentration label is blank. Needs a per-effect → i18n-name map
+   (the "small per-module effect-descriptor map" option). Duration pips + the
+   concentration marker DO work.
+3. **Strip visibility is heuristic.** `effectInstanceToRule` hides `permanent` (the
+   whole v2 build: abilities/equipment/prepared) and pure `*.spent` resource effects,
+   showing duration-limited buffs + concentration. Edge cases (a permanent
+   player-facing buff; the steed, which surfaces via facts + the subject switcher, not
+   the strip) may be mis-classified — confirm on test.
+4. **Export/import effect fidelity is lossy.** Export serialises the bridged display
+   `Rule`s; effects are transient combat state, so a re-import round-trips them
+   imperfectly. Build (rule groups) + custom rules export unchanged.
+5. **`cascadeRemove` is dropped.** Not carried by `EffectInstance`; dependent-effect
+   eviction is now the owning module's job (by `key`).
+6. **Steed resources not in the ledger yet.** `derivePanels` has no
+   `companion.steed.*` entries; the steed's own resources need adding to the catalog.
+7. **Migrated-character build fidelity is W5/test-env.** Whether a real pre-cutover
+   character's build (its settings-derived effects) fully reconstructs as v2
+   `committed` is exactly what the test-env deploy proves; the read-time v1→v2 shim
+   (`parsePersistedEffects`) is in place, persistence is now `EffectInstance[]` JSON.
 - **W5 — persisted-effect migration (env/CI-gated).** A one-shot migration of
   stored `/effects` blobs old→new via W2, plus a read-time shim for un-migrated
   characters. Proven in the **test env** (`make deploy-test`), not here.

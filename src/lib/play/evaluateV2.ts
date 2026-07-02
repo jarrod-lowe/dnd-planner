@@ -2,6 +2,7 @@ import { evaluate, plannedEntries, type PlannedEntry } from '$lib/rules-engine-v
 import type {
   AvailableRuleEntry,
   EffectInstance,
+  EngineOutput,
   Facts,
   PlannedRef,
   RuleModule
@@ -33,6 +34,8 @@ export interface V2PlayOutput {
   resourceEntries: UiEntry[];
   /** Effects advertised this turn — the store commits these on End Turn. */
   advertised: EffectInstance[];
+  /** The raw v2 engine output — the store adapts this to the v1 `EngineOutput`. */
+  raw: EngineOutput;
 }
 
 export function evaluateCharacterV2(
@@ -48,7 +51,8 @@ export function evaluateCharacterV2(
     plannedEntries: plannedEntries(output, planned),
     topBarEntries: deriveTopBarEntries(output.facts),
     resourceEntries: deriveResourceEntries(output.facts),
-    advertised: output.effects
+    advertised: output.effects,
+    raw: output
   };
 }
 

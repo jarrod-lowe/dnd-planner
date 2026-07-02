@@ -1,12 +1,18 @@
 import { apiGet, apiPost, apiDelete } from '$lib/api/client';
-import { evaluate } from '$lib/rules-engine';
 import type { Rule, AvailableRuleEntry } from '$lib/rules-engine';
+import {
+  loadModules,
+  migratePersistedEffects,
+  endTurn as ageCommittedEffects,
+  type EffectInstance,
+  type PlannedRef,
+  type V1EffectRule
+} from '$lib/rules-engine-v2';
 import type { PlannedItem, PlayState } from './types';
 import { debounce } from './debounce';
 import { resolveInitialSelections } from './resolveInitialSelections';
-import { extractTopBarEntries, extractResourceEntries } from './extractTopBar';
-import { decrementCountDowns } from './countDown';
-import { getBaseEffectId } from './effectUtils';
+import { evaluateCharacterV2, hypotheticalOffers } from './evaluateV2';
+import { effectInstanceToRule, adaptV2EngineOutput, offersToV1Entries } from './v2Bridge';
 import { deriveVerbFromRule } from './stepUtils';
 import { locale, t } from '$lib/i18n';
 import { prefetchDetailsForEffects } from '$lib/details/rehydrate';
@@ -23,6 +29,7 @@ const BATCH_SIZE = 100;
 
 const initialState: PlayState = {
   ruleGroups: [],
+  modules: [],
   ruleGroupIds: [],
   ruleGroupRulesMap: {},
   isLoadingRuleGroups: false,
@@ -32,6 +39,7 @@ const initialState: PlayState = {
   plannedItems: [],
   facts: {},
   effects: [],
+  committed: [],
   currentCharacterId: null,
   topBarEntries: [],
   resourceEntries: []
@@ -44,63 +52,63 @@ function generateInstanceId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 }
 
-function recalculateStats(): void {
-  const allRules = [...state.ruleGroups, ...state.effects];
-  state = {
-    ...state,
-    topBarEntries: extractTopBarEntries(allRules),
-    resourceEntries: extractResourceEntries(allRules)
-  };
-}
-
 // Module-level, plain Map (not $state). Replaced entirely each performEvaluation().
 let _hypotheticalEntriesMap = new Map<string, AvailableRuleEntry[]>();
+// The v2 effects advertised by the last evaluation — aged into `committed` at End Turn.
+let _lastAdvertised: EffectInstance[] = [];
+
+/**
+ * The plan as v2 `PlannedRef`s. `addToPlan` rewrites each item's `rule.id` to its
+ * instanceId (so v1 processed instances separately), keeping the real rule id in
+ * `originalRuleId` — so the ref's `ruleId` is `originalRuleId ?? rule.id`.
+ */
+function buildPlannedRefs(): PlannedRef[] {
+  return state.plannedItems.map((item) => ({
+    instanceId: item.instanceId,
+    ruleId: item.originalRuleId ?? item.rule.id,
+    selections: item.rule.selections as Record<string, unknown> | undefined
+  }));
+}
+
+/** Parse a persisted `/effects` blob: v2 `EffectInstance[]` directly, or migrate a v1 blob. */
+function parsePersistedEffects(json: string): EffectInstance[] {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(json);
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(parsed) || parsed.length === 0) return [];
+  // v2 EffectInstances carry `expiry`; v1 effect Rules carry `activities`.
+  const looksV2 = parsed.every((e) => e && typeof e === 'object' && 'expiry' in e);
+  if (looksV2) return parsed as EffectInstance[];
+  return migratePersistedEffects(parsed as V1EffectRule[]).effects;
+}
 
 function performEvaluation(): void {
   state = { ...state, isEvaluating: true };
 
-  const input = {
-    schemaVersion: 1 as const,
-    rules: {
-      standing: state.ruleGroups,
-      planned: state.plannedItems.map((item) => item.rule),
-      effects: state.effects
-    },
-    state: {
-      facts: {}
-    }
-  };
+  const refs = buildPlannedRefs();
+  const result = evaluateCharacterV2(state.modules, state.committed, refs);
 
-  const output = evaluate(input);
-
-  // Pre-compute hypothetical evaluations for each planned item.
-  // Creates a brand-new Map each time — old map is GC'd, no stale entries.
+  // Pre-compute hypothetical evaluations for each planned item (the alternatives
+  // picker). Creates a brand-new Map each time — old map is GC'd, no stale entries.
   // eslint-disable-next-line svelte/prefer-svelte-reactivity -- intentionally non-reactive; replaced each evaluation
   const newMap = new Map<string, AvailableRuleEntry[]>();
-  for (const item of state.plannedItems) {
-    const filteredPlanned = state.plannedItems
-      .filter((i) => i.instanceId !== item.instanceId)
-      .map((i) => {
-        const clone = JSON.parse(JSON.stringify(i.rule)) as Rule;
-        delete clone.varsRuntime;
-        return clone;
-      });
-    const hypInput = {
-      schemaVersion: 1 as const,
-      rules: { standing: state.ruleGroups, planned: filteredPlanned, effects: state.effects },
-      state: { facts: {} }
-    };
-    newMap.set(item.instanceId, evaluate(hypInput).availableRules);
+  for (const [id, entries] of hypotheticalOffers(state.modules, state.committed, refs)) {
+    newMap.set(id, offersToV1Entries(entries));
   }
   _hypotheticalEntriesMap = newMap;
+  _lastAdvertised = result.advertised;
 
   state = {
     ...state,
-    engineOutput: output,
+    engineOutput: adaptV2EngineOutput(result.raw, refs),
     isEvaluating: false,
-    facts: output.facts
+    facts: result.facts,
+    topBarEntries: result.topBarEntries,
+    resourceEntries: result.resourceEntries
   };
-  recalculateStats();
 }
 
 function getAlternativeEntries(instanceId: string): AvailableRuleEntry[] {
@@ -218,23 +226,32 @@ async function loadRuleGroups(characterId: string): Promise<void> {
       }
     }
 
+    // Load the v2 modules for the assigned groups (the engine evaluates these).
+    // Unknown ids (e.g. custom rule groups, which v2 does not evaluate) are skipped.
+    const { modules } = await loadModules(groupIds);
+
     state = {
       ...state,
       ruleGroups: allRules,
+      modules,
       ruleGroupIds: groupIds,
       ruleGroupRulesMap: allGroupsMap,
       isLoadingRuleGroups: false,
       currentCharacterId: characterId
     };
 
-    // Load persisted effects (graceful fallback on failure)
+    // Load persisted effects (graceful fallback on failure). The stored blob is
+    // migrated to v2 committed effects (read-time shim for pre-cutover v1 blobs);
+    // `state.effects` is the v1-shaped display bridge the active-effects UI reads.
     try {
       const effectsResponse = await apiGet(`/api/characters/${characterId}/effects`);
       if (effectsResponse?.ok) {
         const { effects: effectsJson } = await effectsResponse.json();
         if (effectsJson) {
-          state = { ...state, effects: JSON.parse(effectsJson) as Rule[] };
-          prefetchDetailsForEffects(state.effects);
+          const committed = parsePersistedEffects(effectsJson);
+          const effects = committed.map(effectInstanceToRule);
+          state = { ...state, committed, effects };
+          prefetchDetailsForEffects(effects);
         }
       } else {
         toast.error(get(t)('play.error.loadEffects'));
@@ -245,9 +262,6 @@ async function loadRuleGroups(characterId: string): Promise<void> {
 
     // Initial evaluation
     performEvaluation();
-
-    // Extract stats declarations from all standing rules
-    recalculateStats();
   } catch (error) {
     console.error('[loadRuleGroups] Error:', error);
     state = {
@@ -476,7 +490,9 @@ async function updateCustomRules(characterId: string, newRules: Rule[]): Promise
   const oldCustomRules = state.ruleGroupRulesMap[customGroupId] ?? [];
   const oldRuleIds = new Set(oldCustomRules.map((r) => r.id));
 
-  // Optimistic: replace custom rules in state
+  // Optimistic: replace custom rules in state. NOTE: v2 evaluates code modules,
+  // not authored `Rule` objects, so custom rules are stored/edited/exported but do
+  // NOT participate in evaluation under v2 (a known cutover gap — see the M4 plan).
   state = {
     ...state,
     ruleGroups: [...state.ruleGroups.filter((r) => !oldRuleIds.has(r.id)), ...newRules],
@@ -486,7 +502,6 @@ async function updateCustomRules(characterId: string, newRules: Rule[]): Promise
     }
   };
 
-  recalculateStats();
   performEvaluation();
 
   try {
@@ -497,7 +512,6 @@ async function updateCustomRules(characterId: string, newRules: Rule[]): Promise
   } catch (error) {
     // Rollback
     state = { ...state, ruleGroups: prevRules, ruleGroupRulesMap: prevMap };
-    recalculateStats();
     performEvaluation();
     throw error;
   }
@@ -513,6 +527,7 @@ async function rollbackDeps(characterId: string, depIds: string[]): Promise<void
       ...state,
       ruleGroupIds: state.ruleGroupIds.filter((id) => id !== depId),
       ruleGroups: state.ruleGroups.filter((r) => !ruleIdsToRemove.has(r.id)),
+      modules: state.modules.filter((m) => m.id !== depId),
       ruleGroupRulesMap: Object.fromEntries(
         Object.entries(state.ruleGroupRulesMap).filter(([id]) => id !== depId)
       )
@@ -604,16 +619,19 @@ async function assignSingleGroup(characterId: string, ruleGroupId: string): Prom
       };
     });
 
+    // Load the newly assigned group's v2 module so the engine evaluates it.
+    const { modules: newModules } = await loadModules([ruleGroupId]);
+
     state = {
       ...state,
       ruleGroups: [...state.ruleGroups, ...newRules],
+      modules: [...state.modules, ...newModules],
       ruleGroupRulesMap: {
         ...state.ruleGroupRulesMap,
         [ruleGroupId]: newRules
       }
     };
 
-    recalculateStats();
     debouncedEvaluate();
   } catch (error) {
     console.error('[assignRuleGroup] Error:', error);
@@ -630,24 +648,29 @@ async function unassignRuleGroup(characterId: string, ruleGroupId: string): Prom
   // Snapshot for revert
   const prevIds = [...state.ruleGroupIds];
   const prevRules = [...state.ruleGroups];
+  const prevModules = [...state.modules];
   const prevMap = { ...state.ruleGroupRulesMap };
   const prevEffects = [...state.effects];
+  const prevCommitted = [...state.committed];
   const rulesToRemove = state.ruleGroupRulesMap[ruleGroupId] ?? [];
   const ruleIdsToRemove = new Set(rulesToRemove.map((r) => r.id));
 
-  // Optimistic: remove ID, rules, map entry, and settings effects
+  // Optimistic: remove ID, rules, module, map entry, and settings-derived effects
+  // (namespaced `${ruleGroupId}::`) from the committed set.
+  const committed = state.committed.filter((e) => !e.id.startsWith(`${ruleGroupId}::`));
   state = {
     ...state,
     ruleGroupIds: state.ruleGroupIds.filter((id) => id !== ruleGroupId),
     ruleGroups: state.ruleGroups.filter((r) => !ruleIdsToRemove.has(r.id)),
+    modules: state.modules.filter((m) => m.id !== ruleGroupId),
     ruleGroupRulesMap: Object.fromEntries(
       Object.entries(state.ruleGroupRulesMap).filter(([id]) => id !== ruleGroupId)
     ),
-    effects: state.effects.filter((e) => !e.id.startsWith(`${ruleGroupId}::`))
+    committed,
+    effects: committed.map(effectInstanceToRule)
   };
 
   // Re-evaluate immediately for responsive UI
-  recalculateStats();
   performEvaluation();
 
   try {
@@ -657,10 +680,10 @@ async function unassignRuleGroup(characterId: string, ruleGroupId: string): Prom
       throw new Error(`Unassign failed: ${response.status}`);
     }
 
-    // Persist updated effects (settings-derived effects removed above)
+    // Persist updated committed effects (settings-derived effects removed above)
     if (state.currentCharacterId) {
       apiPost(`/api/characters/${state.currentCharacterId}/effects`, {
-        effects: JSON.stringify(state.effects)
+        effects: JSON.stringify(state.committed)
       })
         .then((res) => {
           if (!res.ok) {
@@ -678,10 +701,11 @@ async function unassignRuleGroup(characterId: string, ruleGroupId: string): Prom
       ...state,
       ruleGroupIds: prevIds,
       ruleGroups: prevRules,
+      modules: prevModules,
       ruleGroupRulesMap: prevMap,
-      effects: prevEffects
+      effects: prevEffects,
+      committed: prevCommitted
     };
-    recalculateStats();
     performEvaluation();
     throw error;
   }
@@ -706,79 +730,62 @@ function getDependents(ruleGroupId: string): string[] {
   return dependents;
 }
 
-function removeEffect(ruleId: string): void {
-  const targetEffect = state.effects.find((rule) => rule.id === ruleId);
-
-  const shouldRemove = (rule: Rule): boolean => {
-    if (rule.id === ruleId) return true;
-    if (targetEffect?.cascadeRemove) {
-      return targetEffect.cascadeRemove.includes(getBaseEffectId(rule.id));
-    }
-    return false;
-  };
-
-  const updated = state.effects.filter((rule) => !shouldRemove(rule));
-  state = { ...state, effects: updated };
-  performEvaluation();
-
-  if (state.currentCharacterId) {
-    apiPost(`/api/characters/${state.currentCharacterId}/effects`, {
-      effects: JSON.stringify(updated)
-    })
-      .then((response) => {
-        if (!response.ok) {
-          toast.error(get(t)('play.error.saveEffects'));
-        }
-      })
-      .catch(() => {
+function persistCommitted(): void {
+  if (!state.currentCharacterId) return;
+  apiPost(`/api/characters/${state.currentCharacterId}/effects`, {
+    effects: JSON.stringify(state.committed)
+  })
+    .then((response) => {
+      if (!response.ok) {
         toast.error(get(t)('play.error.saveEffects'));
-      });
-  }
+      }
+    })
+    .catch(() => {
+      toast.error(get(t)('play.error.saveEffects'));
+    });
+}
+
+function removeEffect(effectId: string): void {
+  // v2 effect ids are stable (no counter suffix), so match by exact id. NOTE:
+  // v1's `cascadeRemove` is not carried by an EffectInstance — dependent-effect
+  // eviction is now the owning module's job (by `key`), not a store-level cascade.
+  const committed = state.committed.filter((e) => e.id !== effectId);
+  state = { ...state, committed, effects: committed.map(effectInstanceToRule) };
+  performEvaluation();
+  persistCommitted();
 }
 
 function endTurn(): void {
-  // Commit effects from the last evaluation output before clearing the plan.
-  // This moves advertised effects into the committed effects array so they
-  // persist across turns.
-  const preDecrement = state.engineOutput?.effects ?? state.effects;
-  const effects = decrementCountDowns(preDecrement);
-  const characterId = state.currentCharacterId;
+  // Age the committed set across the turn boundary: merge in this turn's advertised
+  // effects, collapse replacements by key, and drop any whose expiry fired. Rests
+  // recorded this turn are detected from the effects themselves (v2 `endTurn`).
+  const committed = ageCommittedEffects(state.committed, _lastAdvertised);
 
   state = {
     ...state,
     plannedItems: [],
-    effects
+    committed,
+    effects: committed.map(effectInstanceToRule)
   };
   performEvaluation();
 
-  // Fire-and-forget save to backend
-  if (characterId) {
-    apiPost(`/api/characters/${characterId}/effects`, {
-      effects: JSON.stringify(effects)
-    })
-      .then((response) => {
-        if (!response.ok) {
-          toast.error(get(t)('play.error.saveEffects'));
-        }
-      })
-      .catch(() => {
-        toast.error(get(t)('play.error.saveEffects'));
-      });
-  }
+  // Fire-and-forget save to backend.
+  persistCommitted();
 }
 
 function addFollowupEffect(rule: Rule): void {
-  // JSON round-trip strips Svelte reactive proxies that structuredClone can't handle
-  const plainRule = JSON.parse(JSON.stringify(rule));
-  state = {
-    ...state,
-    effects: [...state.effects, plainRule]
-  };
+  // JSON round-trip strips Svelte reactive proxies that structuredClone can't handle,
+  // then migrate the v1 effect rule to a committed v2 EffectInstance.
+  const plainRule = JSON.parse(JSON.stringify(rule)) as V1EffectRule;
+  const { effects: migrated } = migratePersistedEffects([plainRule]);
+  const committed = [...state.committed, ...migrated];
+  state = { ...state, committed, effects: committed.map(effectInstanceToRule) };
   performEvaluation();
 }
 
 function reset(): void {
   _hypotheticalEntriesMap = new Map();
+  _lastAdvertised = [];
   state = { ...initialState };
 }
 
@@ -835,20 +842,12 @@ async function assignRuleGroupWithSettings(
   }
 
   if (effects.length > 0) {
-    state = { ...state, effects: [...state.effects, ...effects] };
+    // Settings produce v1 effect rules — migrate them into the committed set.
+    const { effects: migrated } = migratePersistedEffects(effects as V1EffectRule[]);
+    const committed = [...state.committed, ...migrated];
+    state = { ...state, committed, effects: committed.map(effectInstanceToRule) };
     performEvaluation();
-
-    apiPost(`/api/characters/${characterId}/effects`, {
-      effects: JSON.stringify(state.effects)
-    })
-      .then((response) => {
-        if (!response.ok) {
-          toast.error(get(t)('play.error.saveEffects'));
-        }
-      })
-      .catch(() => {
-        toast.error(get(t)('play.error.saveEffects'));
-      });
+    persistCommitted();
   }
 }
 
