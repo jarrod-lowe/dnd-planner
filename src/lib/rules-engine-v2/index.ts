@@ -19,6 +19,7 @@ export { plannedEntry, plannedEntries, type PlannedEntry } from './adapter';
 export {
   v1EffectRuleToInstance,
   migratePersistedEffects,
+  remapResourceFacts,
   type V1EffectRule,
   type MigrationResult
 } from './migrate';

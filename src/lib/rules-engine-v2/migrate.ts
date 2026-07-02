@@ -18,12 +18,12 @@ import type { CombineMode, EffectInstance, ExpirySpec } from './types';
  * at eval time (`fact`/`condition`) can't be statically baked and are surfaced in
  * `unresolved` rather than silently dropped, so the migration can flag them.
  *
- * Scope: this is correct for effects that share a fact namespace between v1 and v2
- * — build state (`weapon.*.equipped`, `spell.*.prepared`, `*.value`,
- * proficiencies), buffs (`divineFavour.active`), and HP modifiers
- * (`hp.modifier.*`). Resource-tracking effects diverge (v1 sets `*.remaining`
- * directly; v2 derives `remaining = total − spent`), so remapping those to the v2
- * `*.spent` namespace is a semantic layer W5 adds on top — not this mechanical pass.
+ * Shared-namespace effects (build state `weapon.*.equipped`, `spell.*.prepared`,
+ * `*.value`, proficiencies; buffs `divineFavour.active`; `hp.modifier.*`) convert
+ * directly. Resource-tracking effects diverge (v1 decrements `*.remaining`; v2
+ * derives `remaining = total − spent`), so `migratePersistedEffects` also runs the
+ * W5 semantic remap (`remapResourceFacts`) to move those spends into the v2
+ * `*.spent` namespace.
  */
 
 /** The subset of a persisted v1 effect rule this converter reads. */
@@ -97,6 +97,46 @@ export function v1EffectRuleToInstance(rule: V1EffectRule): MigrationResult {
   return { effect, unresolved };
 }
 
+/**
+ * The v5 semantic remap (W5): v1 effects tracked durable resources by decrementing
+ * `*.remaining`, but v2 DERIVES `remaining = total − spent`, so those must move to
+ * the `*.spent` namespace. This is per-fact — v2's Heroic Inspiration uses
+ * `heroicInspiration.remaining` directly, while spell slots / smite / find-steed /
+ * divinity / lay-on-hands derive remaining from spent. A v1 spend shows up as a
+ * negative `remaining` delta (`numberIncrement subtract`), which becomes a positive
+ * `spent`.
+ */
+const REMAINING_IS_DERIVED = (fact: string): boolean =>
+  /^spellcasting\.slots\.level\d+\.remaining$/.test(fact) ||
+  fact === 'paladinSmite.remaining' ||
+  fact === 'paladinFindSteed.remaining' ||
+  fact === 'divinity.remaining' ||
+  fact === 'layOnHands.pool.remaining';
+
+/** Rewrite an effect's resource `*.remaining` deltas to the v2 `*.spent` namespace. */
+export function remapResourceFacts(effect: EffectInstance): EffectInstance {
+  if (!effect.state) return effect;
+  const state: Record<string, number> = {};
+  const stateCombine = { ...(effect.stateCombine ?? {}) };
+  let changed = false;
+  for (const [fact, value] of Object.entries(effect.state)) {
+    if (REMAINING_IS_DERIVED(fact) && value < 0) {
+      const spent = fact.replace(/\.remaining$/, '.spent');
+      state[spent] = (state[spent] ?? 0) - value; // −value = the amount spent
+      delete stateCombine[fact];
+      changed = true;
+    } else {
+      state[fact] = value;
+    }
+  }
+  if (!changed) return effect;
+  return {
+    ...effect,
+    state,
+    ...(Object.keys(stateCombine).length > 0 ? { stateCombine } : { stateCombine: undefined })
+  };
+}
+
 /** Batch-migrate a character's persisted v1 effects to v2 `EffectInstance`s. */
 export function migratePersistedEffects(rules: V1EffectRule[]): {
   effects: EffectInstance[];
@@ -106,7 +146,7 @@ export function migratePersistedEffects(rules: V1EffectRule[]): {
   const unresolved: Record<string, string[]> = {};
   for (const rule of rules) {
     const { effect, unresolved: u } = v1EffectRuleToInstance(rule);
-    effects.push(effect);
+    effects.push(remapResourceFacts(effect));
     if (u.length > 0) unresolved[rule.id] = u;
   }
   return { effects, unresolved };

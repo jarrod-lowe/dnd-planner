@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { v1EffectRuleToInstance, migratePersistedEffects } from '$lib/rules-engine-v2/migrate';
+import {
+  v1EffectRuleToInstance,
+  migratePersistedEffects,
+  remapResourceFacts
+} from '$lib/rules-engine-v2/migrate';
 
 /**
  * M4/W2 — the pure v1-effect → v2-EffectInstance conversion (W5 migration core).
@@ -78,6 +82,58 @@ describe('migrate — v1EffectRuleToInstance', () => {
     });
     expect(effect.state).toEqual({ 'c.d': 2 });
     expect(unresolved).toEqual(['numberSet a.b']);
+  });
+});
+
+describe('migrate — remapResourceFacts (W5 semantic layer)', () => {
+  it('moves a spell-slot spend from the v1 remaining namespace to v2 spent', () => {
+    const remapped = remapResourceFacts({
+      id: 'effect-slot-l1',
+      state: { 'spellcasting.slots.level1.remaining': -1 },
+      expiry: { kind: 'untilLongRest' }
+    });
+    expect(remapped.state).toEqual({ 'spellcasting.slots.level1.spent': 1 });
+  });
+
+  it('remaps smite / find-steed / divinity / lay-on-hands remaining spends to spent', () => {
+    const remapped = remapResourceFacts({
+      id: 'x',
+      state: {
+        'paladinSmite.remaining': -1,
+        'divinity.remaining': -2,
+        'layOnHands.pool.remaining': -5
+      },
+      expiry: { kind: 'untilLongRest' }
+    });
+    expect(remapped.state).toEqual({
+      'paladinSmite.spent': 1,
+      'divinity.spent': 2,
+      'layOnHands.pool.spent': 5
+    });
+  });
+
+  it('leaves Heroic Inspiration remaining alone (v2 uses it directly)', () => {
+    const effect = {
+      id: 'effect-hi-set',
+      key: 'heroic-inspiration',
+      state: { 'heroicInspiration.remaining': 1 },
+      expiry: { kind: 'permanent' } as const
+    };
+    expect(remapResourceFacts(effect)).toEqual(effect);
+  });
+
+  it('applies end to end through the mechanical converter (numberIncrement subtract)', () => {
+    const { effects } = migratePersistedEffects([
+      {
+        id: 'effect-command-l1',
+        activities: [
+          { type: 'numberIncrement', target: { fact: 'spellcasting.slots.level1.remaining' }, source: { number: 1 }, subtract: true },
+          { type: 'advertiseEffect', self: true }
+        ]
+      }
+    ]);
+    expect(effects[0].state).toEqual({ 'spellcasting.slots.level1.spent': 1 });
+    expect(effects[0].expiry).toEqual({ kind: 'permanent' });
   });
 });
 
