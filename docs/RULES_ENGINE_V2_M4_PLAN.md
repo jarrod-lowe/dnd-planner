@@ -87,10 +87,25 @@ Four gaps to bridge:
   rest is module derives (only ~4 parity scenarios set an input fact, all for
   effect/derive state), so W3 collapses into the W2-composing assembler rather than
   a separate BUILD-fact derivation. 4 unit tests.
-- **W4 — runtime wiring behind a flag (env-gated to prove).** A `useV2Engine` flag
-  (settings / env). When on, the store: `loadModules(ruleGroupIds)` instead of
-  fetching rule JSON; builds the v2 input; calls v2 `evaluate` + `evaluatePlan`;
-  runs the W1/W2 adapters. v1 path stays default until W6.
+- **W4 — runtime wiring + display metadata.** (The PR branch *is* the flag — deploy
+  it to test to try v2; no in-app `useV2Engine` toggle.)
+  - **Display metadata (pure, TDD here) — top bar + resources DONE.**
+    `src/lib/play/derivePanels.ts`: `deriveTopBarEntries`/`deriveResourceEntries`
+    are the v2 replacement for `extractTopBarEntries`/`extractResourceEntries` —
+    v2 modules don't carry the v1 `ui.topBar`/`ui.resources` blocks, so this is a
+    fixed facts-driven catalog (an entry surfaces when its driving fact is present;
+    the existing `resolveEntryValue`/`isEntryVisible` render it unchanged). 6 tests.
+    - **Remaining display metadata:** the character-sheet sections (spell slots
+      `magic`, `abilities`, `stats`, `skills`, `passive` — same facts-driven
+      pattern, needs its consumer contract confirmed) and the **active-effects
+      list** (`ActiveStateStrip`/`EffectChip` read each effect rule's `ui.name`/
+      duration; v2 `EffectInstance`s carry none, so effects need display metadata —
+      e.g. a name/duration derived from the effect id + expiry, or a small per-
+      module effect-descriptor map).
+  - **Store wiring (env-proved):** the play store calls `loadModules(ruleGroupIds)`
+    instead of fetching rule JSON, assembles the input via `characterToV2Input`
+    (W3) + the plan, runs v2 `evaluate`/`evaluatePlan`, adapts via W1
+    (`plannedEntries`) + `derivePanels`, and commits/ages effects with `endTurn`.
 - **W5 — persisted-effect migration (env/CI-gated).** A one-shot migration of
   stored `/effects` blobs old→new via W2, plus a read-time shim for un-migrated
   characters. Proven in the **test env** (`make deploy-test`), not here.
