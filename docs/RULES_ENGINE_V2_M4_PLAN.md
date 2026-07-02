@@ -102,10 +102,39 @@ Four gaps to bridge:
       duration; v2 `EffectInstance`s carry none, so effects need display metadata —
       e.g. a name/duration derived from the effect id + expiry, or a small per-
       module effect-descriptor map).
-  - **Store wiring (env-proved):** the play store calls `loadModules(ruleGroupIds)`
-    instead of fetching rule JSON, assembles the input via `characterToV2Input`
-    (W3) + the plan, runs v2 `evaluate`/`evaluatePlan`, adapts via W1
-    (`plannedEntries`) + `derivePanels`, and commits/ages effects with `endTurn`.
+  - **Store wiring (deploy-verified — the one remaining step).** All the pure
+    primitives it needs are built + tested (W1–W5 core). The wiring itself changes
+    `PlayState` and inspects v1 `Rule` internals across the play UI, so it is
+    verified by deploying the branch, not unit tests. Precise recipe:
+    1. **`loadRuleGroups`** — keep the id fetch; add `state.modules =
+       (await loadModules(ids)).modules` (async, once per character). Drop the
+       per-group rule-JSON `/batch` fetch from the eval path (settings still use
+       `ruleGroupIds` + the dep cache, not the rule objects).
+    2. **effects load** — `migratePersistedEffects(v1Blob)` → `state.committed:
+       EffectInstance[]` (W2 + the W5 remap). Keep `state.effects: Rule[]` for the
+       active-effects UI, produced from `state.committed` by a small
+       `effectInstanceToRule` display bridge (id → `ui.name` by the
+       `rule.<group>.<id>.name` convention; `expiry` → `ui.countDown`/`duration`;
+       synthesize a concentration activity when `state['concentration.spent']` so
+       `effectUtils.getEffectKind` reads `CONC`). Persist `state.committed` as JSON.
+    3. **`performEvaluation`** (stays sync) — `evaluateCharacterV2(state.modules,
+       state.committed, refs, {})` where `refs = plannedItems.map(i => ({
+       instanceId: i.instanceId, ruleId: i.rule.id, selections: i.rule.selections }))`.
+       Set `state.facts`, `state.topBarEntries`/`resourceEntries` from the result,
+       and build `state.engineOutput` in the v1 shape (v2 `availableRules` is
+       already compatible; drop `collections`/`trace`). Hypotheticals ←
+       `hypotheticalOffers(...)`. Per-item plan legality ← `plannedEntries` (map by
+       `instanceId`, which PlanStack already keys on).
+    4. **`endTurn`** — age `state.committed` with v2 `endTurn(committed, advertised,
+       {})`; refresh `state.effects` via the display bridge; persist. (Replaces the
+       v1 `decrementCountDowns` on `output.effects`.)
+    5. **`recalculateStats`** — delete (top bar/resources now come from the eval
+       result's `derivePanels` output, not `[...ruleGroups, ...effects]`).
+    - **Remaining display metadata** the wiring surfaces: the character-sheet
+      sections (`magic` spell slots / `abilities` / `stats` / `skills` / `passive`
+      — a `deriveCharacterSheet(facts)` in the same shape as `derivePanels`) and
+      per-effect i18n names for the active-effects strip (the `effectInstanceToRule`
+      name map above).
 - **W5 — persisted-effect migration (env/CI-gated).** A one-shot migration of
   stored `/effects` blobs old→new via W2, plus a read-time shim for un-migrated
   characters. Proven in the **test env** (`make deploy-test`), not here.
