@@ -2,11 +2,9 @@ import { apiGet, apiPost, apiDelete } from '$lib/api/client';
 import type { Rule, AvailableRuleEntry } from '$lib/rules-engine';
 import {
   loadModules,
-  migratePersistedEffects,
   endTurn as ageCommittedEffects,
   type EffectInstance,
-  type PlannedRef,
-  type V1EffectRule
+  type PlannedRef
 } from '$lib/rules-engine-v2';
 import type { PlannedItem, PlayState } from './types';
 import { debounce } from './debounce';
@@ -772,12 +770,10 @@ function endTurn(): void {
   persistCommitted();
 }
 
-function addFollowupEffect(rule: Rule): void {
-  // JSON round-trip strips Svelte reactive proxies that structuredClone can't handle,
-  // then migrate the v1 effect rule to a committed v2 EffectInstance.
-  const plainRule = JSON.parse(JSON.stringify(rule)) as V1EffectRule;
-  const { effects: migrated } = migratePersistedEffects([plainRule]);
-  const committed = [...state.committed, ...migrated];
+function addFollowupEffect(effect: EffectInstance): void {
+  // JSON round-trip strips Svelte reactive proxies that structuredClone can't handle.
+  const plain = JSON.parse(JSON.stringify(effect)) as EffectInstance;
+  const committed = [...state.committed, plain];
   state = { ...state, committed, effects: committed.map(effectInstanceToRule) };
   performEvaluation();
 }
@@ -841,9 +837,8 @@ async function assignRuleGroupWithSettings(
   }
 
   if (effects.length > 0) {
-    // Settings produce v1 effect rules — migrate them into the committed set.
-    const { effects: migrated } = migratePersistedEffects(effects as V1EffectRule[]);
-    const committed = [...state.committed, ...migrated];
+    // Settings resolve directly to v2 EffectInstances — commit them as-is.
+    const committed = [...state.committed, ...effects];
     state = { ...state, committed, effects: committed.map(effectInstanceToRule) };
     performEvaluation();
     persistCommitted();

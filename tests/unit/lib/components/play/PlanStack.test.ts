@@ -217,7 +217,7 @@ describe('PlanStack', () => {
               button: 'rule.dnd-5e-2024.attacks.javelin-slow.button',
               addRule: {
                 target: 'effect',
-                rule: { id: 'effect-javelin-slow', activities: [] }
+                effect: { id: 'effect-javelin-slow', expiry: { kind: 'turns', remaining: 1 } }
               }
             }
           ]

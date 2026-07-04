@@ -9,10 +9,13 @@ describe('Followup type', () => {
       button: 'test.button',
       addRule: {
         target: 'effect',
-        rule: { id: 'test-effect', phase: 'normal', activities: [] }
+        effect: { id: 'test-effect', expiry: { kind: 'endOfTurn' } }
       }
     };
     expect(followup.type).toBe('effect');
+    expect(followup.type === 'effect' && followup.addRule.effect.expiry).toEqual({
+      kind: 'endOfTurn'
+    });
   });
 
   it('accepts attack-line followup without addRule', () => {

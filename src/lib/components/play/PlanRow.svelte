@@ -16,9 +16,9 @@
     AvailableRuleEntry,
     Annotation,
     Facts,
-    ActionCostTag,
-    Rule
+    ActionCostTag
   } from '$lib/rules-engine';
+  import type { EffectInstance } from '$lib/rules-engine-v2';
 
   interface Props {
     item: PlannedItem;
@@ -33,7 +33,7 @@
     onMoveUp?: () => void;
     onMoveDown?: () => void;
     onSwapAlternative?: (entry: AvailableRuleEntry) => void;
-    onFollowup?: (rule: Rule) => void;
+    onFollowup?: (effect: EffectInstance) => void;
   }
 
   let {

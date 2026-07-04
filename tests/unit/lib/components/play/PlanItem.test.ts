@@ -26,9 +26,9 @@ const createMockFollowupPlanItem = (): PlannedItem => ({
           button: 'rule.dnd-5e-2024.attacks.javelin-slow.button',
           addRule: {
             target: 'effect',
-            rule: {
+            effect: {
               id: 'effect-javelin-slow',
-              activities: []
+              expiry: { kind: 'turns', remaining: 1 }
             }
           }
         }

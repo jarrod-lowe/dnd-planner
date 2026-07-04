@@ -189,7 +189,7 @@
         onMovePlanItem={(id, dir) => playStore.movePlanItem(id, dir)}
         onSelectionChange={handleSelectionChange}
         onSwapPlanItemRule={(id, entry) => playStore.swapPlanItemRule(id, entry)}
-        onFollowup={(rule) => playStore.addFollowupEffect(rule)}
+        onFollowup={(effect) => playStore.addFollowupEffect(effect)}
         onEndTurn={() => playStore.endTurn()}
       />
       <Ledger

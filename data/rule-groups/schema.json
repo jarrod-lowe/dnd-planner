@@ -864,8 +864,8 @@
           }
         },
         "effect": {
-          "$ref": "#/definitions/rule",
-          "description": "Effect template using ${value} substitution. After substitution, produces a standard Rule stored as a character effect. Required when type is 'select'."
+          "$ref": "#/definitions/effectInstance",
+          "description": "Effect template using ${value} substitution. After substitution, produces a v2 EffectInstance stored as a character effect. Required when type is 'select'."
         }
       },
       "allOf": [
@@ -879,6 +879,61 @@
         }
       ],
       "additionalProperties": false
+    },
+    "effectInstance": {
+      "type": "object",
+      "description": "A v2 rules-engine EffectInstance: a committed effect that contributes fact deltas while it lives.",
+      "required": ["id", "expiry"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for this effect"
+        },
+        "key": {
+          "type": "string",
+          "description": "Logical identity: effects sharing a key do not stack (newest replaces oldest)"
+        },
+        "ruleId": {
+          "type": "string",
+          "description": "Owning module id, for effects whose contribution the module parameterises"
+        },
+        "state": {
+          "type": "object",
+          "description": "Fact deltas contributed while active (summed by default)",
+          "additionalProperties": { "type": "number" }
+        },
+        "stateCombine": {
+          "type": "object",
+          "description": "Per-fact combine override for state deltas (default sum)",
+          "additionalProperties": { "enum": ["sum", "max", "override"] }
+        },
+        "expiry": {
+          "$ref": "#/definitions/expirySpec"
+        }
+      },
+      "additionalProperties": false
+    },
+    "expiry": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["permanent", "endOfTurn", "untilShortRest", "untilLongRest", "turns"]
+        },
+        "remaining": {
+          "type": "number",
+          "description": "Turns remaining (only for kind: turns)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "expirySpec": {
+      "description": "A single expiry condition, or several (the effect ends on the earliest to fire)",
+      "oneOf": [
+        { "$ref": "#/definitions/expiry" },
+        { "type": "array", "items": { "$ref": "#/definitions/expiry" } }
+      ]
     },
     "settingTranslation": {
       "type": "object",

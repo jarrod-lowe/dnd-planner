@@ -1,7 +1,8 @@
 <script lang="ts">
   import PanelRenderer from './PanelRenderer.svelte';
   import type { PlannedItem } from '$lib/play/types';
-  import type { Facts, Rule } from '$lib/rules-engine';
+  import type { Facts } from '$lib/rules-engine';
+  import type { EffectInstance } from '$lib/rules-engine-v2';
   import type { AnnotationDef } from '$lib/play/annotations';
 
   interface Props {
@@ -11,7 +12,7 @@
     canMoveUp?: boolean;
     canMoveDown?: boolean;
     onSelectionChange?: (selections: Record<string, unknown>) => void;
-    onFollowup?: (rule: Rule) => void;
+    onFollowup?: (effect: EffectInstance) => void;
     onMoveUp: () => void;
     onMoveDown: () => void;
     onRemove: () => void;

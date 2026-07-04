@@ -34,27 +34,16 @@ ruleGroups:
             translations:
               en: { name: "Dexterity" }
               en-x-tlh: { name: "Do" }
+        # v2 EffectInstance: a permanent +1 to the chosen ability score. Keyed by
+        # its own id so re-assigning is idempotent; sums with the base score and
+        # other increases. The ability modifier is a module derive over `*.value`.
         effect:
           id: sentinel-asi-${value}
-          phase: early
-          ui:
-            name: rules.settings.sentinel-asi.${value}
-            section: other
-            hidden: true
-          after:
-            - group: ${value}-base-set
-            - group: ${value}-values
-          group:
-            - ${value}-increases
-            - Stats
-          activities:
-            - type: numberIncrement
-              target:
-                fact: ${value}.value
-              source:
-                number: 1
-            - type: advertiseEffect
-              self: true
+          key: sentinel-asi-${value}
+          state:
+            ${value}.value: 1
+          expiry:
+            kind: permanent
     rules:
       # Set the Sentinel feat active flag
       - id: sentinel-flag

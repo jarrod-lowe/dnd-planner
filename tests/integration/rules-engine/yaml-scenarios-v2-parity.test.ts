@@ -74,7 +74,12 @@ const SKIP_BY_NAME: Record<string, string> = {
   // lifecycle; v2 committed effects cannot self-remove when a derived fact crosses
   // a threshold (there is no per-turn re-advertise hook), so this passive death is
   // by design not reproduced (explicit dismiss cascades correctly — see no-stacking).
-  'steed-zero-hp-dismiss': 'passive self-removal at 0 HP needs v1 self-advertise/cascadeRemove lifecycle'
+  'steed-zero-hp-dismiss': 'passive self-removal at 0 HP needs v1 self-advertise/cascadeRemove lifecycle',
+  // The javelin Slow followup now commits a v2-native EffectInstance
+  // (`addRule.effect`), where v1 authored a v1-shape effect rule (`addRule.rule`).
+  // That is a deliberate v2 shape change (the whole point of deleting migrate.ts);
+  // the v2 followup shape is asserted directly in the weapons unit test instead.
+  'javelin-slow-mastery': 'followup commits a v2 EffectInstance (addRule.effect) — v2-native, diverges from v1 addRule.rule'
 };
 
 // The scenarios expected to run on v2 today. Asserted as an exact set so that a
@@ -147,7 +152,6 @@ const EXPECTED_RUNNABLE = [
   'attack-spear',
   'attack-spear-plus1',
   'greataxe-cleave-mastery',
-  'javelin-slow-mastery',
   'spear-versatile-damage-die',
   'weapon-don-illegal-when-equipped',
   'weapon-donned-attacks-visible',

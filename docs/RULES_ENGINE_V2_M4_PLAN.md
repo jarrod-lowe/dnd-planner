@@ -69,17 +69,16 @@ Four gaps to bridge:
   planned): V1ShapedOutput`: map `availableRules` (descriptor→rule, merge
   `planDiagnostics`+`selections`→`varsRuntime`), pass through `facts`/`annotations`/
   `status`. Unit-tested against fixture v2 outputs. No runtime wiring yet.
-- **W2 — v1-shape effect → `EffectInstance` converter (pure, TDD here) — DONE.**
-  `src/lib/rules-engine-v2/migrate.ts`: `v1EffectRuleToInstance` +
-  `migratePersistedEffects` convert a v1-shape effect `Rule` → v2 `EffectInstance`
-  (baked `numberSet`→`override`, `numberIncrement`→`sum`, `self`-advertise→
-  `permanent`, `group`→`key`; resource `*.remaining` spends remapped to `*.spent`
-  via `remapResourceFacts`); eval-time (`fact`/`condition`) sources surface in
-  `unresolved`. 10 unit tests. **NOT a persisted-character migrator** (that would be
-  the cruft the spec forbids) — it survives only as the runtime converter for the
-  v1-era producers that still EMIT v1-shape effects: settings resolution
-  (`resolveSettings`) and follow-up effects. Those are ported to emit
-  `EffectInstance`s natively in W6, when this module is deleted with v1.
+- **W2 — v1-shape effect → `EffectInstance` converter — DONE, then DELETED.**
+  `migrate.ts` (`v1EffectRuleToInstance` / `migratePersistedEffects` / the
+  `*.remaining`→`*.spent` remap) served the two runtime producers that still emitted
+  v1-shape effects — settings resolution and follow-up effects. Both are now v2-native
+  (settings `effect:` templates are authored as `EffectInstance`s validated by a new
+  `effectInstance` schema; the javelin Slow followup carries `addRule.effect`), so the
+  store commits their output directly and **`migrate.ts` + its test are deleted**. No
+  v1-shape effect is emitted at runtime anywhere. (`substituteTemplate` now also
+  substitutes `${value}` in object keys, since a v2 effect puts the fact name in a
+  `state` key.)
 - **W3 — REMOVED.** The `characterToV2Input` / `PersistedCharacterV1` assembler was
   pure existing-character-migration machinery (stored v1 character → v2 input) and is
   never read by the store — deleted. The store assembles its own input directly
@@ -171,12 +170,12 @@ they get eyeballed and prioritised.
    eviction is now the owning module's job (by `key`).
 6. **Steed resources not in the ledger yet.** `derivePanels` has no
    `companion.steed.*` entries; the steed's own resources need adding to the catalog.
-7. **Settings + follow-up effects still emit v1-shape.** `resolveSettings` and the
-   follow-up mechanism produce v1 effect `Rule`s, which the store converts to
-   `EffectInstance`s via `migratePersistedEffects` (W2). This is the ONLY remaining
-   v1→v2 effect conversion (and it is a NEW-character authoring path, not
-   existing-character migration). It goes away in W6 when those producers are ported
-   to emit `EffectInstance`s natively and `migrate.ts` is deleted with v1.
+
+_(The earlier gap "settings + follow-up effects still emit v1-shape" is CLOSED — see
+W2 above: both are now v2-native and `migrate.ts` is deleted. Porting the settings
+templates also fixed a latent bug where the paladin skill-proficiency effect could
+not resolve its captured `level` var through the converter; v2 emits the base
+`skill.X.proficiency` fact and the module derives the rest.)_
 - **W5 — REMOVED (no existing-character migration).** Per the original spec we do not
   carry pre-v2 characters forward, so there is no one-shot `/effects` backfill and no
   read-time v1→v2 shim. Old characters are deleted and recreated v2-native; every

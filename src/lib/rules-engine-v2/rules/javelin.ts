@@ -28,11 +28,12 @@ const JAVELIN: WeaponDef = {
         button: `${SLOW}.button`,
         addRule: {
           target: 'effect',
-          rule: {
+          // A one-turn Slow reminder committed when tapped (the target isn't modelled,
+          // so it carries no player facts — just a duration-limited marker).
+          effect: {
             id: 'effect-javelin-slow',
-            ui: { section: 'mastery', name: `${SLOW}.effect-name` },
-            phase: 'normal',
-            activities: []
+            key: 'javelin-slow',
+            expiry: { kind: 'turns', remaining: 1 }
           }
         }
       }

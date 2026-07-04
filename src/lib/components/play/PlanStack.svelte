@@ -8,7 +8,8 @@
   import { groupChoicesByVerb } from '$lib/play/groupChoicesByVerb';
   import { getSubject } from '$lib/play/subjectUtils';
   import type { PlannedItem } from '$lib/play/types';
-  import type { AvailableRuleEntry, Annotation, Facts, Rule, Verb } from '$lib/rules-engine';
+  import type { AvailableRuleEntry, Annotation, Facts, Verb } from '$lib/rules-engine';
+  import type { EffectInstance } from '$lib/rules-engine-v2';
 
   interface Props {
     items: PlannedItem[];
@@ -21,7 +22,7 @@
     onSelectionChange: (instanceId: string, selections: Record<string, unknown>) => void;
     onSwapPlanItemRule: (instanceId: string, entry: AvailableRuleEntry) => void;
     onEndTurn: () => void;
-    onFollowup?: (rule: Rule) => void;
+    onFollowup?: (effect: EffectInstance) => void;
   }
 
   let {

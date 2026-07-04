@@ -13,7 +13,8 @@
   import DiceRollToast from './panel-renderer/DiceRollToast.svelte';
   import { evaluateCondition } from '$lib/rules-engine/conditions';
   import { getMatchingAnnotations } from '$lib/play/annotations';
-  import type { AvailableRuleEntry, Facts, Annotation, Rule } from '$lib/rules-engine';
+  import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-engine';
+  import type { EffectInstance } from '$lib/rules-engine-v2';
   import type { TextInformation, CountdownInformation, RollResult } from './panel-renderer/types';
 
   interface Props {
@@ -30,7 +31,7 @@
     canMoveDown?: boolean;
     onMoveUp?: () => void;
     onMoveDown?: () => void;
-    onFollowup?: (rule: Rule) => void;
+    onFollowup?: (effect: EffectInstance) => void;
     onRoll?: (data: RollResult, dieIndex: number) => void;
   }
 
@@ -444,7 +445,7 @@
           type="button"
           class="panel-renderer__followup-button"
           onclick={() => {
-            if (followup.type === 'effect') onFollowup?.(followup.addRule.rule);
+            if (followup.type === 'effect') onFollowup?.(followup.addRule.effect);
           }}
         >
           {$t(followup.button)}

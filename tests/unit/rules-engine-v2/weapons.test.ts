@@ -1,11 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { evaluatePlan, evaluateOffers, endTurn } from '$lib/rules-engine-v2';
+import { evaluate, evaluatePlan, evaluateOffers, endTurn } from '$lib/rules-engine-v2';
 import type { PlannedRef } from '$lib/rules-engine-v2';
 import actionEconomy from '$lib/rules-engine-v2/rules/action-economy';
 import attacks from '$lib/rules-engine-v2/rules/attacks';
 import hands from '$lib/rules-engine-v2/rules/hands';
 import dagger from '$lib/rules-engine-v2/rules/dagger';
 import greataxe from '$lib/rules-engine-v2/rules/greataxe';
+import javelin from '$lib/rules-engine-v2/rules/javelin';
+import javelinMastery from '$lib/rules-engine-v2/rules/javelin-mastery';
 
 /**
  * Weapons spike — the `weaponOffers` builder helper that replaces v1's Python
@@ -97,5 +99,27 @@ describe('v2 weapons — activations spend their resource', () => {
       (o) => o.id === 'dagger-use-reaction-weapon'
     );
     expect(reaction?.legal).toBe(false);
+  });
+});
+
+describe('v2 weapons — javelin Slow followup is a native EffectInstance', () => {
+  it('rides the attack offer as addRule.effect (v2 shape, not a v1 rule)', () => {
+    const MODS = [actionEconomy, attacks, hands, javelin, javelinMastery];
+    // Equip the javelin so its Attack offer (which carries the Slow followup) shows.
+    const out = evaluate({
+      modules: MODS,
+      inputFacts: {},
+      planned: [ref('i0', 'don-javelin')],
+      committed: []
+    });
+    const offer = out.availableRules.find((e) => e.rule.id === 'javelin-use-action');
+    const followups = (
+      offer?.rule.ui as { followups?: Array<{ addRule: { effect: unknown } }> } | undefined
+    )?.followups;
+    expect(followups?.[0].addRule.effect).toEqual({
+      id: 'effect-javelin-slow',
+      key: 'javelin-slow',
+      expiry: { kind: 'turns', remaining: 1 }
+    });
   });
 });

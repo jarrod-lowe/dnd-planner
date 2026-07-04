@@ -2504,14 +2504,9 @@ describe('playStore', () => {
               options: [{ value: 'athletics', translations: { en: { name: 'Athletics' } } }],
               effect: {
                 id: 'paladin-skill-proficiency-${value}',
-                phase: 'early',
-                activities: [
-                  {
-                    type: 'numberSet',
-                    target: { fact: 'skill.${value}.proficiency' },
-                    source: { number: 1 }
-                  }
-                ]
+                key: 'skill-${value}-prof',
+                state: { 'skill.${value}.proficiency': 1 },
+                expiry: { kind: 'permanent' }
               }
             },
             {
@@ -2548,6 +2543,16 @@ describe('playStore', () => {
       );
 
       expect(playStore.state.ruleGroupIds).toContain('greataxe-mastery');
+      // The select setting committed a v2 EffectInstance (base fact only; the module
+      // derives the rest); the display bridge surfaces it in state.effects.
+      expect(playStore.state.committed).toEqual([
+        {
+          id: 'class-paladin-level1::paladin-skill-proficiency-athletics',
+          key: 'skill-athletics-prof',
+          state: { 'skill.athletics.proficiency': 1 },
+          expiry: { kind: 'permanent' }
+        }
+      ]);
       expect(playStore.state.effects).toHaveLength(1);
       expect(playStore.state.effects[0].id).toBe(
         'class-paladin-level1::paladin-skill-proficiency-athletics'
@@ -2719,8 +2724,9 @@ describe('playStore', () => {
 
       playStore.addFollowupEffect({
         id: 'effect-steed',
-        activities: [{ type: 'numberSet', target: { fact: 'steed.active' }, source: { number: 1 } }]
-      } as Rule);
+        state: { 'steed.active': 1 },
+        expiry: { kind: 'permanent' }
+      });
 
       expect(playStore.state.topBarEntries).toHaveLength(1);
       expect(playStore.state.topBarEntries[0]).toMatchObject({ label: 'play.topBar.speed' });

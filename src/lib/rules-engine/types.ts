@@ -428,7 +428,8 @@ export type Activity =
 export type Followup = EffectFollowup | AttackLineFollowup;
 
 /**
- * Effect followup — creates a one-turn effect (no self-advertise, expires at end of turn).
+ * Effect followup — commits a v2 EffectInstance when the button is tapped (e.g. the
+ * javelin's Slow rider). The UI carries this descriptor; the store commits the effect.
  */
 export interface EffectFollowup {
   type: 'effect';
@@ -436,7 +437,7 @@ export interface EffectFollowup {
   button: string;
   addRule: {
     target: string;
-    rule: Rule;
+    effect: import('$lib/rules-engine-v2').EffectInstance;
   };
 }
 

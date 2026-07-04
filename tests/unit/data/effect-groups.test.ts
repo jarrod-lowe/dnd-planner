@@ -17,9 +17,17 @@ interface Rule {
   vars?: Record<string, unknown>;
 }
 
+/** A v2 EffectInstance template (settings resolve directly to these). */
+interface EffectInstanceLike {
+  id: string;
+  key?: string;
+  state?: Record<string, number>;
+  expiry?: { kind: string; remaining?: number };
+}
+
 interface Setting {
   id: string;
-  effect?: Rule;
+  effect?: EffectInstanceLike;
 }
 
 interface RuleGroup {
@@ -152,64 +160,24 @@ describe('ability-scores effect groups', () => {
 // class-paladin/level1.yaml
 // ============================================================
 
-describe('paladin level1 effect groups', () => {
-  let groups: RuleGroup[];
-  let effect: Rule | undefined;
+describe('paladin level1 skill-proficiency setting effect (v2)', () => {
+  let effect: EffectInstanceLike | undefined;
 
   beforeAll(() => {
-    groups = loadYaml('data/rule-groups/class-paladin/level1.yaml');
-    const settings = groups[0].settings;
-    const skillSetting = settings!.find((s) => s.id === 'paladin-skill-1');
+    const groups = loadYaml('data/rule-groups/class-paladin/level1.yaml');
+    const skillSetting = groups[0].settings!.find((s) => s.id === 'paladin-skill-1');
     effect = skillSetting?.effect;
   });
 
-  it('paladin skill effect has group Proficiency and ui.hidden', () => {
-    expect(effect).toBeDefined();
-    expect(effect!.group).toContain('Proficiency');
-    expect(effect!.ui?.hidden).toBe(true);
-  });
-
-  it('paladin skill effect has levelFact for proficiency dot display', () => {
-    expect(effect).toBeDefined();
-    expect(effect!.ui?.levelFact).toBe('skill.${value}.proficiency');
-  });
-
-  it('paladin skill effect has primaryControl with proficiency level select', () => {
-    expect(effect).toBeDefined();
-    const control = effect!.ui?.primaryControl as Record<string, unknown> | undefined;
-    expect(control).toBeDefined();
-    expect(control!.type).toBe('select');
-    expect(control!.var).toBe('level');
-    const options = control!.options as { value: number; label: string; ariaLabel: string }[];
-    expect(options).toHaveLength(3);
-    expect(options[0].value).toBe(0.5);
-    expect(options[1].value).toBe(1);
-    expect(options[2].value).toBe(2);
-  });
-
-  it('paladin skill effect has vars.level with capture', () => {
-    expect(effect).toBeDefined();
-    const level = effect!.vars?.level as Record<string, unknown> | undefined;
-    expect(level).toBeDefined();
-    expect(level!.capture).toBe(true);
-    const def = level!.default as Record<string, unknown>;
-    expect(def.number).toBe(1);
-  });
-
-  it('paladin skill effect uses var level in numberSet activity', () => {
-    expect(effect).toBeDefined();
-    const numberSet = effect!.activities!.find((a) => a.type === 'numberSet');
-    expect(numberSet).toBeDefined();
-    expect((numberSet!.source as Record<string, unknown>)?.var).toBe('level');
-  });
-
-  it('paladin skill effect uses var level in numberFunction sources', () => {
-    expect(effect).toBeDefined();
-    const numberFunction = effect!.activities!.find((a) => a.type === 'numberFunction');
-    expect(numberFunction).toBeDefined();
-    const sources = numberFunction!.sources as Record<string, unknown>[];
-    const levelSource = sources!.find((s) => 'var' in s && s.var === 'level');
-    expect(levelSource).toBeDefined();
+  it('resolves to a permanent EffectInstance that sets the chosen skill proficiency', () => {
+    // v2: settings emit a base-fact EffectInstance; skill.value is a module derive.
+    // Shares the ability-scores offer key so a settings + offer grant do not stack.
+    expect(effect).toEqual({
+      id: 'paladin-skill-proficiency-${value}',
+      key: 'skill-${value}-prof',
+      state: { 'skill.${value}.proficiency': 1 },
+      expiry: { kind: 'permanent' }
+    });
   });
 });
 
@@ -217,22 +185,16 @@ describe('paladin level1 effect groups', () => {
 // feat-sentinel.yaml
 // ============================================================
 
-describe('sentinel effect groups', () => {
-  let groups: RuleGroup[];
-
-  beforeAll(() => {
-    groups = loadYaml('data/rule-groups/dnd-5e-2024/feat-sentinel.yaml');
-  });
-
-  it('sentinel ASI effect has group Stats and ui.hidden', () => {
-    const settings = groups[0].settings;
-    expect(settings).toBeDefined();
-    const asiSetting = settings!.find((s) => s.id === 'sentinel-ability-score');
-    expect(asiSetting).toBeDefined();
-    const effect = asiSetting!.effect;
-    expect(effect).toBeDefined();
-    expect(effect!.group).toContain('Stats');
-    expect(effect!.ui?.hidden).toBe(true);
+describe('sentinel ASI setting effect (v2)', () => {
+  it('resolves to a permanent EffectInstance that adds +1 to the chosen ability', () => {
+    const groups = loadYaml('data/rule-groups/dnd-5e-2024/feat-sentinel.yaml');
+    const asiSetting = groups[0].settings!.find((s) => s.id === 'sentinel-ability-score');
+    expect(asiSetting?.effect).toEqual({
+      id: 'sentinel-asi-${value}',
+      key: 'sentinel-asi-${value}',
+      state: { '${value}.value': 1 },
+      expiry: { kind: 'permanent' }
+    });
   });
 });
 
