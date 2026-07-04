@@ -23,11 +23,6 @@ export {
   type V1EffectRule,
   type MigrationResult
 } from './migrate';
-export {
-  characterToV2Input,
-  type PersistedCharacterV1,
-  type CharacterInputResult
-} from './character-input';
 export { loadModules, lazyRuleGroupIds, type LoadResult } from './lazy';
 export { ENGINE_API_VERSION, isEngineCompatible } from './version';
 export { endTurn, dedupeByKey, type EndTurnOptions } from './effects';

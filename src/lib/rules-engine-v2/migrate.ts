@@ -1,11 +1,14 @@
 import type { CombineMode, EffectInstance, ExpirySpec } from './types';
 
 /**
- * M4/W2 — the persisted-effect migration core: convert a stored v1 effect `Rule`
- * into a v2 `EffectInstance`. This is the pure heart of W5 (the one-shot migration
- * of characters' `/effects` blobs old→new + the read-time shim); wiring it to the
- * backend and proving it against real data is env/CI-gated, but the conversion
- * itself is deterministic and unit-tested here.
+ * Convert a v1-shape effect `Rule` into a v2 `EffectInstance`.
+ *
+ * This is NOT for migrating existing characters — pre-v2 characters are deleted and
+ * recreated v2-native, so nothing reads a stored v1 `/effects` blob. It survives as
+ * a small runtime converter for the paths that still EMIT v1-shape effect rules:
+ * settings resolution (`resolveSettings`) and follow-up effects. Those v1-era
+ * producers are ported to emit `EffectInstance`s directly in W6, at which point this
+ * module is deleted with the rest of v1. Deterministic and unit-tested.
  *
  * Committed effects carry BAKED values (the advertise-time capture is already in
  * `varsRuntime`), so the shapes that actually persist are `numberSet` /
@@ -98,7 +101,7 @@ export function v1EffectRuleToInstance(rule: V1EffectRule): MigrationResult {
 }
 
 /**
- * The v5 semantic remap (W5): v1 effects tracked durable resources by decrementing
+ * The resource semantic remap: v1 tracked durable resources by decrementing
  * `*.remaining`, but v2 DERIVES `remaining = total − spent`, so those must move to
  * the `*.spent` namespace. This is per-fact — v2's Heroic Inspiration uses
  * `heroicInspiration.remaining` directly, while spell slots / smite / find-steed /

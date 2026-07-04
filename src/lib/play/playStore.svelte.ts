@@ -70,19 +70,18 @@ function buildPlannedRefs(): PlannedRef[] {
   }));
 }
 
-/** Parse a persisted `/effects` blob: v2 `EffectInstance[]` directly, or migrate a v1 blob. */
+/**
+ * Parse a persisted `/effects` blob. Characters are v2-native (there is no
+ * migration of pre-v2 characters — those are deleted and recreated), so the blob
+ * is always a stored `EffectInstance[]`; this just parses it defensively.
+ */
 function parsePersistedEffects(json: string): EffectInstance[] {
-  let parsed: unknown;
   try {
-    parsed = JSON.parse(json);
+    const parsed = JSON.parse(json);
+    return Array.isArray(parsed) ? (parsed as EffectInstance[]) : [];
   } catch {
     return [];
   }
-  if (!Array.isArray(parsed) || parsed.length === 0) return [];
-  // v2 EffectInstances carry `expiry`; v1 effect Rules carry `activities`.
-  const looksV2 = parsed.every((e) => e && typeof e === 'object' && 'expiry' in e);
-  if (looksV2) return parsed as EffectInstance[];
-  return migratePersistedEffects(parsed as V1EffectRule[]).effects;
 }
 
 function performEvaluation(): void {

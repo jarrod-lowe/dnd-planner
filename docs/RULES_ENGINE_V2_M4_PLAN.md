@@ -9,8 +9,10 @@ delete v1. After M3 the v2 engine runs essentially the whole scenario suite
 ## 1. Goal & exit criteria
 
 - The play UI evaluates through **v2** (behind a flag first, then unconditionally).
-- Persisted character **effects migrate** from the v1 rule format to the v2 ref /
-  `EffectInstance` format, losslessly for every shipped rule group.
+- **No migration of existing characters.** Per the original spec, we do NOT build
+  permanent cruft to carry pre-v2 characters forward — old characters are deleted and
+  recreated v2-native. So there is no read-time v1→v2 effect shim and no one-shot
+  `/effects` backfill; a stored blob is always a v2 `EffectInstance[]`.
 - `make test` green (unit + rules + e2e); v2 proven in the **test env**.
 - The v1 engine, `activities`, `_auto`, phases, and the YAML rule sources are
   **deleted**; `RULES_ENGINE.md` + the authoring guide are rewritten for v2.
@@ -67,26 +69,22 @@ Four gaps to bridge:
   planned): V1ShapedOutput`: map `availableRules` (descriptor→rule, merge
   `planDiagnostics`+`selections`→`varsRuntime`), pass through `facts`/`annotations`/
   `status`. Unit-tested against fixture v2 outputs. No runtime wiring yet.
-- **W2 — effect format converter (pure, TDD here) — DONE (mechanical pass).**
+- **W2 — v1-shape effect → `EffectInstance` converter (pure, TDD here) — DONE.**
   `src/lib/rules-engine-v2/migrate.ts`: `v1EffectRuleToInstance` +
-  `migratePersistedEffects` convert a persisted v1 effect `Rule` → v2
-  `EffectInstance` (baked `numberSet`→`override`, `numberIncrement`→`sum`,
-  `self`-advertise→`permanent`, `group`→`key`); eval-time (`fact`/`condition`)
-  sources are surfaced in `unresolved`, not dropped. 6 unit tests.
-  **Finding:** this is correct only for the **shared-namespace** effects (build
-  state, buffs, `hp.modifier.*`). Resource effects diverge — v1 sets `*.remaining`
-  directly, v2 derives `remaining = total − spent` — so a **semantic remap** of
-  those to `*.spent` is a W5 layer on top (the same total/remaining/spent mapping
-  `INITIAL_EFFECTS_V2` already encodes for the parity harness), not a mechanical
-  activity→state conversion.
-- **W3 — character→input assembler (pure, TDD here) — DONE.**
-  `src/lib/rules-engine-v2/character-input.ts`: `characterToV2Input({ ruleGroupIds,
-  effects })` → a `SerializableInput` (assigned ids → `ruleGroupIds`, effect blob →
-  committed via W2, `inputFacts` empty, `planned` layered on). **Finding:**
-  `inputFacts` is genuinely empty — the v2 build lives in committed effects and the
-  rest is module derives (only ~4 parity scenarios set an input fact, all for
-  effect/derive state), so W3 collapses into the W2-composing assembler rather than
-  a separate BUILD-fact derivation. 4 unit tests.
+  `migratePersistedEffects` convert a v1-shape effect `Rule` → v2 `EffectInstance`
+  (baked `numberSet`→`override`, `numberIncrement`→`sum`, `self`-advertise→
+  `permanent`, `group`→`key`; resource `*.remaining` spends remapped to `*.spent`
+  via `remapResourceFacts`); eval-time (`fact`/`condition`) sources surface in
+  `unresolved`. 10 unit tests. **NOT a persisted-character migrator** (that would be
+  the cruft the spec forbids) — it survives only as the runtime converter for the
+  v1-era producers that still EMIT v1-shape effects: settings resolution
+  (`resolveSettings`) and follow-up effects. Those are ported to emit
+  `EffectInstance`s natively in W6, when this module is deleted with v1.
+- **W3 — REMOVED.** The `characterToV2Input` / `PersistedCharacterV1` assembler was
+  pure existing-character-migration machinery (stored v1 character → v2 input) and is
+  never read by the store — deleted. The store assembles its own input directly
+  (`loadModules(ids)` + `parsePersistedEffects` over the v2 `EffectInstance[]` blob;
+  `inputFacts` is empty — the v2 build lives in committed effects).
 - **W4 — runtime wiring + display metadata.** (The PR branch *is* the flag — deploy
   it to test to try v2; no in-app `useV2Engine` toggle.)
   - **Display metadata (pure, TDD here) — top bar + resources DONE.**
@@ -119,13 +117,14 @@ Four gaps to bridge:
        (await loadModules(ids)).modules` (async, once per character). Drop the
        per-group rule-JSON `/batch` fetch from the eval path (settings still use
        `ruleGroupIds` + the dep cache, not the rule objects).
-    2. **effects load** — `migratePersistedEffects(v1Blob)` → `state.committed:
-       EffectInstance[]` (W2 + the W5 remap). Keep `state.effects: Rule[]` for the
-       active-effects UI, produced from `state.committed` by a small
-       `effectInstanceToRule` display bridge (id → `ui.name` by the
-       `rule.<group>.<id>.name` convention; `expiry` → `ui.countDown`/`duration`;
-       synthesize a concentration activity when `state['concentration.spent']` so
-       `effectUtils.getEffectKind` reads `CONC`). Persist `state.committed` as JSON.
+    2. **effects load** — `parsePersistedEffects(blob)` → `state.committed:
+       EffectInstance[]` (a plain JSON parse; the blob is v2-native, no migration).
+       Keep `state.effects: Rule[]` for the active-effects UI, produced from
+       `state.committed` by a small `effectInstanceToRule` display bridge (`expiry` →
+       `ui.countDown`/`duration`; synthesize a concentration activity when
+       `state['concentration.spent']` so `effectUtils.getEffectKind` reads `CONC`;
+       build + resource-spend effects flagged `ui.hidden`). Persist `state.committed`
+       as `EffectInstance[]` JSON.
     3. **`performEvaluation`** (stays sync) — `evaluateCharacterV2(state.modules,
        state.committed, refs, {})` where `refs = plannedItems.map(i => ({
        instanceId: i.instanceId, ruleId: i.rule.id, selections: i.rule.selections }))`.
@@ -172,14 +171,17 @@ they get eyeballed and prioritised.
    eviction is now the owning module's job (by `key`).
 6. **Steed resources not in the ledger yet.** `derivePanels` has no
    `companion.steed.*` entries; the steed's own resources need adding to the catalog.
-7. **Migrated-character build fidelity is W5/test-env.** Whether a real pre-cutover
-   character's build (its settings-derived effects) fully reconstructs as v2
-   `committed` is exactly what the test-env deploy proves; the read-time v1→v2 shim
-   (`parsePersistedEffects`) is in place, persistence is now `EffectInstance[]` JSON.
-- **W5 — persisted-effect migration (env/CI-gated).** A one-shot migration of
-  stored `/effects` blobs old→new via W2, plus a read-time shim for un-migrated
-  characters. Proven in the **test env** (`make deploy-test`), not here.
-- **W6 — flip + delete (after W1–W5 green in test env).** Default the flag on;
+7. **Settings + follow-up effects still emit v1-shape.** `resolveSettings` and the
+   follow-up mechanism produce v1 effect `Rule`s, which the store converts to
+   `EffectInstance`s via `migratePersistedEffects` (W2). This is the ONLY remaining
+   v1→v2 effect conversion (and it is a NEW-character authoring path, not
+   existing-character migration). It goes away in W6 when those producers are ported
+   to emit `EffectInstance`s natively and `migrate.ts` is deleted with v1.
+- **W5 — REMOVED (no existing-character migration).** Per the original spec we do not
+  carry pre-v2 characters forward, so there is no one-shot `/effects` backfill and no
+  read-time v1→v2 shim. Old characters are deleted and recreated v2-native; every
+  stored blob is a v2 `EffectInstance[]`.
+- **W6 — flip + delete (after W4 green in test env).** Default the flag on;
   then delete `src/lib/rules-engine/` (v1), the `activities`/`_auto`/phase code,
   `data/rule-sources` + `scripts/rule_preprocessor`, and the YAML groups the app no
   longer reads. Rewrite `RULES_ENGINE.md` + `docs/RULE_GROUP_GUIDE.md` for the v2
@@ -187,10 +189,10 @@ they get eyeballed and prioritised.
 
 ## 4. Verification boundary (inherited from the M2/M3 plans)
 
-- **Pure here:** W1–W3 (adapters, converters, inputFacts) are unit-testable now;
-  the parity harness remains the behavioural oracle for engine agreement.
-- **Env/CI-gated:** W4 proof, W5 data migration, and the e2e/deploy sign-off run
-  via `make deploy-test` / the pipeline — deferred to the test env, not this repo
+- **Pure here:** W1–W2 (adapters, converters) are unit-testable now; the parity
+  harness remains the behavioural oracle for engine agreement.
+- **Env/CI-gated:** the W4 cutover proof and the e2e/deploy sign-off run via
+  `make deploy-test` / the pipeline — deferred to the test env, not this repo
   checkout. W6's deletion lands only once those are green.
 
 ## 5. Guardrails (critical — inherited from CLAUDE.md, keep through compactions)
@@ -203,8 +205,8 @@ they get eyeballed and prioritised.
   theme variables; the adapter feeds the *existing* PanelRenderer unchanged.
 - **Infra only via make targets** (`make deploy-test`, `make sync-rule-groups`);
   never run `terraform` directly. New rules still go through the yaml runner.
-- **Delete only after green** — W6 removes v1 strictly after W1–W5 pass in the test
-  env, so a regression is always a flag-flip away from the v1 path.
+- **Delete only after green** — W6 removes v1 strictly after the W4 cutover passes in
+  the test env, so a regression is always a flag-flip away from the v1 path.
 
 ## 6. Out of scope
 

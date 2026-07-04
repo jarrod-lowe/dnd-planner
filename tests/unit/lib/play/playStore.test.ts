@@ -496,46 +496,6 @@ describe('playStore', () => {
       expect(playStore.state.effects.map((e) => e.id)).toEqual(['effect-bless']);
     });
 
-    it('migrates a legacy v1 effect blob to committed on load', async () => {
-      const mockApiGet = vi.mocked(apiGet);
-
-      // A pre-cutover v1 effect Rule (activities, no expiry) → read-time migration.
-      const v1Blob: Rule[] = [
-        {
-          id: 'effect-bless',
-          group: ['bless'],
-          activities: [
-            { type: 'numberSet', target: { fact: 'bless.active' }, source: { number: 1 } },
-            { type: 'advertiseEffect', self: true }
-          ]
-        } as Rule
-      ];
-
-      mockApiGet
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => ({ ruleGroups: [] })
-        } as Response)
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => ({ effects: JSON.stringify(v1Blob) })
-        } as Response);
-
-      const { playStore } = await import('$lib/play/playStore.svelte');
-      playStore.reset();
-      await playStore.loadRuleGroups('char-1');
-
-      expect(playStore.state.committed).toEqual([
-        {
-          id: 'effect-bless',
-          key: 'bless',
-          state: { 'bless.active': 1 },
-          stateCombine: { 'bless.active': 'override' },
-          expiry: { kind: 'permanent' }
-        }
-      ]);
-    });
-
     it('shows toast on effects load failure and falls back to empty', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockEvaluate = vi.mocked(evaluate);
@@ -2126,12 +2086,11 @@ describe('playStore', () => {
     it('removes an effect by rule ID from state.effects', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
 
-      const effect1: Rule = { id: 'effect-1', activities: [] };
-      const effect2: Rule = { id: 'effect-2', activities: [] };
+      const effect1 = { id: 'effect-1', state: { 'a.active': 1 }, expiry: { kind: 'untilLongRest' as const } };
+      const effect2 = { id: 'effect-2', state: { 'b.active': 1 }, expiry: { kind: 'untilLongRest' as const } };
 
-      // Setup: load character with committed effects
+      // Setup: load character with committed effects (v2 EffectInstance blob)
       mockApiGet
         .mockResolvedValueOnce({
           ok: true,
@@ -2141,25 +2100,6 @@ describe('playStore', () => {
           ok: true,
           json: async () => ({ effects: JSON.stringify([effect1, effect2]) })
         } as Response);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       mockApiPost.mockResolvedValue({ ok: true, status: 204 } as Response);
 
