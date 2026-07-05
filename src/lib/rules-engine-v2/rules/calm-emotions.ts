@@ -104,6 +104,7 @@ const calmEmotions: RuleModule = {
           {
             id: 'effect-calm-emotions',
             state: { 'concentration.spent': 1 },
+            display: { name: 'rule.spell-calm-emotions.effect-calm-emotions.name' },
             expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]
           }
         ];

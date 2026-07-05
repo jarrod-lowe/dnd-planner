@@ -64,6 +64,9 @@ export function steedEffect(level: number, creatureType: number): EffectInstance
     id: 'effect-steed',
     key: 'steed',
     state: steedStats(level, creatureType),
+    // Permanent, but a player-facing mount: `display` opts it onto the strip as a
+    // MOUNT chip (effectUtils reads ui.section === 'mount').
+    display: { name: 'rule.spell-find-steed.effect-steed.name', section: 'mount' },
     expiry: { kind: 'permanent' }
   };
 }

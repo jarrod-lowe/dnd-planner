@@ -88,7 +88,14 @@ const divinity: RuleModule = {
           },
           // Status reminder the player clears from the ledger; no fact state, so
           // removing it never refunds the point (the spend marker above persists).
-          { id: 'effect-divine-sense', expiry: { kind: 'untilLongRest' } }
+          {
+            id: 'effect-divine-sense',
+            display: {
+              name: 'rule.class-paladin-divinity.effect-divine-sense-divinity.name',
+              section: 'senses'
+            },
+            expiry: { kind: 'untilLongRest' }
+          }
         ];
         return { advertise, diagnostics };
       }

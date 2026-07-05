@@ -33,6 +33,7 @@ const JAVELIN: WeaponDef = {
           effect: {
             id: 'effect-javelin-slow',
             key: 'javelin-slow',
+            display: { name: `${SLOW}.effect-name`, section: 'mastery' },
             expiry: { kind: 'turns', remaining: 1 }
           }
         }

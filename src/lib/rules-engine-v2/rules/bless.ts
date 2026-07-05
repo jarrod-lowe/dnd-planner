@@ -103,6 +103,7 @@ const bless: RuleModule = {
           {
             id: 'effect-bless',
             state: { 'concentration.spent': 1 },
+            display: { name: 'rule.spell-bless.effect-bless.name' },
             expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]
           }
         ];

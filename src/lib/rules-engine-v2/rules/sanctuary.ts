@@ -92,7 +92,11 @@ const sanctuary: RuleModule = {
         const advertise: EffectInstance[] = [
           { id: 'cost', state: { 'bonusActions.spent': 1, 'spellcasting.spent': 1 }, expiry: { kind: 'endOfTurn' } },
           // The ward: a pure duration marker; ends after 10 rounds or on any rest.
-          { id: 'effect-sanctuary', expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }] }
+          {
+            id: 'effect-sanctuary',
+            display: { name: 'rule.spell-sanctuary.effect-sanctuary.name' },
+            expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]
+          }
         ];
         const diagnostics: Diagnostic[] = [];
         if (f.num('bonusActions.remaining') <= 0)

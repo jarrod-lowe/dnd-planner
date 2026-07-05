@@ -99,6 +99,7 @@ const protectionFromEvilAndGood: RuleModule = {
           {
             id: 'effect-protection-from-evil-and-good',
             state: { 'concentration.spent': 1 },
+            display: { name: 'rule.spell-protection-from-evil-and-good.effect-protection-from-evil-and-good.name' },
             expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]
           }
         ];

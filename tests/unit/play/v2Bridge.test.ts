@@ -56,6 +56,22 @@ describe('v2Bridge — effectInstanceToRule', () => {
     });
     expect(isHiddenEffect(buff)).toBe(false);
   });
+
+  it('maps display metadata to ui.name/section and shows it even when permanent', () => {
+    // The steed: permanent (would be hidden), but its `display` opts it onto the
+    // strip as a named MOUNT chip.
+    const rule = effectInstanceToRule({
+      id: 'effect-steed',
+      key: 'steed',
+      state: { 'companion.steed.active': 1 },
+      display: { name: 'rule.spell-find-steed.effect-steed.name', section: 'mount' },
+      expiry: { kind: 'permanent' }
+    });
+    expect(rule.ui?.name).toBe('rule.spell-find-steed.effect-steed.name');
+    expect(rule.ui?.section).toBe('mount');
+    expect(getEffectKind(rule)).toBe('MOUNT');
+    expect(isHiddenEffect(rule)).toBe(false);
+  });
 });
 
 const v2out = (overrides: Partial<V2EngineOutput> = {}): V2EngineOutput => ({

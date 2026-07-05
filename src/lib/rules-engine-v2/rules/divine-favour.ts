@@ -114,6 +114,7 @@ const divineFavour: RuleModule = {
             id: 'effect-divine-favour',
             key: 'divine-favour-buff',
             state: { 'divineFavour.active': 1 },
+            display: { name: 'rule.spell-divine-favour.effect-divine-favour.name' },
             expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]
           }
         ];

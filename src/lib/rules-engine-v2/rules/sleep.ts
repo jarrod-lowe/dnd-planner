@@ -99,6 +99,7 @@ const sleep: RuleModule = {
           {
             id: 'effect-sleep',
             state: { 'concentration.spent': 1 },
+            display: { name: 'rule.spell-sleep.effect-sleep.name' },
             expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]
           }
         ];

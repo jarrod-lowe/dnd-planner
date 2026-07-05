@@ -109,7 +109,14 @@ const oath: RuleModule = {
             { id: 'cost', state: { 'bonusActions.spent': 1 }, expiry: { kind: 'endOfTurn' } },
             divinitySpend('effect-emissary-of-peace-divinity'),
             // +5 Persuasion while active — a removable status effect (untilLongRest).
-            { id: 'effect-emissary-of-peace', state: { 'skill.persuasion.value': 5 }, expiry: { kind: 'untilLongRest' } }
+            {
+              id: 'effect-emissary-of-peace',
+              state: { 'skill.persuasion.value': 5 },
+              display: {
+                name: 'rule.class-paladin-oath-redemption-level3.effect-emissary-of-peace-divinity.name'
+              },
+              expiry: { kind: 'untilLongRest' }
+            }
           ],
           diagnostics
         };

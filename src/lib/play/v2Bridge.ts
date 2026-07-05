@@ -59,25 +59,24 @@ function isResourceOnly(state: Record<string, number>): boolean {
 
 /**
  * Whether the effect should be hidden from the active-effects strip by default.
- * The v2 build (abilities, equipment, prepared spells, proficiencies) and settings
- * live as `permanent` committed effects, and slot/economy spends persist as
- * resource effects — none of those are the transient buffs/concentration the strip
- * is for, so they are hidden by default (still revealable via the strip's eye
- * toggle). Concentration always shows.
+ * A module opts an effect INTO the strip by giving it `display` metadata; the v2
+ * build (abilities, equipment, prepared spells, proficiencies), settings, and
+ * slot/economy spends carry no `display` and are `permanent`/resource, so they stay
+ * hidden (still revealable via the strip's eye toggle). Concentration always shows.
  */
 function shouldHideFromStrip(effect: EffectInstance): boolean {
+  if (effect.display) return false;
   const state = effect.state ?? {};
   if ((state['concentration.spent'] ?? 0) > 0) return false;
   return isPermanent(effect.expiry) || isResourceOnly(state);
 }
 
 /**
- * Convert a v2 committed `EffectInstance` into the v1 effect `Rule` shape. The
- * active-effects UI reads `ui`, `group`, and `activities` (for its concentration /
- * build classification) and falls back to the effect id when `ui.name` is absent.
- * Build/economy effects are flagged `ui.hidden` so the strip shows only real active
- * effects; the v2 `EffectInstance` carries no display name yet, so the chip falls
- * back to the id (a per-effect i18n name map is the tracked follow-up).
+ * Convert a v2 committed `EffectInstance` into the v1 effect `Rule` shape the
+ * active-effects UI consumes. The effect's `display` metadata (name / section /
+ * displayFact) maps onto the chip's `ui`; a synthesized concentration activity lets
+ * `effectUtils.getEffectKind` read `CONC`; build/economy effects (no `display`) are
+ * flagged `ui.hidden`.
  */
 export function effectInstanceToRule(effect: EffectInstance): Rule {
   const state = effect.state ?? {};
@@ -98,6 +97,9 @@ export function effectInstanceToRule(effect: EffectInstance): Rule {
     ui.countDown = dur.countDown;
     ui.duration = dur.duration;
   }
+  if (effect.display?.name) ui.name = effect.display.name;
+  if (effect.display?.section) ui.section = effect.display.section;
+  if (effect.display?.displayFact) ui.displayFact = effect.display.displayFact;
   if (shouldHideFromStrip(effect)) ui.hidden = true;
   return {
     id: effect.id,

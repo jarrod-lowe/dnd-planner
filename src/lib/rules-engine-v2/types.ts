@@ -167,7 +167,24 @@ export interface EffectInstance {
    * `max` rather than summing. Combine conflicts are rejected by the sheet.
    */
   stateCombine?: Record<string, CombineMode>;
+  /**
+   * Optional display metadata for the active-effects UI. Inert to the engine (like
+   * an offer's `ui`); its PRESENCE also opts the effect into the strip — build and
+   * bookkeeping effects omit it and stay hidden. The play bridge maps these onto the
+   * effect chip.
+   */
+  display?: EffectDisplay;
   expiry: ExpirySpec;
+}
+
+/** UI metadata a module attaches to an effect it wants shown on the active-effects strip. */
+export interface EffectDisplay {
+  /** i18n key for the chip name (the chip falls back to the effect id if absent). */
+  name?: string;
+  /** UI section for chip classification, e.g. 'mount' (steed) or 'senses'. */
+  section?: string;
+  /** A fact whose value the chip shows next to the name (e.g. a running bonus). */
+  displayFact?: string;
 }
 
 // === ENGINE I/O (M1) ===

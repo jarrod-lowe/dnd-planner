@@ -78,6 +78,7 @@ const grapple: RuleModule = {
             id: 'effect-grappling',
             key: 'grappling',
             state: { 'hands.spent': 1 },
+            display: { name: 'rule.dnd-5e-2024.grapple.effect-grappling.name' },
             expiry: { kind: 'permanent' }
           });
         } else if (passed !== 1) {

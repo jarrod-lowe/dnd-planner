@@ -105,6 +105,7 @@ const holdPerson: RuleModule = {
           {
             id: 'effect-hold-person',
             state: { 'concentration.spent': 1 },
+            display: { name: 'rule.spell-hold-person.effect-hold-person.name' },
             expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]
           }
         ];
