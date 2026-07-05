@@ -496,6 +496,31 @@ describe('playStore', () => {
       expect(playStore.state.effects.map((e) => e.id)).toEqual(['effect-bless']);
     });
 
+    it('drops pre-v2 (v1-shape) effect entries instead of crashing', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+
+      // A pre-v2 character's blob: v1 effect Rules (activities, no `expiry`) mixed
+      // with a valid v2 EffectInstance. The v1 ones are dropped; the v2 one survives.
+      const mixed = [
+        { id: 'effect-legacy', group: ['bless'], activities: [{ type: 'numberSet' }] },
+        { id: 'effect-bless', key: 'bless', state: { 'concentration.spent': 1 }, expiry: { kind: 'permanent' } }
+      ];
+
+      mockApiGet
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ ruleGroups: [] }) } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ effects: JSON.stringify(mixed) })
+        } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      await playStore.loadRuleGroups('char-1');
+
+      expect(playStore.state.committed.map((e) => e.id)).toEqual(['effect-bless']);
+      expect(playStore.state.effects.map((e) => e.id)).toEqual(['effect-bless']);
+    });
+
     it('shows toast on effects load failure and falls back to empty', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockEvaluate = vi.mocked(evaluate);

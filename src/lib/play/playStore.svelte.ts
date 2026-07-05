@@ -76,7 +76,14 @@ function buildPlannedRefs(): PlannedRef[] {
 function parsePersistedEffects(json: string): EffectInstance[] {
   try {
     const parsed = JSON.parse(json);
-    return Array.isArray(parsed) ? (parsed as EffectInstance[]) : [];
+    if (!Array.isArray(parsed)) return [];
+    // A v2 EffectInstance always carries `expiry`. Any entry without it is a pre-v2
+    // (v1-shape) effect from a character not yet recreated v2-native — drop it rather
+    // than crash the play view. Not a migration: the effect is discarded, and that
+    // character starts from a clean effect state (its build is re-made via settings).
+    return parsed.filter(
+      (e): e is EffectInstance => !!e && typeof e === 'object' && 'expiry' in e
+    );
   } catch {
     return [];
   }
