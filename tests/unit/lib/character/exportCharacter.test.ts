@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { buildCharacterExport } from '$lib/character/exportCharacter';
 import type { Character } from '$lib/character/types';
 import type { Rule } from '$lib/rules-engine';
+import type { EffectInstance } from '$lib/rules-engine-v2';
 
 const baseCharacter: Character = {
   characterId: 'char-1',
@@ -17,7 +18,7 @@ describe('buildCharacterExport', () => {
     const ruleGroupIds = ['dnd-5e-2024', 'species-human', 'class-paladin'];
     const result = buildCharacterExport(baseCharacter, ruleGroupIds, []);
 
-    expect(result.schemaVersion).toBe(1);
+    expect(result.schemaVersion).toBe(2);
     expect(result.name).toBe('Thorin');
     expect(result.species).toBe('human');
     expect(result.ruleGroups).toEqual(['dnd-5e-2024', 'species-human', 'class-paladin']);
@@ -25,11 +26,11 @@ describe('buildCharacterExport', () => {
   });
 
   it('includes active effects in export', () => {
-    const effect: Rule = {
+    const effect: EffectInstance = {
       id: 'effect-bless-1',
-      phase: 'normal',
-      group: ['bless-effect'],
-      activities: []
+      key: 'bless',
+      state: { 'concentration.spent': 1 },
+      expiry: { kind: 'permanent' }
     };
 
     const result = buildCharacterExport(baseCharacter, [], [effect]);
@@ -40,12 +41,12 @@ describe('buildCharacterExport', () => {
 
   it('copies arrays to avoid mutation', () => {
     const ruleGroupIds = ['dnd-5e-2024'];
-    const effects: Rule[] = [{ id: 'effect-1', phase: 'normal', group: [], activities: [] }];
+    const effects: EffectInstance[] = [{ id: 'effect-1', expiry: { kind: 'permanent' } }];
 
     const result = buildCharacterExport(baseCharacter, ruleGroupIds, effects);
 
     ruleGroupIds.push('extra');
-    effects.push({ id: 'effect-2', phase: 'normal', group: [], activities: [] });
+    effects.push({ id: 'effect-2', expiry: { kind: 'permanent' } });
 
     expect(result.ruleGroups).toEqual(['dnd-5e-2024']);
     expect(result.effects).toHaveLength(1);

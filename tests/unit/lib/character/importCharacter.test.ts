@@ -18,7 +18,7 @@ describe('validateCharacterImport', () => {
 
   it('rejects JSON with wrong schemaVersion', () => {
     const result = validateCharacterImport(
-      { schemaVersion: 2, name: 'Thorin', species: 'human', ruleGroups: [] },
+      { schemaVersion: 99, name: 'Thorin', species: 'human', ruleGroups: [] },
       availableGroups
     );
 
@@ -29,7 +29,7 @@ describe('validateCharacterImport', () => {
 
   it('rejects JSON without name', () => {
     const result = validateCharacterImport(
-      { schemaVersion: 1, species: 'human', ruleGroups: [] },
+      { schemaVersion: 2, species: 'human', ruleGroups: [] },
       availableGroups
     );
 
@@ -39,7 +39,7 @@ describe('validateCharacterImport', () => {
 
   it('rejects JSON with empty name', () => {
     const result = validateCharacterImport(
-      { schemaVersion: 1, name: '  ', species: 'human', ruleGroups: [] },
+      { schemaVersion: 2, name: '  ', species: 'human', ruleGroups: [] },
       availableGroups
     );
 
@@ -49,7 +49,7 @@ describe('validateCharacterImport', () => {
 
   it('rejects JSON without species', () => {
     const result = validateCharacterImport(
-      { schemaVersion: 1, name: 'Thorin', ruleGroups: [] },
+      { schemaVersion: 2, name: 'Thorin', ruleGroups: [] },
       availableGroups
     );
 
@@ -59,7 +59,7 @@ describe('validateCharacterImport', () => {
 
   it('rejects JSON without ruleGroups', () => {
     const result = validateCharacterImport(
-      { schemaVersion: 1, name: 'Thorin', species: 'human' },
+      { schemaVersion: 2, name: 'Thorin', species: 'human' },
       availableGroups
     );
 
@@ -70,7 +70,7 @@ describe('validateCharacterImport', () => {
   it('rejects JSON where ruleGroups references unknown IDs', () => {
     const result = validateCharacterImport(
       {
-        schemaVersion: 1,
+        schemaVersion: 2,
         name: 'Thorin',
         species: 'human',
         ruleGroups: ['dnd-5e-2024', 'nonexistent-pack']
@@ -91,7 +91,7 @@ describe('validateCharacterImport', () => {
   it('accepts valid JSON with all required fields', () => {
     const result = validateCharacterImport(
       {
-        schemaVersion: 1,
+        schemaVersion: 2,
         name: 'Thorin',
         species: 'human',
         ruleGroups: ['dnd-5e-2024', 'species-human']
@@ -108,12 +108,12 @@ describe('validateCharacterImport', () => {
   });
 
   it('accepts valid JSON with optional customRules and effects', () => {
-    const effect = { id: 'effect-1', phase: 'normal', group: [], activities: [] };
+    const effect = { id: 'effect-1', state: { 'bless.active': 1 }, expiry: { kind: 'permanent' } };
     const customRule = { id: 'custom-1', phase: 'normal', group: [], activities: [] };
 
     const result = validateCharacterImport(
       {
-        schemaVersion: 1,
+        schemaVersion: 2,
         name: 'Thorin',
         species: 'human',
         ruleGroups: ['dnd-5e-2024'],
@@ -131,7 +131,7 @@ describe('validateCharacterImport', () => {
   it('defaults effects to empty array when missing', () => {
     const result = validateCharacterImport(
       {
-        schemaVersion: 1,
+        schemaVersion: 2,
         name: 'Thorin',
         species: 'human',
         ruleGroups: ['dnd-5e-2024']
@@ -224,7 +224,7 @@ describe('importCharacter', () => {
   });
 
   it('saves effects to the new character', async () => {
-    const effect: Rule = { id: 'effect-bless', phase: 'normal', group: [], activities: [] };
+    const effect = { id: 'effect-bless', state: { 'bless.active': 1 }, expiry: { kind: 'permanent' as const } };
     const data = { ...baseData, effects: [effect] };
     const deps = createMockDeps(defaultAssigned);
 

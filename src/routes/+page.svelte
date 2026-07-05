@@ -155,7 +155,7 @@
     const payload = buildCharacterExport(
       character,
       playStore.state.ruleGroupIds,
-      playStore.state.effects,
+      playStore.state.committed,
       playStore.state.ruleGroupRulesMap
     );
     const json = JSON.stringify(payload, null, 2);
