@@ -207,8 +207,32 @@ not resolve its captured `level` var through the converter; v2 emits the base
 - **Delete only after green** — W6 removes v1 strictly after the W4 cutover passes in
   the test env, so a regression is always a flag-flip away from the v1 path.
 
-## 6. Out of scope
+## 6. Deploy readiness (the M2 delivery pipeline, for a full test-env run)
 
-The M2/W4–W6 items still open in their own row (search-index publish, co-bundled
-hosting infra, the end-to-end test-env proof) are prerequisites the pipeline owns;
-M4 consumes them but does not re-do them.
+The env-gated half of the **M2 delivery pipeline** (`docs/RULES_ENGINE_V2_M2_PLAN.md`
+— "gated delivery pipeline") is what a full test run exercises. Verified here that
+the code side is ready:
+
+- **W5 — co-bundled chunk hosting (works).** `pnpm build` code-splits every rule
+  module into its own client chunk (`make verify-chunks`), and now that the store
+  imports `loadModules`, the app's build actually ships them (bless/steed module code
+  is present in `build/_app/immutable/chunks/…`). `make push-test` does
+  `aws s3 sync build/` → S3 + a CloudFront invalidation, so the chunks deploy with the
+  normal app build. No separate infra.
+- **W4 — metadata/search index (works for the test via the existing sync).** The app
+  reads rule-group metadata (name/requires/settings/condition) from DynamoDB, populated
+  by `make sync-rule-groups` from the YAML — unchanged. Publishing metadata *from the
+  v2 modules* (so the YAML can be deleted) is a **W6** prerequisite, not test-blocking.
+- **W6 — end-to-end proof = the deploy itself.** `make deploy-test` runs the full gate
+  then `push-test` + `sync-rule-groups`. Its e2e gate is only the home-page smoke test
+  (no play-flow e2e), so the cutover doesn't break it.
+- **Coverage is complete + guarded.** All 84 deployed rule groups either resolve to a
+  v2 module (67) or have **0 rules** (17: the `*-spells-l*` list aggregators + the
+  `*-detail` catalog entries), which `loadModules` harmlessly skips. `v2-coverage.test.ts`
+  asserts every rule group *with rules* has a module, so a future unported group fails
+  loudly.
+
+**MUST re-sync on deploy:** the settings `effect:` templates changed shape (v1 rule →
+v2 `EffectInstance`), so DynamoDB must be re-synced or `resolveSettings` will choke on
+old-shape data. `make deploy-test` runs `sync-rule-groups`, so a full deploy covers it;
+a chunks-only `push-test` would not.
