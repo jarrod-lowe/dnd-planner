@@ -61,6 +61,47 @@ const RESOURCES: UiEntry[] = [
   { type: 'usedMax', label: 'play.stats.savageAttacker', total: 'savageAttacker.max', remaining: 'savageAttacker.remaining' }
 ];
 
+/**
+ * Steed (companion) resources — shown in the ledger under the 'steed' subject view
+ * (the Ledger filters `entry.subject === activeSubject`). Surface only when a steed
+ * is summoned (its derives are present).
+ */
+const STEED_CORE: { label: string; total: string; remaining: string }[] = [
+  { label: 'play.stats.steed.hp', total: 'companion.steed.hp.max', remaining: 'companion.steed.hp.current' },
+  { label: 'play.stats.steed.movement', total: 'companion.steed.movement.total', remaining: 'companion.steed.movement.remaining' },
+  { label: 'play.stats.steed.actions', total: 'companion.steed.actions.max', remaining: 'companion.steed.actions.remaining' },
+  { label: 'play.stats.steed.bonusActions', total: 'companion.steed.bonusActions.max', remaining: 'companion.steed.bonusActions.remaining' }
+];
+
+/** creatureType (0/1/2) → its once-per-rest special-ability pool (only the match shows). */
+const STEED_ABILITY_BY_TYPE: Record<number, { pool: string; label: string }> = {
+  0: { pool: 'healingTouch', label: 'play.stats.steed.healingTouch' },
+  1: { pool: 'feyStep', label: 'play.stats.steed.feyStep' },
+  2: { pool: 'fellGlare', label: 'play.stats.steed.fellGlare' }
+};
+
+function deriveSteedResources(facts: Facts): UiEntry[] {
+  const entries: UiEntry[] = STEED_CORE.filter((e) => present(facts, e.total)).map((e) => ({
+    type: 'usedMax',
+    label: e.label,
+    total: e.total,
+    remaining: e.remaining,
+    subject: 'steed'
+  }));
+  const ct = facts['companion.steed.creatureType'];
+  const ability = typeof ct === 'number' ? STEED_ABILITY_BY_TYPE[ct] : undefined;
+  if (ability && present(facts, `companion.steed.${ability.pool}.total`)) {
+    entries.push({
+      type: 'usedMax',
+      label: ability.label,
+      total: `companion.steed.${ability.pool}.total`,
+      remaining: `companion.steed.${ability.pool}.remaining`,
+      subject: 'steed'
+    });
+  }
+  return entries;
+}
+
 /** Hit-die sizes a class might grant; the present one drives the hitDie entry. */
 const HIT_DICE = [6, 8, 10, 12] as const;
 
@@ -100,5 +141,7 @@ export function deriveResourceEntries(facts: Facts): UiEntry[] {
   if (present(facts, 'heroicInspiration.remaining')) {
     entries.push({ type: 'value', label: 'play.stats.heroicInspiration', fact: 'heroicInspiration.remaining' });
   }
+  // Steed resources ride along under the 'steed' subject (Ledger filters by subject).
+  entries.push(...deriveSteedResources(facts));
   return sortEntries(entries.filter(isUiEntry));
 }

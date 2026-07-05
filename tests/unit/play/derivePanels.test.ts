@@ -78,4 +78,43 @@ describe('derivePanels — resources', () => {
   it('is empty when no resource facts are present', () => {
     expect(deriveResourceEntries({})).toEqual([]);
   });
+
+  it('surfaces steed resources (subject: steed) with only the matched special ability', () => {
+    const facts = {
+      'companion.steed.creatureType': 1, // fey → feyStep
+      'companion.steed.hp.max': 30,
+      'companion.steed.hp.current': 30,
+      'companion.steed.movement.total': 60,
+      'companion.steed.movement.remaining': 60,
+      'companion.steed.actions.max': 1,
+      'companion.steed.actions.remaining': 1,
+      'companion.steed.bonusActions.max': 1,
+      'companion.steed.bonusActions.remaining': 1,
+      'companion.steed.healingTouch.total': 1,
+      'companion.steed.feyStep.total': 1,
+      'companion.steed.feyStep.remaining': 1,
+      'companion.steed.fellGlare.total': 1
+    };
+    const steed = deriveResourceEntries(facts).filter((e) => e.subject === 'steed');
+    const labels = steed.map((e) => e.label);
+    expect(labels).toEqual(
+      expect.arrayContaining([
+        'play.stats.steed.hp',
+        'play.stats.steed.movement',
+        'play.stats.steed.actions',
+        'play.stats.steed.bonusActions',
+        'play.stats.steed.feyStep'
+      ])
+    );
+    // Only the creature-type-matched ability (feyStep) — not healingTouch/fellGlare.
+    expect(labels).not.toContain('play.stats.steed.healingTouch');
+    expect(labels).not.toContain('play.stats.steed.fellGlare');
+  });
+
+  it('adds no steed resources for a character without a steed', () => {
+    const steed = deriveResourceEntries({ 'actions.max': 1, 'actions.remaining': 1 }).filter(
+      (e) => e.subject === 'steed'
+    );
+    expect(steed).toEqual([]);
+  });
 });
