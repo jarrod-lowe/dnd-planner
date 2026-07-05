@@ -11,7 +11,7 @@
   import PanelTextInput from './panel-renderer/PanelTextInput.svelte';
   import PanelSegmented from './panel-renderer/PanelSegmented.svelte';
   import DiceRollToast from './panel-renderer/DiceRollToast.svelte';
-  import { evaluateCondition } from '$lib/rules-engine/conditions';
+  import { evaluateCondition } from '$lib/play/panelCondition';
   import { getMatchingAnnotations } from '$lib/play/annotations';
   import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-engine';
   import type { EffectInstance } from '$lib/rules-engine-v2';

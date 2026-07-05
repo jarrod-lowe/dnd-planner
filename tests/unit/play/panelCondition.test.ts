@@ -1,10 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import {
-  evaluateCondition,
-  evaluateWhenConditions,
-  isRuleApplicable
-} from '$lib/rules-engine/conditions';
-import type { Condition, Facts, Rule } from '$lib/rules-engine/types';
+import { evaluateCondition } from '$lib/play/panelCondition';
+import type { Condition, Facts } from '$lib/rules-engine/types';
 
 describe('evaluateCondition', () => {
   describe('FactExistenceCondition', () => {
@@ -169,101 +165,5 @@ describe('evaluateCondition', () => {
 
       expect(evaluateCondition(condition, facts, events)).toBe(false);
     });
-  });
-});
-
-describe('evaluateWhenConditions', () => {
-  it('returns true when all conditions are satisfied', () => {
-    const conditions: Condition[] = [
-      { fact: 'hp.current' },
-      { fact: 'hp.current', operator: 'greaterThan', value: 0 }
-    ];
-    const facts: Facts = { 'hp.current': 10 };
-    const events = new Set<string>();
-
-    expect(evaluateWhenConditions(conditions, facts, events)).toBe(true);
-  });
-
-  it('returns false when any condition fails', () => {
-    const conditions: Condition[] = [
-      { fact: 'hp.current' },
-      { fact: 'hp.current', operator: 'greaterThan', value: 100 }
-    ];
-    const facts: Facts = { 'hp.current': 10 };
-    const events = new Set<string>();
-
-    expect(evaluateWhenConditions(conditions, facts, events)).toBe(false);
-  });
-
-  it('returns true for empty conditions array (vacuously true)', () => {
-    const conditions: Condition[] = [];
-    const facts: Facts = {};
-    const events = new Set<string>();
-
-    expect(evaluateWhenConditions(conditions, facts, events)).toBe(true);
-  });
-});
-
-describe('isRuleApplicable', () => {
-  it('returns true when enabled is undefined (defaults to true) and conditions pass', () => {
-    const rule: Rule = {
-      id: 'test-rule',
-      when: [{ fact: 'hp.current' }],
-      activities: []
-    };
-    const facts: Facts = { 'hp.current': 10 };
-    const events = new Set<string>();
-
-    expect(isRuleApplicable(rule, facts, events)).toBe(true);
-  });
-
-  it('returns true when enabled is true and conditions pass', () => {
-    const rule: Rule = {
-      id: 'test-rule',
-      enabled: true,
-      when: [{ fact: 'hp.current' }],
-      activities: []
-    };
-    const facts: Facts = { 'hp.current': 10 };
-    const events = new Set<string>();
-
-    expect(isRuleApplicable(rule, facts, events)).toBe(true);
-  });
-
-  it('returns false when enabled is false', () => {
-    const rule: Rule = {
-      id: 'test-rule',
-      enabled: false,
-      when: [{ fact: 'hp.current' }],
-      activities: []
-    };
-    const facts: Facts = { 'hp.current': 10 };
-    const events = new Set<string>();
-
-    expect(isRuleApplicable(rule, facts, events)).toBe(false);
-  });
-
-  it('returns false when conditions fail', () => {
-    const rule: Rule = {
-      id: 'test-rule',
-      when: [{ fact: 'hp.current', operator: 'greaterThan', value: 100 }],
-      activities: []
-    };
-    const facts: Facts = { 'hp.current': 10 };
-    const events = new Set<string>();
-
-    expect(isRuleApplicable(rule, facts, events)).toBe(false);
-  });
-
-  it('returns true when no when conditions (empty array)', () => {
-    const rule: Rule = {
-      id: 'test-rule',
-      when: [],
-      activities: []
-    };
-    const facts: Facts = {};
-    const events = new Set<string>();
-
-    expect(isRuleApplicable(rule, facts, events)).toBe(true);
   });
 });

@@ -19,6 +19,22 @@ delete v1. After M3 the v2 engine runs essentially the whole scenario suite
 - No user-visible behaviour change at the cutover (the parity harness is the proof
   the two engines agree; the 10 by-design deltas are documented + accepted).
 
+### Status — v1 engine removed
+
+The v1 interpreter is **deleted** (this PR): `evaluate`, `activities`, `phases`,
+`ordering`, `output`, `sources`, `functions`, `conditions`, `hello-world` are gone,
+along with their unit tests, the two v1 scenario runners (`scenarios.test.ts` +
+`yaml-scenarios-runner.test.ts`) and the dead `countDown` helper. The scenario
+corpus is still exercised — the **v2-parity runner** replays every `yaml-scenarios/`
+case through v2. `src/lib/rules-engine/` now holds **only the engine→UI view/output
+contract types** (`Rule`, `Facts`, `EngineOutput`, `AvailableRuleEntry`, …) that the
+v2 bridge targets; its `index.ts` is type-only. The one shared value the UI still
+needed from v1 — `evaluateCondition` for panel gating — moved to
+`$lib/play/panelCondition` (pure, unit-tested). The YAML rule-group **metadata**
+(names/requires/settings) is still published to DynamoDB via `sync-rule-groups` and
+consumed at runtime; deleting those YAML sources is the remaining M2/W4 cleanup and
+is not required to run a full test.
+
 ## 2. The contract gap (what the adapter must bridge)
 
 The play store (`src/lib/play/playStore.svelte.ts`) is the single runtime call
@@ -27,7 +43,7 @@ and consumes:
 
 - `output.availableRules` — `AvailableRuleEntry[]` where **`entry.rule` is a full
   `Rule`** (the UI reads `rule.ui`, `rule.vars`, and **`rule.varsRuntime`** for the
-  per-item captured-var values *and* the `errors` set that drives illegal-item
+  per-item captured-var values _and_ the `errors` set that drives illegal-item
   styling), `legal`, `applicable`, `diagnostics`.
 - `output.facts` — the projected post-plan facts (top bar, resources, gating).
 - `output.effects` — advertised effects (v1 `Rule[]`), **committed into
@@ -66,7 +82,7 @@ Four gaps to bridge:
 ## 3. Increments (ordered; each shippable + testable)
 
 - **W1 — output contract adapter (pure, TDD here).** `adaptV2Output(v2Output,
-  planned): V1ShapedOutput`: map `availableRules` (descriptor→rule, merge
+planned): V1ShapedOutput`: map `availableRules` (descriptor→rule, merge
   `planDiagnostics`+`selections`→`varsRuntime`), pass through `facts`/`annotations`/
   `status`. Unit-tested against fixture v2 outputs. No runtime wiring yet.
 - **W2 — v1-shape effect → `EffectInstance` converter — DONE, then DELETED.**
@@ -84,7 +100,7 @@ Four gaps to bridge:
   never read by the store — deleted. The store assembles its own input directly
   (`loadModules(ids)` + `parsePersistedEffects` over the v2 `EffectInstance[]` blob;
   `inputFacts` is empty — the v2 build lives in committed effects).
-- **W4 — runtime wiring + display metadata.** (The PR branch *is* the flag — deploy
+- **W4 — runtime wiring + display metadata.** (The PR branch _is_ the flag — deploy
   it to test to try v2; no in-app `useV2Engine` toggle.)
   - **Display metadata (pure, TDD here) — top bar + resources DONE.**
     `src/lib/play/derivePanels.ts`: `deriveTopBarEntries`/`deriveResourceEntries`
@@ -113,11 +129,11 @@ Four gaps to bridge:
     real). Full unit suite green (2319 passed / 10 by-design skips), lint + build
     green. Recipe as implemented:
     1. **`loadRuleGroups`** — keep the id fetch; add `state.modules =
-       (await loadModules(ids)).modules` (async, once per character). Drop the
+(await loadModules(ids)).modules` (async, once per character). Drop the
        per-group rule-JSON `/batch` fetch from the eval path (settings still use
        `ruleGroupIds` + the dep cache, not the rule objects).
     2. **effects load** — `parsePersistedEffects(blob)` → `state.committed:
-       EffectInstance[]` (a plain JSON parse; the blob is v2-native, no migration).
+EffectInstance[]` (a plain JSON parse; the blob is v2-native, no migration).
        Keep `state.effects: Rule[]` for the active-effects UI, produced from
        `state.committed` by a small `effectInstanceToRule` display bridge (`expiry` →
        `ui.countDown`/`duration`; synthesize a concentration activity when
@@ -125,15 +141,15 @@ Four gaps to bridge:
        build + resource-spend effects flagged `ui.hidden`). Persist `state.committed`
        as `EffectInstance[]` JSON.
     3. **`performEvaluation`** (stays sync) — `evaluateCharacterV2(state.modules,
-       state.committed, refs, {})` where `refs = plannedItems.map(i => ({
-       instanceId: i.instanceId, ruleId: i.rule.id, selections: i.rule.selections }))`.
+state.committed, refs, {})` where `refs = plannedItems.map(i => ({
+instanceId: i.instanceId, ruleId: i.rule.id, selections: i.rule.selections }))`.
        Set `state.facts`, `state.topBarEntries`/`resourceEntries` from the result,
        and build `state.engineOutput` in the v1 shape (v2 `availableRules` is
        already compatible; drop `collections`/`trace`). Hypotheticals ←
        `hypotheticalOffers(...)`. Per-item plan legality ← `plannedEntries` (map by
        `instanceId`, which PlanStack already keys on).
     4. **`endTurn`** — age `state.committed` with v2 `endTurn(committed, advertised,
-       {})`; refresh `state.effects` via the display bridge; persist. (Replaces the
+{})`; refresh `state.effects` via the display bridge; persist. (Replaces the
        v1 `decrementCountDowns` on `output.effects`.)
     5. **`recalculateStats`** — deleted (top bar/resources now come from the eval
        result's `derivePanels` output, not `[...ruleGroups, ...effects]`).
@@ -174,6 +190,7 @@ W2 above: both are now v2-native and `migrate.ts` is deleted. Porting the settin
 templates also fixed a latent bug where the paladin skill-proficiency effect could
 not resolve its captured `level` var through the converter; v2 emits the base
 `skill.X.proficiency` fact and the module derives the rest.)_
+
 - **W5 — REMOVED (no existing-character migration).** Per the original spec we do not
   carry pre-v2 characters forward, so there is no one-shot `/effects` backfill and no
   read-time v1→v2 shim. Old characters are deleted and recreated v2-native; every
@@ -199,7 +216,7 @@ not resolve its captured `level` var through the converter; v2 emits the base
 - **No behaviour change at cutover** — the parity harness (327 runnable) is the
   agreement proof; the 10 by-design deltas are the accepted, documented set.
 - **I18n / a11y / the CSS Law** for any UI-adapter work — reuse existing keys and
-  theme variables; the adapter feeds the *existing* PanelRenderer unchanged.
+  theme variables; the adapter feeds the _existing_ PanelRenderer unchanged.
 - **Infra only via make targets** (`make deploy-test`, `make sync-rule-groups`);
   never run `terraform` directly. New rules still go through the yaml runner.
 - **Delete only after green** — W6 removes v1 strictly after the W4 cutover passes in
@@ -219,15 +236,15 @@ the code side is ready:
   normal app build. No separate infra.
 - **W4 — metadata/search index (works for the test via the existing sync).** The app
   reads rule-group metadata (name/requires/settings/condition) from DynamoDB, populated
-  by `make sync-rule-groups` from the YAML — unchanged. Publishing metadata *from the
-  v2 modules* (so the YAML can be deleted) is a **W6** prerequisite, not test-blocking.
+  by `make sync-rule-groups` from the YAML — unchanged. Publishing metadata _from the
+  v2 modules_ (so the YAML can be deleted) is a **W6** prerequisite, not test-blocking.
 - **W6 — end-to-end proof = the deploy itself.** `make deploy-test` runs the full gate
   then `push-test` + `sync-rule-groups`. Its e2e gate is only the home-page smoke test
   (no play-flow e2e), so the cutover doesn't break it.
 - **Coverage is complete + guarded.** All 84 deployed rule groups either resolve to a
   v2 module (67) or have **0 rules** (17: the `*-spells-l*` list aggregators + the
   `*-detail` catalog entries), which `loadModules` harmlessly skips. `v2-coverage.test.ts`
-  asserts every rule group *with rules* has a module, so a future unported group fails
+  asserts every rule group _with rules_ has a module, so a future unported group fails
   loudly.
 
 **MUST re-sync on deploy:** the settings `effect:` templates changed shape (v1 rule →

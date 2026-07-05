@@ -7,11 +7,6 @@ vi.mock('$lib/api/client', () => ({
   apiDelete: vi.fn()
 }));
 
-// Mock the rules engine evaluate function
-vi.mock('$lib/rules-engine', () => ({
-  evaluate: vi.fn()
-}));
-
 // Mock $lib/i18n with a proper mock store
 vi.mock('$lib/i18n', () => {
   let currentValue = 'en';
@@ -39,38 +34,14 @@ vi.mock('$lib/i18n', () => {
 });
 
 import { apiPost } from '$lib/api/client';
-import { evaluate } from '$lib/rules-engine';
-import type { Rule, EngineOutput } from '$lib/rules-engine';
+import type { Rule } from '$lib/rules-engine';
 
 const mockApiPost = vi.mocked(apiPost);
-const mockEvaluate = vi.mocked(evaluate);
-
-function mockEngineOutput(): EngineOutput {
-  return {
-    status: { ok: true, legal: true, applicable: true },
-    facts: {},
-    collections: {},
-    availableRules: [],
-    diagnostics: { errors: [], warnings: [], notices: [] },
-    trace: {
-      appliedRuleIds: [],
-      appliedActivityIds: [],
-      providedCapabilities: [],
-      emittedEvents: []
-    },
-    next: {
-      schemaVersion: 1,
-      rules: { standing: [], planned: [], effects: [] },
-      state: { facts: {} }
-    }
-  };
-}
 
 describe('assignRuleGroup with dependencies', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
-    mockEvaluate.mockReturnValue(mockEngineOutput());
   });
 
   afterEach(() => {

@@ -1,11 +1,6 @@
-// Main entry point
-export { evaluate } from './evaluate';
-
-// Temporary placeholder - remove when calling code is updated
-export { getHelloWorld } from './hello-world';
-
-// Source resolution
-export { validateSource, resolveSource, resolveStringSource } from './sources';
+// The v1 execution engine has been removed. This module now only re-exports the
+// shared engine→UI view/output contract types consumed by the UI and the v2
+// bridge; all rule evaluation lives in `$lib/rules-engine-v2`.
 
 // Public types
 export type {
@@ -59,8 +54,5 @@ export type {
   // Output
   EngineOutput,
   AvailableRuleEntry,
-  Trace,
-  // Internal (for testing)
-  WorkingState,
-  RuleContext
+  Trace
 } from './types';

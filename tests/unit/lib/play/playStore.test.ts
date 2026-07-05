@@ -7,13 +7,6 @@ vi.mock('$lib/api/client', () => ({
   apiDelete: vi.fn()
 }));
 
-// Mock the (legacy v1) rules engine evaluate function. The store no longer calls
-// it — v2 is wired through `./evaluateV2` + `loadModules` (mocked below) — but some
-// tests still import the symbol, so keep it a harmless stub.
-vi.mock('$lib/rules-engine', () => ({
-  evaluate: vi.fn()
-}));
-
 // Mock the v2 lazy module loader (no chunks in unit tests) but keep the rest of the
 // v2 barrel real (migratePersistedEffects, endTurn aging — pure).
 vi.mock('$lib/rules-engine-v2', async (importOriginal) => {
@@ -73,7 +66,6 @@ vi.mock('svelte-sonner', () => ({
 }));
 
 import { apiGet, apiPost, apiDelete } from '$lib/api/client';
-import { evaluate } from '$lib/rules-engine';
 import { loadModules } from '$lib/rules-engine-v2';
 import { evaluateCharacterV2, hypotheticalOffers } from '$lib/play/evaluateV2';
 import { locale } from '$lib/i18n';
@@ -132,7 +124,9 @@ describe('playStore', () => {
     it('fetches rule group IDs then batches to fetch rules', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
 
       // Mock rule group IDs response - API returns { ruleGroups: string[] }
       mockApiGet.mockResolvedValueOnce({
@@ -187,7 +181,9 @@ describe('playStore', () => {
     it('splits large rule group lists into batches of 100', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
 
       // Create 150 rule group IDs
       const groupIds = Array.from({ length: 150 }, (_, i) => `group-${i}`);
@@ -273,7 +269,9 @@ describe('playStore', () => {
     it('passes current locale to API', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
 
       // Mock rule group IDs response
       mockApiGet.mockResolvedValueOnce({
@@ -329,7 +327,9 @@ describe('playStore', () => {
     it('populates ruleGroupRulesMap from batch response', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
 
       const group1Rules: Rule[] = [{ id: 'rule-1', activities: [] }];
       const group2Rules: Rule[] = [{ id: 'rule-2', activities: [] }];
@@ -381,7 +381,9 @@ describe('playStore', () => {
     it('stores the characterId in state', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
 
       mockApiGet.mockResolvedValueOnce({
         ok: true,
@@ -425,7 +427,9 @@ describe('playStore', () => {
 
     it('loads effects from API and keeps empty array when null', async () => {
       const mockApiGet = vi.mocked(apiGet);
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
 
       mockApiGet
         .mockResolvedValueOnce({
@@ -503,7 +507,12 @@ describe('playStore', () => {
       // with a valid v2 EffectInstance. The v1 ones are dropped; the v2 one survives.
       const mixed = [
         { id: 'effect-legacy', group: ['bless'], activities: [{ type: 'numberSet' }] },
-        { id: 'effect-bless', key: 'bless', state: { 'concentration.spent': 1 }, expiry: { kind: 'permanent' } }
+        {
+          id: 'effect-bless',
+          key: 'bless',
+          state: { 'concentration.spent': 1 },
+          expiry: { kind: 'permanent' }
+        }
       ];
 
       mockApiGet
@@ -523,7 +532,9 @@ describe('playStore', () => {
 
     it('shows toast on effects load failure and falls back to empty', async () => {
       const mockApiGet = vi.mocked(apiGet);
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
       vi.mocked(toast.error).mockClear();
 
       mockApiGet
@@ -566,7 +577,9 @@ describe('playStore', () => {
 
   describe('addToPlan', () => {
     it('adds a rule to the plan with a unique instance ID', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
         facts: {},
@@ -686,7 +699,9 @@ describe('playStore', () => {
     });
 
     it('does not resolve vars without capture property', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
         facts: {
@@ -732,7 +747,9 @@ describe('playStore', () => {
     });
 
     it('allows adding the same rule multiple times (duplicates)', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
         facts: {},
@@ -766,7 +783,9 @@ describe('playStore', () => {
     });
 
     it('stores originalRuleId preserving the rule id before rewriting', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
         facts: {},
@@ -798,7 +817,9 @@ describe('playStore', () => {
     });
 
     it('stores verb derived from the rule', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
         facts: {},
@@ -834,7 +855,9 @@ describe('playStore', () => {
 
   describe('swapPlanItemRule', () => {
     it('swaps a planned item rule and updates verb and originalRuleId', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
         facts: {},
@@ -886,7 +909,9 @@ describe('playStore', () => {
 
   describe('removeFromPlan', () => {
     it('removes an item by instance ID and reindexes order', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
         facts: {},
@@ -931,7 +956,9 @@ describe('playStore', () => {
 
   describe('movePlanItem', () => {
     it('moves an item up in the plan order', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
         facts: {},
@@ -970,7 +997,9 @@ describe('playStore', () => {
     });
 
     it('moves an item down in the plan order', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
         facts: {},
@@ -1009,7 +1038,9 @@ describe('playStore', () => {
     });
 
     it('does nothing when trying to move first item up', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
         facts: {},
@@ -1048,7 +1079,9 @@ describe('playStore', () => {
     });
 
     it('does nothing when trying to move last item down', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
         facts: {},
@@ -1089,7 +1122,9 @@ describe('playStore', () => {
 
   describe('reset', () => {
     it('clears all state to initial values', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
         facts: {},
@@ -1125,7 +1160,9 @@ describe('playStore', () => {
 
     it('clears currentCharacterId', async () => {
       const mockApiGet = vi.mocked(apiGet);
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
 
       mockApiGet
         .mockResolvedValueOnce({
@@ -1170,7 +1207,9 @@ describe('playStore', () => {
 
   describe('updateSelections', () => {
     it('updates selections for a planned item and triggers debounced evaluate', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
         facts: {},
@@ -1203,7 +1242,9 @@ describe('playStore', () => {
     });
 
     it('does nothing if instance ID not found', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
         facts: {},
@@ -1237,7 +1278,9 @@ describe('playStore', () => {
     });
 
     it('merges new selections with existing instead of replacing', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
         facts: {},
@@ -1292,7 +1335,9 @@ describe('playStore', () => {
   describe('assignRuleGroup', () => {
     it('adds ruleGroupId to state on successful assignment', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
 
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
@@ -1342,7 +1387,9 @@ describe('playStore', () => {
 
     it('fetches rules and updates standing on success', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
 
       const newRules: Rule[] = [{ id: 'new-rule-1', activities: [] }];
 
@@ -1397,7 +1444,9 @@ describe('playStore', () => {
 
     it('reverts ruleGroupIds on API failure', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
 
       mockApiPost.mockResolvedValueOnce({
         ok: false,
@@ -1500,7 +1549,9 @@ describe('playStore', () => {
   describe('condition gating', () => {
     it('blocks assignRuleGroup when conditions are not met', async () => {
       const mockApiGet = vi.mocked(apiGet);
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
 
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
@@ -1677,7 +1728,9 @@ describe('playStore', () => {
     });
 
     it('checkCondition returns true when no conditions defined', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
 
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
@@ -1769,7 +1822,9 @@ describe('playStore', () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
       const mockApiDeleteFn = vi.mocked(apiDelete);
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
 
       const group1Rules: Rule[] = [{ id: 'rule-1', activities: [] }];
 
@@ -1834,7 +1889,9 @@ describe('playStore', () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
       const mockApiDeleteFn = vi.mocked(apiDelete);
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
 
       const group1Rules: Rule[] = [{ id: 'rule-1', activities: [] }];
 
@@ -2020,7 +2077,9 @@ describe('playStore', () => {
     it('shows toast when effects save fails', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
       vi.mocked(toast.error).mockClear();
 
       const committedEffect: Rule = { id: 'effect-1', activities: [] };
@@ -2072,7 +2131,9 @@ describe('playStore', () => {
 
     it('does not POST when no character is loaded', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
       mockApiPost.mockClear();
 
       mockEvaluate.mockReturnValue({
@@ -2112,8 +2173,16 @@ describe('playStore', () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
 
-      const effect1 = { id: 'effect-1', state: { 'a.active': 1 }, expiry: { kind: 'untilLongRest' as const } };
-      const effect2 = { id: 'effect-2', state: { 'b.active': 1 }, expiry: { kind: 'untilLongRest' as const } };
+      const effect1 = {
+        id: 'effect-1',
+        state: { 'a.active': 1 },
+        expiry: { kind: 'untilLongRest' as const }
+      };
+      const effect2 = {
+        id: 'effect-2',
+        state: { 'b.active': 1 },
+        expiry: { kind: 'untilLongRest' as const }
+      };
 
       // Setup: load character with committed effects (v2 EffectInstance blob)
       mockApiGet
@@ -2178,8 +2247,16 @@ describe('playStore', () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
 
-      const effect1 = { id: 'effect-1', state: { 'a.active': 1 }, expiry: { kind: 'untilLongRest' as const } };
-      const effect2 = { id: 'effect-2', state: { 'b.active': 1 }, expiry: { kind: 'untilLongRest' as const } };
+      const effect1 = {
+        id: 'effect-1',
+        state: { 'a.active': 1 },
+        expiry: { kind: 'untilLongRest' as const }
+      };
+      const effect2 = {
+        id: 'effect-2',
+        state: { 'b.active': 1 },
+        expiry: { kind: 'untilLongRest' as const }
+      };
 
       mockApiGet
         .mockResolvedValueOnce({
@@ -2209,7 +2286,9 @@ describe('playStore', () => {
 
     it('does not POST when no character is loaded', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
 
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
@@ -2247,7 +2326,9 @@ describe('playStore', () => {
     it('shows toast when effects save fails', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
       vi.mocked(toast.error).mockClear();
 
       const effect: Rule = { id: 'effect-1', activities: [] };
@@ -2315,7 +2396,9 @@ describe('playStore', () => {
 
     it('calls assignRuleGroup for select-rule-group settings', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
 
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
@@ -2408,7 +2491,9 @@ describe('playStore', () => {
 
     it('does not generate effects for select-rule-group settings', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
 
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
@@ -2479,7 +2564,9 @@ describe('playStore', () => {
 
     it('handles mixed select and select-rule-group settings', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
+      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
+      // this stub keeps older per-test setups intact without touching the store.
+      const mockEvaluate = vi.fn();
 
       mockEvaluate.mockReturnValue({
         status: { ok: true, legal: true, applicable: true },
@@ -2768,7 +2855,11 @@ describe('playStore', () => {
           ok: true,
           json: async () => ({
             effects: JSON.stringify([
-              { id: 'effect-steed', state: { 'steed.active': 1 }, expiry: { kind: 'untilLongRest' } }
+              {
+                id: 'effect-steed',
+                state: { 'steed.active': 1 },
+                expiry: { kind: 'untilLongRest' }
+              }
             ])
           })
         } as Response);
@@ -2792,13 +2883,11 @@ describe('playStore', () => {
         expiry: { kind: 'untilLongRest' as const }
       };
       // Advertise the effect this turn; the entry only surfaces once it's committed.
-      vi.mocked(evaluateCharacterV2).mockImplementation(
-        ((_m: unknown, committed: unknown[]) =>
-          v2Out({
-            topBarEntries: committed.length > 0 ? [speedEntry] : [],
-            advertised: [advertised]
-          })) as never
-      );
+      vi.mocked(evaluateCharacterV2).mockImplementation(((_m: unknown, committed: unknown[]) =>
+        v2Out({
+          topBarEntries: committed.length > 0 ? [speedEntry] : [],
+          advertised: [advertised]
+        })) as never);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
