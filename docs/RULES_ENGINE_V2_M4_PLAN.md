@@ -142,34 +142,32 @@ Four gaps to bridge:
       (`assignRuleGroupWithSettings`) are migrated into `committed`; `addFollowupEffect`
       migrates its v1 rule into `committed`; `removeEffect` filters `committed`.
 
-### Known cutover gaps (accepted for the flag deploy; validate/close on test)
+### Cutover gaps
 
-These are the deliberate degradations baked into the store cutover. None break the
-core play loop (load → stats/resources → plan → end turn); all are advanced-feature
-or cosmetic and are the reason "the PR is the flag" — the test-env deploy is where
-they get eyeballed and prioritised.
+**Only one accepted degradation remains:**
 
 1. **Custom rules do not evaluate.** v2 runs code modules, not authored `Rule`
    objects. Custom rules are still stored, edited (`EditCustomRules`), and exported —
    they just don't contribute facts/offers under v2. A v2 custom-rule authoring path
    (or formal drop) is a separate product decision.
-2. **Effect display names fall back to the id.** An `EffectInstance` carries no
-   display name, so the active-effects chip shows the effect id (e.g. `effect-bless`)
-   and the top-bar concentration label is blank. Needs a per-effect → i18n-name map
-   (the "small per-module effect-descriptor map" option). Duration pips + the
-   concentration marker DO work.
-3. **Strip visibility is heuristic.** `effectInstanceToRule` hides `permanent` (the
-   whole v2 build: abilities/equipment/prepared) and pure `*.spent` resource effects,
-   showing duration-limited buffs + concentration. Edge cases (a permanent
-   player-facing buff; the steed, which surfaces via facts + the subject switcher, not
-   the strip) may be mis-classified — confirm on test.
-4. **Export/import effect fidelity is lossy.** Export serialises the bridged display
-   `Rule`s; effects are transient combat state, so a re-import round-trips them
-   imperfectly. Build (rule groups) + custom rules export unchanged.
-5. **`cascadeRemove` is dropped.** Not carried by `EffectInstance`; dependent-effect
-   eviction is now the owning module's job (by `key`).
-6. **Steed resources not in the ledger yet.** `derivePanels` has no
-   `companion.steed.*` entries; the steed's own resources need adding to the catalog.
+
+**Closed (were not acceptable losses):**
+
+- **Effect i18n names — FIXED.** An `EffectInstance` now carries optional `display`
+  (name/section/displayFact), which the bridge maps to the chip; its presence also
+  opts the effect onto the strip. Wired onto the 12 player-facing effects (spells,
+  steed as a MOUNT chip, grapple, divine-sense, javelin Slow, …), reusing the existing
+  `rule.*.effect-*.name` keys. Also fixes the top-bar concentration label.
+- **Steed resources — FIXED.** `deriveResourceEntries` surfaces the steed's HP /
+  movement / actions / bonus-actions + the creature-type-matched special ability under
+  the `subject: 'steed'` view.
+- **Export/import — FIXED.** Now serialises `committed` (`EffectInstance[]`) at
+  schemaVersion 2 and round-trips faithfully (intentionally not v1-compatible).
+
+**Minor, still open:**
+
+- **`cascadeRemove` is dropped.** Not carried by `EffectInstance`; dependent-effect
+  eviction is now the owning module's job (by `key`). Revisit if a real case needs it.
 
 _(The earlier gap "settings + follow-up effects still emit v1-shape" is CLOSED — see
 W2 above: both are now v2-native and `migrate.ts` is deleted. Porting the settings
