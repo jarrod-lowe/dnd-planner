@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { evaluate, evaluateSheet, evaluatePlan, evaluateOffers, endTurn } from '$lib/rules-engine-v2';
+import {
+  evaluate,
+  evaluateSheet,
+  evaluatePlan,
+  evaluateOffers,
+  endTurn
+} from '$lib/rules-engine-v2';
 import type { Facts, OfferEntry, PlannedRef } from '$lib/rules-engine-v2';
 import actionEconomy from '$lib/rules-engine-v2/rules/action-economy';
 import attacks from '$lib/rules-engine-v2/rules/attacks';

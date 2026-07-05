@@ -30,7 +30,8 @@ const sanctuary: RuleModule = {
     const c: Contribution[] = [
       {
         fact: 'sanctuary.eligibleSlotsRemaining',
-        value: (f) => LEVELS.reduce((s, n) => s + f.num(`spellcasting.slots.level${n}.remaining`), 0)
+        value: (f) =>
+          LEVELS.reduce((s, n) => s + f.num(`spellcasting.slots.level${n}.remaining`), 0)
       },
       {
         fact: 'sanctuary.lowestAvailableSlotLevel',
@@ -63,13 +64,18 @@ const sanctuary: RuleModule = {
           {
             type: 'text',
             label: 'play.information.saveDc',
-            labelValues: { saveType: { fact: 'spellcasting.saveAbility' }, dc: { fact: 'spellcasting.saveDC' } }
+            labelValues: {
+              saveType: { fact: 'spellcasting.saveAbility' },
+              dc: { fact: 'spellcasting.saveDC' }
+            }
           }
         ],
         intents: { DEFEND: 'ward' },
         actionCost: ['bonus', 'L1']
       },
-      vars: { slotLevel: { capture: true, default: { fact: 'sanctuary.lowestAvailableSlotLevel' } } },
+      vars: {
+        slotLevel: { capture: true, default: { fact: 'sanctuary.lowestAvailableSlotLevel' } }
+      },
       legalWhen: [
         {
           condition: (f) => f.num('bonusActions.remaining') > 0,
@@ -90,7 +96,11 @@ const sanctuary: RuleModule = {
             ? selections.slotLevel
             : f.num('sanctuary.lowestAvailableSlotLevel');
         const advertise: EffectInstance[] = [
-          { id: 'cost', state: { 'bonusActions.spent': 1, 'spellcasting.spent': 1 }, expiry: { kind: 'endOfTurn' } },
+          {
+            id: 'cost',
+            state: { 'bonusActions.spent': 1, 'spellcasting.spent': 1 },
+            expiry: { kind: 'endOfTurn' }
+          },
           // The ward: a pure duration marker; ends after 10 rounds or on any rest.
           {
             id: 'effect-sanctuary',

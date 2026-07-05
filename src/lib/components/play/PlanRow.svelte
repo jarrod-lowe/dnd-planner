@@ -12,12 +12,7 @@
   import { peekDetail, getDetail } from '$lib/details/index';
   import type { ItemDetail } from '$lib/details/types';
   import type { PlannedItem } from '$lib/play/types';
-  import type {
-    AvailableRuleEntry,
-    Annotation,
-    Facts,
-    ActionCostTag
-  } from '$lib/rules-engine';
+  import type { AvailableRuleEntry, Annotation, Facts, ActionCostTag } from '$lib/rules-engine';
   import type { EffectInstance } from '$lib/rules-engine-v2';
 
   interface Props {

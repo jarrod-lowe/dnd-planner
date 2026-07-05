@@ -67,9 +67,15 @@ const oath: RuleModule = {
       apply: (f): ActionResult => {
         const diagnostics: Diagnostic[] = [];
         if (f.num('reactions.remaining') <= 0)
-          diagnostics.push({ code: `${O}.offer-rebuke-the-violent.no_reaction`, severity: 'error' });
+          diagnostics.push({
+            code: `${O}.offer-rebuke-the-violent.no_reaction`,
+            severity: 'error'
+          });
         if (f.num('divinity.remaining') <= 0)
-          diagnostics.push({ code: `${O}.offer-rebuke-the-violent.no_divinity`, severity: 'error' });
+          diagnostics.push({
+            code: `${O}.offer-rebuke-the-violent.no_divinity`,
+            severity: 'error'
+          });
         return {
           advertise: [
             { id: 'cost', state: { 'reactions.spent': 1 }, expiry: { kind: 'endOfTurn' } },
@@ -101,7 +107,10 @@ const oath: RuleModule = {
       apply: (f): ActionResult => {
         const diagnostics: Diagnostic[] = [];
         if (f.num('bonusActions.remaining') <= 0)
-          diagnostics.push({ code: `${O}.offer-emissary-of-peace.no_bonus_action`, severity: 'error' });
+          diagnostics.push({
+            code: `${O}.offer-emissary-of-peace.no_bonus_action`,
+            severity: 'error'
+          });
         if (f.num('divinity.remaining') <= 0)
           diagnostics.push({ code: `${O}.offer-emissary-of-peace.no_divinity`, severity: 'error' });
         return {

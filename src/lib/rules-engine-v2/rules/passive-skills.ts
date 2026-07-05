@@ -10,7 +10,10 @@ const PASSIVES = ['perception', 'insight', 'investigation'] as const;
 const passiveSkills: RuleModule = {
   id: 'passive-skills',
   derive: () =>
-    PASSIVES.map((s) => ({ fact: `passive.${s}.value`, value: (f) => 10 + f.num(`skill.${s}.value`) }))
+    PASSIVES.map((s) => ({
+      fact: `passive.${s}.value`,
+      value: (f) => 10 + f.num(`skill.${s}.value`)
+    }))
 };
 
 export default defineRule(passiveSkills);

@@ -23,7 +23,11 @@ import prayerOfHealing from '$lib/rules-engine-v2/rules/prayer-of-healing';
  * are the interim contract check that completes the port to 67/67 groups.
  */
 
-const ref = (instanceId: string, ruleId: string, selections?: Record<string, unknown>): PlannedRef => ({
+const ref = (
+  instanceId: string,
+  ruleId: string,
+  selections?: Record<string, unknown>
+): PlannedRef => ({
   instanceId,
   ruleId,
   ...(selections ? { selections } : {})
@@ -47,7 +51,9 @@ describe('v2 spear-plus1 — magical weapon variant', () => {
 
     const donned = evaluatePlan(ALL, INPUT, [ref('i0', 'don-spear-plus1')]);
     expect(donned.facts['weapon.spear-plus1.equipped']).toBe(1);
-    expect(evaluateOffers(ALL, donned.facts).some((o) => o.id === 'spear-plus1-use-action')).toBe(true);
+    expect(evaluateOffers(ALL, donned.facts).some((o) => o.id === 'spear-plus1-use-action')).toBe(
+      true
+    );
   });
 
   it('marks the weapon magical unconditionally', () => {
@@ -73,7 +79,9 @@ describe('v2 feat-savage-attacker — once-per-turn reroll rider', () => {
     expect(before?.diagnostics.some((d) => d.code.endsWith('no_attack'))).toBe(true);
 
     const attacked = evaluateSheet([featSavageAttacker], { 'attack.last.weapon': 1 });
-    const after = evaluateOffers([featSavageAttacker], attacked).find((o) => o.id === 'savage-attacker-use');
+    const after = evaluateOffers([featSavageAttacker], attacked).find(
+      (o) => o.id === 'savage-attacker-use'
+    );
     expect(after?.legal).toBe(true);
   });
 
@@ -89,7 +97,11 @@ describe('v2 feat-savage-attacker — once-per-turn reroll rider', () => {
     expect(out.planDiagnostics.get('i3')?.some((d) => d.code.endsWith('already_used'))).toBe(true);
 
     // The spend is endOfTurn, so a fresh turn restores the use.
-    const nextTurn = endTurn([], out.advertised.filter((e) => e.expiry.kind !== 'endOfTurn'), {});
+    const nextTurn = endTurn(
+      [],
+      out.advertised.filter((e) => e.expiry.kind !== 'endOfTurn'),
+      {}
+    );
     expect(evaluateSheet(ALL, {}, nextTurn)['savageAttacker.remaining']).toBe(1);
   });
 
@@ -98,14 +110,18 @@ describe('v2 feat-savage-attacker — once-per-turn reroll rider', () => {
       [featSavageAttacker],
       evaluateSheet([featSavageAttacker], { 'attack.last.weapon': 1 })
     );
-    expect(available.some((a) => a.key === 'rule.dnd-5e-2024.feat-savage-attacker.annotation')).toBe(true);
+    expect(
+      available.some((a) => a.key === 'rule.dnd-5e-2024.feat-savage-attacker.annotation')
+    ).toBe(true);
 
     // A used-up turn (spent === max) → no reroll available → no annotation.
     const used = collectAnnotations(
       [featSavageAttacker],
       evaluateSheet([featSavageAttacker], { 'attack.last.weapon': 1, 'savageAttacker.spent': 1 })
     );
-    expect(used.some((a) => a.key === 'rule.dnd-5e-2024.feat-savage-attacker.annotation')).toBe(false);
+    expect(used.some((a) => a.key === 'rule.dnd-5e-2024.feat-savage-attacker.annotation')).toBe(
+      false
+    );
   });
 });
 
@@ -147,9 +163,13 @@ describe('v2 prayer-of-healing — L2 action spell, full L2-9 cascade', () => {
     };
     expect(evaluateSheet(ALL, INPUT)['prayerOfHealing.lowestAvailableSlotLevel']).toBe(2);
 
-    const upcast = evaluatePlan(ALL, INPUT, [ref('c1', 'cast-prayer-of-healing', { slotLevel: 3 })]);
+    const upcast = evaluatePlan(ALL, INPUT, [
+      ref('c1', 'cast-prayer-of-healing', { slotLevel: 3 })
+    ]);
     expect(upcast.facts['spellcasting.slots.level3.remaining']).toBe(0);
     expect(upcast.facts['spellcasting.slots.level2.remaining']).toBe(1); // untouched
-    expect(upcast.advertised.some((e) => e.id.endsWith('effect-prayer-of-healing-slot-l3'))).toBe(true);
+    expect(upcast.advertised.some((e) => e.id.endsWith('effect-prayer-of-healing-slot-l3'))).toBe(
+      true
+    );
   });
 });

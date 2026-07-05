@@ -81,9 +81,7 @@ function parsePersistedEffects(json: string): EffectInstance[] {
     // (v1-shape) effect from a character not yet recreated v2-native — drop it rather
     // than crash the play view. Not a migration: the effect is discarded, and that
     // character starts from a clean effect state (its build is re-made via settings).
-    return parsed.filter(
-      (e): e is EffectInstance => !!e && typeof e === 'object' && 'expiry' in e
-    );
+    return parsed.filter((e): e is EffectInstance => !!e && typeof e === 'object' && 'expiry' in e);
   } catch {
     return [];
   }

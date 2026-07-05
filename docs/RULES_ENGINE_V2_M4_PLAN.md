@@ -127,36 +127,30 @@ planned): V1ShapedOutput`: map `availableRules` (descriptor→rule, merge
     is a 62-test suite that asserted the v1 internals; it has been re-pointed at the
     v2 seam (mocks `./evaluateV2` + `loadModules`, keeps the pure `migrate`/`endTurn`
     real). Full unit suite green (2319 passed / 10 by-design skips), lint + build
-    green. Recipe as implemented:
-    1. **`loadRuleGroups`** — keep the id fetch; add `state.modules =
+    green. Recipe as implemented: 1. **`loadRuleGroups`** — keep the id fetch; add `state.modules =
 (await loadModules(ids)).modules` (async, once per character). Drop the
-       per-group rule-JSON `/batch` fetch from the eval path (settings still use
-       `ruleGroupIds` + the dep cache, not the rule objects).
-    2. **effects load** — `parsePersistedEffects(blob)` → `state.committed:
+    per-group rule-JSON `/batch` fetch from the eval path (settings still use
+    `ruleGroupIds` + the dep cache, not the rule objects). 2. **effects load** — `parsePersistedEffects(blob)` → `state.committed:
 EffectInstance[]` (a plain JSON parse; the blob is v2-native, no migration).
-       Keep `state.effects: Rule[]` for the active-effects UI, produced from
-       `state.committed` by a small `effectInstanceToRule` display bridge (`expiry` →
-       `ui.countDown`/`duration`; synthesize a concentration activity when
-       `state['concentration.spent']` so `effectUtils.getEffectKind` reads `CONC`;
-       build + resource-spend effects flagged `ui.hidden`). Persist `state.committed`
-       as `EffectInstance[]` JSON.
-    3. **`performEvaluation`** (stays sync) — `evaluateCharacterV2(state.modules,
+    Keep `state.effects: Rule[]` for the active-effects UI, produced from
+    `state.committed` by a small `effectInstanceToRule` display bridge (`expiry` →
+    `ui.countDown`/`duration`; synthesize a concentration activity when
+    `state['concentration.spent']` so `effectUtils.getEffectKind` reads `CONC`;
+    build + resource-spend effects flagged `ui.hidden`). Persist `state.committed`
+    as `EffectInstance[]` JSON. 3. **`performEvaluation`** (stays sync) — `evaluateCharacterV2(state.modules,
 state.committed, refs, {})` where `refs = plannedItems.map(i => ({
 instanceId: i.instanceId, ruleId: i.rule.id, selections: i.rule.selections }))`.
-       Set `state.facts`, `state.topBarEntries`/`resourceEntries` from the result,
-       and build `state.engineOutput` in the v1 shape (v2 `availableRules` is
-       already compatible; drop `collections`/`trace`). Hypotheticals ←
-       `hypotheticalOffers(...)`. Per-item plan legality ← `plannedEntries` (map by
-       `instanceId`, which PlanStack already keys on).
-    4. **`endTurn`** — age `state.committed` with v2 `endTurn(committed, advertised,
+    Set `state.facts`, `state.topBarEntries`/`resourceEntries` from the result,
+    and build `state.engineOutput` in the v1 shape (v2 `availableRules` is
+    already compatible; drop `collections`/`trace`). Hypotheticals ←
+    `hypotheticalOffers(...)`. Per-item plan legality ← `plannedEntries` (map by
+    `instanceId`, which PlanStack already keys on). 4. **`endTurn`** — age `state.committed` with v2 `endTurn(committed, advertised,
 {})`; refresh `state.effects` via the display bridge; persist. (Replaces the
-       v1 `decrementCountDowns` on `output.effects`.)
-    5. **`recalculateStats`** — deleted (top bar/resources now come from the eval
-       result's `derivePanels` output, not `[...ruleGroups, ...effects]`).
-    - Also wired: `assignSingleGroup`/`rollbackDeps`/`unassignRuleGroup` add/remove
-      the group's `RuleModule` from `state.modules`; settings-derived effects
-      (`assignRuleGroupWithSettings`) are migrated into `committed`; `addFollowupEffect`
-      migrates its v1 rule into `committed`; `removeEffect` filters `committed`.
+    v1 `decrementCountDowns` on `output.effects`.) 5. **`recalculateStats`** — deleted (top bar/resources now come from the eval
+    result's `derivePanels` output, not `[...ruleGroups, ...effects]`). - Also wired: `assignSingleGroup`/`rollbackDeps`/`unassignRuleGroup` add/remove
+    the group's `RuleModule` from `state.modules`; settings-derived effects
+    (`assignRuleGroupWithSettings`) are migrated into `committed`; `addFollowupEffect`
+    migrates its v1 rule into `committed`; `removeEffect` filters `committed`.
 
 ### Cutover gaps
 

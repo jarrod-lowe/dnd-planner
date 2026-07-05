@@ -78,11 +78,23 @@ const v2out = (overrides: Partial<V2EngineOutput> = {}): V2EngineOutput => ({
   status: { ok: true, legal: true, applicable: true },
   facts: { 'hp.max': 10 },
   availableRules: [
-    { rule: { id: 'unarmed-strike-use-action', ui: {} }, legal: true, applicable: true, diagnostics: [] }
+    {
+      rule: { id: 'unarmed-strike-use-action', ui: {} },
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    }
   ],
   planDiagnostics: {},
   annotations: [],
-  effects: [{ id: 'effect-bless', key: 'bless', state: { 'bless.active': 1 }, expiry: { kind: 'permanent' } }],
+  effects: [
+    {
+      id: 'effect-bless',
+      key: 'bless',
+      state: { 'bless.active': 1 },
+      expiry: { kind: 'permanent' }
+    }
+  ],
   diagnostics: { errors: [], warnings: [], notices: [] },
   next: { modules: [] },
   ...overrides

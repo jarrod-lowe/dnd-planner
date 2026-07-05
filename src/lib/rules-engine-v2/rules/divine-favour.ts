@@ -161,7 +161,9 @@ const divineFavour: RuleModule = {
   ],
   // Surface "+1d4 radiant available" on weapon attacks while the buff is up.
   annotate: (f: FactReader) =>
-    f.num('divineFavour.active') > 0 ? [{ key: `${DF}.annotation`, targets: ['attack.weapon'] }] : []
+    f.num('divineFavour.active') > 0
+      ? [{ key: `${DF}.annotation`, targets: ['attack.weapon'] }]
+      : []
 };
 
 export default defineRule(divineFavour);

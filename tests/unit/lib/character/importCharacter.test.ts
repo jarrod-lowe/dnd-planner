@@ -224,7 +224,11 @@ describe('importCharacter', () => {
   });
 
   it('saves effects to the new character', async () => {
-    const effect = { id: 'effect-bless', state: { 'bless.active': 1 }, expiry: { kind: 'permanent' as const } };
+    const effect = {
+      id: 'effect-bless',
+      state: { 'bless.active': 1 },
+      expiry: { kind: 'permanent' as const }
+    };
     const data = { ...baseData, effects: [effect] };
     const deps = createMockDeps(defaultAssigned);
 

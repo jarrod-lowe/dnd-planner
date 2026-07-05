@@ -115,7 +115,8 @@ const attacks: RuleModule = {
       ],
       apply: (f): ActionResult => ({
         advertise: [spend({ 'reactions.spent': 1, 'attack.last.weapon': 1 })],
-        diagnostics: f.num('reactions.remaining') > 0 ? [] : [{ code: NO_REACTION, severity: 'error' }]
+        diagnostics:
+          f.num('reactions.remaining') > 0 ? [] : [{ code: NO_REACTION, severity: 'error' }]
       })
     }
   ],

@@ -1,4 +1,10 @@
-import { defineRule, type ActionResult, type EffectInstance, type Offer, type RuleModule } from '../builder';
+import {
+  defineRule,
+  type ActionResult,
+  type EffectInstance,
+  type Offer,
+  type RuleModule
+} from '../builder';
 
 const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
 
@@ -9,7 +15,10 @@ function saveOffer(a: string): Offer {
     ui: {
       section: 'free',
       name: `planner.record.save.${a}`,
-      primaryControl: { type: 'dice-line', dice: [{ sides: 20, bonus: { var: 'saveBonus' }, purpose: 'save' }] },
+      primaryControl: {
+        type: 'dice-line',
+        dice: [{ sides: 20, bonus: { var: 'saveBonus' }, purpose: 'save' }]
+      },
       secondaryControl: {
         type: 'segmented',
         var: 'passed',
@@ -47,7 +56,12 @@ function saveOffer(a: string): Offer {
 function restOffer(id: string, fact: string): Offer {
   return {
     id,
-    ui: { section: 'rest', name: `planner.record.rest.${id === 'record-long-rest' ? 'long' : 'short'}`, intents: { REST: 'rest' }, actionCost: [] },
+    ui: {
+      section: 'rest',
+      name: `planner.record.rest.${id === 'record-long-rest' ? 'long' : 'short'}`,
+      intents: { REST: 'rest' },
+      actionCost: []
+    },
     apply: (): ActionResult => ({
       advertise: [{ id: 'rest', state: { [fact]: 1 }, expiry: { kind: 'endOfTurn' } }]
     })
@@ -75,7 +89,13 @@ const coreEvents: RuleModule = {
       ui: {
         section: 'free',
         name: 'planner.record.damage',
-        primaryControl: { type: 'slider', var: 'amount', min: { number: 0 }, max: { fact: 'hp.max' }, unit: 'hp' },
+        primaryControl: {
+          type: 'slider',
+          var: 'amount',
+          min: { number: 0 },
+          max: { fact: 'hp.max' },
+          unit: 'hp'
+        },
         intents: { HEALTH: 'hp' },
         actionCost: []
       },
@@ -84,7 +104,11 @@ const coreEvents: RuleModule = {
         const amount = typeof selections.amount === 'number' ? selections.amount : 0;
         const advertise: EffectInstance[] = [
           // id matches the v1 effect (scenarios assert effect-hp-damage).
-          { id: 'effect-hp-damage', state: { 'hp.modifier.current': -amount }, expiry: { kind: 'untilLongRest' } }
+          {
+            id: 'effect-hp-damage',
+            state: { 'hp.modifier.current': -amount },
+            expiry: { kind: 'untilLongRest' }
+          }
         ];
         // Taking damage while concentrating (the slot is held → remaining ≤ 0)
         // trips the concentration group's check trigger. Keyed + endOfTurn so it
@@ -108,7 +132,13 @@ const coreEvents: RuleModule = {
         section: 'free',
         name: 'planner.record.heal',
         annotationLabels: ['healing.any'],
-        primaryControl: { type: 'slider', var: 'amount', min: { number: 0 }, max: { fact: 'hp.max' }, unit: 'hp' },
+        primaryControl: {
+          type: 'slider',
+          var: 'amount',
+          min: { number: 0 },
+          max: { fact: 'hp.max' },
+          unit: 'hp'
+        },
         intents: { HEALTH: 'hp' },
         actionCost: []
       },
@@ -119,7 +149,11 @@ const coreEvents: RuleModule = {
         return {
           advertise: [
             // id matches the v1 effect (scenarios assert effect-hp-heal).
-            { id: 'effect-hp-heal', state: { 'hp.modifier.current': amount }, expiry: { kind: 'untilLongRest' } }
+            {
+              id: 'effect-hp-heal',
+              state: { 'hp.modifier.current': amount },
+              expiry: { kind: 'untilLongRest' }
+            }
           ]
         };
       }
@@ -130,7 +164,11 @@ const coreEvents: RuleModule = {
       ui: {
         section: 'free',
         name: 'planner.record.check',
-        primaryControl: { type: 'dice-line', dice: [{ sides: 20, purpose: 'check' }], annotationLabels: ['dice.any'] },
+        primaryControl: {
+          type: 'dice-line',
+          dice: [{ sides: 20, purpose: 'check' }],
+          annotationLabels: ['dice.any']
+        },
         intents: { CHECK: 'skill' },
         actionCost: []
       }

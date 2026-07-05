@@ -90,13 +90,27 @@ const steedSpend = (state: Record<string, number>): EffectInstance => ({
 });
 
 /** A steed action/bonus/reaction offer that spends its economy slot. */
-function steedActivation(id: string, section: string, costFact: string, remainingFact: string): Offer {
+function steedActivation(
+  id: string,
+  section: string,
+  costFact: string,
+  remainingFact: string
+): Offer {
   const code = `${S}.${id}.no_actions`;
   return {
     id,
     when: summoned,
-    ui: { section, subject: 'steed', name: `${S}.${id}.name`, description: `${S}.${id}.description`, intents: { ACTION: 'steed' }, actionCost: [section === 'bonus-action' ? 'bonus' : section] },
-    legalWhen: [{ condition: (f) => f.num(remainingFact) > 0, diagnostics: [{ code, severity: 'error' }] }],
+    ui: {
+      section,
+      subject: 'steed',
+      name: `${S}.${id}.name`,
+      description: `${S}.${id}.description`,
+      intents: { ACTION: 'steed' },
+      actionCost: [section === 'bonus-action' ? 'bonus' : section]
+    },
+    legalWhen: [
+      { condition: (f) => f.num(remainingFact) > 0, diagnostics: [{ code, severity: 'error' }] }
+    ],
     apply: (f): ActionResult => ({
       advertise: [steedSpend({ [costFact]: 1 })],
       diagnostics: f.num(remainingFact) > 0 ? [] : [{ code, severity: 'error' }]
@@ -123,19 +137,38 @@ function steedAbilityOffer(creatureType: number): Offer {
   return {
     id: offerId,
     when: (f) => summoned(f) && f.num('companion.steed.creatureType') === creatureType,
-    ui: { section: 'bonus-action', subject: 'steed', name: `${S}.${offerId}.name`, description: `${S}.${offerId}.description`, intents: { ACTION: 'steed' }, actionCost: ['bonus'] },
+    ui: {
+      section: 'bonus-action',
+      subject: 'steed',
+      name: `${S}.${offerId}.name`,
+      description: `${S}.${offerId}.description`,
+      intents: { ACTION: 'steed' },
+      actionCost: ['bonus']
+    },
     legalWhen: [
-      { condition: (f) => f.num('companion.steed.bonusActions.remaining') > 0, diagnostics: [{ code: noBonus, severity: 'error' }] },
-      { condition: (f) => f.num(`companion.steed.${pool}.remaining`) > 0, diagnostics: [{ code: noUses, severity: 'error' }] }
+      {
+        condition: (f) => f.num('companion.steed.bonusActions.remaining') > 0,
+        diagnostics: [{ code: noBonus, severity: 'error' }]
+      },
+      {
+        condition: (f) => f.num(`companion.steed.${pool}.remaining`) > 0,
+        diagnostics: [{ code: noUses, severity: 'error' }]
+      }
     ],
     apply: (f): ActionResult => {
       const diagnostics: Diagnostic[] = [];
-      if (f.num('companion.steed.bonusActions.remaining') <= 0) diagnostics.push({ code: noBonus, severity: 'error' });
-      if (f.num(`companion.steed.${pool}.remaining`) <= 0) diagnostics.push({ code: noUses, severity: 'error' });
+      if (f.num('companion.steed.bonusActions.remaining') <= 0)
+        diagnostics.push({ code: noBonus, severity: 'error' });
+      if (f.num(`companion.steed.${pool}.remaining`) <= 0)
+        diagnostics.push({ code: noUses, severity: 'error' });
       return {
         advertise: [
           steedSpend({ 'companion.steed.bonusActions.spent': 1 }),
-          { id: `steed-${pool}-used`, state: { [`companion.steed.${pool}.spent`]: 1 }, expiry: { kind: 'untilLongRest' } }
+          {
+            id: `steed-${pool}-used`,
+            state: { [`companion.steed.${pool}.spent`]: 1 },
+            expiry: { kind: 'untilLongRest' }
+          }
         ],
         diagnostics
       };
@@ -144,20 +177,47 @@ function steedAbilityOffer(creatureType: number): Offer {
 }
 
 const STEED_SKILLS = [
-  'acrobatics', 'animal-handling', 'arcana', 'athletics', 'deception', 'history',
-  'insight', 'intimidation', 'investigation', 'medicine', 'nature', 'perception',
-  'performance', 'persuasion', 'religion', 'sleight-of-hand', 'stealth', 'survival'
+  'acrobatics',
+  'animal-handling',
+  'arcana',
+  'athletics',
+  'deception',
+  'history',
+  'insight',
+  'intimidation',
+  'investigation',
+  'medicine',
+  'nature',
+  'perception',
+  'performance',
+  'persuasion',
+  'religion',
+  'sleight-of-hand',
+  'stealth',
+  'survival'
 ] as const;
 
 /** A free record/config offer the steed always has while summoned (no spend). */
 const steedFreeOffer = (id: string, intent: Record<string, string>): Offer => ({
   id,
   when: summoned,
-  ui: { section: 'free', subject: 'steed', name: `${S}.${id}.name`, intents: intent, actionCost: [] }
+  ui: {
+    section: 'free',
+    subject: 'steed',
+    name: `${S}.${id}.name`,
+    intents: intent,
+    actionCost: []
+  }
 });
 
 /** Steed HP-modifier setter (keyed permanent — re-use replaces, matching the character's). */
-function steedHpModifier(fact: string, effectId: string, id: string, min: number, max: number): Offer {
+function steedHpModifier(
+  fact: string,
+  effectId: string,
+  id: string,
+  min: number,
+  max: number
+): Offer {
   return {
     id,
     when: summoned,
@@ -165,7 +225,12 @@ function steedHpModifier(fact: string, effectId: string, id: string, min: number
       section: 'free',
       subject: 'steed',
       name: `${S}.${id}.name`,
-      primaryControl: { type: 'slider', var: 'modifier', min: { number: min }, max: { number: max } },
+      primaryControl: {
+        type: 'slider',
+        var: 'modifier',
+        min: { number: min },
+        max: { number: max }
+      },
       intents: { HEALTH: 'hp' },
       actionCost: []
     },
@@ -203,7 +268,8 @@ const findSteed: RuleModule = {
     const c: Contribution[] = [
       {
         fact: 'find-steed.eligibleSlotsRemaining',
-        value: (f) => LEVELS.reduce((s, n) => s + f.num(`spellcasting.slots.level${n}.remaining`), 0)
+        value: (f) =>
+          LEVELS.reduce((s, n) => s + f.num(`spellcasting.slots.level${n}.remaining`), 0)
       },
       {
         fact: 'find-steed.lowestAvailableSlotLevel',
@@ -215,13 +281,15 @@ const findSteed: RuleModule = {
       {
         fact: 'find-steed.highestSlotLevel',
         value: (f) => {
-          for (let n = 5; n >= 2; n--) if (f.num(`spellcasting.slots.level${n}.remaining`) > 0) return n;
+          for (let n = 5; n >= 2; n--)
+            if (f.num(`spellcasting.slots.level${n}.remaining`) > 0) return n;
           return 0;
         }
       },
       {
         fact: 'find-steed.anyResourceRemaining',
-        value: (f) => f.num('find-steed.eligibleSlotsRemaining') + f.num('paladinFindSteed.remaining')
+        value: (f) =>
+          f.num('find-steed.eligibleSlotsRemaining') + f.num('paladinFindSteed.remaining')
       },
       {
         fact: 'find-steed.defaultLevel',
@@ -250,34 +318,45 @@ const findSteed: RuleModule = {
     // Movement: Dash doubles the base; remaining = total − spent.
     c.push({
       fact: 'companion.steed.movement.total',
-      value: (f) => f.num('companion.steed.movement.base') * (f.num('companion.steed.dashed') > 0 ? 2 : 1)
+      value: (f) =>
+        f.num('companion.steed.movement.base') * (f.num('companion.steed.dashed') > 0 ? 2 : 1)
     });
     c.push({
       fact: 'companion.steed.movement.remaining',
-      value: (f) => f.num('companion.steed.movement.total') - f.num('companion.steed.movement.spent')
+      value: (f) =>
+        f.num('companion.steed.movement.total') - f.num('companion.steed.movement.spent')
     });
     // Ability pools: remaining = total − spent (spent persists until a long rest).
     for (const ability of ['healingTouch', 'feyStep', 'fellGlare'] as const) {
       c.push({
         fact: `companion.steed.${ability}.remaining`,
-        value: (f) => f.num(`companion.steed.${ability}.total`) - f.num(`companion.steed.${ability}.spent`)
+        value: (f) =>
+          f.num(`companion.steed.${ability}.total`) - f.num(`companion.steed.${ability}.spent`)
       });
     }
     // HP: max = base + max-modifier; current = base + (negative) damage, capped at
     // base. A steed at 0 HP is no longer summoned (see below).
     c.push({
       fact: 'companion.steed.hp.max',
-      value: (f) => (active(f) ? f.num('companion.steed.hp.base') + f.num('companion.steed.hp.modifier.max') : 0)
+      value: (f) =>
+        active(f) ? f.num('companion.steed.hp.base') + f.num('companion.steed.hp.modifier.max') : 0
     });
     c.push({
       fact: 'companion.steed.hp.current',
       value: (f) =>
-        active(f) ? f.num('companion.steed.hp.base') + Math.min(0, f.num('companion.steed.hp.modifier.current')) : 0
+        active(f)
+          ? f.num('companion.steed.hp.base') +
+            Math.min(0, f.num('companion.steed.hp.modifier.current'))
+          : 0
     });
     c.push({
       fact: 'companion.steed.summoned',
       value: (f) =>
-        active(f) && f.num('companion.steed.dismissed') === 0 && f.num('companion.steed.hp.current') > 0 ? 1 : 0
+        active(f) &&
+        f.num('companion.steed.dismissed') === 0 &&
+        f.num('companion.steed.hp.current') > 0
+          ? 1
+          : 0
     });
     return c;
   },
@@ -320,25 +399,39 @@ const findSteed: RuleModule = {
       ],
       apply: (f, selections): ActionResult => {
         const level =
-          typeof selections.slotLevel === 'number' ? selections.slotLevel : f.num('find-steed.defaultLevel');
-        const creatureType = typeof selections.creatureType === 'number' ? selections.creatureType : 0;
+          typeof selections.slotLevel === 'number'
+            ? selections.slotLevel
+            : f.num('find-steed.defaultLevel');
+        const creatureType =
+          typeof selections.creatureType === 'number' ? selections.creatureType : 0;
         const isFree = level === 0;
         const summonLevel = isFree ? 2 : level; // the free use summons an L2 steed
         const advertise: EffectInstance[] = [
           {
             id: 'cost',
-            state: { 'actions.spent': 1, 'spellcasting.spent': 1, 'find-steed.selectedLevel': summonLevel, 'find-steed.wasFreeUse': isFree ? 1 : 0 },
+            state: {
+              'actions.spent': 1,
+              'spellcasting.spent': 1,
+              'find-steed.selectedLevel': summonLevel,
+              'find-steed.wasFreeUse': isFree ? 1 : 0
+            },
             expiry: { kind: 'endOfTurn' }
           },
           steedEffect(summonLevel, creatureType)
         ];
         const diagnostics: Diagnostic[] = [];
-        if (f.num('actions.remaining') <= 0) diagnostics.push({ code: `${O}.no_action`, severity: 'error' });
+        if (f.num('actions.remaining') <= 0)
+          diagnostics.push({ code: `${O}.no_action`, severity: 'error' });
         if (f.num('spellcasting.remaining') <= 0)
           diagnostics.push({ code: `${O}.no_spellcasting`, severity: 'error' });
         if (isFree) {
-          advertise.push({ id: 'free', state: { 'paladinFindSteed.spent': 1 }, expiry: { kind: 'untilLongRest' } });
-          if (f.num('paladinFindSteed.remaining') <= 0) diagnostics.push({ code: `${O}.no_slots`, severity: 'error' });
+          advertise.push({
+            id: 'free',
+            state: { 'paladinFindSteed.spent': 1 },
+            expiry: { kind: 'untilLongRest' }
+          });
+          if (f.num('paladinFindSteed.remaining') <= 0)
+            diagnostics.push({ code: `${O}.no_slots`, severity: 'error' });
         } else if (level >= 2 && level <= 5) {
           advertise.push({
             id: `effect-steed-slot-l${level}`,
@@ -357,22 +450,53 @@ const findSteed: RuleModule = {
     {
       id: 'steed-move-walk',
       when: summoned,
-      ui: { section: 'move', subject: 'steed', name: `${S}.steed-move-walk.name`, intents: { MOVE: 'travel' }, actionCost: ['move'] },
-      legalWhen: [{ condition: (f) => f.num('companion.steed.movement.remaining') >= 5, diagnostics: [{ code: `${S}.steed-move-walk.out_of_movement`, severity: 'error' }] }],
-      apply: (f): ActionResult => ({ advertise: [steedSpend({ 'companion.steed.movement.spent': 30 })], diagnostics: f.num('companion.steed.movement.remaining') >= 5 ? [] : [{ code: `${S}.steed-move-walk.out_of_movement`, severity: 'error' }] })
+      ui: {
+        section: 'move',
+        subject: 'steed',
+        name: `${S}.steed-move-walk.name`,
+        intents: { MOVE: 'travel' },
+        actionCost: ['move']
+      },
+      legalWhen: [
+        {
+          condition: (f) => f.num('companion.steed.movement.remaining') >= 5,
+          diagnostics: [{ code: `${S}.steed-move-walk.out_of_movement`, severity: 'error' }]
+        }
+      ],
+      apply: (f): ActionResult => ({
+        advertise: [steedSpend({ 'companion.steed.movement.spent': 30 })],
+        diagnostics:
+          f.num('companion.steed.movement.remaining') >= 5
+            ? []
+            : [{ code: `${S}.steed-move-walk.out_of_movement`, severity: 'error' }]
+      })
     },
     {
       id: 'steed-move-fly',
       when: summoned,
-      ui: { section: 'move', subject: 'steed', name: `${S}.steed-move-fly.name`, intents: { MOVE: 'travel' }, actionCost: ['move'] },
+      ui: {
+        section: 'move',
+        subject: 'steed',
+        name: `${S}.steed-move-fly.name`,
+        intents: { MOVE: 'travel' },
+        actionCost: ['move']
+      },
       legalWhen: [
-        { condition: (f) => f.num('companion.steed.fly.can') === 1, diagnostics: [{ code: `${S}.steed-move-fly.cannot_fly`, severity: 'error' }] },
-        { condition: (f) => f.num('companion.steed.movement.remaining') >= 5, diagnostics: [{ code: `${S}.steed-move-fly.out_of_movement`, severity: 'error' }] }
+        {
+          condition: (f) => f.num('companion.steed.fly.can') === 1,
+          diagnostics: [{ code: `${S}.steed-move-fly.cannot_fly`, severity: 'error' }]
+        },
+        {
+          condition: (f) => f.num('companion.steed.movement.remaining') >= 5,
+          diagnostics: [{ code: `${S}.steed-move-fly.out_of_movement`, severity: 'error' }]
+        }
       ],
       apply: (f): ActionResult => {
         const diagnostics: Diagnostic[] = [];
-        if (f.num('companion.steed.fly.can') !== 1) diagnostics.push({ code: `${S}.steed-move-fly.cannot_fly`, severity: 'error' });
-        if (f.num('companion.steed.movement.remaining') < 5) diagnostics.push({ code: `${S}.steed-move-fly.out_of_movement`, severity: 'error' });
+        if (f.num('companion.steed.fly.can') !== 1)
+          diagnostics.push({ code: `${S}.steed-move-fly.cannot_fly`, severity: 'error' });
+        if (f.num('companion.steed.movement.remaining') < 5)
+          diagnostics.push({ code: `${S}.steed-move-fly.out_of_movement`, severity: 'error' });
         return { advertise: [steedSpend({ 'companion.steed.movement.spent': 30 })], diagnostics };
       }
     },
@@ -380,15 +504,54 @@ const findSteed: RuleModule = {
     {
       id: 'steed-dash',
       when: summoned,
-      ui: { section: 'action', subject: 'steed', name: `${S}.steed-dash.name`, intents: { ACTION: 'steed' }, actionCost: ['action'] },
-      legalWhen: [{ condition: (f) => f.num('companion.steed.actions.remaining') > 0, diagnostics: [{ code: `${S}.steed-dash.no_action`, severity: 'error' }] }],
-      apply: (f): ActionResult => ({ advertise: [steedSpend({ 'companion.steed.actions.spent': 1, 'companion.steed.dashed': 1 })], diagnostics: f.num('companion.steed.actions.remaining') > 0 ? [] : [{ code: `${S}.steed-dash.no_action`, severity: 'error' }] })
+      ui: {
+        section: 'action',
+        subject: 'steed',
+        name: `${S}.steed-dash.name`,
+        intents: { ACTION: 'steed' },
+        actionCost: ['action']
+      },
+      legalWhen: [
+        {
+          condition: (f) => f.num('companion.steed.actions.remaining') > 0,
+          diagnostics: [{ code: `${S}.steed-dash.no_action`, severity: 'error' }]
+        }
+      ],
+      apply: (f): ActionResult => ({
+        advertise: [
+          steedSpend({ 'companion.steed.actions.spent': 1, 'companion.steed.dashed': 1 })
+        ],
+        diagnostics:
+          f.num('companion.steed.actions.remaining') > 0
+            ? []
+            : [{ code: `${S}.steed-dash.no_action`, severity: 'error' }]
+      })
     },
-    steedActivation('steed-dodge', 'action', 'companion.steed.actions.spent', 'companion.steed.actions.remaining'),
-    steedActivation('steed-disengage', 'action', 'companion.steed.actions.spent', 'companion.steed.actions.remaining'),
+    steedActivation(
+      'steed-dodge',
+      'action',
+      'companion.steed.actions.spent',
+      'companion.steed.actions.remaining'
+    ),
+    steedActivation(
+      'steed-disengage',
+      'action',
+      'companion.steed.actions.spent',
+      'companion.steed.actions.remaining'
+    ),
     // Slam — the steed's melee attack, as an action or a reaction.
-    steedActivation('steed-slam', 'action', 'companion.steed.actions.spent', 'companion.steed.actions.remaining'),
-    steedActivation('steed-slam-reaction', 'reaction', 'companion.steed.reactions.spent', 'companion.steed.reactions.remaining'),
+    steedActivation(
+      'steed-slam',
+      'action',
+      'companion.steed.actions.spent',
+      'companion.steed.actions.remaining'
+    ),
+    steedActivation(
+      'steed-slam-reaction',
+      'reaction',
+      'companion.steed.reactions.spent',
+      'companion.steed.reactions.remaining'
+    ),
     // Creature-type special abilities (only the matching type surfaces).
     steedAbilityOffer(0),
     steedAbilityOffer(1),
@@ -398,45 +561,118 @@ const findSteed: RuleModule = {
     ...STEED_SKILLS.map((s) => steedFreeOffer(`steed-skill-${s}`, { CHECK: 'steed' })),
     steedFreeOffer('steed-note', { NOTE: 'freeform' }),
     // HP: manual max/current modifiers and a damage recorder.
-    steedHpModifier('companion.steed.hp.modifier.max', 'effect-steed-hp-modifier-max', 'steed-set-hp-modifier-max', -10, 30),
-    steedHpModifier('companion.steed.hp.modifier.current', 'effect-steed-hp-modifier-current', 'steed-set-hp-modifier-current', -30, 30),
+    steedHpModifier(
+      'companion.steed.hp.modifier.max',
+      'effect-steed-hp-modifier-max',
+      'steed-set-hp-modifier-max',
+      -10,
+      30
+    ),
+    steedHpModifier(
+      'companion.steed.hp.modifier.current',
+      'effect-steed-hp-modifier-current',
+      'steed-set-hp-modifier-current',
+      -30,
+      30
+    ),
     {
       id: 'steed-record-damage',
       when: summoned,
-      ui: { section: 'free', subject: 'steed', name: `${S}.steed-record-damage.name`, primaryControl: { type: 'slider', var: 'amount', min: { number: 0 }, max: { fact: 'companion.steed.hp.max' }, unit: 'hp' }, intents: { HEALTH: 'hp' }, actionCost: [] },
+      ui: {
+        section: 'free',
+        subject: 'steed',
+        name: `${S}.steed-record-damage.name`,
+        primaryControl: {
+          type: 'slider',
+          var: 'amount',
+          min: { number: 0 },
+          max: { fact: 'companion.steed.hp.max' },
+          unit: 'hp'
+        },
+        intents: { HEALTH: 'hp' },
+        actionCost: []
+      },
       vars: { amount: { capture: true, default: { number: 0 } } },
       apply: (_f, selections): ActionResult => ({
-        advertise: [{ id: 'effect-steed-hp-damage', key: 'effect-steed-hp-damage', state: { 'companion.steed.hp.modifier.current': -(typeof selections.amount === 'number' ? selections.amount : 0) }, expiry: { kind: 'untilLongRest' } }]
+        advertise: [
+          {
+            id: 'effect-steed-hp-damage',
+            key: 'effect-steed-hp-damage',
+            state: {
+              'companion.steed.hp.modifier.current': -(typeof selections.amount === 'number'
+                ? selections.amount
+                : 0)
+            },
+            expiry: { kind: 'untilLongRest' }
+          }
+        ]
       })
     },
     {
       id: 'steed-record-heal',
       when: summoned,
-      ui: { section: 'free', subject: 'steed', name: `${S}.steed-record-heal.name`, primaryControl: { type: 'slider', var: 'amount', min: { number: 0 }, max: { fact: 'companion.steed.hp.max' }, unit: 'hp' }, intents: { HEALTH: 'hp' }, actionCost: [] },
+      ui: {
+        section: 'free',
+        subject: 'steed',
+        name: `${S}.steed-record-heal.name`,
+        primaryControl: {
+          type: 'slider',
+          var: 'amount',
+          min: { number: 0 },
+          max: { fact: 'companion.steed.hp.max' },
+          unit: 'hp'
+        },
+        intents: { HEALTH: 'hp' },
+        actionCost: []
+      },
       vars: { amount: { capture: true, default: { number: 0 } } },
       apply: (_f, selections): ActionResult => ({
-        advertise: [{ id: 'effect-steed-hp-heal', key: 'effect-steed-hp-heal', state: { 'companion.steed.hp.modifier.current': typeof selections.amount === 'number' ? selections.amount : 0 }, expiry: { kind: 'untilLongRest' } }]
+        advertise: [
+          {
+            id: 'effect-steed-hp-heal',
+            key: 'effect-steed-hp-heal',
+            state: {
+              'companion.steed.hp.modifier.current':
+                typeof selections.amount === 'number' ? selections.amount : 0
+            },
+            expiry: { kind: 'untilLongRest' }
+          }
+        ]
       })
     },
     // Dismiss — the steed vanishes (replaces the summon effect).
     {
       id: 'offer-dismiss-steed',
       when: summoned,
-      ui: { section: 'other', subject: 'steed', name: `${S}.offer-dismiss-steed.name`, intents: { ACTION: 'steed' }, actionCost: [] },
+      ui: {
+        section: 'other',
+        subject: 'steed',
+        name: `${S}.offer-dismiss-steed.name`,
+        intents: { ACTION: 'steed' },
+        actionCost: []
+      },
       // Replaces the summon effect (same key) with a bare dismissed marker: `active`
       // drops, so `summoned` derives to 0 while `dismissed` reads 1. Also evicts the
       // steed's child HP effects (v1 cascadeRemove) via same-key empty effects.
       apply: (): ActionResult => ({
         advertise: [
-          { id: 'effect-steed-dismissed', key: 'steed', state: { 'companion.steed.dismissed': 1 }, expiry: { kind: 'permanent' } },
-          ...STEED_CHILD_EFFECTS.map((k): EffectInstance => ({ id: `evict-${k}`, key: k, expiry: { kind: 'permanent' } }))
+          {
+            id: 'effect-steed-dismissed',
+            key: 'steed',
+            state: { 'companion.steed.dismissed': 1 },
+            expiry: { kind: 'permanent' }
+          },
+          ...STEED_CHILD_EFFECTS.map(
+            (k): EffectInstance => ({ id: `evict-${k}`, key: k, expiry: { kind: 'permanent' } })
+          )
         ]
       })
     }
   ],
   // The Life Bond feature — surfaced as an informational annotation while the
   // steed is summoned (damage the steed takes can be shared with the paladin).
-  annotate: (f) => (summoned(f) ? [{ key: `${S}.annotate-life-bond.text`, targets: ['companion.steed'] }] : [])
+  annotate: (f) =>
+    summoned(f) ? [{ key: `${S}.annotate-life-bond.text`, targets: ['companion.steed'] }] : []
 };
 
 export default defineRule(findSteed);

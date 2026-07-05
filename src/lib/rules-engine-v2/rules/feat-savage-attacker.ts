@@ -58,7 +58,8 @@ const featSavageAttacker: RuleModule = {
           { id: 'spend', state: { 'savageAttacker.spent': 1 }, expiry: { kind: 'endOfTurn' } }
         ];
         const diagnostics: Diagnostic[] = [];
-        if (f.num('attack.last.weapon') < 1) diagnostics.push({ code: `${OFF}.no_attack`, severity: 'error' });
+        if (f.num('attack.last.weapon') < 1)
+          diagnostics.push({ code: `${OFF}.no_attack`, severity: 'error' });
         if (f.num('savageAttacker.remaining') <= 0)
           diagnostics.push({ code: `${OFF}.already_used`, severity: 'error' });
         return { advertise, diagnostics };

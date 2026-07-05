@@ -34,7 +34,10 @@ const dagger: RuleModule = {
     requires: ['attacks', 'hands']
   },
   derive: () => [
-    { fact: 'attack.dagger.hitBonus', value: (f) => f.num('str.modifier') + f.num('proficiency.bonus') },
+    {
+      fact: 'attack.dagger.hitBonus',
+      value: (f) => f.num('str.modifier') + f.num('proficiency.bonus')
+    },
     { fact: 'attack.dagger.damageBonus', value: (f) => f.num('str.modifier') }
   ],
   offer: () => weaponOffers(DAGGER)

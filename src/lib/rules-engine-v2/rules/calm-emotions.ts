@@ -30,7 +30,8 @@ const calmEmotions: RuleModule = {
     const c: Contribution[] = [
       {
         fact: `${SLOTS}.eligibleSlotsRemaining`,
-        value: (f) => LEVELS.reduce((s, n) => s + f.num(`spellcasting.slots.level${n}.remaining`), 0)
+        value: (f) =>
+          LEVELS.reduce((s, n) => s + f.num(`spellcasting.slots.level${n}.remaining`), 0)
       },
       {
         fact: `${SLOTS}.lowestAvailableSlotLevel`,
@@ -63,19 +64,27 @@ const calmEmotions: RuleModule = {
           {
             type: 'text',
             label: 'play.information.saveDc',
-            labelValues: { saveType: { fact: 'spellcasting.saveAbility' }, dc: { fact: 'spellcasting.saveDC' } }
+            labelValues: {
+              saveType: { fact: 'spellcasting.saveAbility' },
+              dc: { fact: 'spellcasting.saveDC' }
+            }
           }
         ],
         primaryControl: {
           type: 'slider',
           var: 'slotLevel',
-          notches: LEVELS.map((n) => ({ value: n, enabled: { fact: `spellcasting.slots.level${n}.total` } })),
+          notches: LEVELS.map((n) => ({
+            value: n,
+            enabled: { fact: `spellcasting.slots.level${n}.total` }
+          })),
           valueFormat: 'spellLevel'
         },
         intents: { CONTROL: 'area' },
         actionCost: ['action', 'conc', 'L2']
       },
-      vars: { slotLevel: { capture: true, default: { fact: `${SLOTS}.lowestAvailableSlotLevel` } } },
+      vars: {
+        slotLevel: { capture: true, default: { fact: `${SLOTS}.lowestAvailableSlotLevel` } }
+      },
       legalWhen: [
         {
           condition: (f) => f.num('actions.remaining') > 0,
@@ -100,7 +109,11 @@ const calmEmotions: RuleModule = {
             ? selections.slotLevel
             : f.num(`${SLOTS}.lowestAvailableSlotLevel`);
         const advertise: EffectInstance[] = [
-          { id: 'cost', state: { 'actions.spent': 1, 'spellcasting.spent': 1 }, expiry: { kind: 'endOfTurn' } },
+          {
+            id: 'cost',
+            state: { 'actions.spent': 1, 'spellcasting.spent': 1 },
+            expiry: { kind: 'endOfTurn' }
+          },
           {
             id: 'effect-calm-emotions',
             state: { 'concentration.spent': 1 },
@@ -109,7 +122,8 @@ const calmEmotions: RuleModule = {
           }
         ];
         const diagnostics: Diagnostic[] = [];
-        if (f.num('actions.remaining') <= 0) diagnostics.push({ code: `${P}.no_action`, severity: 'error' });
+        if (f.num('actions.remaining') <= 0)
+          diagnostics.push({ code: `${P}.no_action`, severity: 'error' });
         if (f.num('spellcasting.remaining') <= 0)
           diagnostics.push({ code: `${P}.no_spellcasting`, severity: 'error' });
         if (f.num('concentration.remaining') <= 0)

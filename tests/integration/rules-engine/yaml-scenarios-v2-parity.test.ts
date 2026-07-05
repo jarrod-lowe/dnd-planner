@@ -47,7 +47,8 @@ const SKIP_BY_NAME: Record<string, string> = {
   // (after: group). v2's plan fold is plan-order-significant by design, so it
   // yields remaining=1 (can't use what you lack, then grant it) — a deliberate divergence.
   'hi-use-then-grant': 'relies on v1 intra-turn reordering; v2 plan fold is plan-order (by design)',
-  'hi-effect-grant-use': 'relies on v1 intra-turn reordering; v2 plan fold is plan-order (by design)',
+  'hi-effect-grant-use':
+    'relies on v1 intra-turn reordering; v2 plan fold is plan-order (by design)',
   // Asserts layOnHands.pool.remaining but omits the class-paladin-lay-on-hands
   // group that derives it in v2 (v1 set remaining directly in the class-level
   // rules). pool.total still matches; remaining is covered by the level2/3
@@ -60,13 +61,16 @@ const SKIP_BY_NAME: Record<string, string> = {
   // effect-sleep-prepared/-removing). v2 evicts the prepare effect immediately
   // (same end state), as bless/protection prepare already do. sleep-prepare only.
   'sleep-prepare': 'v1 `removing` unprepare lifecycle; v2 evicts immediately (same end state)',
-  'calm-emotions-prepare': 'v1 `removing` unprepare lifecycle; v2 evicts immediately (same end state)',
-  'hold-person-prepare': 'v1 `removing` unprepare lifecycle; v2 evicts immediately (same end state)',
+  'calm-emotions-prepare':
+    'v1 `removing` unprepare lifecycle; v2 evicts immediately (same end state)',
+  'hold-person-prepare':
+    'v1 `removing` unprepare lifecycle; v2 evicts immediately (same end state)',
   // Plans don-dagger THEN lock, then expects the earlier-planned don to retroactively
   // pick up the lock error. v2's plan fold is plan-order (the don is folded before the
   // lock sets build.locked), so it does not — the same deliberate divergence as
   // hi-use-then-grant. The build-lock scenario proper (lock flips the offers) runs.
-  'build-lock-weapon-clear': 'relies on v1 intra-turn reordering; v2 plan fold is plan-order (by design)',
+  'build-lock-weapon-clear':
+    'relies on v1 intra-turn reordering; v2 plan fold is plan-order (by design)',
   // The steed's damage type is a STRING fact ('radiant'/'psychic'/'necrotic'); v2
   // facts are numeric only (creatureType 0/1/2 is set, the string label is not).
   'steed-creature-type-fey': 'string fact (companion.steed.damageType) — v2 facts are numeric',
@@ -74,12 +78,14 @@ const SKIP_BY_NAME: Record<string, string> = {
   // lifecycle; v2 committed effects cannot self-remove when a derived fact crosses
   // a threshold (there is no per-turn re-advertise hook), so this passive death is
   // by design not reproduced (explicit dismiss cascades correctly — see no-stacking).
-  'steed-zero-hp-dismiss': 'passive self-removal at 0 HP needs v1 self-advertise/cascadeRemove lifecycle',
+  'steed-zero-hp-dismiss':
+    'passive self-removal at 0 HP needs v1 self-advertise/cascadeRemove lifecycle',
   // The javelin Slow followup now commits a v2-native EffectInstance
   // (`addRule.effect`), where v1 authored a v1-shape effect rule (`addRule.rule`).
   // That is a deliberate v2 shape change (the whole point of deleting migrate.ts);
   // the v2 followup shape is asserted directly in the weapons unit test instead.
-  'javelin-slow-mastery': 'followup commits a v2 EffectInstance (addRule.effect) — v2-native, diverges from v1 addRule.rule'
+  'javelin-slow-mastery':
+    'followup commits a v2 EffectInstance (addRule.effect) — v2-native, diverges from v1 addRule.rule'
 };
 
 // The scenarios expected to run on v2 today. Asserted as an exact set so that a
@@ -805,7 +811,11 @@ describe('yaml scenarios — v2 parity', () => {
     }
     it(name, () => {
       const { modules } = resolveScenarioGroups(config.ruleGroups);
-      const harness = new V2Harness(modules, config.initialFacts ?? {}, INITIAL_EFFECTS_V2[name] ?? []);
+      const harness = new V2Harness(
+        modules,
+        config.initialFacts ?? {},
+        INITIAL_EFFECTS_V2[name] ?? []
+      );
       config.steps.forEach((step, i) => {
         const out = runStep(harness, step);
         const assert = assertOf(step);

@@ -24,7 +24,10 @@ const dash: RuleModule = {
         actionCost: ['action']
       },
       legalWhen: [
-        { condition: (f) => f.num('actions.remaining') > 0, diagnostics: [{ code: NO_ACTION, severity: 'error' }] }
+        {
+          condition: (f) => f.num('actions.remaining') > 0,
+          diagnostics: [{ code: NO_ACTION, severity: 'error' }]
+        }
       ],
       apply: (f): ActionResult => {
         const speed = f.num('character.movement.total');
@@ -36,7 +39,8 @@ const dash: RuleModule = {
               expiry: { kind: 'endOfTurn' }
             }
           ],
-          diagnostics: f.num('actions.remaining') > 0 ? [] : [{ code: NO_ACTION, severity: 'error' }]
+          diagnostics:
+            f.num('actions.remaining') > 0 ? [] : [{ code: NO_ACTION, severity: 'error' }]
         };
       }
     }

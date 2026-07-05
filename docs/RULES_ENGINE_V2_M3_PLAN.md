@@ -96,9 +96,7 @@ the hit/damage derives + a `property.magical` annotation), `feat-savage-attacker
 weapon-attack rider offer + annotation), and the two self-less L2 heal spells
 `spell-aid` (L2–5 cascade) and `spell-prayer-of-healing` (full L2–9 cascade), both
 on the shared `preparedSpellOffers` + slot-cascade shape. Turning the remaining
-`initialEffects`-format scenarios into runnable v2 fixtures (to grow parity beyond
-208) is the separate test-migration effort, not a porting gap.
-
+`initialEffects`-format scenarios into runnable v2 fixtures (to grow parity beyond 208) is the separate test-migration effort, not a porting gap.
 
 Done: step 0 (multi-predicate expiry) + the rest model; **Wave A foundation**
 (`ability-scores`, `proficiency`, `free-actions`, `core-events`, `ac`,
@@ -125,7 +123,7 @@ it directly in the class-level rules); `pool.total` still matches and the
 level2/3 loh scenarios that load the group cover `remaining`.
 
 **Backlog cleared (all runnable-scenario feature gaps now closed — parity 215):**
-The last five skip-listed *runnable* scenarios blocked on un-ported offers/derives
+The last five skip-listed _runnable_ scenarios blocked on un-ported offers/derives
 within ported groups now run against the v1 oracle:
 
 - **HP-modifier setters** — `hp` now offers `set-hp-modifier-max` /
@@ -134,11 +132,11 @@ within ported groups now run against the v1 oracle:
   was a stale skip (`set-constitution` + the CON→`hp.base.max` fold already existed).
 - **Unarmed `hitBonus`/damage** — DONE (was DONE for the spike weapons; the unarmed
   `attack.unarmed.hitBonus = str.modifier + proficiency.bonus`, `damageBonus =
-  str.modifier` derives now land too), unblocking `attack-unarmed-strike` /
+str.modifier` derives now land too), unblocking `attack-unarmed-strike` /
   `ability-modifier-ordering`.
 - **Concentration damage trigger — DONE**: core-events' `record-damage` trips a
   keyed `endOfTurn` `concentration.damage-taken` while concentrating (`remaining ≤
-  0`), and `concentration` surfaces the `concentration-check` offer; recording it
+0`), and `concentration` surfaces the `concentration-check` offer; recording it
   clears the marker via the SAME key (newest wins), so no imperative mid-turn
   subtract is needed (`concentration-check-after-damage`). The earlier "needs more
   than the effect model" note was an over-estimate — the keyed model covers it.
@@ -158,13 +156,14 @@ the lay-on-hands group yet asserts `pool.remaining`, which v2 derives there). Ev
 runnable scenario that could exercise a v2 feature now runs green against the v1
 oracle; the ~114 still-skipped scenarios are all v1-format `initialEffects`
 fixtures (the separate test-migration effort).
+
 - **Passive-effect-from-rest hook — DONE** (`RuleModule.onRest`): a passive module
   emits persistent effects when a rest is recorded this turn. `evaluatePlan` detects
   the rest from the settled facts, appends each module's `onRest` effects, and
   re-derives so they are visible in-evaluation and commit at end of turn. This
   unblocked **Channel Divinity short-rest recovery** (`divinity` emits an
   `untilLongRest` `divinity.recovered` point; `remaining = clamp(total − spent +
-  recovered)`) and **Human HI-on-long-rest** (`species-human` emits a keyed
+recovered)`) and **Human HI-on-long-rest** (`species-human` emits a keyed
   permanent HI effect — same key as the grant, so it does not stack).
   `hi-human-long-rest-no-duplicate` stays skipped, but now only for its v1-format
   `initialEffects`, not a missing feature.

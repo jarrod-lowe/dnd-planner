@@ -22,11 +22,15 @@ const buildLock: RuleModule = {
         actionCost: []
       },
       legalWhen: [
-        { condition: (f) => f.num('build.locked') === 0, diagnostics: [{ code: `${B}.locked`, severity: 'error' }] }
+        {
+          condition: (f) => f.num('build.locked') === 0,
+          diagnostics: [{ code: `${B}.locked`, severity: 'error' }]
+        }
       ],
       apply: (f): ActionResult => {
         const diagnostics: Diagnostic[] = [];
-        if (f.num('build.locked') !== 0) diagnostics.push({ code: `${B}.locked`, severity: 'error' });
+        if (f.num('build.locked') !== 0)
+          diagnostics.push({ code: `${B}.locked`, severity: 'error' });
         return {
           advertise: [
             {

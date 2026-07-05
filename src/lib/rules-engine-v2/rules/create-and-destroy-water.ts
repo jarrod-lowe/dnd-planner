@@ -59,7 +59,11 @@ const createAndDestroyWater: RuleModule = {
       ],
       apply: (f): ActionResult => {
         const advertise: EffectInstance[] = [
-          { id: 'cost', state: { 'actions.spent': 1, 'spellcasting.spent': 1 }, expiry: { kind: 'endOfTurn' } },
+          {
+            id: 'cost',
+            state: { 'actions.spent': 1, 'spellcasting.spent': 1 },
+            expiry: { kind: 'endOfTurn' }
+          },
           {
             id: 'effect-create-and-destroy-water-l1',
             state: { 'spellcasting.slots.level1.spent': 1 },
@@ -67,7 +71,8 @@ const createAndDestroyWater: RuleModule = {
           }
         ];
         const diagnostics: Diagnostic[] = [];
-        if (f.num('actions.remaining') <= 0) diagnostics.push({ code: `${O}.no_action`, severity: 'error' });
+        if (f.num('actions.remaining') <= 0)
+          diagnostics.push({ code: `${O}.no_action`, severity: 'error' });
         if (f.num('spellcasting.remaining') <= 0)
           diagnostics.push({ code: `${O}.no_spellcasting`, severity: 'error' });
         if (f.num('spellcasting.slots.level1.remaining') <= 0)

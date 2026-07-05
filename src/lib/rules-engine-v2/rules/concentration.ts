@@ -26,7 +26,8 @@ const concentration: RuleModule = {
       // Surfaces only while concentrating (slot held → remaining ≤ 0) and damage
       // was taken this turn. Recording the outcome clears the trigger.
       id: 'concentration-check',
-      when: (f) => f.num('concentration.damage-taken') === 1 && f.num('concentration.remaining') <= 0,
+      when: (f) =>
+        f.num('concentration.damage-taken') === 1 && f.num('concentration.remaining') <= 0,
       ui: {
         section: 'free',
         name: 'planner.concentration.check',

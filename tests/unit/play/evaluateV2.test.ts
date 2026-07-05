@@ -46,10 +46,11 @@ describe('evaluateCharacterV2', () => {
   });
 
   it('flags an over-committed second attack as illegal per instance', () => {
-    const out = evaluateCharacterV2(MODULES, [STR16], [
-      attack,
-      { instanceId: 'a2', ruleId: 'unarmed-strike-use-action' }
-    ]);
+    const out = evaluateCharacterV2(
+      MODULES,
+      [STR16],
+      [attack, { instanceId: 'a2', ruleId: 'unarmed-strike-use-action' }]
+    );
     const byId = Object.fromEntries(out.plannedEntries.map((e) => [e.instanceId, e]));
     expect(byId['a1'].legal).toBe(true);
     expect(byId['a2'].legal).toBe(false); // no action left for the second swing

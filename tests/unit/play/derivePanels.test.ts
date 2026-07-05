@@ -67,7 +67,9 @@ describe('derivePanels — resources', () => {
     const entries = deriveResourceEntries({ 'hitDie.d10.total': 5, 'hitDie.d10.remaining': 5 });
     const hd = entries.find((e) => e.type === 'hitDie');
     expect(hd?.type === 'hitDie' && hd.dieSize).toBe(10);
-    expect(resolveEntryValue(hd!, { 'hitDie.d10.total': 5, 'hitDie.d10.remaining': 5 })).toBe('5/5 d10');
+    expect(resolveEntryValue(hd!, { 'hitDie.d10.total': 5, 'hitDie.d10.remaining': 5 })).toBe(
+      '5/5 d10'
+    );
   });
 
   it('includes Heroic Inspiration as a value when present', () => {

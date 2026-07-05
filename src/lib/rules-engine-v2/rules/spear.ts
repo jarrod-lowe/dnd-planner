@@ -17,7 +17,13 @@ const SPEAR: WeaponDef = {
     { distance: 20, type: 'thrown' },
     { distance: 60, type: 'thrown', disadvantage: true }
   ],
-  annotationLabels: ['attack.any', 'attack.melee', 'attack.weapon', 'dice.any', 'property.versatile']
+  annotationLabels: [
+    'attack.any',
+    'attack.melee',
+    'attack.weapon',
+    'dice.any',
+    'property.versatile'
+  ]
 };
 
 /**
@@ -33,7 +39,10 @@ const spear: RuleModule = {
     requires: ['attacks', 'hands']
   },
   derive: () => [
-    { fact: 'attack.spear.hitBonus', value: (f) => f.num('str.modifier') + f.num('proficiency.bonus') },
+    {
+      fact: 'attack.spear.hitBonus',
+      value: (f) => f.num('str.modifier') + f.num('proficiency.bonus')
+    },
     { fact: 'attack.spear.damageBonus', value: (f) => f.num('str.modifier') }
   ],
   offer: () => weaponOffers(SPEAR)

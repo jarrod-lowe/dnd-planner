@@ -54,7 +54,10 @@ const splintArmor: RuleModule = {
         actionCost: []
       },
       legalWhen: [
-        { condition: (f) => f.num('build.locked') === 0, diagnostics: [{ code: BUILD_LOCKED, severity: 'error' }] },
+        {
+          condition: (f) => f.num('build.locked') === 0,
+          diagnostics: [{ code: BUILD_LOCKED, severity: 'error' }]
+        },
         {
           condition: (f) => f.num('armor.splint.equipped') !== 1,
           diagnostics: [{ code: `${S}.don-splint-armor-offer.already-equipped`, severity: 'error' }]
@@ -62,9 +65,13 @@ const splintArmor: RuleModule = {
       ],
       apply: (f): ActionResult => {
         const diagnostics: Diagnostic[] = [];
-        if (f.num('build.locked') !== 0) diagnostics.push({ code: BUILD_LOCKED, severity: 'error' });
+        if (f.num('build.locked') !== 0)
+          diagnostics.push({ code: BUILD_LOCKED, severity: 'error' });
         if (f.num('armor.splint.equipped') === 1)
-          diagnostics.push({ code: `${S}.don-splint-armor-offer.already-equipped`, severity: 'error' });
+          diagnostics.push({
+            code: `${S}.don-splint-armor-offer.already-equipped`,
+            severity: 'error'
+          });
         return {
           advertise: [
             {

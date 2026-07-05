@@ -60,7 +60,8 @@ const grapple: RuleModule = {
       vars: { passed: { capture: true, default: { number: -1 } } },
       legalWhen: [
         {
-          condition: (f) => f.num('actions.remaining') > 0 || f.num('attackAction.extraRemaining') > 0,
+          condition: (f) =>
+            f.num('actions.remaining') > 0 || f.num('attackAction.extraRemaining') > 0,
           diagnostics: [{ code: NO_ACTION, severity: 'error' }]
         },
         {
@@ -83,7 +84,11 @@ const grapple: RuleModule = {
           });
         } else if (passed !== 1) {
           // Unresolved attempt: a hand is committed for the turn only.
-          advertise.push({ id: 'grapple-attempt', state: { 'hands.spent': 1 }, expiry: { kind: 'endOfTurn' } });
+          advertise.push({
+            id: 'grapple-attempt',
+            state: { 'hands.spent': 1 },
+            expiry: { kind: 'endOfTurn' }
+          });
         }
         const diagnostics: Diagnostic[] = [];
         if (overCommitted) diagnostics.push({ code: NO_ACTION, severity: 'error' });

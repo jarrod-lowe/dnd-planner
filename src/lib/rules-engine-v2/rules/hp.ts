@@ -12,7 +12,14 @@ const modifierOf = (selections: Record<string, unknown>): number =>
  * than stacks — dedupeByKey keeps the newest, so `hp.max`/`hp.current` always
  * recompute from base + the single latest modifier (v1's idempotent `numberSum`).
  */
-const modifierSetter = (fact: string, effectId: string, key: string, name: string, min: number, max: number) => ({
+const modifierSetter = (
+  fact: string,
+  effectId: string,
+  key: string,
+  name: string,
+  min: number,
+  max: number
+) => ({
   id: effectId.replace('effect-', 'set-'),
   ui: {
     section: 'free' as const,
@@ -23,7 +30,14 @@ const modifierSetter = (fact: string, effectId: string, key: string, name: strin
   },
   vars: { modifier: { capture: true, default: { number: 0 } } },
   apply: (_f: unknown, selections: Record<string, unknown>): ActionResult => ({
-    advertise: [{ id: effectId, key, state: { [fact]: modifierOf(selections) }, expiry: { kind: 'permanent' as const } }]
+    advertise: [
+      {
+        id: effectId,
+        key,
+        state: { [fact]: modifierOf(selections) },
+        expiry: { kind: 'permanent' as const }
+      }
+    ]
   })
 });
 
@@ -46,10 +60,20 @@ const hp: RuleModule = {
   id: 'hp',
   derive: () => [
     { fact: 'hp.max', value: (f) => f.num('hp.base.max') + f.num('hp.modifier.max') },
-    { fact: 'hp.current', value: (f) => f.num('hp.max') + Math.min(0, f.num('hp.modifier.current')) }
+    {
+      fact: 'hp.current',
+      value: (f) => f.num('hp.max') + Math.min(0, f.num('hp.modifier.current'))
+    }
   ],
   offer: () => [
-    modifierSetter('hp.modifier.max', 'effect-hp-modifier-max', 'hp-modifier-max', `${H}.set-hp-modifier-max.name`, -10, 30),
+    modifierSetter(
+      'hp.modifier.max',
+      'effect-hp-modifier-max',
+      'hp-modifier-max',
+      `${H}.set-hp-modifier-max.name`,
+      -10,
+      30
+    ),
     modifierSetter(
       'hp.modifier.current',
       'effect-hp-modifier-current',

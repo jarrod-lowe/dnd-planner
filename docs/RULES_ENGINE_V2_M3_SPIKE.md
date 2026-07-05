@@ -14,17 +14,17 @@ _everything_, is the cheap place to discover a model gap.
 
 ## What it proves (the whole contract in one rule)
 
-| Contract surface             | Divine Favour exercise                                                                         |
-| ---------------------------- | --------------------------------------------------------------------------------------------- |
-| Structural `when` gate       | cast offer hidden until `spell.l1.divineFavour.prepared == 1`                                  |
-| Illegal-but-visible offer    | the free "use" rider has **no** `when` (matches v1) — always shown, gated by `legalWhen`       |
-| Derived dataflow             | `divineFavour.eligibleSlotsRemaining` ← `spellcasting.slots.level1.remaining`                  |
-| **Three effect lifetimes**   | one `apply` advertises a per-turn cost (`endOfTurn`), a spent slot (`untilLongRest`), and the buff (`turns: 10`) |
+| Contract surface             | Divine Favour exercise                                                                                                   |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Structural `when` gate       | cast offer hidden until `spell.l1.divineFavour.prepared == 1`                                                            |
+| Illegal-but-visible offer    | the free "use" rider has **no** `when` (matches v1) — always shown, gated by `legalWhen`                                 |
+| Derived dataflow             | `divineFavour.eligibleSlotsRemaining` ← `spellcasting.slots.level1.remaining`                                            |
+| **Three effect lifetimes**   | one `apply` advertises a per-turn cost (`endOfTurn`), a spent slot (`untilLongRest`), and the buff (`turns: 10`)         |
 | Same-turn effect visibility  | the buff lights `divineFavour.active` the same turn (the fold re-derives), so `attack → cast → use` is legal in one plan |
-| Replace-by-key (no stacking) | the buff is keyed → re-cast refreshes duration; the slot is unkeyed → spends stack             |
-| Cross-turn aging             | `endTurn` resets the cost, keeps the slot, decrements the buff; buff drops after its 10th round |
-| Annotation                   | `+1d4 radiant available` on `attack.weapon` only while active                                  |
-| i18n / a11y / CSS law        | reuses existing `rule.spell-divine-favour.*` keys; no new strings, no UI/colour changes        |
+| Replace-by-key (no stacking) | the buff is keyed → re-cast refreshes duration; the slot is unkeyed → spends stack                                       |
+| Cross-turn aging             | `endTurn` resets the cost, keeps the slot, decrements the buff; buff drops after its 10th round                          |
+| Annotation                   | `+1d4 radiant available` on `attack.weapon` only while active                                                            |
+| i18n / a11y / CSS law        | reuses existing `rule.spell-divine-favour.*` keys; no new strings, no UI/colour changes                                  |
 
 Verdict: **the paradigm holds.** A genuine duration buff ports faithfully and
 concisely with no new engine concepts.

@@ -49,13 +49,17 @@ const shove: RuleModule = {
       vars: { passed: { capture: true, default: { number: -1 } } },
       legalWhen: [
         {
-          condition: (f) => f.num('actions.remaining') > 0 || f.num('attackAction.extraRemaining') > 0,
+          condition: (f) =>
+            f.num('actions.remaining') > 0 || f.num('attackAction.extraRemaining') > 0,
           diagnostics: [{ code: NO_ACTION, severity: 'error' }]
         }
       ],
       apply: (f): ActionResult => {
         const { effect, overCommitted } = attackActionSpend(f);
-        return { advertise: [effect], diagnostics: overCommitted ? [{ code: NO_ACTION, severity: 'error' }] : [] };
+        return {
+          advertise: [effect],
+          diagnostics: overCommitted ? [{ code: NO_ACTION, severity: 'error' }] : []
+        };
       }
     }
   ]

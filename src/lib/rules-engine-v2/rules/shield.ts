@@ -23,7 +23,10 @@ const shield: RuleModule = {
         actionCost: []
       },
       legalWhen: [
-        { condition: (f) => f.num('build.locked') === 0, diagnostics: [{ code: BUILD_LOCKED, severity: 'error' }] },
+        {
+          condition: (f) => f.num('build.locked') === 0,
+          diagnostics: [{ code: BUILD_LOCKED, severity: 'error' }]
+        },
         {
           condition: (f) => f.num('armor.shield.equipped') !== 1,
           diagnostics: [{ code: `${S}.don-shield-offer.already-equipped`, severity: 'error' }]
@@ -39,7 +42,8 @@ const shield: RuleModule = {
       ],
       apply: (f): ActionResult => {
         const diagnostics: Diagnostic[] = [];
-        if (f.num('build.locked') !== 0) diagnostics.push({ code: BUILD_LOCKED, severity: 'error' });
+        if (f.num('build.locked') !== 0)
+          diagnostics.push({ code: BUILD_LOCKED, severity: 'error' });
         if (f.num('armor.shield.equipped') === 1)
           diagnostics.push({ code: `${S}.don-shield-offer.already-equipped`, severity: 'error' });
         if (f.num('armor.shield.proficient') !== 1)

@@ -53,7 +53,13 @@ const notLocked: LegalWhen = {
   diagnostics: [{ code: LOCKED, severity: 'error' }]
 };
 
-const SLIDER = { type: 'slider', var: 'score', max: { var: 'maxValue' }, min: { number: 0 }, step: 1 };
+const SLIDER = {
+  type: 'slider',
+  var: 'score',
+  max: { var: 'maxValue' },
+  min: { number: 0 },
+  step: 1
+};
 const SCORE_VARS = {
   score: { capture: true, default: { number: 10 } },
   maxValue: { default: { number: 30 } }
@@ -62,9 +68,21 @@ const SKILL_PROFICIENCY_CONTROL = {
   type: 'select',
   var: 'level',
   options: [
-    { value: 0.5, label: 'play.topBar.proficientDotHalf', ariaLabel: 'play.choices.skillProficiency.half' },
-    { value: 1, label: 'play.topBar.proficientDotFull', ariaLabel: 'play.choices.skillProficiency.full' },
-    { value: 2, label: 'play.topBar.proficientDotDouble', ariaLabel: 'play.choices.skillProficiency.double' }
+    {
+      value: 0.5,
+      label: 'play.topBar.proficientDotHalf',
+      ariaLabel: 'play.choices.skillProficiency.half'
+    },
+    {
+      value: 1,
+      label: 'play.topBar.proficientDotFull',
+      ariaLabel: 'play.choices.skillProficiency.full'
+    },
+    {
+      value: 2,
+      label: 'play.topBar.proficientDotDouble',
+      ariaLabel: 'play.choices.skillProficiency.double'
+    }
   ]
 };
 
@@ -124,7 +142,10 @@ function increaseOffer(a: Ability): Offer {
     },
     legalWhen: [
       notLocked,
-      { condition: (f) => f.num(`${a}.value`) < MAX_SCORE, diagnostics: [{ code, severity: 'error' }] }
+      {
+        condition: (f) => f.num(`${a}.value`) < MAX_SCORE,
+        diagnostics: [{ code, severity: 'error' }]
+      }
     ],
     apply: (f) => {
       const diagnostics: Diagnostic[] = [];
@@ -132,7 +153,9 @@ function increaseOffer(a: Ability): Offer {
       if (f.num(`${a}.value`) >= MAX_SCORE) diagnostics.push({ code, severity: 'error' });
       // Keyless so each increase stacks; permanent so it survives rests.
       return {
-        advertise: [{ id: 'increase', state: { [`${a}.value`]: 1 }, expiry: { kind: 'permanent' } }],
+        advertise: [
+          { id: 'increase', state: { [`${a}.value`]: 1 }, expiry: { kind: 'permanent' } }
+        ],
         diagnostics
       };
     }

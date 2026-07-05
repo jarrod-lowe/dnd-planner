@@ -52,7 +52,9 @@ describe('v2 weapons — equip (don)', () => {
     const facts = evaluatePlan(ALL, { 'build.locked': 1 }, []).facts;
     const don = evaluateOffers(ALL, facts).find((o) => o.id === 'don-dagger');
     expect(don?.legal).toBe(false);
-    expect(don?.diagnostics.some((d) => d.code === 'rule.dnd-5e-2024.build-lock.locked')).toBe(true);
+    expect(don?.diagnostics.some((d) => d.code === 'rule.dnd-5e-2024.build-lock.locked')).toBe(
+      true
+    );
   });
 });
 

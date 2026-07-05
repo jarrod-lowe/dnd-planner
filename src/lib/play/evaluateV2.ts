@@ -71,7 +71,10 @@ export function hypotheticalOffers(
   const map = new Map<string, AvailableRuleEntry[]>();
   for (const item of planned) {
     const others = planned.filter((p) => p.instanceId !== item.instanceId);
-    map.set(item.instanceId, evaluate({ modules, inputFacts, planned: others, committed }).availableRules);
+    map.set(
+      item.instanceId,
+      evaluate({ modules, inputFacts, planned: others, committed }).availableRules
+    );
   }
   return map;
 }

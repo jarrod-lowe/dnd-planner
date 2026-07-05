@@ -110,9 +110,21 @@ export function effectInstanceToRule(effect: EffectInstance): Rule {
 }
 
 /** A planned instance rendered as a v1 availableRules entry, keyed by instanceId. */
-function plannedAsV1Entry(rule: Rule, legal: boolean, applicable: boolean, diagnostics: V1Entry['diagnostics'], instanceId: string, selections?: Record<string, unknown>): V1Entry {
+function plannedAsV1Entry(
+  rule: Rule,
+  legal: boolean,
+  applicable: boolean,
+  diagnostics: V1Entry['diagnostics'],
+  instanceId: string,
+  selections?: Record<string, unknown>
+): V1Entry {
   return {
-    rule: { ...rule, id: instanceId, activities: rule.activities ?? [], ...(selections ? { selections } : {}) },
+    rule: {
+      ...rule,
+      id: instanceId,
+      activities: rule.activities ?? [],
+      ...(selections ? { selections } : {})
+    },
     legal,
     applicable,
     diagnostics
@@ -146,7 +158,14 @@ export function offersToV1Entries(entries: V2Entry[]): V1Entry[] {
 export function adaptV2EngineOutput(output: V2EngineOutput, planned: PlannedRef[]): V1EngineOutput {
   const offers = output.availableRules.map(offerAsV1Entry);
   const instances = plannedEntries(output, planned).map((pe) =>
-    plannedAsV1Entry(pe.rule as Rule, pe.legal, pe.applicable, pe.diagnostics, pe.instanceId, pe.selections)
+    plannedAsV1Entry(
+      pe.rule as Rule,
+      pe.legal,
+      pe.applicable,
+      pe.diagnostics,
+      pe.instanceId,
+      pe.selections
+    )
   );
   return {
     status: output.status,
@@ -156,8 +175,17 @@ export function adaptV2EngineOutput(output: V2EngineOutput, planned: PlannedRef[
     // v2 annotations are structurally the v1 shape (costTags is a widened string[]).
     annotations: output.annotations as unknown as V1EngineOutput['annotations'],
     diagnostics: output.diagnostics,
-    trace: { appliedRuleIds: [], appliedActivityIds: [], providedCapabilities: [], emittedEvents: [] },
+    trace: {
+      appliedRuleIds: [],
+      appliedActivityIds: [],
+      providedCapabilities: [],
+      emittedEvents: []
+    },
     effects: output.effects.map(effectInstanceToRule),
-    next: { schemaVersion: 1, rules: { standing: [], planned: [], effects: [] }, state: { facts: output.facts } }
+    next: {
+      schemaVersion: 1,
+      rules: { standing: [], planned: [], effects: [] },
+      state: { facts: output.facts }
+    }
   };
 }

@@ -19,7 +19,8 @@ function spendMovement(
   outOfMovementCode: string,
   cannot?: { code: string; can: (f: FactReader) => boolean }
 ): ActionResult {
-  const distance = typeof selections.distance === 'number' ? selections.distance : f.num(defaultFact);
+  const distance =
+    typeof selections.distance === 'number' ? selections.distance : f.num(defaultFact);
   const cost = distance * mult;
   const diagnostics: Diagnostic[] = [];
   if (f.num('character.movement.remaining') < cost)
@@ -55,7 +56,13 @@ function moveOffer(cfg: MoveCfg): Offer {
       name: `${MV}.${cfg.nameKey}.name`,
       description: `${MV}.${cfg.nameKey}.description`,
       ...(cfg.packBehind ? { packBehind: cfg.packBehind } : {}),
-      primaryControl: { type: 'slider', var: 'distance', max: { var: 'maxDistance' }, step: 5, unit: 'ft' },
+      primaryControl: {
+        type: 'slider',
+        var: 'distance',
+        max: { var: 'maxDistance' },
+        step: 5,
+        unit: 'ft'
+      },
       intents: { MOVE: 'travel' },
       actionCost: ['move']
     },
@@ -65,7 +72,14 @@ function moveOffer(cfg: MoveCfg): Offer {
     },
     legalWhen: cfg.legalWhen,
     apply: (f, selections) =>
-      spendMovement(f, selections, cfg.defaultDistanceFact, cfg.mult, cfg.outOfMovementCode, cfg.cannot)
+      spendMovement(
+        f,
+        selections,
+        cfg.defaultDistanceFact,
+        cfg.mult,
+        cfg.outOfMovementCode,
+        cfg.cannot
+      )
   };
 }
 
@@ -91,7 +105,10 @@ const movement: RuleModule = {
       fact: REMAINING,
       value: (f) => f.num('character.movement.total') - f.num('character.movement.spent')
     },
-    { fact: 'character.movement.half_total', value: (f) => f.num('character.movement.total') * 0.5 },
+    {
+      fact: 'character.movement.half_total',
+      value: (f) => f.num('character.movement.total') * 0.5
+    },
     { fact: 'character.movement.half_remaining', value: (f) => f.num(REMAINING) * 0.5 }
   ],
   offer: () => [
@@ -128,7 +145,10 @@ const movement: RuleModule = {
         ge(REMAINING, 5, `${MV}.action-move-swim-offer.out_of_movement`)
       ],
       outOfMovementCode: `${MV}.action-move-swim-offer.out_of_movement`,
-      cannot: { code: `${MV}.action-move-swim-offer.cannot_swim`, can: (f) => f.num('character.movement.swim.can') >= 1 }
+      cannot: {
+        code: `${MV}.action-move-swim-offer.cannot_swim`,
+        can: (f) => f.num('character.movement.swim.can') >= 1
+      }
     }),
     moveOffer({
       id: 'move-swim-costly',
@@ -143,7 +163,10 @@ const movement: RuleModule = {
         ge(REMAINING, 10, `${MV}.action-move-swim-offer.out_of_movement`)
       ],
       outOfMovementCode: `${MV}.action-move-swim-offer.out_of_movement`,
-      cannot: { code: `${MV}.action-move-swim-offer.cannot_swim`, can: (f) => f.num('character.movement.swim.can') >= 1 }
+      cannot: {
+        code: `${MV}.action-move-swim-offer.cannot_swim`,
+        can: (f) => f.num('character.movement.swim.can') >= 1
+      }
     }),
     moveOffer({
       id: 'move-fly',
@@ -157,7 +180,10 @@ const movement: RuleModule = {
         ge(REMAINING, 5, `${MV}.action-move-fly-offer.out_of_movement`)
       ],
       outOfMovementCode: `${MV}.action-move-fly-offer.out_of_movement`,
-      cannot: { code: `${MV}.action-move-fly-offer.cannot_fly`, can: (f) => f.num('character.movement.fly.can') >= 1 }
+      cannot: {
+        code: `${MV}.action-move-fly-offer.cannot_fly`,
+        can: (f) => f.num('character.movement.fly.can') >= 1
+      }
     })
   ]
 };

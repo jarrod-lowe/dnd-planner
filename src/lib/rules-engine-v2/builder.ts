@@ -77,7 +77,8 @@ export function preparedSpellOffers(opts: {
       ],
       apply: (f) => {
         const diagnostics: Diagnostic[] = [];
-        if (f.num(preparedFact) === 1) diagnostics.push({ code: alreadyPrepared, severity: 'error' });
+        if (f.num(preparedFact) === 1)
+          diagnostics.push({ code: alreadyPrepared, severity: 'error' });
         if (f.num('spellcasting.prepared.remaining') <= 0)
           diagnostics.push({ code: maxPrepared, severity: 'error' });
         // An always-prepared spell is free — it doesn't count against the limit.
@@ -121,7 +122,10 @@ export function preparedSpellOffers(opts: {
         if (f.num(alwaysPreparedFact) === 1)
           diagnostics.push({ code: alwaysPreparedCode, severity: 'error' });
         // Same key, no state → evicts the prepare effect (prepared & count drop).
-        return { advertise: [{ id: 'unprepared', key, expiry: { kind: 'permanent' } }], diagnostics };
+        return {
+          advertise: [{ id: 'unprepared', key, expiry: { kind: 'permanent' } }],
+          diagnostics
+        };
       }
     }
   ];
@@ -292,8 +296,7 @@ function attackActionApply() {
 /** A simple cost transition (reaction / bonus action) with an over-spend guard. */
 function costApply(costFact: string, remainingFact: string, code: string) {
   return (s: FactReader): ActionResult => {
-    const diagnostics: Diagnostic[] =
-      s.num(remainingFact) > 0 ? [] : [{ code, severity: 'error' }];
+    const diagnostics: Diagnostic[] = s.num(remainingFact) > 0 ? [] : [{ code, severity: 'error' }];
     return { advertise: [turnSpend({ [costFact]: 1, 'attack.last.weapon': 1 })], diagnostics };
   };
 }
@@ -348,7 +351,10 @@ export function weaponOffers(def: WeaponDef): Offer[] {
     },
     legalWhen: [
       // Build lock inlined (not a shared anchor): hides EQUIP once the build locks.
-      { condition: (f) => f.num('build.locked') === 0, diagnostics: [{ code: BUILD_LOCKED, severity: 'error' }] },
+      {
+        condition: (f) => f.num('build.locked') === 0,
+        diagnostics: [{ code: BUILD_LOCKED, severity: 'error' }]
+      },
       {
         condition: (f) => f.num(`weapon.${def.id}.equipped`) !== 1,
         diagnostics: [{ code: `${WEAPON_DON}.${def.id}.already-equipped`, severity: 'error' }]
@@ -379,7 +385,8 @@ export function weaponOffers(def: WeaponDef): Offer[] {
     vars: attackVars(def),
     legalWhen: [
       {
-        condition: (f) => f.num('actions.remaining') > 0 || f.num('attackAction.extraRemaining') > 0,
+        condition: (f) =>
+          f.num('actions.remaining') > 0 || f.num('attackAction.extraRemaining') > 0,
         diagnostics: [{ code: NO_ACTION, severity: 'error' }]
       }
     ],

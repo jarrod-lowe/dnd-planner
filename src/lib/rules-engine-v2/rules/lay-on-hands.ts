@@ -30,7 +30,12 @@ const layOnHands: RuleModule = {
         description: `${LOH}.loh-heal.description`,
         detailKey: 'class-feature/lay-on-hands',
         sliderMin: 1,
-        primaryControl: { type: 'slider', var: 'amount', min: { number: 1 }, max: { var: 'maxValue' } },
+        primaryControl: {
+          type: 'slider',
+          var: 'amount',
+          min: { number: 1 },
+          max: { var: 'maxValue' }
+        },
         intents: { AID: 'self' },
         actionCost: ['bonus', 'LoH']
       },
@@ -61,7 +66,11 @@ const layOnHands: RuleModule = {
         return {
           advertise: [
             { id: 'cost', state: { 'bonusActions.spent': 1 }, expiry: { kind: 'endOfTurn' } },
-            { id: 'loh', state: { 'layOnHands.pool.spent': amount }, expiry: { kind: 'untilLongRest' } }
+            {
+              id: 'loh',
+              state: { 'layOnHands.pool.spent': amount },
+              expiry: { kind: 'untilLongRest' }
+            }
           ],
           diagnostics
         };
@@ -80,7 +89,9 @@ const layOnHands: RuleModule = {
       legalWhen: [
         {
           condition: (f) => f.num('bonusActions.remaining') > 0,
-          diagnostics: [{ code: `${LOH}.offer-loh-purify-poison.no_bonus_action`, severity: 'error' }]
+          diagnostics: [
+            { code: `${LOH}.offer-loh-purify-poison.no_bonus_action`, severity: 'error' }
+          ]
         },
         {
           condition: (f) => f.num('layOnHands.pool.remaining') >= PURIFY_COST,

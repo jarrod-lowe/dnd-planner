@@ -31,17 +31,26 @@ const leatherArmor: RuleModule = {
         actionCost: []
       },
       legalWhen: [
-        { condition: (f) => f.num('build.locked') === 0, diagnostics: [{ code: BUILD_LOCKED, severity: 'error' }] },
+        {
+          condition: (f) => f.num('build.locked') === 0,
+          diagnostics: [{ code: BUILD_LOCKED, severity: 'error' }]
+        },
         {
           condition: (f) => f.num('armor.leather.equipped') !== 1,
-          diagnostics: [{ code: `${L}.don-leather-armor-offer.already-equipped`, severity: 'error' }]
+          diagnostics: [
+            { code: `${L}.don-leather-armor-offer.already-equipped`, severity: 'error' }
+          ]
         }
       ],
       apply: (f): ActionResult => {
         const diagnostics: Diagnostic[] = [];
-        if (f.num('build.locked') !== 0) diagnostics.push({ code: BUILD_LOCKED, severity: 'error' });
+        if (f.num('build.locked') !== 0)
+          diagnostics.push({ code: BUILD_LOCKED, severity: 'error' });
         if (f.num('armor.leather.equipped') === 1)
-          diagnostics.push({ code: `${L}.don-leather-armor-offer.already-equipped`, severity: 'error' });
+          diagnostics.push({
+            code: `${L}.don-leather-armor-offer.already-equipped`,
+            severity: 'error'
+          });
         return {
           advertise: [
             {

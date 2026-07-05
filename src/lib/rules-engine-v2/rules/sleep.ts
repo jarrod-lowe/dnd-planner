@@ -31,7 +31,8 @@ const sleep: RuleModule = {
     const c: Contribution[] = [
       {
         fact: `${SLOTS}.eligibleSlotsRemaining`,
-        value: (f) => LEVELS.reduce((s, n) => s + f.num(`spellcasting.slots.level${n}.remaining`), 0)
+        value: (f) =>
+          LEVELS.reduce((s, n) => s + f.num(`spellcasting.slots.level${n}.remaining`), 0)
       },
       {
         fact: `${SLOTS}.lowestAvailableSlotLevel`,
@@ -64,13 +65,18 @@ const sleep: RuleModule = {
           {
             type: 'text',
             label: 'play.information.saveDc',
-            labelValues: { saveType: { fact: 'spellcasting.saveAbility' }, dc: { fact: 'spellcasting.saveDC' } }
+            labelValues: {
+              saveType: { fact: 'spellcasting.saveAbility' },
+              dc: { fact: 'spellcasting.saveDC' }
+            }
           }
         ],
         intents: { CONTROL: 'area' },
         actionCost: ['action', 'conc', 'L1']
       },
-      vars: { slotLevel: { capture: true, default: { fact: `${SLOTS}.lowestAvailableSlotLevel` } } },
+      vars: {
+        slotLevel: { capture: true, default: { fact: `${SLOTS}.lowestAvailableSlotLevel` } }
+      },
       legalWhen: [
         {
           condition: (f) => f.num('actions.remaining') > 0,
@@ -95,7 +101,11 @@ const sleep: RuleModule = {
             ? selections.slotLevel
             : f.num(`${SLOTS}.lowestAvailableSlotLevel`);
         const advertise: EffectInstance[] = [
-          { id: 'cost', state: { 'actions.spent': 1, 'spellcasting.spent': 1 }, expiry: { kind: 'endOfTurn' } },
+          {
+            id: 'cost',
+            state: { 'actions.spent': 1, 'spellcasting.spent': 1 },
+            expiry: { kind: 'endOfTurn' }
+          },
           {
             id: 'effect-sleep',
             state: { 'concentration.spent': 1 },
@@ -104,7 +114,8 @@ const sleep: RuleModule = {
           }
         ];
         const diagnostics: Diagnostic[] = [];
-        if (f.num('actions.remaining') <= 0) diagnostics.push({ code: `${P}.no_action`, severity: 'error' });
+        if (f.num('actions.remaining') <= 0)
+          diagnostics.push({ code: `${P}.no_action`, severity: 'error' });
         if (f.num('spellcasting.remaining') <= 0)
           diagnostics.push({ code: `${P}.no_spellcasting`, severity: 'error' });
         if (f.num('concentration.remaining') <= 0)

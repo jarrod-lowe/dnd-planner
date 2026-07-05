@@ -41,7 +41,9 @@ const freeActions: RuleModule = {
         if (f.num('actions.remaining') <= 0)
           diagnostics.push({ code: `${FA}.action-help-offer.no_action`, severity: 'error' });
         return {
-          advertise: [{ id: 'spend', state: { 'actions.spent': 1 }, expiry: { kind: 'endOfTurn' } }],
+          advertise: [
+            { id: 'spend', state: { 'actions.spent': 1 }, expiry: { kind: 'endOfTurn' } }
+          ],
           diagnostics
         };
       }

@@ -34,7 +34,8 @@ const bless: RuleModule = {
     const c: Contribution[] = [
       {
         fact: 'bless.eligibleSlotsRemaining',
-        value: (f) => LEVELS.reduce((s, n) => s + f.num(`spellcasting.slots.level${n}.remaining`), 0)
+        value: (f) =>
+          LEVELS.reduce((s, n) => s + f.num(`spellcasting.slots.level${n}.remaining`), 0)
       },
       {
         // Lowest slot level with a slot remaining (0 if none).
@@ -67,7 +68,10 @@ const bless: RuleModule = {
           {
             type: 'text',
             label: 'play.information.saveDc',
-            labelValues: { saveType: { fact: 'spellcasting.saveAbility' }, dc: { fact: 'spellcasting.saveDC' } }
+            labelValues: {
+              saveType: { fact: 'spellcasting.saveAbility' },
+              dc: { fact: 'spellcasting.saveDC' }
+            }
           }
         ],
         intents: { AID: 'ally' },
@@ -98,7 +102,11 @@ const bless: RuleModule = {
             ? selections.slotLevel
             : f.num('bless.lowestAvailableSlotLevel');
         const advertise: EffectInstance[] = [
-          { id: 'cost', state: { 'actions.spent': 1, 'spellcasting.spent': 1 }, expiry: { kind: 'endOfTurn' } },
+          {
+            id: 'cost',
+            state: { 'actions.spent': 1, 'spellcasting.spent': 1 },
+            expiry: { kind: 'endOfTurn' }
+          },
           // Concentration held for the duration or until a rest.
           {
             id: 'effect-bless',
@@ -108,7 +116,8 @@ const bless: RuleModule = {
           }
         ];
         const diagnostics: Diagnostic[] = [];
-        if (f.num('actions.remaining') <= 0) diagnostics.push({ code: `${B}.no_action`, severity: 'error' });
+        if (f.num('actions.remaining') <= 0)
+          diagnostics.push({ code: `${B}.no_action`, severity: 'error' });
         if (f.num('spellcasting.remaining') <= 0)
           diagnostics.push({ code: `${B}.no_spellcasting`, severity: 'error' });
         if (f.num('concentration.remaining') <= 0)

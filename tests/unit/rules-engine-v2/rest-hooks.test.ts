@@ -34,7 +34,13 @@ const recoverOnShort: RuleModule = {
   derive: () => [{ fact: 'test.recovered', value: (f) => f.num('test.recovered.sum') }],
   onRest: (kind): EffectInstance[] =>
     kind === 'short'
-      ? [{ id: 'effect-test-recover', state: { 'test.recovered.sum': 1 }, expiry: { kind: 'untilLongRest' } }]
+      ? [
+          {
+            id: 'effect-test-recover',
+            state: { 'test.recovered.sum': 1 },
+            expiry: { kind: 'untilLongRest' }
+          }
+        ]
       : []
 };
 
@@ -73,7 +79,12 @@ describe('v2 rest hook — onRest', () => {
     const r1 = evaluatePlan([coreEvents, grantOnLong], {}, [ref('i0', 'record-long-rest')]);
     const committed = endTurn([], r1.advertised, {});
     // A second long rest with the grant already committed must not double it.
-    const r2 = evaluatePlan([coreEvents, grantOnLong], {}, [ref('i1', 'record-long-rest')], committed);
+    const r2 = evaluatePlan(
+      [coreEvents, grantOnLong],
+      {},
+      [ref('i1', 'record-long-rest')],
+      committed
+    );
     expect(r2.facts['test.points']).toBe(1);
   });
 

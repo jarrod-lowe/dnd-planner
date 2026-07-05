@@ -48,7 +48,10 @@ export function plannedEntry(output: EngineOutput, ref: PlannedRef): PlannedEntr
 }
 
 /** The per-instance entries for every planned ref, in plan order (skips missing offers). */
-export function plannedEntries(output: EngineOutput, planned: readonly PlannedRef[]): PlannedEntry[] {
+export function plannedEntries(
+  output: EngineOutput,
+  planned: readonly PlannedRef[]
+): PlannedEntry[] {
   const entries: PlannedEntry[] = [];
   for (const ref of planned) {
     const entry = plannedEntry(output, ref);

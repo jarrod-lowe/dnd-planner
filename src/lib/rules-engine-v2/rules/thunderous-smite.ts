@@ -30,7 +30,8 @@ const thunderousSmite: RuleModule = {
     const c: Contribution[] = [
       {
         fact: 'tsmite.eligibleSlotsRemaining',
-        value: (f) => LEVELS.reduce((s, n) => s + f.num(`spellcasting.slots.level${n}.remaining`), 0)
+        value: (f) =>
+          LEVELS.reduce((s, n) => s + f.num(`spellcasting.slots.level${n}.remaining`), 0)
       },
       {
         fact: 'tsmite.lowestAvailableSlotLevel',
@@ -40,7 +41,10 @@ const thunderousSmite: RuleModule = {
         }
       },
       // Smite handles L1-5 even for a multiclass full caster.
-      { fact: 'tsmite.maxCastLevel', value: (f) => Math.min(f.num('spellcasting.maxSlotLevel'), 5) },
+      {
+        fact: 'tsmite.maxCastLevel',
+        value: (f) => Math.min(f.num('spellcasting.maxSlotLevel'), 5)
+      },
       {
         // 2d6 at L1, +1 die per level above 1 (so lowest-slot + 1); 0 if none.
         fact: 'tsmite.defaultDieCount',
@@ -82,7 +86,10 @@ const thunderousSmite: RuleModule = {
           {
             type: 'text',
             label: 'play.information.saveDc',
-            labelValues: { saveType: { fact: 'spellcasting.saveAbility' }, dc: { fact: 'spellcasting.saveDC' } }
+            labelValues: {
+              saveType: { fact: 'spellcasting.saveAbility' },
+              dc: { fact: 'spellcasting.saveDC' }
+            }
           }
         ],
         intents: { ATTACK: 'spells' },
@@ -116,7 +123,11 @@ const thunderousSmite: RuleModule = {
             ? selections.slotLevel
             : f.num('tsmite.lowestAvailableSlotLevel');
         const advertise: EffectInstance[] = [
-          { id: 'cost', state: { 'bonusActions.spent': 1, 'spellcasting.spent': 1 }, expiry: { kind: 'endOfTurn' } }
+          {
+            id: 'cost',
+            state: { 'bonusActions.spent': 1, 'spellcasting.spent': 1 },
+            expiry: { kind: 'endOfTurn' }
+          }
         ];
         const diagnostics: Diagnostic[] = [];
         if (f.num('bonusActions.remaining') <= 0)

@@ -24,12 +24,23 @@ const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
 
 /** Top-bar catalog: each entry plus the fact whose presence gates it. */
 const TOP_BAR: { gate: string; entry: UiEntry }[] = [
-  { gate: 'hp.max', entry: { type: 'usedMax', label: 'play.topBar.hp', total: 'hp.max', remaining: 'hp.current' } },
+  {
+    gate: 'hp.max',
+    entry: { type: 'usedMax', label: 'play.topBar.hp', total: 'hp.max', remaining: 'hp.current' }
+  },
   { gate: 'ac.value', entry: { type: 'value', label: 'play.topBar.ac', fact: 'ac.value' } },
-  { gate: 'character.movement.remaining', entry: { type: 'value', label: 'play.topBar.speed', fact: 'character.movement.remaining' } },
+  {
+    gate: 'character.movement.remaining',
+    entry: { type: 'value', label: 'play.topBar.speed', fact: 'character.movement.remaining' }
+  },
   {
     gate: 'concentration.max',
-    entry: { type: 'concentration', label: 'play.topBar.conc', activeLabel: 'play.topBar.concActive', noneLabel: 'play.topBar.concNone' }
+    entry: {
+      type: 'concentration',
+      label: 'play.topBar.conc',
+      activeLabel: 'play.topBar.concActive',
+      noneLabel: 'play.topBar.concNone'
+    }
   },
   {
     gate: 'str.modifier',
@@ -48,17 +59,67 @@ const TOP_BAR: { gate: string; entry: UiEntry }[] = [
 
 /** Resources-panel catalog: usedMax pools, each gated on its `total` fact. */
 const RESOURCES: UiEntry[] = [
-  { type: 'usedMax', label: 'play.stats.actions', total: 'actions.max', remaining: 'actions.remaining' },
-  { type: 'usedMax', label: 'play.stats.bonusActions', total: 'bonusActions.max', remaining: 'bonusActions.remaining' },
-  { type: 'usedMax', label: 'play.stats.reactions', total: 'reactions.max', remaining: 'reactions.remaining' },
-  { type: 'usedMax', label: 'play.stats.movement', total: 'character.movement.total', remaining: 'character.movement.remaining' },
+  {
+    type: 'usedMax',
+    label: 'play.stats.actions',
+    total: 'actions.max',
+    remaining: 'actions.remaining'
+  },
+  {
+    type: 'usedMax',
+    label: 'play.stats.bonusActions',
+    total: 'bonusActions.max',
+    remaining: 'bonusActions.remaining'
+  },
+  {
+    type: 'usedMax',
+    label: 'play.stats.reactions',
+    total: 'reactions.max',
+    remaining: 'reactions.remaining'
+  },
+  {
+    type: 'usedMax',
+    label: 'play.stats.movement',
+    total: 'character.movement.total',
+    remaining: 'character.movement.remaining'
+  },
   { type: 'usedMax', label: 'play.stats.hands', total: 'hands.max', remaining: 'hands.remaining' },
-  { type: 'usedMax', label: 'play.stats.spellcasting', total: 'spellcasting.max', remaining: 'spellcasting.remaining' },
-  { type: 'usedMax', label: 'play.stats.divinity', total: 'divinity.total', remaining: 'divinity.remaining' },
-  { type: 'usedMax', label: 'play.stats.layOnHands', total: 'layOnHands.pool.total', remaining: 'layOnHands.pool.remaining' },
-  { type: 'usedMax', label: 'play.stats.paladinSmite', total: 'paladinSmite.total', remaining: 'paladinSmite.remaining' },
-  { type: 'usedMax', label: 'play.stats.paladinFindSteed', total: 'paladinFindSteed.total', remaining: 'paladinFindSteed.remaining' },
-  { type: 'usedMax', label: 'play.stats.savageAttacker', total: 'savageAttacker.max', remaining: 'savageAttacker.remaining' }
+  {
+    type: 'usedMax',
+    label: 'play.stats.spellcasting',
+    total: 'spellcasting.max',
+    remaining: 'spellcasting.remaining'
+  },
+  {
+    type: 'usedMax',
+    label: 'play.stats.divinity',
+    total: 'divinity.total',
+    remaining: 'divinity.remaining'
+  },
+  {
+    type: 'usedMax',
+    label: 'play.stats.layOnHands',
+    total: 'layOnHands.pool.total',
+    remaining: 'layOnHands.pool.remaining'
+  },
+  {
+    type: 'usedMax',
+    label: 'play.stats.paladinSmite',
+    total: 'paladinSmite.total',
+    remaining: 'paladinSmite.remaining'
+  },
+  {
+    type: 'usedMax',
+    label: 'play.stats.paladinFindSteed',
+    total: 'paladinFindSteed.total',
+    remaining: 'paladinFindSteed.remaining'
+  },
+  {
+    type: 'usedMax',
+    label: 'play.stats.savageAttacker',
+    total: 'savageAttacker.max',
+    remaining: 'savageAttacker.remaining'
+  }
 ];
 
 /**
@@ -67,10 +128,26 @@ const RESOURCES: UiEntry[] = [
  * is summoned (its derives are present).
  */
 const STEED_CORE: { label: string; total: string; remaining: string }[] = [
-  { label: 'play.stats.steed.hp', total: 'companion.steed.hp.max', remaining: 'companion.steed.hp.current' },
-  { label: 'play.stats.steed.movement', total: 'companion.steed.movement.total', remaining: 'companion.steed.movement.remaining' },
-  { label: 'play.stats.steed.actions', total: 'companion.steed.actions.max', remaining: 'companion.steed.actions.remaining' },
-  { label: 'play.stats.steed.bonusActions', total: 'companion.steed.bonusActions.max', remaining: 'companion.steed.bonusActions.remaining' }
+  {
+    label: 'play.stats.steed.hp',
+    total: 'companion.steed.hp.max',
+    remaining: 'companion.steed.hp.current'
+  },
+  {
+    label: 'play.stats.steed.movement',
+    total: 'companion.steed.movement.total',
+    remaining: 'companion.steed.movement.remaining'
+  },
+  {
+    label: 'play.stats.steed.actions',
+    total: 'companion.steed.actions.max',
+    remaining: 'companion.steed.actions.remaining'
+  },
+  {
+    label: 'play.stats.steed.bonusActions',
+    total: 'companion.steed.bonusActions.max',
+    remaining: 'companion.steed.bonusActions.remaining'
+  }
 ];
 
 /** creatureType (0/1/2) → its once-per-rest special-ability pool (only the match shows). */
@@ -130,16 +207,28 @@ export function deriveTopBarEntries(facts: Facts): UiEntry[] {
 
 /** The resources-panel entries for the current facts (incl. the class hit die). */
 export function deriveResourceEntries(facts: Facts): UiEntry[] {
-  const entries: UiEntry[] = RESOURCES.filter((e) => e.type === 'usedMax' && present(facts, e.total));
+  const entries: UiEntry[] = RESOURCES.filter(
+    (e) => e.type === 'usedMax' && present(facts, e.total)
+  );
   for (const die of HIT_DICE) {
     const total = `hitDie.d${die}.total`;
     if (present(facts, total)) {
-      entries.push({ type: 'hitDie', label: 'play.stats.hitDie', total, remaining: `hitDie.d${die}.remaining`, dieSize: die });
+      entries.push({
+        type: 'hitDie',
+        label: 'play.stats.hitDie',
+        total,
+        remaining: `hitDie.d${die}.remaining`,
+        dieSize: die
+      });
     }
   }
   // Heroic Inspiration is a plain value in the resources panel.
   if (present(facts, 'heroicInspiration.remaining')) {
-    entries.push({ type: 'value', label: 'play.stats.heroicInspiration', fact: 'heroicInspiration.remaining' });
+    entries.push({
+      type: 'value',
+      label: 'play.stats.heroicInspiration',
+      fact: 'heroicInspiration.remaining'
+    });
   }
   // Steed resources ride along under the 'steed' subject (Ledger filters by subject).
   entries.push(...deriveSteedResources(facts));

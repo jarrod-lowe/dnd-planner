@@ -14,7 +14,13 @@ const GREATAXE: WeaponDef = {
   damageType: 'slashing',
   disadvantageFact: 'attack.str.disadvantage',
   ranges: [{ distance: 5, type: 'melee' }],
-  annotationLabels: ['attack.any', 'attack.melee', 'attack.weapon', 'dice.any', 'property.twoHanded'],
+  annotationLabels: [
+    'attack.any',
+    'attack.melee',
+    'attack.weapon',
+    'dice.any',
+    'property.twoHanded'
+  ],
   actionUiExtra: {
     followups: [{ type: 'attack-line', condition: masteryCondition, button: CLEAVE }],
     secondaryControl: {
@@ -23,7 +29,12 @@ const GREATAXE: WeaponDef = {
       ranges: { var: 'ranges' },
       dice: [
         { sides: 20, bonus: { var: 'hitBonus' }, purpose: 'to-hit' },
-        { sides: { var: 'damageDie' }, bonus: { var: 'damageBonus' }, purpose: 'damage', damageType: { string: 'slashing' } }
+        {
+          sides: { var: 'damageDie' },
+          bonus: { var: 'damageBonus' },
+          purpose: 'damage',
+          damageType: { string: 'slashing' }
+        }
       ]
     }
   }
@@ -45,7 +56,10 @@ const greataxe: RuleModule = {
     requires: ['attacks', 'hands']
   },
   derive: () => [
-    { fact: 'attack.greataxe.hitBonus', value: (f) => f.num('str.modifier') + f.num('proficiency.bonus') },
+    {
+      fact: 'attack.greataxe.hitBonus',
+      value: (f) => f.num('str.modifier') + f.num('proficiency.bonus')
+    },
     { fact: 'attack.greataxe.damageBonus', value: (f) => f.num('str.modifier') }
   ],
   offer: () => weaponOffers(GREATAXE)

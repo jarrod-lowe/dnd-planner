@@ -56,7 +56,10 @@ const javelin: RuleModule = {
     requires: ['attacks', 'hands']
   },
   derive: () => [
-    { fact: 'attack.javelin.hitBonus', value: (f) => f.num('str.modifier') + f.num('proficiency.bonus') },
+    {
+      fact: 'attack.javelin.hitBonus',
+      value: (f) => f.num('str.modifier') + f.num('proficiency.bonus')
+    },
     { fact: 'attack.javelin.damageBonus', value: (f) => f.num('str.modifier') }
   ],
   offer: () => weaponOffers(JAVELIN)

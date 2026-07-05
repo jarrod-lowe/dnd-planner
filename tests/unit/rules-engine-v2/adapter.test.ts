@@ -11,8 +11,18 @@ const baseOutput = (overrides: Partial<EngineOutput> = {}): EngineOutput => ({
   status: { ok: true, legal: true, applicable: true },
   facts: {},
   availableRules: [
-    { rule: { id: 'cast-bless', ui: { section: 'action-spell' }, vars: {} }, legal: true, applicable: true, diagnostics: [] },
-    { rule: { id: 'unarmed-strike-use-action', ui: {} }, legal: true, applicable: true, diagnostics: [] }
+    {
+      rule: { id: 'cast-bless', ui: { section: 'action-spell' }, vars: {} },
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    },
+    {
+      rule: { id: 'unarmed-strike-use-action', ui: {} },
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    }
   ],
   planDiagnostics: {},
   annotations: [],
@@ -22,7 +32,11 @@ const baseOutput = (overrides: Partial<EngineOutput> = {}): EngineOutput => ({
   ...overrides
 });
 
-const ref = (instanceId: string, ruleId: string, selections?: Record<string, unknown>): PlannedRef => ({
+const ref = (
+  instanceId: string,
+  ruleId: string,
+  selections?: Record<string, unknown>
+): PlannedRef => ({
   instanceId,
   ruleId,
   ...(selections ? { selections } : {})

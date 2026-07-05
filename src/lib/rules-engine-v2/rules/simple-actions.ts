@@ -15,7 +15,10 @@ function actionOffer(id: string, intents: Record<string, string>): Offer {
       actionCost: ['action']
     },
     legalWhen: [
-      { condition: (f) => f.num('actions.remaining') > 0, diagnostics: [{ code: noAction, severity: 'error' }] }
+      {
+        condition: (f) => f.num('actions.remaining') > 0,
+        diagnostics: [{ code: noAction, severity: 'error' }]
+      }
     ],
     apply: (f) => ({
       advertise: [{ id: 'cost', state: { 'actions.spent': 1 }, expiry: { kind: 'endOfTurn' } }],
