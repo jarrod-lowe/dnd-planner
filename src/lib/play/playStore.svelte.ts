@@ -26,10 +26,8 @@ const DEBOUNCE_MS = 300;
 const BATCH_SIZE = 100;
 
 const initialState: PlayState = {
-  ruleGroups: [],
   modules: [],
   ruleGroupIds: [],
-  ruleGroupRulesMap: {},
   isLoadingRuleGroups: false,
   ruleGroupError: null,
   engineOutput: null,
@@ -139,9 +137,6 @@ async function loadRuleGroups(characterId: string): Promise<void> {
     const { ruleGroups: groupIds } = await idsResponse.json();
 
     // Step 2: Batch fetch rule groups (max 100 per request)
-    const allRules: Rule[] = [];
-    const allGroupsMap: Record<string, Rule[]> = {};
-
     for (let i = 0; i < groupIds.length; i += BATCH_SIZE) {
       const batch = groupIds.slice(i, i + BATCH_SIZE);
       const batchResponse = await apiPost(`/api/rule-groups/batch?lang=${currentLocale}`, {
@@ -152,15 +147,9 @@ async function loadRuleGroups(characterId: string): Promise<void> {
         throw new Error(`Failed to fetch rule group batch: ${batchResponse.status}`);
       }
 
+      // Only rule-group metadata (name/requires/settings/condition) is consumed; v2
+      // evaluates code modules, so the batch's rule JSON is intentionally ignored.
       const { ruleGroups: batchGroups } = await batchResponse.json();
-      const batchRules: Rule[] = batchGroups.flatMap(
-        (rg: { ruleGroupId: string; rules: string; requires?: string[] }) => {
-          const rules: Rule[] = JSON.parse(rg.rules);
-          allGroupsMap[rg.ruleGroupId] = rules;
-          return rules;
-        }
-      );
-      allRules.push(...batchRules);
       const batchCache = getCache();
       for (const rg of batchGroups) {
         if (rg.ruleGroupId && !batchCache.has(rg.ruleGroupId)) {
@@ -208,20 +197,6 @@ async function loadRuleGroups(characterId: string): Promise<void> {
         });
         if (resp.ok) {
           groupIds.push(depId);
-          const depBatchResponse = await apiPost(`/api/rule-groups/batch?lang=${currentLocale}`, {
-            ids: [depId]
-          });
-          if (depBatchResponse.ok) {
-            const { ruleGroups: depGroups } = await depBatchResponse.json();
-            const depRules: Rule[] = depGroups.flatMap(
-              (rg: { ruleGroupId: string; rules: string }) => {
-                const rules: Rule[] = JSON.parse(rg.rules);
-                allGroupsMap[rg.ruleGroupId] = rules;
-                return rules;
-              }
-            );
-            allRules.push(...depRules);
-          }
         }
       } catch {
         // best-effort: skip failed dep assignments
@@ -229,22 +204,20 @@ async function loadRuleGroups(characterId: string): Promise<void> {
     }
 
     // Load the v2 modules for the assigned groups (the engine evaluates these).
-    // Unknown ids (e.g. custom rule groups, which v2 does not evaluate) are skipped.
+    // Unknown ids (with no v2 module) are skipped.
     const { modules } = await loadModules(groupIds);
 
     state = {
       ...state,
-      ruleGroups: allRules,
       modules,
       ruleGroupIds: groupIds,
-      ruleGroupRulesMap: allGroupsMap,
       isLoadingRuleGroups: false,
       currentCharacterId: characterId
     };
 
-    // Load persisted effects (graceful fallback on failure). The stored blob is
-    // migrated to v2 committed effects (read-time shim for pre-cutover v1 blobs);
-    // `state.effects` is the v1-shaped display bridge the active-effects UI reads.
+    // Load persisted effects (graceful fallback on failure). The stored blob is a
+    // v2 `EffectInstance[]`; `state.effects` is the v1-shaped display bridge the
+    // active-effects UI reads.
     try {
       const effectsResponse = await apiGet(`/api/characters/${characterId}/effects`);
       if (effectsResponse?.ok) {
@@ -485,54 +458,13 @@ async function assignRuleGroup(characterId: string, ruleGroupId: string): Promis
   }
 }
 
-async function updateCustomRules(characterId: string, newRules: Rule[]): Promise<void> {
-  const customGroupId = `custom-${characterId}`;
-  const prevRules = [...state.ruleGroups];
-  const prevMap = { ...state.ruleGroupRulesMap };
-  const oldCustomRules = state.ruleGroupRulesMap[customGroupId] ?? [];
-  const oldRuleIds = new Set(oldCustomRules.map((r) => r.id));
-
-  // Optimistic: replace custom rules in state. NOTE: v2 evaluates code modules,
-  // not authored `Rule` objects, so custom rules are stored/edited/exported but do
-  // NOT participate in evaluation under v2 (a known cutover gap — see the M4 plan).
-  state = {
-    ...state,
-    ruleGroups: [...state.ruleGroups.filter((r) => !oldRuleIds.has(r.id)), ...newRules],
-    ruleGroupRulesMap: {
-      ...state.ruleGroupRulesMap,
-      [customGroupId]: newRules
-    }
-  };
-
-  performEvaluation();
-
-  try {
-    const response = await apiPost(`/api/rule-groups/${customGroupId}`, {
-      rules: newRules
-    });
-    if (!response.ok) throw new Error(`Save failed: ${response.status}`);
-  } catch (error) {
-    // Rollback
-    state = { ...state, ruleGroups: prevRules, ruleGroupRulesMap: prevMap };
-    performEvaluation();
-    throw error;
-  }
-}
-
 async function rollbackDeps(characterId: string, depIds: string[]): Promise<void> {
   for (const depId of [...depIds].reverse()) {
-    const rulesToRemove = state.ruleGroupRulesMap[depId] ?? [];
-    const ruleIdsToRemove = new Set(rulesToRemove.map((r) => r.id));
-
     // Remove from local state
     state = {
       ...state,
       ruleGroupIds: state.ruleGroupIds.filter((id) => id !== depId),
-      ruleGroups: state.ruleGroups.filter((r) => !ruleIdsToRemove.has(r.id)),
-      modules: state.modules.filter((m) => m.id !== depId),
-      ruleGroupRulesMap: Object.fromEntries(
-        Object.entries(state.ruleGroupRulesMap).filter(([id]) => id !== depId)
-      )
+      modules: state.modules.filter((m) => m.id !== depId)
     };
 
     // Remove from API
@@ -606,32 +538,12 @@ async function assignSingleGroup(characterId: string, ruleGroupId: string): Prom
         });
       }
     }
-    const fetchedRules: Rule[] = batchGroups.flatMap((rg) => {
-      const rulesStr = typeof rg.rules === 'string' ? rg.rules : '[]';
-      return JSON.parse(rulesStr);
-    });
-    const newRules: Rule[] = fetchedRules.map((rule) => {
-      const initialSelections = resolveInitialSelections(rule, state.facts);
-      if (Object.keys(initialSelections).length === 0) {
-        return rule;
-      }
-      return {
-        ...rule,
-        selections: { ...initialSelections, ...rule.selections }
-      };
-    });
-
     // Load the newly assigned group's v2 module so the engine evaluates it.
     const { modules: newModules } = await loadModules([ruleGroupId]);
 
     state = {
       ...state,
-      ruleGroups: [...state.ruleGroups, ...newRules],
-      modules: [...state.modules, ...newModules],
-      ruleGroupRulesMap: {
-        ...state.ruleGroupRulesMap,
-        [ruleGroupId]: newRules
-      }
+      modules: [...state.modules, ...newModules]
     };
 
     debouncedEvaluate();
@@ -649,25 +561,17 @@ async function assignSingleGroup(characterId: string, ruleGroupId: string): Prom
 async function unassignRuleGroup(characterId: string, ruleGroupId: string): Promise<void> {
   // Snapshot for revert
   const prevIds = [...state.ruleGroupIds];
-  const prevRules = [...state.ruleGroups];
   const prevModules = [...state.modules];
-  const prevMap = { ...state.ruleGroupRulesMap };
   const prevEffects = [...state.effects];
   const prevCommitted = [...state.committed];
-  const rulesToRemove = state.ruleGroupRulesMap[ruleGroupId] ?? [];
-  const ruleIdsToRemove = new Set(rulesToRemove.map((r) => r.id));
 
-  // Optimistic: remove ID, rules, module, map entry, and settings-derived effects
+  // Optimistic: remove ID, module, and settings-derived effects
   // (namespaced `${ruleGroupId}::`) from the committed set.
   const committed = state.committed.filter((e) => !e.id.startsWith(`${ruleGroupId}::`));
   state = {
     ...state,
     ruleGroupIds: state.ruleGroupIds.filter((id) => id !== ruleGroupId),
-    ruleGroups: state.ruleGroups.filter((r) => !ruleIdsToRemove.has(r.id)),
     modules: state.modules.filter((m) => m.id !== ruleGroupId),
-    ruleGroupRulesMap: Object.fromEntries(
-      Object.entries(state.ruleGroupRulesMap).filter(([id]) => id !== ruleGroupId)
-    ),
     committed,
     effects: committed.map(effectInstanceToRule)
   };
@@ -702,9 +606,7 @@ async function unassignRuleGroup(characterId: string, ruleGroupId: string): Prom
     state = {
       ...state,
       ruleGroupIds: prevIds,
-      ruleGroups: prevRules,
       modules: prevModules,
-      ruleGroupRulesMap: prevMap,
       effects: prevEffects,
       committed: prevCommitted
     };
@@ -872,7 +774,6 @@ export const playStore = {
   updateSelections,
   swapPlanItemRule,
   getAlternativeEntries,
-  updateCustomRules,
   removeEffect,
   addFollowupEffect,
   getSettingsForRuleGroup,

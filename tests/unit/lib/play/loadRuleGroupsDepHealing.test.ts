@@ -142,11 +142,6 @@ describe('loadRuleGroups dependency self-healing', () => {
     // Both groups should be in state
     expect(playStore.state.ruleGroupIds).toContain('species-human');
     expect(playStore.state.ruleGroupIds).toContain('feat-alert');
-
-    // Both rules should be loaded
-    expect(playStore.state.ruleGroups).toEqual(
-      expect.arrayContaining([...humanRules, ...alertRules])
-    );
   });
 
   it('does not assign anything when all deps are already present', async () => {
@@ -411,9 +406,8 @@ describe('loadRuleGroups dependency self-healing', () => {
 
     await playStore.loadRuleGroups('char-1');
 
-    // Should still have loaded species-human rules
+    // Should still have loaded species-human
     expect(playStore.state.ruleGroupIds).toContain('species-human');
-    expect(playStore.state.ruleGroups).toEqual(expect.arrayContaining(humanRules));
     // feat-alert should NOT be in state (assignment failed)
     expect(playStore.state.ruleGroupIds).not.toContain('feat-alert');
     // Should not have errored

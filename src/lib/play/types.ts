@@ -23,14 +23,10 @@ export interface PlannedItem {
  * State for play mode, managing rules engine and plan.
  */
 export interface PlayState {
-  /** Standing rules loaded from API (v1 shape — kept for custom rules, settings, export). */
-  ruleGroups: Rule[];
   /** v2 rule modules for the assigned groups (the engine evaluates these). */
   modules: RuleModule[];
   /** Rule group IDs assigned to the character */
   ruleGroupIds: string[];
-  /** Rules organized by rule group ID for selective removal */
-  ruleGroupRulesMap: Record<string, Rule[]>;
   /** Loading state for rule groups */
   isLoadingRuleGroups: boolean;
   /** Error message if rule group loading failed */
@@ -45,7 +41,7 @@ export interface PlayState {
   facts: Facts;
   /**
    * Committed effects from previous turns, in the v1 `Rule` display shape (bridged
-   * from `committed`). Read by the active-effects strip and character export.
+   * from `committed`). Read by the active-effects strip.
    */
   effects: Rule[];
   /** v2 committed effects — the persistence + evaluation source of truth. */

@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 import { validateCharacterImport, importCharacter } from '$lib/character/importCharacter';
-import type { Rule } from '$lib/rules-engine';
 
 const availableGroups = new Set(['dnd-5e-2024', 'species-human', 'class-paladin', 'class-fighter']);
 
@@ -107,9 +106,8 @@ describe('validateCharacterImport', () => {
     expect(result.data!.effects).toEqual([]);
   });
 
-  it('accepts valid JSON with optional customRules and effects', () => {
+  it('accepts valid JSON with optional effects', () => {
     const effect = { id: 'effect-1', state: { 'bless.active': 1 }, expiry: { kind: 'permanent' } };
-    const customRule = { id: 'custom-1', phase: 'normal', group: [], activities: [] };
 
     const result = validateCharacterImport(
       {
@@ -117,14 +115,12 @@ describe('validateCharacterImport', () => {
         name: 'Thorin',
         species: 'human',
         ruleGroups: ['dnd-5e-2024'],
-        customRules: [customRule],
         effects: [effect]
       },
       availableGroups
     );
 
     expect(result.valid).toBe(true);
-    expect(result.data!.customRules).toEqual([customRule]);
     expect(result.data!.effects).toEqual([effect]);
   });
 
@@ -158,20 +154,13 @@ describe('importCharacter', () => {
     ruleGroups: ['dnd-5e-2024', 'species-human'],
     effects: []
   };
-  const defaultAssigned = [
-    'action-economy',
-    'proficiency',
-    'movement',
-    'free-actions',
-    'custom-char-new'
-  ];
+  const defaultAssigned = ['action-economy', 'proficiency', 'movement', 'free-actions'];
 
   function createMockDeps(assigned: string[] = []) {
     return {
       createCharacter: vi.fn().mockResolvedValue({ characterId: 'char-new' }),
       fetchAssignedRuleGroups: vi.fn().mockResolvedValue([...assigned]),
       assignRuleGroup: vi.fn().mockResolvedValue(undefined),
-      updateCustomRules: vi.fn().mockResolvedValue(undefined),
       saveEffects: vi.fn().mockResolvedValue(undefined)
     };
   }
@@ -235,23 +224,6 @@ describe('importCharacter', () => {
     await importCharacter(data, 'Thorin', deps);
 
     expect(deps.saveEffects).toHaveBeenCalledWith('char-new', [effect]);
-  });
-
-  it('saves custom rules when present', async () => {
-    const customRule: Rule = { id: 'custom-1', phase: 'normal', group: [], activities: [] };
-    const data = { ...baseData, customRules: [customRule] };
-    const deps = createMockDeps(defaultAssigned);
-
-    await importCharacter(data, 'Thorin', deps);
-
-    expect(deps.updateCustomRules).toHaveBeenCalledWith('char-new', [customRule]);
-  });
-
-  it('does not call updateCustomRules when no custom rules', async () => {
-    const deps = createMockDeps(defaultAssigned);
-    await importCharacter(baseData, 'Thorin', deps);
-
-    expect(deps.updateCustomRules).not.toHaveBeenCalled();
   });
 
   it('returns the new character ID', async () => {

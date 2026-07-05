@@ -1,5 +1,4 @@
 import type { Character } from './types';
-import type { Rule } from '$lib/rules-engine';
 import type { EffectInstance } from '$lib/rules-engine-v2';
 
 /**
@@ -12,30 +11,19 @@ export interface CharacterExport {
   name: string;
   species: string;
   ruleGroups: string[];
-  customRules?: Rule[];
   effects: EffectInstance[];
 }
 
 export function buildCharacterExport(
   character: Character,
   ruleGroupIds: string[],
-  effects: EffectInstance[],
-  ruleGroupRulesMap?: Record<string, Rule[]>
+  effects: EffectInstance[]
 ): CharacterExport {
-  const customGroupId = `custom-${character.characterId}`;
-  const customRules = ruleGroupRulesMap?.[customGroupId];
-
-  const result: CharacterExport = {
+  return {
     schemaVersion: 2,
     name: character.name,
     species: character.species,
-    ruleGroups: ruleGroupIds.filter((id) => id !== customGroupId),
+    ruleGroups: [...ruleGroupIds],
     effects: [...effects]
   };
-
-  if (customRules && customRules.length > 0) {
-    result.customRules = [...customRules];
-  }
-
-  return result;
 }

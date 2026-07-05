@@ -70,7 +70,7 @@ import { loadModules } from '$lib/rules-engine-v2';
 import { evaluateCharacterV2, hypotheticalOffers } from '$lib/play/evaluateV2';
 import { locale } from '$lib/i18n';
 import { toast } from 'svelte-sonner';
-import type { Rule, EngineOutput } from '$lib/rules-engine';
+import type { Rule } from '$lib/rules-engine';
 import type { EngineOutput as V2EngineOutput } from '$lib/rules-engine-v2';
 import type { V2PlayOutput } from '$lib/play/evaluateV2';
 
@@ -124,9 +124,6 @@ describe('playStore', () => {
     it('fetches rule group IDs then batches to fetch rules', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
 
       // Mock rule group IDs response - API returns { ruleGroups: string[] }
       mockApiGet.mockResolvedValueOnce({
@@ -146,26 +143,6 @@ describe('playStore', () => {
         })
       } as Response);
 
-      // Mock evaluate
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
 
       await playStore.loadRuleGroups('char-123');
@@ -174,16 +151,12 @@ describe('playStore', () => {
       expect(mockApiPost).toHaveBeenCalledWith('/api/rule-groups/batch?lang=en', {
         ids: ['group-1', 'group-2']
       });
-      expect(playStore.state.ruleGroups).toEqual(mockRules);
       expect(playStore.state.ruleGroupIds).toEqual(['group-1', 'group-2']);
     });
 
     it('splits large rule group lists into batches of 100', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
 
       // Create 150 rule group IDs
       const groupIds = Array.from({ length: 150 }, (_, i) => `group-${i}`);
@@ -216,25 +189,6 @@ describe('playStore', () => {
           })
         } as Response);
 
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
       await playStore.loadRuleGroups('char-123');
@@ -246,7 +200,6 @@ describe('playStore', () => {
       expect(mockApiPost).toHaveBeenNthCalledWith(2, '/api/rule-groups/batch?lang=en', {
         ids: groupIds.slice(100)
       });
-      expect(playStore.state.ruleGroups).toHaveLength(150);
       expect(playStore.state.ruleGroupIds).toEqual(groupIds);
     });
 
@@ -269,9 +222,6 @@ describe('playStore', () => {
     it('passes current locale to API', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
 
       // Mock rule group IDs response
       mockApiGet.mockResolvedValueOnce({
@@ -287,25 +237,6 @@ describe('playStore', () => {
           ruleGroups: [{ ruleGroupId: 'group-1', rules: JSON.stringify(mockRules) }]
         })
       } as Response);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -324,66 +255,9 @@ describe('playStore', () => {
       locale.set('en');
     });
 
-    it('populates ruleGroupRulesMap from batch response', async () => {
-      const mockApiGet = vi.mocked(apiGet);
-      const mockApiPost = vi.mocked(apiPost);
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
-
-      const group1Rules: Rule[] = [{ id: 'rule-1', activities: [] }];
-      const group2Rules: Rule[] = [{ id: 'rule-2', activities: [] }];
-
-      mockApiGet.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ ruleGroups: ['group-1', 'group-2'] })
-      } as Response);
-
-      mockApiPost.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          ruleGroups: [
-            { ruleGroupId: 'group-1', rules: JSON.stringify(group1Rules) },
-            { ruleGroupId: 'group-2', rules: JSON.stringify(group2Rules) }
-          ]
-        })
-      } as Response);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
-      const { playStore } = await import('$lib/play/playStore.svelte');
-      playStore.reset();
-      await playStore.loadRuleGroups('char-123');
-
-      expect(playStore.state.ruleGroupRulesMap).toEqual({
-        'group-1': group1Rules,
-        'group-2': group2Rules
-      });
-    });
-
     it('stores the characterId in state', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
 
       mockApiGet.mockResolvedValueOnce({
         ok: true,
@@ -399,25 +273,6 @@ describe('playStore', () => {
         })
       } as Response);
 
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
       await playStore.loadRuleGroups('char-999');
@@ -427,9 +282,6 @@ describe('playStore', () => {
 
     it('loads effects from API and keeps empty array when null', async () => {
       const mockApiGet = vi.mocked(apiGet);
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
 
       mockApiGet
         .mockResolvedValueOnce({
@@ -440,25 +292,6 @@ describe('playStore', () => {
           ok: true,
           json: async () => ({ effects: null })
         } as Response);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -532,9 +365,6 @@ describe('playStore', () => {
 
     it('shows toast on effects load failure and falls back to empty', async () => {
       const mockApiGet = vi.mocked(apiGet);
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
       vi.mocked(toast.error).mockClear();
 
       mockApiGet
@@ -547,25 +377,6 @@ describe('playStore', () => {
           status: 500
         } as Response);
 
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
       await playStore.loadRuleGroups('char-1');
@@ -577,28 +388,6 @@ describe('playStore', () => {
 
   describe('addToPlan', () => {
     it('adds a rule to the plan with a unique instance ID', async () => {
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -699,30 +488,6 @@ describe('playStore', () => {
     });
 
     it('does not resolve vars without capture property', async () => {
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {
-          'character.movement.remaining': 25
-        },
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -747,28 +512,6 @@ describe('playStore', () => {
     });
 
     it('allows adding the same rule multiple times (duplicates)', async () => {
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -783,28 +526,6 @@ describe('playStore', () => {
     });
 
     it('stores originalRuleId preserving the rule id before rewriting', async () => {
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -817,28 +538,6 @@ describe('playStore', () => {
     });
 
     it('stores verb derived from the rule', async () => {
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -855,28 +554,6 @@ describe('playStore', () => {
 
   describe('swapPlanItemRule', () => {
     it('swaps a planned item rule and updates verb and originalRuleId', async () => {
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -909,28 +586,6 @@ describe('playStore', () => {
 
   describe('removeFromPlan', () => {
     it('removes an item by instance ID and reindexes order', async () => {
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -956,28 +611,6 @@ describe('playStore', () => {
 
   describe('movePlanItem', () => {
     it('moves an item up in the plan order', async () => {
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -997,28 +630,6 @@ describe('playStore', () => {
     });
 
     it('moves an item down in the plan order', async () => {
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -1038,28 +649,6 @@ describe('playStore', () => {
     });
 
     it('does nothing when trying to move first item up', async () => {
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -1079,28 +668,6 @@ describe('playStore', () => {
     });
 
     it('does nothing when trying to move last item down', async () => {
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -1122,28 +689,6 @@ describe('playStore', () => {
 
   describe('reset', () => {
     it('clears all state to initial values', async () => {
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
 
       // Add some state
@@ -1153,16 +698,12 @@ describe('playStore', () => {
       playStore.reset();
 
       expect(playStore.state.plannedItems).toEqual([]);
-      expect(playStore.state.ruleGroups).toEqual([]);
       expect(playStore.state.ruleGroupIds).toEqual([]);
       expect(playStore.state.engineOutput).toBeNull();
     });
 
     it('clears currentCharacterId', async () => {
       const mockApiGet = vi.mocked(apiGet);
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
 
       mockApiGet
         .mockResolvedValueOnce({
@@ -1173,25 +714,6 @@ describe('playStore', () => {
           ok: true,
           json: async () => ({ effects: null })
         } as Response);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -1207,28 +729,6 @@ describe('playStore', () => {
 
   describe('updateSelections', () => {
     it('updates selections for a planned item and triggers debounced evaluate', async () => {
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -1242,28 +742,6 @@ describe('playStore', () => {
     });
 
     it('does nothing if instance ID not found', async () => {
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -1278,28 +756,6 @@ describe('playStore', () => {
     });
 
     it('merges new selections with existing instead of replacing', async () => {
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -1335,28 +791,6 @@ describe('playStore', () => {
   describe('assignRuleGroup', () => {
     it('adds ruleGroupId to state on successful assignment', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       // prefetchDepTree: batch fetch metadata
       mockApiPost.mockResolvedValueOnce({
@@ -1387,9 +821,6 @@ describe('playStore', () => {
 
     it('fetches rules and updates standing on success', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
 
       const newRules: Rule[] = [{ id: 'new-rule-1', activities: [] }];
 
@@ -1414,63 +845,21 @@ describe('playStore', () => {
         })
       } as Response);
 
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
       await playStore.assignRuleGroup?.('char-1', 'group-new');
 
       expect(playStore.state.ruleGroupIds).toContain('group-new');
-      expect(playStore.state.ruleGroups).toEqual(expect.arrayContaining(newRules));
     });
 
     it('reverts ruleGroupIds on API failure', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
 
       mockApiPost.mockResolvedValueOnce({
         ok: false,
         status: 500
       } as Response);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -1482,95 +871,11 @@ describe('playStore', () => {
       // Should be reverted after failure
       expect(playStore.state.ruleGroupIds).not.toContain('group-new');
     });
-
-    it('captures vars for standing rules when assigning a new rule group', async () => {
-      const mockApiGet = vi.mocked(apiGet);
-      const mockApiPost = vi.mocked(apiPost);
-
-      vi.mocked(evaluateCharacterV2).mockReturnValue(v2Out({ facts: { 'con.modifier': 3 } }));
-
-      // loadRuleGroups: get assigned IDs, then effects
-      mockApiGet
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => ({ ruleGroups: ['base-group'] })
-        } as Response)
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => ({ effects: null })
-        } as Response);
-
-      // loadRuleGroups: fetch base rules
-      mockApiPost.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          ruleGroups: [{ ruleGroupId: 'base-group', rules: JSON.stringify([]) }]
-        })
-      } as Response);
-
-      // prefetchDepTree: batch fetch metadata for group-new
-      mockApiPost.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ ruleGroups: [] })
-      } as Response);
-
-      // assignRuleGroup: assign API call
-      mockApiPost.mockResolvedValueOnce({
-        ok: true,
-        status: 201,
-        json: async () => ({})
-      } as Response);
-
-      // assignRuleGroup: fetch assigned group rules
-      const assignedRule: Rule = {
-        id: 'paladin-level2-hp',
-        vars: {
-          conAtLevel: { capture: true, default: { fact: 'con.modifier' } }
-        },
-        activities: []
-      };
-      mockApiPost.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          ruleGroups: [{ ruleGroupId: 'group-new', rules: JSON.stringify([assignedRule]) }]
-        })
-      } as Response);
-
-      const { playStore } = await import('$lib/play/playStore.svelte');
-      playStore.reset();
-      await playStore.loadRuleGroups('char-1');
-      await playStore.assignRuleGroup?.('char-1', 'group-new');
-
-      const addedRule = playStore.state.ruleGroups.find((r) => r.id === 'paladin-level2-hp');
-      expect(addedRule?.selections).toEqual({ conAtLevel: 3 });
-    });
   });
 
   describe('condition gating', () => {
     it('blocks assignRuleGroup when conditions are not met', async () => {
       const mockApiGet = vi.mocked(apiGet);
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: { 'str.value': 10, 'dex.value': 10 },
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       // loadRuleGroups: get assigned IDs, then effects
       mockApiGet
@@ -1728,29 +1033,6 @@ describe('playStore', () => {
     });
 
     it('checkCondition returns true when no conditions defined', async () => {
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
       playStore.reset();
@@ -1822,9 +1104,6 @@ describe('playStore', () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
       const mockApiDeleteFn = vi.mocked(apiDelete);
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
 
       const group1Rules: Rule[] = [{ id: 'rule-1', activities: [] }];
 
@@ -1840,25 +1119,6 @@ describe('playStore', () => {
           ruleGroups: [{ ruleGroupId: 'group-1', rules: JSON.stringify(group1Rules) }]
         })
       } as Response);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -1889,9 +1149,6 @@ describe('playStore', () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
       const mockApiDeleteFn = vi.mocked(apiDelete);
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
 
       const group1Rules: Rule[] = [{ id: 'rule-1', activities: [] }];
 
@@ -1907,25 +1164,6 @@ describe('playStore', () => {
           ruleGroups: [{ ruleGroupId: 'group-1', rules: JSON.stringify(group1Rules) }]
         })
       } as Response);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -2077,12 +1315,7 @@ describe('playStore', () => {
     it('shows toast when effects save fails', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
       vi.mocked(toast.error).mockClear();
-
-      const committedEffect: Rule = { id: 'effect-1', activities: [] };
 
       mockApiGet
         .mockResolvedValueOnce({
@@ -2093,26 +1326,6 @@ describe('playStore', () => {
           ok: true,
           json: async () => ({ effects: null })
         } as Response);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        effects: [committedEffect],
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [committedEffect] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       // POST returns failure
       mockApiPost.mockResolvedValue({ ok: false, status: 500 } as Response);
@@ -2131,29 +1344,7 @@ describe('playStore', () => {
 
     it('does not POST when no character is loaded', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
       mockApiPost.mockClear();
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -2286,28 +1477,6 @@ describe('playStore', () => {
 
     it('does not POST when no character is loaded', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -2326,9 +1495,6 @@ describe('playStore', () => {
     it('shows toast when effects save fails', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
       vi.mocked(toast.error).mockClear();
 
       const effect: Rule = { id: 'effect-1', activities: [] };
@@ -2342,25 +1508,6 @@ describe('playStore', () => {
           ok: true,
           json: async () => ({ effects: JSON.stringify([effect]) })
         } as Response);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       // POST returns failure
       mockApiPost.mockResolvedValue({ ok: false, status: 500 } as Response);
@@ -2396,28 +1543,6 @@ describe('playStore', () => {
 
     it('calls assignRuleGroup for select-rule-group settings', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       // Parent group + 2 mastery groups (no deps on masteries in test)
       mockAssignAndFetch(mockApiPost); // class-paladin-level1
@@ -2491,28 +1616,6 @@ describe('playStore', () => {
 
     it('does not generate effects for select-rule-group settings', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       mockAssignAndFetch(mockApiPost); // class-paladin-level1
       mockAssignAndFetch(mockApiPost); // greataxe-mastery
@@ -2564,28 +1667,6 @@ describe('playStore', () => {
 
     it('handles mixed select and select-rule-group settings', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      // Legacy no-op: the store evaluates via the mocked evaluateCharacterV2 seam;
-      // this stub keeps older per-test setups intact without touching the store.
-      const mockEvaluate = vi.fn();
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       // Parent assign + mastery assign + effects save
       mockAssignAndFetch(mockApiPost); // class-paladin-level1

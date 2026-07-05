@@ -1,11 +1,9 @@
-import type { Rule } from '$lib/rules-engine';
 import type { EffectInstance } from '$lib/rules-engine-v2';
 
 export interface CharacterImport {
   name: string;
   species: string;
   ruleGroups: string[];
-  customRules?: Rule[];
   effects: EffectInstance[];
 }
 
@@ -66,10 +64,6 @@ export function validateCharacterImport(
     effects: Array.isArray(obj.effects) ? [...(obj.effects as EffectInstance[])] : []
   };
 
-  if (Array.isArray(obj.customRules) && obj.customRules.length > 0) {
-    data.customRules = [...(obj.customRules as Rule[])];
-  }
-
   return { valid: true, data };
 }
 
@@ -77,7 +71,6 @@ export interface ImportDependencies {
   createCharacter: (name: string, species: string) => Promise<{ characterId: string }>;
   fetchAssignedRuleGroups: (characterId: string) => Promise<string[]>;
   assignRuleGroup: (characterId: string, ruleGroupId: string) => Promise<void>;
-  updateCustomRules: (characterId: string, rules: Rule[]) => Promise<void>;
   saveEffects: (characterId: string, effects: EffectInstance[]) => Promise<void>;
 }
 
@@ -93,10 +86,6 @@ export async function importCharacter(
 
   for (const ruleGroupId of toAssign) {
     await deps.assignRuleGroup(character.characterId, ruleGroupId);
-  }
-
-  if (data.customRules && data.customRules.length > 0) {
-    await deps.updateCustomRules(character.characterId, data.customRules);
   }
 
   if (data.effects.length > 0) {

@@ -29,7 +29,6 @@
       values: Map<string, Record<string, string>>
     ) => Promise<void>;
     onBack: () => void;
-    onEditCustomRules?: () => void;
   }
   let {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -40,8 +39,7 @@
     onToggle,
     onGetSettings = () => Promise.resolve(null),
     onToggleWithSettings = () => Promise.resolve(),
-    onBack,
-    onEditCustomRules
+    onBack
   }: Props = $props();
   let assignedSet = $derived(new Set(assignedRuleGroupIds));
   let lockedSet = $derived(new Set(lockedRuleGroups.keys()));
@@ -165,11 +163,6 @@
     {$t('rules.backToPlay')}
   </button>
   <h1 class="manage-rules__title">{$t('rules.manageTitle')}</h1>
-  {#if onEditCustomRules}
-    <button class="manage-rules__edit-custom-btn" onclick={onEditCustomRules}>
-      {$t('rules.editCustomRules')}
-    </button>
-  {/if}
   <div class="manage-rules__search">
     <input
       type="text"
@@ -306,26 +299,6 @@
     color: var(--md-sys-color-on-surface);
     letter-spacing: var(--letter-spacing-wide);
     margin: 0;
-  }
-  .manage-rules__edit-custom-btn {
-    align-self: flex-start;
-    background: transparent;
-    border: 1px solid var(--md-sys-color-outline);
-    border-radius: var(--radius-md);
-    color: var(--md-sys-color-on-surface);
-    cursor: pointer;
-    font-family: var(--font-body);
-    font-size: var(--font-size-sm);
-    padding: var(--spacing-sm) var(--spacing-md);
-    min-height: 2.5rem;
-    transition: background-color var(--transition-fast);
-  }
-  .manage-rules__edit-custom-btn:hover {
-    background: var(--md-sys-color-surface-container);
-  }
-  .manage-rules__edit-custom-btn:focus-visible {
-    outline: 2px solid var(--md-sys-color-primary);
-    outline-offset: 2px;
   }
   .manage-rules__search-input {
     width: 100%;

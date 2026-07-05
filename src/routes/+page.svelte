@@ -8,7 +8,6 @@
   import CreateCharacterDialog from '$lib/components/character/CreateCharacterDialog.svelte';
   import ManageRulesMode from '$lib/components/character/ManageRulesMode.svelte';
   import ViewFactsMode from '$lib/components/character/ViewFactsMode.svelte';
-  import EditCustomRules from '$lib/components/character/EditCustomRules.svelte';
   import { playStore } from '$lib/play/playStore.svelte';
   import { buildCharacterExport } from '$lib/character/exportCharacter';
   import { validateCharacterImport, importCharacter } from '$lib/character/importCharacter';
@@ -24,15 +23,11 @@
   let createError = $state<string | null>(null);
   let hasLoadedCharacters = $state(false);
   let manageRulesActive = $state(false);
-  let editCustomRulesActive = $state(false);
   let viewFactsActive = $state(false);
 
   // In play mode, the standalone TopBar is hidden because IntentTopBar renders inside PlayCharacterMode.
   const isPlayMode = $derived(
-    !!characterStore.state.selectedCharacter &&
-      !manageRulesActive &&
-      !editCustomRulesActive &&
-      !viewFactsActive
+    !!characterStore.state.selectedCharacter && !manageRulesActive && !viewFactsActive
   );
 
   // Compute locked rule groups: assigned groups that are required by other assigned groups
@@ -122,10 +117,6 @@
             const res = await apiPost(`/api/characters/${cid}/rule-groups`, { ruleGroupId });
             if (!res.ok && res.status !== 409) throw new Error(`Assign failed: ${res.status}`);
           },
-          updateCustomRules: async (cid, rules) => {
-            const res = await apiPost(`/api/rule-groups/custom-${cid}`, { rules });
-            if (!res.ok) throw new Error(`Save custom rules failed: ${res.status}`);
-          },
           saveEffects: async (cid, effects) => {
             const res = await apiPost(`/api/characters/${cid}/effects`, {
               effects: JSON.stringify(effects)
@@ -155,8 +146,7 @@
     const payload = buildCharacterExport(
       character,
       playStore.state.ruleGroupIds,
-      playStore.state.committed,
-      playStore.state.ruleGroupRulesMap
+      playStore.state.committed
     );
     const json = JSON.stringify(payload, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
@@ -197,27 +187,23 @@
               playStore.reset();
               characterStore.clearSelection();
               manageRulesActive = false;
-              editCustomRulesActive = false;
               viewFactsActive = false;
             }
           : undefined}
         showManageRules={!!characterStore.state.selectedCharacter &&
           !manageRulesActive &&
-          !editCustomRulesActive &&
           !viewFactsActive}
         onManageRules={() => {
           manageRulesActive = true;
         }}
         showViewFacts={!!characterStore.state.selectedCharacter &&
           !manageRulesActive &&
-          !editCustomRulesActive &&
           !viewFactsActive}
         onViewFacts={() => {
           viewFactsActive = true;
         }}
         showDownloadCharacter={!!characterStore.state.selectedCharacter &&
           !manageRulesActive &&
-          !editCustomRulesActive &&
           !viewFactsActive &&
           !playStore.state.isLoadingRuleGroups &&
           !playStore.state.ruleGroupError}
@@ -226,14 +212,7 @@
     {/if}
     <main id="main-content" class="app-layout__body">
       {#if characterStore.state.selectedCharacter}
-        {#if editCustomRulesActive}
-          <EditCustomRules
-            character={characterStore.state.selectedCharacter}
-            onBack={() => {
-              editCustomRulesActive = false;
-            }}
-          />
-        {:else if manageRulesActive}
+        {#if manageRulesActive}
           <ManageRulesMode
             character={characterStore.state.selectedCharacter}
             assignedRuleGroupIds={playStore.state.ruleGroupIds}
@@ -253,9 +232,6 @@
             onBack={() => {
               manageRulesActive = false;
             }}
-            onEditCustomRules={() => {
-              editCustomRulesActive = true;
-            }}
           />
         {:else if viewFactsActive}
           <ViewFactsMode
@@ -273,26 +249,22 @@
               playStore.reset();
               characterStore.clearSelection();
               manageRulesActive = false;
-              editCustomRulesActive = false;
               viewFactsActive = false;
             }}
             showManageRules={!!characterStore.state.selectedCharacter &&
               !manageRulesActive &&
-              !editCustomRulesActive &&
               !viewFactsActive}
             onManageRules={() => {
               manageRulesActive = true;
             }}
             showViewFacts={!!characterStore.state.selectedCharacter &&
               !manageRulesActive &&
-              !editCustomRulesActive &&
               !viewFactsActive}
             onViewFacts={() => {
               viewFactsActive = true;
             }}
             showDownloadCharacter={!!characterStore.state.selectedCharacter &&
               !manageRulesActive &&
-              !editCustomRulesActive &&
               !viewFactsActive &&
               !playStore.state.isLoadingRuleGroups &&
               !playStore.state.ruleGroupError}

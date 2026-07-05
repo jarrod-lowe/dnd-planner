@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildCharacterExport } from '$lib/character/exportCharacter';
 import type { Character } from '$lib/character/types';
-import type { Rule } from '$lib/rules-engine';
 import type { EffectInstance } from '$lib/rules-engine-v2';
 
 const baseCharacter: Character = {
@@ -50,43 +49,5 @@ describe('buildCharacterExport', () => {
 
     expect(result.ruleGroups).toEqual(['dnd-5e-2024']);
     expect(result.effects).toHaveLength(1);
-  });
-
-  it('excludes custom rule group from ruleGroups and puts rules in customRules', () => {
-    const customRule: Rule = {
-      id: 'my-custom-rule',
-      phase: 'normal',
-      group: ['custom-group'],
-      activities: []
-    };
-    const customRuleGroupId = 'custom-char-1';
-
-    const result = buildCharacterExport(
-      baseCharacter,
-      ['dnd-5e-2024', customRuleGroupId, 'class-paladin'],
-      [],
-      { [customRuleGroupId]: [customRule] }
-    );
-
-    expect(result.ruleGroups).toEqual(['dnd-5e-2024', 'class-paladin']);
-    expect(result.customRules).toEqual([customRule]);
-  });
-
-  it('omits customRules when no custom rule group exists', () => {
-    const result = buildCharacterExport(baseCharacter, ['dnd-5e-2024'], []);
-
-    expect(result.ruleGroups).toEqual(['dnd-5e-2024']);
-    expect(result.customRules).toBeUndefined();
-  });
-
-  it('omits customRules when custom rule group has no rules', () => {
-    const customRuleGroupId = 'custom-char-1';
-
-    const result = buildCharacterExport(baseCharacter, ['dnd-5e-2024', customRuleGroupId], [], {
-      [customRuleGroupId]: []
-    });
-
-    expect(result.ruleGroups).toEqual(['dnd-5e-2024']);
-    expect(result.customRules).toBeUndefined();
   });
 });
