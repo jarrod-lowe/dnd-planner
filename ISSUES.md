@@ -67,14 +67,22 @@ rather than enumerating fact-name patterns.
 effect rules; v2 gave `display` to 14. Beyond hidden build effects (see below),
 v1 effects that were _visible_ chips lost their names entirely — notably
 `effect-hp-damage` / `effect-hp-heal` (v1: `section: health`, showed the amount
-via `displaySelection`, removable as an "undo"), the manual HP modifiers, the
-equipment effects (`effect-leather-armor` / `effect-shield` /
-`effect-splint-armor`), `effect-build-locked`, `effect-divinity-short-rest`,
-and the steed damage/heal/modifier effects. Under the current bridge these
-render as raw-id chips; under the contract fix above they would silently
-disappear instead. Either way the v1 behavior is degraded — these effects need
-`display` metadata authored (reusing the existing `rule.*.effect-*.name` keys,
-which are still in the i18n files).
+via `displaySelection`, removable as an "undo"), the manual HP modifiers,
+`effect-build-locked`, `effect-divinity-short-rest`, and the steed
+damage/heal/modifier effects. Under the current bridge these render as raw-id
+chips; under the contract fix above they would silently disappear instead.
+Either way the v1 behavior is degraded — these effects need `display` metadata
+authored (reusing the existing `rule.*.effect-*.name` keys, which are still in
+the i18n files).
+
+**Equipment can no longer be unequipped through the UI.** Neither v1 nor v2 has
+"doff" offers — in v1 you unequipped by removing the _named_ equipment effect
+chip (`effect-shield`, `effect-leather-armor`, `effect-splint-armor`, weapon
+equips) from the strip. In v2 those equip effects are permanent, keyed, and
+display-less, so they are hidden from the strip by default; the only path to
+free a hand or swap armor is the "show hidden" toggle and guessing among
+raw-id chips. Functional regression, fixed by the same means: author `display`
+on the equip effects.
 
 **Hidden build effects lost their reveal names too.** v1's strip "show hidden"
 toggle revealed named chips ("Strength 15", "Athletics proficiency", "Bless
@@ -137,6 +145,18 @@ whose `verbConfig[verb]` lookup is undefined (stripe/label breakage on the
 plan row). Fix: restore v1's verb intents on the steed offers
 (`MOVE: dash`, `DEFEND: evade`, `ATTACK: brawl`, `AID: heal`,
 `CONTROL: single`) — `subject: 'steed'` already carries the steed-ness.
+
+### 1.9 Life Bond annotation targets a label no panel carries
+
+v1's `annotate-life-bond` (steed regains HP from spell healing within 5 ft)
+targeted `healing.any`, which the Record Healing panel carries — the reminder
+showed when recording healing with a steed summoned. v2 (`find-steed.ts:675`)
+targets `companion.steed`, and no offer in the codebase carries that
+annotation label, so the annotation never renders anywhere. Fix: restore the
+`healing.any` target. Related: v2's steed offers carry no `annotationLabels`
+at all (v1's slam had `[attack.any, attack.melee]`), so attack-targeting
+annotations no longer appear on steed attack panels — possibly intended
+(rider buffs don't apply to the steed), worth a conscious call.
 
 ## 2. Faithfulness deltas v1 → v2 (documented/intentional — confirm acceptable)
 
@@ -306,3 +326,27 @@ reachable / every detailKey resolves to a published file.
 - **End-turn staleness window is v1 parity, not a regression**: v1's `endTurn`
   also committed `state.engineOutput?.effects` from the last completed
   (debounced, 300 ms) evaluation.
+- **All 68 `play.*`/`planner.*` i18n keys referenced by v2 code resolve in both
+  locales** (including the new steed ledger labels in `derivePanels`).
+- **The shared weapon/armor offer helpers (`builder.ts`) are faithful**:
+  don guards (build-lock / already-equipped / hands budget), the versatile
+  two-hand free-hand check, Light off-hand gating, and the Extra-Attack budget
+  spend all mirror v1; "don-only" is itself v1 parity — v1 never had doff
+  offers either (unequip was always the strip chip, see §1.4).
+- **Annotation wiring is sound except §1.9**: every other module annotation
+  target matches at least one offer's `annotationLabels`
+  (`attack.unarmed`/`property.*` flagged by extraction were false positives —
+  they live in const label arrays). Riders are 1:1 with v1 (fighting-style
+  great-weapon only).
+- **Heroic Inspiration cross-module keying is exact**: species-human's
+  long-rest grant and heroic-inspiration's grant/use share the literal key
+  `'heroic-inspiration'`, so eviction/idempotency compose as designed.
+- **Javelin's Slow followup matches the PanelRenderer contract**
+  (`type: 'effect'`, `condition`, `button`, `addRule.effect` with `display`).
+- **The whole backend compiles** (`go build ./...`) after the
+  cleanup-character edit; `watchdog.ts` semantics are sane (2 s budget,
+  between-pass checks).
+- **Zero dependency/config drift**: no changes to `package.json`,
+  `vite.config.ts`, `svelte.config.js`, or `tsconfig.json` vs main — the v2
+  engine added no runtime dependencies. `static/details` is gitignored build
+  output, correctly untracked.
