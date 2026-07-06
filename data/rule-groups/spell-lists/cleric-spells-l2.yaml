@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: cleric-spells-l2
     requires:
@@ -10,9 +9,14 @@ ruleGroups:
       en:
         name: Cleric Spells Level 2
         description: Level 2 spells available to Clerics
-        keywords: [cleric, spells, level2]
+        keywords:
+          - cleric
+          - spells
+          - level2
       en-x-tlh:
         name: Cleric Spells Level 2
         description: Cleric level 2 jupmey
-        keywords: [cleric, jupmey, level2]
-    rules: []
+        keywords:
+          - cleric
+          - jupmey
+          - level2

@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: splint-armor
     requires:
@@ -6,294 +5,55 @@ ruleGroups:
     translations:
       en:
         name: Splint Armor
-        description: Heavy armor providing AC 17, no Dex bonus, Str 15 required or speed reduced by 10
-        keywords: [armor, splint, heavy, ac, equipment]
+        description: Heavy armor providing AC 17, no Dex bonus, Str 15 required or
+          speed reduced by 10
+        keywords:
+          - armor
+          - splint
+          - heavy
+          - ac
+          - equipment
       en-x-tlh:
         name: DIch Sep
-        description: DIch Sep naQ, DIvI' 17, Do DIvI' pagh, HoS 15 DIron pagh Do 10 DIvI'
-        keywords: [DIch, Sep, Jun]
+        description: DIch Sep naQ, DIvI' 17, Do DIvI' pagh, HoS 15 DIron pagh Do 10
+          DIvI'
+        keywords:
+          - DIch
+          - Sep
+          - Jun
     detail:
       key: equipment/splint-armor
       source: srd52
       translations:
         en:
-          meta: 'Heavy Armor'
+          meta: Heavy Armor
           fields:
-            - { labelKey: rules.field.armorClass, value: '17' }
-            - { labelKey: rules.field.strength, value: 'Str 15' }
-            - { labelKey: rules.field.stealth, value: 'Disadvantage' }
-            - { labelKey: rules.field.weight, value: '60 lb.' }
-            - { labelKey: rules.field.donDoff, value: '10 minutes to don, 5 minutes to doff' }
-          body: |
-            Splint Armor is Heavy Armor: your Armor Class is 17, regardless of
+            - labelKey: rules.field.armorClass
+              value: '17'
+            - labelKey: rules.field.strength
+              value: Str 15
+            - labelKey: rules.field.stealth
+              value: Disadvantage
+            - labelKey: rules.field.weight
+              value: 60 lb.
+            - labelKey: rules.field.donDoff
+              value: 10 minutes to don, 5 minutes to doff
+          body: 'Splint Armor is Heavy Armor: your Armor Class is 17, regardless of
+
             your Dexterity modifier.
 
-            If the armor's Strength requirement (Strength 15) exceeds your
+
+            If the armor''s Strength requirement (Strength 15) exceeds your
+
             Strength score, your Speed is reduced by 10 feet. You have
+
             Disadvantage on Dexterity (Stealth) checks while wearing it.
 
+
             If you lack training with Heavy armor, you have Disadvantage on any
-            D20 Test that involves Strength or Dexterity, and you can't cast
+
+            D20 Test that involves Strength or Dexterity, and you can''t cast
+
             spells. You can wear only one suit of armor at a time.
-    rules:
-      # Offer to don splint armor
-      - id: don-splint-armor-offer
-        after:
-          - group: __planned__
-          - group: ac-components
-        activities:
-          - type: offerRule
-            legalWhen:
-              - *not-locked-legal
-              - condition:
-                  fact: armor.splint.equipped
-                  operator: notEquals
-                  value: 1
-                illegalDiagnostics:
-                  - code: rule.dnd-5e-2024.splint-armor.don-splint-armor-offer.already-equipped
-                    severity: error
-            rule:
-              id: don-splint-armor
-              phase: normal
-              after:
-                - group: ac-calculation
-                - group: ac-dex
-              group:
-                - ac-components
-              ui:
-                section: equip
-                name: rule.dnd-5e-2024.splint-armor.don-splint-armor.name
-                detailKey: equipment/splint-armor
-                intents: { EQUIP: armor }
-                actionCost: [move]
-              activities:
-                - *error-clear
-                - *lock-error-track
-                - type: setAdd
-                  target: { var: errors }
-                  source: { string: rule.dnd-5e-2024.splint-armor.don-splint-armor-offer.already-equipped }
-                  when:
-                    - fact: armor.splint.equipped
-                      operator: equals
-                      value: 1
-                # AC: set base to 17, zero Dex bonus (heavy armor)
-                - type: numberSet
-                  target:
-                    fact: ac.base
-                  source:
-                    number: 17
-                - type: numberSet
-                  target:
-                    fact: ac.dexBonus
-                  source:
-                    number: 0
-                - type: numberSet
-                  target:
-                    fact: armor.splint.equipped
-                  source:
-                    number: 1
-                # Unconditional Stealth disadvantage (splint armor property)
-                - type: numberSet
-                  target:
-                    fact: skill.stealth.disadvantage
-                  source:
-                    number: 1
-                # Disadvantage on STR/DEX checks when not proficient with heavy armor
-                - type: numberSet
-                  target:
-                    fact: attack.str.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    - fact: armor.heavy.proficient
-                      operator: notEquals
-                      value: 1
-                - type: numberSet
-                  target:
-                    fact: attack.dex.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    - fact: armor.heavy.proficient
-                      operator: notEquals
-                      value: 1
-                - type: numberSet
-                  target:
-                    fact: initiative.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    - fact: armor.heavy.proficient
-                      operator: notEquals
-                      value: 1
-                - type: numberSet
-                  target:
-                    fact: skill.acrobatics.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    - fact: armor.heavy.proficient
-                      operator: notEquals
-                      value: 1
-                - type: numberSet
-                  target:
-                    fact: skill.athletics.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    - fact: armor.heavy.proficient
-                      operator: notEquals
-                      value: 1
-                - type: numberSet
-                  target:
-                    fact: skill.sleight-of-hand.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    - fact: armor.heavy.proficient
-                      operator: notEquals
-                      value: 1
-                # Spellcasting blocked when not proficient
-                - type: numberSet
-                  target:
-                    fact: spellcasting.remaining
-                  source:
-                    number: 0
-                  when:
-                    - fact: armor.heavy.proficient
-                      operator: notEquals
-                      value: 1
-                # Speed penalty when STR below 15: immediate reduction on don turn
-                - type: numberIncrement
-                  target:
-                    fact: character.movement.remaining
-                  source:
-                    number: 10
-                  subtract: true
-                  when:
-                    - fact: str.value
-                      operator: lessThan
-                      value: 15
-                # Persistent effect
-                - type: advertiseEffect
-                  rule:
-                    id: effect-splint-armor
-                    phase: normal
-                    after:
-                      - group: ac-calculation
-                      - group: ac-dex
-                    group:
-                      - ac-components
-                    ui:
-                      name: rule.dnd-5e-2024.splint-armor.effect-splint-armor.name
-                      detailKey: equipment/splint-armor
-                    activities:
-                      # AC: set base to 17, zero Dex bonus
-                      - type: numberSet
-                        target:
-                          fact: ac.base
-                        source:
-                          number: 17
-                      - type: numberSet
-                        target:
-                          fact: ac.dexBonus
-                        source:
-                          number: 0
-                      - type: numberSet
-                        target:
-                          fact: armor.splint.equipped
-                        source:
-                          number: 1
-                      # Unconditional Stealth disadvantage
-                      - type: numberSet
-                        target:
-                          fact: skill.stealth.disadvantage
-                        source:
-                          number: 1
-                      # Disadvantage on STR/DEX checks when not proficient with heavy armor
-                      - type: numberSet
-                        target:
-                          fact: attack.str.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          - fact: armor.heavy.proficient
-                            operator: notEquals
-                            value: 1
-                      - type: numberSet
-                        target:
-                          fact: attack.dex.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          - fact: armor.heavy.proficient
-                            operator: notEquals
-                            value: 1
-                      - type: numberSet
-                        target:
-                          fact: initiative.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          - fact: armor.heavy.proficient
-                            operator: notEquals
-                            value: 1
-                      - type: numberSet
-                        target:
-                          fact: skill.acrobatics.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          - fact: armor.heavy.proficient
-                            operator: notEquals
-                            value: 1
-                      - type: numberSet
-                        target:
-                          fact: skill.athletics.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          - fact: armor.heavy.proficient
-                            operator: notEquals
-                            value: 1
-                      - type: numberSet
-                        target:
-                          fact: skill.sleight-of-hand.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          - fact: armor.heavy.proficient
-                            operator: notEquals
-                            value: 1
-                      # Spellcasting blocked when not proficient
-                      - type: numberSet
-                        target:
-                          fact: spellcasting.max
-                        source:
-                          number: 0
-                        when:
-                          - fact: armor.heavy.proficient
-                            operator: notEquals
-                            value: 1
-                      - type: numberSet
-                        target:
-                          fact: spellcasting.remaining
-                        source:
-                          number: 0
-                        when:
-                          - fact: armor.heavy.proficient
-                            operator: notEquals
-                            value: 1
-                      # Speed penalty: reduce remaining by 10 when STR below 15
-                      - type: numberIncrement
-                        target:
-                          fact: character.movement.remaining
-                        source:
-                          number: 10
-                        subtract: true
-                        when:
-                          - fact: str.value
-                            operator: lessThan
-                            value: 15
-                      - type: advertiseEffect
-                        self: true
+
+            '

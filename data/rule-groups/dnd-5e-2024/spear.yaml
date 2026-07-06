@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: spear
     requires:
@@ -7,48 +6,48 @@ ruleGroups:
     translations:
       en:
         name: Spear
-        description: Attack rules for the spear, a simple melee weapon dealing 1d6 piercing (versatile 1d8)
-        keywords: [attack, spear, weapon, melee, throwable, versatile, damage]
+        description: Attack rules for the spear, a simple melee weapon dealing 1d6
+          piercing (versatile 1d8)
+        keywords:
+          - attack
+          - spear
+          - weapon
+          - melee
+          - throwable
+          - versatile
+          - damage
       en-x-tlh:
         name: yan
         description: yan 'ej jey' naQ
-        keywords: [jey', yan, nuH]
+        keywords:
+          - jey'
+          - yan
+          - nuH
     detail:
       key: weapon/spear
       source: custom
       translations:
         en:
-          meta: 'Simple Melee Weapon'
+          meta: Simple Melee Weapon
           fields:
-            - { labelKey: rules.field.damage, value: '1d6 piercing (1d8 two-handed)' }
-            - { labelKey: rules.field.properties, value: 'Thrown (Range 20/60), Versatile (1d8)' }
-            - { labelKey: rules.field.mastery, value: 'Sap' }
-            - { labelKey: rules.field.weight, value: '3 lb.' }
-            - { labelKey: rules.field.cost, value: '1 GP' }
-          body: |
-            One of the oldest weapons known, the spear is cheap, simple, and
-            brutally effective. Held in one hand it forms the backbone of any
-            shield wall; set in two it strikes with greater force. It can be
-            hurled after a fleeing foe, making it as versatile as it is
-            ubiquitous.
-    rules:
-      # Compute spear hit bonus = STR modifier + proficiency bonus
-      - id: compute-spear-hit-bonus
-        phase: normal
-        activities:
-          - type: numberSum
-            target:
-              fact: attack.spear.hitBonus
-            sources:
-              - fact: str.modifier
-              - fact: proficiency.bonus
+            - labelKey: rules.field.damage
+              value: 1d6 piercing (1d8 two-handed)
+            - labelKey: rules.field.properties
+              value: Thrown (Range 20/60), Versatile (1d8)
+            - labelKey: rules.field.mastery
+              value: Sap
+            - labelKey: rules.field.weight
+              value: 3 lb.
+            - labelKey: rules.field.cost
+              value: 1 GP
+          body: 'One of the oldest weapons known, the spear is cheap, simple, and
 
-      # Compute spear damage bonus = STR modifier
-      - id: compute-spear-damage-bonus
-        phase: normal
-        activities:
-          - type: numberCopy
-            source:
-              fact: str.modifier
-            target:
-              fact: attack.spear.damageBonus
+            brutally effective. Held in one hand it forms the backbone of any
+
+            shield wall; set in two it strikes with greater force. It can be
+
+            hurled after a fleeing foe, making it as versatile as it is
+
+            ubiquitous.
+
+            '

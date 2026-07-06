@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: class-paladin-oath-redemption-level3
     requires:
@@ -9,272 +8,30 @@ ruleGroups:
     translations:
       en:
         name: Oath of Redemption Level 3
-        description: >
-          Paladin Oath of Redemption features at level 3, including the
+        description: 'Paladin Oath of Redemption features at level 3, including the
           Rebuke the Violent and Emissary of Peace divinity channel options
-        keywords: [paladin, oath, redemption, level3, divinity, rebuke, emissary, peace]
+
+          '
+        keywords:
+          - paladin
+          - oath
+          - redemption
+          - level3
+          - divinity
+          - rebuke
+          - emissary
+          - peace
       en-x-tlh:
         name: Oath of Redemption Level 3
-        description: >
-          Paladin Oath of Redemption level 3, Rebuke the Violent DIvI'
+        description: 'Paladin Oath of Redemption level 3, Rebuke the Violent DIvI''
           Emissary of Peace rojDuy
-        keywords: [paladin, oath, redemption, level3, DIvI', rebuke, rojDuy]
-    rules:
-      # Sleep is always prepared for Oath of Redemption from level 3.
-      # This grant does NOT consume a prepared-spell slot
-      # (spellcasting.prepared.count is untouched) and the alwaysPrepared flag
-      # blocks the Unprepare offer in spells/sleep.yaml.
-      - id: oath-redemption-sleep-always-prepared
-        phase: early
-        group:
-          - always-prepared-set
-        activities:
-          - type: numberSet
-            target:
-              fact: spell.l1.sleep.prepared
-            source:
-              number: 1
-          - type: numberSet
-            target:
-              fact: spell.l1.sleep.alwaysPrepared
-            source:
-              number: 1
 
-      # Sanctuary is always prepared for Oath of Redemption from level 3.
-      # This grant does NOT consume a prepared-spell slot
-      # (spellcasting.prepared.count is untouched) and the alwaysPrepared flag
-      # blocks the Unprepare offer in spells/sanctuary.yaml.
-      - id: oath-redemption-sanctuary-always-prepared
-        phase: early
-        group:
-          - always-prepared-set
-        activities:
-          - type: numberSet
-            target:
-              fact: spell.l1.sanctuary.prepared
-            source:
-              number: 1
-          - type: numberSet
-            target:
-              fact: spell.l1.sanctuary.alwaysPrepared
-            source:
-              number: 1
-
-      # Offer Rebuke the Violent (reaction + 1 divinity point)
-      - id: offer-rebuke-the-violent
-        after:
-          - group: __planned__
-          - group: divinity-set
-        activities:
-          - type: offerRule
-            legalWhen:
-              - condition:
-                  fact: reactions.remaining
-                  operator: greaterThan
-                  value: 0
-                illegalDiagnostics:
-                  - code: rule.class-paladin-oath-redemption-level3.offer-rebuke-the-violent.no_reaction
-                    severity: error
-              - condition:
-                  fact: divinity.remaining
-                  operator: greaterThan
-                  value: 0
-                illegalDiagnostics:
-                  - code: rule.class-paladin-oath-redemption-level3.offer-rebuke-the-violent.no_divinity
-                    severity: error
-            rule:
-              id: rebuke-the-violent
-              group:
-                - __planned__
-              ui:
-                section: reaction
-                name: rule.class-paladin-oath-redemption-level3.rebuke-the-violent.name
-                description: rule.class-paladin-oath-redemption-level3.rebuke-the-violent.description
-                intents:
-                  DEFEND: ward
-                actionCost: [reaction, CD]
-              activities:
-                # Consume reaction
-                - type: numberIncrement
-                  target:
-                    fact: reactions.remaining
-                  source:
-                    number: 1
-                  subtract: true
-                # Consume 1 Divinity point
-                - type: numberIncrement
-                  target:
-                    fact: divinity.remaining
-                  source:
-                    number: 1
-                  subtract: true
-                # Error tracking
-                - *error-clear
-                - type: setAdd
-                  target:
-                    var: errors
-                  source:
-                    string: rule.class-paladin-oath-redemption-level3.offer-rebuke-the-violent.no_reaction
-                  when:
-                    - fact: reactions.remaining
-                      operator: lessThan
-                      value: 0
-                - type: setAdd
-                  target:
-                    var: errors
-                  source:
-                    string: rule.class-paladin-oath-redemption-level3.offer-rebuke-the-violent.no_divinity
-                  when:
-                    - fact: divinity.remaining
-                      operator: lessThan
-                      value: 0
-                # Persist divinity consumption across turns
-                - type: advertiseEffect
-                  rule:
-                    id: effect-rebuke-the-violent-divinity
-                    phase: early
-                    group:
-                      - divinity-effect
-                    ui:
-                      name: rule.class-paladin-oath-redemption-level3.effect-rebuke-the-violent-divinity.name
-                    when:
-                      - fact: rest.long
-                        operator: equals
-                        value: 0
-                    activities:
-                      - type: numberIncrement
-                        target:
-                          fact: divinity.remaining
-                        source:
-                          number: 1
-                        subtract: true
-                      - type: advertiseEffect
-                        self: true
-                        when:
-                          - fact: rest.long
-                            operator: equals
-                            value: 0
-
-      # Offer Emissary of Peace (bonus action + 1 divinity point)
-      - id: offer-emissary-of-peace
-        after:
-          - group: __planned__
-          - group: divinity-set
-        activities:
-          - type: offerRule
-            legalWhen:
-              - condition: *has-bonus-action
-                illegalDiagnostics:
-                  - code: rule.class-paladin-oath-redemption-level3.offer-emissary-of-peace.no_bonus_action
-                    severity: error
-              - condition:
-                  fact: divinity.remaining
-                  operator: greaterThan
-                  value: 0
-                illegalDiagnostics:
-                  - code: rule.class-paladin-oath-redemption-level3.offer-emissary-of-peace.no_divinity
-                    severity: error
-            rule:
-              id: emissary-of-peace
-              group:
-                - __planned__
-              ui:
-                section: bonus-action-other
-                name: rule.class-paladin-oath-redemption-level3.emissary-of-peace.name
-                description: rule.class-paladin-oath-redemption-level3.emissary-of-peace.description
-                intents:
-                  AID: self
-                actionCost: [bonus, CD]
-              activities:
-                # Consume bonus action
-                - type: numberIncrement
-                  target:
-                    fact: bonusActions.remaining
-                  source:
-                    number: 1
-                  subtract: true
-                # Consume 1 Divinity point
-                - type: numberIncrement
-                  target:
-                    fact: divinity.remaining
-                  source:
-                    number: 1
-                  subtract: true
-                # Apply persuasion bonus immediately
-                - type: numberIncrement
-                  target:
-                    fact: skill.persuasion.value
-                  source:
-                    number: 5
-                # Error tracking
-                - *error-clear
-                - type: setAdd
-                  target:
-                    var: errors
-                  source:
-                    string: rule.class-paladin-oath-redemption-level3.offer-emissary-of-peace.no_bonus_action
-                  when:
-                    - fact: bonusActions.remaining
-                      operator: lessThan
-                      value: 0
-                - type: setAdd
-                  target:
-                    var: errors
-                  source:
-                    string: rule.class-paladin-oath-redemption-level3.offer-emissary-of-peace.no_divinity
-                  when:
-                    - fact: divinity.remaining
-                      operator: lessThan
-                      value: 0
-                # Persist divinity consumption across turns
-                - type: advertiseEffect
-                  rule:
-                    id: effect-emissary-of-peace-divinity
-                    phase: early
-                    group:
-                      - divinity-effect
-                    ui:
-                      name: rule.class-paladin-oath-redemption-level3.effect-emissary-of-peace-divinity.name
-                    when:
-                      - fact: rest.long
-                        operator: equals
-                        value: 0
-                    activities:
-                      - type: numberIncrement
-                        target:
-                          fact: divinity.remaining
-                        source:
-                          number: 1
-                        subtract: true
-                      - type: advertiseEffect
-                        self: true
-                        when:
-                          - fact: rest.long
-                            operator: equals
-                            value: 0
-                # Status reminder + persuasion bonus (user-removable)
-                - type: advertiseEffect
-                  rule:
-                    id: effect-emissary-of-peace
-                    phase: early
-                    group:
-                      - divinity-effect
-                    ui:
-                      section: senses
-                      name: rule.class-paladin-oath-redemption-level3.emissary-of-peace.name
-                    when:
-                      - fact: rest.long
-                        operator: equals
-                        value: 0
-                    activities:
-                      - type: numberIncrement
-                        target:
-                          fact: skill.persuasion.value
-                        source:
-                          number: 5
-                      - type: advertiseEffect
-                        self: true
-                        when:
-                          - fact: rest.long
-                            operator: equals
-                            value: 0
+          '
+        keywords:
+          - paladin
+          - oath
+          - redemption
+          - level3
+          - DIvI'
+          - rebuke
+          - rojDuy

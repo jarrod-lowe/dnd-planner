@@ -1,84 +1,17 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: initiative
     translations:
       en:
         name: Initiative
         description: Initiative bonus and roll
-        keywords: [initiative, roll, dexterity, combat]
+        keywords:
+          - initiative
+          - roll
+          - dexterity
+          - combat
       en-x-tlh:
         name: DIvI'
         description: DIvI' bonus 'ej DIvI'
-        keywords: [DIvI', Do]
-    rules:
-      # Initiative bonus = DEX modifier
-      # Uses numberIncrement so future feats (e.g., Alert) can add to it
-      - id: initiative-bonus
-        phase: normal
-        group:
-          - initiative-bonus-settle
-        activities:
-          - type: numberIncrement
-            target:
-              fact: initiative.bonus
-            source:
-              fact: dex.modifier
-
-      # Display initiative bonus in the stats column
-      - id: initiative-display
-        activities: []
-        ui:
-          stats:
-            - name: play.stats.initiative
-              type: modifier
-              fact: initiative.bonus
-              section: stats
-
-      # Offer "Roll Initiative" as a free action (display only, no state change)
-      - id: roll-initiative-offer
-        after:
-          - group: __planned__
-        activities:
-          - type: offerRule
-            rule:
-              id: roll-initiative
-              group:
-                - __planned__
-              ui:
-                section: free
-                name: rule.dnd-5e-2024.initiative.roll-initiative.name
-                description: rule.dnd-5e-2024.initiative.roll-initiative.description
-                disadvantageFact: initiative.disadvantage
-                primaryControl:
-                  type: dice-line
-                  annotationLabels: [dice.any, dice.initiative]
-                  dice:
-                    - sides: 20
-                      bonus: { var: rollBonus }
-                      purpose: check
-                  advantage: { fact: initiative.disadvantage }
-                secondaryControl:
-                  type: dice-line
-                  enabled:
-                    condition:
-                      fact: feat.alert.active
-                      operator: equals
-                      value: 1
-                  label: rule.dnd-5e-2024.feat-alert.initiative-proficiency.button
-                  annotationLabels: [dice.any, dice.initiative]
-                  dice:
-                    - sides: 20
-                      bonus: { var: alertBonus }
-                      purpose: check
-                intents: { INSPECT: sense }
-                actionCost: []
-              vars:
-                rollBonus:
-                  capture: true
-                  default:
-                    fact: initiative.bonus
-                alertBonus:
-                  capture: true
-                  default:
-                    fact: feat.alert.initiativeWithProficiency
-              activities: []
+        keywords:
+          - DIvI'
+          - Do

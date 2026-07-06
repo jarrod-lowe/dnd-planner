@@ -1,54 +1,16 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: feat-alert
     translations:
       en:
         name: Alert
         description: Alert feat grants initiative benefits
-        keywords: [alert, feat, initiative]
+        keywords:
+          - alert
+          - feat
+          - initiative
       en-x-tlh:
         name: valwI'
         description: valwI' DIvI' SubchI'
-        keywords: [valwI', DIvI']
-    rules:
-      # Set the Alert feat active flag
-      - id: alert-flag
-        phase: normal
-        activities:
-          - type: numberSet
-            target:
-              fact: feat.alert.active
-            source:
-              number: 1
-
-      # Compute initiative bonus with proficiency: initiative.bonus + proficiency.bonus
-      - id: alert-initiative-with-proficiency
-        phase: normal
-        after:
-          - group: initiative-bonus-settle
-        activities:
-          - type: numberCopy
-            source:
-              fact: initiative.bonus
-            target:
-              fact: feat.alert.initiativeWithProficiency
-          - type: numberIncrement
-            source:
-              fact: proficiency.bonus
-            target:
-              fact: feat.alert.initiativeWithProficiency
-
-      # Annotate initiative panels with Alert benefits
-      - id: alert-annotate
-        phase: normal
-        when:
-          - fact: feat.alert.active
-            operator: equals
-            value: 1
-        activities:
-          - type: annotate
-            key: rule.dnd-5e-2024.feat-alert.annotation-swap
-            targets: [dice.initiative]
-          - type: annotate
-            key: rule.dnd-5e-2024.feat-alert.annotation-proficiency
-            targets: [dice.initiative]
+        keywords:
+          - valwI'
+          - DIvI'

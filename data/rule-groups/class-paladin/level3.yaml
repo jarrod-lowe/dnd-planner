@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: class-paladin-level3
     requires:
@@ -7,116 +6,16 @@ ruleGroups:
     translations:
       en:
         name: Paladin Level 3
-        description: Paladin class features at level 3, including an additional hit die, spell slot, and Lay on Hands pool
-        keywords: [paladin, class, level3]
+        description: Paladin class features at level 3, including an additional hit
+          die, spell slot, and Lay on Hands pool
+        keywords:
+          - paladin
+          - class
+          - level3
       en-x-tlh:
         name: Paladin Level 3
         description: Paladin Segh level 3, chel Du chelSlot ghop Du
-        keywords: [paladin, segh, level3]
-    rules:
-      # Hit Die - Level 3 Paladin adds 1d10
-      - id: paladin-level3-hit-die
-        phase: early
-        group:
-          - hit-die-base
-        activities:
-          - type: numberIncrement
-            target:
-              fact: hitDie.d10.total
-            source:
-              number: 1
-
-      # HP - Level 3 Paladin adds average d10 (6) + captured CON modifier at level-up time
-      - id: paladin-level3-hp
-        phase: normal
-        after:
-          - group: hp-total
-        group:
-          - hp-set
-        vars:
-          conAtLevel:
-            capture: true
-            default:
-              fact: con.modifier
-        activities:
-          - type: numberIncrement
-            target:
-              fact: hp.max
-            source:
-              number: 6
-          - type: numberIncrement
-            target:
-              fact: hp.base.max
-            source:
-              number: 6
-          - type: numberIncrement
-            target:
-              fact: hp.max
-            source:
-              var: conAtLevel
-          - type: numberIncrement
-            target:
-              fact: hp.base.max
-            source:
-              var: conAtLevel
-
-      # Spell Slots - Level 3 Paladin adds 1 level 1 slot
-      - id: paladin-level3-spell-slots
-        phase: early
-        group:
-          - spellcasting-slots-set
-        activities:
-          - type: numberIncrement
-            target:
-              fact: spellcasting.slots.level1.total
-            source:
-              number: 1
-          - type: numberIncrement
-            target:
-              fact: spellcasting.slots.level1.remaining
-            source:
-              number: 1
-
-      # Prepared Spell Capacity - Level 3 Paladin adds 1 more prepared spell
-      - id: paladin-level3-prepared-max
-        phase: early
-        activities:
-          - type: numberIncrement
-            target:
-              fact: spellcasting.prepared.max
-            source:
-              number: 1
-
-      # Lay on Hands Pool - Level 3 Paladin adds 5 more points
-      - id: paladin-level3-lay-on-hands-pool
-        phase: early
-        group:
-          - loh-pool-set
-        activities:
-          - type: numberIncrement
-            target:
-              fact: layOnHands.pool.total
-            source:
-              number: 5
-          - type: numberIncrement
-            target:
-              fact: layOnHands.pool.remaining
-            source:
-              number: 5
-
-      # Divinity Pool - Level 3 Paladin starts with 2 Divinity points
-      - id: paladin-level3-divinity-pool
-        phase: early
-        group:
-          - divinity-set
-        activities:
-          - type: numberIncrement
-            target:
-              fact: divinity.total
-            source:
-              number: 2
-          - type: numberIncrement
-            target:
-              fact: divinity.remaining
-            source:
-              number: 2
+        keywords:
+          - paladin
+          - segh
+          - level3

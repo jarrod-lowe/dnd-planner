@@ -1,221 +1,48 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: class-paladin-divinity
     translations:
       en:
         name: Divinity
         description: Paladins draw on divine power to fuel special abilities
-        keywords: [paladin, divinity, divine, channel]
+        keywords:
+          - paladin
+          - divinity
+          - divine
+          - channel
       en-x-tlh:
         name: DIvI'
         description: Segh DIvI' DIvI' DIch
-        keywords: [paladin, DIvI', DIch]
+        keywords:
+          - paladin
+          - DIvI'
+          - DIch
     detail:
       key: class-feature/divine-sense
       source: srd52
       translations:
         en:
-          meta: 'Channel Divinity (Paladin)'
-          body: |
-            You can channel divine energy directly from the Outer Planes to fuel
+          meta: Channel Divinity (Paladin)
+          body: 'You can channel divine energy directly from the Outer Planes to fuel
+
             magical effects, starting with Divine Sense. You can use Channel
+
             Divinity twice; you regain one expended use when you finish a Short
+
             Rest and all expended uses when you finish a Long Rest.
 
+
             *Divine Sense.* As a Bonus Action, you can open your awareness to
+
             detect Celestials, Fiends, and Undead. For the next 10 minutes or
+
             until you have the Incapacitated condition, you know the location of
+
             any creature of those types within 60 feet of yourself, and you know
+
             its creature type. Within the same radius, you also detect the
+
             presence of any place or object that has been consecrated or
+
             desecrated, as with the Hallow spell.
-    rules:
-      # Divinity UI stats display
-      - id: divinity-ui
-        phase: early
-        activities: []
-        ui:
-          stats:
-            - name: play.stats.divinity
-              type: usedMax
-              total: divinity.total
-              remaining: divinity.remaining
-              section: resources
-          resources:
-            - type: usedMax
-              label: play.stats.divinity
-              total: divinity.total
-              remaining: divinity.remaining
 
-      # Divinity reset on Long Rest
-      - id: divinity-reset
-        phase: early
-        after:
-          - group: divinity-set
-          - group: divinity-effect
-        when:
-          - fact: rest.long
-            operator: equals
-            value: 1
-        activities:
-          - type: numberCopy
-            source:
-              fact: divinity.total
-            target:
-              fact: divinity.remaining
-
-      # Short Rest - recover 1 Divinity point
-      - id: divinity-short-rest
-        phase: early
-        after:
-          - group: divinity-set
-          - group: divinity-effect
-        when:
-          - fact: rest.short
-            operator: equals
-            value: 1
-        activities:
-          - type: numberIncrement
-            target:
-              fact: divinity.remaining
-            source:
-              number: 1
-            max: divinity.total
-          - type: advertiseEffect
-            rule:
-              id: effect-divinity-short-rest
-              ui:
-                name: rule.class-paladin-divinity.effect-divinity-short-rest.name
-              phase: early
-              when:
-                - fact: rest.long
-                  operator: equals
-                  value: 0
-              activities:
-                - type: numberIncrement
-                  target:
-                    fact: divinity.remaining
-                  source:
-                    number: 1
-                  max: divinity.total
-                - type: advertiseEffect
-                  self: true
-                  when:
-                    - fact: rest.long
-                      operator: equals
-                      value: 0
-
-      # Offer Divine Sense (bonus action)
-      - id: offer-divine-sense
-        after:
-          - group: __planned__
-          - group: divinity-set
-        activities:
-          - type: offerRule
-            legalWhen:
-              - condition: *has-bonus-action
-                illegalDiagnostics:
-                  - code: rule.class-paladin-divinity.offer-divine-sense.no_bonus_action
-                    severity: error
-              - condition:
-                  fact: divinity.remaining
-                  operator: greaterThan
-                  value: 0
-                illegalDiagnostics:
-                  - code: rule.class-paladin-divinity.offer-divine-sense.no_divinity
-                    severity: error
-            rule:
-              id: divine-sense
-              group:
-                - __planned__
-              ui:
-                section: bonus-action-other
-                name: rule.class-paladin-divinity.divine-sense.name
-                description: rule.class-paladin-divinity.divine-sense.description
-                detailKey: class-feature/divine-sense
-                intents:
-                  INSPECT: sense
-                actionCost: [bonus, CD]
-              activities:
-                # Consume bonus action
-                - type: numberIncrement
-                  target:
-                    fact: bonusActions.remaining
-                  source:
-                    number: 1
-                  subtract: true
-                # Consume 1 Divinity point
-                - type: numberIncrement
-                  target:
-                    fact: divinity.remaining
-                  source:
-                    number: 1
-                  subtract: true
-                # Error tracking
-                - *error-clear
-                - type: setAdd
-                  target:
-                    var: errors
-                  source:
-                    string: rule.class-paladin-divinity.offer-divine-sense.no_bonus_action
-                  when:
-                    - fact: bonusActions.remaining
-                      operator: lessThan
-                      value: 0
-                - type: setAdd
-                  target:
-                    var: errors
-                  source:
-                    string: rule.class-paladin-divinity.offer-divine-sense.no_divinity
-                  when:
-                    - fact: divinity.remaining
-                      operator: lessThan
-                      value: 0
-                # Persist consumption across turns
-                - type: advertiseEffect
-                  rule:
-                    id: effect-divine-sense-divinity
-                    phase: early
-                    group:
-                      - divinity-effect
-                    ui:
-                      name: rule.class-paladin-divinity.effect-divine-sense-divinity.name
-                    when:
-                      - fact: rest.long
-                        operator: equals
-                        value: 0
-                    activities:
-                      - type: numberIncrement
-                        target:
-                          fact: divinity.remaining
-                        source:
-                          number: 1
-                        subtract: true
-                      - type: advertiseEffect
-                        self: true
-                        when:
-                          - fact: rest.long
-                            operator: equals
-                            value: 0
-                # Status reminder (user-removable)
-                - type: advertiseEffect
-                  rule:
-                    id: effect-divine-sense
-                    phase: early
-                    group:
-                      - divinity-effect
-                    ui:
-                      section: senses
-                      name: rule.class-paladin-divinity.divine-sense.name
-                      detailKey: class-feature/divine-sense
-                    when:
-                      - fact: rest.long
-                        operator: equals
-                        value: 0
-                    activities:
-                      - type: advertiseEffect
-                        self: true
-                        when:
-                          - fact: rest.long
-                            operator: equals
-                            value: 0
+            '

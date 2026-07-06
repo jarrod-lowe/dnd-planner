@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: spell-create-and-destroy-water
     requires:
@@ -6,288 +5,62 @@ ruleGroups:
     translations:
       en:
         name: Create and Destroy Water
-        description: >
-          Create up to 10 gallons of clean water, or destroy the same amount.
-          Costs 1 action and 1 level 1 spell slot.
-        keywords: [spell, level1, water, create, destroy, utility]
+        description: 'Create up to 10 gallons of clean water, or destroy the same
+          amount. Costs 1 action and 1 level 1 spell slot.
+
+          '
+        keywords:
+          - spell
+          - level1
+          - water
+          - create
+          - destroy
+          - utility
       en-x-tlh:
         name: bIQ chenmoH 'ej HochHom
-        description: wa'maH DIS pIm bIQ chenmoH pagh Qaw'. wa' DIvI' 'ej wa' mugh laH.
-        keywords: [mugh, bIQ, DIvI', laH]
+        description: wa'maH DIS pIm bIQ chenmoH pagh Qaw'. wa' DIvI' 'ej wa' mugh
+          laH.
+        keywords:
+          - mugh
+          - bIQ
+          - DIvI'
+          - laH
     detail:
       key: spell/create-and-destroy-water
       source: srd52
       translations:
         en:
-          meta: 'Level 1 Transmutation (Cleric, Druid)'
+          meta: Level 1 Transmutation (Cleric, Druid)
           fields:
-            - { labelKey: rules.field.castingTime, value: 'Action' }
-            - { labelKey: rules.field.range, value: '30 feet' }
-            - { labelKey: rules.field.components, value: 'V, S, M (a mix of water and sand)' }
-            - { labelKey: rules.field.duration, value: 'Instantaneous' }
-          body: |
-            You do one of the following:
+            - labelKey: rules.field.castingTime
+              value: Action
+            - labelKey: rules.field.range
+              value: 30 feet
+            - labelKey: rules.field.components
+              value: V, S, M (a mix of water and sand)
+            - labelKey: rules.field.duration
+              value: Instantaneous
+          body: 'You do one of the following:
+
 
             **Create Water.** You create up to 10 gallons of clean water within
+
             range in an open container. Alternatively, the water falls as rain in
+
             a 30-foot Cube within range, extinguishing exposed flames there.
 
+
             **Destroy Water.** You destroy up to 10 gallons of water in an open
+
             container within range. Alternatively, you destroy fog in a 30-foot
+
             Cube within range.
 
+
             *Using a Higher-Level Spell Slot.* You create or destroy 10 additional
+
             gallons of water, or the size of the Cube increases by 5 feet, for each
+
             spell slot level above 1.
-    rules:
-      # Offer to prepare Create and Destroy Water (Build → Prepare → L1)
-      - id: prepare-create-and-destroy-water-offer
-        activities:
-          - type: offerRule
-            legalWhen:
-              - *not-locked-legal
-              - condition:
-                  fact: spell.l1.createAndDestroyWater.prepared
-                  operator: notEquals
-                  value: 1
-                illegalDiagnostics:
-                  - code: rule.spell-create-and-destroy-water.prepare-create-and-destroy-water-offer.already_prepared
-                    severity: error
-              - condition:
-                  fact: spellcasting.prepared.remaining
-                  operator: greaterThan
-                  value: 0
-                illegalDiagnostics:
-                  - code: rule.spell-create-and-destroy-water.prepare-create-and-destroy-water-offer.max_prepared
-                    severity: error
-            rule:
-              id: prepare-create-and-destroy-water
-              phase: normal
-              group:
-                - __planned__
-              ui:
-                section: configuration
-                name: rule.spell-create-and-destroy-water.prepare-create-and-destroy-water-offer.name
-                intents: { PREPARE: L1 }
-                actionCost: []
-              activities:
-                - type: numberSet
-                  target:
-                    fact: spell.l1.createAndDestroyWater.prepared
-                  source:
-                    number: 1
-                - type: numberIncrement
-                  target:
-                    fact: spellcasting.prepared.count
-                  source:
-                    number: 1
-                - type: advertiseEffect
-                  rule:
-                    id: effect-create-and-destroy-water-prepared
-                    ui:
-                      name: rule.spell-create-and-destroy-water.effect-create-and-destroy-water-prepared.name
-                      hidden: true
-                    phase: early
-                    after:
-                      - group: spell-l1-create-and-destroy-water-removal-set
-                    activities:
-                      - type: numberSet
-                        target:
-                          fact: spell.l1.createAndDestroyWater.prepared
-                        source:
-                          number: 1
-                        when:
-                          - fact: spell.l1.createAndDestroyWater.removing
-                            operator: equals
-                            value: 0
-                      - type: numberIncrement
-                        target:
-                          fact: spellcasting.prepared.count
-                        source:
-                          number: 1
-                        when:
-                          - fact: spell.l1.createAndDestroyWater.removing
-                            operator: equals
-                            value: 0
-                      - type: advertiseEffect
-                        self: true
-                        when:
-                          - fact: spell.l1.createAndDestroyWater.removing
-                            operator: equals
-                            value: 0
 
-      # Offer to unprepare Create and Destroy Water
-      - id: unprepare-create-and-destroy-water-offer
-        activities:
-          - type: offerRule
-            legalWhen:
-              - *not-locked-legal
-              - condition:
-                  fact: spell.l1.createAndDestroyWater.prepared
-                  operator: equals
-                  value: 1
-                illegalDiagnostics:
-                  - code: rule.spell-create-and-destroy-water.unprepare-create-and-destroy-water-offer.not_prepared
-                    severity: error
-            rule:
-              id: unprepare-create-and-destroy-water
-              ui:
-                section: configuration
-                name: rule.spell-create-and-destroy-water.unprepare-create-and-destroy-water-offer.name
-                intents: { PREPARE: L1 }
-                actionCost: []
-              activities:
-                - type: numberSet
-                  target:
-                    fact: spell.l1.createAndDestroyWater.prepared
-                  source:
-                    number: 0
-                - type: numberSet
-                  target:
-                    fact: spell.l1.createAndDestroyWater.removing
-                  source:
-                    number: 1
-                - type: numberIncrement
-                  target:
-                    fact: spellcasting.prepared.count
-                  source:
-                    number: 1
-                  subtract: true
-                - type: advertiseEffect
-                  rule:
-                    id: effect-create-and-destroy-water-removing
-                    ui:
-                      name: rule.spell-create-and-destroy-water.effect-create-and-destroy-water-removing.name
-                      hidden: true
-                    phase: early
-                    group:
-                      - spell-l1-create-and-destroy-water-removal-set
-                    activities:
-                      - type: numberSet
-                        target:
-                          fact: spell.l1.createAndDestroyWater.removing
-                        source:
-                          number: 1
-
-      - id: offer-create-and-destroy-water
-        when:
-          - fact: spell.l1.createAndDestroyWater.prepared
-            operator: equals
-            value: 1
-        after:
-          - group: action
-          - group: spellcasting
-          - group: __planned__
-        activities:
-          - type: offerRule
-            legalWhen:
-              - condition:
-                  fact: actions.remaining
-                  operator: greaterThan
-                  value: 0
-                illegalDiagnostics:
-                  - code: rule.spell-create-and-destroy-water.offer-create-and-destroy-water.no_action
-                    severity: error
-              - condition:
-                  fact: spellcasting.remaining
-                  operator: greaterThan
-                  value: 0
-                illegalDiagnostics:
-                  - code: rule.spell-create-and-destroy-water.offer-create-and-destroy-water.no_spellcasting
-                    severity: error
-              - condition:
-                  fact: spellcasting.slots.level1.remaining
-                  operator: greaterThan
-                  value: 0
-                illegalDiagnostics:
-                  - code: rule.spell-create-and-destroy-water.offer-create-and-destroy-water.no_slots
-                    severity: error
-            rule:
-              id: cast-create-and-destroy-water
-              ui:
-                section: action-spell
-                name: rule.spell-create-and-destroy-water.cast-create-and-destroy-water.name
-                description: rule.spell-create-and-destroy-water.cast-create-and-destroy-water.description
-                detailKey: spell/create-and-destroy-water
-                intents:
-                  HANDLE: consume
-                actionCost: [action, L1]
-              group:
-                - __planned__
-                - action
-                - spellcasting
-              activities:
-                - type: numberIncrement
-                  target:
-                    fact: actions.remaining
-                  source:
-                    number: 1
-                  subtract: true
-                - type: numberIncrement
-                  target:
-                    fact: spellcasting.remaining
-                  source:
-                    number: 1
-                  subtract: true
-                - type: numberIncrement
-                  target:
-                    fact: spellcasting.slots.level1.remaining
-                  source:
-                    number: 1
-                  subtract: true
-                - type: advertiseEffect
-                  rule:
-                    id: effect-create-and-destroy-water-l1
-                    ui:
-                      section: action-spell
-                      name: play.slotEffect.l1
-                      hidden: true
-                      intents:
-                        HANDLE: consume
-                      actionCost: [L1]
-                    phase: early
-                    after:
-                      - group: spellcasting-slots-set
-                    group:
-                      - spell-slot-effect
-                    activities:
-                      - type: numberIncrement
-                        target:
-                          fact: spellcasting.slots.level1.remaining
-                        source:
-                          number: 1
-                        subtract: true
-                      - type: advertiseEffect
-                        self: true
-                        when:
-                          - fact: rest.long
-                            operator: equals
-                            value: 0
-                - *error-clear
-                - type: setAdd
-                  target:
-                    var: errors
-                  source:
-                    string: rule.spell-create-and-destroy-water.offer-create-and-destroy-water.no_action
-                  when:
-                    - fact: actions.remaining
-                      operator: lessThan
-                      value: 0
-                - type: setAdd
-                  target:
-                    var: errors
-                  source:
-                    string: rule.spell-create-and-destroy-water.offer-create-and-destroy-water.no_spellcasting
-                  when:
-                    - fact: spellcasting.remaining
-                      operator: lessThan
-                      value: 0
-                - type: setAdd
-                  target:
-                    var: errors
-                  source:
-                    string: rule.spell-create-and-destroy-water.offer-create-and-destroy-water.no_slots
-                  when:
-                    - fact: spellcasting.slots.level1.remaining
-                      operator: lessThan
-                      value: 0
+            '

@@ -1,60 +1,3 @@
-# yaml-language-server: $schema=../schema.json
-paladin-skill-options: &paladin-skill-options
-  - value: athletics
-    translations:
-      en: { name: Athletics }
-      en-x-tlh: { name: Athletics }
-  - value: insight
-    translations:
-      en: { name: Insight }
-      en-x-tlh: { name: Insight }
-  - value: intimidation
-    translations:
-      en: { name: Intimidation }
-      en-x-tlh: { name: Intimidation }
-  - value: medicine
-    translations:
-      en: { name: Medicine }
-      en-x-tlh: { name: Medicine }
-  - value: persuasion
-    translations:
-      en: { name: Persuasion }
-      en-x-tlh: { name: Persuasion }
-  - value: religion
-    translations:
-      en: { name: Religion }
-      en-x-tlh: { name: Religion }
-
-paladin-mastery-options: &paladin-mastery-options
-  - value: greataxe-mastery
-    translations:
-      en: { name: Greataxe (Cleave) }
-      en-x-tlh: { name: Greataxe (Cleave) }
-  - value: dagger-mastery
-    translations:
-      en: { name: Dagger (Nick) }
-      en-x-tlh: { name: Dagger (Nick) }
-  - value: javelin-mastery
-    translations:
-      en: { name: Javelin (Slow) }
-      en-x-tlh: { name: Javelin (Slow) }
-  - value: scimitar-mastery
-    translations:
-      en: { name: Scimitar (Nick) }
-      en-x-tlh: { name: Scimitar (Nick) }
-
-# v2 EffectInstance: proficient in the chosen skill. Shares the `skill-<skill>-prof`
-# key with the ability-scores module's skillProficiencyOffer, so a settings-granted
-# proficiency and an offer-granted one don't stack. The skill total (skill.X.value)
-# and the proficiency-bonus contribution are module derives over this base fact.
-paladin-skill-effect: &paladin-skill-effect
-  id: paladin-skill-proficiency-${value}
-  key: skill-${value}-prof
-  state:
-    skill.${value}.proficiency: 1
-  expiry:
-    kind: permanent
-
 ruleGroups:
   - id: class-paladin-level1
     requires:
@@ -64,200 +7,184 @@ ruleGroups:
     translations:
       en:
         name: Paladin Level 1
-        description: Paladin class features at level 1, including proficiency bonus and spellcasting
-        keywords: [paladin, class, level1, spellcasting]
+        description: Paladin class features at level 1, including proficiency bonus
+          and spellcasting
+        keywords:
+          - paladin
+          - class
+          - level1
+          - spellcasting
       en-x-tlh:
         name: Paladin Level 1
         description: Paladin Segh level 1, proficient chel
-        keywords: [paladin, segh, level1]
+        keywords:
+          - paladin
+          - segh
+          - level1
     settings:
       - id: paladin-skill-1
         type: select
         translations:
-          en: { name: Skill Proficiency }
-          en-x-tlh: { name: Skill Proficiency }
-        options: *paladin-skill-options
-        effect: *paladin-skill-effect
+          en:
+            name: Skill Proficiency
+          en-x-tlh:
+            name: Skill Proficiency
+        options:
+          - value: athletics
+            translations:
+              en:
+                name: Athletics
+              en-x-tlh:
+                name: Athletics
+          - value: insight
+            translations:
+              en:
+                name: Insight
+              en-x-tlh:
+                name: Insight
+          - value: intimidation
+            translations:
+              en:
+                name: Intimidation
+              en-x-tlh:
+                name: Intimidation
+          - value: medicine
+            translations:
+              en:
+                name: Medicine
+              en-x-tlh:
+                name: Medicine
+          - value: persuasion
+            translations:
+              en:
+                name: Persuasion
+              en-x-tlh:
+                name: Persuasion
+          - value: religion
+            translations:
+              en:
+                name: Religion
+              en-x-tlh:
+                name: Religion
+        effect:
+          id: paladin-skill-proficiency-${value}
+          key: skill-${value}-prof
+          state:
+            skill.${value}.proficiency: 1
+          expiry:
+            kind: permanent
       - id: paladin-skill-2
         type: select
         translations:
-          en: { name: Skill Proficiency }
-          en-x-tlh: { name: Skill Proficiency }
-        options: *paladin-skill-options
-        effect: *paladin-skill-effect
+          en:
+            name: Skill Proficiency
+          en-x-tlh:
+            name: Skill Proficiency
+        options:
+          - value: athletics
+            translations:
+              en:
+                name: Athletics
+              en-x-tlh:
+                name: Athletics
+          - value: insight
+            translations:
+              en:
+                name: Insight
+              en-x-tlh:
+                name: Insight
+          - value: intimidation
+            translations:
+              en:
+                name: Intimidation
+              en-x-tlh:
+                name: Intimidation
+          - value: medicine
+            translations:
+              en:
+                name: Medicine
+              en-x-tlh:
+                name: Medicine
+          - value: persuasion
+            translations:
+              en:
+                name: Persuasion
+              en-x-tlh:
+                name: Persuasion
+          - value: religion
+            translations:
+              en:
+                name: Religion
+              en-x-tlh:
+                name: Religion
+        effect:
+          id: paladin-skill-proficiency-${value}
+          key: skill-${value}-prof
+          state:
+            skill.${value}.proficiency: 1
+          expiry:
+            kind: permanent
       - id: paladin-mastery-1
         type: select-rule-group
         translations:
-          en: { name: Weapon Mastery }
-          en-x-tlh: { name: Weapon Mastery }
-        options: *paladin-mastery-options
+          en:
+            name: Weapon Mastery
+          en-x-tlh:
+            name: Weapon Mastery
+        options:
+          - value: greataxe-mastery
+            translations:
+              en:
+                name: Greataxe (Cleave)
+              en-x-tlh:
+                name: Greataxe (Cleave)
+          - value: dagger-mastery
+            translations:
+              en:
+                name: Dagger (Nick)
+              en-x-tlh:
+                name: Dagger (Nick)
+          - value: javelin-mastery
+            translations:
+              en:
+                name: Javelin (Slow)
+              en-x-tlh:
+                name: Javelin (Slow)
+          - value: scimitar-mastery
+            translations:
+              en:
+                name: Scimitar (Nick)
+              en-x-tlh:
+                name: Scimitar (Nick)
       - id: paladin-mastery-2
         type: select-rule-group
         translations:
-          en: { name: Weapon Mastery }
-          en-x-tlh: { name: Weapon Mastery }
-        options: *paladin-mastery-options
-    rules:
-      # Hit Die - Level 1 Paladin gets 1d10
-      - id: paladin-level1-hit-die
-        phase: early
-        group:
-          - hit-die-base
-        activities:
-          - type: numberIncrement
-            target:
-              fact: hitDie.d10.total
-            source:
-              number: 1
-
-      # HP - Level 1 Paladin contributes d10 max + CON modifier
-      - id: paladin-level1-hp
-        phase: normal
-        after:
-          - group: hp-total
-        group:
-          - hp-set
-        activities:
-          - type: numberIncrement
-            target:
-              fact: hp.max
-            source:
-              number: 10
-          - type: numberIncrement
-            target:
-              fact: hp.base.max
-            source:
-              number: 10
-          - type: numberIncrement
-            target:
-              fact: hp.max
-            source:
-              fact: con.modifier
-          - type: numberIncrement
-            target:
-              fact: hp.base.max
-            source:
-              fact: con.modifier
-
-      # Proficiency Bonus - Level 1 Paladin adds +2
-      - id: paladin-level1-proficiency
-        phase: early
-        activities:
-          - type: numberIncrement
-            target:
-              fact: proficiency.bonus
-            source:
-              number: 2
-
-      # Spellcasting ability modifier (Charisma for Paladins)
-      - id: paladin-level1-spellcasting-modifier
-        phase: normal
-        after:
-          - group: __planned__
-        group:
-          - spellcasting-modifier-set
-        activities:
-          - type: stringSet
-            target:
-              fact: spellcasting.saveAbility
-            source:
-              string: CHA
-          - type: numberIncrement
-            target:
-              fact: spellcasting.modifier
-            source:
-              fact: cha.modifier
-
-      # Spell Slots - Level 1 Paladin gets 2 level 1 slots
-      - id: paladin-level1-spell-slots
-        phase: early
-        group:
-          - spellcasting-slots-set
-        activities:
-          - type: numberIncrement
-            target:
-              fact: spellcasting.slots.level1.total
-            source:
-              number: 2
-          - type: numberIncrement
-            target:
-              fact: spellcasting.slots.level1.remaining
-            source:
-              number: 2
-
-      # Lay on Hands Pool - Level 1 Paladin adds 5 points
-      - id: paladin-level1-lay-on-hands-pool
-        phase: early
-        group:
-          - loh-pool-set
-        activities:
-          - type: numberIncrement
-            target:
-              fact: layOnHands.pool.total
-            source:
-              number: 5
-          - type: numberIncrement
-            target:
-              fact: layOnHands.pool.remaining
-            source:
-              number: 5
-
-      # Armor Proficiencies - Paladin is proficient in all armor and shields
-      - id: paladin-level1-armor-proficiencies
-        phase: early
-        activities:
-          - type: numberSet
-            target:
-              fact: armor.light.proficient
-            source:
-              number: 1
-          - type: numberSet
-            target:
-              fact: armor.medium.proficient
-            source:
-              number: 1
-          - type: numberSet
-            target:
-              fact: armor.heavy.proficient
-            source:
-              number: 1
-          - type: numberSet
-            target:
-              fact: armor.shield.proficient
-            source:
-              number: 1
-
-      # Saving Throw Proficiencies - Paladin is proficient in Wisdom and Charisma
-      - id: paladin-level1-save-proficiencies
-        phase: early
-        activities:
-          - type: numberSet
-            target:
-              fact: wis.save.proficient
-            source:
-              number: 1
-          - type: numberIncrement
-            target:
-              fact: wis.save
-            source:
-              fact: proficiency.bonus
-          - type: numberSet
-            target:
-              fact: cha.save.proficient
-            source:
-              number: 1
-          - type: numberIncrement
-            target:
-              fact: cha.save
-            source:
-              fact: proficiency.bonus
-
-      # Prepared Spell Capacity - Level 1 Paladin can prepare 2 spells
-      - id: paladin-level1-prepared-max
-        phase: early
-        activities:
-          - type: numberIncrement
-            target:
-              fact: spellcasting.prepared.max
-            source:
-              number: 2
+          en:
+            name: Weapon Mastery
+          en-x-tlh:
+            name: Weapon Mastery
+        options:
+          - value: greataxe-mastery
+            translations:
+              en:
+                name: Greataxe (Cleave)
+              en-x-tlh:
+                name: Greataxe (Cleave)
+          - value: dagger-mastery
+            translations:
+              en:
+                name: Dagger (Nick)
+              en-x-tlh:
+                name: Dagger (Nick)
+          - value: javelin-mastery
+            translations:
+              en:
+                name: Javelin (Slow)
+              en-x-tlh:
+                name: Javelin (Slow)
+          - value: scimitar-mastery
+            translations:
+              en:
+                name: Scimitar (Nick)
+              en-x-tlh:
+                name: Scimitar (Nick)

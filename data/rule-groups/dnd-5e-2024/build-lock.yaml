@@ -1,58 +1,22 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: build-lock
     translations:
       en:
         name: Build Lock
         description: Lock the character build so build options are tucked away
-        keywords: [lock, build, done, finish, freeze, ready]
+        keywords:
+          - lock
+          - build
+          - done
+          - finish
+          - freeze
+          - ready
       en-x-tlh:
         name: qach ngaQ
         description: qachlIj yIngaQmoH 'ej chenmoHwI' Doch So'
-        keywords: [ngaQ, qach, rIn, taH, ready]
-    rules:
-      - id: lock-offer
-        after:
-          - group: __planned__
-        activities:
-          - type: offerRule
-            legalWhen:
-              - *not-locked-legal
-            rule:
-              id: lock
-              phase: early
-              group:
-                - __planned__
-              ui:
-                section: configuration
-                name: rule.dnd-5e-2024.build-lock.lock.name
-                intents: { STAT: lock }
-                actionCost: []
-              activities:
-                # Error tracking (mirrors other BUILD offers)
-                - *error-clear
-                - *lock-error-track
-                # Set the lock fact immediately so same-turn BUILD offers see it
-                - type: numberSet
-                  target:
-                    fact: build.locked
-                  source:
-                    number: 1
-                # Persistent, removable effect that sustains the lock
-                - type: advertiseEffect
-                  rule:
-                    id: effect-build-locked
-                    phase: early
-                    group:
-                      - Stats
-                    ui:
-                      name: rule.dnd-5e-2024.build-lock.effect.name
-                    activities:
-                      - type: numberSet
-                        target:
-                          fact: build.locked
-                        source:
-                          number: 1
-                      # Self-sustain until the player removes it from the ledger
-                      - type: advertiseEffect
-                        self: true
+        keywords:
+          - ngaQ
+          - qach
+          - rIn
+          - taH
+          - ready

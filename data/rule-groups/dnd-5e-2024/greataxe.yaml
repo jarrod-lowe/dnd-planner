@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: greataxe
     requires:
@@ -7,47 +6,47 @@ ruleGroups:
     translations:
       en:
         name: Greataxe
-        description: Attack rules for the greataxe, a martial melee weapon dealing 1d12 slashing damage
-        keywords: [attack, greataxe, axe, weapon, melee, heavy, two-handed, damage]
+        description: Attack rules for the greataxe, a martial melee weapon dealing
+          1d12 slashing damage
+        keywords:
+          - attack
+          - greataxe
+          - axe
+          - weapon
+          - melee
+          - heavy
+          - two-handed
+          - damage
       en-x-tlh:
         name: nuH jen
         description: nuH jen 'ej jey' naQ
-        keywords: [nuH, jen, jey']
+        keywords:
+          - nuH
+          - jen
+          - jey'
     detail:
       key: weapon/greataxe
       source: custom
       translations:
         en:
-          meta: 'Martial Melee Weapon'
+          meta: Martial Melee Weapon
           fields:
-            - { labelKey: rules.field.damage, value: '1d12 slashing' }
-            - { labelKey: rules.field.properties, value: 'Heavy, Two-Handed' }
-            - { labelKey: rules.field.mastery, value: 'Cleave' }
-            - { labelKey: rules.field.weight, value: '7 lb.' }
-            - { labelKey: rules.field.cost, value: '30 GP' }
-          body: |
-            A heavy blade on a long haft, the greataxe trades finesse for sheer
-            cleaving force. It demands two hands and real strength to swing
-            well, and its weight punishes the untrained. In the hands of a
-            master it hews through one foe into the next.
-    rules:
-      # Compute greataxe hit bonus = STR modifier + proficiency bonus
-      - id: compute-greataxe-hit-bonus
-        phase: normal
-        activities:
-          - type: numberSum
-            target:
-              fact: attack.greataxe.hitBonus
-            sources:
-              - fact: str.modifier
-              - fact: proficiency.bonus
+            - labelKey: rules.field.damage
+              value: 1d12 slashing
+            - labelKey: rules.field.properties
+              value: Heavy, Two-Handed
+            - labelKey: rules.field.mastery
+              value: Cleave
+            - labelKey: rules.field.weight
+              value: 7 lb.
+            - labelKey: rules.field.cost
+              value: 30 GP
+          body: 'A heavy blade on a long haft, the greataxe trades finesse for sheer
 
-      # Compute greataxe damage bonus = STR modifier
-      - id: compute-greataxe-damage-bonus
-        phase: normal
-        activities:
-          - type: numberCopy
-            source:
-              fact: str.modifier
-            target:
-              fact: attack.greataxe.damageBonus
+            cleaving force. It demands two hands and real strength to swing
+
+            well, and its weight punishes the untrained. In the hands of a
+
+            master it hews through one foe into the next.
+
+            '

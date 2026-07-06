@@ -1,50 +1,14 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: hands
     translations:
       en:
         name: Hands
         description: Characters have 2 hands for holding equipment
-        keywords: [hands, equipment]
+        keywords:
+          - hands
+          - equipment
       en-x-tlh:
         name: ghopDu'
         description: cha' ghopDu'
-        keywords: [ghopDu']
-    rules:
-      # Hands - set max (2 hands)
-      - id: hands-max
-        phase: early
-        group:
-          - hands-max
-        ui:
-          stats:
-            - name: play.stats.hands
-              type: usedMax
-              total: hands.max
-              remaining: hands.remaining
-              section: resources
-          resources:
-            - type: usedMax
-              label: play.stats.hands
-              total: hands.max
-              remaining: hands.remaining
-        activities:
-          - type: numberSet
-            source:
-              number: 2
-            target:
-              fact: hands.max
-
-      # Hands - reset remaining at start of turn
-      - id: hands-reset
-        phase: early
-        group:
-          - hands-reset
-        after:
-          - group: hands-max
-        activities:
-          - type: numberCopy
-            source:
-              fact: hands.max
-            target:
-              fact: hands.remaining
+        keywords:
+          - ghopDu'

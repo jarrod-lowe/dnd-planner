@@ -1,22 +1,14 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: proficiency
     translations:
       en:
         name: Proficiency
         description: Base proficiency bonus reset rule
-        keywords: [proficiency, bonus]
+        keywords:
+          - proficiency
+          - bonus
       en-x-tlh:
         name: valwI'
         description: valwI' DIvI' naQ
-        keywords: [valwI']
-    rules:
-      - id: proficiency-reset
-        phase: early
-        activities: []
-        ui:
-          stats:
-            - name: play.stats.proficiency
-              type: modifier
-              fact: proficiency.bonus
-              section: abilities
+        keywords:
+          - valwI'

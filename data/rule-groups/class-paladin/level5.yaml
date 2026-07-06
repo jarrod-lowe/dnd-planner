@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: class-paladin-level5
     requires:
@@ -8,131 +7,19 @@ ruleGroups:
     translations:
       en:
         name: Paladin Level 5
-        description: Paladin class features at level 5, including Extra Attack, an additional hit die, expanded spell slots, and increased proficiency
-        keywords: [paladin, class, level5, extra attack]
+        description: Paladin class features at level 5, including Extra Attack, an
+          additional hit die, expanded spell slots, and increased proficiency
+        keywords:
+          - paladin
+          - class
+          - level5
+          - extra attack
       en-x-tlh:
         name: Paladin Level 5
-        description: Paladin Segh level 5, jey' chu', chel Du chelSlot ghop Du valwI' chel
-        keywords: [paladin, segh, level5, jey' chu']
-    rules:
-      # Hit Die - Level 5 Paladin adds 1d10
-      - id: paladin-level5-hit-die
-        phase: early
-        group:
-          - hit-die-base
-        activities:
-          - type: numberIncrement
-            target:
-              fact: hitDie.d10.total
-            source:
-              number: 1
-
-      # HP - Level 5 Paladin adds average d10 (6) + captured CON modifier at level-up time
-      - id: paladin-level5-hp
-        phase: normal
-        after:
-          - group: hp-total
-        group:
-          - hp-set
-        vars:
-          conAtLevel:
-            capture: true
-            default:
-              fact: con.modifier
-        activities:
-          - type: numberIncrement
-            target:
-              fact: hp.max
-            source:
-              number: 6
-          - type: numberIncrement
-            target:
-              fact: hp.base.max
-            source:
-              number: 6
-          - type: numberIncrement
-            target:
-              fact: hp.max
-            source:
-              var: conAtLevel
-          - type: numberIncrement
-            target:
-              fact: hp.base.max
-            source:
-              var: conAtLevel
-
-      # Extra Attack - Level 5 Paladin can attack twice when taking the Attack
-      # action. Grants one extra attack per Attack action via the shared
-      # extraAttacks.max budget (numberIncrement so it stacks like reactions).
-      - id: paladin-level5-extra-attack
-        phase: early
-        activities:
-          - type: numberIncrement
-            target:
-              fact: extraAttacks.max
-            source:
-              number: 1
-
-      # Proficiency Bonus - Level 5 Paladin adds +1
-      - id: paladin-level5-proficiency
-        phase: early
-        activities:
-          - type: numberIncrement
-            target:
-              fact: proficiency.bonus
-            source:
-              number: 1
-
-      # Prepared Spell Capacity - Level 5 Paladin adds 1 more prepared spell
-      - id: paladin-level5-prepared-max
-        phase: early
-        activities:
-          - type: numberIncrement
-            target:
-              fact: spellcasting.prepared.max
-            source:
-              number: 1
-
-      # Spell Slots - Level 5 Paladin adds 1 level 1 slot and 2 level 2 slots
-      - id: paladin-level5-spell-slots
-        phase: early
-        group:
-          - spellcasting-slots-set
-        activities:
-          - type: numberIncrement
-            target:
-              fact: spellcasting.slots.level1.total
-            source:
-              number: 1
-          - type: numberIncrement
-            target:
-              fact: spellcasting.slots.level1.remaining
-            source:
-              number: 1
-          - type: numberIncrement
-            target:
-              fact: spellcasting.slots.level2.total
-            source:
-              number: 2
-          - type: numberIncrement
-            target:
-              fact: spellcasting.slots.level2.remaining
-            source:
-              number: 2
-
-      # Lay on Hands Pool - Level 5 Paladin adds 5 more points
-      - id: paladin-level5-lay-on-hands-pool
-        phase: early
-        group:
-          - loh-pool-set
-        activities:
-          - type: numberIncrement
-            target:
-              fact: layOnHands.pool.total
-            source:
-              number: 5
-          - type: numberIncrement
-            target:
-              fact: layOnHands.pool.remaining
-            source:
-              number: 5
+        description: Paladin Segh level 5, jey' chu', chel Du chelSlot ghop Du valwI'
+          chel
+        keywords:
+          - paladin
+          - segh
+          - level5
+          - jey' chu'

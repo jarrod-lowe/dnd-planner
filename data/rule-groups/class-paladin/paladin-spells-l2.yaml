@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: paladin-spells-l2
     requires:
@@ -9,9 +8,14 @@ ruleGroups:
       en:
         name: Paladin Spells Level 2
         description: Level 2 spells available to Paladins
-        keywords: [paladin, spells, level2]
+        keywords:
+          - paladin
+          - spells
+          - level2
       en-x-tlh:
         name: Paladin Spells Level 2
         description: Paladin level 2 jupmey
-        keywords: [paladin, jupmey, level2]
-    rules: []
+        keywords:
+          - paladin
+          - jupmey
+          - level2

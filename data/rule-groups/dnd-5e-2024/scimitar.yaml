@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: scimitar
     requires:
@@ -7,60 +6,48 @@ ruleGroups:
     translations:
       en:
         name: Scimitar
-        description: Attack rules for the scimitar, a martial melee weapon dealing 1d6 slashing damage
-        keywords: [attack, scimitar, weapon, melee, light, finesse, damage]
+        description: Attack rules for the scimitar, a martial melee weapon dealing
+          1d6 slashing damage
+        keywords:
+          - attack
+          - scimitar
+          - weapon
+          - melee
+          - light
+          - finesse
+          - damage
       en-x-tlh:
         name: Scimitar
         description: Scimitar 'ej jey' naQ
-        keywords: [jey', scimitar, nuH]
+        keywords:
+          - jey'
+          - scimitar
+          - nuH
     detail:
       key: weapon/scimitar
       source: custom
       translations:
         en:
-          meta: 'Martial Melee Weapon'
+          meta: Martial Melee Weapon
           fields:
-            - { labelKey: rules.field.damage, value: '1d6 slashing' }
-            - { labelKey: rules.field.properties, value: 'Finesse, Light' }
-            - { labelKey: rules.field.mastery, value: 'Nick' }
-            - { labelKey: rules.field.weight, value: '3 lb.' }
-            - { labelKey: rules.field.cost, value: '25 GP' }
-          body: |
-            A curved, single-edged blade favoured by lightly armoured duelists,
+            - labelKey: rules.field.damage
+              value: 1d6 slashing
+            - labelKey: rules.field.properties
+              value: Finesse, Light
+            - labelKey: rules.field.mastery
+              value: Nick
+            - labelKey: rules.field.weight
+              value: 3 lb.
+            - labelKey: rules.field.cost
+              value: 25 GP
+          body: 'A curved, single-edged blade favoured by lightly armoured duelists,
+
             the scimitar prizes speed over bulk. Its Finesse balance suits a
-            dancer's footwork, and being Light it flows into a rapid second
+
+            dancer''s footwork, and being Light it flows into a rapid second
+
             strike beside a companion blade. It is a staple of southern warriors
+
             and nimble skirmishers alike.
-    rules:
-      # Compute scimitar finesse bonus = max(STR modifier, DEX modifier)
-      - id: compute-scimitar-finesse-bonus
-        phase: normal
-        activities:
-          - type: numberFunction
-            function: max
-            sources:
-              - fact: str.modifier
-              - fact: dex.modifier
-            target:
-              fact: attack.scimitar.finesseBonus
 
-      # Compute scimitar hit bonus = finesse bonus + proficiency bonus
-      - id: compute-scimitar-hit-bonus
-        phase: normal
-        activities:
-          - type: numberSum
-            target:
-              fact: attack.scimitar.hitBonus
-            sources:
-              - fact: attack.scimitar.finesseBonus
-              - fact: proficiency.bonus
-
-      # Compute scimitar damage bonus = finesse bonus
-      - id: compute-scimitar-damage-bonus
-        phase: normal
-        activities:
-          - type: numberCopy
-            source:
-              fact: attack.scimitar.finesseBonus
-            target:
-              fact: attack.scimitar.damageBonus
+            '

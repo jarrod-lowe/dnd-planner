@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: javelin
     requires:
@@ -7,47 +6,45 @@ ruleGroups:
     translations:
       en:
         name: Javelin
-        description: Attack rules for the javelin, a simple melee weapon dealing 1d6 piercing damage
-        keywords: [attack, javelin, weapon, melee, throwable, damage]
+        description: Attack rules for the javelin, a simple melee weapon dealing 1d6
+          piercing damage
+        keywords:
+          - attack
+          - javelin
+          - weapon
+          - melee
+          - throwable
+          - damage
       en-x-tlh:
         name: Javelin
         description: Javelin 'ej jey' naQ
-        keywords: [jey', Javelin, nuH]
+        keywords:
+          - jey'
+          - Javelin
+          - nuH
     detail:
       key: weapon/javelin
       source: custom
       translations:
         en:
-          meta: 'Simple Melee Weapon'
+          meta: Simple Melee Weapon
           fields:
-            - { labelKey: rules.field.damage, value: '1d6 piercing' }
-            - { labelKey: rules.field.properties, value: 'Thrown (Range 30/120)' }
-            - { labelKey: rules.field.mastery, value: 'Slow' }
-            - { labelKey: rules.field.weight, value: '2 lb.' }
-            - { labelKey: rules.field.cost, value: '5 SP' }
-          body: |
-            A simple thrusting spear built to be thrown, the javelin is the
-            soldier's answer to a foe just out of reach. It is cheap enough to
-            carry several and sturdy enough to recover after a fight. Thrown or
-            thrust, it is as at home in a skirmish line as in a shield wall.
-    rules:
-      # Compute javelin hit bonus = STR modifier + proficiency bonus
-      - id: compute-javelin-hit-bonus
-        phase: normal
-        activities:
-          - type: numberSum
-            target:
-              fact: attack.javelin.hitBonus
-            sources:
-              - fact: str.modifier
-              - fact: proficiency.bonus
+            - labelKey: rules.field.damage
+              value: 1d6 piercing
+            - labelKey: rules.field.properties
+              value: Thrown (Range 30/120)
+            - labelKey: rules.field.mastery
+              value: Slow
+            - labelKey: rules.field.weight
+              value: 2 lb.
+            - labelKey: rules.field.cost
+              value: 5 SP
+          body: 'A simple thrusting spear built to be thrown, the javelin is the
 
-      # Compute javelin damage bonus = STR modifier
-      - id: compute-javelin-damage-bonus
-        phase: normal
-        activities:
-          - type: numberCopy
-            source:
-              fact: str.modifier
-            target:
-              fact: attack.javelin.damageBonus
+            soldier''s answer to a foe just out of reach. It is cheap enough to
+
+            carry several and sturdy enough to recover after a fight. Thrown or
+
+            thrust, it is as at home in a skirmish line as in a shield wall.
+
+            '
