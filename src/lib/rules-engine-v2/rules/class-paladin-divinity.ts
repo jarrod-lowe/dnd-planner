@@ -48,6 +48,7 @@ const divinity: RuleModule = {
           {
             id: 'effect-divinity-short-rest',
             state: { 'divinity.recovered': 1 },
+            display: { name: 'rule.class-paladin-divinity.effect-divinity-short-rest.name' },
             expiry: { kind: 'untilLongRest' }
           }
         ]

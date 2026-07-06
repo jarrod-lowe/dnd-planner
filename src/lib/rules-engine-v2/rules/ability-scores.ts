@@ -118,6 +118,12 @@ function setOffer(a: Ability): Offer {
             id: 'value',
             key: `${a}-value-base`,
             state: { [`${a}.value`]: score },
+            // Named for the reveal toggle (v1: effect-<ability>, hidden, shows the score).
+            display: {
+              name: `${AS}.effect-${FULL[a]}.name`,
+              displayFact: `${a}.value`,
+              hidden: true
+            },
             expiry: { kind: 'permanent' }
           }
         ],
@@ -154,7 +160,12 @@ function increaseOffer(a: Ability): Offer {
       // Keyless so each increase stacks; permanent so it survives rests.
       return {
         advertise: [
-          { id: 'increase', state: { [`${a}.value`]: 1 }, expiry: { kind: 'permanent' } }
+          {
+            id: 'increase',
+            state: { [`${a}.value`]: 1 },
+            display: { name: `${AS}.effect-increase-${FULL[a]}.name`, hidden: true },
+            expiry: { kind: 'permanent' }
+          }
         ],
         diagnostics
       };
@@ -191,6 +202,7 @@ function saveProficiencyOffer(a: Ability): Offer {
             id: 'save-prof',
             key: `${a}-save-prof`,
             state: { [`${a}.save.proficient`]: 1 },
+            display: { name: `${AS}.effect-${a}-save-proficiency.name`, hidden: true },
             expiry: { kind: 'permanent' }
           }
         ],
@@ -233,6 +245,7 @@ function skillProficiencyOffer(skill: string): Offer {
             id: 'skill-prof',
             key: `skill-${skill}-prof`,
             state: { [`skill.${skill}.proficiency`]: level },
+            display: { name: `${AS}.effect-${skill}-proficiency.name`, hidden: true },
             expiry: { kind: 'permanent' }
           }
         ],

@@ -156,6 +156,34 @@ func TestBatchDeleteItems_ExtractsOnlyKeyAttributes(t *testing.T) {
 	}
 }
 
+func TestDeleteCustomRuleGroup(t *testing.T) {
+	ctx := context.Background()
+	characterId := "char-456"
+
+	deleted := false
+	db := &mockDB{
+		deleteFunc: func(ctx context.Context, pk, sk string) error {
+			if pk != "RULEGROUP#custom-char-456" {
+				t.Errorf("expected PK RULEGROUP#custom-char-456, got %s", pk)
+			}
+			if sk != "META#" {
+				t.Errorf("expected SK META#, got %s", sk)
+			}
+			deleted = true
+			return nil
+		},
+	}
+
+	err := deleteCustomRuleGroup(ctx, db, characterId)
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+
+	if !deleted {
+		t.Error("expected delete to be called")
+	}
+}
+
 func TestCleanupCharacter_SendsToDLQOnBatchDeleteFailure(t *testing.T) {
 	ctx := context.Background()
 	characterId := "char-fail"

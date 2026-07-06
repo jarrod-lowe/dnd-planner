@@ -58,6 +58,8 @@ const leatherArmor: RuleModule = {
               key: 'armor:body',
               state: { 'ac.armorBase': 11, 'armor.leather.equipped': 1 },
               stateCombine: { 'ac.armorBase': 'max' },
+              // On the strip (v1 parity): removing the chip is how the armor is doffed.
+              display: { name: 'rule.dnd-5e-2024.leather-armor.effect-leather-armor.name' },
               expiry: { kind: 'permanent' }
             }
           ],

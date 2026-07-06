@@ -37,6 +37,8 @@ const buildLock: RuleModule = {
               id: 'effect-build-locked',
               key: 'build-locked',
               state: { 'build.locked': 1 },
+              // On the strip (v1 parity): removing the chip unlocks the build.
+              display: { name: 'rule.dnd-5e-2024.build-lock.effect.name' },
               expiry: { kind: 'permanent' }
             }
           ],

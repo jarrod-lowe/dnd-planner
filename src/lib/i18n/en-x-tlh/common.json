@@ -372,7 +372,8 @@
         "no_l2_slots": "patlh 2 mugh laH tu'lu'be'",
         "no_l3_slots": "patlh 3 mugh laH tu'lu'be'",
         "no_l4_slots": "patlh 4 mugh laH tu'lu'be'",
-        "no_l5_slots": "patlh 5 mugh laH tu'lu'be'"
+        "no_l5_slots": "patlh 5 mugh laH tu'lu'be'",
+        "wrong_level": "mugh laH patlh qar'be'"
       },
       "prepare-divine-smite-offer": {
         "name": "quv Qaw' mugh chenmoH",

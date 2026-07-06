@@ -78,6 +78,13 @@ func batchDeleteItems(ctx context.Context, db dbClient, items []map[string]types
 	return nil
 }
 
+// deleteCustomRuleGroup removes the character's per-character custom rule-group
+// definition row. The app no longer creates these, but v1-era characters (and the
+// old seeds) did — the delete is idempotent and keeps their deletion leak-free.
+func deleteCustomRuleGroup(ctx context.Context, db dbClient, characterId string) error {
+	return db.delete(ctx, "RULEGROUP#custom-"+characterId, "META#")
+}
+
 func cleanupCharacter(ctx context.Context, db dbClient, characterId string) error {
 	items, err := queryRuleGroupAssignments(ctx, db, characterId)
 	if err != nil {
@@ -90,6 +97,11 @@ func cleanupCharacter(ctx context.Context, db dbClient, characterId string) erro
 			_ = db.sendToDLQ(ctx, characterId, err)
 			return err
 		}
+	}
+
+	if err := deleteCustomRuleGroup(ctx, db, characterId); err != nil {
+		_ = db.sendToDLQ(ctx, characterId, err)
+		return err
 	}
 
 	return nil

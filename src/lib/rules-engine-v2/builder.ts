@@ -90,6 +90,9 @@ export function preparedSpellOffers(opts: {
               key,
               state: { [preparedFact]: 1, 'spellcasting.prepared.count': count },
               stateCombine: { [preparedFact]: 'max' },
+              // Named for the strip's reveal toggle, hidden from the default view
+              // (v1 parity: effect-<spell>-prepared carried ui.name + hidden).
+              display: { name: `${i18nPrefix}.effect-${spellId}-prepared.name`, hidden: true },
               expiry: { kind: 'permanent' }
             }
           ],
@@ -312,12 +315,14 @@ function donApply(def: WeaponDef) {
       diagnostics.push({ code: `${WEAPON_DON}.${def.id}.no-hands`, severity: 'error' });
     // Equipping is a permanent, keyed fact: one effect per weapon (the key stops a
     // re-don stacking) that sets `equipped` and consumes its hands from the budget.
+    // Shown on the strip (v1 parity): removing the chip is how the weapon is stowed.
     return {
       advertise: [
         {
           id: `effect-${def.id}`,
           key: `equip:${def.id}`,
           state: { [`weapon.${def.id}.equipped`]: 1, 'hands.spent': def.hands },
+          display: { name: `${WEAPON_DON}.effect-${def.id}.name` },
           expiry: { kind: 'permanent' }
         }
       ],

@@ -1925,6 +1925,34 @@ describe('playStore', () => {
       expect(playStore.state.topBarEntries[0]).toMatchObject({ label: 'play.topBar.speed' });
     });
 
+    it('persists the committed effects after addFollowupEffect', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      const mockApiPost = vi.mocked(apiPost);
+      vi.mocked(evaluateCharacterV2).mockImplementation(byCommitted as never);
+
+      // Load a character so currentCharacterId is set (persistence needs it).
+      mockApiGet
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ ruleGroups: [] }) } as Response)
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ effects: null }) } as Response);
+      mockApiPost.mockResolvedValue({ ok: true, json: async () => ({}) } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      await playStore.loadRuleGroups('char-fu');
+      mockApiPost.mockClear();
+
+      const effect = {
+        id: 'effect-javelin-slow',
+        key: 'javelin-slow',
+        expiry: { kind: 'turns', remaining: 1 } as const
+      };
+      playStore.addFollowupEffect(effect);
+
+      expect(mockApiPost).toHaveBeenCalledWith('/api/characters/char-fu/effects', {
+        effects: JSON.stringify([effect])
+      });
+    });
+
     it('updates topBarEntries after removeEffect', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);

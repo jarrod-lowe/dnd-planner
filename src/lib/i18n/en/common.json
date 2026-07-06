@@ -372,7 +372,8 @@
         "no_l2_slots": "No Level 2 spell slots remaining",
         "no_l3_slots": "No Level 3 spell slots remaining",
         "no_l4_slots": "No Level 4 spell slots remaining",
-        "no_l5_slots": "No Level 5 spell slots remaining"
+        "no_l5_slots": "No Level 5 spell slots remaining",
+        "wrong_level": "Invalid spell slot level selected"
       },
       "prepare-divine-smite-offer": {
         "name": "Prepare Divine Smite",

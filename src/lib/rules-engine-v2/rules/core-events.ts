@@ -107,6 +107,10 @@ const coreEvents: RuleModule = {
           {
             id: 'effect-hp-damage',
             state: { 'hp.modifier.current': -amount },
+            display: {
+              name: 'rule.dnd-5e-2024.core-events.effect-hp-damage.name',
+              section: 'health'
+            },
             expiry: { kind: 'untilLongRest' }
           }
         ];
@@ -152,6 +156,10 @@ const coreEvents: RuleModule = {
             {
               id: 'effect-hp-heal',
               state: { 'hp.modifier.current': amount },
+              display: {
+                name: 'rule.dnd-5e-2024.core-events.effect-hp-heal.name',
+                section: 'health'
+              },
               expiry: { kind: 'untilLongRest' }
             }
           ]

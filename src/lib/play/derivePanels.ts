@@ -59,6 +59,9 @@ const TOP_BAR: { gate: string; entry: UiEntry }[] = [
 
 /** Resources-panel catalog: usedMax pools, each gated on its `total` fact. */
 const RESOURCES: UiEntry[] = [
+  // HP appears in the ledger as well as the top bar (v1 parity: hp.yaml
+  // declared both a topBar and a resources entry).
+  { type: 'usedMax', label: 'play.stats.hp', total: 'hp.max', remaining: 'hp.current' },
   {
     type: 'usedMax',
     label: 'play.stats.actions',

@@ -23,7 +23,9 @@ export function buildCharacterExport(
     schemaVersion: 2,
     name: character.name,
     species: character.species,
-    ruleGroups: [...ruleGroupIds],
+    // The seeded per-character `custom-<id>` group is character-specific noise —
+    // exporting it would assign a foreign id on import.
+    ruleGroups: ruleGroupIds.filter((id) => !id.startsWith('custom-')),
     effects: [...effects]
   };
 }

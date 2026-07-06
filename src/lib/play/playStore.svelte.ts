@@ -683,6 +683,7 @@ function addFollowupEffect(effect: EffectInstance): void {
   const committed = [...state.committed, plain];
   state = { ...state, committed, effects: committed.map(effectInstanceToRule) };
   performEvaluation();
+  persistCommitted();
 }
 
 function reset(): void {

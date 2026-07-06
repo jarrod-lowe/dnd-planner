@@ -79,6 +79,8 @@ const splintArmor: RuleModule = {
               key: 'armor:body',
               state: { 'ac.armorBase': 17, 'ac.dexCap': 0, 'armor.splint.equipped': 1 },
               stateCombine: { 'ac.armorBase': 'max' },
+              // On the strip (v1 parity): removing the chip is how the armor is doffed.
+              display: { name: 'rule.dnd-5e-2024.splint-armor.effect-splint-armor.name' },
               expiry: { kind: 'permanent' }
             }
           ],

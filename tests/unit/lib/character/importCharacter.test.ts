@@ -66,6 +66,21 @@ describe('validateCharacterImport', () => {
     expect(result.errors).toBeDefined();
   });
 
+  it('ignores custom-* group ids instead of failing validation (legacy exports)', () => {
+    const result = validateCharacterImport(
+      {
+        schemaVersion: 2,
+        name: 'Thorin',
+        species: 'human',
+        ruleGroups: ['dnd-5e-2024', 'custom-char-old']
+      },
+      availableGroups
+    );
+
+    expect(result.valid).toBe(true);
+    expect(result.data!.ruleGroups).toEqual(['dnd-5e-2024']);
+  });
+
   it('rejects JSON where ruleGroups references unknown IDs', () => {
     const result = validateCharacterImport(
       {

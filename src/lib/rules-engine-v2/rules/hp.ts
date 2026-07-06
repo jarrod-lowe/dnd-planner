@@ -35,6 +35,8 @@ const modifierSetter = (
         id: effectId,
         key,
         state: { [fact]: modifierOf(selections) },
+        // Shown on the strip (v1 parity) — removing the chip clears the modifier.
+        display: { name: `rule.dnd-5e-2024.hp.${effectId}.name`, section: 'health' },
         expiry: { kind: 'permanent' as const }
       }
     ]

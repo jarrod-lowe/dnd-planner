@@ -177,7 +177,14 @@ export interface EffectInstance {
   expiry: ExpirySpec;
 }
 
-/** UI metadata a module attaches to an effect it wants shown on the active-effects strip. */
+/**
+ * UI metadata a module attaches to an effect. An effect with `display` (and
+ * without `hidden`) shows on the active-effects strip; one with
+ * `hidden: true` stays off the default strip but keeps its name in the
+ * strip's "show hidden" reveal (build/bookkeeping effects). An effect with no
+ * `display` at all is hidden AND nameless — reserve that for pure per-turn
+ * spends nobody ever needs to inspect.
+ */
 export interface EffectDisplay {
   /** i18n key for the chip name (the chip falls back to the effect id if absent). */
   name?: string;
@@ -185,6 +192,10 @@ export interface EffectDisplay {
   section?: string;
   /** A fact whose value the chip shows next to the name (e.g. a running bonus). */
   displayFact?: string;
+  /** Named but off the default strip (visible via the reveal toggle). */
+  hidden?: boolean;
+  /** The companion the effect belongs to (e.g. 'steed') — drives the subject views. */
+  subject?: string;
 }
 
 // === ENGINE I/O (M1) ===

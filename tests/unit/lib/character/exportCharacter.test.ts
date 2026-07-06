@@ -50,4 +50,16 @@ describe('buildCharacterExport', () => {
     expect(result.ruleGroups).toEqual(['dnd-5e-2024']);
     expect(result.effects).toHaveLength(1);
   });
+
+  it('filters the per-character custom-* group id out of the export', () => {
+    // The seeds assign a character-specific `custom-<id>` group; exporting it
+    // would pollute imports with a foreign id (and break once seeds stop).
+    const result = buildCharacterExport(
+      baseCharacter,
+      ['dnd-5e-2024', 'custom-char-1', 'class-paladin'],
+      []
+    );
+
+    expect(result.ruleGroups).toEqual(['dnd-5e-2024', 'class-paladin']);
+  });
 });

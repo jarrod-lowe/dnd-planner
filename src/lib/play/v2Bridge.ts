@@ -35,40 +35,17 @@ function durationFromExpiry(expiry: ExpirySpec): { countDown: number; duration: 
   return { countDown: turns.remaining, duration: turns.remaining };
 }
 
-/** True when every expiry condition is `permanent`. */
-function isPermanent(expiry: ExpirySpec): boolean {
-  const specs: Expiry[] = Array.isArray(expiry) ? expiry : [expiry];
-  return specs.every((e) => e.kind === 'permanent');
-}
-
-/**
- * Whether an effect is pure resource/economy bookkeeping — a spend the ledger
- * already shows, not a player-facing "active effect". True when it has state and
- * every fact it touches is a `*.spent` economy fact (actions/spellcasting/slots/
- * smite/…) or movement — but NOT `concentration.spent`, which is the concentration
- * marker and belongs on the strip.
- */
-function isResourceOnly(state: Record<string, number>): boolean {
-  const keys = Object.keys(state);
-  if (keys.length === 0) return false;
-  return keys.every(
-    (k) =>
-      (k.endsWith('.spent') && k !== 'concentration.spent') || k.startsWith('character.movement')
-  );
-}
-
 /**
  * Whether the effect should be hidden from the active-effects strip by default.
- * A module opts an effect INTO the strip by giving it `display` metadata; the v2
- * build (abilities, equipment, prepared spells, proficiencies), settings, and
- * slot/economy spends carry no `display` and are `permanent`/resource, so they stay
- * hidden (still revealable via the strip's eye toggle). Concentration always shows.
+ * The `EffectDisplay` contract: `display` present → on the strip (unless it says
+ * `hidden: true`, which keeps the name for the reveal toggle but stays off the
+ * default view); no `display` → hidden bookkeeping. The concentration marker
+ * always shows, display or not.
  */
 function shouldHideFromStrip(effect: EffectInstance): boolean {
-  if (effect.display) return false;
-  const state = effect.state ?? {};
-  if ((state['concentration.spent'] ?? 0) > 0) return false;
-  return isPermanent(effect.expiry) || isResourceOnly(state);
+  if (effect.display) return effect.display.hidden === true;
+  if (((effect.state ?? {})['concentration.spent'] ?? 0) > 0) return false;
+  return true;
 }
 
 /**
@@ -100,6 +77,7 @@ export function effectInstanceToRule(effect: EffectInstance): Rule {
   if (effect.display?.name) ui.name = effect.display.name;
   if (effect.display?.section) ui.section = effect.display.section;
   if (effect.display?.displayFact) ui.displayFact = effect.display.displayFact;
+  if (effect.display?.subject) ui.subject = effect.display.subject;
   if (shouldHideFromStrip(effect)) ui.hidden = true;
   return {
     id: effect.id,

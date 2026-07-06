@@ -40,7 +40,8 @@ describe('v2Bridge — effectInstanceToRule', () => {
     expect(isHiddenEffect(rule)).toBe(true);
   });
 
-  it('hides a pure resource spend (a spent slot) but shows a durationless buff', () => {
+  it('display presence is the strip contract: no display → hidden, display → shown, display.hidden → named but hidden', () => {
+    // A pure resource spend (no display) is bookkeeping — hidden.
     const slot = effectInstanceToRule({
       id: 'effect-bless-slot-l1',
       state: { 'spellcasting.slots.level1.spent': 1 },
@@ -48,13 +49,46 @@ describe('v2Bridge — effectInstanceToRule', () => {
     });
     expect(isHiddenEffect(slot)).toBe(true);
 
+    // ANY display-less effect is hidden, whatever facts it touches (the old
+    // fact-name heuristic let bookkeeping like attackAction.extraGranted leak
+    // onto the strip as raw-id chips).
+    const bookkeeping = effectInstanceToRule({
+      id: 'spend',
+      state: { 'actions.spent': 1, 'attackAction.extraGranted': 1 },
+      expiry: { kind: 'endOfTurn' }
+    });
+    expect(isHiddenEffect(bookkeeping)).toBe(true);
+
+    // A buff opts in via display.
     const buff = effectInstanceToRule({
       id: 'effect-aid',
       key: 'aid',
       state: { 'hp.temp': 5 },
+      display: { name: 'rule.spell-aid.effect-aid.name' },
       expiry: { kind: 'untilLongRest' }
     });
     expect(isHiddenEffect(buff)).toBe(false);
+    expect(buff.ui?.name).toBe('rule.spell-aid.effect-aid.name');
+
+    // display.hidden keeps the name (for the reveal toggle) but stays off the strip.
+    const named = effectInstanceToRule({
+      id: 'prepared',
+      key: 'prep:bless',
+      state: { 'spell.l1.bless.prepared': 1 },
+      display: { name: 'rule.spell-bless.effect-bless-prepared.name', hidden: true },
+      expiry: { kind: 'permanent' }
+    });
+    expect(isHiddenEffect(named)).toBe(true);
+    expect(named.ui?.name).toBe('rule.spell-bless.effect-bless-prepared.name');
+
+    // display.subject flows to ui.subject (steed view filtering).
+    const steedChip = effectInstanceToRule({
+      id: 'effect-steed-hp-damage',
+      state: { 'companion.steed.hp.modifier.current': -3 },
+      display: { name: 'rule.spell-find-steed.steed-record-damage.effect.name', subject: 'steed' },
+      expiry: { kind: 'untilLongRest' }
+    });
+    expect(steedChip.ui?.subject).toBe('steed');
   });
 
   it('maps display metadata to ui.name/section and shows it even when permanent', () => {

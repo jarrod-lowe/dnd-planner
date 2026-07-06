@@ -9,6 +9,8 @@ each section. Line refs are to the branch head at review time.
 
 ### 1.1 v2 delivery-coverage guard is now vacuous
 
+**FIXED.** Rewritten to assert every deployed group resolves via `lazyRuleGroupIds()` or sits in an explicit `CATALOG_ONLY` allowlist, with a second assertion keeping the allowlist accurate (not loadable, still deployed). The rewrite immediately caught a stale entry (`class-paladin-oath-redemption-level4` has a module).
+
 `tests/integration/rules-engine/v2-coverage.test.ts` asserts "every deployed
 rule group **with rules** resolves to a v2 module". Stripping the dead `rules:`
 arrays from the YAML (commit 9922555) made every group 0-rule, so the filter
@@ -25,6 +27,8 @@ only tripwire.
 
 ### 1.2 Seeds still create custom rule groups; deleting a character now leaks them
 
+**FIXED.** Both seed resources removed from `dynamodb-items.tf`; `deleteCustomRuleGroup` (+ test) restored in cleanup-character so v1-era and interim rows are still cleaned. Terraform validate could not run in this sandbox (no terraform binary) — CI validates.
+
 `terraform/module/dnd-planner/dynamodb-items.tf` still seeds, for **every new
 character**: a `RULEGROUP#custom-$(characterId)` definition row
 (`char_custom_rulegroup_def_seed`, ~line 874) and an assignment row linking it
@@ -40,6 +44,8 @@ idempotent, cheap delete) so v1-era and interim rows are still cleaned up.
 
 ### 1.3 Ledger lost its HP row
 
+**FIXED.** `play.stats.hp` usedMax entry added to the RESOURCES catalog (test-first).
+
 v1's `hp.yaml` declared two display entries: `play.topBar.hp` (top bar) and
 `play.stats.hp` (a usedMax row in the ledger/resources panel). The v2
 `derivePanels.ts` RESOURCES catalog has no `play.stats.hp` entry, so the
@@ -48,6 +54,8 @@ ledger no longer shows HP. Fix: add
 to the RESOURCES catalog.
 
 ### 1.4 Active-effects strip shows raw-id chips for per-turn bookkeeping effects
+
+**FIXED.** `shouldHideFromStrip` now implements the documented contract (`display` present → shown unless `display.hidden`; absent → hidden; concentration always shows), and `EffectDisplay` gained `hidden`/`subject`. Display metadata authored: hp damage/heal + manual modifiers (health section), weapon/armor/shield equips (the stow/doff affordance restored), build-lock, divinity short-rest, steed hp damage/heal/modifiers (subject: steed). Hidden-but-named restored for prepared spells (shared helper covers all 14) and ability-scores' stat sets (with displayFact) / increases / save+skill proficiencies. Remainder: settings-derived effects (sentinel ASI, paladin skills) still have no display name in the reveal view — their templates live in the YAML data layer.
 
 `EffectDisplay`'s contract (types.ts) says an effect's `display` **presence opts
 it into the strip** — but `v2Bridge.shouldHideFromStrip` only hides
@@ -92,6 +100,8 @@ useless for debugging a character.
 
 ### 1.5 Two module diagnostic codes have no i18n translation (both locales)
 
+**FIXED.** steed-dash now emits the plural `no_actions` (matching the helper and the i18n); `wrong_level` translations added to both locales.
+
 Verified by expanding every `rule.*` key referenced from
 `src/lib/rules-engine-v2/` (plain + template-literal) against both locale
 files. Missing leaves:
@@ -109,6 +119,8 @@ files. Missing leaves:
 
 ### 1.6 Character export includes the seeded `custom-<characterId>` group id
 
+**FIXED.** Export filters `custom-*` ids; import validation drops them (legacy exports keep importing after the seeds are gone). Both test-covered.
+
 v1's `buildCharacterExport` filtered `custom-${characterId}` out of the
 exported `ruleGroups`; the custom-rules removal dropped that filter, but the
 terraform seeds (§1.2) still assign `custom-<id>` to every character. So a v2
@@ -120,6 +132,8 @@ filter `custom-*` ids on export (and/or tolerate them on import).
 
 ### 1.7 `addFollowupEffect` never persists the committed effect
 
+**FIXED.** `persistCommitted()` added; store test asserts the POST.
+
 `playStore.addFollowupEffect` (javelin Slow rider, etc.) appends to
 `state.committed` and re-evaluates but does not call `persistCommitted()`,
 unlike `removeEffect` / `endTurn` / `assignRuleGroupWithSettings`. A follow-up
@@ -127,6 +141,8 @@ effect committed mid-turn is silently lost if the page reloads before the next
 End Turn / effect change. One-line fix.
 
 ### 1.8 Steed actions are invisible in the add-picker (`ACTION` is not a verb)
+
+**FIXED.** All steed offers restored to their v1 verbs: dash `MOVE: dash`, dodge/disengage `DEFEND: evade`, slam `ATTACK: brawl` (+`attack.any`/`attack.melee` labels), slam-reaction `DEFEND: brawl` (+labels), healing touch `AID: heal`, fey step `MOVE: travel`, fell glare `CONTROL: single`.
 
 `find-steed.ts` gives its activation offers `intents: { ACTION: 'steed' }`
 (lines 108/145/511) — but `ACTION` is not in the `Verb` union or `VERB_ORDER`.
@@ -147,6 +163,8 @@ plan row). Fix: restore v1's verb intents on the steed offers
 `CONTROL: single`) — `subject: 'steed'` already carries the steed-ness.
 
 ### 1.9 Life Bond annotation targets a label no panel carries
+
+**FIXED.** Target restored to `healing.any` (the Record Healing panel), and the slam offers carry `annotationLabels` again so attack annotations reach steed panels as in v1.
 
 v1's `annotate-life-bond` (steed regains HP from spell healing within 5 ft)
 targeted `healing.any`, which the Record Healing panel carries — the reminder

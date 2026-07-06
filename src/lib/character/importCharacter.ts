@@ -42,10 +42,16 @@ export function validateCharacterImport(
     errors.push({ code: 'importErrorMissingSpecies' });
   }
 
-  if (!Array.isArray(obj.ruleGroups)) {
+  // Older exports carried the per-character `custom-<id>` group — meaningless on
+  // a new character, so it is dropped rather than failed on.
+  const ruleGroups = Array.isArray(obj.ruleGroups)
+    ? obj.ruleGroups.filter((id) => !(typeof id === 'string' && id.startsWith('custom-')))
+    : undefined;
+
+  if (!ruleGroups) {
     errors.push({ code: 'importErrorMissingRuleGroups' });
   } else {
-    const missing = obj.ruleGroups.filter(
+    const missing = ruleGroups.filter(
       (id) => typeof id !== 'string' || !availableRuleGroupIds.has(id)
     ) as string[];
     if (missing.length > 0) {
@@ -60,7 +66,7 @@ export function validateCharacterImport(
   const data: CharacterImport = {
     name: (obj.name as string).trim(),
     species: (obj.species as string).trim(),
-    ruleGroups: [...(obj.ruleGroups as string[])],
+    ruleGroups: [...(ruleGroups as string[])],
     effects: Array.isArray(obj.effects) ? [...(obj.effects as EffectInstance[])] : []
   };
 

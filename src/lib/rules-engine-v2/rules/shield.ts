@@ -56,6 +56,8 @@ const shield: RuleModule = {
               id: 'effect-shield',
               key: 'armor:shield',
               state: { 'ac.shieldBonus': 2, 'armor.shield.equipped': 1, 'hands.spent': 1 },
+              // On the strip (v1 parity): removing the chip is how the shield is doffed.
+              display: { name: 'rule.dnd-5e-2024.shield.effect-shield.name' },
               expiry: { kind: 'permanent' }
             }
           ],

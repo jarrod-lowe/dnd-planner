@@ -94,7 +94,9 @@ function steedActivation(
   id: string,
   section: string,
   costFact: string,
-  remainingFact: string
+  remainingFact: string,
+  intents: Record<string, string>,
+  annotationLabels?: string[]
 ): Offer {
   const code = `${S}.${id}.no_actions`;
   return {
@@ -105,7 +107,8 @@ function steedActivation(
       subject: 'steed',
       name: `${S}.${id}.name`,
       description: `${S}.${id}.description`,
-      intents: { ACTION: 'steed' },
+      intents,
+      ...(annotationLabels ? { annotationLabels } : {}),
       actionCost: [section === 'bonus-action' ? 'bonus' : section]
     },
     legalWhen: [
@@ -118,11 +121,12 @@ function steedActivation(
   };
 }
 
-// creatureType → its special ability (bonus action, once per long rest).
-const ABILITY_BY_TYPE = [
-  ['healing-touch', 'healingTouch'],
-  ['fey-step', 'feyStep'],
-  ['fell-glare', 'fellGlare']
+// creatureType → its special ability (bonus action, once per long rest), with
+// the UI intent verb the ability files under (v1 parity: AID / MOVE / CONTROL).
+const ABILITY_BY_TYPE: readonly (readonly [string, string, Record<string, string>])[] = [
+  ['healing-touch', 'healingTouch', { AID: 'heal' }],
+  ['fey-step', 'feyStep', { MOVE: 'travel' }],
+  ['fell-glare', 'fellGlare', { CONTROL: 'single' }]
 ] as const;
 
 /**
@@ -130,7 +134,7 @@ const ABILITY_BY_TYPE = [
  * long-rest pool, surfaced only for the matching creature type.
  */
 function steedAbilityOffer(creatureType: number): Offer {
-  const [id, pool] = ABILITY_BY_TYPE[creatureType];
+  const [id, pool, intents] = ABILITY_BY_TYPE[creatureType];
   const offerId = `steed-${id}`;
   const noBonus = `${S}.${offerId}.no_bonus_action`;
   const noUses = `${S}.${offerId}.no_uses`;
@@ -142,7 +146,7 @@ function steedAbilityOffer(creatureType: number): Offer {
       subject: 'steed',
       name: `${S}.${offerId}.name`,
       description: `${S}.${offerId}.description`,
-      intents: { ACTION: 'steed' },
+      intents,
       actionCost: ['bonus']
     },
     legalWhen: [
@@ -241,6 +245,12 @@ function steedHpModifier(
           id: effectId,
           key: effectId,
           state: { [fact]: typeof selections.modifier === 'number' ? selections.modifier : 0 },
+          // v1 key shape: effect-steed-hp-* is named steed-effect-hp-* in i18n.
+          display: {
+            name: `${S}.${effectId.replace('effect-steed-', 'steed-effect-')}.name`,
+            section: 'health',
+            subject: 'steed'
+          },
           expiry: { kind: 'permanent' }
         }
       ]
@@ -508,13 +518,13 @@ const findSteed: RuleModule = {
         section: 'action',
         subject: 'steed',
         name: `${S}.steed-dash.name`,
-        intents: { ACTION: 'steed' },
+        intents: { MOVE: 'dash' },
         actionCost: ['action']
       },
       legalWhen: [
         {
           condition: (f) => f.num('companion.steed.actions.remaining') > 0,
-          diagnostics: [{ code: `${S}.steed-dash.no_action`, severity: 'error' }]
+          diagnostics: [{ code: `${S}.steed-dash.no_actions`, severity: 'error' }]
         }
       ],
       apply: (f): ActionResult => ({
@@ -524,33 +534,39 @@ const findSteed: RuleModule = {
         diagnostics:
           f.num('companion.steed.actions.remaining') > 0
             ? []
-            : [{ code: `${S}.steed-dash.no_action`, severity: 'error' }]
+            : [{ code: `${S}.steed-dash.no_actions`, severity: 'error' }]
       })
     },
     steedActivation(
       'steed-dodge',
       'action',
       'companion.steed.actions.spent',
-      'companion.steed.actions.remaining'
+      'companion.steed.actions.remaining',
+      { DEFEND: 'evade' }
     ),
     steedActivation(
       'steed-disengage',
       'action',
       'companion.steed.actions.spent',
-      'companion.steed.actions.remaining'
+      'companion.steed.actions.remaining',
+      { DEFEND: 'evade' }
     ),
     // Slam — the steed's melee attack, as an action or a reaction.
     steedActivation(
       'steed-slam',
       'action',
       'companion.steed.actions.spent',
-      'companion.steed.actions.remaining'
+      'companion.steed.actions.remaining',
+      { ATTACK: 'brawl' },
+      ['attack.any', 'attack.melee']
     ),
     steedActivation(
       'steed-slam-reaction',
       'reaction',
       'companion.steed.reactions.spent',
-      'companion.steed.reactions.remaining'
+      'companion.steed.reactions.remaining',
+      { DEFEND: 'brawl' },
+      ['attack.any', 'attack.melee']
     ),
     // Creature-type special abilities (only the matching type surfaces).
     steedAbilityOffer(0),
@@ -603,6 +619,11 @@ const findSteed: RuleModule = {
                 ? selections.amount
                 : 0)
             },
+            display: {
+              name: `${S}.steed-record-damage.effect.name`,
+              section: 'health',
+              subject: 'steed'
+            },
             expiry: { kind: 'untilLongRest' }
           }
         ]
@@ -634,6 +655,11 @@ const findSteed: RuleModule = {
             state: {
               'companion.steed.hp.modifier.current':
                 typeof selections.amount === 'number' ? selections.amount : 0
+            },
+            display: {
+              name: `${S}.steed-record-heal.effect.name`,
+              section: 'health',
+              subject: 'steed'
             },
             expiry: { kind: 'untilLongRest' }
           }
@@ -672,7 +698,9 @@ const findSteed: RuleModule = {
   // The Life Bond feature — surfaced as an informational annotation while the
   // steed is summoned (damage the steed takes can be shared with the paladin).
   annotate: (f) =>
-    summoned(f) ? [{ key: `${S}.annotate-life-bond.text`, targets: ['companion.steed'] }] : []
+    // Rides the Record Healing panel (v1 parity): spell healing within 5 ft also
+    // heals the steed, so the reminder targets `healing.any`, not a steed label.
+    summoned(f) ? [{ key: `${S}.annotate-life-bond.text`, targets: ['healing.any'] }] : []
 };
 
 export default defineRule(findSteed);

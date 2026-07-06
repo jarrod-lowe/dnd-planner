@@ -63,6 +63,13 @@ describe('derivePanels — resources', () => {
     expect(labels).not.toContain('play.stats.divinity'); // no divinity facts
   });
 
+  it('includes an HP row in the ledger (v1 parity: hp.yaml declared both panels)', () => {
+    const facts = { 'hp.max': 12, 'hp.current': 9 };
+    const hp = deriveResourceEntries(facts).find((e) => e.label === 'play.stats.hp');
+    expect(hp).toBeDefined();
+    expect(resolveEntryValue(hp!, facts)).toBe('9/12');
+  });
+
   it('picks the class hit die that is present (d10 for a paladin)', () => {
     const entries = deriveResourceEntries({ 'hitDie.d10.total': 5, 'hitDie.d10.remaining': 5 });
     const hd = entries.find((e) => e.type === 'hitDie');
