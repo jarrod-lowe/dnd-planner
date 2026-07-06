@@ -16,6 +16,11 @@ catch a deployed group that lacks a v2 module. Fix: assert from the opposite
 direction — every group id in `build/test-rule-groups.json` must either resolve
 via `lazyRuleGroupIds()` or appear in an explicit allowlist of catalog-only
 groups (`*-spells-l*`, `*-detail`, `class-paladin-oath-redemption-level4`).
+This matters doubly because the runtime is silent about the same failure:
+`loadRuleGroups` discards `loadModules`' `missing`/`incompatible` lists (it
+must — the catalog-only groups are expected misses), so an assigned group whose
+module was forgotten simply contributes nothing at play time. This test is the
+only tripwire.
 
 ### 1.2 Seeds still create custom rule groups; deleting a character now leaks them
 `terraform/module/dnd-planner/dynamodb-items.tf` still seeds, for **every new
@@ -54,6 +59,25 @@ the documented contract — hide every effect without `display` except the
 concentration marker (`shouldHideFromStrip = !display && !concentration`),
 rather than enumerating fact-name patterns.
 
+**The display-metadata port is also incomplete.** v1 authored `ui.name` on ~90
+effect rules; v2 gave `display` to 14. Beyond hidden build effects (see below),
+v1 effects that were *visible* chips lost their names entirely — notably
+`effect-hp-damage` / `effect-hp-heal` (v1: `section: health`, showed the amount
+via `displaySelection`, removable as an "undo"), the manual HP modifiers, the
+equipment effects (`effect-leather-armor` / `effect-shield` /
+`effect-splint-armor`), `effect-build-locked`, `effect-divinity-short-rest`,
+and the steed damage/heal/modifier effects. Under the current bridge these
+render as raw-id chips; under the contract fix above they would silently
+disappear instead. Either way the v1 behavior is degraded — these effects need
+`display` metadata authored (reusing the existing `rule.*.effect-*.name` keys,
+which are still in the i18n files).
+
+**Hidden build effects lost their reveal names too.** v1's strip "show hidden"
+toggle revealed named chips ("Strength 15", "Athletics proficiency", "Bless
+prepared"); every v2 build/settings effect is nameless, so the reveal view is a
+wall of raw ids. Lower priority, but it makes the hidden-effects toggle nearly
+useless for debugging a character.
+
 ### 1.5 Two module diagnostic codes have no i18n translation (both locales)
 Verified by expanding every `rule.*` key referenced from
 `src/lib/rules-engine-v2/` (plain + template-literal) against both locale
@@ -85,6 +109,25 @@ filter `custom-*` ids on export (and/or tolerate them on import).
 unlike `removeEffect` / `endTurn` / `assignRuleGroupWithSettings`. A follow-up
 effect committed mid-turn is silently lost if the page reloads before the next
 End Turn / effect change. One-line fix.
+
+### 1.8 Steed actions are invisible in the add-picker (`ACTION` is not a verb)
+`find-steed.ts` gives its activation offers `intents: { ACTION: 'steed' }`
+(lines 108/145/511) — but `ACTION` is not in the `Verb` union or `VERB_ORDER`.
+`deriveVerbFromRule` returns the first intents key verbatim, and
+`groupChoicesByVerb` only emits buckets for verbs in `VERB_ORDER`, so these
+offers land in a bucket the picker never renders. Affected: `steed-dash`,
+`steed-dodge`, `steed-disengage`, `steed-slam`, `steed-slam-reaction`, and the
+three creature abilities (healing touch / fey step / fell glare) — essentially
+the steed's entire action surface. v1 used legal verbs (`MOVE: dash`,
+`DEFEND: evade`, `ATTACK: brawl`, `AID: heal`, `CONTROL: single`). The parity
+suite passes because it asserts engine offers, not picker rendering. The
+offers remain reachable via QuickSearch (it matches all entries by name and
+uses the verb only as a row label — which renders as a raw i18n key for
+`ACTION`), and an item added that way gets `PlannedItem.verb = 'ACTION'`,
+whose `verbConfig[verb]` lookup is undefined (stripe/label breakage on the
+plan row). Fix: restore v1's verb intents on the steed offers
+(`MOVE: dash`, `DEFEND: evade`, `ATTACK: brawl`, `AID: heal`,
+`CONTROL: single`) — `subject: 'steed'` already carries the steed-ness.
 
 ## 2. Faithfulness deltas v1 → v2 (documented/intentional — confirm acceptable)
 
@@ -215,6 +258,16 @@ reachable / every detailKey resolves to a published file.
 - **E2E not exercised in this review**: `make test-e2e` (Playwright smoke) was
   not run here; CI runs it on the prod workflows. The play-flow behavior proof
   remains the manual test-env validation.
+- **`ui.section` is now semantics-only, and some values have no meaning.**
+  `SectionCollapsible` (the section-header renderer) has no importers — dead
+  code — and no live consumer renders section names; sections only feed the
+  verb fallback (`deriveVerbFromSection`) and effect-kind mapping. Modules use
+  section values with no i18n header and no verb-fallback case (`mastery`,
+  `mount`, `equip`, bare `action`/`bonus-action`), which is currently harmless
+  (all such offers carry explicit intents) but is an authoring trap — a
+  section-only offer with one of those values would fall to the `HANDLE`
+  bucket. Consider deleting `SectionCollapsible`/`SECTION_ORDER` or typing the
+  allowed section values.
 
 ## 5. Verified-OK (checked, no issue)
 
