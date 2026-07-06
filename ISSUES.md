@@ -8,6 +8,7 @@ each section. Line refs are to the branch head at review time.
 ## 1. Bugs / regressions (should fix before or shortly after merge)
 
 ### 1.1 v2 delivery-coverage guard is now vacuous
+
 `tests/integration/rules-engine/v2-coverage.test.ts` asserts "every deployed
 rule group **with rules** resolves to a v2 module". Stripping the dead `rules:`
 arrays from the YAML (commit 9922555) made every group 0-rule, so the filter
@@ -23,6 +24,7 @@ module was forgotten simply contributes nothing at play time. This test is the
 only tripwire.
 
 ### 1.2 Seeds still create custom rule groups; deleting a character now leaks them
+
 `terraform/module/dnd-planner/dynamodb-items.tf` still seeds, for **every new
 character**: a `RULEGROUP#custom-$(characterId)` definition row
 (`char_custom_rulegroup_def_seed`, ~line 874) and an assignment row linking it
@@ -37,6 +39,7 @@ longer use), and **restore** `deleteCustomRuleGroup` in cleanup-character (an
 idempotent, cheap delete) so v1-era and interim rows are still cleaned up.
 
 ### 1.3 Ledger lost its HP row
+
 v1's `hp.yaml` declared two display entries: `play.topBar.hp` (top bar) and
 `play.stats.hp` (a usedMax row in the ledger/resources panel). The v2
 `derivePanels.ts` RESOURCES catalog has no `play.stats.hp` entry, so the
@@ -45,6 +48,7 @@ ledger no longer shows HP. Fix: add
 to the RESOURCES catalog.
 
 ### 1.4 Active-effects strip shows raw-id chips for per-turn bookkeeping effects
+
 `EffectDisplay`'s contract (types.ts) says an effect's `display` **presence opts
 it into the strip** — but `v2Bridge.shouldHideFromStrip` only hides
 display-less effects that are `permanent` or "resource-only" (all facts
@@ -61,7 +65,7 @@ rather than enumerating fact-name patterns.
 
 **The display-metadata port is also incomplete.** v1 authored `ui.name` on ~90
 effect rules; v2 gave `display` to 14. Beyond hidden build effects (see below),
-v1 effects that were *visible* chips lost their names entirely — notably
+v1 effects that were _visible_ chips lost their names entirely — notably
 `effect-hp-damage` / `effect-hp-heal` (v1: `section: health`, showed the amount
 via `displaySelection`, removable as an "undo"), the manual HP modifiers, the
 equipment effects (`effect-leather-armor` / `effect-shield` /
@@ -79,9 +83,11 @@ wall of raw ids. Lower priority, but it makes the hidden-effects toggle nearly
 useless for debugging a character.
 
 ### 1.5 Two module diagnostic codes have no i18n translation (both locales)
+
 Verified by expanding every `rule.*` key referenced from
 `src/lib/rules-engine-v2/` (plain + template-literal) against both locale
 files. Missing leaves:
+
 - `rule.spell-find-steed.steed-dash.no_action` (find-steed.ts:517/527) — a
   typo: the i18n key (and the shared steed-action helper, line 99) use
   `no_actions` (plural); steed-dash's hand-rolled diagnostics use the singular.
@@ -89,11 +95,12 @@ files. Missing leaves:
 - `rule.spell-divine-smite.offer-divine-smite.wrong_level`
   (divine-smite.ts:168) — a new v2-only guard (out-of-range slot-level
   selection) with no translation authored in either locale. Add the key.
-When these fire, the player sees a raw i18n key / missing-translation warning.
-(The deleted diagnostic-code-coverage test would not have caught these either —
-it only walked YAML rules — but its v2 replacement, §3.1, would.)
+  When these fire, the player sees a raw i18n key / missing-translation warning.
+  (The deleted diagnostic-code-coverage test would not have caught these either —
+  it only walked YAML rules — but its v2 replacement, §3.1, would.)
 
 ### 1.6 Character export includes the seeded `custom-<characterId>` group id
+
 v1's `buildCharacterExport` filtered `custom-${characterId}` out of the
 exported `ruleGroups`; the custom-rules removal dropped that filter, but the
 terraform seeds (§1.2) still assign `custom-<id>` to every character. So a v2
@@ -104,6 +111,7 @@ export **fails import validation** ("unknown rule group"). Fix alongside §1.2:
 filter `custom-*` ids on export (and/or tolerate them on import).
 
 ### 1.7 `addFollowupEffect` never persists the committed effect
+
 `playStore.addFollowupEffect` (javelin Slow rider, etc.) appends to
 `state.committed` and re-evaluates but does not call `persistCommitted()`,
 unlike `removeEffect` / `endTurn` / `assignRuleGroupWithSettings`. A follow-up
@@ -111,6 +119,7 @@ effect committed mid-turn is silently lost if the page reloads before the next
 End Turn / effect change. One-line fix.
 
 ### 1.8 Steed actions are invisible in the add-picker (`ACTION` is not a verb)
+
 `find-steed.ts` gives its activation offers `intents: { ACTION: 'steed' }`
 (lines 108/145/511) — but `ACTION` is not in the `Verb` union or `VERB_ORDER`.
 `deriveVerbFromRule` returns the first intents key verbatim, and
@@ -132,38 +141,45 @@ plan row). Fix: restore v1's verb intents on the steed offers
 ## 2. Faithfulness deltas v1 → v2 (documented/intentional — confirm acceptable)
 
 ### 2.1 Offers are judged against post-plan facts (v1: phase-interleaved)
+
 v2 evaluates the offer catalog once against the final projected facts
 (engine.ts). v1 produced offers during phase execution, so an offer emitted by
 an early-phase rule saw only earlier writes. In practice this makes v2 offers
-*more* consistent (they always see the whole plan), and the parity suite
+_more_ consistent (they always see the whole plan), and the parity suite
 passes — but any rule that relied on offers seeing pre-plan state would differ.
 
 ### 2.2 Plan legality is plan-order-significant (v1 reordered via `after`)
+
 Documented in the parity skip list (`hi-use-then-grant`, `hi-effect-grant-use`,
 `build-lock-weapon-clear`): v1 could reorder a planned "use" after a planned
 "grant" via group dependencies; v2 folds the plan strictly in player order.
 Deliberate design change; players must order dependent actions correctly.
 
 ### 2.3 Spell un-prepare is immediate (v1 had a 2-turn `removing` lifecycle)
+
 sleep / calm-emotions / hold-person prepare effects evict immediately on
 unprepare in v2 (same end state, no intermediate `removing` turn). Skip-listed.
 
 ### 2.4 Steed does not vanish passively at 0 HP
+
 v1's self-advertise-gated-on-hp + `cascadeRemove` let the steed die when its
 HP hit 0 without player action; v2 committed effects cannot self-remove on a
 derived-fact threshold. Explicit dismissal cascades correctly. Skip-listed.
 
 ### 2.5 `cascadeRemove` dropped
+
 `removeEffect` removes exactly one effect id; dependent-effect eviction is the
 owning module's job via shared `key`s. No current rule needs the cascade, but
 any future "removing X also removes Y" behavior must be authored module-side.
 
 ### 2.6 Steed damage type is numeric-only
+
 v2 facts are numbers; the steed's string damage-type label (`radiant` /
 `psychic` / `necrotic`) is not represented (creatureType 0/1/2 is). The UI
 shows the type via the creature-type ability entry instead. Skip-listed.
 
 ### 2.7 Custom rule groups removed outright
+
 v1 let users author per-character YAML/JSON rules (EditCustomRules); v2
 evaluates only code modules, and the whole feature (editor, storage endpoint,
 export field) was removed on this branch at the owner's direction. Existing
@@ -171,6 +187,7 @@ characters with a stored custom group lose those rules (accepted: pre-v2
 characters are deleted/recreated).
 
 ### 2.8 Planned actions apply even when their structural `when` gate is closed
+
 `evaluatePlan` builds its action registry from `collectOffers(modules)` and
 applies any planned ref it finds — it never re-checks the offer's `when` gate.
 `evaluateOffers` (the catalog) does honor `when`, so the offer disappears from
@@ -183,6 +200,7 @@ the turn — v2 still charges the attack. Consider: skip refs whose offer `when`
 fails (or surface `applicable: false` + a diagnostic instead of applying).
 
 ### 2.9 Effect-chip duration pips always render "full"
+
 `v2Bridge.durationFromExpiry` maps a `turns` expiry to
 `{ countDown: remaining, duration: remaining }` because an `EffectInstance`
 keeps only the remaining count — the original total is lost. v1 kept
@@ -191,6 +209,7 @@ showed elapsed pips. Cosmetic; fix would add an authored `total` (or
 `display.duration`) to timed effects.
 
 ### 2.10 Sheet input facts are clobbered by contributors (sharp edge)
+
 `evaluateSheet` seeds `facts = { ...inputFacts }`, but when any module/effect
 contributes to the same fact, `settle()` overwrites the input value with the
 combined contributions — the input is not itself a contribution. At runtime the
@@ -200,6 +219,7 @@ Consider treating a present input fact as an implicit `sum` contribution, or
 throwing on the overlap.
 
 ### 2.11 Engine exceptions are uncaught in the store (hard-fail posture)
+
 `performEvaluation` has no try/catch around `evaluateCharacterV2`, so any
 engine throw crashes the play view: duplicate offer ids (`collectOffers`),
 sheet dependency cycles / conflicting combine modes, and the watchdog's
@@ -210,6 +230,7 @@ Consider catching in `performEvaluation` and surfacing a toast + error state.
 ## 3. Coverage / test gaps
 
 ### 3.1 Diagnostic-code i18n coverage test deleted with no v2 equivalent
+
 `tests/unit/i18n/diagnostic-code-coverage.test.ts` (deleted 9922555) verified
 every `rule.*` diagnostic code referenced by rule content had a translation in
 every locale. It walked the YAML `rules:`, which are gone — but v2 modules also
@@ -220,6 +241,7 @@ version of exactly that check found the two §1.5 misses, so it has proven
 value.
 
 ### 3.2 Some v1 scenarios never replay on v2 (initialEffects-blocked)
+
 The parity run is 326 passed / 11 skipped. Beyond the §2 behavior deltas, a few
 scenarios are skipped for scenario-format reasons, not behavior:
 `hi-human-long-rest-no-duplicate` (v1-format `initialEffects`), the steed
@@ -229,6 +251,7 @@ stat-block scenarios, and Extra Attack (which has **no** yaml scenario at all �
 shrinkage, which is good — but these paths rest on unit tests alone.
 
 ### 3.3 Detail wiring is untested
+
 `detail-flips.test.ts` (deleted) asserted each combat-facing feature was
 referenced by a rule's detail key. Details still render (33 published files;
 offers carry `ui.detailKey`), but nothing now asserts every published detail is
