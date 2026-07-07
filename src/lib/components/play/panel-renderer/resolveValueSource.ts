@@ -1,5 +1,5 @@
 import type { ValueSource } from './types';
-import type { Facts, VarDefinition } from '$lib/rules-engine';
+import type { Facts, VarDefinition } from '$lib/rules-view';
 
 type VarDefs = Record<string, VarDefinition>;
 type Selections = Record<string, unknown>;

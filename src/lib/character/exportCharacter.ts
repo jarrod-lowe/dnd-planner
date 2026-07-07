@@ -1,10 +1,10 @@
 import type { Character } from './types';
-import type { EffectInstance } from '$lib/rules-engine-v2';
+import type { EffectInstance } from '$lib/rules-engine';
 
 /**
- * schemaVersion 2 stores `effects` as v2 `EffectInstance[]` (the committed state),
- * where v1 stored bridged effect `Rule`s. Not backwards-compatible — a v1 export
- * is rejected on import (pre-v2 characters are recreated, not carried forward).
+ * schemaVersion 2 stores `effects` as `EffectInstance[]` (the committed state),
+ * where schemaVersion 1 stored bridged effect `Rule`s. Not backwards-compatible — a schemaVersion 1 export
+ * is rejected on import (legacy characters are recreated, not carried forward).
  */
 export interface CharacterExport {
   schemaVersion: 2;

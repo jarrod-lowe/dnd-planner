@@ -67,7 +67,7 @@ vi.mock('$lib/components/play/tooltipSingleton', () => ({
 import PlanRow from '$lib/components/play/PlanRow.svelte';
 import { peekDetail, getDetail } from '$lib/details/index';
 import type { PlannedItem } from '$lib/play/types';
-import type { Rule } from '$lib/rules-engine';
+import type { Rule } from '$lib/rules-view';
 
 const mockedPeekDetail = vi.mocked(peekDetail);
 const mockedGetDetail = vi.mocked(getDetail);
@@ -93,7 +93,7 @@ const mockEntry = {
   diagnostics: []
 };
 
-const mockFacts = {} as import('$lib/rules-engine').Facts;
+const mockFacts = {} as import('$lib/rules-view').Facts;
 
 describe('PlanRow Rules mode', () => {
   beforeEach(() => {

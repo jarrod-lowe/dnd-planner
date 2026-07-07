@@ -9,7 +9,7 @@
   import { closeActiveTooltip, registerTooltipClose } from './tooltipSingleton';
   import { EYE_OPEN_PATH, EYE_OFF_PATH, SEARCH_PATH, SEARCH_STRIKE_PATH } from '$lib/icons';
   import QuickSearch from './QuickSearch.svelte';
-  import type { AvailableRuleEntry, Verb } from '$lib/rules-engine';
+  import type { AvailableRuleEntry, Verb } from '$lib/rules-view';
 
   interface Props {
     entries: AvailableRuleEntry[];

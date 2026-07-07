@@ -1,20 +1,20 @@
-import type { Facts } from '$lib/rules-engine';
+import type { Facts } from '$lib/rules-view';
 import { type UiEntry, isUiEntry } from './extractTopBar';
 
 /**
- * M4/W4 — the v2 replacement for `extractTopBarEntries` / `extractResourceEntries`.
+ * The facts-driven top-bar / resources catalog.
  *
- * v1 declared the top-bar and resources panels as `ui.topBar` / `ui.resources`
+ * The legacy engine declared the top-bar and resources panels as `ui.topBar` / `ui.resources`
  * blocks on the rule objects, and the store extracted them from
- * `[...ruleGroups, ...effects]`. v2 modules deliberately don't carry that display
+ * `[...ruleGroups, ...effects]`. rule modules deliberately don't carry that display
  * metadata (the parity harness only checks facts/offers/annotations), so the panels
- * need a v2 source. Since every panel entry is a pure declaration that references
- * facts the v2 engine already produces, this is a fixed **facts-driven catalog**:
+ * need a source here. Since every panel entry is a pure declaration that references
+ * facts the engine already produces, this is a fixed **facts-driven catalog**:
  * an entry surfaces when its driving fact is present in the evaluated facts (the
  * owning module is loaded), and the existing `resolveEntryValue` / `isEntryVisible`
  * render it — so the PanelRenderer/top-bar UI is unchanged.
  *
- * The catalog mirrors the v1 declarations exactly (labels + fact refs). The
+ * The catalog mirrors those declarations exactly (labels + fact refs). The
  * character-sheet sections (`magic` spell slots, `abilities`, `stats`, `skills`,
  * `passive`) have their own extractor and are out of scope here — this covers the
  * play-mode top bar + resources panel.
@@ -59,7 +59,7 @@ const TOP_BAR: { gate: string; entry: UiEntry }[] = [
 
 /** Resources-panel catalog: usedMax pools, each gated on its `total` fact. */
 const RESOURCES: UiEntry[] = [
-  // HP appears in the ledger as well as the top bar (v1 parity: hp.yaml
+  // HP appears in the ledger as well as the top bar (hp.yaml
   // declared both a topBar and a resources entry).
   { type: 'usedMax', label: 'play.stats.hp', total: 'hp.max', remaining: 'hp.current' },
   {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Followup } from '$lib/rules-engine';
+import type { Followup } from '$lib/rules-view';
 
 describe('Followup type', () => {
   it('accepts effect followup with addRule', () => {

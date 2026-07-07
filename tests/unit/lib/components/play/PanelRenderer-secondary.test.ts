@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import PanelRenderer from '$lib/components/play/PanelRenderer.svelte';
-import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
+import type { AvailableRuleEntry, Rule } from '$lib/rules-view';
 
 const createEntryWithSecondary = (
   _conditionMet = true,

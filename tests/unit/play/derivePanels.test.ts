@@ -3,7 +3,7 @@ import { deriveTopBarEntries, deriveResourceEntries } from '$lib/play/derivePane
 import { resolveEntryValue } from '$lib/play/extractTopBar';
 
 /**
- * M4/W4 — the facts-driven top-bar / resources catalog (v2 replacement for the v1
+ * The facts-driven top-bar / resources catalog (replacing the legacy
  * `ui.topBar`/`ui.resources` extraction). An entry surfaces iff its driving fact
  * is present, and the existing resolveEntryValue renders it unchanged.
  */
@@ -63,7 +63,7 @@ describe('derivePanels — resources', () => {
     expect(labels).not.toContain('play.stats.divinity'); // no divinity facts
   });
 
-  it('includes an HP row in the ledger (v1 parity: hp.yaml declared both panels)', () => {
+  it('includes an HP row in the ledger (hp.yaml declared both panels)', () => {
     const facts = { 'hp.max': 12, 'hp.current': 9 };
     const hp = deriveResourceEntries(facts).find((e) => e.label === 'play.stats.hp');
     expect(hp).toBeDefined();

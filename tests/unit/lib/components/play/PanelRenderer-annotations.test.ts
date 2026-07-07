@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/svelte';
 import PanelRenderer from '$lib/components/play/PanelRenderer.svelte';
-import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
-import type { Annotation } from '$lib/rules-engine';
+import type { AvailableRuleEntry, Rule } from '$lib/rules-view';
+import type { Annotation } from '$lib/rules-view';
 
 const createEntryWithAnnotations = (): AvailableRuleEntry => ({
   rule: {

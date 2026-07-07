@@ -17,7 +17,7 @@ function walk(obj: unknown, value: string): unknown {
   if (obj !== null && typeof obj === 'object') {
     const result: Record<string, unknown> = {};
     for (const [key, val] of Object.entries(obj)) {
-      // Substitute in keys too: v2 effect templates put the fact name in a `state`
+      // Substitute in keys too: effect templates put the fact name in a `state`
       // object key (e.g. `skill.${value}.proficiency`), not only in string values.
       result[key.replace(PLACEHOLDER, value)] = walk(val, value);
     }

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getSubject } from '$lib/play/subjectUtils';
-import type { Rule } from '$lib/rules-engine';
+import type { Rule } from '$lib/rules-view';
 
 describe('getSubject', () => {
   it('returns undefined when ui is absent', () => {

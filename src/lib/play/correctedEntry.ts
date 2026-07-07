@@ -1,4 +1,4 @@
-import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
+import type { AvailableRuleEntry, Rule } from '$lib/rules-view';
 
 export function correctEntryForPlanItem(
   entry: AvailableRuleEntry,

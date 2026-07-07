@@ -1,4 +1,4 @@
-import type { Condition, Facts } from '$lib/rules-engine/types';
+import type { Condition, Facts } from '$lib/rules-view/types';
 
 function compareValues(actual: number, operator: string, expected: number): boolean {
   switch (operator) {

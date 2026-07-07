@@ -50,7 +50,7 @@ vi.mock('svelte-sonner', () => ({
 }));
 
 import { apiGet, apiPost } from '$lib/api/client';
-import type { Rule } from '$lib/rules-engine';
+import type { Rule } from '$lib/rules-view';
 
 const mockApiGet = vi.mocked(apiGet);
 const mockApiPost = vi.mocked(apiPost);

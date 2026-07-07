@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import PackedChoiceGroup from '$lib/components/play/PackedChoiceGroup.svelte';
-import type { AvailableRuleEntry } from '$lib/rules-engine';
+import type { AvailableRuleEntry } from '$lib/rules-view';
 
 // Mock element.animate for JSDOM (used by Svelte transitions)
 beforeAll(() => {

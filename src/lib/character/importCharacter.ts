@@ -1,4 +1,4 @@
-import type { EffectInstance } from '$lib/rules-engine-v2';
+import type { EffectInstance } from '$lib/rules-engine';
 
 export interface CharacterImport {
   name: string;

@@ -15,7 +15,7 @@ For the engine specification, see [RULES_ENGINE.md](../RULES_ENGINE.md).
 ### Where things live
 
 ```plain
-src/lib/rules-engine-v2/
+src/lib/rules-engine/
   rules/<id>.ts                  # The module: derive/offer/annotate/onRest logic
   registry.ts                    # Eager id → module map (tests, parity harness)
   lazy.ts                        # Dynamic-import chunk map (runtime delivery)
@@ -28,7 +28,7 @@ data/rule-groups/schema.json              # Schema for the metadata layer (valid
 src/lib/i18n/en/common.json               # All rule.* display text and diagnostics
 src/lib/i18n/en-x-tlh/common.json         # …in BOTH locales, always
 
-tests/unit/rules-engine-v2/<feature>.test.ts          # Module unit tests
+tests/unit/rules-engine/<feature>.test.ts          # Module unit tests
 tests/integration/rules-engine/yaml-scenarios/<name>/ # Player-visible scenario tests
 ```
 
@@ -43,7 +43,7 @@ strips). Pick the id once, keep it kebab-case, and never reuse an old one.
 ### The authoring checklist
 
 1. **Write the failing test first** (TDD is mandatory — see §6).
-2. Write the module at `src/lib/rules-engine-v2/rules/<id>.ts`; export
+2. Write the module at `src/lib/rules-engine/rules/<id>.ts`; export
    `default defineRule(module)`.
 3. Register it in **both** `registry.ts` (import + `MODULES` array) and
    `lazy.ts` (`LOADERS['<id>']` dynamic import).
@@ -56,7 +56,7 @@ strips). Pick the id once, keep it kebab-case, and never reuse an old one.
    (then `make test` before declaring done). To publish metadata to the test
    environment: `make sync-rule-groups`; full refresh: `make deploy-test`.
 
-Guards that will catch a missed step: `v2-coverage` (deployed group with no
+Guards that will catch a missed step: `module-coverage` (deployed group with no
 module), `module-i18n-coverage` (untranslated `rule.*` key),
 `sections.test` (bad section / intentless HANDLE), `lazy`/`registry` sync
 tests, the metadata i18n-compliance test (literal display text in a module),
@@ -245,7 +245,7 @@ ruleGroups:
             Markdown body text…
 ```
 
-- `settings` of type `select` produce a v2 `EffectInstance` from the `effect`
+- `settings` of type `select` produce an `EffectInstance` from the `effect`
   template via `${value}` substitution (including inside `display`); the
   result is stored as a character build effect. `select-rule-group` instead
   auto-assigns the chosen group.
@@ -294,7 +294,7 @@ Everything a player can read is a key in **both**
 
 TDD, always: failing test → implementation → green → refactor.
 
-### Module unit tests (`tests/unit/rules-engine-v2/`)
+### Module unit tests (`tests/unit/rules-engine/`)
 
 Exercise the module through the public entry points (`evaluateSheet`,
 `evaluatePlan`, `evaluate`, `endTurn`) with a minimal module set. Remember the
@@ -336,10 +336,10 @@ sibling `assert:`) and cover `facts`, `offers` / `effects` / `annotations`
 
 - `initialFacts` may only carry facts **no module derives** (the engine
   rejects overlap). Prefer driving state through steps or committed effects.
-- Do not author v1-format `initialEffects` blocks in new scenarios. If a
+- Do not author legacy-format `initialEffects` blocks in new scenarios. If a
   scenario must start with pre-existing state, add its committed
-  `EffectInstance[]` to `INITIAL_EFFECTS_V2`
-  (`tests/integration/rules-engine/initial-effects-v2.ts`), keyed by scenario
+  `EffectInstance[]` to `INITIAL_EFFECTS`
+  (`tests/integration/rules-engine/initial-effects.ts`), keyed by scenario
   directory name.
 - The runner asserts an exact runnable-scenario set (`EXPECTED_RUNNABLE`) —
   add your scenario's name there.

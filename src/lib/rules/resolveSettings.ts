@@ -1,6 +1,6 @@
 import type { SettingDefinition } from './settingsTypes';
 import { substituteTemplate } from './substituteSettings';
-import type { EffectInstance } from '$lib/rules-engine-v2';
+import type { EffectInstance } from '$lib/rules-engine';
 
 export interface SettingsGroup {
   ruleGroupId: string;
@@ -40,7 +40,7 @@ export function resolveSettings(
           }
         }
       } else if (setting.effect) {
-        // The template is a v2 EffectInstance with ${value} placeholders; namespace
+        // The template is an EffectInstance with ${value} placeholders; namespace
         // its id per rule group so re-assigning stays idempotent (dedupe by key).
         const effect = substituteTemplate(setting.effect, chosenValue) as unknown as EffectInstance;
         effect.id = `${group.ruleGroupId}::${effect.id}`;

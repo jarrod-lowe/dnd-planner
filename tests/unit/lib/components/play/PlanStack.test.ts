@@ -33,7 +33,7 @@ vi.mock('$lib/play/correctedEntry', () => ({
 }));
 
 import PlanStack from '$lib/components/play/PlanStack.svelte';
-import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-engine';
+import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-view';
 import type { PlannedItem } from '$lib/play/types';
 
 function makeEntry(

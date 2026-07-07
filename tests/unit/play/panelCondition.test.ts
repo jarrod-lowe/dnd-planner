@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { evaluateCondition } from '$lib/play/panelCondition';
-import type { Condition, Facts } from '$lib/rules-engine/types';
+import type { Condition, Facts } from '$lib/rules-view/types';
 
 describe('evaluateCondition', () => {
   describe('FactExistenceCondition', () => {

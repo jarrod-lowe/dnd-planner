@@ -1,6 +1,6 @@
 // M2 / W5 — verify the lazy-loading **mechanism** (NOT deployment readiness).
 //
-// Builds the v2 lazy loader (src/lib/rules-engine-v2/lazy.ts) with Vite and
+// Builds the lazy loader (src/lib/rules-engine/lazy.ts) with Vite and
 // asserts every rule module becomes its OWN chunk via its dynamic import() —
 // i.e. the split points exist and nothing eager-bundles the registry into the
 // loader. Tree-shaking is disabled so the split points show without a consumer.
@@ -10,13 +10,13 @@
 // won't until the app actually imports `loadModules` (M4 wiring) — until then
 // `build/_app/immutable` contains no rule chunks. So do not gate a test deploy on
 // this as "chunks are shipped"; the real shipping check is the SvelteKit build
-// output once v2 is wired in. Runs anywhere Vite runs — no AWS, no deploy.
+// output. Runs anywhere Vite runs — no AWS, no deploy.
 import { build } from 'vite';
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
-const RULES_DIR = 'src/lib/rules-engine-v2/rules';
+const RULES_DIR = 'src/lib/rules-engine/rules';
 const OUT = join(tmpdir(), 'rev2-chunk-verify');
 
 const expected = readdirSync(RULES_DIR)

@@ -132,7 +132,7 @@ make deploy-test  # Deploy to the test environment
 
 ## Notable Code Features
 
-- Rules are TypeScript modules (`src/lib/rules-engine-v2/rules/`) evaluated by a pure dataflow engine; the engine's output feeds the UI and is handed back (with the plan and committed effects) on the next evaluation
+- Rules are TypeScript modules (`src/lib/rules-engine/rules/`) evaluated by a pure dataflow engine; the engine's output feeds the UI and is handed back (with the plan and committed effects) on the next evaluation
   - See RULES_ENGINE.md for the engine specification
   - See FRONTEND_DESIGN.md for the initial design of the frontend
   - See DATA_MODEL.md for a description of the DynamoDB data model

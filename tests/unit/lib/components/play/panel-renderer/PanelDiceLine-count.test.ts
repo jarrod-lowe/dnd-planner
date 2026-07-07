@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import PanelRenderer from '$lib/components/play/PanelRenderer.svelte';
-import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
+import type { AvailableRuleEntry, Rule } from '$lib/rules-view';
 
 // A healing dice-line whose die *count* is driven by a var (e.g. a spell's
 // chosen slot level). Mirrors Prayer of Healing: N d8 where N == slotLevel.

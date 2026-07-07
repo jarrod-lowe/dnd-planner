@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import PanelRenderer from '$lib/components/play/PanelRenderer.svelte';
 import PanelDiceLine from '$lib/components/play/panel-renderer/PanelDiceLine.svelte';
-import type { AvailableRuleEntry, Rule, VarDefinition } from '$lib/rules-engine';
+import type { AvailableRuleEntry, Rule, VarDefinition } from '$lib/rules-view';
 import type { DiceLineControl } from '$lib/components/play/panel-renderer/types';
 
 const createVersatileSpearEntry = (): AvailableRuleEntry => ({

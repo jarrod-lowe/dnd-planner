@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { buildCharacterExport } from '$lib/character/exportCharacter';
 import type { Character } from '$lib/character/types';
-import type { EffectInstance } from '$lib/rules-engine-v2';
+import type { EffectInstance } from '$lib/rules-engine';
 
 const baseCharacter: Character = {
   characterId: 'char-1',

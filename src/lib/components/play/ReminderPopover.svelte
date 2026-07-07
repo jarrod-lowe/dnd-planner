@@ -1,7 +1,7 @@
 <script lang="ts">
   import { t } from '$lib/i18n';
-  import type { Rule } from '$lib/rules-engine';
-  import type { Facts } from '$lib/rules-engine';
+  import type { Rule } from '$lib/rules-view';
+  import type { Facts } from '$lib/rules-view';
 
   interface Props {
     effect: Rule;

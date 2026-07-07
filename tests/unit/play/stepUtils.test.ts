@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { deriveVerbFromRule } from '$lib/play/stepUtils';
-import type { Rule } from '$lib/rules-engine';
+import type { Rule } from '$lib/rules-view';
 
 const makeRule = (overrides: Partial<Rule> & { id: string }): Rule => ({
   activities: [],

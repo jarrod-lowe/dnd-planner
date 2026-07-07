@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { resolveInitialSelections } from '$lib/play/resolveInitialSelections';
-import type { Rule, Facts } from '$lib/rules-engine';
+import type { Rule, Facts } from '$lib/rules-view';
 
 describe('resolveInitialSelections', () => {
   describe('capture: true vars', () => {

@@ -8,7 +8,7 @@
   import PlanStack from '../play/PlanStack.svelte';
   import Ledger from '../play/Ledger.svelte';
   import type { Character } from '$lib/character/types';
-  import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
+  import type { AvailableRuleEntry, Rule } from '$lib/rules-view';
   import { getConcentrationEffectName } from '$lib/play/effectUtils';
   import { getCompanionView, setCompanionView } from '$lib/play/companionStore.svelte';
   import { getSubject } from '$lib/play/subjectUtils';

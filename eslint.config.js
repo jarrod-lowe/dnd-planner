@@ -25,13 +25,13 @@ export default [
     }
   },
   {
-    // Rules-engine-v2 confinement. Authored rule modules must be pure, total
+    // Rules-engine confinement. Authored rule modules must be pure, total
     // functions of their facts — no ambient runtime, I/O, time, randomness, or
     // engine internals. This keeps what-if reprocessing valid, the modules
     // serializable/sandboxable, and is the author/CI half of the security story
     // (the confinement + purity tests are belt-and-suspenders). Scoped to the
     // authored `rules/` dir only; the engine itself may use Date etc.
-    files: ['src/lib/rules-engine-v2/rules/**/*.ts'],
+    files: ['src/lib/rules-engine/rules/**/*.ts'],
     rules: {
       'no-restricted-globals': [
         'error',

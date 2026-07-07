@@ -41,7 +41,7 @@ describe('resolveSettings', () => {
       () => undefined
     );
     expect(result.effects).toHaveLength(1);
-    // Resolves to a v2 EffectInstance: id namespaced, ${value} substituted throughout.
+    // Resolves to an EffectInstance: id namespaced, ${value} substituted throughout.
     expect(result.effects[0]).toEqual({
       id: 'class-paladin-level1::skill-proficiency-athletics',
       key: 'skill-athletics-prof',

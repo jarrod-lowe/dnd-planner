@@ -1,553 +1,399 @@
-// === PRIMITIVES ===
-
 /**
- * Intent verb for UI grouping. Determines which picker group a rule appears under,
- * the row's stripe label, and visual treatment. Purely a UI hint — not used by the engine.
- */
-export type Verb =
-  | 'ATTACK'
-  | 'AID'
-  | 'CONTROL'
-  | 'DEFEND'
-  | 'MOVE'
-  | 'INSPECT'
-  | 'HANDLE'
-  | 'HEALTH'
-  | 'SAVE'
-  | 'CHECK'
-  | 'REST'
-  | 'NOTE'
-  | 'STAT'
-  | 'PROFICIENCY'
-  | 'PREPARE'
-  | 'EQUIP';
-
-/**
- * Action cost tags for UI chip display. Derived from what the rule consumes,
- * not from the verb. Purely a UI hint — the engine budgets from actual resource consumption.
- */
-export type ActionCostTag =
-  | 'action'
-  | 'bonus'
-  | 'reaction'
-  | 'move'
-  | 'conc'
-  | 'LoH'
-  | 'CD'
-  | 'L1'
-  | 'L2'
-  | 'L3'
-  | 'L4'
-  | 'L5'
-  | 'free';
-
-/**
- * Evaluation phase for a rule. Rules execute in phase order: early -> normal -> safeguard.
- * - early: Rules that establish preconditions for later rules (e.g., emit events)
- * - normal: Standard evaluation phase for most rules
- * - safeguard: Late normalization phase for rules that must run after all normal rules
- */
-export type Phase = 'early' | 'normal' | 'safeguard';
-
-/**
- * Numeric ordering for phases. Higher values execute later.
- * Used to validate that generated rules target a later phase.
- */
-export const PHASE_ORDER: Record<Phase, number> = {
-  early: 0,
-  normal: 1,
-  safeguard: 2
-};
-
-/**
- * Returns true if target phase executes after current phase.
- * Used to validate phase transitions in generate_rule activities.
- */
-export function isPhaseAfter(target: Phase, current: Phase): boolean {
-  return PHASE_ORDER[target] > PHASE_ORDER[current];
-}
-
-/**
- * Comparison operators for FactComparisonCondition.
- * Used in `when` conditions to compare fact values.
- */
-export type ComparisonOperator =
-  | 'equals'
-  | 'notEquals'
-  | 'greaterThan'
-  | 'greaterThanOrEqual'
-  | 'lessThan'
-  | 'lessThanOrEqual';
-
-/**
- * Durable state values that persist across evaluations.
- * Keys are dot-notation paths like "hp.current", "str.modifier".
- * Values are primarily numbers in v1, but other types supported for future expansion.
- */
-export type Facts = Record<string, number | string | boolean | object>;
-
-/**
- * Named functions available for number_function activities.
- * Closed set for v1 - statToModifier and multiply.
- */
-export type NamedFunction = 'statToModifier' | 'multiply' | 'max';
-
-// === SOURCE ===
-
-/**
- * A target for activity operations.
- * Exactly one of fact or var must be present.
+ * Rules engine — builder-API types.
  *
- * - fact: Reference to a fact in working state
- * - var: Reference to a rule var (engine→UI communication)
- */
-export interface Target {
-  fact?: string;
-  var?: string;
-}
-
-/**
- * A unified value reference used in activities.
- * Exactly one of fact, number, var, condition, or string must be present.
+ * Rules are pure functions that RETURN data; they never mutate working state.
+ * This file currently covers the "sheet" (derived character state) pass only.
+ * `offer` / `apply` / `effects` / `annotate` arrive in later M0 increments.
  *
- * - fact: Reference to a fact in working state
- * - number: A literal numeric value
- * - var: Reference to a rule var (resolved via selections or vars.default)
- * - condition: Evaluates a condition to 0 (false) or 1 (true)
- * - string: A literal string value (typically an i18n key)
+ * See docs/RULES_ENGINE_V2_PLAN.md.
  */
-export interface RangeEntry {
-  distance: number;
-  type: string;
-  disadvantage?: boolean;
-  /** Display label appended to range (e.g., "1H", "2H" for versatile weapons) */
-  label?: string;
-  /** Override the damage die for this range (e.g., 8 for d8 when using two hands) */
-  damageDie?: number;
-  /** Additional free hands required beyond what the weapon already consumes */
-  extraHands?: number;
-}
 
-export interface Source {
-  fact?: string;
-  number?: number;
-  var?: string;
-  condition?: Condition;
-  string?: string;
-  array?: RangeEntry[];
+/** Flat fact store. Numeric; widened later if needed. */
+export type Facts = Record<string, number>;
+
+/**
+ * Read-only view of facts handed to a contribution's `value`. Reading a fact
+ * records a dependency, which is how the engine derives execution order — the
+ * author never writes `after`/`group`. Unset facts read as 0.
+ */
+export interface FactReader {
+  num(fact: string): number;
+  /**
+   * Whether a fact is present (set). Distinguishes an unset fact from an explicit
+   * 0 — an unset ability score must yield modifier 0 for an undefined score
+   * but statToModifier(0) is -5.
+   */
+  has(fact: string): boolean;
 }
 
 /**
- * Definition of a rule variable with a default value.
- * @property capture - When true, the default value is resolved from facts and stored as a selection when the rule is added to the plan
+ * How multiple contributions to the same fact combine.
+ * - `sum`: add all (e.g. HP from many class levels) — the common modifier case
+ * - `max`: take the largest (e.g. unarmored AC variants)
+ * - `override`: single authoritative writer (default)
  */
-export interface VarDefinition {
-  default: Source;
-  capture?: boolean;
-}
-
-// === CONDITIONS ===
+export type CombineMode = 'sum' | 'max' | 'override';
 
 /**
- * Condition that checks if a fact exists (has any value).
+ * One declarative contribution to a derived fact. `value` is a pure function of
+ * other facts; the engine discovers its dependencies by tracking reads.
  */
-export interface FactExistenceCondition {
+export interface Contribution {
   fact: string;
+  combine?: CombineMode;
+  value: (f: FactReader) => number;
+}
+
+/** Context passed to `derive`. Minimal for the sheet pass (no time, no plan). */
+export interface SheetCtx {
+  selections: Record<string, unknown>;
 }
 
 /**
- * Condition that compares a fact value using an operator.
- * Example: { fact: "hp.current", operator: "greaterThan", value: 0 }
+ * Search/discovery metadata for a rule group. This is the ONLY part of a module
+ * the search index needs — logic stays in the (lazily-loaded) chunk. `name` /
+ * `description` / `keywords` are i18n keys (keywords resolves to the existing
+ * space-separated term string); `requires` lists prerequisite rule-group ids
+ * (literal ids). Resolution of keys → indexed terms happens at publish time
+ * (W4), keeping modules i18n-compliant.
  */
-export interface FactComparisonCondition {
-  fact: string;
-  operator: ComparisonOperator;
-  value: number;
+export interface RuleMeta {
+  name: string;
+  description: string;
+  keywords: string;
+  requires?: string[];
 }
 
 /**
- * Condition that checks if an event was emitted during this evaluation.
- * Events are transient - they only exist within a single evaluate() call.
+ * A rule module. The sheet pass consumes `derive`; the plan/offer passes consume
+ * `offer`. Later passes add `effects`/`annotate`. `meta` is the discovery surface
+ * (search index); only user-facing "content" groups need it.
  */
-export interface EventCondition {
-  event: string;
+export interface RuleModule {
+  id: string;
+  meta?: RuleMeta;
+  derive?: (ctx: SheetCtx) => Contribution[];
+  offer?: (ctx: SheetCtx) => Offer[];
+  /**
+   * Contributions an ACTIVE persistent effect makes to the sheet (e.g. a spent
+   * spell slot adds +1 to `...spent`). The effect replaces the legacy self-advertising
+   * rule: it is just a value that contributes while it lives.
+   */
+  effectContributions?: (effect: EffectInstance) => Contribution[];
+  /**
+   * Related-info pass: pure function of the final post-plan facts, returning the
+   * annotations to surface (illegal-but-visible riders, "+Nd8 radiant" chips,
+   * etc.). Evaluated once against the settled sheet; the UI matches each
+   * annotation's `targets` against panel `annotationLabels` (an unchanged view-contract convention).
+   */
+  annotate?: (f: FactReader) => Annotation[];
+  /**
+   * Passive reaction to a rest recorded THIS turn: return persistent effects to
+   * emit. This is the ONLY way a non-planned module contributes effects — every
+   * other effect comes from a planned offer's `apply`. The engine runs it after
+   * the plan settles (so `facts` reflect the recorded rest), folds the returned
+   * effects back into the sheet (so they are visible in the same evaluation), and
+   * commits them at end of turn.
+   *
+   * It exists because some recoveries can't be aged per-effect: Channel Divinity
+   * regains ONE use on a short rest (so `untilShortRest` spends can't simply age
+   * out — that would refund every use), and a Human regains Heroic Inspiration on
+   * a long rest. Emit a keyed effect to make the grant idempotent (a second rest
+   * does not stack). Pure: a function of the rest kind and the post-plan facts.
+   */
+  onRest?: (kind: RestKind, facts: FactReader) => EffectInstance[];
 }
 
 /**
- * Union of all condition types used in `when` and `legalWhen` arrays.
+ * Which rest was recorded this turn. A long rest also confers a short rest's
+ * benefits, but the engine reports the single highest kind that occurred; a
+ * module that recovers on a short rest handles the long-rest case itself (often
+ * for free, when its spends are `untilLongRest` and simply age out).
  */
-export type Condition = FactExistenceCondition | FactComparisonCondition | EventCondition;
+export type RestKind = 'short' | 'long';
 
-// === DIAGNOSTICS ===
+/** One condition under which a persistent effect ends. */
+export type Expiry =
+  | { kind: 'untilLongRest' }
+  /**
+   * Ends on the next short rest. A long rest grants a short rest's benefits too,
+   * so it also ends an `untilShortRest` effect (whereas `untilLongRest` ends only
+   * on a long rest).
+   */
+  | { kind: 'untilShortRest' }
+  | { kind: 'endOfTurn' }
+  /**
+   * Ends after `remaining` more turns. Authors write only `remaining`; the first
+   * `endTurn` aging backfills `total` (the authored duration) so the UI can
+   * render elapsed vs. remaining pips.
+   */
+  | { kind: 'turns'; remaining: number; total?: number }
+  /**
+   * Never aged by `endTurn` — survives turns and long rests. For prepared spells
+   * / conditions that persist until explicitly removed (the UI's removeEffect),
+   * not by the clock.
+   */
+  | { kind: 'permanent' };
 
 /**
- * A single diagnostic message (error, warning, or notice).
- * Used for both plan-level diagnostics and per-rule legality issues.
+ * When an effect ends: a single condition, or several — in which case it ends as
+ * soon as the EARLIEST fires. A duration buff that also ends on a rest is
+ * `[{ kind: 'turns', remaining }, { kind: 'untilShortRest' }]` (the legacy engine modelled this
+ * with a `when rest.short == 0 && rest.long == 0` guard on the buff's
+ * re-advertise). A single condition stays a single object — no array churn.
  */
-export interface Diagnostic {
-  code: string;
-  severity: 'error' | 'warning' | 'notice';
-  /** Human-readable description of the diagnostic (optional) */
-  message?: string;
+export type ExpirySpec = Expiry | Expiry[];
+
+/**
+ * A persistent or per-turn effect: a serializable value (not a self-replicating
+ * rule), aged/expired at end of turn.
+ *
+ * While active it contributes to the sheet. By default `state` is read as fact
+ * deltas (each `fact: amount` is summed into that fact) — so a spent L1 slot is
+ * `state: { 'spellcasting.slots.level1.spent': 1 }`. For parameterized effects
+ * an owning module (`ruleId`) may instead provide `effectContributions`.
+ */
+export interface EffectInstance {
+  id: string;
+  ruleId?: string;
+  /**
+   * Logical identity for replacement effects. Two effects sharing a `key` do NOT
+   * stack: the newest (advertised-after-committed) evicts the older, both when
+   * the sheet is built and when effects are committed at end of turn — so a
+   * re-applied modifier (set Max HP to +5, then +10) replaces rather than sums.
+   * Keyless effects (the common per-turn spend) never dedupe.
+   */
+  key?: string;
+  /** Fact deltas contributed while active (summed by default), unless the owning module overrides via effectContributions. */
+  state?: Record<string, number>;
+  /**
+   * Per-fact combine override for `state` deltas (default `sum`). Lets an effect
+   * contribute `override`/`max` to a fact — e.g. two different floors taking the
+   * `max` rather than summing. Combine conflicts are rejected by the sheet.
+   */
+  stateCombine?: Record<string, CombineMode>;
+  /**
+   * Optional display metadata for the active-effects UI. Inert to the engine (like
+   * an offer's `ui`); its PRESENCE also opts the effect into the strip — build and
+   * bookkeeping effects omit it and stay hidden. The play bridge maps these onto the
+   * effect chip.
+   */
+  display?: EffectDisplay;
+  expiry: ExpirySpec;
 }
 
 /**
- * Grouped diagnostics by severity.
- * Output includes all three arrays, even if empty.
+ * The closed set of `section` values an offer's `ui` or an effect's `display`
+ * may carry. Sections are semantics, not rendered headers: on offers they feed
+ * the add-picker verb fallback (stepUtils' `deriveVerbFromSection`), on effect
+ * displays the chip kind (`getEffectKind`: 'senses' → SENSE, 'configuration' →
+ * ITEM, 'mount' → MOUNT). Only some sections map to a verb — an offer whose
+ * section has no verb mapping must carry explicit `ui.intents` or its picker
+ * row falls to the generic HANDLE bucket
+ * (tests/unit/rules-engine/sections.test.ts enforces this).
  */
-export interface Diagnostics {
-  errors: Diagnostic[];
-  warnings: Diagnostic[];
-  notices: Diagnostic[];
-}
+export const SECTIONS = [
+  'action',
+  'action-attack',
+  'action-other',
+  'action-spell',
+  'bonus-action',
+  'bonus-action-other',
+  'bonus-action-spell',
+  'configuration',
+  'equip',
+  'free',
+  'health',
+  'mastery',
+  'mount',
+  'move',
+  'other',
+  'reaction',
+  'rest',
+  'senses'
+] as const;
 
-// === STATUS ===
+/** See {@link SECTIONS}. */
+export type Section = (typeof SECTIONS)[number];
 
 /**
- * Overall status of the evaluation.
- * - ok: Engine evaluated successfully (no structural errors like cycles)
- * - legal: All planned rules are ordinarily legal (passed legalWhen checks)
- * - applicable: Engine could still produce meaningful results (may be illegal but applicable)
+ * An offer's `ui` payload: plain data PanelRenderer consumes. Open-ended,
+ * except `section` which is confined to the known set.
  */
+export interface OfferUI extends Record<string, unknown> {
+  section?: Section;
+}
+
+/**
+ * UI metadata a module attaches to an effect. An effect with `display` (and
+ * without `hidden`) shows on the active-effects strip; one with
+ * `hidden: true` stays off the default strip but keeps its name in the
+ * strip's "show hidden" reveal (build/bookkeeping effects). An effect with no
+ * `display` at all is hidden AND nameless — reserve that for pure per-turn
+ * spends nobody ever needs to inspect.
+ */
+export interface EffectDisplay {
+  /** i18n key for the chip name (the chip falls back to the effect id if absent). */
+  name?: string;
+  /** UI section for chip classification, e.g. 'mount' (steed) or 'senses'. */
+  section?: Section;
+  /** A fact whose value the chip shows next to the name (e.g. a running bonus). */
+  displayFact?: string;
+  /** Named but off the default strip (visible via the reveal toggle). */
+  hidden?: boolean;
+  /** The companion the effect belongs to (e.g. 'steed') — drives the subject views. */
+  subject?: string;
+}
+
+// === ENGINE I/O (M1) ===
+
+/** Overall evaluation status (the view-contract shape). */
 export interface Status {
   ok: boolean;
   legal: boolean;
   applicable: boolean;
 }
 
-// === ANNOTATIONS ===
-
-/**
- * Rider data attached to an annotation, rendered as a chip in the UI.
- * Describes a modifier or effect that augments a target rule (e.g., Bless +d4 on attacks).
- */
-export interface AnnotationRider {
-  /** i18n key for the rider chip label (e.g., "spell-bless.rider.plus-d4") */
-  label: string;
-  /** Category of rider for UI rendering */
-  type: 'dice' | 'modifier' | 'effect';
-  /** Action cost tags consumed by this rider, if any */
-  costTags?: ActionCostTag[];
-  /** Whether this rider is currently usable. Undefined = true (always legal). */
-  legal?: boolean;
-  /** i18n key explaining why the rider is illegal, when legal is false */
-  illegalReason?: string;
-}
-
-/**
- * An annotation produced by the rules engine for display on action panels.
- */
-export interface Annotation {
-  key: string;
-  targets: string[];
-  /** Optional rider data for rendering as a modifier chip */
-  rider?: AnnotationRider;
-}
-
-// === ACTIVITIES ===
-
-/**
- * Base fields for all activity types.
- */
-export interface ActivityBase {
+/** The serializable, UI-renderable subset of an offered rule (what PanelRenderer reads). */
+export interface OfferRuleDescriptor {
   id: string;
-  type: string;
-  /** Conditions that must all be satisfied for execution - activity is skipped if any fails */
-  when?: Condition[];
-}
-
-/**
- * Sets a numeric fact to a specific value. Overwrites existing value.
- */
-export interface NumberSetActivity extends ActivityBase {
-  type: 'numberSet';
-  target: Target;
-  source: Source;
-}
-
-export interface StringSetActivity extends ActivityBase {
-  type: 'stringSet';
-  target: Target;
-  source: Source;
-}
-
-/**
- * Increments a numeric fact by a delta. Can use negative numbers to decrement.
- * If fact doesn't exist, treated as 0. Optional max cap from another fact.
- *
- * When `subtract` is true, the value is subtracted instead of added.
- */
-export interface NumberIncrementActivity extends ActivityBase {
-  type: 'numberIncrement';
-  target: Target;
-  source: Source;
-  subtract?: boolean;
-  max?: string;
-}
-
-/**
- * Copies a value from one fact to another.
- */
-export interface NumberCopyActivity extends ActivityBase {
-  type: 'numberCopy';
-  target: Target;
-  source: Source;
-}
-
-/**
- * Sets a fact to the sum of multiple sources. Missing values treated as 0.
- */
-export interface NumberSumActivity extends ActivityBase {
-  type: 'numberSum';
-  target: Target;
-  sources: Source[];
-}
-
-/**
- * Sets a fact using a named function with source arguments.
- * Example: statToModifier(str.value) -> str.modifier
- * Example: multiply(movement.remaining, 0.5) -> movement.half
- */
-export interface NumberFunctionActivity extends ActivityBase {
-  type: 'numberFunction';
-  target: Target;
-  function: NamedFunction;
-  sources: Source[];
-  args?: Record<string, unknown>;
-}
-
-/**
- * Emits an event for this evaluation. Events are transient and don't persist in `next`.
- */
-export interface EmitEventActivity extends ActivityBase {
-  type: 'emitEvent';
-  event: string;
-}
-
-/**
- * Generates a new rule during evaluation. Generated rules can only target later phases.
- */
-export interface GenerateRuleActivity extends ActivityBase {
-  type: 'generateRule';
-  rule: Rule;
-}
-
-/**
- * Entry in an offer_rule's legalWhen array.
- * If condition passes, the rule is legal. If condition fails, the rule is illegal.
- */
-export interface IllegalWhenEntry {
-  condition: Condition;
-  illegalDiagnostics: Diagnostic[];
-}
-
-/**
- * Offers a rule as a potential choice for the UI.
- * Does not execute the rule. Produces an entry in availableRules.
- */
-export interface OfferRuleActivity extends ActivityBase {
-  type: 'offerRule';
-  rule: Rule;
-  legalWhen?: IllegalWhenEntry[];
-}
-
-/**
- * Clears a var target, initializing it to an empty array.
- * Used for managing collection vars like error message lists.
- */
-export interface SetClearActivity extends ActivityBase {
-  type: 'setClear';
-  target: Target;
-}
-
-/**
- * Adds a string to a var target array (deduplicates).
- * Used for collecting error message i18n keys.
- */
-export interface SetAddActivity extends ActivityBase {
-  type: 'setAdd';
-  target: Target;
-  source: { string: string };
-}
-
-/**
- * Advertises a persistent effect that survives across turns.
- * Exactly one of `rule` or `self` must be provided.
- *
- * - rule: Advertises a new effect rule (gets a unique ID)
- * - self: Re-advertises the current rule (self-sustaining effect)
- *
- * Effects are returned in output.effects and committed by the UI at end of turn.
- * To make an effect expire, omit the advertiseEffect self: true activity.
- */
-export interface AdvertiseEffectActivity extends ActivityBase {
-  type: 'advertiseEffect';
-  /** A new rule to advertise as a persistent effect */
-  rule?: Rule;
-  /** Re-advertise the current rule (self-sustaining). Mutually exclusive with rule. */
-  self?: boolean;
-}
-
-/**
- * Produces an annotation for display on matching action panels.
- */
-export interface AnnotateActivity extends ActivityBase {
-  type: 'annotate';
-  /** i18n key for the annotation text */
-  key: string;
-  /** Label strings that action panels must have to receive this annotation */
-  targets: string[];
-  /** Optional rider data for rendering as a modifier chip */
-  rider?: AnnotationRider;
-}
-
-/**
- * Union of all activity types.
- */
-export type Activity =
-  | NumberSetActivity
-  | StringSetActivity
-  | NumberIncrementActivity
-  | NumberCopyActivity
-  | NumberSumActivity
-  | NumberFunctionActivity
-  | EmitEventActivity
-  | GenerateRuleActivity
-  | OfferRuleActivity
-  | SetClearActivity
-  | SetAddActivity
-  | AdvertiseEffectActivity
-  | AnnotateActivity;
-
-// === RULE ===
-
-/**
- * A followup action available on a planned rule's UI.
- * Rendered as a button that the player can click to trigger an action.
- */
-export type Followup = EffectFollowup | AttackLineFollowup;
-
-/**
- * Effect followup — commits a v2 EffectInstance when the button is tapped (e.g. the
- * javelin's Slow rider). The UI carries this descriptor; the store commits the effect.
- */
-export interface EffectFollowup {
-  type: 'effect';
-  condition: Condition;
-  button: string;
-  addRule: {
-    target: string;
-    effect: import('$lib/rules-engine-v2').EffectInstance;
-  };
-}
-
-/**
- * Attack-line followup — adds a second attack row to the panel (e.g., Cleave).
- * Inherits attack parameters from the parent attack.
- */
-export interface AttackLineFollowup {
-  type: 'attack-line';
-  condition: Condition;
-  button: string;
-}
-
-/**
- * Reference to a group for `after` ordering constraints.
- */
-export interface GroupReference {
-  group: string;
-}
-
-/**
- * A reusable executable rule. All fields optional except id and activities.
- *
- * Execution semantics:
- * - Rule executes if: enabled (not false) + phase matches + after settled + when satisfied
- * - When executed: activities run in order, mutating working state
- *
- * @see RULES_ENGINE.md for full spec
- */
-export interface Rule {
-  id: string;
-  description?: string;
   ui?: Record<string, unknown>;
-  vars?: Record<string, VarDefinition>;
-  /** Runtime var values set by activities (engine→UI communication) */
-  varsRuntime?: Record<string, number>;
-  selections?: Record<string, unknown>;
-  phase?: Phase;
-  enabled?: boolean;
-  when?: Condition[];
-  after?: GroupReference[];
-  group?: string[];
-  activities: Activity[];
+  vars?: Record<string, unknown>;
+  description?: string;
 }
 
-// === INPUT ===
-
-/**
- * Rule arrays grouped by semantic meaning to the UI.
- * The engine combines all three into one evaluated ruleset.
- */
-export interface RulesInput {
-  standing: Rule[];
-  planned: Rule[];
-  effects: Rule[];
-}
-
-/**
- * State input containing replay/base facts.
- */
-export interface StateInput {
-  facts: Facts;
-}
-
-/**
- * Complete input to the rules engine. Stateless - same input produces equivalent output.
- */
-export interface EngineInput {
-  schemaVersion: 1;
-  rules: RulesInput;
-  state: StateInput;
-}
-
-// === OUTPUT ===
-
-/**
- * An offered rule in availableRules with legality metadata.
- */
+/** An offered rule with legality metadata (the view AvailableRuleEntry shape). */
 export interface AvailableRuleEntry {
-  rule: Rule;
+  rule: OfferRuleDescriptor;
   legal: boolean;
   applicable: boolean;
   diagnostics: Diagnostic[];
 }
 
-/**
- * Trace/debug information describing what occurred during evaluation.
- * Not durable state - not passed back as input.
- */
-export interface Trace {
-  appliedRuleIds: string[];
-  appliedActivityIds: string[];
-  providedCapabilities: string[];
-  emittedEvents: string[];
+/** Rider chip data on an annotation (view-contract shape). */
+export interface AnnotationRider {
+  label: string;
+  type: 'dice' | 'modifier' | 'effect';
+  costTags?: string[];
+  legal?: boolean;
+  illegalReason?: string;
+}
+
+/** Related-info annotation produced for action panels (view-contract shape). */
+export interface Annotation {
+  key: string;
+  targets: string[];
+  rider?: AnnotationRider;
 }
 
 /**
- * Complete output from the rules engine.
- * - facts: Projected facts after evaluation (what would happen)
- * - next: Replayable input for subsequent calls (base facts, not projected)
+ * Complete input to the engine. `evaluate` runs `modules` directly and stays
+ * pure/sync (it never touches the registry, so it doesn't eagerly bundle every
+ * module). `ruleGroupIds` records where those modules came from, when known, so a
+ * turn can be persisted and replayed by id — modules carry functions and do not
+ * survive JSON. Resolution id → modules is an explicit step (`resolveInput`, or
+ * the M2 lazy loader), not something `evaluate` does.
  */
+export interface EngineInput {
+  modules: RuleModule[];
+  /** The rule-group ids `modules` were resolved from (provenance for serialize/replay). */
+  ruleGroupIds?: string[];
+  inputFacts?: Facts;
+  planned?: PlannedRef[];
+  committed?: EffectInstance[];
+}
+
+/**
+ * The JSON-safe projection of an `EngineInput`: rule-group ids instead of module
+ * objects. Persist this; rehydrate with `resolveInput` (sync) or the lazy loader.
+ */
+export interface SerializableInput {
+  ruleGroupIds: string[];
+  inputFacts?: Facts;
+  planned?: PlannedRef[];
+  committed?: EffectInstance[];
+}
+
+/** Complete output of the engine, composing all passes. */
 export interface EngineOutput {
   status: Status;
   facts: Facts;
-  collections: Record<string, unknown>;
   availableRules: AvailableRuleEntry[];
+  /** Per-planned-instance legality problems, keyed by instanceId. */
+  planDiagnostics: Record<string, Diagnostic[]>;
   annotations: Annotation[];
-  diagnostics: Diagnostics;
-  trace: Trace;
-  /** Advertised effects that should persist across turns. UI commits these at end of turn. */
-  effects: Rule[];
+  /** Effects advertised this turn (the UI commits these at end of turn). */
+  effects: EffectInstance[];
+  diagnostics: { errors: Diagnostic[]; warnings: Diagnostic[]; notices: Diagnostic[] };
+  /** Replayable input — re-running it yields an equivalent result. */
   next: EngineInput;
+}
+
+/** A legality/diagnostic message (the view-contract shape). */
+export interface Diagnostic {
+  code: string;
+  severity: 'error' | 'warning' | 'notice';
+}
+
+/**
+ * The result of applying a planned action: fact deltas to merge into the working
+ * turn state, plus any per-action legality problems (which drive
+ * illegal-but-visible on planned items).
+ */
+export interface ActionResult {
+  /**
+   * Effects this action contributes — the ONLY way an action changes state.
+   * Per-turn spends use `endOfTurn`, durable ones `untilLongRest`. The fold
+   * re-derives the sheet with effects-so-far before each subsequent action, so
+   * every spend is visible to later actions in the same turn.
+   */
+  advertise?: EffectInstance[];
+  diagnostics?: Diagnostic[];
+}
+
+/**
+ * A legality gate on an offer. If `condition` is false the offer is still shown
+ * but marked illegal, with `diagnostics` attached (illegal-but-visible).
+ */
+export interface LegalWhen {
+  condition: (f: FactReader) => boolean;
+  diagnostics: Diagnostic[];
+}
+
+/**
+ * What a module advertises to the UI. `id`/`ui`/`vars` are plain data so the
+ * existing PanelRenderer keeps working; `apply` is the pure transition run when
+ * this offer is added to the plan.
+ */
+export interface Offer {
+  id: string;
+  ui?: OfferUI;
+  vars?: Record<string, unknown>;
+  /**
+   * Structural gate (the structural gate): when it returns false the offer is OMITTED
+   * from availableRules entirely — e.g. only offer Divine Smite when it is
+   * prepared. Distinct from `legalWhen`, which keeps the offer visible but marks
+   * it illegal. The plan fold re-checks this gate per step: a planned action
+   * whose `when` no longer holds is skipped — no execution, no resource spend —
+   * and its plan row renders as inapplicable.
+   */
+  when?: (f: FactReader) => boolean;
+  legalWhen?: LegalWhen[];
+  apply?: (state: FactReader, selections: Record<string, unknown>) => ActionResult;
+}
+
+/** UI-facing offer entry (the `apply` is stripped; legality is resolved). */
+export interface OfferEntry {
+  id: string;
+  ui?: Record<string, unknown>;
+  vars?: Record<string, unknown>;
+  legal: boolean;
+  diagnostics: Diagnostic[];
+}
+
+/** A planned action instance: a reference to an offer id plus its selections. */
+export interface PlannedRef {
+  instanceId: string;
+  ruleId: string;
+  selections?: Record<string, unknown>;
 }

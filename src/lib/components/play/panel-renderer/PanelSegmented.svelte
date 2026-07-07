@@ -2,7 +2,7 @@
   import { resolveValueSource } from './resolveValueSource';
   import { nextSegmentedId } from './segmentedId';
   import type { SegmentedControl } from './types';
-  import type { Facts, VarDefinition } from '$lib/rules-engine';
+  import type { Facts, VarDefinition } from '$lib/rules-view';
   import { t } from '$lib/i18n';
 
   interface Props {

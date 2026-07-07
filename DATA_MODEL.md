@@ -141,13 +141,13 @@ Represents the relationship between a character and a rule group.
 ## Rule Group Record
 
 Represents a rule group's metadata. Rule logic is NOT stored here — it lives
-in the frontend's v2 rule modules (`src/lib/rules-engine-v2/rules/`), keyed by
+in the frontend's rule modules (`src/lib/rules-engine/rules/`), keyed by
 the same `ruleGroupId`.
 
 - PK = RULEGROUP#{ruleGroupId}
 - SK = META#
 - type = RULEGROUP
-- ruleGroupId = canonical rule-group id (matches the v2 module id)
+- ruleGroupId = canonical rule-group id (matches the rule module id)
 - translations = JSON object keyed by locale code (e.g., "en", "en-x-tlh")
   - Each locale contains: name, description, keywords
 - requires = list of rule-group ids auto-assigned alongside this group
@@ -226,6 +226,6 @@ When rule groups are fetched via the API, the `lang` query parameter determines 
 ## Stats Configuration
 
 The stats/ledger display is defined in code, not data: the catalogs in
-`src/lib/play/derivePanels.ts` map facts the v2 engine derives onto top-bar,
+`src/lib/play/derivePanels.ts` map facts the engine derives onto top-bar,
 resource, and ability entries. Rule groups do not declare display stats.
-(v1's `ui.stats[]` pass-through mechanism was removed with the v1 engine.)
+(The legacy `ui.stats[]` pass-through mechanism was removed with the legacy engine.)

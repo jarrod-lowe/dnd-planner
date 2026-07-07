@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import PlanItem from '$lib/components/play/PlanItem.svelte';
 import type { PlannedItem } from '$lib/play/types';
-import type { Rule, Facts } from '$lib/rules-engine';
+import type { Rule, Facts } from '$lib/rules-view';
 
 const createMockPlanItem = (ruleId: string, description?: string): PlannedItem => ({
   instanceId: `instance-${ruleId}`,

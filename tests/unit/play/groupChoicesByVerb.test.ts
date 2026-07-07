@@ -6,7 +6,7 @@ import {
   subBucketLabelKey
 } from '$lib/play/groupChoicesByVerb';
 import { getVerbGroup } from '$lib/play/verbConfig';
-import type { AvailableRuleEntry, Verb } from '$lib/rules-engine';
+import type { AvailableRuleEntry, Verb } from '$lib/rules-view';
 
 const makeEntry = (
   id: string,

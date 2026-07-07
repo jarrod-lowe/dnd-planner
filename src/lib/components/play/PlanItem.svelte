@@ -1,8 +1,8 @@
 <script lang="ts">
   import PanelRenderer from './PanelRenderer.svelte';
   import type { PlannedItem } from '$lib/play/types';
-  import type { Annotation, Facts } from '$lib/rules-engine';
-  import type { EffectInstance } from '$lib/rules-engine-v2';
+  import type { Annotation, Facts } from '$lib/rules-view';
+  import type { EffectInstance } from '$lib/rules-engine';
 
   interface Props {
     item: PlannedItem;

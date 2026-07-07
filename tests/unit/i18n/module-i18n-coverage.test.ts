@@ -3,11 +3,11 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
- * Every `rule.*` i18n key a v2 module references must resolve in every locale.
+ * Every `rule.*` i18n key a rule module references must resolve in every locale.
  *
- * v2 modules carry their offer names, descriptions, diagnostic codes, effect
+ * rule modules carry their offer names, descriptions, diagnostic codes, effect
  * display names and annotation keys as `rule.*` strings — a missing translation
- * surfaces to the player as a raw key. The v1 equivalent walked the YAML rules
+ * surfaces to the player as a raw key. The legacy equivalent walked the YAML rules
  * (deleted with them); this walks the module SOURCE: plain `'rule.…'` literals,
  * plus template keys built from a file's `const X = 'rule.…'` prefixes
  * (`` `${X}.suffix` ``, including one level of prefix nesting). Keys built from
@@ -21,7 +21,7 @@ import { join } from 'node:path';
  */
 
 const ROOT = process.cwd();
-const ENGINE_DIR = join(ROOT, 'src/lib/rules-engine-v2');
+const ENGINE_DIR = join(ROOT, 'src/lib/rules-engine');
 const LOCALES = ['en', 'en-x-tlh'] as const;
 
 /** Flatten a locale dict exactly as sveltekit-i18n does (dot-joined leaves). */
@@ -83,7 +83,7 @@ function keysInSource(source: string): string[] {
   return keys;
 }
 
-describe('v2 module i18n coverage', () => {
+describe('module i18n coverage', () => {
   const referenced = new Set<string>();
   for (const file of engineSources()) {
     for (const key of keysInSource(readFileSync(file, 'utf8'))) referenced.add(key);

@@ -1,16 +1,16 @@
 import { apiGet, apiPost, apiDelete } from '$lib/api/client';
-import type { Rule, AvailableRuleEntry } from '$lib/rules-engine';
+import type { Rule, AvailableRuleEntry } from '$lib/rules-view';
 import {
   loadModules,
   endTurn as ageCommittedEffects,
   type EffectInstance,
   type PlannedRef
-} from '$lib/rules-engine-v2';
+} from '$lib/rules-engine';
 import type { PlannedItem, PlayState } from './types';
 import { debounce } from './debounce';
 import { resolveInitialSelections } from './resolveInitialSelections';
-import { evaluateCharacterV2, hypotheticalOffers } from './evaluateV2';
-import { effectInstanceToRule, adaptV2EngineOutput, offersToV1Entries } from './v2Bridge';
+import { evaluateCharacter, hypotheticalOffers } from './evaluateCharacter';
+import { effectInstanceToRule, adaptEngineOutput, offersToViewEntries } from './engineBridge';
 import { deriveVerbFromRule } from './stepUtils';
 import { locale, t } from '$lib/i18n';
 import { prefetchDetailsForEffects } from '$lib/details/rehydrate';
@@ -50,12 +50,12 @@ function generateInstanceId(): string {
 
 // Module-level, plain Map (not $state). Replaced entirely each performEvaluation().
 let _hypotheticalEntriesMap = new Map<string, AvailableRuleEntry[]>();
-// The v2 effects advertised by the last evaluation — aged into `committed` at End Turn.
+// The effects advertised by the last evaluation — aged into `committed` at End Turn.
 let _lastAdvertised: EffectInstance[] = [];
 
 /**
- * The plan as v2 `PlannedRef`s. `addToPlan` rewrites each item's `rule.id` to its
- * instanceId (so v1 processed instances separately), keeping the real rule id in
+ * The plan as `PlannedRef`s. `addToPlan` rewrites each item's `rule.id` to its
+ * instanceId (instances evaluate separately), keeping the real rule id in
  * `originalRuleId` — so the ref's `ruleId` is `originalRuleId ?? rule.id`.
  */
 function buildPlannedRefs(): PlannedRef[] {
@@ -67,16 +67,16 @@ function buildPlannedRefs(): PlannedRef[] {
 }
 
 /**
- * Parse a persisted `/effects` blob. Characters are v2-native (there is no
- * migration of pre-v2 characters — those are deleted and recreated), so the blob
+ * Parse a persisted `/effects` blob. Characters are current-format (there is no
+ * migration of legacy characters — those are deleted and recreated), so the blob
  * is always a stored `EffectInstance[]`; this just parses it defensively.
  */
 function parsePersistedEffects(json: string): EffectInstance[] {
   try {
     const parsed = JSON.parse(json);
     if (!Array.isArray(parsed)) return [];
-    // A v2 EffectInstance always carries `expiry`. Any entry without it is a pre-v2
-    // (v1-shape) effect from a character not yet recreated v2-native — drop it rather
+    // A EffectInstance always carries `expiry`. Any entry without it is a legacy
+    // (legacy-shape) effect from a character not yet recreated — drop it rather
     // than crash the play view. Not a migration: the effect is discarded, and that
     // character starts from a clean effect state (its build is re-made via settings).
     return parsed.filter((e): e is EffectInstance => !!e && typeof e === 'object' && 'expiry' in e);
@@ -89,9 +89,9 @@ function performEvaluation(): void {
   state = { ...state, isEvaluating: true };
 
   const refs = buildPlannedRefs();
-  let result: ReturnType<typeof evaluateCharacterV2>;
+  let result: ReturnType<typeof evaluateCharacter>;
   try {
-    result = evaluateCharacterV2(state.modules, state.committed, refs);
+    result = evaluateCharacter(state.modules, state.committed, refs);
   } catch (error) {
     // An engine throw (duplicate offer id, dependency cycle, watchdog timeout)
     // must degrade to an error banner, not a dead play view. Keep the previous
@@ -138,14 +138,14 @@ function performEvaluation(): void {
   // eslint-disable-next-line svelte/prefer-svelte-reactivity -- intentionally non-reactive; replaced each evaluation
   const newMap = new Map<string, AvailableRuleEntry[]>();
   for (const [id, entries] of hypotheticalOffers(state.modules, state.committed, refs)) {
-    newMap.set(id, offersToV1Entries(entries));
+    newMap.set(id, offersToViewEntries(entries));
   }
   _hypotheticalEntriesMap = newMap;
   _lastAdvertised = result.advertised;
 
   state = {
     ...state,
-    engineOutput: adaptV2EngineOutput(result.raw, refs),
+    engineOutput: adaptEngineOutput(result.raw, refs),
     isEvaluating: false,
     facts: result.facts,
     topBarEntries: result.topBarEntries,
@@ -189,7 +189,7 @@ async function loadRuleGroups(characterId: string): Promise<void> {
         throw new Error(`Failed to fetch rule group batch: ${batchResponse.status}`);
       }
 
-      // Only rule-group metadata (name/requires/settings/condition) is consumed; v2
+      // Only rule-group metadata (name/requires/settings/condition) is consumed;
       // evaluates code modules, so the batch's rule JSON is intentionally ignored.
       const { ruleGroups: batchGroups } = await batchResponse.json();
       const batchCache = getCache();
@@ -245,8 +245,8 @@ async function loadRuleGroups(characterId: string): Promise<void> {
       }
     }
 
-    // Load the v2 modules for the assigned groups (the engine evaluates these).
-    // Unknown ids (with no v2 module) are skipped.
+    // Load the rule modules for the assigned groups (the engine evaluates these).
+    // Unknown ids (with no module) are skipped.
     const { modules } = await loadModules(groupIds);
 
     state = {
@@ -258,7 +258,7 @@ async function loadRuleGroups(characterId: string): Promise<void> {
     };
 
     // Load persisted effects (graceful fallback on failure). The stored blob is a
-    // v2 `EffectInstance[]`; `state.effects` is the v1-shaped display bridge the
+    // `EffectInstance[]`; `state.effects` is the view-shaped display bridge the
     // active-effects UI reads.
     try {
       const effectsResponse = await apiGet(`/api/characters/${characterId}/effects`);
@@ -580,7 +580,7 @@ async function assignSingleGroup(characterId: string, ruleGroupId: string): Prom
         });
       }
     }
-    // Load the newly assigned group's v2 module so the engine evaluates it.
+    // Load the newly assigned group's rule module so the engine evaluates it.
     const { modules: newModules } = await loadModules([ruleGroupId]);
 
     state = {
@@ -692,8 +692,8 @@ function persistCommitted(): void {
 }
 
 function removeEffect(effectId: string): void {
-  // v2 effect ids are stable (no counter suffix), so match by exact id. NOTE:
-  // v1's `cascadeRemove` is not carried by an EffectInstance — dependent-effect
+  // effect ids are stable (no counter suffix), so match by exact id. NOTE:
+  // Dependent-effect removal is not carried by an EffectInstance — dependent-effect
   // eviction is now the owning module's job (by `key`), not a store-level cascade.
   const committed = state.committed.filter((e) => e.id !== effectId);
   state = { ...state, committed, effects: committed.map(effectInstanceToRule) };
@@ -704,7 +704,7 @@ function removeEffect(effectId: string): void {
 function endTurn(): void {
   // Age the committed set across the turn boundary: merge in this turn's advertised
   // effects, collapse replacements by key, and drop any whose expiry fired. Rests
-  // recorded this turn are detected from the effects themselves (v2 `endTurn`).
+  // recorded this turn are detected from the effects themselves (`endTurn`).
   const committed = ageCommittedEffects(state.committed, _lastAdvertised);
 
   state = {
@@ -787,7 +787,7 @@ async function assignRuleGroupWithSettings(
   }
 
   if (effects.length > 0) {
-    // Settings resolve directly to v2 EffectInstances — commit them as-is.
+    // Settings resolve directly to EffectInstances — commit them as-is.
     const committed = [...state.committed, ...effects];
     state = { ...state, committed, effects: committed.map(effectInstanceToRule) };
     performEvaluation();

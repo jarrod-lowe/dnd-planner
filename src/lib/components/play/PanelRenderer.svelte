@@ -13,8 +13,8 @@
   import DiceRollToast from './panel-renderer/DiceRollToast.svelte';
   import { evaluateCondition } from '$lib/play/panelCondition';
   import { getMatchingAnnotations } from '$lib/play/annotations';
-  import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-engine';
-  import type { EffectInstance } from '$lib/rules-engine-v2';
+  import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-view';
+  import type { EffectInstance } from '$lib/rules-engine';
   import type { TextInformation, CountdownInformation, RollResult } from './panel-renderer/types';
 
   interface Props {

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/svelte';
 import PanelRenderer from '$lib/components/play/PanelRenderer.svelte';
-import type { AvailableRuleEntry, Rule, Facts } from '$lib/rules-engine';
+import type { AvailableRuleEntry, Rule, Facts } from '$lib/rules-view';
 
 const createCountdownEntry = (filled: number, total: number): AvailableRuleEntry => ({
   rule: {

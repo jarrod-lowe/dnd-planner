@@ -1,10 +1,10 @@
-# D&D Rules Engine (v2)
+# D&D Rules Engine
 
 ## Purpose
 
-This document specifies the v2 rules engine: its input/output contract, its
+This document specifies the rules engine: its input/output contract, its
 evaluation model, and its delivery mechanism. The engine lives in
-`src/lib/rules-engine-v2/`; rules are TypeScript **modules**, not data.
+`src/lib/rules-engine/`; rules are TypeScript **modules**, not data.
 
 For a practical "how do I add a rule group" walkthrough, see
 [docs/RULE_GROUP_GUIDE.md](docs/RULE_GROUP_GUIDE.md).
@@ -129,11 +129,11 @@ interface Contribution {
 - `override`: single authoritative writer — two override writers to the same
   fact is an error, as is mixing combine modes on one fact.
 
-`FactReader.num()` reads an unset fact as `0` (v1 parity); `has()`
+`FactReader.num()` reads an unset fact as `0`; `has()`
 distinguishes unset from explicit 0. Dependency discovery is **pull-based**:
 the engine records what each `value` actually reads (including reads behind
 conditionals), so consumers settle after all of their producers' contributions
-— the v1 "two-group copy-after-settle dance" is free.
+— consumers never read a half-settled fact, with no authored ordering.
 
 ### `offer` — the action catalog
 
@@ -148,7 +148,7 @@ interface Offer {
 }
 ```
 
-Two distinct gates, matching v1 semantics:
+Two distinct gates:
 
 - **`when` (structural)**: false → the offer is **omitted** from the catalog
   entirely (e.g. Divine Smite is only offered while prepared). The plan fold
@@ -264,11 +264,11 @@ diagnostics }` — offers judged against the **post-plan** facts, so the
 
 ### The UI bridge
 
-The UI consumes the v1-era view contract (`$lib/rules-engine` is now a
-**types-only package**). `src/lib/play/v2Bridge.ts` adapts v2 output to it:
+The UI consumes the legacy view contract (`$lib/rules-engine` is now a
+**types-only package**). `src/lib/play/engineBridge.ts` adapts engine output to it:
 committed `EffectInstance`s become effect `Rule`s for the strip (display →
 `ui.name`/`section`/`subject`, turns expiry → `ui.countDown`/`ui.duration`
-pips), and `EngineOutput` becomes the store's v1 shape. Offer `ui`/`vars`
+pips), and `EngineOutput` becomes the store's view shape. Offer `ui`/`vars`
 payloads pass through untouched — PanelRenderer reads them directly.
 
 ---
@@ -296,12 +296,12 @@ payloads pass through untouched — PanelRenderer reads them directly.
 
 ## Guards
 
-| Guard                                        | Catches                                                                            |
-| -------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `tests/integration/rules-engine/v2-coverage` | a deployed rule group with no v2 module (and stale catalog-only allowlist entries) |
-| `tests/unit/i18n/module-i18n-coverage`       | a `rule.*` key referenced by a module with no translation in either locale         |
-| `tests/unit/rules-engine-v2/sections.test`   | a section outside the `SECTIONS` union; an intentless offer falling to `HANDLE`    |
-| `tests/unit/rules-engine-v2/purity.test`     | a nondeterministic or stateful module                                              |
-| yaml-scenarios parity runner                 | behavior drift against the v1 scenario corpus                                      |
-| `make validate-rules-schema`                 | YAML metadata drift (including `rules:` sneaking back)                             |
-| `make check` (svelte-check, also in CI)      | type drift, including the `Section` union and the module contract                  |
+| Guard                                            | Catches                                                                         |
+| ------------------------------------------------ | ------------------------------------------------------------------------------- |
+| `tests/integration/rules-engine/module-coverage` | a deployed rule group with no module (and stale catalog-only allowlist entries) |
+| `tests/unit/i18n/module-i18n-coverage`           | a `rule.*` key referenced by a module with no translation in either locale      |
+| `tests/unit/rules-engine/sections.test`          | a section outside the `SECTIONS` union; an intentless offer falling to `HANDLE` |
+| `tests/unit/rules-engine/purity.test`            | a nondeterministic or stateful module                                           |
+| yaml-scenarios parity runner                     | behavior drift against the legacy scenario corpus                               |
+| `make validate-rules-schema`                     | YAML metadata drift (including `rules:` sneaking back)                          |
+| `make check` (svelte-check, also in CI)          | type drift, including the `Section` union and the module contract               |

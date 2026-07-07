@@ -8,8 +8,8 @@
   import { groupChoicesByVerb } from '$lib/play/groupChoicesByVerb';
   import { getSubject } from '$lib/play/subjectUtils';
   import type { PlannedItem } from '$lib/play/types';
-  import type { AvailableRuleEntry, Annotation, Facts, Verb } from '$lib/rules-engine';
-  import type { EffectInstance } from '$lib/rules-engine-v2';
+  import type { AvailableRuleEntry, Annotation, Facts, Verb } from '$lib/rules-view';
+  import type { EffectInstance } from '$lib/rules-engine';
 
   interface Props {
     items: PlannedItem[];

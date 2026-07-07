@@ -3,7 +3,7 @@ import { mount } from 'svelte';
 import { readable } from 'svelte/store';
 import Ledger from '$lib/components/play/Ledger.svelte';
 import type { UiEntry } from '$lib/play/extractTopBar';
-import type { Facts } from '$lib/rules-engine';
+import type { Facts } from '$lib/rules-view';
 
 // i18n mock - returns key as text
 const translations: Record<string, string> = {

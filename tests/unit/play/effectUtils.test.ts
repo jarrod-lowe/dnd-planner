@@ -10,8 +10,8 @@ import {
   getEffectLevel,
   getBaseEffectId
 } from '$lib/play/effectUtils';
-import type { Rule } from '$lib/rules-engine';
-import type { Facts } from '$lib/rules-engine';
+import type { Rule } from '$lib/rules-view';
+import type { Facts } from '$lib/rules-view';
 
 const concActivity = {
   id: 'conc-dec',

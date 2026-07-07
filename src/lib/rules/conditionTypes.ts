@@ -1,4 +1,4 @@
-import type { ComparisonOperator } from '$lib/rules-engine/types';
+import type { ComparisonOperator } from '$lib/rules-view/types';
 
 export interface FactCondition {
   fact: string;

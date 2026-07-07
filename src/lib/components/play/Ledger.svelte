@@ -6,7 +6,7 @@
     resolveEntryValue,
     resourceShortLabelKey
   } from '$lib/play/extractTopBar';
-  import type { Facts, Status } from '$lib/rules-engine';
+  import type { Facts, Status } from '$lib/rules-view';
 
   interface Props {
     resourceEntries: UiEntry[];

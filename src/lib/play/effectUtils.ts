@@ -1,4 +1,4 @@
-import type { Facts, NumberIncrementActivity, Rule } from '$lib/rules-engine';
+import type { Facts, NumberIncrementActivity, Rule } from '$lib/rules-view';
 
 export interface DurationState {
   remaining: number;

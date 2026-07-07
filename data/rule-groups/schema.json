@@ -272,7 +272,7 @@
         },
         "effect": {
           "$ref": "#/definitions/effectInstance",
-          "description": "Effect template using ${value} substitution. After substitution, produces a v2 EffectInstance stored as a character effect. Required when type is 'select'."
+          "description": "Effect template using ${value} substitution. After substitution, produces an EffectInstance stored as a character effect. Required when type is 'select'."
         }
       },
       "allOf": [
@@ -295,7 +295,7 @@
     },
     "effectInstance": {
       "type": "object",
-      "description": "A v2 rules-engine EffectInstance: a committed effect that contributes fact deltas while it lives.",
+      "description": "A rules-engine EffectInstance: a committed effect that contributes fact deltas while it lives.",
       "required": [
         "id",
         "expiry"

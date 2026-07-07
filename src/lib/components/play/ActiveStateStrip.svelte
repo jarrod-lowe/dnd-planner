@@ -7,8 +7,8 @@
   import { EYE_OPEN_PATH, EYE_OFF_PATH } from '$lib/icons';
   import { peekDetail, getDetail } from '$lib/details/index';
   import type { ItemDetail } from '$lib/details/types';
-  import type { Rule } from '$lib/rules-engine';
-  import type { Facts } from '$lib/rules-engine';
+  import type { Rule } from '$lib/rules-view';
+  import type { Facts } from '$lib/rules-view';
 
   interface Props {
     effects: Rule[];

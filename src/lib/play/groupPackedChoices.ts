@@ -1,4 +1,4 @@
-import type { AvailableRuleEntry } from '$lib/rules-engine';
+import type { AvailableRuleEntry } from '$lib/rules-view';
 
 /**
  * Represents a single (non-packed) choice entry

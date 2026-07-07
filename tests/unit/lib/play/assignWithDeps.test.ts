@@ -34,7 +34,7 @@ vi.mock('$lib/i18n', () => {
 });
 
 import { apiPost } from '$lib/api/client';
-import type { Rule } from '$lib/rules-engine';
+import type { Rule } from '$lib/rules-view';
 
 const mockApiPost = vi.mocked(apiPost);
 

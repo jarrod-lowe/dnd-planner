@@ -1,4 +1,4 @@
-import type { Rule } from '$lib/rules-engine';
+import type { Rule } from '$lib/rules-view';
 
 /**
  * Extracts the subject from a rule's ui config.

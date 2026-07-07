@@ -4,7 +4,7 @@ import { readable } from 'svelte/store';
 import IntentTopBar from '$lib/components/play/IntentTopBar.svelte';
 import type { Character } from '$lib/character/types';
 import type { TopBarEntry, UiEntry } from '$lib/play/extractTopBar';
-import type { Facts } from '$lib/rules-engine';
+import type { Facts } from '$lib/rules-view';
 
 // i18n mock - returns key as text
 const translations: Record<string, string> = {

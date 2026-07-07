@@ -16,8 +16,8 @@ ruleGroups:
   - dnd-5e-2024/spear
   - dnd-5e-2024/dagger
 
-# capability.attack.reaction.weapon and reactions.remaining were v1 initial
-# facts; v2 derives both (attacks, action-economy) and the sheet rejects
+# capability.attack.reaction.weapon and reactions.remaining were legacy initial
+# facts; the engine derives both (attacks, action-economy) and the sheet rejects
 # inputs that overlap contributions.
 
 initialEffects:

@@ -1,4 +1,4 @@
-import type { AvailableRuleEntry, Verb } from '$lib/rules-engine';
+import type { AvailableRuleEntry, Verb } from '$lib/rules-view';
 import { deriveVerbFromRule } from './stepUtils';
 import { VERB_ORDER } from './verbConfig';
 

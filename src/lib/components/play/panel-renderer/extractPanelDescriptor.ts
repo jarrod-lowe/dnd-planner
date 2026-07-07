@@ -1,4 +1,4 @@
-import type { Rule } from '$lib/rules-engine';
+import type { Rule } from '$lib/rules-view';
 import type { PanelDescriptor } from './types';
 
 export function extractPanelDescriptor(rule: Rule): PanelDescriptor {

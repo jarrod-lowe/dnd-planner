@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { correctEntryForPlanItem } from '$lib/play/correctedEntry';
-import type { AvailableRuleEntry } from '$lib/rules-engine';
-import type { Rule } from '$lib/rules-engine';
+import type { AvailableRuleEntry } from '$lib/rules-view';
+import type { Rule } from '$lib/rules-view';
 
 function makeEntry(overrides: Partial<AvailableRuleEntry> = {}): AvailableRuleEntry {
   return {

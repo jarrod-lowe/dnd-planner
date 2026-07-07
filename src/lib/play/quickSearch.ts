@@ -1,9 +1,9 @@
 /**
- * Pure matching logic for the +ADD panel Quick Search (v1).
+ * Pure matching logic for the +ADD panel Quick Search.
  *
  * Operates over normalised options ({@link SearchOption}) so the component can
  * stay thin: it resolves localised name + keyword strings via i18n, then defers
- * all filtering/badging to these functions. v1 returns matches in natural order
+ * all filtering/badging to these functions. Matches return in natural order
  * (no ranking, no ★ LIKELY).
  */
 

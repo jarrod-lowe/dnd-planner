@@ -7,19 +7,19 @@ vi.mock('$lib/api/client', () => ({
   apiDelete: vi.fn()
 }));
 
-// Mock the v2 lazy module loader (no chunks in unit tests) but keep the rest of the
-// v2 barrel real (migratePersistedEffects, endTurn aging — pure).
-vi.mock('$lib/rules-engine-v2', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('$lib/rules-engine-v2')>();
+// Mock the lazy module loader (no chunks in unit tests) but keep the rest of the
+// engine barrel real (endTurn aging — pure).
+vi.mock('$lib/rules-engine', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('$lib/rules-engine')>();
   return {
     ...actual,
     loadModules: vi.fn(async () => ({ modules: [], missing: [], incompatible: [] }))
   };
 });
 
-// Mock the store's v2 evaluation seam so tests can inject facts/offers/effects.
-vi.mock('$lib/play/evaluateV2', () => ({
-  evaluateCharacterV2: vi.fn(),
+// Mock the store's evaluation seam so tests can inject facts/offers/effects.
+vi.mock('$lib/play/evaluateCharacter', () => ({
+  evaluateCharacter: vi.fn(),
   hypotheticalOffers: vi.fn(() => new Map())
 }));
 
@@ -66,16 +66,16 @@ vi.mock('svelte-sonner', () => ({
 }));
 
 import { apiGet, apiPost, apiDelete } from '$lib/api/client';
-import { loadModules } from '$lib/rules-engine-v2';
-import { evaluateCharacterV2, hypotheticalOffers } from '$lib/play/evaluateV2';
+import { loadModules } from '$lib/rules-engine';
+import { evaluateCharacter, hypotheticalOffers } from '$lib/play/evaluateCharacter';
 import { locale } from '$lib/i18n';
 import { toast } from 'svelte-sonner';
-import type { Rule } from '$lib/rules-engine';
-import type { EngineOutput as V2EngineOutput } from '$lib/rules-engine-v2';
-import type { V2PlayOutput } from '$lib/play/evaluateV2';
+import type { Rule } from '$lib/rules-view';
+import type { EngineOutput } from '$lib/rules-engine';
+import type { CharacterEvaluation } from '$lib/play/evaluateCharacter';
 
-/** A minimal, valid raw v2 engine output for the adapter to consume. */
-function rawV2(overrides: Partial<V2EngineOutput> = {}): V2EngineOutput {
+/** A minimal, valid raw engine output for the adapter to consume. */
+function rawOutput(overrides: Partial<EngineOutput> = {}): EngineOutput {
   return {
     status: { ok: true, legal: true, applicable: true },
     facts: {},
@@ -89,9 +89,9 @@ function rawV2(overrides: Partial<V2EngineOutput> = {}): V2EngineOutput {
   };
 }
 
-/** A V2PlayOutput (the store's eval seam result) with sensible empty defaults. */
-function v2Out(overrides: Partial<V2PlayOutput> = {}): V2PlayOutput {
-  const raw = overrides.raw ?? rawV2({ facts: overrides.facts });
+/** A CharacterEvaluation (the store's eval seam result) with sensible empty defaults. */
+function playOut(overrides: Partial<CharacterEvaluation> = {}): CharacterEvaluation {
+  const raw = overrides.raw ?? rawOutput({ facts: overrides.facts });
   return {
     facts: raw.facts,
     availableRules: raw.availableRules,
@@ -108,9 +108,9 @@ describe('playStore', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vi.useFakeTimers();
-    // v2 seam defaults: empty modules + an empty evaluation. Tests override as needed.
+    // Seam defaults: empty modules + an empty evaluation. Tests override as needed.
     vi.mocked(loadModules).mockResolvedValue({ modules: [], missing: [], incompatible: [] });
-    vi.mocked(evaluateCharacterV2).mockReturnValue(v2Out());
+    vi.mocked(evaluateCharacter).mockReturnValue(playOut());
     vi.mocked(hypotheticalOffers).mockReturnValue(new Map());
   });
 
@@ -304,7 +304,7 @@ describe('playStore', () => {
     it('populates committed effects from persisted API response', async () => {
       const mockApiGet = vi.mocked(apiGet);
 
-      // A persisted v2 EffectInstance blob (the post-cutover format).
+      // A persisted EffectInstance blob.
       const persisted = [
         {
           id: 'effect-bless',
@@ -333,11 +333,11 @@ describe('playStore', () => {
       expect(playStore.state.effects.map((e) => e.id)).toEqual(['effect-bless']);
     });
 
-    it('drops pre-v2 (v1-shape) effect entries instead of crashing', async () => {
+    it('drops legacy-shape effect entries instead of crashing', async () => {
       const mockApiGet = vi.mocked(apiGet);
 
-      // A pre-v2 character's blob: v1 effect Rules (activities, no `expiry`) mixed
-      // with a valid v2 EffectInstance. The v1 ones are dropped; the v2 one survives.
+      // A legacy character's blob: view effect Rules (activities, no `expiry`) mixed
+      // with a valid EffectInstance. The legacy ones are dropped; the valid one survives.
       const mixed = [
         { id: 'effect-legacy', group: ['bless'], activities: [{ type: 'numberSet' }] },
         {
@@ -413,9 +413,9 @@ describe('playStore', () => {
         json: async () => ({ ruleGroups: [] })
       } as Response);
 
-      // The v2 evaluation returns the facts capture vars resolve against.
-      vi.mocked(evaluateCharacterV2).mockReturnValue(
-        v2Out({ facts: { 'character.movement.remaining': 25, 'character.movement.total': 30 } })
+      // The evaluation returns the facts capture vars resolve against.
+      vi.mocked(evaluateCharacter).mockReturnValue(
+        playOut({ facts: { 'character.movement.remaining': 25, 'character.movement.total': 30 } })
       );
 
       const { playStore } = await import('$lib/play/playStore.svelte');
@@ -456,8 +456,8 @@ describe('playStore', () => {
         json: async () => ({ ruleGroups: [] })
       } as Response);
 
-      vi.mocked(evaluateCharacterV2).mockReturnValue(
-        v2Out({ facts: { 'character.movement.remaining': 25 } })
+      vi.mocked(evaluateCharacter).mockReturnValue(
+        playOut({ facts: { 'character.movement.remaining': 25 } })
       );
 
       const { playStore } = await import('$lib/play/playStore.svelte');
@@ -927,8 +927,8 @@ describe('playStore', () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
 
-      vi.mocked(evaluateCharacterV2).mockReturnValue(
-        v2Out({ facts: { 'str.value': 14, 'dex.value': 10 } })
+      vi.mocked(evaluateCharacter).mockReturnValue(
+        playOut({ facts: { 'str.value': 14, 'dex.value': 10 } })
       );
 
       // loadRuleGroups: get assigned IDs, then effects
@@ -995,8 +995,8 @@ describe('playStore', () => {
     it('checkCondition returns false when conditions not met', async () => {
       const mockApiGet = vi.mocked(apiGet);
 
-      vi.mocked(evaluateCharacterV2).mockReturnValue(
-        v2Out({ facts: { 'str.value': 10, 'dex.value': 10 } })
+      vi.mocked(evaluateCharacter).mockReturnValue(
+        playOut({ facts: { 'str.value': 10, 'dex.value': 10 } })
       );
 
       // loadRuleGroups: get assigned IDs, then effects
@@ -1058,8 +1058,8 @@ describe('playStore', () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
 
-      vi.mocked(evaluateCharacterV2).mockReturnValue(
-        v2Out({ facts: { 'str.value': 10, 'dex.value': 10 } })
+      vi.mocked(evaluateCharacter).mockReturnValue(
+        playOut({ facts: { 'str.value': 10, 'dex.value': 10 } })
       );
 
       // loadRuleGroups: get assigned IDs (sentinel is assigned)
@@ -1204,7 +1204,7 @@ describe('playStore', () => {
         state: { 'spellcasting.slots.level1.spent': 1 },
         expiry: { kind: 'untilLongRest' as const }
       };
-      vi.mocked(evaluateCharacterV2).mockReturnValue(v2Out({ advertised: [advertised] }));
+      vi.mocked(evaluateCharacter).mockReturnValue(playOut({ advertised: [advertised] }));
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -1216,12 +1216,12 @@ describe('playStore', () => {
       expect(playStore.state.committed).toEqual([advertised]);
 
       // A subsequent evaluation passes the committed set to the engine (2nd arg).
-      vi.mocked(evaluateCharacterV2).mockClear();
-      vi.mocked(evaluateCharacterV2).mockReturnValue(v2Out());
+      vi.mocked(evaluateCharacter).mockClear();
+      vi.mocked(evaluateCharacter).mockReturnValue(playOut());
       playStore.addToPlan({ id: 'test-rule', activities: [] });
       vi.advanceTimersByTime(300);
 
-      expect(evaluateCharacterV2).toHaveBeenCalledWith(
+      expect(evaluateCharacter).toHaveBeenCalledWith(
         expect.anything(),
         [advertised],
         expect.anything()
@@ -1234,7 +1234,7 @@ describe('playStore', () => {
         state: { 'spellcasting.slots.level1.spent': 1 },
         expiry: { kind: 'untilLongRest' as const }
       };
-      vi.mocked(evaluateCharacterV2).mockReturnValue(v2Out({ advertised: [advertised] }));
+      vi.mocked(evaluateCharacter).mockReturnValue(playOut({ advertised: [advertised] }));
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -1258,7 +1258,7 @@ describe('playStore', () => {
         state: { 'spellcasting.slots.level1.spent': 1 },
         expiry: { kind: 'untilLongRest' as const }
       };
-      vi.mocked(evaluateCharacterV2).mockReturnValue(v2Out({ advertised: [advertised] }));
+      vi.mocked(evaluateCharacter).mockReturnValue(playOut({ advertised: [advertised] }));
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -1288,7 +1288,7 @@ describe('playStore', () => {
         state: { 'spellcasting.slots.level1.spent': 1 },
         expiry: { kind: 'untilLongRest' as const }
       };
-      vi.mocked(evaluateCharacterV2).mockReturnValue(v2Out({ advertised: [advertised] }));
+      vi.mocked(evaluateCharacter).mockReturnValue(playOut({ advertised: [advertised] }));
 
       // Setup: load character to set currentCharacterId
       mockApiGet
@@ -1380,7 +1380,7 @@ describe('playStore', () => {
         expiry: { kind: 'untilLongRest' as const }
       };
 
-      // Setup: load character with committed effects (v2 EffectInstance blob)
+      // Setup: load character with committed effects (EffectInstance blob)
       mockApiGet
         .mockResolvedValueOnce({
           ok: true,
@@ -1431,12 +1431,12 @@ describe('playStore', () => {
       playStore.reset();
       await playStore.loadRuleGroups('char-1');
 
-      vi.mocked(evaluateCharacterV2).mockClear();
+      vi.mocked(evaluateCharacter).mockClear();
 
       playStore.removeEffect('effect-1');
 
       // Should have re-evaluated (performEvaluation, not debounced)
-      expect(evaluateCharacterV2).toHaveBeenCalled();
+      expect(evaluateCharacter).toHaveBeenCalled();
     });
 
     it('POSTs updated effects to API for persistence', async () => {
@@ -1741,7 +1741,7 @@ describe('playStore', () => {
       );
 
       expect(playStore.state.ruleGroupIds).toContain('greataxe-mastery');
-      // The select setting committed a v2 EffectInstance (base fact only; the module
+      // The select setting committed an EffectInstance (base fact only; the module
       // derives the rest); the display bridge surfaces it in state.effects.
       expect(playStore.state.committed).toEqual([
         {
@@ -1760,7 +1760,7 @@ describe('playStore', () => {
 
   describe('getAlternativeEntries', () => {
     it('returns hypothetical availableRules for a planned item', async () => {
-      // v2 hypotheticals come from `hypotheticalOffers`, keyed by the removed
+      // hypotheticals come from `hypotheticalOffers`, keyed by the removed
       // instance's id. Build the map from the refs the store passes.
       vi.mocked(hypotheticalOffers).mockImplementation((_m, _c, planned) => {
         const map = new Map();
@@ -1788,7 +1788,7 @@ describe('playStore', () => {
       expect(result).toHaveLength(2);
       expect(result[0].legal).toBe(true);
       expect(result[1].legal).toBe(true);
-      // Adapted to the v1 entry shape the UI reads (descriptor gains activities).
+      // Adapted to the view entry shape the UI reads (descriptor gains activities).
       expect(result[0].rule.activities).toEqual([]);
     });
 
@@ -1864,7 +1864,7 @@ describe('playStore', () => {
     });
 
     it('passes plain planned refs (instanceId + ruleId) to hypothetical evaluations', async () => {
-      // v2 passes PlannedRef DATA (not mutable rule objects), so the v1 varsRuntime
+      // The engine takes PlannedRef DATA (not mutable rule objects), so the legacy varsRuntime
       // cross-contamination between the main and hypothetical evals cannot occur.
       const seen: Array<Array<{ instanceId: string; ruleId: string }>> = [];
       vi.mocked(hypotheticalOffers).mockImplementation((_m, _c, planned) => {
@@ -1886,9 +1886,9 @@ describe('playStore', () => {
 
     it('carries a planned item captured selections onto its ref', async () => {
       let capturedRefs: Array<{ ruleId: string; selections?: Record<string, unknown> }> = [];
-      vi.mocked(evaluateCharacterV2).mockImplementation((_m, _c, planned) => {
+      vi.mocked(evaluateCharacter).mockImplementation((_m, _c, planned) => {
         capturedRefs = planned as typeof capturedRefs;
-        return v2Out();
+        return playOut();
       });
 
       const { playStore } = await import('$lib/play/playStore.svelte');
@@ -1904,7 +1904,7 @@ describe('playStore', () => {
 
   describe('engine failure handling', () => {
     it('catches an engine throw, keeps the store usable, and surfaces an error diagnostic', async () => {
-      vi.mocked(evaluateCharacterV2).mockImplementation(() => {
+      vi.mocked(evaluateCharacter).mockImplementation(() => {
         throw new Error('Duplicate offer id "x": offer ids must be unique across modules');
       });
       const { playStore } = await import('$lib/play/playStore.svelte');
@@ -1921,7 +1921,7 @@ describe('playStore', () => {
     });
 
     it('maps a dependency-cycle throw to the cycle-specific error code', async () => {
-      vi.mocked(evaluateCharacterV2).mockImplementation(() => {
+      vi.mocked(evaluateCharacter).mockImplementation(() => {
         throw new Error('Dependency cycle detected: a -> b -> a');
       });
       const { playStore } = await import('$lib/play/playStore.svelte');
@@ -1935,7 +1935,7 @@ describe('playStore', () => {
   });
 
   describe('effect mutations recalculate derived UI', () => {
-    // v2 top-bar entries come from `derivePanels(facts)` in the eval result, not
+    // top-bar entries come from `derivePanels(facts)` in the eval result, not
     // effect `ui.topBar` blocks. A stateful mock surfaces an entry whenever the
     // character carries a committed effect, so a mutation that changes `committed`
     // changes the derived panel — the behaviour these tests guard.
@@ -1945,10 +1945,10 @@ describe('playStore', () => {
       fact: 'character.movement.remaining'
     };
     const byCommitted = (_m: unknown, committed: unknown[]) =>
-      v2Out({ topBarEntries: committed.length > 0 ? [speedEntry] : [] });
+      playOut({ topBarEntries: committed.length > 0 ? [speedEntry] : [] });
 
     it('updates topBarEntries after addFollowupEffect', async () => {
-      vi.mocked(evaluateCharacterV2).mockImplementation(byCommitted as never);
+      vi.mocked(evaluateCharacter).mockImplementation(byCommitted as never);
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -1965,7 +1965,7 @@ describe('playStore', () => {
     it('persists the committed effects after addFollowupEffect', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      vi.mocked(evaluateCharacterV2).mockImplementation(byCommitted as never);
+      vi.mocked(evaluateCharacter).mockImplementation(byCommitted as never);
 
       // Load a character so currentCharacterId is set (persistence needs it).
       mockApiGet
@@ -1993,7 +1993,7 @@ describe('playStore', () => {
     it('updates topBarEntries after removeEffect', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      vi.mocked(evaluateCharacterV2).mockImplementation(byCommitted as never);
+      vi.mocked(evaluateCharacter).mockImplementation(byCommitted as never);
 
       mockApiGet
         .mockResolvedValueOnce({ ok: true, json: async () => ({ ruleGroups: [] }) } as Response)
@@ -2029,8 +2029,8 @@ describe('playStore', () => {
         expiry: { kind: 'untilLongRest' as const }
       };
       // Advertise the effect this turn; the entry only surfaces once it's committed.
-      vi.mocked(evaluateCharacterV2).mockImplementation(((_m: unknown, committed: unknown[]) =>
-        v2Out({
+      vi.mocked(evaluateCharacter).mockImplementation(((_m: unknown, committed: unknown[]) =>
+        playOut({
           topBarEntries: committed.length > 0 ? [speedEntry] : [],
           advertised: [advertised]
         })) as never);

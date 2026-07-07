@@ -1,6 +1,6 @@
 import { prefetchDetail } from '$lib/details/index';
 import { browser } from '$app/environment';
-import type { Rule } from '$lib/rules-engine';
+import type { Rule } from '$lib/rules-view';
 
 export function prefetchDetailsForEffects(effects: Rule[]): void {
   if (!browser) return;
