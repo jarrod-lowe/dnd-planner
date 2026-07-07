@@ -1967,6 +1967,46 @@ describe('playStore', () => {
       const errors = playStore.state.engineOutput?.diagnostics.errors ?? [];
       expect(errors.some((d) => d.code === 'play.error.engineCycle')).toBe(true);
     });
+
+    it('a failed evaluation clears the per-evaluation caches — End Turn must not commit the PREVIOUS plan', async () => {
+      // A successful evaluation caches advertised effects (for End Turn) and
+      // the per-instance planned entries (for the plan rows).
+      vi.mocked(evaluateCharacter).mockImplementation((_m, _c, refs) =>
+        playOut({
+          advertised: [
+            { id: 'i0#0#stale-spend', state: { 'x.spent': 1 }, expiry: { kind: 'untilLongRest' } }
+          ],
+          plannedEntries: refs.map((r) => ({
+            instanceId: r.instanceId,
+            rule: { id: 'attack', ui: {} },
+            legal: true,
+            applicable: true,
+            diagnostics: []
+          }))
+        })
+      );
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      playStore.addToPlan({ id: 'attack', activities: [] });
+      vi.runAllTimers();
+      const instanceId = playStore.state.plannedItems[0].instanceId;
+      expect(playStore.getPlannedEntry(instanceId)).toBeDefined();
+
+      // The next evaluation (plan edited) throws: banner state, plan still visible.
+      vi.mocked(evaluateCharacter).mockImplementation(() => {
+        throw new Error('Duplicate offer id "x": offer ids must be unique across modules');
+      });
+      playStore.addToPlan({ id: 'attack-2', activities: [] });
+      vi.runAllTimers();
+
+      // The caches describe the LAST SUCCESSFUL plan, not the visible one.
+      expect(playStore.getPlannedEntry(instanceId)).toBeUndefined();
+
+      // End Turn in the error state must not merge the stale advertised
+      // effects into the committed (and persisted) set.
+      playStore.endTurn();
+      expect(playStore.state.committed.some((e) => e.id.includes('stale-spend'))).toBe(false);
+    });
   });
 
   describe('effect mutations recalculate derived UI', () => {

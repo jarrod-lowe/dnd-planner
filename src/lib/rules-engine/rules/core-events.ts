@@ -147,15 +147,20 @@ const coreEvents: RuleModule = {
         actionCost: []
       },
       vars: { amount: { capture: true, default: { number: 0 } } },
-      apply: (_f, selections): ActionResult => {
+      apply: (f, selections): ActionResult => {
         const amount = typeof selections.amount === 'number' ? selections.amount : 0;
-        // Reduces accumulated damage; the hp.current clamp caps at hp.max.
+        // Effective healing caps at the HP missing when it is recorded (5e:
+        // regained HP cannot exceed the max — the surplus is simply lost). The
+        // hp.current clamp only HIDES a positive modifier; persisting the raw
+        // amount would bank the surplus and pre-cancel damage taken later
+        // (heal 15 on 10 damage, then take 7 → −2 instead of −7).
+        const missing = Math.max(0, -f.num('hp.modifier.current'));
         return {
           advertise: [
             // id is what the scenarios assert (effect-hp-heal).
             {
               id: 'effect-hp-heal',
-              state: { 'hp.modifier.current': amount },
+              state: { 'hp.modifier.current': Math.min(amount, missing) },
               display: {
                 name: 'rule.dnd-5e-2024.core-events.effect-hp-heal.name',
                 section: 'health'

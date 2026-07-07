@@ -249,6 +249,39 @@ synthesizes the view-side string ('CHA') from the flag (`toViewFacts` in
 engineBridge). Asserted in `spell-save-dc` (flag) and the bridge unit test
 (synthesis).
 
+### 1.15 Overhealing persisted as future HP credit (player)
+
+**FIXED** (found by Codex review on PR #363, round 3). `record-heal` persisted
+the RAW amount into `hp.modifier.current`; `hp.current` clamps only the final
+sum, so the surplus of a heal beyond the missing HP stayed banked and
+pre-cancelled damage taken later (heal 15 on 10 damage, then take 7 → −2
+instead of −7). The heal now caps at the HP missing at record time
+(`min(amount, max(0, −hp.modifier.current))`) — 5e: regained HP cannot exceed
+the max; the surplus is lost. Scenario: `heal-does-not-bank-over-damage` (the
+existing `heal-persists-and-caps` never took damage AFTER the overheal, so it
+missed this).
+
+### 1.16 Steed overhealing cancelled later damage (hole in the 1.13 fix)
+
+**FIXED** (found by Codex review on PR #363, round 3). The 1.13 accumulator
+let `healRecorded` grow past `damageRecorded`; the net is clamped only in
+`hp.current`, so a heal recorded on a full-health steed banked and absorbed
+damage taken later. The running heal total now caps at the running damage
+total (`min(healRecorded + amount, damageRecorded)`). Scenario:
+`steed-overheal-caps-at-damage`.
+
+### 1.17 End Turn in the engine-error state committed the PREVIOUS plan's effects
+
+**FIXED** (found by Codex review on PR #363, round 3). When an evaluation
+threw (banner path), the store kept `_lastAdvertised`, `_plannedEntriesMap`
+and `_hypotheticalEntriesMap` from the last SUCCESSFUL evaluation while the
+plan stayed editable and End Turn enabled — ending the turn merged and
+persisted the previous plan's advertised effects rather than the visible
+plan's. The catch path now clears all three per-evaluation caches: End Turn
+then only ages the committed set, and plan rows/alternatives fall back instead
+of showing the old evaluation's legality. Unit: playStore 'a failed evaluation
+clears the per-evaluation caches'.
+
 ## 2. Faithfulness deltas v1 → v2 (2.1–2.7 ACCEPTED; 2.8–2.11 FIXED)
 
 ### 2.1 Offers are judged against post-plan facts (v1: phase-interleaved)

@@ -672,7 +672,9 @@ const findSteed: RuleModule = {
       },
       vars: { amount: { capture: true, default: { number: 0 } } },
       // Accumulates exactly like steed-record-damage above (one keyed effect
-      // carrying the running heal total).
+      // carrying the running heal total), but the total caps at the damage
+      // recorded so far: healing beyond the missing HP is lost, never banked
+      // against damage taken later (the modifier clamp only hides a surplus).
       apply: (f, selections): ActionResult => {
         const amount = typeof selections.amount === 'number' ? selections.amount : 0;
         return {
@@ -681,7 +683,10 @@ const findSteed: RuleModule = {
               id: 'effect-steed-hp-heal',
               key: 'effect-steed-hp-heal',
               state: {
-                'companion.steed.hp.healRecorded': f.num('companion.steed.hp.healRecorded') + amount
+                'companion.steed.hp.healRecorded': Math.min(
+                  f.num('companion.steed.hp.healRecorded') + amount,
+                  f.num('companion.steed.hp.damageRecorded')
+                )
               },
               display: {
                 name: `${S}.steed-record-heal.effect.name`,

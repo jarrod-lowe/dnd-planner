@@ -131,6 +131,14 @@ function performEvaluation(): void {
         state: { facts: {} }
       }
     };
+    // The failed evaluation produced nothing: the per-evaluation caches still
+    // describe the LAST SUCCESSFUL plan, not the visible one. Clear them so
+    // End Turn cannot merge the previous plan's advertised effects into the
+    // committed set, and plan rows / alternatives fall back rather than show
+    // the old evaluation's legality.
+    _lastAdvertised = [];
+    _plannedEntriesMap = new Map();
+    _hypotheticalEntriesMap = new Map();
     state = {
       ...state,
       isEvaluating: false,

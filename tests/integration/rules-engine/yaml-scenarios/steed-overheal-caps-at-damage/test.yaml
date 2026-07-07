@@ -1,0 +1,57 @@
+name: 'Steed Overheal Caps At Damage'
+description: >-
+  Steed healing beyond the damage recorded so far is lost — the running heal
+  total caps at the running damage total, so an overheal never cancels damage
+  taken later (the modifier clamp only hides a surplus).
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-find-steed
+steps:
+  - evaluate: {}
+  - addOffer:
+      id: prepare-find-steed
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - cast-find-steed
+  - addOffer:
+      id: cast-find-steed
+  - endTurn:
+      assert:
+        facts:
+          companion.steed.hp.current: 25
+  - addOffer:
+      id: steed-record-damage
+      selections:
+        amount: 10
+      assert:
+        facts:
+          companion.steed.hp.current: 15
+  # Overheal: 20 healing on 10 damage — back to full, the surplus is lost.
+  - addOffer:
+      id: steed-record-heal
+      selections:
+        amount: 20
+      assert:
+        facts:
+          companion.steed.hp.current: 25
+  - endTurn: {}
+  # Later damage lands in full: 25 − 5 = 20 (a banked surplus would absorb it).
+  - addOffer:
+      id: steed-record-damage
+      selections:
+        amount: 5
+      assert:
+        facts:
+          companion.steed.hp.current: 20
+  - endTurn:
+      assert:
+        facts:
+          companion.steed.hp.current: 20
