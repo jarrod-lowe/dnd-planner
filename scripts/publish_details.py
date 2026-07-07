@@ -152,11 +152,9 @@ def _load_yaml_docs(data_dir: Path) -> list[dict]:
     return docs
 
 
-def run(data_dir: Path, output_dir: Path, data_dir2: Path | None = None) -> None:
+def run(data_dir: Path, output_dir: Path) -> None:
     """Main entry point: scan YAML, extract details, write JSON."""
     docs = _load_yaml_docs(data_dir)
-    if data_dir2:
-        docs.extend(_load_yaml_docs(data_dir2))
     all_details = extract_details(docs)
     # Group by locale
     locale_details: dict[str, list[tuple[str, dict]]] = {}
@@ -169,10 +167,9 @@ def run(data_dir: Path, output_dir: Path, data_dir2: Path | None = None) -> None
 def main() -> None:
     parser = argparse.ArgumentParser(description="Publish detail JSON from YAML rule groups")
     parser.add_argument("--data-dir", required=True, help="Path to rule groups data directory")
-    parser.add_argument("--data-dir2", default=None, help="Optional second data directory")
     parser.add_argument("--output-dir", default="static/details", help="Output directory for detail JSON")
     args = parser.parse_args()
-    run(Path(args.data_dir), Path(args.output_dir), Path(args.data_dir2) if args.data_dir2 else None)
+    run(Path(args.data_dir), Path(args.output_dir))
 
 
 if __name__ == "__main__":

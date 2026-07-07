@@ -20,7 +20,7 @@ import { lazyRuleGroupIds } from '$lib/rules-engine-v2/lazy';
  * entries are the rules-mode detail catalog.
  *
  * Reads the generated rule-group data (`build/test-rule-groups.json`); runs via
- * `make test-rules` / `make test-unit`, which regenerate it from the YAML first.
+ * `make test-unit`, which regenerates it from the YAML first.
  */
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const jsonPath =

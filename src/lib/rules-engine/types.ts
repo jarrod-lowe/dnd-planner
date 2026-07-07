@@ -480,8 +480,6 @@ export interface Rule {
   when?: Condition[];
   after?: GroupReference[];
   group?: string[];
-  /** Base IDs of effects to also remove when this effect is manually removed from the UI */
-  cascadeRemove?: string[];
   activities: Activity[];
 }
 

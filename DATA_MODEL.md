@@ -70,14 +70,17 @@ Templates for new character creation. Both have `gsiSeedPK = "SEED#CHAR"` so the
 
 #### CHAR_RULEGROUP Record Seeds
 
-Five rule group seeds are created per character (turn-rest, action-economy, proficiency, movement, free-actions):
+One seed per foundational rule group is created for every new character
+(action-economy, core-events, hp, attacks, movement, …, plus the parameterized
+`$(species)` and `$(class)` groups). The authoritative list is the
+`char_*_rulegroup_seed` resources in `terraform/module/dnd-planner/dynamodb-items.tf`.
 
 - PK = `SEED#CHAR#$(characterId)`
 - SK = `RULEGROUP#<group-id>`
 - gsiSeedPK = `SEED#CHAR`
 - type = `CHAR`
 - characterId = `$(characterId)`
-- ruleGroupId = `<group-id>` (one of: turn-rest, action-economy, proficiency, movement, free-actions)
+- ruleGroupId = `<group-id>`
 - userId = `$(userId)`
 - enabled = `true`
 - createdAt = `$(now)`
@@ -137,17 +140,22 @@ Represents the relationship between a character and a rule group.
 
 ## Rule Group Record
 
-Represents a reusable set of rules.
+Represents a rule group's metadata. Rule logic is NOT stored here — it lives
+in the frontend's v2 rule modules (`src/lib/rules-engine-v2/rules/`), keyed by
+the same `ruleGroupId`.
 
 - PK = RULEGROUP#{ruleGroupId}
 - SK = META#
 - type = RULEGROUP
-- ruleGroupId = unique ID (GUID)
+- ruleGroupId = canonical rule-group id (matches the v2 module id)
 - translations = JSON object keyed by locale code (e.g., "en", "en-x-tlh")
   - Each locale contains: name, description, keywords
+- requires = list of rule-group ids auto-assigned alongside this group
+- settings = setting definitions (JSON string, "[]" when none)
+- condition = assignment conditions (JSON string, "[]" when none)
+- rules = always "[]" (legacy attribute, kept for API wire-stability)
 - createdAt = ISO timestamp
 - updatedAt = ISO timestamp
-- rules = list of rule objects (complex, stored as JSON string)
 
 ### Translations Structure
 
@@ -217,66 +225,7 @@ When rule groups are fetched via the API, the `lang` query parameter determines 
 
 ## Stats Configuration
 
-Rules can declare stats to display in the stats column via `ui.stats[]`. The rules engine ignores these declarations and passes them through. The UI collects them from all standing rules and renders them dynamically.
-
-### Stat Entry Types
-
-Each stat entry in `ui.stats[]` has a `type` field that determines the display format:
-
-#### `value` — Plain number display
-
-```yaml
-- name: play.stats.turnCounter # i18n key for label
-  type: value
-  fact: turn.counter # fact path for the value
-  section: turn # section grouping
-```
-
-#### `modifier` — Signed number display (+/-X)
-
-```yaml
-- name: play.stats.proficiency
-  type: modifier
-  fact: proficiency.bonus
-  section: abilities
-```
-
-#### `usedMax` — Resource with capacity (X / Y)
-
-```yaml
-- name: play.stats.actions
-  type: usedMax
-  total: actions.max # fact path for capacity
-  remaining: actions.remaining # fact path for remaining
-  section: resources
-```
-
-Hidden when `total` fact is 0 or undefined.
-
-### Optional Fields
-
-- `nameParams` — Parameters for i18n template interpolation:
-
-```yaml
-- name: play.stats.spellLevel
-  nameParams: { level: 1 }
-  type: usedMax
-  total: spellcasting.slots.level1.total
-  remaining: spellcasting.slots.level1.remaining
-  section: magic
-```
-
-### Sections
-
-Stats are grouped by `section` and displayed in this order:
-
-1. `turn` — Turn counter
-2. `resources` — Speed, Actions, Spellcasting
-3. `abilities` — Proficiency bonus
-4. `magic` — Spell slots
-
-Unknown sections appear after known ones, sorted alphabetically. Stats within each section are sorted alphabetically by name.
-
-### Convention
-
-Place `ui.stats[]` on the rule that establishes/defines the fact being displayed. For example, the `action-max` rule (which sets `actions.max`) should declare the actions stat.
+The stats/ledger display is defined in code, not data: the catalogs in
+`src/lib/play/derivePanels.ts` map facts the v2 engine derives onto top-bar,
+resource, and ability entries. Rule groups do not declare display stats.
+(v1's `ui.stats[]` pass-through mechanism was removed with the v1 engine.)

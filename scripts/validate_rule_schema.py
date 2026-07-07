@@ -3,7 +3,7 @@
 Validate rule YAML files against the JSON Schema.
 
 Usage:
-    python validate_rule_schema.py [--data-dir <path>] [--data-dir2 <path>] [--schema <path>] [--verbose]
+    python validate_rule_schema.py [--data-dir <path>] [--schema <path>] [--verbose]
 """
 
 import argparse
@@ -132,11 +132,6 @@ def parse_args() -> argparse.Namespace:
         help="Path to rule groups data directory (default: data/rule-groups)",
     )
     parser.add_argument(
-        "--data-dir2",
-        default=None,
-        help="Optional second data directory (e.g., generated/rule-groups)",
-    )
-    parser.add_argument(
         "--schema",
         default="data/rule-groups/schema.json",
         help="Path to JSON Schema file (default: data/rule-groups/schema.json)",
@@ -168,12 +163,7 @@ def main() -> None:
     # Load shared definitions from the primary data directory
     shared_defs = load_shared_definitions(data_dir)
 
-    # Collect all directories to validate
     dirs = [data_dir]
-    if args.data_dir2:
-        data_dir2 = Path(args.data_dir2)
-        if data_dir2.exists():
-            dirs.append(data_dir2)
 
     all_errors: list[str] = []
     files_validated = 0
