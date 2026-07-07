@@ -1,14 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { effectInstanceToRule, adaptEngineOutput } from '$lib/play/engineBridge';
 import { getEffectKind, getDurationState, isHiddenEffect } from '$lib/play/effectUtils';
-import type { EngineOutput, PlannedRef } from '$lib/rules-engine';
+import type { EngineOutput } from '$lib/rules-engine';
 
 /**
  * The engine→view bridges: committed EffectInstance → effect Rule (so the
  * active-effects UI reads it) and engine output → the view shape the store stores.
  */
 
-describe('v2Bridge — effectInstanceToRule', () => {
+describe('engineBridge — effectInstanceToRule', () => {
   it('reconstructs a concentration effect the UI classifies as CONC, with duration pips', () => {
     const rule = effectInstanceToRule({
       id: 'effect-bless',
@@ -146,22 +146,19 @@ const makeOutput = (overrides: Partial<EngineOutput> = {}): EngineOutput => ({
   ...overrides
 });
 
-describe('v2Bridge — adaptEngineOutput', () => {
-  it('carries facts/effects and exposes offers + per-instance planned entries by id', () => {
-    const planned: PlannedRef[] = [{ instanceId: 'i0', ruleId: 'unarmed-strike-use-action' }];
+describe('engineBridge — adaptEngineOutput', () => {
+  it('carries facts/effects; availableRules is the offer catalog ONLY (no instance entries)', () => {
     const out = adaptEngineOutput(
-      makeOutput({ planDiagnostics: { i0: [{ code: 'no_action', severity: 'error' }] } }),
-      planned
+      makeOutput({ planDiagnostics: { i0: [{ code: 'no_action', severity: 'error' }] } })
     );
     expect(out.facts).toEqual({ 'hp.max': 10 });
     // The committed effect became a view effect Rule.
     expect(out.effects.map((e) => e.id)).toEqual(['effect-bless']);
-    // availableRules has the offer plus the planned instance keyed by instanceId.
-    const byId = Object.fromEntries(out.availableRules.map((e) => [e.rule.id, e]));
-    expect(byId['unarmed-strike-use-action'].legal).toBe(true);
-    expect(byId['i0'].legal).toBe(false); // the planned instance's own legality
+    // Planned-instance legality is NOT mixed into availableRules — it flows to the
+    // plan rows via the store's plannedEntries map. Mixing instance entries here
+    // leaked them into the add/search pickers as unresolvable duplicates.
+    expect(out.availableRules.map((e) => e.rule.id)).toEqual(['unarmed-strike-use-action']);
     // View-shape fields are present (stubbed).
     expect(out.collections).toEqual({});
-    expect(Array.isArray(out.availableRules)).toBe(true);
   });
 });

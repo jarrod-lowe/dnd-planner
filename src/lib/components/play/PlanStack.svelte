@@ -2,7 +2,6 @@
   import { t } from '$lib/i18n';
   import { SvelteMap } from 'svelte/reactivity';
   import { playStore } from '$lib/play/playStore.svelte';
-  import { correctEntryForPlanItem } from '$lib/play/correctedEntry';
   import PlanRow from './PlanRow.svelte';
   import AddRowPicker from './AddRowPicker.svelte';
   import { groupChoicesByVerb } from '$lib/play/groupChoicesByVerb';
@@ -49,25 +48,23 @@
 
   const itemsWithEntries = $derived(
     items.map((item) => {
+      // The per-instance entry: the offer's rule with THIS instance's own
+      // legality/diagnostics (the engine's planDiagnostics). Two copies of the
+      // same action can differ — the first spend legal, the second over-spent.
+      const planned = playStore.getPlannedEntry(item.instanceId);
+      if (planned) return { item, entry: planned };
+
+      // No per-instance entry: the offer's structural `when` closed (e.g. the
+      // weapon was stowed earlier in the plan) — the engine skips the action and
+      // the row stays visible as inapplicable so the player can see and remove
+      // it — or no evaluation has run yet (fall back to the catalog entry).
       const entry = entryById[item.originalRuleId ?? item.rule.id];
-      // Offer gone from the catalog (its structural `when` closed — e.g. the
-      // weapon was stowed earlier in the plan): the engine skips the action, and
-      // the row stays visible as inapplicable so the player can see and remove it.
       if (!entry)
         return {
           item,
           entry: { rule: item.rule, legal: true, applicable: false, diagnostics: [] }
         };
-
-      const hypothetical = playStore.getAlternativeEntries(item.instanceId);
-      const hypEntry = hypothetical.find(
-        (e) => e.rule.id === (item.originalRuleId ?? item.rule.id)
-      );
-      const baseEntry = hypEntry
-        ? { ...entry, legal: hypEntry.legal, diagnostics: hypEntry.diagnostics }
-        : entry;
-
-      return { item, entry: correctEntryForPlanItem(baseEntry, item) };
+      return { item, entry };
     })
   );
 

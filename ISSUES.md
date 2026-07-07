@@ -176,6 +176,23 @@ at all (v1's slam had `[attack.any, attack.melee]`), so attack-targeting
 annotations no longer appear on steed attack panels — possibly intended
 (rider buffs don't apply to the steed), worth a conscious call.
 
+### 1.10 Plan rows never consumed per-instance legality; instance entries leaked into pickers
+
+**FIXED** (found by Codex review on PR #363). `adaptEngineOutput` mixed
+per-instance planned entries (id = instanceId) into `availableRules`, but
+`PlanStack` resolved rows by `originalRuleId` — so the engine's
+`planDiagnostics` never reached the rows. Row legality came from the
+hypothetical (plan-minus-this-row) catalog, which marks BOTH copies of a
+duplicated action illegal when only the second over-spends; the
+`correctEntryForPlanItem` arbiter that used to fix this read `varsRuntime`,
+which nothing writes any more (deleted as dead). The mixed instance entries
+also leaked into the verb groups, +ADD pickers, and QuickSearch as
+unresolvable duplicate options. Now: `availableRules` is the addable catalog
+only; the store keeps a per-instance `plannedEntries` map
+(`getPlannedEntry(instanceId)`, legality straight from `planDiagnostics`) that
+the plan rows consume; hypotheticals remain for the alternatives picker only.
+Test-covered at all three layers (bridge, store, PlanStack).
+
 ## 2. Faithfulness deltas v1 → v2 (2.1–2.7 ACCEPTED; 2.8–2.11 FIXED)
 
 ### 2.1 Offers are judged against post-plan facts (v1: phase-interleaved)

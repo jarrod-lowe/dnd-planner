@@ -5,22 +5,23 @@ import type {
   AvailableRuleEntry as ViewEntry
 } from '$lib/rules-view';
 import {
-  plannedEntries,
   type EffectInstance,
   type EngineOutput,
   type ExpirySpec,
   type Expiry,
-  type PlannedRef,
   type AvailableRuleEntry as EngineEntry
 } from '$lib/rules-engine';
+import type { PlannedEntry } from '$lib/rules-engine';
 
 /**
  * Bridges the engine's output/effects back to the view-shaped objects the
  * play store + UI already consume, so the components render unchanged at the
  * cutover. Two directions:
  *  - `adaptEngineOutput` — engine `EngineOutput` → the view `EngineOutput` the store
- *    stores (offer catalog + per-instance planned entries as `availableRules`,
- *    facts/annotations/effects passed through, `collections`/`trace`/`next` stubbed).
+ *    stores (`availableRules` is the ADDABLE offer catalog only; per-instance
+ *    planned legality flows to the plan rows via the store's plannedEntries map,
+ *    never mixed into the catalog — mixed entries leaked into the add/search
+ *    pickers as unresolvable duplicates).
  *  - `effectInstanceToRule` — a committed `EffectInstance` → the view effect `Rule`
  *    the active-effects strip + `effectUtils` inspect (duration from `expiry`, a
  *    synthesized concentration activity, the key as its group).
@@ -87,25 +88,21 @@ export function effectInstanceToRule(effect: EffectInstance): Rule {
   };
 }
 
-/** A planned instance rendered as a view availableRules entry, keyed by instanceId. */
-function plannedAsViewEntry(
-  rule: Rule,
-  legal: boolean,
-  applicable: boolean,
-  diagnostics: ViewEntry['diagnostics'],
-  instanceId: string,
-  selections?: Record<string, unknown>
-): ViewEntry {
+/**
+ * An engine per-instance planned entry → the view entry the plan row consumes.
+ * Keeps the OFFER rule id (the row is identified by its item, not this entry);
+ * legality/diagnostics are the instance's own (from `planDiagnostics`).
+ */
+export function plannedEntryToViewEntry(pe: PlannedEntry): ViewEntry {
   return {
     rule: {
-      ...rule,
-      id: instanceId,
-      activities: rule.activities ?? [],
-      ...(selections ? { selections } : {})
+      ...(pe.rule as Rule),
+      activities: (pe.rule as Rule).activities ?? [],
+      ...(pe.selections ? { selections: pe.selections } : {})
     },
-    legal,
-    applicable,
-    diagnostics
+    legal: pe.legal,
+    applicable: pe.applicable,
+    diagnostics: pe.diagnostics
   };
 }
 
@@ -128,28 +125,17 @@ export function offersToViewEntries(entries: EngineEntry[]): ViewEntry[] {
 }
 
 /**
- * Adapt a engine `EngineOutput` (plus the plan) to the view `EngineOutput` the store
- * stores. `availableRules` carries the offer catalog AND one entry per planned
- * instance (id = instanceId, legality from `planDiagnostics`), so the store's
- * existing "look up by rule id" continues to find both offers and plan-item legality.
+ * Adapt an engine `EngineOutput` to the view `EngineOutput` the store stores.
+ * `availableRules` is the addable offer catalog only — per-instance planned
+ * legality reaches the plan rows through the store's plannedEntries map.
  */
-export function adaptEngineOutput(output: EngineOutput, planned: PlannedRef[]): ViewOutput {
+export function adaptEngineOutput(output: EngineOutput): ViewOutput {
   const offers = output.availableRules.map(offerAsViewEntry);
-  const instances = plannedEntries(output, planned).map((pe) =>
-    plannedAsViewEntry(
-      pe.rule as Rule,
-      pe.legal,
-      pe.applicable,
-      pe.diagnostics,
-      pe.instanceId,
-      pe.selections
-    )
-  );
   return {
     status: output.status,
     facts: output.facts,
     collections: {},
-    availableRules: [...offers, ...instances],
+    availableRules: offers,
     // Annotations are structurally the view shape (costTags is a widened string[]).
     annotations: output.annotations as unknown as ViewOutput['annotations'],
     diagnostics: output.diagnostics,

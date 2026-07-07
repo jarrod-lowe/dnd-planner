@@ -24,14 +24,12 @@ vi.mock('$lib/i18n', () => ({
 
 vi.mock('$lib/play/playStore.svelte', () => ({
   playStore: {
-    getAlternativeEntries: vi.fn(() => [])
+    getAlternativeEntries: vi.fn(() => []),
+    getPlannedEntry: vi.fn(() => undefined)
   }
 }));
 
-vi.mock('$lib/play/correctedEntry', () => ({
-  correctEntryForPlanItem: vi.fn((entry) => entry)
-}));
-
+import { playStore } from '$lib/play/playStore.svelte';
 import PlanStack from '$lib/components/play/PlanStack.svelte';
 import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-view';
 import type { PlannedItem } from '$lib/play/types';
@@ -120,6 +118,46 @@ describe('PlanStack', () => {
 
     // Total should be 2 (one player, one steed), not 3
     expect(planRows.length).toBe(2);
+  });
+
+  it('row legality comes from the per-instance planned entry, not the hypothetical catalog', () => {
+    const entry = makeEntry('attack', 'action-attack');
+    const first = makeItem('attack', 'action-attack');
+    const second = { ...makeItem('attack', 'action-attack'), instanceId: 'inst-attack-2' };
+
+    // The engine's per-instance verdicts: first copy legal, second over-spends.
+    vi.mocked(playStore.getPlannedEntry).mockImplementation((id: string) => {
+      if (id === first.instanceId) return { ...entry, legal: true, diagnostics: [] };
+      if (id === second.instanceId)
+        return { ...entry, legal: false, diagnostics: [{ code: 'no_action', severity: 'error' }] };
+      return undefined;
+    });
+    // The hypothetical catalog (plan minus this row) says the offer is illegal for
+    // BOTH rows — the old, wrong source of row legality. It must not win.
+    vi.mocked(playStore.getAlternativeEntries).mockReturnValue([
+      { ...entry, legal: false, diagnostics: [{ code: 'no_action', severity: 'error' }] }
+    ]);
+
+    mount(PlanStack, {
+      target: container,
+      props: {
+        items: [first, second],
+        entries: [entry],
+        facts: {} as Facts,
+        activeAnnotations: [] as Annotation[],
+        onAddToPlan: noop,
+        onRemoveFromPlan: noop,
+        onMovePlanItem: noop,
+        onSelectionChange: noop,
+        onSwapPlanItemRule: noop,
+        onEndTurn: noop
+      }
+    });
+
+    const rows = container.querySelectorAll('.plan-row');
+    expect(rows.length).toBe(2);
+    expect(rows[0].querySelector('.warning-indicator--illegal')).toBeNull();
+    expect(rows[1].querySelector('.warning-indicator--illegal')).toBeTruthy();
   });
 
   it('creates separate +ADD pickers per subject', () => {

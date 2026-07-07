@@ -386,6 +386,39 @@ describe('playStore', () => {
     });
   });
 
+  describe('per-instance planned entries', () => {
+    it('exposes the evaluation planned entries by instanceId, offers-only availableRules', async () => {
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      const rule: Rule = { id: 'attack-1', description: 'Attack', activities: [] };
+      // The evaluation reports this instance illegal via planDiagnostics while the
+      // catalog offer stays legal (the two-copies case: only THIS copy over-spends).
+      vi.mocked(evaluateCharacter).mockImplementation((_m, _c, planned) =>
+        playOut({
+          plannedEntries: planned.map((ref) => ({
+            instanceId: ref.instanceId,
+            rule: { id: 'attack-1', ui: {} },
+            legal: false,
+            applicable: true,
+            diagnostics: [{ code: 'no_action', severity: 'error' as const }]
+          }))
+        })
+      );
+
+      playStore.addToPlan(rule);
+      vi.runAllTimers(); // addToPlan evaluates via the debounce
+      const instanceId = playStore.state.plannedItems[0].instanceId;
+
+      const entry = playStore.getPlannedEntry(instanceId);
+      expect(entry?.legal).toBe(false);
+      expect(entry?.diagnostics?.[0]?.code).toBe('no_action');
+      // The instance never appears as an addable offer.
+      const ids = (playStore.state.engineOutput?.availableRules ?? []).map((e) => e.rule.id);
+      expect(ids).not.toContain(instanceId);
+    });
+  });
+
   describe('addToPlan', () => {
     it('adds a rule to the plan with a unique instance ID', async () => {
       const { playStore } = await import('$lib/play/playStore.svelte');

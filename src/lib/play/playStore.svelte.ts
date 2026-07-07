@@ -10,7 +10,12 @@ import type { PlannedItem, PlayState } from './types';
 import { debounce } from './debounce';
 import { resolveInitialSelections } from './resolveInitialSelections';
 import { evaluateCharacter, hypotheticalOffers } from './evaluateCharacter';
-import { effectInstanceToRule, adaptEngineOutput, offersToViewEntries } from './engineBridge';
+import {
+  effectInstanceToRule,
+  adaptEngineOutput,
+  offersToViewEntries,
+  plannedEntryToViewEntry
+} from './engineBridge';
 import { deriveVerbFromRule } from './stepUtils';
 import { locale, t } from '$lib/i18n';
 import { prefetchDetailsForEffects } from '$lib/details/rehydrate';
@@ -50,6 +55,10 @@ function generateInstanceId(): string {
 
 // Module-level, plain Map (not $state). Replaced entirely each performEvaluation().
 let _hypotheticalEntriesMap = new Map<string, AvailableRuleEntry[]>();
+// Per-instance planned entries (legality from the engine's planDiagnostics),
+// keyed by instanceId. The plan rows read these; `availableRules` stays the
+// addable offer catalog only. Replaced each performEvaluation().
+let _plannedEntriesMap = new Map<string, AvailableRuleEntry>();
 // The effects advertised by the last evaluation — aged into `committed` at End Turn.
 let _lastAdvertised: EffectInstance[] = [];
 
@@ -141,11 +150,17 @@ function performEvaluation(): void {
     newMap.set(id, offersToViewEntries(entries));
   }
   _hypotheticalEntriesMap = newMap;
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- intentionally non-reactive; replaced each evaluation
+  const plannedMap = new Map<string, AvailableRuleEntry>();
+  for (const pe of result.plannedEntries) {
+    plannedMap.set(pe.instanceId, plannedEntryToViewEntry(pe));
+  }
+  _plannedEntriesMap = plannedMap;
   _lastAdvertised = result.advertised;
 
   state = {
     ...state,
-    engineOutput: adaptEngineOutput(result.raw, refs),
+    engineOutput: adaptEngineOutput(result.raw),
     isEvaluating: false,
     facts: result.facts,
     topBarEntries: result.topBarEntries,
@@ -155,6 +170,16 @@ function performEvaluation(): void {
 
 function getAlternativeEntries(instanceId: string): AvailableRuleEntry[] {
   return _hypotheticalEntriesMap.get(instanceId) ?? [];
+}
+
+/**
+ * The per-instance entry for a planned row: the offer's rule with THIS
+ * instance's legality/diagnostics (from the engine's planDiagnostics).
+ * Undefined when the offer's structural gate closed (stale row) or before the
+ * first evaluation.
+ */
+function getPlannedEntry(instanceId: string): AvailableRuleEntry | undefined {
+  return _plannedEntriesMap.get(instanceId);
 }
 
 // Debounced evaluation for plan changes
@@ -730,6 +755,7 @@ function addFollowupEffect(effect: EffectInstance): void {
 
 function reset(): void {
   _hypotheticalEntriesMap = new Map();
+  _plannedEntriesMap = new Map();
   _lastAdvertised = [];
   state = { ...initialState };
 }
@@ -817,6 +843,7 @@ export const playStore = {
   updateSelections,
   swapPlanItemRule,
   getAlternativeEntries,
+  getPlannedEntry,
   removeEffect,
   addFollowupEffect,
   getSettingsForRuleGroup,
