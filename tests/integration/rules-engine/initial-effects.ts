@@ -230,6 +230,7 @@ export const INITIAL_EFFECTS: Record<string, EffectInstance[]> = {
   'steed-creature-type-gating-fiend': [slot(2)],
   'steed-hp-modifiers': [slot(2)],
   'steed-hp-mods': [slot(2)],
+  'steed-damage-accumulates': [slot(2)],
   'find-steed-dismiss': [slot(2)],
   'find-steed-long-rest': [slot(2)],
   'find-steed-life-bond': [slot(2)],

@@ -1,5 +1,6 @@
 import {
   defineRule,
+  preparedSpellCount,
   preparedSpellOffers,
   type ActionResult,
   type Contribution,
@@ -27,6 +28,10 @@ const holdPerson: RuleModule = {
   },
   derive: () => {
     const c: Contribution[] = [
+      preparedSpellCount({
+        preparedFact: 'spell.l2.holdPerson.prepared',
+        alwaysPreparedFact: 'spell.l2.holdPerson.alwaysPrepared'
+      }),
       {
         fact: `${SLOTS}.eligibleSlotsRemaining`,
         value: (f) =>

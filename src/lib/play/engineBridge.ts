@@ -106,6 +106,27 @@ export function plannedEntryToViewEntry(pe: PlannedEntry): ViewEntry {
   };
 }
 
+/** The class flags the bridge may turn into the saveAbility label, in ability order. */
+const SAVE_ABILITY_FLAGS = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
+
+/**
+ * Engine facts → view facts: synthesizes the `spellcasting.saveAbility` string
+ * label ('CHA', …) from the class's numeric flag fact
+ * (`spellcasting.saveAbility.cha` = 1). Spell panels' saveDc label reads the
+ * string (`saveType: { fact: 'spellcasting.saveAbility' }`); the legacy engine
+ * carried it as a string fact, which the numeric engine cannot. With flags for
+ * several abilities set (multiclass), the LAST in ability order wins —
+ * deterministic, and moot while classes are single-ability.
+ */
+function toViewFacts(facts: EngineOutput['facts']): ViewOutput['facts'] {
+  let saveAbility: string | undefined;
+  for (const ability of SAVE_ABILITY_FLAGS) {
+    if ((facts[`spellcasting.saveAbility.${ability}`] ?? 0) === 1)
+      saveAbility = ability.toUpperCase();
+  }
+  return saveAbility ? { ...facts, 'spellcasting.saveAbility': saveAbility } : facts;
+}
+
 /** An offer entry → the view availableRules shape (descriptor gets an empty activities). */
 function offerAsViewEntry(entry: EngineEntry): ViewEntry {
   return {
@@ -133,7 +154,7 @@ export function adaptEngineOutput(output: EngineOutput): ViewOutput {
   const offers = output.availableRules.map(offerAsViewEntry);
   return {
     status: output.status,
-    facts: output.facts,
+    facts: toViewFacts(output.facts),
     collections: {},
     availableRules: offers,
     // Annotations are structurally the view shape (costTags is a widened string[]).

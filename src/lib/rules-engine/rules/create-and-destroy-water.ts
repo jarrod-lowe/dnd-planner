@@ -1,5 +1,6 @@
 import {
   defineRule,
+  preparedSpellCount,
   preparedSpellOffers,
   type ActionResult,
   type Diagnostic,
@@ -24,6 +25,12 @@ const createAndDestroyWater: RuleModule = {
     keywords: `${CAST}.keywords`,
     requires: ['spellcasting']
   },
+  derive: () => [
+    preparedSpellCount({
+      preparedFact: 'spell.l1.createAndDestroyWater.prepared',
+      alwaysPreparedFact: 'spell.l1.createAndDestroyWater.alwaysPrepared'
+    })
+  ],
   offer: () => [
     ...preparedSpellOffers({
       spellId: 'create-and-destroy-water',

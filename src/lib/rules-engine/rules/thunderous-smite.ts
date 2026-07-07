@@ -1,5 +1,6 @@
 import {
   defineRule,
+  preparedSpellCount,
   preparedSpellOffers,
   type ActionResult,
   type Contribution,
@@ -28,6 +29,10 @@ const thunderousSmite: RuleModule = {
   },
   derive: () => {
     const c: Contribution[] = [
+      preparedSpellCount({
+        preparedFact: 'spell.l1.thunderousSmite.prepared',
+        alwaysPreparedFact: 'spell.l1.thunderousSmite.alwaysPrepared'
+      }),
       {
         fact: 'tsmite.eligibleSlotsRemaining',
         value: (f) =>

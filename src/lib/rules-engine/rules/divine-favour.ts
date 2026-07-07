@@ -1,5 +1,6 @@
 import {
   defineRule,
+  preparedSpellCount,
   preparedSpellOffers,
   type ActionResult,
   type Diagnostic,
@@ -44,6 +45,10 @@ const divineFavour: RuleModule = {
     requires: ['spellcasting']
   },
   derive: () => [
+    preparedSpellCount({
+      preparedFact: 'spell.l1.divineFavour.prepared',
+      alwaysPreparedFact: 'spell.l1.divineFavour.alwaysPrepared'
+    }),
     {
       // L1 only, no upcasting.
       fact: 'divineFavour.eligibleSlotsRemaining',

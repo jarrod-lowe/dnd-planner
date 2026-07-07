@@ -1,5 +1,6 @@
 import {
   defineRule,
+  preparedSpellCount,
   preparedSpellOffers,
   type ActionResult,
   type Diagnostic,
@@ -35,6 +36,10 @@ const divineSmite: RuleModule = {
     requires: ['spellcasting']
   },
   derive: () => [
+    preparedSpellCount({
+      preparedFact: 'spell.l1.divineSmite.prepared',
+      alwaysPreparedFact: 'spell.l1.divineSmite.alwaysPrepared'
+    }),
     {
       fact: 'smite.eligibleSlotsRemaining',
       value: (f) =>

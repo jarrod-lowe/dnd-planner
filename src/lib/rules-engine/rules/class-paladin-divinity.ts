@@ -3,6 +3,7 @@ import {
   type ActionResult,
   type Diagnostic,
   type EffectInstance,
+  type FactReader,
   type RestKind,
   type RuleModule
 } from '../builder';
@@ -17,12 +18,15 @@ const D = 'rule.class-paladin-divinity';
  * model (those effects are excluded the turn a long rest is recorded and dropped
  * at endTurn).
  *
- * Short-rest recovery: Channel Divinity regains *one* use on a short rest (all on
- * a long rest). That asymmetry can't be aged per-effect (aging the spends would
- * refund *every* use), so it uses the `onRest` hook: a short rest emits an
+ * Short-rest recovery: Channel Divinity regains *one* EXPENDED use on a short
+ * rest (all on a long rest). That asymmetry can't be aged per-effect (aging the
+ * spends would refund *every* use), so it uses the `onRest` hook: a short rest
+ * with an unrecovered spend outstanding (`spent > recovered`) emits an
  * `untilLongRest` `divinity.recovered` point, and `remaining = clamp(total − spent
- * + recovered)`. A long rest needs no hook — the spend AND recovery effects (both
- * `untilLongRest`) age out, refilling the pool to full.
+ * + recovered)`. The gate stops banking: resting with a full pool emits nothing,
+ * so the points can never pre-pay uses spent after the rest. A long rest needs no
+ * hook — the spend AND recovery effects (both `untilLongRest`) age out, refilling
+ * the pool to full.
  *
  * Divine Sense is the first option: a bonus action spending 1 point, leaving a
  * removable status reminder (`effect-divine-sense`) plus the spend marker.
@@ -39,11 +43,13 @@ const divinity: RuleModule = {
       }
     }
   ],
-  // A short rest regains one Channel Divinity use (a long rest refills fully via
-  // the spends/recovery aging out — no hook needed). Keyless so successive short
-  // rests stack; `untilLongRest` so a long rest clears them.
-  onRest: (kind: RestKind): EffectInstance[] =>
-    kind === 'short'
+  // A short rest regains one EXPENDED Channel Divinity use (a long rest refills
+  // fully via the spends/recovery aging out — no hook needed). Only emitted while
+  // a spend is unrecovered — a rest with the pool full banks nothing. Keyless so
+  // the recoveries that ARE earned stack across rests; `untilLongRest` so a long
+  // rest clears them.
+  onRest: (kind: RestKind, f: FactReader): EffectInstance[] =>
+    kind === 'short' && f.num('divinity.spent') > f.num('divinity.recovered')
       ? [
           {
             id: 'effect-divinity-short-rest',

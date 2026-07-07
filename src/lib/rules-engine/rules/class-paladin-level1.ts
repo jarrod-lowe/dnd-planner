@@ -24,8 +24,11 @@ const paladinLevel1: RuleModule = {
     { fact: 'wis.save.proficient', combine: 'sum', value: () => 1 },
     { fact: 'cha.save.proficient', combine: 'sum', value: () => 1 },
     // Charisma is the paladin's spellcasting ability; its modifier feeds the
-    // spell save DC (computed by the spellcasting group).
+    // spell save DC (computed by the spellcasting group), and the flag fact lets
+    // the play bridge label save DCs with the ability — facts are numeric, so
+    // the 'CHA' string itself is synthesized view-side from this flag.
     { fact: 'spellcasting.modifier', combine: 'sum', value: (f) => f.num('cha.modifier') },
+    { fact: 'spellcasting.saveAbility.cha', combine: 'max', value: () => 1 },
     // Proficient in all armor and shields.
     { fact: 'armor.light.proficient', combine: 'sum', value: () => 1 },
     { fact: 'armor.medium.proficient', combine: 'sum', value: () => 1 },

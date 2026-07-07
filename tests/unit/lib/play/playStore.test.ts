@@ -91,7 +91,9 @@ function rawOutput(overrides: Partial<EngineOutput> = {}): EngineOutput {
 
 /** A CharacterEvaluation (the store's eval seam result) with sensible empty defaults. */
 function playOut(overrides: Partial<CharacterEvaluation> = {}): CharacterEvaluation {
-  const raw = overrides.raw ?? rawOutput({ facts: overrides.facts });
+  // Only forward facts when the caller set them — spreading `facts: undefined`
+  // would REPLACE rawOutput's default `{}` with undefined (an invalid EngineOutput).
+  const raw = overrides.raw ?? rawOutput(overrides.facts ? { facts: overrides.facts } : {});
   return {
     facts: raw.facts,
     availableRules: raw.availableRules,

@@ -20,19 +20,25 @@ const notLockedLegal: LegalWhen = {
 };
 
 /**
- * The prepare / unprepare offer pair shared by every prepared spell.
+ * The prepare / unprepare offer pair shared by every prepared spell. PAIRED with
+ * `preparedSpellCount` below — a module using these offers must also include
+ * that contribution in its `derive`, or its manual preparations never count
+ * against the prepared limit.
  *
  * - prepare: legal while not locked, not already prepared, and under the prepared
  *   limit (`spellcasting.prepared.remaining > 0`). It advertises a PERMANENT keyed
  *   effect setting the spell's `prepared` fact (via `max`, so it composes with a
- *   class always-prepared grant) and `spellcasting.prepared.count += 1` — except
- *   an always-prepared spell is free, so it adds 0 to the count.
+ *   class always-prepared grant). The count against the prepared limit is NOT in
+ *   the effect's state — it is derived live by `preparedSpellCount`, so a later
+ *   always-prepared grant releases the slot (effect state is an unconditional
+ *   delta, and unprepare is illegal once granted, so a baked count could never
+ *   be evicted).
  * - unprepare: legal while not locked, prepared, and NOT always-prepared. It
  *   advertises a same-key empty PERMANENT effect that evicts the prepare effect
- *   (newest-wins dedupe), dropping `prepared` and the count contribution.
+ *   (newest-wins dedupe), dropping `prepared` (and with it the derived count).
  *
- * `alwaysPreparedFact` is read for the count gate / unprepare legality; for a
- * spell no feature ever grants, it is simply absent (0).
+ * `alwaysPreparedFact` is read for the unprepare legality (and the count
+ * derive); for a spell no feature ever grants, it is simply absent (0).
  */
 export function preparedSpellOffers(opts: {
   /** The spell id used in offer ids / i18n keys, e.g. `divine-smite`. */
@@ -81,14 +87,14 @@ export function preparedSpellOffers(opts: {
           diagnostics.push({ code: alreadyPrepared, severity: 'error' });
         if (f.num('spellcasting.prepared.remaining') <= 0)
           diagnostics.push({ code: maxPrepared, severity: 'error' });
-        // An always-prepared spell is free — it doesn't count against the limit.
-        const count = f.num(alwaysPreparedFact) > 0 ? 0 : 1;
         return {
           advertise: [
             {
               id: 'prepared',
               key,
-              state: { [preparedFact]: 1, 'spellcasting.prepared.count': count },
+              // Only the prepared flag persists; the count is derived live by
+              // `preparedSpellCount` (see the pair's doc above).
+              state: { [preparedFact]: 1 },
               stateCombine: { [preparedFact]: 'max' },
               // Named for the strip's reveal toggle, hidden from the default view
               // (effect-<spell>-prepared carried ui.name + hidden).
@@ -132,6 +138,30 @@ export function preparedSpellOffers(opts: {
       }
     }
   ];
+}
+
+/**
+ * The live prepared-count contribution paired with `preparedSpellOffers` — a
+ * module using the offers must also include this in its `derive`. Contributes 1
+ * to `spellcasting.prepared.count` while the spell is prepared AND not
+ * always-prepared, else 0. Derived rather than baked into the prepare effect's
+ * state so a later always-prepared grant releases the slot a manual preparation
+ * consumed: the grant raises `alwaysPreparedFact` and this contribution drops to
+ * 0, where a state delta would have kept counting (and unprepare — the only
+ * eviction — is illegal once granted).
+ */
+export function preparedSpellCount(opts: {
+  /** The spell's prepared fact, e.g. `spell.l1.divineSmite.prepared`. */
+  preparedFact: string;
+  /** The always-prepared fact, e.g. `spell.l1.divineSmite.alwaysPrepared`. */
+  alwaysPreparedFact: string;
+}): Contribution {
+  const { preparedFact, alwaysPreparedFact } = opts;
+  return {
+    fact: 'spellcasting.prepared.count',
+    combine: 'sum',
+    value: (f) => (f.num(preparedFact) === 1 && f.num(alwaysPreparedFact) !== 1 ? 1 : 0)
+  };
 }
 
 // === Weapons ===

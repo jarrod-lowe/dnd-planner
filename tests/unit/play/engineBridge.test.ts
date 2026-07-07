@@ -161,4 +161,17 @@ describe('engineBridge — adaptEngineOutput', () => {
     // View-shape fields are present (stubbed).
     expect(out.collections).toEqual({});
   });
+
+  it('synthesizes the spellcasting.saveAbility label from the class flag fact', () => {
+    // Engine facts are numeric-only; the class contributes a flag
+    // (spellcasting.saveAbility.cha = 1) and the bridge synthesizes the 'CHA'
+    // string the spell panels' saveDc label reads (legacy set it via stringSet).
+    const out = adaptEngineOutput(
+      makeOutput({ facts: { 'hp.max': 10, 'spellcasting.saveAbility.cha': 1 } })
+    );
+    expect(out.facts['spellcasting.saveAbility']).toBe('CHA');
+    // Numeric flag survives too; nothing is synthesized without a flag.
+    expect(out.facts['spellcasting.saveAbility.cha']).toBe(1);
+    expect(adaptEngineOutput(makeOutput()).facts['spellcasting.saveAbility']).toBeUndefined();
+  });
 });

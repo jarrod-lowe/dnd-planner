@@ -1,5 +1,6 @@
 import {
   defineRule,
+  preparedSpellCount,
   preparedSpellOffers,
   type ActionResult,
   type Contribution,
@@ -28,6 +29,10 @@ const sanctuary: RuleModule = {
   },
   derive: () => {
     const c: Contribution[] = [
+      preparedSpellCount({
+        preparedFact: 'spell.l1.sanctuary.prepared',
+        alwaysPreparedFact: 'spell.l1.sanctuary.alwaysPrepared'
+      }),
       {
         fact: 'sanctuary.eligibleSlotsRemaining',
         value: (f) =>

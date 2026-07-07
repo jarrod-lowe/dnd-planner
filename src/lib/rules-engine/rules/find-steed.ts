@@ -1,5 +1,6 @@
 import {
   defineRule,
+  preparedSpellCount,
   preparedSpellOffers,
   statToModifier,
   type ActionResult,
@@ -277,6 +278,10 @@ const findSteed: RuleModule = {
   },
   derive: () => {
     const c: Contribution[] = [
+      preparedSpellCount({
+        preparedFact: 'spell.l2.findSteed.prepared',
+        alwaysPreparedFact: 'spell.l2.findSteed.alwaysPrepared'
+      }),
       {
         fact: 'find-steed.eligibleSlotsRemaining',
         value: (f) =>
@@ -359,6 +364,16 @@ const findSteed: RuleModule = {
           ? f.num('companion.steed.hp.base') +
             Math.min(0, f.num('companion.steed.hp.modifier.current'))
           : 0
+    });
+    // The damage/heal RECORDS accumulate in their own facts (each new record
+    // bakes prior-total + amount into its ONE keyed effect — see
+    // steed-record-damage below); their net feeds the current-HP modifier
+    // alongside the manual setter effect (both combine by sum).
+    c.push({
+      fact: 'companion.steed.hp.modifier.current',
+      combine: 'sum',
+      value: (f) =>
+        f.num('companion.steed.hp.healRecorded') - f.num('companion.steed.hp.damageRecorded')
     });
     c.push({
       fact: 'companion.steed.summoned',
@@ -610,25 +625,33 @@ const findSteed: RuleModule = {
         actionCost: []
       },
       vars: { amount: { capture: true, default: { number: 0 } } },
-      apply: (_f, selections): ActionResult => ({
-        advertise: [
-          {
-            id: 'effect-steed-hp-damage',
-            key: 'effect-steed-hp-damage',
-            state: {
-              'companion.steed.hp.modifier.current': -(typeof selections.amount === 'number'
-                ? selections.amount
-                : 0)
-            },
-            display: {
-              name: `${S}.steed-record-damage.effect.name`,
-              section: 'health',
-              subject: 'steed'
-            },
-            expiry: { kind: 'untilLongRest' }
-          }
-        ]
-      })
+      // Each record REPLACES the one keyed effect with the accumulated running
+      // total (prior total + this amount) — records add up, while the dismiss
+      // cascade still evicts by key and removing the single chip clears the
+      // whole damage record. A same-key effect that merely carried its own
+      // amount would evict the previous record instead of adding to it.
+      apply: (f, selections): ActionResult => {
+        const amount = typeof selections.amount === 'number' ? selections.amount : 0;
+        return {
+          advertise: [
+            {
+              id: 'effect-steed-hp-damage',
+              key: 'effect-steed-hp-damage',
+              state: {
+                'companion.steed.hp.damageRecorded':
+                  f.num('companion.steed.hp.damageRecorded') + amount
+              },
+              display: {
+                name: `${S}.steed-record-damage.effect.name`,
+                section: 'health',
+                subject: 'steed',
+                displayFact: 'companion.steed.hp.damageRecorded'
+              },
+              expiry: { kind: 'untilLongRest' }
+            }
+          ]
+        };
+      }
     },
     {
       id: 'steed-record-heal',
@@ -648,24 +671,29 @@ const findSteed: RuleModule = {
         actionCost: []
       },
       vars: { amount: { capture: true, default: { number: 0 } } },
-      apply: (_f, selections): ActionResult => ({
-        advertise: [
-          {
-            id: 'effect-steed-hp-heal',
-            key: 'effect-steed-hp-heal',
-            state: {
-              'companion.steed.hp.modifier.current':
-                typeof selections.amount === 'number' ? selections.amount : 0
-            },
-            display: {
-              name: `${S}.steed-record-heal.effect.name`,
-              section: 'health',
-              subject: 'steed'
-            },
-            expiry: { kind: 'untilLongRest' }
-          }
-        ]
-      })
+      // Accumulates exactly like steed-record-damage above (one keyed effect
+      // carrying the running heal total).
+      apply: (f, selections): ActionResult => {
+        const amount = typeof selections.amount === 'number' ? selections.amount : 0;
+        return {
+          advertise: [
+            {
+              id: 'effect-steed-hp-heal',
+              key: 'effect-steed-hp-heal',
+              state: {
+                'companion.steed.hp.healRecorded': f.num('companion.steed.hp.healRecorded') + amount
+              },
+              display: {
+                name: `${S}.steed-record-heal.effect.name`,
+                section: 'health',
+                subject: 'steed',
+                displayFact: 'companion.steed.hp.healRecorded'
+              },
+              expiry: { kind: 'untilLongRest' }
+            }
+          ]
+        };
+      }
     },
     // Dismiss — the steed vanishes (replaces the summon effect).
     {

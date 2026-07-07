@@ -256,6 +256,7 @@ const EXPECTED_RUNNABLE = [
   'steed-creature-type-gating-fiend',
   'steed-hp-modifiers',
   'steed-hp-mods',
+  'steed-damage-accumulates',
   'long-rest-sets-flag',
   'savage-attacker-no-feat',
   'short-rest-sets-flag',
@@ -376,6 +377,8 @@ const EXPECTED_RUNNABLE = [
   // M3 — the onRest hook (passive module emits a persistent effect from a rest):
   // Channel Divinity short-rest recovery + Human Heroic Inspiration on a long rest
   'divinity-short-rest-reset',
+  'divinity-short-rest-no-banking',
+  'divinity-recovery-caps-at-spent',
   'hi-human-long-rest-grant',
   // M3 — oath-redemption-level3 Channel Divinity options (first runnable reaction
   // spend, via Rebuke the Violent) + Emissary of Peace

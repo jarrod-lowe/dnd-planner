@@ -193,6 +193,62 @@ only; the store keeps a per-instance `plannedEntries` map
 the plan rows consume; hypotheticals remain for the alternatives picker only.
 Test-covered at all three layers (bridge, store, PlanStack).
 
+### 1.11 Channel Divinity banked recovery points on spend-less short rests
+
+**FIXED** (found by Codex review on PR #363, round 2). The divinity `onRest`
+hook emitted a keyless `divinity.recovered` effect on EVERY short rest,
+unconditionally. Resting with a full pool banked a point that pre-paid a use
+spent later (`remaining = clamp(total − spent + recovered)` hid the surplus
+until the spends arrived); repeated spend-less rests banked without bound. Now
+the hook emits only while there is an unrecovered spend outstanding
+(`divinity.spent > divinity.recovered` — the hook already received a
+`FactReader` it ignored), which is the 2024 rule: a short rest restores one
+EXPENDED use. Scenarios: `divinity-short-rest-no-banking`,
+`divinity-recovery-caps-at-spent`; the existing `divinity-short-rest-reset`
+covers the recover-then-respend chain unchanged.
+
+### 1.12 Manual prepare count could not be released by a later always-prepared grant
+
+**FIXED** (found by Codex review on PR #363, round 2). The prepare offer baked
+`spellcasting.prepared.count: 1` (or 0 if granted at prepare TIME) into the
+permanent effect's state. State is an unconditional delta, and unprepare — the
+only eviction — is illegal for an always-prepared spell: prepare Sleep at L1,
+take Oath of Redemption at L3, and the stale count consumed a prepared slot
+forever. The count is now derived live (`preparedSpellCount` in the builder,
+paired into all 14 users' `derive`: 1 while `prepared && !alwaysPrepared`),
+and the prepare effect persists only the prepared flag. NOTE for stored
+characters: prep effects persisted BEFORE this change still carry the baked
+count in state and will over-count by 1 per manually-prepared spell until
+re-prepared or recreated — covered by the pre-merge delete/recreate pass the
+cutover already requires. Unit: `prepared-count.test.ts` (prepare-then-grant
+across module-set change); the yaml scenarios keep the grant-first order.
+
+### 1.13 Steed damage/heal records replaced instead of accumulating
+
+**FIXED** (found by Codex review on PR #363, round 2). `steed-record-damage`
+advertised a keyed effect whose state carried ONLY that record's amount —
+`dedupeByKey` (newest wins) meant 10 damage then 3 damage left the steed at −3,
+not −13 (heals identically). Each record now bakes prior-total + amount into
+the one keyed effect via dedicated accumulator facts
+(`companion.steed.hp.damageRecorded` / `.healRecorded`; the module derives
+their net into `companion.steed.hp.modifier.current` alongside the manual
+setter), so records add up while the dismiss cascade still evicts by key and
+removing the single chip clears the whole record. The chips also gained
+`displayFact` so they show the running total (legacy showed the per-record
+amount). Scenario: `steed-damage-accumulates`.
+
+### 1.14 spellcasting.saveAbility string fact lost in the port (save DC labels broken)
+
+**FIXED** (found by Codex review on PR #363, round 2). Legacy set
+`spellcasting.saveAbility` to the STRING `'CHA'` (stringSet); seven spells'
+saveDc info line reads it (`saveType: { fact: 'spellcasting.saveAbility' }`).
+Engine facts are numeric by design, so the fact silently vanished and the
+label rendered with an empty save type. Now `class-paladin-level1` contributes
+a numeric flag (`spellcasting.saveAbility.cha` = 1) and the play bridge
+synthesizes the view-side string ('CHA') from the flag (`toViewFacts` in
+engineBridge). Asserted in `spell-save-dc` (flag) and the bridge unit test
+(synthesis).
+
 ## 2. Faithfulness deltas v1 → v2 (2.1–2.7 ACCEPTED; 2.8–2.11 FIXED)
 
 ### 2.1 Offers are judged against post-plan facts (v1: phase-interleaved)
