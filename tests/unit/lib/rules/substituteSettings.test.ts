@@ -38,6 +38,29 @@ describe('substituteTemplate', () => {
     expect(result.id).toBe('test-test');
   });
 
+  it('substitutes ${value} inside an EffectInstance display block (reveal names)', () => {
+    const template = {
+      id: 'sentinel-asi-${value}',
+      key: 'sentinel-asi-${value}',
+      state: { '${value}.value': 1 },
+      display: {
+        name: 'rules.settings.sentinel-asi.${value}',
+        displayFact: '${value}.value',
+        hidden: true
+      },
+      expiry: { kind: 'permanent' }
+    };
+
+    const result = substituteTemplate(template, 'str') as typeof template;
+
+    expect(result.display).toEqual({
+      name: 'rules.settings.sentinel-asi.str',
+      displayFact: 'str.value',
+      hidden: true
+    });
+    expect(result.state).toEqual({ 'str.value': 1 });
+  });
+
   it('leaves non-string values unchanged', () => {
     const template = {
       count: 42,

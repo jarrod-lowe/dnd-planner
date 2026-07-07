@@ -50,7 +50,14 @@
   const itemsWithEntries = $derived(
     items.map((item) => {
       const entry = entryById[item.originalRuleId ?? item.rule.id];
-      if (!entry) return { item, entry: null };
+      // Offer gone from the catalog (its structural `when` closed — e.g. the
+      // weapon was stowed earlier in the plan): the engine skips the action, and
+      // the row stays visible as inapplicable so the player can see and remove it.
+      if (!entry)
+        return {
+          item,
+          entry: { rule: item.rule, legal: true, applicable: false, diagnostics: [] }
+        };
 
       const hypothetical = playStore.getAlternativeEntries(item.instanceId);
       const hypEntry = hypothetical.find(
@@ -116,28 +123,26 @@
 
   <div class="plan-stack__rows" role="list">
     {#each itemsWithEntries as { item, entry }, i (item.instanceId)}
-      {#if entry}
-        <div role="listitem">
-          <PlanRow
-            {item}
-            {entry}
-            {facts}
-            {activeAnnotations}
-            alternatives={correctedAlternatives(
-              item,
-              getAlternatives(item.verb, item.originalRuleId ?? '', getSubject(item.rule))
-            )}
-            canMoveUp={i > 0}
-            canMoveDown={i < items.length - 1}
-            onSelectionChange={(selections) => onSelectionChange(item.instanceId, selections)}
-            onRemove={() => onRemoveFromPlan(item.instanceId)}
-            onMoveUp={() => onMovePlanItem(item.instanceId, 'up')}
-            onMoveDown={() => onMovePlanItem(item.instanceId, 'down')}
-            onSwapAlternative={(alt) => onSwapPlanItemRule(item.instanceId, alt)}
-            {onFollowup}
-          />
-        </div>
-      {/if}
+      <div role="listitem">
+        <PlanRow
+          {item}
+          {entry}
+          {facts}
+          {activeAnnotations}
+          alternatives={correctedAlternatives(
+            item,
+            getAlternatives(item.verb, item.originalRuleId ?? '', getSubject(item.rule))
+          )}
+          canMoveUp={i > 0}
+          canMoveDown={i < items.length - 1}
+          onSelectionChange={(selections) => onSelectionChange(item.instanceId, selections)}
+          onRemove={() => onRemoveFromPlan(item.instanceId)}
+          onMoveUp={() => onMovePlanItem(item.instanceId, 'up')}
+          onMoveDown={() => onMovePlanItem(item.instanceId, 'down')}
+          onSwapAlternative={(alt) => onSwapPlanItemRule(item.instanceId, alt)}
+          {onFollowup}
+        />
+      </div>
     {/each}
   </div>
 

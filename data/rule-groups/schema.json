@@ -4,7 +4,9 @@
   "title": "D&D Planner Rule Groups",
   "description": "Schema for D&D Planner rule group YAML files",
   "type": "object",
-  "required": ["ruleGroups"],
+  "required": [
+    "ruleGroups"
+  ],
   "properties": {
     "ruleGroups": {
       "type": "array",
@@ -15,15 +17,12 @@
     }
   },
   "definitions": {
-    "supportedLocale": {
-      "type": "string",
-      "enum": ["en", "en-x-tlh"],
-      "description": "Supported locales for rule group translations"
-    },
     "detailLocale": {
       "type": "object",
       "description": "Translated detail content for a single locale",
-      "required": ["body"],
+      "required": [
+        "body"
+      ],
       "properties": {
         "meta": {
           "type": "string",
@@ -33,10 +32,17 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["labelKey", "value"],
+            "required": [
+              "labelKey",
+              "value"
+            ],
             "properties": {
-              "labelKey": { "type": "string" },
-              "value": { "type": "string" }
+              "labelKey": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
             }
           }
         },
@@ -49,7 +55,11 @@
     },
     "translation": {
       "type": "object",
-      "required": ["name", "description", "keywords"],
+      "required": [
+        "name",
+        "description",
+        "keywords"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -71,12 +81,18 @@
     },
     "ruleGroup": {
       "type": "object",
-      "required": ["id", "translations"],
+      "required": [
+        "id",
+        "translations"
+      ],
       "properties": {
         "id": {
           "type": "string",
           "description": "Unique identifier for this rule group",
-          "examples": ["paladin-level1-divine-sense", "fighter-champion-improved-critical"]
+          "examples": [
+            "paladin-level1-divine-sense",
+            "fighter-champion-improved-critical"
+          ]
         },
         "translations": {
           "type": "object",
@@ -89,7 +105,10 @@
               "$ref": "#/definitions/translation"
             }
           },
-          "required": ["en", "en-x-tlh"],
+          "required": [
+            "en",
+            "en-x-tlh"
+          ],
           "additionalProperties": false
         },
         "requires": {
@@ -98,13 +117,6 @@
             "type": "string"
           },
           "description": "IDs of rule groups that must also be assigned when this group is assigned"
-        },
-        "rules": {
-          "type": "array",
-          "description": "Array of rules in this rule group",
-          "items": {
-            "$ref": "#/definitions/rule"
-          }
         },
         "settings": {
           "type": "array",
@@ -123,7 +135,11 @@
         "detail": {
           "type": "object",
           "description": "Detail text for rules mode (extracted by publish step, stripped before DynamoDB)",
-          "required": ["key", "source", "translations"],
+          "required": [
+            "key",
+            "source",
+            "translations"
+          ],
           "properties": {
             "key": {
               "type": "string",
@@ -131,7 +147,11 @@
             },
             "source": {
               "type": "string",
-              "enum": ["srd52", "srd51", "custom"],
+              "enum": [
+                "srd52",
+                "srd51",
+                "custom"
+              ],
               "description": "Provenance label"
             },
             "translations": {
@@ -152,7 +172,11 @@
       "description": "A condition for rule group assignment. Top-level array is AND logic; use type 'or' for OR logic.",
       "oneOf": [
         {
-          "required": ["fact", "operator", "value"],
+          "required": [
+            "fact",
+            "operator",
+            "value"
+          ],
           "properties": {
             "fact": {
               "type": "string",
@@ -168,7 +192,10 @@
           }
         },
         {
-          "required": ["type", "clauses"],
+          "required": [
+            "type",
+            "clauses"
+          ],
           "properties": {
             "type": {
               "type": "string",
@@ -186,441 +213,6 @@
         }
       ]
     },
-    "rule": {
-      "type": "object",
-      "required": ["id", "activities"],
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for this rule"
-        },
-        "description": {
-          "type": "string",
-          "description": "i18n key for rule description"
-        },
-        "ui": {
-          "type": "object",
-          "description": "UI-specific configuration",
-          "properties": {
-            "model": {
-              "type": "string",
-              "description": "UI model type (e.g., 'move')"
-            },
-            "section": {
-              "type": "string",
-              "description": "UI section label"
-            },
-            "subject": {
-              "type": "string",
-              "description": "Companion subject identifier (e.g., 'steed'). Absent means player."
-            },
-            "name": {
-              "type": "string",
-              "description": "i18n key for display name"
-            },
-            "description": {
-              "type": "string",
-              "description": "i18n key for a short reminder shown directly under the panel title"
-            },
-            "descriptionValues": {
-              "type": "object",
-              "description": "Dynamic values to interpolate into the description. Keys are placeholder names, values are ValueSource objects resolved at render time.",
-              "additionalProperties": true
-            },
-            "packBehind": {
-              "type": "string",
-              "description": "Rule ID to pack this choice behind (collapsible group)"
-            },
-            "sliderMin": {
-              "type": "number",
-              "description": "Minimum value for the ability-score model slider"
-            },
-            "sliderMax": {
-              "type": "number",
-              "description": "Maximum value for the ability-score model slider"
-            },
-            "stats": {
-              "type": "array",
-              "description": "Stats to display in the stats column",
-              "items": {
-                "$ref": "#/definitions/statEntry"
-              }
-            },
-            "topBar": {
-              "type": "array",
-              "description": "Entries to display in the top bar",
-              "items": {
-                "$ref": "#/definitions/topBarEntry"
-              }
-            },
-            "resources": {
-              "type": "array",
-              "description": "Entries to display in the resources ledger",
-              "items": {
-                "$ref": "#/definitions/topBarEntry"
-              }
-            },
-            "disadvantageFact": {
-              "type": "string",
-              "description": "Fact path indicating disadvantage on this roll"
-            },
-            "outcomeKey": {
-              "type": "string",
-              "description": "i18n key for contest outcome label"
-            },
-            "vsKey": {
-              "type": "string",
-              "description": "i18n key for 'vs' label in contested actions"
-            },
-            "followups": {
-              "type": "array",
-              "description": "Followup action buttons available on this rule",
-              "items": {
-                "$ref": "#/definitions/followup"
-              }
-            },
-            "countDown": {
-              "type": "number",
-              "description": "Remaining rounds for a timed effect (decremented each end turn)"
-            },
-            "duration": {
-              "type": "number",
-              "description": "Total rounds for a timed effect (constant)"
-            },
-            "saveType": {
-              "type": "string",
-              "description": "Ability score type for saving throw (e.g., 'WIS')"
-            },
-            "saveFact": {
-              "type": "string",
-              "description": "Fact path for the save DC value (e.g., 'spellcasting.saveDC')"
-            },
-            "showDC": {
-              "type": "boolean",
-              "description": "Show the save DC display for spell-save model"
-            },
-            "dieSides": {
-              "type": "number",
-              "description": "Number of sides on the smite die (default 8 for d8)"
-            },
-            "annotationLabels": {
-              "type": "array",
-              "description": "Labels this rule responds to for annotation matching (e.g., 'attack.melee')",
-              "items": {
-                "type": "string"
-              }
-            },
-            "primaryControl": {
-              "type": "object",
-              "description": "Primary UI control configuration (e.g., dice-line, slider)",
-              "additionalProperties": true,
-              "allOf": [
-                {
-                  "if": {
-                    "properties": { "type": { "const": "dice-line" } },
-                    "required": ["type"]
-                  },
-                  "then": {
-                    "required": ["dice"],
-                    "properties": {
-                      "dice": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "required": ["purpose"],
-                          "properties": {
-                            "purpose": {
-                              "enum": ["to-hit", "damage", "healing", "save", "check"]
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              ]
-            },
-            "secondaryControl": {
-              "type": "object",
-              "description": "Secondary UI control configuration",
-              "additionalProperties": true,
-              "allOf": [
-                {
-                  "if": {
-                    "properties": { "type": { "const": "dice-line" } },
-                    "required": ["type"]
-                  },
-                  "then": {
-                    "required": ["dice"],
-                    "properties": {
-                      "dice": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "required": ["purpose"],
-                          "properties": {
-                            "purpose": {
-                              "enum": ["to-hit", "damage", "healing", "save", "check"]
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              ]
-            },
-            "information": {
-              "type": "array",
-              "description": "Informational UI elements to display (e.g., text, countdown)",
-              "items": {
-                "type": "object",
-                "additionalProperties": true
-              }
-            },
-            "intents": {
-              "type": "object",
-              "description": "Map of intent verb to sub-bucket label. Keys are verbs (ATTACK, AID, etc.), values are sub-bucket labels. Required when ui.section is present.",
-              "additionalProperties": {
-                "type": "string"
-              }
-            },
-            "actionCost": {
-              "type": "array",
-              "description": "Cost tags for UI chip display. Required when ui.section is present.",
-              "items": {
-                "type": "string",
-                "enum": ["action", "bonus", "reaction", "move", "conc", "LoH", "CD", "L1", "L2", "L3", "L4", "L5", "free"]
-              }
-            },
-            "hidden": {
-              "type": "boolean",
-              "description": "Suppress this effect from the active state display by default (toggled via eye icon)"
-            },
-            "displayFact": {
-              "type": "string",
-              "description": "Fact key to read for displaying a value on the effect chip (e.g., 'str.value')"
-            },
-            "displaySelection": {
-              "type": "string",
-              "description": "Selection key to read for displaying a value on the effect chip (e.g., 'amount')"
-            },
-            "levelFact": {
-              "type": "string",
-              "description": "Fact key to read for displaying proficiency level as pips on the effect chip (e.g., 'skill.athletics.proficiency')"
-            },
-            "detailKey": {
-              "type": "string",
-              "description": "Key for fetching detail content to display in rules mode (e.g., 'spell/sleep')"
-            }
-          },
-          "additionalProperties": false
-        },
-        "vars": {
-          "type": "object",
-          "description": "Rule variables with default values",
-          "additionalProperties": {
-            "$ref": "#/definitions/varDefinition"
-          }
-        },
-        "selections": {
-          "type": "object",
-          "description": "User-selected values for vars",
-          "additionalProperties": true
-        },
-        "phase": {
-          "$ref": "#/definitions/phase",
-          "default": "normal"
-        },
-        "enabled": {
-          "type": "boolean",
-          "default": true
-        },
-        "when": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/condition"
-          },
-          "description": "Conditions that must be satisfied for rule execution"
-        },
-        "after": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/groupReference"
-          },
-          "description": "Group dependencies that must settle first"
-        },
-        "group": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "Groups this rule belongs to"
-        },
-        "cascadeRemove": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "Base IDs of effects to also remove when this effect is manually removed from the UI"
-        },
-        "activities": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/activity"
-          },
-          "description": "Activities to execute when rule runs"
-        }
-      },
-      "additionalProperties": false
-    },
-    "phase": {
-      "type": "string",
-      "enum": ["early", "normal", "safeguard"],
-      "description": "Execution phase"
-    },
-    "groupReference": {
-      "type": "object",
-      "required": ["group"],
-      "properties": {
-        "group": {
-          "type": "string",
-          "description": "Group name to depend on"
-        }
-      },
-      "additionalProperties": false
-    },
-    "varDefinition": {
-      "type": "object",
-      "required": ["default"],
-      "properties": {
-        "default": {
-          "$ref": "#/definitions/source",
-          "description": "Default value source"
-        },
-        "capture": {
-          "type": "boolean",
-          "description": "When true, capture fact value as selection when added to plan",
-          "default": false
-        }
-      },
-      "additionalProperties": false
-    },
-    "target": {
-      "type": "object",
-      "description": "Target for activity operations - exactly one of fact or var must be present",
-      "minProperties": 1,
-      "maxProperties": 1,
-      "properties": {
-        "fact": {
-          "type": "string",
-          "description": "Fact path to target"
-        },
-        "var": {
-          "type": "string",
-          "description": "Variable name to target"
-        }
-      },
-      "additionalProperties": false
-    },
-    "source": {
-      "type": "object",
-      "description": "Value source - exactly one of number, fact, var, condition, string, or array must be present",
-      "minProperties": 1,
-      "maxProperties": 1,
-      "properties": {
-        "number": {
-          "type": "number",
-          "description": "Literal numeric value"
-        },
-        "fact": {
-          "type": "string",
-          "description": "Reference to a fact in working state"
-        },
-        "var": {
-          "type": "string",
-          "description": "Reference to a rule variable"
-        },
-        "condition": {
-          "$ref": "#/definitions/condition",
-          "description": "Condition to evaluate, returns 1 if true, 0 if false"
-        },
-        "string": {
-          "type": "string",
-          "description": "Literal string value (typically an i18n key)"
-        },
-        "array": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/rangeEntry"
-          },
-          "description": "Array of range entries for multi-range weapons"
-        }
-      },
-      "additionalProperties": false
-    },
-    "rangeEntry": {
-      "type": "object",
-      "required": ["distance", "type"],
-      "properties": {
-        "distance": {
-          "type": "integer",
-          "description": "Range distance in feet"
-        },
-        "type": {
-          "type": "string",
-          "description": "Range type (melee, thrown, ranged)"
-        },
-        "disadvantage": {
-          "type": "boolean",
-          "description": "Whether attacks at this range have disadvantage"
-        },
-        "label": {
-          "type": "string",
-          "description": "Display label appended to range (e.g., '1H', '2H' for versatile weapons)"
-        },
-        "damageDie": {
-          "type": "integer",
-          "description": "Override the damage die for this range (e.g., 8 for d8 when using two hands)"
-        },
-        "extraHands": {
-          "type": "integer",
-          "description": "Additional free hands required beyond what the weapon already consumes"
-        }
-      },
-      "additionalProperties": false
-    },
-    "condition": {
-      "type": "object",
-      "description": "Condition for when/legalWhen clauses",
-      "oneOf": [
-        {
-          "required": ["fact"],
-          "properties": {
-            "fact": {
-              "type": "string",
-              "description": "Fact path to check"
-            },
-            "operator": {
-              "$ref": "#/definitions/comparisonOperator"
-            },
-            "value": {
-              "type": "number",
-              "description": "Value to compare against (required when operator is present)"
-            }
-          }
-        },
-        {
-          "required": ["event"],
-          "properties": {
-            "event": {
-              "type": "string",
-              "description": "Event name to check"
-            }
-          }
-        }
-      ]
-    },
     "comparisonOperator": {
       "type": "string",
       "enum": [
@@ -633,205 +225,14 @@
       ],
       "description": "Comparison operator for fact conditions"
     },
-    "activity": {
-      "type": "object",
-      "required": ["type"],
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for this activity"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "numberSet",
-            "stringSet",
-            "numberIncrement",
-            "numberCopy",
-            "numberSum",
-            "numberFunction",
-            "emitEvent",
-            "generateRule",
-            "offerRule",
-            "setClear",
-            "setAdd",
-            "advertiseEffect",
-            "annotate"
-          ],
-          "description": "Activity type"
-        },
-        "when": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/condition"
-          },
-          "description": "Conditions that must all be true for this activity to execute"
-        },
-        "target": {
-          "$ref": "#/definitions/target",
-          "description": "Target for the activity (for numberSet, numberIncrement, numberCopy, numberSum, numberFunction, setClear, setAdd)"
-        },
-        "source": {
-          "$ref": "#/definitions/source",
-          "description": "Source value reference (for numberSet, numberIncrement, numberCopy, setAdd)"
-        },
-        "sources": {
-          "type": "array",
-          "items": { "$ref": "#/definitions/source" },
-          "description": "Array of source value references (for numberSum, numberFunction)"
-        },
-        "max": {
-          "type": "string",
-          "description": "Maximum value fact path (for numberIncrement)"
-        },
-        "subtract": {
-          "type": "boolean",
-          "description": "For numberIncrement: subtract the value instead of adding",
-          "default": false
-        },
-        "function": {
-          "type": "string",
-          "enum": ["statToModifier", "multiply", "max"],
-          "description": "Named function (for numberFunction)"
-        },
-        "args": {
-          "type": "object",
-          "description": "Additional arguments for the function (for numberFunction)",
-          "additionalProperties": true
-        },
-        "event": {
-          "type": "string",
-          "description": "Event name (for emitEvent)"
-        },
-        "rule": {
-          "$ref": "#/definitions/rule",
-          "description": "Rule to generate, offer, or advertise"
-        },
-        "self": {
-          "type": "boolean",
-          "description": "Re-advertise the current rule as a persistent effect (for advertiseEffect, mutually exclusive with rule)"
-        },
-        "legalWhen": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/illegalWhenEntry"
-          },
-          "description": "Conditions for rule legality (for offerRule)"
-        },
-        "key": {
-          "type": "string",
-          "description": "i18n key for the annotation (for annotate)"
-        },
-        "targets": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Annotation label targets to match (for annotate)"
-        },
-        "rider": {
-          "$ref": "#/definitions/annotationRider",
-          "description": "Optional rider data for rendering as a modifier chip (for annotate)"
-        }
-      },
-      "additionalProperties": false
-    },
-    "illegalWhenEntry": {
-      "type": "object",
-      "required": ["condition"],
-      "properties": {
-        "condition": {
-          "$ref": "#/definitions/condition"
-        },
-        "illegalDiagnostics": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/diagnostic"
-          }
-        }
-      }
-    },
-    "diagnostic": {
-      "type": "object",
-      "required": ["code", "severity"],
-      "properties": {
-        "code": {
-          "type": "string"
-        },
-        "severity": {
-          "type": "string",
-          "enum": ["error", "warning", "notice"]
-        }
-      }
-    },
-    "annotationRider": {
-      "type": "object",
-      "required": ["label", "type"],
-      "properties": {
-        "label": {
-          "type": "string",
-          "description": "i18n key for the rider chip label (e.g., 'spell-bless.rider.plus-d4')"
-        },
-        "type": {
-          "type": "string",
-          "enum": ["dice", "modifier", "effect"],
-          "description": "Category of rider for UI rendering"
-        },
-        "costTags": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": ["action", "bonus", "reaction", "move", "conc", "LoH", "CD", "L1", "L2", "L3", "L4", "L5", "free"]
-          },
-          "description": "Action cost tags consumed by this rider"
-        },
-        "legal": {
-          "type": "boolean",
-          "description": "Whether this rider is currently usable. Omit or true = legal."
-        },
-        "illegalReason": {
-          "type": "string",
-          "description": "i18n key explaining why the rider is illegal (when legal is false)"
-        }
-      },
-      "additionalProperties": false
-    },
-    "followup": {
-      "type": "object",
-      "required": ["type", "condition", "button"],
-      "properties": {
-        "type": {
-          "type": "string",
-          "enum": ["effect", "attack-line"],
-          "description": "Followup action type"
-        },
-        "condition": {
-          "$ref": "#/definitions/condition",
-          "description": "Condition that must be true for the followup to be visible"
-        },
-        "button": {
-          "type": "string",
-          "description": "i18n key for the followup button label"
-        },
-        "addRule": {
-          "type": "object",
-          "description": "Rule to add when followup is triggered (for effect type)",
-          "properties": {
-            "target": {
-              "type": "string",
-              "description": "Target fact path for the added rule"
-            },
-            "rule": {
-              "$ref": "#/definitions/rule",
-              "description": "Rule to add"
-            }
-          },
-          "additionalProperties": false
-        }
-      },
-      "additionalProperties": false
-    },
     "settingDefinition": {
       "type": "object",
-      "required": ["id", "type", "translations", "options"],
+      "required": [
+        "id",
+        "type",
+        "translations",
+        "options"
+      ],
       "properties": {
         "id": {
           "type": "string",
@@ -839,7 +240,10 @@
         },
         "type": {
           "type": "string",
-          "enum": ["select", "select-rule-group"],
+          "enum": [
+            "select",
+            "select-rule-group"
+          ],
           "description": "Setting type: select (dropdown generating an effect) or select-rule-group (dropdown auto-assigning a rule group)"
         },
         "translations": {
@@ -853,7 +257,10 @@
               "$ref": "#/definitions/settingTranslation"
             }
           },
-          "required": ["en", "en-x-tlh"],
+          "required": [
+            "en",
+            "en-x-tlh"
+          ],
           "additionalProperties": false
         },
         "options": {
@@ -871,10 +278,16 @@
       "allOf": [
         {
           "if": {
-            "properties": { "type": { "const": "select" } }
+            "properties": {
+              "type": {
+                "const": "select"
+              }
+            }
           },
           "then": {
-            "required": ["effect"]
+            "required": [
+              "effect"
+            ]
           }
         }
       ],
@@ -883,7 +296,10 @@
     "effectInstance": {
       "type": "object",
       "description": "A v2 rules-engine EffectInstance: a committed effect that contributes fact deltas while it lives.",
-      "required": ["id", "expiry"],
+      "required": [
+        "id",
+        "expiry"
+      ],
       "properties": {
         "id": {
           "type": "string",
@@ -900,12 +316,43 @@
         "state": {
           "type": "object",
           "description": "Fact deltas contributed while active (summed by default)",
-          "additionalProperties": { "type": "number" }
+          "additionalProperties": {
+            "type": "number"
+          }
         },
         "stateCombine": {
           "type": "object",
           "description": "Per-fact combine override for state deltas (default sum)",
-          "additionalProperties": { "enum": ["sum", "max", "override"] }
+          "additionalProperties": {
+            "enum": [
+              "sum",
+              "max",
+              "override"
+            ]
+          }
+        },
+        "display": {
+          "type": "object",
+          "description": "UI metadata for the active-effects strip; hidden: true keeps the name for the reveal toggle only",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "i18n key for the chip name"
+            },
+            "section": {
+              "type": "string"
+            },
+            "displayFact": {
+              "type": "string"
+            },
+            "hidden": {
+              "type": "boolean"
+            },
+            "subject": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
         },
         "expiry": {
           "$ref": "#/definitions/expirySpec"
@@ -915,11 +362,19 @@
     },
     "expiry": {
       "type": "object",
-      "required": ["kind"],
+      "required": [
+        "kind"
+      ],
       "properties": {
         "kind": {
           "type": "string",
-          "enum": ["permanent", "endOfTurn", "untilShortRest", "untilLongRest", "turns"]
+          "enum": [
+            "permanent",
+            "endOfTurn",
+            "untilShortRest",
+            "untilLongRest",
+            "turns"
+          ]
         },
         "remaining": {
           "type": "number",
@@ -931,13 +386,22 @@
     "expirySpec": {
       "description": "A single expiry condition, or several (the effect ends on the earliest to fire)",
       "oneOf": [
-        { "$ref": "#/definitions/expiry" },
-        { "type": "array", "items": { "$ref": "#/definitions/expiry" } }
+        {
+          "$ref": "#/definitions/expiry"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/expiry"
+          }
+        }
       ]
     },
     "settingTranslation": {
       "type": "object",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -952,7 +416,10 @@
     },
     "settingOption": {
       "type": "object",
-      "required": ["value", "translations"],
+      "required": [
+        "value",
+        "translations"
+      ],
       "properties": {
         "value": {
           "type": "string",
@@ -969,256 +436,14 @@
               "$ref": "#/definitions/settingTranslation"
             }
           },
-          "required": ["en", "en-x-tlh"],
+          "required": [
+            "en",
+            "en-x-tlh"
+          ],
           "additionalProperties": false
         }
       },
       "additionalProperties": false
-    },
-    "statEntry": {
-      "type": "object",
-      "required": ["name", "type", "section"],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "i18n key for the stat label"
-        },
-        "nameParams": {
-          "type": "object",
-          "description": "Parameters for i18n template interpolation",
-          "additionalProperties": true
-        },
-        "type": {
-          "type": "string",
-          "enum": ["value", "modifier", "usedMax", "hitDie"],
-          "description": "Display type: value (plain number), modifier (+/-X), usedMax (X/Y resource), hitDie (X/Y dZ)"
-        },
-        "fact": {
-          "type": "string",
-          "description": "Fact path for value/modifier types"
-        },
-        "total": {
-          "type": "string",
-          "description": "Fact path for the total capacity (usedMax type)"
-        },
-        "remaining": {
-          "type": "string",
-          "description": "Fact path for remaining amount (usedMax type)"
-        },
-        "section": {
-          "type": "string",
-          "description": "Section name for grouping stats in the UI"
-        },
-        "subject": {
-          "type": "string",
-          "description": "Companion subject identifier (e.g., 'steed'). Absent means player."
-        },
-        "modifierFact": {
-          "type": "string",
-          "description": "Fact path for the modifier display (value type only). When present with saveFact, value renders as score/modifier/save."
-        },
-        "saveFact": {
-          "type": "string",
-          "description": "Fact path for the saving throw modifier (value type only). When present with modifierFact, value renders as score/modifier/save."
-        },
-        "proficiencyFact": {
-          "type": "string",
-          "description": "Fact path for proficiency multiplier indicator (modifier type only). When present, renders a proficiency badge next to the modifier."
-        },
-        "dieSize": {
-          "type": "integer",
-          "description": "Die size for hitDie type (e.g., 6, 8, 10, 12)"
-        }
-      },
-      "additionalProperties": false,
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "usedMax"
-              }
-            }
-          },
-          "then": {
-            "required": ["total", "remaining"]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "enum": ["value", "modifier"]
-              }
-            }
-          },
-          "then": {
-            "required": ["fact"]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "hitDie"
-              }
-            }
-          },
-          "then": {
-            "required": ["total", "remaining", "dieSize"]
-          }
-        }
-      ]
-    },
-    "topBarEntry": {
-      "type": "object",
-      "required": ["type", "label"],
-      "properties": {
-        "type": {
-          "type": "string",
-          "enum": ["usedMax", "value", "modifier", "hitDie", "concentration", "ability"],
-          "description": "Display type for the entry"
-        },
-        "label": {
-          "type": "string",
-          "description": "i18n key for the entry label"
-        },
-        "nameParams": {
-          "type": "object",
-          "description": "Parameters for i18n template interpolation",
-          "additionalProperties": true
-        },
-        "total": {
-          "type": "string",
-          "description": "Fact path for total/max value (usedMax, hitDie types)"
-        },
-        "remaining": {
-          "type": "string",
-          "description": "Fact path for remaining value (usedMax, hitDie types)"
-        },
-        "fact": {
-          "type": "string",
-          "description": "Fact path for display value (value, modifier types)"
-        },
-        "proficiencyFact": {
-          "type": "string",
-          "description": "Fact path for proficiency indicator (modifier type)"
-        },
-        "dieSize": {
-          "type": "integer",
-          "description": "Die size for hitDie type (e.g., 6, 8, 10, 12)"
-        },
-        "activeLabel": {
-          "type": "string",
-          "description": "i18n key for active state label (concentration type)"
-        },
-        "noneLabel": {
-          "type": "string",
-          "description": "i18n key for inactive state label (concentration type)"
-        },
-        "abilities": {
-          "type": "array",
-          "description": "Ability entries for the abilities chip (ability type)",
-          "items": {
-            "type": "object",
-            "required": ["name", "fact"],
-            "properties": {
-              "name": {
-                "type": "string",
-                "description": "i18n key for ability name"
-              },
-              "fact": {
-                "type": "string",
-                "description": "Fact path for modifier value"
-              },
-              "saveFact": {
-                "type": "string",
-                "description": "Fact path for saving throw modifier value"
-              },
-              "proficiencyFact": {
-                "type": "string",
-                "description": "Fact path for proficiency indicator"
-              }
-            },
-            "additionalProperties": false
-          }
-        }
-      },
-      "additionalProperties": false,
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "usedMax"
-              }
-            }
-          },
-          "then": {
-            "required": ["total", "remaining"]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "value"
-              }
-            }
-          },
-          "then": {
-            "required": ["fact"]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "modifier"
-              }
-            }
-          },
-          "then": {
-            "required": ["fact"]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "hitDie"
-              }
-            }
-          },
-          "then": {
-            "required": ["total", "remaining", "dieSize"]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "concentration"
-              }
-            }
-          },
-          "then": {
-            "required": ["activeLabel", "noneLabel"]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "ability"
-              }
-            }
-          },
-          "then": {
-            "required": ["abilities"]
-          }
-        }
-      ]
     }
   }
 }

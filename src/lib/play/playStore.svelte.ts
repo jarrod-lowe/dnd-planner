@@ -89,7 +89,49 @@ function performEvaluation(): void {
   state = { ...state, isEvaluating: true };
 
   const refs = buildPlannedRefs();
-  const result = evaluateCharacterV2(state.modules, state.committed, refs);
+  let result: ReturnType<typeof evaluateCharacterV2>;
+  try {
+    result = evaluateCharacterV2(state.modules, state.committed, refs);
+  } catch (error) {
+    // An engine throw (duplicate offer id, dependency cycle, watchdog timeout)
+    // must degrade to an error banner, not a dead play view. Keep the previous
+    // output (stale but usable) and surface the error via diagnostics.errors —
+    // PlayCharacterMode renders the first error code as the engine-error banner.
+    console.error('[performEvaluation] Engine error:', error);
+    const code =
+      error instanceof Error && /cycle/i.test(error.message)
+        ? 'play.error.engineCycle'
+        : 'play.error.evaluate';
+    const prev = state.engineOutput ?? {
+      status: { ok: false, legal: true, applicable: true },
+      facts: {},
+      collections: {},
+      availableRules: [],
+      annotations: [],
+      diagnostics: { errors: [], warnings: [], notices: [] },
+      trace: {
+        appliedRuleIds: [],
+        appliedActivityIds: [],
+        providedCapabilities: [],
+        emittedEvents: []
+      },
+      effects: [],
+      next: {
+        schemaVersion: 1 as const,
+        rules: { standing: [], planned: [], effects: [] },
+        state: { facts: {} }
+      }
+    };
+    state = {
+      ...state,
+      isEvaluating: false,
+      engineOutput: {
+        ...prev,
+        diagnostics: { ...prev.diagnostics, errors: [{ code, severity: 'error' }] }
+      }
+    };
+    return;
+  }
 
   // Pre-compute hypothetical evaluations for each planned item (the alternatives
   // picker). Creates a brand-new Map each time — old map is GC'd, no stale entries.

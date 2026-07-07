@@ -224,10 +224,16 @@ describe('v2 offers — structural when gate (omit vs. illegal-but-visible)', ()
     ).toBe(true);
   });
 
-  it('still applies a force-planned gated action (the apply registry ignores when)', () => {
-    const { advertised } = evaluatePlan([gated], {}, [
+  it('applies a planned gated action while its gate is open, skips it once closed (v1 parity)', () => {
+    const open = evaluatePlan([gated], { 'feature.enabled': 1 }, [
       { instanceId: 'g1', ruleId: 'gated-action' }
     ]);
-    expect(advertised).toHaveLength(1); // found + applied despite when() false at {}
+    expect(open.advertised).toHaveLength(1);
+
+    // Gate closed (e.g. an earlier plan step removed the prerequisite): the
+    // planned action does not execute and spends nothing — v1 skipped rules
+    // whose `when` failed, and the UI shows the row as inapplicable.
+    const closed = evaluatePlan([gated], {}, [{ instanceId: 'g1', ruleId: 'gated-action' }]);
+    expect(closed.advertised).toHaveLength(0);
   });
 });

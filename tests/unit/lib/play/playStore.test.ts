@@ -1897,6 +1897,38 @@ describe('playStore', () => {
     });
   });
 
+  describe('engine failure handling', () => {
+    it('catches an engine throw, keeps the store usable, and surfaces an error diagnostic', async () => {
+      vi.mocked(evaluateCharacterV2).mockImplementation(() => {
+        throw new Error('Duplicate offer id "x": offer ids must be unique across modules');
+      });
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      // Must not throw the exception out of the store API.
+      expect(() =>
+        playStore.addFollowupEffect({ id: 'e1', expiry: { kind: 'permanent' } })
+      ).not.toThrow();
+
+      expect(playStore.state.isEvaluating).toBe(false);
+      const errors = playStore.state.engineOutput?.diagnostics.errors ?? [];
+      expect(errors.some((d) => d.code === 'play.error.evaluate')).toBe(true);
+    });
+
+    it('maps a dependency-cycle throw to the cycle-specific error code', async () => {
+      vi.mocked(evaluateCharacterV2).mockImplementation(() => {
+        throw new Error('Dependency cycle detected: a -> b -> a');
+      });
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      playStore.addFollowupEffect({ id: 'e1', expiry: { kind: 'permanent' } });
+
+      const errors = playStore.state.engineOutput?.diagnostics.errors ?? [];
+      expect(errors.some((d) => d.code === 'play.error.engineCycle')).toBe(true);
+    });
+  });
+
   describe('effect mutations recalculate derived UI', () => {
     // v2 top-bar entries come from `derivePanels(facts)` in the eval result, not
     // effect `ui.topBar` blocks. A stateful mock surfaces an entry whenever the

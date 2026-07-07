@@ -234,5 +234,7 @@ export const INITIAL_EFFECTS_V2: Record<string, EffectInstance[]> = {
   'find-steed-long-rest': [slot(2)],
   'find-steed-life-bond': [slot(2)],
   'find-steed-hp-modifier-no-stacking': [slot(2)],
-  'attack-with-summoned-steed': [slot(2)]
+  // The scenario's initialEffects grant a L2 slot AND equip the Spear +1; the
+  // equip half was masked while the plan fold ignored `when` gates.
+  'attack-with-summoned-steed': [slot(2), weaponEquipped('spear-plus1')]
 };

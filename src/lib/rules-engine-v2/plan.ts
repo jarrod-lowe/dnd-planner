@@ -85,6 +85,11 @@ export function evaluatePlan(
 
     const offer = offerById.get(ref.ruleId);
     if (!offer) continue; // unknown offer (e.g. removed rule group)
+    // v1 parity: a planned action whose structural `when` gate is closed does not
+    // execute — e.g. an attack whose weapon an earlier plan step stowed. The offer
+    // also vanishes from the catalog (evaluateOffers honors `when`), so the UI
+    // shows the row as inapplicable rather than spending its resources.
+    if (offer.when && !offer.when(reader)) continue;
 
     const diagnostics: Diagnostic[] = [];
     for (const gate of offer.legalWhen ?? []) {

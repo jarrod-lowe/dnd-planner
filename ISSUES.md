@@ -55,7 +55,7 @@ to the RESOURCES catalog.
 
 ### 1.4 Active-effects strip shows raw-id chips for per-turn bookkeeping effects
 
-**FIXED.** `shouldHideFromStrip` now implements the documented contract (`display` present → shown unless `display.hidden`; absent → hidden; concentration always shows), and `EffectDisplay` gained `hidden`/`subject`. Display metadata authored: hp damage/heal + manual modifiers (health section), weapon/armor/shield equips (the stow/doff affordance restored), build-lock, divinity short-rest, steed hp damage/heal/modifiers (subject: steed). Hidden-but-named restored for prepared spells (shared helper covers all 14) and ability-scores' stat sets (with displayFact) / increases / save+skill proficiencies. Remainder: settings-derived effects (sentinel ASI, paladin skills) still have no display name in the reveal view — their templates live in the YAML data layer.
+**FIXED.** `shouldHideFromStrip` now implements the documented contract (`display` present → shown unless `display.hidden`; absent → hidden; concentration always shows), and `EffectDisplay` gained `hidden`/`subject`. Display metadata authored: hp damage/heal + manual modifiers (health section), weapon/armor/shield equips (the stow/doff affordance restored), build-lock, divinity short-rest, steed hp damage/heal/modifiers (subject: steed). Hidden-but-named restored for prepared spells (shared helper covers all 14) and ability-scores' stat sets (with displayFact) / increases / save+skill proficiencies. The settings-derived remainder (sentinel ASI, paladin skills) is fixed too: the schema's `effectInstance` gained a `display` block and the YAML templates author `display: { name: rules.settings…${value}, hidden: true }` (`${value}` substitution test-covered), resolving against the existing flat `rules.settings.*` i18n keys in both locales.
 
 `EffectDisplay`'s contract (types.ts) says an effect's `display` **presence opts
 it into the strip** — but `v2Bridge.shouldHideFromStrip` only hides
@@ -226,6 +226,15 @@ characters are deleted/recreated).
 
 ### 2.8 Planned actions apply even when their structural `when` gate is closed
 
+**FIXED (v1 parity restored).** The plan fold now re-checks the offer's `when`
+gate before applying a planned ref and skips it when closed — no execution, no
+resource spend (engine test + updated `plan-offers` contract test, which had
+codified the old "apply registry ignores when" behavior). `PlanStack` gives
+stale instances a fallback entry (`applicable: false`) so the row renders as
+inapplicable instead of losing its live entry. Surfaced a masked scenario bug:
+`attack-with-summoned-steed`'s v2 initial-effects mapping was missing the
+weapon equip and only passed because the fold ignored `when`.
+
 `evaluatePlan` builds its action registry from `collectOffers(modules)` and
 applies any planned ref it finds — it never re-checks the offer's `when` gate.
 `evaluateOffers` (the catalog) does honor `when`, so the offer disappears from
@@ -258,6 +267,12 @@ throwing on the overlap.
 
 ### 2.11 Engine exceptions are uncaught in the store (hard-fail posture)
 
+**FIXED.** `performEvaluation` now catches engine throws: it keeps the previous
+engine output (or a minimal stub on first evaluation), overrides
+`diagnostics.errors` with `play.error.engineCycle` (cycle messages) or the new
+`play.error.evaluate` (both locales), and the play view shows the existing
+error banner instead of a blank screen. Store tests cover both paths.
+
 `performEvaluation` has no try/catch around `evaluateCharacterV2`, so any
 engine throw crashes the play view: duplicate offer ids (`collectOffers`),
 sheet dependency cycles / conflicting combine modes, and the watchdog's
@@ -268,6 +283,12 @@ Consider catching in `performEvaluation` and surfacing a toast + error state.
 ## 3. Coverage / test gaps
 
 ### 3.1 Diagnostic-code i18n coverage test deleted with no v2 equivalent
+
+**CODIFIED.** `tests/unit/i18n/module-i18n-coverage.test.ts` extracts every
+statically-resolvable `rule.*` key from the v2 module sources (plain literals,
+`const`-prefix template keys with one level of nesting) and asserts each
+resolves in both locales via sveltekit-i18n-style flattening, with a >100-key
+floor so extractor rot is caught. Double-template keys remain uncheckable.
 
 `tests/unit/i18n/diagnostic-code-coverage.test.ts` (deleted 9922555) verified
 every `rule.*` diagnostic code referenced by rule content had a translation in
@@ -297,28 +318,36 @@ reachable / every detailKey resolves to a published file.
 
 ## 4. Pipeline / deploy notes
 
-- **`sync_rule_groups.py` still carries the rules machinery.** The fact-analysis
-  half (`extract_rule_facts`, `RULE_TRANSFORM_VERSION`, rule transforms) now
-  operates on always-empty rules, and every DynamoDB item publishes
-  `rules: "[]"`. Dead but harmless; slim when convenient. The Python tests
-  (`scripts/test_sync_rule_groups.py`, `test_publish_details.py`) are NOT wired
-  into `make test` and may still assume rules-bearing input — verify before
-  relying on them.
-- **`data/rule-groups/schema.json` still describes `rules`/activities** even
-  though no file carries them any more. Slimming it to
-  metadata+settings+condition+detail would make `validate-rules-schema` reject
-  rules sneaking back into the data layer.
-- **`make test-rules` duplicates coverage**: the default vitest run
-  (`test-unit`) already includes `tests/integration/`, so the parity runner
-  executes twice in `make test`. Harmless; drop the target or exclude
-  integration from `test-unit` if CI time matters.
+- **`sync_rule_groups.py` rules machinery: STRIPPED.** The fact-analysis half
+  (`extract_fact_reads_writes`, `add_auto_groups`, `RULE_TRANSFORM_VERSION`),
+  the generated-groups merge path (`merge_generated_into_bases`,
+  `sync_category_with_groups`, `compute_merged_hash`) and the `--data-dir2`
+  plumbing are deleted; `--json-out` output verified byte-identical before and
+  after. DynamoDB items still publish `rules: "[]"` for API stability. The
+  Python tests are pruned to match (18 pass) but remain NOT wired into
+  `make test`. Note: the new hash recipe re-syncs every category once on the
+  next deploy (intended — the YAML changed anyway).
+- **`data/rule-groups/schema.json`: SLIMMED.** `ruleGroup` no longer accepts
+  `rules` (`additionalProperties: false` makes `validate-rules-schema` reject
+  rules sneaking back), definitions pruned 26→11 to the reachable metadata set,
+  and `effectInstance` gained the `display` block (§1.4). Fallout: the schema's
+  `#/definitions/rule` removal killed `src/lib/rules/validateRules.ts` — a dead
+  v1 client-side validator for custom-group rules whose only consumer was its
+  own test. Validator + test deleted, along with the Makefile step that shipped
+  `schema.json` into `static/` for it (the schema is no longer fetched at
+  runtime). Stale `_shared`/`generated/rule-groups` references dropped from
+  `publish-details` and `build/test-rule-groups.json` prerequisites.
+- **`make test-rules` duplicate coverage: DROPPED.** The target (and its
+  `make test` step) is gone; the parity runner already executes inside
+  `test-unit`'s vitest run.
 - **Docs are stale for v2**: `RULES_ENGINE.md` and `docs/RULE_GROUP_GUIDE.md`
   still document the deleted v1 engine/authoring model, and `CLAUDE.md`'s first
   instruction points new-rule authors at the v1 guide. Rewrite before any new
   rule work, or authors will follow a dead process.
-- **E2E not exercised in this review**: `make test-e2e` (Playwright smoke) was
-  not run here; CI runs it on the prod workflows. The play-flow behavior proof
-  remains the manual test-env validation.
+- **E2E**: `make test-e2e` (Playwright smoke, 16 tests) now run and green in
+  this environment (needed a sandbox-only browser-build shim); CI runs it on
+  the prod workflows too. The play-flow behavior proof remains the manual
+  test-env validation.
 - **`ui.section` is now semantics-only, and some values have no meaning.**
   `SectionCollapsible` (the section-header renderer) has no importers — dead
   code — and no live consumer renders section names; sections only feed the

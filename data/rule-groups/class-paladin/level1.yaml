@@ -71,6 +71,10 @@ ruleGroups:
           key: skill-${value}-prof
           state:
             skill.${value}.proficiency: 1
+          # Named for the strip's reveal toggle; hidden from the default view.
+          display:
+            name: rules.settings.paladin-skill.${value}
+            hidden: true
           expiry:
             kind: permanent
       - id: paladin-skill-2
@@ -122,6 +126,10 @@ ruleGroups:
           key: skill-${value}-prof
           state:
             skill.${value}.proficiency: 1
+          # Named for the strip's reveal toggle; hidden from the default view.
+          display:
+            name: rules.settings.paladin-skill.${value}
+            hidden: true
           expiry:
             kind: permanent
       - id: paladin-mastery-1

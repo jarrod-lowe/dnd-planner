@@ -55,5 +55,10 @@ ruleGroups:
           key: sentinel-asi-${value}
           state:
             ${value}.value: 1
+          # Named for the strip's reveal toggle; hidden from the default view.
+          display:
+            name: rules.settings.sentinel-asi.${value}
+            displayFact: ${value}.value
+            hidden: true
           expiry:
             kind: permanent

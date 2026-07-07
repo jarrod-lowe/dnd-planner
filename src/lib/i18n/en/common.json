@@ -1765,7 +1765,8 @@
       "loadRuleGroups": "Failed to load character data",
       "loadEffects": "Failed to load effects",
       "saveEffects": "Failed to save effects",
-      "engineCycle": "Rules engine error: dependency cycle detected. Some actions may be unavailable."
+      "engineCycle": "Rules engine error: dependency cycle detected. Some actions may be unavailable.",
+      "evaluate": "Rules engine error: the last change could not be evaluated. Showing the previous state."
     },
     "toast": {
       "rollType": {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { evaluate } from '$lib/rules-engine-v2';
-import type { EngineInput, PlannedRef } from '$lib/rules-engine-v2';
+import type { EngineInput, PlannedRef, RuleModule } from '$lib/rules-engine-v2';
 import actionEconomy from '$lib/rules-engine-v2/rules/action-economy';
 import attacks from '$lib/rules-engine-v2/rules/attacks';
 import spellcasting from '$lib/rules-engine-v2/rules/spellcasting';
@@ -56,6 +56,33 @@ describe('v2 evaluate() — composed output contract', () => {
     const out = evaluate({ modules: ALL, inputFacts: INPUT, planned: [smite('s1')] });
     expect(out.status.legal).toBe(false);
     expect(out.planDiagnostics['s1'].some((d) => d.code.endsWith('no_attack'))).toBe(true);
+  });
+
+  it('skips a planned action whose structural `when` gate is closed (v1 parity)', () => {
+    // e.g. an attack planned with a weapon that an earlier plan step stowed:
+    // the offer vanishes from the catalog AND its transition must not apply.
+    const gated: RuleModule = {
+      id: 'gated',
+      derive: () => [{ fact: 'gate.open', value: () => 0 }],
+      offer: () => [
+        {
+          id: 'gated-act',
+          when: (f) => f.num('gate.open') === 1,
+          ui: { section: 'free', name: 'x.gated', actionCost: [] },
+          apply: () => ({
+            advertise: [{ id: 'spent', state: { 'x.spent': 1 }, expiry: { kind: 'endOfTurn' } }]
+          })
+        }
+      ]
+    };
+    const out = evaluate({
+      modules: [gated],
+      planned: [{ instanceId: 'g1', ruleId: 'gated-act' }]
+    });
+    expect(out.facts['x.spent'] ?? 0).toBe(0); // transition did not run
+    expect(out.effects).toEqual([]); // nothing advertised
+    expect(out.status.legal).toBe(true); // inapplicable, not illegal (v1 semantics)
+    expect(out.availableRules.find((e) => e.rule.id === 'gated-act')).toBeUndefined();
   });
 
   it('is pure: same input yields an equivalent result, and next replays it', () => {

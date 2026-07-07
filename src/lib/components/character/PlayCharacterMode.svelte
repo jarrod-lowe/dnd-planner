@@ -46,9 +46,13 @@
   // Get available rules from engine output
   const availableRules = $derived(playStore.state.engineOutput?.availableRules ?? []);
 
-  // Check for engine-level errors (cycles, deadlocks)
+  // Check for engine-level errors (cycles, evaluation failures)
   const hasEngineErrors = $derived(
     (playStore.state.engineOutput?.diagnostics.errors.length ?? 0) > 0
+  );
+  // The store puts the specific i18n code on the first error diagnostic.
+  const engineErrorCode = $derived(
+    playStore.state.engineOutput?.diagnostics.errors[0]?.code ?? 'play.error.engineCycle'
   );
 
   // Collect active annotations from engine output
@@ -168,7 +172,7 @@
   {:else}
     <div class="play-character__intent-body">
       {#if hasEngineErrors}
-        <div class="play-character__engine-error" role="alert">{$t('play.error.engineCycle')}</div>
+        <div class="play-character__engine-error" role="alert">{$t(engineErrorCode)}</div>
       {/if}
       <ActiveStateStrip
         effects={currentEffects}
