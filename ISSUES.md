@@ -176,9 +176,11 @@ at all (v1's slam had `[attack.any, attack.melee]`), so attack-targeting
 annotations no longer appear on steed attack panels — possibly intended
 (rider buffs don't apply to the steed), worth a conscious call.
 
-## 2. Faithfulness deltas v1 → v2 (documented/intentional — confirm acceptable)
+## 2. Faithfulness deltas v1 → v2 (2.1–2.7 ACCEPTED; 2.8–2.11 FIXED)
 
 ### 2.1 Offers are judged against post-plan facts (v1: phase-interleaved)
+
+**ACCEPTED** (owner sign-off, 2026-07-07).
 
 v2 evaluates the offer catalog once against the final projected facts
 (engine.ts). v1 produced offers during phase execution, so an offer emitted by
@@ -188,6 +190,8 @@ passes — but any rule that relied on offers seeing pre-plan state would differ
 
 ### 2.2 Plan legality is plan-order-significant (v1 reordered via `after`)
 
+**ACCEPTED** (owner sign-off, 2026-07-07).
+
 Documented in the parity skip list (`hi-use-then-grant`, `hi-effect-grant-use`,
 `build-lock-weapon-clear`): v1 could reorder a planned "use" after a planned
 "grant" via group dependencies; v2 folds the plan strictly in player order.
@@ -195,10 +199,15 @@ Deliberate design change; players must order dependent actions correctly.
 
 ### 2.3 Spell un-prepare is immediate (v1 had a 2-turn `removing` lifecycle)
 
+**ACCEPTED** (owner sign-off, 2026-07-07).
+
 sleep / calm-emotions / hold-person prepare effects evict immediately on
 unprepare in v2 (same end state, no intermediate `removing` turn). Skip-listed.
 
 ### 2.4 Steed does not vanish passively at 0 HP
+
+**ACCEPTED** (owner sign-off, 2026-07-07). Revisit after play-testing if the explicit dismiss tap grates —
+auto-vanish would need a threshold-eviction engine feature.
 
 v1's self-advertise-gated-on-hp + `cascadeRemove` let the steed die when its
 HP hit 0 without player action; v2 committed effects cannot self-remove on a
@@ -206,17 +215,23 @@ derived-fact threshold. Explicit dismissal cascades correctly. Skip-listed.
 
 ### 2.5 `cascadeRemove` dropped
 
+**ACCEPTED** (owner sign-off, 2026-07-07).
+
 `removeEffect` removes exactly one effect id; dependent-effect eviction is the
 owning module's job via shared `key`s. No current rule needs the cascade, but
 any future "removing X also removes Y" behavior must be authored module-side.
 
 ### 2.6 Steed damage type is numeric-only
 
+**ACCEPTED** (owner sign-off, 2026-07-07).
+
 v2 facts are numbers; the steed's string damage-type label (`radiant` /
 `psychic` / `necrotic`) is not represented (creatureType 0/1/2 is). The UI
 shows the type via the creature-type ability entry instead. Skip-listed.
 
 ### 2.7 Custom rule groups removed outright
+
+**ACCEPTED** (owner sign-off, 2026-07-07).
 
 v1 let users author per-character YAML/JSON rules (EditCustomRules); v2
 evaluates only code modules, and the whole feature (editor, storage endpoint,
