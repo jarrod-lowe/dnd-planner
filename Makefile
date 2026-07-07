@@ -1,4 +1,4 @@
-.PHONY: format-terraform validate security test help clean dev build lint format-frontend test-unit test-e2e test-e2e-debug test-component format-check push-test install pnpm setup-dev format go-build deploy-lambdas-test deploy-lambdas-prod sync-rule-groups validate-rules-schema publish-details
+.PHONY: format-terraform validate security test help clean dev build check lint format-frontend test-unit test-e2e test-e2e-debug test-component format-check push-test install pnpm setup-dev format go-build deploy-lambdas-test deploy-lambdas-prod sync-rule-groups validate-rules-schema publish-details
 
 default: help
 
@@ -190,6 +190,10 @@ build: install publish-details
 verify-chunks: install
 	node scripts/verify-chunks.mjs
 
+# Typecheck (svelte-check over .ts and .svelte)
+check: install
+	pnpm check
+
 # Linting
 lint: install
 	pnpm lint
@@ -272,7 +276,7 @@ validate-rules-schema:
 	.venv/bin/python scripts/validate_rule_schema.py --data-dir data/rule-groups
 
 # Run all tests (terraform + frontend)
-test: validate security validate-rules-schema test-unit test-e2e lint
+test: validate security validate-rules-schema check test-unit test-e2e lint
 
 preflight: format-terraform format test
 
@@ -323,6 +327,7 @@ help:
 	@echo "  make test-component      Run Playwright component tests"
 	@echo ""
 	@echo "Code Quality:"
+	@echo "  make check               Typecheck (svelte-check)"
 	@echo "  make lint                Run ESLint"
 	@echo "  make format              Format code (terraform + frontend)"
 	@echo ""

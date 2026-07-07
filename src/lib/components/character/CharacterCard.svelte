@@ -14,7 +14,7 @@
 <div class="character-card">
   <button class="character-card__body" onclick={() => onSelect(character)} type="button">
     <span class="character-card__name">{character.name}</span>
-    <span class="character-card__race">{character.race}</span>
+    <span class="character-card__species">{character.species}</span>
   </button>
   <button
     class="character-card__delete"
@@ -109,7 +109,7 @@
     color: var(--md-sys-color-on-surface);
   }
 
-  .character-card__race {
+  .character-card__species {
     font-family: var(--font-body);
     font-size: var(--font-size-sm);
     color: var(--md-sys-color-on-surface-variant);

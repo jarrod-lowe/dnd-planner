@@ -346,7 +346,7 @@
           secondaryActivated = true;
         }}
       >
-        {$t(descriptor.secondaryControl!.enabled!.button)}
+        {$t(descriptor.secondaryControl!.enabled!.button!)}
       </button>
     </div>
   {/if}

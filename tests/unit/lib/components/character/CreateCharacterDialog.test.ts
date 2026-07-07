@@ -206,8 +206,8 @@ describe('CreateCharacterDialog', () => {
       // Should start in create mode (wizard with name input)
       expect(container.querySelector('input[type="text"]')).toBeTruthy();
 
-      const importTab = Array.from(container.querySelectorAll('[role="tab"]')).find((b) =>
-        b.textContent?.includes('Import')
+      const importTab = Array.from(container.querySelectorAll<HTMLElement>('[role="tab"]')).find(
+        (b) => b.textContent?.includes('Import')
       );
       importTab?.click();
 

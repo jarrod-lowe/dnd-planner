@@ -21,7 +21,7 @@ const createSelectEntry = (overrides?: Partial<AvailableRuleEntry>): AvailableRu
       levels: { default: { array: [0, 0.5, 1, 2] } },
       level: { default: { number: 0 } }
     }
-  } as Rule,
+  } as unknown as Rule,
   legal: true,
   applicable: true,
   diagnostics: [],

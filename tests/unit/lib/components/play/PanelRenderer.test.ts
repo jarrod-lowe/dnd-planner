@@ -23,7 +23,7 @@ describe('PanelRenderer', () => {
       const entry = createMockEntry();
       const onTap = vi.fn();
       const { container } = render(PanelRenderer, { props: { entry, onTap } });
-      const panel = container.querySelector('.panel-renderer');
+      const panel = container.querySelector<HTMLElement>('.panel-renderer');
       panel?.click();
       expect(onTap).toHaveBeenCalledTimes(1);
     });

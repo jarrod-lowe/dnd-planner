@@ -97,7 +97,7 @@ describe('substituteTemplate', () => {
       }
     };
 
-    const result = substituteTemplate(template, 'athletics');
+    const result = substituteTemplate(template, 'athletics') as typeof template;
 
     expect(result.a.b.c).toBe('skill.athletics.deep');
   });

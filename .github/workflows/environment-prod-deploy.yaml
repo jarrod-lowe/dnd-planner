@@ -33,6 +33,9 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Typecheck
+        run: pnpm check
+
       - name: Setup Python
         uses: actions/setup-python@v6
         with:

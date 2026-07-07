@@ -51,8 +51,8 @@ describe('unassignRuleGroup blocking', () => {
 
     const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
     seedCache({
-      spellcasting: { name: 'Spellcasting', description: '', requires: [] },
-      'paladin-1': { name: 'Paladin L1', description: '', requires: ['spellcasting'] }
+      spellcasting: { name: 'Spellcasting', description: '', settings: [], requires: [] },
+      'paladin-1': { name: 'Paladin L1', description: '', settings: [], requires: ['spellcasting'] }
     });
 
     playStore.state.ruleGroupIds = ['spellcasting', 'paladin-1'];
@@ -66,8 +66,8 @@ describe('unassignRuleGroup blocking', () => {
 
     const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
     seedCache({
-      spellcasting: { name: 'Spellcasting', description: '', requires: [] },
-      'paladin-1': { name: 'Paladin L1', description: '', requires: ['spellcasting'] }
+      spellcasting: { name: 'Spellcasting', description: '', settings: [], requires: [] },
+      'paladin-1': { name: 'Paladin L1', description: '', settings: [], requires: ['spellcasting'] }
     });
 
     playStore.state.ruleGroupIds = ['spellcasting', 'paladin-1'];
@@ -82,8 +82,8 @@ describe('unassignRuleGroup blocking', () => {
 
     const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
     seedCache({
-      spellcasting: { name: 'Spellcasting', description: '', requires: [] },
-      'paladin-1': { name: 'Paladin L1', description: '', requires: ['spellcasting'] }
+      spellcasting: { name: 'Spellcasting', description: '', settings: [], requires: [] },
+      'paladin-1': { name: 'Paladin L1', description: '', settings: [], requires: ['spellcasting'] }
     });
 
     // Only spellcasting assigned (paladin removed)
@@ -98,9 +98,19 @@ describe('unassignRuleGroup blocking', () => {
 
     const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
     seedCache({
-      spellcasting: { name: 'Spellcasting', description: '', requires: [] },
-      'paladin-1': { name: 'Paladin L1', description: '', requires: ['spellcasting'] },
-      'sorcerer-1': { name: 'Sorcerer L1', description: '', requires: ['spellcasting'] }
+      spellcasting: { name: 'Spellcasting', description: '', settings: [], requires: [] },
+      'paladin-1': {
+        name: 'Paladin L1',
+        description: '',
+        settings: [],
+        requires: ['spellcasting']
+      },
+      'sorcerer-1': {
+        name: 'Sorcerer L1',
+        description: '',
+        settings: [],
+        requires: ['spellcasting']
+      }
     });
 
     playStore.state.ruleGroupIds = ['spellcasting', 'paladin-1', 'sorcerer-1'];
@@ -117,8 +127,8 @@ describe('unassignRuleGroup blocking', () => {
 
     const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
     seedCache({
-      spellcasting: { name: 'Spellcasting', description: '', requires: [] },
-      'paladin-1': { name: 'Paladin L1', description: '', requires: ['spellcasting'] }
+      spellcasting: { name: 'Spellcasting', description: '', settings: [], requires: [] },
+      'paladin-1': { name: 'Paladin L1', description: '', settings: [], requires: ['spellcasting'] }
     });
 
     // Only spellcasting assigned, paladin-1 is NOT assigned

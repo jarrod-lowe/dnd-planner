@@ -371,9 +371,24 @@ reachable / every detailKey resolves to a published file.
   mapping. The authoring trap is closed: `section` is confined to a `Section`
   union (`SECTIONS` in engine types; `OfferUI.section` +
   `EffectDisplay.section`; matching enum on the schema's `display.section`),
-  and — since nothing typechecks in CI — `sections.test.ts` walks every
-  registered offer and fails on an unknown section or an intentless offer
-  whose section has no verb mapping (accidental `HANDLE`); mutation-checked.
+  and — belt-and-braces with the typecheck gate below — `sections.test.ts`
+  walks every registered offer and fails on an unknown section or an intentless
+  offer whose section has no verb mapping (accidental `HANDLE`);
+  mutation-checked.
+- **Typecheck gate ADDED (was: nothing typechecked in CI).** `pnpm check`
+  (`svelte-kit sync && svelte-check`) is wired into `make test` (`make check`)
+  and both prod workflows as a Typecheck step, and the pre-existing pile of
+  138 errors across 43 files is burned to zero. The burn-down found two real
+  src bugs: `CharacterCard` rendered `character.race` (a field that doesn't
+  exist — every card subtitle was blank; now `species`), and the auth callback
+  listened for the pre-Amplify-v6 `signIn` Hub event that can never fire (now
+  `signedIn`/`signInWithRedirect`; previously only the fallback path
+  redirected). Also fixed: the i18n `t()` payload typing (`PayloadDefault`
+  rejected every real placeholder), `evaluateCondition` union narrowing, and
+  ~50 test-fixture shape drifts. 6 warnings remain (not gating): an unused
+  EffectChip CSS ruleset, four Svelte 5 initial-value-capture warnings in
+  `PanelDiceLine` (worth a look — possible stale-`selections` reactivity), and
+  one a11y warning on the SettingsModal overlay.
 
 ## 5. Verified-OK (checked, no issue)
 

@@ -52,7 +52,7 @@ describe('RulesPane', () => {
   it('calls onFlip when rail is clicked', async () => {
     const onFlip = vi.fn();
     const { container } = render(RulesPane, {
-      props: { detail: sampleDetail, returnLabel: 'Cast', onFlip }
+      props: { detail: sampleDetail, onFlip }
     });
     const rail = container.querySelector('.rules-rail');
     rail?.dispatchEvent(new MouseEvent('click', { bubbles: true }));

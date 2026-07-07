@@ -28,7 +28,7 @@ vi.mock('$lib/i18n', () => {
   };
 
   const mockT = {
-    subscribe: (callback: (key: string) => string) => {
+    subscribe: (callback: (t: (key: string) => string) => void) => {
       callback((key: string) => key);
       return { unsubscribe: () => {} };
     }
@@ -186,7 +186,9 @@ describe('loadRuleGroups dependency self-healing', () => {
     // Should only have 1 apiPost call (the batch fetch) - no assignment calls
     const assignmentCalls = mockApiPost.mock.calls.filter(
       (call) =>
-        typeof call[0] === 'string' && call[0].includes('/rule-groups') && call[1]?.ruleGroupId
+        typeof call[0] === 'string' &&
+        call[0].includes('/rule-groups') &&
+        (call[1] as { ruleGroupId?: string } | undefined)?.ruleGroupId
     );
     expect(assignmentCalls).toHaveLength(0);
 
@@ -353,7 +355,9 @@ describe('loadRuleGroups dependency self-healing', () => {
     await playStore.loadRuleGroups('char-1');
 
     // group-c should be assigned exactly once
-    const assignCalls = mockApiPost.mock.calls.filter((call) => call[1]?.ruleGroupId === 'group-c');
+    const assignCalls = mockApiPost.mock.calls.filter(
+      (call) => (call[1] as { ruleGroupId?: string } | undefined)?.ruleGroupId === 'group-c'
+    );
     expect(assignCalls).toHaveLength(1);
 
     expect(playStore.state.ruleGroupIds).toContain('group-c');

@@ -7,6 +7,7 @@ import type { Rule, Facts } from '$lib/rules-engine';
 const createMockPlanItem = (ruleId: string, description?: string): PlannedItem => ({
   instanceId: `instance-${ruleId}`,
   rule: { id: ruleId, description: description || `Rule ${ruleId}`, activities: [] } as Rule,
+  verb: 'ATTACK',
   order: 0
 });
 
@@ -35,6 +36,7 @@ const createMockFollowupPlanItem = (): PlannedItem => ({
       ]
     }
   } as Rule,
+  verb: 'ATTACK',
   order: 0
 });
 
@@ -58,6 +60,7 @@ const createMockMovePlanItem = (): PlannedItem => ({
       maxDistance: { default: { fact: 'character.movement.total' } }
     }
   } as Rule,
+  verb: 'MOVE',
   order: 0
 });
 

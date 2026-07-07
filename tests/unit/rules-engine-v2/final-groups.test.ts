@@ -99,7 +99,7 @@ describe('v2 feat-savage-attacker — once-per-turn reroll rider', () => {
     // The spend is endOfTurn, so a fresh turn restores the use.
     const nextTurn = endTurn(
       [],
-      out.advertised.filter((e) => e.expiry.kind !== 'endOfTurn'),
+      out.advertised.filter((e) => !Array.isArray(e.expiry) && e.expiry.kind !== 'endOfTurn'),
       {}
     );
     expect(evaluateSheet(ALL, {}, nextTurn)['savageAttacker.remaining']).toBe(1);

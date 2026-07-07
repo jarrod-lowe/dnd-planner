@@ -48,11 +48,12 @@ function makeEntry(
     rule: {
       id,
       phase: 'normal',
-      verb: verb as never,
       ui,
       activities: []
     },
-    legal: true
+    legal: true,
+    applicable: true,
+    diagnostics: []
   };
 }
 
@@ -69,11 +70,11 @@ function makeItem(
     rule: {
       id: ruleId,
       phase: 'normal',
-      verb: verb as never,
       ui,
       activities: []
     },
     verb: verb as never,
+    order: 0,
     originalRuleId: ruleId
   };
 }
@@ -204,7 +205,6 @@ describe('PlanStack', () => {
       rule: {
         id: 'attack-javelin',
         phase: 'normal',
-        verb: 'ATTACK' as never,
         activities: [],
         ui: {
           section: 'action',
@@ -223,7 +223,9 @@ describe('PlanStack', () => {
           ]
         }
       },
-      legal: true
+      legal: true,
+      applicable: true,
+      diagnostics: []
     };
     const onFollowup = vi.fn();
 

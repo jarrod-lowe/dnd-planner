@@ -72,9 +72,9 @@ describe('resolveInitialSelections', () => {
           }
         }
       };
-      const facts: Facts = {
+      const facts = {
         'character.movement.remaining': null
-      };
+      } as unknown as Facts;
 
       const selections = resolveInitialSelections(rule, facts);
 

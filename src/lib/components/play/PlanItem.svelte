@@ -1,14 +1,13 @@
 <script lang="ts">
   import PanelRenderer from './PanelRenderer.svelte';
   import type { PlannedItem } from '$lib/play/types';
-  import type { Facts } from '$lib/rules-engine';
+  import type { Annotation, Facts } from '$lib/rules-engine';
   import type { EffectInstance } from '$lib/rules-engine-v2';
-  import type { AnnotationDef } from '$lib/play/annotations';
 
   interface Props {
     item: PlannedItem;
     facts?: Facts;
-    activeAnnotations?: AnnotationDef[];
+    activeAnnotations?: Annotation[];
     canMoveUp?: boolean;
     canMoveDown?: boolean;
     onSelectionChange?: (selections: Record<string, unknown>) => void;

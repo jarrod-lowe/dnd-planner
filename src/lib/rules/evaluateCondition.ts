@@ -1,4 +1,4 @@
-import type { RuleGroupCondition, OrCondition } from './conditionTypes';
+import type { RuleGroupCondition } from './conditionTypes';
 import type { Facts } from '$lib/rules-engine/types';
 
 function compareValues(actual: number, operator: string, expected: number): boolean {
@@ -21,8 +21,9 @@ function compareValues(actual: number, operator: string, expected: number): bool
 }
 
 function evaluateSingle(condition: RuleGroupCondition, facts: Facts): boolean {
-  if ('type' in condition && (condition as OrCondition).type === 'or') {
-    return (condition as OrCondition).clauses.some((clause) => evaluateSingle(clause, facts));
+  // Only OrCondition carries `type`, so `in` narrows the union both ways.
+  if ('type' in condition) {
+    return condition.clauses.some((clause) => evaluateSingle(clause, facts));
   }
   const actual = facts[condition.fact] ?? 0;
   if (typeof actual !== 'number') return false;

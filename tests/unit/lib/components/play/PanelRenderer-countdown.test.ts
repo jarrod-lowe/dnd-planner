@@ -54,7 +54,7 @@ describe('PanelRenderer - countdown information', () => {
           ]
         }
       }
-    } as Rule as AvailableRuleEntry;
+    } as unknown as AvailableRuleEntry;
     const facts: Facts = { countDown: 3, duration: 5 };
     const { container } = render(PanelRenderer, { props: { entry, facts } });
     const filled = container.querySelectorAll('.panel-renderer__marker--filled');
@@ -72,7 +72,7 @@ describe('PanelRenderer - countdown information', () => {
           ]
         }
       }
-    } as Rule as AvailableRuleEntry;
+    } as unknown as AvailableRuleEntry;
     const { container } = render(PanelRenderer, { props: { entry, facts: {} } });
     const markers = container.querySelectorAll('.panel-renderer__marker');
     expect(markers).toHaveLength(0);
@@ -89,7 +89,7 @@ describe('PanelRenderer - countdown information', () => {
           information: [{ type: 'countdown', filled: { number: 10 }, total: { number: 10 } }]
         }
       }
-    } as Rule as AvailableRuleEntry;
+    } as unknown as AvailableRuleEntry;
     const { container } = render(PanelRenderer, { props: { entry, facts: {} } });
     const filled = container.querySelectorAll('.panel-renderer__marker--filled');
     const empty = container.querySelectorAll('.panel-renderer__marker--empty');

@@ -573,7 +573,12 @@ describe('playStore', () => {
         activities: [],
         ui: { section: 'action-spell', intents: { AID: 'ally' }, actionCost: ['action'] }
       };
-      playStore.swapPlanItemRule(instanceId, { rule: spellRule, illegalReasons: [] });
+      playStore.swapPlanItemRule(instanceId, {
+        rule: spellRule,
+        legal: true,
+        applicable: true,
+        diagnostics: []
+      });
 
       expect(playStore.state.plannedItems).toHaveLength(1);
       const item = playStore.state.plannedItems[0];
@@ -1130,7 +1135,7 @@ describe('playStore', () => {
       let resolveDelete: (value: unknown) => void;
       mockApiDeleteFn.mockReturnValue(
         new Promise((resolve) => {
-          resolveDelete = resolve;
+          resolveDelete = resolve as (value: unknown) => void;
         })
       );
 
@@ -1173,7 +1178,7 @@ describe('playStore', () => {
       let resolveDelete: (value: unknown) => void;
       mockApiDeleteFn.mockReturnValue(
         new Promise((resolve) => {
-          resolveDelete = resolve;
+          resolveDelete = resolve as (value: unknown) => void;
         })
       );
 

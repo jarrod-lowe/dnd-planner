@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
+import type { ItemDetail } from '$lib/details/types';
 
 // Mock Element.animate for JSDOM
 beforeAll(() => {
@@ -88,6 +89,7 @@ function makeItem(overrides?: Partial<Rule>): PlannedItem {
 const mockEntry = {
   rule: { id: 'spell-sleep', activities: [] } as Rule,
   legal: true,
+  applicable: true,
   diagnostics: []
 };
 
@@ -206,7 +208,8 @@ describe('PlanRow Rules mode', () => {
     const illegalEntry = {
       rule: { id: 'spell-sleep', activities: [] } as Rule,
       legal: false,
-      diagnostics: [{ code: 'play.diagnostics.alreadyConcentrating' }]
+      applicable: true,
+      diagnostics: [{ code: 'play.diagnostics.alreadyConcentrating', severity: 'error' as const }]
     };
     const { container } = render(PlanRow, {
       props: {
@@ -229,13 +232,13 @@ describe('PlanRow Rules mode', () => {
   it('ignores stale detail fetch when item has changed', async () => {
     mockedPeekDetail.mockReturnValue(undefined);
 
-    const detailA = { source: 'srd52', body: [{ text: ['Sleep rules text.'] }] };
+    const detailA: ItemDetail = { source: 'srd52', body: [{ text: ['Sleep rules text.'] }] };
 
-    let resolveA!: (d: typeof detailA) => void;
-    const promiseA = new Promise<typeof detailA>((resolve) => {
+    let resolveA!: (d: ItemDetail) => void;
+    const promiseA = new Promise<ItemDetail>((resolve) => {
       resolveA = resolve;
     });
-    const promiseB = new Promise(() => {}); // intentionally never resolves
+    const promiseB = new Promise<ItemDetail>(() => {}); // intentionally never resolves
 
     mockedGetDetail.mockImplementation((key: string) => {
       if (key === 'spell/sleep') return promiseA;

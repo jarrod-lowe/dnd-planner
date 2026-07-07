@@ -275,7 +275,7 @@ describe('PanelRenderer - slider control', () => {
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts, selections }
     });
-    const sliders = container.querySelectorAll('input[type="range"]');
+    const sliders = container.querySelectorAll<HTMLInputElement>('input[type="range"]');
     // Primary slider should show 5 (from selections)
     expect(sliders[0].value).toBe('5');
     // Secondary slider should show 10 (from facts, no selection)

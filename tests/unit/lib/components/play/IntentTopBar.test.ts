@@ -3,7 +3,8 @@ import { mount } from 'svelte';
 import { readable } from 'svelte/store';
 import IntentTopBar from '$lib/components/play/IntentTopBar.svelte';
 import type { Character } from '$lib/character/types';
-import type { UiEntry } from '$lib/play/extractTopBar';
+import type { TopBarEntry, UiEntry } from '$lib/play/extractTopBar';
+import type { Facts } from '$lib/rules-engine';
 
 // i18n mock - returns key as text
 const translations: Record<string, string> = {
@@ -50,6 +51,7 @@ const mockCharacter: Character = {
   userId: 'user-1',
   name: 'Aragorn',
   species: 'human',
+  class: 'paladin',
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-01T00:00:00Z'
 };
@@ -73,7 +75,7 @@ describe('IntentTopBar', () => {
 
   function renderComponent(
     topBarEntries: TopBarEntry[] = [],
-    facts: Record<string, unknown> = {},
+    facts: Facts = {},
     extraProps: Record<string, unknown> = {}
   ) {
     mount(IntentTopBar, {
@@ -328,8 +330,6 @@ describe('IntentTopBar — subject filtering', () => {
         facts: allFacts,
         email: 'test@example.com',
         onLogout: vi.fn(),
-        currentLayout: 'intent',
-        onSwitchLayout: vi.fn(),
         activeSubject: undefined
       }
     });
@@ -350,8 +350,6 @@ describe('IntentTopBar — subject filtering', () => {
         facts: allFacts,
         email: 'test@example.com',
         onLogout: vi.fn(),
-        currentLayout: 'intent',
-        onSwitchLayout: vi.fn(),
         activeSubject: 'steed'
       }
     });
@@ -374,8 +372,6 @@ describe('IntentTopBar — subject filtering', () => {
         facts: allFacts,
         email: 'test@example.com',
         onLogout: vi.fn(),
-        currentLayout: 'intent',
-        onSwitchLayout: vi.fn(),
         activeSubject: 'familiar'
       }
     });

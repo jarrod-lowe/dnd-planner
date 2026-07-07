@@ -3,6 +3,7 @@ import { mount } from 'svelte';
 import { readable } from 'svelte/store';
 import Ledger from '$lib/components/play/Ledger.svelte';
 import type { UiEntry } from '$lib/play/extractTopBar';
+import type { Facts } from '$lib/rules-engine';
 
 // i18n mock - returns key as text
 const translations: Record<string, string> = {
@@ -51,7 +52,7 @@ describe('Ledger', () => {
 
   function renderComponent(
     resourceEntries: UiEntry[] = [],
-    facts: Record<string, unknown> = {},
+    facts: Facts = {},
     extraProps: Record<string, unknown> = {}
   ) {
     mount(Ledger, {
