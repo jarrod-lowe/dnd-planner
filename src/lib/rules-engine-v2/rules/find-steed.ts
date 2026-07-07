@@ -8,7 +8,8 @@ import {
   type EffectInstance,
   type FactReader,
   type Offer,
-  type RuleModule
+  type RuleModule,
+  type Section
 } from '../builder';
 
 const LEVELS = [2, 3, 4, 5] as const;
@@ -92,7 +93,7 @@ const steedSpend = (state: Record<string, number>): EffectInstance => ({
 /** A steed action/bonus/reaction offer that spends its economy slot. */
 function steedActivation(
   id: string,
-  section: string,
+  section: Section,
   costFact: string,
   remainingFact: string,
   intents: Record<string, string>,

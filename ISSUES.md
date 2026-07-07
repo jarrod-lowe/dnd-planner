@@ -363,16 +363,17 @@ reachable / every detailKey resolves to a published file.
   this environment (needed a sandbox-only browser-build shim); CI runs it on
   the prod workflows too. The play-flow behavior proof remains the manual
   test-env validation.
-- **`ui.section` is now semantics-only; dead renderers DELETED.**
+- **`ui.section` is now semantics-only; dead renderers DELETED, values TYPED.**
   `SectionCollapsible` (the section-header renderer) and
   `sectionConfig.ts` (`SECTION_ORDER`/`STAT_SECTION_ORDER`) had no importers —
   deleted with their tests. No live consumer renders section names; sections
   only feed the verb fallback (`deriveVerbFromSection`) and effect-kind
-  mapping. The residual authoring trap stands: a section-only offer using a
-  value with no verb-fallback case (`mastery`, `mount`, `equip`, bare
-  `action`/`bonus-action`) would fall to the `HANDLE` bucket — currently
-  harmless (all such offers carry explicit intents); typing the allowed
-  section values would close it.
+  mapping. The authoring trap is closed: `section` is confined to a `Section`
+  union (`SECTIONS` in engine types; `OfferUI.section` +
+  `EffectDisplay.section`; matching enum on the schema's `display.section`),
+  and — since nothing typechecks in CI — `sections.test.ts` walks every
+  registered offer and fails on an unknown section or an intentless offer
+  whose section has no verb mapping (accidental `HANDLE`); mutation-checked.
 
 ## 5. Verified-OK (checked, no issue)
 

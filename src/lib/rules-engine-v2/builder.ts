@@ -507,6 +507,8 @@ export type {
   FactReader,
   SheetCtx,
   Offer,
+  OfferUI,
+  Section,
   LegalWhen,
   ActionResult,
   EffectInstance,

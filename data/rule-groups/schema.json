@@ -340,7 +340,28 @@
               "description": "i18n key for the chip name"
             },
             "section": {
-              "type": "string"
+              "type": "string",
+              "description": "Chip-kind section; must match the engine's SECTIONS union",
+              "enum": [
+                "action",
+                "action-attack",
+                "action-other",
+                "action-spell",
+                "bonus-action",
+                "bonus-action-other",
+                "bonus-action-spell",
+                "configuration",
+                "equip",
+                "free",
+                "health",
+                "mastery",
+                "mount",
+                "move",
+                "other",
+                "reaction",
+                "rest",
+                "senses"
+              ]
             },
             "displayFact": {
               "type": "string"

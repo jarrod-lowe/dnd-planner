@@ -183,6 +183,48 @@ export interface EffectInstance {
 }
 
 /**
+ * The closed set of `section` values an offer's `ui` or an effect's `display`
+ * may carry. Sections are semantics, not rendered headers: on offers they feed
+ * the add-picker verb fallback (stepUtils' `deriveVerbFromSection`), on effect
+ * displays the chip kind (`getEffectKind`: 'senses' → SENSE, 'configuration' →
+ * ITEM, 'mount' → MOUNT). Only some sections map to a verb — an offer whose
+ * section has no verb mapping must carry explicit `ui.intents` or its picker
+ * row falls to the generic HANDLE bucket
+ * (tests/unit/rules-engine-v2/sections.test.ts enforces this).
+ */
+export const SECTIONS = [
+  'action',
+  'action-attack',
+  'action-other',
+  'action-spell',
+  'bonus-action',
+  'bonus-action-other',
+  'bonus-action-spell',
+  'configuration',
+  'equip',
+  'free',
+  'health',
+  'mastery',
+  'mount',
+  'move',
+  'other',
+  'reaction',
+  'rest',
+  'senses'
+] as const;
+
+/** See {@link SECTIONS}. */
+export type Section = (typeof SECTIONS)[number];
+
+/**
+ * An offer's `ui` payload: plain data PanelRenderer consumes. Open-ended,
+ * except `section` which is confined to the known set.
+ */
+export interface OfferUI extends Record<string, unknown> {
+  section?: Section;
+}
+
+/**
  * UI metadata a module attaches to an effect. An effect with `display` (and
  * without `hidden`) shows on the active-effects strip; one with
  * `hidden: true` stays off the default strip but keeps its name in the
@@ -194,7 +236,7 @@ export interface EffectDisplay {
   /** i18n key for the chip name (the chip falls back to the effect id if absent). */
   name?: string;
   /** UI section for chip classification, e.g. 'mount' (steed) or 'senses'. */
-  section?: string;
+  section?: Section;
   /** A fact whose value the chip shows next to the name (e.g. a running bonus). */
   displayFact?: string;
   /** Named but off the default strip (visible via the reveal toggle). */
@@ -325,7 +367,7 @@ export interface LegalWhen {
  */
 export interface Offer {
   id: string;
-  ui?: Record<string, unknown>;
+  ui?: OfferUI;
   vars?: Record<string, unknown>;
   /**
    * Structural gate (v1's `when`): when it returns false the offer is OMITTED
