@@ -355,10 +355,14 @@ reachable / every detailKey resolves to a published file.
 - **`make test-rules` duplicate coverage: DROPPED.** The target (and its
   `make test` step) is gone; the parity runner already executes inside
   `test-unit`'s vitest run.
-- **Docs are stale for v2**: `RULES_ENGINE.md` and `docs/RULE_GROUP_GUIDE.md`
-  still document the deleted v1 engine/authoring model, and `CLAUDE.md`'s first
-  instruction points new-rule authors at the v1 guide. Rewrite before any new
-  rule work, or authors will follow a dead process.
+- **Docs REWRITTEN for v2.** `RULES_ENGINE.md` is now the v2 engine
+  specification (module contract, sheet/plan/offers/annotate passes, effects
+  model, I/O contract, delivery, guards); `docs/RULE_GROUP_GUIDE.md` is the v2
+  authoring walkthrough (module + registry/lazy + i18n + YAML metadata +
+  scenario checklist, verified against the code and the parity runner's actual
+  step/assert vocabulary); AGENTS.md/CLAUDE.md's "Notable Code Features" no
+  longer describes phases/`after` — it states the structural-ordering and
+  effects-not-mutations model.
 - **E2E**: `make test-e2e` (Playwright smoke, 16 tests) now run and green in
   this environment (needed a sandbox-only browser-build shim); CI runs it on
   the prod workflows too. The play-flow behavior proof remains the manual

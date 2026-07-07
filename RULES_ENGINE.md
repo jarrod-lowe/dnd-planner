@@ -1,1333 +1,307 @@
-# D&D Rules Engine Input/Output JSON Spec (v2)
+# D&D Rules Engine (v2)
 
 ## Purpose
 
-This document defines the JSON input and output contract for the rules engine.
+This document specifies the v2 rules engine: its input/output contract, its
+evaluation model, and its delivery mechanism. The engine lives in
+`src/lib/rules-engine-v2/`; rules are TypeScript **modules**, not data.
 
-It focuses on:
-
-- the top-level input object
-- the top-level output object
-- the meaning of `rules.standing`, `rules.planned`, and `rules.effects`
-- the meaning of `state.facts`
-- the meaning of top-level projected `facts`
-- the meaning of replayable `next`
-- the shape of `availableRules`
-- the distinction between facts and events
-- the reusable rule object schema
+For a practical "how do I add a rule group" walkthrough, see
+[docs/RULE_GROUP_GUIDE.md](docs/RULE_GROUP_GUIDE.md).
 
 ---
 
 ## Design summary
 
-The rules engine is fully stateless.
+The engine is a single **pure, synchronous function**:
 
-It receives:
-
-- standing rules
-- planned rules
-- effect rules already in force
-- state (always empty facts — all facts are derived by rules)
-
-It evaluates them together and returns:
-
-- projected facts after applying the current rules
-- available rules that the UI may offer as choices
-- diagnostics
-- trace information
-- a replayable `next` object
-
-The engine does not commit anything.
-
-Committing is a UI operation.
-
----
-
-## Core concepts
-
-### Standing rules
-
-Standing rules are rules the UI treats as part of the persistent baseline rule set.
-
-Examples:
-
-- derived-stat rules
-- resource offering rules
-- item behavior rules
-- spell behavior definitions
-
-### Planned rules
-
-Planned rules are rules the UI has currently added to the plan. The UI thinks of these as "choices", but the rules engine has no need for the distinction.
-
-Examples:
-
-- using Bardic Inspiration
-- taking a Long Rest
-- making an attack
-- increment turn counter
-
-### Effect rules
-
-Effect rules are rules already in force because of prior events and still affecting evaluation.
-
-Examples:
-
-- an active buff
-- a debuff applied to an enemy being tracked by the player
-- a condition that expires later
-- an externally granted effect such as Bardic Inspiration
-
-### Facts
-
-Facts are durable state values.
-
-They are derived entirely by rules during each evaluation and returned as output. The caller passes empty facts — all fact values are established by standing rules, effects, and planned rules.
-
-Examples:
-
-- `hp.current`
-- `hp.max`
-- `bardicInspiration.remaining`
-- `turn.counter`
-
-### Events
-
-Events are transient occurrences during a single evaluation.
-
-Examples:
-
-- `longRest`
-- `endTurn`
-- `bardicInspirationUsed`
-
-Events are not persisted in the output.
-
-### Projected facts
-
-Top-level output `facts` are the projected facts after applying the current standing rules, planned rules, and effect rules to the input state.
-
-These are the "what would happen" facts.
-
-### Replayable next
-
-`next` is a complete normalized input object suitable for reuse in the next engine call.
-
-It is replayable.
-
-If the caller invokes the engine again using `next` unchanged, the engine should produce a semantically equivalent result.
-
-`next.state.facts` is always empty — facts are fully derived by rules on each evaluation.
-
----
-
-## Input JSON shape
-
-```json
-{
-  "schemaVersion": 1,
-  "rules": {
-    "standing": [],
-    "planned": [],
-    "effects": []
-  },
-  "state": {
-    "facts": {}
-  }
-}
+```ts
+evaluate(input: EngineInput, opts?: EvaluateOptions): EngineOutput;
 ```
 
----
-
-## Rule object
-
-A rule is the reusable executable object used in all rule arrays and rule-bearing outputs.
-
-The same rule schema is used in these places:
-
-- `rules.standing[]`
-- `rules.planned[]`
-- `rules.effects[]`
-- `availableRules[].rule`
-
-A rule has this shape:
-
-```json
-{
-  "id": "string",
-  "description": "string",
-  "ui": {},
-  "vars": {},
-  "phase": "normal",
-  "enabled": true,
-  "when": [],
-  "after": [],
-  "group": ["string"],
-  "activities": []
-}
-```
-
-All fields are optional except where noted, but a practically useful executable rule normally has at least:
-
-- `id`
-- `activities`
-
-### Rule fields
-
-#### `id`
-
-Type: string
-
-Required: yes
-
-Meaning:
-A stable identifier for the rule within the evaluation.
-
-#### `description`
-
-Type: string
-
-Required: no
-
-Meaning:
-Human-readable description for debugging and inspection.
-
-#### `ui`
-
-Type: object
-
-Required: no
-
-Meaning:
-Optional opaque UI metadata used when rules are surfaced to the UI, especially in `availableRules[].rule`. The rules engine does not look at this field, it just copies it through unchanged.
-
-#### `phase`
-
-Type: string
-
-Required: no
-
-Default: `normal`
-
-Allowed values in v1:
-
-- `early`
-- `normal`
-- `safeguard`
-
-Meaning:
-Determines when the rule runs in evaluation.
-
-- `early`: runs before normal rules. This is often useful for rules that emit events or otherwise need to establish preconditions for later rules.
-- `normal`: ordinary evaluation phase.
-- `safeguard`: late normalization phase.
-
-Phases are evaluated in this order:
-
-1. `early`
-2. `normal`
-3. `safeguard`
-
-#### `enabled`
-
-Type: boolean
-
-Required: no
-
-Default: `true`
-
-Meaning:
-Whether the rule is eligible to execute.
-
-If `false`, the rule is ignored for evaluation.
-
-#### `when`
-
-Type: array
-
-Required: no
-
-Default: `[]`
-
-Meaning:
-Applicability conditions that must all be satisfied for the rule to execute.
-
-Supported forms in v1:
-
-##### Fact existence
-
-```json
-{ "fact": "hp.max" }
-```
-
-##### Fact comparison
-
-```json
-{ "fact": "bardicInspiration.remaining", "greaterThan": 0 }
-```
-
-Supported comparison keys:
-
-- `equals`
-- `notEquals`
-- `greaterThan`
-- `greaterThanOrEqual`
-- `lessThan`
-- `lessThanOrEqual`
-
-##### Event condition
-
-```json
-{ "event": "longRest" }
-```
-
-Meaning: this rule only applies in evaluations where that event occurred.
-
-All entries are ANDed together.
-
-Important:
-
-- `when` is evaluated at the time the rule is considered for execution
-- `when` is evaluated against the current working state at that point in evaluation
-- `when` does not imply ordering
-
-This means a `when` condition may see facts that have already been changed by earlier rules in the same evaluation, but it must not assume that a fact has reached its final value unless ordering has been established separately.
-
-If a rule's `when` conditions depend on facts established or modified by other rules, the rule author must use `after` and/or phase structure to ensure the intended ordering.
-
-The same principle applies to facts read by the rule's activities: fact references in `when` or in activities do not automatically create ordering edges.
-
-#### `after`
-
-Type: array
-
-Required: no
-
-Default: `[]`
-
-Meaning:
-Ordering constraints. A rule must not execute until all referenced groups have settled.
-
-Shape:
-
-```json
-{ "group": "str.modifier" }
-```
-
-Meaning:
-The rule must wait until all rules belonging to the specified group have either executed or been determined not to execute in this evaluation.
-
-All entries are ANDed together.
-
-Additional legality rules for `after`:
-
-- waiting on a group that has no provider rules in the same evaluation is illegal
-- waiting on a group defined only in a later phase is illegal
-- group waits must not cross phase boundaries
-
-In practice this means:
-
-- an `early` rule may only wait on `early` groups
-- a `normal` rule may only wait on `normal` groups
-- a `safeguard` rule may only wait on `safeguard` groups
-
-#### `group`
-
-Type: array of strings
-
-Required: no
-
-Default: `[]`
-
-Meaning:
-Declares that this rule participates in the specified group(s).
-
-All rules with the same group name form a group whose execution must settle before rules depending on that group may run.
-
-Groups are phase-local. A group name is only meaningful within a single phase for ordering purposes.
-
-#### `activities`
-
-Type: array of activity objects
-
-Required: yes
-
-Meaning:
-Ordered operations performed when the rule executes.
-
-Activities are defined later in this document.
-
-- activities execute in array order
-- each activity mutates the working state
-- later activities see the results of earlier activities in the same rule
-- later rules see the results of earlier rules
-
-Activities do not:
-
-- create implicit ordering dependencies
-- bypass `when` or `after`
-
-### Rule execution semantics
-
-The engine evaluates `rules.standing`, `rules.planned`, and `rules.effects` together as one combined ruleset.
-
-A rule executes if:
-
-- `enabled` is not `false`
-- its `phase` is currently being evaluated
-- all `after` group dependencies are settled
-- all `when` conditions are satisfied at that moment in the current working state
-
-When a rule executes:
-
-- its `activities` run in order
-- its `id` may appear in `trace.appliedRuleIds`
-
-A group is considered settled when all rules belonging to that group in the same phase have either:
-
-- executed, or
-- been determined not to execute
-
-### Vars, Selections, and UI State
-
-#### Vars
-
-Rules may declare engine-facing variables using vars.
-
-```json
-{
-  "vars": {
-    "distance": {
-      "default": {
-        "fact": "character.movement.current"
-      }
-    }
-  }
-}
-```
-
-- `vars` define parameters that influence rule execution
-- `default` is used if there is no matching value in `selections`
-- vars must not contain UI-only data
-- `vars[].default` uses the same structure as activity `source` values, except they cannot reference other vars
-
-#### Selections
-
-Rules may include:
-
-```json
-{
-  "selections": {
-    "distance": 15
-  }
-}
-```
-
-- `selections` is a sparse map of user-selected values
-- only values differing from defaults should be stored
-- `selections` do not come from the database, they will be added by the UI during execution
-
-#### Separation of concerns
-
-| Concern              | Field      |
-| -------------------- | ---------- |
-| Rule mechanics       | activities |
-| Engine parameters    | vars       |
-| User-selected values | selections |
-| UI-only data         | ui.state   |
-
-### Ordering and applicability
-
-`after` establishes ordering constraints.
-
-`when` does not establish ordering constraints. It is only an applicability check performed when the rule is considered for execution.
-
-Therefore, if a rule needs another rule's fact writes to have happened first, the author must express that ordering explicitly using `after` and/or phases.
-
-A useful rule of thumb is:
-
-- use `when` to say **whether** a rule applies
-- use `after` to say **when** it is safe to evaluate that rule
-
-### Ordering legality and cycles
-
-The engine must reject illegal ordering graphs.
-
-At minimum, the following cases are illegal and should make `status.ok = false`:
-
-- dependency cycles within a phase
-- a rule waiting on a group that no rule in that phase belongs to
-- a rule waiting on a group that belongs only to a different phase
-- any ordering relationship that would require cross-phase waiting
-- a generated rule targeting the same phase as the generating rule
-- a generated rule targeting an earlier phase than the generating rule
-
-These are structural evaluation failures, not ordinary plan-illegality diagnostics.
-
----
-
-## Activity object
-
-Activities are the executable operations within a rule. They are run in order when a rule executes.
-
-This section defines the core activity schema and the built-in activity types for v1.
-
-### Activity shape
-
-```json
-{
-  "id": "string",
-  "type": "string"
-}
-```
-
-All activity types extend this base shape with additional fields.
-
-#### `id`
-
-Type: string
-
-Required: yes
-
-Meaning:
-A stable identifier for the activity within the evaluation.
-
-#### `type`
-
-Type: string
-
-Required: yes
-
-Meaning:
-The activity type.
-
----
-
-## Built-in activity types (v1)
-
-Multiple activity types reference a `source` field. `source` fields may contain _one_ of:
-
-- `fact`: takes the name of a fact
-- `number`: takes a constant number
-- `var`: `varName`
-- `condition`: evaluates a condition, returns 1 if true, 0 if false
-- `string`: takes a literal string value (typically an i18n key)
-
-e.g.
-
-```json
-source:
-  var: varName
-```
-
-In the case of a varName, it will look up the value in `selections` first, and
-if not present, then `vars[].default`. These will then need to be resolved.
-
-E.g.
+Same input → same output. No hidden state, no I/O, no clock (a wall-clock
+watchdog bounds pathological inputs but never fires on real ones). It composes
+four passes:
 
 ```plain
-resolved(x) = selections[x] ?? vars[x].default
+sheet(committed effects)            — derive the character sheet
+→ plan fold                         — apply planned actions in player order,
+                                      re-deriving the sheet with effects-so-far
+→ offers(final facts)               — the action catalog, judged post-plan
+→ annotate(final facts)             — related-info chips (riders)
 ```
 
-### Activity `when` condition
+Three ideas carry the whole design:
 
-All activities may include an optional `when` condition that gates execution:
+1. **The sheet is a dataflow.** Modules declare _contributions_ to facts as
+   pure functions of other facts. The engine discovers dependencies by
+   tracking reads and settles facts in dependency order. **There is no
+   authored ordering** — no phases, no groups, no `after`. Registration order
+   never matters; cycles and writer conflicts are errors.
 
-```json
-{
-  "type": "number_set",
-  "target": { "fact": "hp.current" },
-  "source": { "number": 10 },
-  "when": {
-    "fact": "hp.max",
-    "operator": "greaterThan",
-    "value": 0
-  }
+2. **The plan is a left fold.** Planned actions execute strictly in player
+   order. Before each step the sheet is re-derived with all effects advertised
+   so far, so every action sees the real current state (a second attack sees
+   the first one's spent action).
+
+3. **State changes are effects, not mutations.** An action's `apply` never
+   writes facts; it _advertises_ `EffectInstance`s — serializable values that
+   contribute fact deltas while they live and age out at end of turn. The
+   committed-effects list **is** the persisted character state.
+
+---
+
+## Input contract
+
+```ts
+interface EngineInput {
+  modules: RuleModule[]; // the rule modules to evaluate
+  ruleGroupIds?: string[]; // provenance: ids the modules were resolved from
+  inputFacts?: Facts; // pre-settled source facts (see contract below)
+  planned?: PlannedRef[]; // this turn's plan, in player order
+  committed?: EffectInstance[]; // persistent effects already in force
+}
+
+interface PlannedRef {
+  instanceId: string; // unique per plan row
+  ruleId: string; // the offer id being executed
+  selections?: Record<string, unknown>; // panel control values
 }
 ```
 
-If the `when` condition evaluates to false, the activity is skipped entirely.
+`evaluate` runs `modules` directly and never touches the registry, so it stays
+pure and does not eagerly bundle every module. Modules carry functions and do
+not survive JSON — persistence uses the **serializable projection**:
 
-The `when` field uses the same condition format as rule-level `when` conditions:
-
-- Fact existence: `{ "fact": "hp.max" }`
-- Fact comparison: `{ "fact": "hp.current", "operator": "lessThan", "value": 0 }`
-- Event condition: `{ "event": "longRest" }`
-
-### `number_set`
-
-```json
-{
-  "type": "number_set",
-  "target": "hp.current",
-  "source": {
-    "number": 10
-  }
+```ts
+interface SerializableInput {
+  ruleGroupIds: string[]; // replaces `modules`
+  inputFacts?: Facts;
+  planned?: PlannedRef[];
+  committed?: EffectInstance[];
 }
 ```
 
-Sets a numeric fact to a value.
+`serializeInput` projects an input down; `resolveInput` (sync, eager registry)
+or `loadModules` (async, lazy chunks) rehydrates it. Unresolvable ids are
+returned in `missing` — surfaced, never silently dropped.
 
-- overwrites any existing value
+### The input-facts contract
+
+`inputFacts` are **pre-settled sources with no contributor** (at runtime the
+store passes `{}`; tests use them for genuine inputs such as raw ability
+scores). A fact that is both an input and a contribution target would silently
+lose the input, so the sheet **throws** on the overlap, naming the fact and its
+writers. Model the base value as a module contribution or an effect instead.
 
 ---
 
-### `number_increment`
+## The module contract
 
-```json
-{
-  "type": "number_increment",
-  "target": "hp.current",
-  "max": "hp.max",
-  "source": {
-    "number": 5
-  }
+```ts
+interface RuleModule {
+  id: string; // canonical rule-group id (backend-wide)
+  meta?: RuleMeta; // search/discovery metadata (i18n keys)
+  derive?: (ctx: SheetCtx) => Contribution[];
+  offer?: (ctx: SheetCtx) => Offer[];
+  effectContributions?: (effect: EffectInstance) => Contribution[];
+  annotate?: (f: FactReader) => Annotation[];
+  onRest?: (kind: RestKind, facts: FactReader) => EffectInstance[];
 }
 ```
 
-Increments a numeric fact.
+Modules must be **deterministic, stateless functions of their facts** (the
+purity test evaluates every registered module twice and diffs the snapshots).
+All user-facing text is i18n keys (`rule.*`), never literal strings.
 
-- if the fact does not exist, it is treated as 0
-- `max` (optional) caps the resulting value using another fact
-- a `min` field may be added in future
+### `derive` — sheet contributions
 
----
-
-### `number_copy`
-
-```json
-{
-  "type": "number_copy",
-  "target": "hp.current",
-  "source": {
-    "fact": "hp.max"
-  }
+```ts
+interface Contribution {
+  fact: string;
+  combine?: 'sum' | 'max' | 'override'; // default: override
+  value: (f: FactReader) => number;
 }
 ```
 
-Copies the value from one fact to another.
+- `sum`: additive modifiers (HP from many class levels).
+- `max`: competing floors (unarmored AC variants, always-prepared grants).
+- `override`: single authoritative writer — two override writers to the same
+  fact is an error, as is mixing combine modes on one fact.
 
----
+`FactReader.num()` reads an unset fact as `0` (v1 parity); `has()`
+distinguishes unset from explicit 0. Dependency discovery is **pull-based**:
+the engine records what each `value` actually reads (including reads behind
+conditionals), so consumers settle after all of their producers' contributions
+— the v1 "two-group copy-after-settle dance" is free.
 
-### `number_sum`
+### `offer` — the action catalog
 
-```json
-{
-  "type": "number_sum",
-  "target": "hp.max",
-  "sources": [{ "fact": "hp.base" }, { "fact": "hp.bonus" }]
+```ts
+interface Offer {
+  id: string;
+  ui?: OfferUI; // plain data for PanelRenderer (name, section, intents, …)
+  vars?: Record<string, unknown>; // panel control variable definitions
+  when?: (f: FactReader) => boolean; // structural gate
+  legalWhen?: LegalWhen[]; // legality gates
+  apply?: (f: FactReader, selections) => ActionResult;
 }
 ```
 
-Sets a numeric fact to the sum of multiple other facts.
+Two distinct gates, matching v1 semantics:
 
-- missing facts are treated as 0
+- **`when` (structural)**: false → the offer is **omitted** from the catalog
+  entirely (e.g. Divine Smite is only offered while prepared). The plan fold
+  re-checks it per step: a planned action whose `when` no longer holds is
+  **skipped** — no execution, no resource spend — and its plan row renders as
+  inapplicable.
+- **`legalWhen` (legality)**: false → the offer stays **visible but illegal**,
+  with diagnostics attached (illegal-but-visible). Planned illegal actions
+  still execute — the projection shows the over-commit (e.g.
+  `actions.remaining: -1`) and the row shows the diagnostic.
 
----
+`apply` is the pure transition run when the offer is planned:
 
-### `number_function`
-
-```json
-{
-  "type": "number_function",
-  "target": "str.modifier",
-  "function": "modifier_value",
-  "sources": [{ "fact": "str.value" }]
+```ts
+interface ActionResult {
+  advertise?: EffectInstance[]; // the ONLY way an action changes state
+  diagnostics?: Diagnostic[]; // per-instance legality of THIS execution
 }
 ```
 
-Sets a numeric fact using a named function.
+### `effectContributions` — parameterized effects
 
-- functions are implementation-defined
-- for security, available functions should be referenced by a string name, not `eval()` or equivalent
+By default an effect's `state` is read as fact deltas. When a contribution
+must be computed (not a constant delta), the owning module (matched by the
+effect's `ruleId`) provides it. Used sparingly.
+
+### `annotate` — related info
+
+A pure function of the **final post-plan facts** returning annotations
+(`{ key, targets, rider? }`). The UI matches `targets` against panel
+`annotationLabels` — e.g. Divine Smite's "+Nd8 radiant" rider on melee attack
+panels while the smite is usable.
+
+### `onRest` — passive rest recoveries
+
+Runs after the plan settles when a rest was recorded this turn; returns
+effects folded into the same evaluation and committed at end of turn. This is
+the **only** way a non-planned module emits effects. It exists for recoveries
+that can't be expressed as expiry aging (Channel Divinity regains exactly one
+use on a short rest; a Human regains Heroic Inspiration on a long rest). Emit
+**keyed** effects so a second rest doesn't stack the grant.
 
 ---
 
-### `emit_event`
+## The effects model
 
-```json
-{
-  "type": "emit_event",
-  "event": "longRest"
+```ts
+interface EffectInstance {
+  id: string;
+  ruleId?: string; // owning module, for effectContributions
+  key?: string; // logical identity: same key → newest evicts oldest
+  state?: Record<string, number>; // fact deltas while active (sum by default)
+  stateCombine?: Record<string, CombineMode>; // per-fact override (max/override)
+  display?: EffectDisplay; // UI chip metadata (inert to the engine)
+  expiry: ExpirySpec;
 }
 ```
 
-Emits an event for this evaluation.
+- **Keys**: effects sharing a `key` do not stack — the newest replaces the
+  oldest, both in the sheet and at commit. Re-applying a modifier (set Max HP
+  +5, then +10) replaces; an empty same-key effect _removes_ (this is how
+  unprepare works). Keyless effects (ordinary per-turn spends) never dedupe.
+- **Expiry** is one condition or an array (ends on the **earliest** to fire):
+  `permanent`, `endOfTurn`, `untilShortRest`, `untilLongRest`,
+  `turns { remaining, total? }`. A 10-round buff that also ends on a rest is
+  `[{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]`. Authors
+  write only `remaining`; the first end-of-turn aging backfills `total` so the
+  UI can render elapsed-vs-remaining pips.
+- **Display contract**: `display` present → shown on the active-effects strip
+  (`display.hidden: true` → named but only in the "show hidden" reveal); no
+  `display` at all → hidden **and** nameless — reserve that for pure
+  bookkeeping. Concentration markers always show. `display.section` is
+  confined to the `SECTIONS` union; `display.subject` (e.g. `'steed'`) drives
+  the companion subject views.
 
-- events may be used by `when` conditions in other rules during the same evaluation
-- events are not persisted in `next`
+### End of turn
+
+`endTurn(committed, advertised, { longRest?, shortRest? })` merges the turn's
+advertised effects into the committed set (keyed dedupe, newest wins), ages
+every expiry (turns decrement, `endOfTurn` drops, rest-scoped effects drop on
+their rest — a long rest satisfies `untilShortRest` too), and returns the next
+committed set, which the store persists. Rests recorded via core-events'
+recorder effects (`rest.long` / `rest.short` facts) apply **within the same
+evaluation**: the sheet already excludes effects the rest ends, so resources
+read as restored immediately.
 
 ---
 
-### `generate_rule`
+## Output contract
 
-```json
-{
-  "type": "generate_rule",
-  "rule": { ... }
+```ts
+interface EngineOutput {
+  status: { ok; legal; applicable }; // legal = no plan-step error diagnostics
+  facts: Facts; // projected post-plan facts
+  availableRules: AvailableRuleEntry[]; // the offer catalog, judged post-plan
+  planDiagnostics: Record<string, Diagnostic[]>; // per plan-instance legality
+  annotations: Annotation[];
+  effects: EffectInstance[]; // this turn's advertised effects
+  diagnostics: { errors; warnings; notices }; // engine-level problems
+  next: EngineInput; // echo for replay (serializeInput → JSON-safe)
 }
 ```
 
-Creates a new rule during evaluation.
+- `availableRules` entries are `{ rule: { id, ui, vars }, legal, applicable,
+diagnostics }` — offers judged against the **post-plan** facts, so the
+  catalog reflects what you could _still_ do.
+- `planDiagnostics` is keyed by plan `instanceId`; per-instance legality comes
+  from the fold (each step judged against the state it actually executed in).
+- Engine throws (dependency cycles, combine conflicts, input-fact overlap,
+  watchdog timeout) are caught by the play store, which keeps the previous
+  output and surfaces `play.error.engineCycle` / `play.error.evaluate` in the
+  error banner — a bad module degrades, it does not blank the screen.
 
-A generated rule may only target a later phase than the phase of the rule currently executing.
+### The UI bridge
 
-This means:
-
-- an `early` rule may generate `normal` or `safeguard` rules
-- a `normal` rule may generate `safeguard` rules
-- a `safeguard` rule may not generate any further rules for the current evaluation
-- a rule may not generate another rule in the same phase
-- a rule may not generate another rule in an earlier phase
-
-Immediate effects that must happen in the current phase must be represented directly by the generating rule's own activities, not by a generated rule.
-
-If a generated rule should persist into future evaluations, it must appear in `next.rules.effects`.
-
----
-
-### `offer_rule`
-
-```json
-{
-  "type": "offer_rule",
-  "rule": { ... },
-  "legalWhen": [ ... ]
-}
-```
-
-Offers a rule as a potential choice to the UI.
-
-- does not execute the offered rule
-- produces an entry in `availableRules`
-
-#### `legalWhen`
-
-Type: array
-
-Meaning:
-Conditions that determine whether the offered rule is ordinarily legal.
-
-Each entry has the form:
-
-```json
-{
-  "condition": { ... },
-  "illegalDiagnostics": [ ... ]
-}
-```
-
-Conditions are the same as `when` conditions. If a condition is not satisfied:
-
-- the offered rule is still returned
-- but marked `legal: false`
-- diagnostics are attached
-
-`illegalDiagnostics` has the same shape as `diagnostics` documented elsewhere in this document.
+The UI consumes the v1-era view contract (`$lib/rules-engine` is now a
+**types-only package**). `src/lib/play/v2Bridge.ts` adapts v2 output to it:
+committed `EffectInstance`s become effect `Rule`s for the strip (display →
+`ui.name`/`section`/`subject`, turns expiry → `ui.countDown`/`ui.duration`
+pips), and `EngineOutput` becomes the store's v1 shape. Offer `ui`/`vars`
+payloads pass through untouched — PanelRenderer reads them directly.
 
 ---
 
-### `setClear`
-
-```json
-{
-  "type": "setClear",
-  "target": { "var": "errors" }
-}
-```
-
-Clears a var target, initializing it to an empty array.
-
-- used for managing collection vars like error message lists
-- typically used at the start of a rule to reset before conditionally adding items
-- only supports var targets (not fact targets)
-
----
-
-### `setAdd`
-
-```json
-{
-  "type": "setAdd",
-  "target": { "var": "errors" },
-  "source": { "string": "rule.dnd-5e-2024.base.action-move-walk-offer.out_of_movement" },
-  "when": {
-    "fact": "character.movement.current",
-    "operator": "lessThan",
-    "value": 0
-  }
-}
-```
-
-Adds a string to a var target array.
-
-- only supports string sources (literal i18n keys)
-- only supports var targets (not fact targets)
-- deduplicates: adding the same string twice has no effect
-- typically used with a `when` condition to conditionally add error messages
-- auto-initializes the array if it doesn't exist
-
-Common pattern for collecting illegal choice reasons:
-
-```json
-{
-  "activities": [
-    { "type": "setClear", "target": { "var": "errors" } },
-    {
-      "type": "setAdd",
-      "target": { "var": "errors" },
-      "source": { "string": "rule.dnd-5e-2024.base.action-move-walk-offer.out_of_movement" },
-      "when": { "fact": "character.movement.current", "operator": "lessThan", "value": 0 }
-    },
-    {
-      "type": "setAdd",
-      "target": { "var": "errors" },
-      "source": { "string": "rule.dnd-5e-2024.base.action-attack-offer.no_action" },
-      "when": { "fact": "actions.remaining", "operator": "equals", "value": 0 }
-    }
-  ]
-}
-```
-
-The UI can then display the collected errors as a multi-line popup.
-
----
-
-## Input fields
-
-### `schemaVersion`
-
-Type: integer
-
-Required: yes
-
-Meaning:
-The version of the input/output schema.
-
----
-
-### `rules`
-
-Type: object
-
-Required: yes
-
-Shape:
-
-```json
-{
-  "standing": [],
-  "planned": [],
-  "effects": []
-}
-```
-
-Meaning:
-The complete set of rules to evaluate in this call.
-
-The engine combines `rules.standing`, `rules.planned`, and `rules.effects` into one evaluated ruleset. The separation exists for caller and UI clarity, not because the engine applies different execution semantics to them.
-
-#### `rules.standing`
-
-Type: array of rule objects
-
-Meaning:
-Rules that the UI considers part of the persistent baseline rule set.
-
-#### `rules.planned`
-
-Type: array of rule objects
-
-Meaning:
-Rules that the UI considers part of the current speculative plan.
-
-Planned rules may include additional per-instance fields:
-
-- `selections`: user-selected values for vars
-- `ui.state`: UI-only state
-
-These fields are ignored by the rules engine except where selections affect var resolution. These fields will not be present in the rule groups in the database, as they are execution state.
-
-The UI may add and remove these freely while the user edits the plan.
-
-#### `rules.effects`
-
-Type: array of rule objects
-
-Meaning:
-Rules already in force before this evaluation starts.
-
-These are usually generated or persistent temporary effects.
-
-Although they are already in force from the caller's point of view, the engine evaluates them using the same rule semantics as `rules.standing` and `rules.planned`.
-
----
-
-### `state`
-
-Type: object
-
-Required: yes
-
-Shape:
-
-```json
-{
-  "facts": {}
-}
-```
-
-#### `state.facts`
-
-Type: object mapping fact names to values
-
-Meaning:
-Always empty (`{}`). All facts are derived by standing rules, effects, and planned rules during evaluation. No facts are carried forward from previous evaluations.
-
-These are the current durable state values.
-
----
-
-## Output JSON shape
-
-```json
-{
-  "status": {
-    "ok": true,
-    "legal": true,
-    "applicable": true
-  },
-  "facts": {},
-  "collections": {},
-  "availableRules": [],
-  "diagnostics": {
-    "errors": [],
-    "warnings": [],
-    "notices": []
-  },
-  "trace": {
-    "appliedRuleIds": [],
-    "appliedActivityIds": [],
-    "providedCapabilities": [],
-    "emittedEvents": []
-  },
-  "next": {
-    "schemaVersion": 1,
-    "rules": {
-      "standing": [],
-      "planned": [],
-      "effects": []
-    },
-    "state": {
-      "facts": {}
-    }
-  }
-}
-```
-
----
-
-## Output fields
-
-### `status`
-
-Type: object
-
-Required: yes
-
-Shape:
-
-```json
-{
-  "ok": true,
-  "legal": true,
-  "applicable": true
-}
-```
-
-#### `status.ok`
-
-Whether the engine successfully evaluated the input structurally.
-
-#### `status.legal`
-
-Whether the current full evaluated plan is ordinarily legal.
-
-#### `status.applicable`
-
-Whether the engine could still evaluate the current input and produce a meaningful result.
-
-A plan may be illegal but still applicable.
-
----
-
-### `facts`
-
-Type: object mapping fact names to values
-
-Required: yes
-
-Meaning:
-The projected fact state after evaluating the current rules against the input replay state.
-
-These are the hypothetical result facts.
-
-Important:
-
-- these are not automatically committed
-- these may intentionally differ from `next.state.facts`
-
----
-
-### `collections`
-
-Type: object
-
-Required: yes
-
-Meaning:
-Projected collection outputs such as sets, lists, notices, resistances, and other non-scalar derived values.
-
----
-
-### `availableRules`
-
-Type: array
-
-Required: yes
-
-Meaning:
-Rules the UI may present as choices that can be added to `rules.planned` in a future evaluation.
-
-`availableRules` are derived from the currently projected evaluated state, not from `next.state.facts`.
-
-A rule may still be present in `availableRules` even if it is ordinarily illegal, as long as a containing `offer_rule` activity offered it.
-
-Each entry contains the executable rule plus legality metadata.
-
-Recommended shape:
-
-```json
-[
-  {
-    "rule": {
-      "id": "rule-id",
-      "activities": [],
-      "ui": {
-        "label": "string",
-        "description": "string"
-      }
-    },
-    "legal": true,
-    "applicable": true,
-    "diagnostics": []
-  }
-]
-```
-
-#### `availableRules[].rule`
-
-The full executable rule object that may be added to `rules.planned` by the caller/UI. See the Rules spec earlier in this document.
-
-#### `availableRules[].legal`
-
-Whether adding this rule would be ordinarily legal in the currently projected state.
-
-#### `availableRules[].applicable`
-
-Whether the engine could still evaluate this rule if the UI added it anyway.
-
-#### `availableRules[].diagnostics`
-
-Diagnostics relevant to the legality of the offered rule.
-
-These come from failed `offer_rule.legalWhen` checks.
-
----
-
-### `diagnostics`
-
-Type: object
-
-Required: yes
-
-Shape:
-
-```json
-{
-  "errors": [],
-  "warnings": [],
-  "notices": []
-}
-```
-
-Meaning:
-Diagnostics for the current evaluated input as a whole.
-
-This is distinct from per-offered-rule diagnostics in `availableRules`, but is the same shape.
-
----
-
-### `trace`
-
-Type: object
-
-Required: yes
-
-Shape:
-
-```json
-{
-  "appliedRuleIds": [],
-  "appliedActivityIds": [],
-  "providedCapabilities": [],
-  "emittedEvents": []
-}
-```
-
-Meaning:
-Trace/debug information describing what occurred during this evaluation.
-
-This is not durable state and must not be treated as input for the next call.
-
-If you need visibility into rules created during evaluation, trace may later be extended with creation-specific details, but there is no separate top-level `generatedRules` output.
-
----
-
-### `next`
-
-Type: complete input object
-
-Required: yes
-
-Meaning:
-A complete replayable input document suitable for immediate reuse as the input to a subsequent evaluation.
-
-Important properties:
-
-- `next` is replayable
-- `next` is not the same thing as a committed result
-- `next.state.facts` are replay/base facts, not automatically the projected top-level `facts`
-- `next` does not include transient output-only values such as emitted events, diagnostics, trace, or `availableRules`
-
-Rules created during evaluation that should persist into future evaluations must appear in `next.rules.effects`.
-
-A generated rule may only target a later phase than the rule that generated it. This avoids retroactive same-phase ordering problems.
-
-### Replayability guarantee
-
-If the caller invokes the engine with `next` unchanged, the engine should produce a semantically equivalent result.
-
-This does not require byte-for-byte identical output.
-
----
-
-## Facts vs events
-
-### Facts
-
-Facts are durable state.
-
-They:
-
-- are derived by rules during evaluation (input `state.facts` is always empty)
-- appear in output as top-level projected `facts`
-- appear in `next.state.facts` as an empty object (for replayability contract)
-
-### Events
-
-Events are transient evaluation-local occurrences.
-
-They:
-
-- are emitted during rule execution
-- may satisfy rule dependencies during the same evaluation
-- may appear in `trace.emittedEvents`
-- do not appear in `next`
-- are not passed back into the next call
-
-A useful shorthand:
-
-- facts answer: **what is true right now?**
-- events answer: **what happened during this evaluation?**
-
----
-
-## Commit semantics
-
-The engine does not commit plan effects.
-
-Commit is performed by the UI/caller.
-
-To commit the currently evaluated result, the UI should:
-
-1. take the returned `next`
-2. commit effects from the output to the effects list
-3. make any corresponding UI-level plan edits, such as removing planned rules that have now actually been carried out
-4. re-evaluate (facts are fully derived from rules, so no state needs to be carried forward)
-
-This keeps the distinction between preview and execution outside the engine.
-
----
-
-## Example: Bardic Inspiration offering
-
-### Input
-
-```json
-{
-  "schemaVersion": 1,
-  "rules": {
-    "standing": [
-      {
-        "id": "rule-offer-bardic-inspiration",
-        "description": "Offer Bardic Inspiration if it can be used",
-        "activities": [
-          {
-            "id": "activity-offer-bardic-inspiration",
-            "type": "offer_rule",
-            "rule": {
-              "id": "rule-use-bardic-inspiration",
-              "description": "Use Bardic Inspiration",
-              "ui": {
-                "label": "Use Bardic Inspiration",
-                "description": "Add a Bardic Inspiration die to a roll"
-              },
-              "activities": [
-                {
-                  "id": "activity-consume-bardic-inspiration",
-                  "type": "number_increment",
-                  "target": "bardicInspiration.remaining",
-                  "number": -1
-                }
-              ]
-            },
-            "legalWhen": [
-              {
-                "condition": {
-                  "fact": "bardicInspiration.remaining",
-                  "greaterThan": 0
-                },
-                "illegalDiagnostics": [
-                  {
-                    "code": "resource.bardicInspiration.insufficient",
-                    "severity": "error"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    ],
-    "planned": [],
-    "effects": []
-  },
-  "state": {
-    "facts": {
-      "bardicInspiration.remaining": 2
-    }
-  }
-}
-```
-
-### Output shape (abridged)
-
-```json
-{
-  "facts": {
-    "bardicInspiration.remaining": 2
-  },
-  "availableRules": [
-    {
-      "rule": {
-        "id": "rule-use-bardic-inspiration"
-      },
-      "legal": true,
-      "applicable": true,
-      "diagnostics": []
-    }
-  ],
-  "next": {
-    "schemaVersion": 1,
-    "rules": {
-      "standing": [],
-      "planned": [],
-      "effects": []
-    },
-    "state": {
-      "facts": {
-        "bardicInspiration.remaining": 2
-      }
-    }
-  }
-}
-```
-
-If the UI adds the offered rule to `rules.planned`, top-level projected `facts` may become `1` while `next.state.facts` remains `2` until the UI decides to commit the result.
-
----
-
-## Practical guidance for the UI
-
-### To preview a new choice
-
-- take a rule from `availableRules[].rule`
-- append it to `rules.planned`
-- call the engine again
-
-### To reevaluate without changes
-
-- call the engine again with `next` unchanged
-
-### To commit the result
-
-- take `next`
-- commit effects from the output to the effects list
-- update `rules.planned` to reflect what was actually done
-- call the engine again (facts are fully derived, no state to carry forward)
-
----
-
-## Summary
-
-The input/output contract is built around fully derived facts:
-
-- input `state.facts` is always empty — all values come from rules
-- output projected facts in top-level `facts`
-
-and one replayable next input object:
-
-- `next`
-
-All rules are grouped under `rules`, with three caller-facing buckets:
-
-- `standing`: baseline persistent rules
-- `planned`: rules currently included in the speculative plan
-- `effects`: rules already in force due to prior events and still affecting evaluation
-
-From the engine's point of view, all three are simply combined into the evaluated ruleset.
-
-## A note on UI state
-
-FOR INFORMATIONAL PURPOSES ONLY:
-
-The rules engine does not engage with the `ui` field, it is for the user interface. The rules engine just returns it unchanged. However, for completeness:
-
-```json
-{
-  "ui": {
-    "model": "uiModelName",
-    "name": "rule.group.file.object.name", # A i18n key for the name in the UI
-    "state": {
-      "note": "towards enemy #1" # for example
-    },
-  }
-}
-```
-
-- ignored by the rules engine
-- persisted in memory for UI purposes only
-- must not affect rule execution
-- is not present in the rule groups stored in the database
-- `state` will not be defined in the rule group in the database, it will be generated by the UI itself
+## Delivery
+
+- **Static registry** (`registry.ts`): eager id → module map, keyed by each
+  module's `id`, which is the **canonical rule-group id** used backend-wide
+  (DynamoDB `ruleGroupId`, `requires`, persisted assignments, search index).
+  Used by tests and the sync parity harness.
+- **Lazy chunks** (`lazy.ts`): the runtime path. Each module is a dynamic
+  `import()` Vite code-splits into its own chunk (verified by
+  `make verify-chunks`); a character loads only its assigned groups' chunks.
+  `loadModules(ids, builtForVersion)` gates each chunk on
+  `engineApiVersion` compatibility (`version.ts`) before fetching.
+- **Metadata** (`metadata.ts`): modules with `meta` (user-facing content
+  groups) expose `{ name, description, keywords }` **i18n keys** plus
+  `requires`; `buildModuleRuleGroups` resolves them against the locale
+  dictionaries into the search-index shape. Foundational modules (hp,
+  action-economy, …) carry no `meta` and have no search presence.
+- **The YAML data layer** (`data/rule-groups/`): translations, `requires`,
+  `settings`, `condition`, and `detail` per rule group — published to DynamoDB
+  by `make sync-rule-groups`. It carries **no rules** (the schema rejects
+  them); DynamoDB items publish `rules: "[]"` only for API wire-stability.
+
+## Guards
+
+| Guard                                        | Catches                                                                            |
+| -------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `tests/integration/rules-engine/v2-coverage` | a deployed rule group with no v2 module (and stale catalog-only allowlist entries) |
+| `tests/unit/i18n/module-i18n-coverage`       | a `rule.*` key referenced by a module with no translation in either locale         |
+| `tests/unit/rules-engine-v2/sections.test`   | a section outside the `SECTIONS` union; an intentless offer falling to `HANDLE`    |
+| `tests/unit/rules-engine-v2/purity.test`     | a nondeterministic or stateful module                                              |
+| yaml-scenarios parity runner                 | behavior drift against the v1 scenario corpus                                      |
+| `make validate-rules-schema`                 | YAML metadata drift (including `rules:` sneaking back)                             |
+| `make check` (svelte-check, also in CI)      | type drift, including the `Section` union and the module contract                  |
