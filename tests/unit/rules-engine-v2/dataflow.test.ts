@@ -120,4 +120,25 @@ describe('v2 dataflow sheet — ordering is structural, not authored', () => {
     const b: RuleModule = { id: 'b', derive: () => [{ fact: 'y', value: (f) => f.num('x') }] };
     expect(() => evaluateSheet([a, b], {})).toThrow(/cycle/i);
   });
+
+  // Inputs are pre-settled sources with no contributor (the evaluateSheet
+  // contract). Settling used to silently replace an input with the combined
+  // contributions when both existed — now the overlap fails loudly.
+  it('throws when a module contributes to an input fact (inputs are not contributions)', () => {
+    const m: RuleModule = {
+      id: 'clobberer',
+      derive: () => [{ fact: 'str.value', combine: 'sum', value: () => 1 }]
+    };
+    expect(() => evaluateSheet([m], { 'str.value': 15 })).toThrow(
+      /input fact "str\.value".*clobberer/i
+    );
+  });
+
+  it('throws when an effect contributes to an input fact', () => {
+    expect(() =>
+      evaluateSheet([], { 'hp.temp': 3 }, [
+        { id: 'aid', state: { 'hp.temp': 5 }, expiry: { kind: 'permanent' } }
+      ])
+    ).toThrow(/input fact "hp\.temp"/i);
+  });
 });

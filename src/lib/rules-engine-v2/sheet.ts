@@ -86,6 +86,21 @@ export function evaluateSheet(
     }
   }
 
+  // Inputs are pre-settled sources with no contributor (see the doc above). If a
+  // module or effect also wrote an input fact, settle() would silently replace
+  // the input with the combined contributions — fail loudly instead. (The store
+  // catches and banners engine throws, so a bad module degrades, not blanks.)
+  for (const fact of Object.keys(inputFacts)) {
+    const contribs = byFact.get(fact);
+    if (contribs) {
+      const writers = [...new Set(contribs.map((c) => c.moduleId))].join(', ');
+      throw new Error(
+        `Sheet input fact "${fact}" is also written by contributions (${writers}); ` +
+          `inputs are immutable sources — contribute the base value from a module or effect instead`
+      );
+    }
+  }
+
   const contributedFacts = new Set(byFact.keys());
 
   const facts: Facts = { ...inputFacts };

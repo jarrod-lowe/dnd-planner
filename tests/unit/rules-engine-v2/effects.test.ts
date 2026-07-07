@@ -132,11 +132,25 @@ describe('v2 endTurn — short rest + multi-predicate expiry', () => {
     expect(committed).toHaveLength(0);
   });
 
-  it('decrements the turns predicate in the survivor (it does not reset)', () => {
+  it('decrements the turns predicate and backfills the original total (for elapsed pips)', () => {
     const after1 = endTurn([buff(10)], [], { longRest: false });
     const expiry = after1[0].expiry;
     const preds = Array.isArray(expiry) ? expiry : [expiry];
-    expect(preds.find((p) => p.kind === 'turns')).toEqual({ kind: 'turns', remaining: 9 });
+    expect(preds.find((p) => p.kind === 'turns')).toEqual({
+      kind: 'turns',
+      remaining: 9,
+      total: 10
+    });
+
+    // total records the authored duration — it does not track remaining.
+    const after2 = endTurn(after1, [], { longRest: false });
+    const expiry2 = after2[0].expiry;
+    const preds2 = Array.isArray(expiry2) ? expiry2 : [expiry2];
+    expect(preds2.find((p) => p.kind === 'turns')).toEqual({
+      kind: 'turns',
+      remaining: 8,
+      total: 10
+    });
   });
 
   it('preserves single-predicate shape (backward compatible)', () => {
@@ -145,7 +159,8 @@ describe('v2 endTurn — short rest + multi-predicate expiry', () => {
       [],
       {}
     );
-    expect(after1[0].expiry).toEqual({ kind: 'turns', remaining: 1 }); // still a single object
+    // still a single object, total backfilled
+    expect(after1[0].expiry).toEqual({ kind: 'turns', remaining: 1, total: 2 });
   });
 });
 

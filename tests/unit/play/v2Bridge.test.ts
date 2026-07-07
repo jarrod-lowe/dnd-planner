@@ -27,6 +27,18 @@ describe('v2Bridge — effectInstanceToRule', () => {
     expect(isHiddenEffect(rule)).toBe(false);
   });
 
+  it('an aged timed effect shows elapsed pips: total survives aging, remaining counts down', () => {
+    const rule = effectInstanceToRule({
+      id: 'effect-bless',
+      key: 'bless',
+      state: { 'concentration.spent': 1 },
+      expiry: [{ kind: 'turns', remaining: 7, total: 10 }, { kind: 'untilShortRest' }]
+    });
+    const dur = getDurationState(rule);
+    expect(dur?.remaining).toBe(7);
+    expect(dur?.total).toBe(10); // 10 pips, 7 filled — not 7/7
+  });
+
   it('a permanent keyed build effect → no duration, keyed group, hidden from the strip', () => {
     const rule = effectInstanceToRule({
       id: 'effect-str',

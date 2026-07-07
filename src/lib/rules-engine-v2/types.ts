@@ -122,7 +122,12 @@ export type Expiry =
    */
   | { kind: 'untilShortRest' }
   | { kind: 'endOfTurn' }
-  | { kind: 'turns'; remaining: number }
+  /**
+   * Ends after `remaining` more turns. Authors write only `remaining`; the first
+   * `endTurn` aging backfills `total` (the authored duration) so the UI can
+   * render elapsed vs. remaining pips.
+   */
+  | { kind: 'turns'; remaining: number; total?: number }
   /**
    * Never aged by `endTurn` — survives turns and long rests. For prepared spells
    * / conditions that persist until explicitly removed (the UI's removeEffect),
@@ -326,8 +331,9 @@ export interface Offer {
    * Structural gate (v1's `when`): when it returns false the offer is OMITTED
    * from availableRules entirely — e.g. only offer Divine Smite when it is
    * prepared. Distinct from `legalWhen`, which keeps the offer visible but marks
-   * it illegal. The apply registry still sees every offer, so a force-planned /
-   * stale action whose `when` now fails can still be evaluated.
+   * it illegal. The plan fold re-checks this gate per step: a planned action
+   * whose `when` no longer holds is skipped — no execution, no resource spend —
+   * and its plan row renders as inapplicable (v1 parity).
    */
   when?: (f: FactReader) => boolean;
   legalWhen?: LegalWhen[];

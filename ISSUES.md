@@ -248,6 +248,12 @@ fails (or surface `applicable: false` + a diagnostic instead of applying).
 
 ### 2.9 Effect-chip duration pips always render "full"
 
+**FIXED.** The `turns` expiry now carries an optional `total`, backfilled by the
+first `endTurn` aging (authors still write only `remaining`), and the bridge
+renders pips as `remaining` of `total` — so a 10-round spell at 7 remaining
+shows 10 pips with 7 filled. Old persisted effects without `total` fall back to
+the previous shrink behavior until their next aging. Schema updated to match.
+
 `v2Bridge.durationFromExpiry` maps a `turns` expiry to
 `{ countDown: remaining, duration: remaining }` because an `EffectInstance`
 keeps only the remaining count — the original total is lost. v1 kept
@@ -256,6 +262,15 @@ showed elapsed pips. Cosmetic; fix would add an authored `total` (or
 `display.duration`) to timed effects.
 
 ### 2.10 Sheet input facts are clobbered by contributors (sharp edge)
+
+**FIXED (guarded).** `evaluateSheet` now throws on the overlap, naming the fact
+and its writers; at runtime the store's §2.11 catch surfaces it as an error
+banner rather than a blank screen. The guard immediately caught four places
+where inputs were already being silently swallowed: the annotate tests and the
+purity test passed module-contributed facts (`spell.l1.divineSmite.prepared`,
+`spellcasting.slots.level1.total`) as inputs, and the
+`spear-2h-reaction-no-free-hands` scenario's v1-era `initialFacts` restated
+facts v2 derives — all four remodelled.
 
 `evaluateSheet` seeds `facts = { ...inputFacts }`, but when any module/effect
 contributes to the same fact, `settle()` overwrites the input value with the
@@ -348,16 +363,16 @@ reachable / every detailKey resolves to a published file.
   this environment (needed a sandbox-only browser-build shim); CI runs it on
   the prod workflows too. The play-flow behavior proof remains the manual
   test-env validation.
-- **`ui.section` is now semantics-only, and some values have no meaning.**
-  `SectionCollapsible` (the section-header renderer) has no importers — dead
-  code — and no live consumer renders section names; sections only feed the
-  verb fallback (`deriveVerbFromSection`) and effect-kind mapping. Modules use
-  section values with no i18n header and no verb-fallback case (`mastery`,
-  `mount`, `equip`, bare `action`/`bonus-action`), which is currently harmless
-  (all such offers carry explicit intents) but is an authoring trap — a
-  section-only offer with one of those values would fall to the `HANDLE`
-  bucket. Consider deleting `SectionCollapsible`/`SECTION_ORDER` or typing the
-  allowed section values.
+- **`ui.section` is now semantics-only; dead renderers DELETED.**
+  `SectionCollapsible` (the section-header renderer) and
+  `sectionConfig.ts` (`SECTION_ORDER`/`STAT_SECTION_ORDER`) had no importers —
+  deleted with their tests. No live consumer renders section names; sections
+  only feed the verb fallback (`deriveVerbFromSection`) and effect-kind
+  mapping. The residual authoring trap stands: a section-only offer using a
+  value with no verb-fallback case (`mastery`, `mount`, `equip`, bare
+  `action`/`bonus-action`) would fall to the `HANDLE` bucket — currently
+  harmless (all such offers carry explicit intents); typing the allowed
+  section values would close it.
 
 ## 5. Verified-OK (checked, no issue)
 

@@ -31,8 +31,8 @@ function durationFromExpiry(expiry: ExpirySpec): { countDown: number; duration: 
   const specs: Expiry[] = Array.isArray(expiry) ? expiry : [expiry];
   const turns = specs.find((e): e is Extract<Expiry, { kind: 'turns' }> => e.kind === 'turns');
   if (!turns) return null;
-  // The EffectInstance keeps only the remaining count, so total = remaining here.
-  return { countDown: turns.remaining, duration: turns.remaining };
+  // `total` is backfilled by endTurn aging; before any aging, remaining IS the total.
+  return { countDown: turns.remaining, duration: turns.total ?? turns.remaining };
 }
 
 /**

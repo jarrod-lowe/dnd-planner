@@ -22,8 +22,11 @@ function ageCondition(c: Expiry, opts: EndTurnOptions): { expired: boolean; next
       // A long rest includes a short rest, so either ends it.
       return { expired: !!opts.shortRest || !!opts.longRest, next: c };
     case 'turns': {
+      // Backfill the authored duration on first aging (authors write only
+      // `remaining`); the UI reads `total` for elapsed vs. remaining pips.
+      const total = c.total ?? c.remaining;
       const remaining = c.remaining - 1;
-      return { expired: remaining <= 0, next: { kind: 'turns', remaining } };
+      return { expired: remaining <= 0, next: { kind: 'turns', remaining, total } };
     }
     case 'permanent':
       return { expired: false, next: c };

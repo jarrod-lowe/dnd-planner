@@ -379,6 +379,10 @@
         "remaining": {
           "type": "number",
           "description": "Turns remaining (only for kind: turns)"
+        },
+        "total": {
+          "type": "number",
+          "description": "Authored turns total, backfilled by endTurn aging for elapsed pips (only for kind: turns)"
         }
       },
       "additionalProperties": false

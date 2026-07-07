@@ -17,7 +17,10 @@ import divineSmite from '$lib/rules-engine-v2/rules/divine-smite';
  * a bonus action + spellcasting + a resource left), matching the v1 rule.
  */
 const ALL = [actionEconomy, attacks, spellcasting, paladinSmite, divineSmite];
-const PREPARED = { 'spellcasting.slots.level1.total': 2, 'spell.l1.divineSmite.prepared': 1 };
+// Slots are a genuine input here (no paladin level module in ALL); prepared is
+// NOT — paladin-smite itself contributes prepared = 1 (always-prepared), and
+// the sheet rejects inputs that overlap contributions.
+const PREPARED = { 'spellcasting.slots.level1.total': 2 };
 
 const attack = (instanceId: string): PlannedRef => ({
   instanceId,

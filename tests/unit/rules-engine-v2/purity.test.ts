@@ -81,11 +81,15 @@ describe('v2 purity', () => {
   it('evaluate() is pure end-to-end across representative inputs', () => {
     const all = resolveModules(registeredRuleGroupIds()).modules;
     const attack = { instanceId: 'a1', ruleId: 'unarmed-strike-use-action' };
+    // With every module loaded, slots and smite-prepared are module-contributed
+    // (paladin levels, paladin-smite) — the sheet rejects inputs that overlap
+    // contributions — so the representative input is a genuine one: a raw
+    // ability score (at runtime scores arrive as build effects or inputs).
     const inputs: EngineInput[] = [
-      { modules: all, inputFacts: { 'spellcasting.slots.level1.total': 2 } },
+      { modules: all, inputFacts: {} },
       {
         modules: all,
-        inputFacts: { 'spellcasting.slots.level1.total': 2, 'spell.l1.divineSmite.prepared': 1 },
+        inputFacts: { 'str.value': 15 },
         planned: [attack, { instanceId: 's1', ruleId: 'cast-divine-smite' }]
       }
     ];
