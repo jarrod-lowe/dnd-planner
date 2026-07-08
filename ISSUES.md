@@ -369,8 +369,9 @@ steed-creature-type-fey), so the bridge synthesizes `companion.steed.damageType`
 ('radiant'/'psychic'/'necrotic') from the numeric `companion.steed.creatureType`
 while summoned — same view-synthesis pattern as the CHA save-ability fix — and
 the slam die + description `{{damageType}}` read it. Unit: steed-slam-ui.test.ts
-+ engineBridge damageType synthesis; scenario steed-slam gains the hit-bonus /
-detailKey asserts.
+
+- engineBridge damageType synthesis; scenario steed-slam gains the hit-bonus /
+  detailKey asserts.
 
 ## 2. Faithfulness deltas v1 → v2 (2.1–2.7 ACCEPTED; 2.8–2.11 FIXED)
 
