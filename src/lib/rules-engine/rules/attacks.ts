@@ -11,6 +11,29 @@ const NO_REACTION = 'rule.dnd-5e-2024.attacks.activation.no_reaction';
 const UNARMED = 'rule.dnd-5e-2024.attacks.unarmed-strike';
 const UNARMED_LABELS = ['attack.any', 'attack.melee', 'attack.unarmed', 'dice.any'];
 
+// The dice panel both unarmed activations share (legacy authored it on each):
+// d20 + hit bonus to hit; flat 1 + STR damage — `damageDie` 0 renders the flat
+// bonus rather than a die.
+const UNARMED_CONTROL = {
+  type: 'dice-line',
+  ranges: [{ distance: 5, type: 'melee' }],
+  advantage: { fact: 'attack.str.disadvantage' },
+  dice: [
+    { sides: 20, bonus: { var: 'hitBonus' }, purpose: 'to-hit' },
+    {
+      sides: { var: 'damageDie' },
+      bonus: { var: 'damageBonus' },
+      purpose: 'damage',
+      damageType: { string: 'bludgeoning' }
+    }
+  ]
+};
+const UNARMED_VARS = {
+  hitBonus: { capture: true, default: { fact: 'attack.unarmed.hitBonus' } },
+  damageDie: { default: { number: 0 } },
+  damageBonus: { capture: true, default: { fact: 'attack.unarmed.damageBonus' } }
+};
+
 /** A per-turn spend effect: the given fact deltas, expiring at end of turn. */
 const spend = (state: Record<string, number>): EffectInstance => ({
   id: 'spend',
@@ -79,9 +102,15 @@ const attacks: RuleModule = {
       ui: {
         section: 'action-attack',
         name: `${UNARMED}.name`,
+        description: `${UNARMED}.description`,
+        detailKey: 'attack/unarmed-strike',
+        intents: { ATTACK: 'brawl' },
         actionCost: ['action'],
-        annotationLabels: [...UNARMED_LABELS, 'attack.action']
+        disadvantageFact: 'attack.str.disadvantage',
+        annotationLabels: [...UNARMED_LABELS, 'attack.action'],
+        primaryControl: UNARMED_CONTROL
       },
+      vars: UNARMED_VARS,
       legalWhen: [
         {
           condition: (f) =>
@@ -105,8 +134,10 @@ const attacks: RuleModule = {
         intents: { DEFEND: 'brawl' },
         actionCost: ['reaction'],
         disadvantageFact: 'attack.str.disadvantage',
-        annotationLabels: [...UNARMED_LABELS, 'attack.reaction']
+        annotationLabels: [...UNARMED_LABELS, 'attack.reaction'],
+        primaryControl: UNARMED_CONTROL
       },
+      vars: UNARMED_VARS,
       legalWhen: [
         {
           condition: (f) => f.num('reactions.remaining') > 0,

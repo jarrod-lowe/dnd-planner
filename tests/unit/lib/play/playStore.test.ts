@@ -419,6 +419,22 @@ describe('playStore', () => {
       const ids = (playStore.state.engineOutput?.availableRules ?? []).map((e) => e.rule.id);
       expect(ids).not.toContain(instanceId);
     });
+
+    it('state.facts is the VIEW facts — synthesized labels reach the panels', async () => {
+      // The panels (PanelRenderer via PlanStack/strip/ledger) read
+      // playStore.state.facts. The bridge synthesizes view-only facts (the
+      // spellcasting.saveAbility label) — those must not be lost by storing
+      // the raw engine facts instead of the adapted ones.
+      vi.mocked(evaluateCharacter).mockReturnValue(
+        playOut({ facts: { 'spellcasting.saveAbility.cha': 1 } })
+      );
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      playStore.addFollowupEffect({ id: 'e1', expiry: { kind: 'permanent' } });
+
+      expect(playStore.state.facts['spellcasting.saveAbility.cha']).toBe(1);
+      expect(playStore.state.facts['spellcasting.saveAbility']).toBe('CHA');
+    });
   });
 
   describe('addToPlan', () => {

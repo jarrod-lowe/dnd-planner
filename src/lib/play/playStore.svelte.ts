@@ -166,11 +166,15 @@ function performEvaluation(): void {
   _plannedEntriesMap = plannedMap;
   _lastAdvertised = result.advertised;
 
+  const viewOutput = adaptEngineOutput(result.raw);
   state = {
     ...state,
-    engineOutput: adaptEngineOutput(result.raw),
+    engineOutput: viewOutput,
     isEvaluating: false,
-    facts: result.facts,
+    // The VIEW facts, not the raw engine facts: the panels read state.facts,
+    // and the bridge synthesizes view-only facts on top of the engine's (the
+    // spellcasting.saveAbility label) that would otherwise never reach them.
+    facts: viewOutput.facts,
     topBarEntries: result.topBarEntries,
     resourceEntries: result.resourceEntries
   };

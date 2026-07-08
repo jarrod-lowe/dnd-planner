@@ -308,6 +308,28 @@ recovery). The id now carries the recovery ordinal for the long-rest cycle
 Unit: `divinity-recovery.test.ts`; scenario asserts on the base id keep
 matching via the runner's `startsWith(baseId + '-')` rule.
 
+### 1.20 Unarmed strike lost its dice panel in the port
+
+**FIXED** (found by Codex review on PR #363, round 5). Both unarmed strike
+offers were ported without the legacy `primaryControl` dice-line and the
+captured `hitBonus`/`damageBonus` vars — the module even derived
+`attack.unarmed.hitBonus`/`.damageBonus`, which nothing then read — so a
+planned unarmed strike (action or opportunity-attack reaction) rendered as a
+bare row with no d20/damage roller. The action copy had also dropped
+description/detailKey/intents/disadvantageFact. Restored verbatim from the
+legacy attacks.yaml (shared `UNARMED_CONTROL`/`UNARMED_VARS`; `damageDie` 0
+renders the flat 1 + STR damage). Unit: `unarmed-strike-ui.test.ts`.
+
+### 1.21 Synthesized view facts never reached the panels (hole in the 1.14 fix)
+
+**FIXED** (found by Codex review on PR #363, round 5). The 1.14 fix
+synthesized the `spellcasting.saveAbility` string in `adaptEngineOutput`, but
+`performEvaluation` set `state.facts` from the RAW engine facts
+(`result.facts`) — and `state.facts` is what PlanStack / the strip / the
+ledger pass to PanelRenderer, so the saveDc label still saw the missing fact.
+`state.facts` is now the adapted view output's facts (one adapt call, reused).
+Store test: 'state.facts is the VIEW facts'.
+
 ## 2. Faithfulness deltas v1 → v2 (2.1–2.7 ACCEPTED; 2.8–2.11 FIXED)
 
 ### 2.1 Offers are judged against post-plan facts (v1: phase-interleaved)
