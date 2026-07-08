@@ -15,8 +15,8 @@ steps:
           hp.max: 28
           hp.current: 28
 
-  # CON set after class levels are present:
-  # level 1 uses current CON, levels 2-4 keep captured CON-at-level (0)
+  # CON set after the class levels are present: every level reads the LIVE
+  # CON modifier (2024 rules — retroactive recalculation), so L1-L4 each gain +3.
   - addOffer:
       id: set-constitution
       selections:
@@ -24,5 +24,5 @@ steps:
       assert:
         facts:
           con.modifier: 3
-          hp.max: 31
-          hp.current: 31
+          hp.max: 40
+          hp.current: 40

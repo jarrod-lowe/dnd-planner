@@ -282,6 +282,32 @@ then only ages the committed set, and plan rows/alternatives fall back instead
 of showing the old evaluation's legality. Unit: playStore 'a failed evaluation
 clears the per-evaluation caches'.
 
+### 1.18 Paladin levels 2–5 dropped the CON modifier from max HP
+
+**FIXED** (found by Codex review on PR #363, round 4). The level modules
+contributed a flat +6 per level, so a CON +2 level-5 paladin ran 8 HP low. The
+port had chosen the flat value deliberately — to reproduce the legacy scenario
+totals, which came from legacy's CON-captured-at-level-up model where levels
+assigned BEFORE CON was set contributed a frozen 0 (the app's normal creation
+order). That made the module wrong in every order, where legacy was only wrong
+in one. Levels 2–5 now add `6 + con.modifier` live, matching level 1 and the
+2024 rule that a CON change retroactively recalculates max HP for every level.
+This is a deliberate faithfulness divergence: the hp-paladin-level2/3/4
+scenarios (which had codified the captured-0 totals, with comments saying so)
+now assert the live-CON totals.
+
+### 1.19 Stacked Channel Divinity recoveries shared one effect id
+
+**FIXED** (found by Codex review on PR #363, round 4). The short-rest recovery
+effects are keyless so they stack (one per unrecovered spend — see 1.11), but
+every emission carried id `effect-divinity-short-rest`. `ActiveStateStrip`
+keys chips by `effect.id` (a duplicate crashes the keyed each) and
+`removeEffect` filters by exact id (dismissing one chip removed EVERY
+recovery). The id now carries the recovery ordinal for the long-rest cycle
+(`effect-divinity-short-rest-<recovered+1>`, pure over the facts at emission).
+Unit: `divinity-recovery.test.ts`; scenario asserts on the base id keep
+matching via the runner's `startsWith(baseId + '-')` rule.
+
 ## 2. Faithfulness deltas v1 → v2 (2.1–2.7 ACCEPTED; 2.8–2.11 FIXED)
 
 ### 2.1 Offers are judged against post-plan facts (v1: phase-interleaved)

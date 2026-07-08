@@ -52,7 +52,12 @@ const divinity: RuleModule = {
     kind === 'short' && f.num('divinity.spent') > f.num('divinity.recovered')
       ? [
           {
-            id: 'effect-divinity-short-rest',
+            // The Nth recovery this long-rest cycle. Stacked recoveries are
+            // keyless (they must not evict each other), so each needs its OWN
+            // id: the strip keys chips by id (a duplicate crashes the keyed
+            // each) and removeEffect removes by exact id (a shared id would
+            // dismiss every recovery at once).
+            id: `effect-divinity-short-rest-${f.num('divinity.recovered') + 1}`,
             state: { 'divinity.recovered': 1 },
             display: { name: 'rule.class-paladin-divinity.effect-divinity-short-rest.name' },
             expiry: { kind: 'untilLongRest' }

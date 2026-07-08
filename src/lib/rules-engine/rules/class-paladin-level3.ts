@@ -7,16 +7,17 @@ import { defineRule, type RuleModule } from '../builder';
  * is also where a paladin takes a subclass + Channel Divinity uses, which live in
  * their own `class-paladin-divinity` / oath groups (assigned alongside).
  *
- * Same conventions as level 2: the CON-at-level capture collapses to "count CON
- * once at level 1" (flat +6 here); only pool `total`s are contributed (the
- * lay-on-hands / spellcasting / divinity groups derive `remaining = total −
- * spent`); and the hit-die bump is deferred with the hit-die group.
+ * Same conventions as level 2: +6 (average d10) + the live CON modifier to max
+ * HP (2024: retroactive recalc on a CON change); only pool `total`s are
+ * contributed (the lay-on-hands / spellcasting / divinity groups derive
+ * `remaining = total − spent`); and the hit-die bump is deferred with the
+ * hit-die group.
  */
 const paladinLevel3: RuleModule = {
   id: 'class-paladin-level3',
   derive: () => [
     { fact: 'hitDie.d10.total', combine: 'sum', value: () => 1 },
-    { fact: 'hp.base.max', combine: 'sum', value: () => 6 },
+    { fact: 'hp.base.max', combine: 'sum', value: (f) => 6 + f.num('con.modifier') },
     { fact: 'spellcasting.slots.level1.total', combine: 'sum', value: () => 1 },
     { fact: 'spellcasting.prepared.max', combine: 'sum', value: () => 1 },
     { fact: 'layOnHands.pool.total', combine: 'sum', value: () => 5 },
