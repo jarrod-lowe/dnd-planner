@@ -330,6 +330,29 @@ ledger pass to PanelRenderer, so the saveDc label still saw the missing fact.
 `state.facts` is now the adapted view output's facts (one adapt call, reused).
 Store test: 'state.facts is the VIEW facts'.
 
+### 1.22 Unarmed opportunity attack wrongly marked itself a weapon attack
+
+**FIXED** (found by Codex review on PR #363, round 6). The unarmed reaction's
+apply set `attack.last.weapon: 1`, which the weapon-only riders (Savage
+Attacker, Great Weapon Fighting) read — so an unarmed opportunity attack
+unlocked those riders, while the unarmed ACTION path never set the marker
+(inconsistent). Legacy `attacks.yaml` set only `attack.last.activation.reaction`
+on the unarmed reaction, never the weapon marker (the weapon reactions in
+`weaponOffers` correctly set it). Dropped the marker from the unarmed reaction.
+Unit: extra-attack.test.ts ('unarmed opportunity attack is not a weapon attack',
+plus a donned-weapon-reaction contrast).
+
+### 1.23 Steed movement always spent 30 ft (no distance slider)
+
+**FIXED** (found by Codex review on PR #363, round 6). `steed-move-walk`/`-fly`
+hardcoded `movement.spent: 30` with no control, so a 5- or 10-ft step consumed
+half the steed's 60-ft pool. Legacy carried a distance slider (max
+`movement.total`, default `movement.remaining`) and spent the captured distance
+— the same shape as the player's own move offers. Restored via a shared
+`STEED_MOVE_CONTROL`/`STEED_MOVE_VARS` + captured-distance apply. Scenario:
+steed-move-partial-distance (the existing steed-movement-walk selected 30, so it
+passed by coincidence and missed this).
+
 ## 2. Faithfulness deltas v1 → v2 (2.1–2.7 ACCEPTED; 2.8–2.11 FIXED)
 
 ### 2.1 Offers are judged against post-plan facts (v1: phase-interleaved)

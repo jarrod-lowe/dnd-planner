@@ -232,6 +232,7 @@ export const INITIAL_EFFECTS: Record<string, EffectInstance[]> = {
   'steed-hp-mods': [slot(2)],
   'steed-damage-accumulates': [slot(2)],
   'steed-overheal-caps-at-damage': [slot(2)],
+  'steed-move-partial-distance': [slot(2)],
   'find-steed-dismiss': [slot(2)],
   'find-steed-long-rest': [slot(2)],
   'find-steed-life-bond': [slot(2)],

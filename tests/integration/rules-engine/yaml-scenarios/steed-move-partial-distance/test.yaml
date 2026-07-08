@@ -1,0 +1,40 @@
+name: 'Steed Movement - Partial Distance'
+description: >-
+  Recording the steed moving less than its speed spends only the distance moved,
+  not a fixed 30 ft, so short moves leave the rest of the 60-ft pool available.
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-find-steed
+steps:
+  - evaluate: {}
+  - addOffer:
+      id: prepare-find-steed
+  - addOffer:
+      id: cast-find-steed
+  - endTurn:
+      assert:
+        facts:
+          companion.steed.movement.total: 60
+          companion.steed.movement.remaining: 60
+  # Walk 10 ft — spends 10, not 30.
+  - addOffer:
+      id: steed-move-walk
+      selections:
+        distance: 10
+      assert:
+        facts:
+          companion.steed.movement.remaining: 50
+  # Walk another 5 ft — spends 5.
+  - addOffer:
+      id: steed-move-walk
+      selections:
+        distance: 5
+      assert:
+        facts:
+          companion.steed.movement.remaining: 45

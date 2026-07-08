@@ -257,6 +257,7 @@ const EXPECTED_RUNNABLE = [
   'steed-creature-type-gating-fiend',
   'steed-hp-modifiers',
   'steed-hp-mods',
+  'steed-move-partial-distance',
   'steed-damage-accumulates',
   'steed-overheal-caps-at-damage',
   'long-rest-sets-flag',

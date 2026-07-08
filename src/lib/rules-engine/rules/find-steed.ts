@@ -91,6 +91,25 @@ const steedSpend = (state: Record<string, number>): EffectInstance => ({
   expiry: { kind: 'endOfTurn' }
 });
 
+// The distance slider both steed-move offers share, mirroring the player's own
+// movement offers: record the actual feet moved rather than a fixed 30, so a
+// 5- or 10-ft step doesn't consume half the 60-ft pool.
+const STEED_MOVE_CONTROL = {
+  type: 'slider',
+  var: 'distance',
+  max: { fact: 'companion.steed.movement.total' },
+  step: 5,
+  unit: 'ft'
+} as const;
+const STEED_MOVE_VARS = {
+  distance: { capture: true, default: { fact: 'companion.steed.movement.remaining' } }
+} as const;
+/** Feet to spend for a steed move: the captured distance, else all remaining. */
+const steedMoveDistance = (f: FactReader, selections: Record<string, unknown>): number =>
+  typeof selections.distance === 'number'
+    ? selections.distance
+    : f.num('companion.steed.movement.remaining');
+
 /** A steed action/bonus/reaction offer that spends its economy slot. */
 function steedActivation(
   id: string,
@@ -472,7 +491,8 @@ const findSteed: RuleModule = {
         return { advertise, diagnostics };
       }
     },
-    // Movement — walk always; fly only if the steed can fly. Each spends 30 ft.
+    // Movement — walk always; fly only if the steed can fly. Each records the
+    // captured distance (defaulting to all remaining) via the shared slider.
     {
       id: 'steed-move-walk',
       when: summoned,
@@ -480,17 +500,21 @@ const findSteed: RuleModule = {
         section: 'move',
         subject: 'steed',
         name: `${S}.steed-move-walk.name`,
+        primaryControl: STEED_MOVE_CONTROL,
         intents: { MOVE: 'travel' },
         actionCost: ['move']
       },
+      vars: STEED_MOVE_VARS,
       legalWhen: [
         {
           condition: (f) => f.num('companion.steed.movement.remaining') >= 5,
           diagnostics: [{ code: `${S}.steed-move-walk.out_of_movement`, severity: 'error' }]
         }
       ],
-      apply: (f): ActionResult => ({
-        advertise: [steedSpend({ 'companion.steed.movement.spent': 30 })],
+      apply: (f, selections): ActionResult => ({
+        advertise: [
+          steedSpend({ 'companion.steed.movement.spent': steedMoveDistance(f, selections) })
+        ],
         diagnostics:
           f.num('companion.steed.movement.remaining') >= 5
             ? []
@@ -504,9 +528,11 @@ const findSteed: RuleModule = {
         section: 'move',
         subject: 'steed',
         name: `${S}.steed-move-fly.name`,
+        primaryControl: STEED_MOVE_CONTROL,
         intents: { MOVE: 'travel' },
         actionCost: ['move']
       },
+      vars: STEED_MOVE_VARS,
       legalWhen: [
         {
           condition: (f) => f.num('companion.steed.fly.can') === 1,
@@ -517,13 +543,18 @@ const findSteed: RuleModule = {
           diagnostics: [{ code: `${S}.steed-move-fly.out_of_movement`, severity: 'error' }]
         }
       ],
-      apply: (f): ActionResult => {
+      apply: (f, selections): ActionResult => {
         const diagnostics: Diagnostic[] = [];
         if (f.num('companion.steed.fly.can') !== 1)
           diagnostics.push({ code: `${S}.steed-move-fly.cannot_fly`, severity: 'error' });
         if (f.num('companion.steed.movement.remaining') < 5)
           diagnostics.push({ code: `${S}.steed-move-fly.out_of_movement`, severity: 'error' });
-        return { advertise: [steedSpend({ 'companion.steed.movement.spent': 30 })], diagnostics };
+        return {
+          advertise: [
+            steedSpend({ 'companion.steed.movement.spent': steedMoveDistance(f, selections) })
+          ],
+          diagnostics
+        };
       }
     },
     // Dash — spends the steed's action and doubles its movement this turn.

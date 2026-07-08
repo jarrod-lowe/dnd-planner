@@ -64,3 +64,24 @@ describe('extra attack — level 5 grants the follow-up budget', () => {
     expect(three.planDiagnostics.get('i3')?.some((d) => d.code === NO_ACTION)).toBe(true);
   });
 });
+
+describe('unarmed opportunity attack is not a weapon attack', () => {
+  it('the unarmed reaction does not set attack.last.weapon (weapon-only riders stay gated)', () => {
+    const out = evaluatePlan([actionEconomy, attacks], {}, [
+      ref('i0', 'unarmed-strike-use-reaction')
+    ]);
+    // The reaction is spent...
+    expect(out.facts['reactions.remaining']).toBe(0);
+    // ...but it is NOT a weapon attack: Savage Attacker / Great Weapon Fighting
+    // read attack.last.weapon, and the unarmed ACTION path never sets it either.
+    expect(out.facts['attack.last.weapon'] ?? 0).toBe(0);
+  });
+
+  it('a donned weapon reaction DOES set attack.last.weapon (contrast)', () => {
+    const out = evaluatePlan([actionEconomy, attacks, hands, dagger], {}, [
+      ref('i0', 'don-dagger'),
+      ref('i1', 'dagger-use-reaction-weapon')
+    ]);
+    expect(out.facts['attack.last.weapon']).toBe(1);
+  });
+});

@@ -144,8 +144,12 @@ const attacks: RuleModule = {
           diagnostics: [{ code: NO_REACTION, severity: 'error' }]
         }
       ],
+      // No `attack.last.weapon`: an unarmed strike is not a weapon attack, so it
+      // must NOT unlock the weapon-only riders (Savage Attacker, Great Weapon
+      // Fighting) that read that marker — and the unarmed ACTION path never sets
+      // it either. (The weapon reaction in weaponOffers sets it; unarmed doesn't.)
       apply: (f): ActionResult => ({
-        advertise: [spend({ 'reactions.spent': 1, 'attack.last.weapon': 1 })],
+        advertise: [spend({ 'reactions.spent': 1 })],
         diagnostics:
           f.num('reactions.remaining') > 0 ? [] : [{ code: NO_REACTION, severity: 'error' }]
       })
