@@ -108,23 +108,35 @@ export function plannedEntryToViewEntry(pe: PlannedEntry): ViewEntry {
 
 /** The class flags the bridge may turn into the saveAbility label, in ability order. */
 const SAVE_ABILITY_FLAGS = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
+/** The steed's damage type by numeric creatureType (celestial / fey / fiend). */
+const STEED_DAMAGE_TYPES = ['radiant', 'psychic', 'necrotic'] as const;
 
 /**
- * Engine facts → view facts: synthesizes the `spellcasting.saveAbility` string
- * label ('CHA', …) from the class's numeric flag fact
- * (`spellcasting.saveAbility.cha` = 1). Spell panels' saveDc label reads the
- * string (`saveType: { fact: 'spellcasting.saveAbility' }`); the legacy engine
- * carried it as a string fact, which the numeric engine cannot. With flags for
- * several abilities set (multiclass), the LAST in ability order wins —
- * deterministic, and moot while classes are single-ability.
+ * Engine facts → view facts: adds the STRING facts the numeric engine can't
+ * hold but the panels read, synthesized from numeric facts —
+ *  - `spellcasting.saveAbility` ('CHA', …), from the class flag
+ *    `spellcasting.saveAbility.<ability>` = 1 (the spell saveDc label reads it;
+ *    with several set the LAST in ability order wins — moot while single-ability);
+ *  - `companion.steed.damageType` ('radiant'/'psychic'/'necrotic'), from the
+ *    numeric `companion.steed.creatureType`, only while a steed is summoned (so
+ *    creatureType 0 doesn't read as radiant with no steed). The slam dice-line
+ *    and description read it.
+ * Returns the facts untouched when nothing is synthesized.
  */
 function toViewFacts(facts: EngineOutput['facts']): ViewOutput['facts'] {
-  let saveAbility: string | undefined;
+  const overlay: Record<string, string> = {};
+
   for (const ability of SAVE_ABILITY_FLAGS) {
     if ((facts[`spellcasting.saveAbility.${ability}`] ?? 0) === 1)
-      saveAbility = ability.toUpperCase();
+      overlay['spellcasting.saveAbility'] = ability.toUpperCase();
   }
-  return saveAbility ? { ...facts, 'spellcasting.saveAbility': saveAbility } : facts;
+
+  if ((facts['companion.steed.summoned'] ?? 0) === 1) {
+    const label = STEED_DAMAGE_TYPES[facts['companion.steed.creatureType'] ?? -1];
+    if (label) overlay['companion.steed.damageType'] = label;
+  }
+
+  return Object.keys(overlay).length > 0 ? { ...facts, ...overlay } : facts;
 }
 
 /** An offer entry → the view availableRules shape (descriptor gets an empty activities). */

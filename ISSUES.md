@@ -353,6 +353,25 @@ half the steed's 60-ft pool. Legacy carried a distance slider (max
 steed-move-partial-distance (the existing steed-movement-walk selected 30, so it
 passed by coincidence and missed this).
 
+### 1.24 Steed Otherworldly Slam lost its rollable dice panel
+
+**FIXED** (found by Codex review on PR #363, round 6; owner approved restoring
+the damage-type label). Both slam offers used the generic `steedActivation`
+helper, rendering a bare row: no dice-line, no to-hit/damage vars, and the
+reaction referenced unauthored `steed-slam-reaction.*` i18n keys. Restored via
+a dedicated `steedSlamOffer`: d20 + `companion.steed.slam.hitBonus`
+(cha.modifier + proficiency.bonus, newly derived) to hit, 1d8 +
+`find-steed.selectedLevel` damage, section `action-attack`, detailKey
+`action/otherworldly-slam`; both copies reuse the authored `steed-slam.*` keys
+(action → `no_actions`, reaction → `no_reaction`). The damage-type label is a
+string the numeric engine can't hold (the limitation that skip-lists
+steed-creature-type-fey), so the bridge synthesizes `companion.steed.damageType`
+('radiant'/'psychic'/'necrotic') from the numeric `companion.steed.creatureType`
+while summoned — same view-synthesis pattern as the CHA save-ability fix — and
+the slam die + description `{{damageType}}` read it. Unit: steed-slam-ui.test.ts
++ engineBridge damageType synthesis; scenario steed-slam gains the hit-bonus /
+detailKey asserts.
+
 ## 2. Faithfulness deltas v1 → v2 (2.1–2.7 ACCEPTED; 2.8–2.11 FIXED)
 
 ### 2.1 Offers are judged against post-plan facts (v1: phase-interleaved)

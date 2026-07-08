@@ -47,10 +47,16 @@ steps:
           companion.steed.actions.remaining: 1
           companion.steed.reactions.remaining: 1
           reactions.remaining: 1
+          # Slam to-hit = CHA modifier (0, unset) + proficiency bonus (2).
+          companion.steed.slam.hitBonus: 2
         offers:
           exists:
             - steed-slam
             - steed-slam-reaction
+        offerUi:
+          - id: steed-slam
+            ui:
+              detailKey: action/otherworldly-slam
   # Slam action: consumes steed action
   - addOffer:
       id: steed-slam

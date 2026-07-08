@@ -110,6 +110,71 @@ const steedMoveDistance = (f: FactReader, selections: Record<string, unknown>): 
     ? selections.distance
     : f.num('companion.steed.movement.remaining');
 
+// Otherworldly Slam's rollable dice panel, shared by the action and reaction
+// copies: d20 + the steed's slam hit bonus to hit; 1d8 + spell level damage,
+// typed by the steed's creature type (the string label is synthesized view-side
+// from the numeric creatureType, since engine facts are numeric).
+const STEED_SLAM_CONTROL = {
+  type: 'dice-line',
+  ranges: [{ distance: 5, type: 'melee' }],
+  dice: [
+    { sides: 20, bonus: { var: 'hitBonus' }, purpose: 'to-hit' },
+    {
+      sides: { var: 'damageDie' },
+      bonus: { var: 'damageBonus' },
+      purpose: 'damage',
+      damageType: { fact: 'companion.steed.damageType' }
+    }
+  ]
+} as const;
+const STEED_SLAM_VARS = {
+  hitBonus: { capture: true, default: { fact: 'companion.steed.slam.hitBonus' } },
+  damageDie: { default: { number: 8 } },
+  damageBonus: { capture: true, default: { fact: 'find-steed.selectedLevel' } }
+} as const;
+
+/**
+ * The Otherworldly Slam offer (action or reaction). A rollable attack panel, not
+ * the bare `steedActivation` row: both copies reuse the `steed-slam.*` i18n keys
+ * (the reaction must not reference unauthored `steed-slam-reaction.*`), carry the
+ * shared dice-line + vars, and fill the description's `{{damageType}}` from the
+ * synthesized damage-type fact. `legalCode` is `no_actions` / `no_reaction`.
+ */
+function steedSlamOffer(
+  id: string,
+  section: Section,
+  costFact: string,
+  remainingFact: string,
+  intents: Record<string, string>,
+  legalCode: string
+): Offer {
+  const code = `${S}.steed-slam.${legalCode}`;
+  return {
+    id,
+    when: summoned,
+    ui: {
+      section,
+      subject: 'steed',
+      name: `${S}.steed-slam.name`,
+      description: `${S}.steed-slam.description`,
+      descriptionValues: { damageType: { fact: 'companion.steed.damageType' } },
+      detailKey: 'action/otherworldly-slam',
+      intents,
+      actionCost: [section === 'reaction' ? 'reaction' : section],
+      annotationLabels: ['attack.any', 'attack.melee'],
+      primaryControl: STEED_SLAM_CONTROL
+    },
+    vars: STEED_SLAM_VARS,
+    legalWhen: [
+      { condition: (f) => f.num(remainingFact) > 0, diagnostics: [{ code, severity: 'error' }] }
+    ],
+    apply: (f): ActionResult => ({
+      advertise: [steedSpend({ [costFact]: 1 })],
+      diagnostics: f.num(remainingFact) > 0 ? [] : [{ code, severity: 'error' }]
+    })
+  };
+}
+
 /** A steed action/bonus/reaction offer that spends its economy slot. */
 function steedActivation(
   id: string,
@@ -361,6 +426,12 @@ const findSteed: RuleModule = {
       value: (f) =>
         f.num('companion.steed.movement.total') - f.num('companion.steed.movement.spent')
     });
+    // Otherworldly Slam is a spell attack: to-hit = the caster's CHA modifier +
+    // proficiency bonus (the steed's slam dice-line reads this).
+    c.push({
+      fact: 'companion.steed.slam.hitBonus',
+      value: (f) => f.num('cha.modifier') + f.num('proficiency.bonus')
+    });
     // Ability pools: remaining = total − spent (spent persists until a long rest).
     for (const ability of ['healingTouch', 'feyStep', 'fellGlare'] as const) {
       c.push({
@@ -598,22 +669,22 @@ const findSteed: RuleModule = {
       'companion.steed.actions.remaining',
       { DEFEND: 'evade' }
     ),
-    // Slam — the steed's melee attack, as an action or a reaction.
-    steedActivation(
+    // Slam — the steed's rollable melee attack, as an action or a reaction.
+    steedSlamOffer(
       'steed-slam',
-      'action',
+      'action-attack',
       'companion.steed.actions.spent',
       'companion.steed.actions.remaining',
       { ATTACK: 'brawl' },
-      ['attack.any', 'attack.melee']
+      'no_actions'
     ),
-    steedActivation(
+    steedSlamOffer(
       'steed-slam-reaction',
       'reaction',
       'companion.steed.reactions.spent',
       'companion.steed.reactions.remaining',
       { DEFEND: 'brawl' },
-      ['attack.any', 'attack.melee']
+      'no_reaction'
     ),
     // Creature-type special abilities (only the matching type surfaces).
     steedAbilityOffer(0),

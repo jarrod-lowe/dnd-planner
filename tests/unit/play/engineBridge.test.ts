@@ -174,4 +174,25 @@ describe('engineBridge — adaptEngineOutput', () => {
     expect(out.facts['spellcasting.saveAbility.cha']).toBe(1);
     expect(adaptEngineOutput(makeOutput()).facts['spellcasting.saveAbility']).toBeUndefined();
   });
+
+  it('synthesizes companion.steed.damageType from the numeric creatureType', () => {
+    // The steed's slam damage-type label is a string the numeric engine can't
+    // hold; the bridge maps the numeric creatureType (0/1/2) to the label the
+    // dice-line + description read, but only while a steed is summoned.
+    const dt = (creatureType: number) =>
+      adaptEngineOutput(
+        makeOutput({
+          facts: { 'companion.steed.summoned': 1, 'companion.steed.creatureType': creatureType }
+        })
+      ).facts['companion.steed.damageType'];
+    expect(dt(0)).toBe('radiant'); // celestial
+    expect(dt(1)).toBe('psychic'); // fey
+    expect(dt(2)).toBe('necrotic'); // fiend
+    // No steed summoned → no label synthesized (creatureType 0 must not read as radiant).
+    expect(
+      adaptEngineOutput(makeOutput({ facts: { 'companion.steed.creatureType': 0 } })).facts[
+        'companion.steed.damageType'
+      ]
+    ).toBeUndefined();
+  });
 });
