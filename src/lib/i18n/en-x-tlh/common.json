@@ -176,7 +176,8 @@
       },
       "offer-dismiss-steed": {
         "name": "Sargh mup",
-        "keywords": "dismiss mount companion send away"
+        "keywords": "dismiss mount companion send away",
+        "no_action": "DIvI' tu'lu'be'"
       },
       "annotate-life-bond": {
         "text": "yIn DIch: Sargh DIvI' DIch (vagh 'uy' DIch, mugh level 1+) [manual]"

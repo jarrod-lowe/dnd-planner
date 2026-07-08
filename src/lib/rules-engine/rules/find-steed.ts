@@ -449,10 +449,17 @@ const findSteed: RuleModule = {
     });
     c.push({
       fact: 'companion.steed.hp.current',
+      // base + (negative) damage, CLAMPED at the derived max (legacy clamped the
+      // same way): a negative max-HP modifier caps current so the steed is never
+      // healthier than its maximum (no impossible 25/15), while a positive max
+      // modifier doesn't auto-heal it above its base.
       value: (f) =>
         active(f)
-          ? f.num('companion.steed.hp.base') +
-            Math.min(0, f.num('companion.steed.hp.modifier.current'))
+          ? Math.min(
+              f.num('companion.steed.hp.max'),
+              f.num('companion.steed.hp.base') +
+                Math.min(0, f.num('companion.steed.hp.modifier.current'))
+            )
           : 0
     });
     // The damage/heal RECORDS accumulate in their own facts (each new record
@@ -586,8 +593,10 @@ const findSteed: RuleModule = {
         advertise: [
           steedSpend({ 'companion.steed.movement.spent': steedMoveDistance(f, selections) })
         ],
+        // Validate the SELECTED distance, not a fixed 5 ft — selecting more than
+        // remains must error rather than drive movement negative.
         diagnostics:
-          f.num('companion.steed.movement.remaining') >= 5
+          f.num('companion.steed.movement.remaining') >= steedMoveDistance(f, selections)
             ? []
             : [{ code: `${S}.steed-move-walk.out_of_movement`, severity: 'error' }]
       })
@@ -618,7 +627,8 @@ const findSteed: RuleModule = {
         const diagnostics: Diagnostic[] = [];
         if (f.num('companion.steed.fly.can') !== 1)
           diagnostics.push({ code: `${S}.steed-move-fly.cannot_fly`, severity: 'error' });
-        if (f.num('companion.steed.movement.remaining') < 5)
+        // Validate the SELECTED distance (see steed-move-walk).
+        if (f.num('companion.steed.movement.remaining') < steedMoveDistance(f, selections))
           diagnostics.push({ code: `${S}.steed-move-fly.out_of_movement`, severity: 'error' });
         return {
           advertise: [
@@ -802,22 +812,32 @@ const findSteed: RuleModule = {
         };
       }
     },
-    // Dismiss — the steed vanishes (replaces the summon effect).
+    // Dismiss — the steed vanishes (replaces the summon effect). Costs the
+    // caster's action (as legacy did).
     {
       id: 'offer-dismiss-steed',
       when: summoned,
       ui: {
-        section: 'other',
+        section: 'action',
         subject: 'steed',
         name: `${S}.offer-dismiss-steed.name`,
-        intents: { ACTION: 'steed' },
-        actionCost: []
+        // HANDLE (a valid Verb): the add picker drops offers whose intent verb
+        // isn't in the Verb union — `ACTION` isn't, so Dismiss vanished from it.
+        intents: { HANDLE: 'steed' },
+        actionCost: ['action']
       },
+      legalWhen: [
+        {
+          condition: (f) => f.num('actions.remaining') > 0,
+          diagnostics: [{ code: `${S}.offer-dismiss-steed.no_action`, severity: 'error' }]
+        }
+      ],
       // Replaces the summon effect (same key) with a bare dismissed marker: `active`
       // drops, so `summoned` derives to 0 while `dismissed` reads 1. Also evicts the
-      // steed's child HP effects via same-key empty effects.
-      apply: (): ActionResult => ({
+      // steed's child HP effects via same-key empty effects. Spends the action.
+      apply: (f): ActionResult => ({
         advertise: [
+          { id: 'cost', state: { 'actions.spent': 1 }, expiry: { kind: 'endOfTurn' } },
           {
             id: 'effect-steed-dismissed',
             key: 'steed',
@@ -827,7 +847,11 @@ const findSteed: RuleModule = {
           ...STEED_CHILD_EFFECTS.map(
             (k): EffectInstance => ({ id: `evict-${k}`, key: k, expiry: { kind: 'permanent' } })
           )
-        ]
+        ],
+        diagnostics:
+          f.num('actions.remaining') > 0
+            ? []
+            : [{ code: `${S}.offer-dismiss-steed.no_action`, severity: 'error' }]
       })
     }
   ],

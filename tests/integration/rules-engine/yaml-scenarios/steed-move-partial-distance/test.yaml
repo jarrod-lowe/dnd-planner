@@ -38,3 +38,15 @@ steps:
       assert:
         facts:
           companion.steed.movement.remaining: 45
+  # Selecting more than remains (60 with 45 left) is illegal — it must not drive
+  # movement negative. The >=5 legality gate alone would let this through.
+  - addOffer:
+      id: steed-move-walk
+      selections:
+        distance: 60
+      assert:
+        planErrors:
+          - id: steed-move-walk
+            index: 2
+            errors:
+              - rule.spell-find-steed.steed-move-walk.out_of_movement

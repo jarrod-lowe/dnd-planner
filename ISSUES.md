@@ -373,6 +373,41 @@ the slam die + description `{{damageType}}` read it. Unit: steed-slam-ui.test.ts
 - engineBridge damageType synthesis; scenario steed-slam gains the hit-bonus /
   detailKey asserts.
 
+### 1.25 Steed move spent a fixed 30 ft with no validation of the selected distance
+
+**FIXED** (found by Codex review on PR #363, round 7 — a gap in the round-6
+§1.23 slider fix). The move apply spent the captured distance but the legality
+only checked `remaining >= 5`, so selecting 60 ft with 5 ft left spent 60 and
+drove movement negative. Now the apply validates the SELECTED distance against
+remaining (walk and fly), like the player move helper. Scenario
+steed-move-partial-distance gains an over-select step (planErrors).
+
+### 1.26 Steed current HP could exceed its max
+
+**FIXED** (found by Codex review on PR #363, round 7). `companion.steed.hp.current`
+was `hp.base + damage`, ignoring the derived max — a negative max-HP modifier
+dropped the max but left current at base (impossible 25/15). Now
+`min(hp.max, hp.base + min(0, damageModifier))`, exactly how legacy clamped it
+(`max: companion.steed.hp.max`): current never exceeds max, and a positive max
+modifier still doesn't auto-heal above base (so the steed-hp-modifiers scenario
+is unchanged). Unit: steed-fixes.test.ts.
+
+### 1.27 Dismiss Steed used an invalid verb and cost no action
+
+**FIXED** (found by Codex review on PR #363, round 7). The offer's intent verb
+was `ACTION`, which isn't in the `Verb` union — the add picker drops offers with
+an unknown verb, so Dismiss Steed vanished from it. It also had no action cost
+and its apply didn't spend one, though legacy dismissed as an action. Now
+`intents: { HANDLE: 'steed' }`, `actionCost: ['action']`, an
+`actions.remaining > 0` legality gate (new `offer-dismiss-steed.no_action` i18n
+key, both locales), and the apply spends `actions.spent`. Unit:
+steed-fixes.test.ts.
+
+Two further round-7 findings are steed-UI restorations deferred pending an owner
+scope decision (recorded in §3): the Find Steed cast offer lost its
+slot-level / creature-type selection controls, and the steed
+save / skill-check / note rows lost their d20 / text roll-and-record controls.
+
 ## 2. Faithfulness deltas v1 → v2 (2.1–2.7 ACCEPTED; 2.8–2.11 FIXED)
 
 ### 2.1 Offers are judged against post-plan facts (v1: phase-interleaved)
