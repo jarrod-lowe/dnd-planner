@@ -403,10 +403,32 @@ and its apply didn't spend one, though legacy dismissed as an action. Now
 key, both locales), and the apply spends `actions.spent`. Unit:
 steed-fixes.test.ts.
 
-Two further round-7 findings are steed-UI restorations deferred pending an owner
-scope decision (recorded in §3): the Find Steed cast offer lost its
-slot-level / creature-type selection controls, and the steed
-save / skill-check / note rows lost their d20 / text roll-and-record controls.
+Two further round-7 findings are steed-UI restorations (owner approved doing
+both now) — see §1.28 and §1.29.
+
+### 1.28 Find Steed cast offer lost its slot-level / creature-type controls
+
+**FIXED** (found by Codex review on PR #363, round 7). The cast offer captured
+`slotLevel` / `creatureType` vars but had no controls to set them, so it always
+committed the defaults (free/lowest slot, celestial) — no free-use-vs-slot
+choice, no upcast, no fey/fiend. Restored the legacy controls: a `slotLevel`
+slider whose values (0 free-use, L2–5) are each `enabled` by the matching
+resource fact, and a `creatureType` segmented (celestial/fey/fiend, reusing the
+existing `creature-type.*` i18n). Unit: steed-recorders-ui.test.ts.
+
+### 1.29 Steed save / skill-check / note rows were bare (no roll/record controls)
+
+**FIXED** (found by Codex review on PR #363, round 7). The shared
+`steedFreeOffer` rendered only a name + intents (and pointed at unauthored
+`steed-save-*.name` / `steed-skill-*.name` keys), so the ~25 steed recorder
+rows exposed no d20 roller, outcome, or text box. Replaced with dedicated
+builders mirroring the player recorders and the legacy steed rows:
+`steedSaveOffer` (d20 + `companion.steed.<ability>.save`, pass/fail segmented,
+name `planner.record.save.<ability>`), `steedSkillOffer` (d20 + the governing
+ability modifier via a skill→ability map — steeds have no skill proficiency —
+name `play.stats.skills.<skill>`), and `steedNoteOffer` (multiline text). All
+reuse existing shared i18n keys (no new strings) and the ability-modifier facts
+already derived (no new derives). Unit: steed-recorders-ui.test.ts.
 
 ## 2. Faithfulness deltas v1 → v2 (2.1–2.7 ACCEPTED; 2.8–2.11 FIXED)
 

@@ -287,17 +287,103 @@ const STEED_SKILLS = [
   'survival'
 ] as const;
 
-/** A free record/config offer the steed always has while summoned (no spend). */
-const steedFreeOffer = (id: string, intent: Record<string, string>): Offer => ({
-  id,
+// The outcome picker shared by every recorded save (none / passed / failed).
+const SAVE_OUTCOME_CONTROL = {
+  type: 'segmented',
+  var: 'passed',
+  options: [
+    { value: -1, label: 'planner.record.outcome.none' },
+    { value: 1, label: 'planner.record.passed' },
+    { value: 0, label: 'planner.record.failed' }
+  ]
+} as const;
+
+/**
+ * A steed save recorder: a d20 + the steed's save bonus, with a pass/fail
+ * outcome — the same shape as the player's `record-save-*`, reusing the shared
+ * `planner.record.save.*` name key (a bare row exposed no roller). UI-only (no
+ * spend), like the player's check/note recorders.
+ */
+const steedSaveOffer = (a: (typeof ABILITIES)[number]): Offer => ({
+  id: `steed-save-${a}`,
   when: summoned,
   ui: {
     section: 'free',
     subject: 'steed',
-    name: `${S}.${id}.name`,
-    intents: intent,
+    name: `planner.record.save.${a}`,
+    primaryControl: {
+      type: 'dice-line',
+      dice: [{ sides: 20, bonus: { var: 'rollBonus' }, purpose: 'save' }]
+    },
+    secondaryControl: SAVE_OUTCOME_CONTROL,
+    intents: { SAVE: 'steed' },
     actionCost: []
+  },
+  vars: {
+    rollBonus: { capture: true, default: { fact: `companion.steed.${a}.save` } },
+    passed: { capture: true, default: { number: -1 } }
   }
+});
+
+// Each steed skill rolls its governing ability's modifier (steeds have no skill
+// proficiencies), reusing the shared `play.stats.skills.*` name key.
+const SKILL_ABILITY: Record<(typeof STEED_SKILLS)[number], (typeof ABILITIES)[number]> = {
+  acrobatics: 'dex',
+  'animal-handling': 'wis',
+  arcana: 'int',
+  athletics: 'str',
+  deception: 'cha',
+  history: 'int',
+  insight: 'wis',
+  intimidation: 'cha',
+  investigation: 'int',
+  medicine: 'wis',
+  nature: 'int',
+  perception: 'wis',
+  performance: 'cha',
+  persuasion: 'cha',
+  religion: 'int',
+  'sleight-of-hand': 'dex',
+  stealth: 'dex',
+  survival: 'wis'
+};
+
+/** A steed skill-check recorder: a d20 + the governing ability modifier. */
+const steedSkillOffer = (skill: (typeof STEED_SKILLS)[number]): Offer => ({
+  id: `steed-skill-${skill}`,
+  when: summoned,
+  ui: {
+    section: 'free',
+    subject: 'steed',
+    name: `play.stats.skills.${skill}`,
+    primaryControl: {
+      type: 'dice-line',
+      dice: [{ sides: 20, bonus: { var: 'rollBonus' }, purpose: 'check' }]
+    },
+    intents: { CHECK: 'steed' },
+    actionCost: []
+  },
+  vars: {
+    rollBonus: {
+      capture: true,
+      default: { fact: `companion.steed.${SKILL_ABILITY[skill]}.modifier` }
+    }
+  }
+});
+
+/** A steed freeform note recorder: a multiline text box (player note shape). */
+const steedNoteOffer = (): Offer => ({
+  id: 'steed-note',
+  when: summoned,
+  ui: {
+    section: 'free',
+    subject: 'steed',
+    name: `${S}.steed-note.name`,
+    primaryControl: { type: 'text', var: 'text', multiline: true },
+    intents: { NOTE: 'freeform' },
+    actionCost: []
+  },
+  vars: { text: { capture: true, default: { string: '' } } }
 });
 
 /** Steed HP-modifier setter (keyed permanent — re-use replaces, matching the character's). */
@@ -499,6 +585,29 @@ const findSteed: RuleModule = {
         name: `${O}.name`,
         description: `${O}.description`,
         detailKey: 'spell/find-steed',
+        // Slot-level slider (the free use, if the paladin has it, plus each owned
+        // L2–5 slot) and the creature-type picker — without these the cast always
+        // committed the captured defaults (free/lowest slot, celestial).
+        primaryControl: {
+          type: 'slider',
+          var: 'slotLevel',
+          values: [
+            { value: 0, enabled: { fact: 'paladinFindSteed.total' } },
+            { value: 2, enabled: { fact: 'spellcasting.slots.level2.total' } },
+            { value: 3, enabled: { fact: 'spellcasting.slots.level3.total' } },
+            { value: 4, enabled: { fact: 'spellcasting.slots.level4.total' } },
+            { value: 5, enabled: { fact: 'spellcasting.slots.level5.total' } }
+          ]
+        },
+        secondaryControl: {
+          type: 'segmented',
+          var: 'creatureType',
+          options: [
+            { value: 0, label: `${O}.creature-type.celestial` },
+            { value: 1, label: `${O}.creature-type.fey` },
+            { value: 2, label: `${O}.creature-type.fiend` }
+          ]
+        },
         intents: { AID: 'ally' },
         actionCost: ['action', 'L2']
       },
@@ -701,9 +810,9 @@ const findSteed: RuleModule = {
     steedAbilityOffer(1),
     steedAbilityOffer(2),
     // Saving throws, skill checks, and a note — the steed's record offers.
-    ...ABILITIES.map((a) => steedFreeOffer(`steed-save-${a}`, { SAVE: 'steed' })),
-    ...STEED_SKILLS.map((s) => steedFreeOffer(`steed-skill-${s}`, { CHECK: 'steed' })),
-    steedFreeOffer('steed-note', { NOTE: 'freeform' }),
+    ...ABILITIES.map(steedSaveOffer),
+    ...STEED_SKILLS.map(steedSkillOffer),
+    steedNoteOffer(),
     // HP: manual max/current modifiers and a damage recorder.
     steedHpModifier(
       'companion.steed.hp.modifier.max',
