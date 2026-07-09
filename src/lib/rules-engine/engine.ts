@@ -47,15 +47,16 @@ export function evaluate(input: EngineInput, opts: EvaluateOptions = {}): Engine
 
   // The offer each planned instance ran, as a view entry — so the plan row
   // resolves from the step-time offer even when its own apply closed the `when`
-  // gate (dropping it from `availableRules`). Legality comes from planDiagnostics.
+  // gate (dropping it from `availableRules`). Legality is the fold's verdict
+  // (`planIllegal`: a failed gate of any severity, or an apply error), NOT
+  // inferred from diagnostic severity — matching the add catalog.
   const plannedOffers: Record<string, AvailableRuleEntry> = {};
   for (const [instanceId, o] of plan.plannedOffers) {
-    const diagnostics = planDiagnostics[instanceId] ?? [];
     plannedOffers[instanceId] = {
       rule: { id: o.id, ui: o.ui, vars: o.vars },
-      legal: !diagnostics.some((d) => d.severity === 'error'),
+      legal: !plan.planIllegal.has(instanceId),
       applicable: true,
-      diagnostics
+      diagnostics: planDiagnostics[instanceId] ?? []
     };
   }
 

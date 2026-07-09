@@ -22,31 +22,30 @@ export interface PlannedEntry extends AvailableRuleEntry {
   selections?: Record<string, unknown>;
 }
 
-/** True when no diagnostic is an error (warnings/notices stay legal-but-flagged). */
-function isLegal(diagnostics: readonly { severity: string }[]): boolean {
-  return !diagnostics.some((d) => d.severity === 'error');
-}
-
 /**
  * The per-instance entry for one planned ref: the offer that RAN at this
  * instance's step (from `plannedOffers`), carrying that instance's
- * `planDiagnostics` (and the derived `legal`) plus its captured `selections`.
+ * `planDiagnostics` and captured `selections`.
  *
  * Built from the step-time offer, not the final `availableRules` catalog, so a
  * self-gate-closing action (e.g. Dismiss Steed, whose own apply clears the
  * `summoned` gate it is offered under) keeps its row + diagnostics. Returns
  * `undefined` when the offer never ran — its `when` was already closed at its own
  * step (a genuinely stale row) — so that row falls back to inapplicable.
+ *
+ * `legal` is passed through from the engine (the fold's verdict — a failed gate
+ * of any severity, or an apply error), NOT re-inferred from diagnostic severity,
+ * so a warning-severity gate failure (e.g. don a shield while not proficient)
+ * reads illegal here exactly as it does in the catalog.
  */
 export function plannedEntry(output: EngineOutput, ref: PlannedRef): PlannedEntry | undefined {
   const offer = output.plannedOffers?.[ref.instanceId];
   if (!offer) return undefined;
-  const diagnostics = output.planDiagnostics[ref.instanceId] ?? [];
   return {
     rule: offer.rule,
-    legal: isLegal(diagnostics),
+    legal: offer.legal,
     applicable: offer.applicable,
-    diagnostics,
+    diagnostics: output.planDiagnostics[ref.instanceId] ?? [],
     instanceId: ref.instanceId,
     selections: ref.selections
   };

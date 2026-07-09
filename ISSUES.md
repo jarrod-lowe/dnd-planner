@@ -526,7 +526,19 @@ only the positive side (a negative Dex still lowers AC). Splint now flags
 `ac.dexIgnored` (the ac module forces the bonus to 0), leaving `ac.dexCap` for the
 medium-armor positive cap. Unit: ac.test.ts; scenario: splint-armor-ac.
 
-## 2. Faithfulness deltas v1 → v2 (2.1–2.7 ACCEPTED; 2.8–2.11 FIXED)
+### 1.40 A warning-severity gate failure marked the planned row legal
+
+**FIXED** (found by Codex review on PR #363, round 12 — a regression from the
+§1.35 plan-row work). The add catalog (`evaluateOffers`) marks an offer illegal
+whenever a `legalWhen` gate fails, regardless of the diagnostic's severity — so
+`don-shield` for a non-proficient character is illegal on a WARNING ("a warning
+that still blocks"). But the planned row recomputed `legal` from error-severity
+diagnostics only (`engine.ts` `plannedOffers` and the adapter), so once planned
+the shield row flipped to legal and dropped its illegal indicator. The plan fold
+now records a per-instance legality verdict (`planIllegal`: a failed gate of any
+severity, or an apply error); `plannedOffers` carries it and the adapter passes
+it through instead of inferring from severity. Unit: planned-legality.test.ts,
+adapter.test.ts.
 
 ### 2.1 Offers are judged against post-plan facts (v1: phase-interleaved)
 

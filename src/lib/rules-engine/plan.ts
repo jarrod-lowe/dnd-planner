@@ -17,6 +17,14 @@ export interface PlanResult {
   facts: Facts;
   /** Per-planned-instance legality problems, keyed by instanceId. */
   planDiagnostics: Map<string, Diagnostic[]>;
+  /**
+   * Instance ids whose planned action is illegal — a `legalWhen` gate failed
+   * (ANY severity, matching `evaluateOffers`) or its `apply` returned an error.
+   * Tracked apart from `planDiagnostics` so a warning-severity gate failure (e.g.
+   * donning a shield while not proficient — "a warning that still blocks") still
+   * reads illegal, rather than being inferred back from diagnostic severity.
+   */
+  planIllegal: Set<string>;
   /** Effects advertised by the planned actions this turn (per-turn + durable). */
   advertised: EffectInstance[];
   /**
@@ -82,6 +90,7 @@ export function evaluatePlan(
   for (const offer of collectOffers(modules)) offerById.set(offer.id, offer);
 
   const planDiagnostics = new Map<string, Diagnostic[]>();
+  const planIllegal = new Set<string>();
   const plannedOffers = new Map<string, Offer>();
   const advertised: EffectInstance[] = [];
 
@@ -103,20 +112,31 @@ export function evaluatePlan(
     // even if its own apply closes the gate (dropping it from the final catalog).
     plannedOffers.set(ref.instanceId, offer);
 
+    // Legality mirrors the catalog: a failed `legalWhen` gate is illegal
+    // regardless of its diagnostics' severity (a warning gate still blocks), and
+    // an `apply` that returns an error is illegal too.
+    let legal = true;
     const diagnostics: Diagnostic[] = [];
     for (const gate of offer.legalWhen ?? []) {
-      if (!gate.condition(reader)) diagnostics.push(...gate.diagnostics);
+      if (!gate.condition(reader)) {
+        legal = false;
+        diagnostics.push(...gate.diagnostics);
+      }
     }
 
     if (offer.apply) {
       const result = offer.apply(reader, ref.selections ?? {});
-      if (result.diagnostics) diagnostics.push(...result.diagnostics);
+      if (result.diagnostics) {
+        if (result.diagnostics.some((d) => d.severity === 'error')) legal = false;
+        diagnostics.push(...result.diagnostics);
+      }
       // Namespace advertised effect ids by the planned instance for uniqueness.
       (result.advertise ?? []).forEach((effect, i) =>
         advertised.push({ ...effect, id: `${ref.instanceId}#${i}#${effect.id}` })
       );
     }
 
+    if (!legal) planIllegal.add(ref.instanceId);
     const deduped = dedupeDiagnostics(diagnostics);
     if (deduped.length > 0) planDiagnostics.set(ref.instanceId, deduped);
   }
@@ -142,5 +162,5 @@ export function evaluatePlan(
   const facts = restKind
     ? evaluateSheet(modules, inputFacts, [...committed, ...advertised])
     : settled;
-  return { facts, planDiagnostics, advertised, plannedOffers };
+  return { facts, planDiagnostics, planIllegal, advertised, plannedOffers };
 }

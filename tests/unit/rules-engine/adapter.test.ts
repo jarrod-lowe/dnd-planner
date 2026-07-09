@@ -3,18 +3,17 @@ import { plannedEntry, plannedEntries } from '$lib/rules-engine/adapter';
 import type { AvailableRuleEntry, EngineOutput, PlannedRef } from '$lib/rules-engine';
 
 /**
- * M4/W1 contract adapter — folding per-instance `planDiagnostics` back onto planned
- * items (what the view contract carries inside each planned rule's own entry).
- *
- * The row resolves from `plannedOffers` (the offer that RAN at each instance's
- * step, keyed by instanceId), not the final `availableRules` catalog — so a
- * self-gate-closing action keeps its row even after it drops out of the catalog.
+ * M4/W1 contract adapter — resolving each planned ref to the offer that RAN at
+ * its step (from `plannedOffers`, keyed by instanceId), carrying that instance's
+ * `planDiagnostics` and captured selections. Legality is passed through from the
+ * engine's entry (the fold's verdict), NOT re-inferred from diagnostic severity,
+ * so a warning-severity gate failure stays illegal here as in the catalog.
  */
 
 /** An offer catalog entry for a rule id (the shape plannedOffers stores). */
-const offerEntry = (id: string): AvailableRuleEntry => ({
+const offerEntry = (id: string, legal = true): AvailableRuleEntry => ({
   rule: { id, ui: { section: 'action-spell' }, vars: {} },
-  legal: true,
+  legal,
   applicable: true,
   diagnostics: []
 });
@@ -53,9 +52,9 @@ describe('adapter — plannedEntry', () => {
     expect(entry?.diagnostics).toEqual([]);
   });
 
-  it('folds the instance planDiagnostics in and derives legal=false on an error', () => {
+  it('passes the offer legal=false through and folds in its diagnostics', () => {
     const out = baseOutput({
-      plannedOffers: { i0: offerEntry('unarmed-strike-use-action') },
+      plannedOffers: { i0: offerEntry('unarmed-strike-use-action', false) },
       planDiagnostics: { i0: [{ code: 'no_action', severity: 'error' }] }
     });
     const entry = plannedEntry(out, ref('i0', 'unarmed-strike-use-action'));
@@ -63,12 +62,14 @@ describe('adapter — plannedEntry', () => {
     expect(entry?.diagnostics).toEqual([{ code: 'no_action', severity: 'error' }]);
   });
 
-  it('stays legal when the instance has only a warning/notice', () => {
+  it('keeps a warning-flagged illegal offer illegal (legality is decided upstream)', () => {
+    // A warning-severity gate failure (e.g. don a shield while not proficient) is
+    // illegal in the fold; the adapter must NOT re-infer legal from severity.
     const out = baseOutput({
-      plannedOffers: { i0: offerEntry('cast-bless') },
+      plannedOffers: { i0: offerEntry('don-shield', false) },
       planDiagnostics: { i0: [{ code: 'not_proficient', severity: 'warning' }] }
     });
-    expect(plannedEntry(out, ref('i0', 'cast-bless'))?.legal).toBe(true);
+    expect(plannedEntry(out, ref('i0', 'don-shield'))?.legal).toBe(false);
   });
 
   it('returns undefined when the instance never ran (no plannedOffers entry)', () => {
@@ -88,9 +89,9 @@ describe('adapter — plannedEntry', () => {
     expect(entry?.legal).toBe(true);
   });
 
-  it('scopes diagnostics to the instance — two instances of one offer differ', () => {
+  it('scopes legality + diagnostics to the instance — two instances of one offer differ', () => {
     const out = baseOutput({
-      plannedOffers: { i0: offerEntry('cast-bless'), i1: offerEntry('cast-bless') },
+      plannedOffers: { i0: offerEntry('cast-bless'), i1: offerEntry('cast-bless', false) },
       planDiagnostics: { i1: [{ code: 'already_used', severity: 'error' }] }
     });
     expect(plannedEntry(out, ref('i0', 'cast-bless'))?.legal).toBe(true);
@@ -101,7 +102,10 @@ describe('adapter — plannedEntry', () => {
 describe('adapter — plannedEntries', () => {
   it('preserves plan order and skips refs whose offer never ran', () => {
     const out = baseOutput({
-      plannedOffers: { a: offerEntry('cast-bless'), b: offerEntry('unarmed-strike-use-action') },
+      plannedOffers: {
+        a: offerEntry('cast-bless'),
+        b: offerEntry('unarmed-strike-use-action', false)
+      },
       planDiagnostics: { b: [{ code: 'no_action', severity: 'error' }] }
     });
     const entries = plannedEntries(out, [
