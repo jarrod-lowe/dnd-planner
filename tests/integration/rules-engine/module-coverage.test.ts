@@ -56,8 +56,17 @@ const CATALOG_ONLY = new Set([
 /** The deployed id is the bare rule-group id (the JSON key is `category/id`). */
 const bareId = (key: string): string => key.split('/').pop() ?? key;
 
-describe.skipIf(!existsSync(jsonPath))('module delivery coverage', () => {
-  const data = JSON.parse(readFileSync(jsonPath, 'utf-8')) as Record<string, unknown>;
+// `describe.skipIf` still invokes the factory to collect the (skipped) tests, so
+// the fixture read must be guarded: on a clean checkout where the JSON has not
+// been generated, an unguarded readFileSync throws ENOENT during collection and
+// fails `pnpm test` before any test runs. Read only when the fixture exists; the
+// empty fallback is never asserted because the suite is skipped in that case.
+const hasFixture = existsSync(jsonPath);
+const data: Record<string, unknown> = hasFixture
+  ? (JSON.parse(readFileSync(jsonPath, 'utf-8')) as Record<string, unknown>)
+  : {};
+
+describe.skipIf(!hasFixture)('module delivery coverage', () => {
   const deployed = Object.keys(data).map(bareId);
   const loaders = new Set(lazyRuleGroupIds());
 

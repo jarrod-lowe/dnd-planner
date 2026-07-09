@@ -11,7 +11,10 @@ const fightingStyleGreatWeapon: RuleModule = {
   id: 'fighting-style-great-weapon',
   derive: () => [{ fact: 'character.fightingStyle.greatWeapon', value: () => 1 }],
   annotate: (f) =>
-    f.num('character.fightingStyle.greatWeapon') === 1 && f.num('attack.last.weapon') === 1
+    // `attack.last.weapon` sums per weapon swing (Extra Attack → 2+), so gate on
+    // `>= 1` — as Savage Attacker does — not `=== 1`, which drops the rider on
+    // the second swing.
+    f.num('character.fightingStyle.greatWeapon') === 1 && f.num('attack.last.weapon') >= 1
       ? [
           {
             key: `${F}.annotation`,

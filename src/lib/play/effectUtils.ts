@@ -154,19 +154,43 @@ export function getBaseEffectId(effectId: string): string {
 }
 
 /**
+ * Collapse advertised effects that share a replacement key (`group[0]`), keeping
+ * the LAST (newest) — mirroring the engine's `dedupeByKey`. Two planned actions
+ * touching the same key this turn (Cast then Dismiss Steed; the same HP modifier
+ * set twice) both land in `advertised`, but the engine keeps only the newest for
+ * facts/commit, so the strip must too. Keyless effects are all kept; each
+ * surviving keyed effect stays at its last position.
+ */
+function dedupeAdvertisedByKey(advertised: Rule[]): Rule[] {
+  const lastIndexByKey = new Map<string, number>();
+  advertised.forEach((e, i) => {
+    const key = e.group?.[0];
+    if (key !== undefined) lastIndexByKey.set(key, i);
+  });
+  return advertised.filter((e, i) => {
+    const key = e.group?.[0];
+    return key === undefined || lastIndexByKey.get(key) === i;
+  });
+}
+
+/**
  * Merge committed effects with this turn's advertised (planned) effects for the
  * active-effects strip. A committed effect is replaced by an advertised one that
  * shares its `id` (the fresher copy — carries runtime vars like `countDown`) OR
- * its replacement key (`group[0]`). The engine dedupes committed/advertised by
- * key (newest wins); the strip must mirror that, else a planned replacement —
- * e.g. Dismiss Steed's steed-keyed effect superseding the committed mount chip —
- * would leave the stale committed chip visible until End Turn. Committed-first
+ * its replacement key (`group[0]`). The engine dedupes by key (newest wins) both
+ * among the advertised effects and across committed/advertised, so the strip
+ * mirrors that in two steps: first collapse same-key advertised duplicates
+ * (`dedupeAdvertisedByKey`), then drop any committed effect a surviving advertised
+ * key replaces — else a planned replacement (Dismiss Steed's steed-keyed effect
+ * superseding the committed mount chip, or a re-cast superseding an earlier
+ * planned steed) leaves a stale chip visible until End Turn. Committed-first
  * ordering; keyless effects (no `group`) are never key-deduped.
  */
 export function mergeActiveEffects(committed: Rule[], advertised: Rule[]): Rule[] {
-  const advById = new Map(advertised.map((e) => [e.id, e]));
+  const deduped = dedupeAdvertisedByKey(advertised);
+  const advById = new Map(deduped.map((e) => [e.id, e]));
   const advKeys = new Set(
-    advertised.map((e) => e.group?.[0]).filter((k): k is string => k !== undefined)
+    deduped.map((e) => e.group?.[0]).filter((k): k is string => k !== undefined)
   );
   const result: Rule[] = [];
   const placed = new Set<string>();
@@ -181,7 +205,7 @@ export function mergeActiveEffects(committed: Rule[], advertised: Rule[]): Rule[
     if (key !== undefined && advKeys.has(key)) continue; // replaced by a same-key advertised effect
     result.push(effect);
   }
-  for (const effect of advertised) {
+  for (const effect of deduped) {
     if (!placed.has(effect.id)) result.push(effect);
   }
   return result;

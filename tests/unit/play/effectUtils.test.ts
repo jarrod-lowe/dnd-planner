@@ -512,4 +512,27 @@ describe('mergeActiveEffects', () => {
     const advertised = [eff('a', ['ga'])];
     expect(mergeActiveEffects(committed, advertised).map((e) => e.id)).toEqual(['a', 'b']);
   });
+
+  it('keeps only the newest of two advertised effects sharing a key', () => {
+    // Cast Find Steed then Dismiss Steed both advertise a `steed`-keyed effect
+    // this turn; the engine's dedupeByKey keeps the last (newest) and the strip
+    // must too, else the stale earlier chip lingers until End Turn.
+    const advertised = [eff('cast#0#steed', ['steed']), eff('dismiss#0#steed', ['steed'])];
+    expect(mergeActiveEffects([], advertised).map((e) => e.id)).toEqual(['dismiss#0#steed']);
+  });
+
+  it('collapses same-key advertised duplicates and suppresses the committed chip together', () => {
+    const committed = [eff('effect-steed', ['steed'])];
+    const advertised = [eff('cast#0#steed', ['steed']), eff('dismiss#0#steed', ['steed'])];
+    expect(mergeActiveEffects(committed, advertised).map((e) => e.id)).toEqual(['dismiss#0#steed']);
+  });
+
+  it('dedupes only within a key, keeping the last per key and distinct keys', () => {
+    const advertised = [
+      eff('a#0#steed', ['steed']),
+      eff('b#0#bless', ['bless']),
+      eff('c#0#steed', ['steed'])
+    ];
+    expect(mergeActiveEffects([], advertised).map((e) => e.id)).toEqual(['b#0#bless', 'c#0#steed']);
+  });
 });

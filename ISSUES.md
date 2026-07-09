@@ -486,6 +486,36 @@ the action ran. The plan fold now records the offer each instance ran at its ste
 that; an offer whose `when` was already closed at its own step never ran and
 correctly gets no entry. Unit: adapter.test.ts.
 
+### 1.36 Two planned effects sharing a key both showed on the strip
+
+**FIXED** (found by Codex review on PR #363, round 10 — a follow-up to §1.34).
+The round-9 merge only deduped committed-vs-advertised; two _advertised_ effects
+sharing a replacement key (Cast then Dismiss Steed, or the same HP modifier set
+twice before End Turn) both land in `advertised`, and the committed-key check
+never compared them to each other — so the stale earlier chip lingered even
+though the engine's `dedupeByKey` keeps only the newest for facts/commit.
+`mergeActiveEffects` now first collapses same-key advertised effects (keeping the
+newest), then applies the committed suppression. Unit: effectUtils.test.ts.
+
+### 1.37 Great Weapon Fighting rider vanished on the second Extra Attack swing
+
+**FIXED** (found by Codex review on PR #363, round 10). The annotation gate used
+`attack.last.weapon === 1`, but that marker sums per weapon swing (each
+Attack-action spend contributes 1), so after a second Extra Attack swing it reads
+2 and the reroll rider was suppressed on every two-handed/versatile panel even
+though the style still applies. Now gated on `>= 1`, matching Savage Attacker.
+Unit: fighting-style-great-weapon.test.ts.
+
+### 1.38 Module-coverage fixture read crashed `pnpm test` on a clean checkout
+
+**FIXED** (found by Codex review on PR #363, round 10). `describe.skipIf` still
+invokes the suite factory to collect the skipped tests, so the top-level
+`readFileSync(build/test-rule-groups.json)` ran even when the fixture was absent —
+throwing ENOENT during collection and failing the whole run before any test
+executed (only `make test-unit`, which regenerates the JSON first, was safe). The
+read is now guarded behind `existsSync`, with an empty fallback the skipped suite
+never asserts. Test infra: module-coverage.test.ts.
+
 ## 2. Faithfulness deltas v1 → v2 (2.1–2.7 ACCEPTED; 2.8–2.11 FIXED)
 
 ### 2.1 Offers are judged against post-plan facts (v1: phase-interleaved)
