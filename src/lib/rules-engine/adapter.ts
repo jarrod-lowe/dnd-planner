@@ -28,17 +28,22 @@ function isLegal(diagnostics: readonly { severity: string }[]): boolean {
 }
 
 /**
- * The per-instance entry for one planned ref: the offer whose id is the ref's
- * `ruleId`, carrying that instance's `planDiagnostics` (and the derived `legal`)
- * plus its captured `selections`. Returns `undefined` if the offer is not present
- * (e.g. a stale plan item whose `when` gate no longer holds).
+ * The per-instance entry for one planned ref: the offer that RAN at this
+ * instance's step (from `plannedOffers`), carrying that instance's
+ * `planDiagnostics` (and the derived `legal`) plus its captured `selections`.
+ *
+ * Built from the step-time offer, not the final `availableRules` catalog, so a
+ * self-gate-closing action (e.g. Dismiss Steed, whose own apply clears the
+ * `summoned` gate it is offered under) keeps its row + diagnostics. Returns
+ * `undefined` when the offer never ran — its `when` was already closed at its own
+ * step (a genuinely stale row) — so that row falls back to inapplicable.
  */
 export function plannedEntry(output: EngineOutput, ref: PlannedRef): PlannedEntry | undefined {
-  const offer = output.availableRules.find((e) => e.rule.id === ref.ruleId);
+  const offer = output.plannedOffers?.[ref.instanceId];
   if (!offer) return undefined;
   const diagnostics = output.planDiagnostics[ref.instanceId] ?? [];
   return {
-    rule: ref.selections ? { ...offer.rule, vars: offer.rule.vars } : offer.rule,
+    rule: offer.rule,
     legal: isLegal(diagnostics),
     applicable: offer.applicable,
     diagnostics,

@@ -81,6 +81,7 @@ function rawOutput(overrides: Partial<EngineOutput> = {}): EngineOutput {
     facts: {},
     availableRules: [],
     planDiagnostics: {},
+    plannedOffers: {},
     annotations: [],
     effects: [],
     diagnostics: { errors: [], warnings: [], notices: [] },

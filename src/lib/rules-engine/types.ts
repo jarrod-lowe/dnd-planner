@@ -321,6 +321,15 @@ export interface EngineOutput {
   availableRules: AvailableRuleEntry[];
   /** Per-planned-instance legality problems, keyed by instanceId. */
   planDiagnostics: Record<string, Diagnostic[]>;
+  /**
+   * The offer each planned instance ran, keyed by instanceId — captured at the
+   * step it executed (its `when` held then), so a self-gate-closing action (e.g.
+   * Dismiss Steed, gated on `summoned`, whose own apply clears it) keeps its plan
+   * row + diagnostics even though it drops out of the final `availableRules`.
+   * An offer whose `when` was already closed at its own step never ran and gets
+   * no entry here (its row correctly falls back to inapplicable).
+   */
+  plannedOffers: Record<string, AvailableRuleEntry>;
   annotations: Annotation[];
   /** Effects advertised this turn (the UI commits these at end of turn). */
   effects: EffectInstance[];

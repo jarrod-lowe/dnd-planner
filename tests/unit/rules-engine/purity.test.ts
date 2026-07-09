@@ -65,6 +65,7 @@ function data(out: EngineOutput) {
     facts: out.facts,
     availableRules: out.availableRules,
     planDiagnostics: out.planDiagnostics,
+    plannedOffers: out.plannedOffers,
     annotations: out.annotations,
     effects: out.effects,
     diagnostics: out.diagnostics

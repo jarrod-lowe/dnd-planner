@@ -45,6 +45,20 @@ export function evaluate(input: EngineInput, opts: EvaluateOptions = {}): Engine
     .flat()
     .some((d) => d.severity === 'error');
 
+  // The offer each planned instance ran, as a view entry — so the plan row
+  // resolves from the step-time offer even when its own apply closed the `when`
+  // gate (dropping it from `availableRules`). Legality comes from planDiagnostics.
+  const plannedOffers: Record<string, AvailableRuleEntry> = {};
+  for (const [instanceId, o] of plan.plannedOffers) {
+    const diagnostics = planDiagnostics[instanceId] ?? [];
+    plannedOffers[instanceId] = {
+      rule: { id: o.id, ui: o.ui, vars: o.vars },
+      legal: !diagnostics.some((d) => d.severity === 'error'),
+      applicable: true,
+      diagnostics
+    };
+  }
+
   checkDeadline(deadline, 'annotate', budgetMs);
   const annotations = collectAnnotations(modules, plan.facts);
   // Final checkpoint so a slow annotate cannot overrun the budget silently.
@@ -55,6 +69,7 @@ export function evaluate(input: EngineInput, opts: EvaluateOptions = {}): Engine
     facts: plan.facts,
     availableRules,
     planDiagnostics,
+    plannedOffers,
     annotations,
     effects: plan.advertised,
     diagnostics: { errors: [], warnings: [], notices: [] },

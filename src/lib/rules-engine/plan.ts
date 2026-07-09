@@ -19,6 +19,13 @@ export interface PlanResult {
   planDiagnostics: Map<string, Diagnostic[]>;
   /** Effects advertised by the planned actions this turn (per-turn + durable). */
   advertised: EffectInstance[];
+  /**
+   * The offer each planned instance ran (captured at its step), keyed by
+   * instanceId — so a row whose offer later drops out of the catalog because its
+   * own apply closed the `when` gate still resolves. Only offers that actually
+   * executed are recorded.
+   */
+  plannedOffers: Map<string, Offer>;
 }
 
 function dedupeDiagnostics(diagnostics: Diagnostic[]): Diagnostic[] {
@@ -75,6 +82,7 @@ export function evaluatePlan(
   for (const offer of collectOffers(modules)) offerById.set(offer.id, offer);
 
   const planDiagnostics = new Map<string, Diagnostic[]>();
+  const plannedOffers = new Map<string, Offer>();
   const advertised: EffectInstance[] = [];
 
   for (const ref of planned) {
@@ -90,6 +98,10 @@ export function evaluatePlan(
     // also vanishes from the catalog (evaluateOffers honors `when`), so the UI
     // shows the row as inapplicable rather than spending its resources.
     if (offer.when && !offer.when(reader)) continue;
+
+    // The offer ran (its `when` held at this step). Record it so the row resolves
+    // even if its own apply closes the gate (dropping it from the final catalog).
+    plannedOffers.set(ref.instanceId, offer);
 
     const diagnostics: Diagnostic[] = [];
     for (const gate of offer.legalWhen ?? []) {
@@ -130,5 +142,5 @@ export function evaluatePlan(
   const facts = restKind
     ? evaluateSheet(modules, inputFacts, [...committed, ...advertised])
     : settled;
-  return { facts, planDiagnostics, advertised };
+  return { facts, planDiagnostics, advertised, plannedOffers };
 }

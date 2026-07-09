@@ -132,6 +132,7 @@ const makeOutput = (overrides: Partial<EngineOutput> = {}): EngineOutput => ({
     }
   ],
   planDiagnostics: {},
+  plannedOffers: {},
   annotations: [],
   effects: [
     {

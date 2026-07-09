@@ -153,6 +153,40 @@ export function getBaseEffectId(effectId: string): string {
   return match ? match[1] : effectId;
 }
 
+/**
+ * Merge committed effects with this turn's advertised (planned) effects for the
+ * active-effects strip. A committed effect is replaced by an advertised one that
+ * shares its `id` (the fresher copy — carries runtime vars like `countDown`) OR
+ * its replacement key (`group[0]`). The engine dedupes committed/advertised by
+ * key (newest wins); the strip must mirror that, else a planned replacement —
+ * e.g. Dismiss Steed's steed-keyed effect superseding the committed mount chip —
+ * would leave the stale committed chip visible until End Turn. Committed-first
+ * ordering; keyless effects (no `group`) are never key-deduped.
+ */
+export function mergeActiveEffects(committed: Rule[], advertised: Rule[]): Rule[] {
+  const advById = new Map(advertised.map((e) => [e.id, e]));
+  const advKeys = new Set(
+    advertised.map((e) => e.group?.[0]).filter((k): k is string => k !== undefined)
+  );
+  const result: Rule[] = [];
+  const placed = new Set<string>();
+  for (const effect of committed) {
+    const fresher = advById.get(effect.id);
+    if (fresher) {
+      result.push(fresher); // same id → prefer the advertised (runtime vars)
+      placed.add(effect.id);
+      continue;
+    }
+    const key = effect.group?.[0];
+    if (key !== undefined && advKeys.has(key)) continue; // replaced by a same-key advertised effect
+    result.push(effect);
+  }
+  for (const effect of advertised) {
+    if (!placed.has(effect.id)) result.push(effect);
+  }
+  return result;
+}
+
 export function getEffectDisplayValue(rule: Rule, facts: Facts): string | null {
   const ui = rule.ui as Record<string, unknown> | undefined;
   if (!ui) return null;

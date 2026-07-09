@@ -8,8 +8,8 @@
   import PlanStack from '../play/PlanStack.svelte';
   import Ledger from '../play/Ledger.svelte';
   import type { Character } from '$lib/character/types';
-  import type { AvailableRuleEntry, Rule } from '$lib/rules-view';
-  import { getConcentrationEffectName } from '$lib/play/effectUtils';
+  import type { AvailableRuleEntry } from '$lib/rules-view';
+  import { getConcentrationEffectName, mergeActiveEffects } from '$lib/play/effectUtils';
   import { getCompanionView, setCompanionView } from '$lib/play/companionStore.svelte';
   import { getSubject } from '$lib/play/subjectUtils';
 
@@ -58,29 +58,12 @@
   // Collect active annotations from engine output
   const activeAnnotations = $derived(playStore.state.engineOutput?.annotations ?? []);
 
-  // Get current effects (committed + newly advertised), deduplicated by id.
-  // Committed-first ordering; advertised version preferred (has runtime vars like countDown).
-  const currentEffects = $derived.by(() => {
-    const committed = playStore.state.effects;
-    const advertised = playStore.state.engineOutput?.effects ?? [];
-    const advertisedById = new Array<string>();
-    for (const e of advertised) {
-      advertisedById.push(e.id);
-    }
-    const result: Rule[] = [];
-    for (const effect of committed) {
-      const idx = advertisedById.indexOf(effect.id);
-      const chosen = idx >= 0 ? advertised[idx] : effect;
-      result.push(chosen);
-    }
-    const committedIds = committed.map((e) => e.id);
-    for (const effect of advertised) {
-      if (!committedIds.includes(effect.id)) {
-        result.push(effect);
-      }
-    }
-    return result;
-  });
+  // Current effects: committed + this turn's advertised, deduped by id AND by
+  // replacement key (mergeActiveEffects), so a planned key-replacement suppresses
+  // the stale committed chip — mirroring the engine's key dedupe.
+  const currentEffects = $derived.by(() =>
+    mergeActiveEffects(playStore.state.effects, playStore.state.engineOutput?.effects ?? [])
+  );
 
   const concentrationName = $derived.by(() => {
     const key = getConcentrationEffectName(currentEffects);

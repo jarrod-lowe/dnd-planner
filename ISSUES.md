@@ -465,6 +465,27 @@ optional roll control; Healing Touch gets a `2d8 + summonLevel` healing
 dice-line (Fey Step / Fell Glare, not flagged, keep their bare rows). Unit:
 steed-fixes.test.ts.
 
+### 1.34 Active-effects strip kept the stale committed chip during a keyed replacement
+
+**FIXED** (found by Codex review on PR #363, round 9). The strip merged committed
+and this-turn's advertised effects by `id` only, but the engine dedupes them by
+replacement key (`group[0]`, newest wins). So planning Dismiss Steed — which
+advertises a fresh `steed`-keyed effect that supersedes the committed mount chip
+under a different id — left the stale chip on the strip until End Turn.
+`mergeActiveEffects` now suppresses a committed effect when an advertised effect
+shares its key, mirroring the engine. Unit: effectUtils.test.ts.
+
+### 1.35 A self-gate-closing planned action lost its plan row + diagnostics
+
+**FIXED** (found by Codex review on PR #363, round 9). The plan row resolved its
+offer from the final `availableRules` catalog. Dismiss Steed's own `apply` clears
+the `summoned` gate it is offered under, so the post-fold catalog no longer lists
+it — the row fell back to inapplicable and dropped its diagnostics, even though
+the action ran. The plan fold now records the offer each instance ran at its step
+(`plannedOffers`, keyed by instanceId), and the adapter resolves the row from
+that; an offer whose `when` was already closed at its own step never ran and
+correctly gets no entry. Unit: adapter.test.ts.
+
 ## 2. Faithfulness deltas v1 → v2 (2.1–2.7 ACCEPTED; 2.8–2.11 FIXED)
 
 ### 2.1 Offers are judged against post-plan facts (v1: phase-interleaved)
