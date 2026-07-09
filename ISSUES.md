@@ -516,6 +516,16 @@ executed (only `make test-unit`, which regenerates the JSON first, was safe). Th
 read is now guarded behind `existsSync`, with an empty fallback the skipped suite
 never asserts. Test infra: module-coverage.test.ts.
 
+### 1.39 Heavy armor applied a negative Dex modifier instead of ignoring Dex
+
+**FIXED** (found by Codex review on PR #363, round 11). The AC dex bonus was
+`min(dex.modifier, ac.dexCap)`, and splint set `ac.dexCap` to 0 — but
+`min(-1, 0)` is `-1`, so a Dex 8 character in splint showed AC 16 instead of 17.
+Heavy armor ignores Dex entirely (negatives included), whereas medium armor caps
+only the positive side (a negative Dex still lowers AC). Splint now flags
+`ac.dexIgnored` (the ac module forces the bonus to 0), leaving `ac.dexCap` for the
+medium-armor positive cap. Unit: ac.test.ts; scenario: splint-armor-ac.
+
 ## 2. Faithfulness deltas v1 → v2 (2.1–2.7 ACCEPTED; 2.8–2.11 FIXED)
 
 ### 2.1 Offers are judged against post-plan facts (v1: phase-interleaved)

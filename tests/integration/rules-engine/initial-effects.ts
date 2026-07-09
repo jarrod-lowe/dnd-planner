@@ -14,7 +14,8 @@ import type { EffectInstance } from '$lib/rules-engine';
  * Translation rule: reproduce the legacy fixture's *resulting facts*, but written
  * as INPUT facts wherever the engine derives what the fixture set directly —
  *   - `ac.base`      (was set) → `ac.armorBase`  (the engine derives `ac.base` from it)
- *   - `ac.dexBonus`  (was set) → `ac.dexCap`     (derived: `ac.dexBonus = min(dex, cap)`)
+ *   - `ac.dexBonus`  (was set) → `ac.dexCap` (medium: `min(dex, cap)`) or
+ *                                 `ac.dexIgnored` (heavy: dex bonus forced to 0)
  *   - slot `.remaining` (was set) → omit; set only `.total` (remaining is derived)
  * — and DO NOT add facts the fixture didn't set (e.g. `hands.spent`), so both
  * engines start from an identical fact-state.
@@ -49,11 +50,11 @@ const leatherEquipped = (): EffectInstance => ({
   expiry: permanent
 });
 
-/** Heavy (splint) body armor: AC 17, no Dex (dex cap 0). */
+/** Heavy (splint) body armor: AC 17, Dex ignored entirely. */
 const splintEquipped = (): EffectInstance => ({
   id: 'effect-splint-armor',
   key: 'armor:body',
-  state: { 'ac.armorBase': 17, 'ac.dexCap': 0, 'armor.splint.equipped': 1 },
+  state: { 'ac.armorBase': 17, 'ac.dexIgnored': 1, 'armor.splint.equipped': 1 },
   stateCombine: { 'ac.armorBase': 'max' },
   expiry: permanent
 });

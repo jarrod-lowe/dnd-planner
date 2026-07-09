@@ -21,14 +21,15 @@ steps:
           ac.dexBonus: 0
           ac.value: 17
           armor.splint.equipped: 1
-  # Set DEX to 14 (modifier +2) -- AC should still be 17 (no Dex bonus for heavy armor)
+  # Set DEX to 8 (modifier -1) -- AC is STILL 17: heavy armor ignores Dex entirely,
+  # even a negative modifier (a positive-only cap would wrongly show 16).
   - addOffer:
       id: set-dexterity
       selections:
-        score: 14
+        score: 8
       assert:
         facts:
-          dex.modifier: 2
+          dex.modifier: -1
           ac.base: 17
           ac.dexBonus: 0
           ac.value: 17

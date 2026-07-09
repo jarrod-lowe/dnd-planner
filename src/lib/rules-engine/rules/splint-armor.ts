@@ -13,8 +13,9 @@ const BUILD_LOCKED = 'rule.dnd-5e-2024.build-lock.locked';
 /**
  * Splint Armor — Heavy armor, AC 17, no Dex bonus, and a 10-ft speed penalty if
  * your Strength is below 15. Donning advertises a permanent keyed effect that
- * sets `ac.armorBase` to 17 and `ac.dexCap` to 0 (so the ac group floors the dex
- * bonus). Worn without Heavy-armor training it raises the untrained penalties
+ * sets `ac.armorBase` to 17 and flags `ac.dexIgnored` (so the ac group drops the
+ * dex bonus to 0 — heavy armor ignores Dex entirely, even a negative modifier).
+ * Worn without Heavy-armor training it raises the untrained penalties
  * (disadvantage + no spellcasting); a proficient paladin keeps casting.
  *
  * The speed penalty is a `combine: sum` contribution to `character.movement.spent`
@@ -77,7 +78,7 @@ const splintArmor: RuleModule = {
             {
               id: 'effect-splint-armor',
               key: 'armor:body',
-              state: { 'ac.armorBase': 17, 'ac.dexCap': 0, 'armor.splint.equipped': 1 },
+              state: { 'ac.armorBase': 17, 'ac.dexIgnored': 1, 'armor.splint.equipped': 1 },
               stateCombine: { 'ac.armorBase': 'max' },
               // On the strip: removing the chip is how the armor is doffed.
               display: { name: 'rule.dnd-5e-2024.splint-armor.effect-splint-armor.name' },
