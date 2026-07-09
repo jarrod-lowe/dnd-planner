@@ -430,6 +430,41 @@ name `play.stats.skills.<skill>`), and `steedNoteOffer` (multiline text). All
 reuse existing shared i18n keys (no new strings) and the ability-modifier facts
 already derived (no new derives). Unit: steed-recorders-ui.test.ts.
 
+### 1.30 Find Steed slot slider used `values`, which PanelSlider ignores
+
+**FIXED** (found by Codex review on PR #363, round 8 — a bug in the §1.28
+cast-controls fix). `PanelSlider` reads explicit choices from `control.notches`,
+but the cast slider wrote them under `values`, so it fell back to a 0..0
+sequential slider — still no slot/upcast choice. Renamed to `notches` and added
+`valueFormat: 'spellLevel'` (0 → "Free Use"), matching the aid/spell upcast
+sliders. Unit: steed-recorders-ui.test.ts.
+
+### 1.31 Recasting Find Steed inherited the old steed's HP records
+
+**FIXED** (found by Codex review on PR #363, round 8). A dismissed/dead steed's
+keyed child effects (`effect-steed-hp-damage`/`-heal`/`-modifier-*`, all
+`untilLongRest`) survived, so a recast — which only advertised a replacement
+`steed` effect — inherited the old damage and could sit at 0 HP immediately. The
+cast now advertises the same child-key evictions the dismiss does. Unit:
+steed-fixes.test.ts.
+
+### 1.32 Steed summon level wasn't persisted → slam damage was +0 after the cast turn
+
+**FIXED** (found by Codex review on PR #363, round 8). The slam's damage bonus
+read `find-steed.selectedLevel`, an `endOfTurn` fact set by the cast cost — so
+on any later turn slam damage resolved as `1d8 + 0`. The summon level is now
+baked onto the permanent steed state (`companion.steed.summonLevel`), and the
+slam (and Healing Touch) rollers read that. Unit: steed-fixes.test.ts.
+
+### 1.33 Steed Healing Touch lost its heal roller
+
+**FIXED** (found by Codex review on PR #363, round 8). The celestial steed's
+Healing Touch rendered as a bare bonus-action row via the generic ability
+helper, though it heals 2d8 + spell level. The ability config now carries an
+optional roll control; Healing Touch gets a `2d8 + summonLevel` healing
+dice-line (Fey Step / Fell Glare, not flagged, keep their bare rows). Unit:
+steed-fixes.test.ts.
+
 ## 2. Faithfulness deltas v1 → v2 (2.1–2.7 ACCEPTED; 2.8–2.11 FIXED)
 
 ### 2.1 Offers are judged against post-plan facts (v1: phase-interleaved)

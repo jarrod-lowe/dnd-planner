@@ -39,6 +39,10 @@ function steedStats(level: number, creatureType: number): Record<string, number>
     'companion.steed.active': 1,
     'companion.steed.dismissed': 0,
     'companion.steed.creatureType': creatureType,
+    // The slot level the steed was summoned at — persisted on the permanent
+    // steed state so the slam / healing-touch damage-and-heal rollers can read it
+    // on later turns (the cast's `find-steed.selectedLevel` is endOfTurn).
+    'companion.steed.summonLevel': level,
     'companion.steed.ac.value': 12 + (level - 2),
     'companion.steed.hp.base': hp,
     'companion.steed.speed': 60,
@@ -130,7 +134,9 @@ const STEED_SLAM_CONTROL = {
 const STEED_SLAM_VARS = {
   hitBonus: { capture: true, default: { fact: 'companion.steed.slam.hitBonus' } },
   damageDie: { default: { number: 8 } },
-  damageBonus: { capture: true, default: { fact: 'find-steed.selectedLevel' } }
+  // The persistent summon level (not the endOfTurn cast fact) so slam damage is
+  // 1d8 + level on every turn, not +0 after the cast turn.
+  damageBonus: { capture: true, default: { fact: 'companion.steed.summonLevel' } }
 } as const;
 
 /**
@@ -207,31 +213,58 @@ function steedActivation(
   };
 }
 
-// creatureType → its special ability (bonus action, once per long rest), with
-// the UI intent verb the ability files under (AID / MOVE / CONTROL).
-const ABILITY_BY_TYPE: readonly (readonly [string, string, Record<string, string>])[] = [
-  ['healing-touch', 'healingTouch', { AID: 'heal' }],
-  ['fey-step', 'feyStep', { MOVE: 'travel' }],
-  ['fell-glare', 'fellGlare', { CONTROL: 'single' }]
-] as const;
+// Healing Touch heals 2d8 + spell level; the roller reads the persistent summon
+// level. Fey Step (teleport) and Fell Glare (a WIS save) carry no roller here.
+const HEAL_TOUCH_CONTROL = {
+  type: 'dice-line',
+  dice: [{ sides: 8, count: 2, bonus: { var: 'spellLevel' }, purpose: 'healing' }]
+} as const;
+const HEAL_TOUCH_VARS = {
+  spellLevel: { capture: true, default: { fact: 'companion.steed.summonLevel' } }
+};
+
+/** A creature-type special ability (bonus action, once per long rest). */
+interface AbilityConfig {
+  id: string;
+  /** The once-per-long-rest pool fact stem, e.g. `healingTouch`. */
+  pool: string;
+  intents: Record<string, string>;
+  /** Optional roll control + vars (Healing Touch's 2d8 + level heal line). */
+  primaryControl?: Record<string, unknown>;
+  vars?: Record<string, unknown>;
+}
+// creatureType → its special ability, with the UI intent verb it files under.
+const ABILITY_BY_TYPE: readonly AbilityConfig[] = [
+  {
+    id: 'healing-touch',
+    pool: 'healingTouch',
+    intents: { AID: 'heal' },
+    primaryControl: HEAL_TOUCH_CONTROL,
+    vars: HEAL_TOUCH_VARS
+  },
+  { id: 'fey-step', pool: 'feyStep', intents: { MOVE: 'travel' } },
+  { id: 'fell-glare', pool: 'fellGlare', intents: { CONTROL: 'single' } }
+];
 
 /**
  * A creature-type special ability: a steed bonus action that spends the once-per-
  * long-rest pool, surfaced only for the matching creature type.
  */
 function steedAbilityOffer(creatureType: number): Offer {
-  const [id, pool, intents] = ABILITY_BY_TYPE[creatureType];
+  const { id, pool, intents, primaryControl, vars } = ABILITY_BY_TYPE[creatureType];
   const offerId = `steed-${id}`;
   const noBonus = `${S}.${offerId}.no_bonus_action`;
   const noUses = `${S}.${offerId}.no_uses`;
   return {
     id: offerId,
     when: (f) => summoned(f) && f.num('companion.steed.creatureType') === creatureType,
+    ...(vars ? { vars } : {}),
     ui: {
       section: 'bonus-action',
       subject: 'steed',
       name: `${S}.${offerId}.name`,
       description: `${S}.${offerId}.description`,
+      ...(primaryControl ? { primaryControl } : {}),
       intents,
       actionCost: ['bonus']
     },
@@ -591,13 +624,17 @@ const findSteed: RuleModule = {
         primaryControl: {
           type: 'slider',
           var: 'slotLevel',
-          values: [
+          // `notches` (PanelSlider's key for explicit choices — NOT `values`, which
+          // it ignores) so the slider offers the free use + each owned L2–5 slot;
+          // `spellLevel` renders 0 as "Free Use".
+          notches: [
             { value: 0, enabled: { fact: 'paladinFindSteed.total' } },
             { value: 2, enabled: { fact: 'spellcasting.slots.level2.total' } },
             { value: 3, enabled: { fact: 'spellcasting.slots.level3.total' } },
             { value: 4, enabled: { fact: 'spellcasting.slots.level4.total' } },
             { value: 5, enabled: { fact: 'spellcasting.slots.level5.total' } }
-          ]
+          ],
+          valueFormat: 'spellLevel'
         },
         secondaryControl: {
           type: 'segmented',
@@ -649,7 +686,13 @@ const findSteed: RuleModule = {
             },
             expiry: { kind: 'endOfTurn' }
           },
-          steedEffect(summonLevel, creatureType)
+          steedEffect(summonLevel, creatureType),
+          // Evict any previous steed's keyed child HP effects (damage/heal/
+          // modifiers persist untilLongRest) so a recast starts fresh rather than
+          // inheriting the old steed's damage — the same keys dismissing evicts.
+          ...STEED_CHILD_EFFECTS.map(
+            (k): EffectInstance => ({ id: `evict-${k}`, key: k, expiry: { kind: 'permanent' } })
+          )
         ];
         const diagnostics: Diagnostic[] = [];
         if (f.num('actions.remaining') <= 0)

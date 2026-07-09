@@ -1,10 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { evaluateSheet, evaluatePlan } from '$lib/rules-engine';
-import type { EffectInstance, PlannedRef } from '$lib/rules-engine';
+import type { EffectInstance, FactReader, PlannedRef } from '$lib/rules-engine';
 import findSteed, { steedEffect } from '$lib/rules-engine/rules/find-steed';
 import actionEconomy from '$lib/rules-engine/rules/action-economy';
 
 const ref = (instanceId: string, ruleId: string): PlannedRef => ({ instanceId, ruleId });
+const plainFacts = (facts: Record<string, number>): FactReader => ({
+  num: (k) => facts[k] ?? 0,
+  has: (k) => k in facts
+});
 const maxModifier = (n: number): EffectInstance => ({
   id: 'effect-steed-hp-modifier-max',
   key: 'effect-steed-hp-modifier-max',
@@ -19,6 +23,54 @@ describe('steed current HP is capped at the derived max', () => {
     const facts = evaluateSheet([findSteed], {}, [steedEffect(2, 0), maxModifier(-10)]);
     expect(facts['companion.steed.hp.max']).toBe(15);
     expect(facts['companion.steed.hp.current']).toBe(15); // capped at max, not 25
+  });
+});
+
+describe('steed summon level persists', () => {
+  it('the permanent steed effect carries companion.steed.summonLevel', () => {
+    // An L4 summon must expose its level on the permanent state so the slam /
+    // healing rollers read it on later turns (not the endOfTurn cast fact).
+    const facts = evaluateSheet([findSteed], {}, [steedEffect(4, 0)]);
+    expect(facts['companion.steed.summonLevel']).toBe(4);
+  });
+
+  it('slam damage and healing-touch read the persistent summon level', () => {
+    const offers = findSteed.offer!({ selections: {} });
+    const slam = offers.find((o) => o.id === 'steed-slam');
+    expect(slam?.vars?.damageBonus).toEqual({
+      capture: true,
+      default: { fact: 'companion.steed.summonLevel' }
+    });
+    const heal = offers.find((o) => o.id === 'steed-healing-touch');
+    // Healing Touch (celestial) rolls 2d8 + the summon level.
+    expect(heal?.ui?.primaryControl).toEqual({
+      type: 'dice-line',
+      dice: [{ sides: 8, count: 2, bonus: { var: 'spellLevel' }, purpose: 'healing' }]
+    });
+    expect(heal?.vars?.spellLevel).toEqual({
+      capture: true,
+      default: { fact: 'companion.steed.summonLevel' }
+    });
+  });
+});
+
+describe('recasting Find Steed evicts the old steed HP records', () => {
+  it('a recast advertises the same child-key evictions dismissing does', () => {
+    const offers = findSteed.offer!({ selections: {} });
+    const cast = offers.find((o) => o.id === 'cast-find-steed');
+    // Prepared + an L2 slot so the cast is legal; celestial default.
+    const result = cast!.apply!(
+      plainFacts({ 'spell.l2.findSteed.prepared': 1, 'find-steed.defaultLevel': 2 }),
+      {}
+    );
+    const evicted = (result.advertise ?? [])
+      .filter((e) => e.id.startsWith('evict-'))
+      .map((e) => e.key);
+    // The damage/heal/modifier child keys are cleared so a new steed starts fresh.
+    expect(evicted).toContain('effect-steed-hp-damage');
+    expect(evicted).toContain('effect-steed-hp-heal');
+    expect(evicted).toContain('effect-steed-hp-modifier-max');
+    expect(evicted).toContain('effect-steed-hp-modifier-current');
   });
 });
 

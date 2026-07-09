@@ -31,7 +31,8 @@ const CONTROL = {
 const VARS = {
   hitBonus: { capture: true, default: { fact: 'companion.steed.slam.hitBonus' } },
   damageDie: { default: { number: 8 } },
-  damageBonus: { capture: true, default: { fact: 'find-steed.selectedLevel' } }
+  // The persistent summon level, not the endOfTurn cast fact (else +0 on later turns).
+  damageBonus: { capture: true, default: { fact: 'companion.steed.summonLevel' } }
 };
 
 function codesOf(offer: Offer): string[] {

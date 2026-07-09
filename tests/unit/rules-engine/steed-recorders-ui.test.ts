@@ -81,16 +81,19 @@ describe('steed note recorder', () => {
 describe('Find Steed cast controls', () => {
   it('has a slot-level slider (free-use + L2–5, each gated) and a creature-type segmented', () => {
     const o = get('cast-find-steed');
+    // `notches` — the key PanelSlider reads for explicit choices (not `values`) —
+    // plus valueFormat so 0 renders as "Free Use".
     expect(o.ui.primaryControl).toEqual({
       type: 'slider',
       var: 'slotLevel',
-      values: [
+      notches: [
         { value: 0, enabled: { fact: 'paladinFindSteed.total' } },
         { value: 2, enabled: { fact: 'spellcasting.slots.level2.total' } },
         { value: 3, enabled: { fact: 'spellcasting.slots.level3.total' } },
         { value: 4, enabled: { fact: 'spellcasting.slots.level4.total' } },
         { value: 5, enabled: { fact: 'spellcasting.slots.level5.total' } }
-      ]
+      ],
+      valueFormat: 'spellLevel'
     });
     expect(o.ui.secondaryControl).toEqual({
       type: 'segmented',
