@@ -61,4 +61,15 @@ describe('steed Otherworldly Slam — rollable dice panel', () => {
     expect(codesOf(byId.get('steed-slam')!)).toEqual([`${S}.steed-slam.no_actions`]);
     expect(codesOf(byId.get('steed-slam-reaction')!)).toEqual([`${S}.steed-slam.no_reaction`]);
   });
+
+  it('uses a defined cost tag — ACT for the action, RXN for the reaction', () => {
+    // The action copy's section is `action-attack` (for the attack panel), but the
+    // cost chip reads `play.costTags.<tag>`, which only defines action/bonus/reaction —
+    // so the tag must be `action`, not the raw section.
+    const action = byId.get('steed-slam');
+    const reaction = byId.get('steed-slam-reaction');
+    if (!action?.ui || !reaction?.ui) throw new Error('slam offers with a ui payload expected');
+    expect(action.ui.actionCost).toEqual(['action']);
+    expect(reaction.ui.actionCost).toEqual(['reaction']);
+  });
 });

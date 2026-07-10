@@ -166,7 +166,10 @@ function steedSlamOffer(
       descriptionValues: { damageType: { fact: 'companion.steed.damageType' } },
       detailKey: 'action/otherworldly-slam',
       intents,
-      actionCost: [section === 'reaction' ? 'reaction' : section],
+      // The section is `action-attack` (attack panel) or `reaction`, but the cost
+      // chip reads `play.costTags.<tag>` (only action/bonus/reaction) — so map the
+      // non-reaction case to `action`, not the raw section.
+      actionCost: [section === 'reaction' ? 'reaction' : 'action'],
       annotationLabels: ['attack.any', 'attack.melee'],
       primaryControl: STEED_SLAM_CONTROL
     },

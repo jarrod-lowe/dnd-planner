@@ -553,6 +553,16 @@ illegal planned item is not applied), so no post-rest spend exists for the rest 
 recover. Rest flags are `endOfTurn`, so this fires only within one plan, never on
 turns after a committed rest. Unit: rest-terminal.test.ts.
 
+### 1.42 Steed Slam's action cost chip rendered the raw section
+
+**FIXED** (found by Codex review on PR #363, round 14). The action Otherworldly
+Slam uses section `action-attack` (for the attack panel), and the offer set
+`actionCost` to the raw section — but the cost chip reads `play.costTags.<tag>`,
+which only defines `action` / `bonus` / `reaction`, so the chip showed a
+missing/raw label instead of ACT. The non-reaction case now maps to `action`.
+(The reaction copy and `steedActivation`'s plain `action`/`bonus-action` sections
+were already correct.) Unit: steed-slam-ui.test.ts.
+
 ## 2. Faithfulness deltas v1 → v2 (2.1–2.7 ACCEPTED; 2.8–2.11 FIXED)
 
 ### 2.1 Offers are judged against post-plan facts (v1: phase-interleaved)
