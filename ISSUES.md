@@ -540,6 +540,21 @@ severity, or an apply error); `plannedOffers` carries it and the adapter passes
 it through instead of inferring from severity. Unit: planned-legality.test.ts,
 adapter.test.ts.
 
+### 1.41 A rest recovered/expired spends from actions planned after it
+
+**FIXED** (found by Codex review on PR #363, round 13; owner chose to gate rather
+than reorder rest handling). The rest hook (`onRest`) and `endTurn` aging run once
+against the final post-plan facts, so a rest recorded BEFORE later actions in the
+same plan recovered/expired those later spends — e.g. `record-short-rest` then
+Divine Sense refunded the Channel Divinity use, and a long rest before a spell
+dropped that spell's until-rest effect. A rest is now terminal for the plan: any
+action planned after a rest is illegal and does not execute (the one case where an
+illegal planned item is not applied), so no post-rest spend exists for the rest to
+recover. Rest flags are `endOfTurn`, so this fires only within one plan, never on
+turns after a committed rest. Unit: rest-terminal.test.ts.
+
+## 2. Faithfulness deltas v1 → v2 (2.1–2.7 ACCEPTED; 2.8–2.11 FIXED)
+
 ### 2.1 Offers are judged against post-plan facts (v1: phase-interleaved)
 
 **ACCEPTED** (owner sign-off, 2026-07-07).

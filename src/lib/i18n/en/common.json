@@ -2067,6 +2067,7 @@
     "psychic": "Psychic"
   },
   "planner": {
+    "after-rest": "No actions after a rest this turn.",
     "concentration": {
       "check": "Concentration Check"
     },

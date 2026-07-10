@@ -12,6 +12,9 @@ import { collectOffers } from './offers';
 import { plainReader } from './reader';
 import { checkDeadline, DEFAULT_BUDGET_MS } from './watchdog';
 
+/** Diagnostic for an action planned after a rest — a rest is terminal for the plan. */
+const AFTER_REST = 'planner.after-rest';
+
 export interface PlanResult {
   /** Projected turn facts after folding every planned action over the baseline. */
   facts: Facts;
@@ -107,6 +110,21 @@ export function evaluatePlan(
     // also vanishes from the catalog (evaluateOffers honors `when`), so the UI
     // shows the row as inapplicable rather than spending its resources.
     if (offer.when && !offer.when(reader)) continue;
+
+    // A rest recorded at an EARLIER step is terminal for the plan: any later
+    // action is illegal AND does not execute. Otherwise the post-fold rest hook
+    // (onRest) and endTurn aging, which run against the final facts, would
+    // recover/expire effects the post-rest action created — e.g. a short rest
+    // then Divine Sense would refund the Channel Divinity use. This is the one
+    // case where an illegal planned item is NOT applied (no spend), since a spend
+    // after the rest is exactly what must not happen. Rest flags are endOfTurn, so
+    // this only fires within the same plan, never on turns after a committed rest.
+    if (reader.num('rest.short') > 0 || reader.num('rest.long') > 0) {
+      plannedOffers.set(ref.instanceId, offer);
+      planIllegal.add(ref.instanceId);
+      planDiagnostics.set(ref.instanceId, [{ code: AFTER_REST, severity: 'error' }]);
+      continue;
+    }
 
     // The offer ran (its `when` held at this step). Record it so the row resolves
     // even if its own apply closes the gate (dropping it from the final catalog).
