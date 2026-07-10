@@ -80,6 +80,18 @@ export function steedEffect(level: number, creatureType: number): EffectInstance
 const active = (f: FactReader): boolean => f.num('companion.steed.active') > 0;
 const summoned = (f: FactReader): boolean => f.num('companion.steed.summoned') > 0;
 
+/**
+ * Steed current HP: it starts at `min(max, base)` — a positive max modifier raises
+ * the ceiling but doesn't auto-heal above base, a negative one caps it below base —
+ * then the net current-HP modifier (heal − damage, ≤ 0) subtracts, floored at 0.
+ * Subtracting from the CAPPED start (not raw base) is what makes damage on a
+ * max-reduced steed land: a 15/15 steed taking 15 damage reaches 0, not
+ * `min(15, 25 − 15) = 10`. Shared by the `hp.current` derive and the record-damage
+ * death check so the two can never disagree.
+ */
+const steedCurrentHp = (hpMax: number, hpBase: number, modifierCurrent: number): number =>
+  Math.max(0, Math.min(hpMax, hpBase) + Math.min(0, modifierCurrent));
+
 // The steed's child HP effects, evicted (by key) when the steed is dismissed.
 const STEED_CHILD_EFFECTS = [
   'effect-steed-hp-modifier-max',
@@ -591,16 +603,16 @@ const findSteed: RuleModule = {
     });
     c.push({
       fact: 'companion.steed.hp.current',
-      // base + (negative) damage, CLAMPED at the derived max (legacy clamped the
-      // same way): a negative max-HP modifier caps current so the steed is never
-      // healthier than its maximum (no impossible 25/15), while a positive max
-      // modifier doesn't auto-heal it above its base.
+      // Start at the capped max (min of max and base), then subtract net damage,
+      // floored at 0 — see steedCurrentHp. A negative max modifier lowers the pool
+      // damage eats into (no impossible 25/15); a positive one doesn't auto-heal
+      // above base.
       value: (f) =>
         active(f)
-          ? Math.min(
+          ? steedCurrentHp(
               f.num('companion.steed.hp.max'),
-              f.num('companion.steed.hp.base') +
-                Math.min(0, f.num('companion.steed.hp.modifier.current'))
+              f.num('companion.steed.hp.base'),
+              f.num('companion.steed.hp.modifier.current')
             )
           : 0
     });
@@ -922,11 +934,14 @@ const findSteed: RuleModule = {
         const newDamage = f.num('companion.steed.hp.damageRecorded') + amount;
         // A steed reduced to 0 HP dies: retire it permanently (like Dismiss), so
         // the `untilLongRest` damage record can't expire on a long rest and revive
-        // it. `hp.current` is `base` plus the net-negative HP change; the max clamp
-        // only lowers it further, so `<= 0` here is the death test.
-        const hpAfter =
-          f.num('companion.steed.hp.base') +
-          Math.min(0, f.num('companion.steed.hp.healRecorded') - newDamage);
+        // it. Mirror the hp.current derive (subtract from the CAPPED max, not raw
+        // base): recording `amount` more damage lowers the net current-HP modifier
+        // by `amount` (this reads the live modifier, so a manual setter counts too).
+        const hpAfter = steedCurrentHp(
+          f.num('companion.steed.hp.max'),
+          f.num('companion.steed.hp.base'),
+          f.num('companion.steed.hp.modifier.current') - amount
+        );
         if (hpAfter <= 0) return { advertise: retireSteedEffects() };
         return {
           advertise: [

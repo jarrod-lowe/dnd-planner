@@ -575,6 +575,18 @@ retires the steed with the SAME permanent cascade Dismiss uses (a same-key
 into a shared `retireSteedEffects()` helper — so the retirement outlasts the
 records and a re-cast is required to bring a steed back. Unit: steed-fixes.test.ts.
 
+### 1.44 Steed damage subtracted from raw base HP, not the capped max
+
+**FIXED** (found by Codex review on PR #363, round 16 — a follow-up to §1.43 and
+the §1.31 max cap). `hp.current` derived as `min(hp.max, base + net-damage)`, so it
+subtracted damage from `hp.base` (25) and only clamped at `hp.max` afterward. A
+steed with a −10 max modifier is 15/15, but recording 15 damage read
+`min(15, 25 − 15) = 10` instead of 0 — and the §1.43 death check made the same
+base-HP assumption, so the steed also failed to retire. Current HP now starts at
+`min(hp.max, base)` and subtracts net damage (floored at 0) via a shared
+`steedCurrentHp()` helper used by both the derive and the death check, so damage on
+a max-reduced steed lands and 0 HP retires it. Unit: steed-fixes.test.ts.
+
 ## 2. Faithfulness deltas v1 → v2 (2.1–2.7 ACCEPTED; 2.8–2.11 FIXED)
 
 ### 2.1 Offers are judged against post-plan facts (v1: phase-interleaved)

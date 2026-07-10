@@ -110,6 +110,30 @@ describe('a steed reduced to 0 HP dies and stays dead through a long rest', () =
   });
 });
 
+describe('steed damage subtracts from the capped max HP, not the raw base', () => {
+  const damage = (amount: number): PlannedRef => ({
+    instanceId: 'i0',
+    ruleId: 'steed-record-damage',
+    selections: { amount }
+  });
+  // L2 celestial (base 25) with a -10 max modifier: 15/15, not 25/15.
+  const committed = [steedEffect(2, 0), maxModifier(-10)];
+
+  it('subtracts damage from the reduced max (15 - 5 = 10, not clamped 25 - 5 = 20 → 15)', () => {
+    const out = evaluatePlan([findSteed], {}, [damage(5)], committed);
+    expect(out.facts['companion.steed.hp.max']).toBe(15);
+    expect(out.facts['companion.steed.hp.current']).toBe(10);
+    expect(out.facts['companion.steed.summoned']).toBe(1);
+  });
+
+  it('retires the steed when damage reaches the reduced max (15 damage on a 15-HP steed)', () => {
+    const out = evaluatePlan([findSteed], {}, [damage(15)], committed);
+    expect(out.facts['companion.steed.hp.current']).toBe(0);
+    expect(out.facts['companion.steed.summoned']).toBe(0);
+    expect(out.facts['companion.steed.dismissed']).toBe(1);
+  });
+});
+
 describe('Dismiss Steed is a real HANDLE action', () => {
   const offers = findSteed.offer!({ selections: {} });
   const dismiss = offers.find((o) => o.id === 'offer-dismiss-steed');
