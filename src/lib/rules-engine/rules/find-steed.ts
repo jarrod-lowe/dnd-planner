@@ -88,6 +88,26 @@ const STEED_CHILD_EFFECTS = [
   'effect-steed-hp-heal'
 ] as const;
 
+/**
+ * Retire the steed permanently: replace the summon effect (same `steed` key, so
+ * `active` drops and `dismissed` reads 1) and evict its child HP records. Shared
+ * by an explicit Dismiss and by dying at 0 HP — both must OUTLAST the
+ * `untilLongRest` damage records, else a long rest would restore HP and revive a
+ * retired steed. A re-cast replaces the marker (same key) and re-evicts, so a
+ * fresh steed comes back cleanly.
+ */
+const retireSteedEffects = (): EffectInstance[] => [
+  {
+    id: 'effect-steed-dismissed',
+    key: 'steed',
+    state: { 'companion.steed.dismissed': 1 },
+    expiry: { kind: 'permanent' }
+  },
+  ...STEED_CHILD_EFFECTS.map(
+    (k): EffectInstance => ({ id: `evict-${k}`, key: k, expiry: { kind: 'permanent' } })
+  )
+];
+
 /** Per-turn spend on a steed resource (resets at end of turn). */
 const steedSpend = (state: Record<string, number>): EffectInstance => ({
   id: 'steed-spend',
@@ -899,15 +919,21 @@ const findSteed: RuleModule = {
       // amount would evict the previous record instead of adding to it.
       apply: (f, selections): ActionResult => {
         const amount = typeof selections.amount === 'number' ? selections.amount : 0;
+        const newDamage = f.num('companion.steed.hp.damageRecorded') + amount;
+        // A steed reduced to 0 HP dies: retire it permanently (like Dismiss), so
+        // the `untilLongRest` damage record can't expire on a long rest and revive
+        // it. `hp.current` is `base` plus the net-negative HP change; the max clamp
+        // only lowers it further, so `<= 0` here is the death test.
+        const hpAfter =
+          f.num('companion.steed.hp.base') +
+          Math.min(0, f.num('companion.steed.hp.healRecorded') - newDamage);
+        if (hpAfter <= 0) return { advertise: retireSteedEffects() };
         return {
           advertise: [
             {
               id: 'effect-steed-hp-damage',
               key: 'effect-steed-hp-damage',
-              state: {
-                'companion.steed.hp.damageRecorded':
-                  f.num('companion.steed.hp.damageRecorded') + amount
-              },
+              state: { 'companion.steed.hp.damageRecorded': newDamage },
               display: {
                 name: `${S}.steed-record-damage.effect.name`,
                 section: 'health',
@@ -987,21 +1013,13 @@ const findSteed: RuleModule = {
           diagnostics: [{ code: `${S}.offer-dismiss-steed.no_action`, severity: 'error' }]
         }
       ],
-      // Replaces the summon effect (same key) with a bare dismissed marker: `active`
-      // drops, so `summoned` derives to 0 while `dismissed` reads 1. Also evicts the
-      // steed's child HP effects via same-key empty effects. Spends the action.
+      // Retires the steed (same cascade a 0-HP death uses: replace the summon so
+      // `active` drops and `dismissed` reads 1, and evict the child HP effects),
+      // and spends the action.
       apply: (f): ActionResult => ({
         advertise: [
           { id: 'cost', state: { 'actions.spent': 1 }, expiry: { kind: 'endOfTurn' } },
-          {
-            id: 'effect-steed-dismissed',
-            key: 'steed',
-            state: { 'companion.steed.dismissed': 1 },
-            expiry: { kind: 'permanent' }
-          },
-          ...STEED_CHILD_EFFECTS.map(
-            (k): EffectInstance => ({ id: `evict-${k}`, key: k, expiry: { kind: 'permanent' } })
-          )
+          ...retireSteedEffects()
         ],
         diagnostics:
           f.num('actions.remaining') > 0

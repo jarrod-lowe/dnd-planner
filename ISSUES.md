@@ -563,6 +563,18 @@ missing/raw label instead of ACT. The non-reaction case now maps to `action`.
 (The reaction copy and `steedActivation`'s plain `action`/`bonus-action` sections
 were already correct.) Unit: steed-slam-ui.test.ts.
 
+### 1.43 A steed killed to 0 HP revived for free on the next long rest
+
+**FIXED** (found by Codex review on PR #363, round 15). `companion.steed.summoned`
+only HID a 0-HP steed (`hp.current > 0`); the permanent summon effect still read
+`active = 1` / `dismissed = 0`. Since the damage records are `untilLongRest`, a
+long rest restored `hp.current` and flipped the steed back to summoned with no
+re-cast — a dead steed revived for free. Reaching 0 HP via recorded damage now
+retires the steed with the SAME permanent cascade Dismiss uses (a same-key
+`dismissed` marker that drops `active`, plus the child-HP evictions), extracted
+into a shared `retireSteedEffects()` helper — so the retirement outlasts the
+records and a re-cast is required to bring a steed back. Unit: steed-fixes.test.ts.
+
 ## 2. Faithfulness deltas v1 → v2 (2.1–2.7 ACCEPTED; 2.8–2.11 FIXED)
 
 ### 2.1 Offers are judged against post-plan facts (v1: phase-interleaved)

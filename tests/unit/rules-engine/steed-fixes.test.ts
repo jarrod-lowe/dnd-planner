@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { evaluateSheet, evaluatePlan } from '$lib/rules-engine';
+import { evaluateSheet, evaluatePlan, endTurn } from '$lib/rules-engine';
 import type { EffectInstance, FactReader, PlannedRef } from '$lib/rules-engine';
 import findSteed, { steedEffect } from '$lib/rules-engine/rules/find-steed';
 import actionEconomy from '$lib/rules-engine/rules/action-economy';
@@ -71,6 +71,42 @@ describe('recasting Find Steed evicts the old steed HP records', () => {
     expect(evicted).toContain('effect-steed-hp-heal');
     expect(evicted).toContain('effect-steed-hp-modifier-max');
     expect(evicted).toContain('effect-steed-hp-modifier-current');
+  });
+});
+
+describe('a steed reduced to 0 HP dies and stays dead through a long rest', () => {
+  const damage = (amount: number): PlannedRef => ({
+    instanceId: 'i0',
+    ruleId: 'steed-record-damage',
+    selections: { amount }
+  });
+
+  it('lethal recorded damage retires the steed, and a long rest does not revive it', () => {
+    const committed = [steedEffect(2, 0)]; // L2 celestial: 25 base HP
+    const out = evaluatePlan([findSteed], {}, [damage(25)], committed);
+    // Retired now: not summoned, marked dismissed, no longer active.
+    expect(out.facts['companion.steed.summoned']).toBe(0);
+    expect(out.facts['companion.steed.dismissed']).toBe(1);
+    expect(out.facts['companion.steed.active'] ?? 0).toBe(0);
+
+    // A long rest expires the untilLongRest damage records; the permanent retire
+    // marker must outlast them so the dead steed does NOT revive.
+    const next = endTurn(committed, out.advertised, { longRest: true });
+    const revived = evaluateSheet([findSteed], {}, next);
+    expect(revived['companion.steed.summoned']).toBe(0);
+    expect(revived['companion.steed.active'] ?? 0).toBe(0);
+  });
+
+  it('non-lethal damage keeps the steed, and a long rest restores its HP', () => {
+    const committed = [steedEffect(2, 0)];
+    const out = evaluatePlan([findSteed], {}, [damage(10)], committed);
+    expect(out.facts['companion.steed.summoned']).toBe(1);
+    expect(out.facts['companion.steed.hp.current']).toBe(15);
+
+    const next = endTurn(committed, out.advertised, { longRest: true });
+    const rested = evaluateSheet([findSteed], {}, next);
+    expect(rested['companion.steed.summoned']).toBe(1);
+    expect(rested['companion.steed.hp.current']).toBe(25); // healed to full on a long rest
   });
 });
 
