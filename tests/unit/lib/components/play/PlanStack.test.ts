@@ -160,6 +160,37 @@ describe('PlanStack', () => {
     expect(rows[1].querySelector('.warning-indicator--illegal')).toBeTruthy();
   });
 
+  it('marks a skipped gated row inapplicable, not resolved from the reopened catalog', () => {
+    // The instance was skipped at its `when` step (getPlannedEntry undefined), but
+    // a later plan row reopened the offer, so it is back in the catalog `entries`.
+    // The row must show inapplicable — NOT the catalog's legal/applicable — because
+    // the fold advertised nothing for it (else End Turn commits a different plan).
+    const item = makeItem('attack-sword', 'action-attack');
+    const reopened = makeEntry('attack-sword', 'action-attack'); // legal + applicable
+    vi.mocked(playStore.getPlannedEntry).mockReturnValue(undefined);
+
+    mount(PlanStack, {
+      target: container,
+      props: {
+        items: [item],
+        entries: [reopened],
+        facts: {} as Facts,
+        activeAnnotations: [] as Annotation[],
+        onAddToPlan: noop,
+        onRemoveFromPlan: noop,
+        onMovePlanItem: noop,
+        onSelectionChange: noop,
+        onSwapPlanItemRule: noop,
+        onEndTurn: noop
+      }
+    });
+
+    const rows = container.querySelectorAll('.plan-row');
+    expect(rows.length).toBe(1);
+    expect(rows[0].querySelector('.warning-indicator--inapplicable')).toBeTruthy();
+    expect(rows[0].querySelector('.warning-indicator--illegal')).toBeNull();
+  });
+
   it('creates separate +ADD pickers per subject', () => {
     const playerEntry = makeEntry('attack-sword', 'action', 'ATTACK');
     const steedEntry = makeEntry('steed-attack', 'action', 'ATTACK', 'steed');
@@ -266,6 +297,9 @@ describe('PlanStack', () => {
       diagnostics: []
     };
     const onFollowup = vi.fn();
+    // A planned item that ran resolves from its per-instance entry (which carries
+    // the followups), not the catalog fallback.
+    vi.mocked(playStore.getPlannedEntry).mockReturnValue(entryWithFollowup);
 
     mount(PlanStack, {
       target: container,

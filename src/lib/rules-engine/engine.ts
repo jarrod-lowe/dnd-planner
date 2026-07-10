@@ -41,9 +41,6 @@ export function evaluate(input: EngineInput, opts: EvaluateOptions = {}): Engine
   }));
 
   const planDiagnostics: Record<string, Diagnostic[]> = Object.fromEntries(plan.planDiagnostics);
-  const planHasError = Object.values(planDiagnostics)
-    .flat()
-    .some((d) => d.severity === 'error');
 
   // The offer each planned instance ran, as a view entry — so the plan row
   // resolves from the step-time offer even when its own apply closed the `when`
@@ -66,7 +63,11 @@ export function evaluate(input: EngineInput, opts: EvaluateOptions = {}): Engine
   checkDeadline(deadline, 'done', budgetMs);
 
   return {
-    status: { ok: true, legal: !planHasError, applicable: true },
+    // `status.legal` is the plan's global legality (the Ledger's over-budget
+    // indicator): illegal when ANY planned instance is — an error diagnostic, OR a
+    // failed gate of any severity (a warning gate still blocks) — matching the
+    // per-row `plannedOffers[*].legal`. `planIllegal` already captures both.
+    status: { ok: true, legal: plan.planIllegal.size === 0, applicable: true },
     facts: plan.facts,
     availableRules,
     planDiagnostics,

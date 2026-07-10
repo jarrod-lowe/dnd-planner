@@ -24,6 +24,9 @@ describe('planned legality — a warning-severity gate failure still blocks', ()
     const out = evaluate({ modules: [shield], inputFacts: HAS_HAND, planned: [donShield] });
     expect(out.plannedOffers['i0'].legal).toBe(false);
     expect(plannedEntries(out, [donShield])[0].legal).toBe(false);
+    // The global status (the Ledger over-budget indicator) reflects it too — a
+    // warning gate must not read as globally legal while the row is illegal.
+    expect(out.status.legal).toBe(false);
   });
 
   it('is legal once the character is proficient', () => {
@@ -34,5 +37,6 @@ describe('planned legality — a warning-severity gate failure still blocks', ()
     });
     expect(out.plannedOffers['i0'].legal).toBe(true);
     expect(plannedEntries(out, [donShield])[0].legal).toBe(true);
+    expect(out.status.legal).toBe(true);
   });
 });

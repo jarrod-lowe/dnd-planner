@@ -587,6 +587,28 @@ base-HP assumption, so the steed also failed to retire. Current HP now starts at
 `steedCurrentHp()` helper used by both the derive and the death check, so damage on
 a max-reduced steed lands and 0 HP retires it. Unit: steed-fixes.test.ts.
 
+### 1.45 Global status legality ignored warning-severity plan gates
+
+**FIXED** (found by Codex review on PR #363, round 17 — a follow-up to §1.40).
+`status.legal` (the Ledger's over-budget indicator) was computed only from error
+diagnostics, so a warning-severity gate that still blocks — e.g. `don-shield`
+without shield proficiency — left the per-row indicator illegal while the global
+one read legal. `status.legal` now derives from the fold's `planIllegal` verdict
+(a failed gate of any severity, or an apply error), matching the rows. It is a
+display indicator only (not an End-Turn gate), so illegal-but-visible still
+commits. Unit: planned-legality.test.ts.
+
+### 1.46 A skipped plan row resolved from the reopened catalog as legal
+
+**FIXED** (found by Codex review on PR #363, round 17 — a follow-up to §1.35). A
+planned instance whose `when` gate was closed at its own step (so the fold
+advertised nothing for it) had no per-instance entry; `PlanStack` then fell back
+to the final `availableRules` catalog, which — if a later row reopened the same
+offer (e.g. Dismiss Steed → stale Steed Slam → Cast Find Steed) — showed the row
+legal/applicable even though End Turn commits a different plan. The row now renders
+inapplicable whenever there is no per-instance entry, never resolved from the
+post-plan catalog. Unit: PlanStack.test.ts.
+
 ## 2. Faithfulness deltas v1 → v2 (2.1–2.7 ACCEPTED; 2.8–2.11 FIXED)
 
 ### 2.1 Offers are judged against post-plan facts (v1: phase-interleaved)

@@ -38,14 +38,6 @@
     onFollowup
   }: Props = $props();
 
-  const entryById = $derived.by(() => {
-    const result: Record<string, AvailableRuleEntry> = {};
-    for (const entry of entries) {
-      result[entry.rule.id] = entry;
-    }
-    return result;
-  });
-
   const itemsWithEntries = $derived(
     items.map((item) => {
       // The per-instance entry: the offer's rule with THIS instance's own
@@ -54,17 +46,17 @@
       const planned = playStore.getPlannedEntry(item.instanceId);
       if (planned) return { item, entry: planned };
 
-      // No per-instance entry: the offer's structural `when` closed (e.g. the
-      // weapon was stowed earlier in the plan) — the engine skips the action and
-      // the row stays visible as inapplicable so the player can see and remove
-      // it — or no evaluation has run yet (fall back to the catalog entry).
-      const entry = entryById[item.originalRuleId ?? item.rule.id];
-      if (!entry)
-        return {
-          item,
-          entry: { rule: item.rule, legal: true, applicable: false, diagnostics: [] }
-        };
-      return { item, entry };
+      // No per-instance entry means the engine SKIPPED this instance: its
+      // structural `when` was closed at its own step (e.g. the weapon was stowed,
+      // or the steed dismissed, earlier in the plan), so it advertised no effects.
+      // Show the row inapplicable — do NOT resolve it from the final
+      // `availableRules` catalog, which reflects post-plan state and could show a
+      // later-reopened offer as legal, making End Turn commit a different plan than
+      // the row displays. The player sees the inapplicable row and can remove it.
+      return {
+        item,
+        entry: { rule: item.rule, legal: true, applicable: false, diagnostics: [] }
+      };
     })
   );
 
