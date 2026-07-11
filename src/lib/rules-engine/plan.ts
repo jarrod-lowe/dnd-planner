@@ -8,7 +8,7 @@ import type {
   RuleModule
 } from './types';
 import { evaluateSheet } from './sheet';
-import { collectOffers } from './offers';
+import { collectOffersWithModule } from './offers';
 import { plainReader } from './reader';
 import { checkDeadline, DEFAULT_BUDGET_MS } from './watchdog';
 
@@ -87,10 +87,16 @@ export function evaluatePlan(
   deadline?: number,
   budgetMs: number = DEFAULT_BUDGET_MS
 ): PlanResult {
-  // Action registry: offer id -> Offer. collectOffers enforces globally-unique
-  // offer ids, so the executed transition can never depend on module load order.
+  // Action registry: offer id -> Offer (+ owning module id). collectOffers
+  // enforces globally-unique offer ids, so the executed transition can never
+  // depend on module load order. `offerModuleId` lets the fold stamp each
+  // advertised effect with its owning rule group (for unassign cleanup).
   const offerById = new Map<string, Offer>();
-  for (const offer of collectOffers(modules)) offerById.set(offer.id, offer);
+  const offerModuleId = new Map<string, string>();
+  for (const { offer, moduleId } of collectOffersWithModule(modules)) {
+    offerById.set(offer.id, offer);
+    offerModuleId.set(offer.id, moduleId);
+  }
 
   const planDiagnostics = new Map<string, Diagnostic[]>();
   const planIllegal = new Set<string>();
@@ -148,9 +154,16 @@ export function evaluatePlan(
         if (result.diagnostics.some((d) => d.severity === 'error')) legal = false;
         diagnostics.push(...result.diagnostics);
       }
-      // Namespace advertised effect ids by the planned instance for uniqueness.
+      // Namespace advertised effect ids by the planned instance for uniqueness,
+      // and stamp the owning rule group so the store can drop the group's
+      // committed effects on unassign. An effect that names its own owner keeps it.
+      const owningGroup = offerModuleId.get(offer.id);
       (result.advertise ?? []).forEach((effect, i) =>
-        advertised.push({ ...effect, id: `${ref.instanceId}#${i}#${effect.id}` })
+        advertised.push({
+          ...effect,
+          id: `${ref.instanceId}#${i}#${effect.id}`,
+          ruleGroupId: effect.ruleGroupId ?? owningGroup
+        })
       );
     }
 
@@ -172,7 +185,10 @@ export function evaluatePlan(
   if (restKind) {
     for (const m of modules) {
       if (!m.onRest) continue;
-      for (const e of m.onRest(restKind, reader)) advertised.push(e);
+      // Rest-recovery effects (Channel Divinity, Heroic Inspiration) carry the
+      // same owning-group stamp so unassign drops them too.
+      for (const e of m.onRest(restKind, reader))
+        advertised.push({ ...e, ruleGroupId: e.ruleGroupId ?? m.id });
     }
   }
 

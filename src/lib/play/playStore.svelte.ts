@@ -644,9 +644,13 @@ async function unassignRuleGroup(characterId: string, ruleGroupId: string): Prom
   const prevEffects = [...state.effects];
   const prevCommitted = [...state.committed];
 
-  // Optimistic: remove ID, module, and settings-derived effects
-  // (namespaced `${ruleGroupId}::`) from the committed set.
-  const committed = state.committed.filter((e) => !e.id.startsWith(`${ruleGroupId}::`));
+  // Optimistic: remove ID, module, and the group's committed effects — both the
+  // settings-derived namespaced ones (`${ruleGroupId}::`) and the module-created
+  // effects the plan fold stamped with this `ruleGroupId` (e.g. a donned shield),
+  // which would otherwise keep contributing facts under a group that's gone.
+  const committed = state.committed.filter(
+    (e) => e.ruleGroupId !== ruleGroupId && !e.id.startsWith(`${ruleGroupId}::`)
+  );
   state = {
     ...state,
     ruleGroupIds: state.ruleGroupIds.filter((id) => id !== ruleGroupId),

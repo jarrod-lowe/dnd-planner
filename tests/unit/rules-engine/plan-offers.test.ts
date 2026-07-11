@@ -237,3 +237,57 @@ describe('offers — structural when gate (omit vs. illegal-but-visible)', () =>
     expect(closed.advertised).toHaveLength(0);
   });
 });
+
+describe('plan — stamps rule-group provenance on advertised effects', () => {
+  // So the store can drop a group's committed effects on unassign: module-created
+  // effects (a donned shield) are not namespaced in `id`, so the owning group is
+  // otherwise unrecoverable from the committed blob.
+  it("stamps the owning module id as an advertised effect's ruleGroupId", () => {
+    const equip: RuleModule = {
+      id: 'equip-group',
+      offer: () => [
+        {
+          id: 'don-thing',
+          apply: () => ({
+            advertise: [{ id: 'effect-thing', state: { worn: 1 }, expiry: { kind: 'permanent' } }]
+          })
+        }
+      ]
+    };
+    const { advertised } = evaluatePlan([equip], {}, [{ instanceId: 'e1', ruleId: 'don-thing' }]);
+    expect(advertised).toHaveLength(1);
+    expect(advertised[0].ruleGroupId).toBe('equip-group');
+  });
+
+  it('stamps ruleGroupId on onRest-advertised effects too', () => {
+    const rester: RuleModule = {
+      id: 'rest-group',
+      onRest: () => [{ id: 'recovered', state: { back: 1 }, expiry: { kind: 'untilLongRest' } }]
+    };
+    const { advertised } = evaluatePlan([rester], { 'rest.long': 1 }, []);
+    expect(advertised.find((e) => e.id === 'recovered')?.ruleGroupId).toBe('rest-group');
+  });
+
+  it('does not overwrite a ruleGroupId the effect already declares', () => {
+    const host: RuleModule = {
+      id: 'host',
+      offer: () => [
+        {
+          id: 'act',
+          apply: () => ({
+            advertise: [
+              {
+                id: 'e',
+                ruleGroupId: 'real-owner',
+                state: { x: 1 },
+                expiry: { kind: 'endOfTurn' }
+              }
+            ]
+          })
+        }
+      ]
+    };
+    const { advertised } = evaluatePlan([host], {}, [{ instanceId: 'a1', ruleId: 'act' }]);
+    expect(advertised[0].ruleGroupId).toBe('real-owner');
+  });
+});

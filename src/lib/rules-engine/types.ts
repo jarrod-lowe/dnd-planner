@@ -157,6 +157,14 @@ export interface EffectInstance {
   id: string;
   ruleId?: string;
   /**
+   * The rule group (owning module) that advertised this effect, stamped by the
+   * plan fold. Lets the store drop a group's committed effects when it is
+   * unassigned: module-created effects (e.g. a donned shield) aren't namespaced
+   * in `id`, so this is the only surviving owner link. Distinct from `ruleId`,
+   * which the sheet resolves against modules for `effectContributions`.
+   */
+  ruleGroupId?: string;
+  /**
    * Logical identity for replacement effects. Two effects sharing a `key` do NOT
    * stack: the newest (advertised-after-committed) evicts the older, both when
    * the sheet is built and when effects are committed at end of turn — so a

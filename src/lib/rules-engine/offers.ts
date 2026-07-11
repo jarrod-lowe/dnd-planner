@@ -1,18 +1,28 @@
 import type { Diagnostic, Facts, Offer, OfferEntry, RuleModule } from './types';
 import { plainReader } from './reader';
 
+/** An offer paired with the id of the module that declared it. */
+export interface CollectedOffer {
+  offer: Offer;
+  moduleId: string;
+}
+
 /**
- * Collect every module's offers, enforcing globally-unique offer ids.
+ * Collect every module's offers with their owning module id, enforcing
+ * globally-unique offer ids.
  *
  * A planned action is persisted as just its offer id (`PlannedRef.ruleId`) with
  * no module identity, so if two modules advertised the same id the executed
  * transition would depend on module load order — breaking the determinism the
  * API guarantees. Reject the collision instead of silently overwriting.
  *
+ * The module id is what the plan fold stamps onto advertised effects as
+ * `ruleGroupId`, so unassign can drop a group's committed effects.
+ *
  * @throws If two offers share an id.
  */
-export function collectOffers(modules: RuleModule[]): Offer[] {
-  const offers: Offer[] = [];
+export function collectOffersWithModule(modules: RuleModule[]): CollectedOffer[] {
+  const collected: CollectedOffer[] = [];
   const seen = new Set<string>();
   for (const m of modules) {
     if (!m.offer) continue;
@@ -23,10 +33,15 @@ export function collectOffers(modules: RuleModule[]): Offer[] {
         );
       }
       seen.add(offer.id);
-      offers.push(offer);
+      collected.push({ offer, moduleId: m.id });
     }
   }
-  return offers;
+  return collected;
+}
+
+/** The offer-only view of {@link collectOffersWithModule}. */
+export function collectOffers(modules: RuleModule[]): Offer[] {
+  return collectOffersWithModule(modules).map((c) => c.offer);
 }
 
 /**

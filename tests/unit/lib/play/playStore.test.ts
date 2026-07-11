@@ -1246,6 +1246,64 @@ describe('playStore', () => {
       // Step 3: Reverted
       expect(playStore.state.ruleGroupIds).toContain('group-1');
     });
+
+    it('drops committed effects owned by the removed group, keeps the rest', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      const mockApiDeleteFn = vi.mocked(apiDelete);
+
+      // A module-created committed effect owned by 'shield' — its id is namespaced
+      // by the planned instance (NOT `shield::`), so only its stamped `ruleGroupId`
+      // identifies the owner. A second effect belongs to another group.
+      const shieldEffect = {
+        id: 'inst-1#0#effect-shield',
+        ruleGroupId: 'shield',
+        key: 'armor:shield',
+        state: { 'ac.shieldBonus': 2, 'hands.spent': 1 },
+        expiry: { kind: 'permanent' as const }
+      };
+      const blessEffect = {
+        id: 'inst-2#0#effect-bless',
+        ruleGroupId: 'bless',
+        state: { 'concentration.spent': 1 },
+        expiry: { kind: 'permanent' as const }
+      };
+
+      // Empty assigned-groups list keeps the load to just the effects blob (no
+      // batch fetch to mock); the filter under test operates on committed effects.
+      mockApiGet
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ ruleGroups: [] })
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ effects: JSON.stringify([shieldEffect, blessEffect]) })
+        } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      await playStore.loadRuleGroups('char-123');
+      expect(playStore.state.committed).toHaveLength(2);
+
+      // Pending DELETE so we can inspect the optimistic committed set.
+      let resolveDelete: (value: unknown) => void;
+      mockApiDeleteFn.mockReturnValue(
+        new Promise((resolve) => {
+          resolveDelete = resolve as (value: unknown) => void;
+        })
+      );
+
+      const promise = playStore.unassignRuleGroup?.('char-123', 'shield');
+
+      // The shield's committed effect (owned by the removed group) is dropped;
+      // the other group's effect survives.
+      expect(playStore.state.committed.map((e) => e.id)).toEqual(['inst-2#0#effect-bless']);
+
+      // Clean up the pending unassign.
+      resolveDelete!({ ok: true, status: 204 });
+      vi.mocked(apiPost).mockResolvedValueOnce({ ok: true } as Response);
+      await promise;
+    });
   });
 
   describe('effects persistence', () => {
