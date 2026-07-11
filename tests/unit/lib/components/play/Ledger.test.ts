@@ -172,7 +172,7 @@ describe('Ledger', () => {
     expect(cell).toBeNull();
   });
 
-  it('applies warning style when over budget and remaining < total', () => {
+  it('applies warning style to the cell that is actually overdrawn (remaining < 0)', () => {
     renderComponent(
       [
         {
@@ -182,11 +182,47 @@ describe('Ledger', () => {
           remaining: 'actions.remaining'
         } satisfies UiEntry
       ],
-      { 'actions.max': 1, 'actions.remaining': 0 },
+      { 'actions.max': 1, 'actions.remaining': -1 },
       { status: { legal: false } }
     );
     const cell = container.querySelector('.ledger__cell--warn');
     expect(cell).toBeTruthy();
+  });
+
+  it('does not flag a spent-but-in-budget resource as over budget when another is overspent', () => {
+    // Regression: overspending one resource (actions) must NOT paint other
+    // legitimately-spent resources (movement) as over budget. Only the overdrawn
+    // cell warns; the global status.legal drives the plan-level badge, not every
+    // cell that happens to have been spent.
+    renderComponent(
+      [
+        {
+          type: 'usedMax',
+          label: 'play.stats.actions',
+          total: 'actions.max',
+          remaining: 'actions.remaining'
+        },
+        {
+          type: 'usedMax',
+          label: 'play.stats.movement',
+          total: 'character.movement.total',
+          remaining: 'character.movement.remaining'
+        }
+      ] satisfies UiEntry[],
+      {
+        'actions.max': 1,
+        'actions.remaining': -1,
+        'character.movement.total': 30,
+        'character.movement.remaining': 25
+      },
+      { status: { legal: false } }
+    );
+    const warnCells = container.querySelectorAll('.ledger__cell--warn');
+    // Exactly one cell warns — the overdrawn actions cell, not the in-budget move.
+    expect(warnCells.length).toBe(1);
+    expect(warnCells[0].textContent).toContain('-1/1');
+    // The plan-level "Over budget" badge still shows (global indicator).
+    expect(container.querySelector('.ledger__warn-badge')).toBeTruthy();
   });
 
   it('uses label from entry for display', () => {
