@@ -171,3 +171,30 @@ describe('Dismiss Steed is a real HANDLE action', () => {
     expect(blocked.planDiagnostics.get('i0')?.some((d) => d.code.includes('no_action'))).toBe(true);
   });
 });
+
+describe('steed healing offsets any missing HP, like the player recorder', () => {
+  const currentModifier = (n: number): EffectInstance => ({
+    id: 'effect-steed-hp-modifier-current',
+    key: 'effect-steed-hp-modifier-current',
+    state: { 'companion.steed.hp.modifier.current': n },
+    expiry: { kind: 'permanent' }
+  });
+  const heal = (amount: number): PlannedRef => ({
+    instanceId: 'i0',
+    ruleId: 'steed-record-heal',
+    selections: { amount }
+  });
+
+  it('a heal offsets HP lost to a manual current modifier (15/25 → 25/25), capped at missing', () => {
+    // L2 celestial (25 base). A manual −10 current modifier makes it 15/25 with NO
+    // recorded damage. Like the player heal recorder, healing must offset the net
+    // missing HP — not cap at damageRecorded (0), which would record nothing.
+    const committed = [steedEffect(2, 0), currentModifier(-10)];
+    expect(evaluateSheet([findSteed], {}, committed)['companion.steed.hp.current']).toBe(15);
+
+    const out = evaluatePlan([findSteed], {}, [heal(15)], committed);
+    // Capped at the 10 missing HP (no overheal banking), restoring full HP.
+    expect(out.facts['companion.steed.hp.healRecorded']).toBe(10);
+    expect(out.facts['companion.steed.hp.current']).toBe(25);
+  });
+});
