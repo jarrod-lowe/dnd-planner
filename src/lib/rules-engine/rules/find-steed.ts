@@ -61,6 +61,15 @@ function steedStats(level: number, creatureType: number): Record<string, number>
   return state;
 }
 
+// The steed's child HP effects, evicted (by key) when the steed is dismissed or
+// its mount chip is removed. The mount effect declares them as `dependents`.
+const STEED_CHILD_EFFECTS = [
+  'effect-steed-hp-modifier-max',
+  'effect-steed-hp-modifier-current',
+  'effect-steed-hp-damage',
+  'effect-steed-hp-heal'
+] as const;
+
 /**
  * The steed's summon effect (permanent, keyed so a re-cast/dismiss replaces it).
  * Exported so the parity harness can reproduce an "already-summoned" steed.
@@ -70,6 +79,10 @@ export function steedEffect(level: number, creatureType: number): EffectInstance
     id: 'effect-steed',
     key: 'steed',
     state: steedStats(level, creatureType),
+    // Removing the mount chip must take its HP-record children with it. Planned
+    // Dismiss/recast already evict these by key; declaring them here lets a raw
+    // chip removal do the same instead of stranding them under a gone steed.
+    dependents: [...STEED_CHILD_EFFECTS],
     // Permanent, but a player-facing mount: `display` opts it onto the strip as a
     // MOUNT chip (effectUtils reads ui.section === 'mount').
     display: { name: 'rule.spell-find-steed.effect-steed.name', section: 'mount' },
@@ -91,14 +104,6 @@ const summoned = (f: FactReader): boolean => f.num('companion.steed.summoned') >
  */
 const steedCurrentHp = (hpMax: number, hpBase: number, modifierCurrent: number): number =>
   Math.max(0, Math.min(hpMax, hpBase) + Math.min(0, modifierCurrent));
-
-// The steed's child HP effects, evicted (by key) when the steed is dismissed.
-const STEED_CHILD_EFFECTS = [
-  'effect-steed-hp-modifier-max',
-  'effect-steed-hp-modifier-current',
-  'effect-steed-hp-damage',
-  'effect-steed-hp-heal'
-] as const;
 
 /**
  * Retire the steed permanently: replace the summon effect (same `steed` key, so

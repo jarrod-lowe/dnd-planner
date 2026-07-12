@@ -164,6 +164,14 @@ export interface EffectInstance {
    * Keyless effects (the common per-turn spend) never dedupe.
    */
   key?: string;
+  /**
+   * Keys of dependent (child) effects this effect owns. When it is removed from
+   * the active-state strip (`removeEffect`), the store also evicts committed
+   * effects carrying these keys — e.g. the steed mount owns its HP-record
+   * children, which planned Dismiss/recast already evict but a raw chip removal
+   * would otherwise strand. Advisory data authored by the owning module.
+   */
+  dependents?: string[];
   /** Fact deltas contributed while active (summed by default), unless the owning module overrides via effectContributions. */
   state?: Record<string, number>;
   /**

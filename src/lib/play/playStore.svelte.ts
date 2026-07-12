@@ -729,10 +729,15 @@ function persistCommitted(): void {
 }
 
 function removeEffect(effectId: string): void {
-  // effect ids are stable (no counter suffix), so match by exact id. NOTE:
-  // Dependent-effect removal is not carried by an EffectInstance — dependent-effect
-  // eviction is now the owning module's job (by `key`), not a store-level cascade.
-  const committed = state.committed.filter((e) => e.id !== effectId);
+  // effect ids are stable (no counter suffix), so match by exact id. An effect
+  // may declare `dependents` (child effect keys it owns) — removing the chip
+  // evicts those too, so a steed mount takes its HP records with it, matching the
+  // eviction the planned Dismiss/recast paths already do (by key).
+  const removed = state.committed.find((e) => e.id === effectId);
+  const dependentKeys = new Set(removed?.dependents ?? []);
+  const committed = state.committed.filter(
+    (e) => e.id !== effectId && !(e.key !== undefined && dependentKeys.has(e.key))
+  );
   state = { ...state, committed, effects: committed.map(effectInstanceToRule) };
   performEvaluation();
   persistCommitted();
