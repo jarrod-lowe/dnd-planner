@@ -198,3 +198,34 @@ describe('steed healing offsets any missing HP, like the player recorder', () =>
     expect(out.facts['companion.steed.hp.current']).toBe(25);
   });
 });
+
+describe('steed current HP follows a raised max, like the player', () => {
+  const damage = (amount: number): PlannedRef => ({
+    instanceId: 'i0',
+    ruleId: 'steed-record-damage',
+    selections: { amount }
+  });
+  const heal = (amount: number): PlannedRef => ({
+    instanceId: 'i1',
+    ruleId: 'steed-record-heal',
+    selections: { amount }
+  });
+
+  it('a positive max modifier raises current with it (35/35, not an unfillable 25/35)', () => {
+    // Player parity: hp.current = hp.max + min(0, modifier.current), so raising
+    // the max (Aid-style) raises current too — the same as the player's hp rule.
+    const committed = [steedEffect(2, 0), maxModifier(10)];
+    const facts = evaluateSheet([findSteed], {}, committed);
+    expect(facts['companion.steed.hp.max']).toBe(35);
+    expect(facts['companion.steed.hp.current']).toBe(35);
+  });
+
+  it('damage and healing work against the raised max (35 → 30 → 35)', () => {
+    const committed = [steedEffect(2, 0), maxModifier(10)];
+    const damaged = evaluatePlan([findSteed], {}, [damage(5)], committed);
+    expect(damaged.facts['companion.steed.hp.current']).toBe(30);
+
+    const healed = evaluatePlan([findSteed], {}, [damage(5), heal(5)], committed);
+    expect(healed.facts['companion.steed.hp.current']).toBe(35);
+  });
+});
