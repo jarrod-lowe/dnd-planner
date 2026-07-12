@@ -1248,6 +1248,26 @@ describe('playStore', () => {
     });
   });
 
+  describe('addFollowupEffect', () => {
+    it('replaces a re-tapped keyed follow-up instead of appending a duplicate', async () => {
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      const slow = {
+        id: 'effect-javelin-slow',
+        key: 'javelin-slow',
+        expiry: { kind: 'turns' as const, remaining: 1 }
+      };
+      playStore.addFollowupEffect(slow);
+      playStore.addFollowupEffect(slow); // second tap of the same follow-up
+
+      // The strip keys chips by id and the engine dedupes committed by key, so a
+      // re-tap must REPLACE — one committed entry, not two duplicates.
+      const matching = playStore.state.committed.filter((e) => e.id === 'effect-javelin-slow');
+      expect(matching).toHaveLength(1);
+    });
+  });
+
   describe('effects persistence', () => {
     it('passes committed effects to engine during evaluation', async () => {
       // The cast advertises a persistent slot-spend effect this turn.
