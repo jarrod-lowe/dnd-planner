@@ -428,6 +428,11 @@ export function weaponOffers(def: WeaponDef): Offer[] {
     apply: withVersatile(def, attackActionApply())
   };
 
+  // An opportunity attack is melee-only: drop the thrown range bands so a
+  // throwable weapon (dagger/javelin/spear) can't be "reacted" at 20/60 or
+  // 30/120 ft. Versatile bands are melee (extraHands), so they survive.
+  const meleeDef: WeaponDef = { ...def, ranges: def.ranges.filter((r) => r.type === 'melee') };
+
   const useReaction: Offer = {
     id: `${def.id}-use-reaction-weapon`,
     when: (f) => f.num('capability.attack.reaction.weapon') === 1 && equipped(f),
@@ -439,9 +444,9 @@ export function weaponOffers(def: WeaponDef): Offer[] {
       intents: { DEFEND: 'weapons' },
       actionCost: ['reaction'],
       annotationLabels: [...def.annotationLabels, 'attack.reaction'],
-      primaryControl: diceControl(def)
+      primaryControl: diceControl(meleeDef)
     },
-    vars: attackVars(def),
+    vars: attackVars(meleeDef),
     legalWhen: [
       {
         condition: (f) => f.num('reactions.remaining') > 0,

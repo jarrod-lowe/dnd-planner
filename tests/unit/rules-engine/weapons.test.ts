@@ -126,3 +126,27 @@ describe('weapons — javelin Slow followup is a native EffectInstance', () => {
     });
   });
 });
+
+describe('weapons — reaction (opportunity attack) is melee-only', () => {
+  it('drops thrown range bands from the reaction, keeps them on the Attack action', () => {
+    const MODS = [actionEconomy, attacks, hands, javelin, javelinMastery];
+    const facts = evaluatePlan(MODS, {}, [ref('i0', 'don-javelin')]).facts;
+    const offers = evaluateOffers(MODS, facts);
+
+    const rangesOf = (o: { vars?: Record<string, unknown> } | undefined) => {
+      const ranges = o?.vars?.ranges as
+        | { default?: { array?: Array<{ type: string }> } }
+        | undefined;
+      return ranges?.default?.array ?? [];
+    };
+
+    const reactionRanges = rangesOf(offers.find((o) => o.id === 'javelin-use-reaction-weapon'));
+    const actionRanges = rangesOf(offers.find((o) => o.id === 'javelin-use-action'));
+
+    // The javelin is a thrown weapon (melee 5 ft + thrown 30/120). An opportunity
+    // attack must be melee-only; the Attack action keeps the thrown bands.
+    expect(reactionRanges.length).toBeGreaterThan(0);
+    expect(reactionRanges.every((r) => r.type === 'melee')).toBe(true);
+    expect(actionRanges.some((r) => r.type === 'thrown')).toBe(true);
+  });
+});
