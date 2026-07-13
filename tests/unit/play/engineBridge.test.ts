@@ -118,6 +118,18 @@ describe('engineBridge — effectInstanceToRule', () => {
     expect(getEffectKind(rule)).toBe('MOUNT');
     expect(isHiddenEffect(rule)).toBe(false);
   });
+
+  it("maps display.value to ui.displayValue (a record chip's own amount)", () => {
+    // A player damage record: keyless, stacking — each chip carries its OWN
+    // literal amount (a shared displayFact would show the net on every chip).
+    const rule = effectInstanceToRule({
+      id: 'i1#0#effect-hp-damage',
+      state: { 'hp.modifier.current': -7 },
+      display: { name: 'rule.dnd-5e-2024.core-events.effect-hp-damage.name', value: 7 },
+      expiry: { kind: 'untilLongRest' }
+    });
+    expect(rule.ui?.displayValue).toBe(7);
+  });
 });
 
 const makeOutput = (overrides: Partial<EngineOutput> = {}): EngineOutput => ({

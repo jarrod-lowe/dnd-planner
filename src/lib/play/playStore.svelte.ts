@@ -733,10 +733,15 @@ function persistCommitted(): void {
 }
 
 function removeEffect(effectId: string): void {
-  // effect ids are stable (no counter suffix), so match by exact id. NOTE:
-  // Dependent-effect removal is not carried by an EffectInstance — dependent-effect
-  // eviction is now the owning module's job (by `key`), not a store-level cascade.
-  const committed = state.committed.filter((e) => e.id !== effectId);
+  // effect ids are stable (no counter suffix), so match by exact id. An effect
+  // may declare `dependents` (child effect keys it owns) — removing the chip
+  // evicts those too, so a steed mount takes its HP records with it, matching the
+  // eviction the planned Dismiss/recast paths already do (by key).
+  const removed = state.committed.find((e) => e.id === effectId);
+  const dependentKeys = new Set(removed?.dependents ?? []);
+  const committed = state.committed.filter(
+    (e) => e.id !== effectId && !(e.key !== undefined && dependentKeys.has(e.key))
+  );
   state = { ...state, committed, effects: committed.map(effectInstanceToRule) };
   performEvaluation();
   persistCommitted();
@@ -763,7 +768,16 @@ function endTurn(): void {
 function addFollowupEffect(effect: EffectInstance): void {
   // JSON round-trip strips Svelte reactive proxies that structuredClone can't handle.
   const plain = JSON.parse(JSON.stringify(effect)) as EffectInstance;
-  const committed = [...state.committed, plain];
+  // Re-tapping the same follow-up must REPLACE, not append: the strip keys chips
+  // by id and the engine dedupes committed effects by key, so a duplicate id/key
+  // would double-render and persist a stale copy until End Turn collapses it. Drop
+  // any existing committed effect sharing this one's id (or key, when keyed) first.
+  const committed = [
+    ...state.committed.filter(
+      (e) => e.id !== plain.id && (plain.key === undefined || e.key !== plain.key)
+    ),
+    plain
+  ];
   state = { ...state, committed, effects: committed.map(effectInstanceToRule) };
   performEvaluation();
   persistCommitted();

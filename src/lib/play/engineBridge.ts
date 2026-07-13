@@ -78,6 +78,7 @@ export function effectInstanceToRule(effect: EffectInstance): Rule {
   if (effect.display?.name) ui.name = effect.display.name;
   if (effect.display?.section) ui.section = effect.display.section;
   if (effect.display?.displayFact) ui.displayFact = effect.display.displayFact;
+  if (effect.display?.value !== undefined) ui.displayValue = effect.display.value;
   if (effect.display?.subject) ui.subject = effect.display.subject;
   if (shouldHideFromStrip(effect)) ui.hidden = true;
   return {

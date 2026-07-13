@@ -107,9 +107,12 @@ const coreEvents: RuleModule = {
           {
             id: 'effect-hp-damage',
             state: { 'hp.modifier.current': -amount },
+            // The chip name is `Damage {{score}}`; records are keyless and stack,
+            // so each carries its own amount as a display literal.
             display: {
               name: 'rule.dnd-5e-2024.core-events.effect-hp-damage.name',
-              section: 'health'
+              section: 'health',
+              value: amount
             },
             expiry: { kind: 'untilLongRest' }
           }
@@ -155,15 +158,19 @@ const coreEvents: RuleModule = {
         // amount would bank the surplus and pre-cancel damage taken later
         // (heal 15 on 10 damage, then take 7 → −2 instead of −7).
         const missing = Math.max(0, -f.num('hp.modifier.current'));
+        const effective = Math.min(amount, missing);
         return {
           advertise: [
             // id is what the scenarios assert (effect-hp-heal).
             {
               id: 'effect-hp-heal',
-              state: { 'hp.modifier.current': Math.min(amount, missing) },
+              state: { 'hp.modifier.current': effective },
+              // The chip name is `Healing {{score}}`; show the EFFECTIVE amount —
+              // the same value the effect records (surplus healing is lost).
               display: {
                 name: 'rule.dnd-5e-2024.core-events.effect-hp-heal.name',
-                section: 'health'
+                section: 'health',
+                value: effective
               },
               expiry: { kind: 'untilLongRest' }
             }

@@ -220,6 +220,12 @@ export function getEffectDisplayValue(rule: Rule, facts: Facts): string | null {
     if (value !== undefined && value !== null) return String(value);
   }
 
+  // A literal baked by the effect (a stacking record's own amount — see
+  // EffectDisplay.value); the bridge maps display.value onto ui.displayValue.
+  if (typeof ui.displayValue === 'number' || typeof ui.displayValue === 'string') {
+    return String(ui.displayValue);
+  }
+
   if (typeof ui.displaySelection === 'string' && rule.selections) {
     const value = (rule.selections as Record<string, unknown>)[ui.displaySelection];
     if (value !== undefined && value !== null) return String(value);

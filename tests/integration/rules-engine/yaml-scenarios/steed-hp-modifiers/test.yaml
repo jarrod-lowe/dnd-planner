@@ -52,7 +52,8 @@ steps:
           exists:
             - steed-set-hp-modifier-max
             - steed-set-hp-modifier-current
-  # Set max HP modifier to +5
+  # Set max HP modifier to +5. Current follows the raised max (the player's
+  # hp.current = hp.max + min(0, modifier) formula — Aid-style raises heal too).
   - addOffer:
       id: steed-set-hp-modifier-max
       selections:
@@ -61,7 +62,7 @@ steps:
         facts:
           companion.steed.hp.modifier.max: 5
           companion.steed.hp.max: 30
-          companion.steed.hp.current: 25
+          companion.steed.hp.current: 30
   # Set current HP modifier to -3
   - addOffer:
       id: steed-set-hp-modifier-current
@@ -71,7 +72,7 @@ steps:
         facts:
           companion.steed.hp.modifier.current: -3
           companion.steed.hp.max: 30
-          companion.steed.hp.current: 22
+          companion.steed.hp.current: 27
   # End turn: modifiers should persist via effects
   - endTurn:
       assert:
@@ -83,4 +84,4 @@ steps:
           companion.steed.hp.modifier.max: 5
           companion.steed.hp.modifier.current: -3
           companion.steed.hp.max: 30
-          companion.steed.hp.current: 22
+          companion.steed.hp.current: 27

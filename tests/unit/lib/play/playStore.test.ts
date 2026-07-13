@@ -1306,6 +1306,26 @@ describe('playStore', () => {
     });
   });
 
+  describe('addFollowupEffect', () => {
+    it('replaces a re-tapped keyed follow-up instead of appending a duplicate', async () => {
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      const slow = {
+        id: 'effect-javelin-slow',
+        key: 'javelin-slow',
+        expiry: { kind: 'turns' as const, remaining: 1 }
+      };
+      playStore.addFollowupEffect(slow);
+      playStore.addFollowupEffect(slow); // second tap of the same follow-up
+
+      // The strip keys chips by id and the engine dedupes committed by key, so a
+      // re-tap must REPLACE — one committed entry, not two duplicates.
+      const matching = playStore.state.committed.filter((e) => e.id === 'effect-javelin-slow');
+      expect(matching).toHaveLength(1);
+    });
+  });
+
   describe('effects persistence', () => {
     it('passes committed effects to engine during evaluation', async () => {
       // The cast advertises a persistent slot-spend effect this turn.
@@ -1475,6 +1495,48 @@ describe('playStore', () => {
   });
 
   describe('removeEffect', () => {
+    it("evicts the removed effect's declared dependents, keeps unrelated effects", async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      vi.mocked(apiPost).mockResolvedValue({ ok: true, status: 204 } as Response);
+
+      // The steed mount declares its child HP records as dependents; removing the
+      // mount chip must take them too (a raw exact-id delete would strand them).
+      const mount = {
+        id: 'effect-steed',
+        key: 'steed',
+        dependents: ['effect-steed-hp-damage', 'effect-steed-hp-heal'],
+        expiry: { kind: 'permanent' as const }
+      };
+      const hpDamage = {
+        id: 'effect-steed-hp-damage',
+        key: 'effect-steed-hp-damage',
+        state: { 'companion.steed.hp.damageRecorded': 10 },
+        expiry: { kind: 'untilLongRest' as const }
+      };
+      const unrelated = {
+        id: 'effect-bless',
+        key: 'bless',
+        expiry: { kind: 'permanent' as const }
+      };
+
+      mockApiGet
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ ruleGroups: [] }) } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ effects: JSON.stringify([mount, hpDamage, unrelated]) })
+        } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      await playStore.loadRuleGroups('char-1');
+      expect(playStore.state.committed).toHaveLength(3);
+
+      playStore.removeEffect('effect-steed');
+
+      // The mount and its declared dependent are gone; the unrelated effect stays.
+      expect(playStore.state.committed.map((e) => e.id)).toEqual(['effect-bless']);
+    });
+
     it('removes an effect by rule ID from state.effects', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);

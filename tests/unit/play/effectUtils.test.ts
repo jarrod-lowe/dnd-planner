@@ -388,6 +388,17 @@ describe('getEffectDisplayValue', () => {
     expect(getEffectDisplayValue(rule, {})).toBe('5');
   });
 
+  it('returns a literal ui.displayValue (a record chip baking its own amount)', () => {
+    // Player damage/heal records are keyless and stack: each chip carries its
+    // own baked amount rather than reading a shared fact.
+    const rule: Rule = {
+      id: 'effect-hp-damage',
+      activities: [],
+      ui: { displayValue: 7, name: 'test.name' }
+    };
+    expect(getEffectDisplayValue(rule, {})).toBe('7');
+  });
+
   it('prefers displayFact over displaySelection when both are set', () => {
     const rule: Rule = {
       id: 'effect-test',

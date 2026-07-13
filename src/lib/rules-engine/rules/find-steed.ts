@@ -61,6 +61,15 @@ function steedStats(level: number, creatureType: number): Record<string, number>
   return state;
 }
 
+// The steed's child HP effects, evicted (by key) when the steed is dismissed or
+// its mount chip is removed. The mount effect declares them as `dependents`.
+const STEED_CHILD_EFFECTS = [
+  'effect-steed-hp-modifier-max',
+  'effect-steed-hp-modifier-current',
+  'effect-steed-hp-damage',
+  'effect-steed-hp-heal'
+] as const;
+
 /**
  * The steed's summon effect (permanent, keyed so a re-cast/dismiss replaces it).
  * Exported so the parity harness can reproduce an "already-summoned" steed.
@@ -70,6 +79,10 @@ export function steedEffect(level: number, creatureType: number): EffectInstance
     id: 'effect-steed',
     key: 'steed',
     state: steedStats(level, creatureType),
+    // Removing the mount chip must take its HP-record children with it. Planned
+    // Dismiss/recast already evict these by key; declaring them here lets a raw
+    // chip removal do the same instead of stranding them under a gone steed.
+    dependents: [...STEED_CHILD_EFFECTS],
     // Permanent, but a player-facing mount: `display` opts it onto the strip as a
     // MOUNT chip (effectUtils reads ui.section === 'mount').
     display: { name: 'rule.spell-find-steed.effect-steed.name', section: 'mount' },
@@ -81,24 +94,16 @@ const active = (f: FactReader): boolean => f.num('companion.steed.active') > 0;
 const summoned = (f: FactReader): boolean => f.num('companion.steed.summoned') > 0;
 
 /**
- * Steed current HP: it starts at `min(max, base)` — a positive max modifier raises
- * the ceiling but doesn't auto-heal above base, a negative one caps it below base —
- * then the net current-HP modifier (heal − damage, ≤ 0) subtracts, floored at 0.
- * Subtracting from the CAPPED start (not raw base) is what makes damage on a
- * max-reduced steed land: a 15/15 steed taking 15 damage reaches 0, not
- * `min(15, 25 − 15) = 10`. Shared by the `hp.current` derive and the record-damage
+ * Steed current HP — the PLAYER's formula (`hp.current = hp.max + min(0,
+ * modifier.current)`), floored at 0. Current starts at the derived max, so a
+ * raised max (Aid-style +modifier) raises current with it — no unfillable
+ * 25/35 gap — and a lowered max caps current below base (a 15/15 steed taking
+ * 15 damage reaches 0). Positive current modifiers are display-clamped, exactly
+ * like the player's. Shared by the `hp.current` derive and the record-damage
  * death check so the two can never disagree.
  */
-const steedCurrentHp = (hpMax: number, hpBase: number, modifierCurrent: number): number =>
-  Math.max(0, Math.min(hpMax, hpBase) + Math.min(0, modifierCurrent));
-
-// The steed's child HP effects, evicted (by key) when the steed is dismissed.
-const STEED_CHILD_EFFECTS = [
-  'effect-steed-hp-modifier-max',
-  'effect-steed-hp-modifier-current',
-  'effect-steed-hp-damage',
-  'effect-steed-hp-heal'
-] as const;
+const steedCurrentHp = (hpMax: number, modifierCurrent: number): number =>
+  Math.max(0, hpMax + Math.min(0, modifierCurrent));
 
 /**
  * Retire the steed permanently: replace the summon effect (same `steed` key, so
@@ -603,15 +608,13 @@ const findSteed: RuleModule = {
     });
     c.push({
       fact: 'companion.steed.hp.current',
-      // Start at the capped max (min of max and base), then subtract net damage,
-      // floored at 0 — see steedCurrentHp. A negative max modifier lowers the pool
-      // damage eats into (no impossible 25/15); a positive one doesn't auto-heal
-      // above base.
+      // The player's formula (see steedCurrentHp): current starts at the derived
+      // max — a raised max raises current with it, a lowered max caps it — and
+      // the (≤ 0) net current modifier subtracts, floored at 0.
       value: (f) =>
         active(f)
           ? steedCurrentHp(
               f.num('companion.steed.hp.max'),
-              f.num('companion.steed.hp.base'),
               f.num('companion.steed.hp.modifier.current')
             )
           : 0
@@ -934,12 +937,11 @@ const findSteed: RuleModule = {
         const newDamage = f.num('companion.steed.hp.damageRecorded') + amount;
         // A steed reduced to 0 HP dies: retire it permanently (like Dismiss), so
         // the `untilLongRest` damage record can't expire on a long rest and revive
-        // it. Mirror the hp.current derive (subtract from the CAPPED max, not raw
-        // base): recording `amount` more damage lowers the net current-HP modifier
-        // by `amount` (this reads the live modifier, so a manual setter counts too).
+        // it. Mirror the hp.current derive: recording `amount` more damage lowers
+        // the net current-HP modifier by `amount` (this reads the live modifier,
+        // so a manual setter counts too).
         const hpAfter = steedCurrentHp(
           f.num('companion.steed.hp.max'),
-          f.num('companion.steed.hp.base'),
           f.num('companion.steed.hp.modifier.current') - amount
         );
         if (hpAfter <= 0) return { advertise: retireSteedEffects() };
@@ -979,22 +981,22 @@ const findSteed: RuleModule = {
         actionCost: []
       },
       vars: { amount: { capture: true, default: { number: 0 } } },
-      // Accumulates exactly like steed-record-damage above (one keyed effect
-      // carrying the running heal total), but the total caps at the damage
-      // recorded so far: healing beyond the missing HP is lost, never banked
-      // against damage taken later (the modifier clamp only hides a surplus).
+      // Mirrors the player heal recorder (core-events `record-heal`): the added
+      // heal caps at the current NET missing HP — `max(0, -hp.modifier.current)`,
+      // which folds in recorded damage AND a manual current-HP modifier — so
+      // healing offsets any HP loss (not just recorded damage) and never banks
+      // overheal past full. Still one keyed running total, like steed-record-damage.
       apply: (f, selections): ActionResult => {
         const amount = typeof selections.amount === 'number' ? selections.amount : 0;
+        const missing = Math.max(0, -f.num('companion.steed.hp.modifier.current'));
         return {
           advertise: [
             {
               id: 'effect-steed-hp-heal',
               key: 'effect-steed-hp-heal',
               state: {
-                'companion.steed.hp.healRecorded': Math.min(
-                  f.num('companion.steed.hp.healRecorded') + amount,
-                  f.num('companion.steed.hp.damageRecorded')
-                )
+                'companion.steed.hp.healRecorded':
+                  f.num('companion.steed.hp.healRecorded') + Math.min(amount, missing)
               },
               display: {
                 name: `${S}.steed-record-heal.effect.name`,
