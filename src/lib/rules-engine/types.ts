@@ -247,6 +247,12 @@ export interface EffectDisplay {
   section?: Section;
   /** A fact whose value the chip shows next to the name (e.g. a running bonus). */
   displayFact?: string;
+  /**
+   * A literal the chip shows next to the name — for keyless stacking records
+   * (player damage/heal) where each chip carries its OWN amount; a shared
+   * `displayFact` would show the net total on every chip.
+   */
+  value?: number;
   /** Named but off the default strip (visible via the reveal toggle). */
   hidden?: boolean;
   /** The companion the effect belongs to (e.g. 'steed') — drives the subject views. */
