@@ -11,6 +11,7 @@ import pytest
 from pathlib import Path
 from sync_rule_groups import (
     build_rule_group_item,
+    cleanup_old_search_entries,
     load_shared_definitions,
     parse_rule_groups,
     compute_category_hash,
@@ -377,16 +378,51 @@ class TestOutputJson:
 class FakeTable:
     """Minimal stand-in for a boto3 Table that records delete_item calls."""
 
-    def __init__(self, search_items=None):
+    def __init__(self, search_items=None, search_pages=None):
         self.deleted_keys = []
-        self.search_items = search_items or []
+        if search_pages is None:
+            search_pages = [search_items] if search_items else []
+        self.search_pages = search_pages
+
+    def _page_keys(self):
+        return [{"PK": page[-1]["PK"], "SK": page[-1]["SK"]} for page in self.search_pages]
 
     def query(self, **kwargs):
-        # Only the gsi1 search-index cleanup queries through this fake.
-        return {"Items": list(self.search_items)}
+        # Serves the configured search-index pages like DynamoDB: page N+1 is
+        # only reachable by passing page N's LastEvaluatedKey back as
+        # ExclusiveStartKey; omitting it always restarts from the first page.
+        start = kwargs.get("ExclusiveStartKey")
+        index = 0 if start is None else self._page_keys().index(start) + 1
+        if index >= len(self.search_pages):
+            return {"Items": []}
+        response = {"Items": list(self.search_pages[index])}
+        if index + 1 < len(self.search_pages):
+            response["LastEvaluatedKey"] = self._page_keys()[index]
+        return response
 
     def delete_item(self, Key):
         self.deleted_keys.append(Key)
+
+
+class TestCleanupOldSearchEntriesPagination:
+    """Tests for cleanup_old_search_entries across paginated gsi1 queries."""
+
+    def test_follows_last_evaluated_key_across_pages(self):
+        """Every page of stale entries is deleted, not just the first."""
+        page1 = [
+            {"PK": "LANG#en#PREFIX#gen", "SK": "SCORE#0002#RULEGROUP#gen-a"},
+            {"PK": "LANG#en#PREFIX#gene", "SK": "SCORE#0002#RULEGROUP#gen-a"},
+        ]
+        page2 = [{"PK": "LANG#en#PREFIX#gen", "SK": "SCORE#0001#RULEGROUP#gen-b"}]
+        table = FakeTable(search_pages=[page1, page2])
+
+        deleted = cleanup_old_search_entries(
+            table, "generated", "2026-01-01T00:00:00+00:00", dry_run=False, verbose=False
+        )
+
+        assert deleted == 3
+        for item in page1 + page2:
+            assert {"PK": item["PK"], "SK": item["SK"]} in table.deleted_keys
 
 
 class TestRemoveStaleCategories:
