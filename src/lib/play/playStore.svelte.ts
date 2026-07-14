@@ -144,6 +144,10 @@ function performEvaluation(): void {
       isEvaluating: false,
       engineOutput: {
         ...prev,
+        // The failed evaluation advertised nothing, so the previous plan's
+        // effects must not linger: the strip merges engineOutput.effects into
+        // its chips, and End Turn will never commit them (caches cleared above).
+        effects: [],
         diagnostics: { ...prev.diagnostics, errors: [{ code, severity: 'error' }] }
       }
     };

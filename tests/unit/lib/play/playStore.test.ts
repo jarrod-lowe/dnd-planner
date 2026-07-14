@@ -2086,6 +2086,39 @@ describe('playStore', () => {
       playStore.endTurn();
       expect(playStore.state.committed.some((e) => e.id.includes('stale-spend'))).toBe(false);
     });
+
+    it('a failed evaluation drops the previous plan effects from the view output', async () => {
+      // A successful evaluation surfaces this turn's advertised effects on the
+      // view output — PlayCharacterMode merges engineOutput.effects into the
+      // active-state strip.
+      const planned = {
+        id: 'i0#0#effect-planned',
+        state: { 'x.spent': 1 },
+        display: { name: 'x.name', section: 'health' as const },
+        expiry: { kind: 'untilLongRest' as const }
+      };
+      vi.mocked(evaluateCharacter).mockReturnValue(
+        playOut({ advertised: [planned], raw: { ...rawOutput(), effects: [planned] } })
+      );
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      playStore.addToPlan({ id: 'cast', activities: [] });
+      vi.runAllTimers();
+      expect(playStore.state.engineOutput?.effects ?? []).toHaveLength(1);
+
+      // The next evaluation throws. The caches were cleared so End Turn will
+      // never commit those effects — the view output must stop showing them
+      // too, or the strip renders chips that will not survive the turn.
+      vi.mocked(evaluateCharacter).mockImplementation(() => {
+        throw new Error('Duplicate offer id "x": offer ids must be unique across modules');
+      });
+      playStore.addToPlan({ id: 'cast-2', activities: [] });
+      vi.runAllTimers();
+
+      expect(playStore.state.engineOutput?.effects).toEqual([]);
+      const errors = playStore.state.engineOutput?.diagnostics.errors ?? [];
+      expect(errors.some((d) => d.code === 'play.error.evaluate')).toBe(true);
+    });
   });
 
   describe('effect mutations recalculate derived UI', () => {
