@@ -18,6 +18,7 @@ from typing import Any
 
 import boto3
 import yaml
+from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 
 # Constants
@@ -229,10 +230,8 @@ def cleanup_old_search_entries(
         # Query gsi1 for all entries in this category older than sync_timestamp
         response = table.query(
             IndexName="gsi1",
-            KeyConditionExpression=boto3.dynamodb.conditions.Key("GSI1PK").eq(gsi1pk)
-            & boto3.dynamodb.conditions.Key("GSI1SK").lt(
-                f"{SEARCHINDEX_GSI1SK_PREFIX}{sync_timestamp}"
-            ),
+            KeyConditionExpression=Key("GSI1PK").eq(gsi1pk)
+            & Key("GSI1SK").lt(f"{SEARCHINDEX_GSI1SK_PREFIX}{sync_timestamp}"),
         )
 
         items = response.get("Items", [])
@@ -348,9 +347,7 @@ def get_directory_records(table: Any) -> dict[str, dict]:
     records = {}
 
     try:
-        response = table.query(
-            KeyConditionExpression=boto3.dynamodb.conditions.Key("PK").eq(DIRECTORY_PK)
-        )
+        response = table.query(KeyConditionExpression=Key("PK").eq(DIRECTORY_PK))
 
         for item in response.get("Items", []):
             sk = item.get("SK", "")
@@ -527,6 +524,47 @@ def sync_category(
     return stats
 
 
+def remove_stale_categories(
+    table: Any,
+    directory_records: dict[str, dict],
+    current_categories: set[str],
+    dry_run: bool,
+    verbose: bool,
+) -> dict[str, int]:
+    """
+    Delete stored categories that no longer exist in the data directory.
+
+    For each stale category, deletes its rule group items, all of its search
+    index entries, and finally its directory record — otherwise groups from a
+    removed category stay searchable and assignable with no modules behind
+    them. Returns stats.
+    """
+    stats = {"categoriesRemoved": 0, "deleted": 0, "searchDeleted": 0}
+    now = datetime.now(timezone.utc).isoformat()
+
+    for category in sorted(set(directory_records) - current_categories):
+        record = directory_records[category]
+        print(f"  Removing stale category {category}...")
+
+        stats["deleted"] += delete_rule_groups(
+            table, list(record.get("ids", [])), dry_run, verbose
+        )
+
+        # Every entry in a stale category predates this sync, so the regular
+        # cleanup with the current timestamp removes them all.
+        stats["searchDeleted"] += cleanup_old_search_entries(
+            table, category, now, dry_run, verbose
+        )
+
+        if not dry_run:
+            table.delete_item(
+                Key={"PK": DIRECTORY_PK, "SK": f"{DIRECTORY_SK_PREFIX}{category}"}
+            )
+        stats["categoriesRemoved"] += 1
+
+    return stats
+
+
 def _collect_categories(data_dir: Path) -> list[tuple[str, Path]]:
     """Collect (category_name, category_path) tuples from the data directory."""
     categories: list[tuple[str, Path]] = []
@@ -620,10 +658,22 @@ def main():
         for key in total_stats:
             total_stats[key] += stats[key]
 
+    # Remove categories that are stored in DynamoDB but no longer on disk
+    stale_stats = remove_stale_categories(
+        table,
+        directory_records,
+        {name for name, _ in categories},
+        args.dry_run,
+        args.verbose,
+    )
+    total_stats["deleted"] += stale_stats["deleted"]
+    total_stats["searchDeleted"] += stale_stats["searchDeleted"]
+
     # Summary
     print()
     print("Summary:")
     print(f"  Categories synced: {len(categories)}")
+    print(f"  Stale categories removed: {stale_stats['categoriesRemoved']}")
     print(f"  Rule groups added: {total_stats['added']}")
     print(f"  Rule groups updated: {total_stats['updated']}")
     print(f"  Rule groups deleted: {total_stats['deleted']}")
