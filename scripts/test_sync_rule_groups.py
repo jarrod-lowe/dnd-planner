@@ -15,6 +15,7 @@ from sync_rule_groups import (
     parse_rule_groups,
     compute_category_hash,
     output_json,
+    remove_stale_categories,
 )
 
 NOW = "2024-01-15T12:00:00Z"
@@ -371,3 +372,66 @@ class TestOutputJson:
         output_path = str(tmp_path / "output.json")
         with pytest.raises(SystemExit):
             output_json(empty_dir, output_path)
+
+
+class FakeTable:
+    """Minimal stand-in for a boto3 Table that records delete_item calls."""
+
+    def __init__(self, search_items=None):
+        self.deleted_keys = []
+        self.search_items = search_items or []
+
+    def query(self, **kwargs):
+        # Only the gsi1 search-index cleanup queries through this fake.
+        return {"Items": list(self.search_items)}
+
+    def delete_item(self, Key):
+        self.deleted_keys.append(Key)
+
+
+class TestRemoveStaleCategories:
+    """Tests for the remove_stale_categories function."""
+
+    def _records(self):
+        return {
+            "dnd-5e-2024": {"ids": ["rg-keep"], "contentHash": "x"},
+            "generated": {"ids": ["gen-a", "gen-b"], "contentHash": "y"},
+        }
+
+    def test_deletes_rule_groups_search_entries_and_directory_record(self):
+        """A stored category absent from disk loses its rows, index, and record."""
+        search_item = {"PK": "LANG#en#PREFIX#gen", "SK": "SCORE#0002#RULEGROUP#gen-a"}
+        table = FakeTable(search_items=[search_item])
+
+        stats = remove_stale_categories(
+            table, self._records(), {"dnd-5e-2024"}, dry_run=False, verbose=False
+        )
+
+        assert {"PK": "RULEGROUP#gen-a", "SK": "META#"} in table.deleted_keys
+        assert {"PK": "RULEGROUP#gen-b", "SK": "META#"} in table.deleted_keys
+        assert {"PK": search_item["PK"], "SK": search_item["SK"]} in table.deleted_keys
+        assert {"PK": "RULEGROUPDIRECTORY#", "SK": "CATEGORY#generated"} in table.deleted_keys
+        assert stats == {"categoriesRemoved": 1, "deleted": 2, "searchDeleted": 1}
+
+    def test_noop_when_all_stored_categories_still_exist(self):
+        """Nothing is deleted when every stored category is still on disk."""
+        table = FakeTable()
+
+        stats = remove_stale_categories(
+            table, self._records(), {"dnd-5e-2024", "generated"}, dry_run=False, verbose=False
+        )
+
+        assert table.deleted_keys == []
+        assert stats == {"categoriesRemoved": 0, "deleted": 0, "searchDeleted": 0}
+
+    def test_dry_run_reports_but_deletes_nothing(self):
+        """Dry run counts what it would delete without touching the table."""
+        search_item = {"PK": "LANG#en#PREFIX#gen", "SK": "SCORE#0002#RULEGROUP#gen-a"}
+        table = FakeTable(search_items=[search_item])
+
+        stats = remove_stale_categories(
+            table, self._records(), {"dnd-5e-2024"}, dry_run=True, verbose=False
+        )
+
+        assert table.deleted_keys == []
+        assert stats == {"categoriesRemoved": 1, "deleted": 2, "searchDeleted": 1}
