@@ -220,37 +220,46 @@ def cleanup_old_search_entries(
     """
     Delete search index entries older than sync_timestamp for a category.
 
-    Uses gsi1 to query entries by category, then deletes those with
-    updatedAt older than the current sync.
+    Uses gsi1 to query entries by category, following LastEvaluatedKey through
+    every page, then deletes those with updatedAt older than the current sync.
     """
     gsi1pk = f"{SEARCHINDEX_GSI1PK_PREFIX}{category}"
     deleted = 0
 
     try:
         # Query gsi1 for all entries in this category older than sync_timestamp
-        response = table.query(
-            IndexName="gsi1",
-            KeyConditionExpression=Key("GSI1PK").eq(gsi1pk)
-            & Key("GSI1SK").lt(f"{SEARCHINDEX_GSI1SK_PREFIX}{sync_timestamp}"),
-        )
+        exclusive_start_key = None
+        while True:
+            query_kwargs: dict[str, Any] = {
+                "IndexName": "gsi1",
+                "KeyConditionExpression": Key("GSI1PK").eq(gsi1pk)
+                & Key("GSI1SK").lt(f"{SEARCHINDEX_GSI1SK_PREFIX}{sync_timestamp}"),
+            }
+            if exclusive_start_key is not None:
+                query_kwargs["ExclusiveStartKey"] = exclusive_start_key
+            response = table.query(**query_kwargs)
 
-        items = response.get("Items", [])
+            for item in response.get("Items", []):
+                if dry_run:
+                    if verbose:
+                        print(
+                            f"    Would delete stale search index: {item['PK']} -> {item['SK']}"
+                        )
+                    deleted += 1
+                    continue
 
-        for item in items:
-            if dry_run:
-                if verbose:
-                    print(f"    Would delete stale search index: {item['PK']} -> {item['SK']}")
-                deleted += 1
-                continue
+                try:
+                    table.delete_item(Key={"PK": item["PK"], "SK": item["SK"]})
+                    deleted += 1
+                except ClientError as e:
+                    print(
+                        f"  ERROR deleting search index {item['PK']}/{item['SK']}: {e}",
+                        file=sys.stderr,
+                    )
 
-            try:
-                table.delete_item(Key={"PK": item["PK"], "SK": item["SK"]})
-                deleted += 1
-            except ClientError as e:
-                print(
-                    f"  ERROR deleting search index {item['PK']}/{item['SK']}: {e}",
-                    file=sys.stderr,
-                )
+            exclusive_start_key = response.get("LastEvaluatedKey")
+            if exclusive_start_key is None:
+                break
 
     except ClientError as e:
         print(f"  ERROR querying gsi1 for cleanup: {e}", file=sys.stderr)
