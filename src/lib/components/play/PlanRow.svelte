@@ -92,9 +92,21 @@
   const descriptor = $derived(extractPanelDescriptor(rule));
   const displayName = $derived(descriptor.name ? $t(descriptor.name) : rule.id);
 
-  const costTags = $derived(
-    ((rule.ui as Record<string, unknown>)?.actionCost as ActionCostTag[] | undefined) ?? []
-  );
+  const costTags = $derived.by(() => {
+    const tags =
+      ((rule.ui as Record<string, unknown>)?.actionCost as ActionCostTag[] | undefined) ?? [];
+    // A live slot-level selection re-labels the authored slot chip with what the
+    // cast will actually spend: 0 is the class feature's free use, any other
+    // level the (possibly upcast) slot. Rules without a slotLevel selection —
+    // and levels outside the tag vocabulary — keep the authored tag.
+    const slotLevel = rule.selections?.slotLevel;
+    if (typeof slotLevel !== 'number') return tags;
+    return tags.map((tag) => {
+      if (!/^L[1-5]$/.test(tag)) return tag;
+      if (slotLevel === 0) return 'free' as ActionCostTag;
+      return slotLevel >= 1 && slotLevel <= 5 ? (`L${slotLevel}` as ActionCostTag) : tag;
+    });
+  });
 
   const annotationLabels = $derived(descriptor.annotationLabels ?? []);
   const matchingAnnotations = $derived(getMatchingAnnotations(annotationLabels, activeAnnotations));
