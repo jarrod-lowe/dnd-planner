@@ -10,7 +10,11 @@ const translations: Record<string, string> = {
   'play.addRow.recordGroup': 'record →',
   'play.addRow.buildGroup': 'build →',
   'play.addRow.steedSublabel': 'Steed',
-  'play.plan.endTurn': 'End Turn'
+  'play.plan.endTurn': 'End Turn',
+  'play.costTags.action': 'ACT',
+  'play.costTags.L2': 'L2',
+  'play.costTags.L4': 'L4',
+  'play.costTags.free': 'FREE'
 };
 
 vi.mock('$lib/i18n', () => ({
@@ -266,6 +270,59 @@ describe('PlanStack', () => {
     const altTexts = Array.from(altButtons).map((el) => el.textContent?.trim());
     expect(altTexts).toContain('attack-bow');
     expect(altTexts).not.toContain('steed-attack');
+  });
+
+  describe('cost chips follow the slot-level selection', () => {
+    // A cast with a slot-level slider (e.g. Find Steed): the authored tag is the
+    // spell's base level, but the chip must show what the cast will actually
+    // spend — the free use (0) or the selected (possibly upcast) slot.
+    function makeSpellItem(slotLevel?: number): PlannedItem {
+      const item = makeItem('cast-find-steed', 'action-spell');
+      (item.rule.ui as Record<string, unknown>).actionCost = ['action', 'L2'];
+      if (slotLevel !== undefined) item.rule.selections = { slotLevel };
+      return item;
+    }
+
+    function mountWith(item: PlannedItem) {
+      mount(PlanStack, {
+        target: container,
+        props: {
+          items: [item],
+          entries: [],
+          facts: {} as Facts,
+          activeAnnotations: [] as Annotation[],
+          onAddToPlan: noop,
+          onRemoveFromPlan: noop,
+          onMovePlanItem: noop,
+          onSelectionChange: noop,
+          onSwapPlanItemRule: noop,
+          onEndTurn: noop
+        }
+      });
+    }
+
+    function chipTexts(): string[] {
+      return Array.from(container.querySelectorAll('.plan-row__cost-tag')).map(
+        (el) => el.textContent?.trim() ?? ''
+      );
+    }
+
+    it('shows FREE when the free use (level 0) is selected', () => {
+      mountWith(makeSpellItem(0));
+      expect(chipTexts()).toContain('FREE');
+      expect(chipTexts()).not.toContain('L2');
+    });
+
+    it('shows the upcast level when a higher slot is selected', () => {
+      mountWith(makeSpellItem(4));
+      expect(chipTexts()).toContain('L4');
+      expect(chipTexts()).not.toContain('L2');
+    });
+
+    it('keeps the authored tag when there is no slot-level selection', () => {
+      mountWith(makeSpellItem());
+      expect(chipTexts()).toContain('L2');
+    });
   });
 
   it('passes onFollowup through so followup buttons appear for rules with met conditions', () => {
