@@ -121,6 +121,7 @@ describe('weapons — javelin Slow followup is a native EffectInstance', () => {
     expect(followups?.[0].addRule.effect).toEqual({
       id: 'effect-javelin-slow',
       key: 'javelin-slow',
+      ruleGroupId: 'javelin',
       display: { name: 'rule.dnd-5e-2024.attacks.javelin-slow.effect-name', section: 'mastery' },
       expiry: { kind: 'turns', remaining: 1 }
     });

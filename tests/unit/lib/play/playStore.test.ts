@@ -71,7 +71,7 @@ import { evaluateCharacter, hypotheticalOffers } from '$lib/play/evaluateCharact
 import { locale } from '$lib/i18n';
 import { toast } from 'svelte-sonner';
 import type { Rule } from '$lib/rules-view';
-import type { EngineOutput } from '$lib/rules-engine';
+import type { EffectInstance, EngineOutput } from '$lib/rules-engine';
 import type { CharacterEvaluation } from '$lib/play/evaluateCharacter';
 
 /** A minimal, valid raw engine output for the adapter to consume. */
@@ -1323,6 +1323,43 @@ describe('playStore', () => {
       // re-tap must REPLACE — one committed entry, not two duplicates.
       const matching = playStore.state.committed.filter((e) => e.id === 'effect-javelin-slow');
       expect(matching).toHaveLength(1);
+    });
+
+    it('a committed follow-up is evicted when its owning rule group is unassigned', async () => {
+      // The REAL javelin Slow follow-up effect, as the action panel commits it —
+      // pulled from the module so the authored owner stamp is what's under test.
+      // Follow-ups bypass the plan fold (no `ruleGroupId` stamped at execution),
+      // so the authored effect itself must carry its owning group or
+      // unassignRuleGroup leaves the marker orphaned.
+      const javelinModule = (await import('$lib/rules-engine/rules/javelin')).default;
+      const offers = javelinModule.offer!({ num: () => 0, str: () => '' } as never);
+      const followups = offers
+        .map(
+          (o) => (o.ui as { followups?: { addRule?: { effect?: EffectInstance } }[] })?.followups
+        )
+        .find((f) => f?.some((fu) => fu.addRule?.effect));
+      const slowEffect = followups!.find((fu) => fu.addRule?.effect)!.addRule!.effect!;
+      expect(slowEffect.id).toBe('effect-javelin-slow');
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      vi.mocked(apiPost).mockResolvedValue({ ok: true } as Response);
+      playStore.addFollowupEffect(slowEffect);
+      expect(playStore.state.committed.map((e) => e.id)).toEqual(['effect-javelin-slow']);
+
+      let resolveDelete: (value: unknown) => void;
+      vi.mocked(apiDelete).mockReturnValue(
+        new Promise((resolve) => {
+          resolveDelete = resolve as (value: unknown) => void;
+        })
+      );
+      const promise = playStore.unassignRuleGroup?.('char-123', 'javelin');
+
+      // Unassigning javelin must take its follow-up marker with it.
+      expect(playStore.state.committed).toEqual([]);
+
+      resolveDelete!({ ok: true, status: 204 });
+      await promise;
     });
   });
 

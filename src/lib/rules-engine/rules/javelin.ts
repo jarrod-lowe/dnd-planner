@@ -29,10 +29,13 @@ const JAVELIN: WeaponDef = {
         addRule: {
           target: 'effect',
           // A one-turn Slow reminder committed when tapped (the target isn't modelled,
-          // so it carries no player facts — just a duration-limited marker).
+          // so it carries no player facts — just a duration-limited marker). Follow-ups
+          // bypass the plan fold's owner stamping, so the authored effect must carry
+          // its owning group itself for unassign cleanup to evict it.
           effect: {
             id: 'effect-javelin-slow',
             key: 'javelin-slow',
+            ruleGroupId: 'javelin',
             display: { name: `${SLOW}.effect-name`, section: 'mastery' },
             expiry: { kind: 'turns', remaining: 1 }
           }
