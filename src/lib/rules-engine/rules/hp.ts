@@ -35,8 +35,15 @@ const modifierSetter = (
         id: effectId,
         key,
         state: { [fact]: modifierOf(selections) },
-        // Shown on the strip — removing the chip clears the modifier.
-        display: { name: `rule.dnd-5e-2024.hp.${effectId}.name`, section: 'health' },
+        // Shown on the strip — removing the chip clears the modifier. The name
+        // interpolates {{score}}, so bake the chosen value in as a literal: a
+        // displayFact would read the aggregate (damage/heals also sum into
+        // hp.modifier.current), not this chip's own setting.
+        display: {
+          name: `rule.dnd-5e-2024.hp.${effectId}.name`,
+          section: 'health',
+          value: modifierOf(selections)
+        },
         expiry: { kind: 'permanent' as const }
       }
     ]
