@@ -20,7 +20,7 @@ jobs:
       image: aquasec/trivy:0.69.3
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Run Trivy IaC scan
         run: |
