@@ -50,7 +50,7 @@ jobs:
 
       - name: Terraform Validate
         if: github.actor != 'dependabot[bot]'
-        uses: dflook/terraform-validate@v2
+        uses: dflook/terraform-validate@v3
         with:
           path: terraform/environment/prod
 
