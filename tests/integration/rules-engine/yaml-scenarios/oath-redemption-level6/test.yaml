@@ -1,0 +1,50 @@
+name: 'Oath of Redemption level 6 - no new features'
+description: >
+  A level 6 Oath of Redemption paladin retains every earlier oath ability - the
+  oath grants no new subclass feature at level 6. The class level still applies:
+  LoH pool 30 (5 per level) and a sixth hit die. Divinity stays at 2, the
+  proficiency bonus at 3 and the slot line at 4/2.
+ruleGroups:
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/hit-die
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divinity
+  - class-paladin/class-paladin-lay-on-hands
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-oath-redemption-level3
+  - class-paladin/class-paladin-level4
+  - class-paladin/class-paladin-oath-redemption-level4
+  - class-paladin/class-paladin-level5
+  - class-paladin/class-paladin-oath-redemption-level5
+  - class-paladin/class-paladin-level6
+  - class-paladin/class-paladin-oath-redemption-level6
+steps:
+  - evaluate:
+      assert:
+        facts:
+          hp.max: 40
+          hp.current: 40
+          hitDie.d10.total: 6
+          layOnHands.pool.total: 30
+          layOnHands.pool.remaining: 30
+          divinity.total: 2
+          divinity.remaining: 2
+          proficiency.bonus: 3
+          spellcasting.prepared.max: 6
+          spellcasting.slots.level1.total: 4
+          spellcasting.slots.level2.total: 2
+          # The level 3 and level 5 oath spells stay always-prepared.
+          spell.l1.sleep.alwaysPrepared: 1
+          spell.l1.sanctuary.alwaysPrepared: 1
+          spell.l2.calmEmotions.alwaysPrepared: 1
+          spell.l2.holdPerson.alwaysPrepared: 1
+        offers:
+          exists:
+            - rebuke-the-violent
+            - emissary-of-peace

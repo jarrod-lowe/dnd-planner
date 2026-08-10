@@ -1,0 +1,27 @@
+ruleGroups:
+  - id: class-paladin-oath-redemption-level6
+    requires:
+      - class-paladin-level6
+      - class-paladin-oath-redemption-level5
+    translations:
+      en:
+        name: Oath of Redemption Level 6
+        description: 'Paladin Oath of Redemption features at level 6. No new subclass
+          features at this level.
+
+          '
+        keywords:
+          - paladin
+          - oath
+          - redemption
+          - level6
+      en-x-tlh:
+        name: Oath of Redemption Level 6
+        description: 'Paladin Oath of Redemption level 6. Chu'' DIvI'' DIllI''be''.
+
+          '
+        keywords:
+          - paladin
+          - oath
+          - redemption
+          - level6

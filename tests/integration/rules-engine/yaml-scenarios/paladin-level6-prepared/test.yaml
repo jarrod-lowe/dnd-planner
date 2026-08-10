@@ -1,0 +1,15 @@
+name: 'Paladin: Prepared spells at level 6'
+description: 'A level 6 paladin still prepares 6 spells - level 6 adds no prepared-spell capacity'
+ruleGroups:
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-level4
+  - class-paladin/class-paladin-level5
+  - class-paladin/class-paladin-level6
+steps:
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.prepared.max: 6
