@@ -1,0 +1,18 @@
+name: 'HP from paladin level 6'
+description: 'HP calculated from paladin levels 1-6 using d10 max at level 1 and average d10 at levels 2-6'
+ruleGroups:
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/ability-scores
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-level4
+  - class-paladin/class-paladin-level5
+  - class-paladin/class-paladin-level6
+steps:
+  # Without CON set: 10 (L1) + 6 (L2) + 6 (L3) + 6 (L4) + 6 (L5) + 6 (L6) = 40
+  - evaluate:
+      assert:
+        facts:
+          hp.max: 40
+          hp.current: 40

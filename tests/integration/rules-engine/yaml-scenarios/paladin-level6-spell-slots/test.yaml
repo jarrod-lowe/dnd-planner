@@ -1,0 +1,18 @@
+name: 'Paladin: Spell slots at level 6'
+description: 'A level 6 paladin still has 4 level 1 and 2 level 2 spell slots - level 6 grants no new slots'
+ruleGroups:
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-level4
+  - class-paladin/class-paladin-level5
+  - class-paladin/class-paladin-level6
+steps:
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.slots.level1.total: 4
+          spellcasting.slots.level1.remaining: 4
+          spellcasting.slots.level2.total: 2
+          spellcasting.slots.level2.remaining: 2

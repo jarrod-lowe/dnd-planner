@@ -32,6 +32,7 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   'class-paladin-level3': () => import('./rules/class-paladin-level3'),
   'class-paladin-level4': () => import('./rules/class-paladin-level4'),
   'class-paladin-level5': () => import('./rules/class-paladin-level5'),
+  'class-paladin-level6': () => import('./rules/class-paladin-level6'),
   'class-paladin-divinity': () => import('./rules/class-paladin-divinity'),
   'class-paladin-oath-redemption-level3': () =>
     import('./rules/class-paladin-oath-redemption-level3'),
@@ -52,6 +53,8 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   'spell-hold-person': () => import('./rules/hold-person'),
   'class-paladin-oath-redemption-level5': () =>
     import('./rules/class-paladin-oath-redemption-level5'),
+  'class-paladin-oath-redemption-level6': () =>
+    import('./rules/class-paladin-oath-redemption-level6'),
   'spell-find-steed': () => import('./rules/find-steed'),
   'class-paladin-paladin-find-steed': () => import('./rules/paladin-find-steed'),
   'paladin-spells-l1': () => import('./rules/paladin-spells-l1'),
