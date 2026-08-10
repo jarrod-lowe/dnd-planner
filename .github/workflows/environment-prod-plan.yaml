@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Skip for Dependabot
         if: github.actor == 'dependabot[bot]'
@@ -38,7 +38,7 @@ jobs:
 
       - name: Setup Go
         if: github.actor != 'dependabot[bot]'
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version: '1.26.1'
 
@@ -50,7 +50,7 @@ jobs:
 
       - name: Terraform Validate
         if: github.actor != 'dependabot[bot]'
-        uses: dflook/terraform-validate@v2
+        uses: dflook/terraform-validate@v3
         with:
           path: terraform/environment/prod
 
@@ -75,13 +75,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: 'pnpm'
