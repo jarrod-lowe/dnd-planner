@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import AddRowPicker from '$lib/components/play/AddRowPicker.svelte';
-import type { AvailableRuleEntry } from '$lib/rules-engine';
+import type { AvailableRuleEntry } from '$lib/rules-view';
 
 function makeEntry(id: string, name: string, verb = 'ATTACK', legal = true): AvailableRuleEntry {
   return {

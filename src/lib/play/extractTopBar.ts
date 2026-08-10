@@ -1,4 +1,4 @@
-import type { Facts } from '$lib/rules-engine';
+import type { Facts } from '$lib/rules-view';
 
 // ── Unified UI Entry Types ──
 

@@ -6,7 +6,7 @@
     resolveEntryValue,
     resourceShortLabelKey
   } from '$lib/play/extractTopBar';
-  import type { Facts, Status } from '$lib/rules-engine';
+  import type { Facts, Status } from '$lib/rules-view';
 
   interface Props {
     resourceEntries: UiEntry[];
@@ -75,7 +75,7 @@
       <div
         class="ledger__cell"
         class:ledger__cell--muted={remaining <= 0 && !isOverBudget}
-        class:ledger__cell--warn={isOverBudget && remaining < total}
+        class:ledger__cell--warn={isOverBudget && remaining < 0}
         aria-label="{labelFor(entry)}: {remaining} of {total}"
         title={labelFor(entry)}
       >

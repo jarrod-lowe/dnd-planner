@@ -870,74 +870,7 @@ resource "aws_dynamodb_table_item" "char_class_rulegroup_seed" {
   })
 }
 
-# Custom rule group definition seed - creates an empty per-character rule group
-resource "aws_dynamodb_table_item" "char_custom_rulegroup_def_seed" {
-  table_name = aws_dynamodb_table.data.name
-  hash_key   = "PK"
-  range_key  = "SK"
-
-  item = jsonencode({
-    PK = {
-      S = "SEED#RULEGROUP#custom-$(characterId)"
-    }
-    SK = {
-      S = "META#"
-    }
-    gsiSeedPK = {
-      S = "SEED#CHAR"
-    }
-    type = {
-      S = "RULEGROUP"
-    }
-    ruleGroupId = {
-      S = "custom-$(characterId)"
-    }
-    translations = {
-      M = {
-        en = {
-          M = {
-            name = {
-              S = "Custom Rules"
-            }
-            description = {
-              S = "Custom rules for your character"
-            }
-            keywords = {
-              L = []
-            }
-          }
-        }
-        "en-x-tlh" = {
-          M = {
-            name = {
-              S = "nuDmey raQpo'"
-            }
-            description = {
-              S = "nuDmey raQpo' DIvI' naQ"
-            }
-            keywords = {
-              L = []
-            }
-          }
-        }
-      }
-    }
-    rules = {
-      S = "[]"
-    }
-    userId = {
-      S = "$(userId)"
-    }
-    createdAt = {
-      S = "$(now)"
-    }
-    updatedAt = {
-      S = "$(now)"
-    }
-  })
-}
-
-# Custom rule group assignment seed - links the custom rule group to the character
+# Core-events rule group assignment seed
 resource "aws_dynamodb_table_item" "char_core_events_rulegroup_seed" {
   table_name = aws_dynamodb_table.data.name
   hash_key   = "PK"
@@ -977,41 +910,3 @@ resource "aws_dynamodb_table_item" "char_core_events_rulegroup_seed" {
   })
 }
 
-resource "aws_dynamodb_table_item" "char_custom_rulegroup_seed" {
-  table_name = aws_dynamodb_table.data.name
-  hash_key   = "PK"
-  range_key  = "SK"
-
-  item = jsonencode({
-    PK = {
-      S = "SEED#CHAR#$(characterId)"
-    }
-    SK = {
-      S = "RULEGROUP#custom-$(characterId)"
-    }
-    gsiSeedPK = {
-      S = "SEED#CHAR"
-    }
-    type = {
-      S = "CHAR_RULEGROUP"
-    }
-    characterId = {
-      S = "$(characterId)"
-    }
-    ruleGroupId = {
-      S = "custom-$(characterId)"
-    }
-    userId = {
-      S = "$(userId)"
-    }
-    enabled = {
-      BOOL = true
-    }
-    createdAt = {
-      S = "$(now)"
-    }
-    updatedAt = {
-      S = "$(now)"
-    }
-  })
-}

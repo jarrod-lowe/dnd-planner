@@ -111,6 +111,7 @@ const mockCharacter: Character = {
   userId: 'user-1',
   name: 'Aragorn',
   species: 'human',
+  class: 'paladin',
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-01T00:00:00Z'
 };
@@ -129,6 +130,8 @@ describe('PlayCharacterMode', () => {
       target: container,
       props: {
         character: mockCharacter,
+        email: 'test@example.com',
+        onLogout: vi.fn(),
         onBack: vi.fn()
       }
     });
@@ -144,6 +147,8 @@ describe('PlayCharacterMode', () => {
       target: container,
       props: {
         character: mockCharacter,
+        email: 'test@example.com',
+        onLogout: vi.fn(),
         onBack: vi.fn()
       }
     });
@@ -179,6 +184,8 @@ describe('PlayCharacterMode', () => {
       target: container,
       props: {
         character: mockCharacter,
+        email: 'test@example.com',
+        onLogout: vi.fn(),
         onBack: vi.fn()
       }
     });

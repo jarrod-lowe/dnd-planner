@@ -45,7 +45,8 @@ const mockCharacters: Character[] = [
     characterId: 'char-1',
     userId: 'test-user',
     name: 'Gandalf',
-    race: 'human',
+    species: 'human',
+    class: 'paladin',
     createdAt: '2024-01-01T00:00:00Z',
     updatedAt: '2024-01-01T00:00:00Z'
   },
@@ -53,7 +54,8 @@ const mockCharacters: Character[] = [
     characterId: 'char-2',
     userId: 'test-user',
     name: 'Frodo',
-    race: 'halfling',
+    species: 'halfling',
+    class: 'paladin',
     createdAt: '2024-01-02T00:00:00Z',
     updatedAt: '2024-01-02T00:00:00Z'
   }

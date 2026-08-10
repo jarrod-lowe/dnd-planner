@@ -1,4 +1,4 @@
-import type { Annotation, AnnotationRider } from '$lib/rules-engine';
+import type { Annotation, AnnotationRider } from '$lib/rules-view';
 
 export interface ActiveAnnotation {
   key: string;

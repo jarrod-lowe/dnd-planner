@@ -1,35 +1,31 @@
 import type { Character } from './types';
-import type { Rule } from '$lib/rules-engine';
+import type { EffectInstance } from '$lib/rules-engine';
 
+/**
+ * schemaVersion 2 stores `effects` as `EffectInstance[]` (the committed state),
+ * where schemaVersion 1 stored bridged effect `Rule`s. Not backwards-compatible — a schemaVersion 1 export
+ * is rejected on import (legacy characters are recreated, not carried forward).
+ */
 export interface CharacterExport {
-  schemaVersion: 1;
+  schemaVersion: 2;
   name: string;
   species: string;
   ruleGroups: string[];
-  customRules?: Rule[];
-  effects: Rule[];
+  effects: EffectInstance[];
 }
 
 export function buildCharacterExport(
   character: Character,
   ruleGroupIds: string[],
-  effects: Rule[],
-  ruleGroupRulesMap?: Record<string, Rule[]>
+  effects: EffectInstance[]
 ): CharacterExport {
-  const customGroupId = `custom-${character.characterId}`;
-  const customRules = ruleGroupRulesMap?.[customGroupId];
-
-  const result: CharacterExport = {
-    schemaVersion: 1,
+  return {
+    schemaVersion: 2,
     name: character.name,
     species: character.species,
-    ruleGroups: ruleGroupIds.filter((id) => id !== customGroupId),
+    // The seeded per-character `custom-<id>` group is character-specific noise —
+    // exporting it would assign a foreign id on import.
+    ruleGroups: ruleGroupIds.filter((id) => !id.startsWith('custom-')),
     effects: [...effects]
   };
-
-  if (customRules && customRules.length > 0) {
-    result.customRules = [...customRules];
-  }
-
-  return result;
 }

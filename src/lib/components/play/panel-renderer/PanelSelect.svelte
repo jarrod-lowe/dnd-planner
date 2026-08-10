@@ -1,7 +1,7 @@
 <script lang="ts">
   import { resolveValueSource } from './resolveValueSource';
   import type { SelectControl, SelectOption } from './types';
-  import type { Facts, VarDefinition } from '$lib/rules-engine';
+  import type { Facts, VarDefinition } from '$lib/rules-view';
   import { t } from '$lib/i18n';
 
   interface Props {

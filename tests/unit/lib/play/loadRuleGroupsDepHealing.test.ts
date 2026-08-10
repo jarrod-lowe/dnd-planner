@@ -7,11 +7,6 @@ vi.mock('$lib/api/client', () => ({
   apiDelete: vi.fn()
 }));
 
-// Mock the rules engine evaluate function
-vi.mock('$lib/rules-engine', () => ({
-  evaluate: vi.fn()
-}));
-
 // Mock $lib/i18n with a proper mock store
 vi.mock('$lib/i18n', () => {
   let currentValue = 'en';
@@ -33,7 +28,7 @@ vi.mock('$lib/i18n', () => {
   };
 
   const mockT = {
-    subscribe: (callback: (key: string) => string) => {
+    subscribe: (callback: (t: (key: string) => string) => void) => {
       callback((key: string) => key);
       return { unsubscribe: () => {} };
     }
@@ -55,39 +50,15 @@ vi.mock('svelte-sonner', () => ({
 }));
 
 import { apiGet, apiPost } from '$lib/api/client';
-import { evaluate } from '$lib/rules-engine';
-import type { Rule, EngineOutput } from '$lib/rules-engine';
+import type { Rule } from '$lib/rules-view';
 
 const mockApiGet = vi.mocked(apiGet);
 const mockApiPost = vi.mocked(apiPost);
-const mockEvaluate = vi.mocked(evaluate);
-
-function mockEngineOutput(): EngineOutput {
-  return {
-    status: { ok: true, legal: true, applicable: true },
-    facts: {},
-    collections: {},
-    availableRules: [],
-    diagnostics: { errors: [], warnings: [], notices: [] },
-    trace: {
-      appliedRuleIds: [],
-      appliedActivityIds: [],
-      providedCapabilities: [],
-      emittedEvents: []
-    },
-    next: {
-      schemaVersion: 1,
-      rules: { standing: [], planned: [], effects: [] },
-      state: { facts: {} }
-    }
-  };
-}
 
 describe('loadRuleGroups dependency self-healing', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vi.useFakeTimers();
-    mockEvaluate.mockReturnValue(mockEngineOutput());
   });
 
   afterEach(() => {
@@ -171,11 +142,6 @@ describe('loadRuleGroups dependency self-healing', () => {
     // Both groups should be in state
     expect(playStore.state.ruleGroupIds).toContain('species-human');
     expect(playStore.state.ruleGroupIds).toContain('feat-alert');
-
-    // Both rules should be loaded
-    expect(playStore.state.ruleGroups).toEqual(
-      expect.arrayContaining([...humanRules, ...alertRules])
-    );
   });
 
   it('does not assign anything when all deps are already present', async () => {
@@ -220,7 +186,9 @@ describe('loadRuleGroups dependency self-healing', () => {
     // Should only have 1 apiPost call (the batch fetch) - no assignment calls
     const assignmentCalls = mockApiPost.mock.calls.filter(
       (call) =>
-        typeof call[0] === 'string' && call[0].includes('/rule-groups') && call[1]?.ruleGroupId
+        typeof call[0] === 'string' &&
+        call[0].includes('/rule-groups') &&
+        (call[1] as { ruleGroupId?: string } | undefined)?.ruleGroupId
     );
     expect(assignmentCalls).toHaveLength(0);
 
@@ -387,7 +355,9 @@ describe('loadRuleGroups dependency self-healing', () => {
     await playStore.loadRuleGroups('char-1');
 
     // group-c should be assigned exactly once
-    const assignCalls = mockApiPost.mock.calls.filter((call) => call[1]?.ruleGroupId === 'group-c');
+    const assignCalls = mockApiPost.mock.calls.filter(
+      (call) => (call[1] as { ruleGroupId?: string } | undefined)?.ruleGroupId === 'group-c'
+    );
     expect(assignCalls).toHaveLength(1);
 
     expect(playStore.state.ruleGroupIds).toContain('group-c');
@@ -440,9 +410,8 @@ describe('loadRuleGroups dependency self-healing', () => {
 
     await playStore.loadRuleGroups('char-1');
 
-    // Should still have loaded species-human rules
+    // Should still have loaded species-human
     expect(playStore.state.ruleGroupIds).toContain('species-human');
-    expect(playStore.state.ruleGroups).toEqual(expect.arrayContaining(humanRules));
     // feat-alert should NOT be in state (assignment failed)
     expect(playStore.state.ruleGroupIds).not.toContain('feat-alert');
     // Should not have errored

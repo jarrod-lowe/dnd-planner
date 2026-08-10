@@ -1,0 +1,41 @@
+name: 'Divinity - Recovery Caps At Spent'
+description: >-
+  Each short rest restores one EXPENDED Channel Divinity use. Once every spend is
+  recovered, further short rests emit no additional recovery (the clamp in
+  divinity.remaining would hide the surplus until the next spends — the surplus
+  must not exist at all).
+ruleGroups:
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divinity
+  - class-paladin/class-paladin-level3
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/core-events
+steps:
+  # Spend one point.
+  - addOffer:
+      id: divine-sense
+      assert:
+        facts:
+          divinity.remaining: 1
+  - endTurn: {}
+  # First short rest recovers the expended use.
+  - addOffer:
+      id: record-short-rest
+      assert:
+        facts:
+          divinity.recovered: 1
+          divinity.remaining: 2
+  - endTurn: {}
+  # Second short rest: everything is recovered — no further point may be banked.
+  - addOffer:
+      id: record-short-rest
+      assert:
+        facts:
+          divinity.recovered: 1
+          divinity.remaining: 2
+  - endTurn:
+      assert:
+        facts:
+          divinity.recovered: 1
+          divinity.remaining: 2

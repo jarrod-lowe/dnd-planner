@@ -1,4 +1,5 @@
-import type { Rule, EngineOutput, Facts, Verb } from '$lib/rules-engine';
+import type { Rule, EngineOutput, Facts, Verb } from '$lib/rules-view';
+import type { EffectInstance, RuleModule } from '$lib/rules-engine';
 import type { TopBarEntry, UiEntry } from '$lib/play/extractTopBar';
 
 /**
@@ -22,12 +23,10 @@ export interface PlannedItem {
  * State for play mode, managing rules engine and plan.
  */
 export interface PlayState {
-  /** Standing rules loaded from API */
-  ruleGroups: Rule[];
+  /** Rule modules for the assigned groups (the engine evaluates these). */
+  modules: RuleModule[];
   /** Rule group IDs assigned to the character */
   ruleGroupIds: string[];
-  /** Rules organized by rule group ID for selective removal */
-  ruleGroupRulesMap: Record<string, Rule[]>;
   /** Loading state for rule groups */
   isLoadingRuleGroups: boolean;
   /** Error message if rule group loading failed */
@@ -40,8 +39,13 @@ export interface PlayState {
   plannedItems: PlannedItem[];
   /** Current facts from engine evaluation */
   facts: Facts;
-  /** Committed effects from previous turns. Passed to engine as rules.effects. */
+  /**
+   * Committed effects from previous turns, in the view `Rule` display shape (bridged
+   * from `committed`). Read by the active-effects strip.
+   */
   effects: Rule[];
+  /** committed effects — the persistence + evaluation source of truth. */
+  committed: EffectInstance[];
   /** ID of the currently loaded character, set during loadRuleGroups */
   currentCharacterId: string | null;
   /** Top bar entries extracted from standing rules for display in the intent top bar */

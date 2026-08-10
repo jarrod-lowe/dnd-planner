@@ -48,8 +48,8 @@ vi.mock('$lib/play/effectUtils', () => ({
 }));
 
 import ActiveStateStrip from '$lib/components/play/ActiveStateStrip.svelte';
-import type { Rule } from '$lib/rules-engine';
-import type { Facts } from '$lib/rules-engine';
+import type { Rule } from '$lib/rules-view';
+import type { Facts } from '$lib/rules-view';
 
 const mockFacts = {} as Facts;
 

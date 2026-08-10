@@ -13,13 +13,9 @@ describe('resolveSettings', () => {
     ],
     effect: {
       id: 'skill-proficiency-${value}',
-      activities: [
-        {
-          type: 'numberSet',
-          target: { fact: 'skill.${value}.proficiency' },
-          source: { value: 1 }
-        }
-      ]
+      key: 'skill-${value}-prof',
+      state: { 'skill.${value}.proficiency': 1 },
+      expiry: { kind: 'permanent' }
     }
   };
 
@@ -45,7 +41,13 @@ describe('resolveSettings', () => {
       () => undefined
     );
     expect(result.effects).toHaveLength(1);
-    expect(result.effects[0].id).toBe('class-paladin-level1::skill-proficiency-athletics');
+    // Resolves to an EffectInstance: id namespaced, ${value} substituted throughout.
+    expect(result.effects[0]).toEqual({
+      id: 'class-paladin-level1::skill-proficiency-athletics',
+      key: 'skill-athletics-prof',
+      state: { 'skill.athletics.proficiency': 1 },
+      expiry: { kind: 'permanent' }
+    });
     expect(result.additionalRuleGroupIds).toHaveLength(0);
   });
 

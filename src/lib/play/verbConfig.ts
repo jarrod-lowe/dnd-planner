@@ -1,4 +1,4 @@
-import type { Verb } from '$lib/rules-engine';
+import type { Verb } from '$lib/rules-view';
 
 export const VERB_ORDER: Verb[] = [
   'ATTACK',

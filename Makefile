@@ -1,4 +1,4 @@
-.PHONY: format-terraform validate security test help clean dev build lint format-frontend test-unit test-e2e test-e2e-debug test-component format-check push-test install pnpm setup-dev format go-build deploy-lambdas-test deploy-lambdas-prod sync-rule-groups test-rules preprocess validate-rules-schema publish-details
+.PHONY: format-terraform validate security test help clean dev build check lint format-frontend test-unit test-e2e test-e2e-debug test-component format-check push-test install pnpm setup-dev format go-build deploy-lambdas-test deploy-lambdas-prod sync-rule-groups validate-rules-schema publish-details
 
 default: help
 
@@ -170,25 +170,29 @@ setup-dev: terraform/environment/test/output.json
 	@rm -f .env.local
 	@$(MAKE) .env.local
 
-# Schema derived artifact (copied to static/ for runtime fetch)
-static/data/rule-groups/schema.json: data/rule-groups/schema.json
-	@mkdir -p static/data/rule-groups
-	cp $< $@
-
 # Generate detail JSON files from inline YAML detail blocks
-publish-details: scripts/publish_details.py $(wildcard data/rule-groups/**/*.yaml data/rule-groups/_shared/*.yaml) preprocess
+publish-details: scripts/publish_details.py $(wildcard data/rule-groups/**/*.yaml)
 	@PYTHON=$$(which python3 || which python); \
 	if [ ! -d .venv ]; then $$PYTHON -m venv .venv; fi; \
 	.venv/bin/pip install -q -r scripts/requirements.txt; \
-	.venv/bin/python scripts/publish_details.py --data-dir data/rule-groups --data-dir2 generated/rule-groups --output-dir static/details
+	.venv/bin/python scripts/publish_details.py --data-dir data/rule-groups --output-dir static/details
 
 # Development server
-dev: .env.local install static/data/rule-groups/schema.json publish-details
+dev: .env.local install publish-details
 	pnpm dev
 
 # Production build
-build: install static/data/rule-groups/schema.json publish-details
+build: install publish-details
 	pnpm build
+
+# Verify the rules-engine lazy delivery: every rule module code-splits into
+# its own chunk (no eager-bundling). No AWS/deploy needed.
+verify-chunks: install
+	node scripts/verify-chunks.mjs
+
+# Typecheck (svelte-check over .ts and .svelte)
+check: install
+	pnpm check
 
 # Linting
 lint: install
@@ -234,33 +238,20 @@ push-test: $(TEST_OUTPUT_JSON) build go-build deploy-lambdas-test
 	@aws cloudfront create-invalidation --distribution-id $(TEST_CDN_ID) --paths "/*"
 
 # Build rule groups JSON for integration tests
-build/test-rule-groups.json: scripts/sync_rule_groups.py $(wildcard data/rule-groups/**/*.yaml data/rule-groups/_shared/*.yaml) preprocess
+build/test-rule-groups.json: scripts/sync_rule_groups.py $(wildcard data/rule-groups/**/*.yaml)
 	@mkdir -p build
 	@PYTHON=$$(which python3 || which python); \
 	if [ ! -d .venv ]; then $$PYTHON -m venv .venv; fi; \
 	.venv/bin/pip install -q -r scripts/requirements.txt; \
-	.venv/bin/python scripts/sync_rule_groups.py --json-out build/test-rule-groups.json --data-dir2 generated/rule-groups
-
-# Preprocess rule source documents into generated rule groups
-preprocess:
-	@PYTHON=$$(which python3 || which python); \
-	if [ ! -d .venv ]; then $$PYTHON -m venv .venv; fi; \
-	.venv/bin/pip install -q -r scripts/requirements.txt; \
-	if [ -d data/rule-sources ]; then \
-		.venv/bin/python scripts/preprocess_rule_sources.py --source-dir data/rule-sources --output-dir generated/rule-groups; \
-	fi
-
-# Rules engine integration tests with real YAML data
-test-rules: install build/test-rule-groups.json
-	pnpm exec vitest run tests/integration/rules-engine/yaml-scenarios-runner.test.ts
+	.venv/bin/python scripts/sync_rule_groups.py --json-out build/test-rule-groups.json
 
 # Sync rule groups to DynamoDB
-sync-rule-groups: scripts/sync_rule_groups.py scripts/requirements.txt preprocess $(TEST_OUTPUT_JSON)
+sync-rule-groups: scripts/sync_rule_groups.py scripts/requirements.txt $(TEST_OUTPUT_JSON)
 	@echo "Syncing rule groups to DynamoDB..."
 	@PYTHON=$$(which python3 || which python); \
 	if [ ! -d .venv ]; then $$PYTHON -m venv .venv; fi; \
 	.venv/bin/pip install -q -r scripts/requirements.txt; \
-	.venv/bin/python scripts/sync_rule_groups.py --table=$(TEST_DYNAMODB_TABLE) --data-dir2 generated/rule-groups
+	.venv/bin/python scripts/sync_rule_groups.py --table=$(TEST_DYNAMODB_TABLE)
 
 # Validate for any environment
 validate-%: terraform/environment/%/.terraform
@@ -278,14 +269,14 @@ security:
 	fi
 
 # Validate rule YAML files against JSON Schema
-validate-rules-schema: preprocess
+validate-rules-schema:
 	@PYTHON=$$(which python3 || which python); \
 	if [ ! -d .venv ]; then $$PYTHON -m venv .venv; fi; \
 	.venv/bin/pip install -q -r scripts/requirements.txt; \
-	.venv/bin/python scripts/validate_rule_schema.py --data-dir data/rule-groups --data-dir2 generated/rule-groups
+	.venv/bin/python scripts/validate_rule_schema.py --data-dir data/rule-groups
 
 # Run all tests (terraform + frontend)
-test: validate security validate-rules-schema test-unit test-rules test-e2e lint
+test: validate security validate-rules-schema check test-unit test-e2e lint
 
 preflight: format-terraform format test
 
@@ -330,13 +321,13 @@ help:
 	@echo "Testing:"
 	@echo "  make test                Run all tests (terraform + frontend)"
 	@echo "  make test-unit           Run Vitest unit tests"
-	@echo "  make test-rules          Run rules engine integration tests with real YAML"
 	@echo "  make validate-rules-schema Validate rule YAML files against JSON Schema"
 	@echo "  make test-e2e            Run Playwright E2E tests (CI-friendly)"
 	@echo "  make test-e2e-debug      Run Playwright E2E tests with debug report"
 	@echo "  make test-component      Run Playwright component tests"
 	@echo ""
 	@echo "Code Quality:"
+	@echo "  make check               Typecheck (svelte-check)"
 	@echo "  make lint                Run ESLint"
 	@echo "  make format              Format code (terraform + frontend)"
 	@echo ""

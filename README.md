@@ -377,6 +377,6 @@ The architecture supports:
 - Defences
 - Weapon/Tool/Armour Proficiencies
 - Reduce duplication - e.g. We have no_action text and action consumption per action; this should be one text, and a \*target
-- Reduce code duplication - check e.g. when and legalWhen use the same code, all activities are base & speciality handling (not base repeated)
+- Reduce code duplication - check e.g. when and legalWhen use the same code
 - Sort effects into more meaningful sections
 - Deduplicate/rationalise translations

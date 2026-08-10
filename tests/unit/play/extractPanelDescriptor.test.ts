@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { extractPanelDescriptor } from '$lib/components/play/panel-renderer/extractPanelDescriptor';
-import type { Rule } from '$lib/rules-engine';
+import type { Rule } from '$lib/rules-view';
 
 const makeRule = (overrides: Partial<Rule> & { id: string }): Rule => ({
   activities: [],

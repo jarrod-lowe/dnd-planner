@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Followup } from '$lib/rules-engine';
+import type { Followup } from '$lib/rules-view';
 
 describe('Followup type', () => {
   it('accepts effect followup with addRule', () => {
@@ -9,10 +9,13 @@ describe('Followup type', () => {
       button: 'test.button',
       addRule: {
         target: 'effect',
-        rule: { id: 'test-effect', phase: 'normal', activities: [] }
+        effect: { id: 'test-effect', expiry: { kind: 'endOfTurn' } }
       }
     };
     expect(followup.type).toBe('effect');
+    expect(followup.type === 'effect' && followup.addRule.effect.expiry).toEqual({
+      kind: 'endOfTurn'
+    });
   });
 
   it('accepts attack-line followup without addRule', () => {

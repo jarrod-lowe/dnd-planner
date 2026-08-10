@@ -1,8 +1,15 @@
-import I18n from 'sveltekit-i18n';
+import I18n, { type Parser } from 'sveltekit-i18n';
 
 /** Supported locales */
 export const locales = ['en', 'en-x-tlh'] as const;
 export type Locale = (typeof locales)[number];
+
+/**
+ * Translation payloads are free-form key/value maps (`{ name }`, `{ count }`,
+ * `{ current, max }`, …). The library's default payload type only allows
+ * `default`, which would reject every real placeholder at the call sites.
+ */
+export type TranslationPayload = Record<string, unknown>;
 
 /** Loader configuration for sveltekit-i18n */
 const config = {
@@ -22,7 +29,7 @@ const config = {
 };
 
 /** Initialize the i18n instance */
-export const i18n = new I18n(config);
+export const i18n = new I18n<Parser.Params<TranslationPayload>>(config);
 
 /** Export the translation function store */
 export const t = i18n.t;

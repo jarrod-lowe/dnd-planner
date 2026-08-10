@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { evaluateRuleGroupConditions } from '$lib/rules/evaluateCondition';
 import type { RuleGroupCondition } from '$lib/rules/conditionTypes';
-import type { Facts } from '$lib/rules-engine/types';
+import type { Facts } from '$lib/rules-view/types';
 
 describe('evaluateRuleGroupConditions', () => {
   describe('no conditions', () => {

@@ -1,1172 +1,372 @@
 # Rule Group Authoring Guide
 
-A practical guide for AI agents creating and modifying rule groups. This covers how rule groups are structured, how the engine processes them, ordering semantics, and common patterns.
+A practical guide for AI agents creating and modifying rule groups. A rule
+group is a **TypeScript module** (the logic) plus a **YAML metadata file**
+(translations, prerequisites, settings, conditions, detail text) plus **i18n
+keys** in both locales. There is no rule DSL — the YAML layer carries no rules,
+and the schema rejects them.
 
-For the full engine specification, see [RULES_ENGINE.md](RULES_ENGINE.md).
+For the engine specification, see [RULES_ENGINE.md](../RULES_ENGINE.md).
 
 ---
 
 ## 1. Quick Reference
 
-### File Locations
+### Where things live
 
 ```plain
-data/rule-groups/
-  _shared/definitions.yaml       # Shared YAML anchors (prepended before parsing)
-  dnd-5e-2024/                   # Core D&D 5e 2024 rules
-  class-paladin/                 # Paladin class rules
-  species-human/                 # Human species rules
-  spells/                        # Individual spell rules
-  schema.json                    # JSON Schema for validation
+src/lib/rules-engine/
+  rules/<id>.ts                  # The module: derive/offer/annotate/onRest logic
+  registry.ts                    # Eager id → module map (tests, parity harness)
+  lazy.ts                        # Dynamic-import chunk map (runtime delivery)
+  builder.ts                     # Authoring toolkit (defineRule, shared offer builders)
+  types.ts                       # The module contract (RuleModule, Offer, EffectInstance…)
+
+data/rule-groups/<category>/<name>.yaml   # Metadata: translations/requires/settings/condition/detail
+data/rule-groups/schema.json              # Schema for the metadata layer (validate-rules-schema)
+
+src/lib/i18n/en/common.json               # All rule.* display text and diagnostics
+src/lib/i18n/en-x-tlh/common.json         # …in BOTH locales, always
+
+tests/unit/rules-engine/<feature>.test.ts          # Module unit tests
+tests/integration/rules-engine/yaml-scenarios/<name>/ # Player-visible scenario tests
 ```
 
-### File Naming
+### Identity
 
-- Path: `data/rule-groups/{category}/{name}.yaml`
-- The category directory becomes a DynamoDB search index key
-- Every file **must** start with the schema comment:
+The module's `id` **is** the canonical rule-group id, used everywhere: the
+registry and lazy-loader keys, DynamoDB `ruleGroupId`, `requires` lists,
+persisted character assignments, and the search index. Scenario files
+reference groups as `<category>/<id>` (a file-location convention the harness
+strips). Pick the id once, keep it kebab-case, and never reuse an old one.
 
-  ```yaml
-  # yaml-language-server: $schema=../schema.json
-  ```
+### The authoring checklist
 
-  Adjust the relative path for nesting depth (e.g., `spells/` uses `$schema=../../schema.json`).
+1. **Write the failing test first** (TDD is mandatory — see §6).
+2. Write the module at `src/lib/rules-engine/rules/<id>.ts`; export
+   `default defineRule(module)`.
+3. Register it in **both** `registry.ts` (import + `MODULES` array) and
+   `lazy.ts` (`LOADERS['<id>']` dynamic import).
+4. Add every `rule.*` i18n key to **both** locale files (names, descriptions,
+   diagnostics, effect display names). Modules carry keys, never display text.
+5. Add the YAML metadata file under `data/rule-groups/<category>/` —
+   translations, `requires`, optional `settings`/`condition`/`detail`.
+6. Add or extend a YAML scenario (§6) for the player-visible behavior.
+7. Run the gates: `make validate-rules-schema && make check && make test-unit`
+   (then `make test` before declaring done). To publish metadata to the test
+   environment: `make sync-rule-groups`; full refresh: `make deploy-test`.
 
-### Minimal Valid Rule Group
+Guards that will catch a missed step: `module-coverage` (deployed group with no
+module), `module-i18n-coverage` (untranslated `rule.*` key),
+`sections.test` (bad section / intentless HANDLE), `lazy`/`registry` sync
+tests, the metadata i18n-compliance test (literal display text in a module),
+and `verify-chunks` (module not code-splitting into its own chunk).
+
+---
+
+## 2. The module
+
+A minimal real module (`rules/dash.ts`):
+
+```ts
+import { defineRule, type ActionResult, type RuleModule } from '../builder';
+
+const D = 'rule.dnd-5e-2024.dash';
+const NO_ACTION = `${D}.action-dash-offer.no_action`;
+
+const dash: RuleModule = {
+  id: 'dash',
+  offer: () => [
+    {
+      id: 'dash-action',
+      ui: {
+        section: 'action-other',
+        name: `${D}.dash-action.name`,
+        description: `${D}.dash-action.description`,
+        intents: { MOVE: 'dash' },
+        actionCost: ['action']
+      },
+      legalWhen: [
+        {
+          condition: (f) => f.num('actions.remaining') > 0,
+          diagnostics: [{ code: NO_ACTION, severity: 'error' }]
+        }
+      ],
+      apply: (f): ActionResult => {
+        const speed = f.num('character.movement.total');
+        return {
+          advertise: [
+            {
+              id: 'dash',
+              state: { 'actions.spent': 1, 'character.movement.total': speed },
+              expiry: { kind: 'endOfTurn' }
+            }
+          ],
+          diagnostics:
+            f.num('actions.remaining') > 0 ? [] : [{ code: NO_ACTION, severity: 'error' }]
+        };
+      }
+    }
+  ]
+};
+
+export default defineRule(dash);
+```
+
+Note the pattern: `apply` **never writes facts** — it advertises effects whose
+`state` deltas do the work, and it re-checks its own legality so the fold can
+attach per-instance diagnostics.
+
+### `derive` — contributing to the sheet
+
+```ts
+derive: () => [
+  { fact: 'reactions.max', value: () => 1 },
+  { fact: 'reactions.remaining', value: (f) => f.num('reactions.max') - f.num('reactions.spent') }
+];
+```
+
+- Ordering is **structural**: the engine tracks what each `value` reads and
+  settles producers before consumers. Do not author ordering; there are no
+  phases, groups, or `after`, and none should be proposed.
+- `combine: 'sum'` for stacking modifiers, `'max'` for competing floors,
+  default `override` for a single authoritative writer. Conflicts throw.
+- Unset facts read as `0`; use `f.has()` when unset must differ from zero
+  (an unset ability score's modifier is 0, not −5).
+- Never contribute to a fact the runtime passes as an input — the sheet
+  throws on input/contribution overlap.
+
+### Offers — `when` vs `legalWhen`
+
+- `when` (structural): false hides the offer entirely, and a planned instance
+  whose gate closes is **skipped** (no execution, no spend; the row shows as
+  inapplicable). Use for "this action doesn't exist right now" (not prepared,
+  weapon not equipped, steed not summoned).
+- `legalWhen` (legality): false keeps the offer visible but illegal, showing
+  the diagnostic. Planned-anyway actions still execute and the projection
+  shows the over-commit. Use for resource gates (no action left, no slot).
+
+### Offer `ui` — what the panel renders
+
+`ui.name`/`ui.description` are i18n keys. `ui.section` must be a value from
+the `SECTIONS` union (`types.ts`); only some sections map to a picker verb, so
+an offer whose section has no verb mapping **must** carry `ui.intents`
+(`sections.test.ts` enforces this). `ui.intents: { VERB: 'variant' }` drives
+the add-picker grouping; `ui.actionCost` tags the cost chip;
+`ui.annotationLabels` opts the panel into matching annotations;
+`ui.detailKey` (e.g. `spell/sleep`) links the rules-mode detail text;
+`ui.subject: 'steed'` scopes it to a companion. Panel controls
+(`primaryControl`, `vars`, followups) pass straight through to PanelRenderer —
+copy an existing offer with the control you need (slider: `movement`,
+dice-line: weapons via the builder, select: `skill-checks`).
+
+### Effects
+
+- Per-turn spends: keyless, `expiry: { kind: 'endOfTurn' }`.
+- Durable spends: `untilLongRest` / `untilShortRest`.
+- Timed buffs: `{ kind: 'turns', remaining: N }` (write only `remaining`;
+  aging backfills `total` for the pips), usually paired in an array with
+  `{ kind: 'untilShortRest' }` so a rest also ends it.
+- Replaceable state: give the effect a `key` — newest same-key effect evicts
+  the older one (this is how prepare/unprepare and set-value modifiers work).
+- **Display contract**: no `display` → hidden and nameless (pure
+  bookkeeping); `display: { name }` → a named chip on the active-effects
+  strip; `display: { name, hidden: true }` → named but only in the "show
+  hidden" reveal (build/settings effects). `displayFact` shows a live value on
+  the chip; `subject: 'steed'` files it under the steed view.
+
+### Shared builders
+
+`builder.ts` is the toolkit: `defineRule` (validates the module),
+`preparedSpellOffers` (the prepare/unprepare pair every prepared spell uses),
+the weapon-definition builder (attack/equip/stow/reaction offers from one
+`def`), and `statToModifier`. Reuse them — do not hand-roll a prepared spell
+or a weapon.
+
+### `meta` — search discovery
+
+User-facing content groups (spells, feats, class levels, weapons) carry
+`meta: { name, description, keywords, requires }` — all i18n keys except
+`requires` (literal rule-group ids that auto-assign with this group).
+Foundational modules (hp, action-economy, hands…) have no `meta` and no
+search presence.
+
+---
+
+## 3. The YAML metadata file
+
+One file per group under `data/rule-groups/<category>/`, validated by
+`make validate-rules-schema` against `schema.json`. It contains **no rules**.
 
 ```yaml
 # yaml-language-server: $schema=../schema.json
 ruleGroups:
-  - id: my-rule-group
+  - id: spell-example # must equal the module id
     translations:
       en:
-        name: My Rule Group
-        description: What this rule group does
-        keywords: [search, terms]
+        name: Example
+        description: One-line description for search results.
+        keywords: [example, sample]
       en-x-tlh:
-        name: My Rule Group
-        description: tlhIngan Hol description
-        keywords: [search, terms]
-    rules:
-      - id: my-rule
-        activities:
-          - type: numberSet
-            target:
-              fact: my.counter
-            source:
-              number: 0
+        name: ghItlh
+        description: DIvI' Hol.
+        keywords: [ghItlh]
+    requires: [spellcasting] # auto-assigned alongside this group
+    condition: # optional assignment gate
+      - fact: class.paladin.level
+        operator: greaterThanOrEqual
+        value: 2
+    settings: # optional per-character choices
+      - id: example-choice
+        type: select
+        translations:
+          en: { name: Choose a thing }
+          en-x-tlh: { name: wIv }
+        options:
+          - value: athletics
+            translations:
+              en: { name: Athletics }
+              en-x-tlh: { name: Qapla' }
+        effect: # ${value} substitutes the chosen option
+          id: example-${value}
+          key: example-${value}
+          state: { 'skill.${value}.proficiency': 1 }
+          display:
+            name: rules.settings.example.${value}
+            hidden: true
+          expiry: { kind: permanent }
+    detail: # optional rules-mode text (publish-details → static/details)
+      key: spell/example
+      source: srd52
+      translations:
+        en:
+          meta: Level 1 Abjuration
+          body: |
+            Markdown body text…
 ```
 
-### Key Fields
-
-| Field          | Level     | Required | Description                                                      |
-| -------------- | --------- | -------- | ---------------------------------------------------------------- |
-| `id`           | ruleGroup | yes      | Unique identifier (e.g., `spellcasting`, `class-paladin-level1`) |
-| `translations` | ruleGroup | yes      | Must include both `en` and `en-x-tlh` locales                    |
-| `requires`     | ruleGroup | no       | IDs of other rule groups that must also be assigned              |
-| `rules`        | ruleGroup | no       | Array of rules                                                   |
-| `id`           | rule      | yes      | Unique rule identifier                                           |
-| `phase`        | rule      | no       | `early`, `normal` (default), or `safeguard`                      |
-| `group`        | rule      | no       | Groups this rule belongs to (for ordering)                       |
-| `after`        | rule      | no       | Groups this rule must wait for before executing                  |
-| `when`         | rule      | no       | Conditions that must be true for the rule to execute             |
-| `activities`   | rule      | yes      | Operations to perform when the rule executes                     |
+- `settings` of type `select` produce an `EffectInstance` from the `effect`
+  template via `${value}` substitution (including inside `display`); the
+  result is stored as a character build effect. `select-rule-group` instead
+  auto-assigns the chosen group.
+- `condition` gates assignment (top-level array is AND; `type: or` for OR).
+- `detail` is extracted by `make publish-details` and served statically;
+  offers reference it via `ui.detailKey`.
+- Sync to the test environment with `make sync-rule-groups` (content-hash
+  driven; every category re-syncs when its files change).
 
 ---
 
-## 2. How the Engine Processes Rules
+## 4. i18n
 
-### Facts Start at Zero
+Everything a player can read is a key in **both**
+`src/lib/i18n/en/common.json` and `src/lib/i18n/en-x-tlh/common.json`:
 
-The engine is fully stateless. `input.state.facts` is always empty at the start of each evaluation — all fact values are derived entirely by rules. When a rule reads a fact that hasn't been set, it defaults to 0. This means:
-
-- You do **not** need explicit `numberSet` to 0 before incrementing
-- Simple `numberIncrement` rules can run in any order with no `group` or `after`
-- Ordering is only needed when rules must run in a specific sequence (e.g., copy a final value after all contributions settle)
-
-### Phase Execution Order
-
-The engine runs three phases **in strict order**:
-
-```plain
-early  ->  normal  ->  safeguard
-```
-
-- **early**: Set base values, declare groups for ordering, compute derived values that other phases depend on.
-- **normal**: Standard evaluation. Offer actions, compute derived values.
-- **safeguard**: Late normalization. Rarely used.
-
-### Within a Phase: Groups and Settlement
-
-Rules within a phase are **not** processed in file order. Instead, the engine uses a dependency system:
-
-1. A rule declares membership in groups via `group: [group-name]`
-2. A rule declares it must wait for groups via `after: [{group: group-name}]`
-3. The engine loops through all rules, executing any whose `after` dependencies are satisfied
-4. A group is **settled** when all its member rules have either executed or been skipped
-5. Only settled groups unblock rules waiting on them
-
-This means execution order is determined entirely by the dependency graph, not by file order or rule position in the YAML.
-
-### Phase Isolation
-
-Groups are **phase-local**. An early-phase rule can only wait on early-phase groups. The engine validates this and reports errors for cross-phase dependencies.
-
-### Rules With No Dependencies
-
-A rule with no `after` and no `group` can execute immediately in its phase. The engine processes rules in iteration order when multiple rules are eligible simultaneously.
+- Convention: `rule.<group-id-ish>.<offer-or-effect>.<field>` — e.g.
+  `rule.dnd-5e-2024.dash.dash-action.name`, diagnostics as
+  `…-offer.no_action`.
+- Build keys from a single `const` prefix per file so the
+  `module-i18n-coverage` test can statically resolve them (it expands
+  `${PREFIX}.suffix` templates one level deep; keys built from two template
+  variables are invisible to it — avoid them where possible).
+- Never put display text in a module; the metadata i18n-compliance test
+  rejects it.
 
 ---
 
-## 3. Facts and Ordering
+## 5. Facts and naming
 
-### When You Don't Need Ordering
-
-For most cases, you can simply `numberIncrement` a fact. Since facts start at 0, multiple increments from different rule groups will produce the correct total regardless of execution order:
-
-```yaml
-# proficiency.yaml — declares UI stats, no activities needed
-- id: proficiency-reset
-  phase: early
-  activities: []
-  ui:
-    stats:
-      - name: play.stats.proficiency
-        type: modifier
-        fact: proficiency.bonus
-        section: abilities
-
-# class-paladin/level1.yaml — just increment, no after needed
-- id: paladin-level1-proficiency
-  phase: early
-  activities:
-    - type: numberIncrement
-      target:
-        fact: proficiency.bonus
-      source:
-        number: 2
-```
-
-Multiple classes can each increment `proficiency.bonus` without any ordering, because addition is commutative and facts start at 0.
-
-### When You DO Need Ordering
-
-Ordering is needed when:
-
-1. **A value must be copied after all contributions settle** (e.g., copy `hp.max` to `hp.current` after all class levels have contributed)
-2. **A rule sets a non-zero base value that modifiers depend on** (e.g., set `spellcasting.max` to 1, then copy to `remaining`)
-
-### The Two-Group Pattern (for copy-after-settle)
-
-When multiple rule groups contribute to a value and then a final rule needs the settled total, use two groups:
-
-```yaml
-# hp.yaml — Reset and declare two groups
-- id: hp-reset
-  phase: normal
-  group:
-    - hp-total # Group A: signals that the base value has been set
-    - hp-set # Group B: modifiers join this group
-  activities:
-    - type: numberSet
-      target:
-        fact: hp.max
-      source:
-        number: 0
-
-# hp.yaml — Copy max to current, after ALL modifiers settle
-- id: hp-copy
-  phase: normal
-  after:
-    - group: hp-set # Wait for all hp contributors
-  activities:
-    - type: numberCopy
-      source:
-        fact: hp.max
-      target:
-        fact: hp.current
-```
-
-Then a class level contributes:
-
-```yaml
-# class-paladin/level1.yaml — Contribute to HP
-- id: paladin-level1-hp
-  phase: normal
-  after:
-    - group: hp-total # Wait for the base value to be set
-  group:
-    - hp-set # Join this group (so hp-copy waits for us)
-  activities:
-    - type: numberIncrement
-      target:
-        fact: hp.max
-      source:
-        number: 10
-    - type: numberIncrement
-      target:
-        fact: hp.max
-      source:
-        fact: con.modifier
-```
-
-**Chain**: `hp-reset` (set to 0, declare groups) -> `paladin-level1-hp` (add 10 + CON) -> `hp-copy` (copy max to current).
-
-The two groups allow modifiers to participate between the reset and the copy. Without `hp-total`, the modifier might run before the reset. Without `hp-set`, the copy might run before the modifier.
-
-### The One-Group Pattern (for simple copy)
-
-When a value is set once and copied once (no modifiers from other rule groups), a single group suffices:
-
-```yaml
-# spellcasting.yaml
-- id: spellcasting-max
-  phase: early
-  group:
-    - spellcasting-max
-  activities:
-    - type: numberSet
-      source:
-        number: 1
-      target:
-        fact: spellcasting.max
-
-- id: spellcasting-reset
-  phase: early
-  after:
-    - group: spellcasting-max
-  activities:
-    - type: numberCopy
-      source:
-        fact: spellcasting.max
-      target:
-        fact: spellcasting.remaining
-```
-
-### Rules
-
-- **NEVER** rely on file order or rule order within a file.
-- Use `group` and `after` only when ordering actually matters (copy-after-settle, base-then-modify).
-- Stats-only skeleton rules with `activities: []` are used to declare `ui.stats` for facts derived by multiple rule groups.
+- Facts are flat dotted keys holding numbers. Resources follow
+  `<thing>.max` / `<thing>.spent` / `<thing>.remaining = max − spent`, with
+  spends as effect deltas to `.spent` (so rests restore by aging the spend
+  away, not by writing `.remaining`).
+- Booleans are 0/1 facts (`weapon.spear.equipped`, `build.locked`).
+- Rest signals are `rest.long` / `rest.short` facts contributed by
+  core-events' recorder effects; they apply within the same evaluation.
+- Namespace by feature (`spellcasting.slots.level1.*`,
+  `companion.steed.*`, `capability.attack.reaction.weapon`). Grep before
+  inventing a new fact — the module you're integrating with usually already
+  derives what you need.
 
 ---
 
-## 4. Rule Group Assignment
+## 6. Testing
 
-Rule groups must reach a character through one of three mechanisms:
+TDD, always: failing test → implementation → green → refactor.
 
-### SEED# Records (Automatic on Character Creation)
+### Module unit tests (`tests/unit/rules-engine/`)
 
-Defined in `terraform/module/dnd-planner/dynamodb-items.tf`. When a new character is created, the backend reads all `SEED#CHAR` records and instantiates them for that character.
+Exercise the module through the public entry points (`evaluateSheet`,
+`evaluatePlan`, `evaluate`, `endTurn`) with a minimal module set. Remember the
+input-facts contract: pass genuine inputs only — a fact your module set
+contributes must arrive as an effect or a module, or the sheet throws.
 
-Every new character receives these core rule groups:
+### YAML scenarios (`tests/integration/rules-engine/yaml-scenarios/`)
 
-| Rule Group ID    | Purpose                                         |
-| ---------------- | ----------------------------------------------- |
-| `turn-rest`      | Turn counter and long rest management           |
-| `action-economy` | Action economy rules                            |
-| `proficiency`    | Proficiency bonus system                        |
-| `movement`       | Movement rules                                  |
-| `free-actions`   | Free actions (like Help)                        |
-| `ability-scores` | Ability score system                            |
-| `hit-die`        | Hit die mechanics                               |
-| `hp`             | Hit points tracking                             |
-| `species-{name}` | Species-specific rules (e.g., `species-human`)  |
-| `custom-{id}`    | Empty per-character rule group for custom rules |
-
-The species rule group is parameterized: the character creation request provides the species, and the seed template substitutes `$(species)` to produce the correct ID.
-
-**Adding a new SEED rule group**: Add a new `aws_dynamodb_table_item` resource to `dynamodb-items.tf` with `gsiSeedPK = "SEED#CHAR"`, then run `make deploy-test`.
-
-### `requires` Dependencies (Automatic on Assignment)
-
-When a user assigns a rule group with `requires`, the system automatically resolves all transitive dependencies and assigns them first:
+Player-visible behavior belongs in a scenario (this is the corpus the parity
+runner executes — CLAUDE.md's "add to the yaml scenarios runner"). Anatomy:
 
 ```yaml
-# class-paladin/level1.yaml
+name: 'Dash adds speed for one turn'
 ruleGroups:
-  - id: class-paladin-level1
-    requires:
-      - spellcasting # Spellcasting must also be assigned
-    rules: [...]
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/dash
+steps:
+  - addOffer:
+      id: dash-action
+      assert:
+        facts:
+          character.movement.remaining: 60
+        planErrors:
+          - id: dash-action
+            errors: []
+  - endTurn:
+      assert:
+        facts:
+          character.movement.remaining: 30
 ```
 
-Assigning `class-paladin-level1` will automatically assign `spellcasting` first. Dependencies are resolved in `src/lib/rules/resolveDependencies.ts` — deepest first, with deduplication for diamond dependencies.
+Steps: `evaluate` (assert without acting), `addOffer` (+ optional
+`selections`), `updateSelections`, `removeFromPlan`, `removeEffect`, and
+`endTurn` (optionally `longRest: true`). Asserts sit under the step (or as a
+sibling `assert:`) and cover `facts`, `offers` / `effects` / `annotations`
+(`exists` / `notExists`, plus `legal` / `illegal` for offers), `offerVars`,
+`offerUi`, `status`, and `planErrors`. Conventions:
 
-**Use `requires` for**: Supporting rule groups that should never be directly assigned by users but are needed by other rule groups.
+- `initialFacts` may only carry facts **no module derives** (the engine
+  rejects overlap). Prefer driving state through steps or committed effects.
+- Do not author legacy-format `initialEffects` blocks in new scenarios. If a
+  scenario must start with pre-existing state, add its committed
+  `EffectInstance[]` to `INITIAL_EFFECTS`
+  (`tests/integration/rules-engine/initial-effects.ts`), keyed by scenario
+  directory name.
+- The runner asserts an exact runnable-scenario set (`EXPECTED_RUNNABLE`) —
+  add your scenario's name there.
 
-### Manual User Selection
+### The gates
 
-Rule groups synced to DynamoDB (via `make sync-rule-groups`) appear in the rule group picker in the UI. Users can manually browse and assign them. This is how class levels, spells, and other optional content get added to characters.
-
-**Use manual selection for**: Content that users choose to add — class levels, subclasses, spells, feats.
-
-### Authoring Checklist for New Rule Groups
-
-Before a new rule group can be used, it must be reachable via at least one mechanism:
-
-- **Every character needs it** → Add a SEED# record to `dynamodb-items.tf`
-- **Users choose to add it** → Sync via `make sync-rule-groups`; it appears in the UI picker
-- **It's a dependency of another group** → Add `requires` to the parent group; no SEED# needed
+`make validate-rules-schema` (YAML), `make check` (types), `make test-unit`
+(vitest incl. all guards + parity), `make test` before declaring done.
 
 ---
 
-## 5. Rule Group Dependencies (`requires` vs `after`)
-
-These are two different dependency mechanisms at different levels:
-
-|               | `requires` (ruleGroup level)                    | `after` (rule level)                   |
-| ------------- | ----------------------------------------------- | -------------------------------------- |
-| **Purpose**   | Ensure another rule group is assigned           | Control execution order within a phase |
-| **Scope**     | Character assignment (composition)              | Single evaluation cycle                |
-| **Mechanism** | Auto-assigns dependency when parent is assigned | Waits for group settlement             |
-| **Example**   | Paladin requires spellcasting                   | HP increment waits for HP reset        |
-
-### `requires` — Composition Dependency
-
-When a user assigns a rule group with `requires`, the system automatically assigns all required groups first (transitively). This ensures the necessary rules exist in the evaluation.
-
-```yaml
-# class-paladin/level1.yaml
-ruleGroups:
-  - id: class-paladin-level1
-    requires:
-      - spellcasting
-    rules:
-      - id: paladin-level1-spell-slots
-        group:
-          - spellcasting-slots-set
-        activities:
-          - type: numberIncrement
-            target:
-              fact: spellcasting.slots.level1.total
-            source:
-              number: 2
-```
-
-Without `requires: [spellcasting]`, the `spellcasting-slots-set` group might not exist (if no other assigned rule group declares it), which could cause incorrect ordering.
-
-### `after` — Execution Ordering
-
-See Section 3. This controls the order rules execute within a single phase.
-
----
-
-## 6. Common Patterns
-
-### Pattern: Stats-Only Skeleton
-
-**Use when:** Multiple rule groups contribute to a fact, and you need UI stats for it. The skeleton rule has no activities — it exists solely to declare `ui.stats`.
-
-```yaml
-# proficiency.yaml
-- id: proficiency-reset
-  phase: early
-  activities: []
-  ui:
-    stats:
-      - name: play.stats.proficiency
-        type: modifier
-        fact: proficiency.bonus
-        section: abilities
-```
-
-### Pattern: Simple Increment (No Ordering)
-
-**Use when:** Multiple rule groups add to the same value. No ordering needed since facts start at 0 and addition is commutative.
-
-```yaml
-# class-paladin/level1.yaml
-- id: paladin-level1-proficiency
-  phase: early
-  activities:
-    - type: numberIncrement
-      target:
-        fact: proficiency.bonus
-      source:
-        number: 2
-```
-
-### Pattern: Reset-Modify-Copy (Two-Group Pattern)
-
-**Use when:** Multiple rule groups contribute to a value, then a final copy is needed after all contributions settle (e.g., HP, spell slots). See Section 3 for the full explanation.
-
-Chain: `reset total to 0` -> `modifiers increment total` -> `copy total to remaining/current`
-
-### Pattern: Simple Copy (One-Group Pattern)
-
-**Use when:** A value is set once and needs to be copied once per evaluation (e.g., action points, spellcasting uses).
-
-```yaml
-- id: action-max
-  phase: early
-  group:
-    - action-max
-  activities:
-    - type: numberSet
-      source:
-        number: 1
-      target:
-        fact: actions.max
-
-- id: action-reset
-  phase: early
-  after:
-    - group: action-max
-  activities:
-    - type: numberCopy
-      source:
-        fact: actions.max
-      target:
-        fact: actions.remaining
-```
-
-### Pattern: Offer Rule With Legality Checks
-
-**Use when:** Presenting an action the user can choose, with conditions that determine if it's legal.
-
-```yaml
-- id: action-move-walk-offer
-  after:
-    - group: half-movement-remaining
-  activities:
-    - type: offerRule
-      legalWhen:
-        - condition:
-            fact: character.movement.remaining
-            operator: greaterThanOrEqual
-            value: 5
-          illegalDiagnostics:
-            - code: rule.dnd-5e-2024.movement.action-move-walk-offer.out_of_movement
-              severity: error
-      rule:
-        id: move-walk
-        ui:
-          model: move
-          section: move
-          name: rule.dnd-5e-2024.movement.move-walk.name
-        group:
-          - move
-        vars:
-          distance:
-            capture: true
-            default:
-              fact: character.movement.remaining
-        activities:
-          - type: numberIncrement
-            target:
-              fact: character.movement.remaining
-            source:
-              var: distance
-            subtract: true
-```
-
-Key points:
-
-- `offerRule` does NOT execute the inner rule. It offers it as a UI choice.
-- `legalWhen` is an array — every entry's condition must pass.
-- `illegalDiagnostics` provides i18n error keys for failed conditions.
-- The inner `rule` is what gets executed when the user chooses this action.
-- `capture: true` snapshots the default value when added to the plan.
-
-### Pattern: Conditional Offerings
-
-**Use when:** An action should only be available under certain conditions.
-
-```yaml
-- id: action-move-swim-offer
-  when:
-    - fact: character.movement.swim.cost
-      operator: equals
-      value: 1
-  after:
-    - group: half-movement-remaining
-  activities:
-    - type: offerRule
-      # ...
-```
-
-`when` controls whether the rule executes at all. `legalWhen` (inside `offerRule`) controls whether the offered action is legal but still visible. Use `when` for structural conditions (this rule is irrelevant), `legalWhen` for resource conditions (you can try but it'll be marked illegal).
-
-### Pattern: Error Collection
-
-**Use when:** Collecting error states within a rule's execution.
-
-```yaml
-activities:
-  - *error-clear
-  - type: numberIncrement
-    target:
-      fact: actions.remaining
-    source:
-      number: 1
-    subtract: true
-  - type: setAdd
-    target:
-      var: errors
-    source:
-      string: rule.dnd-5e-2024.free-actions.action-help-offer.no_action
-    when:
-      fact: actions.remaining
-      operator: lessThan
-      value: 0
-```
-
-The `*error-clear` anchor is defined in `_shared/definitions.yaml`. Always clear before collecting.
-
-### Pattern: Planned Item Legality
-
-There are two separate legality mechanisms in the engine:
-
-- **`legalWhen`** on `offerRule` controls the **offer display**. It answers "should this be shown as available?" and is evaluated AFTER all planned rules have executed, against the current world state. It only affects the choices list.
-- **`varsRuntime.errors`** (via `setAdd` to `var: errors`) controls the **plan display**. It answers "did this rule encounter a problem during execution?" and is evaluated DURING the rule's own execution. Both UIs use this to mark planned items as illegal.
-
-These are separate concerns that check at different times and can disagree. `legalWhen` prevents offering a rule when conditions fail, but it does NOT automatically make already-planned items show as illegal. If a planned item should show as illegal when a condition fails, the rule's activities must populate `varsRuntime.errors` for that condition.
-
-**Every rule with `legalWhen` should also have error tracking in its activities.** This ensures planned items display correct legality in both UIs.
-
-For resource-consuming rules (action economy, spell slots), check AFTER the resource is consumed:
-
-```yaml
-activities:
-  - type: numberIncrement
-    target: { fact: actions.remaining }
-    source: { number: 1 }
-    subtract: true
-  - *error-clear
-  - type: setAdd
-    target: { var: errors }
-    source: { string: rule.example.no_action }
-    when:
-      - fact: actions.remaining
-        operator: lessThan
-        value: 0
-```
-
-For state-checking rules (already equipped, already proficient), check BEFORE the state is changed:
-
-```yaml
-activities:
-  - *error-clear
-  - type: setAdd
-    target: { var: errors }
-    source: { string: rule.example.already_equipped }
-    when:
-      - fact: armor.shield.equipped
-        operator: equals
-        value: 1
-  # ... rest of activities that modify state
-```
-
-### Pattern: Computed Values
-
-**Use when:** Deriving a value from another fact, especially when other rules need to wait for it.
-
-```yaml
-- id: compute-half-movement-total
-  phase: normal
-  group:
-    - half-movement-total
-  activities:
-    - type: numberFunction
-      function: multiply
-      sources:
-        - fact: character.movement.total
-      target:
-        fact: character.movement.half_total
-      args:
-        multiplier: 0.5
-```
-
-By declaring a `group`, other rules can use `after: [{group: half-movement-total}]` to wait for this computation.
-
-### Pattern: Species/Class Constants
-
-**Use when:** Setting base character attributes that other rules depend on.
-
-```yaml
-- id: set-base-distance
-  phase: early
-  group:
-    - species-constants
-  activities:
-    - type: numberSet
-      target:
-        fact: character.movement.total
-      source:
-        number: 30
-    - type: numberSet
-      target:
-        fact: character.movement.swim.can
-      source:
-        number: 1
-    - type: numberSet
-      target:
-        fact: character.movement.swim.cost
-      source:
-        number: 2
-```
-
-### Pattern: Persistent Effects (Spells)
-
-**Use when:** An action creates an ongoing effect that persists across turns.
-
-```yaml
-activities:
-  - type: numberIncrement
-    target:
-      fact: actions.remaining
-    source:
-      number: 1
-    subtract: true
-  - type: numberIncrement
-    target:
-      fact: spellcasting.slots.level1.remaining
-    source:
-      number: 1
-    subtract: true
-  - type: advertiseEffect
-    rule:
-      id: effect-my-spell-l1
-      ui:
-        section: action-spell
-        name: rule.my-spell.effect-my-spell-l1.name
-      phase: early
-      after:
-        - group: spellcasting-slots-set
-      group:
-        - spell-slot-effect
-      activities:
-        - type: numberIncrement
-          target:
-            fact: spellcasting.slots.level1.remaining
-          source:
-            number: 1
-          subtract: true
-        - type: advertiseEffect
-          self: true
-          when:
-            fact: rest.long
-            operator: equals
-            value: 0
-  - *error-clear
-```
-
-Key points:
-
-- `advertiseEffect` creates a rule that persists in `effects` across evaluations.
-- `self: true` re-advertises the effect each turn (self-sustaining).
-- The effect expires when its `when` condition is false.
-- Effects get unique IDs with numeric suffixes to avoid collisions.
-
-### Pattern: Spell with SRD Detail (Flip Button)
-
-**Use when:** A spell has SRD reference text that should be viewable via the flip button on the action card.
-
-Two things must **both** be present — the detail JSON will NOT cause a flip button to appear without `detailKey` on the rule:
-
-**1. `detail:` section on the rule group** (compiled to `static/details/en/{key}.json` by `scripts/publish_details.py` / `make build`):
-
-```yaml
-detail:
-  key: spell/my-spell # matches the static asset path
-  source: srd52
-  translations:
-    en:
-      meta: 'Level N School (Class)'
-      fields:
-        - { labelKey: rules.field.castingTime, value: 'Action' }
-        - { labelKey: rules.field.range, value: '30 feet' }
-        - { labelKey: rules.field.components, value: 'V, S' }
-        - { labelKey: rules.field.duration, value: 'Instantaneous' }
-      body: |
-        Spell description text here. **Bold** and *italic* are supported.
-        Blank lines between paragraphs. Bullet items start with `- `.
-```
-
-**2. `detailKey` on every rule `ui:` where the flip button should appear:**
-
-```yaml
-# On the cast rule (shows flip when the spell is offered):
-ui:
-  section: action-spell
-  name: rule.my-spell.cast-my-spell.name
-  detailKey: spell/my-spell        # must match detail.key above
-
-# On the persistent effect rule (shows flip while the effect is active):
-ui:
-  name: rule.my-spell.effect-my-spell.name
-  detailKey: spell/my-spell
-```
-
-After adding or changing the `detail:` section, run `make build` to regenerate the static asset.
-
-### Pattern: Always-Prepared (Granted) Spells
-
-**Use when:** A class/subclass/species feature grants a spell that is always
-prepared and does not count against the character's prepared-spell limit (e.g.
-Paladin's Divine Smite from level 2).
-
-The spell itself stays a normal preparable spell (`spells/<spell>.yaml` with the
-usual prepare/unprepare/cast rules). The granting feature layers "always
-prepared" on top via two facts:
-
-- `spell.l{N}.{key}.prepared = 1` — marks it prepared (gates the cast offer)
-- `spell.l{N}.{key}.alwaysPrepared = 1` — marks the grant as permanent
-
-**1. Grant rule** (in the feature's rule group — runs every evaluation because
-the feature is always assigned, so no persistent effect is needed):
-
-```yaml
-# class-paladin/paladin-smite.yaml — Paladin L2 grants Divine Smite
-- id: paladin-smite-always-prepared
-  phase: early
-  group:
-    - always-prepared-set
-  activities:
-    - type: numberSet
-      target: { fact: spell.l1.divineSmite.prepared }
-      source: { number: 1 }
-    - type: numberSet
-      target: { fact: spell.l1.divineSmite.alwaysPrepared }
-      source: { number: 1 }
-```
-
-This does **not** touch `spellcasting.prepared.count`, so the grant is free. The
-spell's own prepare offer self-hides (its legality requires `prepared != 1`).
-
-**2. Unprepare guard** (on the spell's unprepare offer) — prevents the player
-unpreparing a granted spell:
-
-```yaml
-legalWhen:
-  - condition: { fact: spell.l1.divineSmite.prepared, operator: equals, value: 1 }
-    illegalDiagnostics:
-      [{ code: rule.spell-divine-smite.unprepare-divine-smite-offer.not_prepared, severity: error }]
-  - condition: { fact: spell.l1.divineSmite.alwaysPrepared, operator: notEquals, value: 1 }
-    illegalDiagnostics:
-      [
-        {
-          code: rule.spell-divine-smite.unprepare-divine-smite-offer.always_prepared,
-          severity: error
-        }
-      ]
-```
-
-Any spell that may be granted always-prepared must include this `alwaysPrepared`
-guard on its unprepare offer.
-
-**3. Retire a prior manual preparation.** If a caster manually prepared the spell
-(its persistent `effect-{spell}-prepared` keeps incrementing
-`spellcasting.prepared.count` each evaluation) and later gains the grant, that
-effect must stop contributing — otherwise it permanently consumes a prepared
-slot. Guard the effect's count increment and its self re-advertisement on
-`alwaysPrepared != 1`, and order the effect `after: always-prepared-set` so the
-grant's flag is set first:
-
-```yaml
-# inside effect-{spell}-prepared
-after:
-  - group: always-prepared-set
-activities:
-  - type: numberIncrement
-    target: { fact: spellcasting.prepared.count }
-    source: { number: 1 }
-    when:
-      - { fact: spell.l1.divineSmite.removing, operator: equals, value: 0 }
-      - { fact: spell.l1.divineSmite.alwaysPrepared, operator: notEquals, value: 1 }
-  - type: advertiseEffect # self-sustain only while not granted
-    self: true
-    when:
-      - { fact: spell.l1.divineSmite.removing, operator: equals, value: 0 }
-      - { fact: spell.l1.divineSmite.alwaysPrepared, operator: notEquals, value: 1 }
-```
-
-### Pattern: Free Casts Per Long Rest (Spell Resource)
-
-**Use when:** A feature lets a spell be cast a limited number of times per long
-rest without a spell slot (e.g. Paladin's free Divine Smite once per long rest).
-
-Model the free uses as a resource granted by the feature, and offer it inside
-the spell's normal cast offer as **slot "level 0"** so there is a single cast
-option rather than a duplicate.
-
-- Feature grants the resource: `{ability}.total`/`{ability}.remaining` (set in an
-  early-phase rule), with a long-rest reset that copies `total` → `remaining`,
-  and a persistent effect (advertised by the cast) that keeps `remaining` at the
-  spent value until `rest.long == 1`. (See `class-paladin/paladin-smite.yaml`.)
-- The spell's cast offer computes a slider `min` of `0` when a free use is
-  available (else `1`) via a fact, and gates legality on
-  `slots + freeUses > 0`. Selecting level `0` consumes the free use instead of a
-  slot. Non-holders never have the resource, so the level-0 notch never appears
-  for them. (See `spells/divine-smite.yaml`.)
-
-Because the free use only changes which resource is spent — not whether a spell
-is being cast — the cast still consumes the bonus action and the
-`spellcasting.remaining` "one spell per turn" resource in both cases.
-
----
-
-## 7. Conventions
-
-### Stats Declarations (`ui.stats[]`)
-
-Rules can declare stats to display in the play mode stats column via `ui.stats[]`. The rules engine ignores these — they are a UI concern only.
-
-**Convention:** Place `ui.stats[]` on the rule that logically owns the fact being displayed. For facts derived by modifier rules across multiple files, use a dedicated stats-only skeleton rule (with `activities: []`).
-
-Three stat types are supported:
-
-```yaml
-# Plain number (e.g., Turn Counter)
-- id: turn-counter-increment
-  activities:
-    - type: numberIncrement
-      target: { fact: turn.counter }
-      source: { number: 1 }
-  ui:
-    stats:
-      - name: play.stats.turnCounter
-        type: value
-        fact: turn.counter
-        section: turn
-
-# Stats-only skeleton (no activities — facts derived by modifier rules)
-- id: proficiency-reset
-  activities: []
-  ui:
-    stats:
-      - name: play.stats.proficiency
-        type: modifier
-        fact: proficiency.bonus
-        section: abilities
-
-# Resource with capacity (e.g., Actions 1/1)
-- id: action-max
-  activities:
-    - type: numberSet
-      target: { fact: actions.max }
-      source: { number: 1 }
-  ui:
-    stats:
-      - name: play.stats.actions
-        type: usedMax
-        total: actions.max
-        remaining: actions.remaining
-        section: resources
-
-# Stats-only skeleton for spell slots (9 stat entries, one per level)
-- id: spellcasting-slots-total
-  activities: []
-  ui:
-    stats:
-      - name: play.stats.spellLevel
-        nameParams: { level: 1 }
-        type: usedMax
-        total: spellcasting.slots.level1.total
-        remaining: spellcasting.slots.level1.remaining
-        section: magic
-```
-
-**Sections** group stats visually. Known sections (in display order):
-
-- `turn` — Turn counter
-- `resources` — Speed, Actions, Spellcasting, HP
-- `abilities` — Proficiency
-- `magic` — Spell slots
-- `stats` — Ability scores
-- `skills` — Skills
-
-**Display rules:**
-
-- `value`: shows plain number; hidden if fact is undefined
-- `modifier`: shows `+X` or `-X`; hidden if fact is undefined
-- `usedMax`: shows `X / Y`; hidden if total is 0 or undefined
-
-### Annotations (`annotate` activity and `ui.annotationLabels`)
-
-Annotations display reminder text on action panels when certain conditions are met. The rules engine produces annotations via the `annotate` activity, and the UI matches them against action labels.
-
-**How it works:**
-
-1. Actions (e.g., attacks) declare `ui.annotationLabels` — labels they respond to
-2. Rules use `annotate` activities with conditions and target labels — the engine produces annotations when conditions pass
-3. When an annotation's targets overlap with an action's labels, the annotation text appears on that action's panel
-
-**Attack labels** (on the definition's `ui` field):
-
-```yaml
-# Unarmed Strike
-ui:
-  model: attack
-  annotationLabels: [attack.any, attack.melee, attack.unarmed]
-
-# Melee weapon (dagger, greataxe, etc.)
-ui:
-  model: attack
-  annotationLabels: [attack.any, attack.melee, attack.weapon]
-```
-
-**Annotation rules** (using `annotate` activity with YAML anchors):
-
-```yaml
-# Define condition anchors (shared with legalWhen)
-legalWhen:
-  - condition: &ds-has-bonus-action
-      fact: bonusActions.remaining
-      operator: greaterThan
-      value: 0
-    illegalDiagnostics:
-      - code: rule.spell-divine-smite.offer-divine-smite.no_bonus_action
-        severity: error
-
-# Annotate rule uses the same anchors
-- id: annotate-divine-smite
-  after:
-    - group: __planned__
-    - group: spellcasting
-    - group: smite-resources-computed
-  activities:
-    - type: annotate
-      when:
-        - *ds-has-bonus-action
-        - *ds-has-attack-action
-        - *ds-has-smite-slots
-        - *ds-has-spellcasting
-      key: rule.spell-divine-smite.annotation
-      targets: [attack.melee, attack.unarmed]
-```
-
-Annotations are produced by the engine when all `when` conditions pass. Use YAML anchors (`&name` / `*name`) to share conditions between `legalWhen` and the annotate rule's `when` — avoiding duplication. The annotation `key` must be an i18n key with translations in both locales.
-
-### Dice-Line Controls (`ui.primaryControl` / `ui.secondaryControl`)
-
-A `dice-line` control renders one or more tappable dice chips — e.g. an attack's to-hit d20 plus its damage die, or a saving-throw d20. Each entry in its `dice[]` array is one die:
-
-```yaml
-primaryControl:
-  type: dice-line
-  ranges: { var: ranges } # optional (melee/thrown/etc.)
-  advantage: { fact: attack.str.disadvantage } # optional
-  dice:
-    - sides: 20
-      bonus: { var: hitBonus }
-      purpose: to-hit
-    - sides: { var: damageDie }
-      bonus: { var: damageBonus }
-      damageType: { string: slashing }
-      purpose: damage
-```
-
-**`purpose` is required on every die** and is enforced by the schema (`make validate-rules-schema` rejects a die without it). It declares the die's semantic role so the UI can label and (later) group rolls by intent rather than guessing from the die size. Use one of:
-
-| `purpose` | Use for                                                       |
-| --------- | ------------------------------------------------------------- |
-| `to-hit`  | Attack rolls — weapon, unarmed, spell attacks, shove, grapple |
-| `damage`  | Any die that deals damage (carries `damageType`)              |
-| `healing` | Any die that restores HP (healing spells and abilities)       |
-| `save`    | Saving throws                                                 |
-| `check`   | Ability checks, skill checks, initiative                      |
-
-Author `purpose` by intent, not by inference: a healing die is `healing` even if it omits `unit: hp`, and an attack's d20 is `to-hit` (not `check`). The roll toast label and each chip's accessible name are both derived from this field.
-
-### Translations
-
-Every rule group must have translations for both supported locales:
-
-```yaml
-translations:
-  en:
-    name: Display Name
-    description: Human-readable description
-    keywords: [search, terms]
-  en-x-tlh:
-    name: Klingon Name
-    description: Klingon description
-    keywords: [klingon, terms]
-```
-
-The test suite validates this — missing translations will fail `make test`.
-
-### i18n Keys
-
-All user-facing strings use i18n keys, never hardcoded text:
-
-```yaml
-# Correct
-name: rule.dnd-5e-2024.movement.move-walk.name
-
-# Wrong
-name: Walk
-```
-
-i18n keys follow the pattern: `rule.{rule-group-id}.{rule-id}.{field}`
-
-### Shared Anchors
-
-Place reusable YAML anchors in `data/rule-groups/_shared/definitions.yaml`. This file is prepended before parsing, so anchors are available in all rule group files.
-
-Currently available:
-
-- `*error-clear` — Clears the `errors` var
-
-### Group Naming
-
-Group names should describe what they gate:
-
-- `spellcasting-slots-set` — When all slot modifications are done
-- `species-constants` — When species base values are set
-- `action-max` — When action maximum is set
-- `hp-total` — When HP base value has been set
-- `hp-set` — When all HP contributions have settled
-
-### Rule ID Naming
-
-Rule IDs should be descriptive and namespaced:
-
-- `{category}-{feature}-{action}`: `action-move-walk-offer`
-- `{category}-{feature}-{modifier}`: `paladin-level1-proficiency`
-- `{category}-{reset}`: `proficiency-reset`, `spellcasting-slots-reset`
-
----
-
-## 8. Testing and Verification
-
-Add suitable tests into `yaml-scenarios` when creating new rules.
-
-### Automated
-
-- **`make test`** — Runs unit tests including translation completeness checks
-- **Schema validation** — The `schema.json` file provides validation via yaml-language-server in editors
-
-### Syncing to Test Environment
-
-- **`make sync-rule-groups`** — Syncs YAML definitions to the test DynamoDB table. Run this after adding or modifying rule groups.
-- **`make deploy-test`** — Full deployment including rule group sync
-
-### Manual Verification Checklist
-
-1. All rule groups have `en` and `en-x-tlh` translations with `name`, `description`, and `keywords`
-2. Every YAML file has the schema comment on line 1
-3. All `after` references point to groups that actually exist in the same phase
-4. Rules that modify the same fact use `group`/`after` only when ordering matters (copy-after-settle)
-5. No rule waits on a group it belongs to (self-dependency cycle)
-6. All `requires` references point to existing rule group IDs
-7. User-facing strings use i18n keys, not hardcoded text
-8. The `*error-clear` anchor is used before any `setAdd` to the `errors` var
-9. New rule groups are reachable via SEED#, `requires`, or manual selection (see Section 4)
-10. Spells with a `detail:` section also have `detailKey: {key}` on the cast rule's `ui:` and on any persistent effect rule's `ui:` — the detail JSON alone is not enough to show the flip button
-
----
-
-## 9. Activity Types Reference
-
-| Type              | Description                   | Key Fields                                     |
-| ----------------- | ----------------------------- | ---------------------------------------------- |
-| `numberSet`       | Set fact to value (overwrite) | `target.fact`, `source`                        |
-| `numberIncrement` | Add/subtract from fact        | `target.fact`, `source`, `subtract?: true`     |
-| `numberCopy`      | Copy value between facts      | `source.fact`, `target.fact`                   |
-| `numberSum`       | Sum multiple sources          | `target.fact`, `sources[]`                     |
-| `numberFunction`  | Apply named function          | `function`, `sources[]`, `target.fact`, `args` |
-| `emitEvent`       | Emit transient event          | `event`                                        |
-| `generateRule`    | Create rule for later phase   | `rule`                                         |
-| `offerRule`       | Offer choice to UI            | `rule`, `legalWhen[]`                          |
-| `setClear`        | Clear var array               | `target.var`                                   |
-| `setAdd`          | Add string to var array       | `target.var`, `source.string`                  |
-| `advertiseEffect` | Persistent cross-turn effect  | `rule` or `self: true`                         |
-
-> **Effect-offered `legalWhen` ordering invariant.** When an `advertiseEffect`
-> (or `generateRule`) rule offers a sub-rule via `offerRule`, that sub-rule's
-> `legalWhen` fact reads do **not** add an auto-`after` to the emitting effect
-> (doing so would form an `__effects__ → _auto.fact.X → __effects__` cycle with
-> the planned actions that consume `X`). For the offer's legality to be correct,
-> any fact read by an effect-offered rule's `legalWhen` **must be baselined in an
-> earlier phase than the offering effect** (e.g. set in `early` when the effect
-> is `normal`) — never by a same-phase effect. The same-phase writers of such a
-> fact are the planned consumers, which a pre-consumption legality check must not
-> wait for. (Guarded by the `steed-fell-glare` integration scenario.)
-
-### Named Functions (numberFunction)
-
-| Function         | Description                       | `args`       |
-| ---------------- | --------------------------------- | ------------ |
-| `statToModifier` | Convert ability score to modifier | _(none)_     |
-| `multiply`       | Multiply source values together   | `multiplier` |
-| `max`            | Return maximum value from sources | _(none)_     |
-
-### Source Types
-
-| Type        | Example                                              | Description                  |
-| ----------- | ---------------------------------------------------- | ---------------------------- |
-| `number`    | `{number: 5}`                                        | Literal numeric value        |
-| `fact`      | `{fact: proficiency.bonus}`                          | Reference to a fact          |
-| `var`       | `{var: distance}`                                    | Reference to a rule variable |
-| `condition` | `{condition: {fact: x, operator: equals, value: 0}}` | Evaluates to 1 or 0          |
-| `string`    | `{string: rule.error.key}`                           | Literal string (i18n key)    |
-
-### Comparison Operators
-
-`equals`, `notEquals`, `greaterThan`, `greaterThanOrEqual`, `lessThan`, `lessThanOrEqual`
-
----
-
-## 10. Dependency Graph Visualization
-
-Here is the dependency graph for the base D&D 5e 2024 rule groups with a Paladin:
-
-```plain
-Phase: early
-  species-constants ──────────────────> action-move-reset
-  (species-human)                       (movement)
-       │                                     │
-       └── sets movement.total               └── copies total to remaining
-                                            (after species-constants)
-
-  paladin-level1-proficiency
-  (class-paladin-level1)
-       │
-       └── increments proficiency.bonus by 2
-           (no after — facts start at 0)
-
-  spellcasting-max ──────> spellcasting-reset
-  (spellcasting)            (spellcasting)
-       │                        │
-       └── sets max to 1        └── copies max to remaining
-                              (after spellcasting-max)
-
-  paladin-level1-spell-slots
-  (class-paladin-level1)
-       │
-       └── increments spellcasting.slots.level1.total by 2
-           (no after — facts start at 0, joins spellcasting-slots-set)
-
-  paladin-level1-hit-die
-  (class-paladin-level1)
-       │
-       └── increments hitDie.d10.total by 1
-           (joins hit-die-base group)
-
-  turn-counter
-  (turn-rest)
-       │
-       └── increments turn.counter by 1
-
-Phase: normal
-  hp-reset ──────> paladin-level1-hp ──> hp-copy
-  (hp)              (class-paladin-level1)  (hp)
-       │                  │                    │
-       └── sets max to 0  └── adds 10 + CON    └── copies max to current
-       (declares groups)     (joins hp-set)        (after hp-set)
-
-  half-movement-total ──> ... ──> half-movement-remaining ──> offer rules
-  (movement)                (movement)                         (movement)
-```
-
-## 11. Common Errors
-
-- Forgetting to create a SEED# record for new rule groups that should be used by all characters
-- Getting the ordering wrong
-- Not capturing variables that need to keep their values (e.g. slider max's)
-- Not making sure activities apply from both planned choices and active effects where required
-- Forgetting to `make deploy-test` or `make sync-rule-groups` to update the database
-- Forgetting `purpose` on a `dice-line` die — every die needs one of `to-hit`, `damage`, `healing`, `save`, `check` (enforced by the schema; `make validate-rules-schema` will reject the file)
+## 7. Common pitfalls
+
+- **Rules in YAML.** There is no rules DSL any more; the schema rejects
+  `rules:`. Logic goes in the module.
+- **Authoring ordering.** No phases/groups/`after` exist. If a value seems to
+  need ordering, express it as a derivation of the facts it depends on.
+- **Writing facts from `apply`.** Impossible by design — advertise an effect.
+- **Missing the second registration.** `registry.ts` AND `lazy.ts` both need
+  the module; a sync test fails if they drift.
+- **A section with no verb.** An offer whose `ui.section` has no verb mapping
+  and no `ui.intents` lands in the generic HANDLE picker bucket —
+  `sections.test.ts` fails the build.
+- **Keyed vs keyless effects.** Forgetting a `key` on replaceable state makes
+  re-application stack; putting a `key` on a per-turn spend makes the second
+  spend evict the first.
+- **Display omission.** An effect the player should see (or ever inspect)
+  needs `display`; a nameless hidden effect is invisible even in the reveal.
+- **One locale.** Every key lands in `en` **and** `en-x-tlh`, or
+  `module-i18n-coverage` fails.

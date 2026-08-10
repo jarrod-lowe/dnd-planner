@@ -1,4 +1,4 @@
-import type { Rule, Verb } from '$lib/rules-engine';
+import type { Rule, Verb } from '$lib/rules-view';
 
 /**
  * Derives the primary verb from a rule's ui.intents.

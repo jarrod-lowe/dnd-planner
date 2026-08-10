@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 import { validateCharacterImport, importCharacter } from '$lib/character/importCharacter';
-import type { Rule } from '$lib/rules-engine';
 
 const availableGroups = new Set(['dnd-5e-2024', 'species-human', 'class-paladin', 'class-fighter']);
 
@@ -18,7 +17,7 @@ describe('validateCharacterImport', () => {
 
   it('rejects JSON with wrong schemaVersion', () => {
     const result = validateCharacterImport(
-      { schemaVersion: 2, name: 'Thorin', species: 'human', ruleGroups: [] },
+      { schemaVersion: 99, name: 'Thorin', species: 'human', ruleGroups: [] },
       availableGroups
     );
 
@@ -29,7 +28,7 @@ describe('validateCharacterImport', () => {
 
   it('rejects JSON without name', () => {
     const result = validateCharacterImport(
-      { schemaVersion: 1, species: 'human', ruleGroups: [] },
+      { schemaVersion: 2, species: 'human', ruleGroups: [] },
       availableGroups
     );
 
@@ -39,7 +38,7 @@ describe('validateCharacterImport', () => {
 
   it('rejects JSON with empty name', () => {
     const result = validateCharacterImport(
-      { schemaVersion: 1, name: '  ', species: 'human', ruleGroups: [] },
+      { schemaVersion: 2, name: '  ', species: 'human', ruleGroups: [] },
       availableGroups
     );
 
@@ -49,7 +48,7 @@ describe('validateCharacterImport', () => {
 
   it('rejects JSON without species', () => {
     const result = validateCharacterImport(
-      { schemaVersion: 1, name: 'Thorin', ruleGroups: [] },
+      { schemaVersion: 2, name: 'Thorin', ruleGroups: [] },
       availableGroups
     );
 
@@ -59,7 +58,7 @@ describe('validateCharacterImport', () => {
 
   it('rejects JSON without ruleGroups', () => {
     const result = validateCharacterImport(
-      { schemaVersion: 1, name: 'Thorin', species: 'human' },
+      { schemaVersion: 2, name: 'Thorin', species: 'human' },
       availableGroups
     );
 
@@ -67,10 +66,25 @@ describe('validateCharacterImport', () => {
     expect(result.errors).toBeDefined();
   });
 
+  it('ignores custom-* group ids instead of failing validation (legacy exports)', () => {
+    const result = validateCharacterImport(
+      {
+        schemaVersion: 2,
+        name: 'Thorin',
+        species: 'human',
+        ruleGroups: ['dnd-5e-2024', 'custom-char-old']
+      },
+      availableGroups
+    );
+
+    expect(result.valid).toBe(true);
+    expect(result.data!.ruleGroups).toEqual(['dnd-5e-2024']);
+  });
+
   it('rejects JSON where ruleGroups references unknown IDs', () => {
     const result = validateCharacterImport(
       {
-        schemaVersion: 1,
+        schemaVersion: 2,
         name: 'Thorin',
         species: 'human',
         ruleGroups: ['dnd-5e-2024', 'nonexistent-pack']
@@ -91,7 +105,7 @@ describe('validateCharacterImport', () => {
   it('accepts valid JSON with all required fields', () => {
     const result = validateCharacterImport(
       {
-        schemaVersion: 1,
+        schemaVersion: 2,
         name: 'Thorin',
         species: 'human',
         ruleGroups: ['dnd-5e-2024', 'species-human']
@@ -107,31 +121,28 @@ describe('validateCharacterImport', () => {
     expect(result.data!.effects).toEqual([]);
   });
 
-  it('accepts valid JSON with optional customRules and effects', () => {
-    const effect = { id: 'effect-1', phase: 'normal', group: [], activities: [] };
-    const customRule = { id: 'custom-1', phase: 'normal', group: [], activities: [] };
+  it('accepts valid JSON with optional effects', () => {
+    const effect = { id: 'effect-1', state: { 'bless.active': 1 }, expiry: { kind: 'permanent' } };
 
     const result = validateCharacterImport(
       {
-        schemaVersion: 1,
+        schemaVersion: 2,
         name: 'Thorin',
         species: 'human',
         ruleGroups: ['dnd-5e-2024'],
-        customRules: [customRule],
         effects: [effect]
       },
       availableGroups
     );
 
     expect(result.valid).toBe(true);
-    expect(result.data!.customRules).toEqual([customRule]);
     expect(result.data!.effects).toEqual([effect]);
   });
 
   it('defaults effects to empty array when missing', () => {
     const result = validateCharacterImport(
       {
-        schemaVersion: 1,
+        schemaVersion: 2,
         name: 'Thorin',
         species: 'human',
         ruleGroups: ['dnd-5e-2024']
@@ -158,20 +169,13 @@ describe('importCharacter', () => {
     ruleGroups: ['dnd-5e-2024', 'species-human'],
     effects: []
   };
-  const defaultAssigned = [
-    'action-economy',
-    'proficiency',
-    'movement',
-    'free-actions',
-    'custom-char-new'
-  ];
+  const defaultAssigned = ['action-economy', 'proficiency', 'movement', 'free-actions'];
 
   function createMockDeps(assigned: string[] = []) {
     return {
       createCharacter: vi.fn().mockResolvedValue({ characterId: 'char-new' }),
       fetchAssignedRuleGroups: vi.fn().mockResolvedValue([...assigned]),
       assignRuleGroup: vi.fn().mockResolvedValue(undefined),
-      updateCustomRules: vi.fn().mockResolvedValue(undefined),
       saveEffects: vi.fn().mockResolvedValue(undefined)
     };
   }
@@ -224,30 +228,17 @@ describe('importCharacter', () => {
   });
 
   it('saves effects to the new character', async () => {
-    const effect: Rule = { id: 'effect-bless', phase: 'normal', group: [], activities: [] };
+    const effect = {
+      id: 'effect-bless',
+      state: { 'bless.active': 1 },
+      expiry: { kind: 'permanent' as const }
+    };
     const data = { ...baseData, effects: [effect] };
     const deps = createMockDeps(defaultAssigned);
 
     await importCharacter(data, 'Thorin', deps);
 
     expect(deps.saveEffects).toHaveBeenCalledWith('char-new', [effect]);
-  });
-
-  it('saves custom rules when present', async () => {
-    const customRule: Rule = { id: 'custom-1', phase: 'normal', group: [], activities: [] };
-    const data = { ...baseData, customRules: [customRule] };
-    const deps = createMockDeps(defaultAssigned);
-
-    await importCharacter(data, 'Thorin', deps);
-
-    expect(deps.updateCustomRules).toHaveBeenCalledWith('char-new', [customRule]);
-  });
-
-  it('does not call updateCustomRules when no custom rules', async () => {
-    const deps = createMockDeps(defaultAssigned);
-    await importCharacter(baseData, 'Thorin', deps);
-
-    expect(deps.updateCustomRules).not.toHaveBeenCalled();
   });
 
   it('returns the new character ID', async () => {

@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: feat-sentinel
     condition:
@@ -13,73 +12,53 @@ ruleGroups:
     translations:
       en:
         name: Sentinel
-        description: Opportunist. You strike foes who attack others and cannot be avoided by Disengaging.
-        keywords: [sentinel, feat, opportunity, attack, reaction, melee]
+        description: Opportunist. You strike foes who attack others and cannot be
+          avoided by Disengaging.
+        keywords:
+          - sentinel
+          - feat
+          - opportunity
+          - attack
+          - reaction
+          - melee
       en-x-tlh:
         name: Sentinel
         description: Sentinel DIvI'. DIch DIvI' DIch 'ej DIch DIvI' DIvI'.
-        keywords: [sentinel, DIvI', DIch, jey']
+        keywords:
+          - sentinel
+          - DIvI'
+          - DIch
+          - jey'
     settings:
       - id: sentinel-ability-score
         type: select
         translations:
-          en: { name: "Ability Score Increase (+1)" }
-          en-x-tlh: { name: "laH chel (+1)" }
+          en:
+            name: Ability Score Increase (+1)
+          en-x-tlh:
+            name: laH chel (+1)
         options:
           - value: str
             translations:
-              en: { name: "Strength" }
-              en-x-tlh: { name: "HoS" }
+              en:
+                name: Strength
+              en-x-tlh:
+                name: HoS
           - value: dex
             translations:
-              en: { name: "Dexterity" }
-              en-x-tlh: { name: "Do" }
+              en:
+                name: Dexterity
+              en-x-tlh:
+                name: Do
         effect:
           id: sentinel-asi-${value}
-          phase: early
-          ui:
+          key: sentinel-asi-${value}
+          state:
+            ${value}.value: 1
+          # Named for the strip's reveal toggle; hidden from the default view.
+          display:
             name: rules.settings.sentinel-asi.${value}
-            section: other
+            displayFact: ${value}.value
             hidden: true
-          after:
-            - group: ${value}-base-set
-            - group: ${value}-values
-          group:
-            - ${value}-increases
-            - Stats
-          activities:
-            - type: numberIncrement
-              target:
-                fact: ${value}.value
-              source:
-                number: 1
-            - type: advertiseEffect
-              self: true
-    rules:
-      # Set the Sentinel feat active flag
-      - id: sentinel-flag
-        phase: normal
-        activities:
-          - type: numberSet
-            target:
-              fact: feat.sentinel.active
-            source:
-              number: 1
-
-      # Annotate melee reaction attacks with Sentinel benefits
-      - id: sentinel-annotate
-        phase: normal
-        when:
-          - fact: feat.sentinel.active
-            operator: equals
-            value: 1
-        activities:
-          - type: annotate
-            key: rule.dnd-5e-2024.feat-sentinel.annotation-disengage
-            targets: [attack.reaction]
-          - type: annotate
-            key: rule.dnd-5e-2024.feat-sentinel.annotation-retaliate
-            targets: [attack.reaction]
-          - type: annotate
-            key: rule.dnd-5e-2024.feat-sentinel.annotation-speed
-            targets: [attack.reaction]
+          expiry:
+            kind: permanent

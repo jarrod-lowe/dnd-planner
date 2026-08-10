@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import PanelRenderer from '$lib/components/play/PanelRenderer.svelte';
-import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
+import type { AvailableRuleEntry, Rule } from '$lib/rules-view';
 
 const createSelectEntry = (overrides?: Partial<AvailableRuleEntry>): AvailableRuleEntry => ({
   rule: {
@@ -21,7 +21,7 @@ const createSelectEntry = (overrides?: Partial<AvailableRuleEntry>): AvailableRu
       levels: { default: { array: [0, 0.5, 1, 2] } },
       level: { default: { number: 0 } }
     }
-  } as Rule,
+  } as unknown as Rule,
   legal: true,
   applicable: true,
   diagnostics: [],

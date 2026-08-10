@@ -1,0 +1,51 @@
+name: 'Divinity - Short Rest No Banking'
+description: >-
+  A short rest restores an EXPENDED Channel Divinity use only. Resting while the
+  pool is full banks nothing: no recovery point accumulates, so uses spent after
+  the rests stay spent.
+ruleGroups:
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divinity
+  - class-paladin/class-paladin-level3
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/core-events
+steps:
+  # Two short rests with nothing spent: no recovery may be emitted.
+  - evaluate:
+      assert:
+        facts:
+          divinity.total: 2
+          divinity.remaining: 2
+  - addOffer:
+      id: record-short-rest
+      assert:
+        facts:
+          divinity.recovered: 0
+          divinity.remaining: 2
+  - endTurn: {}
+  - addOffer:
+      id: record-short-rest
+      assert:
+        facts:
+          divinity.recovered: 0
+          divinity.remaining: 2
+  - endTurn: {}
+  # Spend both points (one bonus action per turn); nothing was banked, so the
+  # pool really empties.
+  - addOffer:
+      id: divine-sense
+      assert:
+        facts:
+          divinity.remaining: 1
+  - endTurn: {}
+  - addOffer:
+      id: divine-sense
+      assert:
+        facts:
+          divinity.remaining: 0
+  - endTurn:
+      assert:
+        facts:
+          divinity.recovered: 0
+          divinity.remaining: 0

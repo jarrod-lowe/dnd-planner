@@ -44,3 +44,4 @@ generated/
 
 # Claude Code config
 .claude/
+.pytest_cache/

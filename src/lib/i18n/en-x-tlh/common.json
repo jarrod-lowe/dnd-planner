@@ -176,7 +176,8 @@
       },
       "offer-dismiss-steed": {
         "name": "Sargh mup",
-        "keywords": "dismiss mount companion send away"
+        "keywords": "dismiss mount companion send away",
+        "no_action": "DIvI' tu'lu'be'"
       },
       "annotate-life-bond": {
         "text": "yIn DIch: Sargh DIvI' DIch (vagh 'uy' DIch, mugh level 1+) [manual]"
@@ -372,7 +373,8 @@
         "no_l2_slots": "patlh 2 mugh laH tu'lu'be'",
         "no_l3_slots": "patlh 3 mugh laH tu'lu'be'",
         "no_l4_slots": "patlh 4 mugh laH tu'lu'be'",
-        "no_l5_slots": "patlh 5 mugh laH tu'lu'be'"
+        "no_l5_slots": "patlh 5 mugh laH tu'lu'be'",
+        "wrong_level": "mugh laH patlh qar'be'"
       },
       "prepare-divine-smite-offer": {
         "name": "quv Qaw' mugh chenmoH",
@@ -477,7 +479,8 @@
       "unprepare-prayer-of-healing-offer": {
         "name": "Qor' nIvbogh mugh lISmoH",
         "keywords": "heal restore hit points group rest",
-        "not_prepared": "Qor' nIvbogh not prepared"
+        "not_prepared": "Qor' nIvbogh not prepared",
+        "always_prepared": "Qor' nIvbogh always prepared"
       },
       "effect-prayer-of-healing-prepared": {
         "name": "Qor' nIvbogh Prepared"
@@ -1171,7 +1174,9 @@
           "button": "Cleave"
         },
         "greataxe-mastery": {
-          "name": "nuH jen Mastery (Cleave)"
+          "name": "nuH jen Mastery (Cleave)",
+          "keywords": "greataxe mastery cleave weapon attack nuH",
+          "description": "nuH jen mastery 'ej Cleave"
         },
         "attack-greataxe-offer": {
           "no_action": "DIvI' tu'lu'be'"
@@ -1182,7 +1187,9 @@
           "description": "1d4 piercing | Finesse, Light, Thrown 20/60 | Nick"
         },
         "dagger-mastery": {
-          "name": "nejwI' Mastery (Nick)"
+          "name": "nejwI' Mastery (Nick)",
+          "keywords": "dagger mastery nick weapon attack nuH",
+          "description": "nejwI' mastery 'ej Nick"
         },
         "javelin": {
           "name": "Javelin",
@@ -1520,16 +1527,6 @@
     "toggleError": "DIvI' DIvI' laHbe'. yInIDqa'.",
     "requiredBy": "DIvI': {{names}}",
     "conditionNotMet": "DIch DIch DIvI'",
-    "editCustomRules": "DIvI' chu' DIvI'",
-    "customRulesTitle": "DIvI' chu'",
-    "backToManageRules": "DIvI' SeH HI'egh",
-    "saveRules": "pol",
-    "resetRules": "chID",
-    "saving": "pollI'...",
-    "saveError": "DIvI' pol laHbe'. yInIDqa'.",
-    "validationErrors": "DIvI' DIvI'be'",
-    "yamlSyntaxError": "YAML DIvI'be'",
-    "noErrors": "DIvI'be'",
     "settingsTitle": "{{name}} DIvI'",
     "settingsConfirm": "chel",
     "settingsCancel": "DIvI'",
@@ -1769,7 +1766,8 @@
       "loadRuleGroups": "nuv DIvI' laHbe'",
       "loadEffects": "DIvI' DIvI' laHbe'",
       "saveEffects": "DIvI' pol laHbe'",
-      "engineCycle": "DIvI' DIvI' DIvI' DIvI'."
+      "engineCycle": "DIvI' DIvI' DIvI' DIvI'.",
+      "evaluate": "DIvI' DIvI' laHbe'. wanI' ret cha'lu'."
     },
     "toast": {
       "rollType": {
@@ -2069,6 +2067,10 @@
     "psychic": "Psychic"
   },
   "planner": {
+    "after-rest": "DIvI' rInpu' tu'lu'be'",
+    "concentration": {
+      "check": "buQ waH"
+    },
     "record": {
       "damage": "QInvID DIvI'",
       "heal": "DIvI' DIvI'",

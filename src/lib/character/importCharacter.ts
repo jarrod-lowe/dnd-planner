@@ -1,11 +1,10 @@
-import type { Rule } from '$lib/rules-engine';
+import type { EffectInstance } from '$lib/rules-engine';
 
 export interface CharacterImport {
   name: string;
   species: string;
   ruleGroups: string[];
-  customRules?: Rule[];
-  effects: Rule[];
+  effects: EffectInstance[];
 }
 
 export interface ImportValidationError {
@@ -31,7 +30,7 @@ export function validateCharacterImport(
 
   const obj = raw as Record<string, unknown>;
 
-  if (obj.schemaVersion !== 1) {
+  if (obj.schemaVersion !== 2) {
     errors.push({ code: 'importInvalidVersion' });
   }
 
@@ -43,10 +42,16 @@ export function validateCharacterImport(
     errors.push({ code: 'importErrorMissingSpecies' });
   }
 
-  if (!Array.isArray(obj.ruleGroups)) {
+  // Older exports carried the per-character `custom-<id>` group — meaningless on
+  // a new character, so it is dropped rather than failed on.
+  const ruleGroups = Array.isArray(obj.ruleGroups)
+    ? obj.ruleGroups.filter((id) => !(typeof id === 'string' && id.startsWith('custom-')))
+    : undefined;
+
+  if (!ruleGroups) {
     errors.push({ code: 'importErrorMissingRuleGroups' });
   } else {
-    const missing = obj.ruleGroups.filter(
+    const missing = ruleGroups.filter(
       (id) => typeof id !== 'string' || !availableRuleGroupIds.has(id)
     ) as string[];
     if (missing.length > 0) {
@@ -61,13 +66,9 @@ export function validateCharacterImport(
   const data: CharacterImport = {
     name: (obj.name as string).trim(),
     species: (obj.species as string).trim(),
-    ruleGroups: [...(obj.ruleGroups as string[])],
-    effects: Array.isArray(obj.effects) ? [...(obj.effects as Rule[])] : []
+    ruleGroups: [...(ruleGroups as string[])],
+    effects: Array.isArray(obj.effects) ? [...(obj.effects as EffectInstance[])] : []
   };
-
-  if (Array.isArray(obj.customRules) && obj.customRules.length > 0) {
-    data.customRules = [...(obj.customRules as Rule[])];
-  }
 
   return { valid: true, data };
 }
@@ -76,8 +77,7 @@ export interface ImportDependencies {
   createCharacter: (name: string, species: string) => Promise<{ characterId: string }>;
   fetchAssignedRuleGroups: (characterId: string) => Promise<string[]>;
   assignRuleGroup: (characterId: string, ruleGroupId: string) => Promise<void>;
-  updateCustomRules: (characterId: string, rules: Rule[]) => Promise<void>;
-  saveEffects: (characterId: string, effects: Rule[]) => Promise<void>;
+  saveEffects: (characterId: string, effects: EffectInstance[]) => Promise<void>;
 }
 
 export async function importCharacter(
@@ -92,10 +92,6 @@ export async function importCharacter(
 
   for (const ruleGroupId of toAssign) {
     await deps.assignRuleGroup(character.characterId, ruleGroupId);
-  }
-
-  if (data.customRules && data.customRules.length > 0) {
-    await deps.updateCustomRules(character.characterId, data.customRules);
   }
 
   if (data.effects.length > 0) {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getAnnotationLabels, getMatchingAnnotations } from '$lib/play/annotations';
-import type { Annotation } from '$lib/rules-engine';
+import type { Annotation } from '$lib/rules-view';
 
 describe('getAnnotationLabels', () => {
   it('returns empty array when ui is undefined', () => {

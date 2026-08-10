@@ -2,13 +2,13 @@
   import { t } from '$lib/i18n';
   import { SvelteMap } from 'svelte/reactivity';
   import { playStore } from '$lib/play/playStore.svelte';
-  import { correctEntryForPlanItem } from '$lib/play/correctedEntry';
   import PlanRow from './PlanRow.svelte';
   import AddRowPicker from './AddRowPicker.svelte';
   import { groupChoicesByVerb } from '$lib/play/groupChoicesByVerb';
   import { getSubject } from '$lib/play/subjectUtils';
   import type { PlannedItem } from '$lib/play/types';
-  import type { AvailableRuleEntry, Annotation, Facts, Rule, Verb } from '$lib/rules-engine';
+  import type { AvailableRuleEntry, Annotation, Facts, Verb } from '$lib/rules-view';
+  import type { EffectInstance } from '$lib/rules-engine';
 
   interface Props {
     items: PlannedItem[];
@@ -21,7 +21,7 @@
     onSelectionChange: (instanceId: string, selections: Record<string, unknown>) => void;
     onSwapPlanItemRule: (instanceId: string, entry: AvailableRuleEntry) => void;
     onEndTurn: () => void;
-    onFollowup?: (rule: Rule) => void;
+    onFollowup?: (effect: EffectInstance) => void;
   }
 
   let {
@@ -38,28 +38,25 @@
     onFollowup
   }: Props = $props();
 
-  const entryById = $derived.by(() => {
-    const result: Record<string, AvailableRuleEntry> = {};
-    for (const entry of entries) {
-      result[entry.rule.id] = entry;
-    }
-    return result;
-  });
-
   const itemsWithEntries = $derived(
     items.map((item) => {
-      const entry = entryById[item.originalRuleId ?? item.rule.id];
-      if (!entry) return { item, entry: null };
+      // The per-instance entry: the offer's rule with THIS instance's own
+      // legality/diagnostics (the engine's planDiagnostics). Two copies of the
+      // same action can differ — the first spend legal, the second over-spent.
+      const planned = playStore.getPlannedEntry(item.instanceId);
+      if (planned) return { item, entry: planned };
 
-      const hypothetical = playStore.getAlternativeEntries(item.instanceId);
-      const hypEntry = hypothetical.find(
-        (e) => e.rule.id === (item.originalRuleId ?? item.rule.id)
-      );
-      const baseEntry = hypEntry
-        ? { ...entry, legal: hypEntry.legal, diagnostics: hypEntry.diagnostics }
-        : entry;
-
-      return { item, entry: correctEntryForPlanItem(baseEntry, item) };
+      // No per-instance entry means the engine SKIPPED this instance: its
+      // structural `when` was closed at its own step (e.g. the weapon was stowed,
+      // or the steed dismissed, earlier in the plan), so it advertised no effects.
+      // Show the row inapplicable — do NOT resolve it from the final
+      // `availableRules` catalog, which reflects post-plan state and could show a
+      // later-reopened offer as legal, making End Turn commit a different plan than
+      // the row displays. The player sees the inapplicable row and can remove it.
+      return {
+        item,
+        entry: { rule: item.rule, legal: true, applicable: false, diagnostics: [] }
+      };
     })
   );
 
@@ -115,28 +112,26 @@
 
   <div class="plan-stack__rows" role="list">
     {#each itemsWithEntries as { item, entry }, i (item.instanceId)}
-      {#if entry}
-        <div role="listitem">
-          <PlanRow
-            {item}
-            {entry}
-            {facts}
-            {activeAnnotations}
-            alternatives={correctedAlternatives(
-              item,
-              getAlternatives(item.verb, item.originalRuleId ?? '', getSubject(item.rule))
-            )}
-            canMoveUp={i > 0}
-            canMoveDown={i < items.length - 1}
-            onSelectionChange={(selections) => onSelectionChange(item.instanceId, selections)}
-            onRemove={() => onRemoveFromPlan(item.instanceId)}
-            onMoveUp={() => onMovePlanItem(item.instanceId, 'up')}
-            onMoveDown={() => onMovePlanItem(item.instanceId, 'down')}
-            onSwapAlternative={(alt) => onSwapPlanItemRule(item.instanceId, alt)}
-            {onFollowup}
-          />
-        </div>
-      {/if}
+      <div role="listitem">
+        <PlanRow
+          {item}
+          {entry}
+          {facts}
+          {activeAnnotations}
+          alternatives={correctedAlternatives(
+            item,
+            getAlternatives(item.verb, item.originalRuleId ?? '', getSubject(item.rule))
+          )}
+          canMoveUp={i > 0}
+          canMoveDown={i < items.length - 1}
+          onSelectionChange={(selections) => onSelectionChange(item.instanceId, selections)}
+          onRemove={() => onRemoveFromPlan(item.instanceId)}
+          onMoveUp={() => onMovePlanItem(item.instanceId, 'up')}
+          onMoveDown={() => onMovePlanItem(item.instanceId, 'down')}
+          onSwapAlternative={(alt) => onSwapPlanItemRule(item.instanceId, alt)}
+          {onFollowup}
+        />
+      </div>
     {/each}
   </div>
 

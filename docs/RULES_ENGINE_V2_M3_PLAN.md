@@ -1,0 +1,248 @@
+# Rules Engine v2 — M3 Plan (port all rule groups)
+
+Branch `claude/rules-engine-v2-m3` (PR #357, stacked on `…-m2`). This is the big
+milestone: re-author every v1 rule group as a v2 builder-API module until the
+whole scenario suite runs on v2. M4 then flips the runtime and deletes v1.
+
+## 1. Goal & exit criteria
+
+- **Every existing yaml scenario green on v2** (the parity harness, currently 3
+  runnable / 333 skipped, reaches ~0 skipped).
+- New scenarios added where v2 exposes behaviour v1 scenarios didn't cover.
+- The Python `scripts/rule_preprocessor` (weapons) is retired or retargeted.
+- The 3 deferred module-parity items (below) land.
+- `make test` green; no v1 behaviour regressions.
+
+## 2. What we already have (ported in M0/M1 + the spike)
+
+`ability-scores`, `hp`, `action-economy`, `attacks`, `spellcasting`,
+`class-paladin-level1`, `class-paladin-paladin-smite`, `spell-divine-smite`,
+`spell-divine-favour` — 9 modules, each code-split into its own lazy chunk.
+
+## 3. Strategy
+
+- **Parity harness is the oracle.** Port a group, its scenarios unskip
+  automatically (the harness resolves a scenario once _all_ its groups are
+  ported). Watch "N runnable / M skipped" climb after every port.
+- **Dependency order, foundation first** (§5). Most scenarios are full-character
+  and block on a few foundational groups (`proficiency`, `free-actions`,
+  `core-events`), so porting those unlocks scenarios in waves rather than one at a
+  time. Until a group's scenarios unskip, a **per-rule unit test is the interim
+  contract check** (as the spike did for Divine Favour).
+- **TDD, hardest-representative-first within a wave.** Each module: write the unit
+  test (or unskip the scenario), red, port, green, then run the parity harness.
+- **One module = one chunk = one canonical bare ruleGroupId** (registry.ts +
+  lazy.ts), matching the backend's persisted/published id namespace.
+
+## 4. Step 0 — multi-predicate expiry (DONE)
+
+The pre-M3 spike ([RULES_ENGINE_V2_M3_SPIKE.md](RULES_ENGINE_V2_M3_SPIKE.md))
+surfaced that a single-predicate `Expiry` can't model "duration AND ends on a
+rest". Landed: `ExpirySpec = Expiry | Expiry[]` (ends when the earliest condition
+fires) + an `untilShortRest` condition (a long rest ends it too) + a `shortRest`
+option on `endTurn`. Single conditions stay single objects; `endTurn` stays a
+pure fold. This unblocks every duration/rest spell in waves D/E.
+
+## 4b. Rest model (decided)
+
+A rest **applies immediately when recorded** — engine-wide, so the app and the
+parity harness behave identically, and both engines pass the same (v1-authored)
+scenarios that assert restoration right after a planned `record-rest`. Mechanism:
+a recorded rest is a fact (`rest.long` / `rest.short`, set by core-events'
+recorders); the sheet **excludes that rest's scoped effects in the evaluation it
+is recorded** (`untilLongRest` on a long rest; `untilShortRest` on either), and
+`endTurn` then drops them so they don't return next turn. `endTurn`'s explicit
+`longRest` / `shortRest` param is kept for direct callers (unit tests). A long
+rest counts as a short rest too. (Per the user: either timing is fine as long as
+it is consistent — this is the consistent definition chosen.)
+
+## 4c. Progress (parity 3 → 327 runnable; ALL groups ported + initialEffects migrated)
+
+**Milestone reached: the whole scenario suite runs on v2** — 327 / 337 runnable,
+the remaining **10 skips all by-design** (v2 plan-order vs v1 intra-turn reordering
+×3; v1 `removing` unprepare lifecycle ×3; two scenarios that omit the lay-on-hands
+group they assert against; and two genuine v2 limitations — a string `damageType`
+fact, since v2 facts are numeric, and a steed's passive self-removal at 0 HP, which
+needs v1's self-advertise/cascadeRemove lifecycle).
+
+The jump from 216 came in two phases after all groups were ported:
+
+1. **Closed every runnable-scenario feature gap** (216 → 224 → … see below): HP-
+   modifier setters, unarmed hit/damage, the concentration damage trigger, the
+   versatile two-hand check.
+2. **Migrated the ~114 v1-format `initialEffects` scenarios** onto the parity
+   harness via a central `INITIAL_EFFECTS_V2` adapter map (keyed by scenario name,
+   holding the v2 committed-effect translation), so the shared corpus stays pure-v1
+   (the v1 runner is untouched at 336/336). The migration surfaced and fixed ~12
+   real v2 bugs against the oracle (splint Stealth disadvantage; javelin Slow
+   followup; prayer-of-healing slot floor; calm-emotions / hold-person upcast
+   sliders; hold-person WIS save; the Extra Attack annotation; unarmed
+   `annotationLabels` + reaction offer) and required **building the Find Steed steed
+   subsystem** in v2 from scratch — a namespaced `companion.steed.*` sub-entity with
+   a slot-scaled stat block baked at cast time (per creature type), a derived
+   per-turn action economy / movement / saves / ability pools, and its full offer
+   set (move, dash, dodge, disengage, the three creature-type abilities, slam,
+   saves, skills, HP modifiers, damage/heal, dismiss-with-cascade).
+
+**Original milestone: every rule group a scenario references now has a v2 module.**
+The parity harness reports **0** scenarios skipped for an unported group — the 128
+remaining skips are all v1-format `initialEffects` or documented plan-order /
+prepare-lifecycle divergences (`SKIP_BY_NAME`), not missing features. The final
+four groups were `initialEffects`-only (no runnable scenario reaches them), so they
+land with focused unit tests (`tests/unit/rules-engine-v2/final-groups.test.ts`)
+instead of harness coverage: `spear-plus1` (magical `weaponOffers` variant, +1 in
+the hit/damage derives + a `property.magical` annotation), `feat-savage-attacker`
+(a one-per-turn reroll resource — `max`=1, `remaining = max − spent`, a free
+weapon-attack rider offer + annotation), and the two self-less L2 heal spells
+`spell-aid` (L2–5 cascade) and `spell-prayer-of-healing` (full L2–9 cascade), both
+on the shared `preparedSpellOffers` + slot-cascade shape. Turning the remaining
+`initialEffects`-format scenarios into runnable v2 fixtures (to grow parity beyond 208) is the separate test-migration effort, not a porting gap.
+
+Done: step 0 (multi-predicate expiry) + the rest model; **Wave A foundation**
+(`ability-scores`, `proficiency`, `free-actions`, `core-events`, `ac`,
+`movement`, `species-human`); resources `heroic-inspiration`, `lay-on-hands`;
+`class-paladin-level1` filled out (saves, spell modifier, armor profs, LoH pool,
+prepared max); **the prepared-spell path** (deferred item #2 below — DONE via
+`builder.preparedSpellOffers`); the first concentration / on-hit-smite / ward
+spells (`bless`, `thunderous-smite`, `create-and-destroy-water`, `sanctuary`,
+`protection-from-evil-and-good`); and **the weapons spike** (`hands`,
+`dagger`(+`-mastery`), `greataxe`(+`-mastery`)) via `builder.weaponOffers` — the
+definitions × profiles cross-product the Python preprocessor generated is now a
+plain function over data (see Wave D); and **paladin level 2**
+(`class-paladin-level2`) — the keystone of the paladin progression (it blocks
+~42 scenarios; level3 a further 32, etc.). It stacks `combine: sum` onto level 1
+(HP, prepared-spell capacity, Lay-on-Hands pool) and finally exercises the Divine
+Smite free-use path (already in the smite module). The CON-at-level capture v1
+did for HP collapses to "count CON once at level 1" in v2's passive-derive model;
+the hit-die contribution is deferred with the hit-die group. **Paladin level 3**
+(`class-paladin-level3`) follows the same shape (+6 HP, a third L1 slot, +1
+prepared, +5 LoH, +2 Channel Divinity pool — `remaining`s derived by their owning
+groups). Note `paladin-level3-loh-pool` is skip-listed: it omits the
+lay-on-hands group yet asserts `pool.remaining`, which v2 derives there (v1 set
+it directly in the class-level rules); `pool.total` still matches and the
+level2/3 loh scenarios that load the group cover `remaining`.
+
+**Backlog cleared (all runnable-scenario feature gaps now closed — parity 215):**
+The last five skip-listed _runnable_ scenarios blocked on un-ported offers/derives
+within ported groups now run against the v1 oracle:
+
+- **HP-modifier setters** — `hp` now offers `set-hp-modifier-max` /
+  `set-hp-modifier-current` as KEYED permanent effects, so re-use REPLACES rather
+  than stacks (`hp-with-modifiers`, `hp-modifier-no-stacking`). `hp-paladin-level1`
+  was a stale skip (`set-constitution` + the CON→`hp.base.max` fold already existed).
+- **Unarmed `hitBonus`/damage** — DONE (was DONE for the spike weapons; the unarmed
+  `attack.unarmed.hitBonus = str.modifier + proficiency.bonus`, `damageBonus =
+str.modifier` derives now land too), unblocking `attack-unarmed-strike` /
+  `ability-modifier-ordering`.
+- **Concentration damage trigger — DONE**: core-events' `record-damage` trips a
+  keyed `endOfTurn` `concentration.damage-taken` while concentrating (`remaining ≤
+0`), and `concentration` surfaces the `concentration-check` offer; recording it
+  clears the marker via the SAME key (newest wins), so no imperative mid-turn
+  subtract is needed (`concentration-check-after-damage`). The earlier "needs more
+  than the effect model" note was an over-estimate — the keyed model covers it.
+
+- **Versatile two-hand free-hand check — DONE**: `weaponOffers` now exposes
+  `extraHands` as a captured selection on versatile weapons and `withVersatile`
+  errors `versatile.no-free-hand` when the two-hand grip is chosen with no hand
+  free (`extraHands > 0 && hands.remaining < 1`) — v1's `extraHandsNeeded` check
+  (`spear-2h-no-free-hands`). Non-versatile weapons are returned unchanged.
+
+The **7** remaining non-`initialEffects` skips are all by-design or a scenario
+artifact, not feature gaps: `hi-use-then-grant` / `build-lock-weapon-clear` (v1
+intra-turn reordering; v2 is plan-order); `sleep`/`calm-emotions`/
+`hold-person-prepare` (v1 `removing` unprepare lifecycle; v2 evicts to the same
+end state); `paladin-level3-loh-pool` / `oath-redemption-level4` (scenario omits
+the lay-on-hands group yet asserts `pool.remaining`, which v2 derives there). Every
+runnable scenario that could exercise a v2 feature now runs green against the v1
+oracle; the ~114 still-skipped scenarios are all v1-format `initialEffects`
+fixtures (the separate test-migration effort).
+
+- **Passive-effect-from-rest hook — DONE** (`RuleModule.onRest`): a passive module
+  emits persistent effects when a rest is recorded this turn. `evaluatePlan` detects
+  the rest from the settled facts, appends each module's `onRest` effects, and
+  re-derives so they are visible in-evaluation and commit at end of turn. This
+  unblocked **Channel Divinity short-rest recovery** (`divinity` emits an
+  `untilLongRest` `divinity.recovered` point; `remaining = clamp(total − spent +
+recovered)`) and **Human HI-on-long-rest** (`species-human` emits a keyed
+  permanent HI effect — same key as the grant, so it does not stack).
+  `hi-human-long-rest-no-duplicate` stays skipped, but now only for its v1-format
+  `initialEffects`, not a missing feature.
+- **`hi-use-then-grant`** — relies on v1 intra-turn reordering; v2 plan fold is
+  plan-order by design (won't change).
+- **Always-prepared count gate edge** — handled at apply time (reads
+  `alwaysPrepared`); the `*-prepared-then-granted` scenarios that exercise it
+  also need later groups (level2 / find-steed / oath), so they unlock there.
+
+## 5. Port waves (order is a guide; parity coupling may reshuffle)
+
+Each entry is a v1 group → v2 module. Run the parity harness after each. **All
+waves below are now complete** (see §4c); the list is kept as the port record.
+
+- **Wave A — foundation (highest unlock):** `proficiency` (unblocks
+  ability-increase + all skills), `free-actions` (action-economy scenarios),
+  `core-events`, `hit-die`, `build-lock`, `concentration`, `movement`, `hands`,
+  `species-human`.
+- **Wave B — defence & checks:** `ac`, armor (`leather-armor`, `splint-armor`,
+  `shield`), `skill-checks`, `passive-skills`, `initiative`, `heroic-inspiration`.
+- **Wave C — actions & feats:** `dash`, `grapple`, `shove`, `simple-actions`,
+  `feat-alert`, `feat-savage-attacker`, `feat-sentinel`,
+  `fighting-style-great-weapon`.
+- **Wave D — weapons (retire the Python preprocessor) DONE:** `dagger`(+`-mastery`),
+  `greataxe`(+`-mastery`), `javelin`(+`-mastery`), `scimitar`(+`-mastery`),
+  `spear`, `spear-plus1` — all ported. The replacement for the
+  preprocessor is `builder.weaponOffers(def)`: a weapon is one self-contained
+  module (hit/damage derives + `weaponOffers`), where the helper crosses the
+  weapon `def` with the don/use-action/use-reaction/use-bonus profiles directly
+  in TS (template literals stand in for `$(definition.id)`). The remaining
+  weapons are the same shape; `spear`/`spear-plus1` additionally need the
+  versatile `extraHands` two-hand path (deferred — neither spike weapon uses it).
+  The v1 `data/rule-sources` + `scripts/rule_preprocessor` stay until v1 is
+  decommissioned (M4); deleting them now would break the v1 engine and its
+  scenarios. The spike proves the retirement is a mechanical follow-up.
+- **Wave E — paladin class + remaining spells:** class-paladin `divinity`,
+  `lay-on-hands`, `level2`–`level5`, `oath-redemption-level3/4/5`,
+  `paladin-find-steed`, `paladin-spells-l1/l2`; spells `bless`, `calm-emotions`,
+  `command`, `create-and-destroy-water`, `hold-person`, `prayer-of-healing`,
+  `protection-from-evil-and-good`, `sanctuary`, `sleep`, `spell-aid`,
+  `spell-find-steed`, `thunderous-smite`.
+
+## 6. Deferred module-parity items (carried from M0, land in M3)
+
+1. **Replacement-effect / HP-modifier rules** — the keyed-effect + `stateCombine`
+   engine support exists (`effect-model.test.ts`); port the rules that use it
+   (HP modifiers, prepared-spell markers).
+2. **Divine Smite / Divine Favour prepare path** — the prepare/unprepare offers +
+   `spellcasting.prepared.*` accounting (the spike used `prepared` as an input
+   fact; real prepare management ports here).
+3. **Full attack UI descriptors** — incl. `annotationLabels` so the smite/favour
+   riders actually attach in the panel (#355).
+
+## 7. Verification boundary
+
+- Pure-engine work (modules, expiry model, parity) is **fully testable here**:
+  `make test` (vitest + rules + lint), parity harness, `verify-chunks`.
+- Search-index publish of the new modules' metadata (M2/W4 sync half) and the
+  e2e/deploy proof remain **env/CI-gated** (run via `make sync-rule-groups` /
+  `make deploy-test`), deferred to their milestones.
+
+## 8. Guardrails (critical — inherited from CLAUDE.md, keep through compactions)
+
+- **TDD** for every module (red → green); **never commit on a failing `make test`**.
+- **Never commit to `main`.** Develop on `claude/rules-engine-v2-m3`.
+- **I18n:** all user-facing text via the translation files/keys — never hardcode
+  strings in modules; reuse existing `rule.*` keys where the v1 group had them.
+- **A11y + the CSS Law:** any UI-descriptor work uses semantic markup and only
+  existing theme colour variables — never invent colours; reuse semantic styles.
+- **Infra only via make targets** (`make deploy-test`, `make sync-rule-groups`,
+  `make validate`); never run `terraform` directly.
+- **New rules go through the yaml scenarios runner**; see
+  `docs/RULE_GROUP_GUIDE.md` before authoring.
+- **STOP rule:** if a rule genuinely doesn't fit the paradigm, stop and ask — do
+  not improvise a different engine shape (use the dependency mechanism / data
+  combinators, never split the phases further).
+
+## 9. Out of scope (M4)
+
+Runtime flip / feature-flag cutover, the UI + persistence contract adapter,
+migrating persisted effects to the ref format, and deleting the v1
+engine/activities/phases/YAML. Tracked in the master plan's M4 row.

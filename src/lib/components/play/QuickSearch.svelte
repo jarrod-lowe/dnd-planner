@@ -12,7 +12,7 @@
     type SearchOption
   } from '$lib/play/quickSearch';
   import { closeActiveTooltip, registerTooltipClose } from './tooltipSingleton';
-  import type { AvailableRuleEntry } from '$lib/rules-engine';
+  import type { AvailableRuleEntry } from '$lib/rules-view';
 
   interface Props {
     entries: AvailableRuleEntry[];

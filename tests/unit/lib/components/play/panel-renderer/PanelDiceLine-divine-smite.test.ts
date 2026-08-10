@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import PanelRenderer from '$lib/components/play/PanelRenderer.svelte';
-import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
+import type { AvailableRuleEntry, Rule } from '$lib/rules-view';
 
 // Mirrors the cast-divine-smite descriptor: a slot-level slider primaryControl
 // plus a two-chip secondaryControl dice-line (regular damage + Fiend/Undead).

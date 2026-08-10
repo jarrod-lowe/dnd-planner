@@ -132,11 +132,12 @@ make deploy-test  # Deploy to the test environment
 
 ## Notable Code Features
 
-- Rules are processed in the rules engine, providing an output for the UI to use, and to also hand back to the rules engine
-  - See RULES_ENGINE.md for a lot of detail on how the rules engine works
+- Rules are TypeScript modules (`src/lib/rules-engine/rules/`) evaluated by a pure dataflow engine; the engine's output feeds the UI and is handed back (with the plan and committed effects) on the next evaluation
+  - See RULES_ENGINE.md for the engine specification
   - See FRONTEND_DESIGN.md for the initial design of the frontend
   - See DATA_MODEL.md for a description of the DynamoDB data model
   - See docs/RULE_GROUP_GUIDE.md for how to write new rules
-- Rules are handled in the rules engine in three phases (a rule belongs in one phase)
-- Within a phase, rules can specify that they run `after` groups set by other rules
-  - Do NOT propose splitting up the rules processing further, use the dependency mechanism instead
+- The YAML under `data/rule-groups/` is metadata only (translations, requires, settings, condition, detail) — it carries no rules, and the schema rejects them
+- Evaluation ordering is structural (derived from what each contribution reads), not authored — there are no phases, groups, or `after`
+  - Do NOT propose adding ordering controls; express a value as a derivation of the facts it depends on
+- Actions never write facts: an offer's `apply` advertises effects, and the committed-effects list is the persisted character state

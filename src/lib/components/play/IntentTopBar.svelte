@@ -9,7 +9,7 @@
     UiEntryConcentration,
     UiEntryAbility
   } from '$lib/play/extractTopBar';
-  import type { Facts } from '$lib/rules-engine';
+  import type { Facts } from '$lib/rules-view';
 
   interface Props {
     character: Character;

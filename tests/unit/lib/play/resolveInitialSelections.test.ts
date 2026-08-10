@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { resolveInitialSelections } from '$lib/play/resolveInitialSelections';
-import type { Rule, Facts } from '$lib/rules-engine';
+import type { Rule, Facts } from '$lib/rules-view';
 
 describe('resolveInitialSelections', () => {
   describe('capture: true vars', () => {
@@ -72,9 +72,9 @@ describe('resolveInitialSelections', () => {
           }
         }
       };
-      const facts: Facts = {
+      const facts = {
         'character.movement.remaining': null
-      };
+      } as unknown as Facts;
 
       const selections = resolveInitialSelections(rule, facts);
 

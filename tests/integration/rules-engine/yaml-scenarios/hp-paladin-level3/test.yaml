@@ -14,8 +14,8 @@ steps:
           hp.max: 22
           hp.current: 22
 
-  # CON set after class levels are present:
-  # level 1 uses current CON, but levels 2 and 3 keep captured CON-at-level (0)
+  # CON set after the class levels are present: every level reads the LIVE
+  # CON modifier (2024 rules — retroactive recalculation), so L1-L3 each gain +3.
   - addOffer:
       id: set-constitution
       selections:
@@ -23,14 +23,13 @@ steps:
       assert:
         facts:
           con.modifier: 3
-          hp.max: 25
-          hp.current: 25
+          hp.max: 31
+          hp.current: 31
 
-  # After a turn boundary, effect-constitution runs in early phase.
-  # Levels 2 and 3 should still use captured CON (0).
+  # The recalculated max survives the turn boundary.
   - endTurn:
       assert:
         facts:
           con.modifier: 3
-          hp.max: 25
-          hp.current: 25
+          hp.max: 31
+          hp.current: 31

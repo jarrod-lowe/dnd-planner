@@ -52,6 +52,7 @@ const mockCharacter: Character = {
   userId: 'test-user',
   name: 'Gandalf',
   species: 'human',
+  class: 'paladin',
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-01T00:00:00Z'
 };
@@ -76,6 +77,7 @@ describe('ManageRulesMode', () => {
     mount(ManageRulesMode, {
       target: container,
       props: {
+        onToggle: vi.fn().mockResolvedValue(undefined),
         character: mockCharacter,
         onBack: vi.fn()
       }
@@ -90,6 +92,7 @@ describe('ManageRulesMode', () => {
     mount(ManageRulesMode, {
       target: container,
       props: {
+        onToggle: vi.fn().mockResolvedValue(undefined),
         character: mockCharacter,
         onBack: vi.fn()
       }
@@ -103,6 +106,7 @@ describe('ManageRulesMode', () => {
     mount(ManageRulesMode, {
       target: container,
       props: {
+        onToggle: vi.fn().mockResolvedValue(undefined),
         character: mockCharacter,
         onBack: vi.fn()
       }
@@ -119,6 +123,7 @@ describe('ManageRulesMode', () => {
     mount(ManageRulesMode, {
       target: container,
       props: {
+        onToggle: vi.fn().mockResolvedValue(undefined),
         character: mockCharacter,
         onBack
       }
@@ -139,6 +144,7 @@ describe('ManageRulesMode', () => {
     mount(ManageRulesMode, {
       target: container,
       props: {
+        onToggle: vi.fn().mockResolvedValue(undefined),
         character: mockCharacter,
         onBack: vi.fn()
       }
@@ -162,6 +168,7 @@ describe('ManageRulesMode', () => {
     mount(ManageRulesMode, {
       target: container,
       props: {
+        onToggle: vi.fn().mockResolvedValue(undefined),
         character: mockCharacter,
         onBack: vi.fn()
       }
@@ -204,6 +211,7 @@ describe('ManageRulesMode', () => {
     mount(ManageRulesMode, {
       target: container,
       props: {
+        onToggle: vi.fn().mockResolvedValue(undefined),
         character: mockCharacter,
         onBack: vi.fn()
       }
@@ -231,6 +239,7 @@ describe('ManageRulesMode', () => {
     mount(ManageRulesMode, {
       target: container,
       props: {
+        onToggle: vi.fn().mockResolvedValue(undefined),
         character: mockCharacter,
         onBack: vi.fn()
       }
@@ -255,6 +264,7 @@ describe('ManageRulesMode', () => {
     mount(ManageRulesMode, {
       target: container,
       props: {
+        onToggle: vi.fn().mockResolvedValue(undefined),
         character: mockCharacter,
         onBack: vi.fn()
       }
@@ -280,6 +290,7 @@ describe('ManageRulesMode', () => {
     mount(ManageRulesMode, {
       target: container,
       props: {
+        onToggle: vi.fn().mockResolvedValue(undefined),
         character: mockCharacter,
         onBack: vi.fn()
       }
@@ -307,6 +318,7 @@ describe('ManageRulesMode', () => {
     mount(ManageRulesMode, {
       target: container,
       props: {
+        onToggle: vi.fn().mockResolvedValue(undefined),
         character: mockCharacter,
         onBack: vi.fn()
       }
@@ -353,6 +365,7 @@ describe('ManageRulesMode', () => {
     mount(ManageRulesMode, {
       target: container,
       props: {
+        onToggle: vi.fn().mockResolvedValue(undefined),
         character: mockCharacter,
         onBack: vi.fn()
       }
@@ -374,6 +387,7 @@ describe('ManageRulesMode', () => {
     mount(ManageRulesMode, {
       target: container,
       props: {
+        onToggle: vi.fn().mockResolvedValue(undefined),
         character: mockCharacter,
         onBack: vi.fn()
       }
@@ -407,6 +421,7 @@ describe('ManageRulesMode', () => {
     mount(ManageRulesMode, {
       target: container,
       props: {
+        onToggle: vi.fn().mockResolvedValue(undefined),
         character: mockCharacter,
         assignedRuleGroupIds: ['fireball'],
         onBack: vi.fn()
@@ -442,6 +457,7 @@ describe('ManageRulesMode', () => {
     mount(ManageRulesMode, {
       target: container,
       props: {
+        onToggle: vi.fn().mockResolvedValue(undefined),
         character: mockCharacter,
         assignedRuleGroupIds: ['some-other-group'],
         onBack: vi.fn()
@@ -478,6 +494,7 @@ describe('ManageRulesMode', () => {
     mount(ManageRulesMode, {
       target: container,
       props: {
+        onToggle: vi.fn().mockResolvedValue(undefined),
         character: mockCharacter,
         assignedRuleGroupIds: [],
         onBack: vi.fn()
@@ -718,6 +735,7 @@ describe('ManageRulesMode', () => {
     mount(ManageRulesMode, {
       target: container,
       props: {
+        onToggle: vi.fn().mockResolvedValue(undefined),
         character: mockCharacter,
         assignedRuleGroupIds: [],
         onBack: vi.fn()
@@ -752,6 +770,7 @@ describe('ManageRulesMode', () => {
     mount(ManageRulesMode, {
       target: container,
       props: {
+        onToggle: vi.fn().mockResolvedValue(undefined),
         character: mockCharacter,
         assignedRuleGroupIds: [],
         onBack: vi.fn()
@@ -793,6 +812,7 @@ describe('ManageRulesMode', () => {
       mount(ManageRulesMode, {
         target: container,
         props: {
+          onToggle: vi.fn().mockResolvedValue(undefined),
           character: mockCharacter,
           assignedRuleGroupIds: ['spellcasting'],
           lockedRuleGroups: new Map([['spellcasting', ['Paladin L1']]]),
@@ -836,6 +856,7 @@ describe('ManageRulesMode', () => {
       mount(ManageRulesMode, {
         target: container,
         props: {
+          onToggle: vi.fn().mockResolvedValue(undefined),
           character: mockCharacter,
           assignedRuleGroupIds: ['spellcasting'],
           lockedRuleGroups: new Map([['spellcasting', ['Paladin L1', 'Sorcerer L1']]]),
@@ -969,6 +990,7 @@ describe('ManageRulesMode', () => {
       mount(ManageRulesMode, {
         target: container,
         props: {
+          onToggle: vi.fn().mockResolvedValue(undefined),
           character: mockCharacter,
           assignedRuleGroupIds: ['spellcasting'],
           lockedRuleGroups: new Map(),

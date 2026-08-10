@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: leather-armor
     requires:
@@ -7,258 +6,44 @@ ruleGroups:
       en:
         name: Leather Armor
         description: Light armor providing AC 11 + Dex
-        keywords: [armor, leather, light, ac, equipment]
+        keywords:
+          - armor
+          - leather
+          - light
+          - ac
+          - equipment
       en-x-tlh:
         name: DIch Jun
         description: DIch Jun nob DIvI'
-        keywords: [DIch, Jun]
+        keywords:
+          - DIch
+          - Jun
     detail:
       key: equipment/leather-armor
       source: srd52
       translations:
         en:
-          meta: 'Light Armor'
+          meta: Light Armor
           fields:
-            - { labelKey: rules.field.armorClass, value: '11 + Dex modifier' }
-            - { labelKey: rules.field.stealth, value: 'Normal' }
-            - { labelKey: rules.field.weight, value: '10 lb.' }
-            - { labelKey: rules.field.donDoff, value: '1 minute to don or doff' }
-          body: |
-            Leather Armor is Light Armor: your base Armor Class equals 11 plus
+            - labelKey: rules.field.armorClass
+              value: 11 + Dex modifier
+            - labelKey: rules.field.stealth
+              value: Normal
+            - labelKey: rules.field.weight
+              value: 10 lb.
+            - labelKey: rules.field.donDoff
+              value: 1 minute to don or doff
+          body: 'Leather Armor is Light Armor: your base Armor Class equals 11 plus
+
             your Dexterity modifier.
 
+
             If you wear Light, Medium, or Heavy armor and lack training with it,
+
             you have Disadvantage on any D20 Test that involves Strength or
-            Dexterity, and you can't cast spells. You can wear only one suit of
+
+            Dexterity, and you can''t cast spells. You can wear only one suit of
+
             armor at a time.
-    rules:
-      # Offer to don leather armor
-      - id: don-leather-armor-offer
-        after:
-          - group: __planned__
-          - group: ac-components
-        activities:
-          - type: offerRule
-            legalWhen:
-              - *not-locked-legal
-              - condition:
-                  fact: armor.leather.equipped
-                  operator: notEquals
-                  value: 1
-                illegalDiagnostics:
-                  - code: rule.dnd-5e-2024.leather-armor.don-leather-armor-offer.already-equipped
-                    severity: error
-            rule:
-              id: don-leather-armor
-              phase: normal
-              after:
-                - group: ac-calculation
-              group:
-                - ac-components
-              ui:
-                section: equip
-                name: rule.dnd-5e-2024.leather-armor.don-leather-armor.name
-                detailKey: equipment/leather-armor
-                intents: { EQUIP: armor }
-                actionCost: []
-              activities:
-                - *error-clear
-                - *lock-error-track
-                - type: setAdd
-                  target: { var: errors }
-                  source: { string: rule.dnd-5e-2024.leather-armor.don-leather-armor-offer.already-equipped }
-                  when:
-                    - fact: armor.leather.equipped
-                      operator: equals
-                      value: 1
-                - type: numberSet
-                  target:
-                    fact: ac.base
-                  source:
-                    number: 11
-                - type: numberSet
-                  target:
-                    fact: armor.leather.equipped
-                  source:
-                    number: 1
-                # Disadvantage on STR/DEX checks when not proficient with light armor
-                - type: numberSet
-                  target:
-                    fact: attack.str.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    - fact: armor.light.proficient
-                      operator: notEquals
-                      value: 1
-                - type: numberSet
-                  target:
-                    fact: attack.dex.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    - fact: armor.light.proficient
-                      operator: notEquals
-                      value: 1
-                - type: numberSet
-                  target:
-                    fact: initiative.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    - fact: armor.light.proficient
-                      operator: notEquals
-                      value: 1
-                - type: numberSet
-                  target:
-                    fact: skill.acrobatics.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    - fact: armor.light.proficient
-                      operator: notEquals
-                      value: 1
-                - type: numberSet
-                  target:
-                    fact: skill.athletics.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    - fact: armor.light.proficient
-                      operator: notEquals
-                      value: 1
-                - type: numberSet
-                  target:
-                    fact: skill.sleight-of-hand.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    - fact: armor.light.proficient
-                      operator: notEquals
-                      value: 1
-                - type: numberSet
-                  target:
-                    fact: skill.stealth.disadvantage
-                  source:
-                    number: 1
-                  when:
-                    - fact: armor.light.proficient
-                      operator: notEquals
-                      value: 1
-                # Spellcasting blocked when not proficient
-                - type: numberSet
-                  target:
-                    fact: spellcasting.remaining
-                  source:
-                    number: 0
-                  when:
-                    - fact: armor.light.proficient
-                      operator: notEquals
-                      value: 1
-                - type: advertiseEffect
-                  rule:
-                    id: effect-leather-armor
-                    phase: normal
-                    after:
-                      - group: ac-calculation
-                    group:
-                      - ac-components
-                    ui:
-                      name: rule.dnd-5e-2024.leather-armor.effect-leather-armor.name
-                      detailKey: equipment/leather-armor
-                    activities:
-                      - type: numberSet
-                        target:
-                          fact: ac.base
-                        source:
-                          number: 11
-                      - type: numberSet
-                        target:
-                          fact: armor.leather.equipped
-                        source:
-                          number: 1
-                      # Disadvantage on STR/DEX checks when not proficient with light armor
-                      - type: numberSet
-                        target:
-                          fact: attack.str.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          - fact: armor.light.proficient
-                            operator: notEquals
-                            value: 1
-                      - type: numberSet
-                        target:
-                          fact: attack.dex.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          - fact: armor.light.proficient
-                            operator: notEquals
-                            value: 1
-                      - type: numberSet
-                        target:
-                          fact: initiative.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          - fact: armor.light.proficient
-                            operator: notEquals
-                            value: 1
-                      - type: numberSet
-                        target:
-                          fact: skill.acrobatics.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          - fact: armor.light.proficient
-                            operator: notEquals
-                            value: 1
-                      - type: numberSet
-                        target:
-                          fact: skill.athletics.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          - fact: armor.light.proficient
-                            operator: notEquals
-                            value: 1
-                      - type: numberSet
-                        target:
-                          fact: skill.sleight-of-hand.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          - fact: armor.light.proficient
-                            operator: notEquals
-                            value: 1
-                      - type: numberSet
-                        target:
-                          fact: skill.stealth.disadvantage
-                        source:
-                          number: 1
-                        when:
-                          - fact: armor.light.proficient
-                            operator: notEquals
-                            value: 1
-                      # Spellcasting blocked when not proficient
-                      - type: numberSet
-                        target:
-                          fact: spellcasting.max
-                        source:
-                          number: 0
-                        when:
-                          - fact: armor.light.proficient
-                            operator: notEquals
-                            value: 1
-                      - type: numberSet
-                        target:
-                          fact: spellcasting.remaining
-                        source:
-                          number: 0
-                        when:
-                          - fact: armor.light.proficient
-                            operator: notEquals
-                            value: 1
-                      - type: advertiseEffect
-                        self: true
+
+            '

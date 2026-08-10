@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: shield
     requires:
@@ -8,138 +7,35 @@ ruleGroups:
       en:
         name: Shield
         description: A shield that grants +2 AC when equipped
-        keywords: [shield, armor, ac, equipment]
+        keywords:
+          - shield
+          - armor
+          - ac
+          - equipment
       en-x-tlh:
         name: DIch
         description: DIch naQ, DIvI' 2 DIch Jun
-        keywords: [DIch, Jun]
+        keywords:
+          - DIch
+          - Jun
     detail:
       key: equipment/shield
       source: srd52
       translations:
         en:
-          meta: 'Shield'
+          meta: Shield
           fields:
-            - { labelKey: rules.field.armorClass, value: '+2' }
-            - { labelKey: rules.field.weight, value: '6 lb.' }
-            - { labelKey: rules.field.donDoff, value: 'Utilize action to don or doff' }
-          body: |
-            A Shield increases your Armor Class by 2 while you wield it.
+            - labelKey: rules.field.armorClass
+              value: '+2'
+            - labelKey: rules.field.weight
+              value: 6 lb.
+            - labelKey: rules.field.donDoff
+              value: Utilize action to don or doff
+          body: 'A Shield increases your Armor Class by 2 while you wield it.
+
 
             You gain the Armor Class benefit of a Shield only if you have
+
             training with it. You can wield only one Shield at a time.
-    rules:
-      - id: don-shield-offer
-        after:
-          - group: __planned__
-          - group: ac-components
-        activities:
-          - type: offerRule
-            legalWhen:
-              - *not-locked-legal
-              - condition:
-                  fact: armor.shield.equipped
-                  operator: notEquals
-                  value: 1
-                illegalDiagnostics:
-                  - code: rule.dnd-5e-2024.shield.don-shield-offer.already-equipped
-                    severity: error
-              - condition:
-                  fact: armor.shield.proficient
-                  operator: equals
-                  value: 1
-                illegalDiagnostics:
-                  - code: rule.dnd-5e-2024.shield.don-shield-offer.not-proficient
-                    severity: warning
-              - condition:
-                  fact: hands.remaining
-                  operator: greaterThanOrEqual
-                  value: 1
-                illegalDiagnostics:
-                  - code: rule.dnd-5e-2024.shield.don-shield-offer.no-hands
-                    severity: error
-            rule:
-              id: don-shield
-              phase: normal
-              after:
-                - group: ac-calculation
-                - group: ac-dex
-              group:
-                - ac-components
-              ui:
-                section: equip
-                name: rule.dnd-5e-2024.shield.don-shield.name
-                detailKey: equipment/shield
-                intents: { EQUIP: armor }
-                actionCost: []
-              activities:
-                - *error-clear
-                - *lock-error-track
-                - type: setAdd
-                  target: { var: errors }
-                  source: { string: rule.dnd-5e-2024.shield.don-shield-offer.already-equipped }
-                  when:
-                    - fact: armor.shield.equipped
-                      operator: equals
-                      value: 1
-                - type: setAdd
-                  target: { var: errors }
-                  source: { string: rule.dnd-5e-2024.shield.don-shield-offer.not-proficient }
-                  when:
-                    - fact: armor.shield.proficient
-                      operator: notEquals
-                      value: 1
-                - type: numberIncrement
-                  target:
-                    fact: ac.shieldBonus
-                  source:
-                    number: 2
-                - type: numberSet
-                  target:
-                    fact: armor.shield.equipped
-                  source:
-                    number: 1
-                - type: numberIncrement
-                  target:
-                    fact: hands.remaining
-                  source:
-                    number: 1
-                  subtract: true
-                - type: setAdd
-                  target: { var: errors }
-                  source: { string: rule.dnd-5e-2024.shield.don-shield-offer.no-hands }
-                  when:
-                    - fact: hands.remaining
-                      operator: lessThan
-                      value: 0
-                - type: advertiseEffect
-                  rule:
-                    id: effect-shield
-                    phase: normal
-                    after:
-                      - group: ac-calculation
-                      - group: ac-dex
-                    group:
-                      - ac-components
-                    ui:
-                      name: rule.dnd-5e-2024.shield.effect-shield.name
-                      detailKey: equipment/shield
-                    activities:
-                      - type: numberIncrement
-                        target:
-                          fact: ac.shieldBonus
-                        source:
-                          number: 2
-                      - type: numberSet
-                        target:
-                          fact: armor.shield.equipped
-                        source:
-                          number: 1
-                      - type: numberIncrement
-                        target:
-                          fact: hands.remaining
-                        source:
-                          number: 1
-                        subtract: true
-                      - type: advertiseEffect
-                        self: true
+
+            '

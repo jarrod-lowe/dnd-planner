@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: grapple
     requires:
@@ -7,270 +6,80 @@ ruleGroups:
       en:
         name: Grapple
         description: Core rules for the Grapple action
-        keywords: [grapple, action, attack, strength]
+        keywords:
+          - grapple
+          - action
+          - attack
+          - strength
       en-x-tlh:
         name: DIvI' qop
         description: DIvI' qop DIvI' naQ
-        keywords: [qop, DIvI', HIv, HoS]
+        keywords:
+          - qop
+          - DIvI'
+          - HIv
+          - HoS
     detail:
       key: attack/grapple
       source: srd52
       translations:
         en:
-          meta: 'Unarmed Strike Option'
+          meta: Unarmed Strike Option
           fields:
-            - { labelKey: rules.field.range, value: '5 feet' }
-            - { labelKey: rules.field.dc, value: '8 + Strength modifier + Proficiency Bonus' }
-          body: |
-            **Grapple.** The target must succeed on a Strength or Dexterity saving
+            - labelKey: rules.field.range
+              value: 5 feet
+            - labelKey: rules.field.dc
+              value: 8 + Strength modifier + Proficiency Bonus
+          body: '**Grapple.** The target must succeed on a Strength or Dexterity saving
+
             throw (it chooses which), or it has the Grappled condition. The DC for
+
             the saving throw and any escape attempts equals 8 plus your Strength
+
             modifier and Proficiency Bonus. This grapple is possible only if the
+
             target is no more than one size larger than you and if you have a hand
+
             free to grab it.
 
+
             A creature can grapple another creature. Characters typically grapple
+
             by using an Unarmed Strike. However a grapple is initiated, it follows
+
             these rules.
 
+
             **Grappled Condition.** Successfully grappling a creature gives it the
+
             Grappled condition.
 
+
             **One Grapple per Hand.** A creature must have a hand free to grapple
+
             another creature. Some stat blocks and game effects allow a creature
+
             to grapple using a tentacle, a maw, or another body part. Whatever
+
             part a grappler uses, it can grapple only one creature at a time with
+
             that part, and the grappler can’t use that part to target another
+
             creature unless it ends the grapple.
 
-            **Ending a Grapple.** A Grappled creature can use its action to make a
-            Strength (Athletics) or Dexterity (Acrobatics) check against the
-            grapple’s escape DC, ending the condition on itself on a success. The
-            condition also ends if the grappler has the Incapacitated condition or
-            if the distance between the Grappled target and the grappler exceeds
-            the grappler’s range. In addition, the grappler can release the target
-            at any time (no action required).
-    rules:
-      # Compute grapple DC = 8 + proficiency bonus + STR modifier
-      - id: compute-grapple-dc
-        phase: normal
-        activities:
-          - type: numberSum
-            target:
-              fact: grapple.dc
-            sources:
-              - number: 8
-              - fact: proficiency.bonus
-              - fact: str.modifier
 
-      # Offer grapple as an action. A Grapple is an Unarmed Strike option and
-      # counts as an attack within the Attack action, so it participates in the
-      # Extra Attack budget like other action attacks.
-      - id: action-grapple-offer
-        after:
-          - group: action
-          - group: __planned__
-          - group: ea-canattack
-          # Wait for hand-consuming effects (equipped shield/weapon effects, which
-          # auto-join __effects__) to settle before reading hands.remaining, so a
-          # character with no free hand sees Grapple as illegal.
-          - group: __effects__
-        activities:
-          - type: offerRule
-            legalWhen:
-              - condition:
-                  fact: attackAction.canAttack
-                  operator: equals
-                  value: 1
-                illegalDiagnostics:
-                  - code: rule.dnd-5e-2024.grapple.action-grapple-offer.no_action
-                    severity: error
-              # One grapple per hand: a free hand is required to grab the target.
-              - condition:
-                  fact: hands.remaining
-                  operator: greaterThanOrEqual
-                  value: 1
-                illegalDiagnostics:
-                  - code: rule.dnd-5e-2024.grapple.action-grapple-offer.no_hand
-                    severity: error
-            rule:
-              id: grapple-action
-              ui:
-                section: action-attack
-                packBehind: unarmed-strike-use-action
-                name: rule.dnd-5e-2024.grapple.grapple-action.name
-                description: rule.dnd-5e-2024.grapple.grapple-action.description
-                detailKey: attack/grapple
-                annotationLabels: [attack.action]
-                # Grapple is a save vs the grappler's DC, not an attack roll, so
-                # the row shows the DC (no dice roller) plus a target-outcome marker.
-                information:
-                  - type: text
-                    label: play.information.saveDc
-                    labelValues:
-                      saveType: { string: 'STR/DEX' }
-                      dc: { fact: grapple.dc }
-                secondaryControl:
-                  type: segmented
-                  var: passed
-                  # The save is the target's, not the player's, so label the marker
-                  # to make "Failed" unambiguous (target failed = grappled).
-                  prefix: play.choices.grapple.target
-                  options:
-                    - value: -1
-                      label: planner.record.outcome.none
-                    - value: 1
-                      label: planner.record.passed
-                    - value: 0
-                      label: planner.record.failed
-                intents: { ATTACK: brawl }
-                actionCost: [action]
-              vars:
-                passed:
-                  capture: true
-                  default:
-                    number: -1
-              # Wait for hand-consuming effects (e.g. equipped shield/weapon
-              # effects, which auto-join __effects__) to settle before reading
-              # hands.remaining, so the plan row's no_hand error reflects the
-              # real free-hand count (mirrors the offer's __effects__ dependency).
-              after:
-                - group: __effects__
-              group:
-                - __planned__
-                - action
-              activities:
-                # Extra Attack budget: spend a free follow-up if one is open,
-                # otherwise spend an action and open the follow-up budget.
-                - type: numberCopy
-                  source:
-                    fact: attackAction.extraRemaining
-                  target:
-                    fact: attackAction.wasExtra
-                  id: snapshot-extra
-                - type: numberCopy
-                  source:
-                    fact: actions.remaining
-                  target:
-                    fact: attackAction.actionsBefore
-                  id: snapshot-actions
-                - type: numberIncrement
-                  target:
-                    fact: attackAction.extraRemaining
-                  source:
-                    number: 1
-                  subtract: true
-                  when:
-                    - fact: attackAction.wasExtra
-                      operator: greaterThan
-                      value: 0
-                  id: spend-extra
-                - type: numberIncrement
-                  target:
-                    fact: actions.remaining
-                  source:
-                    number: 1
-                  subtract: true
-                  when:
-                    - fact: attackAction.wasExtra
-                      operator: lessThanOrEqual
-                      value: 0
-                  id: action-cost
-                - type: numberCopy
-                  source:
-                    fact: extraAttacks.max
-                  target:
-                    fact: attackAction.extraRemaining
-                  when:
-                    - fact: attackAction.wasExtra
-                      operator: lessThanOrEqual
-                      value: 0
-                    - fact: attackAction.actionsBefore
-                      operator: greaterThan
-                      value: 0
-                  id: refill-extra
-                # Bridge the captured target-outcome to a fact first, so the hand
-                # cost below can gate on it (fact-only `when`).
-                - type: numberSet
-                  source:
-                    var: passed
-                  target:
-                    fact: grapple.passed
-                  id: bridge-passed
-                # A hand is occupied while the grapple is attempted (passed=-1) or
-                # holding (passed=0), but NOT when the target saved (passed=1),
-                # since nothing is held. The persistent Grappling effect
-                # (advertised below on a failed save) re-consumes the hand on
-                # subsequent turns.
-                - type: numberCopy
-                  source:
-                    fact: hands.remaining
-                  target:
-                    fact: grapple.handsBefore
-                  id: snapshot-hand
-                - type: numberIncrement
-                  target:
-                    fact: hands.remaining
-                  source:
-                    number: 1
-                  subtract: true
-                  when:
-                    - fact: grapple.passed
-                      operator: notEquals
-                      value: 1
-                  id: consume-hand
-                - *error-clear
-                - type: setAdd
-                  target:
-                    var: errors
-                  source:
-                    string: rule.dnd-5e-2024.grapple.action-grapple-offer.no_action
-                  when:
-                    - fact: attackAction.wasExtra
-                      operator: lessThanOrEqual
-                      value: 0
-                    - fact: attackAction.actionsBefore
-                      operator: lessThanOrEqual
-                      value: 0
-                # A free hand is a prerequisite to attempt the grapple regardless
-                # of the save outcome, so this diagnostic is unconditional. Only
-                # the hand occupancy (consume-hand above / Grappling effect) is
-                # skipped when the target saves.
-                - type: setAdd
-                  target:
-                    var: errors
-                  source:
-                    string: rule.dnd-5e-2024.grapple.action-grapple-offer.no_hand
-                  when:
-                    - fact: grapple.handsBefore
-                      operator: lessThan
-                      value: 1
-                # Target failed its STR/DEX save (passed == 0) -> the grapple took
-                # hold. Persist a Grappling effect that keeps the hand consumed
-                # until released (the player dismisses the chip). It runs in the
-                # early phase, after hands-reset, so it re-consumes the hand each
-                # turn before the normal-phase grapple offer re-evaluates legality
-                # (one grapple per hand).
-                - type: advertiseEffect
-                  when:
-                    - fact: grapple.passed
-                      operator: equals
-                      value: 0
-                  rule:
-                    id: effect-grappling
-                    phase: early
-                    after:
-                      - group: hands-reset
-                    ui:
-                      section: ongoing
-                      name: rule.dnd-5e-2024.grapple.effect-grappling.name
-                      detailKey: attack/grapple
-                    activities:
-                      - type: numberIncrement
-                        target:
-                          fact: hands.remaining
-                        source:
-                          number: 1
-                        subtract: true
-                      - type: advertiseEffect
-                        self: true
+            **Ending a Grapple.** A Grappled creature can use its action to make a
+
+            Strength (Athletics) or Dexterity (Acrobatics) check against the
+
+            grapple’s escape DC, ending the condition on itself on a success. The
+
+            condition also ends if the grappler has the Incapacitated condition or
+
+            if the distance between the Grappled target and the grappler exceeds
+
+            the grappler’s range. In addition, the grappler can release the target
+
+            at any time (no action required).
+
+            '

@@ -2,7 +2,7 @@
   import { slide } from 'svelte/transition';
   import { t } from '$lib/i18n';
   import PanelRenderer from './PanelRenderer.svelte';
-  import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-engine';
+  import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-view';
 
   interface Props {
     leader: AvailableRuleEntry;

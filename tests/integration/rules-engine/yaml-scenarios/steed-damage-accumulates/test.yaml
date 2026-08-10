@@ -1,0 +1,73 @@
+name: 'Steed Damage Accumulates'
+description: >-
+  Recording steed damage twice accumulates (10 then 3 → 13 total), rather than
+  the newer record replacing the older; healing records likewise accumulate and
+  offset the damage total.
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-find-steed
+steps:
+  - evaluate: {}
+  - addOffer:
+      id: prepare-find-steed
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - cast-find-steed
+  - addOffer:
+      id: cast-find-steed
+  - endTurn:
+      assert:
+        facts:
+          companion.steed.hp.max: 25
+          companion.steed.hp.current: 25
+  # Record 10 damage and commit it.
+  - addOffer:
+      id: steed-record-damage
+      selections:
+        amount: 10
+      assert:
+        facts:
+          companion.steed.hp.current: 15
+  - endTurn:
+      assert:
+        facts:
+          companion.steed.hp.current: 15
+  # A later 3-damage record adds to the earlier 10 (13 total), not replaces it.
+  - addOffer:
+      id: steed-record-damage
+      selections:
+        amount: 3
+      assert:
+        facts:
+          companion.steed.hp.current: 12
+  - endTurn:
+      assert:
+        facts:
+          companion.steed.hp.current: 12
+  # Healing accumulates too — two same-turn heals (4 then 2) offset 6 of the 13.
+  - addOffer:
+      id: steed-record-heal
+      selections:
+        amount: 4
+      assert:
+        facts:
+          companion.steed.hp.current: 16
+  - addOffer:
+      id: steed-record-heal
+      selections:
+        amount: 2
+      assert:
+        facts:
+          companion.steed.hp.current: 18
+  - endTurn:
+      assert:
+        facts:
+          companion.steed.hp.current: 18

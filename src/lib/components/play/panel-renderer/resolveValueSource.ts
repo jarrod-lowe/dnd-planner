@@ -1,5 +1,5 @@
 import type { ValueSource } from './types';
-import type { Facts, VarDefinition } from '$lib/rules-engine';
+import type { Facts, VarDefinition } from '$lib/rules-view';
 
 type VarDefs = Record<string, VarDefinition>;
 type Selections = Record<string, unknown>;
@@ -11,20 +11,22 @@ export function resolveValueSource(
   selections?: Selections
 ): number | string | unknown[] | undefined {
   if (!source) return undefined;
+  // Facts and selections are dynamically shaped; this function's declared
+  // return union is the panel contract, so the reads narrow to it.
   let result: number | string | unknown[] | undefined;
   if (source.number !== undefined) result = source.number;
   else if (source.string !== undefined) result = source.string;
-  else if (source.fact !== undefined) result = facts[source.fact];
+  else if (source.fact !== undefined) result = facts[source.fact] as number | string | undefined;
   else if (source.var !== undefined) {
     if (selections && selections[source.var] !== undefined) {
-      result = selections[source.var];
+      result = selections[source.var] as number | string | unknown[] | undefined;
     } else {
       const varDef = vars[source.var];
       if (!varDef) return undefined;
       const def = varDef.default;
       if (def.number !== undefined) result = def.number;
       else if (def.string !== undefined) result = def.string;
-      else if (def.fact !== undefined) result = facts[def.fact];
+      else if (def.fact !== undefined) result = facts[def.fact] as number | string | undefined;
       else if (def.array !== undefined) result = def.array;
       else return undefined;
     }

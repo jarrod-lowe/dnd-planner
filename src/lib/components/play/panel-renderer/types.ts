@@ -77,7 +77,7 @@ export interface DiceEntry {
 
 export interface ControlBase {
   enabled?: {
-    condition: import('$lib/rules-engine').Condition;
+    condition: import('$lib/rules-view').Condition;
     button?: string;
   };
 }
@@ -174,5 +174,5 @@ export interface PanelDescriptor {
   primaryControl?: Control;
   secondaryControl?: Control;
   information?: Information[];
-  followups?: import('$lib/rules-engine').Followup[];
+  followups?: import('$lib/rules-view').Followup[];
 }

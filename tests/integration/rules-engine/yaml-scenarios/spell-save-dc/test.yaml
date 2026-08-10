@@ -12,6 +12,9 @@ steps:
           spellcasting.saveDC: 10
           spellcasting.slots.level1.total: 2
           spellcasting.modifier: 0
+          # The class flags its spellcasting ability; the play bridge turns this
+          # into the 'CHA' label spell panels show next to the save DC.
+          spellcasting.saveAbility.cha: 1
   - addOffer:
       id: set-charisma
       selections:

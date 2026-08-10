@@ -176,7 +176,8 @@
       },
       "offer-dismiss-steed": {
         "name": "Dismiss Steed",
-        "keywords": "dismiss mount companion send away"
+        "keywords": "dismiss mount companion send away",
+        "no_action": "No action available"
       },
       "annotate-life-bond": {
         "text": "Life Bond: Steed also regains HP (within 5 ft, from a level 1+ spell) [manual]"
@@ -372,7 +373,8 @@
         "no_l2_slots": "No Level 2 spell slots remaining",
         "no_l3_slots": "No Level 3 spell slots remaining",
         "no_l4_slots": "No Level 4 spell slots remaining",
-        "no_l5_slots": "No Level 5 spell slots remaining"
+        "no_l5_slots": "No Level 5 spell slots remaining",
+        "wrong_level": "Invalid spell slot level selected"
       },
       "prepare-divine-smite-offer": {
         "name": "Prepare Divine Smite",
@@ -477,7 +479,8 @@
       "unprepare-prayer-of-healing-offer": {
         "name": "Unprepare Prayer of Healing",
         "keywords": "heal restore hit points group rest",
-        "not_prepared": "Prayer of Healing is not prepared"
+        "not_prepared": "Prayer of Healing is not prepared",
+        "always_prepared": "Prayer of Healing is always prepared"
       },
       "effect-prayer-of-healing-prepared": {
         "name": "Prayer of Healing Prepared"
@@ -1171,7 +1174,9 @@
           "button": "Cleave"
         },
         "greataxe-mastery": {
-          "name": "Greataxe Mastery (Cleave)"
+          "name": "Greataxe Mastery (Cleave)",
+          "keywords": "greataxe mastery cleave weapon attack",
+          "description": "Weapon mastery for the greataxe, granting the Cleave property"
         },
         "attack-greataxe-offer": {
           "no_action": "No action available"
@@ -1182,7 +1187,9 @@
           "description": "1d4 piercing | Finesse, Light, Thrown 20/60 | Nick"
         },
         "dagger-mastery": {
-          "name": "Dagger Mastery (Nick)"
+          "name": "Dagger Mastery (Nick)",
+          "keywords": "dagger mastery nick weapon attack",
+          "description": "Weapon mastery for the dagger, granting the Nick property"
         },
         "javelin": {
           "name": "Javelin",
@@ -1520,16 +1527,6 @@
     "toggleError": "Failed to update rule group. Please try again.",
     "requiredBy": "Required by: {{names}}",
     "conditionNotMet": "Prerequisite not met",
-    "editCustomRules": "Edit Custom Rules",
-    "customRulesTitle": "Custom Rules",
-    "backToManageRules": "Back to Manage Rules",
-    "saveRules": "Save",
-    "resetRules": "Reset",
-    "saving": "Saving...",
-    "saveError": "Failed to save rules. Please try again.",
-    "validationErrors": "Validation Errors",
-    "yamlSyntaxError": "YAML Syntax Error",
-    "noErrors": "No errors",
     "settingsTitle": "Configure {{name}}",
     "settingsConfirm": "Add",
     "settingsCancel": "Cancel",
@@ -1769,7 +1766,8 @@
       "loadRuleGroups": "Failed to load character data",
       "loadEffects": "Failed to load effects",
       "saveEffects": "Failed to save effects",
-      "engineCycle": "Rules engine error: dependency cycle detected. Some actions may be unavailable."
+      "engineCycle": "Rules engine error: dependency cycle detected. Some actions may be unavailable.",
+      "evaluate": "Rules engine error: the last change could not be evaluated. Showing the previous state."
     },
     "toast": {
       "rollType": {
@@ -2069,6 +2067,10 @@
     "psychic": "Psychic"
   },
   "planner": {
+    "after-rest": "No actions after a rest this turn.",
+    "concentration": {
+      "check": "Concentration Check"
+    },
     "record": {
       "damage": "Record Damage",
       "heal": "Record Healing",

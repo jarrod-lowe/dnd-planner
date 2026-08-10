@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: class-paladin-oath-redemption-level5
     requires:
@@ -9,54 +8,32 @@ ruleGroups:
     translations:
       en:
         name: Oath of Redemption Level 5
-        description: >
-          Paladin Oath of Redemption oath spells at level 5: Calm Emotions and
-          Hold Person are always prepared and do not count against your prepared
+        description: 'Paladin Oath of Redemption oath spells at level 5: Calm Emotions
+          and Hold Person are always prepared and do not count against your prepared
           spells.
-        keywords: [paladin, oath, redemption, level5, calm, emotions, hold, person]
+
+          '
+        keywords:
+          - paladin
+          - oath
+          - redemption
+          - level5
+          - calm
+          - emotions
+          - hold
+          - person
       en-x-tlh:
         name: Oath of Redemption Level 5
-        description: >
-          Paladin Oath of Redemption level 5 oath spells: Calm Emotions, Hold
-          Person reH mugh.
-        keywords: [paladin, oath, redemption, level5, calm, emotions, hold, person]
-    rules:
-      # Calm Emotions is always prepared for Oath of Redemption from level 5.
-      # This grant does NOT consume a prepared-spell slot
-      # (spellcasting.prepared.count is untouched) and the alwaysPrepared flag
-      # blocks the Unprepare offer in spells/calm-emotions.yaml.
-      - id: oath-redemption-calm-emotions-always-prepared
-        phase: early
-        group:
-          - always-prepared-set
-        activities:
-          - type: numberSet
-            target:
-              fact: spell.l2.calmEmotions.prepared
-            source:
-              number: 1
-          - type: numberSet
-            target:
-              fact: spell.l2.calmEmotions.alwaysPrepared
-            source:
-              number: 1
+        description: 'Paladin Oath of Redemption level 5 oath spells: Calm Emotions,
+          Hold Person reH mugh.
 
-      # Hold Person is always prepared for Oath of Redemption from level 5.
-      # This grant does NOT consume a prepared-spell slot
-      # (spellcasting.prepared.count is untouched) and the alwaysPrepared flag
-      # blocks the Unprepare offer in spells/hold-person.yaml.
-      - id: oath-redemption-hold-person-always-prepared
-        phase: early
-        group:
-          - always-prepared-set
-        activities:
-          - type: numberSet
-            target:
-              fact: spell.l2.holdPerson.prepared
-            source:
-              number: 1
-          - type: numberSet
-            target:
-              fact: spell.l2.holdPerson.alwaysPrepared
-            source:
-              number: 1
+          '
+        keywords:
+          - paladin
+          - oath
+          - redemption
+          - level5
+          - calm
+          - emotions
+          - hold
+          - person

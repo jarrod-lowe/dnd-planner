@@ -1,290 +1,78 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: attacks
     translations:
       en:
         name: Attacks
         description: Core attack rules for unarmed strike and weapon attacks
-        keywords: [attack, unarmed, strike, melee, weapon, damage]
+        keywords:
+          - attack
+          - unarmed
+          - strike
+          - melee
+          - weapon
+          - damage
       en-x-tlh:
         name: jey' DIvI'
         description: jey' DIvI' 'ej jey' naQ
-        keywords: [jey', DIvI', nuH]
+        keywords:
+          - jey'
+          - DIvI'
+          - nuH
     detail:
       key: attack/unarmed-strike
       source: srd52
       translations:
         en:
-          meta: 'Unarmed Attack'
+          meta: Unarmed Attack
           fields:
-            - { labelKey: rules.field.range, value: '5 feet' }
-            - { labelKey: rules.field.damage, value: '1 + Strength modifier (bludgeoning)' }
-          body: |
-            Instead of using a weapon to make a melee attack, you can use a punch,
+            - labelKey: rules.field.range
+              value: 5 feet
+            - labelKey: rules.field.damage
+              value: 1 + Strength modifier (bludgeoning)
+          body: 'Instead of using a weapon to make a melee attack, you can use a punch,
+
             kick, headbutt, or similar forceful blow. In game terms, this is an
+
             Unarmed Strike—a melee attack that involves you using your body to
+
             damage, grapple, or shove a target within 5 feet of you.
 
+
             Whenever you use your Unarmed Strike, choose one of the following
+
             options for its effect.
 
+
             **Damage.** You make an attack roll against the target. Your bonus to
+
             the roll equals your Strength modifier plus your Proficiency Bonus. On
+
             a hit, the target takes Bludgeoning damage equal to 1 plus your
+
             Strength modifier.
 
+
             **Grapple.** The target must succeed on a Strength or Dexterity saving
+
             throw (it chooses which), or it has the Grappled condition. The DC for
+
             the saving throw and any escape attempts equals 8 plus your Strength
+
             modifier and Proficiency Bonus. This grapple is possible only if the
+
             target is no more than one size larger than you and if you have a hand
+
             free to grab it. See also “Grappling.”
 
+
             **Shove.** The target must succeed on a Strength or Dexterity saving
+
             throw (it chooses which), or you either push it 5 feet away or cause
+
             it to have the Prone condition. The DC for the saving throw equals 8
+
             plus your Strength modifier and Proficiency Bonus. This shove is
+
             possible only if the target is no more than one size larger than you.
-    rules:
-      # Compute unarmed strike hit bonus = STR modifier + proficiency bonus
-      - id: compute-unarmed-hit-bonus
-        phase: normal
-        activities:
-          - type: numberSum
-            target:
-              fact: attack.unarmed.hitBonus
-            sources:
-              - fact: str.modifier
-              - fact: proficiency.bonus
 
-      # Compute unarmed strike damage bonus = STR modifier
-      - id: compute-unarmed-damage-bonus
-        phase: normal
-        activities:
-          - type: numberCopy
-            source:
-              fact: str.modifier
-            target:
-              fact: attack.unarmed.damageBonus
-
-      # Grant reaction weapon attack capability (Opportunity Attacks)
-      - id: grant-reaction-weapon-capability
-        phase: normal
-        activities:
-          - type: numberSet
-            target:
-              fact: capability.attack.reaction.weapon
-            source:
-              number: 1
-
-      # === Unarmed Strike as action ===
-      - id: unarmed-strike-use-action-offer
-        after:
-          - group: option-capabilities
-          - group: ea-canattack
-        activities:
-          - type: offerRule
-            legalWhen:
-              - condition:
-                  fact: attackAction.canAttack
-                  operator: equals
-                  value: 1
-                illegalDiagnostics:
-                  - code: rule.dnd-5e-2024.attacks.activation.no_action
-                    severity: error
-            rule:
-              id: unarmed-strike-use-action
-              group:
-                - __planned__
-                - action
-              ui:
-                section: action-attack
-                name: rule.dnd-5e-2024.attacks.unarmed-strike.name
-                description: rule.dnd-5e-2024.attacks.unarmed-strike.description
-                detailKey: attack/unarmed-strike
-                intents: { ATTACK: brawl }
-                actionCost: [action]
-                disadvantageFact: attack.str.disadvantage
-                annotationLabels: [attack.any, attack.melee, attack.unarmed, dice.any, attack.action]
-                primaryControl:
-                  type: dice-line
-                  ranges:
-                    - distance: 5
-                      type: melee
-                  advantage: { fact: attack.str.disadvantage }
-                  dice:
-                    - sides: 20
-                      bonus: { var: hitBonus }
-                      purpose: to-hit
-                    - sides: { var: damageDie }
-                      bonus: { var: damageBonus }
-                      damageType: { string: bludgeoning }
-                      purpose: damage
-              vars:
-                hitBonus:
-                  capture: true
-                  default:
-                    fact: attack.unarmed.hitBonus
-                damageDie:
-                  default:
-                    number: 0
-                damageBonus:
-                  capture: true
-                  default:
-                    fact: attack.unarmed.damageBonus
-              phase: normal
-              activities:
-                # Snapshot pre-state so the branch below sees pre-mutation values.
-                - type: numberCopy
-                  source:
-                    fact: attackAction.extraRemaining
-                  target:
-                    fact: attackAction.wasExtra
-                  id: snapshot-extra
-                - type: numberCopy
-                  source:
-                    fact: actions.remaining
-                  target:
-                    fact: attackAction.actionsBefore
-                  id: snapshot-actions
-                # Free follow-up: spend an extra-attack charge, no action.
-                - type: numberIncrement
-                  target:
-                    fact: attackAction.extraRemaining
-                  source:
-                    number: 1
-                  subtract: true
-                  when:
-                    - fact: attackAction.wasExtra
-                      operator: greaterThan
-                      value: 0
-                  id: spend-extra
-                # New Attack action: spend an action.
-                - type: numberIncrement
-                  target:
-                    fact: actions.remaining
-                  source:
-                    number: 1
-                  subtract: true
-                  when:
-                    - fact: attackAction.wasExtra
-                      operator: lessThanOrEqual
-                      value: 0
-                  id: action-cost
-                # Refill the follow-up budget for this new Attack action. Guarded
-                # on actionsBefore > 0 so a force-planned over-committed attack
-                # does not re-open the budget.
-                - type: numberCopy
-                  source:
-                    fact: extraAttacks.max
-                  target:
-                    fact: attackAction.extraRemaining
-                  when:
-                    - fact: attackAction.wasExtra
-                      operator: lessThanOrEqual
-                      value: 0
-                    - fact: attackAction.actionsBefore
-                      operator: greaterThan
-                      value: 0
-                  id: refill-extra
-                - type: numberSet
-                  target:
-                    fact: attack.last.activation.action
-                  source:
-                    number: 1
-                  id: action-flag
-                # Per-item error tracking. The presence of the `errors` key makes
-                # the UI trust this item's own errors for legality (see
-                # correctEntryForPlanItem), so an over-commit flags only the
-                # offending swing rather than every planned unarmed strike.
-                - type: setClear
-                  target:
-                    var: errors
-                  id: error-clear
-                - type: setAdd
-                  target:
-                    var: errors
-                  source:
-                    string: rule.dnd-5e-2024.attacks.activation.no_action
-                  when:
-                    - fact: attackAction.wasExtra
-                      operator: lessThanOrEqual
-                      value: 0
-                    - fact: attackAction.actionsBefore
-                      operator: lessThanOrEqual
-                      value: 0
-                  id: error-check
-
-      # === Unarmed Strike as reaction ===
-      - id: unarmed-strike-use-reaction-offer
-        after:
-          - group: option-capabilities
-        activities:
-          - type: offerRule
-            when:
-              - fact: capability.attack.reaction.weapon
-                operator: equals
-                value: 1
-            legalWhen:
-              - condition:
-                  fact: reactions.remaining
-                  operator: greaterThan
-                  value: 0
-                illegalDiagnostics:
-                  - code: rule.dnd-5e-2024.attacks.activation.no_reaction
-                    severity: error
-            rule:
-              id: unarmed-strike-use-reaction
-              group:
-                - __planned__
-                - action
-              ui:
-                section: reaction
-                name: rule.dnd-5e-2024.attacks.unarmed-strike.name
-                description: rule.dnd-5e-2024.attacks.unarmed-strike.description
-                detailKey: attack/unarmed-strike
-                intents: { DEFEND: brawl }
-                actionCost: [reaction]
-                disadvantageFact: attack.str.disadvantage
-                annotationLabels: [attack.any, attack.melee, attack.unarmed, dice.any, attack.reaction]
-                primaryControl:
-                  type: dice-line
-                  ranges:
-                    - distance: 5
-                      type: melee
-                  advantage: { fact: attack.str.disadvantage }
-                  dice:
-                    - sides: 20
-                      bonus: { var: hitBonus }
-                      purpose: to-hit
-                    - sides: { var: damageDie }
-                      bonus: { var: damageBonus }
-                      damageType: { string: bludgeoning }
-                      purpose: damage
-              vars:
-                hitBonus:
-                  capture: true
-                  default:
-                    fact: attack.unarmed.hitBonus
-                damageDie:
-                  default:
-                    number: 0
-                damageBonus:
-                  capture: true
-                  default:
-                    fact: attack.unarmed.damageBonus
-              phase: normal
-              activities:
-                - type: numberIncrement
-                  target:
-                    fact: reactions.remaining
-                  source:
-                    number: 1
-                  subtract: true
-                  id: reaction-cost
-                - type: numberSet
-                  target:
-                    fact: attack.last.activation.reaction
-                  source:
-                    number: 1
-                  id: reaction-flag
+            '

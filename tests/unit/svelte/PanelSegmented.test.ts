@@ -94,7 +94,7 @@ describe('PanelSegmented', () => {
     const { container } = render(PanelSegmented, {
       props: { ...baseProps, selections: { passed: 1 } }
     });
-    const inputs = container.querySelectorAll('input[type="radio"]');
+    const inputs = container.querySelectorAll<HTMLInputElement>('input[type="radio"]');
     expect(inputs[0].checked).toBe(false);
     expect(inputs[1].checked).toBe(true);
     expect(inputs[2].checked).toBe(false);
@@ -129,8 +129,8 @@ describe('PanelSegmented', () => {
     // other). Each instance must own a distinct id and name.
     const { container: a } = render(PanelSegmented, { props: baseProps });
     const { container: b } = render(PanelSegmented, { props: baseProps });
-    const aInput = a.querySelector('input[type="radio"]')!;
-    const bInput = b.querySelector('input[type="radio"]')!;
+    const aInput = a.querySelector<HTMLInputElement>('input[type="radio"]')!;
+    const bInput = b.querySelector<HTMLInputElement>('input[type="radio"]')!;
     expect(aInput.id).not.toBe(bInput.id);
     expect(aInput.name).not.toBe(bInput.name);
   });

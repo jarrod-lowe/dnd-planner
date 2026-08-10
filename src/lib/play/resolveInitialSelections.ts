@@ -9,7 +9,7 @@
  * @param facts - Current facts from the engine output
  * @returns Selections object with captured values
  */
-import type { Rule, Facts } from '$lib/rules-engine';
+import type { Rule, Facts } from '$lib/rules-view';
 
 export function resolveInitialSelections(rule: Rule, facts: Facts): Record<string, unknown> {
   const selections: Record<string, unknown> = {};

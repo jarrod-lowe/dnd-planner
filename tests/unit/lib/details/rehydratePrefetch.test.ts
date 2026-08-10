@@ -25,7 +25,7 @@ vi.mock('$lib/api/client', () => ({
 }));
 
 // Mock rules engine
-vi.mock('$lib/rules-engine', () => ({
+vi.mock('$lib/rules-view', () => ({
   evaluate: vi.fn(() => ({
     facts: {},
     effects: [],
@@ -59,7 +59,7 @@ describe('prefetchDetailsForEffects', () => {
       { id: 'no-detail', activities: [] }
     ];
 
-    prefetchDetailsForEffects(effects as import('$lib/rules-engine').Rule[]);
+    prefetchDetailsForEffects(effects as import('$lib/rules-view').Rule[]);
 
     expect(mockPrefetchDetail).toHaveBeenCalledTimes(2);
     expect(mockPrefetchDetail).toHaveBeenCalledWith('spell/bless');
@@ -72,7 +72,7 @@ describe('prefetchDetailsForEffects', () => {
       { id: 'with-key', activities: [], ui: { detailKey: 'feature/test' } }
     ];
 
-    prefetchDetailsForEffects(effects as import('$lib/rules-engine').Rule[]);
+    prefetchDetailsForEffects(effects as import('$lib/rules-view').Rule[]);
 
     expect(mockPrefetchDetail).toHaveBeenCalledTimes(1);
     expect(mockPrefetchDetail).toHaveBeenCalledWith('feature/test');

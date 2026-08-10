@@ -2,11 +2,12 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import PlanItem from '$lib/components/play/PlanItem.svelte';
 import type { PlannedItem } from '$lib/play/types';
-import type { Rule, Facts } from '$lib/rules-engine';
+import type { Rule, Facts } from '$lib/rules-view';
 
 const createMockPlanItem = (ruleId: string, description?: string): PlannedItem => ({
   instanceId: `instance-${ruleId}`,
   rule: { id: ruleId, description: description || `Rule ${ruleId}`, activities: [] } as Rule,
+  verb: 'ATTACK',
   order: 0
 });
 
@@ -26,15 +27,16 @@ const createMockFollowupPlanItem = (): PlannedItem => ({
           button: 'rule.dnd-5e-2024.attacks.javelin-slow.button',
           addRule: {
             target: 'effect',
-            rule: {
+            effect: {
               id: 'effect-javelin-slow',
-              activities: []
+              expiry: { kind: 'turns', remaining: 1 }
             }
           }
         }
       ]
     }
   } as Rule,
+  verb: 'ATTACK',
   order: 0
 });
 
@@ -58,6 +60,7 @@ const createMockMovePlanItem = (): PlannedItem => ({
       maxDistance: { default: { fact: 'character.movement.total' } }
     }
   } as Rule,
+  verb: 'MOVE',
   order: 0
 });
 

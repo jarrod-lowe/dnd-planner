@@ -1,108 +1,16 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: ac
     translations:
       en:
         name: Armor Class
         description: Core rules for armor class calculation
-        keywords: [armor class, ac, defense]
+        keywords:
+          - armor class
+          - ac
+          - defense
       en-x-tlh:
         name: DIch Jun
         description: DIch Jun naQ
-        keywords: [DIch, Jun]
-    rules:
-      # ===================================================================
-      # AC RESET - Sets base AC to 10, establishes the three-group cascade
-      # Spans ac-calculation, ac-dex, ac-components
-      # ===================================================================
-      - id: ac-reset
-        phase: normal
-        group:
-          - ac-calculation
-          - ac-dex
-          - ac-components
-        activities:
-          - type: numberSet
-            target:
-              fact: ac.base
-            source:
-              number: 10
-
-      # ===================================================================
-      # AC DEX - Copies dexterity modifier into ac.dexBonus
-      # Runs after ac-calculation group settles
-      # Spans ac-dex, ac-components
-      #
-      # FUTURE EXTENSIBILITY:
-      # Armor that overrides dex (e.g., Medium Armor +2 cap):
-      #   after: ac-dex, group: ac-components
-      #   numberSet ac.dexBonus = 2
-      #
-      # Armor that replaces base (e.g., Plate 18):
-      #   after: ac-dex, group: ac-components
-      #   numberSet ac.base = 18
-      #   numberSet ac.dexBonus = 0
-      # ===================================================================
-      - id: ac-dex
-        phase: normal
-        after:
-          - group: ac-calculation
-        group:
-          - ac-dex
-          - ac-components
-        activities:
-          - type: numberCopy
-            source:
-              fact: dex.modifier
-            target:
-              fact: ac.dexBonus
-
-      # ===================================================================
-      # AC SUM - Sums all AC components into final ac.value
-      # Runs after ac-components group settles
-      #
-      # FUTURE EXTENSIBILITY:
-      # Armor that adds (e.g., +1 magic enhancement):
-      #   after: ac-calculation, group: ac-components
-      #   numberIncrement ac.armorBonus = 1
-      #
-      # Shields (+2):
-      #   after: ac-calculation, group: ac-components
-      #   numberIncrement ac.shieldBonus = 2
-      #
-      # Class modifiers (e.g., Defense Fighting Style +1):
-      #   after: ac-calculation, group: ac-components
-      #   numberIncrement ac.miscBonus = 1
-      # ===================================================================
-      - id: ac-sum
-        phase: normal
-        after:
-          - group: ac-components
-        group:
-          - ac-total
-        activities:
-          - type: numberSum
-            target:
-              fact: ac.value
-            sources:
-              - fact: ac.base
-              - fact: ac.dexBonus
-              - fact: ac.armorBonus
-              - fact: ac.shieldBonus
-              - fact: ac.miscBonus
-
-      # ===================================================================
-      # AC DISPLAY - Shows AC in the abilities section
-      # ===================================================================
-      - id: ac-display
-        activities: []
-        ui:
-          stats:
-            - name: play.stats.ac
-              type: value
-              fact: ac.value
-              section: abilities
-          topBar:
-            - type: value
-              label: play.topBar.ac
-              fact: ac.value
+        keywords:
+          - DIch
+          - Jun

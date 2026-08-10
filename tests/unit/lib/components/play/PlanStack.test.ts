@@ -10,7 +10,11 @@ const translations: Record<string, string> = {
   'play.addRow.recordGroup': 'record →',
   'play.addRow.buildGroup': 'build →',
   'play.addRow.steedSublabel': 'Steed',
-  'play.plan.endTurn': 'End Turn'
+  'play.plan.endTurn': 'End Turn',
+  'play.costTags.action': 'ACT',
+  'play.costTags.L2': 'L2',
+  'play.costTags.L4': 'L4',
+  'play.costTags.free': 'FREE'
 };
 
 vi.mock('$lib/i18n', () => ({
@@ -24,16 +28,14 @@ vi.mock('$lib/i18n', () => ({
 
 vi.mock('$lib/play/playStore.svelte', () => ({
   playStore: {
-    getAlternativeEntries: vi.fn(() => [])
+    getAlternativeEntries: vi.fn(() => []),
+    getPlannedEntry: vi.fn(() => undefined)
   }
 }));
 
-vi.mock('$lib/play/correctedEntry', () => ({
-  correctEntryForPlanItem: vi.fn((entry) => entry)
-}));
-
+import { playStore } from '$lib/play/playStore.svelte';
 import PlanStack from '$lib/components/play/PlanStack.svelte';
-import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-engine';
+import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-view';
 import type { PlannedItem } from '$lib/play/types';
 
 function makeEntry(
@@ -48,11 +50,12 @@ function makeEntry(
     rule: {
       id,
       phase: 'normal',
-      verb: verb as never,
       ui,
       activities: []
     },
-    legal: true
+    legal: true,
+    applicable: true,
+    diagnostics: []
   };
 }
 
@@ -69,11 +72,11 @@ function makeItem(
     rule: {
       id: ruleId,
       phase: 'normal',
-      verb: verb as never,
       ui,
       activities: []
     },
     verb: verb as never,
+    order: 0,
     originalRuleId: ruleId
   };
 }
@@ -119,6 +122,77 @@ describe('PlanStack', () => {
 
     // Total should be 2 (one player, one steed), not 3
     expect(planRows.length).toBe(2);
+  });
+
+  it('row legality comes from the per-instance planned entry, not the hypothetical catalog', () => {
+    const entry = makeEntry('attack', 'action-attack');
+    const first = makeItem('attack', 'action-attack');
+    const second = { ...makeItem('attack', 'action-attack'), instanceId: 'inst-attack-2' };
+
+    // The engine's per-instance verdicts: first copy legal, second over-spends.
+    vi.mocked(playStore.getPlannedEntry).mockImplementation((id: string) => {
+      if (id === first.instanceId) return { ...entry, legal: true, diagnostics: [] };
+      if (id === second.instanceId)
+        return { ...entry, legal: false, diagnostics: [{ code: 'no_action', severity: 'error' }] };
+      return undefined;
+    });
+    // The hypothetical catalog (plan minus this row) says the offer is illegal for
+    // BOTH rows — the old, wrong source of row legality. It must not win.
+    vi.mocked(playStore.getAlternativeEntries).mockReturnValue([
+      { ...entry, legal: false, diagnostics: [{ code: 'no_action', severity: 'error' }] }
+    ]);
+
+    mount(PlanStack, {
+      target: container,
+      props: {
+        items: [first, second],
+        entries: [entry],
+        facts: {} as Facts,
+        activeAnnotations: [] as Annotation[],
+        onAddToPlan: noop,
+        onRemoveFromPlan: noop,
+        onMovePlanItem: noop,
+        onSelectionChange: noop,
+        onSwapPlanItemRule: noop,
+        onEndTurn: noop
+      }
+    });
+
+    const rows = container.querySelectorAll('.plan-row');
+    expect(rows.length).toBe(2);
+    expect(rows[0].querySelector('.warning-indicator--illegal')).toBeNull();
+    expect(rows[1].querySelector('.warning-indicator--illegal')).toBeTruthy();
+  });
+
+  it('marks a skipped gated row inapplicable, not resolved from the reopened catalog', () => {
+    // The instance was skipped at its `when` step (getPlannedEntry undefined), but
+    // a later plan row reopened the offer, so it is back in the catalog `entries`.
+    // The row must show inapplicable — NOT the catalog's legal/applicable — because
+    // the fold advertised nothing for it (else End Turn commits a different plan).
+    const item = makeItem('attack-sword', 'action-attack');
+    const reopened = makeEntry('attack-sword', 'action-attack'); // legal + applicable
+    vi.mocked(playStore.getPlannedEntry).mockReturnValue(undefined);
+
+    mount(PlanStack, {
+      target: container,
+      props: {
+        items: [item],
+        entries: [reopened],
+        facts: {} as Facts,
+        activeAnnotations: [] as Annotation[],
+        onAddToPlan: noop,
+        onRemoveFromPlan: noop,
+        onMovePlanItem: noop,
+        onSelectionChange: noop,
+        onSwapPlanItemRule: noop,
+        onEndTurn: noop
+      }
+    });
+
+    const rows = container.querySelectorAll('.plan-row');
+    expect(rows.length).toBe(1);
+    expect(rows[0].querySelector('.warning-indicator--inapplicable')).toBeTruthy();
+    expect(rows[0].querySelector('.warning-indicator--illegal')).toBeNull();
   });
 
   it('creates separate +ADD pickers per subject', () => {
@@ -198,13 +272,65 @@ describe('PlanStack', () => {
     expect(altTexts).not.toContain('steed-attack');
   });
 
+  describe('cost chips follow the slot-level selection', () => {
+    // A cast with a slot-level slider (e.g. Find Steed): the authored tag is the
+    // spell's base level, but the chip must show what the cast will actually
+    // spend — the free use (0) or the selected (possibly upcast) slot.
+    function makeSpellItem(slotLevel?: number): PlannedItem {
+      const item = makeItem('cast-find-steed', 'action-spell');
+      (item.rule.ui as Record<string, unknown>).actionCost = ['action', 'L2'];
+      if (slotLevel !== undefined) item.rule.selections = { slotLevel };
+      return item;
+    }
+
+    function mountWith(item: PlannedItem) {
+      mount(PlanStack, {
+        target: container,
+        props: {
+          items: [item],
+          entries: [],
+          facts: {} as Facts,
+          activeAnnotations: [] as Annotation[],
+          onAddToPlan: noop,
+          onRemoveFromPlan: noop,
+          onMovePlanItem: noop,
+          onSelectionChange: noop,
+          onSwapPlanItemRule: noop,
+          onEndTurn: noop
+        }
+      });
+    }
+
+    function chipTexts(): string[] {
+      return Array.from(container.querySelectorAll('.plan-row__cost-tag')).map(
+        (el) => el.textContent?.trim() ?? ''
+      );
+    }
+
+    it('shows FREE when the free use (level 0) is selected', () => {
+      mountWith(makeSpellItem(0));
+      expect(chipTexts()).toContain('FREE');
+      expect(chipTexts()).not.toContain('L2');
+    });
+
+    it('shows the upcast level when a higher slot is selected', () => {
+      mountWith(makeSpellItem(4));
+      expect(chipTexts()).toContain('L4');
+      expect(chipTexts()).not.toContain('L2');
+    });
+
+    it('keeps the authored tag when there is no slot-level selection', () => {
+      mountWith(makeSpellItem());
+      expect(chipTexts()).toContain('L2');
+    });
+  });
+
   it('passes onFollowup through so followup buttons appear for rules with met conditions', () => {
     const item = makeItem('attack-javelin', 'action', 'ATTACK');
     const entryWithFollowup: AvailableRuleEntry = {
       rule: {
         id: 'attack-javelin',
         phase: 'normal',
-        verb: 'ATTACK' as never,
         activities: [],
         ui: {
           section: 'action',
@@ -217,15 +343,20 @@ describe('PlanStack', () => {
               button: 'rule.dnd-5e-2024.attacks.javelin-slow.button',
               addRule: {
                 target: 'effect',
-                rule: { id: 'effect-javelin-slow', activities: [] }
+                effect: { id: 'effect-javelin-slow', expiry: { kind: 'turns', remaining: 1 } }
               }
             }
           ]
         }
       },
-      legal: true
+      legal: true,
+      applicable: true,
+      diagnostics: []
     };
     const onFollowup = vi.fn();
+    // A planned item that ran resolves from its per-instance entry (which carries
+    // the followups), not the catalog fallback.
+    vi.mocked(playStore.getPlannedEntry).mockReturnValue(entryWithFollowup);
 
     mount(PlanStack, {
       target: container,

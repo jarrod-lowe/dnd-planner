@@ -8,8 +8,8 @@
   import PlanStack from '../play/PlanStack.svelte';
   import Ledger from '../play/Ledger.svelte';
   import type { Character } from '$lib/character/types';
-  import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
-  import { getConcentrationEffectName } from '$lib/play/effectUtils';
+  import type { AvailableRuleEntry } from '$lib/rules-view';
+  import { getConcentrationEffectName, mergeActiveEffects } from '$lib/play/effectUtils';
   import { getCompanionView, setCompanionView } from '$lib/play/companionStore.svelte';
   import { getSubject } from '$lib/play/subjectUtils';
 
@@ -46,37 +46,24 @@
   // Get available rules from engine output
   const availableRules = $derived(playStore.state.engineOutput?.availableRules ?? []);
 
-  // Check for engine-level errors (cycles, deadlocks)
+  // Check for engine-level errors (cycles, evaluation failures)
   const hasEngineErrors = $derived(
     (playStore.state.engineOutput?.diagnostics.errors.length ?? 0) > 0
+  );
+  // The store puts the specific i18n code on the first error diagnostic.
+  const engineErrorCode = $derived(
+    playStore.state.engineOutput?.diagnostics.errors[0]?.code ?? 'play.error.engineCycle'
   );
 
   // Collect active annotations from engine output
   const activeAnnotations = $derived(playStore.state.engineOutput?.annotations ?? []);
 
-  // Get current effects (committed + newly advertised), deduplicated by id.
-  // Committed-first ordering; advertised version preferred (has runtime vars like countDown).
-  const currentEffects = $derived.by(() => {
-    const committed = playStore.state.effects;
-    const advertised = playStore.state.engineOutput?.effects ?? [];
-    const advertisedById = new Array<string>();
-    for (const e of advertised) {
-      advertisedById.push(e.id);
-    }
-    const result: Rule[] = [];
-    for (const effect of committed) {
-      const idx = advertisedById.indexOf(effect.id);
-      const chosen = idx >= 0 ? advertised[idx] : effect;
-      result.push(chosen);
-    }
-    const committedIds = committed.map((e) => e.id);
-    for (const effect of advertised) {
-      if (!committedIds.includes(effect.id)) {
-        result.push(effect);
-      }
-    }
-    return result;
-  });
+  // Current effects: committed + this turn's advertised, deduped by id AND by
+  // replacement key (mergeActiveEffects), so a planned key-replacement suppresses
+  // the stale committed chip — mirroring the engine's key dedupe.
+  const currentEffects = $derived.by(() =>
+    mergeActiveEffects(playStore.state.effects, playStore.state.engineOutput?.effects ?? [])
+  );
 
   const concentrationName = $derived.by(() => {
     const key = getConcentrationEffectName(currentEffects);
@@ -168,7 +155,7 @@
   {:else}
     <div class="play-character__intent-body">
       {#if hasEngineErrors}
-        <div class="play-character__engine-error" role="alert">{$t('play.error.engineCycle')}</div>
+        <div class="play-character__engine-error" role="alert">{$t(engineErrorCode)}</div>
       {/if}
       <ActiveStateStrip
         effects={currentEffects}
@@ -189,7 +176,7 @@
         onMovePlanItem={(id, dir) => playStore.movePlanItem(id, dir)}
         onSelectionChange={handleSelectionChange}
         onSwapPlanItemRule={(id, entry) => playStore.swapPlanItemRule(id, entry)}
-        onFollowup={(rule) => playStore.addFollowupEffect(rule)}
+        onFollowup={(effect) => playStore.addFollowupEffect(effect)}
         onEndTurn={() => playStore.endTurn()}
       />
       <Ledger

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { resolveValueSource } from './resolveValueSource';
   import type { TextInputControl } from './types';
-  import type { Facts, VarDefinition } from '$lib/rules-engine';
+  import type { Facts, VarDefinition } from '$lib/rules-view';
 
   interface Props {
     control: TextInputControl;

@@ -1,0 +1,65 @@
+import type { AvailableRuleEntry, EngineOutput, PlannedRef } from './types';
+
+/**
+ * M4 contract adapter (W1) — bridges the engine `EngineOutput` to the shape the play
+ * UI consumes, so the existing PanelRenderer/PlanStack keep working unchanged at
+ * the cutover.
+ *
+ * Most of the output already matches: the engine's `AvailableRuleEntry` is
+ * `{ rule, legal, applicable, diagnostics }` — the same fields the UI reads
+ * (`rule.id/ui/vars/description`, `legal`, `applicable`, `diagnostics`) — and the
+ * top-level `facts`/`annotations`/`effects` carry over directly. The one thing the engine
+ * splits out is **per-planned-instance** legality: the view contract folds it into
+ * each planned item's own entry, whereas the engine returns it in `planDiagnostics` keyed by
+ * `instanceId`. This module reunites them.
+ */
+
+/** A planned item's offer, resolved with its per-instance legality + selections. */
+export interface PlannedEntry extends AvailableRuleEntry {
+  /** The planned instance this entry is for. */
+  instanceId: string;
+  /** The captured selections (slider / dice / level) for this instance. */
+  selections?: Record<string, unknown>;
+}
+
+/**
+ * The per-instance entry for one planned ref: the offer that RAN at this
+ * instance's step (from `plannedOffers`), carrying that instance's
+ * `planDiagnostics` and captured `selections`.
+ *
+ * Built from the step-time offer, not the final `availableRules` catalog, so a
+ * self-gate-closing action (e.g. Dismiss Steed, whose own apply clears the
+ * `summoned` gate it is offered under) keeps its row + diagnostics. Returns
+ * `undefined` when the offer never ran — its `when` was already closed at its own
+ * step (a genuinely stale row) — so that row falls back to inapplicable.
+ *
+ * `legal` is passed through from the engine (the fold's verdict — a failed gate
+ * of any severity, or an apply error), NOT re-inferred from diagnostic severity,
+ * so a warning-severity gate failure (e.g. don a shield while not proficient)
+ * reads illegal here exactly as it does in the catalog.
+ */
+export function plannedEntry(output: EngineOutput, ref: PlannedRef): PlannedEntry | undefined {
+  const offer = output.plannedOffers?.[ref.instanceId];
+  if (!offer) return undefined;
+  return {
+    rule: offer.rule,
+    legal: offer.legal,
+    applicable: offer.applicable,
+    diagnostics: output.planDiagnostics[ref.instanceId] ?? [],
+    instanceId: ref.instanceId,
+    selections: ref.selections
+  };
+}
+
+/** The per-instance entries for every planned ref, in plan order (skips missing offers). */
+export function plannedEntries(
+  output: EngineOutput,
+  planned: readonly PlannedRef[]
+): PlannedEntry[] {
+  const entries: PlannedEntry[] = [];
+  for (const ref of planned) {
+    const entry = plannedEntry(output, ref);
+    if (entry) entries.push(entry);
+  }
+  return entries;
+}

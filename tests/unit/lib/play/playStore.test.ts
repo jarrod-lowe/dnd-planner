@@ -7,9 +7,20 @@ vi.mock('$lib/api/client', () => ({
   apiDelete: vi.fn()
 }));
 
-// Mock the rules engine evaluate function
-vi.mock('$lib/rules-engine', () => ({
-  evaluate: vi.fn()
+// Mock the lazy module loader (no chunks in unit tests) but keep the rest of the
+// engine barrel real (endTurn aging — pure).
+vi.mock('$lib/rules-engine', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('$lib/rules-engine')>();
+  return {
+    ...actual,
+    loadModules: vi.fn(async () => ({ modules: [], missing: [], incompatible: [] }))
+  };
+});
+
+// Mock the store's evaluation seam so tests can inject facts/offers/effects.
+vi.mock('$lib/play/evaluateCharacter', () => ({
+  evaluateCharacter: vi.fn(),
+  hypotheticalOffers: vi.fn(() => new Map())
 }));
 
 // Mock $lib/i18n with a proper mock store
@@ -55,15 +66,55 @@ vi.mock('svelte-sonner', () => ({
 }));
 
 import { apiGet, apiPost, apiDelete } from '$lib/api/client';
-import { evaluate } from '$lib/rules-engine';
+import { loadModules } from '$lib/rules-engine';
+import { evaluateCharacter, hypotheticalOffers } from '$lib/play/evaluateCharacter';
 import { locale } from '$lib/i18n';
 import { toast } from 'svelte-sonner';
-import type { Rule, EngineOutput, EngineInput } from '$lib/rules-engine';
+import type { Rule } from '$lib/rules-view';
+import type { EffectInstance, EngineOutput } from '$lib/rules-engine';
+import type { CharacterEvaluation } from '$lib/play/evaluateCharacter';
+
+/** A minimal, valid raw engine output for the adapter to consume. */
+function rawOutput(overrides: Partial<EngineOutput> = {}): EngineOutput {
+  return {
+    status: { ok: true, legal: true, applicable: true },
+    facts: {},
+    availableRules: [],
+    planDiagnostics: {},
+    plannedOffers: {},
+    annotations: [],
+    effects: [],
+    diagnostics: { errors: [], warnings: [], notices: [] },
+    next: { modules: [] },
+    ...overrides
+  };
+}
+
+/** A CharacterEvaluation (the store's eval seam result) with sensible empty defaults. */
+function playOut(overrides: Partial<CharacterEvaluation> = {}): CharacterEvaluation {
+  // Only forward facts when the caller set them — spreading `facts: undefined`
+  // would REPLACE rawOutput's default `{}` with undefined (an invalid EngineOutput).
+  const raw = overrides.raw ?? rawOutput(overrides.facts ? { facts: overrides.facts } : {});
+  return {
+    facts: raw.facts,
+    availableRules: raw.availableRules,
+    plannedEntries: [],
+    topBarEntries: [],
+    resourceEntries: [],
+    advertised: [],
+    raw,
+    ...overrides
+  };
+}
 
 describe('playStore', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vi.useFakeTimers();
+    // Seam defaults: empty modules + an empty evaluation. Tests override as needed.
+    vi.mocked(loadModules).mockResolvedValue({ modules: [], missing: [], incompatible: [] });
+    vi.mocked(evaluateCharacter).mockReturnValue(playOut());
+    vi.mocked(hypotheticalOffers).mockReturnValue(new Map());
   });
 
   afterEach(() => {
@@ -76,7 +127,6 @@ describe('playStore', () => {
     it('fetches rule group IDs then batches to fetch rules', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
 
       // Mock rule group IDs response - API returns { ruleGroups: string[] }
       mockApiGet.mockResolvedValueOnce({
@@ -96,26 +146,6 @@ describe('playStore', () => {
         })
       } as Response);
 
-      // Mock evaluate
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
 
       await playStore.loadRuleGroups('char-123');
@@ -124,14 +154,12 @@ describe('playStore', () => {
       expect(mockApiPost).toHaveBeenCalledWith('/api/rule-groups/batch?lang=en', {
         ids: ['group-1', 'group-2']
       });
-      expect(playStore.state.ruleGroups).toEqual(mockRules);
       expect(playStore.state.ruleGroupIds).toEqual(['group-1', 'group-2']);
     });
 
     it('splits large rule group lists into batches of 100', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
 
       // Create 150 rule group IDs
       const groupIds = Array.from({ length: 150 }, (_, i) => `group-${i}`);
@@ -164,25 +192,6 @@ describe('playStore', () => {
           })
         } as Response);
 
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
       await playStore.loadRuleGroups('char-123');
@@ -194,7 +203,6 @@ describe('playStore', () => {
       expect(mockApiPost).toHaveBeenNthCalledWith(2, '/api/rule-groups/batch?lang=en', {
         ids: groupIds.slice(100)
       });
-      expect(playStore.state.ruleGroups).toHaveLength(150);
       expect(playStore.state.ruleGroupIds).toEqual(groupIds);
     });
 
@@ -217,7 +225,6 @@ describe('playStore', () => {
     it('passes current locale to API', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
 
       // Mock rule group IDs response
       mockApiGet.mockResolvedValueOnce({
@@ -233,25 +240,6 @@ describe('playStore', () => {
           ruleGroups: [{ ruleGroupId: 'group-1', rules: JSON.stringify(mockRules) }]
         })
       } as Response);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -270,62 +258,9 @@ describe('playStore', () => {
       locale.set('en');
     });
 
-    it('populates ruleGroupRulesMap from batch response', async () => {
-      const mockApiGet = vi.mocked(apiGet);
-      const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
-
-      const group1Rules: Rule[] = [{ id: 'rule-1', activities: [] }];
-      const group2Rules: Rule[] = [{ id: 'rule-2', activities: [] }];
-
-      mockApiGet.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ ruleGroups: ['group-1', 'group-2'] })
-      } as Response);
-
-      mockApiPost.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          ruleGroups: [
-            { ruleGroupId: 'group-1', rules: JSON.stringify(group1Rules) },
-            { ruleGroupId: 'group-2', rules: JSON.stringify(group2Rules) }
-          ]
-        })
-      } as Response);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
-      const { playStore } = await import('$lib/play/playStore.svelte');
-      playStore.reset();
-      await playStore.loadRuleGroups('char-123');
-
-      expect(playStore.state.ruleGroupRulesMap).toEqual({
-        'group-1': group1Rules,
-        'group-2': group2Rules
-      });
-    });
-
     it('stores the characterId in state', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
 
       mockApiGet.mockResolvedValueOnce({
         ok: true,
@@ -341,25 +276,6 @@ describe('playStore', () => {
         })
       } as Response);
 
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
       await playStore.loadRuleGroups('char-999');
@@ -369,7 +285,6 @@ describe('playStore', () => {
 
     it('loads effects from API and keeps empty array when null', async () => {
       const mockApiGet = vi.mocked(apiGet);
-      const mockEvaluate = vi.mocked(evaluate);
 
       mockApiGet
         .mockResolvedValueOnce({
@@ -381,25 +296,6 @@ describe('playStore', () => {
           json: async () => ({ effects: null })
         } as Response);
 
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
       await playStore.loadRuleGroups('char-1');
@@ -408,12 +304,17 @@ describe('playStore', () => {
       expect(playStore.state.effects).toEqual([]);
     });
 
-    it('populates effects from persisted API response', async () => {
+    it('populates committed effects from persisted API response', async () => {
       const mockApiGet = vi.mocked(apiGet);
-      const mockEvaluate = vi.mocked(evaluate);
 
-      const persistedEffects: Rule[] = [
-        { id: 'effect-slot-expended-l1', phase: 'normal', activities: [] }
+      // A persisted EffectInstance blob.
+      const persisted = [
+        {
+          id: 'effect-bless',
+          key: 'bless',
+          state: { 'concentration.spent': 1 },
+          expiry: [{ kind: 'turns', remaining: 10 }]
+        }
       ];
 
       mockApiGet
@@ -423,38 +324,50 @@ describe('playStore', () => {
         } as Response)
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => ({ effects: JSON.stringify(persistedEffects) })
+          json: async () => ({ effects: JSON.stringify(persisted) })
         } as Response);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
       await playStore.loadRuleGroups('char-1');
 
-      expect(playStore.state.effects).toEqual(persistedEffects);
+      // The blob loads directly as committed; state.effects is the display bridge.
+      expect(playStore.state.committed).toEqual(persisted);
+      expect(playStore.state.effects.map((e) => e.id)).toEqual(['effect-bless']);
+    });
+
+    it('drops legacy-shape effect entries instead of crashing', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+
+      // A legacy character's blob: view effect Rules (activities, no `expiry`) mixed
+      // with a valid EffectInstance. The legacy ones are dropped; the valid one survives.
+      const mixed = [
+        { id: 'effect-legacy', group: ['bless'], activities: [{ type: 'numberSet' }] },
+        {
+          id: 'effect-bless',
+          key: 'bless',
+          state: { 'concentration.spent': 1 },
+          expiry: { kind: 'permanent' }
+        }
+      ];
+
+      mockApiGet
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ ruleGroups: [] }) } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ effects: JSON.stringify(mixed) })
+        } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      await playStore.loadRuleGroups('char-1');
+
+      expect(playStore.state.committed.map((e) => e.id)).toEqual(['effect-bless']);
+      expect(playStore.state.effects.map((e) => e.id)).toEqual(['effect-bless']);
     });
 
     it('shows toast on effects load failure and falls back to empty', async () => {
       const mockApiGet = vi.mocked(apiGet);
-      const mockEvaluate = vi.mocked(evaluate);
       vi.mocked(toast.error).mockClear();
 
       mockApiGet
@@ -467,25 +380,6 @@ describe('playStore', () => {
           status: 500
         } as Response);
 
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
       await playStore.loadRuleGroups('char-1');
@@ -495,28 +389,57 @@ describe('playStore', () => {
     });
   });
 
+  describe('per-instance planned entries', () => {
+    it('exposes the evaluation planned entries by instanceId, offers-only availableRules', async () => {
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      const rule: Rule = { id: 'attack-1', description: 'Attack', activities: [] };
+      // The evaluation reports this instance illegal via planDiagnostics while the
+      // catalog offer stays legal (the two-copies case: only THIS copy over-spends).
+      vi.mocked(evaluateCharacter).mockImplementation((_m, _c, planned) =>
+        playOut({
+          plannedEntries: planned.map((ref) => ({
+            instanceId: ref.instanceId,
+            rule: { id: 'attack-1', ui: {} },
+            legal: false,
+            applicable: true,
+            diagnostics: [{ code: 'no_action', severity: 'error' as const }]
+          }))
+        })
+      );
+
+      playStore.addToPlan(rule);
+      vi.runAllTimers(); // addToPlan evaluates via the debounce
+      const instanceId = playStore.state.plannedItems[0].instanceId;
+
+      const entry = playStore.getPlannedEntry(instanceId);
+      expect(entry?.legal).toBe(false);
+      expect(entry?.diagnostics?.[0]?.code).toBe('no_action');
+      // The instance never appears as an addable offer.
+      const ids = (playStore.state.engineOutput?.availableRules ?? []).map((e) => e.rule.id);
+      expect(ids).not.toContain(instanceId);
+    });
+
+    it('state.facts is the VIEW facts — synthesized labels reach the panels', async () => {
+      // The panels (PanelRenderer via PlanStack/strip/ledger) read
+      // playStore.state.facts. The bridge synthesizes view-only facts (the
+      // spellcasting.saveAbility label) — those must not be lost by storing
+      // the raw engine facts instead of the adapted ones.
+      vi.mocked(evaluateCharacter).mockReturnValue(
+        playOut({ facts: { 'spellcasting.saveAbility.cha': 1 } })
+      );
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      playStore.addFollowupEffect({ id: 'e1', expiry: { kind: 'permanent' } });
+
+      expect(playStore.state.facts['spellcasting.saveAbility.cha']).toBe(1);
+      expect(playStore.state.facts['spellcasting.saveAbility']).toBe('CHA');
+    });
+  });
+
   describe('addToPlan', () => {
     it('adds a rule to the plan with a unique instance ID', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -535,7 +458,6 @@ describe('playStore', () => {
 
     it('resolves capture vars from facts when adding to plan', async () => {
       const mockApiGet = vi.mocked(apiGet);
-      const mockEvaluate = vi.mocked(evaluate);
 
       // Mock rule group IDs response
       mockApiGet.mockResolvedValueOnce({
@@ -543,28 +465,10 @@ describe('playStore', () => {
         json: async () => ({ ruleGroups: [] })
       } as Response);
 
-      // Mock evaluate to return facts
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {
-          'character.movement.remaining': 25,
-          'character.movement.total': 30
-        },
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
+      // The evaluation returns the facts capture vars resolve against.
+      vi.mocked(evaluateCharacter).mockReturnValue(
+        playOut({ facts: { 'character.movement.remaining': 25, 'character.movement.total': 30 } })
+      );
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -598,33 +502,15 @@ describe('playStore', () => {
 
     it('preserves rule default selections alongside capture vars', async () => {
       const mockApiGet = vi.mocked(apiGet);
-      const mockEvaluate = vi.mocked(evaluate);
 
       mockApiGet.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ ruleGroups: [] })
       } as Response);
 
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {
-          'character.movement.remaining': 25
-        },
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
+      vi.mocked(evaluateCharacter).mockReturnValue(
+        playOut({ facts: { 'character.movement.remaining': 25 } })
+      );
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -654,28 +540,6 @@ describe('playStore', () => {
     });
 
     it('does not resolve vars without capture property', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {
-          'character.movement.remaining': 25
-        },
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -700,26 +564,6 @@ describe('playStore', () => {
     });
 
     it('allows adding the same rule multiple times (duplicates)', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -734,26 +578,6 @@ describe('playStore', () => {
     });
 
     it('stores originalRuleId preserving the rule id before rewriting', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -766,26 +590,6 @@ describe('playStore', () => {
     });
 
     it('stores verb derived from the rule', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -802,26 +606,6 @@ describe('playStore', () => {
 
   describe('swapPlanItemRule', () => {
     it('swaps a planned item rule and updates verb and originalRuleId', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -841,7 +625,12 @@ describe('playStore', () => {
         activities: [],
         ui: { section: 'action-spell', intents: { AID: 'ally' }, actionCost: ['action'] }
       };
-      playStore.swapPlanItemRule(instanceId, { rule: spellRule, illegalReasons: [] });
+      playStore.swapPlanItemRule(instanceId, {
+        rule: spellRule,
+        legal: true,
+        applicable: true,
+        diagnostics: []
+      });
 
       expect(playStore.state.plannedItems).toHaveLength(1);
       const item = playStore.state.plannedItems[0];
@@ -854,26 +643,6 @@ describe('playStore', () => {
 
   describe('removeFromPlan', () => {
     it('removes an item by instance ID and reindexes order', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -899,26 +668,6 @@ describe('playStore', () => {
 
   describe('movePlanItem', () => {
     it('moves an item up in the plan order', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -938,26 +687,6 @@ describe('playStore', () => {
     });
 
     it('moves an item down in the plan order', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -977,26 +706,6 @@ describe('playStore', () => {
     });
 
     it('does nothing when trying to move first item up', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -1016,26 +725,6 @@ describe('playStore', () => {
     });
 
     it('does nothing when trying to move last item down', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -1057,26 +746,6 @@ describe('playStore', () => {
 
   describe('reset', () => {
     it('clears all state to initial values', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
 
       // Add some state
@@ -1086,14 +755,12 @@ describe('playStore', () => {
       playStore.reset();
 
       expect(playStore.state.plannedItems).toEqual([]);
-      expect(playStore.state.ruleGroups).toEqual([]);
       expect(playStore.state.ruleGroupIds).toEqual([]);
       expect(playStore.state.engineOutput).toBeNull();
     });
 
     it('clears currentCharacterId', async () => {
       const mockApiGet = vi.mocked(apiGet);
-      const mockEvaluate = vi.mocked(evaluate);
 
       mockApiGet
         .mockResolvedValueOnce({
@@ -1104,25 +771,6 @@ describe('playStore', () => {
           ok: true,
           json: async () => ({ effects: null })
         } as Response);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -1138,26 +786,6 @@ describe('playStore', () => {
 
   describe('updateSelections', () => {
     it('updates selections for a planned item and triggers debounced evaluate', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -1171,26 +799,6 @@ describe('playStore', () => {
     });
 
     it('does nothing if instance ID not found', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -1205,26 +813,6 @@ describe('playStore', () => {
     });
 
     it('merges new selections with existing instead of replacing', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -1260,26 +848,6 @@ describe('playStore', () => {
   describe('assignRuleGroup', () => {
     it('adds ruleGroupId to state on successful assignment', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       // prefetchDepTree: batch fetch metadata
       mockApiPost.mockResolvedValueOnce({
@@ -1310,7 +878,6 @@ describe('playStore', () => {
 
     it('fetches rules and updates standing on success', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
 
       const newRules: Rule[] = [{ id: 'new-rule-1', activities: [] }];
 
@@ -1335,61 +902,21 @@ describe('playStore', () => {
         })
       } as Response);
 
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
       await playStore.assignRuleGroup?.('char-1', 'group-new');
 
       expect(playStore.state.ruleGroupIds).toContain('group-new');
-      expect(playStore.state.ruleGroups).toEqual(expect.arrayContaining(newRules));
     });
 
     it('reverts ruleGroupIds on API failure', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
 
       mockApiPost.mockResolvedValueOnce({
         ok: false,
         status: 500
       } as Response);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -1401,111 +928,11 @@ describe('playStore', () => {
       // Should be reverted after failure
       expect(playStore.state.ruleGroupIds).not.toContain('group-new');
     });
-
-    it('captures vars for standing rules when assigning a new rule group', async () => {
-      const mockApiGet = vi.mocked(apiGet);
-      const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: { 'con.modifier': 3 },
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
-      // loadRuleGroups: get assigned IDs, then effects
-      mockApiGet
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => ({ ruleGroups: ['base-group'] })
-        } as Response)
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => ({ effects: null })
-        } as Response);
-
-      // loadRuleGroups: fetch base rules
-      mockApiPost.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          ruleGroups: [{ ruleGroupId: 'base-group', rules: JSON.stringify([]) }]
-        })
-      } as Response);
-
-      // prefetchDepTree: batch fetch metadata for group-new
-      mockApiPost.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ ruleGroups: [] })
-      } as Response);
-
-      // assignRuleGroup: assign API call
-      mockApiPost.mockResolvedValueOnce({
-        ok: true,
-        status: 201,
-        json: async () => ({})
-      } as Response);
-
-      // assignRuleGroup: fetch assigned group rules
-      const assignedRule: Rule = {
-        id: 'paladin-level2-hp',
-        vars: {
-          conAtLevel: { capture: true, default: { fact: 'con.modifier' } }
-        },
-        activities: []
-      };
-      mockApiPost.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          ruleGroups: [{ ruleGroupId: 'group-new', rules: JSON.stringify([assignedRule]) }]
-        })
-      } as Response);
-
-      const { playStore } = await import('$lib/play/playStore.svelte');
-      playStore.reset();
-      await playStore.loadRuleGroups('char-1');
-      await playStore.assignRuleGroup?.('char-1', 'group-new');
-
-      const addedRule = playStore.state.ruleGroups.find((r) => r.id === 'paladin-level2-hp');
-      expect(addedRule?.selections).toEqual({ conAtLevel: 3 });
-    });
   });
 
   describe('condition gating', () => {
     it('blocks assignRuleGroup when conditions are not met', async () => {
       const mockApiGet = vi.mocked(apiGet);
-      const mockEvaluate = vi.mocked(evaluate);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: { 'str.value': 10, 'dex.value': 10 },
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       // loadRuleGroups: get assigned IDs, then effects
       mockApiGet
@@ -1551,26 +978,10 @@ describe('playStore', () => {
     it('allows assignRuleGroup when conditions are met', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
 
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: { 'str.value': 14, 'dex.value': 10 },
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
+      vi.mocked(evaluateCharacter).mockReturnValue(
+        playOut({ facts: { 'str.value': 14, 'dex.value': 10 } })
+      );
 
       // loadRuleGroups: get assigned IDs, then effects
       mockApiGet
@@ -1635,26 +1046,10 @@ describe('playStore', () => {
 
     it('checkCondition returns false when conditions not met', async () => {
       const mockApiGet = vi.mocked(apiGet);
-      const mockEvaluate = vi.mocked(evaluate);
 
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: { 'str.value': 10, 'dex.value': 10 },
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
+      vi.mocked(evaluateCharacter).mockReturnValue(
+        playOut({ facts: { 'str.value': 10, 'dex.value': 10 } })
+      );
 
       // loadRuleGroups: get assigned IDs, then effects
       mockApiGet
@@ -1695,27 +1090,6 @@ describe('playStore', () => {
     });
 
     it('checkCondition returns true when no conditions defined', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       const { seedCache } = await import('$lib/rules/ruleGroupCache.svelte');
       playStore.reset();
@@ -1735,26 +1109,10 @@ describe('playStore', () => {
     it('checkCondition returns false after loadRuleGroups caches a condition-bearing group', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
 
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: { 'str.value': 10, 'dex.value': 10 },
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
+      vi.mocked(evaluateCharacter).mockReturnValue(
+        playOut({ facts: { 'str.value': 10, 'dex.value': 10 } })
+      );
 
       // loadRuleGroups: get assigned IDs (sentinel is assigned)
       mockApiGet
@@ -1803,7 +1161,6 @@ describe('playStore', () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
       const mockApiDeleteFn = vi.mocked(apiDelete);
-      const mockEvaluate = vi.mocked(evaluate);
 
       const group1Rules: Rule[] = [{ id: 'rule-1', activities: [] }];
 
@@ -1820,25 +1177,6 @@ describe('playStore', () => {
         })
       } as Response);
 
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
       await playStore.loadRuleGroups('char-123');
@@ -1849,7 +1187,7 @@ describe('playStore', () => {
       let resolveDelete: (value: unknown) => void;
       mockApiDeleteFn.mockReturnValue(
         new Promise((resolve) => {
-          resolveDelete = resolve;
+          resolveDelete = resolve as (value: unknown) => void;
         })
       );
 
@@ -1868,7 +1206,6 @@ describe('playStore', () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
       const mockApiDeleteFn = vi.mocked(apiDelete);
-      const mockEvaluate = vi.mocked(evaluate);
 
       const group1Rules: Rule[] = [{ id: 'rule-1', activities: [] }];
 
@@ -1885,25 +1222,6 @@ describe('playStore', () => {
         })
       } as Response);
 
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
       await playStore.loadRuleGroups('char-123');
@@ -1912,7 +1230,7 @@ describe('playStore', () => {
       let resolveDelete: (value: unknown) => void;
       mockApiDeleteFn.mockReturnValue(
         new Promise((resolve) => {
-          resolveDelete = resolve;
+          resolveDelete = resolve as (value: unknown) => void;
         })
       );
 
@@ -1928,149 +1246,162 @@ describe('playStore', () => {
       // Step 3: Reverted
       expect(playStore.state.ruleGroupIds).toContain('group-1');
     });
+
+    it('drops committed effects owned by the removed group, keeps the rest', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      const mockApiDeleteFn = vi.mocked(apiDelete);
+
+      // A module-created committed effect owned by 'shield' — its id is namespaced
+      // by the planned instance (NOT `shield::`), so only its stamped `ruleGroupId`
+      // identifies the owner. A second effect belongs to another group.
+      const shieldEffect = {
+        id: 'inst-1#0#effect-shield',
+        ruleGroupId: 'shield',
+        key: 'armor:shield',
+        state: { 'ac.shieldBonus': 2, 'hands.spent': 1 },
+        expiry: { kind: 'permanent' as const }
+      };
+      const blessEffect = {
+        id: 'inst-2#0#effect-bless',
+        ruleGroupId: 'bless',
+        state: { 'concentration.spent': 1 },
+        expiry: { kind: 'permanent' as const }
+      };
+
+      // Empty assigned-groups list keeps the load to just the effects blob (no
+      // batch fetch to mock); the filter under test operates on committed effects.
+      mockApiGet
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ ruleGroups: [] })
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ effects: JSON.stringify([shieldEffect, blessEffect]) })
+        } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      await playStore.loadRuleGroups('char-123');
+      expect(playStore.state.committed).toHaveLength(2);
+
+      // Pending DELETE so we can inspect the optimistic committed set.
+      let resolveDelete: (value: unknown) => void;
+      mockApiDeleteFn.mockReturnValue(
+        new Promise((resolve) => {
+          resolveDelete = resolve as (value: unknown) => void;
+        })
+      );
+
+      const promise = playStore.unassignRuleGroup?.('char-123', 'shield');
+
+      // The shield's committed effect (owned by the removed group) is dropped;
+      // the other group's effect survives.
+      expect(playStore.state.committed.map((e) => e.id)).toEqual(['inst-2#0#effect-bless']);
+
+      // Clean up the pending unassign.
+      resolveDelete!({ ok: true, status: 204 });
+      vi.mocked(apiPost).mockResolvedValueOnce({ ok: true } as Response);
+      await promise;
+    });
+  });
+
+  describe('addFollowupEffect', () => {
+    it('replaces a re-tapped keyed follow-up instead of appending a duplicate', async () => {
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      const slow = {
+        id: 'effect-javelin-slow',
+        key: 'javelin-slow',
+        expiry: { kind: 'turns' as const, remaining: 1 }
+      };
+      playStore.addFollowupEffect(slow);
+      playStore.addFollowupEffect(slow); // second tap of the same follow-up
+
+      // The strip keys chips by id and the engine dedupes committed by key, so a
+      // re-tap must REPLACE — one committed entry, not two duplicates.
+      const matching = playStore.state.committed.filter((e) => e.id === 'effect-javelin-slow');
+      expect(matching).toHaveLength(1);
+    });
+
+    it('a committed follow-up is evicted when its owning rule group is unassigned', async () => {
+      // The REAL javelin Slow follow-up effect, as the action panel commits it —
+      // pulled from the module so the authored owner stamp is what's under test.
+      // Follow-ups bypass the plan fold (no `ruleGroupId` stamped at execution),
+      // so the authored effect itself must carry its owning group or
+      // unassignRuleGroup leaves the marker orphaned.
+      const javelinModule = (await import('$lib/rules-engine/rules/javelin')).default;
+      const offers = javelinModule.offer!({ num: () => 0, str: () => '' } as never);
+      const followups = offers
+        .map(
+          (o) => (o.ui as { followups?: { addRule?: { effect?: EffectInstance } }[] })?.followups
+        )
+        .find((f) => f?.some((fu) => fu.addRule?.effect));
+      const slowEffect = followups!.find((fu) => fu.addRule?.effect)!.addRule!.effect!;
+      expect(slowEffect.id).toBe('effect-javelin-slow');
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      vi.mocked(apiPost).mockResolvedValue({ ok: true } as Response);
+      playStore.addFollowupEffect(slowEffect);
+      expect(playStore.state.committed.map((e) => e.id)).toEqual(['effect-javelin-slow']);
+
+      let resolveDelete: (value: unknown) => void;
+      vi.mocked(apiDelete).mockReturnValue(
+        new Promise((resolve) => {
+          resolveDelete = resolve as (value: unknown) => void;
+        })
+      );
+      const promise = playStore.unassignRuleGroup?.('char-123', 'javelin');
+
+      // Unassigning javelin must take its follow-up marker with it.
+      expect(playStore.state.committed).toEqual([]);
+
+      resolveDelete!({ ok: true, status: 204 });
+      await promise;
+    });
   });
 
   describe('effects persistence', () => {
     it('passes committed effects to engine during evaluation', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      const committedEffect: Rule = { id: 'effect-slot-1', activities: [] };
-
-      // First call: spell cast returns an effect
-      mockEvaluate.mockReturnValueOnce({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        effects: [committedEffect],
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [committedEffect] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
-      // Second call: after endTurn, should receive committed effects
-      mockEvaluate
-        .mockReturnValueOnce({
-          status: { ok: true, legal: true, applicable: true },
-          facts: {},
-          collections: {},
-          availableRules: [],
-          diagnostics: { errors: [], warnings: [], notices: [] },
-          trace: {
-            appliedRuleIds: [],
-            appliedActivityIds: [],
-            providedCapabilities: [],
-            emittedEvents: []
-          },
-          effects: [committedEffect],
-          next: {
-            schemaVersion: 1,
-            rules: { standing: [], planned: [], effects: [committedEffect] },
-            state: { facts: {} }
-          }
-        } as EngineOutput)
-        .mockReturnValueOnce({
-          status: { ok: true, legal: true, applicable: true },
-          facts: {},
-          collections: {},
-          availableRules: [],
-          diagnostics: { errors: [], warnings: [], notices: [] },
-          trace: {
-            appliedRuleIds: [],
-            appliedActivityIds: [],
-            providedCapabilities: [],
-            emittedEvents: []
-          },
-          effects: [],
-          next: {
-            schemaVersion: 1,
-            rules: { standing: [], planned: [], effects: [] },
-            state: { facts: {} }
-          }
-        } as EngineOutput);
+      // The cast advertises a persistent slot-spend effect this turn.
+      const advertised = {
+        id: 'effect-slot-1',
+        state: { 'spellcasting.slots.level1.spent': 1 },
+        expiry: { kind: 'untilLongRest' as const }
+      };
+      vi.mocked(evaluateCharacter).mockReturnValue(playOut({ advertised: [advertised] }));
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
-      // Cast a spell that advertises an effect
-      const spellRule: Rule = { id: 'cast-spell', activities: [] };
-      playStore.addToPlan(spellRule);
+      // Cast a spell that advertises an effect, then commit it at End Turn.
+      playStore.addToPlan({ id: 'cast-spell', activities: [] });
       vi.advanceTimersByTime(300);
-
-      // End turn to commit effects
       playStore.endTurn();
+      expect(playStore.state.committed).toEqual([advertised]);
 
-      // Now add another action - the committed effects should be passed to engine
-      mockEvaluate.mockClear();
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        effects: [committedEffect],
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [committedEffect] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
-
-      const rule: Rule = { id: 'test-rule', activities: [] };
-      playStore.addToPlan(rule);
+      // A subsequent evaluation passes the committed set to the engine (2nd arg).
+      vi.mocked(evaluateCharacter).mockClear();
+      vi.mocked(evaluateCharacter).mockReturnValue(playOut());
+      playStore.addToPlan({ id: 'test-rule', activities: [] });
       vi.advanceTimersByTime(300);
 
-      // Verify evaluate was called with the committed effects
-      expect(mockEvaluate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          rules: expect.objectContaining({
-            effects: [committedEffect]
-          })
-        })
+      expect(evaluateCharacter).toHaveBeenCalledWith(
+        expect.anything(),
+        [advertised],
+        expect.anything()
       );
     });
 
-    it('commits output effects to state on endTurn', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      const committedEffect: Rule = {
+    it('commits advertised effects to state on endTurn', async () => {
+      const advertised = {
         id: 'effect-slot-1',
-        phase: 'normal',
-        activities: []
+        state: { 'spellcasting.slots.level1.spent': 1 },
+        expiry: { kind: 'untilLongRest' as const }
       };
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: { 'slots.remaining': 3 },
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        effects: [committedEffect],
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [committedEffect] },
-          state: { facts: { 'slots.remaining': 3 } }
-        }
-      } as EngineOutput);
+      vi.mocked(evaluateCharacter).mockReturnValue(playOut({ advertised: [advertised] }));
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -2079,37 +1410,22 @@ describe('playStore', () => {
       playStore.addToPlan({ id: 'test-rule', activities: [] });
       vi.advanceTimersByTime(300);
 
-      // End turn
+      // End turn ages the advertised effect into committed.
       playStore.endTurn();
 
-      // Verify effects from output were committed to state
-      expect(playStore.state.effects).toEqual([committedEffect]);
+      expect(playStore.state.committed).toEqual([advertised]);
+      expect(playStore.state.effects.map((e) => e.id)).toEqual(['effect-slot-1']);
       // Verify plan was cleared
       expect(playStore.state.plannedItems).toEqual([]);
     });
 
     it('clears effects on reset', async () => {
-      const committedEffect: Rule = { id: 'effect-1', activities: [] };
-      const mockEvaluate = vi.mocked(evaluate);
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        effects: [committedEffect],
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [committedEffect] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
+      const advertised = {
+        id: 'effect-1',
+        state: { 'spellcasting.slots.level1.spent': 1 },
+        expiry: { kind: 'untilLongRest' as const }
+      };
+      vi.mocked(evaluateCharacter).mockReturnValue(playOut({ advertised: [advertised] }));
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -2120,21 +1436,26 @@ describe('playStore', () => {
       playStore.endTurn();
 
       // Verify effects were committed
-      expect(playStore.state.effects).toEqual([committedEffect]);
+      expect(playStore.state.committed).toEqual([advertised]);
 
-      // Reset should clear effects
+      // Reset should clear committed + display effects
       playStore.reset();
 
+      expect(playStore.state.committed).toEqual([]);
       expect(playStore.state.effects).toEqual([]);
     });
 
     it('POSTs committed effects on endTurn', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
       vi.mocked(toast.error).mockClear();
 
-      const committedEffect: Rule = { id: 'effect-slot-1', activities: [] };
+      const advertised = {
+        id: 'effect-slot-1',
+        state: { 'spellcasting.slots.level1.spent': 1 },
+        expiry: { kind: 'untilLongRest' as const }
+      };
+      vi.mocked(evaluateCharacter).mockReturnValue(playOut({ advertised: [advertised] }));
 
       // Setup: load character to set currentCharacterId
       mockApiGet
@@ -2146,26 +1467,6 @@ describe('playStore', () => {
           ok: true,
           json: async () => ({ effects: null })
         } as Response);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        effects: [committedEffect],
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [committedEffect] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       mockApiPost.mockResolvedValue({ ok: true, status: 204 } as Response);
 
@@ -2179,17 +1480,14 @@ describe('playStore', () => {
       playStore.endTurn();
 
       expect(mockApiPost).toHaveBeenCalledWith('/api/characters/char-42/effects', {
-        effects: JSON.stringify([committedEffect])
+        effects: JSON.stringify([advertised])
       });
     });
 
     it('shows toast when effects save fails', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
       vi.mocked(toast.error).mockClear();
-
-      const committedEffect: Rule = { id: 'effect-1', activities: [] };
 
       mockApiGet
         .mockResolvedValueOnce({
@@ -2200,26 +1498,6 @@ describe('playStore', () => {
           ok: true,
           json: async () => ({ effects: null })
         } as Response);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        effects: [committedEffect],
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [committedEffect] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       // POST returns failure
       mockApiPost.mockResolvedValue({ ok: false, status: 500 } as Response);
@@ -2238,27 +1516,7 @@ describe('playStore', () => {
 
     it('does not POST when no character is loaded', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
       mockApiPost.mockClear();
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -2274,15 +1532,64 @@ describe('playStore', () => {
   });
 
   describe('removeEffect', () => {
+    it("evicts the removed effect's declared dependents, keeps unrelated effects", async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      vi.mocked(apiPost).mockResolvedValue({ ok: true, status: 204 } as Response);
+
+      // The steed mount declares its child HP records as dependents; removing the
+      // mount chip must take them too (a raw exact-id delete would strand them).
+      const mount = {
+        id: 'effect-steed',
+        key: 'steed',
+        dependents: ['effect-steed-hp-damage', 'effect-steed-hp-heal'],
+        expiry: { kind: 'permanent' as const }
+      };
+      const hpDamage = {
+        id: 'effect-steed-hp-damage',
+        key: 'effect-steed-hp-damage',
+        state: { 'companion.steed.hp.damageRecorded': 10 },
+        expiry: { kind: 'untilLongRest' as const }
+      };
+      const unrelated = {
+        id: 'effect-bless',
+        key: 'bless',
+        expiry: { kind: 'permanent' as const }
+      };
+
+      mockApiGet
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ ruleGroups: [] }) } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ effects: JSON.stringify([mount, hpDamage, unrelated]) })
+        } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      await playStore.loadRuleGroups('char-1');
+      expect(playStore.state.committed).toHaveLength(3);
+
+      playStore.removeEffect('effect-steed');
+
+      // The mount and its declared dependent are gone; the unrelated effect stays.
+      expect(playStore.state.committed.map((e) => e.id)).toEqual(['effect-bless']);
+    });
+
     it('removes an effect by rule ID from state.effects', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
 
-      const effect1: Rule = { id: 'effect-1', activities: [] };
-      const effect2: Rule = { id: 'effect-2', activities: [] };
+      const effect1 = {
+        id: 'effect-1',
+        state: { 'a.active': 1 },
+        expiry: { kind: 'untilLongRest' as const }
+      };
+      const effect2 = {
+        id: 'effect-2',
+        state: { 'b.active': 1 },
+        expiry: { kind: 'untilLongRest' as const }
+      };
 
-      // Setup: load character with committed effects
+      // Setup: load character with committed effects (EffectInstance blob)
       mockApiGet
         .mockResolvedValueOnce({
           ok: true,
@@ -2292,25 +1599,6 @@ describe('playStore', () => {
           ok: true,
           json: async () => ({ effects: JSON.stringify([effect1, effect2]) })
         } as Response);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       mockApiPost.mockResolvedValue({ ok: true, status: 204 } as Response);
 
@@ -2331,9 +1619,10 @@ describe('playStore', () => {
     it('triggers re-evaluation after removing an effect', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
 
-      const effect: Rule = { id: 'effect-1', activities: [] };
+      const persisted = [
+        { id: 'effect-1', state: { 'x.active': 1 }, expiry: { kind: 'untilLongRest' } }
+      ];
 
       mockApiGet
         .mockResolvedValueOnce({
@@ -2342,27 +1631,8 @@ describe('playStore', () => {
         } as Response)
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => ({ effects: JSON.stringify([effect]) })
+          json: async () => ({ effects: JSON.stringify(persisted) })
         } as Response);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       mockApiPost.mockResolvedValue({ ok: true, status: 204 } as Response);
 
@@ -2370,21 +1640,28 @@ describe('playStore', () => {
       playStore.reset();
       await playStore.loadRuleGroups('char-1');
 
-      mockEvaluate.mockClear();
+      vi.mocked(evaluateCharacter).mockClear();
 
       playStore.removeEffect('effect-1');
 
-      // Should have called evaluate (performEvaluation, not debounced)
-      expect(mockEvaluate).toHaveBeenCalled();
+      // Should have re-evaluated (performEvaluation, not debounced)
+      expect(evaluateCharacter).toHaveBeenCalled();
     });
 
     it('POSTs updated effects to API for persistence', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
 
-      const effect1: Rule = { id: 'effect-1', activities: [] };
-      const effect2: Rule = { id: 'effect-2', activities: [] };
+      const effect1 = {
+        id: 'effect-1',
+        state: { 'a.active': 1 },
+        expiry: { kind: 'untilLongRest' as const }
+      };
+      const effect2 = {
+        id: 'effect-2',
+        state: { 'b.active': 1 },
+        expiry: { kind: 'untilLongRest' as const }
+      };
 
       mockApiGet
         .mockResolvedValueOnce({
@@ -2395,25 +1672,6 @@ describe('playStore', () => {
           ok: true,
           json: async () => ({ effects: JSON.stringify([effect1, effect2]) })
         } as Response);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       mockApiPost.mockResolvedValue({ ok: true, status: 204 } as Response);
 
@@ -2433,26 +1691,6 @@ describe('playStore', () => {
 
     it('does not POST when no character is loaded', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -2471,7 +1709,6 @@ describe('playStore', () => {
     it('shows toast when effects save fails', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
       vi.mocked(toast.error).mockClear();
 
       const effect: Rule = { id: 'effect-1', activities: [] };
@@ -2485,25 +1722,6 @@ describe('playStore', () => {
           ok: true,
           json: async () => ({ effects: JSON.stringify([effect]) })
         } as Response);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       // POST returns failure
       mockApiPost.mockResolvedValue({ ok: false, status: 500 } as Response);
@@ -2539,26 +1757,6 @@ describe('playStore', () => {
 
     it('calls assignRuleGroup for select-rule-group settings', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       // Parent group + 2 mastery groups (no deps on masteries in test)
       mockAssignAndFetch(mockApiPost); // class-paladin-level1
@@ -2632,26 +1830,6 @@ describe('playStore', () => {
 
     it('does not generate effects for select-rule-group settings', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       mockAssignAndFetch(mockApiPost); // class-paladin-level1
       mockAssignAndFetch(mockApiPost); // greataxe-mastery
@@ -2703,26 +1881,6 @@ describe('playStore', () => {
 
     it('handles mixed select and select-rule-group settings', async () => {
       const mockApiPost = vi.mocked(apiPost);
-      const mockEvaluate = vi.mocked(evaluate);
-
-      mockEvaluate.mockReturnValue({
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput);
 
       // Parent assign + mastery assign + effects save
       mockAssignAndFetch(mockApiPost); // class-paladin-level1
@@ -2753,14 +1911,9 @@ describe('playStore', () => {
               options: [{ value: 'athletics', translations: { en: { name: 'Athletics' } } }],
               effect: {
                 id: 'paladin-skill-proficiency-${value}',
-                phase: 'early',
-                activities: [
-                  {
-                    type: 'numberSet',
-                    target: { fact: 'skill.${value}.proficiency' },
-                    source: { number: 1 }
-                  }
-                ]
+                key: 'skill-${value}-prof',
+                state: { 'skill.${value}.proficiency': 1 },
+                expiry: { kind: 'permanent' }
               }
             },
             {
@@ -2797,6 +1950,16 @@ describe('playStore', () => {
       );
 
       expect(playStore.state.ruleGroupIds).toContain('greataxe-mastery');
+      // The select setting committed an EffectInstance (base fact only; the module
+      // derives the rest); the display bridge surfaces it in state.effects.
+      expect(playStore.state.committed).toEqual([
+        {
+          id: 'class-paladin-level1::paladin-skill-proficiency-athletics',
+          key: 'skill-athletics-prof',
+          state: { 'skill.athletics.proficiency': 1 },
+          expiry: { kind: 'permanent' }
+        }
+      ]);
       expect(playStore.state.effects).toHaveLength(1);
       expect(playStore.state.effects[0].id).toBe(
         'class-paladin-level1::paladin-skill-proficiency-athletics'
@@ -2805,65 +1968,19 @@ describe('playStore', () => {
   });
 
   describe('getAlternativeEntries', () => {
-    function makeEngineOutput(
-      availableRules: import('$lib/rules-engine').AvailableRuleEntry[] = []
-    ): EngineOutput {
-      return {
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules,
-        annotations: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        effects: [],
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput;
-    }
-
     it('returns hypothetical availableRules for a planned item', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-
-      const mainOutput = makeEngineOutput([
-        {
-          rule: { id: 'attack-1', activities: [] },
-          legal: false,
-          applicable: true,
-          diagnostics: []
-        },
-        {
-          rule: { id: 'disengage-1', activities: [] },
-          legal: false,
-          applicable: true,
-          diagnostics: []
+      // hypotheticals come from `hypotheticalOffers`, keyed by the removed
+      // instance's id. Build the map from the refs the store passes.
+      vi.mocked(hypotheticalOffers).mockImplementation((_m, _c, planned) => {
+        const map = new Map();
+        for (const ref of planned) {
+          map.set(ref.instanceId, [
+            { rule: { id: 'attack-1' }, legal: true, applicable: true, diagnostics: [] },
+            { rule: { id: 'disengage-1' }, legal: true, applicable: true, diagnostics: [] }
+          ]);
         }
-      ]);
-
-      const hypotheticalOutput = makeEngineOutput([
-        {
-          rule: { id: 'attack-1', activities: [] },
-          legal: true,
-          applicable: true,
-          diagnostics: []
-        },
-        {
-          rule: { id: 'disengage-1', activities: [] },
-          legal: true,
-          applicable: true,
-          diagnostics: []
-        }
-      ]);
-
-      mockEvaluate.mockReturnValueOnce(mainOutput).mockReturnValueOnce(hypotheticalOutput);
+        return map;
+      });
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -2880,12 +1997,11 @@ describe('playStore', () => {
       expect(result).toHaveLength(2);
       expect(result[0].legal).toBe(true);
       expect(result[1].legal).toBe(true);
+      // Adapted to the view entry shape the UI reads (descriptor gains activities).
+      expect(result[0].rule.activities).toEqual([]);
     });
 
     it('returns empty array when instanceId is not in the map', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      mockEvaluate.mockReturnValue(makeEngineOutput());
-
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -2897,16 +2013,15 @@ describe('playStore', () => {
     });
 
     it('replaces map between evaluations so removed items have no stale entries', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-
-      const altRules = [
-        { rule: { id: 'dodge-1', activities: [] }, legal: true, applicable: true, diagnostics: [] }
-      ];
-      // 1 main eval + 2 hypothetical evals (one per planned item)
-      mockEvaluate
-        .mockReturnValueOnce(makeEngineOutput())
-        .mockReturnValueOnce(makeEngineOutput(altRules))
-        .mockReturnValueOnce(makeEngineOutput(altRules));
+      vi.mocked(hypotheticalOffers).mockImplementation((_m, _c, planned) => {
+        const map = new Map();
+        for (const ref of planned) {
+          map.set(ref.instanceId, [
+            { rule: { id: 'dodge-1' }, legal: true, applicable: true, diagnostics: [] }
+          ]);
+        }
+        return map;
+      });
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -2922,18 +2037,23 @@ describe('playStore', () => {
       expect(playStore.getAlternativeEntries(idA)).toBeDefined();
       expect(playStore.getAlternativeEntries(idA)).not.toEqual([]);
 
-      // Remove item B and re-evaluate
-      mockEvaluate.mockReturnValue(makeEngineOutput());
+      // Remove item B and re-evaluate — B is no longer a ref, so no stale entry.
       playStore.removeFromPlan(idB);
       vi.advanceTimersByTime(300);
 
-      // B's entries should be gone from the map
       expect(playStore.getAlternativeEntries(idB)).toEqual([]);
     });
 
     it('clears map on reset so no stale entries persist', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      mockEvaluate.mockReturnValue(makeEngineOutput());
+      vi.mocked(hypotheticalOffers).mockImplementation((_m, _c, planned) => {
+        const map = new Map();
+        for (const ref of planned) {
+          map.set(ref.instanceId, [
+            { rule: { id: 'dodge-1' }, legal: true, applicable: true, diagnostics: [] }
+          ]);
+        }
+        return map;
+      });
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -2952,124 +2072,224 @@ describe('playStore', () => {
       expect(playStore.getAlternativeEntries(instanceId)).toEqual([]);
     });
 
-    it('does not corrupt plan state varsRuntime with hypothetical evaluation results', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      let callCount = 0;
-
-      // Simulate real engine behavior: evaluate() mutates rule.varsRuntime
-      mockEvaluate.mockImplementation((input) => {
-        callCount++;
-        const tag = callCount === 1 ? 'main' : `hyp-${callCount}`;
-        for (const rule of input.rules.planned) {
-          rule.varsRuntime = { source: tag };
-        }
-        return makeEngineOutput();
+    it('passes plain planned refs (instanceId + ruleId) to hypothetical evaluations', async () => {
+      // The engine takes PlannedRef DATA (not mutable rule objects), so the legacy varsRuntime
+      // cross-contamination between the main and hypothetical evals cannot occur.
+      const seen: Array<Array<{ instanceId: string; ruleId: string }>> = [];
+      vi.mocked(hypotheticalOffers).mockImplementation((_m, _c, planned) => {
+        seen.push(planned as Array<{ instanceId: string; ruleId: string }>);
+        return new Map();
       });
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
       playStore.addToPlan({ id: 'attack-1', activities: [] });
-      playStore.addToPlan({ id: 'disengage-1', activities: [] });
       vi.advanceTimersByTime(300);
 
-      // Without cloning: hypothetical evals overwrite the real rules' varsRuntime
-      // With cloning: real rules keep the main evaluation's varsRuntime
-      const ruleA = playStore.state.plannedItems[0].rule;
-      const ruleB = playStore.state.plannedItems[1].rule;
-      expect(ruleA.varsRuntime).toEqual({ source: 'main' });
-      expect(ruleB.varsRuntime).toEqual({ source: 'main' });
+      expect(seen.length).toBeGreaterThan(0);
+      const lastRefs = seen[seen.length - 1];
+      expect(lastRefs[0].ruleId).toBe('attack-1');
+      expect(lastRefs[0].instanceId).toBeDefined();
     });
 
-    it('passes clean rules without stale varsRuntime to hypothetical evaluations', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      const hypotheticalInputs: EngineInput[] = [];
-      let callCount = 0;
-
-      mockEvaluate.mockImplementation((input) => {
-        callCount++;
-        if (callCount === 1) {
-          // Main eval: simulate real engine setting varsRuntime
-          for (const rule of input.rules.planned) {
-            rule.varsRuntime = { stale: true };
-          }
-        } else {
-          // Hypothetical evals: capture to verify they're clean
-          hypotheticalInputs.push(input);
-        }
-        return makeEngineOutput();
+    it('carries a planned item captured selections onto its ref', async () => {
+      let capturedRefs: Array<{ ruleId: string; selections?: Record<string, unknown> }> = [];
+      vi.mocked(evaluateCharacter).mockImplementation((_m, _c, planned) => {
+        capturedRefs = planned as typeof capturedRefs;
+        return playOut();
       });
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
-      playStore.addToPlan({ id: 'attack-1', activities: [] });
-      playStore.addToPlan({ id: 'disengage-1', activities: [] });
+      playStore.addToPlan({ id: 'cast-spell', activities: [], selections: { slotLevel: 2 } });
       vi.advanceTimersByTime(300);
 
-      // 2 hypothetical evals (one per planned item), each with 1 planned rule
-      expect(hypotheticalInputs).toHaveLength(2);
-      for (const hypInput of hypotheticalInputs) {
-        for (const rule of hypInput.rules.planned) {
-          expect(rule.varsRuntime).toBeUndefined();
-        }
-      }
+      expect(capturedRefs[0].ruleId).toBe('cast-spell');
+      expect(capturedRefs[0].selections).toMatchObject({ slotLevel: 2 });
+    });
+  });
+
+  describe('engine failure handling', () => {
+    it('catches an engine throw, keeps the store usable, and surfaces an error diagnostic', async () => {
+      vi.mocked(evaluateCharacter).mockImplementation(() => {
+        throw new Error('Duplicate offer id "x": offer ids must be unique across modules');
+      });
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      // Must not throw the exception out of the store API.
+      expect(() =>
+        playStore.addFollowupEffect({ id: 'e1', expiry: { kind: 'permanent' } })
+      ).not.toThrow();
+
+      expect(playStore.state.isEvaluating).toBe(false);
+      const errors = playStore.state.engineOutput?.diagnostics.errors ?? [];
+      expect(errors.some((d) => d.code === 'play.error.evaluate')).toBe(true);
+    });
+
+    it('maps a dependency-cycle throw to the cycle-specific error code', async () => {
+      vi.mocked(evaluateCharacter).mockImplementation(() => {
+        throw new Error('Dependency cycle detected: a -> b -> a');
+      });
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      playStore.addFollowupEffect({ id: 'e1', expiry: { kind: 'permanent' } });
+
+      const errors = playStore.state.engineOutput?.diagnostics.errors ?? [];
+      expect(errors.some((d) => d.code === 'play.error.engineCycle')).toBe(true);
+    });
+
+    it('a failed evaluation clears the per-evaluation caches — End Turn must not commit the PREVIOUS plan', async () => {
+      // A successful evaluation caches advertised effects (for End Turn) and
+      // the per-instance planned entries (for the plan rows).
+      vi.mocked(evaluateCharacter).mockImplementation((_m, _c, refs) =>
+        playOut({
+          advertised: [
+            { id: 'i0#0#stale-spend', state: { 'x.spent': 1 }, expiry: { kind: 'untilLongRest' } }
+          ],
+          plannedEntries: refs.map((r) => ({
+            instanceId: r.instanceId,
+            rule: { id: 'attack', ui: {} },
+            legal: true,
+            applicable: true,
+            diagnostics: []
+          }))
+        })
+      );
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      playStore.addToPlan({ id: 'attack', activities: [] });
+      vi.runAllTimers();
+      const instanceId = playStore.state.plannedItems[0].instanceId;
+      expect(playStore.getPlannedEntry(instanceId)).toBeDefined();
+
+      // The next evaluation (plan edited) throws: banner state, plan still visible.
+      vi.mocked(evaluateCharacter).mockImplementation(() => {
+        throw new Error('Duplicate offer id "x": offer ids must be unique across modules');
+      });
+      playStore.addToPlan({ id: 'attack-2', activities: [] });
+      vi.runAllTimers();
+
+      // The caches describe the LAST SUCCESSFUL plan, not the visible one.
+      expect(playStore.getPlannedEntry(instanceId)).toBeUndefined();
+
+      // End Turn in the error state must not merge the stale advertised
+      // effects into the committed (and persisted) set.
+      playStore.endTurn();
+      expect(playStore.state.committed.some((e) => e.id.includes('stale-spend'))).toBe(false);
+    });
+
+    it('a failed evaluation drops the previous plan effects from the view output', async () => {
+      // A successful evaluation surfaces this turn's advertised effects on the
+      // view output — PlayCharacterMode merges engineOutput.effects into the
+      // active-state strip.
+      const planned = {
+        id: 'i0#0#effect-planned',
+        state: { 'x.spent': 1 },
+        display: { name: 'x.name', section: 'health' as const },
+        expiry: { kind: 'untilLongRest' as const }
+      };
+      vi.mocked(evaluateCharacter).mockReturnValue(
+        playOut({ advertised: [planned], raw: { ...rawOutput(), effects: [planned] } })
+      );
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      playStore.addToPlan({ id: 'cast', activities: [] });
+      vi.runAllTimers();
+      expect(playStore.state.engineOutput?.effects ?? []).toHaveLength(1);
+
+      // The next evaluation throws. The caches were cleared so End Turn will
+      // never commit those effects — the view output must stop showing them
+      // too, or the strip renders chips that will not survive the turn.
+      vi.mocked(evaluateCharacter).mockImplementation(() => {
+        throw new Error('Duplicate offer id "x": offer ids must be unique across modules');
+      });
+      playStore.addToPlan({ id: 'cast-2', activities: [] });
+      vi.runAllTimers();
+
+      expect(playStore.state.engineOutput?.effects).toEqual([]);
+      const errors = playStore.state.engineOutput?.diagnostics.errors ?? [];
+      expect(errors.some((d) => d.code === 'play.error.evaluate')).toBe(true);
     });
   });
 
   describe('effect mutations recalculate derived UI', () => {
-    function makeEngineOutput(): EngineOutput {
-      return {
-        status: { ok: true, legal: true, applicable: true },
-        facts: {},
-        collections: {},
-        availableRules: [],
-        diagnostics: { errors: [], warnings: [], notices: [] },
-        trace: {
-          appliedRuleIds: [],
-          appliedActivityIds: [],
-          providedCapabilities: [],
-          emittedEvents: []
-        },
-        effects: [],
-        next: {
-          schemaVersion: 1,
-          rules: { standing: [], planned: [], effects: [] },
-          state: { facts: {} }
-        }
-      } as EngineOutput;
-    }
-
-    const effectWithTopBar: Rule = {
-      id: 'steed-effect',
-      activities: [],
-      ui: { topBar: [{ type: 'value', label: 'Steed HP', fact: 'steed.hp' }] }
+    // top-bar entries come from `derivePanels(facts)` in the eval result, not
+    // effect `ui.topBar` blocks. A stateful mock surfaces an entry whenever the
+    // character carries a committed effect, so a mutation that changes `committed`
+    // changes the derived panel — the behaviour these tests guard.
+    const speedEntry = {
+      type: 'value' as const,
+      label: 'play.topBar.speed',
+      fact: 'character.movement.remaining'
     };
+    const byCommitted = (_m: unknown, committed: unknown[]) =>
+      playOut({ topBarEntries: committed.length > 0 ? [speedEntry] : [] });
 
     it('updates topBarEntries after addFollowupEffect', async () => {
-      vi.mocked(evaluate).mockReturnValue(makeEngineOutput());
+      vi.mocked(evaluateCharacter).mockImplementation(byCommitted as never);
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
-      playStore.addFollowupEffect(effectWithTopBar);
+      playStore.addFollowupEffect({
+        id: 'effect-steed',
+        state: { 'steed.active': 1 },
+        expiry: { kind: 'permanent' }
+      });
 
       expect(playStore.state.topBarEntries).toHaveLength(1);
-      expect(playStore.state.topBarEntries[0]).toMatchObject({
-        label: 'Steed HP',
-        fact: 'steed.hp'
+      expect(playStore.state.topBarEntries[0]).toMatchObject({ label: 'play.topBar.speed' });
+    });
+
+    it('persists the committed effects after addFollowupEffect', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      const mockApiPost = vi.mocked(apiPost);
+      vi.mocked(evaluateCharacter).mockImplementation(byCommitted as never);
+
+      // Load a character so currentCharacterId is set (persistence needs it).
+      mockApiGet
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ ruleGroups: [] }) } as Response)
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ effects: null }) } as Response);
+      mockApiPost.mockResolvedValue({ ok: true, json: async () => ({}) } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      await playStore.loadRuleGroups('char-fu');
+      mockApiPost.mockClear();
+
+      const effect = {
+        id: 'effect-javelin-slow',
+        key: 'javelin-slow',
+        expiry: { kind: 'turns', remaining: 1 } as const
+      };
+      playStore.addFollowupEffect(effect);
+
+      expect(mockApiPost).toHaveBeenCalledWith('/api/characters/char-fu/effects', {
+        effects: JSON.stringify([effect])
       });
     });
 
     it('updates topBarEntries after removeEffect', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);
-      vi.mocked(evaluate).mockReturnValue(makeEngineOutput());
+      vi.mocked(evaluateCharacter).mockImplementation(byCommitted as never);
 
       mockApiGet
         .mockResolvedValueOnce({ ok: true, json: async () => ({ ruleGroups: [] }) } as Response)
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => ({ effects: JSON.stringify([effectWithTopBar]) })
+          json: async () => ({
+            effects: JSON.stringify([
+              {
+                id: 'effect-steed',
+                state: { 'steed.active': 1 },
+                expiry: { kind: 'untilLongRest' }
+              }
+            ])
+          })
         } as Response);
       mockApiPost.mockResolvedValue({ ok: true, status: 204 } as Response);
 
@@ -3079,16 +2299,23 @@ describe('playStore', () => {
 
       expect(playStore.state.topBarEntries).toHaveLength(1);
 
-      playStore.removeEffect('steed-effect');
+      playStore.removeEffect('effect-steed');
 
       expect(playStore.state.topBarEntries).toHaveLength(0);
     });
 
     it('updates topBarEntries after endTurn commits effects from engine output', async () => {
-      const mockEvaluate = vi.mocked(evaluate);
-      const output = makeEngineOutput();
-      output.effects = [effectWithTopBar];
-      mockEvaluate.mockReturnValue(output);
+      const advertised = {
+        id: 'effect-steed',
+        state: { 'steed.active': 1 },
+        expiry: { kind: 'untilLongRest' as const }
+      };
+      // Advertise the effect this turn; the entry only surfaces once it's committed.
+      vi.mocked(evaluateCharacter).mockImplementation(((_m: unknown, committed: unknown[]) =>
+        playOut({
+          topBarEntries: committed.length > 0 ? [speedEntry] : [],
+          advertised: [advertised]
+        })) as never);
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
@@ -3101,7 +2328,7 @@ describe('playStore', () => {
       playStore.endTurn();
 
       expect(playStore.state.topBarEntries).toHaveLength(1);
-      expect(playStore.state.topBarEntries[0]).toMatchObject({ label: 'Steed HP' });
+      expect(playStore.state.topBarEntries[0]).toMatchObject({ label: 'play.topBar.speed' });
     });
   });
 });

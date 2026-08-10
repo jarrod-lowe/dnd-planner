@@ -1,6 +1,6 @@
 import type { SettingDefinition } from './settingsTypes';
 import { substituteTemplate } from './substituteSettings';
-import type { Rule } from '$lib/rules-engine';
+import type { EffectInstance } from '$lib/rules-engine';
 
 export interface SettingsGroup {
   ruleGroupId: string;
@@ -14,7 +14,7 @@ export interface MetaLookup {
 
 export interface ResolvedSettings {
   additionalRuleGroupIds: string[];
-  effects: Rule[];
+  effects: EffectInstance[];
 }
 
 export function resolveSettings(
@@ -22,7 +22,7 @@ export function resolveSettings(
   lookupMeta: (id: string) => MetaLookup | undefined
 ): ResolvedSettings {
   const additionalRuleGroupIds: string[] = [];
-  const effects: Rule[] = [];
+  const effects: EffectInstance[] = [];
 
   for (const group of groups) {
     for (const setting of group.settings) {
@@ -40,7 +40,9 @@ export function resolveSettings(
           }
         }
       } else if (setting.effect) {
-        const effect = substituteTemplate(setting.effect, chosenValue) as unknown as Rule;
+        // The template is an EffectInstance with ${value} placeholders; namespace
+        // its id per rule group so re-assigning stays idempotent (dedupe by key).
+        const effect = substituteTemplate(setting.effect, chosenValue) as unknown as EffectInstance;
         effect.id = `${group.ruleGroupId}::${effect.id}`;
         effects.push(JSON.parse(JSON.stringify(effect)));
       }

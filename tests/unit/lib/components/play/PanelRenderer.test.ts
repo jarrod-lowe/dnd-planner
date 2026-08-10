@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/svelte';
 import PanelRenderer from '$lib/components/play/PanelRenderer.svelte';
-import type { AvailableRuleEntry } from '$lib/rules-engine';
+import type { AvailableRuleEntry } from '$lib/rules-view';
 
 const createMockEntry = (overrides?: Partial<AvailableRuleEntry>): AvailableRuleEntry => ({
   rule: { id: 'test-rule', description: 'Test Rule', activities: [] },
@@ -23,7 +23,7 @@ describe('PanelRenderer', () => {
       const entry = createMockEntry();
       const onTap = vi.fn();
       const { container } = render(PanelRenderer, { props: { entry, onTap } });
-      const panel = container.querySelector('.panel-renderer');
+      const panel = container.querySelector<HTMLElement>('.panel-renderer');
       panel?.click();
       expect(onTap).toHaveBeenCalledTimes(1);
     });

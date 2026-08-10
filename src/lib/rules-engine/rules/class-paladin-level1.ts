@@ -1,0 +1,45 @@
+import { defineRule, type RuleModule } from '../builder';
+
+/**
+ * Paladin level 1 contributions to the sheet: +2 proficiency, a d10 hit die
+ * worth of max HP (10 + CON modifier), two level-1 spell slots, Wisdom/Charisma
+ * save proficiency, and Charisma as the spellcasting ability. All use
+ * `combine: sum` so multiple class levels / classes stack with no ordering —
+ * addition is commutative and the engine settles all contributors before
+ * dependents read the total.
+ *
+ * (Still partial vs the legacy group: hit-die and prepared-spell capacity port with
+ * their dependent groups in later M3 waves.)
+ */
+const paladinLevel1: RuleModule = {
+  id: 'class-paladin-level1',
+  derive: () => [
+    { fact: 'proficiency.bonus', combine: 'sum', value: () => 2 },
+    { fact: 'hitDie.d10.total', combine: 'sum', value: () => 1 },
+    { fact: 'hp.base.max', combine: 'sum', value: (f) => 10 + f.num('con.modifier') },
+    // Paladin level 1 grants two level-1 spell slots.
+    { fact: 'spellcasting.slots.level1.total', combine: 'sum', value: () => 2 },
+    // Wisdom and Charisma save proficiency. Only the flag is set; ability-scores'
+    // save derive adds the proficiency bonus from it, so it is not double-counted.
+    { fact: 'wis.save.proficient', combine: 'sum', value: () => 1 },
+    { fact: 'cha.save.proficient', combine: 'sum', value: () => 1 },
+    // Charisma is the paladin's spellcasting ability; its modifier feeds the
+    // spell save DC (computed by the spellcasting group), and the flag fact lets
+    // the play bridge label save DCs with the ability — facts are numeric, so
+    // the 'CHA' string itself is synthesized view-side from this flag.
+    { fact: 'spellcasting.modifier', combine: 'sum', value: (f) => f.num('cha.modifier') },
+    { fact: 'spellcasting.saveAbility.cha', combine: 'max', value: () => 1 },
+    // Proficient in all armor and shields.
+    { fact: 'armor.light.proficient', combine: 'sum', value: () => 1 },
+    { fact: 'armor.medium.proficient', combine: 'sum', value: () => 1 },
+    { fact: 'armor.heavy.proficient', combine: 'sum', value: () => 1 },
+    { fact: 'armor.shield.proficient', combine: 'sum', value: () => 1 },
+    // Lay on Hands pool: 5 × paladin level (5 at level 1). `remaining` is derived
+    // by the lay-on-hands group (total − spent).
+    { fact: 'layOnHands.pool.total', combine: 'sum', value: () => 5 },
+    // Prepared-spell capacity: a level-1 paladin can prepare 2 spells.
+    { fact: 'spellcasting.prepared.max', combine: 'sum', value: () => 2 }
+  ]
+};
+
+export default defineRule(paladinLevel1);

@@ -8,10 +8,11 @@ import {
   isHiddenEffect,
   getEffectDisplayValue,
   getEffectLevel,
-  getBaseEffectId
+  getBaseEffectId,
+  mergeActiveEffects
 } from '$lib/play/effectUtils';
-import type { Rule } from '$lib/rules-engine';
-import type { Facts } from '$lib/rules-engine';
+import type { Rule } from '$lib/rules-view';
+import type { Facts } from '$lib/rules-view';
 
 const concActivity = {
   id: 'conc-dec',
@@ -387,6 +388,17 @@ describe('getEffectDisplayValue', () => {
     expect(getEffectDisplayValue(rule, {})).toBe('5');
   });
 
+  it('returns a literal ui.displayValue (a record chip baking its own amount)', () => {
+    // Player damage/heal records are keyless and stack: each chip carries its
+    // own baked amount rather than reading a shared fact.
+    const rule: Rule = {
+      id: 'effect-hp-damage',
+      activities: [],
+      ui: { displayValue: 7, name: 'test.name' }
+    };
+    expect(getEffectDisplayValue(rule, {})).toBe('7');
+  });
+
   it('prefers displayFact over displaySelection when both are set', () => {
     const rule: Rule = {
       id: 'effect-test',
@@ -453,5 +465,85 @@ describe('getEffectLevel', () => {
       ui: { levelFact: 'skill.athletics.proficiency', name: 'test.name' }
     };
     expect(getEffectLevel(rule, { 'skill.athletics.proficiency': 0.5 })).toBe(0.5);
+  });
+});
+
+describe('mergeActiveEffects', () => {
+  const eff = (id: string, group?: string[]): Rule => ({
+    id,
+    activities: [],
+    ...(group ? { group } : {})
+  });
+
+  it('returns committed effects unchanged when nothing is advertised', () => {
+    const committed = [eff('a'), eff('b')];
+    expect(mergeActiveEffects(committed, [])).toEqual(committed);
+  });
+
+  it('appends advertised-only effects after committed ones', () => {
+    expect(mergeActiveEffects([eff('a')], [eff('b')]).map((e) => e.id)).toEqual(['a', 'b']);
+  });
+
+  it('prefers the advertised copy when ids match (fresher runtime vars)', () => {
+    const committed = [{ ...eff('bless'), ui: { countDown: 10 } }];
+    const advertised = [{ ...eff('bless'), ui: { countDown: 9 } }];
+    const merged = mergeActiveEffects(committed, advertised);
+    expect(merged).toHaveLength(1);
+    expect((merged[0].ui as { countDown: number }).countDown).toBe(9);
+  });
+
+  it('suppresses a committed effect replaced by a same-key advertised effect', () => {
+    // Dismiss Steed: the committed mount chip (effect-steed, keyed 'steed') is
+    // superseded by a fresh steed-keyed effect advertised this turn under a
+    // different id — the strip must show only the advertised one.
+    const committed = [eff('effect-steed', ['steed'])];
+    const advertised = [eff('i0#0#dismiss-marker', ['steed'])];
+    expect(mergeActiveEffects(committed, advertised).map((e) => e.id)).toEqual([
+      'i0#0#dismiss-marker'
+    ]);
+  });
+
+  it('keeps a committed effect whose key is not among the advertised keys', () => {
+    const committed = [eff('effect-steed', ['steed'])];
+    const advertised = [eff('other', ['bless'])];
+    expect(mergeActiveEffects(committed, advertised).map((e) => e.id)).toEqual([
+      'effect-steed',
+      'other'
+    ]);
+  });
+
+  it('never key-dedupes keyless committed effects', () => {
+    const committed = [eff('a'), eff('b')];
+    const advertised = [eff('c', ['steed'])];
+    expect(mergeActiveEffects(committed, advertised).map((e) => e.id)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('preserves committed-first ordering across an id replacement', () => {
+    const committed = [eff('a', ['ga']), eff('b', ['gb'])];
+    const advertised = [eff('a', ['ga'])];
+    expect(mergeActiveEffects(committed, advertised).map((e) => e.id)).toEqual(['a', 'b']);
+  });
+
+  it('keeps only the newest of two advertised effects sharing a key', () => {
+    // Cast Find Steed then Dismiss Steed both advertise a `steed`-keyed effect
+    // this turn; the engine's dedupeByKey keeps the last (newest) and the strip
+    // must too, else the stale earlier chip lingers until End Turn.
+    const advertised = [eff('cast#0#steed', ['steed']), eff('dismiss#0#steed', ['steed'])];
+    expect(mergeActiveEffects([], advertised).map((e) => e.id)).toEqual(['dismiss#0#steed']);
+  });
+
+  it('collapses same-key advertised duplicates and suppresses the committed chip together', () => {
+    const committed = [eff('effect-steed', ['steed'])];
+    const advertised = [eff('cast#0#steed', ['steed']), eff('dismiss#0#steed', ['steed'])];
+    expect(mergeActiveEffects(committed, advertised).map((e) => e.id)).toEqual(['dismiss#0#steed']);
+  });
+
+  it('dedupes only within a key, keeping the last per key and distinct keys', () => {
+    const advertised = [
+      eff('a#0#steed', ['steed']),
+      eff('b#0#bless', ['bless']),
+      eff('c#0#steed', ['steed'])
+    ];
+    expect(mergeActiveEffects([], advertised).map((e) => e.id)).toEqual(['b#0#bless', 'c#0#steed']);
   });
 });

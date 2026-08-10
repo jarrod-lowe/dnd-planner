@@ -10,6 +10,7 @@ function makeCache(
     map.set(id, {
       name: entry.name ?? id,
       description: '',
+      settings: [],
       requires: entry.requires ?? []
     });
   }

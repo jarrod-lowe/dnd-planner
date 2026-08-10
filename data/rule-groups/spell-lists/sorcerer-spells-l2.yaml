@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: sorcerer-spells-l2
     requires:
@@ -7,9 +6,14 @@ ruleGroups:
       en:
         name: Sorcerer Spells Level 2
         description: Level 2 spells available to Sorcerers
-        keywords: [sorcerer, spells, level2]
+        keywords:
+          - sorcerer
+          - spells
+          - level2
       en-x-tlh:
         name: Sorcerer Spells Level 2
         description: Sorcerer level 2 jupmey
-        keywords: [sorcerer, jupmey, level2]
-    rules: []
+        keywords:
+          - sorcerer
+          - jupmey
+          - level2

@@ -18,9 +18,11 @@
       redirectToHome();
     }, 10000);
 
-    // Listen for signIn event (fires after token exchange completes)
+    // Redirect once the OAuth token exchange completes. Amplify v6 emits
+    // 'signInWithRedirect' when the redirect flow finishes and 'signedIn' when
+    // the session is established (the pre-v6 'signIn' event no longer exists).
     hubListener = Hub.listen('auth', ({ payload }) => {
-      if (payload.event === 'signIn') {
+      if (payload.event === 'signedIn' || payload.event === 'signInWithRedirect') {
         clearTimeout(redirectTimeout);
         redirectToHome();
       }

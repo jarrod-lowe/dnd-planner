@@ -26,7 +26,8 @@ const mockCharacter: Character = {
   characterId: 'char-1',
   userId: 'test-user',
   name: 'Gandalf',
-  race: 'human',
+  species: 'human',
+  class: 'paladin',
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-01T00:00:00Z'
 };

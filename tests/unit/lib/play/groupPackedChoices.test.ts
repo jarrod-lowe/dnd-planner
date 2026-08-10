@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { groupPackedChoices } from '$lib/play/groupPackedChoices';
-import type { AvailableRuleEntry, Rule } from '$lib/rules-engine';
+import type { AvailableRuleEntry, Rule } from '$lib/rules-view';
 
 /**
  * Helper to create mock AvailableRuleEntry for testing

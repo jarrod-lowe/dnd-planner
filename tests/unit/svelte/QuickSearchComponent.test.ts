@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import QuickSearch from '$lib/components/play/QuickSearch.svelte';
-import type { AvailableRuleEntry } from '$lib/rules-engine';
+import type { AvailableRuleEntry } from '$lib/rules-view';
 
 // The i18n mock (tests/setup.ts) returns the key itself for unknown keys, so an
 // entry whose ui.name is a friendly string surfaces that string as its display
