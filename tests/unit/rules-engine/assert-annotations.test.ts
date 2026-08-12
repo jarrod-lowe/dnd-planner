@@ -27,7 +27,9 @@ describe('assertAnnotations', () => {
     expect(() =>
       assertAnnotations(annotations, { notExists: ['rule.demo.absent'] }, 'where')
     ).not.toThrow();
-    expect(() => assertAnnotations(annotations, { exists: ['rule.demo.absent'] }, 'where')).toThrow();
+    expect(() =>
+      assertAnnotations(annotations, { exists: ['rule.demo.absent'] }, 'where')
+    ).toThrow();
   });
 
   it('passes when every asserted rider field matches', () => {
@@ -92,9 +94,7 @@ describe('assertAnnotations', () => {
       assertAnnotations(
         annotations,
         {
-          targets: [
-            { key: 'rule.demo.valued', targets: ['save.any', 'save.any.companion'] }
-          ]
+          targets: [{ key: 'rule.demo.valued', targets: ['save.any', 'save.any.companion'] }]
         },
         'where'
       )
