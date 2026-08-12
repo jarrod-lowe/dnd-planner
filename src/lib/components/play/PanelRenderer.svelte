@@ -13,7 +13,7 @@
   import DiceRollToast from './panel-renderer/DiceRollToast.svelte';
   import { evaluateCondition } from '$lib/play/panelCondition';
   import { getMatchingAnnotations } from '$lib/play/annotations';
-  import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-view';
+  import type { AvailableRuleEntry, Facts, Annotation, RiderValue } from '$lib/rules-view';
   import type { EffectInstance } from '$lib/rules-engine';
   import type {
     TextInformation,
@@ -224,18 +224,35 @@
       : matchingAnnotations.filter((ann) => ann.rider?.label !== gwfRiderLabel)
   );
 
+  // Resolves a rider's numeric contribution. Only the `flat` kind exists today;
+  // `dice` and `floor` are filed follow-ups. An unrecognised kind resolves to
+  // undefined so the caller below drops that modifier entirely — no chip is
+  // safer than a chip that renders "+0" and looks active while doing nothing.
+  // (`RiderValue` is a single-variant type rather than a real discriminated
+  // union yet, so TypeScript can't flag a missing case by narrowing to
+  // `never` here; when a second kind lands, add its case above and consider
+  // an exhaustiveness check then.)
+  function resolveRiderValue(value: RiderValue): number | undefined {
+    return value.kind === 'flat' ? value.bonus : undefined;
+  }
+
   // Annotations whose rider carries a value become toggleable chips on the dice
   // line; valueless riders stay the text chips they have always been.
   const rollModifiers = $derived<RollModifier[]>(
     displayAnnotations
       .filter((ann) => ann.rider?.value !== undefined && ann.rider?.appliesTo !== undefined)
-      .map((ann) => ({
-        key: ann.key,
-        label: ann.rider!.label,
-        appliesTo: ann.rider!.appliesTo!,
-        value: ann.rider!.value!.kind === 'flat' ? ann.rider!.value!.bonus : 0,
-        defaultOn: ann.rider!.defaultOn ?? true
-      }))
+      .map((ann): RollModifier | undefined => {
+        const value = resolveRiderValue(ann.rider!.value!);
+        if (value === undefined) return undefined;
+        return {
+          key: ann.key,
+          label: ann.rider!.label,
+          appliesTo: ann.rider!.appliesTo!,
+          value,
+          defaultOn: ann.rider!.defaultOn ?? true
+        };
+      })
+      .filter((m): m is RollModifier => m !== undefined)
   );
 
   const visibleFollowups = $derived(
@@ -262,6 +279,9 @@
     if (result.mode === 'advantage') modifiers.push($t('play.toast.modifier.advantage'));
     if (result.mode === 'disadvantage') modifiers.push($t('play.toast.modifier.disadvantage'));
     for (const ann of displayAnnotations) {
+      // Valued riders are rendered with their resolved number by the loop below;
+      // this one is for informational riders that only have a label.
+      if (ann.rider?.value !== undefined) continue;
       if (ann.rider?.type === 'dice' || ann.rider?.type === 'modifier') {
         modifiers.push($t(ann.rider.label));
       }

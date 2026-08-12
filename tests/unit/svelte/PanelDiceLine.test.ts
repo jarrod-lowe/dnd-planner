@@ -215,4 +215,35 @@ describe('PanelDiceLine', () => {
     const { container } = render(PanelDiceLine, { props: { ...saveProps, editable: false } });
     expect(modChip(container, 'aura')).toBeInstanceOf(HTMLSpanElement);
   });
+
+  it('does not leak a modifier onto a sibling die of a different purpose on the same line', async () => {
+    const onRoll = vi.fn();
+    const mixed: DiceLineControl = {
+      type: 'dice-line',
+      dice: [
+        { sides: 20, bonus: { number: 5 }, purpose: 'save' },
+        { sides: 8, bonus: { number: 3 }, damageType: { string: 'slashing' }, purpose: 'damage' }
+      ]
+    };
+    const { container } = render(PanelDiceLine, {
+      props: { control: mixed, editable: true, facts: {}, vars: {}, modifiers, onRoll }
+    });
+    // The save die on this line matches, so both chips render once (not once per die).
+    expect(modChip(container, 'aura')).toBeInstanceOf(HTMLButtonElement);
+    expect(modChip(container, 'ring')).toBeInstanceOf(HTMLButtonElement);
+
+    await fireEvent.click(main(container, 0)!);
+    const [saveResult] = onRoll.mock.calls[0];
+    expect(saveResult.total).toBe(saveResult.natural + 9);
+    expect(saveResult.modifiers).toEqual([
+      { label: 'rule.demo.aura', value: 3 },
+      { label: 'rule.demo.ring', value: 1 }
+    ]);
+
+    onRoll.mockClear();
+    await fireEvent.click(main(container, 1)!);
+    const [damageResult] = onRoll.mock.calls[0];
+    expect(damageResult.total).toBe(damageResult.natural + 3);
+    expect(damageResult.modifiers).toBeUndefined();
+  });
 });
