@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { assertAnnotations } from '../../integration/rules-engine/assert-annotations';
-import type { Annotation } from '$lib/rules-view';
+import type { Annotation } from '$lib/rules-engine';
 
 const annotations: Annotation[] = [
   {

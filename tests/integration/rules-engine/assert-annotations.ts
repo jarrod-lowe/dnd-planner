@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import type { Annotation } from '$lib/rules-view';
+import type { Annotation } from '$lib/rules-engine';
 
 /**
  * Annotation assertions for the YAML scenario runner. `exists` / `notExists`
