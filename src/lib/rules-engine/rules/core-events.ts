@@ -15,6 +15,11 @@ function saveOffer(a: string): Offer {
     ui: {
       section: 'free',
       name: `planner.record.save.${a}`,
+      // Riders targeting saves attach here: `save.any` for every save (Aura of
+      // Protection), `save.{ability}` for ability-specific bonuses. The
+      // `.companion` forms on the steed's rows are deliberately distinct so a
+      // self-only bonus cannot leak onto the mount (matching is set intersection).
+      annotationLabels: ['save.any', `save.${a}`],
       primaryControl: {
         type: 'dice-line',
         dice: [{ sides: 20, bonus: { var: 'saveBonus' }, purpose: 'save' }]
@@ -184,10 +189,10 @@ const coreEvents: RuleModule = {
       ui: {
         section: 'free',
         name: 'planner.record.check',
+        annotationLabels: ['dice.any'],
         primaryControl: {
           type: 'dice-line',
-          dice: [{ sides: 20, purpose: 'check' }],
-          annotationLabels: ['dice.any']
+          dice: [{ sides: 20, purpose: 'check' }]
         },
         intents: { CHECK: 'skill' },
         actionCost: []

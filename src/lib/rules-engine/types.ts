@@ -292,10 +292,34 @@ export interface AvailableRuleEntry {
   diagnostics: Diagnostic[];
 }
 
+/**
+ * Semantic role of a die within a dice-line. The single source of truth — the
+ * panel-renderer's `DicePurpose` aliases this so a rider's `appliesTo` and a
+ * die's `purpose` can never drift apart.
+ */
+export type RollPurpose = 'to-hit' | 'damage' | 'healing' | 'save' | 'check';
+
+/**
+ * A rider's contribution to a roll. Discriminated on `kind` so later kinds slot
+ * in without touching riders already written: `dice` (Bless's +1d4) and `floor`
+ * (Great Weapon Fighting's "1s and 2s count as 3") are the planned additions.
+ */
+export type RiderValue = { kind: 'flat'; bonus: number };
+
 /** Rider chip data on an annotation (view-contract shape). */
 export interface AnnotationRider {
   label: string;
   type: 'dice' | 'modifier' | 'effect';
+  /**
+   * What this rider contributes to the roll. Absent → the rider is purely
+   * informational and renders as today's text chip; present → the UI renders a
+   * toggleable modifier chip and folds the value into the rolled total.
+   */
+  value?: RiderValue;
+  /** Which die on a matched panel the value applies to. Required when `value` is set. */
+  appliesTo?: RollPurpose;
+  /** Whether the modifier's toggle starts on. Defaults to true. */
+  defaultOn?: boolean;
   costTags?: string[];
   legal?: boolean;
   illegalReason?: string;

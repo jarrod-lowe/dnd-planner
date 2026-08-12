@@ -5,16 +5,19 @@ ruleGroups:
     translations:
       en:
         name: Paladin Level 6
-        description: Paladin class features at level 6, including an additional hit
-          die and a larger Lay on Hands pool
+        description: Paladin class features at level 6, including Aura of
+          Protection, an additional hit die and a larger Lay on Hands pool
         keywords:
           - paladin
           - class
           - level6
+          - aura
+          - protection
       en-x-tlh:
         name: Paladin Level 6
-        description: Paladin Segh level 6, chel Du, chel Lay on Hands
+        description: Paladin Segh level 6, Hub Hurgh, chel Du, chel Lay on Hands
         keywords:
           - paladin
           - segh
           - level6
+          - hub

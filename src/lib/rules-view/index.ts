@@ -40,6 +40,8 @@ export type {
   IllegalWhenEntry,
   Annotation,
   AnnotationRider,
+  RiderValue,
+  RollPurpose,
   ActionCostTag,
   Verb,
   // Rule

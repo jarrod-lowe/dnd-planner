@@ -1,5 +1,9 @@
 name: 'Heroic Inspiration - Annotation'
-description: 'Annotation appears when HI available and disappears after use'
+description: >
+  Annotation appears when HI available and disappears after use. Also pins
+  that `record-check` carries `dice.any` at the top-level `ui` (not nested
+  inside a control, where it would never be matched) — the placement fix in
+  cd9429a4 that made this annotation reach a real panel.
 ruleGroups:
   - dnd-5e-2024/core-events
   - dnd-5e-2024/heroic-inspiration
@@ -28,6 +32,10 @@ steps:
         annotations:
           exists:
             - rule.dnd-5e-2024.heroic-inspiration.annotation
+        offerUi:
+          - id: record-check
+            ui:
+              annotationLabels: [dice.any]
   - addOffer:
       id: use-hi
       assert:

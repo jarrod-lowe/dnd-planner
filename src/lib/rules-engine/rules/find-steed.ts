@@ -384,6 +384,9 @@ const steedSaveOffer = (a: (typeof ABILITIES)[number]): Offer => ({
     section: 'free',
     subject: 'steed',
     name: `planner.record.save.${a}`,
+    // Companion-scoped so a rider must opt in to buffing the mount (see
+    // ISSUES.md 1.9 — these are the first annotationLabels steed panels carry).
+    annotationLabels: ['save.any.companion', `save.${a}.companion`],
     primaryControl: {
       type: 'dice-line',
       dice: [{ sides: 20, bonus: { var: 'rollBonus' }, purpose: 'save' }]

@@ -218,6 +218,18 @@ export interface Status {
 // === ANNOTATIONS ===
 
 /**
+ * Semantic role of a die within a dice-line. Mirrors the engine's `RollPurpose`.
+ */
+export type RollPurpose = 'to-hit' | 'damage' | 'healing' | 'save' | 'check';
+
+/**
+ * A rider's contribution to a roll. Discriminated on `kind` so `dice` (Bless's
+ * +1d4) and `floor` (Great Weapon Fighting) can be added without touching
+ * existing riders. Mirrors the engine's `RiderValue`.
+ */
+export type RiderValue = { kind: 'flat'; bonus: number };
+
+/**
  * Rider data attached to an annotation, rendered as a chip in the UI.
  * Describes a modifier or effect that augments a target rule (e.g., Bless +d4 on attacks).
  */
@@ -226,6 +238,12 @@ export interface AnnotationRider {
   label: string;
   /** Category of rider for UI rendering */
   type: 'dice' | 'modifier' | 'effect';
+  /** What this rider adds to the roll. Absent → informational text chip only. */
+  value?: RiderValue;
+  /** Which die on a matched panel the value applies to. Required when `value` is set. */
+  appliesTo?: RollPurpose;
+  /** Whether the modifier's toggle starts on. Defaults to true. */
+  defaultOn?: boolean;
   /** Action cost tags consumed by this rider, if any */
   costTags?: ActionCostTag[];
   /** Whether this rider is currently usable. Undefined = true (always legal). */

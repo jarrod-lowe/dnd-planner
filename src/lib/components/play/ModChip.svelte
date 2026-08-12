@@ -64,7 +64,6 @@
   </button>
 {:else if variant === 'effect'}
   <span class={chipClass} aria-label={ariaLabel}>
-    <span class="mod-chip__fx-badge" aria-hidden="true">FX</span>
     <span class="mod-chip__label">{label}</span>
   </span>
 {:else}
@@ -140,13 +139,6 @@
     color: var(--md-sys-color-on-primary-container);
     background: color-mix(in srgb, var(--md-sys-color-primary-container) 60%, transparent);
     pointer-events: none;
-  }
-
-  .mod-chip__fx-badge {
-    font-size: 0.625rem;
-    font-weight: 700;
-    color: var(--md-sys-color-primary);
-    opacity: 0.7;
   }
 
   /* Illegal variant */

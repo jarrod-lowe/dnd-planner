@@ -13,9 +13,14 @@
   import DiceRollToast from './panel-renderer/DiceRollToast.svelte';
   import { evaluateCondition } from '$lib/play/panelCondition';
   import { getMatchingAnnotations } from '$lib/play/annotations';
-  import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-view';
+  import type { AvailableRuleEntry, Facts, Annotation, RiderValue } from '$lib/rules-view';
   import type { EffectInstance } from '$lib/rules-engine';
-  import type { TextInformation, CountdownInformation, RollResult } from './panel-renderer/types';
+  import type {
+    TextInformation,
+    CountdownInformation,
+    RollResult,
+    RollModifier
+  } from './panel-renderer/types';
 
   interface Props {
     entry: AvailableRuleEntry;
@@ -219,6 +224,46 @@
       : matchingAnnotations.filter((ann) => ann.rider?.label !== gwfRiderLabel)
   );
 
+  // Resolves a rider's numeric contribution. Only the `flat` kind exists today;
+  // `dice` and `floor` are filed follow-ups. An unrecognised kind resolves to
+  // undefined so the caller below drops that modifier entirely — no chip is
+  // safer than a chip that renders "+0" and looks active while doing nothing.
+  // (`RiderValue` is a single-variant type rather than a real discriminated
+  // union yet, so TypeScript can't flag a missing case by narrowing to
+  // `never` here; when a second kind lands, add its case above and consider
+  // an exhaustiveness check then.)
+  function resolveRiderValue(value: RiderValue): number | undefined {
+    return value.kind === 'flat' ? value.bonus : undefined;
+  }
+
+  // A valued rider is REPRESENTED by its dice-line toggle chip, so it must not
+  // also appear as a static text chip or in the toast's rider list — it would
+  // show twice, and the static copy would still read as present after the
+  // toggle is switched off. Everything downstream of the dice line uses this
+  // list rather than displayAnnotations.
+  const informationalAnnotations = $derived(
+    displayAnnotations.filter((ann) => ann.rider?.value === undefined)
+  );
+
+  // Annotations whose rider carries a value become toggleable chips on the dice
+  // line; valueless riders stay the text chips they have always been.
+  const rollModifiers = $derived<RollModifier[]>(
+    displayAnnotations
+      .filter((ann) => ann.rider?.value !== undefined && ann.rider?.appliesTo !== undefined)
+      .map((ann): RollModifier | undefined => {
+        const value = resolveRiderValue(ann.rider!.value!);
+        if (value === undefined) return undefined;
+        return {
+          key: ann.key,
+          label: ann.rider!.label,
+          appliesTo: ann.rider!.appliesTo!,
+          value,
+          defaultOn: ann.rider!.defaultOn ?? true
+        };
+      })
+      .filter((m): m is RollModifier => m !== undefined)
+  );
+
   const visibleFollowups = $derived(
     editable && onFollowup
       ? (descriptor.followups ?? []).filter(
@@ -242,10 +287,13 @@
     const modifiers: string[] = [];
     if (result.mode === 'advantage') modifiers.push($t('play.toast.modifier.advantage'));
     if (result.mode === 'disadvantage') modifiers.push($t('play.toast.modifier.disadvantage'));
-    for (const ann of displayAnnotations) {
+    for (const ann of informationalAnnotations) {
       if (ann.rider?.type === 'dice' || ann.rider?.type === 'modifier') {
         modifiers.push($t(ann.rider.label));
       }
+    }
+    for (const m of result.modifiers ?? []) {
+      modifiers.push(`${$t(m.label)} ${m.value >= 0 ? '+' : ''}${m.value}`);
     }
 
     toast.custom(DiceRollToast, {
@@ -310,6 +358,7 @@
         {onSelectionChange}
         onRoll={handleDiceRoll}
         gwfActive={effectiveGwfActive}
+        modifiers={rollModifiers}
       />
     </div>
   {/if}
@@ -373,6 +422,7 @@
         {onSelectionChange}
         onRoll={handleDiceRoll}
         gwfActive={effectiveGwfActive}
+        modifiers={rollModifiers}
       />
     </div>
   {/if}
@@ -431,9 +481,9 @@
       {/each}
     </div>
   {/each}
-  {#if displayAnnotations.length > 0}
+  {#if informationalAnnotations.length > 0}
     <div class="panel-renderer__annotations" role="note">
-      {#each displayAnnotations as annotation (annotation.key)}
+      {#each informationalAnnotations as annotation (annotation.key)}
         <span class="panel-renderer__annotation">{$t(annotation.key)}</span>
       {/each}
     </div>
