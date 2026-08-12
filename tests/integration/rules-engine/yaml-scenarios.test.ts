@@ -15,6 +15,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
 import { INITIAL_EFFECTS } from './initial-effects';
+import { assertAnnotations, type AnnotationAssert } from './assert-annotations';
 
 /**
  * M1 / W5 — the parity harness (the acceptance gate).
@@ -506,7 +507,7 @@ interface AssertConfig {
   effects?: { exists?: string[]; notExists?: string[] };
   offerVars?: { id: string; vars: Record<string, unknown> }[];
   offerUi?: { id: string; ui: Record<string, unknown> }[];
-  annotations?: { exists?: string[]; notExists?: string[] };
+  annotations?: AnnotationAssert;
   status?: { ok?: boolean; legal?: boolean; applicable?: boolean };
   planErrors?: { id: string; index?: number; errors: string[] }[];
 }
@@ -584,23 +585,6 @@ function assertOfferUi(
     for (const [k, v] of Object.entries(ui))
       expect(e!.rule.ui?.[k], `${where}: offerUi "${id}".${k}`).toEqual(v);
   }
-}
-
-function assertAnnotations(
-  actual: EngineOutput['annotations'],
-  expected: NonNullable<AssertConfig['annotations']>,
-  where: string
-): void {
-  for (const key of expected.exists ?? [])
-    expect(
-      actual.some((a) => a.key === key),
-      `${where}: annotation "${key}" exists`
-    ).toBe(true);
-  for (const key of expected.notExists ?? [])
-    expect(
-      actual.some((a) => a.key === key),
-      `${where}: annotation "${key}" absent`
-    ).toBe(false);
 }
 
 function assertStatus(
