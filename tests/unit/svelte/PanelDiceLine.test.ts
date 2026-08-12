@@ -141,4 +141,78 @@ describe('PanelDiceLine', () => {
     await tick();
     expect(t.getAttribute('aria-expanded')).toBe('false');
   });
+
+  const modifiers = [
+    { key: 'aura', label: 'rule.demo.aura', appliesTo: 'save' as const, value: 3, defaultOn: true },
+    { key: 'ring', label: 'rule.demo.ring', appliesTo: 'save' as const, value: 1, defaultOn: true }
+  ];
+
+  const saveControl: DiceLineControl = {
+    type: 'dice-line',
+    dice: [{ sides: 20, bonus: { number: 5 }, purpose: 'save' }]
+  };
+
+  const saveProps = { control: saveControl, editable: true, facts: {}, vars: {}, modifiers };
+
+  const modChip = (c: HTMLElement, key: string) =>
+    c.querySelector(`.panel-renderer__modifier[data-modifier-key="${key}"]`);
+
+  it('renders one toggle chip per modifier, on by default', () => {
+    const { container } = render(PanelDiceLine, { props: saveProps });
+    expect(modChip(container, 'aura')).toBeInstanceOf(HTMLButtonElement);
+    expect(modChip(container, 'ring')).toBeInstanceOf(HTMLButtonElement);
+    expect(modChip(container, 'aura')?.getAttribute('aria-pressed')).toBe('true');
+    expect(modChip(container, 'aura')?.textContent?.trim()).toBe('rule.demo.aura +3');
+  });
+
+  it('adds every active modifier to the rolled total', async () => {
+    const onRoll = vi.fn();
+    const { container } = render(PanelDiceLine, { props: { ...saveProps, onRoll } });
+    await fireEvent.click(main(container, 0)!);
+    const [result] = onRoll.mock.calls[0];
+    // d20 natural + die bonus 5 + aura 3 + ring 1
+    expect(result.total).toBe(result.natural + 9);
+    expect(result.bonus).toBe(5);
+    expect(result.modifiers).toEqual([
+      { label: 'rule.demo.aura', value: 3 },
+      { label: 'rule.demo.ring', value: 1 }
+    ]);
+  });
+
+  it('drops a modifier from the total when its chip is toggled off', async () => {
+    const onRoll = vi.fn();
+    const { container } = render(PanelDiceLine, { props: { ...saveProps, onRoll } });
+    await fireEvent.click(modChip(container, 'aura')!);
+    await tick();
+    expect(modChip(container, 'aura')?.getAttribute('aria-pressed')).toBe('false');
+    await fireEvent.click(main(container, 0)!);
+    const [result] = onRoll.mock.calls[0];
+    expect(result.total).toBe(result.natural + 6);
+    expect(result.modifiers).toEqual([{ label: 'rule.demo.ring', value: 1 }]);
+  });
+
+  it('only applies a modifier to the die whose purpose it targets', async () => {
+    const onRoll = vi.fn();
+    const mixed: DiceLineControl = {
+      type: 'dice-line',
+      dice: [
+        { sides: 20, bonus: { number: 5 }, purpose: 'to-hit' },
+        { sides: 8, bonus: { number: 3 }, damageType: { string: 'slashing' }, purpose: 'damage' }
+      ]
+    };
+    const { container } = render(PanelDiceLine, {
+      props: { control: mixed, editable: true, facts: {}, vars: {}, modifiers, onRoll }
+    });
+    // Neither die has purpose 'save', so no chip applies and no chip renders.
+    expect(modChip(container, 'aura')).toBeNull();
+    await fireEvent.click(main(container, 0)!);
+    const [result] = onRoll.mock.calls[0];
+    expect(result.total).toBe(result.natural + 5);
+    expect(result.modifiers).toBeUndefined();
+  });
+
+  it('renders static spans (not buttons) for modifiers when not editable', () => {
+    const { container } = render(PanelDiceLine, { props: { ...saveProps, editable: false } });
+    expect(modChip(container, 'aura')).toBeInstanceOf(HTMLSpanElement);
+  });
 });

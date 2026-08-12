@@ -15,7 +15,12 @@
   import { getMatchingAnnotations } from '$lib/play/annotations';
   import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-view';
   import type { EffectInstance } from '$lib/rules-engine';
-  import type { TextInformation, CountdownInformation, RollResult } from './panel-renderer/types';
+  import type {
+    TextInformation,
+    CountdownInformation,
+    RollResult,
+    RollModifier
+  } from './panel-renderer/types';
 
   interface Props {
     entry: AvailableRuleEntry;
@@ -219,6 +224,20 @@
       : matchingAnnotations.filter((ann) => ann.rider?.label !== gwfRiderLabel)
   );
 
+  // Annotations whose rider carries a value become toggleable chips on the dice
+  // line; valueless riders stay the text chips they have always been.
+  const rollModifiers = $derived<RollModifier[]>(
+    displayAnnotations
+      .filter((ann) => ann.rider?.value !== undefined && ann.rider?.appliesTo !== undefined)
+      .map((ann) => ({
+        key: ann.key,
+        label: ann.rider!.label,
+        appliesTo: ann.rider!.appliesTo!,
+        value: ann.rider!.value!.kind === 'flat' ? ann.rider!.value!.bonus : 0,
+        defaultOn: ann.rider!.defaultOn ?? true
+      }))
+  );
+
   const visibleFollowups = $derived(
     editable && onFollowup
       ? (descriptor.followups ?? []).filter(
@@ -246,6 +265,9 @@
       if (ann.rider?.type === 'dice' || ann.rider?.type === 'modifier') {
         modifiers.push($t(ann.rider.label));
       }
+    }
+    for (const m of result.modifiers ?? []) {
+      modifiers.push(`${$t(m.label)} ${m.value >= 0 ? '+' : ''}${m.value}`);
     }
 
     toast.custom(DiceRollToast, {
@@ -310,6 +332,7 @@
         {onSelectionChange}
         onRoll={handleDiceRoll}
         gwfActive={effectiveGwfActive}
+        modifiers={rollModifiers}
       />
     </div>
   {/if}
@@ -373,6 +396,7 @@
         {onSelectionChange}
         onRoll={handleDiceRoll}
         gwfActive={effectiveGwfActive}
+        modifiers={rollModifiers}
       />
     </div>
   {/if}

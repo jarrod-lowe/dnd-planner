@@ -18,6 +18,23 @@ export type CritMode = 'normal' | 'critical';
  */
 export type DicePurpose = RollPurpose;
 
+/**
+ * A toggleable modifier offered on a dice line — one chip. Derived by
+ * PanelRenderer from annotations whose rider carries a `value`; `key` is the
+ * annotation key, and is what the toggle state is keyed on.
+ */
+export interface RollModifier {
+  key: string;
+  /** i18n key for the chip label. */
+  label: string;
+  /** Which die (by purpose) this applies to. */
+  appliesTo: DicePurpose;
+  /** Resolved numeric contribution to the total. */
+  value: number;
+  /** Whether the chip starts switched on. */
+  defaultOn: boolean;
+}
+
 export interface RollResult {
   total: number;
   natural: number;
@@ -42,6 +59,8 @@ export interface RollResult {
   purpose?: DicePurpose;
   /** Original die value (1 or 2) before GWF floor applied */
   gwfFloor?: number;
+  /** Active roll modifiers folded into `total` (over and above `bonus`). */
+  modifiers?: { label: string; value: number }[];
 }
 
 export interface ValueSource {

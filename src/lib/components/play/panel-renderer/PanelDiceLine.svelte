@@ -3,7 +3,7 @@
   import { rollTypeKey } from './rollType';
   import DamageTypeIcon from './DamageTypeIcon.svelte';
   import { nextDiceLineId } from './diceLineId';
-  import type { CritMode, DiceLineControl, DiceEntry, RollResult } from './types';
+  import type { CritMode, DiceLineControl, DiceEntry, RollModifier, RollResult } from './types';
   import type { Facts, VarDefinition } from '$lib/rules-view';
   import { t } from '$lib/i18n';
 
@@ -16,6 +16,7 @@
     onSelectionChange?: (selections: Record<string, unknown>) => void;
     onRoll?: (data: RollResult, dieIndex: number) => void;
     gwfActive?: boolean;
+    modifiers?: RollModifier[];
   }
 
   let {
@@ -26,7 +27,8 @@
     selections = {},
     onSelectionChange: _onSelectionChange,
     onRoll,
-    gwfActive = false
+    gwfActive = false,
+    modifiers = []
   }: Props = $props();
 
   void _onSelectionChange;
@@ -49,6 +51,31 @@
   let rangeIndex = $state(
     selections && typeof selections.rangeIndex === 'number' ? selections.rangeIndex : 0
   );
+  // Ephemeral, exactly like rangeIndex: a modifier switched off for one
+  // situational roll (an Aura of Protection save while Incapacitated) must not
+  // stay off for the rest of the session. Keyed by annotation key; an absent
+  // entry means "as authored", so a changing `modifiers` prop needs no syncing.
+  let modifierState = $state<Record<string, boolean>>({});
+
+  const modifierOn = (m: RollModifier): boolean => modifierState[m.key] ?? m.defaultOn;
+
+  function toggleModifier(m: RollModifier): void {
+    if (!editable) return;
+    modifierState = { ...modifierState, [m.key]: !modifierOn(m) };
+  }
+
+  // A modifier is only shown when some die on this line has its purpose —
+  // otherwise a save bonus would appear on a weapon panel with nothing to modify.
+  const shownModifiers = $derived(
+    modifiers.filter((m) => control.dice.some((d) => d.purpose === m.appliesTo))
+  );
+
+  const activeModifiersFor = (die: DiceEntry): RollModifier[] =>
+    shownModifiers.filter((m) => m.appliesTo === die.purpose && modifierOn(m));
+
+  function formatModifier(m: RollModifier): string {
+    return `${$t(m.label)} ${m.value >= 0 ? '+' : ''}${m.value}`;
+  }
   let rollResults = $state<Record<number, RollResult>>({});
   let rollMode = $state<RollMode>('normal');
   let openDieIndex = $state(-1);
@@ -233,6 +260,8 @@
     const isCrit = crit === 'critical';
     const rolledCount = isCrit ? count * 2 : count;
     const bonus = (resolveValueSource(die.bonus, facts, vars, selections) as number) ?? 0;
+    const activeModifiers = activeModifiersFor(die);
+    const modifierTotal = activeModifiers.reduce((sum, m) => sum + m.value, 0);
     const rollModeToUse = mode ?? (sides === 20 ? effectiveRollMode : 'normal');
     let natural: number;
     let rolls: number[] | undefined;
@@ -274,7 +303,7 @@
     }
     const damageTypeStr = formatDamageType(die) || undefined;
     const result: RollResult = {
-      total: natural + bonus,
+      total: natural + bonus + modifierTotal,
       natural,
       mode: sides === 20 ? rollModeToUse : undefined,
       critical: isCrit || undefined,
@@ -286,7 +315,11 @@
       damageType: damageTypeStr,
       unit: die.unit,
       purpose: die.purpose,
-      gwfFloor
+      gwfFloor,
+      modifiers:
+        activeModifiers.length > 0
+          ? activeModifiers.map(({ label, value }) => ({ label, value }))
+          : undefined
     };
     rollResults[dieIndex] = result;
     rollMode = 'normal';
@@ -456,9 +489,19 @@
   }
 
   const parts = $derived.by<
-    { type: 'label' | 'range' | 'die'; die?: DiceEntry; dieIndex?: number }[]
+    {
+      type: 'label' | 'range' | 'die' | 'modifier';
+      die?: DiceEntry;
+      dieIndex?: number;
+      modifier?: RollModifier;
+    }[]
   >(() => {
-    const result: { type: 'label' | 'range' | 'die'; die?: DiceEntry; dieIndex?: number }[] = [];
+    const result: {
+      type: 'label' | 'range' | 'die' | 'modifier';
+      die?: DiceEntry;
+      dieIndex?: number;
+      modifier?: RollModifier;
+    }[] = [];
     if (control.label) {
       result.push({ type: 'label' });
     }
@@ -467,6 +510,9 @@
     }
     for (let di = 0; di < control.dice.length; di++) {
       result.push({ type: 'die', die: control.dice[di], dieIndex: di });
+    }
+    for (const modifier of shownModifiers) {
+      result.push({ type: 'modifier', modifier });
     }
     return result;
   });
@@ -494,6 +540,23 @@
         </button>
       {:else}
         <span class="panel-renderer__range">{formatRangeText(currentRange!)}</span>
+      {/if}
+    {:else if part.type === 'modifier'}
+      {@const m = part.modifier!}
+      {@const on = modifierOn(m)}
+      {#if editable}
+        <button
+          class="panel-renderer__modifier"
+          class:panel-renderer__modifier--on={on}
+          type="button"
+          aria-pressed={on}
+          data-modifier-key={m.key}
+          onclick={() => toggleModifier(m)}
+        >
+          {formatModifier(m)}
+        </button>
+      {:else}
+        <span class="panel-renderer__modifier" data-modifier-key={m.key}>{formatModifier(m)}</span>
       {/if}
     {:else}
       {@const dieIsD20 = isD20(part.die!)}
@@ -689,6 +752,36 @@
   }
 
   .panel-renderer__range--clickable:hover {
+    background: var(--md-sys-color-surface-container-highest);
+  }
+
+  /* Shaped like the range chip (same surface, border, radius) but a toggle
+     rather than a cycle: modifiers stack independently, so each gets its own
+     on/off chip. The on state uses the secondary-container pair so an active
+     modifier reads as filled without inventing a colour. */
+  .panel-renderer__modifier {
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    color: var(--md-sys-color-on-surface-variant);
+    background: var(--md-sys-color-surface-container);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    white-space: nowrap;
+  }
+
+  button.panel-renderer__modifier {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .panel-renderer__modifier--on {
+    color: var(--md-sys-color-on-secondary-container);
+    background: var(--md-sys-color-secondary-container);
+    border-color: var(--md-sys-color-secondary-container);
+  }
+
+  button.panel-renderer__modifier:hover {
     background: var(--md-sys-color-surface-container-highest);
   }
 
