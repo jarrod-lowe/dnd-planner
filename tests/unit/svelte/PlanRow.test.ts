@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { render } from '@testing-library/svelte';
+import { render, fireEvent } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import PlanRow from '$lib/components/play/PlanRow.svelte';
 import type { Annotation, AvailableRuleEntry } from '$lib/rules-view';
 import type { PlannedItem } from '$lib/play/types';
@@ -96,6 +97,24 @@ describe('PlanRow rider chips', () => {
     // a static copy here would still read as present with the toggle switched off.
     expect(noteText).not.toContain('rule.demo.aura');
     expect(noteText).toContain('rule.demo.note');
+  });
+
+  it('keeps a modifier switched off across a collapse and re-expand', async () => {
+    const { container } = render(PlanRow, { props });
+    const toggle = () =>
+      container.querySelector('.panel-renderer__modifier[data-modifier-key="rule.demo.aura"]');
+    await fireEvent.click(toggle()!);
+    await tick();
+    expect(toggle()?.getAttribute('aria-pressed')).toBe('false');
+
+    await fireEvent.click(container.querySelector('[aria-label="play.planRow.collapseAria"]')!);
+    await tick();
+    await fireEvent.click(container.querySelector('[aria-label="play.planRow.expandAria"]')!);
+    await tick();
+
+    // Unmounting the panel would silently restore the default-on state, and the
+    // next save would quietly include a bonus the player had disabled.
+    expect(toggle()?.getAttribute('aria-pressed')).toBe('false');
   });
 
   it('no longer brands effect chips with an FX badge', () => {

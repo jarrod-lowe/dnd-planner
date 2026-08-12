@@ -314,19 +314,28 @@
       </div>
 
       {@render modChips()}
+    {:else}
+      <span class="plan-row__collapsed-name">{displayName}</span>
+    {/if}
 
-      <div class="plan-row__content">
-        <PanelRenderer
-          {entry}
-          editable={true}
-          {facts}
-          selections={item.rule.selections}
-          {activeAnnotations}
-          {onSelectionChange}
-          {onFollowup}
-        />
-      </div>
+    <!-- Always mounted, hidden with display:none rather than removed from the
+         DOM: unmounting discards the panel's component state, which silently
+         reset a modifier the player had switched off (and would do the same to
+         any future stateful control). display:none also takes it out of the tab
+         order and the accessibility tree, so a collapsed row stays unreachable. -->
+    <div class="plan-row__content" class:plan-row__content--hidden={rulesMode || collapsed}>
+      <PanelRenderer
+        {entry}
+        editable={true}
+        {facts}
+        selections={item.rule.selections}
+        {activeAnnotations}
+        {onSelectionChange}
+        {onFollowup}
+      />
+    </div>
 
+    {#if !rulesMode && !collapsed}
       {#if alternatives.length > 0}
         <div class="plan-row__alternatives">
           <span class="plan-row__alternatives-label">{$t('play.planRow.orInstead')}</span>
@@ -377,8 +386,6 @@
           })()}
         </span>
       {/if}
-    {:else}
-      <span class="plan-row__collapsed-name">{displayName}</span>
     {/if}
   </div>
 </div>
@@ -551,6 +558,12 @@
 
   .plan-row__content {
     min-width: 0;
+  }
+
+  /* display:none (not visibility/height) so the hidden panel leaves the tab
+     order and the accessibility tree while keeping its component state alive. */
+  .plan-row__content--hidden {
+    display: none;
   }
 
   .plan-row__content > :global(.panel-renderer) {
