@@ -370,3 +370,10 @@ sibling `assert:`) and cover `facts`, `offers` / `effects` / `annotations`
   needs `display`; a nameless hidden effect is invisible even in the reveal.
 - **One locale.** Every key lands in `en` **and** `en-x-tlh`, or
   `module-i18n-coverage` fails.
+- **`annotationLabels` nested in a control.** They belong on the offer's `ui`,
+  never inside `primaryControl` / `secondaryControl`. Only `ui.annotationLabels`
+  is read (`extractPanelDescriptor` → `getAnnotationLabels`), and a module's `ui`
+  is typed `Record<string, unknown>`, so a nested array compiles happily and
+  silently matches nothing. `annotation-targets.test.ts` catches a target label
+  no panel carries at all, but not a label that is nested-and-dead here while
+  another panel still carries it correctly.
