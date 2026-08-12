@@ -6,11 +6,15 @@ import type { Annotation } from '$lib/rules-engine';
  * match by key; `riders` asserts named fields of a matched annotation's rider
  * field-by-field (the same shape as the runner's offerVars / offerUi asserts),
  * so a scenario can pin what a modifier is WORTH and not merely that it arrived.
+ * `targets` asserts the full `targets` array of a matched annotation, so a
+ * scenario can pin WHICH panels a modifier reaches (e.g. that it also reaches
+ * a companion's panel) and not merely that the annotation exists somewhere.
  */
 export interface AnnotationAssert {
   exists?: string[];
   notExists?: string[];
   riders?: { key: string; rider: Record<string, unknown> }[];
+  targets?: { key: string; targets: string[] }[];
 }
 
 export function assertAnnotations(
@@ -35,5 +39,10 @@ export function assertAnnotations(
     const actualRider = found!.rider as unknown as Record<string, unknown>;
     for (const [field, value] of Object.entries(rider))
       expect(actualRider[field], `${where}: annotation "${key}".rider.${field}`).toEqual(value);
+  }
+  for (const { key, targets } of expected.targets ?? []) {
+    const found = actual.find((a) => a.key === key);
+    expect(found, `${where}: annotation "${key}" exists`).toBeDefined();
+    expect(found!.targets, `${where}: annotation "${key}".targets`).toEqual(targets);
   }
 }

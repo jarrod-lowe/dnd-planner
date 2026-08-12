@@ -76,4 +76,38 @@ describe('assertAnnotations', () => {
       )
     ).toThrow();
   });
+
+  it('passes when the targets array matches exactly', () => {
+    expect(() =>
+      assertAnnotations(
+        annotations,
+        { targets: [{ key: 'rule.demo.valued', targets: ['save.any'] }] },
+        'where'
+      )
+    ).not.toThrow();
+  });
+
+  it('fails when a target is missing from the actual array', () => {
+    expect(() =>
+      assertAnnotations(
+        annotations,
+        {
+          targets: [
+            { key: 'rule.demo.valued', targets: ['save.any', 'save.any.companion'] }
+          ]
+        },
+        'where'
+      )
+    ).toThrow();
+  });
+
+  it('fails when asserting targets on an annotation that is absent', () => {
+    expect(() =>
+      assertAnnotations(
+        annotations,
+        { targets: [{ key: 'rule.demo.absent', targets: ['save.any'] }] },
+        'where'
+      )
+    ).toThrow();
+  });
 });

@@ -26,6 +26,11 @@ steps:
         annotations:
           exists:
             - rule.class-paladin-level6.aura-of-protection
+          targets:
+            - key: rule.class-paladin-level6.aura-of-protection
+              targets:
+                - save.any
+                - save.any.companion
           riders:
             - key: rule.class-paladin-level6.aura-of-protection
               rider:
@@ -56,3 +61,24 @@ steps:
                 value:
                   kind: flat
                   bonus: 3
+
+  # Charisma 8 -> modifier -1: the floor kicks in for a NEGATIVE modifier too,
+  # not just for the "unset" zero case above (an unfloored implementation
+  # would also read 1 at zero, so that alone doesn't pin the floor).
+  - updateSelections:
+      id: set-charisma
+      selections:
+        score: 8
+      assert:
+        facts:
+          cha.value: 8
+          cha.modifier: -1
+        annotations:
+          riders:
+            - key: rule.class-paladin-level6.aura-of-protection
+              rider:
+                type: modifier
+                appliesTo: save
+                value:
+                  kind: flat
+                  bonus: 1
