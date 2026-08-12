@@ -122,11 +122,20 @@
   const diceSignature = $derived(
     control.dice.map((d) => `${getDieSides(d) ?? ''}x${getDieCount(d)}`).join('|')
   );
-  // A roll total is only meaningful for the dice that produced it; clear stale
-  // results when the resolved dice change so a chip never shows a total that no
+  // Which modifiers are currently switched on, per die. Toggling one changes the
+  // expression just as surely as swapping a die does, so it invalidates totals too.
+  const modifierSignature = $derived(
+    shownModifiers
+      .filter((m) => modifierOn(m))
+      .map((m) => `${m.key}:${m.value}`)
+      .join('|')
+  );
+  // A roll total is only meaningful for the dice AND modifiers that produced it;
+  // clear stale results when either changes so a chip never shows a total that no
   // longer matches its current expression.
   $effect(() => {
     void diceSignature;
+    void modifierSignature;
     rollResults = {};
   });
 

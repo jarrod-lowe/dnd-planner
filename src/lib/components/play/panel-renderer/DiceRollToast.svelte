@@ -22,7 +22,13 @@
 
   const isAdvDisadv = $derived(result.mode === 'advantage' || result.mode === 'disadvantage');
   const isGWF = $derived(result.gwfFloor !== undefined);
-  const hasBonus = $derived(result.bonus !== undefined && result.bonus !== 0);
+  // `result.bonus` is the die's OWN authored bonus; active roll modifiers ride
+  // separately in `result.modifiers` so consumers can name their sources. The
+  // equation has to add up to `total`, so the bonus term shown here is the sum
+  // of both — the named breakdown is listed under the equation.
+  const modifierTotal = $derived((result.modifiers ?? []).reduce((sum, m) => sum + m.value, 0));
+  const effectiveBonus = $derived((result.bonus ?? 0) + modifierTotal);
+  const hasBonus = $derived(effectiveBonus !== 0);
 </script>
 
 <div class="dice-toast" role="status">
@@ -44,10 +50,10 @@
       >
       <span class="dice-toast__paren">)</span>
       {#if hasBonus}
-        {#if result.bonus! > 0}
-          <span class="dice-toast__bonus"> + {result.bonus}</span>
+        {#if effectiveBonus > 0}
+          <span class="dice-toast__bonus"> + {effectiveBonus}</span>
         {:else}
-          <span class="dice-toast__bonus"> − {Math.abs(result.bonus!)}</span>
+          <span class="dice-toast__bonus"> − {Math.abs(effectiveBonus)}</span>
         {/if}
       {/if}
       <span class="dice-toast__equals"> = </span>
@@ -59,10 +65,10 @@
       <span class="dice-toast__kept">{result.natural}</span>
       <span class="dice-toast__paren">)</span>
       {#if hasBonus}
-        {#if result.bonus! > 0}
-          <span class="dice-toast__bonus"> + {result.bonus}</span>
+        {#if effectiveBonus > 0}
+          <span class="dice-toast__bonus"> + {effectiveBonus}</span>
         {:else}
-          <span class="dice-toast__bonus"> − {Math.abs(result.bonus!)}</span>
+          <span class="dice-toast__bonus"> − {Math.abs(effectiveBonus)}</span>
         {/if}
       {/if}
       <span class="dice-toast__equals"> = </span>
@@ -71,10 +77,10 @@
       <span class={natClass(result.natural)}
         >{result.rolls ? result.rolls.join(' + ') : result.natural}</span
       >
-      {#if result.bonus! > 0}
-        <span class="dice-toast__bonus"> + {result.bonus}</span>
+      {#if effectiveBonus > 0}
+        <span class="dice-toast__bonus"> + {effectiveBonus}</span>
       {:else}
-        <span class="dice-toast__bonus"> − {Math.abs(result.bonus!)}</span>
+        <span class="dice-toast__bonus"> − {Math.abs(effectiveBonus)}</span>
       {/if}
       <span class="dice-toast__equals"> = </span>
       <span class="dice-toast__total">{result.total}</span>

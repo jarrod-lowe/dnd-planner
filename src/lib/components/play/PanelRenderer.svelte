@@ -236,6 +236,15 @@
     return value.kind === 'flat' ? value.bonus : undefined;
   }
 
+  // A valued rider is REPRESENTED by its dice-line toggle chip, so it must not
+  // also appear as a static text chip or in the toast's rider list — it would
+  // show twice, and the static copy would still read as present after the
+  // toggle is switched off. Everything downstream of the dice line uses this
+  // list rather than displayAnnotations.
+  const informationalAnnotations = $derived(
+    displayAnnotations.filter((ann) => ann.rider?.value === undefined)
+  );
+
   // Annotations whose rider carries a value become toggleable chips on the dice
   // line; valueless riders stay the text chips they have always been.
   const rollModifiers = $derived<RollModifier[]>(
@@ -278,10 +287,7 @@
     const modifiers: string[] = [];
     if (result.mode === 'advantage') modifiers.push($t('play.toast.modifier.advantage'));
     if (result.mode === 'disadvantage') modifiers.push($t('play.toast.modifier.disadvantage'));
-    for (const ann of displayAnnotations) {
-      // Valued riders are rendered with their resolved number by the loop below;
-      // this one is for informational riders that only have a label.
-      if (ann.rider?.value !== undefined) continue;
+    for (const ann of informationalAnnotations) {
       if (ann.rider?.type === 'dice' || ann.rider?.type === 'modifier') {
         modifiers.push($t(ann.rider.label));
       }
@@ -475,9 +481,9 @@
       {/each}
     </div>
   {/each}
-  {#if displayAnnotations.length > 0}
+  {#if informationalAnnotations.length > 0}
     <div class="panel-renderer__annotations" role="note">
-      {#each displayAnnotations as annotation (annotation.key)}
+      {#each informationalAnnotations as annotation (annotation.key)}
         <span class="panel-renderer__annotation">{$t(annotation.key)}</span>
       {/each}
     </div>

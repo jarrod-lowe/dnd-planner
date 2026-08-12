@@ -87,6 +87,17 @@ describe('PlanRow rider chips', () => {
     expect(toggle?.textContent?.trim()).toBe('rule.demo.aura +3');
   });
 
+  it('does not repeat a valued rider as a panel annotation either', () => {
+    const { container } = render(PlanRow, { props });
+    const noteText = Array.from(container.querySelectorAll('.panel-renderer__annotation')).map(
+      (el) => el.textContent
+    );
+    // The panel's own annotation row is the third place a rider can surface;
+    // a static copy here would still read as present with the toggle switched off.
+    expect(noteText).not.toContain('rule.demo.aura');
+    expect(noteText).toContain('rule.demo.note');
+  });
+
   it('no longer brands effect chips with an FX badge', () => {
     const { container } = render(PlanRow, { props });
     expect(container.querySelector('.mod-chip__fx-badge')).toBeNull();

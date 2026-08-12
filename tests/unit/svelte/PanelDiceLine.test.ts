@@ -174,6 +174,19 @@ describe('PanelDiceLine', () => {
     expect(main(container, 0)?.textContent?.trim()).toBe('d20+6');
   });
 
+  it('clears a stale rolled total when a modifier is toggled', async () => {
+    const { container } = render(PanelDiceLine, { props: saveProps });
+    await fireEvent.click(main(container, 0)!);
+    await tick();
+    // A rolled chip shows its total, not the expression.
+    expect(main(container, 0)?.textContent?.trim()).not.toContain('d20');
+    await fireEvent.click(modChip(container, 'aura')!);
+    await tick();
+    // The total was computed with the aura on and no longer matches the roll
+    // you would now make, so the chip reverts to the (updated) expression.
+    expect(main(container, 0)?.textContent?.trim()).toBe('d20+6');
+  });
+
   it('adds every active modifier to the rolled total', async () => {
     const onRoll = vi.fn();
     const { container } = render(PanelDiceLine, { props: { ...saveProps, onRoll } });
