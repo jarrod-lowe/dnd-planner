@@ -110,7 +110,12 @@
 
   const annotationLabels = $derived(descriptor.annotationLabels ?? []);
   const matchingAnnotations = $derived(getMatchingAnnotations(annotationLabels, activeAnnotations));
-  const riderAnnotations = $derived(matchingAnnotations.filter((a) => a.rider));
+  // Valued riders render as their own interactive toggle chip on the panel's
+  // dice line, so showing them here too would duplicate them — once dead, once
+  // live. This row is for informational riders that carry only a label.
+  const riderAnnotations = $derived(
+    matchingAnnotations.filter((a) => a.rider && a.rider.value === undefined)
+  );
 
   const hasWarning = $derived(!entry.legal || !entry.applicable);
   const warningType = $derived(

@@ -775,13 +775,20 @@
     touch-action: manipulation;
   }
 
+  /* Filled, reusing the same primary pair the nat-20 die chip uses for its
+     "active" look. The secondary-container pair was tried first and is a near
+     match for surface-container in the light theme (rgb(255 218 216) vs
+     rgb(252 234 232)) — the toggle read as inert because its two states were
+     indistinguishable. State must be visible, not just announced. */
   .panel-renderer__modifier--on {
-    color: var(--md-sys-color-on-secondary-container);
-    background: var(--md-sys-color-secondary-container);
-    border-color: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-primary);
+    background: var(--md-sys-color-primary);
+    border-color: var(--md-sys-color-primary);
   }
 
-  button.panel-renderer__modifier:hover {
+  /* Scoped to the off state: an unscoped :hover outranks --on (0,2,1 vs 0,1,0)
+     and would repaint a hovered active chip as though it were off. */
+  button.panel-renderer__modifier:not(.panel-renderer__modifier--on):hover {
     background: var(--md-sys-color-surface-container-highest);
   }
 
