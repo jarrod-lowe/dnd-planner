@@ -488,14 +488,14 @@ const EXPECTED_RUNNABLE = [
   'find-steed-prepared-then-granted',
   // M3 — class-paladin-level6 + oath-redemption-level6. Level 6 is a flat step on
   // the class table (proficiency / prepared / slots hold), so these scenarios pin
-  // the "no change" as much as the hit die / HP / LoH additions. Aura of
-  // Protection, the level-6 class feature, is not modelled yet.
+  // the "no change" as much as the hit die / HP / LoH additions.
   'hp-paladin-level6',
   'hit-die-paladin-level6',
   'paladin-level6-loh-pool',
   'paladin-level6-prepared',
   'paladin-level6-proficiency',
   'paladin-level6-spell-slots',
+  'paladin-level6-aura-of-protection',
   'oath-redemption-level6'
 ].sort();
 

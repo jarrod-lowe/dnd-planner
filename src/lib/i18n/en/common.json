@@ -596,6 +596,9 @@
         "name": "Divinity Recovery"
       }
     },
+    "class-paladin-level6": {
+      "aura-of-protection": "Aura of Protection"
+    },
     "class-paladin-oath-redemption-level3": {
       "rebuke-the-violent": {
         "name": "Rebuke the Violent",

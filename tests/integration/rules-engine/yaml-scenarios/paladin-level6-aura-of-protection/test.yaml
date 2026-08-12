@@ -1,0 +1,58 @@
+name: 'Paladin: Aura of Protection at level 6'
+description: >
+  A level 6 paladin's Aura of Protection annotates every save panel (and the
+  steed's) with a toggleable modifier worth the Charisma modifier, minimum +1.
+  The `{a}.save` facts themselves are untouched — the aura is a bonus to the
+  roll, not a change to the saving throw modifier.
+
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-level4
+  - class-paladin/class-paladin-level5
+  - class-paladin/class-paladin-level6
+
+steps:
+  # No Charisma set yet: modifier 0, so the aura floors at the minimum +1.
+  - evaluate:
+      assert:
+        facts:
+          cha.modifier: 0
+        annotations:
+          exists:
+            - rule.class-paladin-level6.aura-of-protection
+          riders:
+            - key: rule.class-paladin-level6.aura-of-protection
+              rider:
+                type: modifier
+                appliesTo: save
+                value:
+                  kind: flat
+                  bonus: 1
+  # Charisma 16 → +3, and the save facts stay exactly as proficiency dictates.
+  - addOffer:
+      id: set-charisma
+      selections:
+        score: 16
+      assert:
+        facts:
+          cha.value: 16
+          cha.modifier: 3
+          # Paladin is save-proficient in CHA (+3 proficiency at level 6): 3 + 3.
+          cha.save: 6
+          # Not proficient in DEX: the bare modifier, with no aura bonus folded in.
+          dex.save: 0
+        annotations:
+          riders:
+            - key: rule.class-paladin-level6.aura-of-protection
+              rider:
+                type: modifier
+                appliesTo: save
+                value:
+                  kind: flat
+                  bonus: 3
