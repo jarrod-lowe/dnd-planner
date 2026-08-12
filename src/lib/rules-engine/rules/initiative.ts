@@ -19,9 +19,9 @@ const initiative: RuleModule = {
         name: `${I}.roll-initiative.name`,
         description: `${I}.roll-initiative.description`,
         disadvantageFact: 'initiative.disadvantage',
+        annotationLabels: ['dice.any', 'dice.initiative'],
         primaryControl: {
           type: 'dice-line',
-          annotationLabels: ['dice.any', 'dice.initiative'],
           dice: [{ sides: 20, bonus: { var: 'rollBonus' }, purpose: 'check' }],
           advantage: { fact: 'initiative.disadvantage' }
         },
@@ -29,7 +29,6 @@ const initiative: RuleModule = {
           type: 'dice-line',
           enabled: { condition: { fact: 'feat.alert.active', operator: 'equals', value: 1 } },
           label: 'rule.dnd-5e-2024.feat-alert.initiative-proficiency.button',
-          annotationLabels: ['dice.any', 'dice.initiative'],
           dice: [{ sides: 20, bonus: { var: 'alertBonus' }, purpose: 'check' }]
         },
         intents: { INSPECT: 'sense' },

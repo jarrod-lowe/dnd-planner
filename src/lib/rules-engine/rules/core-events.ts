@@ -184,10 +184,10 @@ const coreEvents: RuleModule = {
       ui: {
         section: 'free',
         name: 'planner.record.check',
+        annotationLabels: ['dice.any'],
         primaryControl: {
           type: 'dice-line',
-          dice: [{ sides: 20, purpose: 'check' }],
-          annotationLabels: ['dice.any']
+          dice: [{ sides: 20, purpose: 'check' }]
         },
         intents: { CHECK: 'skill' },
         actionCost: []

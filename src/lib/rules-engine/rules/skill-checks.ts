@@ -30,9 +30,9 @@ function rollOffer(skill: string): Offer {
       section: 'free',
       name: `play.stats.skills.${skill}`,
       disadvantageFact: `skill.${skill}.disadvantage`,
+      annotationLabels: ['dice.any'],
       primaryControl: {
         type: 'dice-line',
-        annotationLabels: ['dice.any'],
         dice: [{ sides: 20, bonus: { var: 'rollBonus' }, purpose: 'check' }],
         advantage: { fact: `skill.${skill}.disadvantage` }
       },
