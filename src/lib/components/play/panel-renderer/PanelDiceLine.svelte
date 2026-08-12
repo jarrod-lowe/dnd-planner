@@ -147,10 +147,18 @@
     return `${range.distance}ft`;
   }
 
+  // The chip must read as the roll you are ABOUT to make, so active modifiers are
+  // folded in: toggling Aura of Protection moves a save from `d20+5` to `d20+8`.
+  // (The character's own save modifier, shown in the top bar, is untouched — the
+  // aura is a bonus to the roll, not a change to the saving throw.)
   function formatBonus(die: DiceEntry): string {
-    if (die.bonus === undefined) return '';
-    const value = resolveValueSource(die.bonus, facts, vars, selections) as number | undefined;
-    if (value === undefined) return '';
+    const modifierTotal = activeModifiersFor(die).reduce((sum, m) => sum + m.value, 0);
+    const base =
+      die.bonus === undefined
+        ? undefined
+        : (resolveValueSource(die.bonus, facts, vars, selections) as number | undefined);
+    if (base === undefined && modifierTotal === 0) return '';
+    const value = (base ?? 0) + modifierTotal;
     if (value >= 0) return `+${value}`;
     return `${value}`;
   }

@@ -165,6 +165,15 @@ describe('PanelDiceLine', () => {
     expect(modChip(container, 'aura')?.textContent?.trim()).toBe('rule.demo.aura +3');
   });
 
+  it('folds active modifiers into the displayed bonus so the chip shows the real roll', async () => {
+    const { container } = render(PanelDiceLine, { props: saveProps });
+    // die bonus 5 + aura 3 + ring 1
+    expect(main(container, 0)?.textContent?.trim()).toBe('d20+9');
+    await fireEvent.click(modChip(container, 'aura')!);
+    await tick();
+    expect(main(container, 0)?.textContent?.trim()).toBe('d20+6');
+  });
+
   it('adds every active modifier to the rolled total', async () => {
     const onRoll = vi.fn();
     const { container } = render(PanelDiceLine, { props: { ...saveProps, onRoll } });
