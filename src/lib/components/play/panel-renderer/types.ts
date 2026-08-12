@@ -1,3 +1,5 @@
+import type { RollPurpose } from '$lib/rules-view';
+
 export type RollMode = 'normal' | 'advantage' | 'disadvantage';
 
 /**
@@ -11,8 +13,10 @@ export type CritMode = 'normal' | 'critical';
 /**
  * Semantic role of a die within a dice-line. Authored per die so the UI can
  * label/group rolls by intent rather than inferring from die size or damageType.
+ * Aliases the view contract's `RollPurpose` so a rider's `appliesTo` and a die's
+ * `purpose` are the same closed set by construction.
  */
-export type DicePurpose = 'to-hit' | 'damage' | 'healing' | 'save' | 'check';
+export type DicePurpose = RollPurpose;
 
 export interface RollResult {
   total: number;

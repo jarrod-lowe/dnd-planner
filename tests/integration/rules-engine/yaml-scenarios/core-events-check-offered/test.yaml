@@ -13,9 +13,9 @@ steps:
         offerUi:
           - id: record-check
             ui:
+              annotationLabels: [dice.any]
               primaryControl:
                 type: dice-line
                 dice:
                   - sides: 20
                     purpose: check
-                annotationLabels: [dice.any]

@@ -22,6 +22,9 @@ steps:
         offerUi:
           - id: roll-initiative
             ui:
+              annotationLabels:
+                - dice.any
+                - dice.initiative
               secondaryControl:
                 type: dice-line
                 enabled:
@@ -30,9 +33,6 @@ steps:
                     operator: equals
                     value: 1
                 label: rule.dnd-5e-2024.feat-alert.initiative-proficiency.button
-                annotationLabels:
-                  - dice.any
-                  - dice.initiative
                 dice:
                   - sides: 20
                     bonus:
