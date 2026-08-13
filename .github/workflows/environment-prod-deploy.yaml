@@ -107,7 +107,7 @@ jobs:
         run: make deploy-lambdas-prod
 
       - name: Get terraform outputs
-        uses: dflook/terraform-output@v2
+        uses: dflook/terraform-output@v3
         id: tf-outputs
         env:
           TF_VAR_domain: ${{ secrets.TF_VAR_domain }}
@@ -162,7 +162,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Get terraform outputs
-        uses: dflook/terraform-output@v2
+        uses: dflook/terraform-output@v3
         id: tf-outputs
         env:
           TF_VAR_domain: ${{ secrets.TF_VAR_domain }}
