@@ -126,6 +126,57 @@ const RESOURCES: UiEntry[] = [
 ];
 
 /**
+ * Steed (companion) top-bar catalog — the same chips the player gets, minus
+ * concentration (a steed never concentrates). Entries carry `subject: 'steed'`
+ * so IntentTopBar surfaces them only while the steed view is active.
+ */
+const STEED_TOP_BAR: { gate: string; entry: UiEntry }[] = [
+  {
+    gate: 'companion.steed.hp.max',
+    entry: {
+      type: 'usedMax',
+      label: 'play.topBar.hp',
+      total: 'companion.steed.hp.max',
+      remaining: 'companion.steed.hp.current',
+      subject: 'steed'
+    }
+  },
+  {
+    gate: 'companion.steed.ac.value',
+    entry: {
+      type: 'value',
+      label: 'play.topBar.ac',
+      fact: 'companion.steed.ac.value',
+      subject: 'steed'
+    }
+  },
+  {
+    gate: 'companion.steed.movement.remaining',
+    entry: {
+      type: 'value',
+      label: 'play.topBar.speed',
+      fact: 'companion.steed.movement.remaining',
+      subject: 'steed'
+    }
+  },
+  {
+    gate: 'companion.steed.str.modifier',
+    entry: {
+      type: 'ability',
+      label: 'play.topBar.abilities',
+      // No proficiencyFact: a steed has no save proficiencies, so find-steed
+      // derives each `.save` as its plain `.modifier`.
+      abilities: ABILITIES.map((a) => ({
+        name: `play.stats.${a}`,
+        fact: `companion.steed.${a}.modifier`,
+        saveFact: `companion.steed.${a}.save`
+      })),
+      subject: 'steed'
+    }
+  }
+];
+
+/**
  * Steed (companion) resources — shown in the ledger under the 'steed' subject view
  * (the Ledger filters `entry.subject === activeSubject`). Surface only when a steed
  * is summoned (its derives are present).
@@ -204,7 +255,9 @@ function sortEntries(entries: UiEntry[]): UiEntry[] {
 
 /** The play top-bar entries for the current facts (owning module loaded ⇒ present). */
 export function deriveTopBarEntries(facts: Facts): UiEntry[] {
-  const entries = TOP_BAR.filter(({ gate }) => present(facts, gate)).map(({ entry }) => entry);
+  const entries = [...TOP_BAR, ...STEED_TOP_BAR]
+    .filter(({ gate }) => present(facts, gate))
+    .map(({ entry }) => entry);
   return sortEntries(entries);
 }
 

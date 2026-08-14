@@ -46,6 +46,98 @@ describe('derivePanels — top bar', () => {
   });
 });
 
+describe('derivePanels — top bar (steed subject)', () => {
+  it('emits a steed HP entry, tagged subject:steed, when the steed has HP', () => {
+    const facts = { 'companion.steed.hp.max': 25, 'companion.steed.hp.current': 18 };
+    const steed = deriveTopBarEntries(facts).filter((e) => e.subject === 'steed');
+    expect(steed.map((e) => e.label)).toEqual(['play.topBar.hp']);
+    expect(resolveEntryValue(steed[0], facts)).toBe('18/25');
+  });
+
+  it('emits steed AC and speed value chips from the steed facts', () => {
+    const facts = {
+      'companion.steed.ac.value': 12,
+      'companion.steed.movement.remaining': 60
+    };
+    const steed = deriveTopBarEntries(facts).filter((e) => e.subject === 'steed');
+    expect(steed.map((e) => e.label)).toEqual(['play.topBar.ac', 'play.topBar.speed']);
+    expect(steed.map((e) => resolveEntryValue(e, facts))).toEqual(['12', '60']);
+  });
+
+  it('emits a steed abilities chip with each modifier and its save', () => {
+    const entry = deriveTopBarEntries({ 'companion.steed.str.modifier': 4 }).find(
+      (e) => e.subject === 'steed'
+    );
+    expect(entry?.type).toBe('ability');
+    expect(entry?.label).toBe('play.topBar.abilities');
+    expect(entry?.type === 'ability' && entry.abilities).toEqual([
+      {
+        name: 'play.stats.str',
+        fact: 'companion.steed.str.modifier',
+        saveFact: 'companion.steed.str.save'
+      },
+      {
+        name: 'play.stats.dex',
+        fact: 'companion.steed.dex.modifier',
+        saveFact: 'companion.steed.dex.save'
+      },
+      {
+        name: 'play.stats.con',
+        fact: 'companion.steed.con.modifier',
+        saveFact: 'companion.steed.con.save'
+      },
+      {
+        name: 'play.stats.int',
+        fact: 'companion.steed.int.modifier',
+        saveFact: 'companion.steed.int.save'
+      },
+      {
+        name: 'play.stats.wis',
+        fact: 'companion.steed.wis.modifier',
+        saveFact: 'companion.steed.wis.save'
+      },
+      {
+        name: 'play.stats.cha',
+        fact: 'companion.steed.cha.modifier',
+        saveFact: 'companion.steed.cha.save'
+      }
+    ]);
+  });
+
+  it('never emits a concentration chip for the steed', () => {
+    const facts = {
+      'companion.steed.hp.max': 25,
+      'companion.steed.hp.current': 25,
+      'companion.steed.ac.value': 12,
+      'companion.steed.movement.remaining': 60,
+      'companion.steed.str.modifier': 4,
+      'concentration.max': 1
+    };
+    const steed = deriveTopBarEntries(facts).filter((e) => e.subject === 'steed');
+    expect(steed.map((e) => e.type)).not.toContain('concentration');
+    expect(steed.map((e) => e.label)).toEqual([
+      'play.topBar.hp',
+      'play.topBar.ac',
+      'play.topBar.speed',
+      'play.topBar.abilities'
+    ]);
+  });
+
+  it('leaves the player chips untagged so the two subjects stay separate', () => {
+    const facts = {
+      'hp.max': 12,
+      'hp.current': 12,
+      'companion.steed.hp.max': 25,
+      'companion.steed.hp.current': 25
+    };
+    const entries = deriveTopBarEntries(facts);
+    const player = entries.filter((e) => e.subject === undefined);
+    expect(player.map((e) => e.label)).toEqual(['play.topBar.hp']);
+    expect(resolveEntryValue(player[0], facts)).toBe('12/12');
+    expect(entries.filter((e) => e.subject === 'steed').length).toBe(1);
+  });
+});
+
 describe('derivePanels — resources', () => {
   it('emits pools whose total fact is present', () => {
     const facts = {
