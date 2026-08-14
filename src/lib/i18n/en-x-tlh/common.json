@@ -1952,7 +1952,8 @@
         "gear": "GEAR",
         "consume": "CONSUME",
         "effects": "EFFECTS",
-        "spells": "SPELLS"
+        "spells": "SPELLS",
+        "steed": "Sargh"
       },
       "HEALTH": {
         "default": "HP",
@@ -1961,12 +1962,14 @@
       "SAVE": {
         "default": "OTHER",
         "others": "OTHERS",
-        "you": "YOU"
+        "you": "YOU",
+        "steed": "Sargh"
       },
       "CHECK": {
         "default": "OTHER",
         "skill": "SKILL",
-        "raw": "RAW"
+        "raw": "RAW",
+        "steed": "Sargh"
       },
       "REST": {
         "default": "Rest",
