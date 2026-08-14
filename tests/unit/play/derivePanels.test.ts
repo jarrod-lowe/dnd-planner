@@ -71,12 +71,36 @@ describe('derivePanels — top bar (steed subject)', () => {
     expect(entry?.type).toBe('ability');
     expect(entry?.label).toBe('play.topBar.abilities');
     expect(entry?.type === 'ability' && entry.abilities).toEqual([
-      { name: 'play.stats.str', fact: 'companion.steed.str.modifier', saveFact: 'companion.steed.str.save' },
-      { name: 'play.stats.dex', fact: 'companion.steed.dex.modifier', saveFact: 'companion.steed.dex.save' },
-      { name: 'play.stats.con', fact: 'companion.steed.con.modifier', saveFact: 'companion.steed.con.save' },
-      { name: 'play.stats.int', fact: 'companion.steed.int.modifier', saveFact: 'companion.steed.int.save' },
-      { name: 'play.stats.wis', fact: 'companion.steed.wis.modifier', saveFact: 'companion.steed.wis.save' },
-      { name: 'play.stats.cha', fact: 'companion.steed.cha.modifier', saveFact: 'companion.steed.cha.save' }
+      {
+        name: 'play.stats.str',
+        fact: 'companion.steed.str.modifier',
+        saveFact: 'companion.steed.str.save'
+      },
+      {
+        name: 'play.stats.dex',
+        fact: 'companion.steed.dex.modifier',
+        saveFact: 'companion.steed.dex.save'
+      },
+      {
+        name: 'play.stats.con',
+        fact: 'companion.steed.con.modifier',
+        saveFact: 'companion.steed.con.save'
+      },
+      {
+        name: 'play.stats.int',
+        fact: 'companion.steed.int.modifier',
+        saveFact: 'companion.steed.int.save'
+      },
+      {
+        name: 'play.stats.wis',
+        fact: 'companion.steed.wis.modifier',
+        saveFact: 'companion.steed.wis.save'
+      },
+      {
+        name: 'play.stats.cha',
+        fact: 'companion.steed.cha.modifier',
+        saveFact: 'companion.steed.cha.save'
+      }
     ]);
   });
 
