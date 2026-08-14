@@ -1952,7 +1952,8 @@
         "gear": "GEAR",
         "consume": "CONSUME",
         "effects": "EFFECTS",
-        "spells": "SPELLS"
+        "spells": "SPELLS",
+        "steed": "Doq"
       },
       "HEALTH": {
         "default": "HP",
@@ -1961,12 +1962,14 @@
       "SAVE": {
         "default": "OTHER",
         "others": "OTHERS",
-        "you": "YOU"
+        "you": "YOU",
+        "steed": "Doq"
       },
       "CHECK": {
         "default": "OTHER",
         "skill": "SKILL",
-        "raw": "RAW"
+        "raw": "RAW",
+        "steed": "Doq"
       },
       "REST": {
         "default": "Rest",
