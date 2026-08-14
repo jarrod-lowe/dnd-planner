@@ -1953,7 +1953,7 @@
         "consume": "CONSUME",
         "effects": "EFFECTS",
         "spells": "SPELLS",
-        "steed": "Doq"
+        "steed": "Sargh"
       },
       "HEALTH": {
         "default": "HP",
@@ -1963,13 +1963,13 @@
         "default": "OTHER",
         "others": "OTHERS",
         "you": "YOU",
-        "steed": "Doq"
+        "steed": "Sargh"
       },
       "CHECK": {
         "default": "OTHER",
         "skill": "SKILL",
         "raw": "RAW",
-        "steed": "Doq"
+        "steed": "Sargh"
       },
       "REST": {
         "default": "Rest",
