@@ -264,4 +264,7 @@ Final
   - Like the open-upward flip, this has **no unit-test coverage** — vitest never loads component CSS into jsdom. Both are CSS-positioning behaviours that only a browser can catch, which is exactly how this defect surfaced.
 - [x] Screenshot at the narrowest supported tablet width; confirm the width risk
   - **Both documented risks are clear.** Hatch reads correctly at 9px pip and 18px tile — no diamond fallback needed. At 1024×768 all 14 cells fit one row; a simulated nine-level worst case wraps onto a second ledger row, legible and unclipped, so the `5/6`-collapse fallback is **not needed**.
-- [ ] Branch off main, commit, open PR (no AI attribution in the message)
+- [x] Branch off main, commit (no AI attribution in the message)
+  - Branch `spell-slot-display`, commit `6bb17020`. `docs/plans/ideas/_sample.md` was deliberately left out — it is a pre-existing local edit unrelated to this feature.
+- [x] Open PR
+  - **Spent-pip contrast: user accepted 1.39:1 as shipped**, on the grounds that the three states differ by shape/texture (solid / hatched / outlined), not colour alone — so the low-contrast ring is never the sole carrier of meaning. `--md-sys-color-outline` (3.65:1) stays documented above as the escalation if that judgement changes.
