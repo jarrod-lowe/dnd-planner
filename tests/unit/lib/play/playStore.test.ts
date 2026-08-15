@@ -1532,6 +1532,100 @@ describe('playStore', () => {
     });
   });
 
+  describe("this turn's advertised effects reach consumers", () => {
+    // The slot cell needs the raw `EffectInstance[]` — `engineOutput.effects` is
+    // bridged through `effectInstanceToRule()`, which DISCARDS the `state` map, so
+    // a consumer reading it would see every this-turn slot spend as zero.
+
+    it('exposes the advertised effects with their state map intact', async () => {
+      const advertised = {
+        id: 'effect-slot-1',
+        state: { 'spellcasting.slots.level1.spent': 1 },
+        expiry: { kind: 'untilLongRest' as const }
+      };
+      vi.mocked(evaluateCharacter).mockReturnValue(
+        playOut({ advertised: [advertised], raw: rawOutput({ effects: [advertised] }) })
+      );
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      playStore.addToPlan({ id: 'cast-spell', activities: [] });
+      vi.advanceTimersByTime(300);
+
+      expect(playStore.state.advertised).toEqual([advertised]);
+      expect(playStore.state.advertised[0].state?.['spellcasting.slots.level1.spent']).toBe(1);
+      // The regression this guards: the bridged view list has no `state` at all.
+      expect(playStore.state.engineOutput?.effects[0]).not.toHaveProperty('state');
+    });
+
+    it('clears the advertised effects at End Turn — a spent plan must not linger', async () => {
+      const advertised = {
+        id: 'effect-slot-1',
+        state: { 'spellcasting.slots.level1.spent': 1 },
+        expiry: { kind: 'untilLongRest' as const }
+      };
+      vi.mocked(evaluateCharacter).mockReturnValue(playOut({ advertised: [advertised] }));
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      playStore.addToPlan({ id: 'cast-spell', activities: [] });
+      vi.advanceTimersByTime(300);
+      expect(playStore.state.advertised).toEqual([advertised]);
+
+      // The next turn's evaluation advertises nothing — the plan is empty again.
+      vi.mocked(evaluateCharacter).mockReturnValue(playOut());
+      playStore.endTurn();
+
+      expect(playStore.state.advertised).toEqual([]);
+    });
+
+    it('clears the advertised effects on reset (character switch)', async () => {
+      const advertised = {
+        id: 'effect-slot-1',
+        state: { 'spellcasting.slots.level1.spent': 1 },
+        expiry: { kind: 'untilLongRest' as const }
+      };
+      vi.mocked(evaluateCharacter).mockReturnValue(playOut({ advertised: [advertised] }));
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      playStore.addToPlan({ id: 'cast-spell', activities: [] });
+      vi.advanceTimersByTime(300);
+      expect(playStore.state.advertised).toEqual([advertised]);
+
+      playStore.reset();
+
+      expect(playStore.state.advertised).toEqual([]);
+    });
+
+    it('drops the advertised effects when an evaluation throws', async () => {
+      const advertised = {
+        id: 'effect-slot-1',
+        state: { 'spellcasting.slots.level1.spent': 1 },
+        expiry: { kind: 'untilLongRest' as const }
+      };
+      vi.mocked(evaluateCharacter).mockReturnValue(playOut({ advertised: [advertised] }));
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      playStore.addToPlan({ id: 'cast-spell', activities: [] });
+      vi.advanceTimersByTime(300);
+      expect(playStore.state.advertised).toEqual([advertised]);
+
+      vi.mocked(evaluateCharacter).mockImplementation(() => {
+        throw new Error('boom');
+      });
+      playStore.addToPlan({ id: 'cast-spell', activities: [] });
+      vi.advanceTimersByTime(300);
+
+      expect(playStore.state.advertised).toEqual([]);
+    });
+  });
+
   describe('endTurn flushes the pending debounced evaluation', () => {
     // Plan edits (add/remove/move/updateSelections/swap) re-evaluate on a 300ms
     // debounce. End Turn commits `_lastAdvertised` — whatever the LAST evaluation

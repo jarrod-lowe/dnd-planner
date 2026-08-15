@@ -183,6 +183,7 @@
         resourceEntries={playStore.state.resourceEntries}
         facts={playStore.state.facts}
         status={playStore.state.engineOutput?.status}
+        effects={playStore.state.advertised}
         viewLabel={activeSubject ? `play.companion.${activeSubject}` : undefined}
         {activeSubject}
       />

@@ -249,6 +249,41 @@ describe('derivePanels — resources', () => {
     expect(labels).not.toContain('play.stats.steed.fellGlare');
   });
 
+  it('emits one slotLevels entry listing every level with slots (paladin at level 11)', () => {
+    const facts = {
+      'spellcasting.slots.level1.total': 4,
+      'spellcasting.slots.level1.spent': 1,
+      'spellcasting.slots.level2.total': 3,
+      'spellcasting.slots.level2.spent': 0,
+      'spellcasting.slots.level3.total': 3,
+      'spellcasting.slots.level3.spent': 0,
+      // A level the character does not have yet — excluded.
+      'spellcasting.slots.level4.total': 0,
+      // Prayer of Healing can reach 6+, so the catalog must not stop at 5.
+      'spellcasting.slots.level6.total': 1,
+      'spellcasting.slots.level6.spent': 0
+    };
+    const slots = deriveResourceEntries(facts).filter((e) => e.type === 'slotLevels');
+    expect(slots).toHaveLength(1);
+    expect(slots[0].label).toBe('play.stats.spellSlots');
+    expect(slots[0].type === 'slotLevels' && slots[0].levels).toEqual([1, 2, 3, 6]);
+    expect(isEntryVisible(slots[0], facts)).toBe(true);
+    expect(resolveEntryValue(slots[0], facts)).toBe('10/11');
+  });
+
+  it('emits no slotLevels entry for a non-caster', () => {
+    const entries = deriveResourceEntries({ 'actions.max': 1, 'actions.remaining': 1 });
+    expect(entries.filter((e) => e.type === 'slotLevels')).toEqual([]);
+  });
+
+  it('emits no slotLevels entry when every level total is zero', () => {
+    const entries = deriveResourceEntries({
+      'spellcasting.slots.level1.total': 0,
+      'spellcasting.slots.level2.total': 0
+    });
+    expect(entries.filter((e) => e.type === 'slotLevels')).toEqual([]);
+  });
+
   it('adds no steed resources for a character without a steed', () => {
     const steed = deriveResourceEntries({ 'actions.max': 1, 'actions.remaining': 1 }).filter(
       (e) => e.subject === 'steed'

@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { mount } from 'svelte';
+import { mount, flushSync } from 'svelte';
 import { readable } from 'svelte/store';
 import Ledger from '$lib/components/play/Ledger.svelte';
 import type { UiEntry } from '$lib/play/extractTopBar';
 import type { Facts } from '$lib/rules-view';
+import type { EffectInstance } from '$lib/rules-engine';
 
 // i18n mock - returns key as text
 const translations: Record<string, string> = {
@@ -18,7 +19,24 @@ const translations: Record<string, string> = {
   'play.companion.steed': 'Steed',
   'play.ledger.short.hp': 'HP',
   'play.ledger.short.actions': 'ACT',
-  'play.ledger.short.hitDie': 'HD'
+  'play.ledger.short.hitDie': 'HD',
+  'play.stats.spellSlots': 'Spell Slots',
+  'play.ledger.short.spellSlots': 'Cast',
+  // Deliberately distinctive templates: the tests pin that every slot string
+  // comes from the i18n system, not from hardcoded English in the component.
+  'play.slots.toggle': 'Show spell slot breakdown',
+  'play.slots.title': 'Spell slots',
+  'play.slots.tilesLabel': 'Spell slots => {{summary}}',
+  'play.slots.levelSummary': '{{open}} open at L{{level}}',
+  'play.slots.summarySeparator': ' | ',
+  'play.slots.noneOpen': 'nothing open',
+  'play.slots.levelRow':
+    'Level {{level}} => {{open}} open, {{thisTurn}} this turn, {{spent}} spent, {{total}} total',
+  'play.slots.levelTile': '{{level}}',
+  'play.slots.legendTitle': 'Key',
+  'play.slots.legend.open': 'Open',
+  'play.slots.legend.thisTurn': 'This turn',
+  'play.slots.legend.spent': 'Spent'
 };
 
 // The i18n mock returns the key as text for unmatched keys, interpolating
@@ -440,5 +458,297 @@ describe('Ledger — subject filtering', () => {
     });
     const cells = container.querySelectorAll('.ledger__cell');
     expect(cells.length).toBe(0);
+  });
+});
+
+describe('Ledger — spell slot cell', () => {
+  let container: HTMLElement;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    vi.clearAllMocks();
+  });
+
+  const slotEntry: UiEntry = {
+    type: 'slotLevels',
+    label: 'play.stats.spellSlots',
+    levels: [1, 2]
+  };
+
+  /**
+   * An advertised effect that spends one slot of `level` this turn — the shape
+   * every slot-spending rule emits. `expiry` is required on EffectInstance, so
+   * a bare `{ id, state }` literal would pass vitest but fail `pnpm check`.
+   */
+  function slotSpend(id: string, level: number): EffectInstance {
+    return {
+      id,
+      state: { [`spellcasting.slots.level${level}.spent`]: 1 },
+      expiry: { kind: 'untilLongRest' }
+    };
+  }
+
+  function renderSlots(
+    facts: Facts,
+    effects: EffectInstance[] = [],
+    entries: UiEntry[] = [slotEntry]
+  ) {
+    mount(Ledger, {
+      target: container,
+      props: { resourceEntries: entries, facts, effects }
+    });
+    flushSync();
+  }
+
+  function toggle(): HTMLButtonElement {
+    const button = container.querySelector<HTMLButtonElement>('.ledger__slot-toggle');
+    expect(button).toBeTruthy();
+    return button as HTMLButtonElement;
+  }
+
+  function tileStates(): string[] {
+    return Array.from(container.querySelectorAll<HTMLElement>('.ledger__slot-tile')).map((tile) => {
+      if (tile.classList.contains('ledger__slot-tile--open')) return 'open';
+      if (tile.classList.contains('ledger__slot-tile--this-turn')) return 'this-turn';
+      if (tile.classList.contains('ledger__slot-tile--spent')) return 'spent';
+      return 'unknown';
+    });
+  }
+
+  function tileDigits(): (string | null)[] {
+    return Array.from(container.querySelectorAll('.ledger__slot-tile')).map(
+      (tile) => tile.textContent
+    );
+  }
+
+  it('renders exactly ONE tile for a level, however many slots it holds', () => {
+    // 4 slots, 1 spent earlier -> 3 open. The ledger answers "can I cast at
+    // this level?", so it is one tile per LEVEL; the per-slot breakdown is the
+    // tray's job.
+    renderSlots({
+      'spellcasting.slots.level1.total': 4,
+      'spellcasting.slots.level1.spent': 1
+    });
+    expect(container.querySelectorAll('.ledger__cell').length).toBe(1);
+    expect(container.querySelectorAll('.ledger__slot-tile').length).toBe(1);
+    expect(tileStates()).toEqual(['open']);
+    expect(tileDigits()).toEqual(['1']);
+    // The short label is still the ledger's own cell-label element.
+    expect(container.querySelector('.ledger__cell-label')?.textContent).toBe('Cast');
+  });
+
+  it('renders one tile per level, ascending, for a two-level caster', () => {
+    // L1: 4 total, 2 spent earlier. L2: 2 total, none spent. Two levels, two
+    // tiles — not six.
+    renderSlots({
+      'spellcasting.slots.level1.total': 4,
+      'spellcasting.slots.level1.spent': 2,
+      'spellcasting.slots.level2.total': 2,
+      'spellcasting.slots.level2.spent': 0
+    });
+    expect(container.querySelectorAll('.ledger__slot-tile').length).toBe(2);
+    expect(tileDigits()).toEqual(['1', '2']);
+    expect(tileStates()).toEqual(['open', 'open']);
+  });
+
+  it('marks a level open while any slot remains, even with a spend this turn', () => {
+    // 3 total, 1 spent by the current plan -> 2 still open. Open wins: the
+    // question the tile answers is "castable right now?".
+    renderSlots(
+      {
+        'spellcasting.slots.level1.total': 3,
+        'spellcasting.slots.level1.spent': 1
+      },
+      [slotSpend('bless-slot', 1)]
+    );
+    expect(tileStates()).toEqual(['open']);
+  });
+
+  it('renders a hatched this-turn tile when the current plan exhausted the level', () => {
+    // 2 total, both spent by this turn's plan -> nothing open, but removing a
+    // plan row gets the level back, so it is the recoverable this-turn state.
+    renderSlots(
+      {
+        'spellcasting.slots.level1.total': 2,
+        'spellcasting.slots.level1.spent': 2
+      },
+      [slotSpend('bless-slot', 1), slotSpend('smite-slot', 1)]
+    );
+    expect(container.querySelectorAll('.ledger__slot-tile').length).toBe(1);
+    expect(tileStates()).toEqual(['this-turn']);
+  });
+
+  it('renders a spent tile when the level was exhausted on earlier turns', () => {
+    // 2 total, 2 spent, nothing advertised this turn -> gone until a rest.
+    renderSlots({
+      'spellcasting.slots.level1.total': 2,
+      'spellcasting.slots.level1.spent': 2
+    });
+    expect(container.querySelectorAll('.ledger__slot-tile').length).toBe(1);
+    expect(tileStates()).toEqual(['spent']);
+  });
+
+  it('prefers this-turn over spent when a closed level mixes both', () => {
+    // 3 total: 2 spent earlier, 1 spent by the plan. Nothing open, but the
+    // plan is what closed it, so the tile stays recoverable.
+    renderSlots(
+      {
+        'spellcasting.slots.level1.total': 3,
+        'spellcasting.slots.level1.spent': 3
+      },
+      [slotSpend('bless-slot', 1)]
+    );
+    expect(tileStates()).toEqual(['this-turn']);
+  });
+
+  it('renders a caret affordance, hidden from assistive tech, that reflects the open state', () => {
+    // aria-expanded already carries the disclosure state, so the glyph must
+    // add no screen-reader noise — it exists purely so sighted users can see
+    // the cell opens.
+    renderSlots({
+      'spellcasting.slots.level1.total': 2,
+      'spellcasting.slots.level1.spent': 0
+    });
+    const caret = container.querySelector('.ledger__slot-caret');
+    expect(caret).toBeTruthy();
+    expect(caret?.getAttribute('aria-hidden')).toBe('true');
+    // It lives inside the toggle, so its rotation can key off aria-expanded.
+    expect(toggle().contains(caret as Node)).toBe(true);
+    expect(toggle().getAttribute('aria-expanded')).toBe('false');
+
+    toggle().click();
+    flushSync();
+    expect(toggle().getAttribute('aria-expanded')).toBe('true');
+    expect(container.querySelector('.ledger__slot-caret')).toBeTruthy();
+  });
+
+  it('exposes the tile row as a single labelled image carrying the open-slot summary', () => {
+    renderSlots({
+      'spellcasting.slots.level1.total': 4,
+      'spellcasting.slots.level1.spent': 2,
+      'spellcasting.slots.level2.total': 1,
+      'spellcasting.slots.level2.spent': 0
+    });
+    const tiles = container.querySelector('.ledger__slot-tiles');
+    expect(tiles?.getAttribute('role')).toBe('img');
+    expect(tiles?.getAttribute('aria-label')).toBe('Spell slots => 2 open at L1 | 1 open at L2');
+    // Individual tiles are decorative — the row label carries the meaning.
+    const decorative = Array.from(container.querySelectorAll('.ledger__slot-tile')).every(
+      (tile) => tile.getAttribute('aria-hidden') === 'true'
+    );
+    expect(decorative).toBe(true);
+  });
+
+  it('falls back to the none-open phrase when every slot is spent', () => {
+    renderSlots({
+      'spellcasting.slots.level1.total': 2,
+      'spellcasting.slots.level1.spent': 2
+    });
+    expect(container.querySelector('.ledger__slot-tiles')?.getAttribute('aria-label')).toBe(
+      'Spell slots => nothing open'
+    );
+  });
+
+  it('starts collapsed: no tray, aria-expanded false', () => {
+    renderSlots({
+      'spellcasting.slots.level1.total': 2,
+      'spellcasting.slots.level1.spent': 0
+    });
+    expect(container.querySelector('.slot-tray')).toBeNull();
+    expect(toggle().getAttribute('aria-expanded')).toBe('false');
+    expect(toggle().getAttribute('aria-controls')).toBeTruthy();
+  });
+
+  it('opens the tray on click and points aria-controls at it', () => {
+    renderSlots({
+      'spellcasting.slots.level1.total': 2,
+      'spellcasting.slots.level1.spent': 1
+    });
+    toggle().click();
+    flushSync();
+
+    const tray = container.querySelector('.slot-tray');
+    expect(tray).toBeTruthy();
+    expect(toggle().getAttribute('aria-expanded')).toBe('true');
+    expect(tray?.id).toBe(toggle().getAttribute('aria-controls'));
+    // The tray shows the per-level breakdown row.
+    expect(container.querySelector('.slot-tray__row')?.getAttribute('aria-label')).toBe(
+      'Level 1 => 1 open, 0 this turn, 1 spent, 2 total'
+    );
+  });
+
+  it('closes on Escape and returns focus to the toggle', () => {
+    renderSlots({
+      'spellcasting.slots.level1.total': 2,
+      'spellcasting.slots.level1.spent': 0
+    });
+    toggle().focus();
+    toggle().click();
+    flushSync();
+    expect(container.querySelector('.slot-tray')).toBeTruthy();
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    flushSync();
+
+    expect(container.querySelector('.slot-tray')).toBeNull();
+    expect(toggle().getAttribute('aria-expanded')).toBe('false');
+    expect(document.activeElement).toBe(toggle());
+  });
+
+  it('closes on an outside click', () => {
+    renderSlots({
+      'spellcasting.slots.level1.total': 2,
+      'spellcasting.slots.level1.spent': 0
+    });
+    toggle().click();
+    flushSync();
+    expect(container.querySelector('.slot-tray')).toBeTruthy();
+
+    document.body.click();
+    flushSync();
+    expect(container.querySelector('.slot-tray')).toBeNull();
+    expect(toggle().getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('hides the cell when the character has no slots at any listed level', () => {
+    renderSlots({
+      'spellcasting.slots.level1.total': 0,
+      'spellcasting.slots.level2.total': 0
+    });
+    expect(container.querySelectorAll('.ledger__cell').length).toBe(0);
+  });
+
+  it('keeps usedMax and hitDie cells rendering alongside the slot cell', () => {
+    // Regression for the {#each} key widening: the key was `entry.total`, which
+    // a slotLevels entry does not have. Existing cells must keep their identity.
+    renderSlots(
+      {
+        'hp.max': 35,
+        'hp.current': 28,
+        'hitDie.d8.total': 5,
+        'hitDie.d8.remaining': 3,
+        'spellcasting.slots.level1.total': 2,
+        'spellcasting.slots.level1.spent': 0
+      },
+      [],
+      [
+        { type: 'usedMax', label: 'play.stats.hp', total: 'hp.max', remaining: 'hp.current' },
+        {
+          type: 'hitDie',
+          label: 'play.stats.hitDie',
+          nameParams: { dieSize: 8 },
+          total: 'hitDie.d8.total',
+          remaining: 'hitDie.d8.remaining',
+          dieSize: 8
+        },
+        slotEntry
+      ]
+    );
+    expect(container.querySelectorAll('.ledger__cell').length).toBe(3);
+    expect(container.textContent).toContain('28/35');
+    expect(container.textContent).toContain('3/5 d8');
+    // One level configured -> one tile.
+    expect(container.querySelectorAll('.ledger__slot-tile').length).toBe(1);
   });
 });

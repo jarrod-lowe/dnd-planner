@@ -46,6 +46,14 @@ export interface PlayState {
   effects: Rule[];
   /** committed effects — the persistence + evaluation source of truth. */
   committed: EffectInstance[];
+  /**
+   * THIS turn's advertised (uncommitted) effects, as raw `EffectInstance`s.
+   * Not `engineOutput.effects`: that list is bridged through `effectInstanceToRule()`,
+   * which discards the `state` map — so consumers that read effect state (the
+   * ledger's per-level slot cell) must read this instead. Cleared at End Turn
+   * (via the following evaluation), on reset, and when an evaluation throws.
+   */
+  advertised: EffectInstance[];
   /** ID of the currently loaded character, set during loadRuleGroups */
   currentCharacterId: string | null;
   /** Top bar entries extracted from standing rules for display in the intent top bar */

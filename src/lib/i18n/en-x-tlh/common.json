@@ -1629,6 +1629,7 @@
       "paladinFindSteed": "Sargh Sam quv",
       "divinity": "quv DIvI'",
       "spellcasting": "mugh DIvI'",
+      "spellSlots": "mugh patlhmey",
       "spellLevel": "mugh DIvI' L{{level}}",
       "spellSaveDC": "mugh DIvI' DIch",
       "concentration": "buQ",
@@ -1816,6 +1817,22 @@
       "l8": "DIvI' L8 mugh",
       "l9": "DIvI' L9 mugh"
     },
+    "slots": {
+      "toggle": "mugh patlhmey yI'ang",
+      "title": "mugh patlhmey",
+      "tilesLabel": "mugh patlhmey: {{summary}}",
+      "levelSummary": "{{open}} poS patlh {{level}}",
+      "summarySeparator": ", ",
+      "noneOpen": "pagh poS",
+      "levelRow": "patlh {{level}}: {{open}} poS, {{thisTurn}} DaHjaj, {{spent}} lo'ta', {{total}} naQ",
+      "levelTile": "{{level}}",
+      "legendTitle": "ngoq",
+      "legend": {
+        "open": "poS",
+        "thisTurn": "DaHjaj",
+        "spent": "lo'ta'"
+      }
+    },
     "slider": {
       "freeUse": "lo'Ha'",
       "level": "patlh {{level}}"
@@ -1875,7 +1892,8 @@
         "movement": "SPD",
         "hands": "HAND",
         "hitDie": "HD",
-        "spellcasting": "Magic",
+        "spellcasting": "mugh",
+        "spellSlots": "lo'",
         "divinity": "CD",
         "layOnHands": "LoH",
         "paladinSmite": "Smite",

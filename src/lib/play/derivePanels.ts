@@ -23,6 +23,9 @@ import { type UiEntry, isUiEntry } from './extractTopBar';
 
 const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
 
+/** Spell slot levels the engine models (Prayer of Healing can reach 6–9). */
+const SLOT_LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
+
 /** Top-bar catalog: each entry plus the fact whose presence gates it. */
 const TOP_BAR: { gate: string; entry: UiEntry }[] = [
   {
@@ -234,13 +237,15 @@ function deriveSteedResources(facts: Facts): UiEntry[] {
   return entries;
 }
 
+/** Canonical display order. Kept identical to the copy in `extractTopBar.ts`. */
 const UI_ENTRY_TYPE_ORDER: Record<string, number> = {
   usedMax: 0,
   value: 1,
   modifier: 2,
   hitDie: 3,
-  concentration: 4,
-  ability: 5
+  slotLevels: 4,
+  concentration: 5,
+  ability: 6
 };
 
 const present = (facts: Facts, fact: string): boolean => facts[fact] !== undefined;
@@ -278,6 +283,16 @@ export function deriveResourceEntries(facts: Facts): UiEntry[] {
         dieSize: die
       });
     }
+  }
+  // Spell slots: one entry covering every level the character actually has.
+  // Purely fact-driven, so a half-caster (paladin, ranger) needs no per-class
+  // code — the levels are whichever `spellcasting.slots.levelN.total` facts the
+  // loaded modules produced.
+  const slotLevels = SLOT_LEVELS.filter(
+    (level) => Number(facts[`spellcasting.slots.level${level}.total`] ?? 0) > 0
+  );
+  if (slotLevels.length > 0) {
+    entries.push({ type: 'slotLevels', label: 'play.stats.spellSlots', levels: slotLevels });
   }
   // Heroic Inspiration is a plain value in the resources panel.
   if (present(facts, 'heroicInspiration.remaining')) {

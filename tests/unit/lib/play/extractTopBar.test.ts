@@ -1,6 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import type { Rule } from '$lib/rules-view';
 import type { Facts } from '$lib/rules-view';
+import type { UiEntrySlotLevels } from '$lib/play/extractTopBar';
+
+const slotLevelsEntry = (levels: number[]): UiEntrySlotLevels => ({
+  type: 'slotLevels',
+  label: 'play.stats.spellSlots',
+  levels
+});
 
 describe('isUiEntry', () => {
   it('rejects undefined', async () => {
@@ -166,6 +173,48 @@ describe('isUiEntry', () => {
         ]
       })
     ).toBe(true);
+  });
+
+  it('accepts valid slotLevels entry', async () => {
+    const { isUiEntry } = await import('$lib/play/extractTopBar');
+    expect(
+      isUiEntry({
+        type: 'slotLevels',
+        label: 'play.stats.spellSlots',
+        levels: [1, 2]
+      })
+    ).toBe(true);
+  });
+
+  it('accepts a slotLevels entry with an empty levels array', async () => {
+    const { isUiEntry } = await import('$lib/play/extractTopBar');
+    expect(isUiEntry({ type: 'slotLevels', label: 'play.stats.spellSlots', levels: [] })).toBe(
+      true
+    );
+  });
+
+  it('rejects slotLevels entry missing levels', async () => {
+    const { isUiEntry } = await import('$lib/play/extractTopBar');
+    expect(isUiEntry({ type: 'slotLevels', label: 'play.stats.spellSlots' })).toBe(false);
+  });
+
+  it('rejects slotLevels entry whose levels is not an array', async () => {
+    const { isUiEntry } = await import('$lib/play/extractTopBar');
+    expect(isUiEntry({ type: 'slotLevels', label: 'play.stats.spellSlots', levels: 3 })).toBe(
+      false
+    );
+  });
+
+  it('rejects slotLevels entry with non-numeric level entries', async () => {
+    const { isUiEntry } = await import('$lib/play/extractTopBar');
+    expect(
+      isUiEntry({ type: 'slotLevels', label: 'play.stats.spellSlots', levels: [1, '2'] })
+    ).toBe(false);
+  });
+
+  it('rejects slotLevels entry missing label', async () => {
+    const { isUiEntry } = await import('$lib/play/extractTopBar');
+    expect(isUiEntry({ type: 'slotLevels', levels: [1] })).toBe(false);
   });
 
   it('rejects entry with unknown type', async () => {
@@ -498,6 +547,23 @@ describe('resolveEntryValue', () => {
       )
     ).toBe('3/5 d8');
   });
+
+  it('sums open/total across the levels of a slotLevels entry', async () => {
+    const { resolveEntryValue } = await import('$lib/play/extractTopBar');
+    // Level 1: 4 total, 1 already spent ⇒ 3 open. Level 2: 3 total, none spent.
+    const facts: Facts = {
+      'spellcasting.slots.level1.total': 4,
+      'spellcasting.slots.level1.spent': 1,
+      'spellcasting.slots.level2.total': 3,
+      'spellcasting.slots.level2.spent': 0
+    };
+    expect(resolveEntryValue(slotLevelsEntry([1, 2]), facts)).toBe('6/7');
+  });
+
+  it('returns 0/0 for a slotLevels entry with no slot facts', async () => {
+    const { resolveEntryValue } = await import('$lib/play/extractTopBar');
+    expect(resolveEntryValue(slotLevelsEntry([1]), {})).toBe('0/0');
+  });
 });
 
 describe('isEntryVisible', () => {
@@ -585,6 +651,29 @@ describe('isEntryVisible', () => {
       )
     ).toBe(false);
   });
+
+  it('returns true for slotLevels when any level has a non-zero total', async () => {
+    const { isEntryVisible } = await import('$lib/play/extractTopBar');
+    const facts: Facts = {
+      'spellcasting.slots.level1.total': 0,
+      'spellcasting.slots.level2.total': 3
+    };
+    expect(isEntryVisible(slotLevelsEntry([1, 2]), facts)).toBe(true);
+  });
+
+  it('returns false for slotLevels when every level total is 0', async () => {
+    const { isEntryVisible } = await import('$lib/play/extractTopBar');
+    const facts: Facts = {
+      'spellcasting.slots.level1.total': 0,
+      'spellcasting.slots.level2.total': 0
+    };
+    expect(isEntryVisible(slotLevelsEntry([1, 2]), facts)).toBe(false);
+  });
+
+  it('returns false for slotLevels when the total facts are missing', async () => {
+    const { isEntryVisible } = await import('$lib/play/extractTopBar');
+    expect(isEntryVisible(slotLevelsEntry([1, 2]), {})).toBe(false);
+  });
 });
 
 describe('resourceShortLabelKey', () => {
@@ -611,6 +700,7 @@ describe('resourceShortLabelKey', () => {
     expect(resourceShortLabelKey('play.stats.savageAttacker')).toBe(
       'play.ledger.short.savageAttacker'
     );
+    expect(resourceShortLabelKey('play.stats.spellSlots')).toBe('play.ledger.short.spellSlots');
   });
 
   it('maps steed (companion) resources to short keys', async () => {
