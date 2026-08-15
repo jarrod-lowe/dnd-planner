@@ -108,6 +108,44 @@ describe('Ledger', () => {
     expect(cells[0].textContent).toContain('3/5 d8');
   });
 
+  it('renders one cell per hit-die size for a multiclass character (3d10 + 2d6)', () => {
+    // Exactly the entries deriveResourceEntries emits for a multiclass
+    // character: two hitDie entries sharing one label, distinguished only by
+    // their fact refs and die sizes.
+    renderComponent(
+      [
+        {
+          type: 'hitDie',
+          label: 'play.stats.hitDie',
+          total: 'hitDie.d10.total',
+          remaining: 'hitDie.d10.remaining',
+          dieSize: 10
+        },
+        {
+          type: 'hitDie',
+          label: 'play.stats.hitDie',
+          total: 'hitDie.d6.total',
+          remaining: 'hitDie.d6.remaining',
+          dieSize: 6
+        }
+      ] satisfies UiEntry[],
+      {
+        'hitDie.d10.total': 3,
+        'hitDie.d10.remaining': 2,
+        'hitDie.d6.total': 2,
+        'hitDie.d6.remaining': 1
+      }
+    );
+    const cells = container.querySelectorAll('.ledger__cell');
+    expect(cells.length).toBe(2);
+    expect(container.textContent).toContain('2/3 d10');
+    expect(container.textContent).toContain('1/2 d6');
+    // Screen-reader labels carry the die size so the two rows differ.
+    const labels = Array.from(cells).map((c) => c.getAttribute('aria-label'));
+    expect(labels).toContain('Hit Die d10: 2 of 3');
+    expect(labels).toContain('Hit Die d6: 1 of 2');
+  });
+
   it('hides entry when not visible (total is 0)', () => {
     renderComponent(
       [

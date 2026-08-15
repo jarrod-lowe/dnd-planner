@@ -46,6 +46,19 @@
     }
     return $t(shortKey);
   }
+
+  // Screen-reader text for a cell. Hit-die rows include the die size so the
+  // multiple rows of a multiclass character (e.g. "Hit Die d10" / "Hit Die d6")
+  // stay distinguishable when they share the same label.
+  function ariaLabelFor(
+    entry: UiEntryUsedMax | UiEntryHitDie,
+    remaining: number,
+    total: number
+  ): string {
+    const label =
+      entry.type === 'hitDie' ? `${labelFor(entry)} d${entry.dieSize}` : labelFor(entry);
+    return `${label}: ${remaining} of ${total}`;
+  }
 </script>
 
 <div class="ledger" role="region" aria-label={$t('play.ledger.title')}>
@@ -63,7 +76,7 @@
   {/if}
 
   <div class="ledger__cells">
-    {#each visibleEntries as entry (entry.label + JSON.stringify(entry.nameParams))}
+    {#each visibleEntries as entry (entry.total)}
       {@const total =
         entry.type === 'hitDie'
           ? Number(facts[entry.total] ?? 0)
@@ -76,7 +89,7 @@
         class="ledger__cell"
         class:ledger__cell--muted={remaining <= 0 && !isOverBudget}
         class:ledger__cell--warn={isOverBudget && remaining < 0}
-        aria-label="{labelFor(entry)}: {remaining} of {total}"
+        aria-label={ariaLabelFor(entry, remaining, total)}
         title={labelFor(entry)}
       >
         <span class="ledger__cell-label">{shortLabelFor(entry)}</span>
