@@ -1,4 +1,5 @@
 import type { Facts } from '$lib/rules-view';
+import { HIT_DIE_SIZES } from '$lib/rules-engine';
 import { type UiEntry, isUiEntry } from './extractTopBar';
 
 /**
@@ -233,9 +234,6 @@ function deriveSteedResources(facts: Facts): UiEntry[] {
   return entries;
 }
 
-/** Hit-die sizes a class might grant; the present one drives the hitDie entry. */
-const HIT_DICE = [6, 8, 10, 12] as const;
-
 const UI_ENTRY_TYPE_ORDER: Record<string, number> = {
   usedMax: 0,
   value: 1,
@@ -266,12 +264,15 @@ export function deriveResourceEntries(facts: Facts): UiEntry[] {
   const entries: UiEntry[] = RESOURCES.filter(
     (e) => e.type === 'usedMax' && present(facts, e.total)
   );
-  for (const die of HIT_DICE) {
+  for (const die of HIT_DIE_SIZES) {
     const total = `hitDie.d${die}.total`;
     if (present(facts, total)) {
       entries.push({
         type: 'hitDie',
+        // The label interpolates {{dieSize}}, so consumers (Ledger aria-labels)
+        // get a distinguishable "Hit Die d10" / "Hit Die d6" for free.
         label: 'play.stats.hitDie',
+        nameParams: { dieSize: die },
         total,
         remaining: `hitDie.d${die}.remaining`,
         dieSize: die

@@ -11,17 +11,23 @@ const translations: Record<string, string> = {
   'play.ledger.overBudget': 'Over budget',
   'play.stats.hp': 'HP',
   'play.stats.actions': 'Actions',
-  'play.stats.hitDie': 'Hit Die',
+  'play.stats.hitDie': 'Hit Die d{{dieSize}}',
   'play.companion.steed': 'Steed',
   'play.ledger.short.hp': 'HP',
   'play.ledger.short.actions': 'ACT',
   'play.ledger.short.hitDie': 'HD'
 };
 
-// The i18n mock returns the key as text for unmatched keys, and appends params when present
+// The i18n mock returns the key as text for unmatched keys, interpolating
+// {{param}} placeholders when params are present (like the real sveltekit-i18n).
 vi.mock('$lib/i18n', () => ({
-  t: readable((key: string) => {
-    return translations[key] ?? key;
+  t: readable((key: string, params?: Record<string, unknown>) => {
+    const template = translations[key] ?? key;
+    if (!params) return template;
+    return Object.entries(params).reduce(
+      (text, [k, v]) => text.replaceAll(`{{${k}}}`, String(v)),
+      template
+    );
   }),
   locale: {
     ...readable('en'),
@@ -110,13 +116,14 @@ describe('Ledger', () => {
 
   it('renders one cell per hit-die size for a multiclass character (3d10 + 2d6)', () => {
     // Exactly the entries deriveResourceEntries emits for a multiclass
-    // character: two hitDie entries sharing one label, distinguished only by
-    // their fact refs and die sizes.
+    // character: two hitDie entries sharing one label key, distinguished by
+    // their fact refs and the {{dieSize}} nameParam the label interpolates.
     renderComponent(
       [
         {
           type: 'hitDie',
           label: 'play.stats.hitDie',
+          nameParams: { dieSize: 10 },
           total: 'hitDie.d10.total',
           remaining: 'hitDie.d10.remaining',
           dieSize: 10
@@ -124,6 +131,7 @@ describe('Ledger', () => {
         {
           type: 'hitDie',
           label: 'play.stats.hitDie',
+          nameParams: { dieSize: 6 },
           total: 'hitDie.d6.total',
           remaining: 'hitDie.d6.remaining',
           dieSize: 6

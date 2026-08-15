@@ -8,7 +8,7 @@
 // (`./registry`, `./metadata`) by tests/harness/build code — not re-exported here.
 // `loadModules` (lazy, dynamic-import based) is the runtime loader.
 export { evaluate, type EvaluateOptions } from './engine';
-export { defineRule } from './builder';
+export { defineRule, HIT_DIE_SIZES } from './builder';
 export { EngineTimeoutError, DEFAULT_BUDGET_MS } from './watchdog';
 export { evaluateSheet } from './sheet';
 export { evaluatePlan, type PlanResult } from './plan';

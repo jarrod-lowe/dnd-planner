@@ -172,6 +172,16 @@ describe('derivePanels — resources', () => {
     );
   });
 
+  it('labels each hit-die entry with its die size via nameParams', () => {
+    // The label key interpolates {{dieSize}}, so consumers (Ledger aria-labels)
+    // get a distinguishable "Hit Die d10" / "Hit Die d6" for free instead of
+    // appending the size by hand.
+    const hd = deriveResourceEntries({ 'hitDie.d10.total': 5, 'hitDie.d10.remaining': 5 }).find(
+      (e) => e.type === 'hitDie'
+    );
+    expect(hd?.nameParams).toEqual({ dieSize: 10 });
+  });
+
   it('emits one hit-die entry per size with a total (multiclass 3d10 + 2d6)', () => {
     const facts = {
       'hitDie.d10.total': 3,

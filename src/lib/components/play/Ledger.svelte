@@ -47,17 +47,16 @@
     return $t(shortKey);
   }
 
-  // Screen-reader text for a cell. Hit-die rows include the die size so the
-  // multiple rows of a multiclass character (e.g. "Hit Die d10" / "Hit Die d6")
-  // stay distinguishable when they share the same label.
+  // Screen-reader text for a cell. The label itself carries any
+  // disambiguating params — hit-die rows interpolate {{dieSize}} (see
+  // derivePanels), so a multiclass character's "Hit Die d10" / "Hit Die d6"
+  // stay distinguishable without per-type surgery here.
   function ariaLabelFor(
     entry: UiEntryUsedMax | UiEntryHitDie,
     remaining: number,
     total: number
   ): string {
-    const label =
-      entry.type === 'hitDie' ? `${labelFor(entry)} d${entry.dieSize}` : labelFor(entry);
-    return `${label}: ${remaining} of ${total}`;
+    return `${labelFor(entry)}: ${remaining} of ${total}`;
   }
 </script>
 
