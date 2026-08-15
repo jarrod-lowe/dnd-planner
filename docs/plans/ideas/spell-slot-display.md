@@ -273,5 +273,10 @@ Review feedback — PR #386 (Codex, automated)
   - Pinned rather than left implicit: a comment on the `open` computation and on `SlotLevel.open` forbidding a clamp, plus regression tests in `slotLevels.test.ts` and `SlotTray.test.ts`. Non-vacuity proved by applying a clamp in three places in turn and watching each assertion fail, then reverting.
   - Confirmed not broken, just negative: `pipRun()`'s `Math.max(0, …)` keeps the pip run sane (3 pips, no negative-length run).
 
+- [x] **P2 "Exclude slot spends already cleared by a planned long rest"** (second review, on `5992927f`) — **valid, fixed.** A plan containing a cast *and* a long rest kept the cast's effect in `advertised` while `evaluateSheet` excluded its `untilLongRest` contribution from the facts, so a level reported `spent: 0, open: 4, thisTurn: 1` — five pips on a four-slot level, and an aria-label that could not be true.
+  - Fixed at the cause, not the symptom: `deriveSlotLevels` now filters advertised effects through the engine's own `endsOnRest` predicate (the exact one `evaluateSheet` uses), keyed off the `rest.long` / `rest.short` facts. Generalises to `untilShortRest` spends for free. `endsOnRest` added to the rules-engine barrel export.
+  - Distinct from the rejected clamp: a negative `open` reports something true, whereas "4 open and 1 spent this turn on a 4-slot level" cannot be. The over-budget behaviour and its guard tests are byte-identical.
+  - Proven by an integration test through the real engine (cast + long rest), plus guards that a long rest restores an `untilShortRest` spend and a short rest does NOT restore an `untilLongRest` one (over-filtering regression).
+
 - [x] Open PR
   - **Spent-pip contrast: user accepted 1.39:1 as shipped**, on the grounds that the three states differ by shape/texture (solid / hatched / outlined), not colour alone — so the low-contrast ring is never the sole carrier of meaning. `--md-sys-color-outline` (3.65:1) stays documented above as the escalation if that judgement changes.

@@ -18,7 +18,7 @@ export { serializeInput } from './input';
 export { plannedEntry, plannedEntries, type PlannedEntry } from './adapter';
 export { loadModules, lazyRuleGroupIds, type LoadResult } from './lazy';
 export { ENGINE_API_VERSION, isEngineCompatible } from './version';
-export { endTurn, dedupeByKey, type EndTurnOptions } from './effects';
+export { endTurn, dedupeByKey, endsOnRest, type EndTurnOptions } from './effects';
 export { statToModifier } from './functions';
 export { SECTIONS } from './types';
 // Type-only re-exports are erased at build time, so they don't pull the registry.

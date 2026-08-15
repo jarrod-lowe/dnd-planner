@@ -176,6 +176,36 @@ describe('SlotTray', () => {
     expect(row.querySelectorAll('.slot-tray__pip--spent').length).toBe(0);
   });
 
+  it('never draws more pips than the level has slots for a cast + long rest plan', async () => {
+    // Composition test: the tray is fed what `deriveSlotLevels` ACTUALLY derives
+    // for a plan holding both a cast and a long rest. The rest restores the slot
+    // in the same evaluation, so the projected `spent` is 0 - and if the
+    // derivation still counted the advertised spend as `thisTurn`, the run would
+    // be 4 open + 1 this turn = FIVE pips on a four-slot level.
+    const { deriveSlotLevels } = await import('$lib/play/slotLevels');
+    const levels = deriveSlotLevels(
+      {
+        'spellcasting.slots.level1.total': 4,
+        'spellcasting.slots.level1.spent': 0,
+        'rest.long': 1
+      },
+      [
+        {
+          id: 'bless',
+          state: { 'spellcasting.slots.level1.spent': 1 },
+          expiry: { kind: 'untilLongRest' }
+        },
+        { id: 'rest', state: { 'rest.long': 1 }, expiry: { kind: 'endOfTurn' } }
+      ]
+    );
+    renderComponent(levels);
+    const row = rows()[0];
+    expect(row.querySelectorAll('.slot-tray__pip').length).toBe(4);
+    expect(row.querySelectorAll('.slot-tray__pip--open').length).toBe(4);
+    expect(row.querySelectorAll('.slot-tray__pip--this-turn').length).toBe(0);
+    expect(row.getAttribute('aria-label')).toBe('Level 1 => 4 open, 0 this turn, 0 spent, 4 total');
+  });
+
   it('names all three states in the legend as real text', () => {
     // The legend words are the a11y guarantee that no state is carried by
     // texture alone, so they must survive even though the hint sentence went.

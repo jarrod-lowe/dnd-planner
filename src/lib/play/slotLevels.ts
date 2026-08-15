@@ -17,6 +17,7 @@
  * Pure: no store access, no side effects.
  */
 import type { Facts } from '$lib/rules-view';
+import { endsOnRest } from '$lib/rules-engine';
 import type { EffectInstance } from '$lib/rules-engine';
 
 export interface SlotLevel {
@@ -62,6 +63,18 @@ function numberFact(facts: Facts, path: string): number {
 export function deriveSlotLevels(facts: Facts, advertised: EffectInstance[]): SlotLevel[] {
   const levels: SlotLevel[] = [];
 
+  // A rest recorded by THIS plan restores the spends scoped to it within the
+  // same evaluation — `evaluateSheet` skips exactly these effects (same
+  // `endsOnRest` predicate) when building the projected facts, so `spent` does
+  // not include them. They stay in `plan.advertised` all the same (endTurn ages
+  // them out at the boundary), so counting them here would report a spend the
+  // facts say never happened: "4 open, 1 this turn, 0 spent of 4" — five pips on
+  // a four-slot level. Filter them out so `thisTurn` only ever counts spends
+  // that still stand once the plan settles.
+  const restLong = numberFact(facts, 'rest.long') > 0;
+  const restShort = numberFact(facts, 'rest.short') > 0;
+  const standing = advertised.filter((e) => !endsOnRest(e.expiry, restLong, restShort));
+
   for (const level of SLOT_LEVELS) {
     const total = numberFact(facts, totalFact(level));
     if (total <= 0) continue;
@@ -69,7 +82,7 @@ export function deriveSlotLevels(facts: Facts, advertised: EffectInstance[]): Sl
     const spent = numberFact(facts, spentFact(level));
     const path = spentFact(level);
     let thisTurn = 0;
-    for (const effect of advertised) {
+    for (const effect of standing) {
       thisTurn += effect.state?.[path] ?? 0;
     }
 

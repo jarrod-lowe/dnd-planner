@@ -2,10 +2,20 @@ import { describe, it, expect } from 'vitest';
 import type { Facts } from '$lib/rules-view';
 import type { EffectInstance } from '$lib/rules-engine';
 
-/** A spent slot lasts until a long rest; the expiry is irrelevant to the derivation. */
+/** A spent slot lasts until a long rest; that expiry is what a rest restores. */
 function effect(id: string, state?: Record<string, number>): EffectInstance {
   const base: EffectInstance = { id, expiry: { kind: 'untilLongRest' } };
   return state === undefined ? base : { ...base, state };
+}
+
+/** A short-rest-scoped spend (e.g. a Warlock pact slot). */
+function shortRestEffect(id: string, state: Record<string, number>): EffectInstance {
+  return { id, state, expiry: { kind: 'untilShortRest' } };
+}
+
+/** The flag effect core-events' rest recorders advertise — `endOfTurn`, never restored. */
+function restFlag(fact: 'rest.long' | 'rest.short'): EffectInstance {
+  return { id: 'rest', state: { [fact]: 1 }, expiry: { kind: 'endOfTurn' } };
 }
 
 describe('deriveSlotLevels', () => {
@@ -167,6 +177,62 @@ describe('deriveSlotLevels', () => {
     // of the overdraft. The ledger flags the illegality separately.
     expect(deriveSlotLevels(facts, advertised)).toEqual([
       { level: 1, total: 2, open: -1, thisTurn: 3, spent: 3 }
+    ]);
+  });
+
+  it('ignores a this-turn spend the same turn’s long rest already restored', async () => {
+    const { deriveSlotLevels } = await import('$lib/play/slotLevels');
+    // Cast then Long Rest in ONE plan. `evaluateSheet` drops the cast's
+    // `untilLongRest` slot effect from the projected facts (the rest restores it
+    // in the same evaluation), so `spent` is 0 — but the effect is still in
+    // `plan.advertised`. Counting it would report `4 open, 1 this turn, 0 spent`
+    // and draw FIVE pips on a four-slot level.
+    const facts: Facts = {
+      'spellcasting.slots.level1.total': 4,
+      'spellcasting.slots.level1.spent': 0,
+      'rest.long': 1
+    };
+    const advertised = [
+      effect('bless', { 'spellcasting.slots.level1.spent': 1 }),
+      restFlag('rest.long')
+    ];
+    expect(deriveSlotLevels(facts, advertised)).toEqual([
+      { level: 1, total: 4, open: 4, thisTurn: 0, spent: 0 }
+    ]);
+  });
+
+  it('ignores a short-rest-scoped spend restored by a long rest this turn', async () => {
+    const { deriveSlotLevels } = await import('$lib/play/slotLevels');
+    // A long rest includes a short rest, so it restores `untilShortRest` spends too.
+    const facts: Facts = {
+      'spellcasting.slots.level1.total': 2,
+      'spellcasting.slots.level1.spent': 0,
+      'rest.long': 1
+    };
+    const advertised = [
+      shortRestEffect('pact-slot', { 'spellcasting.slots.level1.spent': 1 }),
+      restFlag('rest.long')
+    ];
+    expect(deriveSlotLevels(facts, advertised)).toEqual([
+      { level: 1, total: 2, open: 2, thisTurn: 0, spent: 0 }
+    ]);
+  });
+
+  it('keeps a long-rest-scoped spend when only a SHORT rest is recorded', async () => {
+    const { deriveSlotLevels } = await import('$lib/play/slotLevels');
+    // A short rest does not restore an `untilLongRest` slot spend, so the sheet
+    // still counts it and so must the this-turn breakdown.
+    const facts: Facts = {
+      'spellcasting.slots.level1.total': 2,
+      'spellcasting.slots.level1.spent': 1,
+      'rest.short': 1
+    };
+    const advertised = [
+      effect('bless', { 'spellcasting.slots.level1.spent': 1 }),
+      restFlag('rest.short')
+    ];
+    expect(deriveSlotLevels(facts, advertised)).toEqual([
+      { level: 1, total: 2, open: 1, thisTurn: 1, spent: 1 }
     ]);
   });
 

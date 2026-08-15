@@ -96,4 +96,80 @@ describe('deriveSlotLevels over a real engine evaluation', () => {
       { level: 1, total: 2, open: 1, thisTurn: 0, spent: 1 }
     ]);
   });
+
+  it('reports nothing as spent this turn when the plan also records a long rest', () => {
+    const { modules, missing } = resolveModules(GROUPS);
+    expect(missing, 'every rule group resolves to a module').toEqual([]);
+
+    // Prepare Bless on an earlier turn so the plan under test is cast + rest only.
+    let committed: EffectInstance[] = [];
+    const prepare = evaluate({
+      modules,
+      inputFacts: {},
+      planned: [planned('p1', 'prepare-bless')],
+      committed
+    });
+    committed = endTurn(committed, prepare.effects);
+
+    // Cast Bless AND record a long rest in the SAME plan. The rest is terminal,
+    // so it must come last for the cast to execute at all.
+    const castThenRest = evaluate({
+      modules,
+      inputFacts: {},
+      planned: [planned('c1', 'cast-bless'), planned('r1', 'record-long-rest')],
+      committed
+    });
+
+    // The long rest really is recorded in the projected facts…
+    expect(castThenRest.facts['rest.long']).toBe(1);
+    // …and the cast's slot spend really is still advertised, even though the
+    // rest restored it — this is the shape that used to be miscounted.
+    const slotSpends = castThenRest.effects.filter(
+      (e) => e.state?.[SLOT_L1_SPENT] !== undefined && e.expiry
+    );
+    expect(slotSpends).toHaveLength(1);
+    // …but the sheet excludes it, so the slot is NOT spent.
+    expect(castThenRest.facts[SLOT_L1_SPENT] ?? 0).toBe(0);
+
+    // The breakdown must agree with the sheet: no slot is spent this turn,
+    // because the rest in the same plan gave it back.
+    expect(deriveSlotLevels(castThenRest.facts, castThenRest.effects)).toEqual([
+      { level: 1, total: 2, open: 2, thisTurn: 0, spent: 0 }
+    ]);
+  });
+
+  it('restores a PRIOR turn’s slot spend when a long rest is planned', () => {
+    const { modules, missing } = resolveModules(GROUPS);
+    expect(missing, 'every rule group resolves to a module').toEqual([]);
+
+    let committed: EffectInstance[] = [];
+    const prepare = evaluate({
+      modules,
+      inputFacts: {},
+      planned: [planned('p1', 'prepare-bless')],
+      committed
+    });
+    committed = endTurn(committed, prepare.effects);
+
+    // Turn 2: cast Bless and end the turn, so the spend is committed.
+    const cast = evaluate({
+      modules,
+      inputFacts: {},
+      planned: [planned('c1', 'cast-bless')],
+      committed
+    });
+    committed = endTurn(committed, cast.effects);
+
+    // Turn 3: plan a long rest. The committed spend is restored by the sheet,
+    // and nothing was spent this turn either.
+    const rest = evaluate({
+      modules,
+      inputFacts: {},
+      planned: [planned('r1', 'record-long-rest')],
+      committed
+    });
+    expect(deriveSlotLevels(rest.facts, rest.effects)).toEqual([
+      { level: 1, total: 2, open: 2, thisTurn: 0, spent: 0 }
+    ]);
+  });
 });
