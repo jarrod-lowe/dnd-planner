@@ -11,8 +11,9 @@
    * - because colour alone is not accessible. Nothing is left conveyed by
    * texture alone: the legend names all three states ("Open" / "This turn" /
    * "Spent") as real text, and every row carries an aria-label with all four
-   * counts, so the pip run itself is decorative and hidden from the
-   * accessibility tree.
+   * counts - the SAME disjoint breakdown the pips draw, so a screen-reader and
+   * a sighted reader are told about the same number of slots. The pip run
+   * itself is therefore decorative and hidden from the accessibility tree.
    */
   import { t } from '$lib/i18n';
   import type { SlotLevel } from '$lib/play/slotLevels';
@@ -40,33 +41,47 @@
   }
 
   /**
-   * Open pips first, then this turn's, then the ones spent on earlier turns.
-   * `spent` is the projected total and already includes `thisTurn`, so the
-   * earlier count is the difference - counting both would double up.
+   * Slots spent on EARLIER turns. `level.spent` is the projected total and
+   * already includes `thisTurn`, so the earlier count is the difference -
+   * counting both would double up. Floored at 0 because an over-budget plan can
+   * push `thisTurn` past `spent` (see `deriveSlotLevels`); note this floor is
+   * deliberately NOT applied to `open`, whose negative value is the overdraft
+   * signal.
+   *
+   * Derived once per row and fed to both the pip run and the aria-label, so the
+   * two can never disagree about how many slots the level shows.
    */
-  function pipRun(level: SlotLevel): PipState[] {
+  function earlierSpent(level: SlotLevel): number {
+    return Math.max(0, level.spent - level.thisTurn);
+  }
+
+  /** Open pips first, then this turn's, then the ones spent on earlier turns. */
+  function pipRun(level: SlotLevel, earlier: number): PipState[] {
     return [
       ...repeat('open', level.open),
       ...repeat('this-turn', level.thisTurn),
-      ...repeat('spent', level.spent - level.thisTurn)
+      ...repeat('spent', earlier)
     ];
   }
 
   const rows = $derived(
     [...levels]
       .sort((a, b) => a.level - b.level)
-      .map((level) => ({
-        level,
-        pips: pipRun(level),
-        tile: $t('play.slots.levelTile', { level: level.level }),
-        label: $t('play.slots.levelRow', {
-          level: level.level,
-          open: level.open,
-          thisTurn: level.thisTurn,
-          spent: level.spent,
-          total: level.total
-        })
-      }))
+      .map((level) => {
+        const earlier = earlierSpent(level);
+        return {
+          level,
+          pips: pipRun(level, earlier),
+          tile: $t('play.slots.levelTile', { level: level.level }),
+          label: $t('play.slots.levelRow', {
+            level: level.level,
+            open: level.open,
+            thisTurn: level.thisTurn,
+            spent: earlier,
+            total: level.total
+          })
+        };
+      })
   );
 </script>
 

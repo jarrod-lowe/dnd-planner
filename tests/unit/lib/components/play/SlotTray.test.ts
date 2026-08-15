@@ -123,10 +123,28 @@ describe('SlotTray', () => {
   });
 
   it('labels each row with every count from the i18n template', () => {
+    // `spent` in the label is the EARLIER-turn count, matching the outlined
+    // pips: 4 total, 3 spent overall of which 1 is this turn => 2 earlier.
     renderComponent([slotLevel(1, 4, 3, 1)]);
     expect(rows()[0].getAttribute('aria-label')).toBe(
-      'Level 1 => 1 open, 1 this turn, 3 spent, 4 total'
+      'Level 1 => 1 open, 1 this turn, 2 spent, 4 total'
     );
+  });
+
+  it('reports disjoint counts that sum to the total, matching the pip run', () => {
+    // 4 total, 2 spent overall of which 1 is this turn => 2 open + 1 this turn
+    // + 1 earlier. The three parts are disjoint and must sum to 4, exactly as
+    // the pips do - a label saying "2 spent" here would double-count the cast
+    // and describe five slots on a four-slot level.
+    renderComponent([slotLevel(1, 4, 2, 1)]);
+    const row = rows()[0];
+    expect(row.getAttribute('aria-label')).toBe('Level 1 => 2 open, 1 this turn, 1 spent, 4 total');
+
+    const open = row.querySelectorAll('.slot-tray__pip--open').length;
+    const thisTurn = row.querySelectorAll('.slot-tray__pip--this-turn').length;
+    const earlier = row.querySelectorAll('.slot-tray__pip--spent').length;
+    expect([open, thisTurn, earlier]).toEqual([2, 1, 1]);
+    expect(open + thisTurn + earlier).toBe(4);
   });
 
   it('marks the decorative pips as hidden from the accessibility tree', () => {
@@ -154,7 +172,8 @@ describe('SlotTray', () => {
     renderComponent([slotLevel(6, 1, 1, 1)]);
     const row = rows()[0];
     expect(row.querySelectorAll('.slot-tray__pip--this-turn').length).toBe(1);
-    expect(row.getAttribute('aria-label')).toBe('Level 6 => 0 open, 1 this turn, 1 spent, 1 total');
+    // The single spend IS this turn's, so there are no earlier spends to report.
+    expect(row.getAttribute('aria-label')).toBe('Level 6 => 0 open, 1 this turn, 0 spent, 1 total');
   });
 
   it('surfaces a negative open honestly for an over-budget plan (deliberate — do not clamp)', () => {
@@ -166,8 +185,10 @@ describe('SlotTray', () => {
     renderComponent([slotLevel(1, 2, 3, 3)]);
     const row = rows()[0];
     expect(row.querySelector('.slot-tray__count')?.textContent?.trim()).toBe('-1/2');
+    // `open` stays negative; the earlier-spend count floors at 0 the same way
+    // the pip run does, so the label never reports a negative spend.
     expect(row.getAttribute('aria-label')).toBe(
-      'Level 1 => -1 open, 3 this turn, 3 spent, 2 total'
+      'Level 1 => -1 open, 3 this turn, 0 spent, 2 total'
     );
     // The pip run itself stays sane - `pipRun` floors each repeat at 0, so the
     // negative open contributes no pips and the three this-turn spends show.
