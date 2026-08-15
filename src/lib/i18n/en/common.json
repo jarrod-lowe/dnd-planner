@@ -1819,6 +1819,14 @@
       "freeUse": "Free Use",
       "level": "Level {{level}}"
     },
+    "hitDice": {
+      "groupLabel": "Hit Dice",
+      "bonusLabel": "Each die + CON {{bonus}}",
+      "poolLabel": "d{{sides}} hit dice, {{remaining}} of {{total}} unspent",
+      "slotLabel": "d{{sides}} hit die {{slot}} of {{total}}",
+      "slotSpentLabel": "d{{sides}} hit die {{slot}} of {{total}} (spent)",
+      "slotRolledLabel": "d{{sides}} hit die {{slot}} of {{total}}, rolled {{roll}}, heals {{heal}} hp"
+    },
     "activeState": {
       "title": "Active State",
       "standing": "{{count}} standing",
