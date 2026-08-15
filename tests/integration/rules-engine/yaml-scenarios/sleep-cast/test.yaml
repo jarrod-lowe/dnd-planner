@@ -26,7 +26,20 @@ steps:
   # Prepare Sleep first
   - addOffer:
       id: prepare-sleep
-  - endTurn: {}
+  - endTurn:
+      assert:
+        offers:
+          exists:
+            - cast-sleep
+        offerUi:
+          - id: cast-sleep
+            ui:
+              # Targets make a Wisdom save (per this repo's detail text)
+              information:
+                - type: text
+                  label: play.information.saveDcWis
+                  labelValues:
+                    dc: { fact: spellcasting.saveDC }
   # Now set charisma and cast sleep
   - addOffer:
       id: set-charisma

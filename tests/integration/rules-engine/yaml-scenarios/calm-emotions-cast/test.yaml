@@ -43,7 +43,20 @@ steps:
   # Prepare Calm Emotions first
   - addOffer:
       id: prepare-calm-emotions
-  - endTurn: {}
+  - endTurn:
+      assert:
+        offers:
+          exists:
+            - cast-calm-emotions
+        offerUi:
+          - id: cast-calm-emotions
+            ui:
+              # Humanoids in the sphere make a Charisma save
+              information:
+                - type: text
+                  label: play.information.saveDcCha
+                  labelValues:
+                    dc: { fact: spellcasting.saveDC }
   # Set charisma and cast
   - addOffer:
       id: set-charisma

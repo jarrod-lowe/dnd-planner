@@ -65,12 +65,12 @@ const holdPerson: RuleModule = {
         detailKey: 'spell/hold-person',
         showDC: true,
         // Hold Person forces a fixed Wisdom save on the target (not the caster's
-        // spell save ability), so the save type is the literal WIS.
+        // spell save ability), so the label names WIS.
         information: [
           {
             type: 'text',
-            label: 'play.information.saveDc',
-            labelValues: { saveType: { string: 'WIS' }, dc: { fact: 'spellcasting.saveDC' } }
+            label: 'play.information.saveDcWis',
+            labelValues: { dc: { fact: 'spellcasting.saveDC' } }
           }
         ],
         primaryControl: {

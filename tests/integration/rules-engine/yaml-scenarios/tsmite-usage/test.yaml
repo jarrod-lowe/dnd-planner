@@ -22,6 +22,18 @@ steps:
           bonusActions.remaining: 1
           spellcasting.remaining: 1
           spellcasting.slots.level1.remaining: 2
+        offers:
+          exists:
+            - cast-thunderous-smite
+        offerUi:
+          - id: cast-thunderous-smite
+            ui:
+              # The target makes a Strength save (matches the ui.saveType flag)
+              information:
+                - type: text
+                  label: play.information.saveDcStr
+                  labelValues:
+                    dc: { fact: spellcasting.saveDC }
   - addOffer:
       id: unarmed-strike-use-action
       assert:

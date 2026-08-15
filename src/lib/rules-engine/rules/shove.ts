@@ -29,8 +29,8 @@ const shove: RuleModule = {
         information: [
           {
             type: 'text',
-            label: 'play.information.saveDc',
-            labelValues: { saveType: { string: 'STR/DEX' }, dc: { fact: 'shove.dc' } }
+            label: 'play.information.saveDcStrDex',
+            labelValues: { dc: { fact: 'shove.dc' } }
           }
         ],
         secondaryControl: {

@@ -90,11 +90,10 @@ const thunderousSmite: RuleModule = {
         information: [
           {
             type: 'text',
-            label: 'play.information.saveDc',
-            labelValues: {
-              saveType: { fact: 'spellcasting.saveAbility' },
-              dc: { fact: 'spellcasting.saveDC' }
-            }
+            // The target makes a STR save (the ui.saveType flag above); the
+            // DC value is the spell save DC.
+            label: 'play.information.saveDcStr',
+            labelValues: { dc: { fact: 'spellcasting.saveDC' } }
           }
         ],
         intents: { ATTACK: 'spells' },

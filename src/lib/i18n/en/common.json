@@ -1790,7 +1790,10 @@
       }
     },
     "information": {
-      "saveDc": "{{saveType}} Save DC {{dc}}",
+      "saveDcStr": "STR Save DC {{dc}}",
+      "saveDcStrDex": "STR/DEX Save DC {{dc}}",
+      "saveDcWis": "WIS Save DC {{dc}}",
+      "saveDcCha": "CHA Save DC {{dc}}",
       "aidBonus": "+{{hp}} HP"
     },
     "slotEffect": {

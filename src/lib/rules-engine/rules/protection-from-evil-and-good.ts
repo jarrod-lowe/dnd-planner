@@ -65,17 +65,8 @@ const protectionFromEvilAndGood: RuleModule = {
         name: `${P}.name`,
         description: `${P}.description`,
         detailKey: 'spell/protection-from-evil-and-good',
-        showDC: true,
-        information: [
-          {
-            type: 'text',
-            label: 'play.information.saveDc',
-            labelValues: {
-              saveType: { fact: 'spellcasting.saveAbility' },
-              dc: { fact: 'spellcasting.saveDC' }
-            }
-          }
-        ],
+        // No save DC line: the ward forces no saving throw (attackers suffer
+        // disadvantage; the target can't be Charmed/Frightened by such creatures).
         intents: { DEFEND: 'ward' },
         actionCost: ['action', 'conc', 'L1']
       },

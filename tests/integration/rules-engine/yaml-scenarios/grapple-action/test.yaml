@@ -26,6 +26,15 @@ steps:
           exists:
             - set-strength
             - grapple-action
+        offerUi:
+          - id: grapple-action
+            ui:
+              # Target chooses a Strength or Dexterity save
+              information:
+                - type: text
+                  label: play.information.saveDcStrDex
+                  labelValues:
+                    dc: { fact: grapple.dc }
 
   - addOffer:
       id: set-strength

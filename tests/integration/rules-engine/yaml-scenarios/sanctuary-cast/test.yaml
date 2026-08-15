@@ -21,6 +21,15 @@ steps:
         offers:
           exists:
             - cast-sanctuary
+        offerUi:
+          - id: cast-sanctuary
+            ui:
+              # Attackers targeting the warded creature make a Wisdom save
+              information:
+                - type: text
+                  label: play.information.saveDcWis
+                  labelValues:
+                    dc: { fact: spellcasting.saveDC }
   - addOffer:
       id: set-charisma
       selections:
