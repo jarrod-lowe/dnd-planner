@@ -1821,7 +1821,6 @@
     },
     "hitDice": {
       "groupLabel": "Hit Dice",
-      "bonusLabel": "Each die: CON {{bonus}}",
       "poolLabel": "d{{sides}} hit dice, {{remaining}} of {{total}} unspent",
       "slotLabel": "d{{sides}} hit die {{slot}} of {{total}}",
       "slotSpentLabel": "d{{sides}} hit die {{slot}} of {{total}} (spent)",

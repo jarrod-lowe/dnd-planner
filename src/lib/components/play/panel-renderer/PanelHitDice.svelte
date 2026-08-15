@@ -1,5 +1,6 @@
 <script lang="ts">
   import { resolveValueSource } from './resolveValueSource';
+  import DieChip from './DieChip.svelte';
   import type { HitDiceControl, RollResult } from './types';
   import type { Facts, VarDefinition } from '$lib/rules-view';
   import { t } from '$lib/i18n';
@@ -82,8 +83,9 @@
 
   const rolls = $derived(parseRolls(selections.rolls));
 
-  // The CON modifier added to each die's heal. Displayed and folded into the
-  // per-die result preview; the engine's `apply` is the authority.
+  // The CON modifier added to each die's heal. Surfaced on the chip exactly as
+  // a dice-line surfaces a die bonus ("d10+2" before the roll, natural+bonus
+  // after); the engine's `apply` remains the authority on the final heal.
   const bonus = $derived(
     control.bonus === undefined
       ? 0
@@ -94,10 +96,17 @@
     return rolls[`d${pool.sides}`]?.[String(slot)];
   }
 
-  // Each die heals at least 1 HP (the engine's floor); the missing-HP cap is
-  // applied engine-side and shows up in the structural HP preview instead.
-  function healFor(natural: number): number {
-    return Math.max(1, natural + bonus);
+  function formatBonus(value: number): string {
+    return value >= 0 ? `+${value}` : `${value}`;
+  }
+
+  // Chip text follows the dice-line convention: the expression with its bonus
+  // before rolling, the roll total (natural + modifier) after — never the
+  // engine's floored heal, which shows in the structural HP preview instead.
+  function chipText(pool: ResolvedPool, slot: number): string {
+    const rolled = slotRoll(pool, slot);
+    if (rolled !== undefined) return String(rolled + bonus);
+    return control.bonus === undefined ? `d${pool.sides}` : `d${pool.sides}${formatBonus(bonus)}`;
   }
 
   function rollSlot(pool: ResolvedPool, slot: number): void {
@@ -119,6 +128,12 @@
       },
       slot
     );
+  }
+
+  // Each die heals at least 1 HP (the engine's floor); the missing-HP cap is
+  // applied engine-side and shows up in the structural HP preview instead.
+  function healFor(natural: number): number {
+    return Math.max(1, natural + bonus);
   }
 
   function poolAriaLabel(pool: ResolvedPool): string {
@@ -150,19 +165,10 @@
     if (slot >= pool.remaining) return $t('play.hitDice.slotSpentLabel', params);
     return $t('play.hitDice.slotLabel', params);
   }
-
-  function formatBonus(): string {
-    return `${bonus >= 0 ? '+' : ''}${bonus}`;
-  }
 </script>
 
 {#if pools.length > 0}
   <div class="panel-renderer__hit-dice" role="group" aria-label={$t('play.hitDice.groupLabel')}>
-    {#if control.bonus !== undefined}
-      <span class="panel-renderer__hit-dice-bonus">
-        {$t('play.hitDice.bonusLabel', { bonus: formatBonus() })}
-      </span>
-    {/if}
     {#each pools as pool (pool.sides)}
       <div
         class="panel-renderer__hit-dice-pool"
@@ -171,35 +177,16 @@
         data-die-sides={pool.sides}
       >
         {#each pool.slots as slot (slot)}
-          {@const rolled = slotRoll(pool, slot)}
           {@const spent = slot >= pool.remaining}
-          {@const heal = rolled !== undefined ? healFor(rolled) : undefined}
-          {#if editable}
-            <button
-              class="panel-renderer__hit-die"
-              class:panel-renderer__hit-die--rolled={rolled !== undefined}
-              class:panel-renderer__hit-die--spent={spent}
-              type="button"
-              disabled={spent}
-              data-die-sides={pool.sides}
-              data-slot-index={slot}
-              aria-label={slotAriaLabel(pool, slot)}
-              onclick={() => rollSlot(pool, slot)}
-            >
-              {heal ?? `d${pool.sides}`}
-            </button>
-          {:else}
-            <span
-              class="panel-renderer__hit-die"
-              class:panel-renderer__hit-die--rolled={rolled !== undefined}
-              class:panel-renderer__hit-die--spent={spent}
-              data-die-sides={pool.sides}
-              data-slot-index={slot}
-              aria-label={slotAriaLabel(pool, slot)}
-            >
-              {heal ?? `d${pool.sides}`}
-            </span>
-          {/if}
+          <DieChip
+            text={chipText(pool, slot)}
+            {editable}
+            ariaLabel={slotAriaLabel(pool, slot)}
+            disabled={spent}
+            dieSides={pool.sides}
+            slotIndex={slot}
+            onclick={() => rollSlot(pool, slot)}
+          />
         {/each}
       </div>
     {/each}
@@ -213,66 +200,10 @@
     gap: var(--spacing-xs);
   }
 
-  .panel-renderer__hit-dice-bonus {
-    font-family: var(--font-body);
-    font-size: var(--font-size-sm);
-    color: var(--md-sys-color-on-surface-variant);
-  }
-
   .panel-renderer__hit-dice-pool {
     display: flex;
     align-items: center;
     gap: var(--spacing-xs);
     flex-wrap: wrap;
-  }
-
-  /* Shaped like a dice-line die chip (same surface, border, radius) so both
-     roller kinds read as one family. No new colours: every pair is a theme pair
-     already used by the dice-line chips. */
-  .panel-renderer__hit-die {
-    font-family: var(--font-body);
-    font-size: var(--font-size-md);
-    color: var(--md-sys-color-on-surface);
-    background: var(--md-sys-color-surface-container);
-    border: 1px solid var(--md-sys-color-outline-variant);
-    border-radius: var(--radius-sm);
-    padding: var(--spacing-xs) var(--spacing-sm);
-    white-space: nowrap;
-  }
-
-  button.panel-renderer__hit-die {
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  button.panel-renderer__hit-die:hover:not(:disabled) {
-    background: var(--md-sys-color-surface-container-highest);
-  }
-
-  .panel-renderer__hit-die:focus-visible {
-    outline: 2px solid var(--md-sys-color-primary);
-    outline-offset: 2px;
-  }
-
-  /* Filled with the primary pair, matching a dice-line's active modifier chip:
-     a rolled slot must read as committed-to, not as another blank die. */
-  .panel-renderer__hit-die--rolled {
-    color: var(--md-sys-color-on-primary);
-    background: var(--md-sys-color-primary);
-    border-color: var(--md-sys-color-primary);
-  }
-
-  button.panel-renderer__hit-die--rolled:hover:not(:disabled) {
-    background: var(--md-sys-color-primary);
-  }
-
-  button.panel-renderer__hit-die:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
-  span.panel-renderer__hit-die {
-    cursor: default;
   }
 </style>

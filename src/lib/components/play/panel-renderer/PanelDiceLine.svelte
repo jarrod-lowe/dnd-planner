@@ -2,6 +2,7 @@
   import { resolveValueSource } from './resolveValueSource';
   import { rollTypeKey } from './rollType';
   import DamageTypeIcon from './DamageTypeIcon.svelte';
+  import DieChip from './DieChip.svelte';
   import { nextDiceLineId } from './diceLineId';
   import type { CritMode, DiceLineControl, DiceEntry, RollModifier, RollResult } from './types';
   import type { Facts, VarDefinition } from '$lib/rules-view';
@@ -587,27 +588,21 @@
         {/if}
         {#if editable && dieHasOptions}
           <div class="panel-renderer__chip-split">
-            <button
-              class="panel-renderer__die-chip panel-renderer__die-chip--main"
-              aria-label={dieAriaLabel(part.die!, part.dieIndex!)}
-              class:panel-renderer__die-chip--crit={rollResults[part.dieIndex!]?.natural === 20}
-              class:panel-renderer__die-chip--fumble={rollResults[part.dieIndex!]?.natural === 1}
-              class:panel-renderer__die-chip--adv={rollResults[part.dieIndex!]?.mode ===
-                'advantage'}
-              class:panel-renderer__die-chip--disadv={rollResults[part.dieIndex!]?.mode ===
-                'disadvantage'}
-              class:panel-renderer__die-chip--crit-damage={rollResults[part.dieIndex!]?.critical}
-              type="button"
-              data-die-index={part.dieIndex}
-              bind:this={chipRefs[part.dieIndex!]}
+            <DieChip
+              main
+              text={formatDieChip(part.die!, part.dieIndex!)}
+              {editable}
+              ariaLabel={dieAriaLabel(part.die!, part.dieIndex!)}
+              crit={rollResults[part.dieIndex!]?.natural === 20}
+              fumble={rollResults[part.dieIndex!]?.natural === 1}
+              advantage={rollResults[part.dieIndex!]?.mode === 'advantage'}
+              disadvantage={rollResults[part.dieIndex!]?.mode === 'disadvantage'}
+              critDamage={rollResults[part.dieIndex!]?.critical}
+              critical={rollResults[part.dieIndex!]?.critical}
+              dieIndex={part.dieIndex}
+              bind:ref={chipRefs[part.dieIndex!]}
               onclick={() => handleRoll(part.dieIndex!)}
-            >
-              {formatDieChip(part.die!, part.dieIndex!)}{#if rollResults[part.dieIndex!]?.critical}
-                <span class="panel-renderer__crit-badge" aria-hidden="true">
-                  {$t('play.choices.attack.criticalSymbol')}
-                </span>
-              {/if}
-            </button>
+            />
             <button
               id="{uid}-trigger-{part.dieIndex}"
               class="panel-renderer__options-trigger"
@@ -701,29 +696,21 @@
               {/if}
             </div>
           </div>
-        {:else if editable}
-          <button
-            class="panel-renderer__die-chip"
-            aria-label={dieAriaLabel(part.die!, part.dieIndex!)}
-            class:panel-renderer__die-chip--crit={rollResults[part.dieIndex!]?.natural === 20}
-            class:panel-renderer__die-chip--fumble={rollResults[part.dieIndex!]?.natural === 1}
-            class:panel-renderer__die-chip--adv={rollResults[part.dieIndex!]?.mode === 'advantage'}
-            class:panel-renderer__die-chip--disadv={rollResults[part.dieIndex!]?.mode ===
-              'disadvantage'}
-            class:panel-renderer__die-chip--crit-damage={rollResults[part.dieIndex!]?.critical}
-            type="button"
-            data-die-index={part.dieIndex}
-            bind:this={chipRefs[part.dieIndex!]}
-            onclick={() => handleRoll(part.dieIndex!)}
-          >
-            {formatDieChip(part.die!, part.dieIndex!)}{#if rollResults[part.dieIndex!]?.critical}
-              <span class="panel-renderer__crit-badge" aria-hidden="true">
-                {$t('play.choices.attack.criticalSymbol')}
-              </span>
-            {/if}
-          </button>
         {:else}
-          <span class="panel-renderer__die-chip">{formatDieChip(part.die!, part.dieIndex!)}</span>
+          <DieChip
+            text={formatDieChip(part.die!, part.dieIndex!)}
+            {editable}
+            ariaLabel={dieAriaLabel(part.die!, part.dieIndex!)}
+            crit={rollResults[part.dieIndex!]?.natural === 20}
+            fumble={rollResults[part.dieIndex!]?.natural === 1}
+            advantage={rollResults[part.dieIndex!]?.mode === 'advantage'}
+            disadvantage={rollResults[part.dieIndex!]?.mode === 'disadvantage'}
+            critDamage={rollResults[part.dieIndex!]?.critical}
+            critical={rollResults[part.dieIndex!]?.critical}
+            dieIndex={part.dieIndex}
+            bind:ref={chipRefs[part.dieIndex!]}
+            onclick={() => handleRoll(part.dieIndex!)}
+          />
         {/if}
       </div>
       {#if !dieIsD20 && formatDamageType(part.die!)}
@@ -829,60 +816,10 @@
     align-items: center;
   }
 
-  .panel-renderer__die-chip {
-    font-family: var(--font-body);
-    font-size: var(--font-size-md);
-    color: var(--md-sys-color-on-surface);
-    background: var(--md-sys-color-surface-container);
-    border: 1px solid var(--md-sys-color-outline-variant);
-    border-radius: var(--radius-sm);
-    padding: var(--spacing-xs) var(--spacing-sm);
-    cursor: pointer;
-    white-space: nowrap;
-  }
-
-  button.panel-renderer__die-chip:hover {
-    background: var(--md-sys-color-surface-container-highest);
-  }
-
-  span.panel-renderer__die-chip {
-    cursor: default;
-    background: transparent;
-    border: none;
-    padding: 0;
-  }
-
-  .panel-renderer__die-chip--crit {
-    color: var(--md-sys-color-on-primary);
-    background: var(--md-sys-color-primary);
-    border-color: var(--md-sys-color-primary);
-  }
-
-  .panel-renderer__die-chip--fumble {
-    color: var(--md-sys-color-on-error);
-    background: var(--md-sys-color-error);
-    border-color: var(--md-sys-color-error);
-  }
-
-  /* Critical damage: distinct tertiary accent border so it never collides with
-     the d20 nat-20 primary-fill crit style. */
-  .panel-renderer__die-chip--crit-damage {
-    border-color: var(--md-sys-color-tertiary);
-  }
-
-  .panel-renderer__crit-badge {
-    font-size: var(--font-size-md);
-    margin-left: var(--spacing-xs);
-  }
-
   .panel-renderer__chip-split {
     display: inline-flex;
     align-items: stretch;
     isolation: isolate;
-  }
-
-  .panel-renderer__die-chip--main {
-    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
   }
 
   /* The right half of a split chip: a distinct element (not a .die-chip) so
@@ -913,23 +850,23 @@
     height: 0.75rem;
   }
 
-  /* The trigger sits immediately beside the main chip, so match roll-state
-     styling via an adjacent-sibling selector — the chevron fills with the
-     crit/fumble colour instead of looking detached. The main chip styles itself
-     via the .die-chip--* rules above. */
-  .panel-renderer__die-chip--crit + .panel-renderer__options-trigger {
+  /* The trigger sits immediately beside the main chip (a DieChip child
+     component, hence :global), so match roll-state styling via an
+     adjacent-sibling selector — the chevron fills with the crit/fumble colour
+     instead of looking detached. The chip styles itself via its own rules. */
+  :global(.panel-renderer__die-chip--crit) + .panel-renderer__options-trigger {
     color: var(--md-sys-color-on-primary);
     background: var(--md-sys-color-primary);
     border-color: var(--md-sys-color-primary);
   }
 
-  .panel-renderer__die-chip--fumble + .panel-renderer__options-trigger {
+  :global(.panel-renderer__die-chip--fumble) + .panel-renderer__options-trigger {
     color: var(--md-sys-color-on-error);
     background: var(--md-sys-color-error);
     border-color: var(--md-sys-color-error);
   }
 
-  .panel-renderer__die-chip--crit-damage + .panel-renderer__options-trigger {
+  :global(.panel-renderer__die-chip--crit-damage) + .panel-renderer__options-trigger {
     border-color: var(--md-sys-color-tertiary);
   }
 

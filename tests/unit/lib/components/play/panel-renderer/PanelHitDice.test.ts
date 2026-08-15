@@ -53,7 +53,7 @@ describe('PanelRenderer - hit-dice control', () => {
       props: { entry, editable: true, facts: baseFacts() }
     });
     // d8 pool (2 slots) + d10 pool (3 slots); d6/d12 pools resolve total 0.
-    const chips = container.querySelectorAll('.panel-renderer__hit-die');
+    const chips = container.querySelectorAll('.panel-renderer__hit-dice .panel-renderer__die-chip');
     expect(chips.length).toBe(5);
     expect(container.textContent).not.toContain('d6');
     expect(container.textContent).not.toContain('d12');
@@ -66,7 +66,9 @@ describe('PanelRenderer - hit-dice control', () => {
     });
     // DOM order: d8 slots 0-1, then d10 slots 0-2. d10 remaining is 1, so
     // d10 slots 1 and 2 (index >= remaining) are spent.
-    const chips = container.querySelectorAll<HTMLButtonElement>('.panel-renderer__hit-die');
+    const chips = container.querySelectorAll<HTMLButtonElement>(
+      '.panel-renderer__hit-dice .panel-renderer__die-chip'
+    );
     expect(chips[3].disabled).toBe(true);
     expect(chips[4].disabled).toBe(true);
     expect(chips[0].disabled).toBe(false);
@@ -80,7 +82,7 @@ describe('PanelRenderer - hit-dice control', () => {
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts: baseFacts(), onSelectionChange }
     });
-    const chips = container.querySelectorAll('.panel-renderer__hit-die');
+    const chips = container.querySelectorAll('.panel-renderer__hit-dice .panel-renderer__die-chip');
     await fireEvent.click(chips[2]); // d10 slot 0
     expect(onSelectionChange).toHaveBeenCalledWith({
       rolls: { d10: { '0': 6 } }
@@ -100,7 +102,7 @@ describe('PanelRenderer - hit-dice control', () => {
         onSelectionChange
       }
     });
-    const chips = container.querySelectorAll('.panel-renderer__hit-die');
+    const chips = container.querySelectorAll('.panel-renderer__hit-dice .panel-renderer__die-chip');
     await fireEvent.click(chips[2]); // d10 slot 0 again
     const calls = onSelectionChange.mock.calls;
     expect(calls[calls.length - 1][0]).toEqual({
@@ -115,7 +117,9 @@ describe('PanelRenderer - hit-dice control', () => {
     const { container, rerender } = render(PanelRenderer, {
       props: { entry, editable: true, facts, selections }
     });
-    const chip = container.querySelectorAll('.panel-renderer__hit-die')[2];
+    const chip = container.querySelectorAll(
+      '.panel-renderer__hit-dice .panel-renderer__die-chip'
+    )[2];
     expect(chip.textContent?.trim()).toBe('8'); // 6 + CON 2
     // The pending row re-evaluates as other plan items commit: the d10 pool's
     // spent boundary moves (1 remaining -> 0). The rolled slot 0 keeps its roll.
@@ -125,7 +129,9 @@ describe('PanelRenderer - hit-dice control', () => {
       facts: { ...facts, 'hitDie.d10.remaining': 0 },
       selections
     });
-    const chipAfter = container.querySelectorAll('.panel-renderer__hit-die')[2];
+    const chipAfter = container.querySelectorAll(
+      '.panel-renderer__hit-dice .panel-renderer__die-chip'
+    )[2];
     expect(chipAfter.textContent?.trim()).toBe('8');
   });
 
@@ -136,7 +142,7 @@ describe('PanelRenderer - hit-dice control', () => {
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts: baseFacts(), onRoll }
     });
-    const chips = container.querySelectorAll('.panel-renderer__hit-die');
+    const chips = container.querySelectorAll('.panel-renderer__hit-dice .panel-renderer__die-chip');
     await fireEvent.click(chips[2]);
     expect(onRoll).toHaveBeenCalledTimes(1);
     const [result, slotIndex] = onRoll.mock.calls[0];
@@ -157,7 +163,7 @@ describe('PanelRenderer - hit-dice control', () => {
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts, onRoll }
     });
-    const chips = container.querySelectorAll('.panel-renderer__hit-die');
+    const chips = container.querySelectorAll('.panel-renderer__hit-dice .panel-renderer__die-chip');
     await fireEvent.click(chips[2]);
     const [result] = onRoll.mock.calls[0];
     expect(result.natural).toBe(1);
@@ -172,7 +178,7 @@ describe('PanelRenderer - hit-dice control', () => {
     const { container } = render(PanelRenderer, {
       props: { entry, editable: false, facts: baseFacts(), onSelectionChange, onRoll }
     });
-    const chips = container.querySelectorAll('.panel-renderer__hit-die');
+    const chips = container.querySelectorAll('.panel-renderer__hit-dice .panel-renderer__die-chip');
     expect(chips.length).toBe(5);
     for (const chip of chips) {
       expect(chip.tagName).toBe('SPAN');
@@ -188,7 +194,7 @@ describe('PanelRenderer - hit-dice control', () => {
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts: baseFacts() }
     });
-    const chips = container.querySelectorAll('.panel-renderer__hit-die');
+    const chips = container.querySelectorAll('.panel-renderer__hit-dice .panel-renderer__die-chip');
     expect(chips[2].getAttribute('aria-label')).toBe('d10 hit die 1 of 3');
     expect(chips[3].getAttribute('aria-label')).toBe('d10 hit die 2 of 3 (spent)');
     const pool = container.querySelector('.panel-renderer__hit-dice-pool[data-die-sides="10"]');
@@ -202,7 +208,9 @@ describe('PanelRenderer - hit-dice control', () => {
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts: baseFacts(), selections }
     });
-    const chip = container.querySelectorAll('.panel-renderer__hit-die')[2];
+    const chip = container.querySelectorAll(
+      '.panel-renderer__hit-dice .panel-renderer__die-chip'
+    )[2];
     expect(chip.getAttribute('aria-label')).toBe('d10 hit die 1 of 3, rolled 6, heals 8 hp');
   });
 
@@ -215,7 +223,9 @@ describe('PanelRenderer - hit-dice control', () => {
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts, selections }
     });
-    const chips = container.querySelectorAll<HTMLButtonElement>('.panel-renderer__hit-die');
+    const chips = container.querySelectorAll<HTMLButtonElement>(
+      '.panel-renderer__hit-dice .panel-renderer__die-chip'
+    );
     expect(chips[2].disabled).toBe(true);
     expect(chips[2].getAttribute('aria-label')).toBe('d10 hit die 1 of 3, rolled 6, heals 8 hp');
     // An unrolled spent slot still announces only its spent state.
@@ -236,12 +246,32 @@ describe('PanelRenderer - hit-dice control', () => {
     expect(container.textContent).not.toContain('Each die');
   });
 
-  it('shows the CON bonus applied to every die', () => {
+  it('shows the CON modifier on the chip like any other dice line', () => {
     const entry = createHitDiceEntry();
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts: baseFacts() }
     });
-    const bonus = container.querySelector('.panel-renderer__hit-dice-bonus');
-    expect(bonus?.textContent?.trim()).toBe('Each die: CON +2');
+    // No bespoke bonus line — the modifier rides the chip expression itself,
+    // exactly as a dice-line's "d20+3" chip does.
+    expect(container.querySelector('.panel-renderer__hit-dice-bonus')).toBeNull();
+    const chips = container.querySelectorAll('.panel-renderer__hit-dice .panel-renderer__die-chip');
+    expect(chips[0].textContent?.trim()).toBe('d8+2');
+    expect(chips[2].textContent?.trim()).toBe('d10+2');
+  });
+
+  it('shows the natural roll plus the modifier on a rolled chip, without the heal floor', () => {
+    const entry = createHitDiceEntry();
+    // CON -2 and a natural 1: the 1-HP floor is engine-side (it shows in the
+    // structural HP preview and the toast), so the chip itself reads 1 - 2 = -1,
+    // the same natural-plus-modifier total any other dice line would show.
+    const facts = { ...baseFacts(), 'con.modifier': -2 };
+    const selections = { rolls: { d10: { '0': 1 } } };
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts, selections }
+    });
+    const chip = container.querySelectorAll(
+      '.panel-renderer__hit-dice .panel-renderer__die-chip'
+    )[2];
+    expect(chip.textContent?.trim()).toBe('-1');
   });
 });

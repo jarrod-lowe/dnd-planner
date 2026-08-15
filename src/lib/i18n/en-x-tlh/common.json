@@ -1821,7 +1821,6 @@
     },
     "hitDice": {
       "groupLabel": "mI' Hegh",
-      "bonusLabel": "Hoch mI': CON {{bonus}}",
       "poolLabel": "d{{sides}} mI' Hegh, {{remaining}} of {{total}} lo'Ha'",
       "slotLabel": "d{{sides}} mI' Hegh {{slot}} of {{total}}",
       "slotSpentLabel": "d{{sides}} mI' Hegh {{slot}} of {{total}} (lo'ta')",
