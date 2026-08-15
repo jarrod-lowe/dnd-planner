@@ -1633,6 +1633,7 @@
       "spellSaveDC": "mugh DIvI' DIch",
       "concentration": "buQ",
       "usedMax": "{{used}} / {{max}}",
+      "valueLabel": "{{label}}: {{remaining}} vo' {{total}}",
       "hitDie": "QIp DIvI' d{{dieSize}}",
       "hitDieValue": "{{used}}/{{max}} DIvI' d{{dieSize}}",
       "initiative": "chuwI'",

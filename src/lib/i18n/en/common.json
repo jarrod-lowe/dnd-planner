@@ -1613,6 +1613,7 @@
       "spellSaveDC": "Spell Save DC",
       "concentration": "Concentration",
       "usedMax": "{{used}} / {{max}}",
+      "valueLabel": "{{label}}: {{remaining}} of {{total}}",
       "hitDie": "Hit Die d{{dieSize}}",
       "hitDieValue": "{{used}}/{{max}} d{{dieSize}}",
       "initiative": "Initiative",

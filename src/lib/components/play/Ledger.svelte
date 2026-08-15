@@ -50,13 +50,19 @@
   // Screen-reader text for a cell. The label itself carries any
   // disambiguating params — hit-die rows interpolate {{dieSize}} (see
   // derivePanels), so a multiclass character's "Hit Die d10" / "Hit Die d6"
-  // stay distinguishable without per-type surgery here.
+  // stay distinguishable without per-type surgery here. The whole
+  // "label: N of M" composition goes through i18n so the scaffolding
+  // translates too.
   function ariaLabelFor(
     entry: UiEntryUsedMax | UiEntryHitDie,
     remaining: number,
     total: number
   ): string {
-    return `${labelFor(entry)}: ${remaining} of ${total}`;
+    return $t('play.stats.valueLabel', {
+      label: labelFor(entry),
+      remaining,
+      total
+    });
   }
 </script>
 

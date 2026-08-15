@@ -12,6 +12,9 @@ const translations: Record<string, string> = {
   'play.stats.hp': 'HP',
   'play.stats.actions': 'Actions',
   'play.stats.hitDie': 'Hit Die d{{dieSize}}',
+  // Deliberately distinctive so tests pin that the composition comes from
+  // this key, not a hardcoded English "label: N of M" string.
+  'play.stats.valueLabel': '{{label}} => {{remaining}} / {{total}}',
   'play.companion.steed': 'Steed',
   'play.ledger.short.hp': 'HP',
   'play.ledger.short.actions': 'ACT',
@@ -150,8 +153,8 @@ describe('Ledger', () => {
     expect(container.textContent).toContain('1/2 d6');
     // Screen-reader labels carry the die size so the two rows differ.
     const labels = Array.from(cells).map((c) => c.getAttribute('aria-label'));
-    expect(labels).toContain('Hit Die d10: 2 of 3');
-    expect(labels).toContain('Hit Die d6: 1 of 2');
+    expect(labels).toContain('Hit Die d10 => 2 / 3');
+    expect(labels).toContain('Hit Die d6 => 1 / 2');
   });
 
   it('hides entry when not visible (total is 0)', () => {
@@ -289,8 +292,27 @@ describe('Ledger', () => {
     expect(label?.textContent).toBe('ACT');
     // ...while the full name (label + counts) is preserved for screen readers
     // and hover, which now agree.
-    expect(cell?.getAttribute('title')).toBe('Actions: 0 of 1');
-    expect(cell?.getAttribute('aria-label')).toBe('Actions: 0 of 1');
+    expect(cell?.getAttribute('title')).toBe('Actions => 0 / 1');
+    expect(cell?.getAttribute('aria-label')).toBe('Actions => 0 / 1');
+  });
+
+  it('composes the aria-label and title from the play.stats.valueLabel template', () => {
+    // The full "label + counts" string must come from the i18n system so
+    // non-English locales translate the ": N of M" scaffolding too.
+    renderComponent(
+      [
+        {
+          type: 'usedMax',
+          label: 'play.stats.actions',
+          total: 'actions.max',
+          remaining: 'actions.remaining'
+        } satisfies UiEntry
+      ],
+      { 'actions.max': 1, 'actions.remaining': 0 }
+    );
+    const cell = container.querySelector('.ledger__cell');
+    expect(cell?.getAttribute('aria-label')).toBe('Actions => 0 / 1');
+    expect(cell?.getAttribute('title')).toBe('Actions => 0 / 1');
   });
 
   it('uses nameParams for parameterized labels', () => {
