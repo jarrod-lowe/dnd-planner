@@ -52,10 +52,11 @@ afterEach(() => {
 
 describe('PanelRenderer - hit-dice control', () => {
   // The real play flow resolves panel facts POST-plan, so the open rest row's
-  // own pending rolls already shrank `remaining`. Availability must be
-  // COMMITTED-based: threshold = remaining + this row's own rolled slots, so
-  // the row's own rolls disable nothing — only an earlier rest's committed
-  // spends disable slots.
+  // own ACCEPTED rolls already shrank `remaining`, and the row's
+  // `advertisedEffects` carry one hit-die spend per accepted roll. Availability
+  // must be COMMITTED-based: threshold = remaining + this row's advertised
+  // spends, so the row's own rolls disable nothing — only an earlier rest's
+  // committed spends (and rolls the engine rejected) disable slots.
   const d10OnlyFacts = (total: number, remaining: number): Record<string, number> => ({
     ...baseFacts(),
     'hitDie.d8.total': 0,
@@ -94,12 +95,18 @@ describe('PanelRenderer - hit-dice control', () => {
   it('keeps every slot available while the row rolls its own dice', () => {
     const entry = createHitDiceEntry();
     // Same facts (remaining 5, one committed spend) but the row itself has
-    // rolled slot 0: that roll shrank the POST-plan remaining, not the
-    // committed pool. Threshold = 5 + 1 = 6 → nothing disabled, and the pool
-    // announces the committed-based count, not the raw remaining.
+    // rolled slot 0 (natural 6 + CON 2 = 8, advertised): that accepted roll
+    // shrank the POST-plan remaining, not the committed pool. Threshold =
+    // 5 + 1 advertised spend = 6 → nothing disabled, and the pool announces
+    // the committed-based count, not the raw remaining.
     const selections = { rolls: { d10: { '0': 6 } } };
     const { container } = render(PanelRenderer, {
-      props: { entry, editable: true, facts: d10OnlyFacts(6, 5), selections }
+      props: {
+        entry: { ...entry, advertisedEffects: [healEffect(8, 10)] },
+        editable: true,
+        facts: d10OnlyFacts(6, 5),
+        selections
+      }
     });
     const chips = container.querySelectorAll<HTMLButtonElement>(
       '.panel-renderer__hit-dice .panel-renderer__die-chip'
@@ -113,11 +120,17 @@ describe('PanelRenderer - hit-dice control', () => {
     const entry = createHitDiceEntry();
     const onSelectionChange = vi.fn();
     vi.spyOn(Math, 'random').mockReturnValue(0.5); // d10 -> 6
-    // Roll slot 0 (payload already in selections), then tap slot 5: both are
-    // the row's own spends, so slot 5 must stay rollable.
+    // Roll slot 0 (payload already in selections, spend advertised), then tap
+    // slot 5: both are the row's own spends, so slot 5 must stay rollable.
     const selections = { rolls: { d10: { '0': 4 } } };
     const { container } = render(PanelRenderer, {
-      props: { entry, editable: true, facts: d10OnlyFacts(6, 5), selections, onSelectionChange }
+      props: {
+        entry: { ...entry, advertisedEffects: [healEffect(6, 10)] },
+        editable: true,
+        facts: d10OnlyFacts(6, 5),
+        selections,
+        onSelectionChange
+      }
     });
     const chips = container.querySelectorAll<HTMLButtonElement>(
       '.panel-renderer__hit-dice .panel-renderer__die-chip'
@@ -130,16 +143,82 @@ describe('PanelRenderer - hit-dice control', () => {
 
   it('counts distinct rolled slots, not re-rolls, toward availability', () => {
     const entry = createHitDiceEntry();
-    // Re-rolling slot 0 replaces its entry (one slot key), so the threshold is
-    // 5 + 1 = 6, not 5 + 2.
+    // Re-rolling slot 0 replaces its entry and its advertised spend (one
+    // hitDie.d10.spent), so the threshold is 5 + 1 = 6, not 5 + 2.
     const selections = { rolls: { d10: { '0': 6 } } };
     const { container } = render(PanelRenderer, {
-      props: { entry, editable: true, facts: d10OnlyFacts(6, 5), selections }
+      props: {
+        entry: { ...entry, advertisedEffects: [healEffect(8, 10)] },
+        editable: true,
+        facts: d10OnlyFacts(6, 5),
+        selections
+      }
     });
     const chips = container.querySelectorAll<HTMLButtonElement>(
       '.panel-renderer__hit-dice .panel-renderer__die-chip'
     );
     expect(chips[5].disabled).toBe(false);
+  });
+
+  it('offsets availability by advertised spends, not retained rejected rolls', async () => {
+    // The reported scenario: 6 d10s, 1 committed spend, retained rolls in
+    // slots 0 and 5. Only slot 0's die was ACCEPTED (the row advertises exactly
+    // one hitDie.d10.spent); slot 5's roll was REJECTED (die_already_spent),
+    // so it still rides selections but the engine advertises no spend for it
+    // and the post-plan remaining (4 = 6 − 1 committed − 1 accepted) does not
+    // reflect it. Counting selection KEYS would offset by 2 (threshold 6) and
+    // leave slot 5 tappable as a re-roll — stuck on the diagnostic. Offsetting
+    // by the ADVERTISED spends yields threshold 4 + 1 = 5: slot 5 is blocked
+    // (and, carrying a roll, clearable), slot 4 is free.
+    const entry = createHitDiceEntry();
+    const onSelectionChange = vi.fn();
+    const selections = { rolls: { d10: { '0': 6, '5': 4 } } };
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: { ...entry, advertisedEffects: [healEffect(8, 10)] },
+        editable: true,
+        facts: { ...d10OnlyFacts(6, 4), 'hp.modifier.current': -12 },
+        selections,
+        onSelectionChange
+      }
+    });
+    const chips = container.querySelectorAll<HTMLButtonElement>(
+      '.panel-renderer__hit-dice .panel-renderer__die-chip'
+    );
+    const pool = container.querySelector('.panel-renderer__hit-dice-pool[data-die-sides="10"]');
+    expect(pool?.getAttribute('aria-label')).toBe('d10 hit dice, 5 of 6 unspent');
+    expect(chips[4].disabled).toBe(false);
+    expect(chips[4].getAttribute('aria-label')).toBe('d10 hit die 5 of 6');
+    expect(chips[5].getAttribute('aria-label')).toBe(
+      'd10 hit die 6 of 6 (spent), rolled 4, heals 6 hp, tap to clear'
+    );
+    // Tapping the blocked-but-rolled slot CLEARS the stranded roll instead of
+    // re-rolling it.
+    await fireEvent.click(chips[5]);
+    expect(onSelectionChange).toHaveBeenCalledWith({ rolls: { d10: { '0': 6 } } });
+  });
+
+  it('keeps every slot available with two accepted rolls the row advertises', () => {
+    // Sanity pin of the earlier fix via the new computation: no committed
+    // spends, two accepted rolls, both advertised — the post-plan remaining
+    // (4 = 6 − 2) plus the 2 advertised spends recovers the full 6, so nothing
+    // the row's own rolls disabled stays disabled.
+    const entry = createHitDiceEntry();
+    const selections = { rolls: { d10: { '0': 6, '1': 4 } } };
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: { ...entry, advertisedEffects: [healEffect(8, 10), healEffect(6, 10)] },
+        editable: true,
+        facts: { ...d10OnlyFacts(6, 4), 'hp.modifier.current': -6 },
+        selections
+      }
+    });
+    const chips = container.querySelectorAll<HTMLButtonElement>(
+      '.panel-renderer__hit-dice .panel-renderer__die-chip'
+    );
+    for (const chip of chips) expect(chip.disabled).toBe(false);
+    const pool = container.querySelector('.panel-renderer__hit-dice-pool[data-die-sides="10"]');
+    expect(pool?.getAttribute('aria-label')).toBe('d10 hit dice, 6 of 6 unspent');
   });
 
   it('renders one roller per slot and skips pools with no dice', () => {
@@ -318,12 +397,13 @@ describe('PanelRenderer - hit-dice control', () => {
 
   it('announces the roll of a slot blocked by a committed spend, with a clear affordance', () => {
     const entry = createHitDiceEntry();
-    // d10 pool 3, post-plan remaining 0, two rolled slots: the committed-based
-    // threshold is 0 + 2 = 2, so slot 2 is blocked by an EARLIER rest's spend —
-    // but it still carries a roll from before that spend committed. The slot
+    // d10 pool 3, 1 committed spend, two rolled slots — only slot 0's roll was
+    // accepted (1 advertised spend), so post-plan remaining is 3 − 1 − 1 = 1
+    // and the committed-based threshold is 1 + 1 = 2: slot 2 is blocked by the
+    // EARLIER rest's spend but still carries its (rejected) roll. The slot
     // stays tappable SOLELY to clear the stranded roll (committing it would
     // error die_already_spent).
-    const facts = { ...baseFacts(), 'hitDie.d10.remaining': 0, 'hp.modifier.current': -12 };
+    const facts = { ...baseFacts(), 'hitDie.d10.remaining': 1, 'hp.modifier.current': -12 };
     const selections = { rolls: { d10: { '0': 6, '2': 4 } } };
     const { container } = render(PanelRenderer, {
       props: {
@@ -342,10 +422,12 @@ describe('PanelRenderer - hit-dice control', () => {
       'd10 hit die 3 of 3 (spent), rolled 4, heals 6 hp, tap to clear'
     );
     // The row's OWN rolled slot 0 is not blocked by the committed spend: the
-    // threshold counts it back in, so it announces a plain roll.
+    // threshold counts its advertised spend back in, so it announces a plain
+    // roll.
     expect(chips[2].getAttribute('aria-label')).toBe('d10 hit die 1 of 3, rolled 6, heals 8 hp');
-    // Only ONE committed spend exists (total 3 − remaining 0 − 2 own rolls), so
-    // unrolled slot 1 stays available — the block lands on the highest slot.
+    // Only ONE committed spend exists (total 3 − remaining 1 − 1 accepted
+    // roll), so unrolled slot 1 stays available — the block lands on the
+    // highest slot.
     expect(chips[3].getAttribute('aria-label')).toBe('d10 hit die 2 of 3');
   });
 
@@ -353,12 +435,19 @@ describe('PanelRenderer - hit-dice control', () => {
     const entry = createHitDiceEntry();
     const onSelectionChange = vi.fn();
     // Same construction as above: slot 2 is blocked by an earlier rest's
-    // committed spend but carries a roll — tapping it must UN-roll it (the only
-    // fix for the die_already_spent commit error short of deleting the row).
-    const facts = { ...baseFacts(), 'hitDie.d10.remaining': 0 };
+    // committed spend but carries a (rejected) roll — tapping it must UN-roll
+    // it (the only fix for the die_already_spent commit error short of
+    // deleting the row).
+    const facts = { ...baseFacts(), 'hitDie.d10.remaining': 1, 'hp.modifier.current': -12 };
     const selections = { rolls: { d10: { '0': 6, '2': 4 } } };
     const { container } = render(PanelRenderer, {
-      props: { entry, editable: true, facts, selections, onSelectionChange }
+      props: {
+        entry: { ...entry, advertisedEffects: [healEffect(8, 10)] },
+        editable: true,
+        facts,
+        selections,
+        onSelectionChange
+      }
     });
     const chips = container.querySelectorAll<HTMLButtonElement>(
       '.panel-renderer__hit-dice .panel-renderer__die-chip'
@@ -370,14 +459,21 @@ describe('PanelRenderer - hit-dice control', () => {
   it('keeps the last roll of a size when another slot of it is cleared', async () => {
     const entry = createHitDiceEntry();
     const onSelectionChange = vi.fn();
-    // d8 pool 3, post-plan remaining 0, slots 0 and 2 rolled: the threshold is
-    // 0 + 2 = 2, so slot 2 is blocked (committed spend) and clearable while
-    // slot 0 stays available — clearing slot 2 drops only that slot, not the
+    // d8 pool 3, 1 committed spend, slots 0 and 2 rolled with only slot 0
+    // accepted (advertised): post-plan remaining is 1, so the threshold is
+    // 1 + 1 = 2 — slot 2 is blocked (committed spend) and clearable while
+    // slot 0 stays available. Clearing slot 2 drops only that slot, not the
     // whole d8 map.
-    const facts = { ...baseFacts(), 'hitDie.d8.total': 3, 'hitDie.d8.remaining': 0 };
+    const facts = { ...baseFacts(), 'hitDie.d8.total': 3, 'hitDie.d8.remaining': 1 };
     const selections = { rolls: { d8: { '0': 3, '2': 4 } } };
     const { container } = render(PanelRenderer, {
-      props: { entry, editable: true, facts, selections, onSelectionChange }
+      props: {
+        entry: { ...entry, advertisedEffects: [healEffect(5, 8)] },
+        editable: true,
+        facts,
+        selections,
+        onSelectionChange
+      }
     });
     const chips = container.querySelectorAll<HTMLButtonElement>(
       '.panel-renderer__hit-dice .panel-renderer__die-chip'

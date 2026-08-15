@@ -39,10 +39,13 @@
      * COMMITTED-based availability — slots at index >= threshold are spent by
      * an EARLIER rest and render disabled. The raw `remaining` fact is resolved
      * against POST-plan facts, so it already includes this row's own pending
-     * spends; offsetting it back by the row's own rolled slots (each rolled
-     * slot spends exactly one die) yields availability that the row's own rolls
-     * cannot shrink. Rest rows are plan-terminal (at most one per plan), so the
-     * offset is exact — the row's spends can never double-count.
+     * spends; offsetting it back by the row's own ADVERTISED hit-die spends
+     * yields availability that the row's own accepted rolls cannot shrink. A
+     * retained roll the engine REJECTED (die_already_spent) advertises no
+     * spend, so it correctly does NOT count back in — the slot stays blocked
+     * and the roll is only clearable. Rest rows are plan-terminal (at most one
+     * per plan), so the offset is exact — the row's spends can never
+     * double-count.
      */
     threshold: number;
     slots: number[];
@@ -87,19 +90,29 @@
 
   const rolls = $derived(parseRolls(selections.rolls));
 
+  // Sum of the hit-die spends this row's advertised effects carry for a size —
+  // exactly the rolls the engine ACCEPTED. A retained roll the engine rejected
+  // (die_already_spent) advertises nothing, so it must not offset availability
+  // back open the way counting the selection's slot keys would.
+  function advertisedSpends(sides: number): number {
+    let sum = 0;
+    for (const effect of advertisedEffects) {
+      const spent = effect.state?.[`hitDie.d${sides}.spent`];
+      if (typeof spent === 'number' && Number.isFinite(spent)) sum += spent;
+    }
+    return sum;
+  }
+
   const pools = $derived.by<ResolvedPool[]>(() =>
     control.pools
       .map((pool) => {
         const total = resolvePoolNumber(pool.total, 0);
         // Clamp defensively: `remaining` may exceed `total` if a reset races a spend.
         const remaining = Math.min(resolvePoolNumber(pool.remaining, 0), total);
-        // Distinct rolled SLOT KEYS for this size (a re-roll replaces its slot,
-        // so it counts once) — the row's own pending spends to offset back out.
-        const ownRolls = Object.keys(rolls[`d${pool.sides}`] ?? {}).length;
         return {
           sides: pool.sides,
           total,
-          threshold: Math.min(remaining + ownRolls, total),
+          threshold: Math.min(remaining + advertisedSpends(pool.sides), total),
           slots: [] as number[]
         };
       })

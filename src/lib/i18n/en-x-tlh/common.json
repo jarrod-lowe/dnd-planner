@@ -1822,11 +1822,11 @@
     },
     "hitDice": {
       "groupLabel": "mI' Hegh",
-      "poolLabel": "d{{sides}} mI' Hegh, {{remaining}} of {{total}} lo'Ha'",
-      "slotLabel": "d{{sides}} mI' Hegh {{slot}} of {{total}}",
-      "slotSpentLabel": "d{{sides}} mI' Hegh {{slot}} of {{total}} (lo'ta')",
-      "slotRolledLabel": "d{{sides}} mI' Hegh {{slot}} of {{total}}, wIqaw {{roll}}, HIq {{heal}} hp",
-      "slotSpentRolledLabel": "d{{sides}} mI' Hegh {{slot}} of {{total}} (lo'ta'), wIqaw {{roll}}, HIq {{heal}} hp, wIqaw teqmeH yI'uy"
+      "poolLabel": "d{{sides}} mI' Hegh, {{remaining}} vo' {{total}} lo'Ha'",
+      "slotLabel": "d{{sides}} mI' Hegh {{slot}} vo' {{total}}",
+      "slotSpentLabel": "d{{sides}} mI' Hegh {{slot}} vo' {{total}} (lo'ta')",
+      "slotRolledLabel": "d{{sides}} mI' Hegh {{slot}} vo' {{total}}, wIqaw {{roll}}, HIq {{heal}} hp",
+      "slotSpentRolledLabel": "d{{sides}} mI' Hegh {{slot}} vo' {{total}} (lo'ta'), wIqaw {{roll}}, HIq {{heal}} hp, wIqaw teqmeH yI'uy"
     },
     "activeState": {
       "title": "Active State",
