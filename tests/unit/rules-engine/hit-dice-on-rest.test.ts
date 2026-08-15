@@ -118,6 +118,38 @@ describe('spending hit dice on a short rest', () => {
     ]);
   });
 
+  it('rejects an out-of-range slot index, reported before an invalid roll', () => {
+    // Slot 5 is past the 2-die pool AND the roll is 0: the slot check fires
+    // first, so the diagnostic is invalid_slot alone (one diagnostic per slot).
+    const { facts, planDiagnostics, advertised } = evaluatePlan(
+      modules,
+      { 'hitDie.d10.total': 2 },
+      [rest('r1', { d10: { '5': 0 } })]
+    );
+    expect(facts['hitDie.d10.spent'] ?? 0).toBe(0);
+    expect(healChips(advertised)).toHaveLength(0);
+    expect(planDiagnostics.get('r1')?.map((d) => d.code)).toEqual([
+      'rule.dnd-5e-2024.core-events.record-short-rest-offer.invalid_slot'
+    ]);
+  });
+
+  it('rejects a zero or non-integer roll on a valid slot', () => {
+    for (const roll of [0, 1.5]) {
+      const { facts, planDiagnostics, advertised } = evaluatePlan(
+        modules,
+        { 'hitDie.d10.total': 1 },
+        [rest('r1', { d10: { '0': roll } })],
+        [damageTaken(8)]
+      );
+      expect(facts['hp.modifier.current']).toBe(-8);
+      expect(facts['hitDie.d10.spent'] ?? 0).toBe(0);
+      expect(healChips(advertised)).toHaveLength(0);
+      expect(planDiagnostics.get('r1')?.map((d) => d.code)).toEqual([
+        'rule.dnd-5e-2024.core-events.record-short-rest-offer.invalid_roll'
+      ]);
+    }
+  });
+
   it('re-rolling a slot replaces the earlier result (no double heal or spend)', () => {
     const first = evaluatePlan(
       modules,

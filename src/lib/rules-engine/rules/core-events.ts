@@ -1,5 +1,6 @@
 import {
   defineRule,
+  HIT_DIE_SIZES,
   type ActionResult,
   type Diagnostic,
   type EffectInstance,
@@ -9,7 +10,16 @@ import {
 
 const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
 const CE = 'rule.dnd-5e-2024.core-events';
-const HIT_DIE_SIZES = [6, 8, 10, 12] as const;
+
+/**
+ * The rest-flag effect both rest recorders advertise: sets the flag for this
+ * evaluation (consumed by the rest groups), aging out at end of turn.
+ */
+const restFlag = (fact: string): EffectInstance => ({
+  id: 'rest',
+  state: { [fact]: 1 },
+  expiry: { kind: 'endOfTurn' }
+});
 
 /** A record-save offer for one ability: a d20 + save bonus, with a pass/fail. */
 function saveOffer(a: string): Offer {
@@ -70,9 +80,7 @@ function restOffer(id: string, fact: string): Offer {
       intents: { REST: 'rest' },
       actionCost: []
     },
-    apply: (): ActionResult => ({
-      advertise: [{ id: 'rest', state: { [fact]: 1 }, expiry: { kind: 'endOfTurn' } }]
-    })
+    apply: (): ActionResult => ({ advertise: [restFlag(fact)] })
   };
 }
 
@@ -82,6 +90,10 @@ function restOffer(id: string, fact: string): Offer {
  * is authored once, so dynamic sizes ride ValueSources, not authored entries).
  * The renderer draws `total` slot rollers per pool; slots at index >=
  * `remaining` are spent and render disabled.
+ *
+ * Deliberately NOT typed against the renderer's `HitDiceControl` — rule
+ * modules may import only `../builder` (confinement), so the payload is plain
+ * data that the panel-renderer types describe on their side.
  */
 function hitDiceControl(): Record<string, unknown> {
   return {
@@ -107,6 +119,11 @@ function hitDiceControl(): Record<string, unknown> {
  * health chip is removable and removing it refunds the die with the HP. A die
  * rolled with nothing left to heal still spends (5e). The long-rest reset is
  * free: the spends age out with a long rest like Lay on Hands.
+ *
+ * Cross-size attribution of the missing-HP budget is deterministic: sizes are
+ * consumed in ascending order (d6 before d12), slots ascending within a size,
+ * so the capped-to-zero heals always land on the LAST chips in that order and
+ * the UI can predict which chip carries the capped amount.
  */
 function shortRestOffer(): Offer {
   return {
@@ -119,9 +136,7 @@ function shortRestOffer(): Offer {
       primaryControl: hitDiceControl()
     },
     apply: (f, selections): ActionResult => {
-      const advertise: EffectInstance[] = [
-        { id: 'rest', state: { 'rest.short': 1 }, expiry: { kind: 'endOfTurn' } }
-      ];
+      const advertise: EffectInstance[] = [restFlag('rest.short')];
       const diagnostics: Diagnostic[] = [];
       const rolls = (selections.rolls ?? {}) as Record<string, Record<string, unknown>>;
       let missing = Math.max(0, -f.num('hp.modifier.current'));
