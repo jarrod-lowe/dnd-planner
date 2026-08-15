@@ -309,7 +309,7 @@ describe('PanelRenderer - hit-dice control', () => {
     expect(chipAfter.textContent?.trim()).toBe('8');
   });
 
-  it('fires onRoll with natural, CON bonus, and the floored heal', async () => {
+  it('fires onRoll with natural, CON bonus, and the raw equation total', async () => {
     const entry = createHitDiceEntry();
     const onRoll = vi.fn();
     vi.spyOn(Math, 'random').mockReturnValue(0.5); // d10 -> 6
@@ -323,25 +323,34 @@ describe('PanelRenderer - hit-dice control', () => {
     expect(result.natural).toBe(6);
     expect(result.bonus).toBe(2);
     expect(result.total).toBe(8);
+    // Nothing floored or capped: the effective heal IS the equation total, so
+    // no separate `effective` rides the payload (the toast equation alone is
+    // the honest announcement).
+    expect(result.effective).toBeUndefined();
     expect(result.sides).toBe(10);
     expect(result.unit).toBe('hp');
     expect(result.purpose).toBe('healing');
     expect(slotIndex).toBe(0);
   });
 
-  it('floors the heal at 1 HP when the roll plus CON is lower', async () => {
+  it('keeps the equation honest and carries the floored heal separately', async () => {
     const entry = createHitDiceEntry();
     const onRoll = vi.fn();
     vi.spyOn(Math, 'random').mockReturnValue(0); // d10 -> 1
-    const facts = { ...baseFacts(), 'con.modifier': -2 };
+    const facts = { ...baseFacts(), 'con.modifier': -3 };
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts, onRoll }
     });
     const chips = container.querySelectorAll('.panel-renderer__hit-dice .panel-renderer__die-chip');
     await fireEvent.click(chips[2]);
     const [result] = onRoll.mock.calls[0];
+    // The toast renders natural/bonus/total as an equation, so `total` must be
+    // the true math (1 − 3 = −2) while the engine's 1-HP floor rides
+    // `effective` — announcing "1 − 3 = 1" would be a false equation.
     expect(result.natural).toBe(1);
-    expect(result.total).toBe(1);
+    expect(result.bonus).toBe(-3);
+    expect(result.total).toBe(-2);
+    expect(result.effective).toBe(1);
   });
 
   it('does not roll spent slots or fire callbacks when read-only', async () => {
@@ -505,14 +514,16 @@ describe('PanelRenderer - hit-dice control', () => {
     expect(chip.getAttribute('aria-label')).toBe('d10 hit die 1 of 3, rolled 6, heals 3 hp');
 
     // Nothing rolled yet: the committed 3 HP missing IS the budget the fresh
-    // roll lands against.
+    // roll lands against. The equation stays honest (6 + 2 = 8) while the
+    // capped heal rides `effective`.
     const { container: c2 } = render(PanelRenderer, {
       props: { entry, editable: true, facts: { ...baseFacts(), 'hp.modifier.current': -3 }, onRoll }
     });
     await fireEvent.click(
       c2.querySelectorAll('.panel-renderer__hit-dice .panel-renderer__die-chip')[2]
     );
-    expect(onRoll.mock.calls[0][0].total).toBe(3);
+    expect(onRoll.mock.calls[0][0].total).toBe(8);
+    expect(onRoll.mock.calls[0][0].effective).toBe(3);
   });
 
   it('does not let a rejected roll consume the budget for a later pool', async () => {

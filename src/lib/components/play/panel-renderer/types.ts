@@ -59,6 +59,13 @@ export interface RollResult {
   purpose?: DicePurpose;
   /** Original die value (1 or 2) before GWF floor applied */
   gwfFloor?: number;
+  /**
+   * The value that actually lands after the roll's own math is replaced — e.g.
+   * a hit-die heal floored at 1 or capped by missing HP. Only carried when it
+   * DIFFERS from `total` (the raw natural + bonus math the equation shows);
+   * the toast strikes the raw total and renders this beside it.
+   */
+  effective?: number;
   /** Active roll modifiers folded into `total` (over and above `bonus`). */
   modifiers?: { label: string; value: number }[];
 }

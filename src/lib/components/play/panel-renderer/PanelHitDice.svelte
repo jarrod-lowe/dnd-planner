@@ -228,11 +228,18 @@
     onSelectionChange?.({
       rolls: { ...rolls, [key]: { ...(rolls[key] ?? {}), [String(slot)]: natural } }
     });
+    // The toast renders natural/bonus/total as an equation, so `total` is the
+    // TRUE math (natural + CON). The engine's floored/capped heal rides
+    // `effective`, carried only when it replaces that math — the toast then
+    // strikes the raw total and shows the effective heal beside it.
+    const raw = natural + bonus;
+    const effective = cappedHealFor(pool, slot, natural);
     onRoll?.(
       {
-        total: cappedHealFor(pool, slot, natural),
+        total: raw,
         natural,
         bonus: bonus !== 0 ? bonus : undefined,
+        effective: effective === raw ? undefined : effective,
         sides: pool.sides,
         unit: control.unit,
         purpose: 'healing'
