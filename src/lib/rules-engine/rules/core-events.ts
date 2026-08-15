@@ -1,12 +1,15 @@
 import {
   defineRule,
   type ActionResult,
+  type Diagnostic,
   type EffectInstance,
   type Offer,
   type RuleModule
 } from '../builder';
 
 const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
+const CE = 'rule.dnd-5e-2024.core-events';
+const HIT_DIE_SIZES = [6, 8, 10, 12] as const;
 
 /** A record-save offer for one ability: a d20 + save bonus, with a pass/fail. */
 function saveOffer(a: string): Offer {
@@ -74,6 +77,104 @@ function restOffer(id: string, fact: string): Offer {
 }
 
 /**
+ * The hit-dice roller control on the short-rest offer: one pool per die size,
+ * each resolved from the live `hitDie.*` facts at render time (an offer's `ui`
+ * is authored once, so dynamic sizes ride ValueSources, not authored entries).
+ * The renderer draws `total` slot rollers per pool; slots at index >=
+ * `remaining` are spent and render disabled.
+ */
+function hitDiceControl(): Record<string, unknown> {
+  return {
+    type: 'hit-dice',
+    unit: 'hp',
+    bonus: { fact: 'con.modifier' },
+    pools: HIT_DIE_SIZES.map((n) => ({
+      sides: n,
+      total: { fact: `hitDie.d${n}.total` },
+      remaining: { fact: `hitDie.d${n}.remaining` }
+    }))
+  };
+}
+
+/**
+ * The short rest, with hit-dice spending. Rolled slots arrive via
+ * `selections.rolls` as `{ d10: { '0': 6 } }` — slot index → NATURAL roll
+ * (1..sides); the CON bonus and the 1-HP floor are applied here, engine-side.
+ *
+ * Each rolled slot advertises ONE keyless `untilLongRest` effect carrying both
+ * the heal (`max(1, roll + con.modifier)`, capped at the missing HP — the
+ * record-heal pattern, so surplus isn't banked) and the die spend, so the
+ * health chip is removable and removing it refunds the die with the HP. A die
+ * rolled with nothing left to heal still spends (5e). The long-rest reset is
+ * free: the spends age out with a long rest like Lay on Hands.
+ */
+function shortRestOffer(): Offer {
+  return {
+    id: 'record-short-rest',
+    ui: {
+      section: 'rest',
+      name: 'planner.record.rest.short',
+      intents: { REST: 'rest' },
+      actionCost: [],
+      primaryControl: hitDiceControl()
+    },
+    apply: (f, selections): ActionResult => {
+      const advertise: EffectInstance[] = [
+        { id: 'rest', state: { 'rest.short': 1 }, expiry: { kind: 'endOfTurn' } }
+      ];
+      const diagnostics: Diagnostic[] = [];
+      const rolls = (selections.rolls ?? {}) as Record<string, Record<string, unknown>>;
+      let missing = Math.max(0, -f.num('hp.modifier.current'));
+      const con = f.num('con.modifier');
+      for (const n of HIT_DIE_SIZES) {
+        const sizeRolls = rolls[`d${n}`];
+        if (!sizeRolls) continue;
+        const total = f.num(`hitDie.d${n}.total`);
+        const remaining = f.num(`hitDie.d${n}.remaining`);
+        for (const slot of Object.keys(sizeRolls).sort((a, b) => Number(a) - Number(b))) {
+          const index = Number(slot);
+          const roll = Number(sizeRolls[slot]);
+          if (!Number.isInteger(index) || index < 0 || index >= total) {
+            diagnostics.push({
+              code: `${CE}.record-short-rest-offer.invalid_slot`,
+              severity: 'error'
+            });
+            continue;
+          }
+          if (index >= remaining) {
+            diagnostics.push({
+              code: `${CE}.record-short-rest-offer.die_already_spent`,
+              severity: 'error'
+            });
+            continue;
+          }
+          if (!Number.isInteger(roll) || roll < 1 || roll > n) {
+            diagnostics.push({
+              code: `${CE}.record-short-rest-offer.invalid_roll`,
+              severity: 'error'
+            });
+            continue;
+          }
+          const effective = Math.min(Math.max(1, roll + con), missing);
+          missing -= effective;
+          advertise.push({
+            id: 'effect-hit-die-heal',
+            state: { 'hp.modifier.current': effective, [`hitDie.d${n}.spent`]: 1 },
+            display: {
+              name: `${CE}.effect-hit-die-heal.name`,
+              section: 'health',
+              value: effective
+            },
+            expiry: { kind: 'untilLongRest' }
+          });
+        }
+      }
+      return { advertise, diagnostics };
+    }
+  };
+}
+
+/**
  * Core events: the always-available recorders — damage, healing, saving throws,
  * ability checks, short/long rest, and a freeform note.
  *
@@ -82,8 +183,9 @@ function restOffer(id: string, fact: string): Offer {
  * clamps the total at the max, so over-heal is bounded without an imperative
  * clamp. Rest recorders set `rest.short` / `rest.long` for the evaluation; the engine
  * ages rest-scoped resources at endTurn, so the resource RESET on rest is the
- * concern of the resource groups, not here. Recording damage while concentrating
- * also trips `concentration.damage-taken` (the concentration group's check
+ * concern of the resource groups, not here. The short rest also spends hit dice
+ * (see `shortRestOffer`). Recording damage while concentrating also trips
+ * `concentration.damage-taken` (the concentration group's check
  * trigger). Foundational, so no search meta.
  */
 const coreEvents: RuleModule = {
@@ -198,7 +300,7 @@ const coreEvents: RuleModule = {
         actionCost: []
       }
     },
-    restOffer('record-short-rest', 'rest.short'),
+    shortRestOffer(),
     restOffer('record-long-rest', 'rest.long'),
     {
       id: 'record-note',

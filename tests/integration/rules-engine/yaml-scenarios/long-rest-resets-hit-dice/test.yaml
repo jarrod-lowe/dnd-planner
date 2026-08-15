@@ -1,0 +1,45 @@
+name: 'Long Rest - Resets Hit Dice'
+description: 'A hit die spent on a short rest returns to the pool after a long rest'
+ruleGroups:
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/hit-die
+  - class-paladin/class-paladin-level1
+steps:
+  # Turn 1: spend the hit die on a short rest (full HP, so the die heals 0 but is spent)
+  - addOffer:
+      id: record-short-rest
+      selections:
+        rolls:
+          d10:
+            '0': 6
+      assert:
+        facts:
+          hp.modifier.current: 0
+          hitDie.d10.spent: 1
+          hitDie.d10.remaining: 0
+  - endTurn:
+      assert:
+        facts:
+          hitDie.d10.remaining: 0
+  # Turn 2: the long rest resets the pool (the untilLongRest spend ages out)
+  - evaluate:
+      assert:
+        facts:
+          hitDie.d10.remaining: 0
+  - addOffer:
+      id: record-long-rest
+      assert:
+        facts:
+          hitDie.d10.remaining: 1
+          hitDie.d10.spent: 0
+  - endTurn:
+      assert:
+        facts:
+          hitDie.d10.remaining: 1
+  # Turn 3: the pool stays full
+  - evaluate:
+      assert:
+        facts:
+          hitDie.d10.total: 1
+          hitDie.d10.remaining: 1

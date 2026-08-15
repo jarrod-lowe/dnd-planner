@@ -643,6 +643,14 @@
         },
         "effect-hp-heal": {
           "name": "Healing {{score}}"
+        },
+        "effect-hit-die-heal": {
+          "name": "Hit Dice {{score}}"
+        },
+        "record-short-rest-offer": {
+          "die_already_spent": "That hit die is already spent",
+          "invalid_roll": "Invalid hit die roll",
+          "invalid_slot": "Invalid hit die slot"
         }
       },
       "proficiency": {},

@@ -643,6 +643,14 @@
         },
         "effect-hp-heal": {
           "name": "DIch {{score}}"
+        },
+        "effect-hit-die-heal": {
+          "name": "DIch 'och {{score}}"
+        },
+        "record-short-rest-offer": {
+          "die_already_spent": "vetlh DIch lo'lu'ta'",
+          "invalid_roll": "DIch qaSHa'",
+          "invalid_slot": "DIch woHHa'"
         }
       },
       "proficiency": {},

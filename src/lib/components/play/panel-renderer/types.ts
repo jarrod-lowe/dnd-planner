@@ -113,6 +113,32 @@ export interface DiceLineControl extends ControlBase {
   dice: DiceEntry[];
 }
 
+/** One die-size pool on a hit-dice control, resolved from facts at render time. */
+export interface HitDicePool {
+  /** Die size (6, 8, 10, 12). */
+  sides: number;
+  /** Total dice ever owned at this size — the pool renders this many slot rollers. */
+  total: ValueSource;
+  /** Unspent dice — slots at index >= `remaining` are spent and render disabled. */
+  remaining: ValueSource;
+}
+
+/**
+ * The hit-dice roller on a rest panel: one die roller per hit-die slot, grouped
+ * by size (d6/d8/d10/d12 pools whose `total` resolves > 0; others are skipped).
+ * Rolling slot i of size n writes `selections.rolls['d${n}'][i] = <natural
+ * roll>` — the natural value only; the CON bonus and the 1-HP floor are applied
+ * by the engine's `apply`, not folded into the roll.
+ */
+export interface HitDiceControl extends ControlBase {
+  type: 'hit-dice';
+  pools: HitDicePool[];
+  /** Bonus added to each die's heal (e.g. the CON modifier). */
+  bonus?: ValueSource;
+  /** Unit key for the heal (e.g. "hp"). */
+  unit?: string;
+}
+
 export interface SliderNotch {
   value: number;
   enabled?: ValueSource; // when undefined or truthy, notch is active
@@ -169,6 +195,7 @@ export interface TextInputControl extends ControlBase {
 
 export type Control =
   | DiceLineControl
+  | HitDiceControl
   | SliderControl
   | SelectControl
   | TextInputControl
