@@ -1633,7 +1633,7 @@
       "spellSaveDC": "mugh DIvI' DIch",
       "concentration": "buQ",
       "usedMax": "{{used}} / {{max}}",
-      "hitDie": "QIp DIvI'",
+      "hitDie": "QIp DIvI' d{{dieSize}}",
       "hitDieValue": "{{used}}/{{max}} DIvI' d{{dieSize}}",
       "initiative": "chuwI'",
       "hp": "HP",
@@ -1824,7 +1824,8 @@
       "poolLabel": "d{{sides}} mI' Hegh, {{remaining}} of {{total}} lo'Ha'",
       "slotLabel": "d{{sides}} mI' Hegh {{slot}} of {{total}}",
       "slotSpentLabel": "d{{sides}} mI' Hegh {{slot}} of {{total}} (lo'ta')",
-      "slotRolledLabel": "d{{sides}} mI' Hegh {{slot}} of {{total}}, wIqaw {{roll}}, HIq {{heal}} hp"
+      "slotRolledLabel": "d{{sides}} mI' Hegh {{slot}} of {{total}}, wIqaw {{roll}}, HIq {{heal}} hp",
+      "slotSpentRolledLabel": "d{{sides}} mI' Hegh {{slot}} of {{total}} (lo'ta'), wIqaw {{roll}}, HIq {{heal}} hp, wIqaw teqmeH yI'uy"
     },
     "activeState": {
       "title": "Active State",

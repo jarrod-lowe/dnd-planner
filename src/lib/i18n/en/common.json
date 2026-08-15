@@ -1613,7 +1613,7 @@
       "spellSaveDC": "Spell Save DC",
       "concentration": "Concentration",
       "usedMax": "{{used}} / {{max}}",
-      "hitDie": "Hit Die",
+      "hitDie": "Hit Die d{{dieSize}}",
       "hitDieValue": "{{used}}/{{max}} d{{dieSize}}",
       "initiative": "Initiative",
       "hp": "HP",
@@ -1824,7 +1824,8 @@
       "poolLabel": "d{{sides}} hit dice, {{remaining}} of {{total}} unspent",
       "slotLabel": "d{{sides}} hit die {{slot}} of {{total}}",
       "slotSpentLabel": "d{{sides}} hit die {{slot}} of {{total}} (spent)",
-      "slotRolledLabel": "d{{sides}} hit die {{slot}} of {{total}}, rolled {{roll}}, heals {{heal}} hp"
+      "slotRolledLabel": "d{{sides}} hit die {{slot}} of {{total}}, rolled {{roll}}, heals {{heal}} hp",
+      "slotSpentRolledLabel": "d{{sides}} hit die {{slot}} of {{total}} (spent), rolled {{roll}}, heals {{heal}} hp, tap to clear"
     },
     "activeState": {
       "title": "Active State",

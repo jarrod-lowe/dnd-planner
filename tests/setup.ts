@@ -25,6 +25,8 @@ vi.mock('sveltekit-i18n', () => {
     'play.hitDice.slotSpentLabel': 'd{{sides}} hit die {{slot}} of {{total}} (spent)',
     'play.hitDice.slotRolledLabel':
       'd{{sides}} hit die {{slot}} of {{total}}, rolled {{roll}}, heals {{heal}} hp',
+    'play.hitDice.slotSpentRolledLabel':
+      'd{{sides}} hit die {{slot}} of {{total}} (spent), rolled {{roll}}, heals {{heal}} hp, tap to clear',
     'play.hitDice.bonusLabel': 'Each die: CON {{bonus}}'
   };
 

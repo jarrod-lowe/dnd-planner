@@ -1,6 +1,7 @@
 <script lang="ts">
   import { resolveValueSource } from './resolveValueSource';
   import DieChip from './DieChip.svelte';
+  import { SvelteMap } from 'svelte/reactivity';
   import type { HitDiceControl, RollResult } from './types';
   import type { Facts, VarDefinition } from '$lib/rules-view';
   import { t } from '$lib/i18n';
@@ -35,12 +36,22 @@
     slots: number[];
   }
 
+  // Resolve a numeric value source, ignoring anything non-numeric (a string
+  // fact must never leak into arithmetic).
+  function resolveNumber(
+    source: HitDiceControl['pools'][number]['total'] | HitDiceControl['bonus'],
+    fallback: number
+  ): number {
+    const resolved = resolveValueSource(source, facts, vars, selections);
+    return typeof resolved === 'number' && Number.isFinite(resolved) ? resolved : fallback;
+  }
+
   function resolvePoolNumber(
     source: HitDiceControl['pools'][number]['total'],
     fallback: number
   ): number {
-    const resolved = resolveValueSource(source, facts, vars, selections);
-    return typeof resolved === 'number' && resolved > 0 ? Math.floor(resolved) : fallback;
+    const resolved = resolveNumber(source, fallback);
+    return resolved > 0 ? Math.floor(resolved) : fallback;
   }
 
   const pools = $derived.by<ResolvedPool[]>(() =>
@@ -85,12 +96,10 @@
 
   // The CON modifier added to each die's heal. Surfaced on the chip exactly as
   // a dice-line surfaces a die bonus ("d10+2" before the roll, natural+bonus
-  // after); the engine's `apply` remains the authority on the final heal.
-  const bonus = $derived(
-    control.bonus === undefined
-      ? 0
-      : ((resolveValueSource(control.bonus, facts, vars, selections) as number | undefined) ?? 0)
-  );
+  // after); the engine's `apply` remains the authority on the final heal. A
+  // bonus source that resolves to a non-number (a string fact) is no bonus —
+  // it must never string-concatenate into the arithmetic.
+  const bonus = $derived(control.bonus === undefined ? 0 : resolveNumber(control.bonus, 0));
 
   function slotRoll(pool: ResolvedPool, slot: number): number | undefined {
     return rolls[`d${pool.sides}`]?.[String(slot)];
@@ -109,6 +118,49 @@
     return control.bonus === undefined ? `d${pool.sides}` : `d${pool.sides}${formatBonus(bonus)}`;
   }
 
+  // The HP missing right now — the engine's heal budget for this rest.
+  const missingHp = $derived(Math.max(0, -Number(facts['hp.modifier.current'] ?? 0)));
+
+  // The engine consumes the budget in ascending size-then-slot order, so the
+  // preview walks pools in that order (whatever order they render in).
+  const orderedPools = $derived([...pools].sort((a, b) => a.sides - b.sides));
+
+  // The heal a given slot's roll would land, mirroring shortRestOffer exactly:
+  // min(max(1, roll + bonus), budget left when this slot's turn comes), with
+  // every earlier-in-order rolled slot having already claimed its capped heal.
+  // `natural` overrides the stored roll (the just-tapped roll is not in the
+  // selections yet). Same input, same answer as the engine commits.
+  function cappedHealFor(pool: ResolvedPool, slot: number, natural: number): number {
+    let missing = missingHp;
+    for (const p of orderedPools) {
+      for (const s of p.slots) {
+        const isTarget = p.sides === pool.sides && s === slot;
+        const rolled = isTarget ? natural : slotRoll(p, s);
+        if (rolled === undefined) continue;
+        const effective = Math.min(healFor(rolled), missing);
+        if (isTarget) return effective;
+        missing -= effective;
+      }
+    }
+    // The slot's pool is filtered out of the render (total 0) — unreachable
+    // for a tappable slot, but keep the engine's shape anyway.
+    return Math.min(healFor(natural), missing);
+  }
+
+  // The announced heal per rolled slot (aria-label). Precomputed so each chip
+  // labels without re-walking the whole board.
+  const announcedHeals = $derived.by(() => {
+    const bySlot = new SvelteMap<string, number>();
+    for (const pool of pools) {
+      for (const slot of pool.slots) {
+        const rolled = slotRoll(pool, slot);
+        if (rolled === undefined) continue;
+        bySlot.set(`d${pool.sides}:${slot}`, cappedHealFor(pool, slot, rolled));
+      }
+    }
+    return bySlot;
+  });
+
   function rollSlot(pool: ResolvedPool, slot: number): void {
     if (!editable || slot >= pool.remaining) return;
     const natural = Math.floor(Math.random() * pool.sides) + 1;
@@ -119,7 +171,7 @@
     });
     onRoll?.(
       {
-        total: healFor(natural),
+        total: cappedHealFor(pool, slot, natural),
         natural,
         bonus: bonus !== 0 ? bonus : undefined,
         sides: pool.sides,
@@ -130,8 +182,22 @@
     );
   }
 
+  // A roll stranded on a slot the spent boundary has moved past (an earlier
+  // plan item spent the same die) can ONLY be cleared — committing it would
+  // error die_already_spent with no other fix but deleting the row.
+  function clearRoll(pool: ResolvedPool, slot: number): void {
+    if (!editable) return;
+    const key = `d${pool.sides}`;
+    const sizeRolls = { ...(rolls[key] ?? {}) };
+    delete sizeRolls[String(slot)];
+    const nextRolls = { ...rolls };
+    if (Object.keys(sizeRolls).length > 0) nextRolls[key] = sizeRolls;
+    else delete nextRolls[key];
+    onSelectionChange?.({ rolls: nextRolls });
+  }
+
   // Each die heals at least 1 HP (the engine's floor); the missing-HP cap is
-  // applied engine-side and shows up in the structural HP preview instead.
+  // applied by `cappedHealFor` and committed engine-side.
   function healFor(natural: number): number {
     return Math.max(1, natural + bonus);
   }
@@ -150,16 +216,25 @@
       slot: String(slot + 1),
       total: String(pool.total)
     };
-    // A rolled slot announces its roll even when the spent boundary has since
-    // moved past it — sighted users still see the rolled value on the chip, and
-    // the (disabled) button state already conveys spent. Only never-rolled
-    // slots announce the bare spent label.
+    // A rolled slot announces its roll and its CAPPED heal (the same value the
+    // engine commits — never a heal that lands 0). A rolled slot the spent
+    // boundary has since moved past stays tappable solely to clear the roll,
+    // so its label says so; only never-rolled slots announce the bare spent
+    // label.
     const rolled = slotRoll(pool, slot);
     if (rolled !== undefined) {
+      const heal = announcedHeals.get(`d${pool.sides}:${slot}`) ?? healFor(rolled);
+      if (slot >= pool.remaining) {
+        return $t('play.hitDice.slotSpentRolledLabel', {
+          ...params,
+          roll: String(rolled),
+          heal: String(heal)
+        });
+      }
       return $t('play.hitDice.slotRolledLabel', {
         ...params,
         roll: String(rolled),
-        heal: String(healFor(rolled))
+        heal: String(heal)
       });
     }
     if (slot >= pool.remaining) return $t('play.hitDice.slotSpentLabel', params);
@@ -178,14 +253,15 @@
       >
         {#each pool.slots as slot (slot)}
           {@const spent = slot >= pool.remaining}
+          {@const rolled = slotRoll(pool, slot) !== undefined}
           <DieChip
             text={chipText(pool, slot)}
             {editable}
             ariaLabel={slotAriaLabel(pool, slot)}
-            disabled={spent}
+            disabled={spent && !rolled}
             dieSides={pool.sides}
             slotIndex={slot}
-            onclick={() => rollSlot(pool, slot)}
+            onclick={() => (spent ? clearRoll(pool, slot) : rollSlot(pool, slot))}
           />
         {/each}
       </div>

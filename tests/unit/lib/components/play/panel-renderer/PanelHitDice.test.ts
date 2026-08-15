@@ -32,6 +32,9 @@ const createHitDiceEntry = (): AvailableRuleEntry => ({
 
 const baseFacts = (): Record<string, number> => ({
   'con.modifier': 2,
+  // 20 HP missing: generous, so the uncapped heal (roll + CON) previews intact
+  // unless a test narrows it to exercise the missing-HP cap.
+  'hp.modifier.current': -20,
   'hitDie.d6.total': 0,
   'hitDie.d6.remaining': 0,
   'hitDie.d8.total': 2,
@@ -214,10 +217,11 @@ describe('PanelRenderer - hit-dice control', () => {
     expect(chip.getAttribute('aria-label')).toBe('d10 hit die 1 of 3, rolled 6, heals 8 hp');
   });
 
-  it('announces the roll of a slot the spent boundary has moved past', () => {
+  it('announces the roll of a slot the spent boundary has moved past, with a clear affordance', () => {
     const entry = createHitDiceEntry();
     // d10 remaining 0: every slot is spent, but slot 0 still carries a roll
-    // from before the boundary moved — its label must keep announcing the roll.
+    // from before the boundary moved. The slot stays tappable SOLELY to clear
+    // the stranded roll (committing it would error die_already_spent).
     const facts = { ...baseFacts(), 'hitDie.d10.remaining': 0 };
     const selections = { rolls: { d10: { '0': 6 } } };
     const { container } = render(PanelRenderer, {
@@ -226,10 +230,117 @@ describe('PanelRenderer - hit-dice control', () => {
     const chips = container.querySelectorAll<HTMLButtonElement>(
       '.panel-renderer__hit-dice .panel-renderer__die-chip'
     );
-    expect(chips[2].disabled).toBe(true);
-    expect(chips[2].getAttribute('aria-label')).toBe('d10 hit die 1 of 3, rolled 6, heals 8 hp');
+    expect(chips[2].disabled).toBe(false);
+    expect(chips[2].getAttribute('aria-label')).toBe(
+      'd10 hit die 1 of 3 (spent), rolled 6, heals 8 hp, tap to clear'
+    );
     // An unrolled spent slot still announces only its spent state.
     expect(chips[3].getAttribute('aria-label')).toBe('d10 hit die 2 of 3 (spent)');
+  });
+
+  it('clears a roll stranded on a slot the spent boundary moved past', async () => {
+    const entry = createHitDiceEntry();
+    const onSelectionChange = vi.fn();
+    // d10 remaining 0 while slot 0 carries a roll: tapping the stranded slot
+    // must UN-roll it (the only fix for the die_already_spent commit error
+    // short of deleting the row).
+    const facts = { ...baseFacts(), 'hitDie.d10.remaining': 0 };
+    const selections = { rolls: { d10: { '0': 6 } } };
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts, selections, onSelectionChange }
+    });
+    const chips = container.querySelectorAll<HTMLButtonElement>(
+      '.panel-renderer__hit-dice .panel-renderer__die-chip'
+    );
+    await fireEvent.click(chips[2]);
+    expect(onSelectionChange).toHaveBeenCalledWith({ rolls: {} });
+  });
+
+  it('keeps the last roll of a size when another slot of it is cleared', async () => {
+    const entry = createHitDiceEntry();
+    const onSelectionChange = vi.fn();
+    // Both d8 slots rolled, then the d8 pool's boundary moves to 0: clearing
+    // slot 0 drops only that slot, not the whole d8 map.
+    const facts = { ...baseFacts(), 'hitDie.d8.remaining': 0, 'hitDie.d10.remaining': 0 };
+    const selections = { rolls: { d8: { '0': 3, '1': 4 } } };
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts, selections, onSelectionChange }
+    });
+    const chips = container.querySelectorAll<HTMLButtonElement>(
+      '.panel-renderer__hit-dice .panel-renderer__die-chip'
+    );
+    await fireEvent.click(chips[0]); // d8 slot 0
+    expect(onSelectionChange).toHaveBeenCalledWith({ rolls: { d8: { '1': 4 } } });
+  });
+
+  it('caps the announced heal at the missing HP (the engine commits the same cap)', async () => {
+    const entry = createHitDiceEntry();
+    const onRoll = vi.fn();
+    vi.spyOn(Math, 'random').mockReturnValue(0.5); // d10 -> 6, roll + CON = 8
+    // Only 3 HP missing: the engine commits min(8, 3) = 3, so the aria-label
+    // and the toast's roll result must announce 3 — never a heal that lands 0.
+    const facts = { ...baseFacts(), 'hp.modifier.current': -3 };
+    const selections = { rolls: { d10: { '0': 6 } } };
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts, selections }
+    });
+    const chip = container.querySelectorAll(
+      '.panel-renderer__hit-dice .panel-renderer__die-chip'
+    )[2];
+    expect(chip.getAttribute('aria-label')).toBe('d10 hit die 1 of 3, rolled 6, heals 3 hp');
+
+    const { container: c2 } = render(PanelRenderer, {
+      props: { entry, editable: true, facts, onRoll }
+    });
+    await fireEvent.click(
+      c2.querySelectorAll('.panel-renderer__hit-dice .panel-renderer__die-chip')[2]
+    );
+    expect(onRoll.mock.calls[0][0].total).toBe(3);
+  });
+
+  it('decrements the missing-HP budget across rolled slots in engine order', () => {
+    const entry = createHitDiceEntry();
+    // 3 HP missing, two d8s rolled at 6 (+2 = 8 each): the engine consumes
+    // the budget ascending size-then-slot, so slot 0 heals 3 and slot 1 heals 0
+    // (its die is still spent). The preview walks the same order. Both d8 slots
+    // are unspent (remaining 2), so both get the plain rolled label.
+    const facts = { ...baseFacts(), 'hp.modifier.current': -3 };
+    const selections = { rolls: { d8: { '0': 6, '1': 6 } } };
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts, selections }
+    });
+    const chips = container.querySelectorAll('.panel-renderer__hit-dice .panel-renderer__die-chip');
+    expect(chips[0].getAttribute('aria-label')).toBe('d8 hit die 1 of 2, rolled 6, heals 3 hp');
+    expect(chips[1].getAttribute('aria-label')).toBe('d8 hit die 2 of 2, rolled 6, heals 0 hp');
+  });
+
+  it('announces a heal of 0 at full HP (the die is still spent)', () => {
+    const entry = createHitDiceEntry();
+    // No missing HP: the announced heal is 0, never the uncapped roll + CON.
+    const facts = { ...baseFacts(), 'hp.modifier.current': 0 };
+    const selections = { rolls: { d10: { '0': 6 } } };
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts, selections }
+    });
+    const chip = container.querySelectorAll(
+      '.panel-renderer__hit-dice .panel-renderer__die-chip'
+    )[2];
+    expect(chip.getAttribute('aria-label')).toBe('d10 hit die 1 of 3, rolled 6, heals 0 hp');
+  });
+
+  it('treats a bonus that resolves to a non-number as no bonus', () => {
+    const entry = createHitDiceEntry();
+    // A string fact must not string-concatenate into the arithmetic ("62").
+    const facts = { ...baseFacts(), 'con.modifier': '2' } as unknown as Record<string, number>;
+    const selections = { rolls: { d10: { '0': 6 } } };
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts, selections }
+    });
+    const chip = container.querySelectorAll(
+      '.panel-renderer__hit-dice .panel-renderer__die-chip'
+    )[2];
+    expect(chip.textContent?.trim()).toBe('6');
+    expect(chip.getAttribute('aria-label')).toBe('d10 hit die 1 of 3, rolled 6, heals 6 hp');
   });
 
   it('renders nothing when every pool is empty', () => {
