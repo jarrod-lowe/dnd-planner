@@ -396,7 +396,7 @@ describe('derivePanels — resources', () => {
   });
 
   it('emits steed actionPools only when either actions.max or bonusActions.max is present', () => {
-    // Only actions.max present → no actionPools entry
+    // Only actions.max present → actionPools entry present
     const factsActionsOnly = {
       'companion.steed.actions.max': 1,
       'companion.steed.actions.spent': 0
@@ -406,7 +406,7 @@ describe('derivePanels — resources', () => {
     );
     expect(steedActionsOnly.some((e) => e.type === 'actionPools')).toBe(true);
 
-    // Only bonusActions.max present → no actionPools entry
+    // Only bonusActions.max present → actionPools entry present
     const factsBonusOnly = {
       'companion.steed.bonusActions.max': 1,
       'companion.steed.bonusActions.spent': 0

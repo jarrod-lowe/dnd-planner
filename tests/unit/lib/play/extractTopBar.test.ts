@@ -672,6 +672,39 @@ describe('resolveEntryValue', () => {
     expect(resolveEntryValue(actionPoolsEntry, facts)).toBe('3/3');
   });
 
+  it('sums open/total with heterogeneous spent values (one action spent)', async () => {
+    const { resolveEntryValue } = await import('$lib/play/extractTopBar');
+    // actions.max: 1, actions.spent: 1 → open: 0; bonusActions and reactions fresh.
+    const facts: Facts = {
+      'actions.max': 1,
+      'actions.spent': 1,
+      'bonusActions.max': 1,
+      'bonusActions.spent': 0,
+      'reactions.max': 1,
+      'reactions.spent': 0
+    };
+    const actionPoolsEntry = {
+      type: 'actionPools' as const,
+      label: 'play.stats.actions',
+      factPrefix: '',
+      pools: [
+        { key: 'actions', label: 'play.stats.actions', shortLabel: 'play.ledger.short.actions' },
+        {
+          key: 'bonusActions',
+          label: 'play.stats.bonusActions',
+          shortLabel: 'play.ledger.short.bonusActions'
+        },
+        {
+          key: 'reactions',
+          label: 'play.stats.reactions',
+          shortLabel: 'play.ledger.short.reactions'
+        }
+      ]
+    };
+    // (0 + 1 + 1) / (1 + 1 + 1) = 2/3
+    expect(resolveEntryValue(actionPoolsEntry, facts)).toBe('2/3');
+  });
+
   it('sums open/total for steed actionPools (2 pools)', async () => {
     const { resolveEntryValue } = await import('$lib/play/extractTopBar');
     // Steed with 1 action, 1 bonus action, 0 reactions (no reaction pool).

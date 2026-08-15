@@ -61,7 +61,7 @@ const TOP_BAR: { gate: string; entry: UiEntry }[] = [
   }
 ];
 
-/** Resources-panel catalog: usedMax pools, each gated on its `total` fact. */
+/** Resources-panel catalog: usedMax pools gated on their `total` fact, plus the action-economy pools gated on any pool `max`. */
 const RESOURCES: UiEntry[] = [
   // HP appears in the ledger as well as the top bar (hp.yaml
   // declared both a topBar and a resources entry).
@@ -209,7 +209,7 @@ function deriveSteedResources(facts: Facts): UiEntry[] {
     remaining: e.remaining,
     subject: 'steed'
   }));
-  // Add actionPools entry when either actions.max or bonusActions.max is present
+  // A steed can have actions-only, bonusActions-only, or both, so gate on the disjunction.
   const hasActions = present(facts, 'companion.steed.actions.max');
   const hasBonusActions = present(facts, 'companion.steed.bonusActions.max');
   if (hasActions || hasBonusActions) {
