@@ -1901,7 +1901,7 @@
         "savageAttacker": "Savage",
         "steed": {
           "hp": "HP",
-          "movement": "MOV",
+          "movement": "SPD",
           "actions": "ACT",
           "bonusActions": "BON",
           "healingTouch": "Heal",
