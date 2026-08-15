@@ -174,7 +174,9 @@
     });
     // Only fall back to noneOpen if ALL pools are at 0 open
     const hasAnyOpen = pools.some((pool) => pool.open > 0);
-    const summary = hasAnyOpen ? open.join($t('play.economy.summarySeparator')) : $t('play.economy.noneOpen');
+    const summary = hasAnyOpen
+      ? open.join($t('play.economy.summarySeparator'))
+      : $t('play.economy.noneOpen');
     return $t('play.economy.tilesLabel', { summary });
   }
 
@@ -297,7 +299,12 @@
         </div>
       {:else if entry.type === 'actionPools'}
         {@const key = entryKey(entry)}
-        {@const pools = deriveActionPools(facts, effects, entry.factPrefix, entry.pools.map((p) => p.key))}
+        {@const pools = deriveActionPools(
+          facts,
+          effects,
+          entry.factPrefix,
+          entry.pools.map((p) => p.key)
+        )}
         {@const isOpen = trayOpenKey === key}
         <!-- position: relative — SlotTray self-anchors with position: absolute. -->
         <div class="ledger__cell ledger__cell--slots" bind:this={cellEls[key]}>
@@ -312,9 +319,13 @@
           >
             <span class="ledger__cell-label">{shortLabelFor(entry)}</span>
             <span class="ledger__slot-row">
-              <span class="ledger__slot-tiles" role="img" aria-label={economyTilesLabel(pools, entry)}>
+              <span
+                class="ledger__slot-tiles"
+                role="img"
+                aria-label={economyTilesLabel(pools, entry)}
+              >
                 {#each entry.pools as poolDef (poolDef.key)}
-                  {@const pool = pools.find(p => p.key === poolDef.key)}
+                  {@const pool = pools.find((p) => p.key === poolDef.key)}
                   {#if pool}
                     <span
                       class="ledger__slot-tile ledger__slot-tile--{tileState(pool)}"

@@ -40,7 +40,6 @@ const translations: Record<string, string> = {
   'play.slots.legend.spent': 'Spent',
   // Action economy keys
   'play.economy.toggle': 'Show action economy breakdown',
-  'play.stats.actions': 'Actions',
   'play.stats.bonusActions': 'Bonus Actions',
   'play.stats.reactions': 'Reactions',
   'play.economy.poolOpen': '{{name}}: {{open}} open',
@@ -782,7 +781,11 @@ describe('Ledger — action economy cell', () => {
     factPrefix: '',
     pools: [
       { key: 'actions', label: 'play.stats.actions', shortLabel: 'play.stats.actions' },
-      { key: 'bonusActions', label: 'play.stats.bonusActions', shortLabel: 'play.stats.bonusActions' },
+      {
+        key: 'bonusActions',
+        label: 'play.stats.bonusActions',
+        shortLabel: 'play.stats.bonusActions'
+      },
       { key: 'reactions', label: 'play.stats.reactions', shortLabel: 'play.stats.reactions' }
     ]
   };
@@ -873,6 +876,34 @@ describe('Ledger — action economy cell', () => {
       'reactions.spent': 1
     });
     expect(tileStates()).toEqual(['spent', 'spent', 'spent']);
+  });
+
+  it('prefers open over this-turn for pools (precedence test)', () => {
+    // 2 max, 1 spent overall, 1 spent by current plan -> 1 still open.
+    // Open wins: removing the current plan row gets it back.
+    renderEconomy(
+      {
+        'actions.max': 2,
+        'actions.spent': 1
+      },
+      [actionSpend('attack-action', 'actions', 1)]
+    );
+    expect(tileStates()).toEqual(['open']);
+  });
+
+  it('drops pools with max <= 0 but keeps tile alignment for live pools', () => {
+    // Bonus actions has max: 0, so it should not render a tile.
+    // Actions and reactions should keep correct labels/alignment.
+    renderEconomy({
+      'actions.max': 1,
+      'actions.spent': 0,
+      'bonusActions.max': 0,
+      'bonusActions.spent': 0,
+      'reactions.max': 1,
+      'reactions.spent': 0
+    });
+    expect(container.querySelectorAll('.ledger__slot-tile').length).toBe(2);
+    expect(tileTexts()).toEqual(['Actions', 'Reactions']);
   });
 
   it('exposes tile-row aria summary text from i18n templates', () => {
@@ -1102,7 +1133,9 @@ describe('Ledger — action economy cell', () => {
     expect(slotToggle.getAttribute('aria-expanded')).toBe('true');
 
     // Open economy tray - should close slots tray
-    const economyToggle = container.querySelectorAll('.ledger__slot-toggle')[1] as HTMLButtonElement;
+    const economyToggle = container.querySelectorAll(
+      '.ledger__slot-toggle'
+    )[1] as HTMLButtonElement;
     economyToggle.click();
     flushSync();
 
@@ -1135,7 +1168,9 @@ describe('Ledger — action economy cell', () => {
     );
 
     // Open economy tray first
-    const economyToggle = container.querySelectorAll('.ledger__slot-toggle')[1] as HTMLButtonElement;
+    const economyToggle = container.querySelectorAll(
+      '.ledger__slot-toggle'
+    )[1] as HTMLButtonElement;
     economyToggle.click();
     flushSync();
     expect(container.querySelector('.slot-tray')).toBeTruthy();
