@@ -1,5 +1,7 @@
 // === PRIMITIVES ===
 
+import type { EffectInstance } from '$lib/rules-engine';
+
 /**
  * Intent verb for UI grouping. Determines which picker group a rule appears under,
  * the row's stripe label, and visual treatment. Purely a UI hint — not used by the engine.
@@ -539,6 +541,15 @@ export interface AvailableRuleEntry {
   legal: boolean;
   applicable: boolean;
   diagnostics: Diagnostic[];
+  /**
+   * The effects THIS entry advertised, when it is a planned row (the engine
+   * adapter scopes the turn-wide advertised list by instance id). Absent on
+   * catalog/picker entries — an unplanned offer advertises nothing. Lets a row
+   * distinguish its own pending effects from the post-plan facts, which already
+   * fold them in (e.g. the hit-dice roller rebuilds the engine's
+   * committed-only heal budget from them).
+   */
+  advertisedEffects?: EffectInstance[];
 }
 
 /**

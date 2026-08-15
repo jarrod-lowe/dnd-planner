@@ -74,7 +74,8 @@ function illegalVerdicts(refs: readonly PlannedRef[]): CharacterEvaluation {
       rule: { ...attackRule, id: ref.ruleId },
       legal: false,
       applicable: true,
-      diagnostics: [{ code: 'no_action', severity: 'error' as const }]
+      diagnostics: [{ code: 'no_action', severity: 'error' as const }],
+      advertisedEffects: []
     })),
     topBarEntries: [],
     resourceEntries: [],

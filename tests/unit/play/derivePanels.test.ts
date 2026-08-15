@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { deriveTopBarEntries, deriveResourceEntries } from '$lib/play/derivePanels';
-import { resolveEntryValue } from '$lib/play/extractTopBar';
+import type { UiEntryHitDie } from '$lib/play/extractTopBar';
+import { resolveEntryValue, isEntryVisible } from '$lib/play/extractTopBar';
 
 /**
  * The facts-driven top-bar / resources catalog (replacing the legacy
@@ -169,6 +170,42 @@ describe('derivePanels — resources', () => {
     expect(resolveEntryValue(hd!, { 'hitDie.d10.total': 5, 'hitDie.d10.remaining': 5 })).toBe(
       '5/5 d10'
     );
+  });
+
+  it('labels each hit-die entry with its die size via nameParams', () => {
+    // The label key interpolates {{dieSize}}, so consumers (Ledger aria-labels)
+    // get a distinguishable "Hit Die d10" / "Hit Die d6" for free instead of
+    // appending the size by hand.
+    const hd = deriveResourceEntries({ 'hitDie.d10.total': 5, 'hitDie.d10.remaining': 5 }).find(
+      (e) => e.type === 'hitDie'
+    );
+    expect(hd?.nameParams).toEqual({ dieSize: 10 });
+  });
+
+  it('emits one hit-die entry per size with a total (multiclass 3d10 + 2d6)', () => {
+    const facts = {
+      'hitDie.d10.total': 3,
+      'hitDie.d10.remaining': 2,
+      'hitDie.d6.total': 2,
+      'hitDie.d6.remaining': 2
+    };
+    const hd = deriveResourceEntries(facts).filter((e) => e.type === 'hitDie');
+    // Emitted in ascending die-size order (HIT_DICE catalog order).
+    expect(hd.map((e) => e.dieSize)).toEqual([6, 10]);
+    expect(hd.map((e) => resolveEntryValue(e, facts))).toEqual(['2/2 d6', '2/3 d10']);
+  });
+
+  it('renders no hit-die row for a size whose total is zero (visibility gate)', () => {
+    const facts = {
+      'hitDie.d10.total': 3,
+      'hitDie.d10.remaining': 3,
+      'hitDie.d8.total': 0,
+      'hitDie.d8.remaining': 0
+    };
+    const visible = deriveResourceEntries(facts).filter(
+      (e): e is UiEntryHitDie => e.type === 'hitDie' && isEntryVisible(e, facts)
+    );
+    expect(visible.map((e) => e.dieSize)).toEqual([10]);
   });
 
   it('includes Heroic Inspiration as a value when present', () => {

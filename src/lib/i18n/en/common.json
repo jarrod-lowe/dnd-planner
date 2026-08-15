@@ -643,6 +643,14 @@
         },
         "effect-hp-heal": {
           "name": "Healing {{score}}"
+        },
+        "effect-hit-die-heal": {
+          "name": "Hit Dice {{score}}"
+        },
+        "record-short-rest-offer": {
+          "die_already_spent": "That hit die is already spent",
+          "invalid_roll": "Invalid hit die roll",
+          "invalid_slot": "Invalid hit die slot"
         }
       },
       "proficiency": {},
@@ -1605,7 +1613,8 @@
       "spellSaveDC": "Spell Save DC",
       "concentration": "Concentration",
       "usedMax": "{{used}} / {{max}}",
-      "hitDie": "Hit Die",
+      "valueLabel": "{{label}}: {{remaining}} of {{total}}",
+      "hitDie": "Hit Die d{{dieSize}}",
       "hitDieValue": "{{used}}/{{max}} d{{dieSize}}",
       "initiative": "Initiative",
       "hp": "HP",
@@ -1810,6 +1819,14 @@
     "slider": {
       "freeUse": "Free Use",
       "level": "Level {{level}}"
+    },
+    "hitDice": {
+      "groupLabel": "Hit Dice",
+      "poolLabel": "d{{sides}} hit dice, {{remaining}} of {{total}} unspent",
+      "slotLabel": "d{{sides}} hit die {{slot}} of {{total}}",
+      "slotSpentLabel": "d{{sides}} hit die {{slot}} of {{total}} (spent)",
+      "slotRolledLabel": "d{{sides}} hit die {{slot}} of {{total}}, rolled {{roll}}, heals {{heal}} hp",
+      "slotSpentRolledLabel": "d{{sides}} hit die {{slot}} of {{total}} (spent), rolled {{roll}}, heals {{heal}} hp, tap to clear"
     },
     "activeState": {
       "title": "Active State",

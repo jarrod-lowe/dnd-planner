@@ -59,6 +59,13 @@ export interface RollResult {
   purpose?: DicePurpose;
   /** Original die value (1 or 2) before GWF floor applied */
   gwfFloor?: number;
+  /**
+   * The value that actually lands after the roll's own math is replaced — e.g.
+   * a hit-die heal floored at 1 or capped by missing HP. Only carried when it
+   * DIFFERS from `total` (the raw natural + bonus math the equation shows);
+   * the toast strikes the raw total and renders this beside it.
+   */
+  effective?: number;
   /** Active roll modifiers folded into `total` (over and above `bonus`). */
   modifiers?: { label: string; value: number }[];
 }
@@ -111,6 +118,37 @@ export interface DiceLineControl extends ControlBase {
   advantage?: ValueSource;
   label?: string; // i18n key - inline text rendered like range text (e.g. "5ft")
   dice: DiceEntry[];
+}
+
+/** One die-size pool on a hit-dice control, resolved from facts at render time. */
+export interface HitDicePool {
+  /** Die size (6, 8, 10, 12). */
+  sides: number;
+  /** Total dice ever owned at this size — the pool renders this many slot rollers. */
+  total: ValueSource;
+  /** Unspent dice — slots at index >= `remaining` are spent and render disabled. */
+  remaining: ValueSource;
+}
+
+/**
+ * The hit-dice roller on a rest panel: one die roller per hit-die slot, grouped
+ * by size (d6/d8/d10/d12 pools whose `total` resolves > 0; others are skipped).
+ * Rolling slot i of size n writes `selections.rolls['d${n}'][i] = <natural
+ * roll>` — the natural value only; the CON bonus and the 1-HP floor are applied
+ * by the engine's `apply`, not folded into the roll.
+ *
+ * Note: `bonus` and `unit` are generic ValueSources, but today's UI labels
+ * hardcode "CON" and the hp unit in its strings (play.hitDice.*) — the only
+ * authored control is the CON-modulated short-rest heal. A differently-authored
+ * control must generalize those labels first.
+ */
+export interface HitDiceControl extends ControlBase {
+  type: 'hit-dice';
+  pools: HitDicePool[];
+  /** Bonus added to each die's heal (e.g. the CON modifier). */
+  bonus?: ValueSource;
+  /** Unit key for the heal (e.g. "hp"). */
+  unit?: string;
 }
 
 export interface SliderNotch {
@@ -169,6 +207,7 @@ export interface TextInputControl extends ControlBase {
 
 export type Control =
   | DiceLineControl
+  | HitDiceControl
   | SliderControl
   | SelectControl
   | TextInputControl

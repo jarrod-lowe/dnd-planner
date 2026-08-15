@@ -643,6 +643,14 @@
         },
         "effect-hp-heal": {
           "name": "DIch {{score}}"
+        },
+        "effect-hit-die-heal": {
+          "name": "DIch 'och {{score}}"
+        },
+        "record-short-rest-offer": {
+          "die_already_spent": "vetlh DIch lo'lu'ta'",
+          "invalid_roll": "DIch qaSHa'",
+          "invalid_slot": "DIch woHHa'"
         }
       },
       "proficiency": {},
@@ -1625,7 +1633,8 @@
       "spellSaveDC": "mugh DIvI' DIch",
       "concentration": "buQ",
       "usedMax": "{{used}} / {{max}}",
-      "hitDie": "QIp DIvI'",
+      "valueLabel": "{{label}}: {{remaining}} vo' {{total}}",
+      "hitDie": "QIp DIvI' d{{dieSize}}",
       "hitDieValue": "{{used}}/{{max}} DIvI' d{{dieSize}}",
       "initiative": "chuwI'",
       "hp": "HP",
@@ -1810,6 +1819,14 @@
     "slider": {
       "freeUse": "lo'Ha'",
       "level": "patlh {{level}}"
+    },
+    "hitDice": {
+      "groupLabel": "mI' Hegh",
+      "poolLabel": "d{{sides}} mI' Hegh, {{remaining}} vo' {{total}} lo'Ha'",
+      "slotLabel": "d{{sides}} mI' Hegh {{slot}} vo' {{total}}",
+      "slotSpentLabel": "d{{sides}} mI' Hegh {{slot}} vo' {{total}} (lo'ta')",
+      "slotRolledLabel": "d{{sides}} mI' Hegh {{slot}} vo' {{total}}, wIqaw {{roll}}, HIq {{heal}} hp",
+      "slotSpentRolledLabel": "d{{sides}} mI' Hegh {{slot}} vo' {{total}} (lo'ta'), wIqaw {{roll}}, HIq {{heal}} hp, wIqaw teqmeH yI'uy"
     },
     "activeState": {
       "title": "Active State",

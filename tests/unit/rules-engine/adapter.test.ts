@@ -116,4 +116,53 @@ describe('adapter — plannedEntries', () => {
     expect(entries.map((e) => e.instanceId)).toEqual(['a', 'b']);
     expect(entries.map((e) => e.legal)).toEqual([true, false]);
   });
+
+  it('scopes the advertised effects to the instance that advertised them', () => {
+    // The plan fold namespaces each advertised effect id as
+    // `${instanceId}#${i}#${effect.id}`, so a planned row can recover exactly
+    // its own pending effects from the turn-wide list — e.g. the hit-dice
+    // roller needs its own heals to rebuild the engine's committed-only budget.
+    const out = baseOutput({
+      plannedOffers: { i0: offerEntry('record-short-rest'), i1: offerEntry('record-damage') },
+      effects: [
+        { id: 'i0#0#effect-rest-short', state: { 'rest.short': 1 }, expiry: { kind: 'endOfTurn' } },
+        {
+          id: 'i0#1#effect-hit-die-heal',
+          state: { 'hp.modifier.current': 11 },
+          expiry: { kind: 'untilLongRest' }
+        },
+        {
+          id: 'i1#0#effect-damage',
+          state: { 'hp.modifier.current': -4 },
+          expiry: { kind: 'untilLongRest' }
+        }
+      ]
+    });
+    const entries = plannedEntries(out, [
+      ref('i0', 'record-short-rest'),
+      ref('i1', 'record-damage')
+    ]);
+    expect(entries[0].advertisedEffects?.map((e) => e.id)).toEqual([
+      'i0#0#effect-rest-short',
+      'i0#1#effect-hit-die-heal'
+    ]);
+    expect(entries[1].advertisedEffects?.map((e) => e.id)).toEqual(['i1#0#effect-damage']);
+  });
+
+  it('does not match an instance id that is a strict prefix of another', () => {
+    // "i1" must not claim "i10#..." — the prefix filter includes the "#" sentinel.
+    const out = baseOutput({
+      plannedOffers: { i1: offerEntry('cast-bless'), i10: offerEntry('record-damage') },
+      effects: [
+        {
+          id: 'i10#0#effect-damage',
+          state: { 'hp.modifier.current': -4 },
+          expiry: { kind: 'untilLongRest' }
+        }
+      ]
+    });
+    const entries = plannedEntries(out, [ref('i1', 'cast-bless'), ref('i10', 'record-damage')]);
+    expect(entries[0].advertisedEffects).toEqual([]);
+    expect(entries[1].advertisedEffects?.map((e) => e.id)).toEqual(['i10#0#effect-damage']);
+  });
 });

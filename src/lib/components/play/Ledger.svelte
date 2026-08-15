@@ -46,6 +46,24 @@
     }
     return $t(shortKey);
   }
+
+  // Screen-reader text for a cell. The label itself carries any
+  // disambiguating params — hit-die rows interpolate {{dieSize}} (see
+  // derivePanels), so a multiclass character's "Hit Die d10" / "Hit Die d6"
+  // stay distinguishable without per-type surgery here. The whole
+  // "label: N of M" composition goes through i18n so the scaffolding
+  // translates too.
+  function ariaLabelFor(
+    entry: UiEntryUsedMax | UiEntryHitDie,
+    remaining: number,
+    total: number
+  ): string {
+    return $t('play.stats.valueLabel', {
+      label: labelFor(entry),
+      remaining,
+      total
+    });
+  }
 </script>
 
 <div class="ledger" role="region" aria-label={$t('play.ledger.title')}>
@@ -63,7 +81,9 @@
   {/if}
 
   <div class="ledger__cells">
-    {#each visibleEntries as entry (entry.label + JSON.stringify(entry.nameParams))}
+    <!-- The total fact path is the cell's identity — distinct per pool, unlike
+         the hit-die label shared by every die size — so it must stay unique. -->
+    {#each visibleEntries as entry (entry.total)}
       {@const total =
         entry.type === 'hitDie'
           ? Number(facts[entry.total] ?? 0)
@@ -76,8 +96,8 @@
         class="ledger__cell"
         class:ledger__cell--muted={remaining <= 0 && !isOverBudget}
         class:ledger__cell--warn={isOverBudget && remaining < 0}
-        aria-label="{labelFor(entry)}: {remaining} of {total}"
-        title={labelFor(entry)}
+        aria-label={ariaLabelFor(entry, remaining, total)}
+        title={ariaLabelFor(entry, remaining, total)}
       >
         <span class="ledger__cell-label">{shortLabelFor(entry)}</span>
         <span class="ledger__cell-value">{resolveEntryValue(entry, facts)}</span>

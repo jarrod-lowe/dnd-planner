@@ -29,6 +29,13 @@
   const modifierTotal = $derived((result.modifiers ?? []).reduce((sum, m) => sum + m.value, 0));
   const effectiveBonus = $derived((result.bonus ?? 0) + modifierTotal);
   const hasBonus = $derived(effectiveBonus !== 0);
+  // The roll's math was replaced after the fact (a hit-die heal floored at 1 or
+  // capped by missing HP): render the raw total struck out with the effective
+  // value beside it — the same replaced-value visual the dropped adv/disadv
+  // roll and the GWF floor already use.
+  const hasReplacedTotal = $derived(
+    result.effective !== undefined && result.effective !== result.total
+  );
 </script>
 
 <div class="dice-toast" role="status">
@@ -83,14 +90,26 @@
         <span class="dice-toast__bonus"> − {Math.abs(effectiveBonus)}</span>
       {/if}
       <span class="dice-toast__equals"> = </span>
-      <span class="dice-toast__total">{result.total}</span>
-    {:else}
-      <span class={natClass(result.natural)}
-        >{result.rolls ? result.rolls.join(' + ') : result.natural}</span
-      >
-      {#if result.rolls && result.rolls.length > 1}
-        <span class="dice-toast__equals"> = </span>
+      {#if hasReplacedTotal}
+        <span class="dice-toast__dropped"><s>{result.total}</s></span>
+        <span class="dice-toast__total">{result.effective}</span>
+      {:else}
         <span class="dice-toast__total">{result.total}</span>
+      {/if}
+    {:else}
+      {#if hasReplacedTotal}
+        <span class="dice-toast__dropped"
+          ><s>{result.rolls ? result.rolls.join(' + ') : result.natural}</s></span
+        >
+        <span class="dice-toast__total">{result.effective}</span>
+      {:else}
+        <span class={natClass(result.natural)}
+          >{result.rolls ? result.rolls.join(' + ') : result.natural}</span
+        >
+        {#if result.rolls && result.rolls.length > 1}
+          <span class="dice-toast__equals"> = </span>
+          <span class="dice-toast__total">{result.total}</span>
+        {/if}
       {/if}
     {/if}
 

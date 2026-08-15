@@ -7,6 +7,7 @@
   import { rollTypeKey } from './panel-renderer/rollType';
   import PanelSlider from './panel-renderer/PanelSlider.svelte';
   import PanelDiceLine from './panel-renderer/PanelDiceLine.svelte';
+  import PanelHitDice from './panel-renderer/PanelHitDice.svelte';
   import PanelSelect from './panel-renderer/PanelSelect.svelte';
   import PanelTextInput from './panel-renderer/PanelTextInput.svelte';
   import PanelSegmented from './panel-renderer/PanelSegmented.svelte';
@@ -98,6 +99,9 @@
   const primaryDiceLine = $derived(
     descriptor.primaryControl?.type === 'dice-line' ? descriptor.primaryControl : undefined
   );
+  const primaryHitDice = $derived(
+    descriptor.primaryControl?.type === 'hit-dice' ? descriptor.primaryControl : undefined
+  );
   const primarySelect = $derived(
     descriptor.primaryControl?.type === 'select' ? descriptor.primaryControl : undefined
   );
@@ -136,6 +140,9 @@
 
   const secondaryDiceLine = $derived(
     descriptor.secondaryControl?.type === 'dice-line' ? descriptor.secondaryControl : undefined
+  );
+  const secondaryHitDice = $derived(
+    descriptor.secondaryControl?.type === 'hit-dice' ? descriptor.secondaryControl : undefined
   );
   const secondarySelect = $derived(
     descriptor.secondaryControl?.type === 'select' ? descriptor.secondaryControl : undefined
@@ -362,6 +369,20 @@
       />
     </div>
   {/if}
+  {#if primaryHitDice}
+    <div class="panel-renderer__control">
+      <PanelHitDice
+        control={primaryHitDice}
+        {editable}
+        {facts}
+        {vars}
+        {selections}
+        advertisedEffects={entry.advertisedEffects}
+        {onSelectionChange}
+        onRoll={handleDiceRoll}
+      />
+    </div>
+  {/if}
   {#if primarySelect}
     <div class="panel-renderer__control">
       <PanelSelect
@@ -423,6 +444,20 @@
         onRoll={handleDiceRoll}
         gwfActive={effectiveGwfActive}
         modifiers={rollModifiers}
+      />
+    </div>
+  {/if}
+  {#if secondaryShouldRender && secondaryHitDice}
+    <div class="panel-renderer__control panel-renderer__control--secondary">
+      <PanelHitDice
+        control={secondaryHitDice}
+        {editable}
+        {facts}
+        {vars}
+        {selections}
+        advertisedEffects={entry.advertisedEffects}
+        {onSelectionChange}
+        onRoll={handleDiceRoll}
       />
     </div>
   {/if}

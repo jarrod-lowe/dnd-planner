@@ -1,0 +1,100 @@
+name: 'Short Rest - Hit Dice'
+description: 'Spending hit dice on a recorded short rest heals (floored at 1 HP per die, capped at missing HP) and spends the die; the chip is removable and dismissing the rest spends nothing'
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/hit-die
+  - class-paladin/class-paladin-level1
+steps:
+  # Turn 1: build CON 6 (modifier -2, max HP 8) and take 5 damage
+  - addOffer:
+      id: set-constitution
+      selections:
+        score: 6
+      assert:
+        facts:
+          con.modifier: -2
+  - addOffer:
+      id: record-damage
+      selections:
+        amount: 5
+      assert:
+        facts:
+          hp.modifier.current: -5
+  - endTurn:
+      assert:
+        facts:
+          hp.modifier.current: -5
+          hp.current: 3
+  # Turn 2: short rest rolling the d10 — a natural 1 with CON -2 floors at 1 HP
+  - evaluate:
+      assert:
+        facts:
+          hitDie.d10.total: 1
+          hitDie.d10.remaining: 1
+  - addOffer:
+      id: record-short-rest
+      selections:
+        rolls:
+          d10:
+            '0': 1
+      assert:
+        facts:
+          hp.modifier.current: -4
+          hitDie.d10.spent: 1
+  # Re-rolling the same slot replaces the result: 9 - 2 = 7, capped at the 5 missing
+  - updateSelections:
+      id: record-short-rest
+      selections:
+        rolls:
+          d10:
+            '0': 9
+      assert:
+        facts:
+          hp.modifier.current: 0
+          hitDie.d10.spent: 1
+  - endTurn:
+      assert:
+        facts:
+          hp.modifier.current: 0
+          hitDie.d10.spent: 1
+  # Turn 3: the heal committed as a removable chip; removing it refunds the heal
+  # and the die together
+  - evaluate:
+      assert:
+        facts:
+          hp.modifier.current: 0
+          hitDie.d10.remaining: 0
+        effects:
+          exists:
+            - effect-hit-die-heal
+  - removeEffect:
+      id: effect-hit-die-heal
+      assert:
+        facts:
+          hp.modifier.current: -5
+          hitDie.d10.spent: 0
+  # Turn 4: dismissing the planned rest consumes nothing
+  - addOffer:
+      id: record-short-rest
+      selections:
+        rolls:
+          d10:
+            '0': 4
+      assert:
+        facts:
+          hp.modifier.current: -3
+          hitDie.d10.spent: 1
+  - removeFromPlan:
+      id: record-short-rest
+      assert:
+        facts:
+          hp.modifier.current: -5
+          hitDie.d10.spent: 0
+  - endTurn:
+      assert:
+        facts:
+          hp.modifier.current: -5
+          hitDie.d10.spent: 0
+          hitDie.d10.remaining: 1

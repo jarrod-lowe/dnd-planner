@@ -19,7 +19,15 @@ vi.mock('sveltekit-i18n', () => {
     'play.information.saveDc': '{{saveType}} Save DC {{dc}}',
     'play.information.aidBonus': '+{{hp}} HP',
     'play.quickSearch.matchCount': '{{count}} matches',
-    'play.quickSearch.more': '+{{count}} more · keep typing'
+    'play.quickSearch.more': '+{{count}} more · keep typing',
+    'play.hitDice.poolLabel': 'd{{sides}} hit dice, {{remaining}} of {{total}} unspent',
+    'play.hitDice.slotLabel': 'd{{sides}} hit die {{slot}} of {{total}}',
+    'play.hitDice.slotSpentLabel': 'd{{sides}} hit die {{slot}} of {{total}} (spent)',
+    'play.hitDice.slotRolledLabel':
+      'd{{sides}} hit die {{slot}} of {{total}}, rolled {{roll}}, heals {{heal}} hp',
+    'play.hitDice.slotSpentRolledLabel':
+      'd{{sides}} hit die {{slot}} of {{total}} (spent), rolled {{roll}}, heals {{heal}} hp, tap to clear',
+    'play.hitDice.bonusLabel': 'Each die: CON {{bonus}}'
   };
 
   return {

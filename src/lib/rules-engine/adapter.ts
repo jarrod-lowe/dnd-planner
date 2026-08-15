@@ -1,4 +1,4 @@
-import type { AvailableRuleEntry, EngineOutput, PlannedRef } from './types';
+import type { AvailableRuleEntry, EffectInstance, EngineOutput, PlannedRef } from './types';
 
 /**
  * M4 contract adapter (W1) — bridges the engine `EngineOutput` to the shape the play
@@ -20,6 +20,14 @@ export interface PlannedEntry extends AvailableRuleEntry {
   instanceId: string;
   /** The captured selections (slider / dice / level) for this instance. */
   selections?: Record<string, unknown>;
+  /**
+   * The effects this instance advertised this turn — its slice of the
+   * turn-wide `EngineOutput.effects`, recovered by the instance-id prefix the
+   * plan fold stamps on every advertised effect id. Lets a plan row tell its
+   * own pending effects apart from the post-plan facts, which already fold
+   * them in.
+   */
+  advertisedEffects: EffectInstance[];
 }
 
 /**
@@ -47,8 +55,19 @@ export function plannedEntry(output: EngineOutput, ref: PlannedRef): PlannedEntr
     applicable: offer.applicable,
     diagnostics: output.planDiagnostics[ref.instanceId] ?? [],
     instanceId: ref.instanceId,
-    selections: ref.selections
+    selections: ref.selections,
+    advertisedEffects: effectsOfInstance(output.effects, ref.instanceId)
   };
+}
+
+/**
+ * An instance's own advertised effects: the fold namespaces every advertised
+ * effect id as `${instanceId}#${i}#${effect.id}`, so the trailing `#` sentinel
+ * scopes the match exactly — `i1` never claims `i10#...`.
+ */
+function effectsOfInstance(effects: EffectInstance[], instanceId: string): EffectInstance[] {
+  const prefix = `${instanceId}#`;
+  return effects.filter((e) => e.id.startsWith(prefix));
 }
 
 /** The per-instance entries for every planned ref, in plan order (skips missing offers). */

@@ -20,6 +20,13 @@ const notLockedLegal: LegalWhen = {
 };
 
 /**
+ * The hit-die die sizes, ascending. Shared by `hit-die` (which derives
+ * `remaining` for each) and `core-events` (whose short rest spends them), so
+ * the two can never disagree on what a hit die can be.
+ */
+export const HIT_DIE_SIZES = [6, 8, 10, 12] as const;
+
+/**
  * The prepare / unprepare offer pair shared by every prepared spell. PAIRED with
  * `preparedSpellCount` below — a module using these offers must also include
  * that contribution in its `derive`, or its manual preparations never count
