@@ -30,8 +30,9 @@ const translations: Record<string, string> = {
   'play.slots.levelSummary': '{{open}} open at L{{level}}',
   'play.slots.summarySeparator': ' | ',
   'play.slots.noneOpen': 'nothing open',
-  'play.slots.levelRow':
-    'Level {{level}} => {{open}} open, {{thisTurn}} this turn, {{spent}} spent, {{total}} total',
+  'play.tray.row':
+    '{{name}}: {{open}} open, {{thisTurn}} this turn, {{spent}} spent, {{total}} total',
+  'play.slots.levelName': 'Level {{level}}',
   'play.slots.levelTile': '{{level}}',
   'play.slots.legendTitle': 'Key',
   'play.slots.legend.open': 'Open',
@@ -674,7 +675,7 @@ describe('Ledger — spell slot cell', () => {
     expect(tray?.id).toBe(toggle().getAttribute('aria-controls'));
     // The tray shows the per-level breakdown row.
     expect(container.querySelector('.slot-tray__row')?.getAttribute('aria-label')).toBe(
-      'Level 1 => 1 open, 0 this turn, 1 spent, 2 total'
+      'Level 1: 1 open, 0 this turn, 1 spent, 2 total'
     );
   });
 

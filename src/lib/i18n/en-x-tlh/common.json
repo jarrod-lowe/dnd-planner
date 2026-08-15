@@ -1825,7 +1825,6 @@
       "levelName": "patlh {{level}}",
       "summarySeparator": ", ",
       "noneOpen": "pagh poS",
-      "levelRow": "patlh {{level}}: {{open}} poS, {{thisTurn}} DaHjaj, {{spent}} lo'ta', {{total}} naQ",
       "levelTile": "{{level}}",
       "legendTitle": "ngoq",
       "legend": {

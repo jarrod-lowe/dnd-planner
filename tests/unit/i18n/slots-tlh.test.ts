@@ -19,7 +19,6 @@ const SLOT_KEYS = [
   'levelName',
   'summarySeparator',
   'noneOpen',
-  'levelRow',
   'levelTile',
   'legendTitle'
 ] as const;
@@ -28,7 +27,7 @@ const SLOT_KEYS = [
  * Keys the tray used to carry and no longer does. They must be gone from BOTH
  * locale files, or the parity test passes while an orphan string ships.
  */
-const REMOVED_SLOT_KEYS = ['legendHint'] as const;
+const REMOVED_SLOT_KEYS = ['legendHint', 'levelRow'] as const;
 
 const LEGEND_KEYS = ['open', 'thisTurn', 'spent'] as const;
 
@@ -84,9 +83,6 @@ describe('spell-slot i18n templates', () => {
     expect(enSlots.levelSummary).toContain('{{open}}');
     expect(enSlots.levelSummary).toContain('{{level}}');
     expect(enSlots.levelTile).toContain('{{level}}');
-    for (const param of ['level', 'open', 'thisTurn', 'spent', 'total']) {
-      expect(enSlots.levelRow, `play.slots.levelRow {{${param}}}`).toContain(`{{${param}}}`);
-    }
   });
 
   it('leaks no English into the tlh tray copy', () => {

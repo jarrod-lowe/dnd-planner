@@ -113,6 +113,18 @@
     return deriveSlotLevels(facts, effects).filter((level) => entry.levels.includes(level.level));
   }
 
+  function slotTrayRowsFor(entry: UiEntrySlotLevels) {
+    return slotLevelsFor(entry).map((level) => ({
+      tile: $t('play.slots.levelTile', { level: level.level }),
+      name: $t('play.slots.levelName', { level: level.level }),
+      order: level.level,
+      open: level.open,
+      thisTurn: level.thisTurn,
+      spent: level.spent,
+      total: level.total
+    }));
+  }
+
   /**
    * One tile per LEVEL. The ledger answers a single question — "can I cast at
    * this level right now?" — so the three states are a precedence, not a
@@ -234,7 +246,7 @@
             </span>
           </button>
           {#if slotsOpen}
-            <SlotTray id={SLOT_TRAY_ID} {levels} />
+            <SlotTray id={SLOT_TRAY_ID} rows={slotTrayRowsFor(entry)} titleKey="play.slots.title" />
           {/if}
         </div>
       {:else}

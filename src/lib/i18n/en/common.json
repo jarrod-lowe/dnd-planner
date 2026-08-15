@@ -1825,7 +1825,6 @@
       "levelName": "Level {{level}}",
       "summarySeparator": ", ",
       "noneOpen": "no slots open",
-      "levelRow": "Level {{level}}: {{open}} open, {{thisTurn}} this turn, {{spent}} spent, {{total}} total",
       "levelTile": "{{level}}",
       "legendTitle": "Key",
       "legend": {
