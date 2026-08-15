@@ -157,6 +157,25 @@ describe('SlotTray', () => {
     expect(row.getAttribute('aria-label')).toBe('Level 6 => 0 open, 1 this turn, 1 spent, 1 total');
   });
 
+  it('surfaces a negative open honestly for an over-budget plan (deliberate — do not clamp)', () => {
+    // The engine applies an illegal over-budget cast and advertises its spend,
+    // so `deriveSlotLevels` hands the tray a negative `open` on purpose. The
+    // tray must show it rather than round it up to 0: the count text and the
+    // row's aria-label both have to say how far into the red the plan is.
+    // 2 level-1 slots, 3 cast this turn.
+    renderComponent([slotLevel(1, 2, 3, 3)]);
+    const row = rows()[0];
+    expect(row.querySelector('.slot-tray__count')?.textContent?.trim()).toBe('-1/2');
+    expect(row.getAttribute('aria-label')).toBe(
+      'Level 1 => -1 open, 3 this turn, 3 spent, 2 total'
+    );
+    // The pip run itself stays sane - `pipRun` floors each repeat at 0, so the
+    // negative open contributes no pips and the three this-turn spends show.
+    expect(row.querySelectorAll('.slot-tray__pip--open').length).toBe(0);
+    expect(row.querySelectorAll('.slot-tray__pip--this-turn').length).toBe(3);
+    expect(row.querySelectorAll('.slot-tray__pip--spent').length).toBe(0);
+  });
+
   it('names all three states in the legend as real text', () => {
     // The legend words are the a11y guarantee that no state is carried by
     // texture alone, so they must survive even though the hint sentence went.

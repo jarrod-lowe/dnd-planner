@@ -150,6 +150,26 @@ describe('deriveSlotLevels', () => {
     expect(result.map((l) => l.level)).toEqual([1, 3]);
   });
 
+  it('reports a negative open for an over-budget plan (deliberate — do not clamp)', async () => {
+    const { deriveSlotLevels } = await import('$lib/play/slotLevels');
+    // The engine does not veto an illegal cast: it applies it and advertises the
+    // spend, so `spent` can exceed `total`. Two level-1 slots, three cast.
+    const facts: Facts = {
+      'spellcasting.slots.level1.total': 2,
+      'spellcasting.slots.level1.spent': 3
+    };
+    const advertised = [
+      effect('bless', { 'spellcasting.slots.level1.spent': 1 }),
+      effect('cure-wounds', { 'spellcasting.slots.level1.spent': 1 }),
+      effect('shield-of-faith', { 'spellcasting.slots.level1.spent': 1 })
+    ];
+    // -1, NOT 0: the player is one slot into the red and must be told the size
+    // of the overdraft. The ledger flags the illegality separately.
+    expect(deriveSlotLevels(facts, advertised)).toEqual([
+      { level: 1, total: 2, open: -1, thisTurn: 3, spent: 3 }
+    ]);
+  });
+
   it('covers levels 1 through 9', async () => {
     const { deriveSlotLevels } = await import('$lib/play/slotLevels');
     const facts: Facts = {};

@@ -266,5 +266,12 @@ Final
   - **Both documented risks are clear.** Hatch reads correctly at 9px pip and 18px tile — no diamond fallback needed. At 1024×768 all 14 cells fit one row; a simulated nine-level worst case wraps onto a second ledger row, legible and unclipped, so the `5/6`-collapse fallback is **not needed**.
 - [x] Branch off main, commit (no AI attribution in the message)
   - Branch `spell-slot-display`, commit `6bb17020`. `docs/plans/ideas/_sample.md` was deliberately left out — it is a pre-existing local edit unrelated to this feature.
+Review feedback — PR #386 (Codex, automated)
+
+- [x] **P1 "Use a theme token for the hatch color"** (`Ledger.svelte`) — **rejected, false positive.** `color-mix(in srgb, var(--token) N%, transparent)` derives an alpha from an existing theme variable; it does not invent a colour. It is the established idiom here: `EffectChip.svelte:241-242` uses exactly it for the `--expiring` hatch this deliberately mirrors, and six components use `color-mix` in total. No change.
+- [x] **P2 "Clamp slot breakdowns for illegal over-budget plans"** (`slotLevels.ts`) — **rejected by user decision.** The defect is real (an over-budget plan drives `spent` past `total`, so the tray shows `-1/2` and announces "-1 open"), but the user ruled the negative is correct: *"Showing -1 spell slots is valid if the player plays spells illegally."* The ledger already flags over-budget separately, so the number's job is to say how far over.
+  - Pinned rather than left implicit: a comment on the `open` computation and on `SlotLevel.open` forbidding a clamp, plus regression tests in `slotLevels.test.ts` and `SlotTray.test.ts`. Non-vacuity proved by applying a clamp in three places in turn and watching each assertion fail, then reverting.
+  - Confirmed not broken, just negative: `pipRun()`'s `Math.max(0, …)` keeps the pip run sane (3 pips, no negative-length run).
+
 - [x] Open PR
   - **Spent-pip contrast: user accepted 1.39:1 as shipped**, on the grounds that the three states differ by shape/texture (solid / hatched / outlined), not colour alone — so the low-contrast ring is never the sole carrier of meaning. `--md-sys-color-outline` (3.65:1) stays documented above as the escalation if that judgement changes.

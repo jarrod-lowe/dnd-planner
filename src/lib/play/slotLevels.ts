@@ -24,7 +24,10 @@ export interface SlotLevel {
   level: number;
   /** Slots of this level the character has in total. */
   total: number;
-  /** Slots still castable right now (`total - spent`). */
+  /**
+   * Slots still castable right now (`total - spent`). Negative when the plan is
+   * over budget — that is intended, not a bug; see `deriveSlotLevels`.
+   */
   open: number;
   /** Slots spent by the current, uncommitted plan. */
   thisTurn: number;
@@ -70,6 +73,14 @@ export function deriveSlotLevels(facts: Facts, advertised: EffectInstance[]): Sl
       thisTurn += effect.state?.[path] ?? 0;
     }
 
+    // `open` is DELIBERATELY allowed to go negative — do NOT clamp it with
+    // `Math.max(0, …)`. The engine does not veto an over-budget cast: it still
+    // applies the illegal cast and advertises its slot spend, so `spent` can
+    // legitimately exceed `total`. The ledger already surfaces "this plan is
+    // over budget" separately (`status.legal === false` drives its warn state),
+    // so the number's job here is to say *how far* over: "-1" tells the player
+    // they are one slot into the red. Reporting `0` would hide the overdraft
+    // and make an illegal plan look castable.
     levels.push({ level, total, open: total - spent, thisTurn, spent });
   }
 
