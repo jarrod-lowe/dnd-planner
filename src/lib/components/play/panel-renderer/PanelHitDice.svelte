@@ -31,8 +31,16 @@
     sides: number;
     /** Total dice ever owned at this size — one slot roller per die. */
     total: number;
-    /** Unspent dice — slots at index >= remaining are spent and render disabled. */
-    remaining: number;
+    /**
+     * COMMITTED-based availability — slots at index >= threshold are spent by
+     * an EARLIER rest and render disabled. The raw `remaining` fact is resolved
+     * against POST-plan facts, so it already includes this row's own pending
+     * spends; offsetting it back by the row's own rolled slots (each rolled
+     * slot spends exactly one die) yields availability that the row's own rolls
+     * cannot shrink. Rest rows are plan-terminal (at most one per plan), so the
+     * offset is exact — the row's spends can never double-count.
+     */
+    threshold: number;
     slots: number[];
   }
 
@@ -54,25 +62,6 @@
     return resolved > 0 ? Math.floor(resolved) : fallback;
   }
 
-  const pools = $derived.by<ResolvedPool[]>(() =>
-    control.pools
-      .map((pool) => {
-        const total = resolvePoolNumber(pool.total, 0);
-        return {
-          sides: pool.sides,
-          total,
-          // Clamp defensively: `remaining` may exceed `total` if a reset races a spend.
-          remaining: Math.min(resolvePoolNumber(pool.remaining, 0), total),
-          slots: [] as number[]
-        };
-      })
-      .filter((pool) => pool.total > 0)
-      .map((pool) => ({
-        ...pool,
-        slots: Array.from({ length: pool.total }, (_, i) => i)
-      }))
-  );
-
   // Unlike a dice-line's rollResults, hit-dice rolls are SLOT-KEYED and ride
   // the pending row's `selections.rolls` (the engine reads them from there).
   // Deriving the view from the selections prop means the rolls survive any
@@ -93,6 +82,29 @@
   }
 
   const rolls = $derived(parseRolls(selections.rolls));
+
+  const pools = $derived.by<ResolvedPool[]>(() =>
+    control.pools
+      .map((pool) => {
+        const total = resolvePoolNumber(pool.total, 0);
+        // Clamp defensively: `remaining` may exceed `total` if a reset races a spend.
+        const remaining = Math.min(resolvePoolNumber(pool.remaining, 0), total);
+        // Distinct rolled SLOT KEYS for this size (a re-roll replaces its slot,
+        // so it counts once) — the row's own pending spends to offset back out.
+        const ownRolls = Object.keys(rolls[`d${pool.sides}`] ?? {}).length;
+        return {
+          sides: pool.sides,
+          total,
+          threshold: Math.min(remaining + ownRolls, total),
+          slots: [] as number[]
+        };
+      })
+      .filter((pool) => pool.total > 0)
+      .map((pool) => ({
+        ...pool,
+        slots: Array.from({ length: pool.total }, (_, i) => i)
+      }))
+  );
 
   // The CON modifier added to each die's heal. Surfaced on the chip exactly as
   // a dice-line surfaces a die bonus ("d10+2" before the roll, natural+bonus
@@ -162,7 +174,7 @@
   });
 
   function rollSlot(pool: ResolvedPool, slot: number): void {
-    if (!editable || slot >= pool.remaining) return;
+    if (!editable || slot >= pool.threshold) return;
     const natural = Math.floor(Math.random() * pool.sides) + 1;
     const key = `d${pool.sides}`;
     // Re-roll replaces: one slot = one die = one entry in the map.
@@ -182,9 +194,9 @@
     );
   }
 
-  // A roll stranded on a slot the spent boundary has moved past (an earlier
-  // plan item spent the same die) can ONLY be cleared — committing it would
-  // error die_already_spent with no other fix but deleting the row.
+  // A roll stranded on a slot an EARLIER rest's committed spend has blocked
+  // can ONLY be cleared — committing it would error die_already_spent with no
+  // other fix but deleting the row.
   function clearRoll(pool: ResolvedPool, slot: number): void {
     if (!editable) return;
     const key = `d${pool.sides}`;
@@ -203,9 +215,12 @@
   }
 
   function poolAriaLabel(pool: ResolvedPool): string {
+    // The announced unspent count is the COMMITTED-based threshold, not the raw
+    // post-plan `remaining` — the row's own pending rolls are still unspent
+    // until End Turn commits them.
     return $t('play.hitDice.poolLabel', {
       sides: String(pool.sides),
-      remaining: String(pool.remaining),
+      remaining: String(pool.threshold),
       total: String(pool.total)
     });
   }
@@ -217,14 +232,14 @@
       total: String(pool.total)
     };
     // A rolled slot announces its roll and its CAPPED heal (the same value the
-    // engine commits — never a heal that lands 0). A rolled slot the spent
-    // boundary has since moved past stays tappable solely to clear the roll,
+    // engine commits — never a heal that lands 0). A rolled slot blocked by an
+    // EARLIER rest's committed spend stays tappable solely to clear the roll,
     // so its label says so; only never-rolled slots announce the bare spent
     // label.
     const rolled = slotRoll(pool, slot);
     if (rolled !== undefined) {
       const heal = announcedHeals.get(`d${pool.sides}:${slot}`) ?? healFor(rolled);
-      if (slot >= pool.remaining) {
+      if (slot >= pool.threshold) {
         return $t('play.hitDice.slotSpentRolledLabel', {
           ...params,
           roll: String(rolled),
@@ -237,7 +252,7 @@
         heal: String(heal)
       });
     }
-    if (slot >= pool.remaining) return $t('play.hitDice.slotSpentLabel', params);
+    if (slot >= pool.threshold) return $t('play.hitDice.slotSpentLabel', params);
     return $t('play.hitDice.slotLabel', params);
   }
 </script>
@@ -252,7 +267,7 @@
         data-die-sides={pool.sides}
       >
         {#each pool.slots as slot (slot)}
-          {@const spent = slot >= pool.remaining}
+          {@const spent = slot >= pool.threshold}
           {@const rolled = slotRoll(pool, slot) !== undefined}
           <DieChip
             text={chipText(pool, slot)}

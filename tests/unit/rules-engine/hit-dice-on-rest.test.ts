@@ -184,6 +184,49 @@ describe('spending hit dice on a short rest', () => {
     expect(chip.display?.value).toBe(4);
   });
 
+  // The live panel flow: each tap re-evaluates the plan with a LARGER rolls
+  // payload on the same open row. The row's own pending spends must not poison
+  // its own availability — rolling slot 0 must leave the highest slot rollable,
+  // and a payload rolling both must spend both with no die_already_spent.
+  it('rolls slot 0 then the highest slot in one open rest row without self-poisoning', () => {
+    const first = evaluatePlan(
+      modules,
+      { 'hitDie.d10.total': 6 },
+      [rest('r1', { d10: { '0': 4 } })],
+      [damageTaken(20)]
+    );
+    expect(first.facts['hitDie.d10.spent']).toBe(1);
+    expect(first.planDiagnostics.get('r1')).toBeUndefined();
+
+    const second = evaluatePlan(
+      modules,
+      { 'hitDie.d10.total': 6 },
+      [rest('r1', { d10: { '0': 4, '5': 6 } })],
+      [damageTaken(20)]
+    );
+    expect(second.facts['hitDie.d10.spent']).toBe(2);
+    expect(second.planDiagnostics.get('r1')).toBeUndefined();
+    expect(healChips(second.advertised)).toHaveLength(2);
+  });
+
+  // A spend COMMITTED by an earlier rest (endTurn) still blocks its slot for a
+  // NEW rest row: threshold semantics are committed-based, never waived by the
+  // row's own rolls. (Pinned here alongside the self-poisoning case so the fix
+  // cannot loosen one while fixing the other.)
+  it('keeps rejecting a slot blocked by a committed spend after the fix', () => {
+    const { facts, planDiagnostics, advertised } = evaluatePlan(
+      modules,
+      { 'hitDie.d10.total': 6 },
+      [rest('r2', { d10: { '0': 4, '5': 6 } })],
+      [spentDie(10, 1), damageTaken(20)]
+    );
+    expect(facts['hitDie.d10.spent']).toBe(2); // committed 1 + slot 0 only
+    expect(healChips(advertised)).toHaveLength(1);
+    expect(planDiagnostics.get('r2')?.map((d) => d.code)).toEqual([
+      'rule.dnd-5e-2024.core-events.record-short-rest-offer.die_already_spent'
+    ]);
+  });
+
   // The committed path: two dice rolled in ONE rest must remain independently
   // removable after End Turn commits them. The strip keys chips by effect.id and
   // removeEffect filters by exact id, so a shared id would (a) break the keyed

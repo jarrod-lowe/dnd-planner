@@ -150,6 +150,14 @@ function shortRestOffer(): Offer {
         // erroring invalid_slot against pools that do not exist.
         if (!f.has(`hitDie.d${n}.total`)) continue;
         const total = f.num(`hitDie.d${n}.total`);
+        // COMMITTED-only availability. The plan fold derives an action's facts
+        // from `committed + advertised-so-far`, and a rest row's own advertised
+        // spends are pushed only AFTER its apply runs — so `remaining` here
+        // already excludes this row's own pending rolls. It shrinks only when an
+        // EARLIER rest's spend was aged into `committed` at end of turn, which is
+        // exactly the spend a `die_already_spent` should reject. (The UI panel,
+        // by contrast, resolves its facts POST-plan, so its own rolls DO shrink
+        // its `remaining` — that offset lives in PanelHitDice, not here.)
         const remaining = f.num(`hitDie.d${n}.remaining`);
         for (const slot of Object.keys(sizeRolls).sort((a, b) => Number(a) - Number(b))) {
           const index = Number(slot);
