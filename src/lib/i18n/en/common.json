@@ -1822,6 +1822,7 @@
       "title": "Spell Slots",
       "tilesLabel": "Spell slots: {{summary}}",
       "levelSummary": "{{open}} open at level {{level}}",
+      "levelName": "Level {{level}}",
       "summarySeparator": ", ",
       "noneOpen": "no slots open",
       "levelRow": "Level {{level}}: {{open}} open, {{thisTurn}} this turn, {{spent}} spent, {{total}} total",
@@ -1832,6 +1833,15 @@
         "thisTurn": "This turn",
         "spent": "Spent"
       }
+    },
+    "tray": {
+      "row": "{{name}}: {{open}} open, {{thisTurn}} this turn, {{spent}} spent, {{total}} total"
+    },
+    "economy": {
+      "toggle": "Show action breakdown",
+      "tilesLabel": "Action economy: {{summary}}",
+      "poolOpen": "{{name}}: {{open}}",
+      "noneOpen": "None open"
     },
     "slider": {
       "freeUse": "Free Use",

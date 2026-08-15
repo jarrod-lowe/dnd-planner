@@ -16,6 +16,7 @@ const SLOT_KEYS = [
   'title',
   'tilesLabel',
   'levelSummary',
+  'levelName',
   'summarySeparator',
   'noneOpen',
   'levelRow',

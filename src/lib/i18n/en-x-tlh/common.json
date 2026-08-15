@@ -1822,6 +1822,7 @@
       "title": "mugh patlhmey",
       "tilesLabel": "mugh patlhmey: {{summary}}",
       "levelSummary": "{{open}} poS patlh {{level}}",
+      "levelName": "patlh {{level}}",
       "summarySeparator": ", ",
       "noneOpen": "pagh poS",
       "levelRow": "patlh {{level}}: {{open}} poS, {{thisTurn}} DaHjaj, {{spent}} lo'ta', {{total}} naQ",
@@ -1832,6 +1833,15 @@
         "thisTurn": "DaHjaj",
         "spent": "lo'ta'"
       }
+    },
+    "tray": {
+      "row": "{{name}}: {{open}} poS, {{thisTurn}} DaHjaj, {{spent}} lo'ta', {{total}} naQ"
+    },
+    "economy": {
+      "toggle": "DIv DIv yI'ang",
+      "tilesLabel": "DIv DIv: {{summary}}",
+      "poolOpen": "{{name}}: {{open}}",
+      "noneOpen": "pagh poS"
     },
     "slider": {
       "freeUse": "lo'Ha'",
