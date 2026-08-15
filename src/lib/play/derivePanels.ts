@@ -67,22 +67,18 @@ const RESOURCES: UiEntry[] = [
   // declared both a topBar and a resources entry).
   { type: 'usedMax', label: 'play.stats.hp', total: 'hp.max', remaining: 'hp.current' },
   {
-    type: 'usedMax',
+    type: 'actionPools',
     label: 'play.stats.actions',
-    total: 'actions.max',
-    remaining: 'actions.remaining'
-  },
-  {
-    type: 'usedMax',
-    label: 'play.stats.bonusActions',
-    total: 'bonusActions.max',
-    remaining: 'bonusActions.remaining'
-  },
-  {
-    type: 'usedMax',
-    label: 'play.stats.reactions',
-    total: 'reactions.max',
-    remaining: 'reactions.remaining'
+    factPrefix: '',
+    pools: [
+      { key: 'actions', label: 'play.stats.actions', shortLabel: 'play.ledger.short.actions' },
+      {
+        key: 'bonusActions',
+        label: 'play.stats.bonusActions',
+        shortLabel: 'play.ledger.short.bonusActions'
+      },
+      { key: 'reactions', label: 'play.stats.reactions', shortLabel: 'play.ledger.short.reactions' }
+    ]
   },
   {
     type: 'usedMax',
@@ -195,16 +191,6 @@ const STEED_CORE: { label: string; total: string; remaining: string }[] = [
     label: 'play.stats.steed.movement',
     total: 'companion.steed.movement.total',
     remaining: 'companion.steed.movement.remaining'
-  },
-  {
-    label: 'play.stats.steed.actions',
-    total: 'companion.steed.actions.max',
-    remaining: 'companion.steed.actions.remaining'
-  },
-  {
-    label: 'play.stats.steed.bonusActions',
-    total: 'companion.steed.bonusActions.max',
-    remaining: 'companion.steed.bonusActions.remaining'
   }
 ];
 
@@ -223,6 +209,29 @@ function deriveSteedResources(facts: Facts): UiEntry[] {
     remaining: e.remaining,
     subject: 'steed'
   }));
+  // Add actionPools entry when either actions.max or bonusActions.max is present
+  const hasActions = present(facts, 'companion.steed.actions.max');
+  const hasBonusActions = present(facts, 'companion.steed.bonusActions.max');
+  if (hasActions || hasBonusActions) {
+    entries.push({
+      type: 'actionPools',
+      label: 'play.stats.steed.actions',
+      subject: 'steed',
+      factPrefix: 'companion.steed.',
+      pools: [
+        {
+          key: 'actions',
+          label: 'play.stats.steed.actions',
+          shortLabel: 'play.ledger.short.steed.actions'
+        },
+        {
+          key: 'bonusActions',
+          label: 'play.stats.steed.bonusActions',
+          shortLabel: 'play.ledger.short.steed.bonusActions'
+        }
+      ]
+    });
+  }
   const ct = facts['companion.steed.creatureType'];
   const ability = typeof ct === 'number' ? STEED_ABILITY_BY_TYPE[ct] : undefined;
   if (ability && present(facts, `companion.steed.${ability.pool}.total`)) {
@@ -240,6 +249,7 @@ function deriveSteedResources(facts: Facts): UiEntry[] {
 /** Canonical display order. Kept identical to the copy in `extractTopBar.ts`. */
 const UI_ENTRY_TYPE_ORDER: Record<string, number> = {
   usedMax: 0,
+  actionPools: 0, // Ties usedMax to preserve catalog position (after HP, before movement)
   value: 1,
   modifier: 2,
   hitDie: 3,
@@ -267,7 +277,10 @@ export function deriveTopBarEntries(facts: Facts): UiEntry[] {
 /** The resources-panel entries for the current facts (incl. the class hit die). */
 export function deriveResourceEntries(facts: Facts): UiEntry[] {
   const entries: UiEntry[] = RESOURCES.filter(
-    (e) => e.type === 'usedMax' && present(facts, e.total)
+    (e) =>
+      (e.type === 'usedMax' && present(facts, e.total)) ||
+      (e.type === 'actionPools' &&
+        e.pools.some((p) => present(facts, `${e.factPrefix}${p.key}.max`)))
   );
   for (const die of HIT_DIE_SIZES) {
     const total = `hitDie.d${die}.total`;

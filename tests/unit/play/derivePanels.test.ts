@@ -143,7 +143,7 @@ describe('derivePanels — resources', () => {
   it('emits pools whose total fact is present', () => {
     const facts = {
       'actions.max': 1,
-      'actions.remaining': 1,
+      'actions.spent': 0,
       'spellcasting.max': 1,
       'spellcasting.remaining': 1,
       'layOnHands.pool.total': 5,
@@ -154,6 +154,94 @@ describe('derivePanels — resources', () => {
     expect(labels).toContain('play.stats.spellcasting');
     expect(labels).toContain('play.stats.layOnHands');
     expect(labels).not.toContain('play.stats.divinity'); // no divinity facts
+  });
+
+  it('emits actionPools entry positioned after HP and before movement', () => {
+    const facts = {
+      'hp.max': 12,
+      'hp.current': 12,
+      'actions.max': 1,
+      'actions.spent': 0,
+      'bonusActions.max': 1,
+      'bonusActions.spent': 0,
+      'reactions.max': 1,
+      'reactions.spent': 0,
+      'character.movement.total': 30,
+      'character.movement.remaining': 30
+    };
+    const entries = deriveResourceEntries(facts);
+    const labels = entries.map((e) => e.label);
+    const hpIndex = labels.indexOf('play.stats.hp');
+    const actionPoolsIndex = labels.indexOf('play.stats.actions');
+    const movementIndex = labels.indexOf('play.stats.movement');
+    expect(hpIndex).toBeGreaterThanOrEqual(0);
+    expect(actionPoolsIndex).toBeGreaterThanOrEqual(0);
+    expect(movementIndex).toBeGreaterThanOrEqual(0);
+    expect(actionPoolsIndex).toBe(hpIndex + 1);
+    expect(actionPoolsIndex).toBeLessThan(movementIndex);
+  });
+
+  it('emits actionPools entry with correct shape (label, factPrefix, pools)', () => {
+    const facts = {
+      'actions.max': 1,
+      'actions.spent': 0,
+      'bonusActions.max': 1,
+      'bonusActions.spent': 0,
+      'reactions.max': 1,
+      'reactions.spent': 0
+    };
+    const actionPools = deriveResourceEntries(facts).find((e) => e.type === 'actionPools');
+    expect(actionPools).toBeDefined();
+    expect(actionPools?.type).toBe('actionPools');
+    expect(actionPools?.label).toBe('play.stats.actions');
+    expect(actionPools?.factPrefix).toBe('');
+    expect(actionPools?.type === 'actionPools' && actionPools.pools).toEqual([
+      { key: 'actions', label: 'play.stats.actions', shortLabel: 'play.ledger.short.actions' },
+      {
+        key: 'bonusActions',
+        label: 'play.stats.bonusActions',
+        shortLabel: 'play.ledger.short.bonusActions'
+      },
+      { key: 'reactions', label: 'play.stats.reactions', shortLabel: 'play.ledger.short.reactions' }
+    ]);
+  });
+
+  it('emits no actionPools entry when no action facts exist', () => {
+    const facts = {
+      'hp.max': 12,
+      'hp.current': 12
+    };
+    const entries = deriveResourceEntries(facts);
+    expect(entries.some((e) => e.type === 'actionPools')).toBe(false);
+    expect(entries.some((e) => e.label === 'play.stats.actions')).toBe(false);
+    expect(entries.some((e) => e.label === 'play.stats.bonusActions')).toBe(false);
+    expect(entries.some((e) => e.label === 'play.stats.reactions')).toBe(false);
+  });
+
+  it('emits no usedMax actions entries (actionPools replaces them)', () => {
+    const facts = {
+      'actions.max': 1,
+      'actions.spent': 0,
+      'bonusActions.max': 1,
+      'bonusActions.spent': 0,
+      'reactions.max': 1,
+      'reactions.spent': 0
+    };
+    const entries = deriveResourceEntries(facts);
+    const usedMaxActions = entries.filter(
+      (e) => e.type === 'usedMax' && e.label === 'play.stats.actions'
+    );
+    const usedMaxBonus = entries.filter(
+      (e) => e.type === 'usedMax' && e.label === 'play.stats.bonusActions'
+    );
+    const usedMaxReactions = entries.filter(
+      (e) => e.type === 'usedMax' && e.label === 'play.stats.reactions'
+    );
+    expect(usedMaxActions).toEqual([]);
+    expect(usedMaxBonus).toEqual([]);
+    expect(usedMaxReactions).toEqual([]);
+    // One actionPools entry instead
+    expect(entries.filter((e) => e.type === 'actionPools')).toHaveLength(1);
   });
 
   it('includes an HP row in the ledger (hp.yaml declared both panels)', () => {
@@ -225,9 +313,9 @@ describe('derivePanels — resources', () => {
       'companion.steed.movement.total': 60,
       'companion.steed.movement.remaining': 60,
       'companion.steed.actions.max': 1,
-      'companion.steed.actions.remaining': 1,
+      'companion.steed.actions.spent': 0,
       'companion.steed.bonusActions.max': 1,
-      'companion.steed.bonusActions.remaining': 1,
+      'companion.steed.bonusActions.spent': 0,
       'companion.steed.healingTouch.total': 1,
       'companion.steed.feyStep.total': 1,
       'companion.steed.feyStep.remaining': 1,
@@ -240,13 +328,29 @@ describe('derivePanels — resources', () => {
         'play.stats.steed.hp',
         'play.stats.steed.movement',
         'play.stats.steed.actions',
-        'play.stats.steed.bonusActions',
         'play.stats.steed.feyStep'
       ])
     );
     // Only the creature-type-matched ability (feyStep) — not healingTouch/fellGlare.
     expect(labels).not.toContain('play.stats.steed.healingTouch');
     expect(labels).not.toContain('play.stats.steed.fellGlare');
+    // One actionPools entry, not separate usedMax actions/bonusActions
+    const actionPoolsEntries = steed.filter((e) => e.type === 'actionPools');
+    expect(actionPoolsEntries).toHaveLength(1);
+    expect(actionPoolsEntries[0].label).toBe('play.stats.steed.actions');
+    expect(actionPoolsEntries[0].subject).toBe('steed');
+    expect(actionPoolsEntries[0].type === 'actionPools' && actionPoolsEntries[0].pools).toEqual([
+      {
+        key: 'actions',
+        label: 'play.stats.steed.actions',
+        shortLabel: 'play.ledger.short.steed.actions'
+      },
+      {
+        key: 'bonusActions',
+        label: 'play.stats.steed.bonusActions',
+        shortLabel: 'play.ledger.short.steed.bonusActions'
+      }
+    ]);
   });
 
   it('emits one slotLevels entry listing every level with slots (paladin at level 11)', () => {
@@ -289,5 +393,34 @@ describe('derivePanels — resources', () => {
       (e) => e.subject === 'steed'
     );
     expect(steed).toEqual([]);
+  });
+
+  it('emits steed actionPools only when either actions.max or bonusActions.max is present', () => {
+    // Only actions.max present → no actionPools entry
+    const factsActionsOnly = {
+      'companion.steed.actions.max': 1,
+      'companion.steed.actions.spent': 0
+    };
+    const steedActionsOnly = deriveResourceEntries(factsActionsOnly).filter(
+      (e) => e.subject === 'steed'
+    );
+    expect(steedActionsOnly.some((e) => e.type === 'actionPools')).toBe(true);
+
+    // Only bonusActions.max present → no actionPools entry
+    const factsBonusOnly = {
+      'companion.steed.bonusActions.max': 1,
+      'companion.steed.bonusActions.spent': 0
+    };
+    const steedBonusOnly = deriveResourceEntries(factsBonusOnly).filter(
+      (e) => e.subject === 'steed'
+    );
+    expect(steedBonusOnly.some((e) => e.type === 'actionPools')).toBe(true);
+
+    // Neither present → no actionPools entry
+    const factsNeither = {
+      'companion.steed.hp.max': 30
+    };
+    const steedNeither = deriveResourceEntries(factsNeither).filter((e) => e.subject === 'steed');
+    expect(steedNeither.some((e) => e.type === 'actionPools')).toBe(false);
   });
 });
