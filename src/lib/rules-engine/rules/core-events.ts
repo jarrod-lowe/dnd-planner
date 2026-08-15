@@ -144,6 +144,11 @@ function shortRestOffer(): Offer {
       for (const n of HIT_DIE_SIZES) {
         const sizeRolls = rolls[`d${n}`];
         if (!sizeRolls) continue;
+        // Guarded like record-damage's concentration check: a plan may carry
+        // rolls under a rule set lacking the hit-die group (groups changed after
+        // the plan was built). Absent facts no-op the rolls silently instead of
+        // erroring invalid_slot against pools that do not exist.
+        if (!f.has(`hitDie.d${n}.total`)) continue;
         const total = f.num(`hitDie.d${n}.total`);
         const remaining = f.num(`hitDie.d${n}.remaining`);
         for (const slot of Object.keys(sizeRolls).sort((a, b) => Number(a) - Number(b))) {

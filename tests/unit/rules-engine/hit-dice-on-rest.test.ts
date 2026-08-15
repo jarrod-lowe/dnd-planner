@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { evaluate, evaluatePlan } from '$lib/rules-engine';
+import { evaluate, evaluatePlan, endTurn } from '$lib/rules-engine';
 import type { EffectInstance, PlannedRef } from '$lib/rules-engine';
 import coreEvents from '$lib/rules-engine/rules/core-events';
 import hitDie from '$lib/rules-engine/rules/hit-die';
@@ -182,5 +182,48 @@ describe('spending hit dice on a short rest', () => {
     expect(chip.state).toEqual({ 'hp.modifier.current': 4, 'hitDie.d10.spent': 1 });
     expect(chip.expiry).toEqual({ kind: 'untilLongRest' });
     expect(chip.display?.value).toBe(4);
+  });
+
+  // The committed path: two dice rolled in ONE rest must remain independently
+  // removable after End Turn commits them. The strip keys chips by effect.id and
+  // removeEffect filters by exact id, so a shared id would (a) break the keyed
+  // each with a duplicate-key error and (b) drop BOTH heals+spends at once.
+  it('commits two dice from one rest with distinct ids; removing one chip keeps the other', () => {
+    const { advertised } = evaluatePlan(
+      modules,
+      { 'hitDie.d10.total': 2 },
+      [rest('r1', { d10: { '0': 4, '1': 5 } })],
+      [damageTaken(20)]
+    );
+    const committed = endTurn([damageTaken(20)], advertised);
+    const chips = healChips(committed);
+    expect(chips).toHaveLength(2);
+    // Distinct committed ids: no duplicate key for the strip's keyed each, and
+    // an exact-id removal cannot sweep both.
+    expect(new Set(chips.map((c) => c.id)).size).toBe(2);
+
+    // playStore.removeEffect: filter the committed set by exact id, re-evaluate.
+    const kept = committed.filter((e) => e.id !== chips[0]!.id);
+    const after = evaluate({ modules, committed: kept });
+    expect(after.facts['hitDie.d10.spent']).toBe(1);
+    // 20 damage, heals 4 + 5; removing the 4-heal chip refunds it with the die.
+    expect(after.facts['hp.modifier.current']).toBe(-15);
+  });
+
+  // A plan may carry rolls under a rule set lacking the hit-die group (the
+  // character's groups changed after the plan was built). Mirror record-damage's
+  // concentration guard: absent facts mean the rolls silently no-op — never a
+  // spurious invalid_slot ERROR against a pool that does not exist.
+  it('silently ignores rolls when the hit-die group is not loaded', () => {
+    const { facts, planDiagnostics, advertised } = evaluatePlan(
+      [coreEvents, hp],
+      {},
+      [rest('r1', { d10: { '0': 4 } })],
+      [damageTaken(8)]
+    );
+    expect(planDiagnostics.get('r1')).toBeUndefined();
+    expect(healChips(advertised)).toHaveLength(0);
+    expect(facts['hp.modifier.current']).toBe(-8);
+    expect(facts['hitDie.d10.spent'] ?? 0).toBe(0);
   });
 });
