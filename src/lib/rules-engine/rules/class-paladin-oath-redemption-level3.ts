@@ -55,13 +55,10 @@ const oath: RuleModule = {
         information: [
           {
             type: 'text',
-            label: 'play.information.saveDc',
-            labelValues: {
-              // The save the attacker makes (WIS); the DC value itself is the
-              // spell save DC, but which stat derives it isn't this label's business.
-              saveType: { string: 'WIS' },
-              dc: { fact: 'spellcasting.saveDC' }
-            }
+            // The save the attacker makes (WIS); the DC value itself is the
+            // spell save DC, but which stat derives it isn't this label's business.
+            label: 'play.information.saveDcWis',
+            labelValues: { dc: { fact: 'spellcasting.saveDC' } }
           }
         ],
         intents: { DEFEND: 'ward' },

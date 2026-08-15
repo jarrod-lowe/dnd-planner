@@ -54,9 +54,8 @@ steps:
               # Humanoids in the sphere make a Charisma save
               information:
                 - type: text
-                  label: play.information.saveDc
+                  label: play.information.saveDcCha
                   labelValues:
-                    saveType: { string: CHA }
                     dc: { fact: spellcasting.saveDC }
   # Set charisma and cast
   - addOffer:

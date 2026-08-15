@@ -68,13 +68,10 @@ const sanctuary: RuleModule = {
         information: [
           {
             type: 'text',
-            label: 'play.information.saveDc',
-            labelValues: {
-              // Attackers targeting the warded creature make a WIS save; the DC
-              // value is the spell save DC.
-              saveType: { string: 'WIS' },
-              dc: { fact: 'spellcasting.saveDC' }
-            }
+            // Attackers targeting the warded creature make a WIS save; the DC
+            // value is the spell save DC.
+            label: 'play.information.saveDcWis',
+            labelValues: { dc: { fact: 'spellcasting.saveDC' } }
           }
         ],
         intents: { DEFEND: 'ward' },

@@ -42,9 +42,8 @@ steps:
             ui:
               information:
                 - type: text
-                  label: play.information.saveDc
+                  label: play.information.saveDcStrDex
                   labelValues:
-                    saveType: { string: 'STR/DEX' }
                     dc: { fact: shove.dc }
               secondaryControl:
                 type: segmented

@@ -68,12 +68,9 @@ const command: RuleModule = {
         information: [
           {
             type: 'text',
-            label: 'play.information.saveDc',
-            labelValues: {
-              // The target makes a WIS save; the DC value is the spell save DC.
-              saveType: { string: 'WIS' },
-              dc: { fact: 'spellcasting.saveDC' }
-            }
+            // The target makes a WIS save; the DC value is the spell save DC.
+            label: 'play.information.saveDcWis',
+            labelValues: { dc: { fact: 'spellcasting.saveDC' } }
           }
         ],
         intents: { CONTROL: 'single' },

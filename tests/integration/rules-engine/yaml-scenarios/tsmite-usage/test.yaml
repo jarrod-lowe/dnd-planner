@@ -31,9 +31,8 @@ steps:
               # The target makes a Strength save (matches the ui.saveType flag)
               information:
                 - type: text
-                  label: play.information.saveDc
+                  label: play.information.saveDcStr
                   labelValues:
-                    saveType: { string: STR }
                     dc: { fact: spellcasting.saveDC }
   - addOffer:
       id: unarmed-strike-use-action

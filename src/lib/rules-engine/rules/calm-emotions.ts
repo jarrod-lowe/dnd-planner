@@ -68,13 +68,10 @@ const calmEmotions: RuleModule = {
         information: [
           {
             type: 'text',
-            label: 'play.information.saveDc',
-            labelValues: {
-              // Humanoids in the sphere make a CHA save; the DC value is the
-              // spell save DC.
-              saveType: { string: 'CHA' },
-              dc: { fact: 'spellcasting.saveDC' }
-            }
+            // Humanoids in the sphere make a CHA save; the DC value is the
+            // spell save DC.
+            label: 'play.information.saveDcCha',
+            labelValues: { dc: { fact: 'spellcasting.saveDC' } }
           }
         ],
         primaryControl: {

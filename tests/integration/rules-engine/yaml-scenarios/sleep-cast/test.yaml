@@ -37,9 +37,8 @@ steps:
               # Targets make a Wisdom save (per this repo's detail text)
               information:
                 - type: text
-                  label: play.information.saveDc
+                  label: play.information.saveDcWis
                   labelValues:
-                    saveType: { string: WIS }
                     dc: { fact: spellcasting.saveDC }
   # Now set charisma and cast sleep
   - addOffer:

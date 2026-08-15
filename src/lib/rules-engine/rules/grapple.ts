@@ -40,8 +40,8 @@ const grapple: RuleModule = {
         information: [
           {
             type: 'text',
-            label: 'play.information.saveDc',
-            labelValues: { saveType: { string: 'STR/DEX' }, dc: { fact: 'grapple.dc' } }
+            label: 'play.information.saveDcStrDex',
+            labelValues: { dc: { fact: 'grapple.dc' } }
           }
         ],
         secondaryControl: {

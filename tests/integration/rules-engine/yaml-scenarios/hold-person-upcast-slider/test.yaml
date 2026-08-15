@@ -46,9 +46,8 @@ steps:
               # Target makes a fixed Wisdom save (not the caster's ability)
               information:
                 - type: text
-                  label: play.information.saveDc
+                  label: play.information.saveDcWis
                   labelValues:
-                    saveType: { string: WIS }
                     dc: { fact: spellcasting.saveDC }
               primaryControl:
                 type: slider

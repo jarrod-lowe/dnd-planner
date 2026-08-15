@@ -28,9 +28,8 @@ steps:
               # The target makes a Wisdom save
               information:
                 - type: text
-                  label: play.information.saveDc
+                  label: play.information.saveDcWis
                   labelValues:
-                    saveType: { string: WIS }
                     dc: { fact: spellcasting.saveDC }
   - addOffer:
       id: cast-command

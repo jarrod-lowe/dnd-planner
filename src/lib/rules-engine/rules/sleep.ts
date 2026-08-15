@@ -69,12 +69,9 @@ const sleep: RuleModule = {
         information: [
           {
             type: 'text',
-            label: 'play.information.saveDc',
-            labelValues: {
-              // Targets make a WIS save; the DC value is the spell save DC.
-              saveType: { string: 'WIS' },
-              dc: { fact: 'spellcasting.saveDC' }
-            }
+            // Targets make a WIS save; the DC value is the spell save DC.
+            label: 'play.information.saveDcWis',
+            labelValues: { dc: { fact: 'spellcasting.saveDC' } }
           }
         ],
         intents: { CONTROL: 'area' },
