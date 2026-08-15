@@ -129,6 +129,11 @@ export interface HitDicePool {
  * Rolling slot i of size n writes `selections.rolls['d${n}'][i] = <natural
  * roll>` — the natural value only; the CON bonus and the 1-HP floor are applied
  * by the engine's `apply`, not folded into the roll.
+ *
+ * Note: `bonus` and `unit` are generic ValueSources, but today's UI labels
+ * hardcode "CON" and the hp unit in its strings (play.hitDice.*) — the only
+ * authored control is the CON-modulated short-rest heal. A differently-authored
+ * control must generalize those labels first.
  */
 export interface HitDiceControl extends ControlBase {
   type: 'hit-dice';

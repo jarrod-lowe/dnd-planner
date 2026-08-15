@@ -135,7 +135,10 @@
       slot: String(slot + 1),
       total: String(pool.total)
     };
-    if (slot >= pool.remaining) return $t('play.hitDice.slotSpentLabel', params);
+    // A rolled slot announces its roll even when the spent boundary has since
+    // moved past it — sighted users still see the rolled value on the chip, and
+    // the (disabled) button state already conveys spent. Only never-rolled
+    // slots announce the bare spent label.
     const rolled = slotRoll(pool, slot);
     if (rolled !== undefined) {
       return $t('play.hitDice.slotRolledLabel', {
@@ -144,6 +147,7 @@
         heal: String(healFor(rolled))
       });
     }
+    if (slot >= pool.remaining) return $t('play.hitDice.slotSpentLabel', params);
     return $t('play.hitDice.slotLabel', params);
   }
 
@@ -152,53 +156,55 @@
   }
 </script>
 
-<div class="panel-renderer__hit-dice" role="group" aria-label={$t('play.hitDice.groupLabel')}>
-  {#if control.bonus !== undefined}
-    <span class="panel-renderer__hit-dice-bonus">
-      {$t('play.hitDice.bonusLabel', { bonus: formatBonus() })}
-    </span>
-  {/if}
-  {#each pools as pool (pool.sides)}
-    <div
-      class="panel-renderer__hit-dice-pool"
-      role="group"
-      aria-label={poolAriaLabel(pool)}
-      data-die-sides={pool.sides}
-    >
-      {#each pool.slots as slot (slot)}
-        {@const rolled = slotRoll(pool, slot)}
-        {@const spent = slot >= pool.remaining}
-        {@const heal = rolled !== undefined ? healFor(rolled) : undefined}
-        {#if editable}
-          <button
-            class="panel-renderer__hit-die"
-            class:panel-renderer__hit-die--rolled={rolled !== undefined}
-            class:panel-renderer__hit-die--spent={spent}
-            type="button"
-            disabled={spent}
-            data-die-sides={pool.sides}
-            data-slot-index={slot}
-            aria-label={slotAriaLabel(pool, slot)}
-            onclick={() => rollSlot(pool, slot)}
-          >
-            {heal ?? `d${pool.sides}`}
-          </button>
-        {:else}
-          <span
-            class="panel-renderer__hit-die"
-            class:panel-renderer__hit-die--rolled={rolled !== undefined}
-            class:panel-renderer__hit-die--spent={spent}
-            data-die-sides={pool.sides}
-            data-slot-index={slot}
-            aria-label={slotAriaLabel(pool, slot)}
-          >
-            {heal ?? `d${pool.sides}`}
-          </span>
-        {/if}
-      {/each}
-    </div>
-  {/each}
-</div>
+{#if pools.length > 0}
+  <div class="panel-renderer__hit-dice" role="group" aria-label={$t('play.hitDice.groupLabel')}>
+    {#if control.bonus !== undefined}
+      <span class="panel-renderer__hit-dice-bonus">
+        {$t('play.hitDice.bonusLabel', { bonus: formatBonus() })}
+      </span>
+    {/if}
+    {#each pools as pool (pool.sides)}
+      <div
+        class="panel-renderer__hit-dice-pool"
+        role="group"
+        aria-label={poolAriaLabel(pool)}
+        data-die-sides={pool.sides}
+      >
+        {#each pool.slots as slot (slot)}
+          {@const rolled = slotRoll(pool, slot)}
+          {@const spent = slot >= pool.remaining}
+          {@const heal = rolled !== undefined ? healFor(rolled) : undefined}
+          {#if editable}
+            <button
+              class="panel-renderer__hit-die"
+              class:panel-renderer__hit-die--rolled={rolled !== undefined}
+              class:panel-renderer__hit-die--spent={spent}
+              type="button"
+              disabled={spent}
+              data-die-sides={pool.sides}
+              data-slot-index={slot}
+              aria-label={slotAriaLabel(pool, slot)}
+              onclick={() => rollSlot(pool, slot)}
+            >
+              {heal ?? `d${pool.sides}`}
+            </button>
+          {:else}
+            <span
+              class="panel-renderer__hit-die"
+              class:panel-renderer__hit-die--rolled={rolled !== undefined}
+              class:panel-renderer__hit-die--spent={spent}
+              data-die-sides={pool.sides}
+              data-slot-index={slot}
+              aria-label={slotAriaLabel(pool, slot)}
+            >
+              {heal ?? `d${pool.sides}`}
+            </span>
+          {/if}
+        {/each}
+      </div>
+    {/each}
+  </div>
+{/if}
 
 <style>
   .panel-renderer__hit-dice {

@@ -206,12 +206,42 @@ describe('PanelRenderer - hit-dice control', () => {
     expect(chip.getAttribute('aria-label')).toBe('d10 hit die 1 of 3, rolled 6, heals 8 hp');
   });
 
+  it('announces the roll of a slot the spent boundary has moved past', () => {
+    const entry = createHitDiceEntry();
+    // d10 remaining 0: every slot is spent, but slot 0 still carries a roll
+    // from before the boundary moved — its label must keep announcing the roll.
+    const facts = { ...baseFacts(), 'hitDie.d10.remaining': 0 };
+    const selections = { rolls: { d10: { '0': 6 } } };
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts, selections }
+    });
+    const chips = container.querySelectorAll<HTMLButtonElement>('.panel-renderer__hit-die');
+    expect(chips[2].disabled).toBe(true);
+    expect(chips[2].getAttribute('aria-label')).toBe('d10 hit die 1 of 3, rolled 6, heals 8 hp');
+    // An unrolled spent slot still announces only its spent state.
+    expect(chips[3].getAttribute('aria-label')).toBe('d10 hit die 2 of 3 (spent)');
+  });
+
+  it('renders nothing when every pool is empty', () => {
+    const entry = createHitDiceEntry();
+    const facts: Record<string, number> = { 'con.modifier': 2 };
+    for (const sides of [6, 8, 10, 12]) {
+      facts[`hitDie.d${sides}.total`] = 0;
+      facts[`hitDie.d${sides}.remaining`] = 0;
+    }
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts }
+    });
+    expect(container.querySelector('.panel-renderer__hit-dice')).toBeNull();
+    expect(container.textContent).not.toContain('Each die');
+  });
+
   it('shows the CON bonus applied to every die', () => {
     const entry = createHitDiceEntry();
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts: baseFacts() }
     });
     const bonus = container.querySelector('.panel-renderer__hit-dice-bonus');
-    expect(bonus?.textContent?.trim()).toBe('Each die + CON +2');
+    expect(bonus?.textContent?.trim()).toBe('Each die: CON +2');
   });
 });
