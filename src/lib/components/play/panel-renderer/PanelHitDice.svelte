@@ -190,6 +190,12 @@
         const isTarget = p.sides === pool.sides && s === slot;
         const rolled = isTarget ? natural : slotRoll(p, s);
         if (rolled === undefined) continue;
+        // A NON-TARGET roll the engine REJECTED (its slot sits at or beyond
+        // its pool's accepted-availability threshold → die_already_spent)
+        // commits no heal, so it must not consume this budget either — only
+        // the target slot is available by construction. The rejected slot's
+        // own label still walks to its (capped) value via the isTarget path.
+        if (!isTarget && s >= p.threshold) continue;
         const effective = Math.min(healFor(rolled), missing);
         if (isTarget) return effective;
         missing -= effective;

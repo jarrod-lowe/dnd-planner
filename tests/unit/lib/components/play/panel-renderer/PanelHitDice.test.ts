@@ -515,6 +515,45 @@ describe('PanelRenderer - hit-dice control', () => {
     expect(onRoll.mock.calls[0][0].total).toBe(3);
   });
 
+  it('does not let a rejected roll consume the budget for a later pool', async () => {
+    // The reported bug: a retained d6 roll stranded on a slot its pool's
+    // accepted threshold blocks (rejected die_already_spent, nothing
+    // advertised) still deducted its heal from the preview budget, so tapping
+    // an available d10 announced a 0-HP heal though the engine commits the
+    // d10's full effective healing. Committed missing 8; the rejected d6
+    // (roll 6 + CON 2 = 8) would eat the whole budget if wrongly counted.
+    const entry = createHitDiceEntry();
+    const onRoll = vi.fn();
+    vi.spyOn(Math, 'random').mockReturnValue(0.5); // d10 -> 6
+    const facts = {
+      ...baseFacts(),
+      'hitDie.d6.total': 2,
+      'hitDie.d6.remaining': 0,
+      'hitDie.d8.total': 0,
+      'hitDie.d8.remaining': 0,
+      'hitDie.d10.total': 3,
+      'hitDie.d10.remaining': 3,
+      'hp.modifier.current': -8
+    };
+    const selections = { rolls: { d6: { '1': 6 } } };
+    const { container } = render(PanelRenderer, {
+      props: {
+        // No advertised effects: the engine rejected the d6 roll and
+        // committed nothing for it.
+        entry,
+        editable: true,
+        facts,
+        selections,
+        onRoll
+      }
+    });
+    // DOM order: d6 slots 0-1, then d10 slots 0-2 — tap d10 slot 0.
+    await fireEvent.click(
+      container.querySelectorAll('.panel-renderer__hit-dice .panel-renderer__die-chip')[2]
+    );
+    expect(onRoll.mock.calls[0][0].total).toBe(8);
+  });
+
   it('decrements the missing-HP budget across rolled slots in engine order', () => {
     const entry = createHitDiceEntry();
     // 3 HP missing, two d8s rolled at 6 (+2 = 8 each): the engine consumes
