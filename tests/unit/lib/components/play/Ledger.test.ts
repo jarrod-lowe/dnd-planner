@@ -279,8 +279,9 @@ describe('Ledger', () => {
     const label = container.querySelector('.ledger__cell-label');
     // Visible label is the compact short form...
     expect(label?.textContent).toBe('ACT');
-    // ...while the full name is preserved for screen readers and hover.
-    expect(cell?.getAttribute('title')).toBe('Actions');
+    // ...while the full name (label + counts) is preserved for screen readers
+    // and hover, which now agree.
+    expect(cell?.getAttribute('title')).toBe('Actions: 0 of 1');
     expect(cell?.getAttribute('aria-label')).toBe('Actions: 0 of 1');
   });
 

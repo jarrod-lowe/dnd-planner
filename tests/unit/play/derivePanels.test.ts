@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { deriveTopBarEntries, deriveResourceEntries } from '$lib/play/derivePanels';
+import type { UiEntryHitDie } from '$lib/play/extractTopBar';
 import { resolveEntryValue, isEntryVisible } from '$lib/play/extractTopBar';
 
 /**
@@ -180,7 +181,7 @@ describe('derivePanels — resources', () => {
     };
     const hd = deriveResourceEntries(facts).filter((e) => e.type === 'hitDie');
     // Emitted in ascending die-size order (HIT_DICE catalog order).
-    expect(hd.map((e) => (e.type === 'hitDie' ? e.dieSize : undefined))).toEqual([6, 10]);
+    expect(hd.map((e) => e.dieSize)).toEqual([6, 10]);
     expect(hd.map((e) => resolveEntryValue(e, facts))).toEqual(['2/2 d6', '2/3 d10']);
   });
 
@@ -192,9 +193,9 @@ describe('derivePanels — resources', () => {
       'hitDie.d8.remaining': 0
     };
     const visible = deriveResourceEntries(facts).filter(
-      (e) => e.type === 'hitDie' && isEntryVisible(e, facts)
+      (e): e is UiEntryHitDie => e.type === 'hitDie' && isEntryVisible(e, facts)
     );
-    expect(visible.map((e) => (e.type === 'hitDie' ? e.dieSize : undefined))).toEqual([10]);
+    expect(visible.map((e) => e.dieSize)).toEqual([10]);
   });
 
   it('includes Heroic Inspiration as a value when present', () => {
