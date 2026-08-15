@@ -377,6 +377,7 @@
         {facts}
         {vars}
         {selections}
+        advertisedEffects={entry.advertisedEffects}
         {onSelectionChange}
         onRoll={handleDiceRoll}
       />
@@ -454,6 +455,7 @@
         {facts}
         {vars}
         {selections}
+        advertisedEffects={entry.advertisedEffects}
         {onSelectionChange}
         onRoll={handleDiceRoll}
       />

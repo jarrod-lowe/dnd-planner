@@ -103,7 +103,10 @@ export function plannedEntryToViewEntry(pe: PlannedEntry): ViewEntry {
     },
     legal: pe.legal,
     applicable: pe.applicable,
-    diagnostics: pe.diagnostics
+    diagnostics: pe.diagnostics,
+    // The row's own pending effects — the hit-dice roller rebuilds the engine's
+    // committed-only heal budget from them (post-plan facts fold them in).
+    advertisedEffects: pe.advertisedEffects
   };
 }
 

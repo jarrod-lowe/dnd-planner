@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import PanelRenderer from '$lib/components/play/PanelRenderer.svelte';
 import type { AvailableRuleEntry, Rule } from '$lib/rules-view';
+import type { EffectInstance } from '$lib/rules-engine';
 
 // Mirrors the control authored on `record-short-rest` (core-events.ts):
 // pools per die size resolved from `hitDie.*` facts, CON bonus, hp unit.
@@ -61,6 +62,16 @@ describe('PanelRenderer - hit-dice control', () => {
     'hitDie.d8.remaining': 0,
     'hitDie.d10.total': total,
     'hitDie.d10.remaining': remaining
+  });
+
+  // One of the row's own advertised `effect-hit-die-heal` effects (ids
+  // namespaced by instance, state carrying the engine's CAPPED effective heal
+  // plus the die spend). The panel rebuilds the engine's committed-only heal
+  // budget from these — see the post-plan tests at the bottom of this suite.
+  const healEffect = (heal: number, sides: number): EffectInstance => ({
+    id: 'i0#1#effect-hit-die-heal',
+    state: { 'hp.modifier.current': heal, [`hitDie.d${sides}.spent`]: 1 },
+    expiry: { kind: 'untilLongRest' }
   });
 
   it('disables only slots blocked by committed spends (no rolls in the row)', () => {
@@ -287,10 +298,17 @@ describe('PanelRenderer - hit-dice control', () => {
 
   it('announces a rolled slot with its roll and heal', async () => {
     const entry = createHitDiceEntry();
-    vi.spyOn(Math, 'random').mockReturnValue(0.5); // d10 -> 6, heal 8
+    // Post-plan: committed missing 20, the rolled d10 advertised an 8-HP heal,
+    // so the facts read 12 missing.
     const selections = { rolls: { d10: { '0': 6 } } };
+    const facts = { ...baseFacts(), 'hp.modifier.current': -12 };
     const { container } = render(PanelRenderer, {
-      props: { entry, editable: true, facts: baseFacts(), selections }
+      props: {
+        entry: { ...entry, advertisedEffects: [healEffect(8, 10)] },
+        editable: true,
+        facts,
+        selections
+      }
     });
     const chip = container.querySelectorAll(
       '.panel-renderer__hit-dice .panel-renderer__die-chip'
@@ -305,10 +323,15 @@ describe('PanelRenderer - hit-dice control', () => {
     // but it still carries a roll from before that spend committed. The slot
     // stays tappable SOLELY to clear the stranded roll (committing it would
     // error die_already_spent).
-    const facts = { ...baseFacts(), 'hitDie.d10.remaining': 0 };
+    const facts = { ...baseFacts(), 'hitDie.d10.remaining': 0, 'hp.modifier.current': -12 };
     const selections = { rolls: { d10: { '0': 6, '2': 4 } } };
     const { container } = render(PanelRenderer, {
-      props: { entry, editable: true, facts, selections }
+      props: {
+        entry: { ...entry, advertisedEffects: [healEffect(8, 10)] },
+        editable: true,
+        facts,
+        selections
+      }
     });
     const chips = container.querySelectorAll<HTMLButtonElement>(
       '.panel-renderer__hit-dice .panel-renderer__die-chip'
@@ -369,18 +392,26 @@ describe('PanelRenderer - hit-dice control', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.5); // d10 -> 6, roll + CON = 8
     // Only 3 HP missing: the engine commits min(8, 3) = 3, so the aria-label
     // and the toast's roll result must announce 3 — never a heal that lands 0.
-    const facts = { ...baseFacts(), 'hp.modifier.current': -3 };
+    // Post-plan, that 3-HP heal leaves nothing missing.
+    const facts = { ...baseFacts(), 'hp.modifier.current': 0 };
     const selections = { rolls: { d10: { '0': 6 } } };
     const { container } = render(PanelRenderer, {
-      props: { entry, editable: true, facts, selections }
+      props: {
+        entry: { ...entry, advertisedEffects: [healEffect(3, 10)] },
+        editable: true,
+        facts,
+        selections
+      }
     });
     const chip = container.querySelectorAll(
       '.panel-renderer__hit-dice .panel-renderer__die-chip'
     )[2];
     expect(chip.getAttribute('aria-label')).toBe('d10 hit die 1 of 3, rolled 6, heals 3 hp');
 
+    // Nothing rolled yet: the committed 3 HP missing IS the budget the fresh
+    // roll lands against.
     const { container: c2 } = render(PanelRenderer, {
-      props: { entry, editable: true, facts, onRoll }
+      props: { entry, editable: true, facts: { ...baseFacts(), 'hp.modifier.current': -3 }, onRoll }
     });
     await fireEvent.click(
       c2.querySelectorAll('.panel-renderer__hit-dice .panel-renderer__die-chip')[2]
@@ -393,11 +424,17 @@ describe('PanelRenderer - hit-dice control', () => {
     // 3 HP missing, two d8s rolled at 6 (+2 = 8 each): the engine consumes
     // the budget ascending size-then-slot, so slot 0 heals 3 and slot 1 heals 0
     // (its die is still spent). The preview walks the same order. Both d8 slots
-    // are unspent (remaining 2), so both get the plain rolled label.
-    const facts = { ...baseFacts(), 'hp.modifier.current': -3 };
+    // are unspent (remaining 2), so both get the plain rolled label. Post-plan,
+    // the 3-HP heal leaves nothing missing.
+    const facts = { ...baseFacts(), 'hp.modifier.current': 0 };
     const selections = { rolls: { d8: { '0': 6, '1': 6 } } };
     const { container } = render(PanelRenderer, {
-      props: { entry, editable: true, facts, selections }
+      props: {
+        entry: { ...entry, advertisedEffects: [healEffect(3, 8), healEffect(0, 8)] },
+        editable: true,
+        facts,
+        selections
+      }
     });
     const chips = container.querySelectorAll('.panel-renderer__hit-dice .panel-renderer__die-chip');
     expect(chips[0].getAttribute('aria-label')).toBe('d8 hit die 1 of 2, rolled 6, heals 3 hp');
@@ -410,7 +447,12 @@ describe('PanelRenderer - hit-dice control', () => {
     const facts = { ...baseFacts(), 'hp.modifier.current': 0 };
     const selections = { rolls: { d10: { '0': 6 } } };
     const { container } = render(PanelRenderer, {
-      props: { entry, editable: true, facts, selections }
+      props: {
+        entry: { ...entry, advertisedEffects: [healEffect(0, 10)] },
+        editable: true,
+        facts,
+        selections
+      }
     });
     const chip = container.querySelectorAll(
       '.panel-renderer__hit-dice .panel-renderer__die-chip'
@@ -421,10 +463,20 @@ describe('PanelRenderer - hit-dice control', () => {
   it('treats a bonus that resolves to a non-number as no bonus', () => {
     const entry = createHitDiceEntry();
     // A string fact must not string-concatenate into the arithmetic ("62").
-    const facts = { ...baseFacts(), 'con.modifier': '2' } as unknown as Record<string, number>;
+    // Post-plan: committed missing 20, the rolled d10 advertised a 6-HP heal.
+    const facts = {
+      ...baseFacts(),
+      'con.modifier': '2',
+      'hp.modifier.current': -14
+    } as unknown as Record<string, number>;
     const selections = { rolls: { d10: { '0': 6 } } };
     const { container } = render(PanelRenderer, {
-      props: { entry, editable: true, facts, selections }
+      props: {
+        entry: { ...entry, advertisedEffects: [healEffect(6, 10)] },
+        editable: true,
+        facts,
+        selections
+      }
     });
     const chip = container.querySelectorAll(
       '.panel-renderer__hit-dice .panel-renderer__die-chip'
@@ -474,5 +526,97 @@ describe('PanelRenderer - hit-dice control', () => {
       '.panel-renderer__hit-dice .panel-renderer__die-chip'
     )[2];
     expect(chip.textContent?.trim()).toBe('-1');
+  });
+
+  // The tests below model the real post-plan construction: facts carry the
+  // POST-plan missing (the row's own heals already subtracted) and the entry
+  // carries the row's own advertised heal effects to add back.
+  it('announces the heal the engine commits, not one shrunk by its own pending heal', () => {
+    // Committed missing 20; slot 0 already rolled 9 (9 + CON 2 = 11), so the
+    // post-plan missing is 9 and the row advertises an 11-HP heal effect.
+    const entry = createHitDiceEntry();
+    const facts = { ...d10OnlyFacts(3, 2), 'hp.modifier.current': -9 };
+    const selections = { rolls: { d10: { '0': 9 } } };
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: { ...entry, advertisedEffects: [healEffect(11, 10)] },
+        editable: true,
+        facts,
+        selections
+      }
+    });
+    const chip = container.querySelectorAll(
+      '.panel-renderer__hit-dice .panel-renderer__die-chip'
+    )[0];
+    expect(chip.getAttribute('aria-label')).toBe('d10 hit die 1 of 3, rolled 9, heals 11 hp');
+  });
+
+  it('announces the next die against the committed missing, not the post-plan missing', async () => {
+    // Same construction as above; rolling slot 1 (natural 6 + CON 2 = 8) must
+    // promise 8 — 11 of the committed 20 is consumed, 9 remain, 8 fits. The
+    // toast may never promise 0 (or under-promise) while committed-missing HP
+    // remains.
+    const entry = createHitDiceEntry();
+    const onRoll = vi.fn();
+    vi.spyOn(Math, 'random').mockReturnValue(0.5); // d10 -> 6
+    const facts = { ...d10OnlyFacts(3, 2), 'hp.modifier.current': -9 };
+    const selections = { rolls: { d10: { '0': 9 } } };
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: { ...entry, advertisedEffects: [healEffect(11, 10)] },
+        editable: true,
+        facts,
+        selections,
+        onRoll
+      }
+    });
+    await fireEvent.click(
+      container.querySelectorAll('.panel-renderer__hit-dice .panel-renderer__die-chip')[1]
+    );
+    expect(onRoll.mock.calls[0][0].total).toBe(8);
+  });
+
+  it('announces a heal of 0 at full HP even with the row advertising its own heal', () => {
+    // Committed missing 0: the die is still spent, the advertised heal is 0,
+    // and the post-plan missing stays 0 — the announcement is 0, never the
+    // uncapped roll + CON.
+    const entry = createHitDiceEntry();
+    const facts = { ...d10OnlyFacts(3, 2), 'hp.modifier.current': 0 };
+    const selections = { rolls: { d10: { '0': 6 } } };
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: { ...entry, advertisedEffects: [healEffect(0, 10)] },
+        editable: true,
+        facts,
+        selections
+      }
+    });
+    const chip = container.querySelectorAll(
+      '.panel-renderer__hit-dice .panel-renderer__die-chip'
+    )[0];
+    expect(chip.getAttribute('aria-label')).toBe('d10 hit die 1 of 3, rolled 6, heals 0 hp');
+  });
+
+  it('announces only the final rolls after a slot is re-rolled (the plan re-evaluates)', () => {
+    // Re-rolling replaces the slot's entry and the plan re-evaluates from
+    // scratch, so no stale roll (nor its heal effect) may linger in the budget.
+    // Committed missing 20; slot 0 re-rolled from 9 (heal 11) down to 1
+    // (heal 3): the post-plan missing is 17 and the row advertises a 3-HP heal.
+    const entry = createHitDiceEntry();
+    const facts = { ...d10OnlyFacts(3, 2), 'hp.modifier.current': -17 };
+    const selections = { rolls: { d10: { '0': 1 } } };
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: { ...entry, advertisedEffects: [healEffect(3, 10)] },
+        editable: true,
+        facts,
+        selections
+      }
+    });
+    const chip = container.querySelectorAll(
+      '.panel-renderer__hit-dice .panel-renderer__die-chip'
+    )[0];
+    expect(chip.textContent?.trim()).toBe('3');
+    expect(chip.getAttribute('aria-label')).toBe('d10 hit die 1 of 3, rolled 1, heals 3 hp');
   });
 });

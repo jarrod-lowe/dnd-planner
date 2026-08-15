@@ -404,7 +404,8 @@ describe('playStore', () => {
             rule: { id: 'attack-1', ui: {} },
             legal: false,
             applicable: true,
-            diagnostics: [{ code: 'no_action', severity: 'error' as const }]
+            diagnostics: [{ code: 'no_action', severity: 'error' as const }],
+            advertisedEffects: []
           }))
         })
       );
@@ -2155,7 +2156,8 @@ describe('playStore', () => {
             rule: { id: 'attack', ui: {} },
             legal: true,
             applicable: true,
-            diagnostics: []
+            diagnostics: [],
+            advertisedEffects: []
           }))
         })
       );

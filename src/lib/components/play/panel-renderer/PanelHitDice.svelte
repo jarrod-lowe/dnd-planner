@@ -4,6 +4,7 @@
   import { SvelteMap } from 'svelte/reactivity';
   import type { HitDiceControl, RollResult } from './types';
   import type { Facts, VarDefinition } from '$lib/rules-view';
+  import type { EffectInstance } from '$lib/rules-engine';
   import { t } from '$lib/i18n';
 
   interface Props {
@@ -12,6 +13,8 @@
     facts: Facts;
     vars: Record<string, VarDefinition>;
     selections?: Record<string, unknown>;
+    /** This row's own advertised effects (`entry.advertisedEffects`). */
+    advertisedEffects?: EffectInstance[];
     onSelectionChange?: (selections: Record<string, unknown>) => void;
     onRoll?: (data: RollResult, slotIndex: number) => void;
   }
@@ -22,6 +25,7 @@
     facts,
     vars,
     selections = {},
+    advertisedEffects = [],
     onSelectionChange,
     onRoll
   }: Props = $props();
@@ -130,8 +134,32 @@
     return control.bonus === undefined ? `d${pool.sides}` : `d${pool.sides}${formatBonus(bonus)}`;
   }
 
-  // The HP missing right now — the engine's heal budget for this rest.
-  const missingHp = $derived(Math.max(0, -Number(facts['hp.modifier.current'] ?? 0)));
+  // The HP missing from the POST-plan facts — but the engine budgets the heal
+  // from the missing HP at ITS apply time, which excludes this row's own
+  // effects (the fold pushes them only after apply runs). Those heals are
+  // already subtracted here, so add the row's own advertised heals back to
+  // reconstruct the budget the engine actually commits against. Heals from
+  // EARLIER plan rows stay subtracted: the engine's apply sees those.
+  const missingHp = $derived.by(() => {
+    const postPlan = Math.max(0, -Number(facts['hp.modifier.current'] ?? 0));
+    return postPlan + ownPendingHeal();
+  });
+
+  // Sum of the effective heals this row's `effect-hit-die-heal` effects carry —
+  // the engine's capped values, never a recomputed roll + CON (the cap is
+  // exactly what recomputation cannot recover from the facts alone).
+  function ownPendingHeal(): number {
+    let sum = 0;
+    for (const effect of advertisedEffects) {
+      const heal = effect.state?.['hp.modifier.current'];
+      if (typeof heal !== 'number') continue;
+      // Only the hit-die heals: the row also advertises the rest flag, which
+      // touches no HP.
+      if (!Object.keys(effect.state ?? {}).some((k) => /^hitDie\.d\d+\.spent$/.test(k))) continue;
+      sum += heal;
+    }
+    return sum;
+  }
 
   // The engine consumes the budget in ascending size-then-slot order, so the
   // preview walks pools in that order (whatever order they render in).
