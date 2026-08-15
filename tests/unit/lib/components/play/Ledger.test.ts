@@ -1112,6 +1112,46 @@ describe('Ledger — action economy cell', () => {
     expect(container.querySelectorAll('.slot-tray').length).toBe(1);
   });
 
+  it('opening slots tray closes open economy tray (reverse direction)', () => {
+    const slotEntry: UiEntry = {
+      type: 'slotLevels',
+      label: 'play.stats.spellSlots',
+      levels: [1]
+    };
+
+    renderEconomy(
+      {
+        'spellcasting.slots.level1.total': 2,
+        'spellcasting.slots.level1.spent': 0,
+        'actions.max': 1,
+        'actions.spent': 0,
+        'bonusActions.max': 1,
+        'bonusActions.spent': 0,
+        'reactions.max': 1,
+        'reactions.spent': 0
+      },
+      [],
+      [slotEntry, economyEntry]
+    );
+
+    // Open economy tray first
+    const economyToggle = container.querySelectorAll('.ledger__slot-toggle')[1] as HTMLButtonElement;
+    economyToggle.click();
+    flushSync();
+    expect(container.querySelector('.slot-tray')).toBeTruthy();
+    expect(economyToggle.getAttribute('aria-expanded')).toBe('true');
+
+    // Open slots tray - should close economy tray
+    const slotToggle = container.querySelectorAll('.ledger__slot-toggle')[0] as HTMLButtonElement;
+    slotToggle.click();
+    flushSync();
+
+    expect(slotToggle.getAttribute('aria-expanded')).toBe('true');
+    expect(economyToggle.getAttribute('aria-expanded')).toBe('false');
+    // Only one tray should exist
+    expect(container.querySelectorAll('.slot-tray').length).toBe(1);
+  });
+
   it('hides the cell when all pools have max <= 0', () => {
     renderEconomy({
       'actions.max': 0,
