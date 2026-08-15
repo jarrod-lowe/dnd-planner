@@ -14,7 +14,7 @@
    * texture alone: the legend names all three states ("Open" / "This turn" /
    * "Spent") as real text, and every row carries an aria-label with all four
    * counts - the SAME disjoint breakdown the pips draw, so a screen-reader and
-   * a sighted reader are told about the same number of slots. The pip run
+   * a sighted reader are told about the same number of pools. The pip run
    * itself is therefore decorative and hidden from the accessibility tree.
    */
   import { t } from '$lib/i18n';
@@ -24,7 +24,7 @@
     tile: string;
     /** Full name for the row's aria-label: "Level 1", "Bonus Action". */
     name: string;
-    /** Sort order (slot level, or pool position). */
+    /** Sort order (pool level, or pool position). */
     order: number;
     open: number;
     thisTurn: number;
@@ -43,7 +43,7 @@
 
   let { rows, titleKey, id }: Props = $props();
 
-  /** CSS modifier suffix for each slot state. */
+  /** CSS modifier suffix for each pool state. */
   type PipState = 'open' | 'this-turn' | 'spent';
 
   const LEGEND: { state: PipState; key: string }[] = [
@@ -57,14 +57,14 @@
   }
 
   /**
-   * Slots spent on EARLIER turns. `row.spent` is the projected total and
+   * Pools spent on EARLIER turns. `row.spent` is the projected total and
    * already includes `thisTurn`, so the earlier count is the difference -
    * counting both would double up. Floored at 0 because an over-budget plan can
    * push `thisTurn` past `spent`; note this floor is deliberately NOT applied
    * to `open`, whose negative value is the overdraft signal.
    *
    * Derived once per row and fed to both the pip run and the aria-label, so the
-   * two can never disagree about how many slots the row shows.
+   * two can never disagree about how many pools the row shows.
    */
   function earlierSpent(row: TrayRow): number {
     return Math.max(0, row.spent - row.thisTurn);

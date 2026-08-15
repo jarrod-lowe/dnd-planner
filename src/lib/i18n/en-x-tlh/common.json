@@ -1839,6 +1839,7 @@
     "economy": {
       "toggle": "DIvI'mey yI'ang",
       "tilesLabel": "DIvI'mey: {{summary}}",
+      "summarySeparator": ", ",
       "poolOpen": "{{name}}: {{open}}",
       "noneOpen": "pagh poS"
     },

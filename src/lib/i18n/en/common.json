@@ -1839,6 +1839,7 @@
     "economy": {
       "toggle": "Show action breakdown",
       "tilesLabel": "Action economy: {{summary}}",
+      "summarySeparator": ", ",
       "poolOpen": "{{name}}: {{open}}",
       "noneOpen": "None open"
     },

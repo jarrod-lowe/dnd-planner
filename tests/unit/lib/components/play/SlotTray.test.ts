@@ -2,22 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from 'svelte';
 import { readable } from 'svelte/store';
 import SlotTray from '$lib/components/play/SlotTray.svelte';
-
-/**
- * Generic tray row - the new shared API for spell levels, action economy, etc.
- */
-interface TrayRow {
-  /** Compact tile text: "1", "ACT". */
-  tile: string;
-  /** Full name for the row's aria-label: "Level 1", "Bonus Action". */
-  name: string;
-  /** Sort order (slot level, or pool position). */
-  order: number;
-  open: number;
-  thisTurn: number;
-  spent: number;
-  total: number;
-}
+import type { TrayRow } from '$lib/components/play/SlotTray.svelte';
 
 // i18n mock - returns key as text, interpolating {{param}} like sveltekit-i18n.
 // The templates are deliberately distinctive so the tests pin that the strings
