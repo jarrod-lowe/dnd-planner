@@ -69,16 +69,8 @@ const bless: RuleModule = {
         name: `${B}.name`,
         description: `${B}.description`,
         detailKey: 'spell/bless',
-        information: [
-          {
-            type: 'text',
-            label: 'play.information.saveDc',
-            labelValues: {
-              saveType: { fact: 'spellcasting.saveAbility' },
-              dc: { fact: 'spellcasting.saveDC' }
-            }
-          }
-        ],
+        // No save DC line: Bless forces no saving throw (it adds 1d4 to the
+        // target's own attack rolls and saves).
         intents: { AID: 'ally' },
         actionCost: ['action', 'conc', 'L1']
       },

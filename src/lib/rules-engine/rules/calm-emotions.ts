@@ -70,7 +70,9 @@ const calmEmotions: RuleModule = {
             type: 'text',
             label: 'play.information.saveDc',
             labelValues: {
-              saveType: { fact: 'spellcasting.saveAbility' },
+              // Humanoids in the sphere make a CHA save; the DC value is the
+              // spell save DC.
+              saveType: { string: 'CHA' },
               dc: { fact: 'spellcasting.saveDC' }
             }
           }

@@ -23,6 +23,18 @@ steps:
         offers:
           exists:
             - rebuke-the-violent
+        offerUi:
+          - id: rebuke-the-violent
+            ui:
+              detailKey: class-feature/rebuke-the-violent
+              information:
+                - type: text
+                  label: play.information.saveDc
+                  labelValues:
+                    saveType:
+                      string: WIS
+                    dc:
+                      fact: spellcasting.saveDC
   - addOffer:
       id: rebuke-the-violent
       assert:

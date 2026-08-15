@@ -22,6 +22,16 @@ steps:
         offers:
           exists:
             - cast-command
+        offerUi:
+          - id: cast-command
+            ui:
+              # The target makes a Wisdom save
+              information:
+                - type: text
+                  label: play.information.saveDc
+                  labelValues:
+                    saveType: { string: WIS }
+                    dc: { fact: spellcasting.saveDC }
   - addOffer:
       id: cast-command
       assert:

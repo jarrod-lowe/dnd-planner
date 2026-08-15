@@ -51,6 +51,19 @@ const oath: RuleModule = {
         section: 'reaction',
         name: `${O}.rebuke-the-violent.name`,
         description: `${O}.rebuke-the-violent.description`,
+        detailKey: 'class-feature/rebuke-the-violent',
+        information: [
+          {
+            type: 'text',
+            label: 'play.information.saveDc',
+            labelValues: {
+              // The save the attacker makes (WIS); the DC value itself is the
+              // spell save DC, but which stat derives it isn't this label's business.
+              saveType: { string: 'WIS' },
+              dc: { fact: 'spellcasting.saveDC' }
+            }
+          }
+        ],
         intents: { DEFEND: 'ward' },
         actionCost: ['reaction', 'CD']
       },

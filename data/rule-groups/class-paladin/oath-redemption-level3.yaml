@@ -35,3 +35,23 @@ ruleGroups:
           - DIvI'
           - rebuke
           - rojDuy
+    detail:
+      key: class-feature/rebuke-the-violent
+      source: custom
+      translations:
+        en:
+          meta: Channel Divinity (Oath of Redemption)
+          fields:
+            - labelKey: rules.field.castingTime
+              value: 1 Reaction (when a nearby creature is damaged by an attack)
+            - labelKey: rules.field.range
+              value: 30 feet
+            - labelKey: rules.field.dc
+              value: Wisdom save vs your spell save DC
+          body: |
+            When a creature you can see within 30 feet of you harms another
+            creature — not you — with an attack, you can spend your Reaction and
+            one use of Channel Divinity to chasten the aggressor. The attacker
+            must roll a Wisdom saving throw against your spell save DC, taking
+            radiant damage matching the harm it just inflicted on a failure, or
+            only half that amount if it succeeds.
