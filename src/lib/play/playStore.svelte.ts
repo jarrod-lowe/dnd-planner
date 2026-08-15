@@ -40,6 +40,7 @@ const initialState: PlayState = {
   facts: {},
   effects: [],
   committed: [],
+  advertised: [],
   currentCharacterId: null,
   topBarEntries: [],
   resourceEntries: []
@@ -143,6 +144,9 @@ function performEvaluation(): void {
     state = {
       ...state,
       isEvaluating: false,
+      // Same reason as `_lastAdvertised` above: the failed evaluation advertised
+      // nothing, so the previous plan's slot spends must not keep showing.
+      advertised: [],
       engineOutput: {
         ...prev,
         // The failed evaluation advertised nothing, so the previous plan's
@@ -176,6 +180,11 @@ function performEvaluation(): void {
     ...state,
     engineOutput: viewOutput,
     isEvaluating: false,
+    // The RAW advertised instances. `viewOutput.effects` is the same list bridged
+    // to the display `Rule` shape, which drops `state` — consumers that read
+    // effect state (the ledger's slot cell) need these. Reactive because it lives
+    // here: `_lastAdvertised` is a plain module variable and would not re-render.
+    advertised: result.advertised,
     // The VIEW facts, not the raw engine facts: the panels read state.facts,
     // and the bridge synthesizes view-only facts on top of the engine's (the
     // spellcasting.saveAbility label) that would otherwise never reach them.

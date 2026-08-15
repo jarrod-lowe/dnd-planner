@@ -1,8 +1,16 @@
 import type { Facts } from '$lib/rules-view';
+import { deriveSlotLevels } from './slotLevels';
 
 // ── Unified UI Entry Types ──
 
-export type UiEntryType = 'usedMax' | 'value' | 'modifier' | 'hitDie' | 'concentration' | 'ability';
+export type UiEntryType =
+  | 'usedMax'
+  | 'value'
+  | 'modifier'
+  | 'hitDie'
+  | 'slotLevels'
+  | 'concentration'
+  | 'ability';
 
 interface UiEntryBase {
   label: string;
@@ -34,6 +42,18 @@ export interface UiEntryHitDie extends UiEntryBase {
   dieSize: number;
 }
 
+/**
+ * Per-level spell slots, rendered as a row of tiles plus a breakdown tray.
+ *
+ * Only the level numbers are stored: the driving facts are
+ * `spellcasting.slots.level{n}.total` / `.spent` by construction, exactly as
+ * `hitDie` carries only its `dieSize`.
+ */
+export interface UiEntrySlotLevels extends UiEntryBase {
+  type: 'slotLevels';
+  levels: number[];
+}
+
 export interface UiEntryConcentration extends UiEntryBase {
   type: 'concentration';
   activeLabel: string;
@@ -55,6 +75,7 @@ export type UiEntry =
   | UiEntryValue
   | UiEntryModifier
   | UiEntryHitDie
+  | UiEntrySlotLevels
   | UiEntryConcentration
   | UiEntryAbility;
 
@@ -107,6 +128,12 @@ export function isUiEntry(entry: unknown): entry is UiEntry {
     );
   }
 
+  if (obj.type === 'slotLevels') {
+    if (typeof obj.label !== 'string') return false;
+    if (!Array.isArray(obj.levels)) return false;
+    return obj.levels.every((level: unknown) => typeof level === 'number');
+  }
+
   if (obj.type === 'concentration') {
     return (
       typeof obj.label === 'string' &&
@@ -139,13 +166,15 @@ export const isTopBarEntry = isUiEntry;
 
 // ── Extraction ──
 
+/** Canonical display order. Kept identical to the copy in `derivePanels.ts`. */
 const UI_ENTRY_TYPE_ORDER: Record<string, number> = {
   usedMax: 0,
   value: 1,
   modifier: 2,
   hitDie: 3,
-  concentration: 4,
-  ability: 5
+  slotLevels: 4,
+  concentration: 5,
+  ability: 6
 };
 
 export function extractUiEntries(
@@ -194,6 +223,7 @@ const RESOURCE_SHORT_LABELS: Record<string, string> = {
   'play.stats.hands': 'play.ledger.short.hands',
   'play.stats.hitDie': 'play.ledger.short.hitDie',
   'play.stats.spellcasting': 'play.ledger.short.spellcasting',
+  'play.stats.spellSlots': 'play.ledger.short.spellSlots',
   'play.stats.divinity': 'play.ledger.short.divinity',
   'play.stats.layOnHands': 'play.ledger.short.layOnHands',
   'play.stats.paladinSmite': 'play.ledger.short.paladinSmite',
@@ -232,6 +262,15 @@ export function resolveEntryValue(entry: UiEntry, facts: Facts): string {
     const remaining = Number(facts[entry.remaining] ?? 0);
     return `${remaining}/${total} d${entry.dieSize}`;
   }
+  if (entry.type === 'slotLevels') {
+    // Compact fallback only — the tray renders the per-level breakdown. The
+    // this-turn split is irrelevant to a summed "open/total", so no advertised
+    // effects are needed here.
+    const levels = deriveSlotLevels(facts, []).filter((l) => entry.levels.includes(l.level));
+    const open = levels.reduce((sum, l) => sum + l.open, 0);
+    const total = levels.reduce((sum, l) => sum + l.total, 0);
+    return `${open}/${total}`;
+  }
   return '';
 }
 
@@ -249,6 +288,12 @@ export function isEntryVisible(entry: UiEntry, facts: Facts): boolean {
   if (entry.type === 'hitDie') {
     const total = facts[entry.total];
     return total !== undefined && Number(total) !== 0;
+  }
+  if (entry.type === 'slotLevels') {
+    return entry.levels.some((level) => {
+      const total = facts[`spellcasting.slots.level${level}.total`];
+      return total !== undefined && Number(total) > 0;
+    });
   }
   // concentration and ability are always visible when present
   return true;

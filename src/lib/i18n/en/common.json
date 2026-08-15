@@ -1609,6 +1609,7 @@
       "paladinFindSteed": "Faithful Steed",
       "divinity": "Divinity",
       "spellcasting": "Spellcast",
+      "spellSlots": "Spell Slots",
       "spellLevel": "Spell L{{level}}",
       "spellSaveDC": "Spell Save DC",
       "concentration": "Concentration",
@@ -1816,6 +1817,22 @@
       "l8": "L8 Spell Slot Expended",
       "l9": "L9 Spell Slot Expended"
     },
+    "slots": {
+      "toggle": "Show spell slot breakdown",
+      "title": "Spell Slots",
+      "tilesLabel": "Spell slots: {{summary}}",
+      "levelSummary": "{{open}} open at level {{level}}",
+      "summarySeparator": ", ",
+      "noneOpen": "no slots open",
+      "levelRow": "Level {{level}}: {{open}} open, {{thisTurn}} this turn, {{spent}} spent, {{total}} total",
+      "levelTile": "{{level}}",
+      "legendTitle": "Key",
+      "legend": {
+        "open": "Open",
+        "thisTurn": "This turn",
+        "spent": "Spent"
+      }
+    },
     "slider": {
       "freeUse": "Free Use",
       "level": "Level {{level}}"
@@ -1875,7 +1892,8 @@
         "movement": "SPD",
         "hands": "HAND",
         "hitDie": "HD",
-        "spellcasting": "Magic",
+        "spellcasting": "Weave",
+        "spellSlots": "Cast",
         "divinity": "CD",
         "layOnHands": "LoH",
         "paladinSmite": "Smite",
