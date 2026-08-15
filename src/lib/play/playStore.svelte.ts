@@ -7,7 +7,6 @@ import {
   type PlannedRef
 } from '$lib/rules-engine';
 import type { PlannedItem, PlayState } from './types';
-import { debounce } from './debounce';
 import { resolveInitialSelections } from './resolveInitialSelections';
 import { evaluateCharacter, hypotheticalOffers } from './evaluateCharacter';
 import {
@@ -95,6 +94,8 @@ function parsePersistedEffects(json: string): EffectInstance[] {
 }
 
 function performEvaluation(): void {
+  // A direct evaluation supersedes any still-scheduled one.
+  cancelScheduledEvaluation();
   state = { ...state, isEvaluating: true };
 
   const refs = buildPlannedRefs();
@@ -198,10 +199,37 @@ function getPlannedEntry(instanceId: string): AvailableRuleEntry | undefined {
   return _plannedEntriesMap.get(instanceId);
 }
 
-// Debounced evaluation for plan changes
-const debouncedEvaluate = debounce(() => {
-  performEvaluation();
-}, DEBOUNCE_MS);
+// Scheduled (debounced) evaluation for plan changes. Not the plain `debounce`
+// helper: End Turn commits what the LAST evaluation advertised, so a pending
+// evaluation must be flushable synchronously before the commit reads it.
+let _evaluationTimer: ReturnType<typeof setTimeout> | null = null;
+
+function cancelScheduledEvaluation(): void {
+  if (_evaluationTimer) {
+    clearTimeout(_evaluationTimer);
+    _evaluationTimer = null;
+  }
+}
+
+function scheduleEvaluation(): void {
+  cancelScheduledEvaluation();
+  _evaluationTimer = setTimeout(() => {
+    _evaluationTimer = null;
+    performEvaluation();
+  }, DEBOUNCE_MS);
+}
+
+/**
+ * Run a still-scheduled evaluation now, if any. Commit paths (End Turn) read
+ * the advertised effects of the last evaluation — without this flush, a plan
+ * edit inside the debounce window would be committed from its PREVIOUS
+ * advertisement (or not at all).
+ */
+function flushPendingEvaluation(): void {
+  if (_evaluationTimer) {
+    performEvaluation();
+  }
+}
 
 async function loadRuleGroups(characterId: string): Promise<void> {
   state = { ...state, isLoadingRuleGroups: true, ruleGroupError: null };
@@ -352,7 +380,7 @@ function addToPlan(rule: Rule): void {
     plannedItems: [...state.plannedItems, newItem]
   };
 
-  debouncedEvaluate();
+  scheduleEvaluation();
 }
 
 function removeFromPlan(instanceId: string): void {
@@ -369,7 +397,7 @@ function removeFromPlan(instanceId: string): void {
     plannedItems: reindexed
   };
 
-  debouncedEvaluate();
+  scheduleEvaluation();
 }
 
 function movePlanItem(instanceId: string, direction: 'up' | 'down'): void {
@@ -396,7 +424,7 @@ function movePlanItem(instanceId: string, direction: 'up' | 'down'): void {
     plannedItems: reindexed
   };
 
-  debouncedEvaluate();
+  scheduleEvaluation();
 }
 
 function updateSelections(instanceId: string, selections: Record<string, unknown>): void {
@@ -418,7 +446,7 @@ function updateSelections(instanceId: string, selections: Record<string, unknown
     plannedItems: updatedItems
   };
 
-  debouncedEvaluate();
+  scheduleEvaluation();
 }
 
 function swapPlanItemRule(instanceId: string, entry: AvailableRuleEntry): void {
@@ -443,7 +471,7 @@ function swapPlanItemRule(instanceId: string, entry: AvailableRuleEntry): void {
     plannedItems: updated
   };
 
-  debouncedEvaluate();
+  scheduleEvaluation();
 }
 
 /**
@@ -629,7 +657,7 @@ async function assignSingleGroup(characterId: string, ruleGroupId: string): Prom
       modules: [...state.modules, ...newModules]
     };
 
-    debouncedEvaluate();
+    scheduleEvaluation();
   } catch (error) {
     console.error('[assignRuleGroup] Error:', error);
     // Revert
@@ -752,6 +780,10 @@ function removeEffect(effectId: string): void {
 }
 
 function endTurn(): void {
+  // A plan edit inside the debounce window (tapped die, slider, added step) has
+  // not been evaluated yet — flush it so the commit below reads the CURRENT
+  // plan's advertised effects, not the previous evaluation's.
+  flushPendingEvaluation();
   // Age the committed set across the turn boundary: merge in this turn's advertised
   // effects, collapse replacements by key, and drop any whose expiry fired. Rests
   // recorded this turn are detected from the effects themselves (`endTurn`).
@@ -788,6 +820,7 @@ function addFollowupEffect(effect: EffectInstance): void {
 }
 
 function reset(): void {
+  cancelScheduledEvaluation();
   _hypotheticalEntriesMap = new Map();
   _plannedEntriesMap = new Map();
   _lastAdvertised = [];

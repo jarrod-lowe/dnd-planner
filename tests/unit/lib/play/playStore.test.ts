@@ -1532,6 +1532,80 @@ describe('playStore', () => {
     });
   });
 
+  describe('endTurn flushes the pending debounced evaluation', () => {
+    // Plan edits (add/remove/move/updateSelections/swap) re-evaluate on a 300ms
+    // debounce. End Turn commits `_lastAdvertised` — whatever the LAST evaluation
+    // advertised. Tapping a control and then End Turn inside the debounce window
+    // must still commit the edited plan's effects, so endTurn has to flush the
+    // pending evaluation before reading the advertised set.
+
+    it('commits a hit-dice roll tapped within the debounce window', async () => {
+      // The hit-dice-on-rest shape: the evaluation advertises one heal per
+      // selected die.
+      vi.mocked(evaluateCharacter).mockImplementation((_m, _c, refs) => {
+        const dice = (refs[0]?.selections as { dice?: number } | undefined)?.dice ?? 0;
+        return playOut({
+          advertised: Array.from({ length: dice }, (_, i) => ({
+            id: `hit-dice-heal-${i}`,
+            state: { 'hp.healed': 1 },
+            expiry: { kind: 'untilLongRest' as const }
+          }))
+        });
+      });
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      playStore.addToPlan({ id: 'short-rest', activities: [] });
+      vi.advanceTimersByTime(300); // first evaluation: no die selected, nothing advertised
+      expect(playStore.state.committed).toEqual([]);
+
+      const instanceId = playStore.state.plannedItems[0].instanceId;
+      // The player taps a die, then immediately taps End Turn — inside the window.
+      playStore.updateSelections(instanceId, { dice: 1 });
+      playStore.endTurn();
+
+      expect(playStore.state.committed.map((e) => e.id)).toEqual(['hit-dice-heal-0']);
+    });
+
+    it('commits a slider selection changed within the debounce window (generic path)', async () => {
+      // A plain selection-bearing control: the advertised spend follows the
+      // selection's current value.
+      vi.mocked(evaluateCharacter).mockImplementation((_m, _c, refs) => {
+        const distance = (refs[0]?.selections as { distance?: number } | undefined)?.distance;
+        return playOut({
+          advertised: distance
+            ? [
+                {
+                  id: 'move-spend',
+                  state: { 'character.movement.spent': distance },
+                  expiry: { kind: 'untilLongRest' as const }
+                }
+              ]
+            : []
+        });
+      });
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      playStore.addToPlan({ id: 'move-walk', activities: [] });
+      vi.advanceTimersByTime(300); // first evaluation: no distance, nothing advertised
+
+      const instanceId = playStore.state.plannedItems[0].instanceId;
+      playStore.updateSelections(instanceId, { distance: 20 });
+      playStore.endTurn();
+
+      expect(playStore.state.committed).toEqual([
+        {
+          id: 'move-spend',
+          state: { 'character.movement.spent': 20 },
+          expiry: { kind: 'untilLongRest' }
+        }
+      ]);
+    });
+  });
+
   describe('removeEffect', () => {
     it("evicts the removed effect's declared dependents, keeps unrelated effects", async () => {
       const mockApiGet = vi.mocked(apiGet);
