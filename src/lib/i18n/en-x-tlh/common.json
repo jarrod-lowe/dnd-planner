@@ -1838,8 +1838,8 @@
       "row": "{{name}}: {{open}} poS, {{thisTurn}} DaHjaj, {{spent}} lo'ta', {{total}} naQ"
     },
     "economy": {
-      "toggle": "DIv DIv yI'ang",
-      "tilesLabel": "DIv DIv: {{summary}}",
+      "toggle": "DIvI'mey yI'ang",
+      "tilesLabel": "DIvI'mey: {{summary}}",
       "poolOpen": "{{name}}: {{open}}",
       "noneOpen": "pagh poS"
     },

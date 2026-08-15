@@ -72,7 +72,7 @@ describe('action-economy i18n templates', () => {
   });
 
   it('leaks no English into the tlh economy copy', () => {
-    const english = /\b(open|spent|level|turn|total|show|none|action|breakdown)\b/i;
+    const english = /\b(open|spent|level|turn|total|show|none|action|breakdown|economy)\b/i;
     for (const key of ECONOMY_KEYS) {
       expect(withoutParams(tlhEconomy[key]), `en-x-tlh play.economy.${key}`).not.toMatch(english);
     }
