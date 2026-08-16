@@ -375,15 +375,14 @@
     color: var(--md-sys-color-on-surface);
   }
 
-  .intent-top-bar__chip--hp {
+  .intent-top-bar__chip--stack {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
     gap: 2px;
-    min-width: 5rem;
   }
 
-  .intent-top-bar__chip--hp .intent-top-bar__chip-label {
-    align-self: flex-start;
+  .intent-top-bar__chip--hp {
+    min-width: 5rem;
   }
 
   .intent-top-bar__hp-bar {
@@ -391,6 +390,7 @@
     background: var(--md-sys-color-surface-container);
     border-radius: 2px;
     overflow: hidden;
+    align-self: stretch;
   }
 
   .intent-top-bar__hp-fill {
@@ -398,12 +398,6 @@
     background: var(--md-sys-color-primary);
     border-radius: 2px;
     transition: width var(--transition-normal);
-  }
-
-  .intent-top-bar__chip--conc {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
   }
 
   .intent-top-bar__conc-icon {
