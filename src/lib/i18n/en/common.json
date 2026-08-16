@@ -2105,7 +2105,8 @@
       "L3": "L3",
       "L4": "L4",
       "L5": "L5",
-      "free": "FREE"
+      "free": "FREE",
+      "upcastAria": "Casting at L{{level}} — base level L{{base}}"
     }
   },
   "damage-type": {
