@@ -1,33 +1,49 @@
 <script lang="ts">
   /**
-   * Per-level spell slot breakdown, shown as a disclosure tray anchored ABOVE
-   * the ledger's slot cell - the ledger is pinned to the bottom of the
-   * viewport, so a tray opening downwards would be off-screen.
+   * Generic tiled pool tray - shows any tiled resource breakdown (spell levels,
+   * action economy) as a disclosure tray anchored ABOVE the ledger's cell.
    *
-   * Presentation only: the caller passes the already-derived `SlotLevel[]`
-   * (see `$lib/play/slotLevels`), so this component never touches the engine.
+   * The ledger is pinned to the bottom of the viewport, so a tray opening
+   * downwards would be off-screen.
+   *
+   * Presentation only: the caller passes already-derived `TrayRow[]`, so this
+   * component never touches the engine.
    *
    * States are distinguished by texture AND colour - solid / hatched / outlined
    * - because colour alone is not accessible. Nothing is left conveyed by
    * texture alone: the legend names all three states ("Open" / "This turn" /
    * "Spent") as real text, and every row carries an aria-label with all four
    * counts - the SAME disjoint breakdown the pips draw, so a screen-reader and
-   * a sighted reader are told about the same number of slots. The pip run
+   * a sighted reader are told about the same number of pools. The pip run
    * itself is therefore decorative and hidden from the accessibility tree.
    */
   import { t } from '$lib/i18n';
-  import type { SlotLevel } from '$lib/play/slotLevels';
+
+  export interface TrayRow {
+    /** Compact tile text: "1", "ACT". */
+    tile: string;
+    /** Full name for the row's aria-label: "Level 1", "Bonus Action". */
+    name: string;
+    /** Sort order (pool level, or pool position). */
+    order: number;
+    open: number;
+    thisTurn: number;
+    spent: number;
+    total: number;
+  }
 
   interface Props {
-    /** Levels to show, already filtered to `total > 0` by `deriveSlotLevels`. */
-    levels: SlotLevel[];
+    /** Rows to show, one per pool level or action type. */
+    rows: TrayRow[];
+    /** i18n key rendered as the tray heading. */
+    titleKey: string;
     /** DOM id, so the disclosure button's `aria-controls` can point here. */
     id?: string;
   }
 
-  let { levels, id }: Props = $props();
+  let { rows, titleKey, id }: Props = $props();
 
-  /** CSS modifier suffix for each slot state. */
+  /** CSS modifier suffix for each pool state. */
   type PipState = 'open' | 'this-turn' | 'spent';
 
   const LEGEND: { state: PipState; key: string }[] = [
@@ -41,44 +57,42 @@
   }
 
   /**
-   * Slots spent on EARLIER turns. `level.spent` is the projected total and
+   * Pools spent on EARLIER turns. `row.spent` is the projected total and
    * already includes `thisTurn`, so the earlier count is the difference -
    * counting both would double up. Floored at 0 because an over-budget plan can
-   * push `thisTurn` past `spent` (see `deriveSlotLevels`); note this floor is
-   * deliberately NOT applied to `open`, whose negative value is the overdraft
-   * signal.
+   * push `thisTurn` past `spent`; note this floor is deliberately NOT applied
+   * to `open`, whose negative value is the overdraft signal.
    *
    * Derived once per row and fed to both the pip run and the aria-label, so the
-   * two can never disagree about how many slots the level shows.
+   * two can never disagree about how many pools the row shows.
    */
-  function earlierSpent(level: SlotLevel): number {
-    return Math.max(0, level.spent - level.thisTurn);
+  function earlierSpent(row: TrayRow): number {
+    return Math.max(0, row.spent - row.thisTurn);
   }
 
   /** Open pips first, then this turn's, then the ones spent on earlier turns. */
-  function pipRun(level: SlotLevel, earlier: number): PipState[] {
+  function pipRun(row: TrayRow, earlier: number): PipState[] {
     return [
-      ...repeat('open', level.open),
-      ...repeat('this-turn', level.thisTurn),
+      ...repeat('open', row.open),
+      ...repeat('this-turn', row.thisTurn),
       ...repeat('spent', earlier)
     ];
   }
 
-  const rows = $derived(
-    [...levels]
-      .sort((a, b) => a.level - b.level)
-      .map((level) => {
-        const earlier = earlierSpent(level);
+  const sortedRows = $derived(
+    [...rows]
+      .sort((a, b) => a.order - b.order)
+      .map((row) => {
+        const earlier = earlierSpent(row);
         return {
-          level,
-          pips: pipRun(level, earlier),
-          tile: $t('play.slots.levelTile', { level: level.level }),
-          label: $t('play.slots.levelRow', {
-            level: level.level,
-            open: level.open,
-            thisTurn: level.thisTurn,
+          row,
+          pips: pipRun(row, earlier),
+          label: $t('play.tray.row', {
+            name: row.name,
+            open: row.open,
+            thisTurn: row.thisTurn,
             spent: earlier,
-            total: level.total
+            total: row.total
           })
         };
       })
@@ -86,19 +100,19 @@
 </script>
 
 <div class="slot-tray" {id}>
-  {#if rows.length > 0}
-    <h3 class="slot-tray__title">{$t('play.slots.title')}</h3>
+  {#if sortedRows.length > 0}
+    <h3 class="slot-tray__title">{$t(titleKey)}</h3>
 
     <ul class="slot-tray__rows">
-      {#each rows as row (row.level.level)}
-        <li class="slot-tray__row" aria-label={row.label}>
-          <span class="slot-tray__tile" aria-hidden="true">{row.tile}</span>
+      {#each sortedRows as item (item.row.order)}
+        <li class="slot-tray__row" aria-label={item.label}>
+          <span class="slot-tray__tile" aria-hidden="true">{item.row.tile}</span>
           <span class="slot-tray__pips" aria-hidden="true">
-            {#each row.pips as pip, index (index)}
+            {#each item.pips as pip, index (index)}
               <span class="slot-tray__pip slot-tray__pip--{pip}"></span>
             {/each}
           </span>
-          <span class="slot-tray__count">{row.level.open}/{row.level.total}</span>
+          <span class="slot-tray__count">{item.row.open}/{item.row.total}</span>
         </li>
       {/each}
     </ul>

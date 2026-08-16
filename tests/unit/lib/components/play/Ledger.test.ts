@@ -30,13 +30,29 @@ const translations: Record<string, string> = {
   'play.slots.levelSummary': '{{open}} open at L{{level}}',
   'play.slots.summarySeparator': ' | ',
   'play.slots.noneOpen': 'nothing open',
-  'play.slots.levelRow':
-    'Level {{level}} => {{open}} open, {{thisTurn}} this turn, {{spent}} spent, {{total}} total',
+  'play.tray.row':
+    '{{name}}: {{open}} open, {{thisTurn}} this turn, {{spent}} spent, {{total}} total',
+  'play.slots.levelName': 'Level {{level}}',
   'play.slots.levelTile': '{{level}}',
   'play.slots.legendTitle': 'Key',
   'play.slots.legend.open': 'Open',
   'play.slots.legend.thisTurn': 'This turn',
-  'play.slots.legend.spent': 'Spent'
+  'play.slots.legend.spent': 'Spent',
+  // Action economy keys
+  'play.economy.toggle': 'Show action economy breakdown',
+  'play.stats.bonusActions': 'Bonus Actions',
+  'play.stats.reactions': 'Reactions',
+  'play.economy.poolOpen': '{{name}}: {{open}} open',
+  'play.economy.noneOpen': 'nothing open',
+  'play.economy.summarySeparator': ' | ',
+  'play.economy.tilesLabel': 'Action economy => {{summary}}',
+  'play.economy.tile.actions': 'A',
+  'play.economy.tile.bonusActions': 'B',
+  'play.economy.tile.reactions': 'R',
+  'play.ledger.short.steed.actions': 'ST.A',
+  'play.stats.steed.actions': 'Steed Actions',
+  'play.ledger.short.steed.bonusActions': 'ST.B',
+  'play.stats.steed.bonusActions': 'Steed Bonus Actions'
 };
 
 // The i18n mock returns the key as text for unmatched keys, interpolating
@@ -623,6 +639,41 @@ describe('Ledger — spell slot cell', () => {
     expect(container.querySelector('.ledger__slot-caret')).toBeTruthy();
   });
 
+  it('places the caret in the same row as the label, before the tiles row', () => {
+    // The caret should be a child of the same ledger__slot-row as the label,
+    // and that row should precede the tiles row.
+    renderSlots({
+      'spellcasting.slots.level1.total': 2,
+      'spellcasting.slots.level1.spent': 0
+    });
+
+    const label = container.querySelector('.ledger__cell-label');
+    const caret = container.querySelector('.ledger__slot-caret');
+    const tiles = container.querySelector('.ledger__slot-tiles');
+
+    expect(label).toBeTruthy();
+    expect(caret).toBeTruthy();
+    expect(tiles).toBeTruthy();
+
+    // Label and caret are siblings in the same row
+    const labelRow = label?.parentElement;
+    const caretRow = caret?.parentElement;
+    expect(labelRow).toBe(caretRow);
+    expect(labelRow?.classList.contains('ledger__slot-row')).toBe(true);
+
+    // The tiles row is a separate row that comes after the label+caret row
+    const tilesRow = tiles?.parentElement;
+    expect(tilesRow?.classList.contains('ledger__slot-row')).toBe(true);
+    expect(tilesRow).toBeTruthy();
+    expect(labelRow).toBeTruthy();
+
+    if (labelRow && tilesRow) {
+      expect(labelRow.compareDocumentPosition(tilesRow) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(
+        Node.DOCUMENT_POSITION_FOLLOWING
+      );
+    }
+  });
+
   it('exposes the tile row as a single labelled image carrying the open-slot summary', () => {
     renderSlots({
       'spellcasting.slots.level1.total': 4,
@@ -674,7 +725,7 @@ describe('Ledger — spell slot cell', () => {
     expect(tray?.id).toBe(toggle().getAttribute('aria-controls'));
     // The tray shows the per-level breakdown row.
     expect(container.querySelector('.slot-tray__row')?.getAttribute('aria-label')).toBe(
-      'Level 1 => 1 open, 0 this turn, 1 spent, 2 total'
+      'Level 1: 1 open, 0 this turn, 1 spent, 2 total'
     );
   });
 
@@ -750,5 +801,535 @@ describe('Ledger — spell slot cell', () => {
     expect(container.textContent).toContain('3/5 d8');
     // One level configured -> one tile.
     expect(container.querySelectorAll('.ledger__slot-tile').length).toBe(1);
+  });
+});
+
+describe('Ledger — action economy cell', () => {
+  let container: HTMLElement;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    vi.clearAllMocks();
+  });
+
+  const economyEntry: UiEntry = {
+    type: 'actionPools',
+    label: 'play.stats.actions',
+    factPrefix: '',
+    pools: [
+      {
+        key: 'actions',
+        label: 'play.stats.actions',
+        shortLabel: 'play.stats.actions',
+        tile: 'play.economy.tile.actions'
+      },
+      {
+        key: 'bonusActions',
+        label: 'play.stats.bonusActions',
+        shortLabel: 'play.stats.bonusActions',
+        tile: 'play.economy.tile.bonusActions'
+      },
+      {
+        key: 'reactions',
+        label: 'play.stats.reactions',
+        shortLabel: 'play.stats.reactions',
+        tile: 'play.economy.tile.reactions'
+      }
+    ]
+  };
+
+  /**
+   * An advertised effect that spends one action-pool item this turn.
+   */
+  function actionSpend(id: string, poolKey: string, count: number = 1): EffectInstance {
+    return {
+      id,
+      state: { [`${poolKey}.spent`]: count },
+      expiry: { kind: 'untilLongRest' }
+    };
+  }
+
+  function renderEconomy(
+    facts: Facts,
+    effects: EffectInstance[] = [],
+    entries: UiEntry[] = [economyEntry],
+    extraProps: Record<string, unknown> = {}
+  ) {
+    mount(Ledger, {
+      target: container,
+      props: { resourceEntries: entries, facts, effects, ...extraProps }
+    });
+    flushSync();
+  }
+
+  function toggle(): HTMLButtonElement {
+    const button = container.querySelector<HTMLButtonElement>('.ledger__slot-toggle');
+    expect(button).toBeTruthy();
+    return button as HTMLButtonElement;
+  }
+
+  function tileStates(): string[] {
+    return Array.from(container.querySelectorAll<HTMLElement>('.ledger__slot-tile')).map((tile) => {
+      if (tile.classList.contains('ledger__slot-tile--open')) return 'open';
+      if (tile.classList.contains('ledger__slot-tile--this-turn')) return 'this-turn';
+      if (tile.classList.contains('ledger__slot-tile--spent')) return 'spent';
+      return 'unknown';
+    });
+  }
+
+  function tileTexts(): (string | null)[] {
+    return Array.from(container.querySelectorAll('.ledger__slot-tile')).map(
+      (tile) => tile.textContent
+    );
+  }
+
+  it('renders one tile per pool with correct state classes - all open', () => {
+    renderEconomy({
+      'actions.max': 1,
+      'actions.spent': 0,
+      'bonusActions.max': 1,
+      'bonusActions.spent': 0,
+      'reactions.max': 1,
+      'reactions.spent': 0
+    });
+    expect(container.querySelectorAll('.ledger__cell').length).toBe(1);
+    expect(container.querySelectorAll('.ledger__slot-tile').length).toBe(3);
+    expect(tileStates()).toEqual(['open', 'open', 'open']);
+    expect(tileTexts()).toEqual(['A', 'B', 'R']);
+    expect(container.querySelector('.ledger__cell-label')?.textContent).toBe('ACT');
+  });
+
+  it('places the caret in the same row as the label, before the tiles row', () => {
+    // The caret should be a child of the same ledger__slot-row as the label,
+    // and that row should precede the tiles row.
+    renderEconomy({
+      'actions.max': 1,
+      'actions.spent': 0,
+      'bonusActions.max': 1,
+      'bonusActions.spent': 0,
+      'reactions.max': 1,
+      'reactions.spent': 0
+    });
+
+    const label = container.querySelector('.ledger__cell-label');
+    const caret = container.querySelector('.ledger__slot-caret');
+    const tiles = container.querySelector('.ledger__slot-tiles');
+
+    expect(label).toBeTruthy();
+    expect(caret).toBeTruthy();
+    expect(tiles).toBeTruthy();
+
+    // Label and caret are siblings in the same row
+    const labelRow = label?.parentElement;
+    const caretRow = caret?.parentElement;
+    expect(labelRow).toBe(caretRow);
+    expect(labelRow?.classList.contains('ledger__slot-row')).toBe(true);
+
+    // The tiles row is a separate row that comes after the label+caret row
+    const tilesRow = tiles?.parentElement;
+    expect(tilesRow?.classList.contains('ledger__slot-row')).toBe(true);
+    expect(tilesRow).toBeTruthy();
+    expect(labelRow).toBeTruthy();
+
+    if (labelRow && tilesRow) {
+      expect(labelRow.compareDocumentPosition(tilesRow) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(
+        Node.DOCUMENT_POSITION_FOLLOWING
+      );
+    }
+  });
+
+  it('renders one tile spent via advertised effect as this-turn state', () => {
+    renderEconomy(
+      {
+        'actions.max': 1,
+        'actions.spent': 1,
+        'bonusActions.max': 1,
+        'bonusActions.spent': 0,
+        'reactions.max': 1,
+        'reactions.spent': 0
+      },
+      [actionSpend('attack-action', 'actions', 1)]
+    );
+    expect(tileStates()).toEqual(['this-turn', 'open', 'open']);
+  });
+
+  it('renders all tiles as spent when all pools exhausted on earlier turns', () => {
+    renderEconomy({
+      'actions.max': 1,
+      'actions.spent': 1,
+      'bonusActions.max': 1,
+      'bonusActions.spent': 1,
+      'reactions.max': 1,
+      'reactions.spent': 1
+    });
+    expect(tileStates()).toEqual(['spent', 'spent', 'spent']);
+  });
+
+  it('prefers open over this-turn for pools (precedence test)', () => {
+    // 2 max, 1 spent overall, 1 spent by current plan -> 1 still open.
+    // Open wins: removing the current plan row gets it back.
+    renderEconomy(
+      {
+        'actions.max': 2,
+        'actions.spent': 1
+      },
+      [actionSpend('attack-action', 'actions', 1)]
+    );
+    expect(tileStates()).toEqual(['open']);
+  });
+
+  it('drops pools with max <= 0 but keeps tile alignment for live pools', () => {
+    // Bonus actions has max: 0, so it should not render a tile.
+    // Actions and reactions should keep correct labels/alignment.
+    renderEconomy({
+      'actions.max': 1,
+      'actions.spent': 0,
+      'bonusActions.max': 0,
+      'bonusActions.spent': 0,
+      'reactions.max': 1,
+      'reactions.spent': 0
+    });
+    expect(container.querySelectorAll('.ledger__slot-tile').length).toBe(2);
+    expect(tileTexts()).toEqual(['A', 'R']);
+  });
+
+  it('exposes tile-row aria summary text from i18n templates', () => {
+    renderEconomy({
+      'actions.max': 1,
+      'actions.spent': 0,
+      'bonusActions.max': 1,
+      'bonusActions.spent': 1,
+      'reactions.max': 1,
+      'reactions.spent': 0
+    });
+    const tiles = container.querySelector('.ledger__slot-tiles');
+    expect(tiles?.getAttribute('role')).toBe('img');
+    expect(tiles?.getAttribute('aria-label')).toBe(
+      'Action economy => Actions: 1 open | Bonus Actions: 0 open | Reactions: 1 open'
+    );
+  });
+
+  it('falls back to none-open phrase when every pool is spent', () => {
+    renderEconomy({
+      'actions.max': 1,
+      'actions.spent': 1,
+      'bonusActions.max': 1,
+      'bonusActions.spent': 1,
+      'reactions.max': 1,
+      'reactions.spent': 1
+    });
+    expect(container.querySelector('.ledger__slot-tiles')?.getAttribute('aria-label')).toBe(
+      'Action economy => nothing open'
+    );
+  });
+
+  it('opens the tray on click with correct aria attributes', () => {
+    renderEconomy({
+      'actions.max': 1,
+      'actions.spent': 0,
+      'bonusActions.max': 1,
+      'bonusActions.spent': 0,
+      'reactions.max': 1,
+      'reactions.spent': 0
+    });
+    const button = toggle();
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+    expect(button.getAttribute('aria-controls')).toBeTruthy();
+
+    button.click();
+    flushSync();
+
+    expect(button.getAttribute('aria-expanded')).toBe('true');
+    const tray = container.querySelector('.slot-tray');
+    expect(tray).toBeTruthy();
+    expect(tray?.id).toBe(button.getAttribute('aria-controls'));
+  });
+
+  it('renders tray rows with names from play.stats.* keys', () => {
+    renderEconomy(
+      {
+        'actions.max': 1,
+        'actions.spent': 0,
+        'bonusActions.max': 1,
+        'bonusActions.spent': 0,
+        'reactions.max': 1,
+        'reactions.spent': 0
+      },
+      [],
+      [economyEntry]
+    );
+    toggle().click();
+    flushSync();
+
+    const rows = container.querySelectorAll('.slot-tray__row');
+    expect(rows.length).toBe(3);
+    expect(rows[0].getAttribute('aria-label')).toBe(
+      'Actions: 1 open, 0 this turn, 0 spent, 1 total'
+    );
+    expect(rows[1].getAttribute('aria-label')).toBe(
+      'Bonus Actions: 1 open, 0 this turn, 0 spent, 1 total'
+    );
+    expect(rows[2].getAttribute('aria-label')).toBe(
+      'Reactions: 1 open, 0 this turn, 0 spent, 1 total'
+    );
+  });
+
+  it('closes on Escape and returns focus to the toggle', () => {
+    renderEconomy({
+      'actions.max': 1,
+      'actions.spent': 0,
+      'bonusActions.max': 1,
+      'bonusActions.spent': 0,
+      'reactions.max': 1,
+      'reactions.spent': 0
+    });
+    toggle().focus();
+    toggle().click();
+    flushSync();
+    expect(container.querySelector('.slot-tray')).toBeTruthy();
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    flushSync();
+
+    expect(container.querySelector('.slot-tray')).toBeNull();
+    expect(toggle().getAttribute('aria-expanded')).toBe('false');
+    expect(document.activeElement).toBe(toggle());
+  });
+
+  it('closes on an outside click', () => {
+    renderEconomy({
+      'actions.max': 1,
+      'actions.spent': 0,
+      'bonusActions.max': 1,
+      'bonusActions.spent': 0,
+      'reactions.max': 1,
+      'reactions.spent': 0
+    });
+    toggle().click();
+    flushSync();
+    expect(container.querySelector('.slot-tray')).toBeTruthy();
+
+    document.body.click();
+    flushSync();
+    expect(container.querySelector('.slot-tray')).toBeNull();
+    expect(toggle().getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('renders steed economy with 2 tiles and steed short label', () => {
+    const steedEconomyEntry: UiEntry = {
+      type: 'actionPools',
+      label: 'play.stats.steed.actions',
+      factPrefix: 'companion.steed.',
+      subject: 'steed',
+      pools: [
+        {
+          key: 'actions',
+          label: 'play.stats.steed.actions',
+          shortLabel: 'play.stats.actions',
+          tile: 'play.economy.tile.actions'
+        },
+        {
+          key: 'bonusActions',
+          label: 'play.stats.steed.bonusActions',
+          shortLabel: 'play.stats.bonusActions',
+          tile: 'play.economy.tile.bonusActions'
+        }
+      ]
+    };
+
+    renderEconomy(
+      {
+        'companion.steed.actions.max': 1,
+        'companion.steed.actions.spent': 0,
+        'companion.steed.bonusActions.max': 1,
+        'companion.steed.bonusActions.spent': 0
+      },
+      [],
+      [steedEconomyEntry],
+      { activeSubject: 'steed' }
+    );
+
+    expect(container.querySelectorAll('.ledger__slot-tile').length).toBe(2);
+    expect(container.querySelector('.ledger__cell-label')?.textContent).toBe('ST.A');
+    expect(tileTexts()).toEqual(['A', 'B']);
+  });
+
+  it('renders steed tray title from entry.label', () => {
+    const steedEconomyEntry: UiEntry = {
+      type: 'actionPools',
+      label: 'play.stats.steed.actions',
+      factPrefix: 'companion.steed.',
+      subject: 'steed',
+      pools: [
+        {
+          key: 'actions',
+          label: 'play.stats.steed.actions',
+          shortLabel: 'play.stats.actions',
+          tile: 'play.economy.tile.actions'
+        }
+      ]
+    };
+
+    renderEconomy(
+      {
+        'companion.steed.actions.max': 1,
+        'companion.steed.actions.spent': 0
+      },
+      [],
+      [steedEconomyEntry],
+      { activeSubject: 'steed' }
+    );
+
+    toggle().click();
+    flushSync();
+
+    expect(container.querySelector('.slot-tray__title')?.textContent?.trim()).toBe('Steed Actions');
+  });
+
+  it('shows negative tray count for over-budget advertised spend without clamping', () => {
+    renderEconomy(
+      {
+        'actions.max': 1,
+        'actions.spent': 2
+      },
+      [actionSpend('over-budget-action', 'actions', 2)]
+    );
+    toggle().click();
+    flushSync();
+
+    const row = container.querySelector('.slot-tray__row');
+    expect(row?.querySelector('.slot-tray__count')?.textContent?.trim()).toBe('-1/1');
+  });
+
+  it('opening economy tray closes open slots tray and vice versa', () => {
+    const slotEntry: UiEntry = {
+      type: 'slotLevels',
+      label: 'play.stats.spellSlots',
+      levels: [1]
+    };
+
+    renderEconomy(
+      {
+        'spellcasting.slots.level1.total': 2,
+        'spellcasting.slots.level1.spent': 0,
+        'actions.max': 1,
+        'actions.spent': 0,
+        'bonusActions.max': 1,
+        'bonusActions.spent': 0,
+        'reactions.max': 1,
+        'reactions.spent': 0
+      },
+      [],
+      [slotEntry, economyEntry]
+    );
+
+    // Open slots tray
+    const slotToggle = container.querySelectorAll('.ledger__slot-toggle')[0] as HTMLButtonElement;
+    slotToggle.click();
+    flushSync();
+    expect(container.querySelector('.slot-tray')).toBeTruthy();
+    expect(slotToggle.getAttribute('aria-expanded')).toBe('true');
+
+    // Open economy tray - should close slots tray
+    const economyToggle = container.querySelectorAll(
+      '.ledger__slot-toggle'
+    )[1] as HTMLButtonElement;
+    economyToggle.click();
+    flushSync();
+
+    expect(economyToggle.getAttribute('aria-expanded')).toBe('true');
+    expect(slotToggle.getAttribute('aria-expanded')).toBe('false');
+    // Only one tray should exist
+    expect(container.querySelectorAll('.slot-tray').length).toBe(1);
+  });
+
+  it('opening slots tray closes open economy tray (reverse direction)', () => {
+    const slotEntry: UiEntry = {
+      type: 'slotLevels',
+      label: 'play.stats.spellSlots',
+      levels: [1]
+    };
+
+    renderEconomy(
+      {
+        'spellcasting.slots.level1.total': 2,
+        'spellcasting.slots.level1.spent': 0,
+        'actions.max': 1,
+        'actions.spent': 0,
+        'bonusActions.max': 1,
+        'bonusActions.spent': 0,
+        'reactions.max': 1,
+        'reactions.spent': 0
+      },
+      [],
+      [slotEntry, economyEntry]
+    );
+
+    // Open economy tray first
+    const economyToggle = container.querySelectorAll(
+      '.ledger__slot-toggle'
+    )[1] as HTMLButtonElement;
+    economyToggle.click();
+    flushSync();
+    expect(container.querySelector('.slot-tray')).toBeTruthy();
+    expect(economyToggle.getAttribute('aria-expanded')).toBe('true');
+
+    // Open slots tray - should close economy tray
+    const slotToggle = container.querySelectorAll('.ledger__slot-toggle')[0] as HTMLButtonElement;
+    slotToggle.click();
+    flushSync();
+
+    expect(slotToggle.getAttribute('aria-expanded')).toBe('true');
+    expect(economyToggle.getAttribute('aria-expanded')).toBe('false');
+    // Only one tray should exist
+    expect(container.querySelectorAll('.slot-tray').length).toBe(1);
+  });
+
+  it('hides the cell when all pools have max <= 0', () => {
+    renderEconomy({
+      'actions.max': 0,
+      'actions.spent': 0,
+      'bonusActions.max': 0,
+      'bonusActions.spent': 0,
+      'reactions.max': 0,
+      'reactions.spent': 0
+    });
+    expect(container.querySelectorAll('.ledger__cell').length).toBe(0);
+  });
+
+  it('keeps usedMax and hitDie cells rendering alongside the economy cell', () => {
+    renderEconomy(
+      {
+        'hp.max': 35,
+        'hp.current': 28,
+        'hitDie.d8.total': 5,
+        'hitDie.d8.remaining': 3,
+        'actions.max': 1,
+        'actions.spent': 0,
+        'bonusActions.max': 1,
+        'bonusActions.spent': 0,
+        'reactions.max': 1,
+        'reactions.spent': 0
+      },
+      [],
+      [
+        { type: 'usedMax', label: 'play.stats.hp', total: 'hp.max', remaining: 'hp.current' },
+        {
+          type: 'hitDie',
+          label: 'play.stats.hitDie',
+          nameParams: { dieSize: 8 },
+          total: 'hitDie.d8.total',
+          remaining: 'hitDie.d8.remaining',
+          dieSize: 8
+        },
+        economyEntry
+      ]
+    );
+    expect(container.querySelectorAll('.ledger__cell').length).toBe(3);
+    expect(container.textContent).toContain('28/35');
+    expect(container.textContent).toContain('3/5 d8');
+    // Three pools -> three tiles
+    expect(container.querySelectorAll('.ledger__slot-tile').length).toBe(3);
   });
 });

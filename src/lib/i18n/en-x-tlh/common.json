@@ -1822,9 +1822,9 @@
       "title": "mugh patlhmey",
       "tilesLabel": "mugh patlhmey: {{summary}}",
       "levelSummary": "{{open}} poS patlh {{level}}",
+      "levelName": "patlh {{level}}",
       "summarySeparator": ", ",
       "noneOpen": "pagh poS",
-      "levelRow": "patlh {{level}}: {{open}} poS, {{thisTurn}} DaHjaj, {{spent}} lo'ta', {{total}} naQ",
       "levelTile": "{{level}}",
       "legendTitle": "ngoq",
       "legend": {
@@ -1832,6 +1832,19 @@
         "thisTurn": "DaHjaj",
         "spent": "lo'ta'"
       }
+    },
+    "tray": {
+      "row": "{{name}}: {{open}} poS, {{thisTurn}} DaHjaj, {{spent}} lo'ta', {{total}} naQ"
+    },
+    "economy": {
+      "toggle": "DIvI'mey yI'ang",
+      "tilesLabel": "DIvI'mey: {{summary}}",
+      "summarySeparator": ", ",
+      "poolOpen": "{{name}}: {{open}}",
+      "noneOpen": "pagh poS",
+      "tile.actions": "a",
+      "tile.bonusActions": "b",
+      "tile.reactions": "r"
     },
     "slider": {
       "freeUse": "lo'Ha'",

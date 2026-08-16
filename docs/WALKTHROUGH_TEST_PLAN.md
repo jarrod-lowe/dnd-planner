@@ -172,7 +172,8 @@ turn boundary and a reload._
 
 - **W5.1** Do: plan Attack (greataxe). Expect: the row shows a dice line — d20
   to-hit with the STR+proficiency bonus, d12 damage with the STR bonus; the
-  ledger's ACT cell decrements.
+  ledger's ACT cell shows one fewer open action (the A tile changes from solid
+  to hatched).
 - **W5.2** Do: plan a Move with the distance slider at 15 ft. Expect: movement
   remaining drops by exactly 15 (not the full speed).
 - **W5.3** Do: add a second Attack action row (beyond Extra Attack budget — at
@@ -180,8 +181,9 @@ turn boundary and a reload._
   - Extra Attack), the THIRD row alone shows illegal; earlier rows stay clean
     (per-instance legality, not whole-plan poisoning).
 - **W5.4** Do: with the plan overspending actions, look at the ledger. Expect:
-  the "Over budget" badge shows, and ONLY the overdrawn cell (ACT) is
-  highlighted red — the legitimately spent Move cell must NOT be red.
+  the "Over budget" badge shows at the top; the action-economy cell does NOT
+  turn red (it uses --warn for usedMax state only) — the legitimately spent
+  Move cell stays clean.
 - **W5.5** Do: remove the third attack; End Turn. Expect: the plan clears;
   per-turn resources (actions, movement) reset to full; durable spends stay
   spent.
@@ -241,8 +243,9 @@ automation._
   owned slot level (L2+); End Turn: the steed appears as a mount chip; no
   spell slot was spent (the free use was).
 - **W8.2** Do: switch the ledger/picker to the steed subject. Expect: steed
-  resources (its own HP 25/25 at L2-equivalent, ACT/BON/RXN, 60 ft move)
-  separate from the player's.
+  resources (its own HP 25/25 at L2-equivalent, an action-economy cell with
+  A/B tiles, 60 ft move) separate from the player's; the steed's economy
+  cell expands to a tray with Actions/Bonus Action rows (no Reactions).
 - **W8.3** Do: NEXT turn (after at least one End Turn), plan Otherworldly
   Slam. Expect: a rollable dice panel — d20 + CHA+proficiency to hit, 1d8 plus
   the summon level as damage (the bonus must not be +0 on later turns).
@@ -312,9 +315,11 @@ whole screens for raw keys and drive the app keyboard-only._
   arrows): add an offer, adjust its slider, End Turn. Expect: every control is
   reachable, focus is always visible, sliders respond to arrow keys.
 - **W11.4** Do: inspect the ledger cells and one chip with a screen reader or
-  the accessibility tree. Expect: cells expose full labels ("Actions: 0 of 1"
-  style), the over-budget badge is announced (alert), chips have accessible
-  names.
+  the accessibility tree. Expect: the action-economy cell is a button whose
+  accessible name combines "ACT" with a tile-run summary (e.g. "Action economy:
+  Actions: 1, Bonus Action: 1, Reactions: 1"); tray rows announce counts with
+  all four states (e.g. "Actions: 1 open, 0 this turn, 0 spent, 1 total");
+  the over-budget badge is announced as an alert; chips have accessible names.
 - **W11.5** Do: view the play screen at a tablet viewport (~1024×768, touch if
   available). Expect: no horizontal page scroll; touch targets (sliders, +ADD,
   End Turn) are comfortably tappable.

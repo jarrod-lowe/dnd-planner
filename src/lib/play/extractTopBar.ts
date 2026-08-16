@@ -1,5 +1,6 @@
 import type { Facts } from '$lib/rules-view';
 import { deriveSlotLevels } from './slotLevels';
+import { deriveActionPools } from './actionPools';
 
 // ── Unified UI Entry Types ──
 
@@ -9,6 +10,7 @@ export type UiEntryType =
   | 'modifier'
   | 'hitDie'
   | 'slotLevels'
+  | 'actionPools'
   | 'concentration'
   | 'ability';
 
@@ -54,6 +56,22 @@ export interface UiEntrySlotLevels extends UiEntryBase {
   levels: number[];
 }
 
+/**
+ * Per-pool action economy (Actions / Bonus Actions / Reactions), rendered as a
+ * row of tiles plus a breakdown tray — the same display as `slotLevels`.
+ *
+ * `factPrefix` selects subject: '' (player) reads `actions.max` etc.;
+ * 'companion.steed.' reads `companion.steed.actions.max` etc. Each pool carries
+ * its own label (full, for the tray), shortLabel (compact, for tray rows), and tile
+ * (single-letter i18n key, for cell tiles).
+ */
+export interface UiEntryActionPools extends UiEntryBase {
+  type: 'actionPools';
+  /** Fact prefix: '' for the player, 'companion.steed.' for the steed. */
+  factPrefix: string;
+  pools: Array<{ key: string; label: string; shortLabel: string; tile: string }>;
+}
+
 export interface UiEntryConcentration extends UiEntryBase {
   type: 'concentration';
   activeLabel: string;
@@ -76,6 +94,7 @@ export type UiEntry =
   | UiEntryModifier
   | UiEntryHitDie
   | UiEntrySlotLevels
+  | UiEntryActionPools
   | UiEntryConcentration
   | UiEntryAbility;
 
@@ -134,6 +153,21 @@ export function isUiEntry(entry: unknown): entry is UiEntry {
     return obj.levels.every((level: unknown) => typeof level === 'number');
   }
 
+  if (obj.type === 'actionPools') {
+    if (typeof obj.label !== 'string') return false;
+    if (typeof obj.factPrefix !== 'string') return false;
+    if (!Array.isArray(obj.pools)) return false;
+    return obj.pools.every(
+      (p: unknown) =>
+        typeof p === 'object' &&
+        p !== null &&
+        typeof (p as Record<string, unknown>).key === 'string' &&
+        typeof (p as Record<string, unknown>).label === 'string' &&
+        typeof (p as Record<string, unknown>).shortLabel === 'string' &&
+        typeof (p as Record<string, unknown>).tile === 'string'
+    );
+  }
+
   if (obj.type === 'concentration') {
     return (
       typeof obj.label === 'string' &&
@@ -169,6 +203,7 @@ export const isTopBarEntry = isUiEntry;
 /** Canonical display order. Kept identical to the copy in `derivePanels.ts`. */
 const UI_ENTRY_TYPE_ORDER: Record<string, number> = {
   usedMax: 0,
+  actionPools: 0, // Ties usedMax to preserve catalog position (after HP, before movement)
   value: 1,
   modifier: 2,
   hitDie: 3,
@@ -271,6 +306,20 @@ export function resolveEntryValue(entry: UiEntry, facts: Facts): string {
     const total = levels.reduce((sum, l) => sum + l.total, 0);
     return `${open}/${total}`;
   }
+  if (entry.type === 'actionPools') {
+    // Compact fallback only — the tray renders the per-pool breakdown. No
+    // advertised effects needed: the this-turn split doesn't affect the summed
+    // "open/total".
+    const pools = deriveActionPools(
+      facts,
+      [],
+      entry.factPrefix,
+      entry.pools.map((p) => p.key)
+    );
+    const open = pools.reduce((sum, p) => sum + p.open, 0);
+    const total = pools.reduce((sum, p) => sum + p.total, 0);
+    return `${open}/${total}`;
+  }
   return '';
 }
 
@@ -292,6 +341,12 @@ export function isEntryVisible(entry: UiEntry, facts: Facts): boolean {
   if (entry.type === 'slotLevels') {
     return entry.levels.some((level) => {
       const total = facts[`spellcasting.slots.level${level}.total`];
+      return total !== undefined && Number(total) > 0;
+    });
+  }
+  if (entry.type === 'actionPools') {
+    return entry.pools.some((p) => {
+      const total = facts[`${entry.factPrefix}${p.key}.max`];
       return total !== undefined && Number(total) > 0;
     });
   }

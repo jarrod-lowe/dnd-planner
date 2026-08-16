@@ -217,6 +217,152 @@ describe('isUiEntry', () => {
     expect(isUiEntry({ type: 'slotLevels', levels: [1] })).toBe(false);
   });
 
+  it('accepts valid actionPools entry', async () => {
+    const { isUiEntry } = await import('$lib/play/extractTopBar');
+    expect(
+      isUiEntry({
+        type: 'actionPools',
+        label: 'play.stats.actions',
+        factPrefix: '',
+        pools: [
+          {
+            key: 'actions',
+            label: 'play.stats.actions',
+            shortLabel: 'play.ledger.short.actions',
+            tile: 'play.economy.tile.actions'
+          },
+          {
+            key: 'bonusActions',
+            label: 'play.stats.bonusActions',
+            shortLabel: 'play.ledger.short.bonusActions',
+            tile: 'play.economy.tile.bonusActions'
+          },
+          {
+            key: 'reactions',
+            label: 'play.stats.reactions',
+            shortLabel: 'play.ledger.short.reactions',
+            tile: 'play.economy.tile.reactions'
+          }
+        ]
+      })
+    ).toBe(true);
+  });
+
+  it('rejects actionPools entry missing label', async () => {
+    const { isUiEntry } = await import('$lib/play/extractTopBar');
+    expect(
+      isUiEntry({
+        type: 'actionPools',
+        factPrefix: '',
+        pools: [
+          { key: 'actions', label: 'play.stats.actions', shortLabel: 'play.ledger.short.actions' }
+        ]
+      })
+    ).toBe(false);
+  });
+
+  it('rejects actionPools entry with non-string factPrefix', async () => {
+    const { isUiEntry } = await import('$lib/play/extractTopBar');
+    expect(
+      isUiEntry({
+        type: 'actionPools',
+        label: 'play.stats.actions',
+        factPrefix: 123,
+        pools: [
+          { key: 'actions', label: 'play.stats.actions', shortLabel: 'play.ledger.short.actions' }
+        ]
+      })
+    ).toBe(false);
+  });
+
+  it('rejects actionPools entry with pools not an array', async () => {
+    const { isUiEntry } = await import('$lib/play/extractTopBar');
+    expect(
+      isUiEntry({
+        type: 'actionPools',
+        label: 'play.stats.actions',
+        factPrefix: '',
+        pools: 'not-an-array'
+      })
+    ).toBe(false);
+  });
+
+  it('rejects actionPools entry with pool element missing shortLabel', async () => {
+    const { isUiEntry } = await import('$lib/play/extractTopBar');
+    expect(
+      isUiEntry({
+        type: 'actionPools',
+        label: 'play.stats.actions',
+        factPrefix: '',
+        pools: [{ key: 'actions', label: 'play.stats.actions' }]
+      })
+    ).toBe(false);
+  });
+
+  it('rejects actionPools entry with pool element missing tile', async () => {
+    const { isUiEntry } = await import('$lib/play/extractTopBar');
+    expect(
+      isUiEntry({
+        type: 'actionPools',
+        label: 'play.stats.actions',
+        factPrefix: '',
+        pools: [
+          { key: 'actions', label: 'play.stats.actions', shortLabel: 'play.ledger.short.actions' }
+        ]
+      })
+    ).toBe(false);
+  });
+
+  it('rejects actionPools entry with pool element having non-string tile', async () => {
+    const { isUiEntry } = await import('$lib/play/extractTopBar');
+    expect(
+      isUiEntry({
+        type: 'actionPools',
+        label: 'play.stats.actions',
+        factPrefix: '',
+        pools: [
+          {
+            key: 'actions',
+            label: 'play.stats.actions',
+            shortLabel: 'play.ledger.short.actions',
+            tile: 123
+          }
+        ]
+      })
+    ).toBe(false);
+  });
+
+  it('accepts valid actionPools entry with tile field', async () => {
+    const { isUiEntry } = await import('$lib/play/extractTopBar');
+    expect(
+      isUiEntry({
+        type: 'actionPools',
+        label: 'play.stats.actions',
+        factPrefix: '',
+        pools: [
+          {
+            key: 'actions',
+            label: 'play.stats.actions',
+            shortLabel: 'play.ledger.short.actions',
+            tile: 'play.economy.tile.actions'
+          },
+          {
+            key: 'bonusActions',
+            label: 'play.stats.bonusActions',
+            shortLabel: 'play.ledger.short.bonusActions',
+            tile: 'play.economy.tile.bonusActions'
+          },
+          {
+            key: 'reactions',
+            label: 'play.stats.reactions',
+            shortLabel: 'play.ledger.short.reactions',
+            tile: 'play.economy.tile.reactions'
+          }
+        ]
+      })
+    ).toBe(true);
+  });
+
   it('rejects entry with unknown type', async () => {
     const { isUiEntry } = await import('$lib/play/extractTopBar');
     expect(isUiEntry({ type: 'unknown', label: 'x' })).toBe(false);
@@ -564,6 +710,116 @@ describe('resolveEntryValue', () => {
     const { resolveEntryValue } = await import('$lib/play/extractTopBar');
     expect(resolveEntryValue(slotLevelsEntry([1]), {})).toBe('0/0');
   });
+
+  it('sums open/total across the pools of an actionPools entry (player 1/1/1)', async () => {
+    const { resolveEntryValue } = await import('$lib/play/extractTopBar');
+    // Default 1 action, 1 bonus action, 1 reaction, none spent yet.
+    const facts: Facts = {
+      'actions.max': 1,
+      'actions.spent': 0,
+      'bonusActions.max': 1,
+      'bonusActions.spent': 0,
+      'reactions.max': 1,
+      'reactions.spent': 0
+    };
+    const actionPoolsEntry = {
+      type: 'actionPools' as const,
+      label: 'play.stats.actions',
+      factPrefix: '',
+      pools: [
+        {
+          key: 'actions',
+          label: 'play.stats.actions',
+          shortLabel: 'play.ledger.short.actions',
+          tile: 'play.economy.tile.actions'
+        },
+        {
+          key: 'bonusActions',
+          label: 'play.stats.bonusActions',
+          shortLabel: 'play.ledger.short.bonusActions',
+          tile: 'play.economy.tile.bonusActions'
+        },
+        {
+          key: 'reactions',
+          label: 'play.stats.reactions',
+          shortLabel: 'play.ledger.short.reactions',
+          tile: 'play.economy.tile.reactions'
+        }
+      ]
+    };
+    expect(resolveEntryValue(actionPoolsEntry, facts)).toBe('3/3');
+  });
+
+  it('sums open/total with heterogeneous spent values (one action spent)', async () => {
+    const { resolveEntryValue } = await import('$lib/play/extractTopBar');
+    // actions.max: 1, actions.spent: 1 → open: 0; bonusActions and reactions fresh.
+    const facts: Facts = {
+      'actions.max': 1,
+      'actions.spent': 1,
+      'bonusActions.max': 1,
+      'bonusActions.spent': 0,
+      'reactions.max': 1,
+      'reactions.spent': 0
+    };
+    const actionPoolsEntry = {
+      type: 'actionPools' as const,
+      label: 'play.stats.actions',
+      factPrefix: '',
+      pools: [
+        {
+          key: 'actions',
+          label: 'play.stats.actions',
+          shortLabel: 'play.ledger.short.actions',
+          tile: 'play.economy.tile.actions'
+        },
+        {
+          key: 'bonusActions',
+          label: 'play.stats.bonusActions',
+          shortLabel: 'play.ledger.short.bonusActions',
+          tile: 'play.economy.tile.bonusActions'
+        },
+        {
+          key: 'reactions',
+          label: 'play.stats.reactions',
+          shortLabel: 'play.ledger.short.reactions',
+          tile: 'play.economy.tile.reactions'
+        }
+      ]
+    };
+    // (0 + 1 + 1) / (1 + 1 + 1) = 2/3
+    expect(resolveEntryValue(actionPoolsEntry, facts)).toBe('2/3');
+  });
+
+  it('sums open/total for steed actionPools (2 pools)', async () => {
+    const { resolveEntryValue } = await import('$lib/play/extractTopBar');
+    // Steed with 1 action, 1 bonus action, 0 reactions (no reaction pool).
+    const facts: Facts = {
+      'companion.steed.actions.max': 1,
+      'companion.steed.actions.spent': 0,
+      'companion.steed.bonusActions.max': 1,
+      'companion.steed.bonusActions.spent': 0
+    };
+    const actionPoolsEntry = {
+      type: 'actionPools' as const,
+      label: 'play.stats.steed.actions',
+      factPrefix: 'companion.steed.',
+      pools: [
+        {
+          key: 'actions',
+          label: 'play.stats.steed.actions',
+          shortLabel: 'play.ledger.short.steed.actions',
+          tile: 'play.economy.tile.actions'
+        },
+        {
+          key: 'bonusActions',
+          label: 'play.stats.steed.bonusActions',
+          shortLabel: 'play.ledger.short.steed.bonusActions',
+          tile: 'play.economy.tile.bonusActions'
+        }
+      ]
+    };
+    expect(resolveEntryValue(actionPoolsEntry, facts)).toBe('2/2');
+  });
 });
 
 describe('isEntryVisible', () => {
@@ -673,6 +929,87 @@ describe('isEntryVisible', () => {
   it('returns false for slotLevels when the total facts are missing', async () => {
     const { isEntryVisible } = await import('$lib/play/extractTopBar');
     expect(isEntryVisible(slotLevelsEntry([1, 2]), {})).toBe(false);
+  });
+
+  it('returns true for actionPools when one pool has max > 0', async () => {
+    const { isEntryVisible } = await import('$lib/play/extractTopBar');
+    const facts: Facts = { 'actions.max': 1, 'actions.spent': 0 };
+    const actionPoolsEntry = {
+      type: 'actionPools' as const,
+      label: 'play.stats.actions',
+      factPrefix: '',
+      pools: [
+        {
+          key: 'actions',
+          label: 'play.stats.actions',
+          shortLabel: 'play.ledger.short.actions',
+          tile: 'play.economy.tile.actions'
+        },
+        {
+          key: 'bonusActions',
+          label: 'play.stats.bonusActions',
+          shortLabel: 'play.ledger.short.bonusActions',
+          tile: 'play.economy.tile.bonusActions'
+        },
+        {
+          key: 'reactions',
+          label: 'play.stats.reactions',
+          shortLabel: 'play.ledger.short.reactions',
+          tile: 'play.economy.tile.reactions'
+        }
+      ]
+    };
+    expect(isEntryVisible(actionPoolsEntry, facts)).toBe(true);
+  });
+
+  it('returns false for actionPools when all pools have max 0 or missing', async () => {
+    const { isEntryVisible } = await import('$lib/play/extractTopBar');
+    const facts: Facts = { 'actions.max': 0, 'bonusActions.max': 0 };
+    const actionPoolsEntry = {
+      type: 'actionPools' as const,
+      label: 'play.stats.actions',
+      factPrefix: '',
+      pools: [
+        {
+          key: 'actions',
+          label: 'play.stats.actions',
+          shortLabel: 'play.ledger.short.actions',
+          tile: 'play.economy.tile.actions'
+        },
+        {
+          key: 'bonusActions',
+          label: 'play.stats.bonusActions',
+          shortLabel: 'play.ledger.short.bonusActions',
+          tile: 'play.economy.tile.bonusActions'
+        }
+      ]
+    };
+    expect(isEntryVisible(actionPoolsEntry, facts)).toBe(false);
+  });
+
+  it('returns true for actionPools with steed prefix when steed pool has max > 0', async () => {
+    const { isEntryVisible } = await import('$lib/play/extractTopBar');
+    const facts: Facts = { 'companion.steed.actions.max': 1, 'companion.steed.actions.spent': 0 };
+    const actionPoolsEntry = {
+      type: 'actionPools' as const,
+      label: 'play.stats.steed.actions',
+      factPrefix: 'companion.steed.',
+      pools: [
+        {
+          key: 'actions',
+          label: 'play.stats.steed.actions',
+          shortLabel: 'play.ledger.short.steed.actions',
+          tile: 'play.economy.tile.actions'
+        },
+        {
+          key: 'bonusActions',
+          label: 'play.stats.steed.bonusActions',
+          shortLabel: 'play.ledger.short.steed.bonusActions',
+          tile: 'play.economy.tile.bonusActions'
+        }
+      ]
+    };
+    expect(isEntryVisible(actionPoolsEntry, facts)).toBe(true);
   });
 });
 
