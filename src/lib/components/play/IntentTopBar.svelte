@@ -144,7 +144,7 @@
       {#if hpEntry && hpVisible}
         {@const entry = hpEntry}
         <div
-          class="intent-top-bar__chip intent-top-bar__chip--hp"
+          class="intent-top-bar__chip intent-top-bar__chip--stack intent-top-bar__chip--hp"
           aria-label="{$t(entry.label)} {$t('play.topBar.hpValue', {
             current: hpCurrent,
             max: hpMax
@@ -169,7 +169,7 @@
       {#each valueEntries as entry (entry.label)}
         {@const value = facts[entry.fact]}
         {#if value !== undefined}
-          <div class="intent-top-bar__chip" aria-label="{$t(entry.label)} {value}">
+          <div class="intent-top-bar__chip intent-top-bar__chip--stack" aria-label="{$t(entry.label)} {value}">
             <span class="intent-top-bar__chip-label">{$t(entry.label)}</span>
             <span class="intent-top-bar__chip-value">{value}</span>
           </div>
@@ -179,7 +179,7 @@
       {#if concEntry}
         {@const entry = concEntry}
         <div
-          class="intent-top-bar__chip intent-top-bar__chip--conc"
+          class="intent-top-bar__chip intent-top-bar__chip--stack intent-top-bar__chip--conc"
           class:intent-top-bar__chip--conc-active={concActive}
           aria-label="{$t(entry.label)}: {concActive
             ? (concentrationEffectName ?? $t(entry.activeLabel))

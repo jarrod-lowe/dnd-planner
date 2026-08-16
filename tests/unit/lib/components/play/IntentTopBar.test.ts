@@ -169,6 +169,50 @@ describe('IntentTopBar', () => {
     expect(chips.length).toBe(2);
   });
 
+  it('stacks value chips two-line via --stack modifier', () => {
+    renderComponent(
+      [{ type: 'value', label: 'play.topBar.ac', fact: 'ac.value' } satisfies UiEntry],
+      { 'ac.value': 16 }
+    );
+    const chip = container.querySelector('.intent-top-bar__chip');
+    expect(chip?.classList.contains('intent-top-bar__chip--stack')).toBe(true);
+  });
+
+  it('stacks hp and conc chips; abilities chip stays unstacked', () => {
+    renderComponent(
+      [
+        { type: 'usedMax', label: 'play.topBar.hp', total: 'hp.max', remaining: 'hp.current' },
+        {
+          type: 'concentration',
+          label: 'play.topBar.conc',
+          activeLabel: 'play.topBar.concActive',
+          noneLabel: 'play.topBar.concNone'
+        },
+        {
+          type: 'ability',
+          label: 'play.topBar.abilities',
+          abilities: [{ name: 'play.stats.str', fact: 'str.modifier' }]
+        }
+      ] satisfies TopBarEntry[],
+      { 'hp.current': 28, 'hp.max': 35, 'str.modifier': 3 }
+    );
+    expect(
+      container
+        .querySelector('.intent-top-bar__chip--hp')
+        ?.classList.contains('intent-top-bar__chip--stack')
+    ).toBe(true);
+    expect(
+      container
+        .querySelector('.intent-top-bar__chip--conc')
+        ?.classList.contains('intent-top-bar__chip--stack')
+    ).toBe(true);
+    expect(
+      container
+        .querySelector('.intent-top-bar__chip--abilities')
+        ?.classList.contains('intent-top-bar__chip--stack')
+    ).toBe(false);
+  });
+
   it('renders concentration chip from concentration entry', () => {
     renderComponent(
       [
