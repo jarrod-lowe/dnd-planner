@@ -14,6 +14,7 @@ import tlh from '$lib/i18n/en-x-tlh/common.json';
 const enCostTags = en.play.costTags as Record<string, string>;
 const tlhCostTags = tlh.play.costTags as Record<string, string>;
 const KEY = 'upcastAria';
+const SINGLE_BRACE = /(?<!\{)\{\w+\}(?!\})/;
 
 describe('upcast tag i18n', () => {
   it('defines the aria key in both locales', () => {
@@ -30,9 +31,7 @@ describe('upcast tag i18n', () => {
 
   it('uses double-brace interpolation only', () => {
     for (const value of [enCostTags[KEY], tlhCostTags[KEY]]) {
-      // This regex matches single-brace interpolation like {param}
-      // but NOT double-brace like {{param}}, using negative lookaheads
-      expect(value).not.toMatch(/\{(?!\{)[^}]*\}(?!\})/);
+      expect(value).not.toMatch(SINGLE_BRACE);
     }
   });
 
