@@ -280,9 +280,9 @@ Phase 4 — sweep + final
 - [x] `make test` (full)
   - Exit 0: tf validate (pre-existing warnings), trivy 0, schema 82, svelte-check 0 errors (6 pre-existing), vitest 143 files / 1830 passed / 11 skipped (yaml inline), build ok, e2e 16/16.
 - [x] Playwright on <http://localhost:5173>: **target `TestCharacter` only — check the on-screen name first, the app auto-loads "Sami"**; tiles render, tray opens, hatch on planned attack → spent after End Turn; steed view tray; check tray anchor + 3-char tiles at 1024×768
-  - TestCharacter confirmed on load. ONE ACT cell after HP, 3 open tiles; tray upward, on-screen at 1024×768 (x=114, 192×154, no clip) and 1280×800; tiles never overflow (scrollWidth == clientWidth); Unarmed Strike plan ⇒ ACT hatched, row "0 open, 1 this turn", End Turn ⇒ back to solid 1/1; steed view: 2 tiles, steed title/rows. Screenshots /tmp/verify-economy-*.png.
-- [ ] Commit per phase (no AI attribution, never on main); open PR
-  - Per-phase commits done through `efa50afb` (+ reactive-refs fix staged — commit blocked by a 1Password agent signing error, awaiting unlock).
+  - TestCharacter confirmed on load. ONE ACT cell after HP, 3 open tiles; tray upward, on-screen at 1024×768 (x=114, 192×154, no clip) and 1280×800; tiles never overflow (scrollWidth == clientWidth); Unarmed Strike plan ⇒ ACT hatched, row "0 open, 1 this turn", End Turn ⇒ back to solid 1/1; steed view: 2 tiles, steed title/rows. Screenshots /tmp/verify-economy-\*.png.
+- [x] Commit per phase (no AI attribution, never on main); open PR
+  - Per-phase commits done through `efa50afb`; feedback rework + polish landed as `8132fd86`, plan doc `ae39d285`. **PR #389.** Codex watch armed.
 - [x] User feedback rework: cell tiles A/B/R (`play.economy.tile.*` both locales), tray unchanged; tests updated
   - 1833 passed | 11 skipped; pnpm check 0 errors. Final-review wrap-ups landed alongside (staged): `effects` prop comment covers both cells; WALKTHROUGH_TEST_PLAN.md W5.1/W5.4/W8.2/W11.4 rewritten for the single cell. All awaiting one commit once 1Password signs.
 - [x] User feedback rework: caret on the title line (beside the label) in both tray cells, not the tile line
