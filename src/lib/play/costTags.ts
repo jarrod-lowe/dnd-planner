@@ -41,9 +41,7 @@ export function resolveCostTags(rule: Rule): ResolvedCostTags {
       : slotLevel >= 1 && slotLevel <= 5
         ? (`L${slotLevel}` as ActionCostTag)
         : undefined;
-  const resolvedTags = relabel
-    ? tags.map((tag) => (L_TAG.test(tag) ? relabel : tag))
-    : tags;
+  const resolvedTags = relabel ? tags.map((tag) => (L_TAG.test(tag) ? relabel : tag)) : tags;
 
   const upcast =
     relabel !== undefined &&
