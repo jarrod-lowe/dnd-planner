@@ -26,7 +26,7 @@
     activeSubject?: string;
     /**
      * This turn's advertised (uncommitted) effects — raw `EffectInstance[]`
-     * from `playStore.state.advertised`. Only the slot cell needs them: the
+     * from `playStore.state.advertised`. The slot and action-economy cells need them: the
      * projected facts alone cannot say which spends belong to the current plan.
      *
      * Do NOT re-wire this to `engineOutput.effects`: that list is bridged to
@@ -112,8 +112,8 @@
 
   /** Only one tray open at a time across all cells. */
   let trayOpenKey: string | null = $state(null);
-  let toggleEls: Record<string, HTMLButtonElement | undefined> = {};
-  let cellEls: Record<string, HTMLDivElement | undefined> = {};
+  let toggleEls: Record<string, HTMLButtonElement | undefined> = $state({});
+  let cellEls: Record<string, HTMLDivElement | undefined> = $state({});
 
   function slotLevelsFor(entry: UiEntrySlotLevels): SlotLevel[] {
     return deriveSlotLevels(facts, effects).filter((level) => entry.levels.includes(level.level));
@@ -263,16 +263,8 @@
             onclick={() => toggleSlots(key)}
             bind:this={toggleEls[key]}
           >
-            <span class="ledger__cell-label">{shortLabelFor(entry)}</span>
             <span class="ledger__slot-row">
-              <span class="ledger__slot-tiles" role="img" aria-label={slotTilesLabel(levels)}>
-                {#each levels as level (level.level)}
-                  <span
-                    class="ledger__slot-tile ledger__slot-tile--{tileState(level)}"
-                    aria-hidden="true">{$t('play.slots.levelTile', { level: level.level })}</span
-                  >
-                {/each}
-              </span>
+              <span class="ledger__cell-label">{shortLabelFor(entry)}</span>
               <!-- Disclosure affordance only. aria-expanded on the button
                    already states the tray's state, so this must add no
                    screen-reader noise. Points up because the tray opens
@@ -287,6 +279,16 @@
               >
                 <path d="M6 15l6-6 6 6" />
               </svg>
+            </span>
+            <span class="ledger__slot-row">
+              <span class="ledger__slot-tiles" role="img" aria-label={slotTilesLabel(levels)}>
+                {#each levels as level (level.level)}
+                  <span
+                    class="ledger__slot-tile ledger__slot-tile--{tileState(level)}"
+                    aria-hidden="true">{$t('play.slots.levelTile', { level: level.level })}</span
+                  >
+                {/each}
+              </span>
             </span>
           </button>
           {#if isOpen}
@@ -317,7 +319,23 @@
             onclick={() => toggleSlots(key)}
             bind:this={toggleEls[key]}
           >
-            <span class="ledger__cell-label">{shortLabelFor(entry)}</span>
+            <span class="ledger__slot-row">
+              <span class="ledger__cell-label">{shortLabelFor(entry)}</span>
+              <!-- Disclosure affordance only. aria-expanded on the button
+                   already states the tray's state, so this must add no
+                   screen-reader noise. Points up because the tray opens
+                   upward; flips on expand. -->
+              <svg
+                class="ledger__slot-caret"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path d="M6 15l6-6 6 6" />
+              </svg>
+            </span>
             <span class="ledger__slot-row">
               <span
                 class="ledger__slot-tiles"
@@ -329,21 +347,11 @@
                   {#if pool}
                     <span
                       class="ledger__slot-tile ledger__slot-tile--{tileState(pool)}"
-                      aria-hidden="true">{$t(poolDef.shortLabel)}</span
+                      aria-hidden="true">{$t(poolDef.tile)}</span
                     >
                   {/if}
                 {/each}
               </span>
-              <svg
-                class="ledger__slot-caret"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                aria-hidden="true"
-              >
-                <path d="M6 15l6-6 6 6" />
-              </svg>
             </span>
           </button>
           {#if isOpen}
@@ -503,7 +511,7 @@
     border-color: var(--md-sys-color-outline-variant);
   }
 
-  /* Tiles and the disclosure caret share one row under the label. */
+  /* Horizontal row pattern — shared by the label+caret line and the tiles line. */
   .ledger__slot-row {
     display: flex;
     align-items: center;

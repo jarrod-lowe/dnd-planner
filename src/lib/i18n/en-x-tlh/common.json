@@ -1841,7 +1841,10 @@
       "tilesLabel": "DIvI'mey: {{summary}}",
       "summarySeparator": ", ",
       "poolOpen": "{{name}}: {{open}}",
-      "noneOpen": "pagh poS"
+      "noneOpen": "pagh poS",
+      "tile.actions": "a",
+      "tile.bonusActions": "b",
+      "tile.reactions": "r"
     },
     "slider": {
       "freeUse": "lo'Ha'",

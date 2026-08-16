@@ -62,13 +62,14 @@ export interface UiEntrySlotLevels extends UiEntryBase {
  *
  * `factPrefix` selects subject: '' (player) reads `actions.max` etc.;
  * 'companion.steed.' reads `companion.steed.actions.max` etc. Each pool carries
- * its own label (full, for the tray) and shortLabel (compact, for tiles).
+ * its own label (full, for the tray), shortLabel (compact, for tray rows), and tile
+ * (single-letter i18n key, for cell tiles).
  */
 export interface UiEntryActionPools extends UiEntryBase {
   type: 'actionPools';
   /** Fact prefix: '' for the player, 'companion.steed.' for the steed. */
   factPrefix: string;
-  pools: Array<{ key: string; label: string; shortLabel: string }>;
+  pools: Array<{ key: string; label: string; shortLabel: string; tile: string }>;
 }
 
 export interface UiEntryConcentration extends UiEntryBase {
@@ -162,7 +163,8 @@ export function isUiEntry(entry: unknown): entry is UiEntry {
         p !== null &&
         typeof (p as Record<string, unknown>).key === 'string' &&
         typeof (p as Record<string, unknown>).label === 'string' &&
-        typeof (p as Record<string, unknown>).shortLabel === 'string'
+        typeof (p as Record<string, unknown>).shortLabel === 'string' &&
+        typeof (p as Record<string, unknown>).tile === 'string'
     );
   }
 

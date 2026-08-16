@@ -225,16 +225,23 @@ describe('isUiEntry', () => {
         label: 'play.stats.actions',
         factPrefix: '',
         pools: [
-          { key: 'actions', label: 'play.stats.actions', shortLabel: 'play.ledger.short.actions' },
+          {
+            key: 'actions',
+            label: 'play.stats.actions',
+            shortLabel: 'play.ledger.short.actions',
+            tile: 'play.economy.tile.actions'
+          },
           {
             key: 'bonusActions',
             label: 'play.stats.bonusActions',
-            shortLabel: 'play.ledger.short.bonusActions'
+            shortLabel: 'play.ledger.short.bonusActions',
+            tile: 'play.economy.tile.bonusActions'
           },
           {
             key: 'reactions',
             label: 'play.stats.reactions',
-            shortLabel: 'play.ledger.short.reactions'
+            shortLabel: 'play.ledger.short.reactions',
+            tile: 'play.economy.tile.reactions'
           }
         ]
       })
@@ -290,6 +297,70 @@ describe('isUiEntry', () => {
         pools: [{ key: 'actions', label: 'play.stats.actions' }]
       })
     ).toBe(false);
+  });
+
+  it('rejects actionPools entry with pool element missing tile', async () => {
+    const { isUiEntry } = await import('$lib/play/extractTopBar');
+    expect(
+      isUiEntry({
+        type: 'actionPools',
+        label: 'play.stats.actions',
+        factPrefix: '',
+        pools: [
+          { key: 'actions', label: 'play.stats.actions', shortLabel: 'play.ledger.short.actions' }
+        ]
+      })
+    ).toBe(false);
+  });
+
+  it('rejects actionPools entry with pool element having non-string tile', async () => {
+    const { isUiEntry } = await import('$lib/play/extractTopBar');
+    expect(
+      isUiEntry({
+        type: 'actionPools',
+        label: 'play.stats.actions',
+        factPrefix: '',
+        pools: [
+          {
+            key: 'actions',
+            label: 'play.stats.actions',
+            shortLabel: 'play.ledger.short.actions',
+            tile: 123
+          }
+        ]
+      })
+    ).toBe(false);
+  });
+
+  it('accepts valid actionPools entry with tile field', async () => {
+    const { isUiEntry } = await import('$lib/play/extractTopBar');
+    expect(
+      isUiEntry({
+        type: 'actionPools',
+        label: 'play.stats.actions',
+        factPrefix: '',
+        pools: [
+          {
+            key: 'actions',
+            label: 'play.stats.actions',
+            shortLabel: 'play.ledger.short.actions',
+            tile: 'play.economy.tile.actions'
+          },
+          {
+            key: 'bonusActions',
+            label: 'play.stats.bonusActions',
+            shortLabel: 'play.ledger.short.bonusActions',
+            tile: 'play.economy.tile.bonusActions'
+          },
+          {
+            key: 'reactions',
+            label: 'play.stats.reactions',
+            shortLabel: 'play.ledger.short.reactions',
+            tile: 'play.economy.tile.reactions'
+          }
+        ]
+      })
+    ).toBe(true);
   });
 
   it('rejects entry with unknown type', async () => {
@@ -656,16 +727,23 @@ describe('resolveEntryValue', () => {
       label: 'play.stats.actions',
       factPrefix: '',
       pools: [
-        { key: 'actions', label: 'play.stats.actions', shortLabel: 'play.ledger.short.actions' },
+        {
+          key: 'actions',
+          label: 'play.stats.actions',
+          shortLabel: 'play.ledger.short.actions',
+          tile: 'play.economy.tile.actions'
+        },
         {
           key: 'bonusActions',
           label: 'play.stats.bonusActions',
-          shortLabel: 'play.ledger.short.bonusActions'
+          shortLabel: 'play.ledger.short.bonusActions',
+          tile: 'play.economy.tile.bonusActions'
         },
         {
           key: 'reactions',
           label: 'play.stats.reactions',
-          shortLabel: 'play.ledger.short.reactions'
+          shortLabel: 'play.ledger.short.reactions',
+          tile: 'play.economy.tile.reactions'
         }
       ]
     };
@@ -688,16 +766,23 @@ describe('resolveEntryValue', () => {
       label: 'play.stats.actions',
       factPrefix: '',
       pools: [
-        { key: 'actions', label: 'play.stats.actions', shortLabel: 'play.ledger.short.actions' },
+        {
+          key: 'actions',
+          label: 'play.stats.actions',
+          shortLabel: 'play.ledger.short.actions',
+          tile: 'play.economy.tile.actions'
+        },
         {
           key: 'bonusActions',
           label: 'play.stats.bonusActions',
-          shortLabel: 'play.ledger.short.bonusActions'
+          shortLabel: 'play.ledger.short.bonusActions',
+          tile: 'play.economy.tile.bonusActions'
         },
         {
           key: 'reactions',
           label: 'play.stats.reactions',
-          shortLabel: 'play.ledger.short.reactions'
+          shortLabel: 'play.ledger.short.reactions',
+          tile: 'play.economy.tile.reactions'
         }
       ]
     };
@@ -722,12 +807,14 @@ describe('resolveEntryValue', () => {
         {
           key: 'actions',
           label: 'play.stats.steed.actions',
-          shortLabel: 'play.ledger.short.steed.actions'
+          shortLabel: 'play.ledger.short.steed.actions',
+          tile: 'play.economy.tile.actions'
         },
         {
           key: 'bonusActions',
           label: 'play.stats.steed.bonusActions',
-          shortLabel: 'play.ledger.short.steed.bonusActions'
+          shortLabel: 'play.ledger.short.steed.bonusActions',
+          tile: 'play.economy.tile.bonusActions'
         }
       ]
     };
@@ -852,16 +939,23 @@ describe('isEntryVisible', () => {
       label: 'play.stats.actions',
       factPrefix: '',
       pools: [
-        { key: 'actions', label: 'play.stats.actions', shortLabel: 'play.ledger.short.actions' },
+        {
+          key: 'actions',
+          label: 'play.stats.actions',
+          shortLabel: 'play.ledger.short.actions',
+          tile: 'play.economy.tile.actions'
+        },
         {
           key: 'bonusActions',
           label: 'play.stats.bonusActions',
-          shortLabel: 'play.ledger.short.bonusActions'
+          shortLabel: 'play.ledger.short.bonusActions',
+          tile: 'play.economy.tile.bonusActions'
         },
         {
           key: 'reactions',
           label: 'play.stats.reactions',
-          shortLabel: 'play.ledger.short.reactions'
+          shortLabel: 'play.ledger.short.reactions',
+          tile: 'play.economy.tile.reactions'
         }
       ]
     };
@@ -876,11 +970,17 @@ describe('isEntryVisible', () => {
       label: 'play.stats.actions',
       factPrefix: '',
       pools: [
-        { key: 'actions', label: 'play.stats.actions', shortLabel: 'play.ledger.short.actions' },
+        {
+          key: 'actions',
+          label: 'play.stats.actions',
+          shortLabel: 'play.ledger.short.actions',
+          tile: 'play.economy.tile.actions'
+        },
         {
           key: 'bonusActions',
           label: 'play.stats.bonusActions',
-          shortLabel: 'play.ledger.short.bonusActions'
+          shortLabel: 'play.ledger.short.bonusActions',
+          tile: 'play.economy.tile.bonusActions'
         }
       ]
     };
@@ -898,12 +998,14 @@ describe('isEntryVisible', () => {
         {
           key: 'actions',
           label: 'play.stats.steed.actions',
-          shortLabel: 'play.ledger.short.steed.actions'
+          shortLabel: 'play.ledger.short.steed.actions',
+          tile: 'play.economy.tile.actions'
         },
         {
           key: 'bonusActions',
           label: 'play.stats.steed.bonusActions',
-          shortLabel: 'play.ledger.short.steed.bonusActions'
+          shortLabel: 'play.ledger.short.steed.bonusActions',
+          tile: 'play.economy.tile.bonusActions'
         }
       ]
     };

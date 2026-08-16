@@ -46,6 +46,9 @@ const translations: Record<string, string> = {
   'play.economy.noneOpen': 'nothing open',
   'play.economy.summarySeparator': ' | ',
   'play.economy.tilesLabel': 'Action economy => {{summary}}',
+  'play.economy.tile.actions': 'A',
+  'play.economy.tile.bonusActions': 'B',
+  'play.economy.tile.reactions': 'R',
   'play.ledger.short.steed.actions': 'ST.A',
   'play.stats.steed.actions': 'Steed Actions',
   'play.ledger.short.steed.bonusActions': 'ST.B',
@@ -636,6 +639,41 @@ describe('Ledger — spell slot cell', () => {
     expect(container.querySelector('.ledger__slot-caret')).toBeTruthy();
   });
 
+  it('places the caret in the same row as the label, before the tiles row', () => {
+    // The caret should be a child of the same ledger__slot-row as the label,
+    // and that row should precede the tiles row.
+    renderSlots({
+      'spellcasting.slots.level1.total': 2,
+      'spellcasting.slots.level1.spent': 0
+    });
+
+    const label = container.querySelector('.ledger__cell-label');
+    const caret = container.querySelector('.ledger__slot-caret');
+    const tiles = container.querySelector('.ledger__slot-tiles');
+
+    expect(label).toBeTruthy();
+    expect(caret).toBeTruthy();
+    expect(tiles).toBeTruthy();
+
+    // Label and caret are siblings in the same row
+    const labelRow = label?.parentElement;
+    const caretRow = caret?.parentElement;
+    expect(labelRow).toBe(caretRow);
+    expect(labelRow?.classList.contains('ledger__slot-row')).toBe(true);
+
+    // The tiles row is a separate row that comes after the label+caret row
+    const tilesRow = tiles?.parentElement;
+    expect(tilesRow?.classList.contains('ledger__slot-row')).toBe(true);
+    expect(tilesRow).toBeTruthy();
+    expect(labelRow).toBeTruthy();
+
+    if (labelRow && tilesRow) {
+      expect(labelRow.compareDocumentPosition(tilesRow) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(
+        Node.DOCUMENT_POSITION_FOLLOWING
+      );
+    }
+  });
+
   it('exposes the tile row as a single labelled image carrying the open-slot summary', () => {
     renderSlots({
       'spellcasting.slots.level1.total': 4,
@@ -780,13 +818,24 @@ describe('Ledger — action economy cell', () => {
     label: 'play.stats.actions',
     factPrefix: '',
     pools: [
-      { key: 'actions', label: 'play.stats.actions', shortLabel: 'play.stats.actions' },
+      {
+        key: 'actions',
+        label: 'play.stats.actions',
+        shortLabel: 'play.stats.actions',
+        tile: 'play.economy.tile.actions'
+      },
       {
         key: 'bonusActions',
         label: 'play.stats.bonusActions',
-        shortLabel: 'play.stats.bonusActions'
+        shortLabel: 'play.stats.bonusActions',
+        tile: 'play.economy.tile.bonusActions'
       },
-      { key: 'reactions', label: 'play.stats.reactions', shortLabel: 'play.stats.reactions' }
+      {
+        key: 'reactions',
+        label: 'play.stats.reactions',
+        shortLabel: 'play.stats.reactions',
+        tile: 'play.economy.tile.reactions'
+      }
     ]
   };
 
@@ -847,8 +896,47 @@ describe('Ledger — action economy cell', () => {
     expect(container.querySelectorAll('.ledger__cell').length).toBe(1);
     expect(container.querySelectorAll('.ledger__slot-tile').length).toBe(3);
     expect(tileStates()).toEqual(['open', 'open', 'open']);
-    expect(tileTexts()).toEqual(['Actions', 'Bonus Actions', 'Reactions']);
+    expect(tileTexts()).toEqual(['A', 'B', 'R']);
     expect(container.querySelector('.ledger__cell-label')?.textContent).toBe('ACT');
+  });
+
+  it('places the caret in the same row as the label, before the tiles row', () => {
+    // The caret should be a child of the same ledger__slot-row as the label,
+    // and that row should precede the tiles row.
+    renderEconomy({
+      'actions.max': 1,
+      'actions.spent': 0,
+      'bonusActions.max': 1,
+      'bonusActions.spent': 0,
+      'reactions.max': 1,
+      'reactions.spent': 0
+    });
+
+    const label = container.querySelector('.ledger__cell-label');
+    const caret = container.querySelector('.ledger__slot-caret');
+    const tiles = container.querySelector('.ledger__slot-tiles');
+
+    expect(label).toBeTruthy();
+    expect(caret).toBeTruthy();
+    expect(tiles).toBeTruthy();
+
+    // Label and caret are siblings in the same row
+    const labelRow = label?.parentElement;
+    const caretRow = caret?.parentElement;
+    expect(labelRow).toBe(caretRow);
+    expect(labelRow?.classList.contains('ledger__slot-row')).toBe(true);
+
+    // The tiles row is a separate row that comes after the label+caret row
+    const tilesRow = tiles?.parentElement;
+    expect(tilesRow?.classList.contains('ledger__slot-row')).toBe(true);
+    expect(tilesRow).toBeTruthy();
+    expect(labelRow).toBeTruthy();
+
+    if (labelRow && tilesRow) {
+      expect(labelRow.compareDocumentPosition(tilesRow) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(
+        Node.DOCUMENT_POSITION_FOLLOWING
+      );
+    }
   });
 
   it('renders one tile spent via advertised effect as this-turn state', () => {
@@ -903,7 +991,7 @@ describe('Ledger — action economy cell', () => {
       'reactions.spent': 0
     });
     expect(container.querySelectorAll('.ledger__slot-tile').length).toBe(2);
-    expect(tileTexts()).toEqual(['Actions', 'Reactions']);
+    expect(tileTexts()).toEqual(['A', 'R']);
   });
 
   it('exposes tile-row aria summary text from i18n templates', () => {
@@ -1035,11 +1123,17 @@ describe('Ledger — action economy cell', () => {
       factPrefix: 'companion.steed.',
       subject: 'steed',
       pools: [
-        { key: 'actions', label: 'play.stats.steed.actions', shortLabel: 'play.stats.actions' },
+        {
+          key: 'actions',
+          label: 'play.stats.steed.actions',
+          shortLabel: 'play.stats.actions',
+          tile: 'play.economy.tile.actions'
+        },
         {
           key: 'bonusActions',
           label: 'play.stats.steed.bonusActions',
-          shortLabel: 'play.stats.bonusActions'
+          shortLabel: 'play.stats.bonusActions',
+          tile: 'play.economy.tile.bonusActions'
         }
       ]
     };
@@ -1058,7 +1152,7 @@ describe('Ledger — action economy cell', () => {
 
     expect(container.querySelectorAll('.ledger__slot-tile').length).toBe(2);
     expect(container.querySelector('.ledger__cell-label')?.textContent).toBe('ST.A');
-    expect(tileTexts()).toEqual(['Actions', 'Bonus Actions']);
+    expect(tileTexts()).toEqual(['A', 'B']);
   });
 
   it('renders steed tray title from entry.label', () => {
@@ -1068,7 +1162,12 @@ describe('Ledger — action economy cell', () => {
       factPrefix: 'companion.steed.',
       subject: 'steed',
       pools: [
-        { key: 'actions', label: 'play.stats.steed.actions', shortLabel: 'play.stats.actions' }
+        {
+          key: 'actions',
+          label: 'play.stats.steed.actions',
+          shortLabel: 'play.stats.actions',
+          tile: 'play.economy.tile.actions'
+        }
       ]
     };
 

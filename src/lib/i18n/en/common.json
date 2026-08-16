@@ -1841,7 +1841,10 @@
       "tilesLabel": "Action economy: {{summary}}",
       "summarySeparator": ", ",
       "poolOpen": "{{name}}: {{open}}",
-      "noneOpen": "None open"
+      "noneOpen": "None open",
+      "tile.actions": "A",
+      "tile.bonusActions": "B",
+      "tile.reactions": "R"
     },
     "slider": {
       "freeUse": "Free Use",

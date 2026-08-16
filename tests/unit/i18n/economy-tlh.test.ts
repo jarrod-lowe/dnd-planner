@@ -11,7 +11,16 @@ import tlh from '$lib/i18n/en-x-tlh/common.json';
  * sveltekit-i18n interpolates DOUBLE braces ({{param}}); a single-brace
  * {param} renders literally and is a latent bug, so both locales are checked.
  */
-const ECONOMY_KEYS = ['toggle', 'tilesLabel', 'summarySeparator', 'poolOpen', 'noneOpen'] as const;
+const ECONOMY_KEYS = [
+  'toggle',
+  'tilesLabel',
+  'summarySeparator',
+  'poolOpen',
+  'noneOpen',
+  'tile.actions',
+  'tile.bonusActions',
+  'tile.reactions'
+] as const;
 
 const TRAY_KEYS = ['row'] as const;
 

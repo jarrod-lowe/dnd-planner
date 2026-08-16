@@ -71,13 +71,24 @@ const RESOURCES: UiEntry[] = [
     label: 'play.stats.actions',
     factPrefix: '',
     pools: [
-      { key: 'actions', label: 'play.stats.actions', shortLabel: 'play.ledger.short.actions' },
+      {
+        key: 'actions',
+        label: 'play.stats.actions',
+        shortLabel: 'play.ledger.short.actions',
+        tile: 'play.economy.tile.actions'
+      },
       {
         key: 'bonusActions',
         label: 'play.stats.bonusActions',
-        shortLabel: 'play.ledger.short.bonusActions'
+        shortLabel: 'play.ledger.short.bonusActions',
+        tile: 'play.economy.tile.bonusActions'
       },
-      { key: 'reactions', label: 'play.stats.reactions', shortLabel: 'play.ledger.short.reactions' }
+      {
+        key: 'reactions',
+        label: 'play.stats.reactions',
+        shortLabel: 'play.ledger.short.reactions',
+        tile: 'play.economy.tile.reactions'
+      }
     ]
   },
   {
@@ -222,12 +233,14 @@ function deriveSteedResources(facts: Facts): UiEntry[] {
         {
           key: 'actions',
           label: 'play.stats.steed.actions',
-          shortLabel: 'play.ledger.short.steed.actions'
+          shortLabel: 'play.ledger.short.steed.actions',
+          tile: 'play.economy.tile.actions'
         },
         {
           key: 'bonusActions',
           label: 'play.stats.steed.bonusActions',
-          shortLabel: 'play.ledger.short.steed.bonusActions'
+          shortLabel: 'play.ledger.short.steed.bonusActions',
+          tile: 'play.economy.tile.bonusActions'
         }
       ]
     });

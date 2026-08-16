@@ -181,7 +181,7 @@ describe('derivePanels — resources', () => {
     expect(actionPoolsIndex).toBeLessThan(movementIndex);
   });
 
-  it('emits actionPools entry with correct shape (label, factPrefix, pools)', () => {
+  it('emits actionPools entry with correct shape (label, factPrefix, pools, tile)', () => {
     const facts = {
       'actions.max': 1,
       'actions.spent': 0,
@@ -196,13 +196,24 @@ describe('derivePanels — resources', () => {
     expect(actionPools?.label).toBe('play.stats.actions');
     expect(actionPools?.factPrefix).toBe('');
     expect(actionPools?.type === 'actionPools' && actionPools.pools).toEqual([
-      { key: 'actions', label: 'play.stats.actions', shortLabel: 'play.ledger.short.actions' },
+      {
+        key: 'actions',
+        label: 'play.stats.actions',
+        shortLabel: 'play.ledger.short.actions',
+        tile: 'play.economy.tile.actions'
+      },
       {
         key: 'bonusActions',
         label: 'play.stats.bonusActions',
-        shortLabel: 'play.ledger.short.bonusActions'
+        shortLabel: 'play.ledger.short.bonusActions',
+        tile: 'play.economy.tile.bonusActions'
       },
-      { key: 'reactions', label: 'play.stats.reactions', shortLabel: 'play.ledger.short.reactions' }
+      {
+        key: 'reactions',
+        label: 'play.stats.reactions',
+        shortLabel: 'play.ledger.short.reactions',
+        tile: 'play.economy.tile.reactions'
+      }
     ]);
   });
 
@@ -343,12 +354,14 @@ describe('derivePanels — resources', () => {
       {
         key: 'actions',
         label: 'play.stats.steed.actions',
-        shortLabel: 'play.ledger.short.steed.actions'
+        shortLabel: 'play.ledger.short.steed.actions',
+        tile: 'play.economy.tile.actions'
       },
       {
         key: 'bonusActions',
         label: 'play.stats.steed.bonusActions',
-        shortLabel: 'play.ledger.short.steed.bonusActions'
+        shortLabel: 'play.ledger.short.steed.bonusActions',
+        tile: 'play.economy.tile.bonusActions'
       }
     ]);
   });
