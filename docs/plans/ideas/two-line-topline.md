@@ -21,13 +21,13 @@ Be extremely concise. Sacrifice grammar for the sake of concision.
 
 ### Task 0: branch
 
-- [ ] `git checkout -b two-line-topline` (never commit to main)
+- [x] `git checkout -b two-line-topline` (never commit to main)
 
 ### Task 1: RED — failing tests
 
 **Files:** `tests/unit/lib/components/play/IntentTopBar.test.ts` (insert after `renders multiple value chips`, ~line 170)
 
-- [ ] Add:
+- [x] Add:
 
 ```ts
 it('stacks value chips two-line via --stack modifier', () => {
@@ -75,24 +75,24 @@ it('stacks hp and conc chips; abilities chip stays unstacked', () => {
 });
 ```
 
-- [ ] Run: `pnpm exec vitest run tests/unit/lib/components/play/IntentTopBar.test.ts`
-- [ ] Expect: 2 new tests FAIL (`expected true, got false`), all existing PASS. Compile error/panic = fix first.
+- [x] Run: `pnpm exec vitest run tests/unit/lib/components/play/IntentTopBar.test.ts`
+- [x] Expect: 2 new tests FAIL (`expected true, got false`), all existing PASS. Compile error/panic = fix first.
 
 ### Task 2: GREEN — markup
 
 **Files:** `src/lib/components/play/IntentTopBar.svelte`
 
-- [ ] HP chip (line 147): `class="intent-top-bar__chip intent-top-bar__chip--stack intent-top-bar__chip--hp"`
-- [ ] Value chip (line 172): `class="intent-top-bar__chip intent-top-bar__chip--stack"`
-- [ ] Conc chip (line 182): `class="intent-top-bar__chip intent-top-bar__chip--stack intent-top-bar__chip--conc"`
-- [ ] Run: `pnpm exec vitest run tests/unit/lib/components/play/IntentTopBar.test.ts` → ALL PASS
-- [ ] Commit: `Stack all topline chips via shared modifier` (tests + markup)
+- [x] HP chip (line 147): `class="intent-top-bar__chip intent-top-bar__chip--stack intent-top-bar__chip--hp"`
+- [x] Value chip (line 172): `class="intent-top-bar__chip intent-top-bar__chip--stack"`
+- [x] Conc chip (line 182): `class="intent-top-bar__chip intent-top-bar__chip--stack intent-top-bar__chip--conc"`
+- [x] Run: `pnpm exec vitest run tests/unit/lib/components/play/IntentTopBar.test.ts` → ALL PASS
+- [x] Commit: `Stack all topline chips via shared modifier` (tests + markup)
 
 ### Task 3: CSS consolidation
 
 **Files:** `src/lib/components/play/IntentTopBar.svelte` `<style>`
 
-- [ ] Add after `__chip-value` rule (~line 374):
+- [x] Add after `__chip-value` rule (~line 374):
 
 ```css
 .intent-top-bar__chip--stack {
@@ -102,16 +102,23 @@ it('stacks hp and conc chips; abilities chip stays unstacked', () => {
 }
 ```
 
-- [ ] `--hp` rule → only `min-width: 5rem;`
-- [ ] Delete `.intent-top-bar__chip--hp .intent-top-bar__chip-label { align-self: flex-start; }`
-- [ ] `__hp-bar` rule: add `align-self: stretch;`
-- [ ] Delete `--conc` rule block (column/flex-start/gap)
-- [ ] `make test-unit` → PASS
-- [ ] Commit: `Centre stacked topline chips, dedupe layout CSS`
+- [x] `--hp` rule → only `min-width: 5rem;`
+- [x] Delete `.intent-top-bar__chip--hp .intent-top-bar__chip-label { align-self: flex-start; }`
+- [x] `__hp-bar` rule: add `align-self: stretch;`
+- [x] Delete `--conc` rule block (column/flex-start/gap)
+- [x] `make test-unit` → PASS
+- [x] Commit: `Centre stacked topline chips, dedupe layout CSS`
 
 ### Task 4: verify
 
-- [ ] `make test` → PASS (full gate — never commit while tests fail)
-- [ ] `make lint` → PASS
-- [ ] Eyeball: `pgrep -f vite.js` (if dead: `make dev`); playwright on <http://localhost:5173>, play mode, light + dark: AC/SPD label-over-value, centered, narrow; HP centered, bar full chip width; conc centered; abilities unchanged; steed view too
+- [x] `make test` → PASS (full gate — never commit while tests fail)
+- [x] `make lint` → PASS
+- [x] Eyeball: `pgrep -f vite.js` (if dead: `make dev`); playwright on <http://localhost:5173>, play mode, light + dark: AC/SPD label-over-value, centered, narrow; HP centered, bar full chip width; conc centered; abilities unchanged; steed view too
 - [ ] superpowers:finishing-a-development-branch → PR
+
+### Execution notes
+
+- Extra commit `41832872` "Fix prettier formatting in IntentTopBar" — Task 2's value-chip line exceeded printWidth 100; caught in quality review, rewrapped, re-reviewed.
+- `make lint` covered by `make test` (its final stage is `pnpm lint`, exit 0).
+- Eyeball done via computed styles + geometry (stronger than pixels): player + steed, light + dark. AC 35px / SPD 43px wide, stacked, centered; HP label/value centered, hp-bar spans content box exactly (62/62px, 0 insets); abilities chip row, unchanged.
+- Commits: `62d71dc0` plan, `c3e0653e` markup+tests, `41832872` prettier fix, `ddc037e3` CSS.
