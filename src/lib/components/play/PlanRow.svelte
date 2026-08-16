@@ -108,6 +108,12 @@
     }
   }
 
+  function handleWindowKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape' && upcastTooltipOpen) {
+      closeUpcastTooltip();
+    }
+  }
+
   const verb = $derived(item.verb);
   const rule = $derived(item.rule);
   const descriptor = $derived(extractPanelDescriptor(rule));
@@ -164,6 +170,7 @@
 
   function toggleCollapse() {
     collapsed = !collapsed;
+    if (collapsed) closeUpcastTooltip();
   }
 
   const detailKey = $derived(
@@ -200,7 +207,7 @@
   }
 </script>
 
-<svelte:window onclick={handleWindowClick} />
+<svelte:window onclick={handleWindowClick} onkeydown={handleWindowKeydown} />
 
 {#snippet modChips()}
   {#if riderAnnotations.length > 0}
