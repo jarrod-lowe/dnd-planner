@@ -169,7 +169,10 @@
       {#each valueEntries as entry (entry.label)}
         {@const value = facts[entry.fact]}
         {#if value !== undefined}
-          <div class="intent-top-bar__chip intent-top-bar__chip--stack" aria-label="{$t(entry.label)} {value}">
+          <div
+            class="intent-top-bar__chip intent-top-bar__chip--stack"
+            aria-label="{$t(entry.label)} {value}"
+          >
             <span class="intent-top-bar__chip-label">{$t(entry.label)}</span>
             <span class="intent-top-bar__chip-value">{value}</span>
           </div>
