@@ -144,7 +144,7 @@
       {#if hpEntry && hpVisible}
         {@const entry = hpEntry}
         <div
-          class="intent-top-bar__chip intent-top-bar__chip--hp"
+          class="intent-top-bar__chip intent-top-bar__chip--stack intent-top-bar__chip--hp"
           aria-label="{$t(entry.label)} {$t('play.topBar.hpValue', {
             current: hpCurrent,
             max: hpMax
@@ -169,7 +169,10 @@
       {#each valueEntries as entry (entry.label)}
         {@const value = facts[entry.fact]}
         {#if value !== undefined}
-          <div class="intent-top-bar__chip" aria-label="{$t(entry.label)} {value}">
+          <div
+            class="intent-top-bar__chip intent-top-bar__chip--stack"
+            aria-label="{$t(entry.label)} {value}"
+          >
             <span class="intent-top-bar__chip-label">{$t(entry.label)}</span>
             <span class="intent-top-bar__chip-value">{value}</span>
           </div>
@@ -179,7 +182,7 @@
       {#if concEntry}
         {@const entry = concEntry}
         <div
-          class="intent-top-bar__chip intent-top-bar__chip--conc"
+          class="intent-top-bar__chip intent-top-bar__chip--stack intent-top-bar__chip--conc"
           class:intent-top-bar__chip--conc-active={concActive}
           aria-label="{$t(entry.label)}: {concActive
             ? (concentrationEffectName ?? $t(entry.activeLabel))
@@ -372,15 +375,14 @@
     color: var(--md-sys-color-on-surface);
   }
 
-  .intent-top-bar__chip--hp {
+  .intent-top-bar__chip--stack {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
     gap: 2px;
-    min-width: 5rem;
   }
 
-  .intent-top-bar__chip--hp .intent-top-bar__chip-label {
-    align-self: flex-start;
+  .intent-top-bar__chip--hp {
+    min-width: 5rem;
   }
 
   .intent-top-bar__hp-bar {
@@ -388,6 +390,7 @@
     background: var(--md-sys-color-surface-container);
     border-radius: 2px;
     overflow: hidden;
+    align-self: stretch;
   }
 
   .intent-top-bar__hp-fill {
@@ -395,12 +398,6 @@
     background: var(--md-sys-color-primary);
     border-radius: 2px;
     transition: width var(--transition-normal);
-  }
-
-  .intent-top-bar__chip--conc {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
   }
 
   .intent-top-bar__conc-icon {
