@@ -9,6 +9,7 @@
   import { getSubBucket, subBucketLabelKey } from '$lib/play/groupChoicesByVerb';
   import { getSubject } from '$lib/play/subjectUtils';
   import { closeActiveTooltip, registerTooltipClose } from './tooltipSingleton';
+  import { resolveCostTags } from '$lib/play/costTags';
   import { peekDetail, getDetail } from '$lib/details/index';
   import type { ItemDetail } from '$lib/details/types';
   import type { PlannedItem } from '$lib/play/types';
@@ -54,6 +55,7 @@
   let rulesMode = $state(false);
   let rulesDetail = $state<ItemDetail | null | undefined>(undefined);
   let rulesLoading = $state(false);
+  let upcastTooltipOpen = $state(false);
 
   function closeLocalTooltip() {
     openTooltipAltId = null;
@@ -81,9 +83,28 @@
     }
   }
 
+  function closeUpcastTooltip() {
+    upcastTooltipOpen = false;
+    registerTooltipClose(null);
+  }
+
+  function toggleUpcastTooltip(e: MouseEvent) {
+    e.stopPropagation();
+    if (upcastTooltipOpen) {
+      closeUpcastTooltip();
+    } else {
+      closeActiveTooltip();
+      upcastTooltipOpen = true;
+      registerTooltipClose(closeUpcastTooltip);
+    }
+  }
+
   function handleWindowClick() {
     if (openTooltipAltId) {
       closeLocalTooltip();
+    }
+    if (upcastTooltipOpen) {
+      closeUpcastTooltip();
     }
   }
 
@@ -92,21 +113,9 @@
   const descriptor = $derived(extractPanelDescriptor(rule));
   const displayName = $derived(descriptor.name ? $t(descriptor.name) : rule.id);
 
-  const costTags = $derived.by(() => {
-    const tags =
-      ((rule.ui as Record<string, unknown>)?.actionCost as ActionCostTag[] | undefined) ?? [];
-    // A live slot-level selection re-labels the authored slot chip with what the
-    // cast will actually spend: 0 is the class feature's free use, any other
-    // level the (possibly upcast) slot. Rules without a slotLevel selection —
-    // and levels outside the tag vocabulary — keep the authored tag.
-    const slotLevel = rule.selections?.slotLevel;
-    if (typeof slotLevel !== 'number') return tags;
-    return tags.map((tag) => {
-      if (!/^L[1-5]$/.test(tag)) return tag;
-      if (slotLevel === 0) return 'free' as ActionCostTag;
-      return slotLevel >= 1 && slotLevel <= 5 ? (`L${slotLevel}` as ActionCostTag) : tag;
-    });
-  });
+  const resolvedCostTags = $derived(resolveCostTags(rule));
+  const costTags = $derived(resolvedCostTags.tags);
+  const upcast = $derived(resolvedCostTags.upcast);
 
   const annotationLabels = $derived(descriptor.annotationLabels ?? []);
   const matchingAnnotations = $derived(getMatchingAnnotations(annotationLabels, activeAnnotations));
@@ -128,6 +137,10 @@
   );
 
   const verbLabel = $derived($t(`play.verbs.${verb}`));
+
+  const upcastAria = $derived(
+    upcast ? $t('play.costTags.upcastAria', { level: upcast.level, base: upcast.base }) : ''
+  );
 
   const subjectLabel = $derived.by(() => {
     const subject = getSubject(rule);
@@ -309,7 +322,22 @@
     {:else if !collapsed}
       <div class="plan-row__cost-chips">
         {#each costTags as tag (tag)}
-          <span class="plan-row__cost-tag">{formatCostTag(tag)}</span>
+          {#if upcast && tag === `L${upcast.level}`}
+            <button
+              type="button"
+              class="plan-row__cost-tag plan-row__cost-tag--upcast"
+              aria-label={upcastAria}
+              aria-expanded={upcastTooltipOpen}
+              onclick={toggleUpcastTooltip}
+            >
+              {formatCostTag(tag)}
+              {#if upcastTooltipOpen}
+                <span class="plan-row__upcast-tooltip" aria-hidden="true">{upcastAria}</span>
+              {/if}
+            </button>
+          {:else}
+            <span class="plan-row__cost-tag">{formatCostTag(tag)}</span>
+          {/if}
         {/each}
       </div>
 
@@ -548,6 +576,49 @@
     background: var(--md-sys-color-surface-container);
     padding: 0.0625rem var(--spacing-xs);
     border-radius: var(--radius-sm);
+  }
+
+  .plan-row__cost-tag--upcast {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--md-sys-color-error);
+    color: var(--md-sys-color-error);
+    cursor: pointer;
+    transition:
+      background-color var(--transition-fast),
+      color var(--transition-fast);
+  }
+
+  .plan-row__cost-tag--upcast:hover,
+  .plan-row__cost-tag--upcast:focus-visible {
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+  }
+
+  .plan-row__cost-tag--upcast:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: 2px;
+  }
+
+  .plan-row__upcast-tooltip {
+    position: absolute;
+    top: calc(100% + var(--spacing-xs));
+    left: 0;
+    white-space: pre;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--md-sys-color-outline);
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: normal;
+    line-height: var(--line-height-md);
+    z-index: var(--z-dropdown);
+    pointer-events: none;
   }
 
   .plan-row__mod-chips {
