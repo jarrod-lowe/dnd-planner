@@ -139,4 +139,4 @@ Eight YAML scenarios under `tests/integration/rules-engine/yaml-scenarios/`, eac
 - [x] `make deploy-test` - REQUIRED even for a rules-only change: `make sync-rule-groups` alone updates DynamoDB but does not invalidate the CloudFront distribution, so the test site keeps serving the old bundle. Deploy issued invalidation `/*`.
 - [x] Playwright check on <http://localhost:5173>: assigned "Oath of Redemption Level 7" in Manage Rules; `class-paladin-level7` auto-assigned via `requires` (checked + disabled). Live topline/resources moved exactly as specced - HP 17/52 -> 25/60, LoH 30 -> 35/35, HD 6 -> 7/7 d10, slots 4/2 -> 4/3. The offer appears under Defend -> Ward, renders the `RXN` cost chip, the description, and the hp slider; sliding to 33 took HP 25 -> -8 and spent the reaction; the chip reads "Aura of the Guardian 33"; the Flip side renders the detail meta, Casting Time/Range fields and body. Undo restored everything.
 - [x] Branch `paladin-l7-oath-redemption` off `main`
-- [ ] Commit + PR
+- [x] Commit + PR - https://github.com/jarrod-lowe/dnd-planner/pull/394
