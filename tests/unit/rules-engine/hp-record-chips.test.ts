@@ -68,6 +68,22 @@ describe('player HP record effects carry their amount for the chip', () => {
     expect(eff?.state?.['hp.modifier.current']).toBe(-2);
   });
 
+  it('a damage record clears banked credit but shows only the damage taken', () => {
+    // hp.max 12 with the manual current-HP override at +30: hp.current reads
+    // 12/12 (the clamp hides a positive modifier exactly as it hides overkill)
+    // and 30 points of credit sit banked above the floor. A 5-point damage
+    // record has to pay that 30 off as well as take the 5, so the state delta
+    // is −35 — but the chip says Damage 5, the damage the player actually took.
+    const { advertised, facts } = evaluatePlan([coreEvents, hp], { 'hp.base.max': 12 }, [
+      { instanceId: 'm1', ruleId: 'set-hp-modifier-current', selections: { modifier: 30 } },
+      damage('d1', 5)
+    ]);
+    const eff = advertised.find((e) => e.id.includes('effect-hp-damage'));
+    expect(eff?.display?.value).toBe(5);
+    expect(eff?.state?.['hp.modifier.current']).toBe(-35);
+    expect(facts['hp.current']).toBe(7);
+  });
+
   it('an Aura of the Guardian transfer caps at the HP the paladin holds', () => {
     // hp.max 12, 10 already taken: absorbing 20 for an ally can only cost the
     // 2 HP left, so the chip and the effect both record 2 (HP floors at 0).
@@ -83,6 +99,23 @@ describe('player HP record effects carry their amount for the chip', () => {
     expect(eff?.display?.value).toBe(2);
     expect(eff?.state?.['hp.modifier.current']).toBe(-2);
     expect(facts['hp.current']).toBe(0);
+  });
+
+  it('an Aura of the Guardian transfer clears banked credit too', () => {
+    // Same split as the damage record: the chip shows the 5 HP transferred,
+    // while the state delta also pays down the 30 banked above the floor.
+    const { advertised, facts } = evaluatePlan(
+      [coreEvents, hp, actionEconomy, auraOfTheGuardian],
+      { 'hp.base.max': 12 },
+      [
+        { instanceId: 'm1', ruleId: 'set-hp-modifier-current', selections: { modifier: 30 } },
+        { instanceId: 'a1', ruleId: 'aura-of-the-guardian', selections: { amount: 5 } }
+      ]
+    );
+    const eff = advertised.find((e) => e.id.includes('effect-aura-of-the-guardian'));
+    expect(eff?.display?.value).toBe(5);
+    expect(eff?.state?.['hp.modifier.current']).toBe(-35);
+    expect(facts['hp.current']).toBe(7);
   });
 });
 

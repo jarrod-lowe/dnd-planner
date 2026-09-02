@@ -41,23 +41,56 @@ export const currentHp = (hpMax: number, modifierCurrent: number): number =>
   Math.max(0, hpMax + Math.min(0, modifierCurrent));
 
 /**
- * The damage a record can effectively deal: capped at the HP actually held when
- * it is recorded. The mirror image of the heal cap (regained HP cannot exceed
- * the max); without it the raw overkill BANKS in `hp.modifier.current` — 100
- * damage on a 60-HP character leaves −100, and a later heal of 20 is swallowed
- * whole because the floor keeps hiding the difference.
+ * HP CREDIT banked ABOVE the floor: the part of a net current-HP modifier that
+ * is positive. The exact counterpart of the `overkill` half of `healableHp`,
+ * and of the `min(0, …)` clamp in `currentHp` — that clamp is what HIDES it, so
+ * a positive modifier reads as full HP on the sheet while still soaking up the
+ * next damage record.
  *
- * Gated on `hp.max` being present: with the HP group unloaded there is no HP to
- * cap against, so the raw amount stands (capping at an absent max would silently
- * zero every damage record).
+ * A modifier is a plain SUM of independently REMOVABLE effect deltas, so credit
+ * is trivially reachable with nothing but ordinary recorders: take 35 damage,
+ * heal it back (a legitimate +35), then dismiss the mis-entered damage chip —
+ * the heal's +35 stays and 35 points of damage now have to be paid before the
+ * bar moves at all. An overkill repair folded into a heal delta banks the same
+ * way when the effect that caused the overkill is later removed.
  *
- * Callers must use the returned value for BOTH the effect's state delta and its
- * display value, so the chip shows the effective damage — the same convention
- * `record-heal` follows for surplus healing.
+ * Takes the modifier as a NUMBER, like `currentHp`, so the player and the steed
+ * share one definition of "banked credit" (their modifiers are different facts).
  */
-export function effectiveDamage(f: FactReader, amount: number): number {
-  if (!f.has('hp.max')) return amount;
-  return Math.min(amount, currentHp(f.num('hp.max'), f.num('hp.modifier.current')));
+export const bankedCredit = (modifierCurrent: number): number => Math.max(0, modifierCurrent);
+
+/**
+ * What a damage record has to account for, as TWO numbers — the exact mirror of
+ * `healableHp`:
+ *  - `effective` — the damage the record can visibly deal, capped at the HP
+ *    actually held when it is recorded. Without the cap the raw overkill BANKS
+ *    in `hp.modifier.current` (100 damage on a 60-HP character leaves −100) and
+ *    a later heal of 20 is swallowed whole because the floor hides the rest.
+ *  - `credit` — HP credit banked ABOVE the floor (see `bankedCredit`), hidden by
+ *    the same clamp and just as capable of swallowing this record whole.
+ *
+ * So a damage record's state delta is `−(effective + credit)` — it clears the
+ * hidden credit AND deals the damage — while its display value stays
+ * `effective`, the damage the player actually took. Callers MUST separate the
+ * two; using the delta for the chip would show a number nobody took. `credit`
+ * is 0 in the ordinary case, so the arithmetic is unchanged for every character
+ * that never banked one.
+ *
+ * Gated on `hp.max` being present the same way `healableHp` is: with the HP
+ * group unloaded there is no HP to cap against, so the raw amount stands
+ * (capping at an absent max would silently zero every damage record) and there
+ * is no floor for credit to sit above.
+ */
+export function effectiveDamage(
+  f: FactReader,
+  amount: number
+): { effective: number; credit: number } {
+  if (!f.has('hp.max')) return { effective: amount, credit: 0 };
+  const modifier = f.num('hp.modifier.current');
+  return {
+    effective: Math.min(amount, currentHp(f.num('hp.max'), modifier)),
+    credit: bankedCredit(modifier)
+  };
 }
 
 /**

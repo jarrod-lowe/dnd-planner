@@ -1,0 +1,69 @@
+name: 'Steed Damage Clears Banked Credit'
+description: >-
+  The steed's version of damage-clears-banked-credit. Its records are ONE keyed
+  running total each, so dismissing the damage chip zeroes `damageRecorded`
+  outright while `healRecorded` stays — leaving the net current-HP modifier
+  POSITIVE and hidden by the same clamp. The next damage record has to clear
+  that credit as well as its own amount, or the hit is swallowed (and the
+  0-HP retirement check misses a lethal blow).
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-find-steed
+steps:
+  - addOffer:
+      id: prepare-find-steed
+  - addOffer:
+      id: cast-find-steed
+  - endTurn:
+      assert:
+        facts:
+          companion.steed.hp.current: 25
+  - addOffer:
+      id: steed-record-damage
+      selections:
+        amount: 10
+      assert:
+        facts:
+          companion.steed.hp.current: 15
+  - addOffer:
+      id: steed-record-heal
+      selections:
+        amount: 10
+      assert:
+        facts:
+          companion.steed.hp.current: 25
+  - endTurn:
+      assert:
+        facts:
+          companion.steed.hp.current: 25
+        effects:
+          exists:
+            - effect-steed-hp-damage
+            - effect-steed-hp-heal
+  # Dismiss the mis-entered damage chip: the heal total stays, so the net
+  # modifier is +10 — invisible on the sheet (still 25/25) but banked.
+  - removeEffect:
+      id: effect-steed-hp-damage
+      assert:
+        facts:
+          companion.steed.hp.modifier.current: 10
+          companion.steed.hp.current: 25
+  # The next hit must land in full: 25 − 8 = 17. Paying it into the +10 credit
+  # instead leaves +2 and the steed takes nothing at all.
+  - addOffer:
+      id: steed-record-damage
+      selections:
+        amount: 8
+      assert:
+        facts:
+          companion.steed.hp.current: 17
+  - endTurn:
+      assert:
+        facts:
+          companion.steed.hp.current: 17

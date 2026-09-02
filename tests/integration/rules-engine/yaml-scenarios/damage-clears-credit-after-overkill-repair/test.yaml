@@ -1,0 +1,73 @@
+name: 'Damage Clears Credit Left By An Overkill Repair'
+description: >-
+  The narrower instance of damage-clears-banked-credit. A heal that repairs HP
+  banked BELOW the floor (see heal-repairs-banked-overkill) folds the repair
+  into its own delta — so removing the effect that caused the overkill leaves
+  that compensation behind as banked CREDIT. Damage recorded afterwards has to
+  clear it, or the repair silently absorbs the next hit.
+ruleGroups:
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - class-paladin/class-paladin-level1
+  - dnd-5e-2024/core-events
+steps:
+  # CON 14 → hp.max = 10 + 2 = 12.
+  - addOffer:
+      id: set-constitution
+      selections:
+        score: 14
+      assert:
+        facts:
+          hp.max: 12
+          hp.current: 12
+  # The manual override drives the modifier to −30: 18 points sit hidden BELOW
+  # the floor, and the sheet reads 0/12.
+  - addOffer:
+      id: set-hp-modifier-current
+      selections:
+        modifier: -30
+      assert:
+        facts:
+          hp.modifier.current: -30
+          hp.current: 0
+  # A full heal restores the 12 visible HP AND pays off the hidden 18 — a +30
+  # delta, of which 18 is compensation for the override.
+  - addOffer:
+      id: record-heal
+      selections:
+        amount: 12
+      assert:
+        facts:
+          hp.modifier.current: 0
+          hp.current: 12
+  - endTurn:
+      assert:
+        facts:
+          hp.current: 12
+        effects:
+          exists:
+            - effect-hp-heal
+            - effect-hp-modifier-current
+  # Remove the override that caused the overkill. Its −30 goes; the heal's +30
+  # stays, so the modifier is now +30 — invisible, but banked.
+  - removeEffect:
+      id: effect-hp-modifier-current
+      assert:
+        facts:
+          hp.modifier.current: 30
+          hp.current: 12
+  # Damage must still land in full: 12 − 5 = 7.
+  - addOffer:
+      id: record-damage
+      selections:
+        amount: 5
+      assert:
+        facts:
+          hp.current: 7
+  - endTurn:
+      assert:
+        facts:
+          hp.modifier.current: -5
+          hp.current: 7

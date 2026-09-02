@@ -250,14 +250,19 @@ const coreEvents: RuleModule = {
         const amount = typeof selections.amount === 'number' ? selections.amount : 0;
         // Effective damage caps at the HP held when it is recorded: HP bottoms
         // out at 0, and persisting the raw overkill would BANK it below −max and
-        // silently swallow a later heal (the mirror of the record-heal cap). Like
-        // the heal chip, the record then shows the EFFECTIVE amount.
-        const effective = effectiveDamage(f, amount);
+        // silently swallow a later heal (the mirror of the record-heal cap).
+        //
+        // The delta also clears any CREDIT banked above the floor — a heal whose
+        // damage record was later dismissed, or an overkill repair whose cause
+        // was removed. See effectiveDamage: without that the damage is swallowed
+        // paying the credit down and the HP bar never moves. Like the heal chip,
+        // the record itself shows only the EFFECTIVE amount.
+        const { effective, credit } = effectiveDamage(f, amount);
         const advertise: EffectInstance[] = [
           // id is what the scenarios assert (effect-hp-damage).
           {
             id: 'effect-hp-damage',
-            state: { 'hp.modifier.current': -effective },
+            state: { 'hp.modifier.current': -(effective + credit) },
             // The chip name is `Damage {{score}}`; records are keyless and stack,
             // so each carries its own amount as a display literal.
             display: {
