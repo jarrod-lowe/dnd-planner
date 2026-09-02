@@ -1,0 +1,74 @@
+name: 'Paladin: Aura of the Guardian floors HP at zero'
+description: >-
+  Aura of the Guardian can absorb more damage than the paladin has hit points —
+  that is the point of the feature — but the paladin's HP still bottoms out at
+  0, never negative, and only the HP actually available is recorded. Banking the
+  overkill would swallow the healing that follows.
+ruleGroups:
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divinity
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-oath-redemption-level3
+  - class-paladin/class-paladin-level4
+  - class-paladin/class-paladin-oath-redemption-level4
+  - class-paladin/class-paladin-level5
+  - class-paladin/class-paladin-oath-redemption-level5
+  - class-paladin/class-paladin-level6
+  - class-paladin/class-paladin-oath-redemption-level6
+  - class-paladin/class-paladin-level7
+  - class-paladin/class-paladin-oath-redemption-level7
+steps:
+  - evaluate:
+      assert:
+        facts:
+          hp.max: 46
+          hp.current: 46
+          reactions.remaining: 1
+
+  # Down to 6 HP.
+  - addOffer:
+      id: record-damage
+      selections:
+        amount: 40
+      assert:
+        facts:
+          hp.current: 6
+
+  # Take 20 for an ally with 6 HP left: the paladin drops to 0, not to −14.
+  - addOffer:
+      id: aura-of-the-guardian
+      selections:
+        amount: 20
+      assert:
+        facts:
+          reactions.remaining: 0
+          hp.current: 0
+        planErrors:
+          - id: aura-of-the-guardian
+            index: 0
+            errors: []
+
+  - endTurn:
+      assert:
+        facts:
+          hp.current: 0
+        effects:
+          exists:
+            - effect-aura-of-the-guardian
+
+  # The heal lands in full: 0 + 10 = 10. Only the 6 HP the paladin actually had
+  # were recorded by the aura, so nothing was banked below 0.
+  - addOffer:
+      id: record-heal
+      selections:
+        amount: 10
+      assert:
+        facts:
+          hp.current: 10

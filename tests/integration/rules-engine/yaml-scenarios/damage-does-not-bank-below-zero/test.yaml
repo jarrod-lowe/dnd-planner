@@ -1,0 +1,58 @@
+name: 'Damage Does Not Bank Below Zero'
+description: >-
+  HP bottoms out at 0 — it is never negative. Damage beyond the HP the
+  character has at record time is absorbed but not banked: recording the raw
+  overkill would leave `hp.modifier.current` below −max, so a later heal would
+  be silently swallowed. The mirror image of heal-does-not-bank-over-damage.
+ruleGroups:
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - class-paladin/class-paladin-level1
+  - dnd-5e-2024/core-events
+steps:
+  # CON 14 → hp.max = 10 + 2 = 12.
+  - addOffer:
+      id: set-constitution
+      selections:
+        score: 14
+      assert:
+        facts:
+          hp.max: 12
+          hp.current: 12
+  - addOffer:
+      id: record-damage
+      selections:
+        amount: 10
+      assert:
+        facts:
+          hp.current: 2
+  # 10 more with only 2 HP left: HP floors at 0, it does not read −8.
+  - addOffer:
+      id: record-damage
+      selections:
+        amount: 10
+      assert:
+        facts:
+          hp.current: 0
+  - endTurn:
+      assert:
+        facts:
+          hp.current: 0
+        effects:
+          exists:
+            - effect-hp-damage
+  # The heal lands in full: 0 + 5 = 5. Banked overkill (−20 instead of −12)
+  # would leave the character stuck at 0 and the heal invisible.
+  - addOffer:
+      id: record-heal
+      selections:
+        amount: 5
+      assert:
+        facts:
+          hp.current: 5
+  - endTurn:
+      assert:
+        facts:
+          hp.current: 5

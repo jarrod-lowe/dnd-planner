@@ -140,6 +140,7 @@ const EXPECTED_RUNNABLE = [
   'heal-increases-hp',
   'heal-persists-and-caps',
   'heal-does-not-bank-over-damage',
+  'damage-does-not-bank-below-zero',
   'hp-with-modifiers',
   'hp-modifier-no-stacking',
   'hp-paladin-level1',
@@ -509,6 +510,7 @@ const EXPECTED_RUNNABLE = [
   'paladin-level7-spell-slots',
   'paladin-level7-aura-of-the-guardian',
   'paladin-level7-aura-concentration',
+  'paladin-level7-aura-floors-hp',
   'oath-redemption-level7'
 ].sort();
 

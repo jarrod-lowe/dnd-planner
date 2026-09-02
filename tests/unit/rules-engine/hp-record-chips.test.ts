@@ -3,6 +3,8 @@ import { evaluatePlan } from '$lib/rules-engine';
 import type { PlannedRef } from '$lib/rules-engine';
 import coreEvents from '$lib/rules-engine/rules/core-events';
 import hp from '$lib/rules-engine/rules/hp';
+import actionEconomy from '$lib/rules-engine/rules/action-economy';
+import auraOfTheGuardian from '$lib/rules-engine/rules/class-paladin-oath-redemption-level7';
 
 /**
  * The player damage/heal record chips must carry their own amount: the i18n
@@ -36,6 +38,36 @@ describe('player HP record effects carry their amount for the chip', () => {
     const eff = advertised.find((e) => e.id.includes('effect-hp-heal'));
     expect(eff?.display?.value).toBe(10);
     expect(eff?.state?.['hp.modifier.current']).toBe(10);
+  });
+
+  it('a damage record bakes the EFFECTIVE damage (capped at the HP held)', () => {
+    // hp.max 12, 10 damage taken, then a 10-damage record with 2 HP left: only
+    // 2 HP can be lost, so both the chip and the state say 2 — banking −10
+    // would push hp.modifier.current past −max and swallow a later heal.
+    const { advertised } = evaluatePlan([coreEvents, hp], { 'hp.base.max': 12 }, [
+      damage('d1', 10),
+      damage('d2', 10)
+    ]);
+    const eff = advertised.find((e) => e.id.startsWith('d2#'));
+    expect(eff?.display?.value).toBe(2);
+    expect(eff?.state?.['hp.modifier.current']).toBe(-2);
+  });
+
+  it('an Aura of the Guardian transfer caps at the HP the paladin holds', () => {
+    // hp.max 12, 10 already taken: absorbing 20 for an ally can only cost the
+    // 2 HP left, so the chip and the effect both record 2 (HP floors at 0).
+    const { advertised, facts } = evaluatePlan(
+      [coreEvents, hp, actionEconomy, auraOfTheGuardian],
+      { 'hp.base.max': 12 },
+      [
+        damage('d1', 10),
+        { instanceId: 'a1', ruleId: 'aura-of-the-guardian', selections: { amount: 20 } }
+      ]
+    );
+    const eff = advertised.find((e) => e.id.includes('effect-aura-of-the-guardian'));
+    expect(eff?.display?.value).toBe(2);
+    expect(eff?.state?.['hp.modifier.current']).toBe(-2);
+    expect(facts['hp.current']).toBe(0);
   });
 });
 

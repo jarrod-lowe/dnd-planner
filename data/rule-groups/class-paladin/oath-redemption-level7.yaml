@@ -39,14 +39,22 @@ ruleGroups:
           meta: Oath of Redemption feature (level 7)
           fields:
             - labelKey: rules.field.castingTime
-              value: 1 Reaction (when a creature within 10 feet takes damage)
+              value: 1 Reaction (when another creature in your aura is damaged)
             - labelKey: rules.field.range
               value: 10 feet
           body: |
-            When a creature within 10 feet of you takes damage, you can use your
-            Reaction to magically take that damage yourself instead of the
-            creature taking it. The damage you take this way can't be reduced in
-            any way, and only the damage transfers — any other effects that came
-            with it stay on the original target.
+            Your guardian aura reaches out 10 feet, and while it holds you can
+            shoulder harm meant for someone else. When another creature inside
+            that radius takes damage, spend your Reaction to draw the wound onto
+            yourself — that creature is spared entirely, and you lose the hit
+            points in its place.
 
-            At level 18 the range of this aura grows to 30 feet.
+            What you absorb arrives at full strength: resistance, damage
+            reduction and every other softening effect are ignored, so you pay
+            the whole number.
+
+            Nothing but the hit point loss travels. Conditions, ongoing effects
+            and any other rider attached to the blow stay with the creature you
+            shielded.
+
+            From level 18 the aura's reach extends to 30 feet.

@@ -69,9 +69,11 @@ apply -> advertise:
   diagnostics: re-check the reaction gate (rebuke-the-violent shape)
 ```
 
-Reaction is the whole cost (XGE "magically" is a descriptor, not a Magic action). No `amount > 0` gate, no HP-floor gate - dropping yourself to 0 is the point of the feature.
+Reaction is the whole cost (the transfer is described as magical, which is flavour rather than a Magic action). No `amount > 0` gate and no gate on having the HP to spare - dropping yourself to 0 is the point of the feature. (Phase 6 added the floor at 0: absorbing more than you hold bottoms out rather than going negative.)
 
-**Deliberately not modelled** (doc-comment + description only, mirroring the L6 aura): the 10-ft radius, ally positioning, line of sight, "damage can't be reduced in any way" (nothing in the engine reduces damage), "no other effects transfer", the L18 range increase to 30 ft.
+**Deliberately not modelled** (doc-comment + description only, mirroring the L6 aura): the 10-ft radius, ally positioning, line of sight, the ban on mitigating the absorbed damage (nothing in the engine reduces damage), the rule that only hit point loss crosses over, the L18 range increase to 30 ft.
+
+**Detail text must be original.** The published wording of this feature is copyrighted and not licensed here - the rules-mode body conveys the mechanics in our own voice, as the L3 oath detail does. Never paste or closely track published text.
 
 ### i18n keys (both locales)
 
@@ -140,3 +142,14 @@ Eight YAML scenarios under `tests/integration/rules-engine/yaml-scenarios/`, eac
 - [x] Playwright check on <http://localhost:5173>: assigned "Oath of Redemption Level 7" in Manage Rules; `class-paladin-level7` auto-assigned via `requires` (checked + disabled). Live topline/resources moved exactly as specced - HP 17/52 -> 25/60, LoH 30 -> 35/35, HD 6 -> 7/7 d10, slots 4/2 -> 4/3. The offer appears under Defend -> Ward, renders the `RXN` cost chip, the description, and the hp slider; sliding to 33 took HP 25 -> -8 and spent the reaction; the chip reads "Aura of the Guardian 33"; the Flip side renders the detail meta, Casting Time/Range fields and body. Undo restored everything.
 - [x] Branch `paladin-l7-oath-redemption` off `main`
 - [x] Commit + PR - https://github.com/jarrod-lowe/dnd-planner/pull/394
+
+### Phase 6 - Post-review fixes (main agent + subagents)
+
+Raised by the human after the PR opened.
+
+- [x] **Copyright.** The published wording of Aura of the Guardian is not licensed here, and the first draft of the rules-mode body tracked it sentence-for-sentence. Rewritten in our own voice (four paragraphs, leading with the aura rather than the trigger); every distinctive published phrase replaced. Also reworded the casting-time field, the offer description (`cannot be reduced` -> `Absorb an ally's damage in full`, both locales), three quoted clauses in the module doc-comment and two in this plan. `source: custom` was already correct.
+- [x] **HP floored at 0.** `hp.current` had no lower clamp, so absorbing more than you hold read `HP -8/60`. Two defects, both fixed:
+  - `hp.current` now uses the shared `currentHp` helper - `Math.max(0, hpMax + Math.min(0, modifierCurrent))` - hoisted into `builder.ts` and reused by `hp.ts` and `find-steed.ts` (the steed already had the correct formula, with a comment calling it "the player's formula"; they had drifted).
+  - Overkill damage no longer BANKS. `effectiveDamage(f, amount)` caps a record at the HP held, mirroring the existing heal cap, applied in `core-events` `record-damage` and in the aura. Without it the floor would have hidden a worse bug: 100 damage on 60 HP then a heal of 20 left the player visibly at 0.
+  - Consequence accepted by the human: damage chips show the EFFECTIVE amount, as heal chips already do.
+  - RED first: 2 yaml scenarios (`damage-does-not-bank-below-zero`, `paladin-level7-aura-floors-hp`) + 2 unit tests in `hp-record-chips.test.ts`, all failing for the right reason before implementation. `make test` green after.

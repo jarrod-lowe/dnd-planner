@@ -1,4 +1,5 @@
 import {
+  currentHp,
   defineRule,
   preparedSpellCount,
   preparedSpellOffers,
@@ -94,16 +95,14 @@ const active = (f: FactReader): boolean => f.num('companion.steed.active') > 0;
 const summoned = (f: FactReader): boolean => f.num('companion.steed.summoned') > 0;
 
 /**
- * Steed current HP — the PLAYER's formula (`hp.current = hp.max + min(0,
- * modifier.current)`), floored at 0. Current starts at the derived max, so a
- * raised max (Aid-style +modifier) raises current with it — no unfillable
- * 25/35 gap — and a lowered max caps current below base (a 15/15 steed taking
- * 15 damage reaches 0). Positive current modifiers are display-clamped, exactly
- * like the player's. Shared by the `hp.current` derive and the record-damage
- * death check so the two can never disagree.
+ * Steed current HP — literally the PLAYER's formula (`currentHp` from the
+ * builder, shared so the two can never drift apart). Current starts at the
+ * derived max, so a raised max (Aid-style +modifier) raises current with it — no
+ * unfillable 25/35 gap — and a lowered max caps current below base (a 15/15
+ * steed taking 15 damage reaches 0). Aliased here so the `hp.current` derive and
+ * the record-damage death check read as one steed-specific concept.
  */
-const steedCurrentHp = (hpMax: number, modifierCurrent: number): number =>
-  Math.max(0, hpMax + Math.min(0, modifierCurrent));
+const steedCurrentHp = currentHp;
 
 /**
  * Retire the steed permanently: replace the summon effect (same `steed` key, so

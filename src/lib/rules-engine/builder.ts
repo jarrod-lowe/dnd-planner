@@ -27,6 +27,40 @@ const notLockedLegal: LegalWhen = {
 export const HIT_DIE_SIZES = [6, 8, 10, 12] as const;
 
 /**
+ * Current HP from a max and the NET current-HP modifier. Damage drives the
+ * modifier negative and healing carries it back toward 0, so:
+ *  - `min(0, …)` clamps a positive modifier — current never exceeds the max;
+ *  - `max(0, …)` floors the result — HP bottoms out at 0 and is never negative.
+ *    You can absorb more damage than you have hit points, but the sheet still
+ *    reads 0/60, not −8/60.
+ *
+ * Shared by the player's `hp.current`, the steed's, and `effectiveDamage` below,
+ * so the three can never disagree on what "current HP" means.
+ */
+export const currentHp = (hpMax: number, modifierCurrent: number): number =>
+  Math.max(0, hpMax + Math.min(0, modifierCurrent));
+
+/**
+ * The damage a record can effectively deal: capped at the HP actually held when
+ * it is recorded. The mirror image of the heal cap (regained HP cannot exceed
+ * the max); without it the raw overkill BANKS in `hp.modifier.current` — 100
+ * damage on a 60-HP character leaves −100, and a later heal of 20 is swallowed
+ * whole because the floor keeps hiding the difference.
+ *
+ * Gated on `hp.max` being present: with the HP group unloaded there is no HP to
+ * cap against, so the raw amount stands (capping at an absent max would silently
+ * zero every damage record).
+ *
+ * Callers must use the returned value for BOTH the effect's state delta and its
+ * display value, so the chip shows the effective damage — the same convention
+ * `record-heal` follows for surplus healing.
+ */
+export function effectiveDamage(f: FactReader, amount: number): number {
+  if (!f.has('hp.max')) return amount;
+  return Math.min(amount, currentHp(f.num('hp.max'), f.num('hp.modifier.current')));
+}
+
+/**
  * The prepare / unprepare offer pair shared by every prepared spell. PAIRED with
  * `preparedSpellCount` below — a module using these offers must also include
  * that contribution in its `derive`, or its manual preparations never count

@@ -1,5 +1,6 @@
 import {
   defineRule,
+  effectiveDamage,
   HIT_DIE_SIZES,
   type ActionResult,
   type Diagnostic,
@@ -237,17 +238,22 @@ const coreEvents: RuleModule = {
       vars: { amount: { capture: true, default: { number: 0 } } },
       apply: (f, selections): ActionResult => {
         const amount = typeof selections.amount === 'number' ? selections.amount : 0;
+        // Effective damage caps at the HP held when it is recorded: HP bottoms
+        // out at 0, and persisting the raw overkill would BANK it below −max and
+        // silently swallow a later heal (the mirror of the record-heal cap). Like
+        // the heal chip, the record then shows the EFFECTIVE amount.
+        const effective = effectiveDamage(f, amount);
         const advertise: EffectInstance[] = [
           // id is what the scenarios assert (effect-hp-damage).
           {
             id: 'effect-hp-damage',
-            state: { 'hp.modifier.current': -amount },
+            state: { 'hp.modifier.current': -effective },
             // The chip name is `Damage {{score}}`; records are keyless and stack,
             // so each carries its own amount as a display literal.
             display: {
               name: 'rule.dnd-5e-2024.core-events.effect-hp-damage.name',
               section: 'health',
-              value: amount
+              value: effective
             },
             expiry: { kind: 'untilLongRest' }
           }

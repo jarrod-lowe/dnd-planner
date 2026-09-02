@@ -37,8 +37,10 @@ steps:
           exists:
             - aura-of-the-guardian
 
-  # Take 12 damage for an ally: the reaction is the whole cost, and there is no
-  # HP floor — dropping yourself low is the point of the feature.
+  # Take 12 damage for an ally: the reaction is the whole cost, and nothing gates
+  # on having the HP to spare — dropping yourself low is the point of the
+  # feature. (Absorbing MORE than you hold bottoms out at 0; that is pinned by
+  # paladin-level7-aura-floors-hp.)
   - addOffer:
       id: aura-of-the-guardian
       selections:
