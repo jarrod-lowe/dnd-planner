@@ -1,0 +1,19 @@
+name: 'Paladin: Spell slots at level 7'
+description: 'A level 7 paladin has 4 level 1 and 3 level 2 spell slots - level 7 grants a third level 2 slot'
+ruleGroups:
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-level4
+  - class-paladin/class-paladin-level5
+  - class-paladin/class-paladin-level6
+  - class-paladin/class-paladin-level7
+steps:
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.slots.level1.total: 4
+          spellcasting.slots.level1.remaining: 4
+          spellcasting.slots.level2.total: 3
+          spellcasting.slots.level2.remaining: 3

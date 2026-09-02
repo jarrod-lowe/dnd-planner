@@ -2,11 +2,16 @@
 
 Description
 
+## Behaviour
+
+Use subagents to perform tasks; the main agent should only be used for co-ordination and communicating with the human. Make sure that is in the plan.
+Be extremely concise. Sacrifice grammar for the sake of concision.
+
 ## Process
 
-1. Using brainstorming, come up with a plan
-2. Incorporate test driven development (superpower) into the plan - remember, RED tests must compile, run, not panic, fail
-3. Place the plan into this file
+1. Using /grill-me, come up with a plan
+2. Incorporate test driven development (/tdd) into the plan - remember, RED tests must compile, run, not panic, fail
+3. Place the plan into this file, replacing this "Process" section
 4. Include a checklist of items to perform (`[ ] foo`)
 5. After approval, execute the checklist in order, ticking items off as you go, and adding notes as necessary
 6. Perform additional final testing, including, if helpful:

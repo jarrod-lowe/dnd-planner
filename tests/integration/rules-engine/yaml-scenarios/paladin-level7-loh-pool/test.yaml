@@ -1,0 +1,22 @@
+name: 'Paladin Level 7 - Lay on Hands Pool'
+description: 'Lay on Hands pool is 35/35 for a paladin with levels 1-7 (5 per level)'
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-level4
+  - class-paladin/class-paladin-level5
+  - class-paladin/class-paladin-level6
+  - class-paladin/class-paladin-level7
+  - class-paladin/class-paladin-lay-on-hands
+steps:
+  - evaluate:
+      assert:
+        facts:
+          layOnHands.pool.total: 35
+          layOnHands.pool.remaining: 35

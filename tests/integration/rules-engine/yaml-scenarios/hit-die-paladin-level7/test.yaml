@@ -1,0 +1,20 @@
+name: 'Hit die from paladin level 7'
+description: 'Paladin levels 1-7 grant 7d10 hit dice which reset to remaining on evaluation'
+ruleGroups:
+  - dnd-5e-2024/hit-die
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-level4
+  - class-paladin/class-paladin-level5
+  - class-paladin/class-paladin-level6
+  - class-paladin/class-paladin-level7
+steps:
+  - evaluate:
+      assert:
+        facts:
+          hitDie.d10.total: 7
+          hitDie.d10.remaining: 7
+          hitDie.d6.total: 0
+          hitDie.d8.total: 0
+          hitDie.d12.total: 0

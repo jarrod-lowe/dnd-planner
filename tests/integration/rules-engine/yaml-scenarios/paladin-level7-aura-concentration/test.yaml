@@ -1,0 +1,72 @@
+name: 'Paladin: Aura of the Guardian while concentrating'
+description: >
+  The damage Aura of the Guardian takes on is real damage to the paladin, so
+  using it while concentrating (Bless is up, so `concentration.remaining` is 0)
+  raises `concentration.damage-taken` and puts the concentration check in front
+  of the player.
+ruleGroups:
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/concentration
+  - spells/spell-bless
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divinity
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-oath-redemption-level3
+  - class-paladin/class-paladin-level4
+  - class-paladin/class-paladin-oath-redemption-level4
+  - class-paladin/class-paladin-level5
+  - class-paladin/class-paladin-oath-redemption-level5
+  - class-paladin/class-paladin-level6
+  - class-paladin/class-paladin-oath-redemption-level6
+  - class-paladin/class-paladin-level7
+  - class-paladin/class-paladin-oath-redemption-level7
+steps:
+  - evaluate:
+  - addOffer:
+      id: prepare-bless
+  - evaluate:
+      assert:
+        facts:
+          concentration.remaining: 1
+        offers:
+          exists:
+            - cast-bless
+  - addOffer:
+      id: cast-bless
+      assert:
+        facts:
+          concentration.remaining: 0
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-bless
+
+  # Next turn, still concentrating on Bless.
+  - evaluate:
+      assert:
+        facts:
+          concentration.remaining: 0
+          reactions.remaining: 1
+          hp.current: 46
+        offers:
+          exists:
+            - aura-of-the-guardian
+
+  # Taking 8 for an ally is damage to the paladin: concentration is now at risk.
+  - addOffer:
+      id: aura-of-the-guardian
+      selections:
+        amount: 8
+      assert:
+        facts:
+          reactions.remaining: 0
+          hp.current: 38
+          concentration.damage-taken: 1

@@ -1,0 +1,52 @@
+ruleGroups:
+  - id: class-paladin-oath-redemption-level7
+    requires:
+      - class-paladin-level7
+      - class-paladin-oath-redemption-level6
+    translations:
+      en:
+        name: Oath of Redemption Level 7
+        description: 'Paladin Oath of Redemption features at level 7, including Aura
+          of the Guardian
+
+          '
+        keywords:
+          - paladin
+          - oath
+          - redemption
+          - level7
+          - aura
+          - guardian
+          - reaction
+      en-x-tlh:
+        name: Oath of Redemption Level 7
+        description: 'Paladin Oath of Redemption level 7, Aura of the Guardian Hub
+          Hurgh
+
+          '
+        keywords:
+          - paladin
+          - oath
+          - redemption
+          - level7
+          - Hub
+          - 'HubwI'''
+    detail:
+      key: class-feature/aura-of-the-guardian
+      source: custom
+      translations:
+        en:
+          meta: Oath of Redemption feature (level 7)
+          fields:
+            - labelKey: rules.field.castingTime
+              value: 1 Reaction (when a creature within 10 feet takes damage)
+            - labelKey: rules.field.range
+              value: 10 feet
+          body: |
+            When a creature within 10 feet of you takes damage, you can use your
+            Reaction to magically take that damage yourself instead of the
+            creature taking it. The damage you take this way can't be reduced in
+            any way, and only the damage transfers — any other effects that came
+            with it stay on the original target.
+
+            At level 18 the range of this aura grows to 30 feet.

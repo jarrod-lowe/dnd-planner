@@ -9,6 +9,7 @@ import classPaladinLevel3 from './rules/class-paladin-level3';
 import classPaladinLevel4 from './rules/class-paladin-level4';
 import classPaladinLevel5 from './rules/class-paladin-level5';
 import classPaladinLevel6 from './rules/class-paladin-level6';
+import classPaladinLevel7 from './rules/class-paladin-level7';
 import classPaladinDivinity from './rules/class-paladin-divinity';
 import classPaladinOathRedemptionLevel3 from './rules/class-paladin-oath-redemption-level3';
 import classPaladinOathRedemptionLevel4 from './rules/class-paladin-oath-redemption-level4';
@@ -34,6 +35,7 @@ import calmEmotions from './rules/calm-emotions';
 import holdPerson from './rules/hold-person';
 import classPaladinOathRedemptionLevel5 from './rules/class-paladin-oath-redemption-level5';
 import classPaladinOathRedemptionLevel6 from './rules/class-paladin-oath-redemption-level6';
+import classPaladinOathRedemptionLevel7 from './rules/class-paladin-oath-redemption-level7';
 import findSteed from './rules/find-steed';
 import paladinFindSteed from './rules/paladin-find-steed';
 import paladinSpellsL1 from './rules/paladin-spells-l1';
@@ -99,6 +101,7 @@ const MODULES: RuleModule[] = [
   classPaladinLevel4,
   classPaladinLevel5,
   classPaladinLevel6,
+  classPaladinLevel7,
   classPaladinDivinity,
   classPaladinOathRedemptionLevel3,
   classPaladinOathRedemptionLevel4,
@@ -117,6 +120,7 @@ const MODULES: RuleModule[] = [
   holdPerson,
   classPaladinOathRedemptionLevel5,
   classPaladinOathRedemptionLevel6,
+  classPaladinOathRedemptionLevel7,
   findSteed,
   paladinFindSteed,
   paladinSpellsL1,

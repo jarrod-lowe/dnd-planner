@@ -625,6 +625,19 @@
         "name": "Emissary of Peace (Divinity)"
       }
     },
+    "class-paladin-oath-redemption-level7": {
+      "aura-of-the-guardian": {
+        "name": "Aura of the Guardian",
+        "keywords": "reaction ally damage transfer protect",
+        "description": "10ft | Take an ally's damage — cannot be reduced"
+      },
+      "offer-aura-of-the-guardian": {
+        "no_reaction": "No reaction available"
+      },
+      "effect-aura-of-the-guardian": {
+        "name": "Aura of the Guardian {{score}}"
+      }
+    },
     "dnd-5e-2024": {
       "action-economy": {},
       "build-lock": {
