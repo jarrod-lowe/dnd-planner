@@ -153,3 +153,15 @@ Raised by the human after the PR opened.
   - Overkill damage no longer BANKS. `effectiveDamage(f, amount)` caps a record at the HP held, mirroring the existing heal cap, applied in `core-events` `record-damage` and in the aura. Without it the floor would have hidden a worse bug: 100 damage on 60 HP then a heal of 20 left the player visibly at 0.
   - Consequence accepted by the human: damage chips show the EFFECTIVE amount, as heal chips already do.
   - RED first: 2 yaml scenarios (`damage-does-not-bank-below-zero`, `paladin-level7-aura-floors-hp`) + 2 unit tests in `hp-record-chips.test.ts`, all failing for the right reason before implementation. `make test` green after.
+
+### Phase 7 - PR review fix (main agent + subagent)
+
+Codex flagged (P2) that the Phase 6 floor HIDES rather than repairs a modifier already past it. Confirmed, and broader than reported: reachable on `main` today via stacked uncapped damage records AND via the manual `set-hp-modifier-current` slider (range -30, uncapped, untouched by this branch). Worse, the floor made it LESS visible - `-60/60` moving to `-40/60` on a heal became `0/60` sitting still.
+
+- [x] `healableHp(f)` in `builder.ts` returns `{ missing, overkill }`: `missing = hp.max - hp.current` (visible budget), `overkill = max(0, -modifier - hp.max)` (hidden debt below the floor). Guarded on `f.has('hp.max')` like `effectiveDamage`.
+- [x] `record-heal` caps against `missing` and advertises `effective + overkill`; the chip still shows `effective` - the HP the player watched come back.
+- [x] `record-short-rest`'s hit-die heal had the identical bug (a rest on a below-floor character healed nothing visible). Fixed the same way; the first die that heals carries the repair.
+- [x] Steed: NOT reachable, left untouched. `companion.steed.summoned` requires `hp.current > 0`, `steed-record-heal` carries `when: summoned`, and `when` blocks execution (`plan.ts:118`) - so a below-floor modifier and a runnable steed heal are mutually exclusive. Both routes in are closed: damage retires the steed at <= 0 rather than banking, and the manual steed slider un-summons it at the floor.
+- [x] RED first: yaml scenario `heal-repairs-banked-overkill` (reaches the state through the manual slider - no legacy fixture needed) + 2 unit tests. All failed for the right reason.
+- [x] Found while fixing: `hit-dice-on-rest.test.ts` fixtures omitted `hp.base.max`, so `hp.max` was 0 and several assertions passed vacuously - including one the Phase 6 damage cap had already neutered. Fixtures given a real max; no expected value changed.
+- [x] `make test` green - 145 files, 1866 passed, 11 skipped.

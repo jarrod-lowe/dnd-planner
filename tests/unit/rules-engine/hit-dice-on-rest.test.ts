@@ -32,6 +32,14 @@ const spentDie = (n: number, count: number): EffectInstance => ({
   expiry: { kind: 'untilLongRest' }
 });
 
+/**
+ * A real max HP for these fixtures. The heal budget is `hp.max − hp.current`,
+ * so a character with no class levels (hp.max 0) has nothing to heal into and
+ * every die would restore 0 — the arithmetic each case asserts needs a max that
+ * covers the damage it takes. 30 covers the largest (20).
+ */
+const hpMax = { 'hp.base.max': 30 };
+
 /** Damage taken on an earlier turn, so there are missing HP to heal into. */
 const damageTaken = (amount: number): EffectInstance => ({
   id: 'prior-damage',
@@ -73,7 +81,7 @@ describe('spending hit dice on a short rest', () => {
   it('heals max(1, roll + con.modifier) and spends the die', () => {
     const { facts, advertised } = evaluatePlan(
       modules,
-      { 'hitDie.d10.total': 1 },
+      { ...hpMax, 'hitDie.d10.total': 1 },
       [rest('r1', { d10: { '0': 4 } })],
       [damageTaken(8)]
     );
@@ -85,7 +93,7 @@ describe('spending hit dice on a short rest', () => {
   it('floors a low roll at 1 HP per die (CON penalty cannot heal 0)', () => {
     const { facts } = evaluatePlan(
       modules,
-      { 'hitDie.d10.total': 1, 'con.modifier': -3 },
+      { ...hpMax, 'hitDie.d10.total': 1, 'con.modifier': -3 },
       [rest('r1', { d10: { '0': 1 } })],
       [damageTaken(8)]
     );
@@ -94,7 +102,9 @@ describe('spending hit dice on a short rest', () => {
   });
 
   it('caps the total at the missing HP (record-heal pattern)', () => {
-    const { facts } = evaluatePlan(modules, { 'hitDie.d10.total': 2 }, [
+    // hp.base.max matters: without it hp.max is 0, the damage record caps to 0
+    // and the assertions below would pass with nothing healed OR taken.
+    const { facts } = evaluatePlan(modules, { 'hp.base.max': 12, 'hitDie.d10.total': 2 }, [
       damage('d1', 3),
       rest('r1', { d10: { '0': 6, '1': 6 } })
     ]);
@@ -104,10 +114,26 @@ describe('spending hit dice on a short rest', () => {
     expect(facts['hitDie.d10.spent']).toBe(2);
   });
 
+  it('clears overkill banked below the floor before healing (record-heal pattern)', () => {
+    // A legacy damage record (or the manual −30 override) left the modifier at
+    // −30 on a 12-HP character: 18 points hide BELOW the floor. Measuring the
+    // missing HP off that raw modifier makes the die's 6 vanish into the
+    // overkill and hp.current stays 0 — the rest looks like it did nothing.
+    const { facts } = evaluatePlan(
+      modules,
+      { 'hp.base.max': 12, 'hitDie.d10.total': 1 },
+      [rest('r1', { d10: { '0': 6 } })],
+      [damageTaken(30)]
+    );
+    expect(facts['hp.current']).toBe(6);
+    expect(facts['hp.modifier.current']).toBe(-6);
+    expect(facts['hitDie.d10.spent']).toBe(1);
+  });
+
   it('rejects a roll on an already-spent slot and spends nothing', () => {
     const { facts, planDiagnostics, advertised } = evaluatePlan(
       modules,
-      { 'hitDie.d10.total': 2 },
+      { ...hpMax, 'hitDie.d10.total': 2 },
       [rest('r1', { d10: { '1': 5 } })],
       [spentDie(10, 1)]
     );
@@ -123,7 +149,7 @@ describe('spending hit dice on a short rest', () => {
     // first, so the diagnostic is invalid_slot alone (one diagnostic per slot).
     const { facts, planDiagnostics, advertised } = evaluatePlan(
       modules,
-      { 'hitDie.d10.total': 2 },
+      { ...hpMax, 'hitDie.d10.total': 2 },
       [rest('r1', { d10: { '5': 0 } })]
     );
     expect(facts['hitDie.d10.spent'] ?? 0).toBe(0);
@@ -137,7 +163,7 @@ describe('spending hit dice on a short rest', () => {
     for (const roll of [0, 1.5]) {
       const { facts, planDiagnostics, advertised } = evaluatePlan(
         modules,
-        { 'hitDie.d10.total': 1 },
+        { ...hpMax, 'hitDie.d10.total': 1 },
         [rest('r1', { d10: { '0': roll } })],
         [damageTaken(8)]
       );
@@ -153,7 +179,7 @@ describe('spending hit dice on a short rest', () => {
   it('re-rolling a slot replaces the earlier result (no double heal or spend)', () => {
     const first = evaluatePlan(
       modules,
-      { 'hitDie.d10.total': 1 },
+      { ...hpMax, 'hitDie.d10.total': 1 },
       [rest('r1', { d10: { '0': 2 } })],
       [damageTaken(8)]
     );
@@ -162,7 +188,7 @@ describe('spending hit dice on a short rest', () => {
     // replaces the old slot value rather than stacking onto it.
     const second = evaluatePlan(
       modules,
-      { 'hitDie.d10.total': 1 },
+      { ...hpMax, 'hitDie.d10.total': 1 },
       [rest('r1', { d10: { '0': 7 } })],
       [damageTaken(8)]
     );
@@ -174,7 +200,7 @@ describe('spending hit dice on a short rest', () => {
   it('each rolled slot is one removable chip carrying its heal AND its die spend', () => {
     const { advertised } = evaluatePlan(
       modules,
-      { 'hitDie.d10.total': 1 },
+      { ...hpMax, 'hitDie.d10.total': 1 },
       [rest('r1', { d10: { '0': 4 } })],
       [damageTaken(8)]
     );
@@ -191,7 +217,7 @@ describe('spending hit dice on a short rest', () => {
   it('rolls slot 0 then the highest slot in one open rest row without self-poisoning', () => {
     const first = evaluatePlan(
       modules,
-      { 'hitDie.d10.total': 6 },
+      { ...hpMax, 'hitDie.d10.total': 6 },
       [rest('r1', { d10: { '0': 4 } })],
       [damageTaken(20)]
     );
@@ -200,7 +226,7 @@ describe('spending hit dice on a short rest', () => {
 
     const second = evaluatePlan(
       modules,
-      { 'hitDie.d10.total': 6 },
+      { ...hpMax, 'hitDie.d10.total': 6 },
       [rest('r1', { d10: { '0': 4, '5': 6 } })],
       [damageTaken(20)]
     );
@@ -216,7 +242,7 @@ describe('spending hit dice on a short rest', () => {
   it('keeps rejecting a slot blocked by a committed spend after the fix', () => {
     const { facts, planDiagnostics, advertised } = evaluatePlan(
       modules,
-      { 'hitDie.d10.total': 6 },
+      { ...hpMax, 'hitDie.d10.total': 6 },
       [rest('r2', { d10: { '0': 4, '5': 6 } })],
       [spentDie(10, 1), damageTaken(20)]
     );
@@ -234,7 +260,7 @@ describe('spending hit dice on a short rest', () => {
   it('commits two dice from one rest with distinct ids; removing one chip keeps the other', () => {
     const { advertised } = evaluatePlan(
       modules,
-      { 'hitDie.d10.total': 2 },
+      { ...hpMax, 'hitDie.d10.total': 2 },
       [rest('r1', { d10: { '0': 4, '1': 5 } })],
       [damageTaken(20)]
     );

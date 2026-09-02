@@ -67,7 +67,10 @@ const modifierSetter = (
  * bottoms out at 0 rather than reading negative. Overkill damage is capped by
  * the RECORDERS (see `effectiveDamage`) so it is never banked in the first
  * place; this clamp also covers the manual current-HP slider, which is an
- * explicit override rather than a damage record.
+ * explicit override rather than a damage record and so is deliberately left
+ * uncapped. That override — and any record banked before the cap existed — can
+ * still put the modifier BELOW the floor, so the heal recorders repair it as
+ * they heal (see `healableHp`); without that a heal is swallowed whole.
  */
 const hp: RuleModule = {
   id: 'hp',

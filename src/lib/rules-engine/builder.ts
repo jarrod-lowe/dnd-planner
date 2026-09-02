@@ -61,6 +61,45 @@ export function effectiveDamage(f: FactReader, amount: number): number {
 }
 
 /**
+ * What a healing record has to account for, as TWO numbers:
+ *  - `missing` — the HP a heal can visibly restore (`hp.max − hp.current`), the
+ *    budget every heal caps against;
+ *  - `overkill` — HP loss banked BELOW the floor, i.e. the part of a negative
+ *    `hp.modifier.current` past −`hp.max`. The `hp.current` clamp HIDES it, so
+ *    it is invisible on the sheet but still soaks up healing.
+ *
+ * `effectiveDamage` stops NEW records from banking overkill, but it cannot undo
+ * what is already there: records committed before that cap landed (they are
+ * keyless and stack, so two 60s on a 60-HP character bank −120), and the manual
+ * current-HP slider, whose −30 range is a deliberate explicit override and is
+ * left uncapped. Measuring `missing` off the raw modifier — as this code once
+ * did — makes a heal chew through the hidden overkill instead: on −100/60 a
+ * 20-point heal moves the modifier to −80 and `hp.current` stays 0, so the heal
+ * appears to do nothing whatsoever.
+ *
+ * So a heal record's state delta is `effective + overkill` — it clears the
+ * hidden debt AND restores the healed HP — while its display value stays
+ * `effective`, the HP the player actually watched come back. Callers MUST
+ * separate the two; using the delta for the chip would show a number nobody
+ * healed. `overkill` is 0 in the ordinary case, so the arithmetic is unchanged
+ * for every character that never went past the floor.
+ *
+ * Gated on `hp.max` being present the same way `effectiveDamage` is: with the
+ * HP group unloaded there is no max to measure against, so `missing` falls back
+ * to the raw negative modifier (today's behaviour) and there is no floor to
+ * repair.
+ */
+export function healableHp(f: FactReader): { missing: number; overkill: number } {
+  if (!f.has('hp.max')) return { missing: Math.max(0, -f.num('hp.modifier.current')), overkill: 0 };
+  const hpMax = f.num('hp.max');
+  const modifier = f.num('hp.modifier.current');
+  return {
+    missing: hpMax - currentHp(hpMax, modifier),
+    overkill: Math.max(0, -modifier - hpMax)
+  };
+}
+
+/**
  * The prepare / unprepare offer pair shared by every prepared spell. PAIRED with
  * `preparedSpellCount` below — a module using these offers must also include
  * that contribution in its `derive`, or its manual preparations never count

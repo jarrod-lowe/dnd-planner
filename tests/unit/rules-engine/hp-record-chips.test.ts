@@ -40,6 +40,21 @@ describe('player HP record effects carry their amount for the chip', () => {
     expect(eff?.state?.['hp.modifier.current']).toBe(10);
   });
 
+  it('a heal past the floor clears the hidden overkill but shows only the visible HP', () => {
+    // hp.max 12 with the manual current-HP override at −30: hp.current reads 0
+    // and 18 points sit hidden BELOW the floor. A 5-point heal has to pay off
+    // that 18 as well as restore the 5, so the state delta is 23 — but the chip
+    // says Healing 5, the HP the player actually watched come back.
+    const { advertised, facts } = evaluatePlan([coreEvents, hp], { 'hp.base.max': 12 }, [
+      { instanceId: 'm1', ruleId: 'set-hp-modifier-current', selections: { modifier: -30 } },
+      heal('h1', 5)
+    ]);
+    const eff = advertised.find((e) => e.id.includes('effect-hp-heal'));
+    expect(eff?.display?.value).toBe(5);
+    expect(eff?.state?.['hp.modifier.current']).toBe(23);
+    expect(facts['hp.current']).toBe(5);
+  });
+
   it('a damage record bakes the EFFECTIVE damage (capped at the HP held)', () => {
     // hp.max 12, 10 damage taken, then a 10-damage record with 2 HP left: only
     // 2 HP can be lost, so both the chip and the state say 2 — banking −10
