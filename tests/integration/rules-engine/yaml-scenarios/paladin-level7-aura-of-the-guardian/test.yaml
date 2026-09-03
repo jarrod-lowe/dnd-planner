@@ -1,0 +1,93 @@
+name: 'Paladin: Aura of the Guardian at level 7'
+description: >
+  Aura of the Guardian costs a reaction and moves a chosen amount of damage from
+  a nearby ally onto the paladin: the amount comes straight off `hp.current` and
+  the effect persists until a long rest. The effect is keyless, so a second use
+  on a later turn stacks with the first. With the reaction already spent the
+  offer is illegal and the planned use carries the `no_reaction` diagnostic.
+ruleGroups:
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divinity
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-oath-redemption-level3
+  - class-paladin/class-paladin-level4
+  - class-paladin/class-paladin-oath-redemption-level4
+  - class-paladin/class-paladin-level5
+  - class-paladin/class-paladin-oath-redemption-level5
+  - class-paladin/class-paladin-level6
+  - class-paladin/class-paladin-oath-redemption-level6
+  - class-paladin/class-paladin-level7
+  - class-paladin/class-paladin-oath-redemption-level7
+steps:
+  - evaluate:
+      assert:
+        facts:
+          hp.max: 46
+          hp.current: 46
+          reactions.max: 1
+          reactions.remaining: 1
+        offers:
+          exists:
+            - aura-of-the-guardian
+
+  # Take 12 damage for an ally: the reaction is the whole cost, and nothing gates
+  # on having the HP to spare — dropping yourself low is the point of the
+  # feature. (Absorbing MORE than you hold bottoms out at 0; that is pinned by
+  # paladin-level7-aura-floors-hp.)
+  - addOffer:
+      id: aura-of-the-guardian
+      selections:
+        amount: 12
+      assert:
+        facts:
+          reactions.remaining: 0
+          hp.max: 46
+          hp.current: 34
+        planErrors:
+          - id: aura-of-the-guardian
+            index: 0
+            errors: []
+
+  - endTurn:
+      assert:
+        facts:
+          # The HP loss lasts until a long rest; the reaction comes back.
+          hp.current: 34
+          reactions.remaining: 1
+        effects:
+          exists:
+            - effect-aura-of-the-guardian
+
+  # A second use next turn stacks (the effect is keyless), taking another 5.
+  - addOffer:
+      id: aura-of-the-guardian
+      selections:
+        amount: 5
+      assert:
+        facts:
+          reactions.remaining: 0
+          hp.current: 29
+        planErrors:
+          - id: aura-of-the-guardian
+            index: 0
+            errors: []
+
+  # No reaction left: the offer is illegal and the planned use is diagnosed.
+  - addOffer:
+      id: aura-of-the-guardian
+      assert:
+        offers:
+          illegal:
+            - aura-of-the-guardian
+        planErrors:
+          - id: aura-of-the-guardian
+            index: 1
+            errors:
+              - rule.class-paladin-oath-redemption-level7.offer-aura-of-the-guardian.no_reaction

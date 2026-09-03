@@ -1,0 +1,24 @@
+ruleGroups:
+  - id: class-paladin-level7
+    requires:
+      - class-paladin-level6
+    translations:
+      en:
+        name: Paladin Level 7
+        description: Paladin class features at level 7, including an additional hit
+          die, a larger Lay on Hands pool, another prepared spell and a third
+          level 2 spell slot
+        keywords:
+          - paladin
+          - class
+          - level7
+          - spell slots
+      en-x-tlh:
+        name: Paladin Level 7
+        description: Paladin Segh level 7, chel Du, chel Lay on Hands, chel nabbogh
+          mIw, wej cha'DIch chelSlot
+        keywords:
+          - paladin
+          - segh
+          - level7
+          - chelSlot

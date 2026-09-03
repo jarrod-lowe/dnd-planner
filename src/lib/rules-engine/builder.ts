@@ -27,6 +27,25 @@ const notLockedLegal: LegalWhen = {
 export const HIT_DIE_SIZES = [6, 8, 10, 12] as const;
 
 /**
+ * Current HP from a max and the NET current-HP modifier. Damage drives the
+ * modifier negative and healing carries it back toward 0, so:
+ *  - `min(0, …)` clamps a positive modifier — current never exceeds the max;
+ *  - `max(0, …)` floors the result — HP bottoms out at 0 and is never negative.
+ *    You can absorb more damage than you have hit points, but the sheet still
+ *    reads 0/60, not −8/60.
+ *
+ * Shared by the player's `hp.current` and the steed's, so the two can never
+ * disagree on what "current HP" means. It is a pure read over the settled facts
+ * and stores NOTHING, which is why it is safe: a damage record that baked a
+ * clamped amount into its own effect would be an order-dependent value inside an
+ * independently removable chip (delete an earlier chip and the later one is
+ * suddenly wrong). Overkill therefore banks in `hp.modifier.current`; that is a
+ * known limitation of a summed fact over removable effects, tracked separately.
+ */
+export const currentHp = (hpMax: number, modifierCurrent: number): number =>
+  Math.max(0, hpMax + Math.min(0, modifierCurrent));
+
+/**
  * The prepare / unprepare offer pair shared by every prepared spell. PAIRED with
  * `preparedSpellCount` below — a module using these offers must also include
  * that contribution in its `derive`, or its manual preparations never count

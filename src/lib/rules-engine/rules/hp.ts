@@ -1,4 +1,4 @@
-import { defineRule, type ActionResult, type RuleModule } from '../builder';
+import { currentHp, defineRule, type ActionResult, type RuleModule } from '../builder';
 
 const H = 'rule.dnd-5e-2024.hp';
 
@@ -61,9 +61,15 @@ const modifierSetter = (
  * into `hp.modifier.current`, negative for damage) or the manual setter offers
  * below; they read as 0 here.
  *
- * `hp.current` clamps at `hp.max`: damage drives `hp.modifier.current` negative,
- * healing back toward 0, and the `min(0, …)` caps it so over-heal never exceeds
- * the max.
+ * `hp.current` is `currentHp` (shared with the steed): damage drives
+ * `hp.modifier.current` negative and healing back toward 0, and the helper
+ * clamps the result to `[0, hp.max]` — over-heal never exceeds the max, and HP
+ * bottoms out at 0 rather than reading negative. The clamp lives HERE and not in
+ * the recorders on purpose: a record that stored a clamped amount would bake an
+ * order-dependent value into an independently removable chip. Overkill therefore
+ * still banks in `hp.modifier.current` (a known limitation of a summed fact over
+ * removable effects, tracked separately). This clamp also covers the manual
+ * current-HP slider, which is an explicit override rather than a damage record.
  */
 const hp: RuleModule = {
   id: 'hp',
@@ -71,7 +77,7 @@ const hp: RuleModule = {
     { fact: 'hp.max', value: (f) => f.num('hp.base.max') + f.num('hp.modifier.max') },
     {
       fact: 'hp.current',
-      value: (f) => f.num('hp.max') + Math.min(0, f.num('hp.modifier.current'))
+      value: (f) => currentHp(f.num('hp.max'), f.num('hp.modifier.current'))
     }
   ],
   offer: () => [

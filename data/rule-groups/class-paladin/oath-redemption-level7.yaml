@@ -1,0 +1,60 @@
+ruleGroups:
+  - id: class-paladin-oath-redemption-level7
+    requires:
+      - class-paladin-level7
+      - class-paladin-oath-redemption-level6
+    translations:
+      en:
+        name: Oath of Redemption Level 7
+        description: 'Paladin Oath of Redemption features at level 7, including Aura
+          of the Guardian
+
+          '
+        keywords:
+          - paladin
+          - oath
+          - redemption
+          - level7
+          - aura
+          - guardian
+          - reaction
+      en-x-tlh:
+        name: Oath of Redemption Level 7
+        description: 'Paladin Oath of Redemption level 7, Aura of the Guardian Hub
+          Hurgh
+
+          '
+        keywords:
+          - paladin
+          - oath
+          - redemption
+          - level7
+          - Hub
+          - 'HubwI'''
+    detail:
+      key: class-feature/aura-of-the-guardian
+      source: custom
+      translations:
+        en:
+          meta: Oath of Redemption feature (level 7)
+          fields:
+            - labelKey: rules.field.castingTime
+              value: 1 Reaction (when another creature in your aura is damaged)
+            - labelKey: rules.field.range
+              value: 10 feet
+          body: |
+            Your guardian aura reaches out 10 feet, and while it holds you can
+            shoulder harm meant for someone else. When another creature inside
+            that radius takes damage, spend your Reaction to draw the wound onto
+            yourself — that creature is spared entirely, and you lose the hit
+            points in its place.
+
+            What you absorb arrives at full strength: resistance, damage
+            reduction and every other softening effect are ignored, so you pay
+            the whole number.
+
+            Nothing but the hit point loss travels. Conditions, ongoing effects
+            and any other rider attached to the blow stay with the creature you
+            shielded.
+
+            From level 18 the aura's reach extends to 30 feet.

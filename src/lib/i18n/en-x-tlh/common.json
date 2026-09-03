@@ -625,6 +625,19 @@
         "name": "rojDuy (DIvI')"
       }
     },
+    "class-paladin-oath-redemption-level7": {
+      "aura-of-the-guardian": {
+        "name": "HubwI' Hurgh",
+        "keywords": "reaction ally damage transfer protect",
+        "description": "10ft | jupwI' qIp naQ yISuq"
+      },
+      "offer-aura-of-the-guardian": {
+        "no_reaction": "DIvI' cha' tu'lu'be'"
+      },
+      "effect-aura-of-the-guardian": {
+        "name": "HubwI' Hurgh {{score}}"
+      }
+    },
     "dnd-5e-2024": {
       "action-economy": {},
       "build-lock": {

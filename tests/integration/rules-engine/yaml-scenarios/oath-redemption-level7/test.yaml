@@ -1,0 +1,54 @@
+name: 'Oath of Redemption level 7 - Aura of the Guardian'
+description: >
+  A level 7 Oath of Redemption paladin keeps every earlier oath ability and gains
+  Aura of the Guardian. The class level applies too: LoH pool 35 (5 per level), a
+  seventh hit die, a seventh prepared spell and a third level 2 slot. Divinity
+  stays at 2 and the proficiency bonus at 3.
+ruleGroups:
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/hit-die
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divinity
+  - class-paladin/class-paladin-lay-on-hands
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-oath-redemption-level3
+  - class-paladin/class-paladin-level4
+  - class-paladin/class-paladin-oath-redemption-level4
+  - class-paladin/class-paladin-level5
+  - class-paladin/class-paladin-oath-redemption-level5
+  - class-paladin/class-paladin-level6
+  - class-paladin/class-paladin-oath-redemption-level6
+  - class-paladin/class-paladin-level7
+  - class-paladin/class-paladin-oath-redemption-level7
+steps:
+  - evaluate:
+      assert:
+        facts:
+          hp.max: 46
+          hp.current: 46
+          hitDie.d10.total: 7
+          layOnHands.pool.total: 35
+          layOnHands.pool.remaining: 35
+          divinity.total: 2
+          divinity.remaining: 2
+          proficiency.bonus: 3
+          spellcasting.prepared.max: 7
+          spellcasting.slots.level1.total: 4
+          spellcasting.slots.level2.total: 3
+          # The level 3 and level 5 oath spells stay always-prepared.
+          spell.l1.sleep.alwaysPrepared: 1
+          spell.l1.sanctuary.alwaysPrepared: 1
+          spell.l2.calmEmotions.alwaysPrepared: 1
+          spell.l2.holdPerson.alwaysPrepared: 1
+        offers:
+          exists:
+            - rebuke-the-violent
+            - emissary-of-peace
+            # New at level 7.
+            - aura-of-the-guardian

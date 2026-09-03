@@ -498,7 +498,19 @@ const EXPECTED_RUNNABLE = [
   'paladin-level6-proficiency',
   'paladin-level6-spell-slots',
   'paladin-level6-aura-of-protection',
-  'oath-redemption-level6'
+  'oath-redemption-level6',
+  // M3 — class-paladin-level7 + oath-redemption-level7. Level 7 moves the class
+  // table (a third level 2 slot, a seventh prepared spell) and the oath grants
+  // Aura of the Guardian, a reaction that moves an ally's damage onto the paladin.
+  'hp-paladin-level7',
+  'hit-die-paladin-level7',
+  'paladin-level7-loh-pool',
+  'paladin-level7-prepared',
+  'paladin-level7-spell-slots',
+  'paladin-level7-aura-of-the-guardian',
+  'paladin-level7-aura-concentration',
+  'paladin-level7-aura-floors-hp',
+  'oath-redemption-level7'
 ].sort();
 
 // --- Test config types (subset of the legacy runner's schema we drive) ---
