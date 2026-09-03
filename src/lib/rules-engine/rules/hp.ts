@@ -64,10 +64,12 @@ const modifierSetter = (
  * `hp.current` is `currentHp` (shared with the steed): damage drives
  * `hp.modifier.current` negative and healing back toward 0, and the helper
  * clamps the result to `[0, hp.max]` — over-heal never exceeds the max, and HP
- * bottoms out at 0 rather than reading negative. Overkill damage is capped by
- * the RECORDERS (see `effectiveDamage`) so it is never banked in the first
- * place; this clamp also covers the manual current-HP slider, which is an
- * explicit override rather than a damage record.
+ * bottoms out at 0 rather than reading negative. The clamp lives HERE and not in
+ * the recorders on purpose: a record that stored a clamped amount would bake an
+ * order-dependent value into an independently removable chip. Overkill therefore
+ * still banks in `hp.modifier.current` (a known limitation of a summed fact over
+ * removable effects, tracked separately). This clamp also covers the manual
+ * current-HP slider, which is an explicit override rather than a damage record.
  */
 const hp: RuleModule = {
   id: 'hp',

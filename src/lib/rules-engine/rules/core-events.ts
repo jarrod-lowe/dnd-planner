@@ -1,6 +1,5 @@
 import {
   defineRule,
-  effectiveDamage,
   HIT_DIE_SIZES,
   type ActionResult,
   type Diagnostic,
@@ -238,22 +237,22 @@ const coreEvents: RuleModule = {
       vars: { amount: { capture: true, default: { number: 0 } } },
       apply: (f, selections): ActionResult => {
         const amount = typeof selections.amount === 'number' ? selections.amount : 0;
-        // Effective damage caps at the HP held when it is recorded: HP bottoms
-        // out at 0, and persisting the raw overkill would BANK it below −max and
-        // silently swallow a later heal (the mirror of the record-heal cap). Like
-        // the heal chip, the record then shows the EFFECTIVE amount.
-        const effective = effectiveDamage(f, amount);
+        // The RAW amount is recorded, not one clamped to the HP held: a clamp
+        // would bake an order-dependent value into an independently removable
+        // chip, so deleting an earlier damage chip would leave this one wrong.
+        // Overkill therefore banks in `hp.modifier.current` (the `hp.current`
+        // derive floors the display at 0); that is tracked separately.
         const advertise: EffectInstance[] = [
           // id is what the scenarios assert (effect-hp-damage).
           {
             id: 'effect-hp-damage',
-            state: { 'hp.modifier.current': -effective },
+            state: { 'hp.modifier.current': -amount },
             // The chip name is `Damage {{score}}`; records are keyless and stack,
             // so each carries its own amount as a display literal.
             display: {
               name: 'rule.dnd-5e-2024.core-events.effect-hp-damage.name',
               section: 'health',
-              value: effective
+              value: amount
             },
             expiry: { kind: 'untilLongRest' }
           }
@@ -262,8 +261,14 @@ const coreEvents: RuleModule = {
         // trips the concentration group's check trigger. Keyed + endOfTurn so it
         // lasts only this turn and a planned concentration-check can clear it
         // (same key, newest wins). Gated on the group being loaded so it never
-        // sets a phantom fact when concentration isn't in play.
-        if (f.has('concentration.remaining') && f.num('concentration.remaining') <= 0) {
+        // sets a phantom fact when concentration isn't in play, and on the
+        // amount: a row left at the slider's default 0 is no damage taken, so it
+        // must not put a concentration check in front of the player.
+        if (
+          amount > 0 &&
+          f.has('concentration.remaining') &&
+          f.num('concentration.remaining') <= 0
+        ) {
           advertise.push({
             id: 'concentration-damage-taken',
             key: 'concentration-damage-taken',

@@ -33,11 +33,11 @@ const spentDie = (n: number, count: number): EffectInstance => ({
 });
 
 /**
- * A real max HP for these fixtures. Without it `hp.max` is 0, which is not a
- * state any character reaches: `hp.current` reads 0 while the modifier says HP
- * was lost, and a damage RECORD caps to 0 against it (see `effectiveDamage`),
- * so a case that records damage asserts nothing. Each case needs a max that
- * covers the damage it takes; 30 covers the largest (20).
+ * A real max HP for these fixtures. Without it `hp.max` is 0 — a state no
+ * character reaches, and one where `hp.current` reads 0 while the modifier says
+ * HP was lost, so the healing under test would never be visible on the sheet.
+ * Each case gets a max that covers the damage it takes; 30 covers the largest
+ * (20).
  */
 const hpMax = { 'hp.base.max': 30 };
 
@@ -103,8 +103,8 @@ describe('spending hit dice on a short rest', () => {
   });
 
   it('caps the total at the missing HP (record-heal pattern)', () => {
-    // hp.base.max matters: without it hp.max is 0, the damage record caps to 0
-    // and the assertions below would pass with nothing healed OR taken.
+    // A real hp.base.max, as above: 12 covers the 3 damage this case records, so
+    // the character is at a hit-point total a sheet could actually show.
     const { facts } = evaluatePlan(modules, { 'hp.base.max': 12, 'hitDie.d10.total': 2 }, [
       damage('d1', 3),
       rest('r1', { d10: { '0': 6, '1': 6 } })

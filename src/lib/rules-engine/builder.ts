@@ -34,31 +34,16 @@ export const HIT_DIE_SIZES = [6, 8, 10, 12] as const;
  *    You can absorb more damage than you have hit points, but the sheet still
  *    reads 0/60, not −8/60.
  *
- * Shared by the player's `hp.current`, the steed's, and `effectiveDamage` below,
- * so the three can never disagree on what "current HP" means.
+ * Shared by the player's `hp.current` and the steed's, so the two can never
+ * disagree on what "current HP" means. It is a pure read over the settled facts
+ * and stores NOTHING, which is why it is safe: a damage record that baked a
+ * clamped amount into its own effect would be an order-dependent value inside an
+ * independently removable chip (delete an earlier chip and the later one is
+ * suddenly wrong). Overkill therefore banks in `hp.modifier.current`; that is a
+ * known limitation of a summed fact over removable effects, tracked separately.
  */
 export const currentHp = (hpMax: number, modifierCurrent: number): number =>
   Math.max(0, hpMax + Math.min(0, modifierCurrent));
-
-/**
- * The damage a record can effectively deal: capped at the HP actually held when
- * it is recorded. The mirror image of the heal cap (regained HP cannot exceed
- * the max); without it the raw overkill BANKS in `hp.modifier.current` — 100
- * damage on a 60-HP character leaves −100, and a later heal of 20 is swallowed
- * whole because the floor keeps hiding the difference.
- *
- * Gated on `hp.max` being present: with the HP group unloaded there is no HP to
- * cap against, so the raw amount stands (capping at an absent max would silently
- * zero every damage record).
- *
- * Callers must use the returned value for BOTH the effect's state delta and its
- * display value, so the chip shows the effective damage — the same convention
- * `record-heal` follows for surplus healing.
- */
-export function effectiveDamage(f: FactReader, amount: number): number {
-  if (!f.has('hp.max')) return amount;
-  return Math.min(amount, currentHp(f.num('hp.max'), f.num('hp.modifier.current')));
-}
 
 /**
  * The prepare / unprepare offer pair shared by every prepared spell. PAIRED with

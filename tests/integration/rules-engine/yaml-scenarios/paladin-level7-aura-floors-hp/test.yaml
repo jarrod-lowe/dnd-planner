@@ -2,8 +2,8 @@ name: 'Paladin: Aura of the Guardian floors HP at zero'
 description: >-
   Aura of the Guardian can absorb more damage than the paladin has hit points —
   that is the point of the feature — but the paladin's HP still bottoms out at
-  0, never negative, and only the HP actually available is recorded. Banking the
-  overkill would swallow the healing that follows.
+  0 and never reads negative. The floor lives in the `hp.current` derive, not in
+  the record: the chip keeps the raw amount the player entered.
 ruleGroups:
   - dnd-5e-2024/hp
   - dnd-5e-2024/ability-scores
@@ -41,7 +41,7 @@ steps:
         facts:
           hp.current: 6
 
-  # Take 20 for an ally with 6 HP left: the paladin drops to 0, not to −14.
+  # Take 20 for an ally with 6 HP left: the paladin reads 0, not −14.
   - addOffer:
       id: aura-of-the-guardian
       selections:
@@ -62,13 +62,3 @@ steps:
         effects:
           exists:
             - effect-aura-of-the-guardian
-
-  # The heal lands in full: 0 + 10 = 10. Only the 6 HP the paladin actually had
-  # were recorded by the aura, so nothing was banked below 0.
-  - addOffer:
-      id: record-heal
-      selections:
-        amount: 10
-      assert:
-        facts:
-          hp.current: 10

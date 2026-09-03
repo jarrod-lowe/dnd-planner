@@ -40,6 +40,21 @@ steps:
         offers:
           exists:
             - record-damage
+  # A damage row left at the slider's default 0 records no damage, so it must
+  # not trigger a concentration check.
+  - addOffer:
+      id: record-damage
+      selections:
+        amount: 0
+      assert:
+        facts:
+          concentration.damage-taken: 0
+        offers:
+          notExists:
+            - concentration-check
+  - removeFromPlan:
+      id: record-damage
+
   # Record damage while concentrating
   - addOffer:
       id: record-damage

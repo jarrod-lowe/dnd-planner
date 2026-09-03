@@ -163,3 +163,33 @@ Phases 7 and 8 are reverted (`eb6c685d`, `17f14990`). Both stored a CORRECTION i
 - [x] Reverted: `healableHp`, `bankedCredit`, the `{ effective, credit }` pair, the heal/hit-die repair, the steed credit fold, and 4 yaml scenarios (`heal-repairs-banked-overkill`, `damage-clears-banked-credit`, `damage-clears-credit-after-overkill-repair`, `steed-damage-clears-banked-credit`).
 - [x] Kept from the revert: the `hit-dice-on-rest.test.ts` fixtures keep a real `hp.base.max`. Without it `hp.max` is 0 and the surviving damage cap reduces a damage record to 0, so the "caps the total at the missing HP" case asserted nothing.
 - [x] **Known bugs, unchanged from `main`, to be raised SEPARATELY:** dismissing a damage chip after healing banks positive credit and the next damage does nothing; a character banked below zero cannot be healed. Both follow from `hp.modifier.current` being a summed fact over independently removable effects. The fix is an ordered-replay model, not another summed-fact patch - out of scope for this PR.
+
+### Phase 10 - Dropped the damage cap; guarded the zero-damage concentration marker (main agent + subagent)
+
+Post-review, decided by the human.
+
+- [x] **`effectiveDamage` deleted.** The cap had the SAME flaw as the Phase 7/8 reverts: it baked an
+      order-dependent value into an independently removable committed effect. Shown by: 12 max HP,
+      record Damage 10 (chip -10, HP 2), record Damage 10 again (chip -2, HP 0), delete the FIRST
+      chip -> HP reads 10, where only the second 10-point event should stand and it should read 2.
+      `record-damage` (core-events) and `aura-of-the-guardian` now record the RAW amount in both the
+      state delta and `display.value`, exactly as on `main`.
+- [x] **`currentHp` is the sole surviving HP change** and is safe because it STORES NOTHING - a pure
+      read over settled facts in the `hp.current` derive (and the steed's), not a value persisted in
+      a chip. `builder.ts` now holds `currentHp` and no other HP helper.
+- [x] **Overkill banking is back**, accepted and expected: `hp.modifier.current` goes below `-max`
+      and a later heal can be swallowed. Nothing compensates for it - compensating is precisely what
+      Phases 7-9 reverted. Tracked in #395 with the other summed-fact HP bugs.
+- [x] Tests: deleted `damage-does-not-bank-below-zero` (it asserted the cap) and its
+      `EXPECTED_RUNNABLE` entry; `paladin-level7-aura-floors-hp` keeps its floor assertions and drops
+      the post-overkill heal step the cap had made work; the two cap cases left
+      `hp-record-chips.test.ts`. The `hit-dice-on-rest.test.ts` fixtures keep a real `hp.base.max`,
+      but the comment now gives the reason that survives the cap: `hp.max` 0 is a state no character
+      reaches, and the healing under test would not be visible on the sheet.
+- [x] **Zero-damage concentration guard.** `aura-of-the-guardian` advertised
+      `concentration-damage-taken` whenever concentrating, so merely adding the row with the slider
+      at its default 0 tripped a concentration check for nothing. `record-damage` had the identical
+      unguarded block (pre-existing). Both now require `amount > 0`. RED first: extended
+      `paladin-level7-aura-concentration` and `concentration-check-after-damage` with an amount-0
+      step (fact 0, no `concentration-check` offer) plus a `removeFromPlan`, both failing
+      `expected 1 to deeply equal +0` before the guard.

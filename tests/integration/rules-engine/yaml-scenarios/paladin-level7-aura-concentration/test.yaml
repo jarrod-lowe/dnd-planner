@@ -60,6 +60,22 @@ steps:
           exists:
             - aura-of-the-guardian
 
+  # Adding the row with the slider still at its default 0 transfers no damage,
+  # so it must NOT put a concentration check in front of the player.
+  - addOffer:
+      id: aura-of-the-guardian
+      selections:
+        amount: 0
+      assert:
+        facts:
+          hp.current: 46
+          concentration.damage-taken: 0
+        offers:
+          notExists:
+            - concentration-check
+  - removeFromPlan:
+      id: aura-of-the-guardian
+
   # Taking 8 for an ally is damage to the paladin: concentration is now at risk.
   - addOffer:
       id: aura-of-the-guardian

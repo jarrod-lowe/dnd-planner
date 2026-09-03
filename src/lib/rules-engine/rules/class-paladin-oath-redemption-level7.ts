@@ -1,6 +1,5 @@
 import {
   defineRule,
-  effectiveDamage,
   type ActionResult,
   type Diagnostic,
   type EffectInstance,
@@ -30,10 +29,12 @@ const O = 'rule.class-paladin-oath-redemption-level7';
  *   check can clear it, and gated on `f.has` so it never sets a phantom fact
  *   when the concentration group is not loaded.
  *
- * There is deliberately no `amount > 0` gate, and no gate on having enough HP —
- * dropping yourself to 0 to save an ally is the point of the feature. The
- * recorded loss is capped at the HP held (`effectiveDamage`) so the paladin
- * bottoms out at 0 rather than going negative or banking the overkill.
+ * The offer is deliberately legal at any amount, and there is no gate on having
+ * enough HP — dropping yourself to 0 to save an ally is the point of the
+ * feature. The RAW amount is recorded (clamping it to the HP held would bake an
+ * order-dependent value into an independently removable chip); `hp.current`
+ * floors the sheet at 0. Only the concentration marker is gated on the transfer
+ * being non-zero, since a row still at the slider's default costs no HP.
  *
  * Deliberately not modelled (the app tracks one character's resources, not a
  * battlefield): the 10-foot radius, ally positioning and line of sight; the
@@ -78,27 +79,31 @@ const oath: RuleModule = {
             severity: 'error'
           });
         const amount = typeof selections.amount === 'number' ? selections.amount : 0;
-        // The transfer is real damage, so it caps like any other damage record
-        // (see effectiveDamage): absorbing more than the paladin has left drops
-        // them to 0 — never negative — and records only the HP actually lost, so
-        // the surplus cannot bank and swallow a later heal. The chip therefore
-        // shows the EFFECTIVE amount, exactly as the damage and heal chips do.
-        const effective = effectiveDamage(f, amount);
+        // The transfer is recorded RAW, exactly like `record-damage`: the chip
+        // carries the amount the player entered, and `hp.current` floors the
+        // sheet at 0 when the paladin absorbs more than they hold.
         const advertise: EffectInstance[] = [
           { id: 'cost', state: { 'reactions.spent': 1 }, expiry: { kind: 'endOfTurn' } },
           {
             id: 'effect-aura-of-the-guardian',
-            state: { 'hp.modifier.current': -effective },
+            state: { 'hp.modifier.current': -amount },
             // Keyless and stacking, so each transfer carries its own amount.
             display: {
               name: `${O}.effect-aura-of-the-guardian.name`,
               section: 'health',
-              value: effective
+              value: amount
             },
             expiry: { kind: 'untilLongRest' }
           }
         ];
-        if (f.has('concentration.remaining') && f.num('concentration.remaining') <= 0) {
+        // Gated on the amount as well as on the group being loaded: adding the
+        // row with the slider still at 0 transfers no damage, so it must not
+        // trip a concentration check (same guard as `record-damage`).
+        if (
+          amount > 0 &&
+          f.has('concentration.remaining') &&
+          f.num('concentration.remaining') <= 0
+        ) {
           advertise.push({
             id: 'concentration-damage-taken',
             key: 'concentration-damage-taken',
