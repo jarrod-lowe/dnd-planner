@@ -153,3 +153,13 @@ Raised by the human after the PR opened.
   - Overkill damage no longer BANKS. `effectiveDamage(f, amount)` caps a record at the HP held, mirroring the existing heal cap, applied in `core-events` `record-damage` and in the aura. Without it the floor would have hidden a worse bug: 100 damage on 60 HP then a heal of 20 left the player visibly at 0.
   - Consequence accepted by the human: damage chips show the EFFECTIVE amount, as heal chips already do.
   - RED first: 2 yaml scenarios (`damage-does-not-bank-below-zero`, `paladin-level7-aura-floors-hp`) + 2 unit tests in `hp-record-chips.test.ts`, all failing for the right reason before implementation. `make test` green after.
+
+### Phase 9 - Reverted the fragile HP repairs (main agent + subagent)
+
+Phases 7 and 8 are reverted (`eb6c685d`, `17f14990`). Both stored a CORRECTION inside an effect other than the one that caused the problem - the heal chip carried the overkill repair, the damage chip carried the credit clear - so dismissing a chip afterwards orphans the correction and HP comes out wrong again. Each fix traded one reachable wrong answer for another.
+
+- [x] A two-counter ledger (record damage and healing as separate running totals, HP = max - (damage - healing)) was evaluated and REJECTED: the steed already works that way and has the identical bug - dismissing its damage chip leaves healing standing as pure credit.
+- [x] Kept, both from Phase 6 and both safe because the correction lives in the effect that causes it: the `hp.current` floor (`currentHp`, shared by `hp.ts` and the steed) and the damage cap (`effectiveDamage`, a bare number, used by `record-damage` and the aura).
+- [x] Reverted: `healableHp`, `bankedCredit`, the `{ effective, credit }` pair, the heal/hit-die repair, the steed credit fold, and 4 yaml scenarios (`heal-repairs-banked-overkill`, `damage-clears-banked-credit`, `damage-clears-credit-after-overkill-repair`, `steed-damage-clears-banked-credit`).
+- [x] Kept from the revert: the `hit-dice-on-rest.test.ts` fixtures keep a real `hp.base.max`. Without it `hp.max` is 0 and the surviving damage cap reduces a damage record to 0, so the "caps the total at the missing HP" case asserted nothing.
+- [x] **Known bugs, unchanged from `main`, to be raised SEPARATELY:** dismissing a damage chip after healing banks positive credit and the next damage does nothing; a character banked below zero cannot be healed. Both follow from `hp.modifier.current` being a summed fact over independently removable effects. The fix is an ordered-replay model, not another summed-fact patch - out of scope for this PR.
