@@ -141,7 +141,6 @@ const EXPECTED_RUNNABLE = [
   'heal-persists-and-caps',
   'heal-does-not-bank-over-damage',
   'damage-does-not-bank-below-zero',
-  'heal-repairs-banked-overkill',
   'hp-with-modifiers',
   'hp-modifier-no-stacking',
   'hp-paladin-level1',

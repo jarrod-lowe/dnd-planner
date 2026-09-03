@@ -1,7 +1,6 @@
 import {
   defineRule,
   effectiveDamage,
-  healableHp,
   HIT_DIE_SIZES,
   type ActionResult,
   type Diagnostic,
@@ -141,12 +140,7 @@ function shortRestOffer(): Offer {
       const advertise: EffectInstance[] = [restFlag('rest.short')];
       const diagnostics: Diagnostic[] = [];
       const rolls = (selections.rolls ?? {}) as Record<string, Record<string, unknown>>;
-      // The rest heals into the missing HP, the record-heal budget. `overkill`
-      // is HP loss already banked BELOW the floor (see healableHp) — invisible
-      // on the sheet but still soaking up healing, so the FIRST die that heals
-      // pays it off as well, and the rest lifts hp.current instead of vanishing
-      // into it. It is 0 for any character that never went past the floor.
-      let { missing, overkill } = healableHp(f);
+      let missing = Math.max(0, -f.num('hp.modifier.current'));
       const con = f.num('con.modifier');
       for (const n of HIT_DIE_SIZES) {
         const sizeRolls = rolls[`d${n}`];
@@ -192,13 +186,9 @@ function shortRestOffer(): Offer {
           }
           const effective = Math.min(Math.max(1, roll + con), missing);
           missing -= effective;
-          // One die carries the overkill repair; the chip still shows only the
-          // HP this die visibly restored.
-          const repair = overkill;
-          overkill = 0;
           advertise.push({
             id: 'effect-hit-die-heal',
-            state: { 'hp.modifier.current': effective + repair, [`hitDie.d${n}.spent`]: 1 },
+            state: { 'hp.modifier.current': effective, [`hitDie.d${n}.spent`]: 1 },
             display: {
               name: `${CE}.effect-hit-die-heal.name`,
               section: 'health',
@@ -308,23 +298,16 @@ const coreEvents: RuleModule = {
         // hp.current clamp only HIDES a positive modifier; persisting the raw
         // amount would bank the surplus and pre-cancel damage taken later
         // (heal 15 on 10 damage, then take 7 → −2 instead of −7).
-        //
-        // The delta also clears any overkill already banked below the floor (a
-        // legacy uncapped damage record, or the manual current-HP override) —
-        // see healableHp: without that the heal is swallowed whole and the HP
-        // bar never moves.
-        const { missing, overkill } = healableHp(f);
+        const missing = Math.max(0, -f.num('hp.modifier.current'));
         const effective = Math.min(amount, missing);
         return {
           advertise: [
             // id is what the scenarios assert (effect-hp-heal).
             {
               id: 'effect-hp-heal',
-              state: { 'hp.modifier.current': effective + overkill },
-              // The chip name is `Healing {{score}}`; show the VISIBLE amount —
-              // the HP the player watched come back (surplus healing is lost,
-              // and the overkill folded into the state above was never HP the
-              // sheet showed them losing).
+              state: { 'hp.modifier.current': effective },
+              // The chip name is `Healing {{score}}`; show the EFFECTIVE amount —
+              // the same value the effect records (surplus healing is lost).
               display: {
                 name: 'rule.dnd-5e-2024.core-events.effect-hp-heal.name',
                 section: 'health',
