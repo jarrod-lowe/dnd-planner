@@ -1,5 +1,4 @@
 import {
-  bankedCredit,
   currentHp,
   defineRule,
   preparedSpellCount,
@@ -937,26 +936,15 @@ const findSteed: RuleModule = {
       // amount would evict the previous record instead of adding to it.
       apply: (f, selections): ActionResult => {
         const amount = typeof selections.amount === 'number' ? selections.amount : 0;
-        // CREDIT banked above the floor, exactly as the player's recorders clear
-        // it (see bankedCredit). The steed's records are one keyed running total
-        // each, so dismissing the damage chip zeroes `damageRecorded` outright
-        // while `healRecorded` stays — leaving the net modifier POSITIVE, hidden
-        // by the same clamp, and able to swallow the next hit whole. Rolling it
-        // into the running damage total is the only place it CAN go: the two
-        // totals are a ledger, and `damage − healing` has to equal the HP the
-        // steed has actually lost. It is 0 unless a record was dismissed out
-        // from under a heal.
-        const credit = bankedCredit(f.num('companion.steed.hp.modifier.current'));
-        const newDamage = f.num('companion.steed.hp.damageRecorded') + amount + credit;
+        const newDamage = f.num('companion.steed.hp.damageRecorded') + amount;
         // A steed reduced to 0 HP dies: retire it permanently (like Dismiss), so
         // the `untilLongRest` damage record can't expire on a long rest and revive
         // it. Mirror the hp.current derive: recording `amount` more damage lowers
         // the net current-HP modifier by `amount` (this reads the live modifier,
-        // so a manual setter counts too) — plus the credit, or a lethal hit reads
-        // as survivable while the credit absorbs it.
+        // so a manual setter counts too).
         const hpAfter = steedCurrentHp(
           f.num('companion.steed.hp.max'),
-          f.num('companion.steed.hp.modifier.current') - amount - credit
+          f.num('companion.steed.hp.modifier.current') - amount
         );
         if (hpAfter <= 0) return { advertise: retireSteedEffects() };
         return {

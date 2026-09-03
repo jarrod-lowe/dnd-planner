@@ -71,12 +71,6 @@ const modifierSetter = (
  * uncapped. That override — and any record banked before the cap existed — can
  * still put the modifier BELOW the floor, so the heal recorders repair it as
  * they heal (see `healableHp`); without that a heal is swallowed whole.
- *
- * The clamp hides a POSITIVE modifier just as thoroughly — and one is easy to
- * bank, because the modifier is a sum of independently removable deltas (heal a
- * damage record, then dismiss the record). So the damage recorders clear that
- * banked credit as they damage (see `bankedCredit`), the mirror of the repair
- * above; without it the damage is swallowed whole instead.
  */
 const hp: RuleModule = {
   id: 'hp',

@@ -78,19 +78,17 @@ const oath: RuleModule = {
             severity: 'error'
           });
         const amount = typeof selections.amount === 'number' ? selections.amount : 0;
-        // The transfer is real damage, so it goes through the same accounting as
-        // any other damage record (see effectiveDamage): absorbing more than the
-        // paladin has left drops them to 0 — never negative — and records only
-        // the HP actually lost, so the surplus cannot bank and swallow a later
-        // heal; and the delta clears any CREDIT already banked above the floor,
-        // which would otherwise swallow the transfer whole. The chip therefore
+        // The transfer is real damage, so it caps like any other damage record
+        // (see effectiveDamage): absorbing more than the paladin has left drops
+        // them to 0 — never negative — and records only the HP actually lost, so
+        // the surplus cannot bank and swallow a later heal. The chip therefore
         // shows the EFFECTIVE amount, exactly as the damage and heal chips do.
-        const { effective, credit } = effectiveDamage(f, amount);
+        const effective = effectiveDamage(f, amount);
         const advertise: EffectInstance[] = [
           { id: 'cost', state: { 'reactions.spent': 1 }, expiry: { kind: 'endOfTurn' } },
           {
             id: 'effect-aura-of-the-guardian',
-            state: { 'hp.modifier.current': -(effective + credit) },
+            state: { 'hp.modifier.current': -effective },
             // Keyless and stacking, so each transfer carries its own amount.
             display: {
               name: `${O}.effect-aura-of-the-guardian.name`,
