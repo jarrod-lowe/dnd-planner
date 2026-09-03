@@ -186,9 +186,9 @@ Root cause: `hp.modifier.current` is a plain sum of independently removable delt
 
 A 2x2 in `builder.ts`, the only module rule files may import from:
 
-| | Number-level (shared player/steed) | Fact-level pair (player recorders) |
-| --- | --- | --- |
-| **Floor** | `currentHp` - clamps to `[0, max]` | `healableHp` -> `{ missing, overkill }` |
+|            | Number-level (shared player/steed)           | Fact-level pair (player recorders)           |
+| ---------- | -------------------------------------------- | -------------------------------------------- |
+| **Floor**  | `currentHp` - clamps to `[0, max]`           | `healableHp` -> `{ missing, overkill }`      |
 | **Credit** | `bankedCredit` - positive side of that clamp | `effectiveDamage` -> `{ effective, credit }` |
 
 Each fact-level helper returns "what the chip shows" plus "what the state must additionally reconcile". NOTE: the steed's recorders are convergent-but-separate code, not shared - only the number-level helpers are common. A future change to HP semantics has two places to visit.
