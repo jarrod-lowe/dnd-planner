@@ -13,8 +13,8 @@ import type { Facts } from '$lib/rules-view';
  * back from the settled sheet to "what is in my hands" is to read the facts the
  * effect wrote. Each configuration knows the facts it commits
  * (`loadoutEffectState`), so the match is an exact comparison against those —
- * including `hands.spent`, which is what separates one dagger from two, and a
- * one-handed grip from a versatile weapon held in both hands.
+ * including `loadout.hands.spent`, which is what separates one dagger from two,
+ * and a one-handed grip from a versatile weapon held in both hands.
  *
  * This is what lets the picker open on the row the player is already on rather
  * than on empty hands (which, committed, would disarm them).
@@ -28,10 +28,18 @@ export function currentLoadout(modules: RuleModule[], facts: Facts): LoadoutConf
   // Every fact ANY configuration can write. The comparison has to run over the
   // whole set, not just the candidate's own keys: a spear held in one hand and
   // a spear in each hand write the same `weapon.spear.equipped` and the same
-  // `hands.spent`, and differ only by the `twoHanded` fact one of them leaves
+  // hand count, and differ only by the `twoHanded` fact one of them leaves
   // unset. Checking a candidate's own keys alone would match the wrong row.
+  //
+  // `hands.spent` is deliberately EXCLUDED. It is the shared budget — Grapple adds
+  // to it too — so comparing it makes one dagger plus a grappled target present
+  // the exact state of two daggers, and configurations are tried hands-ascending,
+  // so the wrong row wins. `loadout.hands.spent` is the loadout's own share and
+  // carries the same discrimination without the contamination. Putting
+  // `hands.spent` back would silently restore the collision.
   const owned = new Set<string>();
   for (const state of states) for (const fact of Object.keys(state)) owned.add(fact);
+  owned.delete('hands.spent');
 
   for (const [index, config] of configs.entries()) {
     const state = states[index];

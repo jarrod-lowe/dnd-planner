@@ -10,6 +10,7 @@ import dagger from '$lib/rules-engine/rules/dagger';
 import greataxe from '$lib/rules-engine/rules/greataxe';
 import javelin from '$lib/rules-engine/rules/javelin';
 import javelinMastery from '$lib/rules-engine/rules/javelin-mastery';
+import spear from '$lib/rules-engine/rules/spear';
 
 /**
  * Weapons spike — the `weaponOffers` builder helper that replaces the legacy Python
@@ -132,5 +133,54 @@ describe('weapons — reaction (opportunity attack) is melee-only', () => {
     expect(reactionRanges.length).toBeGreaterThan(0);
     expect(reactionRanges.every((r) => r.type === 'melee')).toBe(true);
     expect(actionRanges.some((r) => r.type === 'thrown')).toBe(true);
+  });
+});
+
+describe("weapons — a versatile weapon's melee band names the grip", () => {
+  /**
+   * The grip is fixed by the LOADOUT, not chosen per attack, so the only thing on
+   * an attack row that moved with it was the damage die — "d6 or d8?" with nothing
+   * saying which grip you are in. The melee band therefore carries a label that
+   * FOLLOWS the grip fact, reusing the loadout's own grip keys so the vocabulary
+   * is the same on the attack row and on the loadout chip.
+   */
+  const GRIP_LABEL = {
+    fact: 'weapon.spear.twoHanded',
+    map: {
+      0: 'rule.dnd-5e-2024.loadout.grip.one-handed',
+      1: 'rule.dnd-5e-2024.loadout.grip.two-handed'
+    }
+  };
+
+  const rangesOf = (o: { vars?: Record<string, unknown> } | undefined) => {
+    const ranges = o?.vars?.ranges as
+      | { default?: { array?: Array<{ type: string; label?: unknown }> } }
+      | undefined;
+    return ranges?.default?.array ?? [];
+  };
+
+  const spearRanges = (configId: string) => {
+    const MODS = [actionEconomy, attacks, hands, loadout, spear];
+    const facts = evaluatePlan(MODS, {}, [equip('i0', MODS, configId)]).facts;
+    return rangesOf(evaluateOffers(MODS, facts).find((o) => o.id === 'spear-use-action'));
+  };
+
+  it('labels the single melee band from the grip fact', () => {
+    const melee = spearRanges('spear').filter((r) => r.type === 'melee');
+    expect(melee).toHaveLength(1);
+    expect(melee[0].label).toEqual(GRIP_LABEL);
+  });
+
+  it('leaves the thrown bands unlabelled — the grip changes what you swing, not what you throw', () => {
+    const thrown = spearRanges('spear:2h').filter((r) => r.type === 'thrown');
+    expect(thrown.length).toBeGreaterThan(0);
+    expect(thrown.every((r) => r.label === undefined)).toBe(true);
+  });
+
+  it('leaves a one-grip weapon unlabelled', () => {
+    const facts = evaluatePlan(ALL, {}, [equip('i0', ALL, 'greataxe')]).facts;
+    const ranges = rangesOf(evaluateOffers(ALL, facts).find((o) => o.id === 'greataxe-use-action'));
+    expect(ranges.length).toBeGreaterThan(0);
+    expect(ranges.every((r) => r.label === undefined)).toBe(true);
   });
 });

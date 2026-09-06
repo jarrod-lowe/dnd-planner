@@ -6,10 +6,19 @@ import type {
   EquipDef,
   FactReader,
   LegalWhen,
+  MappedLabelSource,
   Offer,
   RuleModule
 } from './types';
-import { loadoutEffectState, type LoadoutConfig, type LoadoutItem } from './loadout';
+import {
+  GRIP_ONE_HANDED,
+  GRIP_TWO_HANDED,
+  LOADOUT_HANDS_SPENT,
+  loadoutEffectState,
+  MAX_HANDS,
+  type LoadoutConfig,
+  type LoadoutItem
+} from './loadout';
 
 /** Pure, deterministic helpers that are part of the authoring toolkit. */
 export { statToModifier } from './functions';
@@ -215,7 +224,12 @@ const isVersatile = (def: WeaponDef): boolean => def.versatile === true;
 export interface WeaponRange {
   distance: number;
   type: 'melee' | 'thrown';
-  label?: string;
+  /**
+   * i18n KEY appended to the distance ("5ft Two-handed"). A `MappedLabelSource`
+   * picks the key from a fact at render time — see {@link gripLabel}. Never
+   * display text: the dice line translates whatever lands here.
+   */
+  label?: string | MappedLabelSource;
   /**
    * Pins this band's damage die, overriding the `damageDie` var. Used to hold a
    * versatile weapon's THROWN bands at the one-handed die: the grip changes what
@@ -278,15 +292,31 @@ const turnSpend = (state: Record<string, number>): EffectInstance => ({
 });
 
 /**
+ * The grip a versatile weapon's melee band announces, reusing the LOADOUT's own
+ * grip keys so the attack row and the loadout chip say the same word. The grip is
+ * no longer a per-attack choice, so without this the only thing that moved with it
+ * was the damage die — d6 or d8 with nothing on the row saying which grip you are
+ * in, and it is easy to forget.
+ */
+function gripLabel(def: WeaponDef): MappedLabelSource {
+  return {
+    fact: `weapon.${def.id}.twoHanded`,
+    map: { 0: GRIP_ONE_HANDED, 1: GRIP_TWO_HANDED }
+  };
+}
+
+/**
  * The dice-line bands for a weapon. A versatile weapon's grip lives in the
  * LOADOUT, not in the attack, so its melee band carries no die of its own (it
- * follows the `damageDie` var, which follows the grip fact) while its thrown
- * bands pin the one-handed die — you throw a spear the same however you were
- * holding it.
+ * follows the `damageDie` var, which follows the grip fact) and instead names the
+ * grip, while its thrown bands pin the one-handed die and stay unlabelled — the
+ * grip changes what you swing with, not what you throw.
  */
 function rangesFor(def: WeaponDef): WeaponRange[] {
   if (!isVersatile(def)) return def.ranges;
-  return def.ranges.map((r) => (r.type === 'thrown' ? { ...r, damageDie: def.damageDie } : r));
+  return def.ranges.map((r) =>
+    r.type === 'thrown' ? { ...r, damageDie: def.damageDie } : { ...r, label: gripLabel(def) }
+  );
 }
 
 /**
@@ -546,7 +576,7 @@ export function armorTrainingPenalties(armorId: string, proficiencyFact: string)
  */
 
 /** The loadout combinator surface a rule module may use (see loadout.ts). */
-export { loadoutEffectState };
+export { loadoutEffectState, LOADOUT_HANDS_SPENT, MAX_HANDS };
 export type { LoadoutConfig, LoadoutItem };
 
 export type {

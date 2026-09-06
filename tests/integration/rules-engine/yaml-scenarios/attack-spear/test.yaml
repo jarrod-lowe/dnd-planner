@@ -46,8 +46,15 @@ steps:
               ranges:
                 default:
                   array:
+                    # The single melee band names the grip the loadout set, so the
+                    # attack row states it rather than leaving only the die to hint.
                     - distance: 5
                       type: melee
+                      label:
+                        fact: weapon.spear.twoHanded
+                        map:
+                          '0': rule.dnd-5e-2024.loadout.grip.one-handed
+                          '1': rule.dnd-5e-2024.loadout.grip.two-handed
                     - distance: 20
                       type: thrown
                       damageDie: 6

@@ -43,6 +43,11 @@ steps:
                   array:
                     - distance: 5
                       type: melee
+                      label:
+                        fact: weapon.spear.twoHanded
+                        map:
+                          '0': rule.dnd-5e-2024.loadout.grip.one-handed
+                          '1': rule.dnd-5e-2024.loadout.grip.two-handed
                     - distance: 20
                       type: thrown
                       damageDie: 6

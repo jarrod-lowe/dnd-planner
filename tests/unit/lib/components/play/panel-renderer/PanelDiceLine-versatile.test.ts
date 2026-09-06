@@ -38,7 +38,7 @@ const createVersatileSpearEntry = (): AvailableRuleEntry => ({
         default: {
           array: [
             { distance: 5, type: 'melee', label: '1H' },
-            { distance: 5, type: 'melee', label: '2H', damageDie: 8, extraHands: 1 },
+            { distance: 5, type: 'melee', label: '2H', damageDie: 8 },
             { distance: 20, type: 'thrown' },
             { distance: 60, type: 'thrown', disadvantage: true }
           ]
@@ -190,32 +190,19 @@ describe('PanelRenderer - versatile weapon (spear)', () => {
 
   // === Range selection feedback ===
 
-  it('calls onSelectionChange with extraHands when cycling to 2H range', async () => {
+  // A range switch reports the new index and nothing else. It used to also write
+  // an `extraHands` selection, from the days when a versatile weapon offered a
+  // second melee band and the grip was chosen per attack; the loadout owns the
+  // grip now, no band carries `extraHands`, and nothing consumes the selection.
+  it('reports only the new range index when cycling', async () => {
     const entry = createVersatileSpearEntry();
     const onSelectionChange = vi.fn();
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts: {}, onSelectionChange }
     });
-    // Cycle to 2H range
     const rangeEl = container.querySelector('.panel-renderer__range') as HTMLElement;
     await fireEvent.click(rangeEl);
-    // Should call onSelectionChange with extraHands: 1 (from 2H range entry)
-    expect(onSelectionChange).toHaveBeenCalledWith(expect.objectContaining({ extraHands: 1 }));
-  });
-
-  it('calls onSelectionChange with extraHands 0 when cycling to 1H range', async () => {
-    const entry = createVersatileSpearEntry();
-    const onSelectionChange = vi.fn();
-    const { container } = render(PanelRenderer, {
-      props: { entry, editable: true, facts: {}, onSelectionChange }
-    });
-    // Start on 1H - no selection change yet (initial state)
-    // Cycle through all to get back to 1H
-    const rangeEl = container.querySelector('.panel-renderer__range') as HTMLElement;
-    await fireEvent.click(rangeEl); // -> 2H
-    onSelectionChange.mockClear();
-    await fireEvent.click(rangeEl); // -> 20ft thrown
-    expect(onSelectionChange).toHaveBeenCalledWith(expect.objectContaining({ extraHands: 0 }));
+    expect(onSelectionChange).toHaveBeenCalledWith({ rangeIndex: 1 });
   });
 
   it('initializes rangeIndex from selections', () => {
@@ -292,5 +279,134 @@ describe('PanelRenderer - versatile weapon (spear)', () => {
     // Without GWF floor: 1 + 3 = 4
     expect(container.textContent).toContain('4');
     expect(container.textContent).not.toContain('6');
+  });
+});
+
+// === Grip on the melee band (the shape the builder actually emits today) ===
+//
+// The grip is fixed by the LOADOUT, so a versatile weapon has ONE melee band and
+// the only thing that moved with the grip was the damage die. The band's label is
+// a ValueSource that follows `weapon.<id>.twoHanded` onto the loadout's own grip
+// i18n keys, so the attack row states the grip in words. `$t` is mocked to the
+// identity, so the assertions below name the keys.
+
+const ONE_HANDED = 'rule.dnd-5e-2024.loadout.grip.one-handed';
+const TWO_HANDED = 'rule.dnd-5e-2024.loadout.grip.two-handed';
+
+const gripSpearControl = (): DiceLineControl => ({
+  type: 'dice-line',
+  ranges: { var: 'ranges' },
+  dice: [
+    { sides: 20, bonus: { var: 'hitBonus' }, purpose: 'to-hit' },
+    {
+      sides: { var: 'damageDie' },
+      bonus: { var: 'damageBonus' },
+      purpose: 'damage',
+      damageType: { string: 'piercing' }
+    }
+  ]
+});
+
+const gripSpearVars = (): Record<string, VarDefinition> =>
+  ({
+    ranges: {
+      default: {
+        array: [
+          {
+            distance: 5,
+            type: 'melee',
+            label: { fact: 'weapon.spear.twoHanded', map: { 0: ONE_HANDED, 1: TWO_HANDED } }
+          },
+          { distance: 20, type: 'thrown', damageDie: 6 },
+          { distance: 60, type: 'thrown', disadvantage: true, damageDie: 6 }
+        ]
+      }
+    },
+    hitBonus: { default: { number: 5 } },
+    damageDie: { default: { fact: 'attack.spear.damageDie' } },
+    damageBonus: { default: { number: 3 } }
+  }) as unknown as Record<string, VarDefinition>;
+
+const renderGripSpear = (facts: Record<string, number>) =>
+  render(PanelDiceLine, {
+    props: {
+      control: gripSpearControl(),
+      editable: true,
+      facts,
+      vars: gripSpearVars()
+    }
+  });
+
+describe('PanelDiceLine - versatile grip label follows the loadout', () => {
+  it('reads one-handed when the grip fact is unset', () => {
+    const { container } = renderGripSpear({ 'attack.spear.damageDie': 6 });
+    expect(container.querySelector('.panel-renderer__range')?.textContent?.trim()).toBe(
+      `5ft ${ONE_HANDED}`
+    );
+    expect(container.textContent).toContain('d6');
+  });
+
+  it('reads two-handed when the loadout set the grip fact', () => {
+    const { container } = renderGripSpear({
+      'weapon.spear.twoHanded': 1,
+      'attack.spear.damageDie': 8
+    });
+    expect(container.querySelector('.panel-renderer__range')?.textContent?.trim()).toBe(
+      `5ft ${TWO_HANDED}`
+    );
+    expect(container.textContent).toContain('d8');
+  });
+
+  it('leaves the thrown bands free of any grip wording', async () => {
+    const { container } = renderGripSpear({
+      'weapon.spear.twoHanded': 1,
+      'attack.spear.damageDie': 8
+    });
+    const rangeEl = container.querySelector('.panel-renderer__range') as HTMLElement;
+    await fireEvent.click(rangeEl); // -> 20ft thrown
+    expect(container.querySelector('.panel-renderer__range')?.textContent?.trim()).toBe('20ft');
+    expect(container.textContent).not.toContain(TWO_HANDED);
+    expect(container.textContent).not.toContain(ONE_HANDED);
+  });
+
+  it('translates a plain-string range label instead of rendering the raw key', () => {
+    // A range label is an i18n KEY, not display text — it used to render raw,
+    // which is why the cosmetic 1H/2H labels had to be deleted. Uses a key the
+    // test dictionary actually translates, so a missing `$t` call would show.
+    const control = gripSpearControl();
+    const vars = gripSpearVars();
+    (vars.ranges.default as unknown as { array: Array<{ label?: unknown }> }).array[0].label =
+      'play.loadout.handsFree.one';
+    const { container } = render(PanelDiceLine, {
+      props: { control, editable: true, facts: {}, vars }
+    });
+    expect(container.querySelector('.panel-renderer__range')?.textContent?.trim()).toBe(
+      '5ft 1 hand free'
+    );
+  });
+
+  it('puts the grip in the die chips accessible name, not just the visible text', () => {
+    const { container } = renderGripSpear({
+      'weapon.spear.twoHanded': 1,
+      'attack.spear.damageDie': 8
+    });
+    const chips = container.querySelectorAll('.panel-renderer__die-chip');
+    expect(chips.length).toBe(2);
+    for (const chip of chips) {
+      expect(chip.getAttribute('aria-label')).toContain(TWO_HANDED);
+    }
+  });
+
+  it('does NOT put a thrown bands (absent) grip into the accessible name', async () => {
+    const { container } = renderGripSpear({
+      'weapon.spear.twoHanded': 1,
+      'attack.spear.damageDie': 8
+    });
+    const rangeEl = container.querySelector('.panel-renderer__range') as HTMLElement;
+    await fireEvent.click(rangeEl); // -> 20ft thrown
+    const chips = container.querySelectorAll('.panel-renderer__die-chip');
+    for (const chip of chips) {
+      expect(chip.getAttribute('aria-label')).not.toContain(TWO_HANDED);
+    }
   });
 });

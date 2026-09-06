@@ -13,11 +13,30 @@ import type { EquipDef, RuleModule } from './types';
  * the same list from the same input, independent of module order.
  */
 
+/**
+ * How many hands a character has.
+ *
+ * The single source of the number: the `hands` rule derives `hands.max` from it
+ * and the enumerator bounds configurations by it, so the picker can never offer a
+ * loadout the budget would then reject. It stays a constant rather than a fact
+ * here because `enumerateLoadouts` is a pure function of the MODULES — the picker
+ * that calls it has no facts to hand, and an absent `hands.max` would enumerate
+ * nothing at all rather than falling back. Making the roster respond to a live
+ * third hand means plumbing facts into the picker and deciding what an unsettled
+ * sheet should show; nothing grants a third hand today.
+ */
+export const MAX_HANDS = 2;
+
 const L = 'rule.dnd-5e-2024.loadout';
 const EMPTY = `${L}.empty.name`;
 const FREE_HAND = `${L}.hands-free.name`;
-const GRIP_ONE_HANDED = `${L}.grip.one-handed`;
-const GRIP_TWO_HANDED = `${L}.grip.two-handed`;
+/**
+ * The grip vocabulary. Exported because the attack row says it too: a versatile
+ * weapon's melee band names its grip with these same keys, so the loadout chip and
+ * the attack row can never drift into two different words for one thing.
+ */
+export const GRIP_ONE_HANDED = `${L}.grip.one-handed`;
+export const GRIP_TWO_HANDED = `${L}.grip.two-handed`;
 
 /** One held item within a configuration. */
 export interface LoadoutItem {
@@ -99,7 +118,7 @@ function toItem(g: Grip): LoadoutItem {
  * used then id (so the list is stable however the modules arrive). Pinning the
  * current configuration to the top is a UI concern, not this function's.
  */
-export function enumerateLoadouts(modules: RuleModule[], maxHands = 2): LoadoutConfig[] {
+export function enumerateLoadouts(modules: RuleModule[], maxHands = MAX_HANDS): LoadoutConfig[] {
   const grips = [...modules]
     .filter((m) => m.equip)
     .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
@@ -137,13 +156,36 @@ export function enumerateLoadouts(modules: RuleModule[], maxHands = 2): LoadoutC
 }
 
 /**
+ * The fact recording the loadout's OWN share of the hand budget.
+ *
+ * `hands.spent` is an aggregate that every hand-consuming rule adds to (Grapple
+ * keeps one while the target is Grappled), so it cannot answer "how many hands is
+ * the loadout using?" — and both the gate and the matcher need exactly that. Only
+ * one loadout effect can exist (they share `key: 'loadout'`, and the newest evicts
+ * the older), so a single fact is unambiguous.
+ *
+ * Subtract it from `hands.spent` for the hands spoken for by everything else.
+ */
+export const LOADOUT_HANDS_SPENT = 'loadout.hands.spent';
+
+/**
  * The `state` of the single keyed effect a configuration commits: every held
  * item's facts, plus the hands it spends. Effects sharing `key: 'loadout'` do not
  * stack — the newest evicts the older — which is what makes a swap atomic without
  * any offer-side effect-removal API.
  */
 export function loadoutEffectState(config: LoadoutConfig): Record<string, number> {
-  const state: Record<string, number> = { 'hands.spent': config.hands };
+  const state: Record<string, number> = {
+    'hands.spent': config.hands,
+    [LOADOUT_HANDS_SPENT]: config.hands
+  };
   for (const item of config.items) Object.assign(state, item.state);
+  // The GRIP, as distinct from the weapon: `grip.twoHanded` says both hands are on
+  // one haft, whether that is a greataxe (two-handed by construction) or a spear
+  // the loadout chose to hold two-handed. A two-handed grip consumes both hands, so
+  // at most one item can ever be held that way and one global fact is unambiguous —
+  // which lets a rule about the grip (Great Weapon Fighting) stay ignorant of which
+  // weapon it is.
+  if (config.items.some((item) => item.hands >= 2)) state['grip.twoHanded'] = 1;
   return state;
 }

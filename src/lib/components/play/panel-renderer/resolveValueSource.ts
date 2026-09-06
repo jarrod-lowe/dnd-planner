@@ -45,5 +45,14 @@ export function resolveValueSource(
     if (source.max !== undefined && result > source.max) result = source.max;
   }
 
+  // The mapping form: turn the resolved value into a string (an i18n key). An
+  // unset source reads as 0 — an absent numeric fact is zero everywhere else in
+  // the engine — so `{ fact, map: { 0: …, 1: … } }` covers a flag fact that is
+  // only written in its "on" state, such as a versatile weapon's grip.
+  if (source.map !== undefined) {
+    if (Array.isArray(result)) return undefined;
+    return source.map[String(result ?? 0)];
+  }
+
   return result;
 }

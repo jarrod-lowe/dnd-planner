@@ -157,6 +157,7 @@ const EXPECTED_RUNNABLE = [
   'greataxe-cleave-mastery',
   'spear-versatile-damage-die',
   'weapon-donned-attacks-visible',
+  'loadout-over-budget-with-grapple',
   'fighting-style-great-weapon-annotations',
   'savage-attacker-annotations',
   'savage-attacker-weapon-only',

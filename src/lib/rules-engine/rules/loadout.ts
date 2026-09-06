@@ -1,6 +1,7 @@
 import {
   defineRule,
   loadoutEffectState,
+  LOADOUT_HANDS_SPENT,
   type ActionResult,
   type Diagnostic,
   type LoadoutConfig,
@@ -131,7 +132,15 @@ const loadout: RuleModule = {
       apply: (f, selections): ActionResult => {
         const config = readConfig(selections);
         const diagnostics: Diagnostic[] = [];
-        if (config.hands > f.num('hands.max')) {
+        // The hand budget is SHARED: Grapple keeps a hand while the target is
+        // Grappled, so `hands.spent` is not the loadout's alone. Subtract the
+        // loadout's own share — the effect this apply is about to replace — and
+        // gate on what is genuinely still free. Comparing against `hands.max`
+        // alone waved a two-handed loadout through while a hand was already tied
+        // up, and only in that order: Grapple's own gate reads `hands.remaining`,
+        // so grapple-after-loadout was caught all along.
+        const spentElsewhere = f.num('hands.spent') - f.num(LOADOUT_HANDS_SPENT);
+        if (config.hands + spentElsewhere > f.num('hands.max')) {
           diagnostics.push({ code: NO_HANDS, severity: 'error' });
         }
         const holdsShield = config.items.some((item) => item.state[SHIELD_EQUIPPED] === 1);

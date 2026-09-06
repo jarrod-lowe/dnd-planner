@@ -43,14 +43,63 @@ const createGreataxeEntry = (): AvailableRuleEntry => ({
   diagnostics: []
 });
 
+const RIDER = 'rule.dnd-5e-2024.fighting-style-great-weapon.rider';
+// The chip a matched informational annotation renders is its KEY, not its label.
+const ANNOTATION = 'rule.dnd-5e-2024.fighting-style-great-weapon.annotation';
+
+/** What the rule emits while the loadout grips two-handed. */
 const gwfAnnotation: Annotation = {
-  key: 'rule.dnd-5e-2024.fighting-style-great-weapon.annotation',
+  key: ANNOTATION,
   targets: ['property.twoHanded', 'property.versatile'],
-  rider: {
-    label: 'rule.dnd-5e-2024.fighting-style-great-weapon.rider',
-    type: 'modifier'
-  }
+  rider: { label: RIDER, type: 'modifier' }
 };
+
+/** What it emits otherwise — a versatile weapon in one hand earns nothing. */
+const gwfAnnotationOneHandedGrip: Annotation = {
+  key: ANNOTATION,
+  targets: ['property.twoHanded'],
+  rider: { label: RIDER, type: 'modifier' }
+};
+
+const createSpearEntry = (): AvailableRuleEntry => ({
+  rule: {
+    id: 'spear',
+    description: 'Spear',
+    activities: [],
+    ui: {
+      section: 'action-attack',
+      name: 'rule.attacks.spear.name',
+      annotationLabels: [
+        'attack.any',
+        'attack.melee',
+        'attack.weapon',
+        'dice.any',
+        'property.versatile'
+      ],
+      primaryControl: {
+        type: 'dice-line',
+        ranges: { var: 'ranges' },
+        dice: [
+          { sides: 20, bonus: { var: 'hitBonus' } },
+          {
+            sides: { var: 'damageDie' },
+            bonus: { var: 'damageBonus' },
+            damageType: { string: 'piercing' }
+          }
+        ]
+      }
+    },
+    vars: {
+      ranges: { default: { array: [{ distance: 5, type: 'melee' }] } },
+      hitBonus: { default: { number: 5 } },
+      damageDie: { default: { number: 8 } },
+      damageBonus: { default: { number: 3 } }
+    }
+  } as Rule,
+  legal: true,
+  applicable: true,
+  diagnostics: []
+});
 
 describe('PanelDiceLine - Great Weapon Fighting', () => {
   it('applies GWF floor when damage die rolls 1', async () => {
@@ -155,5 +204,56 @@ describe('PanelDiceLine - Great Weapon Fighting', () => {
     expect(result.natural).toBe(6);
     expect(result.total).toBe(9); // 6 + 3 bonus
     expect(result.gwfFloor).toBeUndefined();
+  });
+});
+
+/**
+ * The UI half of the grip gate. Whether GWF reaches a versatile weapon is decided
+ * by the RULE — it drops `property.versatile` from the annotation's targets unless
+ * the loadout grips two-handed — so the panel must do nothing but honour the
+ * targets it is given.
+ *
+ * The panel used to re-decide this itself, from a per-attack `extraHands`
+ * selection. The loadout change stopped writing that selection, so the panel's
+ * gate pinned itself false and GWF died for every versatile weapon with no test to
+ * catch it. These two are that test: they fail if the panel ever second-guesses
+ * the rule again.
+ */
+describe('PanelRenderer - GWF follows the annotation targets, not the panel', () => {
+  const rollDamage = async (entry: AvailableRuleEntry, activeAnnotations: Annotation[]) => {
+    const onRoll = vi.fn();
+    vi.spyOn(Math, 'random').mockReturnValue(0); // would roll a 1
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {}, onRoll, activeAnnotations }
+    });
+    await fireEvent.click(container.querySelectorAll('.panel-renderer__die-chip')[1]);
+    return { result: onRoll.mock.calls[0][0], container };
+  };
+
+  it('floors a versatile weapon gripped two-handed, and shows the rider', async () => {
+    const { result, container } = await rollDamage(createSpearEntry(), [gwfAnnotation]);
+    expect(result.gwfFloor).toBe(1);
+    expect(result.natural).toBe(3);
+    expect(container.textContent).toContain(ANNOTATION);
+  });
+
+  it('leaves a versatile weapon gripped one-handed alone, and shows no rider', async () => {
+    const { result, container } = await rollDamage(createSpearEntry(), [
+      gwfAnnotationOneHandedGrip
+    ]);
+    expect(result.gwfFloor).toBeUndefined();
+    expect(result.natural).toBe(1);
+    expect(container.textContent).not.toContain(ANNOTATION);
+  });
+
+  it('still floors a greataxe when only property.twoHanded is targeted', async () => {
+    // The two-handed target is unconditional, so this is what a greataxe sees
+    // whenever nothing versatile is in hand. It must keep working.
+    const { result, container } = await rollDamage(createGreataxeEntry(), [
+      gwfAnnotationOneHandedGrip
+    ]);
+    expect(result.gwfFloor).toBe(1);
+    expect(result.natural).toBe(3);
+    expect(container.textContent).toContain(ANNOTATION);
   });
 });

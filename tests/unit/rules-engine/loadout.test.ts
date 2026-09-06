@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { enumerateLoadouts, loadoutEffectState } from '$lib/rules-engine/loadout';
+import { enumerateLoadouts, loadoutEffectState, MAX_HANDS } from '$lib/rules-engine/loadout';
 import type { LoadoutConfig } from '$lib/rules-engine/loadout';
 import { evaluate, evaluatePlan, evaluateOffers, endTurn } from '$lib/rules-engine';
-import type { PlannedRef } from '$lib/rules-engine';
+import type { EffectInstance, PlannedRef } from '$lib/rules-engine';
 import ac from '$lib/rules-engine/rules/ac';
 import abilityScores from '$lib/rules-engine/rules/ability-scores';
 import buildLock from '$lib/rules-engine/rules/build-lock';
@@ -149,6 +149,19 @@ const plan = (instanceId: string, config: LoadoutConfig): PlannedRef => ({
   selections: { loadout: config }
 });
 
+const NO_HANDS = 'rule.dnd-5e-2024.loadout.set-loadout-offer.no-hands';
+
+const hasNoHands = (diagnostics: { code: string }[] | undefined): boolean =>
+  diagnostics?.some((d) => d.code === NO_HANDS) ?? false;
+
+/** A hand tied up by something that is not the loadout — the shared-budget case. */
+const GRAPPLING: EffectInstance = {
+  id: 'effect-grappling',
+  key: 'grappling',
+  state: { 'hands.spent': 1 },
+  expiry: { kind: 'permanent' }
+};
+
 describe('set-loadout offer', () => {
   it('commits ONE permanent effect under the shared `loadout` key', () => {
     const out = evaluatePlan(PLAY, {}, [plan('i0', configOf('dagger+shield'))]);
@@ -192,11 +205,49 @@ describe('set-loadout offer', () => {
       items: [...configOf('dagger+shield').items, ...configOf('greataxe').items]
     };
     const out = evaluatePlan(PLAY, {}, [plan('i0', overreach)]);
-    expect(
-      out.planDiagnostics
-        .get('i0')
-        ?.some((d) => d.code === 'rule.dnd-5e-2024.loadout.set-loadout-offer.no-hands')
-    ).toBe(true);
+    expect(hasNoHands(out.planDiagnostics.get('i0'))).toBe(true);
+  });
+
+  /**
+   * The budget is shared. Grapple keeps a hand while the target is Grappled, so a
+   * two-handed loadout no longer fits — and the gate has to notice, because the
+   * reverse order already did: Grapple's own gate reads `hands.remaining`. Reading
+   * `hands.max` alone made loadout-after-grapple the one unguarded direction.
+   */
+  it('counts hands already spent elsewhere, not just the character’s maximum', () => {
+    const out = evaluatePlan(PLAY, {}, [plan('i0', configOf('greataxe'))], [GRAPPLING]);
+    expect(hasNoHands(out.planDiagnostics.get('i0'))).toBe(true);
+    expect(out.planIllegal.has('i0')).toBe(true);
+  });
+
+  it('leaves a loadout that still fits alongside the grapple alone', () => {
+    const out = evaluatePlan(PLAY, {}, [plan('i0', configOf('dagger'))], [GRAPPLING]);
+    expect(hasNoHands(out.planDiagnostics.get('i0'))).toBe(false);
+    expect(out.facts['hands.remaining']).toBe(0);
+  });
+
+  /**
+   * The subtraction must use the loadout's OWN share, not the aggregate, or
+   * swapping one two-handed weapon for another would read as needing four hands.
+   */
+  it('does not count the loadout it is replacing', () => {
+    const held = evaluatePlan(PLAY, {}, [plan('i0', configOf('greataxe'))]);
+    const committed = endTurn([], held.advertised, {});
+    const swap = evaluatePlan(PLAY, {}, [plan('i1', configOf('spear:2h'))], committed);
+    expect(hasNoHands(swap.planDiagnostics.get('i1'))).toBe(false);
+    expect(swap.facts['hands.remaining']).toBe(0);
+  });
+});
+
+/**
+ * The enumerator and the `hands` rule must bound the same budget. They used to
+ * hard-code 2 independently, so a change to one would have silently offered
+ * configurations the other rejects.
+ */
+describe('hand budget', () => {
+  it('enumerates against the same maximum the hands rule derives', () => {
+    expect(evaluatePlan([hands], {}, []).facts['hands.max']).toBe(MAX_HANDS);
+    expect(enumerateLoadouts(PLAY).every((c) => c.hands <= MAX_HANDS)).toBe(true);
   });
 });
 
@@ -204,6 +255,8 @@ describe('loadoutEffectState', () => {
   it('merges every held item’s facts and the hands they spend', () => {
     expect(loadoutEffectState(configOf('spear:2h'))).toEqual({
       'hands.spent': 2,
+      'loadout.hands.spent': 2,
+      'grip.twoHanded': 1,
       'weapon.spear.equipped': 1,
       'weapon.spear.twoHanded': 1
     });
@@ -212,12 +265,50 @@ describe('loadoutEffectState', () => {
   it('sets a held fact once, however many copies are held', () => {
     expect(loadoutEffectState(configOf('dagger+dagger'))).toEqual({
       'hands.spent': 2,
+      'loadout.hands.spent': 2,
       'weapon.dagger.equipped': 1
     });
   });
 
   it('empties the hands when nothing is held', () => {
-    expect(loadoutEffectState(configOf('empty'))).toEqual({ 'hands.spent': 0 });
+    expect(loadoutEffectState(configOf('empty'))).toEqual({
+      'hands.spent': 0,
+      'loadout.hands.spent': 0
+    });
+  });
+
+  /**
+   * `hands.spent` is the shared budget — Grapple writes it too — so the loadout
+   * also records its OWN share. Only one loadout effect can exist (they share a
+   * key, and the newest evicts the older), so this fact is unambiguous, and it is
+   * what lets the gate work out how many hands are spoken for elsewhere and the
+   * matcher tell one dagger from two without being fooled by a grapple.
+   */
+  it('records its own share of the hand budget separately from the aggregate', () => {
+    for (const id of ['empty', 'dagger', 'dagger+dagger', 'spear:2h', 'greataxe']) {
+      const state = loadoutEffectState(configOf(id));
+      expect(state['loadout.hands.spent'], id).toBe(state['hands.spent']);
+    }
+  });
+
+  /**
+   * `grip.twoHanded` is the GRIP, not the weapon: rules that care whether both
+   * hands are on one haft (Great Weapon Fighting) should not have to know which
+   * weapon it is. A two-handed grip consumes both hands, so at most one item can
+   * ever be held that way and one global fact is unambiguous.
+   */
+  it('flags a two-handed grip for an inherently two-handed weapon too', () => {
+    expect(loadoutEffectState(configOf('greataxe'))).toEqual({
+      'hands.spent': 2,
+      'loadout.hands.spent': 2,
+      'grip.twoHanded': 1,
+      'weapon.greataxe.equipped': 1
+    });
+  });
+
+  it('does not flag a grip when both hands hold separate one-handed items', () => {
+    expect(loadoutEffectState(configOf('dagger+dagger'))['grip.twoHanded']).toBeUndefined();
+    expect(loadoutEffectState(configOf('spear'))['grip.twoHanded']).toBeUndefined();
   });
 });
 
