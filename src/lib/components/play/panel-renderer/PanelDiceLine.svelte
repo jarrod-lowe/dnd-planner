@@ -58,6 +58,13 @@
      */
     label?: string | ValueSource;
     damageDie?: number;
+    /**
+     * Whether attacking in this band is a melee weapon attack — the engine states
+     * it on every weapon band (thrown bands are false). Gates the melee-only
+     * riders below; absent means "no band data says otherwise", so a line that
+     * carries no bands at all behaves exactly as it did before.
+     */
+    meleeAttack?: boolean;
   }
 
   let rangeIndex = $state(
@@ -115,6 +122,13 @@
   const currentRange = $derived(
     ranges && ranges.length > 0 ? ranges[rangeIndex % ranges.length] : undefined
   );
+
+  // Great Weapon Fighting floors a MELEE weapon attack's damage die. `gwfActive`
+  // is row-level — the rule derives it from facts (the loadout's grip) and cannot
+  // see which band this row is cycled to — so the band itself says whether it is a
+  // melee attack, exactly as it says which damage die it uses. Deciding that a
+  // thrown band is ranged is the engine's job; the panel only honours the data.
+  const meleeBand = $derived(currentRange?.meleeAttack !== false);
 
   const rulesDisadvantage = $derived(
     control.advantage ? !!resolveValueSource(control.advantage, facts, vars, selections) : false
@@ -338,7 +352,9 @@
       // counts as 3, floored before summing so crits and other multi-die rolls
       // total correctly. Single-die keeps the (orig | 3) toast format via
       // gwfFloor; multi-die stores the floored rolls for the breakdown.
-      if (gwfActive && die.damageType && sides > 2 && rolls.some((r) => r <= 2)) {
+      // `meleeBand` keeps it off a thrown band — GWF is melee-only, and the
+      // row-level `gwfActive` cannot know which band is selected.
+      if (gwfActive && meleeBand && die.damageType && sides > 2 && rolls.some((r) => r <= 2)) {
         if (rolledCount === 1) {
           gwfFloor = rolls[0];
           rolls = [3];

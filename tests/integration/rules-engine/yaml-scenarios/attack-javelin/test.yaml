@@ -44,12 +44,18 @@ steps:
               ranges:
                 default:
                   array:
+                    # Each band states whether it is a melee weapon attack: a
+                    # melee-only rider (Great Weapon Fighting) is gated on the
+                    # band, since the rules engine cannot see which one is picked.
                     - distance: 5
                       type: melee
+                      meleeAttack: true
                     - distance: 30
                       type: thrown
+                      meleeAttack: false
                     - distance: 120
                       type: thrown
+                      meleeAttack: false
                       disadvantage: true
 
   - addOffer:

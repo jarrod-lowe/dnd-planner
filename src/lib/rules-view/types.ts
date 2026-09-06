@@ -130,6 +130,13 @@ export interface RangeEntry {
   label?: string | MappedLabelSource;
   /** Override the damage die for this range (e.g., 8 for d8 when using two hands) */
   damageDie?: number;
+  /**
+   * Whether attacking in this band is a MELEE weapon attack (thrown bands: false).
+   * Gates riders that RAW only reach melee weapon attacks — Great Weapon
+   * Fighting's 1-2 → 3 damage floor — which are otherwise row-level signals the
+   * rules engine derives from facts without knowing which band is selected.
+   */
+  meleeAttack?: boolean;
 }
 
 export interface Source {

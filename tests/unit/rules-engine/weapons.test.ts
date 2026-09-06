@@ -184,3 +184,46 @@ describe("weapons — a versatile weapon's melee band names the grip", () => {
     expect(ranges.every((r) => r.label === undefined)).toBe(true);
   });
 });
+
+/**
+ * Whether a band is a MELEE weapon attack is a rule, so the engine states it on
+ * the band — the same way it pins a thrown band's damage die. Riders that RAW
+ * only reach melee weapon attacks (Great Weapon Fighting's 1-2 → 3 damage floor)
+ * are row-level signals: they are derived from facts and cannot see which band
+ * the row is currently cycled to, so the band has to carry the answer itself.
+ *
+ * Without this a spear gripped two-handed floored its THROWN damage too.
+ */
+describe('weapons — bands declare whether they are melee attacks', () => {
+  const bandsOf = (o: { vars?: Record<string, unknown> } | undefined) => {
+    const ranges = o?.vars?.ranges as
+      | { default?: { array?: Array<{ type: string; meleeAttack?: boolean }> } }
+      | undefined;
+    return ranges?.default?.array ?? [];
+  };
+
+  const spearBands = (configId: string) => {
+    const MODS = [actionEconomy, attacks, hands, loadout, spear];
+    const facts = evaluatePlan(MODS, {}, [equip('i0', MODS, configId)]).facts;
+    return bandsOf(evaluateOffers(MODS, facts).find((o) => o.id === 'spear-use-action'));
+  };
+
+  it('marks a two-handed spear’s melee band as a melee attack', () => {
+    const melee = spearBands('spear:2h').filter((r) => r.type === 'melee');
+    expect(melee).toHaveLength(1);
+    expect(melee[0].meleeAttack).toBe(true);
+  });
+
+  it('marks a two-handed spear’s thrown bands as NOT melee attacks', () => {
+    const thrown = spearBands('spear:2h').filter((r) => r.type === 'thrown');
+    expect(thrown.length).toBeGreaterThan(0);
+    expect(thrown.every((r) => r.meleeAttack === false)).toBe(true);
+  });
+
+  it('marks a one-grip melee weapon’s band as a melee attack', () => {
+    const facts = evaluatePlan(ALL, {}, [equip('i0', ALL, 'greataxe')]).facts;
+    const bands = bandsOf(evaluateOffers(ALL, facts).find((o) => o.id === 'greataxe-use-action'));
+    expect(bands.length).toBeGreaterThan(0);
+    expect(bands.every((r) => r.meleeAttack === true)).toBe(true);
+  });
+});

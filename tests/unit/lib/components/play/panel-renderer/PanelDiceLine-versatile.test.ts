@@ -269,7 +269,9 @@ describe('PanelRenderer - versatile weapon (spear)', () => {
     const { container } = render(PanelDiceLine, {
       props: { control, editable: true, facts: {}, vars, gwfActive: false }
     });
-    // Cycle to thrown range (20ft) — PanelRenderer sets gwfActive=false for thrown
+    // Cycle to thrown range (20ft). `gwfActive` is row-level and false here; a
+    // thrown band is additionally barred by its own `meleeAttack: false` — see
+    // PanelDiceLine-gwf.test.ts for the case where the row-level signal is TRUE.
     const rangeEl = container.querySelector('.panel-renderer__range') as HTMLElement;
     await fireEvent.click(rangeEl); // -> 2H
     await fireEvent.click(rangeEl); // -> 20ft thrown

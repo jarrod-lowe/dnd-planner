@@ -90,7 +90,18 @@ const createSpearEntry = (): AvailableRuleEntry => ({
       }
     },
     vars: {
-      ranges: { default: { array: [{ distance: 5, type: 'melee' }] } },
+      // The bands the builder emits for a versatile+thrown weapon: one melee band
+      // (die follows the grip) and two thrown bands pinned to the one-handed die
+      // and flagged as NOT melee attacks.
+      ranges: {
+        default: {
+          array: [
+            { distance: 5, type: 'melee', meleeAttack: true },
+            { distance: 20, type: 'thrown', damageDie: 6, meleeAttack: false },
+            { distance: 60, type: 'thrown', disadvantage: true, damageDie: 6, meleeAttack: false }
+          ]
+        }
+      },
       hitBonus: { default: { number: 5 } },
       damageDie: { default: { number: 8 } },
       damageBonus: { default: { number: 3 } }
@@ -244,6 +255,60 @@ describe('PanelRenderer - GWF follows the annotation targets, not the panel', ()
     expect(result.gwfFloor).toBeUndefined();
     expect(result.natural).toBe(1);
     expect(container.textContent).not.toContain(ANNOTATION);
+  });
+
+  it('does NOT floor a thrown band, even while the row-level rider is active', async () => {
+    // The rider is row-level: the rule sees the two-handed grip and says yes for
+    // the ROW. Throwing the spear is a ranged weapon attack, so the floor must not
+    // reach it — the band says so itself (`meleeAttack: false`) and the panel
+    // honours the band rather than re-deciding the rule.
+    const onRoll = vi.fn();
+    vi.spyOn(Math, 'random').mockReturnValue(0); // rolls a 1 on the pinned d6
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: createSpearEntry(),
+        editable: true,
+        facts: {},
+        onRoll,
+        activeAnnotations: [gwfAnnotation]
+      }
+    });
+    // Cycle the band: melee 5ft -> thrown 20ft.
+    await fireEvent.click(container.querySelector('.panel-renderer__range') as HTMLElement);
+    await fireEvent.click(container.querySelectorAll('.panel-renderer__die-chip')[1]);
+
+    const [result] = onRoll.mock.calls[0];
+    expect(result.sides).toBe(6); // the thrown band pins the one-handed die
+    expect(result.gwfFloor).toBeUndefined();
+    expect(result.natural).toBe(1);
+    expect(result.total).toBe(4); // 1 + 3 bonus, unfloored
+  });
+
+  it('keeps flooring the melee band of the same weapon after cycling back', async () => {
+    // Guards the fix against "just switch GWF off for versatile weapons": the
+    // melee band of the very row that must not floor when thrown still floors.
+    const onRoll = vi.fn();
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: createSpearEntry(),
+        editable: true,
+        facts: {},
+        onRoll,
+        activeAnnotations: [gwfAnnotation]
+      }
+    });
+    const rangeEl = container.querySelector('.panel-renderer__range') as HTMLElement;
+    await fireEvent.click(rangeEl); // -> 20ft thrown
+    await fireEvent.click(rangeEl); // -> 60ft thrown
+    await fireEvent.click(rangeEl); // -> back to 5ft melee
+    await fireEvent.click(container.querySelectorAll('.panel-renderer__die-chip')[1]);
+
+    const [result] = onRoll.mock.calls[0];
+    expect(result.sides).toBe(8); // two-handed die on the melee band
+    expect(result.gwfFloor).toBe(1);
+    expect(result.natural).toBe(3);
+    expect(result.total).toBe(6);
   });
 
   it('still floors a greataxe when only property.twoHanded is targeted', async () => {

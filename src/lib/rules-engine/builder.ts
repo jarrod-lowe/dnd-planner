@@ -236,6 +236,18 @@ export interface WeaponRange {
    * you swing with, not what you throw.
    */
   damageDie?: number;
+  /**
+   * Whether attacking in this band is a MELEE weapon attack. Set by
+   * {@link rangesFor} for every band (melee bands true, thrown bands false), so a
+   * rider that RAW only reaches melee weapon attacks — Great Weapon Fighting's
+   * 1-2 → 3 damage floor — can be gated on the band the row is cycled to.
+   *
+   * It has to be stated on the BAND, not left to the rider's own annotation:
+   * annotations are derived from facts for the whole row, and the selected band
+   * is per-row UI state the engine never sees. Without this a spear gripped
+   * two-handed floored its thrown damage as well as its melee damage.
+   */
+  meleeAttack?: boolean;
   disadvantage?: boolean;
 }
 
@@ -306,17 +318,25 @@ function gripLabel(def: WeaponDef): MappedLabelSource {
 }
 
 /**
- * The dice-line bands for a weapon. A versatile weapon's grip lives in the
- * LOADOUT, not in the attack, so its melee band carries no die of its own (it
- * follows the `damageDie` var, which follows the grip fact) and instead names the
- * grip, while its thrown bands pin the one-handed die and stay unlabelled — the
- * grip changes what you swing with, not what you throw.
+ * The dice-line bands for a weapon. Every band states whether it is a melee
+ * weapon attack (`meleeAttack`), which is what melee-only riders are gated on —
+ * the dice line knows which band it is cycled to, the rules engine does not.
+ *
+ * A versatile weapon's grip lives in the LOADOUT, not in the attack, so its melee
+ * band carries no die of its own (it follows the `damageDie` var, which follows
+ * the grip fact) and instead names the grip, while its thrown bands pin the
+ * one-handed die and stay unlabelled — the grip changes what you swing with, not
+ * what you throw. For the same reason a thrown band is never a melee attack: a
+ * two-handed grip earns Great Weapon Fighting on the swing, not on the throw.
  */
 function rangesFor(def: WeaponDef): WeaponRange[] {
-  if (!isVersatile(def)) return def.ranges;
-  return def.ranges.map((r) =>
-    r.type === 'thrown' ? { ...r, damageDie: def.damageDie } : { ...r, label: gripLabel(def) }
-  );
+  return def.ranges.map((r) => {
+    const band: WeaponRange = { ...r, meleeAttack: r.type === 'melee' };
+    if (!isVersatile(def)) return band;
+    return r.type === 'thrown'
+      ? { ...band, damageDie: def.damageDie }
+      : { ...band, label: gripLabel(def) };
+  });
 }
 
 /**
