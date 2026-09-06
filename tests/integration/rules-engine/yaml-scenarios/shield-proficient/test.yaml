@@ -1,6 +1,8 @@
 name: 'Shield Proficient'
 description: 'No warning or disadvantages when proficient with shields'
 ruleGroups:
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
   - dnd-5e-2024/ac
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/shield
@@ -22,9 +24,22 @@ steps:
           armor.shield.proficient: 1
         offers:
           exists:
-            - don-shield
+            - set-loadout
   - addOffer:
-      id: don-shield
+      id: set-loadout
+      selections:
+        loadout:
+          id: shield
+          hands: 1
+          handsFree: 1
+          items:
+            - id: shield
+              nameKey: rule.dnd-5e-2024.shield.effect-shield.name
+              hands: 1
+              twoHanded: false
+              state:
+                armor.shield.equipped: 1
+                ac.shieldBonus: 2
       assert:
         facts:
           ac.shieldBonus: 2
@@ -33,3 +48,9 @@ steps:
           attack.str.disadvantage: 0
           attack.dex.disadvantage: 0
           skill.stealth.disadvantage: 0
+        planErrors:
+          - id: set-loadout
+            errors: []
+        offers:
+          legal:
+            - set-loadout

@@ -1,0 +1,94 @@
+name: 'Spear 2H Excludes A Second Weapon'
+description: >
+  The versatile grip used to be a per-attack `extraHands` selection that errored
+  at attack time when no hand was free. It is part of the loadout now, so the
+  error is structurally unreachable: the two-handed grip costs the second hand at
+  equip time, which means the dagger simply cannot be held alongside it. Held
+  one-handed, the spear leaves room for the dagger and both attacks are clean.
+
+ruleGroups:
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spear
+  - dnd-5e-2024/dagger
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          hands.remaining: 2
+        offers:
+          exists:
+            - set-loadout
+
+  # One-handed spear + dagger: two one-handed items, both weapons held, no error.
+  - addOffer:
+      id: set-loadout
+      selections:
+        loadout:
+          id: dagger+spear
+          hands: 2
+          handsFree: 0
+          items:
+            - id: dagger
+              nameKey: rule.dnd-5e-2024.attacks.dagger.name
+              hands: 1
+              twoHanded: false
+              state:
+                weapon.dagger.equipped: 1
+            - id: spear
+              nameKey: rule.dnd-5e-2024.attacks.spear.name
+              hands: 1
+              twoHanded: false
+              gripKey: rule.dnd-5e-2024.loadout.grip.one-handed
+              state:
+                weapon.spear.equipped: 1
+      assert:
+        facts:
+          hands.remaining: 0
+          weapon.dagger.equipped: 1
+          weapon.spear.equipped: 1
+          weapon.spear.twoHanded: 0
+        offers:
+          exists:
+            - spear-use-action
+            - dagger-use-action
+
+  # Gripping the spear two-handed takes the dagger's hand, so the dagger is no
+  # longer held at all — and the spear attack is still error-free.
+  - updateSelections:
+      id: set-loadout
+      selections:
+        loadout:
+          id: spear:2h
+          hands: 2
+          handsFree: 0
+          items:
+            - id: spear
+              nameKey: rule.dnd-5e-2024.attacks.spear.name
+              hands: 2
+              twoHanded: true
+              gripKey: rule.dnd-5e-2024.loadout.grip.two-handed
+              state:
+                weapon.spear.equipped: 1
+                weapon.spear.twoHanded: 1
+      assert:
+        facts:
+          hands.remaining: 0
+          weapon.spear.equipped: 1
+          weapon.spear.twoHanded: 1
+          weapon.dagger.equipped: 0
+        planErrors:
+          - id: set-loadout
+            errors: []
+        offers:
+          exists:
+            - spear-use-action
+          notExists:
+            - dagger-use-action

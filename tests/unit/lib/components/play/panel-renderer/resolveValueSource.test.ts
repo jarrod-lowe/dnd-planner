@@ -161,6 +161,49 @@ describe('resolveValueSource', () => {
     });
   });
 
+  describe('map', () => {
+    const GRIP = {
+      fact: 'weapon.spear.twoHanded',
+      map: {
+        0: 'rule.dnd-5e-2024.loadout.grip.one-handed',
+        1: 'rule.dnd-5e-2024.loadout.grip.two-handed'
+      }
+    };
+
+    it('maps a fact value onto the matching string', () => {
+      expect(resolveValueSource(GRIP, { 'weapon.spear.twoHanded': 1 }, {})).toBe(
+        'rule.dnd-5e-2024.loadout.grip.two-handed'
+      );
+      expect(resolveValueSource(GRIP, { 'weapon.spear.twoHanded': 0 }, {})).toBe(
+        'rule.dnd-5e-2024.loadout.grip.one-handed'
+      );
+    });
+
+    it('maps an UNSET fact as 0 — the engine reads an absent numeric fact as zero', () => {
+      // `weapon.<id>.twoHanded` is only written by a two-handed loadout, so the
+      // one-handed grip is the absence of the fact, not a fact set to 0.
+      expect(resolveValueSource(GRIP, {}, {})).toBe('rule.dnd-5e-2024.loadout.grip.one-handed');
+    });
+
+    it('maps a var selection too, not just a fact', () => {
+      const source = { var: 'grip', map: { 0: 'one', 1: 'two' } };
+      expect(
+        resolveValueSource(source, {}, { grip: { default: { number: 0 } } }, { grip: 1 })
+      ).toBe('two');
+    });
+
+    it('returns undefined when nothing in the map matches', () => {
+      expect(
+        resolveValueSource({ fact: 'weapon.spear.twoHanded', map: { 1: 'two' } }, {}, {})
+      ).toBeUndefined();
+    });
+
+    it('leaves sources without a map untouched', () => {
+      expect(resolveValueSource({ fact: 'weapon.spear.twoHanded' }, {}, {})).toBeUndefined();
+      expect(resolveValueSource({ number: 1 }, {}, {})).toBe(1);
+    });
+  });
+
   it('ignores scale and offset on non-numeric values', () => {
     const result = resolveValueSource({ string: 'hello', scale: 5, offset: -3 }, {}, {});
     expect(result).toBe('hello');

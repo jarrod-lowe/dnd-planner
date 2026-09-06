@@ -1,0 +1,34 @@
+name: 'Weapon Loadout Offer'
+description: >
+  The per-weapon don offers are gone. A character with a weapon assigned and
+  nothing in hand gets ONE equip offer — set-loadout — and it is legal, because
+  every hand configuration (including empty hands) is reached through it.
+
+ruleGroups:
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/dagger
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          weapon.dagger.equipped: 0
+          hands.remaining: 2
+        offers:
+          legal:
+            - set-loadout
+          notExists:
+            - don-dagger
+        offerUi:
+          - id: set-loadout
+            ui:
+              section: equip
+              actionCost:
+                - free

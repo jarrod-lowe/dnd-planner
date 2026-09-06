@@ -11,11 +11,13 @@
   import PanelSelect from './panel-renderer/PanelSelect.svelte';
   import PanelTextInput from './panel-renderer/PanelTextInput.svelte';
   import PanelSegmented from './panel-renderer/PanelSegmented.svelte';
+  import PanelLoadout from './panel-renderer/PanelLoadout.svelte';
   import DiceRollToast from './panel-renderer/DiceRollToast.svelte';
   import { evaluateCondition } from '$lib/play/panelCondition';
   import { getMatchingAnnotations } from '$lib/play/annotations';
   import type { AvailableRuleEntry, Facts, Annotation, RiderValue } from '$lib/rules-view';
   import type { EffectInstance } from '$lib/rules-engine';
+  import type { RuleModule } from '$lib/rules-engine/types';
   import type {
     TextInformation,
     CountdownInformation,
@@ -28,6 +30,12 @@
     editable?: boolean;
     onTap?: () => void;
     facts?: Facts;
+    /**
+     * The character's resolved modules. Only the loadout control needs them:
+     * its rows are enumerated from the items the character actually has, so
+     * they cannot be authored into the offer.
+     */
+    modules?: RuleModule[];
     selections?: Record<string, unknown>;
     activeAnnotations?: Annotation[];
     onSelectionChange?: (selections: Record<string, unknown>) => void;
@@ -46,6 +54,7 @@
     editable = false,
     onTap,
     facts = {},
+    modules = [],
     selections = {},
     activeAnnotations = [],
     onSelectionChange,
@@ -107,6 +116,9 @@
   );
   const primaryTextInput = $derived(
     descriptor.primaryControl?.type === 'text' ? descriptor.primaryControl : undefined
+  );
+  const primaryLoadout = $derived(
+    descriptor.primaryControl?.type === 'loadout' ? descriptor.primaryControl : undefined
   );
   const secondarySlider = $derived(
     descriptor.secondaryControl?.type === 'slider' ? descriptor.secondaryControl : undefined
@@ -216,20 +228,13 @@
 
   const gwfRiderLabel = 'rule.dnd-5e-2024.fighting-style-great-weapon.rider';
 
+  // Whether Great Weapon Fighting applies to THIS panel is settled upstream: the
+  // rule targets `property.versatile` only while the loadout grips two-handed, so a
+  // one-handed spear's panel never matches the annotation in the first place. This
+  // used to re-decide it here from a per-attack `extraHands` selection — which the
+  // loadout change stopped writing, silently killing GWF for every versatile
+  // weapon. Deciding which grip earns the reroll is a rule; the panel only renders.
   const gwfActive = $derived(matchingAnnotations.some((ann) => ann.rider?.label === gwfRiderLabel));
-
-  // For versatile weapons, GWF only applies when 2H range is selected (extraHands > 0).
-  // Gate both the gwfActive prop and the displayed annotations.
-  const isVersatileWeapon = $derived(annotationLabels.includes('property.versatile'));
-  const selectionExtraHands = $derived((selections?.extraHands as number) ?? 0);
-  const effectiveGwfActive = $derived(gwfActive && (!isVersatileWeapon || selectionExtraHands > 0));
-
-  // Filter out GWF annotation when versatile weapon is not in 2H mode
-  const displayAnnotations = $derived(
-    effectiveGwfActive
-      ? matchingAnnotations
-      : matchingAnnotations.filter((ann) => ann.rider?.label !== gwfRiderLabel)
-  );
 
   // Resolves a rider's numeric contribution. Only the `flat` kind exists today;
   // `dice` and `floor` are filed follow-ups. An unrecognised kind resolves to
@@ -247,15 +252,15 @@
   // also appear as a static text chip or in the toast's rider list — it would
   // show twice, and the static copy would still read as present after the
   // toggle is switched off. Everything downstream of the dice line uses this
-  // list rather than displayAnnotations.
+  // list rather than matchingAnnotations.
   const informationalAnnotations = $derived(
-    displayAnnotations.filter((ann) => ann.rider?.value === undefined)
+    matchingAnnotations.filter((ann) => ann.rider?.value === undefined)
   );
 
   // Annotations whose rider carries a value become toggleable chips on the dice
   // line; valueless riders stay the text chips they have always been.
   const rollModifiers = $derived<RollModifier[]>(
-    displayAnnotations
+    matchingAnnotations
       .filter((ann) => ann.rider?.value !== undefined && ann.rider?.appliesTo !== undefined)
       .map((ann): RollModifier | undefined => {
         const value = resolveRiderValue(ann.rider!.value!);
@@ -364,7 +369,7 @@
         {selections}
         {onSelectionChange}
         onRoll={handleDiceRoll}
-        gwfActive={effectiveGwfActive}
+        {gwfActive}
         modifiers={rollModifiers}
       />
     </div>
@@ -407,6 +412,17 @@
       />
     </div>
   {/if}
+  {#if primaryLoadout}
+    <div class="panel-renderer__control">
+      <PanelLoadout
+        control={primaryLoadout}
+        {editable}
+        {modules}
+        {selections}
+        {onSelectionChange}
+      />
+    </div>
+  {/if}
   {#if secondaryShowEnableButton}
     <div class="panel-renderer__control panel-renderer__control--secondary">
       <button
@@ -442,7 +458,7 @@
         {selections}
         {onSelectionChange}
         onRoll={handleDiceRoll}
-        gwfActive={effectiveGwfActive}
+        {gwfActive}
         modifiers={rollModifiers}
       />
     </div>

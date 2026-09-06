@@ -84,6 +84,18 @@ export interface ValueSource {
   min?: number;
   /** Clamp the final numeric result to at most this value (applied after scale+offset). */
   max?: number;
+  /**
+   * Maps the resolved value onto a string — an i18n key, in every use so far — so
+   * a label can FOLLOW a fact rather than being fixed when the offer is built.
+   * Offer `vars` are static (built with no facts), so this is the only way a
+   * versatile weapon's melee band can say which grip the loadout put it in.
+   *
+   * Looked up by the value's string form, with an unset source read as `0`: an
+   * absent numeric fact is zero everywhere else in the engine (`f.num`), and a
+   * grip fact is only written for the two-handed grip. No match (and no `0`
+   * entry) resolves to undefined, so the caller renders nothing.
+   */
+  map?: Record<string, string>;
 }
 
 export interface DiceEntry {
@@ -205,13 +217,28 @@ export interface TextInputControl extends ControlBase {
   multiline?: boolean;
 }
 
+/**
+ * The hand-configuration picker (`set-loadout`).
+ *
+ * Carries no options: the legal configurations are not authorable, they are
+ * enumerated from the modules the character has assigned (`enumerateLoadouts`).
+ * The selection written to `var` is the whole `LoadoutConfig` object, not a
+ * number — which is why {@link SelectControl} (numeric values, `String(v)`
+ * labels) cannot serve here.
+ */
+export interface LoadoutControl extends ControlBase {
+  type: 'loadout';
+  var: string;
+}
+
 export type Control =
   | DiceLineControl
   | HitDiceControl
   | SliderControl
   | SelectControl
   | TextInputControl
-  | SegmentedControl;
+  | SegmentedControl
+  | LoadoutControl;
 
 export interface TextInformation {
   type: 'text';

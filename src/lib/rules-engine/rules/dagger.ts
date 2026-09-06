@@ -1,4 +1,4 @@
-import { defineRule, weaponOffers, type RuleModule, type WeaponDef } from '../builder';
+import { defineRule, weaponEquip, weaponOffers, type RuleModule, type WeaponDef } from '../builder';
 
 const P = 'rule.dnd-5e-2024.attacks.dagger';
 
@@ -27,11 +27,12 @@ const DAGGER: WeaponDef = {
  */
 const dagger: RuleModule = {
   id: 'dagger',
+  equip: weaponEquip(DAGGER),
   meta: {
     name: `${P}.name`,
     description: `${P}.description`,
     keywords: `${P}.keywords`,
-    requires: ['attacks', 'hands']
+    requires: ['attacks', 'hands', 'loadout']
   },
   derive: () => [
     {

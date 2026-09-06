@@ -15,11 +15,14 @@
   import type { PlannedItem } from '$lib/play/types';
   import type { AvailableRuleEntry, Annotation, Facts, ActionCostTag } from '$lib/rules-view';
   import type { EffectInstance } from '$lib/rules-engine';
+  import type { RuleModule } from '$lib/rules-engine/types';
 
   interface Props {
     item: PlannedItem;
     entry: AvailableRuleEntry;
     facts: Facts;
+    /** The character's resolved modules — only the loadout control reads them. */
+    modules?: RuleModule[];
     activeAnnotations: Annotation[];
     alternatives?: AvailableRuleEntry[];
     canMoveUp?: boolean;
@@ -36,6 +39,7 @@
     item,
     entry,
     facts,
+    modules = [],
     activeAnnotations,
     alternatives = [],
     canMoveUp = true,
@@ -363,6 +367,7 @@
         {entry}
         editable={true}
         {facts}
+        {modules}
         selections={item.rule.selections}
         {activeAnnotations}
         {onSelectionChange}

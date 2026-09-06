@@ -1,16 +1,52 @@
 name: 'Shield Not Proficient Warning'
-description: 'Don shield is illegal with warning when not proficient, no disadvantages applied'
+description: >
+  Holding a shield you are not trained with warns rather than blocks: the loadout
+  still applies (the shield is held and the +2 AC lands), the planned row carries
+  a warning-severity diagnostic, and the catalog row reads illegal-but-visible so
+  the strip shows why.
 ruleGroups:
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
   - dnd-5e-2024/ac
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/shield
 initialFacts:
   armor.shield.proficient: 0
 steps:
+  # Nothing held: no shield, so nothing to warn about.
   - evaluate:
       assert:
         facts:
           ac.value: 10
         offers:
+          legal:
+            - set-loadout
+
+  - addOffer:
+      id: set-loadout
+      selections:
+        loadout:
+          id: shield
+          hands: 1
+          handsFree: 1
+          items:
+            - id: shield
+              nameKey: rule.dnd-5e-2024.shield.effect-shield.name
+              hands: 1
+              twoHanded: false
+              state:
+                armor.shield.equipped: 1
+                ac.shieldBonus: 2
+      assert:
+        facts:
+          armor.shield.equipped: 1
+          ac.shieldBonus: 2
+          ac.value: 12
+          hands.remaining: 1
+        planErrors:
+          - id: set-loadout
+            errors:
+              - rule.dnd-5e-2024.loadout.set-loadout-offer.not-proficient
+        offers:
           illegal:
-            - don-shield
+            - set-loadout

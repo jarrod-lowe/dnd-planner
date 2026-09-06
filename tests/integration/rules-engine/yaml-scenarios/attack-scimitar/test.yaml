@@ -46,6 +46,7 @@ steps:
                   array:
                     - distance: 5
                       type: melee
+                      meleeAttack: true
 
   - addOffer:
       id: set-strength

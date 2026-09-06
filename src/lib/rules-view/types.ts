@@ -1,6 +1,6 @@
 // === PRIMITIVES ===
 
-import type { EffectInstance } from '$lib/rules-engine';
+import type { EffectInstance, MappedLabelSource } from '$lib/rules-engine';
 
 /**
  * Intent verb for UI grouping. Determines which picker group a rule appears under,
@@ -122,12 +122,21 @@ export interface RangeEntry {
   distance: number;
   type: string;
   disadvantage?: boolean;
-  /** Display label appended to range (e.g., "1H", "2H" for versatile weapons) */
-  label?: string;
+  /**
+   * i18n KEY for a label appended to the range (e.g. "5ft Two-handed"). Either a
+   * fixed key, or a {@link MappedLabelSource} that picks the key from a fact — how
+   * a versatile weapon's melee band names the grip the loadout set.
+   */
+  label?: string | MappedLabelSource;
   /** Override the damage die for this range (e.g., 8 for d8 when using two hands) */
   damageDie?: number;
-  /** Additional free hands required beyond what the weapon already consumes */
-  extraHands?: number;
+  /**
+   * Whether attacking in this band is a MELEE weapon attack (thrown bands: false).
+   * Gates riders that RAW only reach melee weapon attacks — Great Weapon
+   * Fighting's 1-2 → 3 damage floor — which are otherwise row-level signals the
+   * rules engine derives from facts without knowing which band is selected.
+   */
+  meleeAttack?: boolean;
 }
 
 export interface Source {

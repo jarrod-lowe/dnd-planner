@@ -1,9 +1,12 @@
 name: 'Hands - Shield Uses 1 Hand'
 description: >
-  Donning a shield decrements hands.remaining by 1.
+  A loadout holding a shield spends 1 of the 2 hands, leaving one free — a free
+  hand is load-bearing (somatic components, Grapple, Lay on Hands), so the
+  remaining count is the point.
 
 ruleGroups:
   - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
   - dnd-5e-2024/ac
   - dnd-5e-2024/shield
 
@@ -15,9 +18,22 @@ steps:
           hands.remaining: 2
         offers:
           exists:
-            - don-shield
+            - set-loadout
   - addOffer:
-      id: don-shield
+      id: set-loadout
+      selections:
+        loadout:
+          id: shield
+          hands: 1
+          handsFree: 1
+          items:
+            - id: shield
+              nameKey: rule.dnd-5e-2024.shield.effect-shield.name
+              hands: 1
+              twoHanded: false
+              state:
+                armor.shield.equipped: 1
+                ac.shieldBonus: 2
       assert:
         facts:
           armor.shield.equipped: 1

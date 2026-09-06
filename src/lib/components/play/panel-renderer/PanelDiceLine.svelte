@@ -4,7 +4,14 @@
   import DamageTypeIcon from './DamageTypeIcon.svelte';
   import DieChip from './DieChip.svelte';
   import { nextDiceLineId } from './diceLineId';
-  import type { CritMode, DiceLineControl, DiceEntry, RollModifier, RollResult } from './types';
+  import type {
+    CritMode,
+    DiceLineControl,
+    DiceEntry,
+    RollModifier,
+    RollResult,
+    ValueSource
+  } from './types';
   import type { Facts, VarDefinition } from '$lib/rules-view';
   import { t } from '$lib/i18n';
 
@@ -44,9 +51,20 @@
     distance: number;
     type: string;
     disadvantage?: boolean;
-    label?: string;
+    /**
+     * i18n KEY, never display text. A ValueSource picks the key from a fact at
+     * render time — how a versatile weapon's melee band names the grip the
+     * loadout set, which the attack itself no longer chooses.
+     */
+    label?: string | ValueSource;
     damageDie?: number;
-    extraHands?: number;
+    /**
+     * Whether attacking in this band is a melee weapon attack — the engine states
+     * it on every weapon band (thrown bands are false). Gates the melee-only
+     * riders below; absent means "no band data says otherwise", so a line that
+     * carries no bands at all behaves exactly as it did before.
+     */
+    meleeAttack?: boolean;
   }
 
   let rangeIndex = $state(
@@ -105,6 +123,13 @@
     ranges && ranges.length > 0 ? ranges[rangeIndex % ranges.length] : undefined
   );
 
+  // Great Weapon Fighting floors a MELEE weapon attack's damage die. `gwfActive`
+  // is row-level — the rule derives it from facts (the loadout's grip) and cannot
+  // see which band this row is cycled to — so the band itself says whether it is a
+  // melee attack, exactly as it says which damage die it uses. Deciding that a
+  // thrown band is ranged is the engine's job; the panel only honours the data.
+  const meleeBand = $derived(currentRange?.meleeAttack !== false);
+
   const rulesDisadvantage = $derived(
     control.advantage ? !!resolveValueSource(control.advantage, facts, vars, selections) : false
   );
@@ -143,18 +168,30 @@
   function handleRangeTap(): void {
     if (!editable || !ranges || ranges.length <= 1) return;
     rangeIndex = (rangeIndex + 1) % ranges.length;
-    const range = ranges[rangeIndex];
-    if (_onSelectionChange) {
-      _onSelectionChange({
-        rangeIndex,
-        extraHands: range?.extraHands ?? 0
-      });
-    }
+    _onSelectionChange?.({ rangeIndex });
   }
 
+  /**
+   * A band's TRANSLATED label. Whatever a band carries is an i18n key — a fixed
+   * one, or a mapping ValueSource that picks the key from a fact (a versatile
+   * weapon's grip: the loadout fixes it, so the row has to state it). This used to
+   * render the label raw, which is why the old cosmetic `1H`/`2H` labels had to go.
+   */
+  function rangeLabel(range: RangeEntry | undefined): string | undefined {
+    const label = range?.label;
+    if (label === undefined) return undefined;
+    const key =
+      typeof label === 'string'
+        ? label
+        : (resolveValueSource(label, facts, vars, selections) as string | undefined);
+    return key ? $t(key) : undefined;
+  }
+
+  const currentRangeLabel = $derived(rangeLabel(currentRange));
+
   function formatRangeText(range: RangeEntry): string {
-    if (range.label) return `${range.distance}ft ${range.label}`;
-    return `${range.distance}ft`;
+    const label = rangeLabel(range);
+    return label ? `${range.distance}ft ${label}` : `${range.distance}ft`;
   }
 
   // The chip must read as the roll you are ABOUT to make, so active modifiers are
@@ -214,13 +251,19 @@
 
   /**
    * Accessible name for a die chip. Leads with the roll's purpose label (e.g.
-   * "To-Hit") when authored, followed by any cosmetic label, then the chip text.
-   * Returns undefined when there is nothing to prefix so the button falls back
-   * to its text content as the accessible name.
+   * "To-Hit") when authored, then the current band's label, then any cosmetic
+   * label, then the chip text. Returns undefined when there is nothing to prefix
+   * so the button falls back to its text content as the accessible name.
+   *
+   * The band's label is in here — not left to the sibling range text — because it
+   * is what the roll IS: a versatile weapon's chip reads d6 or d8 with nothing
+   * else naming the grip, and a screen-reader user moving chip to chip would never
+   * meet the range button.
    */
   function dieAriaLabel(die: DiceEntry, dieIndex: number): string | undefined {
     const prefix = [
       die.purpose ? $t(rollTypeKey(die.purpose)) : undefined,
+      currentRangeLabel,
       die.label ? $t(die.label) : undefined,
       rollResults[dieIndex]?.critical ? $t('play.choices.attack.critical') : undefined
     ]
@@ -309,7 +352,9 @@
       // counts as 3, floored before summing so crits and other multi-die rolls
       // total correctly. Single-die keeps the (orig | 3) toast format via
       // gwfFloor; multi-die stores the floored rolls for the breakdown.
-      if (gwfActive && die.damageType && sides > 2 && rolls.some((r) => r <= 2)) {
+      // `meleeBand` keeps it off a thrown band — GWF is melee-only, and the
+      // row-level `gwfActive` cannot know which band is selected.
+      if (gwfActive && meleeBand && die.damageType && sides > 2 && rolls.some((r) => r <= 2)) {
         if (rolledCount === 1) {
           gwfFloor = rolls[0];
           rolls = [3];

@@ -3,11 +3,22 @@ import type {
   Contribution,
   Diagnostic,
   EffectInstance,
+  EquipDef,
   FactReader,
   LegalWhen,
+  MappedLabelSource,
   Offer,
   RuleModule
 } from './types';
+import {
+  GRIP_ONE_HANDED,
+  GRIP_TWO_HANDED,
+  LOADOUT_HANDS_SPENT,
+  loadoutEffectState,
+  MAX_HANDS,
+  type LoadoutConfig,
+  type LoadoutItem
+} from './loadout';
 
 /** Pure, deterministic helpers that are part of the authoring toolkit. */
 export { statToModifier } from './functions';
@@ -193,7 +204,7 @@ export function preparedSpellCount(opts: {
 // === Weapons ===
 //
 // The legacy engine generated a weapon's rules by a Python preprocessor that crossed weapon
-// *definitions* (dagger, greataxe, …) with reusable *profiles* (don, use as an
+// *definitions* (dagger, greataxe, …) with reusable *profiles* (use as an
 // action / reaction / bonus-action) into per-weapon rule groups. Here a weapon
 // is one self-contained module whose `offer` calls `weaponOffers(def)` — the
 // cross-product is a plain function over data, so the preprocessor's job (and the
@@ -201,23 +212,42 @@ export function preparedSpellCount(opts: {
 // template literals here. The shared i18n prefix is unchanged.
 
 const ATTACKS = 'rule.dnd-5e-2024.attacks';
-const WEAPON_DON = 'rule.dnd-5e-2024.weapon-don';
 const NO_ACTION = `${ATTACKS}.activation.no_action`;
 const NO_REACTION = `${ATTACKS}.activation.no_reaction`;
 const NO_BONUS_ACTION = `${ATTACKS}.activation.no_bonus_action`;
-const VERSATILE_NO_FREE_HAND = `${ATTACKS}.versatile.no-free-hand`;
 
-/** A versatile weapon has a two-handed band that costs an extra hand. */
-const isVersatile = (def: WeaponDef): boolean => def.ranges.some((r) => (r.extraHands ?? 0) > 0);
+/** A versatile weapon may be gripped two-handed for a bigger damage die. */
+const isVersatile = (def: WeaponDef): boolean => def.versatile === true;
 // BUILD_LOCKED is declared above (shared with the prepared-spell offers).
 
 /** One reach/throw band shown on a weapon's dice line. */
 export interface WeaponRange {
   distance: number;
   type: 'melee' | 'thrown';
-  label?: string;
+  /**
+   * i18n KEY appended to the distance ("5ft Two-handed"). A `MappedLabelSource`
+   * picks the key from a fact at render time — see {@link gripLabel}. Never
+   * display text: the dice line translates whatever lands here.
+   */
+  label?: string | MappedLabelSource;
+  /**
+   * Pins this band's damage die, overriding the `damageDie` var. Used to hold a
+   * versatile weapon's THROWN bands at the one-handed die: the grip changes what
+   * you swing with, not what you throw.
+   */
   damageDie?: number;
-  extraHands?: number;
+  /**
+   * Whether attacking in this band is a MELEE weapon attack. Set by
+   * {@link rangesFor} for every band (melee bands true, thrown bands false), so a
+   * rider that RAW only reaches melee weapon attacks — Great Weapon Fighting's
+   * 1-2 → 3 damage floor — can be gated on the band the row is cycled to.
+   *
+   * It has to be stated on the BAND, not left to the rider's own annotation:
+   * annotations are derived from facts for the whole row, and the selected band
+   * is per-row UI state the engine never sees. Without this a spear gripped
+   * two-handed floored its thrown damage as well as its melee damage.
+   */
+  meleeAttack?: boolean;
   disadvantage?: boolean;
 }
 
@@ -225,8 +255,12 @@ export interface WeaponRange {
 export interface WeaponDef {
   /** Weapon id; drives offer ids, `attack.<id>.*` / `weapon.<id>.*` facts, i18n. */
   id: string;
-  /** Hands needed to wield (1 or 2) — the don's hands-budget cost. */
-  hands: number;
+  /** Hands needed to wield (1 or 2) — the loadout's hands-budget cost. */
+  hands: 1 | 2;
+  /** Versatile: it may also be gripped two-handed, for `versatileDamageDie`. */
+  versatile?: boolean;
+  /** Damage die size when gripped two-handed (versatile weapons only). */
+  versatileDamageDie?: number;
   /** Light property → adds the off-hand bonus-action swing offer. */
   light?: boolean;
   /** Damage die size, e.g. 4 for 1d4. */
@@ -243,6 +277,25 @@ export interface WeaponDef {
   actionUiExtra?: Record<string, unknown>;
 }
 
+/**
+ * The weapon's hand-slot declaration — what the loadout enumerator reads to offer
+ * it as part of a hand configuration. Derived from the same `def` as the offers so
+ * the two can never disagree on hands or grip. Every weapon is `stackable`: a
+ * second copy may fill the other hand (the hands budget still bounds it, so a
+ * two-handed weapon is unreachable in pairs).
+ */
+export function weaponEquip(def: WeaponDef): EquipDef {
+  return {
+    hands: def.hands,
+    stackable: true,
+    nameKey: `${ATTACKS}.${def.id}.name`,
+    state: { [`weapon.${def.id}.equipped`]: 1 },
+    ...(isVersatile(def)
+      ? { versatile: true, twoHandedState: { [`weapon.${def.id}.twoHanded`]: 1 } }
+      : {})
+  };
+}
+
 /** A per-turn spend effect: the given fact deltas, expiring at end of turn. */
 const turnSpend = (state: Record<string, number>): EffectInstance => ({
   id: 'spend',
@@ -250,39 +303,71 @@ const turnSpend = (state: Record<string, number>): EffectInstance => ({
   expiry: { kind: 'endOfTurn' }
 });
 
-/** The vars block (dice config) carried by every attack profile of a weapon. */
-function attackVars(def: WeaponDef): Record<string, unknown> {
-  const vars: Record<string, unknown> = {
-    ranges: { default: { array: def.ranges } },
-    hitBonus: { capture: true, default: { fact: `attack.${def.id}.hitBonus` } },
-    damageDie: { default: { number: def.damageDie } },
-    damageBonus: { capture: true, default: { fact: `attack.${def.id}.damageBonus` } }
+/**
+ * The grip a versatile weapon's melee band announces, reusing the LOADOUT's own
+ * grip keys so the attack row and the loadout chip say the same word. The grip is
+ * no longer a per-attack choice, so without this the only thing that moved with it
+ * was the damage die — d6 or d8 with nothing on the row saying which grip you are
+ * in, and it is easy to forget.
+ */
+function gripLabel(def: WeaponDef): MappedLabelSource {
+  return {
+    fact: `weapon.${def.id}.twoHanded`,
+    map: { 0: GRIP_ONE_HANDED, 1: GRIP_TWO_HANDED }
   };
-  // Versatile weapons expose the two-hand grip as a captured selection so the
-  // apply can reject it when no hand is free (see withVersatile).
-  if (isVersatile(def)) vars.extraHands = { capture: true, default: { number: 0 } };
-  return vars;
 }
 
 /**
- * Wrap an attack's base apply so a versatile weapon gripped two-handed
- * (`extraHands > 0`) errors when no hand is free (`hands.remaining < 1`) — the
- * `extraHandsNeeded` / `versatile.no-free-hand` check. Non-versatile weapons are
- * returned unchanged, so their offers keep exactly their prior shape.
+ * The dice-line bands for a weapon. Every band states whether it is a melee
+ * weapon attack (`meleeAttack`), which is what melee-only riders are gated on —
+ * the dice line knows which band it is cycled to, the rules engine does not.
+ *
+ * A versatile weapon's grip lives in the LOADOUT, not in the attack, so its melee
+ * band carries no die of its own (it follows the `damageDie` var, which follows
+ * the grip fact) and instead names the grip, while its thrown bands pin the
+ * one-handed die and stay unlabelled — the grip changes what you swing with, not
+ * what you throw. For the same reason a thrown band is never a melee attack: a
+ * two-handed grip earns Great Weapon Fighting on the swing, not on the throw.
  */
-function withVersatile(
-  def: WeaponDef,
-  base: (f: FactReader) => ActionResult
-): (f: FactReader, selections: Record<string, unknown>) => ActionResult {
-  if (!isVersatile(def)) return base;
-  return (f, selections) => {
-    const r = base(f);
-    const extra = typeof selections?.extraHands === 'number' ? selections.extraHands : 0;
-    const diagnostics: Diagnostic[] = [...(r.diagnostics ?? [])];
-    if (extra > 0 && f.num('hands.remaining') < 1) {
-      diagnostics.push({ code: VERSATILE_NO_FREE_HAND, severity: 'error' });
+function rangesFor(def: WeaponDef): WeaponRange[] {
+  return def.ranges.map((r) => {
+    const band: WeaponRange = { ...r, meleeAttack: r.type === 'melee' };
+    if (!isVersatile(def)) return band;
+    return r.type === 'thrown'
+      ? { ...band, damageDie: def.damageDie }
+      : { ...band, label: gripLabel(def) };
+  });
+}
+
+/**
+ * The damage-die contribution of a versatile weapon: the die follows the grip the
+ * loadout set (`weapon.<id>.twoHanded`), which is why the dice line needs no
+ * two-handed band and no `extraHands` selection. Empty for a weapon with one grip.
+ *
+ * PAIRED with `weaponOffers` — a versatile weapon's module must spread this into
+ * its `derive`, or its `damageDie` var reads an unset fact (0).
+ */
+export function weaponGripDerives(def: WeaponDef): Contribution[] {
+  if (!isVersatile(def)) return [];
+  const twoHanded = def.versatileDamageDie ?? def.damageDie;
+  return [
+    {
+      fact: `attack.${def.id}.damageDie`,
+      value: (f) => (f.num(`weapon.${def.id}.twoHanded`) === 1 ? twoHanded : def.damageDie)
     }
-    return { ...r, diagnostics };
+  ];
+}
+
+/** The vars block (dice config) carried by every attack profile of a weapon. */
+function attackVars(def: WeaponDef): Record<string, unknown> {
+  return {
+    ranges: { default: { array: rangesFor(def) } },
+    hitBonus: { capture: true, default: { fact: `attack.${def.id}.hitBonus` } },
+    // Versatile: the die is a live fact of the equipped grip (weaponGripDerives).
+    damageDie: isVersatile(def)
+      ? { default: { fact: `attack.${def.id}.damageDie` } }
+      : { default: { number: def.damageDie } },
+    damageBonus: { capture: true, default: { fact: `attack.${def.id}.damageBonus` } }
   };
 }
 
@@ -360,73 +445,22 @@ function costApply(costFact: string, remainingFact: string, code: string) {
   };
 }
 
-/** The equip (don) transition: a permanent keyed effect holding the weapon equipped. */
-function donApply(def: WeaponDef) {
-  return (f: FactReader): ActionResult => {
-    const diagnostics: Diagnostic[] = [];
-    if (f.num('build.locked') !== 0) diagnostics.push({ code: BUILD_LOCKED, severity: 'error' });
-    if (f.num(`weapon.${def.id}.equipped`) === 1)
-      diagnostics.push({ code: `${WEAPON_DON}.${def.id}.already-equipped`, severity: 'error' });
-    if (f.num('hands.remaining') < def.hands)
-      diagnostics.push({ code: `${WEAPON_DON}.${def.id}.no-hands`, severity: 'error' });
-    // Equipping is a permanent, keyed fact: one effect per weapon (the key stops a
-    // re-don stacking) that sets `equipped` and consumes its hands from the budget.
-    // Shown on the strip: removing the chip is how the weapon is stowed.
-    return {
-      advertise: [
-        {
-          id: `effect-${def.id}`,
-          key: `equip:${def.id}`,
-          state: { [`weapon.${def.id}.equipped`]: 1, 'hands.spent': def.hands },
-          display: { name: `${WEAPON_DON}.effect-${def.id}.name` },
-          expiry: { kind: 'permanent' }
-        }
-      ],
-      diagnostics
-    };
-  };
-}
-
 /**
- * Every offer a weapon advertises: the don (EQUIP) plus the attack activations
- * (Attack action, melee reaction, and — Light only — an off-hand bonus-action
- * swing). The attack offers are *structurally* gated on the weapon being equipped
- * (`when`), so they vanish when it is stowed; legality (`legalWhen`) then gates on
- * the relevant resource. This is the don-offer + use-action / use-reaction /
- * use-bonus-followup-light profiles, expressed directly.
+ * Every offer a weapon advertises: the attack activations (Attack action, melee
+ * reaction, and — Light only — an off-hand bonus-action swing). The attack offers
+ * are *structurally* gated on the weapon being equipped (`when`), so they vanish
+ * when it is stowed; legality (`legalWhen`) then gates on the relevant resource.
+ *
+ * There is no per-weapon don offer any more: what a character holds is set as a
+ * whole configuration by the `loadout` group's `set-loadout` (which is why every
+ * weapon also declares `equip: weaponEquip(def)`), so this file no longer writes
+ * `weapon.<id>.equipped` — it only reads it.
  */
 export function weaponOffers(def: WeaponDef): Offer[] {
   const equipped = (f: FactReader): boolean => f.num(`weapon.${def.id}.equipped`) === 1;
   const name = `${ATTACKS}.${def.id}.name`;
   const description = `${ATTACKS}.${def.id}.description`;
   const detailKey = `weapon/${def.id}`;
-
-  const don: Offer = {
-    id: `don-${def.id}`,
-    ui: {
-      section: 'equip',
-      detailKey,
-      name: `${WEAPON_DON}.don-${def.id}.name`,
-      intents: { EQUIP: 'weapons' },
-      actionCost: []
-    },
-    legalWhen: [
-      // Build lock inlined (not a shared anchor): hides EQUIP once the build locks.
-      {
-        condition: (f) => f.num('build.locked') === 0,
-        diagnostics: [{ code: BUILD_LOCKED, severity: 'error' }]
-      },
-      {
-        condition: (f) => f.num(`weapon.${def.id}.equipped`) !== 1,
-        diagnostics: [{ code: `${WEAPON_DON}.${def.id}.already-equipped`, severity: 'error' }]
-      },
-      {
-        condition: (f) => f.num('hands.remaining') >= def.hands,
-        diagnostics: [{ code: `${WEAPON_DON}.${def.id}.no-hands`, severity: 'error' }]
-      }
-    ],
-    apply: donApply(def)
-  };
 
   const useAction: Offer = {
     id: `${def.id}-use-action`,
@@ -451,12 +485,12 @@ export function weaponOffers(def: WeaponDef): Offer[] {
         diagnostics: [{ code: NO_ACTION, severity: 'error' }]
       }
     ],
-    apply: withVersatile(def, attackActionApply())
+    apply: attackActionApply()
   };
 
   // An opportunity attack is melee-only: drop the thrown range bands so a
   // throwable weapon (dagger/javelin/spear) can't be "reacted" at 20/60 or
-  // 30/120 ft. Versatile bands are melee (extraHands), so they survive.
+  // 30/120 ft. A versatile weapon's melee band survives (its die follows the grip).
   const meleeDef: WeaponDef = { ...def, ranges: def.ranges.filter((r) => r.type === 'melee') };
 
   const useReaction: Offer = {
@@ -479,10 +513,10 @@ export function weaponOffers(def: WeaponDef): Offer[] {
         diagnostics: [{ code: NO_REACTION, severity: 'error' }]
       }
     ],
-    apply: withVersatile(def, costApply('reactions.spent', 'reactions.remaining', NO_REACTION))
+    apply: costApply('reactions.spent', 'reactions.remaining', NO_REACTION)
   };
 
-  const offers: Offer[] = [don, useAction, useReaction];
+  const offers: Offer[] = [useAction, useReaction];
 
   if (def.light) {
     offers.push({
@@ -561,9 +595,14 @@ export function armorTrainingPenalties(armorId: string, proficiencyFact: string)
  *    path into a module, keeping every rule a pure function of its facts.
  */
 
+/** The loadout combinator surface a rule module may use (see loadout.ts). */
+export { loadoutEffectState, LOADOUT_HANDS_SPENT, MAX_HANDS };
+export type { LoadoutConfig, LoadoutItem };
+
 export type {
   RuleModule,
   RuleMeta,
+  EquipDef,
   Contribution,
   FactReader,
   SheetCtx,

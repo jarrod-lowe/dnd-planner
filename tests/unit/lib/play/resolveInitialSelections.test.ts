@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { resolveInitialSelections } from '$lib/play/resolveInitialSelections';
+import { enumerateLoadouts, loadoutEffectState } from '$lib/rules-engine/loadout';
 import type { Rule, Facts } from '$lib/rules-view';
+import type { RuleModule } from '$lib/rules-engine/types';
 
 describe('resolveInitialSelections', () => {
   describe('capture: true vars', () => {
@@ -206,6 +208,85 @@ describe('resolveInitialSelections', () => {
       const selections = resolveInitialSelections(rule, facts);
 
       expect(selections).toEqual({ distance: 25 });
+    });
+  });
+
+  describe('loadout control', () => {
+    const spear: RuleModule = {
+      id: 'spear',
+      equip: {
+        hands: 1,
+        versatile: true,
+        stackable: true,
+        nameKey: 'rule.test.spear.name',
+        state: { 'weapon.spear.equipped': 1 },
+        twoHandedState: { 'weapon.spear.twoHanded': 1 }
+      }
+    };
+
+    const loadoutRule: Rule = {
+      id: 'set-loadout',
+      activities: [],
+      ui: { primaryControl: { type: 'loadout', var: 'loadout' } }
+    };
+
+    /**
+     * The facts the sheet would carry while holding `id`, plus any hands spent by
+     * something other than the loadout. Derived rather than hand-written: the
+     * matcher compares against every fact a configuration can write, so a literal
+     * fixture quietly stops matching (and falls back to `empty`, which looks like
+     * a real answer) whenever that state gains a fact. The literal names are
+     * pinned in tests/unit/rules-engine/loadout.test.ts, where they belong.
+     */
+    const heldFacts = (id: string, spentElsewhere = 0): Facts => {
+      const config = enumerateLoadouts([spear]).find((c) => c.id === id);
+      if (!config) throw new Error(`no such configuration: ${id}`);
+      const state = loadoutEffectState(config);
+      return { ...state, 'hands.spent': state['hands.spent'] + spentElsewhere };
+    };
+
+    it('captures what is already in the hands so the row starts on it', () => {
+      // Without this the row would start on "empty hands" and its effect would
+      // silently disarm the character the moment it is added to the plan.
+      const selections = resolveInitialSelections(loadoutRule, heldFacts('spear'), [spear]);
+
+      expect((selections.loadout as { id: string }).id).toBe('spear');
+    });
+
+    it('captures the two-handed grip when that is how the weapon is held', () => {
+      const selections = resolveInitialSelections(loadoutRule, heldFacts('spear:2h'), [spear]);
+
+      expect((selections.loadout as { id: string }).id).toBe('spear:2h');
+    });
+
+    /**
+     * The harm the matcher collision actually did. One spear held plus a hand on a
+     * grappled target presents the same aggregate hand count as a spear in each
+     * hand, so the row pinned itself to the two-spear configuration — and merely
+     * ADDING the row would then arm the character with a spear they do not have
+     * and commit a third spent hand. An untouched row must never change what the
+     * character is holding.
+     */
+    it('does not invent a second weapon from a hand spent elsewhere', () => {
+      const selections = resolveInitialSelections(loadoutRule, heldFacts('spear', 1), [spear]);
+
+      expect((selections.loadout as { id: string }).id).toBe('spear');
+    });
+
+    it('captures empty hands when nothing is held', () => {
+      const selections = resolveInitialSelections(loadoutRule, {}, [spear]);
+
+      expect((selections.loadout as { id: string }).id).toBe('empty');
+    });
+
+    it('leaves rules without a loadout control alone', () => {
+      const rule: Rule = {
+        id: 'other',
+        activities: [],
+        ui: { primaryControl: { type: 'slider', var: 'slotLevel' } }
+      };
+
+      expect(resolveInitialSelections(rule, {}, [spear])).toEqual({});
     });
   });
 });

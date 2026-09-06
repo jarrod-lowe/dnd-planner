@@ -1,9 +1,10 @@
 name: 'Hands - Dagger Uses 1 Hand'
 description: >
-  Donning a dagger decrements hands.remaining by 1.
+  A loadout holding a single dagger spends 1 hand and leaves one free.
 
 ruleGroups:
   - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
   - dnd-5e-2024/core-events
   - dnd-5e-2024/action-economy
   - dnd-5e-2024/free-actions
@@ -20,9 +21,21 @@ steps:
           hands.remaining: 2
         offers:
           exists:
-            - don-dagger
+            - set-loadout
   - addOffer:
-      id: don-dagger
+      id: set-loadout
+      selections:
+        loadout:
+          id: dagger
+          hands: 1
+          handsFree: 1
+          items:
+            - id: dagger
+              nameKey: rule.dnd-5e-2024.attacks.dagger.name
+              hands: 1
+              twoHanded: false
+              state:
+                weapon.dagger.equipped: 1
       assert:
         facts:
           weapon.dagger.equipped: 1

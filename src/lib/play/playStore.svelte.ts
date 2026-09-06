@@ -370,7 +370,7 @@ async function loadRuleGroups(characterId: string): Promise<void> {
 function addToPlan(rule: Rule): void {
   const instanceId = generateInstanceId();
   // Resolve capture vars from current facts
-  const initialSelections = resolveInitialSelections(rule, state.facts);
+  const initialSelections = resolveInitialSelections(rule, state.facts, state.modules);
 
   const newItem: PlannedItem = {
     instanceId,
@@ -462,7 +462,7 @@ function swapPlanItemRule(instanceId: string, entry: AvailableRuleEntry): void {
   const index = state.plannedItems.findIndex((i) => i.instanceId === instanceId);
   if (index === -1) return;
 
-  const initialSelections = resolveInitialSelections(entry.rule, state.facts);
+  const initialSelections = resolveInitialSelections(entry.rule, state.facts, state.modules);
   const updated = [...state.plannedItems];
   updated[index] = {
     ...updated[index],

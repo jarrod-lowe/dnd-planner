@@ -1,19 +1,28 @@
-import { defineRule, weaponOffers, type RuleModule, type WeaponDef } from '../builder';
+import {
+  defineRule,
+  weaponEquip,
+  weaponGripDerives,
+  weaponOffers,
+  type RuleModule,
+  type WeaponDef
+} from '../builder';
 
 const P = 'rule.dnd-5e-2024.attacks.spear';
 
 const SPEAR: WeaponDef = {
   id: 'spear',
   hands: 1,
+  versatile: true,
+  versatileDamageDie: 8,
   damageDie: 6,
   damageType: 'piercing',
   disadvantageFact: 'attack.str.disadvantage',
-  // Versatile: a two-handed melee band (1d8, needs a free hand) sits alongside the
-  // one-handed and thrown bands. weaponOffers carries these as dice-line data; the
-  // two-handed free-hand check itself is not yet modelled (see the skip-list).
+  // Versatile: the grip is part of the LOADOUT (a two-handed spear costs the
+  // second hand up front), so there is one melee band whose die follows
+  // `weapon.spear.twoHanded` — d6 one-handed, d8 two-handed — and the thrown bands
+  // stay at d6 whatever the grip.
   ranges: [
-    { distance: 5, type: 'melee', label: '1H' },
-    { distance: 5, type: 'melee', label: '2H', damageDie: 8, extraHands: 1 },
+    { distance: 5, type: 'melee' },
     { distance: 20, type: 'thrown' },
     { distance: 60, type: 'thrown', disadvantage: true }
   ],
@@ -32,18 +41,20 @@ const SPEAR: WeaponDef = {
  */
 const spear: RuleModule = {
   id: 'spear',
+  equip: weaponEquip(SPEAR),
   meta: {
     name: `${P}.name`,
     description: `${P}.description`,
     keywords: `${P}.keywords`,
-    requires: ['attacks', 'hands']
+    requires: ['attacks', 'hands', 'loadout']
   },
   derive: () => [
     {
       fact: 'attack.spear.hitBonus',
       value: (f) => f.num('str.modifier') + f.num('proficiency.bonus')
     },
-    { fact: 'attack.spear.damageBonus', value: (f) => f.num('str.modifier') }
+    { fact: 'attack.spear.damageBonus', value: (f) => f.num('str.modifier') },
+    ...weaponGripDerives(SPEAR)
   ],
   offer: () => weaponOffers(SPEAR)
 };

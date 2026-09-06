@@ -69,9 +69,36 @@ export interface RuleMeta {
  * `offer`. Later passes add `effects`/`annotate`. `meta` is the discovery surface
  * (search index); only user-facing "content" groups need it.
  */
+/**
+ * What a module contributes to the hands loadout — declared by anything you can
+ * HOLD (the weapons and the shield). Body armor has no `equip`: it uses no hands
+ * and keeps its own don offers.
+ *
+ * The `state` maps are the facts the loadout effect sets while the item is held,
+ * so the item — not the loadout module — owns its own fact names
+ * (`weapon.<id>.equipped`, `armor.shield.equipped`, `ac.shieldBonus`, …) and the
+ * loadout stays a pure combinator over whatever is assigned.
+ */
+export interface EquipDef {
+  /** Hands the item occupies in its base grip. */
+  hands: 1 | 2;
+  /** Versatile: it may also be gripped two-handed, costing one more hand. */
+  versatile?: boolean;
+  /** Whether a second copy may be held in the other hand (weapons, not shields). */
+  stackable?: boolean;
+  /** i18n key for the item's chip name. */
+  nameKey: string;
+  /** Facts set while the item is held. */
+  state: Record<string, number>;
+  /** Extra facts set when the item is gripped two-handed (versatile only). */
+  twoHandedState?: Record<string, number>;
+}
+
 export interface RuleModule {
   id: string;
   meta?: RuleMeta;
+  /** Hand-slot declaration — present only on items you can hold. See {@link EquipDef}. */
+  equip?: EquipDef;
   derive?: (ctx: SheetCtx) => Contribution[];
   offer?: (ctx: SheetCtx) => Offer[];
   /**
@@ -238,6 +265,26 @@ export type Section = (typeof SECTIONS)[number];
  */
 export interface OfferUI extends Record<string, unknown> {
   section?: Section;
+}
+
+/**
+ * An i18n key chosen at RENDER time from the value of a fact — the mapping form
+ * of the panel renderer's `ValueSource`.
+ *
+ * An offer's `vars` are built with no facts, so anything authored there is fixed
+ * for the life of the offer. This is the escape hatch for a label that must follow
+ * live character state: a versatile weapon's melee band names the grip the LOADOUT
+ * set (`weapon.<id>.twoHanded`), which the attack itself no longer chooses.
+ *
+ * Lookup is by the fact's string form, with an unset fact read as `0` (an absent
+ * numeric fact is zero everywhere else in the engine), so a flag fact written only
+ * in its "on" state still resolves both ways.
+ */
+export interface MappedLabelSource {
+  /** The fact whose value selects the key. */
+  fact: string;
+  /** Fact value (as a string) → i18n key. */
+  map: Record<string, string>;
 }
 
 /**
