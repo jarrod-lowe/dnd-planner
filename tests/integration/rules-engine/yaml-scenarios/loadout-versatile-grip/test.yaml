@@ -1,0 +1,99 @@
+name: 'Loadout - the versatile grip is part of the loadout, not the attack'
+description: >
+  A versatile weapon's grip used to be a per-attack `extraHands` selection that
+  errored when no hand was free. It is now part of the loadout: the two-handed
+  configuration costs the second hand up front and sets weapon.<id>.twoHanded, and
+  the attack's damage die follows that fact — d8 gripped two-handed, d6 with a
+  shield in the other hand. The free-hand error is gone because the configuration
+  can no longer be illegal.
+
+ruleGroups:
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/shield
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spear
+
+steps:
+  # Two-handed grip: both hands, the grip fact set, the bigger die.
+  - addOffer:
+      id: set-loadout
+      selections:
+        loadout:
+          id: spear:2h
+          hands: 2
+          handsFree: 0
+          items:
+            - id: spear
+              nameKey: rule.dnd-5e-2024.attacks.spear.name
+              hands: 2
+              twoHanded: true
+              gripKey: rule.dnd-5e-2024.loadout.grip.two-handed
+              state:
+                weapon.spear.equipped: 1
+                weapon.spear.twoHanded: 1
+      assert:
+        facts:
+          hands.remaining: 0
+          weapon.spear.equipped: 1
+          weapon.spear.twoHanded: 1
+          attack.spear.damageDie: 8
+        offers:
+          exists:
+            - spear-use-action
+
+  # One hand on the spear, a shield in the other: the grip fact is gone and the
+  # die is back to d6. The dice line carries no two-handed band to pick.
+  - addOffer:
+      id: set-loadout
+      selections:
+        loadout:
+          id: spear+shield
+          hands: 2
+          handsFree: 0
+          items:
+            - id: spear
+              nameKey: rule.dnd-5e-2024.attacks.spear.name
+              hands: 1
+              twoHanded: false
+              gripKey: rule.dnd-5e-2024.loadout.grip.one-handed
+              state:
+                weapon.spear.equipped: 1
+            - id: shield
+              nameKey: rule.dnd-5e-2024.shield.effect-shield.name
+              hands: 1
+              twoHanded: false
+              state:
+                armor.shield.equipped: 1
+                ac.shieldBonus: 2
+      assert:
+        facts:
+          hands.remaining: 0
+          weapon.spear.equipped: 1
+          weapon.spear.twoHanded: 0
+          armor.shield.equipped: 1
+          attack.spear.damageDie: 6
+        offerVars:
+          - id: spear-use-action
+            vars:
+              ranges:
+                default:
+                  array:
+                    - distance: 5
+                      type: melee
+                    - distance: 20
+                      type: thrown
+                      damageDie: 6
+                    - distance: 60
+                      type: thrown
+                      damageDie: 6
+                      disadvantage: true
+              damageDie:
+                default:
+                  fact: attack.spear.damageDie

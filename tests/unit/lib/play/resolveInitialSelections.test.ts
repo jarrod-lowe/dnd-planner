@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { resolveInitialSelections } from '$lib/play/resolveInitialSelections';
 import type { Rule, Facts } from '$lib/rules-view';
+import type { RuleModule } from '$lib/rules-engine/types';
 
 describe('resolveInitialSelections', () => {
   describe('capture: true vars', () => {
@@ -206,6 +207,64 @@ describe('resolveInitialSelections', () => {
       const selections = resolveInitialSelections(rule, facts);
 
       expect(selections).toEqual({ distance: 25 });
+    });
+  });
+
+  describe('loadout control', () => {
+    const spear: RuleModule = {
+      id: 'spear',
+      equip: {
+        hands: 1,
+        versatile: true,
+        stackable: true,
+        nameKey: 'rule.test.spear.name',
+        state: { 'weapon.spear.equipped': 1 },
+        twoHandedState: { 'weapon.spear.twoHanded': 1 }
+      }
+    };
+
+    const loadoutRule: Rule = {
+      id: 'set-loadout',
+      activities: [],
+      ui: { primaryControl: { type: 'loadout', var: 'loadout' } }
+    };
+
+    it('captures what is already in the hands so the row starts on it', () => {
+      // Without this the row would start on "empty hands" and its effect would
+      // silently disarm the character the moment it is added to the plan.
+      const facts: Facts = { 'weapon.spear.equipped': 1, 'hands.spent': 1 };
+
+      const selections = resolveInitialSelections(loadoutRule, facts, [spear]);
+
+      expect((selections.loadout as { id: string }).id).toBe('spear');
+    });
+
+    it('captures the two-handed grip when that is how the weapon is held', () => {
+      const facts: Facts = {
+        'weapon.spear.equipped': 1,
+        'weapon.spear.twoHanded': 1,
+        'hands.spent': 2
+      };
+
+      const selections = resolveInitialSelections(loadoutRule, facts, [spear]);
+
+      expect((selections.loadout as { id: string }).id).toBe('spear:2h');
+    });
+
+    it('captures empty hands when nothing is held', () => {
+      const selections = resolveInitialSelections(loadoutRule, {}, [spear]);
+
+      expect((selections.loadout as { id: string }).id).toBe('empty');
+    });
+
+    it('leaves rules without a loadout control alone', () => {
+      const rule: Rule = {
+        id: 'other',
+        activities: [],
+        ui: { primaryControl: { type: 'slider', var: 'slotLevel' } }
+      };
+
+      expect(resolveInitialSelections(rule, {}, [spear])).toEqual({});
     });
   });
 });

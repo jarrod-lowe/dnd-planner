@@ -1,0 +1,58 @@
+name: 'Loadout - changing hands is legal while the build is locked'
+description: >
+  The whole point of the loadout offer: what you hold changes in play. Every other
+  EQUIP offer gates on build.locked === 0, so swapping mid-combat used to mean
+  unlocking the build. set-loadout carries no build-lock gate and costs no action
+  (house rule), so it stays legal — and applies — with build.locked: 1.
+
+ruleGroups:
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
+  - dnd-5e-2024/build-lock
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/dagger
+
+steps:
+  - addOffer:
+      id: lock
+      assert:
+        facts:
+          build.locked: 1
+        offers:
+          legal:
+            - set-loadout
+
+  - addOffer:
+      id: set-loadout
+      selections:
+        loadout:
+          id: dagger+dagger
+          hands: 2
+          handsFree: 0
+          items:
+            - id: dagger
+              nameKey: rule.dnd-5e-2024.attacks.dagger.name
+              hands: 1
+              twoHanded: false
+              state:
+                weapon.dagger.equipped: 1
+            - id: dagger
+              nameKey: rule.dnd-5e-2024.attacks.dagger.name
+              hands: 1
+              twoHanded: false
+              state:
+                weapon.dagger.equipped: 1
+      assert:
+        facts:
+          build.locked: 1
+          hands.remaining: 0
+          weapon.dagger.equipped: 1
+          actions.remaining: 1
+        planErrors:
+          - id: set-loadout
+            errors: []

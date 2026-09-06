@@ -1,8 +1,10 @@
 name: 'Spear Versatile Damage Die'
 description: >
-  Spear ranges include 4 entries: melee 1H, melee 2H (with damageDie override to 8),
-  thrown 20ft, and thrown 60ft with disadvantage. The 2H entry has damageDie: 8
-  overriding the default damageDie of 6.
+  A versatile weapon's grip is part of the LOADOUT, not the attack, so the dice
+  line carries one melee band and its damage die is a live fact of the equipped
+  grip (attack.spear.damageDie: d6 one-handed, d8 two-handed). The thrown bands
+  pin the one-handed die — the grip changes what you swing with, not what you
+  throw.
 
 ruleGroups:
   - dnd-5e-2024/action-economy
@@ -29,6 +31,10 @@ initialEffects:
 steps:
   - evaluate:
       assert:
+        facts:
+          weapon.spear.equipped: 1
+          weapon.spear.twoHanded: 0
+          attack.spear.damageDie: 6
         offerVars:
           - id: spear-use-action
             vars:
@@ -37,17 +43,13 @@ steps:
                   array:
                     - distance: 5
                       type: melee
-                      label: 1H
-                    - distance: 5
-                      type: melee
-                      label: 2H
-                      damageDie: 8
-                      extraHands: 1
                     - distance: 20
                       type: thrown
+                      damageDie: 6
                     - distance: 60
                       type: thrown
+                      damageDie: 6
                       disadvantage: true
               damageDie:
                 default:
-                  number: 6
+                  fact: attack.spear.damageDie

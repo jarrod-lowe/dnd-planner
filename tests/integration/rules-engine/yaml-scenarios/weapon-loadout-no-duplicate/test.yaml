@@ -1,0 +1,71 @@
+name: 'Weapon Loadout Planned - No Duplicate'
+description: >
+  Planning the same weapon twice used to be blocked by marking the second don
+  illegal. There is no per-item don to mark, so the guard is structural instead:
+  both planned loadouts advertise under the shared `loadout` key, the newest
+  evicts the older, and the hand spend is 1 — not 2 — however many times the same
+  configuration is planned in a turn.
+
+ruleGroups:
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/dagger
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          weapon.dagger.equipped: 0
+        offers:
+          legal:
+            - set-loadout
+  - addOffer:
+      id: set-loadout
+      selections:
+        loadout:
+          id: dagger
+          hands: 1
+          handsFree: 1
+          items:
+            - id: dagger
+              nameKey: rule.dnd-5e-2024.attacks.dagger.name
+              hands: 1
+              twoHanded: false
+              state:
+                weapon.dagger.equipped: 1
+      assert:
+        facts:
+          weapon.dagger.equipped: 1
+          hands.remaining: 1
+  - addOffer:
+      id: set-loadout
+      selections:
+        loadout:
+          id: dagger
+          hands: 1
+          handsFree: 1
+          items:
+            - id: dagger
+              nameKey: rule.dnd-5e-2024.attacks.dagger.name
+              hands: 1
+              twoHanded: false
+              state:
+                weapon.dagger.equipped: 1
+      assert:
+        facts:
+          weapon.dagger.equipped: 1
+          hands.remaining: 1
+        offers:
+          legal:
+            - set-loadout
+  - endTurn:
+      assert:
+        facts:
+          weapon.dagger.equipped: 1
+          hands.remaining: 1

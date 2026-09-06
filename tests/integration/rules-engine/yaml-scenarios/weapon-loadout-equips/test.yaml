@@ -1,0 +1,51 @@
+name: 'Weapon Loadout Sets Equipped'
+description: >
+  Setting a loadout that holds a dagger sets weapon.dagger.equipped to 1. After
+  endTurn the single keyed effect-loadout persists and the weapon stays equipped —
+  the per-item effect-dagger it replaced is gone.
+
+ruleGroups:
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/dagger
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          weapon.dagger.equipped: 0
+        offers:
+          exists:
+            - set-loadout
+  - addOffer:
+      id: set-loadout
+      selections:
+        loadout:
+          id: dagger
+          hands: 1
+          handsFree: 1
+          items:
+            - id: dagger
+              nameKey: rule.dnd-5e-2024.attacks.dagger.name
+              hands: 1
+              twoHanded: false
+              state:
+                weapon.dagger.equipped: 1
+      assert:
+        facts:
+          weapon.dagger.equipped: 1
+  - endTurn:
+      assert:
+        facts:
+          weapon.dagger.equipped: 1
+        effects:
+          exists:
+            - effect-loadout
+          notExists:
+            - effect-dagger

@@ -1253,9 +1253,6 @@
           "no_reaction": "DIvI' cha' tu'lu'be'",
           "no_bonus_action": "Quv DIvI' tu'lu'be'"
         },
-        "versatile": {
-          "no-free-hand": "ghopDu' puS nuH jen lo'"
-        },
         "extra-attack": {
           "annotation": "jey' chu': jey' chu' laH"
         }
@@ -1336,6 +1333,30 @@
           "no_inspiration": "SuvwI' SubchI' tu'lu'be'"
         }
       },
+      "loadout": {
+        "set-loadout": {
+          "name": "ghopDu' qeng choH",
+          "keywords": "loadout equip hands swap wield draw stow shield",
+          "description": "cha' ghopDu' Dochmey wIv"
+        },
+        "set-loadout-offer": {
+          "no-hands": "ghopDu' law' poQ qeng",
+          "not-proficient": "DIch SuvwI' DIch DIron"
+        },
+        "effect-loadout": {
+          "name": "ghopDu' qeng"
+        },
+        "empty": {
+          "name": "ghopDu' chIm"
+        },
+        "grip": {
+          "one-handed": "wa' ghop",
+          "two-handed": "cha' ghop"
+        },
+        "hands-free": {
+          "name": "ghop tlhab"
+        }
+      },
       "leather-armor": {
         "don-leather-armor": {
           "name": "DIch Jun tuQ",
@@ -1361,68 +1382,11 @@
         }
       },
       "shield": {
-        "don-shield": {
-          "name": "DIch tuQ",
-          "keywords": "equip wear block defend protection"
-        },
-        "don-shield-offer": {
-          "already-equipped": "DIch tuQtaH",
-          "not-proficient": "DIch SuvwI' DIch DIron",
-          "no-hands": "not enough ghopDu'"
-        },
         "effect-shield": {
           "name": "DIch"
         }
       },
       "weapon-don": {
-        "don-dagger": {
-          "name": "Don Dagger",
-          "keywords": "equip wield draw hold ready knife blade"
-        },
-        "don-greataxe": {
-          "name": "Don nuH jen",
-          "keywords": "equip wield draw hold ready axe"
-        },
-        "don-javelin": {
-          "name": "Don Javelin",
-          "keywords": "equip wield draw hold ready thrown"
-        },
-        "don-scimitar": {
-          "name": "Don Scimitar",
-          "keywords": "equip wield draw hold ready sword"
-        },
-        "don-spear": {
-          "name": "Don yan",
-          "keywords": "equip wield draw hold ready polearm"
-        },
-        "don-spear-plus1": {
-          "name": "Don yan cha'",
-          "keywords": "equip wield draw hold ready polearm magic"
-        },
-        "dagger": {
-          "already-equipped": "Dagger is already equipped",
-          "no-hands": "not enough ghopDu'"
-        },
-        "greataxe": {
-          "already-equipped": "nuH jen is already equipped",
-          "no-hands": "not enough ghopDu'"
-        },
-        "javelin": {
-          "already-equipped": "Javelin is already equipped",
-          "no-hands": "not enough ghopDu'"
-        },
-        "scimitar": {
-          "already-equipped": "Scimitar is already equipped",
-          "no-hands": "not enough ghopDu'"
-        },
-        "spear": {
-          "already-equipped": "yan is already equipped",
-          "no-hands": "not enough ghopDu'"
-        },
-        "spear-plus1": {
-          "already-equipped": "yan cha' is already equipped",
-          "no-hands": "not enough ghopDu'"
-        },
         "effect-dagger": {
           "name": "Dagger"
         },
@@ -2057,7 +2021,8 @@
       },
       "EQUIP": {
         "weapons": "WEAPONS",
-        "armor": "ARMOR"
+        "armor": "ARMOR",
+        "loadout": "ghopDu' qeng"
       }
     },
     "addRow": {
@@ -2104,6 +2069,14 @@
       "effectSource": "EFFECT: {{name}}",
       "illegalTag": "ILLEGAL",
       "illegalWhy": "WHY ILLEGAL: {{reason}}"
+    },
+    "loadout": {
+      "groupLabel": "ghopDu' qeng wIvmey",
+      "handsFree": {
+        "none": "ghop chIm tu'lu'be'",
+        "one": "wa' ghop chIm",
+        "many": "{{count}} ghopDu' chIm"
+      }
     },
     "costTags": {
       "action": "ACT",

@@ -205,13 +205,28 @@ export interface TextInputControl extends ControlBase {
   multiline?: boolean;
 }
 
+/**
+ * The hand-configuration picker (`set-loadout`).
+ *
+ * Carries no options: the legal configurations are not authorable, they are
+ * enumerated from the modules the character has assigned (`enumerateLoadouts`).
+ * The selection written to `var` is the whole `LoadoutConfig` object, not a
+ * number — which is why {@link SelectControl} (numeric values, `String(v)`
+ * labels) cannot serve here.
+ */
+export interface LoadoutControl extends ControlBase {
+  type: 'loadout';
+  var: string;
+}
+
 export type Control =
   | DiceLineControl
   | HitDiceControl
   | SliderControl
   | SelectControl
   | TextInputControl
-  | SegmentedControl;
+  | SegmentedControl
+  | LoadoutControl;
 
 export interface TextInformation {
   type: 'text';

@@ -1,0 +1,62 @@
+name: 'Shield Loadout Is Idempotent'
+description: >
+  "Cannot don a shield you already hold" no longer has a per-item offer to refuse.
+  The property that replaced it is idempotence: every loadout commits ONE effect
+  under the shared `loadout` key, so re-choosing the configuration you are already
+  in evicts the old effect instead of stacking with it. The AC bonus stays +2 and
+  the hand spend stays 1, however many times it is set.
+ruleGroups:
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/shield
+# Shield training granted so the loadout row carries no proficiency warning.
+initialFacts:
+  armor.shield.proficient: 1
+steps:
+  - addOffer:
+      id: set-loadout
+      selections:
+        loadout:
+          id: shield
+          hands: 1
+          handsFree: 1
+          items:
+            - id: shield
+              nameKey: rule.dnd-5e-2024.shield.effect-shield.name
+              hands: 1
+              twoHanded: false
+              state:
+                armor.shield.equipped: 1
+                ac.shieldBonus: 2
+      assert:
+        facts:
+          ac.shieldBonus: 2
+          ac.value: 12
+          armor.shield.equipped: 1
+          hands.remaining: 1
+
+  - addOffer:
+      id: set-loadout
+      selections:
+        loadout:
+          id: shield
+          hands: 1
+          handsFree: 1
+          items:
+            - id: shield
+              nameKey: rule.dnd-5e-2024.shield.effect-shield.name
+              hands: 1
+              twoHanded: false
+              state:
+                armor.shield.equipped: 1
+                ac.shieldBonus: 2
+      assert:
+        facts:
+          ac.shieldBonus: 2
+          ac.value: 12
+          armor.shield.equipped: 1
+          hands.remaining: 1
+        offers:
+          legal:
+            - set-loadout

@@ -27,7 +27,10 @@ vi.mock('sveltekit-i18n', () => {
       'd{{sides}} hit die {{slot}} of {{total}}, rolled {{roll}}, heals {{heal}} hp',
     'play.hitDice.slotSpentRolledLabel':
       'd{{sides}} hit die {{slot}} of {{total}} (spent), rolled {{roll}}, heals {{heal}} hp, tap to clear',
-    'play.hitDice.bonusLabel': 'Each die: CON {{bonus}}'
+    'play.hitDice.bonusLabel': 'Each die: CON {{bonus}}',
+    'play.loadout.handsFree.none': 'no hands free',
+    'play.loadout.handsFree.one': '1 hand free',
+    'play.loadout.handsFree.many': '{{count}} hands free'
   };
 
   return {

@@ -1253,9 +1253,6 @@
           "no_reaction": "No reaction available",
           "no_bonus_action": "No bonus action available"
         },
-        "versatile": {
-          "no-free-hand": "Not enough free hands for two-handed attack"
-        },
         "extra-attack": {
           "annotation": "Extra Attack: you can attack again"
         }
@@ -1336,6 +1333,30 @@
           "no_inspiration": "No Heroic Inspiration available"
         }
       },
+      "loadout": {
+        "set-loadout": {
+          "name": "Change Loadout",
+          "keywords": "loadout equip hands swap wield draw stow shield",
+          "description": "Set what is in both hands at once"
+        },
+        "set-loadout-offer": {
+          "no-hands": "That loadout needs more hands than you have",
+          "not-proficient": "Not proficient with shields"
+        },
+        "effect-loadout": {
+          "name": "Loadout"
+        },
+        "empty": {
+          "name": "Empty hands"
+        },
+        "grip": {
+          "one-handed": "One-handed",
+          "two-handed": "Two-handed"
+        },
+        "hands-free": {
+          "name": "Hand free"
+        }
+      },
       "leather-armor": {
         "don-leather-armor": {
           "name": "Don Leather Armor",
@@ -1361,68 +1382,11 @@
         }
       },
       "shield": {
-        "don-shield": {
-          "name": "Don Shield",
-          "keywords": "equip wear block defend protection"
-        },
-        "don-shield-offer": {
-          "already-equipped": "Shield is already equipped",
-          "not-proficient": "Not proficient with shields",
-          "no-hands": "Not enough hands to equip a shield"
-        },
         "effect-shield": {
           "name": "Shield"
         }
       },
       "weapon-don": {
-        "don-dagger": {
-          "name": "Don Dagger",
-          "keywords": "equip wield draw hold ready knife blade"
-        },
-        "don-greataxe": {
-          "name": "Don Greataxe",
-          "keywords": "equip wield draw hold ready axe"
-        },
-        "don-javelin": {
-          "name": "Don Javelin",
-          "keywords": "equip wield draw hold ready thrown"
-        },
-        "don-scimitar": {
-          "name": "Don Scimitar",
-          "keywords": "equip wield draw hold ready sword"
-        },
-        "don-spear": {
-          "name": "Don Spear",
-          "keywords": "equip wield draw hold ready polearm"
-        },
-        "don-spear-plus1": {
-          "name": "Don Spear +1",
-          "keywords": "equip wield draw hold ready polearm magic"
-        },
-        "dagger": {
-          "already-equipped": "Dagger is already equipped",
-          "no-hands": "Not enough hands to equip a dagger"
-        },
-        "greataxe": {
-          "already-equipped": "Greataxe is already equipped",
-          "no-hands": "Not enough hands to equip a greataxe"
-        },
-        "javelin": {
-          "already-equipped": "Javelin is already equipped",
-          "no-hands": "Not enough hands to equip a javelin"
-        },
-        "scimitar": {
-          "already-equipped": "Scimitar is already equipped",
-          "no-hands": "Not enough hands to equip a scimitar"
-        },
-        "spear": {
-          "already-equipped": "Spear is already equipped",
-          "no-hands": "Not enough hands to equip a spear"
-        },
-        "spear-plus1": {
-          "already-equipped": "Spear +1 is already equipped",
-          "no-hands": "Not enough hands to equip a Spear +1"
-        },
         "effect-dagger": {
           "name": "Dagger"
         },
@@ -2057,7 +2021,8 @@
       },
       "EQUIP": {
         "weapons": "Weapons",
-        "armor": "Armor"
+        "armor": "Armor",
+        "loadout": "Loadout"
       }
     },
     "addRow": {
@@ -2104,6 +2069,14 @@
       "effectSource": "Effect: {{name}}",
       "illegalTag": "Illegal",
       "illegalWhy": "Why illegal: {{reason}}"
+    },
+    "loadout": {
+      "groupLabel": "Loadout options",
+      "handsFree": {
+        "none": "no hands free",
+        "one": "1 hand free",
+        "many": "{{count}} hands free"
+      }
     },
     "costTags": {
       "action": "ACT",

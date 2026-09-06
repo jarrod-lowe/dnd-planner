@@ -42,21 +42,19 @@ steps:
         offerVars:
           - id: spear-plus1-use-action
             vars:
+              # The grip lives in the loadout, so there is ONE melee band whose
+              # die follows weapon.spear-plus1.twoHanded; the thrown bands pin d6.
               ranges:
                 default:
                   array:
                     - distance: 5
                       type: melee
-                      label: 1H
-                    - distance: 5
-                      type: melee
-                      label: 2H
-                      damageDie: 8
-                      extraHands: 1
                     - distance: 20
                       type: thrown
+                      damageDie: 6
                     - distance: 60
                       type: thrown
+                      damageDie: 6
                       disadvantage: true
         annotations:
           exists:

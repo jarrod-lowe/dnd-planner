@@ -1,9 +1,10 @@
 name: 'Hands - Greataxe Uses 2 Hands'
 description: >
-  Donning a greataxe decrements hands.remaining by 2.
+  A loadout holding a greataxe spends both hands, leaving none free.
 
 ruleGroups:
   - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
   - dnd-5e-2024/core-events
   - dnd-5e-2024/action-economy
   - dnd-5e-2024/free-actions
@@ -20,9 +21,21 @@ steps:
           hands.remaining: 2
         offers:
           exists:
-            - don-greataxe
+            - set-loadout
   - addOffer:
-      id: don-greataxe
+      id: set-loadout
+      selections:
+        loadout:
+          id: greataxe
+          hands: 2
+          handsFree: 0
+          items:
+            - id: greataxe
+              nameKey: rule.dnd-5e-2024.attacks.greataxe.name
+              hands: 2
+              twoHanded: false
+              state:
+                weapon.greataxe.equipped: 1
       assert:
         facts:
           weapon.greataxe.equipped: 1

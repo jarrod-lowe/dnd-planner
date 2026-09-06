@@ -68,12 +68,6 @@ const SKIP_BY_NAME: Record<string, string> = {
     'legacy `removing` unprepare lifecycle; the engine evicts immediately (same end state)',
   'hold-person-prepare':
     'legacy `removing` unprepare lifecycle; the engine evicts immediately (same end state)',
-  // Plans don-dagger THEN lock, then expects the earlier-planned don to retroactively
-  // pick up the lock error. The plan fold is plan-order (the don is folded before the
-  // lock sets build.locked), so it does not — the same deliberate divergence as
-  // hi-use-then-grant. The build-lock scenario proper (lock flips the offers) runs.
-  'build-lock-weapon-clear':
-    'relies on legacy intra-turn reordering; the plan fold is plan-order (by design)',
   // The steed's damage type is a STRING fact ('radiant'/'psychic'/'necrotic');
   // facts are numeric only (creatureType 0/1/2 is set, the string label is not).
   'steed-creature-type-fey': 'string fact (companion.steed.damageType) — facts are numeric',
@@ -146,14 +140,13 @@ const EXPECTED_RUNNABLE = [
   'attack-unarmed-strike',
   'ability-modifier-ordering',
   'concentration-check-after-damage',
-  'spear-2h-no-free-hands',
+  'spear-2h-excludes-second-weapon',
   'savage-attacker-usage',
   // Migrated from legacy initialEffects (see INITIAL_EFFECTS):
   'leather-armor-already-equipped',
   'leather-armor-proficient',
   'splint-armor-already-equipped',
   'splint-armor-proficient',
-  'shield-already-equipped',
   'shield-proficient',
   'shield-with-splint-armor',
   'attack-greataxe',
@@ -163,7 +156,6 @@ const EXPECTED_RUNNABLE = [
   'attack-spear-plus1',
   'greataxe-cleave-mastery',
   'spear-versatile-damage-die',
-  'weapon-don-illegal-when-equipped',
   'weapon-donned-attacks-visible',
   'fighting-style-great-weapon-annotations',
   'savage-attacker-annotations',
@@ -213,14 +205,12 @@ const EXPECTED_RUNNABLE = [
   'tsmite-cap-high-slot',
   'tsmite-upcast',
   'hands-two-daggers-legal',
-  'hands-shield-then-greataxe-illegal',
-  'hands-greataxe-then-shield-illegal',
+  'hands-shield-then-greataxe-replaces',
+  'hands-greataxe-plus-shield-over-budget',
   'grapple-no-free-hand',
   'grapple-no-free-hand-normal-effect',
   'grapple-no-hand-even-when-saved',
   'grapple-saved-frees-hand',
-  'spear-2h-effects-ordering',
-  'spear-2h-reaction-no-free-hands',
   'reaction-tracking',
   'rebuke-the-violent-illegal-no-reaction',
   'find-steed-basic-cast',
@@ -349,10 +339,12 @@ const EXPECTED_RUNNABLE = [
   'hands-weapon-dagger-uses-1',
   'hands-weapon-greataxe-uses-2',
   'hands-weapon-persists',
-  'weapon-don-equips',
-  'weapon-don-offer',
-  'weapon-don-planned-attack-visible',
-  'weapon-don-planned-no-duplicate',
+  'weapon-loadout-equips',
+  'weapon-loadout-offer',
+  'weapon-loadout-planned-attack-visible',
+  'weapon-loadout-no-duplicate',
+  'weapon-loadout-empty-hands',
+  'shield-loadout-idempotent',
   'weapon-mastery-dagger',
   'weapon-mastery-greataxe',
   'weapon-stowed-no-attacks',
@@ -433,8 +425,15 @@ const EXPECTED_RUNNABLE = [
   'command-cast',
   'command-prepare',
   // M3 — build-lock (Lock flips every BUILD offer illegal via a permanent
-  // build.locked effect); build-lock-weapon-clear is skip-listed (plan-order)
+  // build.locked effect, and unlocking clears the error off an already-planned row)
   'build-lock',
+  'build-lock-clears-stale-error',
+  // loadout — the whole hand configuration set at once by one keyed permanent
+  // effect, legal (and free) while the build is locked
+  'loadout-set',
+  'loadout-swap',
+  'loadout-versatile-grip',
+  'loadout-while-locked',
   // M3 — initiative (dex-modifier bonus + display-only Roll Initiative offer)
   'alert-no-feat-no-annotations',
   'initiative-bonus',

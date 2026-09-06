@@ -1,10 +1,12 @@
 name: 'Hands - Shield Hand Usage Persists Across Turns'
 description: >
-  After donning a shield and ending the turn, the hand usage persists.
-  hands.remaining stays at 1 on the next turn.
+  After setting a loadout that holds a shield and ending the turn, the hand usage
+  persists: the loadout effect is permanent, so hands.remaining stays at 1 on the
+  next turn.
 
 ruleGroups:
   - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
   - dnd-5e-2024/ac
   - dnd-5e-2024/shield
 
@@ -14,7 +16,20 @@ steps:
         facts:
           hands.remaining: 2
   - addOffer:
-      id: don-shield
+      id: set-loadout
+      selections:
+        loadout:
+          id: shield
+          hands: 1
+          handsFree: 1
+          items:
+            - id: shield
+              nameKey: rule.dnd-5e-2024.shield.effect-shield.name
+              hands: 1
+              twoHanded: false
+              state:
+                armor.shield.equipped: 1
+                ac.shieldBonus: 2
       assert:
         facts:
           armor.shield.equipped: 1

@@ -1,9 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { evaluate, evaluatePlan, evaluateOffers, endTurn } from '$lib/rules-engine';
-import type { PlannedRef } from '$lib/rules-engine';
+import { evaluate, evaluatePlan, evaluateOffers } from '$lib/rules-engine';
+import type { PlannedRef, RuleModule } from '$lib/rules-engine';
+import { enumerateLoadouts } from '$lib/rules-engine/loadout';
 import actionEconomy from '$lib/rules-engine/rules/action-economy';
 import attacks from '$lib/rules-engine/rules/attacks';
 import hands from '$lib/rules-engine/rules/hands';
+import loadout from '$lib/rules-engine/rules/loadout';
 import dagger from '$lib/rules-engine/rules/dagger';
 import greataxe from '$lib/rules-engine/rules/greataxe';
 import javelin from '$lib/rules-engine/rules/javelin';
@@ -15,69 +17,50 @@ import javelinMastery from '$lib/rules-engine/rules/javelin-mastery';
  *
  * The yaml-scenario parity harness already covers the offer-existence / mastery /
  * hands-budget surface. This file pins down the *apply* paths the runnable
- * scenarios don't reach: the permanent keyed equip effect, the equip-budget
- * accounting, the build-lock gate, and the attack/reaction resource spends.
+ * scenarios don't reach: the attack/reaction resource spends and the offer shapes
+ * that ride an equipped weapon.
+ *
+ * Getting a weapon INTO a hand is no longer a weapon concern: the per-item don
+ * offers are gone and `set-loadout` is the only write path, so equipping here is
+ * just setup (see `equip` below). The loadout offer itself — its keyed permanent
+ * effect, its hand budget and its indifference to the build lock — belongs to
+ * loadout.test.ts, not here.
  */
-const ALL = [actionEconomy, attacks, hands, dagger, greataxe];
+const ALL = [actionEconomy, attacks, hands, loadout, dagger, greataxe];
 
 const ref = (instanceId: string, ruleId: string): PlannedRef => ({ instanceId, ruleId });
 
-describe('weapons — equip (don)', () => {
-  it('equips via a permanent keyed effect that survives end of turn, costing one hand', () => {
-    const out = evaluatePlan(ALL, {}, [ref('i0', 'don-dagger')]);
-    expect(out.facts['weapon.dagger.equipped']).toBe(1);
-    expect(out.facts['hands.remaining']).toBe(1); // 2 - 1
-
-    const eff = out.advertised.find((e) => e.id.includes('effect-dagger'));
-    expect(eff?.key).toBe('equip:dagger');
-    expect(eff?.expiry).toEqual({ kind: 'permanent' });
-
-    // Permanent → still committed next turn, so the weapon stays equipped.
-    const committed = endTurn([], out.advertised, {});
-    expect(committed.some((e) => e.id.includes('effect-dagger'))).toBe(true);
-  });
-
-  it('re-donning the same weapon does not stack (the equip key dedupes)', () => {
-    const out = evaluatePlan(ALL, {}, [ref('i0', 'don-dagger'), ref('i1', 'don-dagger')]);
-    expect(out.facts['weapon.dagger.equipped']).toBe(1);
-    expect(out.facts['hands.remaining']).toBe(1); // not 0 — one hand, not two
-  });
-
-  it('a two-handed weapon consumes both hands', () => {
-    const out = evaluatePlan(ALL, {}, [ref('i0', 'don-greataxe')]);
-    expect(out.facts['hands.remaining']).toBe(0); // 2 - 2
-  });
-
-  it('is illegal while the build is locked', () => {
-    const facts = evaluatePlan(ALL, { 'build.locked': 1 }, []).facts;
-    const don = evaluateOffers(ALL, facts).find((o) => o.id === 'don-dagger');
-    expect(don?.legal).toBe(false);
-    expect(don?.diagnostics.some((d) => d.code === 'rule.dnd-5e-2024.build-lock.locked')).toBe(
-      true
-    );
-  });
-});
+/**
+ * Setup: plan the loadout that puts `configId` in hand. The configuration comes
+ * from the enumerator rather than a hand-written literal, so these tests hold a
+ * weapon exactly the way the UI does.
+ */
+const equip = (instanceId: string, modules: RuleModule[], configId: string): PlannedRef => {
+  const config = enumerateLoadouts(modules).find((c) => c.id === configId);
+  if (!config) throw new Error(`no such loadout configuration: ${configId}`);
+  return { instanceId, ruleId: 'set-loadout', selections: { loadout: config } };
+};
 
 describe('weapons — attack offers gate on being equipped', () => {
-  it('hides the action/reaction attacks when stowed, shows them when donned', () => {
+  it('hides the action/reaction attacks when stowed, shows them when held', () => {
     const stowed = evaluateOffers(ALL, evaluatePlan(ALL, {}, []).facts);
     expect(stowed.some((o) => o.id === 'dagger-use-action')).toBe(false);
     expect(stowed.some((o) => o.id === 'dagger-use-reaction-weapon')).toBe(false);
 
-    const donned = evaluateOffers(ALL, evaluatePlan(ALL, {}, [ref('i0', 'don-dagger')]).facts);
-    expect(donned.some((o) => o.id === 'dagger-use-action')).toBe(true);
-    expect(donned.some((o) => o.id === 'dagger-use-reaction-weapon')).toBe(true);
+    const held = evaluateOffers(ALL, evaluatePlan(ALL, {}, [equip('i0', ALL, 'dagger')]).facts);
+    expect(held.some((o) => o.id === 'dagger-use-action')).toBe(true);
+    expect(held.some((o) => o.id === 'dagger-use-reaction-weapon')).toBe(true);
   });
 });
 
 describe('weapons — activations spend their resource', () => {
   it('a weapon Attack action spends the action; a second over-commits', () => {
-    const one = evaluatePlan(ALL, {}, [ref('i0', 'don-dagger'), ref('i1', 'dagger-use-action')]);
+    const one = evaluatePlan(ALL, {}, [equip('i0', ALL, 'dagger'), ref('i1', 'dagger-use-action')]);
     expect(one.facts['actions.remaining']).toBe(0);
     expect(one.planDiagnostics.has('i1')).toBe(false); // the first swing is legal
 
     const two = evaluatePlan(ALL, {}, [
-      ref('i0', 'don-dagger'),
+      equip('i0', ALL, 'dagger'),
       ref('i1', 'dagger-use-action'),
       ref('i2', 'dagger-use-action')
     ]);
@@ -89,11 +72,11 @@ describe('weapons — activations spend their resource', () => {
   });
 
   it('a weapon reaction spends the reaction and then reads illegal', () => {
-    const donned = evaluateOffers(ALL, evaluatePlan(ALL, {}, [ref('i0', 'don-dagger')]).facts);
-    expect(donned.find((o) => o.id === 'dagger-use-reaction-weapon')?.legal).toBe(true);
+    const held = evaluateOffers(ALL, evaluatePlan(ALL, {}, [equip('i0', ALL, 'dagger')]).facts);
+    expect(held.find((o) => o.id === 'dagger-use-reaction-weapon')?.legal).toBe(true);
 
     const spent = evaluatePlan(ALL, {}, [
-      ref('i0', 'don-dagger'),
+      equip('i0', ALL, 'dagger'),
       ref('i1', 'dagger-use-reaction-weapon')
     ]);
     expect(spent.facts['reactions.remaining']).toBe(0);
@@ -106,12 +89,12 @@ describe('weapons — activations spend their resource', () => {
 
 describe('weapons — javelin Slow followup is a native EffectInstance', () => {
   it('rides the attack offer as addRule.effect (not a legacy rule object)', () => {
-    const MODS = [actionEconomy, attacks, hands, javelin, javelinMastery];
-    // Equip the javelin so its Attack offer (which carries the Slow followup) shows.
+    const MODS = [actionEconomy, attacks, hands, loadout, javelin, javelinMastery];
+    // Hold the javelin so its Attack offer (which carries the Slow followup) shows.
     const out = evaluate({
       modules: MODS,
       inputFacts: {},
-      planned: [ref('i0', 'don-javelin')],
+      planned: [equip('i0', MODS, 'javelin')],
       committed: []
     });
     const offer = out.availableRules.find((e) => e.rule.id === 'javelin-use-action');
@@ -130,8 +113,8 @@ describe('weapons — javelin Slow followup is a native EffectInstance', () => {
 
 describe('weapons — reaction (opportunity attack) is melee-only', () => {
   it('drops thrown range bands from the reaction, keeps them on the Attack action', () => {
-    const MODS = [actionEconomy, attacks, hands, javelin, javelinMastery];
-    const facts = evaluatePlan(MODS, {}, [ref('i0', 'don-javelin')]).facts;
+    const MODS = [actionEconomy, attacks, hands, loadout, javelin, javelinMastery];
+    const facts = evaluatePlan(MODS, {}, [equip('i0', MODS, 'javelin')]).facts;
     const offers = evaluateOffers(MODS, facts);
 
     const rangesOf = (o: { vars?: Record<string, unknown> } | undefined) => {

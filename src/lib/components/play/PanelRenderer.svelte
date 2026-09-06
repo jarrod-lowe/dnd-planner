@@ -11,11 +11,13 @@
   import PanelSelect from './panel-renderer/PanelSelect.svelte';
   import PanelTextInput from './panel-renderer/PanelTextInput.svelte';
   import PanelSegmented from './panel-renderer/PanelSegmented.svelte';
+  import PanelLoadout from './panel-renderer/PanelLoadout.svelte';
   import DiceRollToast from './panel-renderer/DiceRollToast.svelte';
   import { evaluateCondition } from '$lib/play/panelCondition';
   import { getMatchingAnnotations } from '$lib/play/annotations';
   import type { AvailableRuleEntry, Facts, Annotation, RiderValue } from '$lib/rules-view';
   import type { EffectInstance } from '$lib/rules-engine';
+  import type { RuleModule } from '$lib/rules-engine/types';
   import type {
     TextInformation,
     CountdownInformation,
@@ -28,6 +30,12 @@
     editable?: boolean;
     onTap?: () => void;
     facts?: Facts;
+    /**
+     * The character's resolved modules. Only the loadout control needs them:
+     * its rows are enumerated from the items the character actually has, so
+     * they cannot be authored into the offer.
+     */
+    modules?: RuleModule[];
     selections?: Record<string, unknown>;
     activeAnnotations?: Annotation[];
     onSelectionChange?: (selections: Record<string, unknown>) => void;
@@ -46,6 +54,7 @@
     editable = false,
     onTap,
     facts = {},
+    modules = [],
     selections = {},
     activeAnnotations = [],
     onSelectionChange,
@@ -107,6 +116,9 @@
   );
   const primaryTextInput = $derived(
     descriptor.primaryControl?.type === 'text' ? descriptor.primaryControl : undefined
+  );
+  const primaryLoadout = $derived(
+    descriptor.primaryControl?.type === 'loadout' ? descriptor.primaryControl : undefined
   );
   const secondarySlider = $derived(
     descriptor.secondaryControl?.type === 'slider' ? descriptor.secondaryControl : undefined
@@ -402,6 +414,17 @@
         {editable}
         {facts}
         {vars}
+        {selections}
+        {onSelectionChange}
+      />
+    </div>
+  {/if}
+  {#if primaryLoadout}
+    <div class="panel-renderer__control">
+      <PanelLoadout
+        control={primaryLoadout}
+        {editable}
+        {modules}
         {selections}
         {onSelectionChange}
       />
