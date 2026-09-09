@@ -89,7 +89,7 @@ steps:
                       type: melee
                       meleeAttack: true
                       label:
-                        fact: weapon.spear.twoHanded
+                        var: twoHanded
                         map:
                           '0': rule.dnd-5e-2024.loadout.grip.one-handed-short
                           '1': rule.dnd-5e-2024.loadout.grip.two-handed-short
@@ -104,6 +104,15 @@ steps:
                       meleeAttack: false
                       damageDie: 6
                       disadvantage: true
+              # The offer's die and grip label are both CAPTURED (they freeze together
+              # when a row is added), but the offer itself is rebuilt every evaluation,
+              # so an UNPLANNED offer still advertises the live grip through the vars'
+              # defaults — which is what the facts above assert.
+              twoHanded:
+                capture: true
+                default:
+                  fact: weapon.spear.twoHanded
               damageDie:
+                capture: true
                 default:
                   fact: attack.spear.damageDie

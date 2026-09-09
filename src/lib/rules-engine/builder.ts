@@ -304,19 +304,30 @@ const turnSpend = (state: Record<string, number>): EffectInstance => ({
 });
 
 /**
+ * The var a versatile weapon's attack profiles capture the grip into. Both the
+ * damage die and the melee band's label read it — see {@link attackVars}.
+ */
+const GRIP_VAR = 'twoHanded';
+
+/**
  * The grip a versatile weapon's melee band announces, reusing the LOADOUT's own
  * grip vocabulary so the attack row and the loadout chip say the same thing. The
  * grip is no longer a per-attack choice, so without this the only thing that moved
  * with it was the damage die — d6 or d8 with nothing on the row saying which grip
  * you are in, and it is easy to forget.
  *
+ * Reads the CAPTURED `twoHanded` var, not `weapon.<id>.twoHanded` directly, so the
+ * label freezes with the die it sits beside (see {@link attackVars}). On an offer
+ * that is not yet planned there is no selection, so the var falls through to its
+ * own default — the live fact — and the picker still shows the current grip.
+ *
  * The ABBREVIATED keys, because this label shares the dice line's range button with
  * the distance ("5ft 1H"): the full words made that button change width as the grip
  * changed. The picker, a vertical list, keeps the words.
  */
-function gripLabel(def: WeaponDef): MappedLabelSource {
+function gripLabel(): MappedLabelSource {
   return {
-    fact: `weapon.${def.id}.twoHanded`,
+    var: GRIP_VAR,
     map: { 0: GRIP_ONE_HANDED_SHORT, 1: GRIP_TWO_HANDED_SHORT }
   };
 }
@@ -339,7 +350,7 @@ function rangesFor(def: WeaponDef): WeaponRange[] {
     if (!isVersatile(def)) return band;
     return r.type === 'thrown'
       ? { ...band, damageDie: def.damageDie }
-      : { ...band, label: gripLabel(def) };
+      : { ...band, label: gripLabel() };
   });
 }
 
@@ -362,15 +373,40 @@ export function weaponGripDerives(def: WeaponDef): Contribution[] {
   ];
 }
 
-/** The vars block (dice config) carried by every attack profile of a weapon. */
+/**
+ * The vars block (dice config) carried by every attack profile of a weapon.
+ *
+ * A versatile weapon's grip is a fact the LOADOUT sets, and both the damage die
+ * (`weaponGripDerives`) and the melee band's label follow it. Both are CAPTURED,
+ * for two different reasons:
+ *
+ *  - Every plan row is rendered against the ONE final projected facts object —
+ *    there is no per-step projection — so a live read is really "the state at the
+ *    end of the plan". Planning a spear swing two-handed and then planning a grip
+ *    change rewrote the already-planned swing as one-handed (#398).
+ *  - They must freeze at the SAME moment. A captured die beside a live label reads
+ *    "1H" next to a d8, which is worse than either drifting alone.
+ *
+ * Be clear about what this buys: capture freezes at ADD time, which is still not
+ * the row's position in the plan. Add the swing one-handed and then insert a grip
+ * change ABOVE it and the captured values are stale in the other direction. That is
+ * exactly the trade-off `hitBonus` and `damageBonus` already live with, so the
+ * argument here is consistency with them, not correctness. Making a row read its
+ * own step's facts needs per-step facts projection — an engine change, not this.
+ *
+ * The `twoHanded` var exists only to be captured: `gripLabel` maps it onto the
+ * loadout's grip keys. A weapon with one grip carries neither var and is untouched.
+ */
 function attackVars(def: WeaponDef): Record<string, unknown> {
   return {
     ranges: { default: { array: rangesFor(def) } },
     hitBonus: { capture: true, default: { fact: `attack.${def.id}.hitBonus` } },
-    // Versatile: the die is a live fact of the equipped grip (weaponGripDerives).
-    damageDie: isVersatile(def)
-      ? { default: { fact: `attack.${def.id}.damageDie` } }
-      : { default: { number: def.damageDie } },
+    ...(isVersatile(def)
+      ? {
+          [GRIP_VAR]: { capture: true, default: { fact: `weapon.${def.id}.twoHanded` } },
+          damageDie: { capture: true, default: { fact: `attack.${def.id}.damageDie` } }
+        }
+      : { damageDie: { default: { number: def.damageDie } } }),
     damageBonus: { capture: true, default: { fact: `attack.${def.id}.damageBonus` } }
   };
 }

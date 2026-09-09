@@ -268,24 +268,29 @@ export interface OfferUI extends Record<string, unknown> {
 }
 
 /**
- * An i18n key chosen at RENDER time from the value of a fact — the mapping form
- * of the panel renderer's `ValueSource`.
+ * An i18n key chosen at RENDER time from the value of a fact OR a var — the
+ * mapping form of the panel renderer's `ValueSource`.
  *
  * An offer's `vars` are built with no facts, so anything authored there is fixed
  * for the life of the offer. This is the escape hatch for a label that must follow
- * live character state: a versatile weapon's melee band names the grip the LOADOUT
- * set (`weapon.<id>.twoHanded`), which the attack itself no longer chooses.
+ * character state: a versatile weapon's melee band names the grip the LOADOUT set,
+ * which the attack itself no longer chooses.
  *
- * Lookup is by the fact's string form, with an unset fact read as `0` (an absent
- * numeric fact is zero everywhere else in the engine), so a flag fact written only
- * in its "on" state still resolves both ways.
+ * Which source to pick matters. A `fact` is read from the plan's single FINAL
+ * projection, so the label follows the end of the plan rather than the row's own
+ * position; a `var` reads the row's captured selection first, so a `capture: true`
+ * var freezes the label when the row was added. Anything paired with a captured
+ * value (a versatile weapon's grip label beside its captured damage die) must use
+ * the same source, or the row contradicts itself.
+ *
+ * Lookup is by the resolved value's string form, with an unset source read as `0`
+ * (an absent numeric fact is zero everywhere else in the engine), so a flag written
+ * only in its "on" state still resolves both ways.
  */
-export interface MappedLabelSource {
-  /** The fact whose value selects the key. */
-  fact: string;
-  /** Fact value (as a string) → i18n key. */
-  map: Record<string, string>;
-}
+export type MappedLabelSource = { map: Record<string, string> } & (
+  | { fact: string; var?: undefined }
+  | { var: string; fact?: undefined }
+);
 
 /**
  * UI metadata a module attaches to an effect. An effect with `display` (and

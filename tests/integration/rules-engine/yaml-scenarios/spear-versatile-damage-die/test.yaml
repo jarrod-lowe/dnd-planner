@@ -45,7 +45,7 @@ steps:
                       type: melee
                       meleeAttack: true
                       label:
-                        fact: weapon.spear.twoHanded
+                        var: twoHanded
                         map:
                           '0': rule.dnd-5e-2024.loadout.grip.one-handed-short
                           '1': rule.dnd-5e-2024.loadout.grip.two-handed-short
@@ -58,6 +58,14 @@ steps:
                       meleeAttack: false
                       damageDie: 6
                       disadvantage: true
+              # Captured, alongside the grip var the band's label reads: a plan row
+              # is rendered against the plan's FINAL facts, so a live die would let
+              # a loadout change planned later rewrite an earlier swing (#398).
+              twoHanded:
+                capture: true
+                default:
+                  fact: weapon.spear.twoHanded
               damageDie:
+                capture: true
                 default:
                   fact: attack.spear.damageDie

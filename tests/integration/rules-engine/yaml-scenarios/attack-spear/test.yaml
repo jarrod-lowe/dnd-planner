@@ -43,6 +43,16 @@ steps:
             vars:
               # The grip lives in the loadout, so there is ONE melee band whose
               # die follows weapon.spear.twoHanded; the thrown bands pin d6.
+              # Both the band's label and the die read the CAPTURED grip var, so a
+              # loadout change planned later cannot rewrite an earlier swing.
+              twoHanded:
+                capture: true
+                default:
+                  fact: weapon.spear.twoHanded
+              damageDie:
+                capture: true
+                default:
+                  fact: attack.spear.damageDie
               ranges:
                 default:
                   array:
@@ -52,7 +62,7 @@ steps:
                       type: melee
                       meleeAttack: true
                       label:
-                        fact: weapon.spear.twoHanded
+                        var: twoHanded
                         map:
                           '0': rule.dnd-5e-2024.loadout.grip.one-handed-short
                           '1': rule.dnd-5e-2024.loadout.grip.two-handed-short

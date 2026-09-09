@@ -141,12 +141,16 @@ describe("weapons — a versatile weapon's melee band names the grip", () => {
    * The grip is fixed by the LOADOUT, not chosen per attack, so the only thing on
    * an attack row that moved with it was the damage die — "d6 or d8?" with nothing
    * saying which grip you are in. The melee band therefore carries a label that
-   * FOLLOWS the grip fact, onto the loadout's ABBREVIATED grip keys: the label
+   * FOLLOWS the grip, onto the loadout's ABBREVIATED grip keys: the label
    * shares a button with the range ("5ft 1H"), and the full words made that button
    * change width as the grip changed. The picker's vertical list keeps the words.
+   *
+   * It reads the CAPTURED `twoHanded` var rather than `weapon.spear.twoHanded`
+   * directly, so it freezes with the damage die it sits beside — see the captured
+   * vars below, and PanelDiceLine-versatile-capture.test.ts for the behaviour.
    */
   const GRIP_LABEL = {
-    fact: 'weapon.spear.twoHanded',
+    var: 'twoHanded',
     map: {
       0: 'rule.dnd-5e-2024.loadout.grip.one-handed-short',
       1: 'rule.dnd-5e-2024.loadout.grip.two-handed-short'
@@ -183,6 +187,36 @@ describe("weapons — a versatile weapon's melee band names the grip", () => {
     const ranges = rangesOf(evaluateOffers(ALL, facts).find((o) => o.id === 'greataxe-use-action'));
     expect(ranges.length).toBeGreaterThan(0);
     expect(ranges.every((r) => r.label === undefined)).toBe(true);
+  });
+
+  /**
+   * The grip label and the damage die are the SAME statement about a row, so they
+   * are captured together (#398). Split them — capture one, leave the other live —
+   * and a row reads "1H" beside a d8 the moment a later loadout change lands, which
+   * is worse than either drifting alone. Asserted on the authored shape so the pair
+   * cannot be separated by an edit that never renders anything.
+   */
+  it('captures the grip and the die together on a versatile weapon', () => {
+    const MODS = [actionEconomy, attacks, hands, loadout, spear];
+    const facts = evaluatePlan(MODS, {}, [equip('i0', MODS, 'spear:2h')]).facts;
+    const vars = evaluateOffers(MODS, facts).find((o) => o.id === 'spear-use-action')?.vars;
+
+    expect(vars?.twoHanded).toEqual({
+      capture: true,
+      default: { fact: 'weapon.spear.twoHanded' }
+    });
+    expect(vars?.damageDie).toEqual({
+      capture: true,
+      default: { fact: 'attack.spear.damageDie' }
+    });
+  });
+
+  it('leaves a one-grip weapon with a static die and no grip var', () => {
+    const facts = evaluatePlan(ALL, {}, [equip('i0', ALL, 'greataxe')]).facts;
+    const vars = evaluateOffers(ALL, facts).find((o) => o.id === 'greataxe-use-action')?.vars;
+
+    expect(vars?.twoHanded).toBeUndefined();
+    expect(vars?.damageDie).toEqual({ default: { number: 12 } });
   });
 });
 
