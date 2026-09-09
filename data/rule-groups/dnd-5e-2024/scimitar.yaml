@@ -3,6 +3,7 @@ ruleGroups:
     requires:
       - attacks
       - hands
+      - loadout
     translations:
       en:
         name: Scimitar

@@ -1,71 +1,29 @@
-import { defineRule, type ActionResult, type Diagnostic, type RuleModule } from '../builder';
+import { defineRule, type RuleModule } from '../builder';
 
 const S = 'rule.dnd-5e-2024.shield';
-const BUILD_LOCKED = 'rule.dnd-5e-2024.build-lock.locked';
 
 /**
- * Shield — +2 AC, one hand. Donning advertises a permanent keyed effect adding
- * `ac.shieldBonus` (additive, distinct from the worn-armor base) and consuming a
- * hand from the equip budget. The offer is illegal without shield training (a
- * warning that still blocks) or with no free hand. Foundational equip group, so
- * no search meta.
+ * Shield — +2 AC, one hand.
+ *
+ * There is no don-shield offer any more: a shield is one of the things you can
+ * HOLD, so it declares `equip` and the `loadout` group's `set-loadout` puts it in
+ * a hand as part of a whole configuration. That is the only write path, which is
+ * why this module is now pure declaration — the AC bonus and the equipped flag
+ * ride on the loadout effect, keyed so a swap evicts them atomically.
+ *
+ * `ac.shieldBonus` is additive and distinct from the worn-armor base, so it
+ * composes with leather/splint exactly as before. Foundational equip group, so no
+ * search meta.
  */
 const shield: RuleModule = {
   id: 'shield',
-  offer: () => [
-    {
-      id: 'don-shield',
-      ui: {
-        section: 'equip',
-        name: `${S}.don-shield.name`,
-        detailKey: 'equipment/shield',
-        intents: { EQUIP: 'armor' },
-        actionCost: []
-      },
-      legalWhen: [
-        {
-          condition: (f) => f.num('build.locked') === 0,
-          diagnostics: [{ code: BUILD_LOCKED, severity: 'error' }]
-        },
-        {
-          condition: (f) => f.num('armor.shield.equipped') !== 1,
-          diagnostics: [{ code: `${S}.don-shield-offer.already-equipped`, severity: 'error' }]
-        },
-        {
-          condition: (f) => f.num('armor.shield.proficient') === 1,
-          diagnostics: [{ code: `${S}.don-shield-offer.not-proficient`, severity: 'warning' }]
-        },
-        {
-          condition: (f) => f.num('hands.remaining') >= 1,
-          diagnostics: [{ code: `${S}.don-shield-offer.no-hands`, severity: 'error' }]
-        }
-      ],
-      apply: (f): ActionResult => {
-        const diagnostics: Diagnostic[] = [];
-        if (f.num('build.locked') !== 0)
-          diagnostics.push({ code: BUILD_LOCKED, severity: 'error' });
-        if (f.num('armor.shield.equipped') === 1)
-          diagnostics.push({ code: `${S}.don-shield-offer.already-equipped`, severity: 'error' });
-        if (f.num('armor.shield.proficient') !== 1)
-          diagnostics.push({ code: `${S}.don-shield-offer.not-proficient`, severity: 'warning' });
-        if (f.num('hands.remaining') < 1)
-          diagnostics.push({ code: `${S}.don-shield-offer.no-hands`, severity: 'error' });
-        return {
-          advertise: [
-            {
-              id: 'effect-shield',
-              key: 'armor:shield',
-              state: { 'ac.shieldBonus': 2, 'armor.shield.equipped': 1, 'hands.spent': 1 },
-              // On the strip: removing the chip is how the shield is doffed.
-              display: { name: 'rule.dnd-5e-2024.shield.effect-shield.name' },
-              expiry: { kind: 'permanent' }
-            }
-          ],
-          diagnostics
-        };
-      }
-    }
-  ]
+  // One hand, and never two of them: a shield is not stackable, so the loadout
+  // enumerator never offers "Shield + Shield".
+  equip: {
+    hands: 1,
+    nameKey: `${S}.effect-shield.name`,
+    state: { 'armor.shield.equipped': 1, 'ac.shieldBonus': 2 }
+  }
 };
 
 export default defineRule(shield);

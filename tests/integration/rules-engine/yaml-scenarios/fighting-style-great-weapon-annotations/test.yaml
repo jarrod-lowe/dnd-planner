@@ -1,9 +1,19 @@
 name: 'Fighting Style - Great Weapon Fighting - Annotations'
 description: >
-  When fighting-style-great-weapon is assigned and a greataxe attack is planned,
-  the GWF annotation appears on qualifying weapon panels (those with property.twoHanded
-  or property.versatile labels). The annotation does NOT appear without a planned
-  weapon attack or on unarmed strikes.
+  When fighting-style-great-weapon is assigned and a weapon attack is planned, the
+  GWF annotation appears on qualifying weapon panels. The annotation does NOT appear
+  without a planned weapon attack or on unarmed strikes.
+
+  WHICH panels qualify depends on the grip, and the annotation's `targets` array is
+  what says so. An inherently two-handed weapon (greataxe, property.twoHanded)
+  always qualifies. A VERSATILE weapon (spear, property.versatile) qualifies only
+  while the loadout actually has it in two hands — `grip.twoHanded`.
+
+  That gate used to live in the UI (PanelRenderer's `selectionExtraHands > 0`),
+  reading a per-attack selection. When the loadout took ownership of the grip
+  nothing wrote that selection any more, so the gate pinned itself false and GWF
+  died for every versatile weapon, silently, because no test covered it. It is a
+  rule, so it lives in the rule now and these steps are its net.
 
 ruleGroups:
   - dnd-5e-2024/ability-scores
@@ -11,6 +21,9 @@ ruleGroups:
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/attacks
   - dnd-5e-2024/greataxe
+  - dnd-5e-2024/spear
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
   - dnd-5e-2024/free-actions
   - dnd-5e-2024/core-events
   - dnd-5e-2024/fighting-style-great-weapon
@@ -57,12 +70,94 @@ steps:
       assert:
         facts:
           str.value: 16
-  # Plan a greataxe attack - GWF annotation should appear (greataxe has property.twoHanded label)
+  # Plan a greataxe attack - GWF annotation should appear (greataxe has property.twoHanded label).
+  # No loadout has been set, so `grip.twoHanded` is 0 — and the greataxe qualifies
+  # anyway. A weapon that is two-handed by construction is never held any other way.
   - addOffer:
       id: greataxe-use-action
+      assert:
+        facts:
+          attack.last.weapon: 1
+          grip.twoHanded: 0
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.fighting-style-great-weapon.annotation
+          targets:
+            - key: rule.dnd-5e-2024.fighting-style-great-weapon.annotation
+              targets:
+                - property.twoHanded
+
+  - endTurn: {}
+
+  # A spear in ONE hand: the annotation still fires (a weapon attack was made) but
+  # it no longer reaches property.versatile, so the spear's panel gets no rider.
+  - addOffer:
+      id: set-loadout
+      selections:
+        loadout:
+          id: spear
+          hands: 1
+          handsFree: 1
+          items:
+            - id: spear
+              nameKey: rule.dnd-5e-2024.attacks.spear.name
+              hands: 1
+              twoHanded: false
+              gripKey: rule.dnd-5e-2024.loadout.grip.one-handed
+              state:
+                weapon.spear.equipped: 1
+      assert:
+        facts:
+          weapon.spear.equipped: 1
+          grip.twoHanded: 0
+  - addOffer:
+      id: spear-use-action
       assert:
         facts:
           attack.last.weapon: 1
         annotations:
           exists:
             - rule.dnd-5e-2024.fighting-style-great-weapon.annotation
+          targets:
+            - key: rule.dnd-5e-2024.fighting-style-great-weapon.annotation
+              targets:
+                - property.twoHanded
+
+  - endTurn: {}
+
+  # The same spear in BOTH hands: the grip fact is set and property.versatile joins
+  # the targets, so the spear's panel gets the reroll rider.
+  - addOffer:
+      id: set-loadout
+      selections:
+        loadout:
+          id: spear:2h
+          hands: 2
+          handsFree: 0
+          items:
+            - id: spear
+              nameKey: rule.dnd-5e-2024.attacks.spear.name
+              hands: 2
+              twoHanded: true
+              gripKey: rule.dnd-5e-2024.loadout.grip.two-handed
+              state:
+                weapon.spear.equipped: 1
+                weapon.spear.twoHanded: 1
+      assert:
+        facts:
+          weapon.spear.equipped: 1
+          weapon.spear.twoHanded: 1
+          grip.twoHanded: 1
+  - addOffer:
+      id: spear-use-action
+      assert:
+        facts:
+          attack.last.weapon: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.fighting-style-great-weapon.annotation
+          targets:
+            - key: rule.dnd-5e-2024.fighting-style-great-weapon.annotation
+              targets:
+                - property.twoHanded
+                - property.versatile

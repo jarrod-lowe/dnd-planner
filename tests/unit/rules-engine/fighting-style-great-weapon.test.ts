@@ -23,8 +23,23 @@ describe('fighting-style-great-weapon — reroll rider', () => {
     expect(anns({}).some((a) => a.key === KEY)).toBe(false);
   });
 
-  it('annotates two-handed/versatile panels after the first weapon attack', () => {
+  /**
+   * WHICH panels qualify depends on the grip, and that is a rule, not a UI
+   * concern. A two-handed weapon always qualifies; a VERSATILE one qualifies only
+   * while the loadout actually has it in two hands (`grip.twoHanded`).
+   *
+   * This gate used to live in PanelRenderer as `selectionExtraHands > 0`, reading
+   * a per-attack selection. When the loadout took ownership of the grip nothing
+   * wrote that selection any more, so the gate silently pinned itself false and
+   * Great Weapon Fighting died for every versatile weapon — with no test to say so.
+   */
+  it('annotates only two-handed panels when nothing is gripped two-handed', () => {
     const found = anns({ 'attack.last.weapon': 1 }).find((a) => a.key === KEY);
+    expect(found?.targets).toEqual(['property.twoHanded']);
+  });
+
+  it('adds the versatile panels once the loadout grips two-handed', () => {
+    const found = anns({ 'attack.last.weapon': 1, 'grip.twoHanded': 1 }).find((a) => a.key === KEY);
     expect(found?.targets).toEqual(['property.twoHanded', 'property.versatile']);
   });
 

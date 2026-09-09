@@ -41,21 +41,41 @@ steps:
         offerVars:
           - id: spear-use-action
             vars:
+              # The grip lives in the loadout, so there is ONE melee band whose
+              # die follows weapon.spear.twoHanded; the thrown bands pin d6.
+              # Both the band's label and the die read the CAPTURED grip var, so a
+              # loadout change planned later cannot rewrite an earlier swing.
+              twoHanded:
+                capture: true
+                default:
+                  fact: weapon.spear.twoHanded
+              damageDie:
+                capture: true
+                default:
+                  fact: attack.spear.damageDie
               ranges:
                 default:
                   array:
+                    # The single melee band names the grip the loadout set, so the
+                    # attack row states it rather than leaving only the die to hint.
                     - distance: 5
                       type: melee
-                      label: 1H
-                    - distance: 5
-                      type: melee
-                      label: 2H
-                      damageDie: 8
-                      extraHands: 1
+                      meleeAttack: true
+                      label:
+                        var: twoHanded
+                        map:
+                          '0': rule.dnd-5e-2024.loadout.grip.one-handed-short
+                          '1': rule.dnd-5e-2024.loadout.grip.two-handed-short
+                    # A thrown band is not a melee weapon attack, so a two-handed
+                    # grip's Great Weapon Fighting floor must not reach it.
                     - distance: 20
                       type: thrown
+                      meleeAttack: false
+                      damageDie: 6
                     - distance: 60
                       type: thrown
+                      meleeAttack: false
+                      damageDie: 6
                       disadvantage: true
 
   - addOffer:

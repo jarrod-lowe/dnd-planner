@@ -1,0 +1,71 @@
+name: 'Hands - Choosing The Greataxe Replaces A Held Shield'
+description: >
+  A shield in hand used to make the greataxe don illegal (1 hand left, 2 needed).
+  There is no per-item don to refuse any more: the loadout is set whole, so
+  choosing the greataxe while a shield is held simply REPLACES it. The shared
+  `loadout` effect key evicts the previous configuration, so the shield's AC bonus
+  and its hand both come back rather than the hand spend accumulating to 3.
+
+ruleGroups:
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/shield
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/greataxe
+
+# Shield training granted so the loadout rows carry no proficiency warning.
+initialFacts:
+  armor.shield.proficient: 1
+
+steps:
+  - addOffer:
+      id: set-loadout
+      selections:
+        loadout:
+          id: shield
+          hands: 1
+          handsFree: 1
+          items:
+            - id: shield
+              nameKey: rule.dnd-5e-2024.shield.effect-shield.name
+              hands: 1
+              twoHanded: false
+              state:
+                armor.shield.equipped: 1
+                ac.shieldBonus: 2
+      assert:
+        facts:
+          armor.shield.equipped: 1
+          ac.shieldBonus: 2
+          hands.remaining: 1
+
+  - addOffer:
+      id: set-loadout
+      selections:
+        loadout:
+          id: greataxe
+          hands: 2
+          handsFree: 0
+          items:
+            - id: greataxe
+              nameKey: rule.dnd-5e-2024.attacks.greataxe.name
+              hands: 2
+              twoHanded: false
+              state:
+                weapon.greataxe.equipped: 1
+      assert:
+        facts:
+          weapon.greataxe.equipped: 1
+          armor.shield.equipped: 0
+          ac.shieldBonus: 0
+          hands.remaining: 0
+        planErrors:
+          - id: set-loadout
+            index: 1
+            errors: []

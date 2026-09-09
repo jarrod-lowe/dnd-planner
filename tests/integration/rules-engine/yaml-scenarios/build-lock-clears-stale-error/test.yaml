@@ -1,0 +1,64 @@
+name: "Build Lock - unlocking clears a planned row's stale lock error"
+description: >
+  A planned BUILD offer that gates on build.locked must not KEEP its lock error
+  once the lock is gone. The legacy don wrapper setAdded to var:errors without a
+  setClear first, so varsRuntime.errors accumulated across evaluations and the
+  planned row stayed illegal forever. The engine's fold allocates planDiagnostics
+  fresh each evaluation (plan.ts) and every `apply` builds its diagnostics array
+  by value, so the error is a pure function of the facts — this pins that.
+
+  Uses the leather-armor don rather than a weapon: the per-weapon dons are gone
+  (set-loadout replaced them, and it deliberately carries no build-lock gate), so
+  body armor is now the offer this property lives on.
+
+  The lock is planned BEFORE the armor so the plan fold — which is plan-order by
+  design — sees build.locked already set when it folds the don.
+
+ruleGroups:
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/leather-armor
+  - dnd-5e-2024/build-lock
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          build.locked: 0
+        offers:
+          legal:
+            - don-leather-armor
+            - lock
+
+  # Lock the build first: every BUILD offer flips illegal.
+  - addOffer:
+      id: lock
+      assert:
+        facts:
+          build.locked: 1
+        offers:
+          illegal:
+            - don-leather-armor
+
+  # Planning the don anyway records the lock error against that row.
+  - addOffer:
+      id: don-leather-armor
+      assert:
+        facts:
+          build.locked: 1
+        planErrors:
+          - id: don-leather-armor
+            errors:
+              - rule.dnd-5e-2024.build-lock.locked
+
+  # Unlocking must clear it: the SAME planned row re-evaluates clean and legal.
+  - removeFromPlan:
+      id: lock
+      assert:
+        facts:
+          build.locked: 0
+          armor.leather.equipped: 1
+          ac.base: 11
+        planErrors:
+          - id: don-leather-armor
+            errors: []

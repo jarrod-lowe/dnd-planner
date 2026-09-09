@@ -1,0 +1,83 @@
+name: 'Loadout - the hand budget counts hands spent elsewhere'
+description: >
+  `hands.spent` is an AGGREGATE: the loadout writes it, and so does Grapple (a
+  permanent hand while the target is Grappled, a turn-long one for an unresolved
+  attempt). The loadout's gate must therefore compare its configuration against the
+  hands still FREE, not against `hands.max` — otherwise a two-handed loadout is
+  waved through while a hand is already tied up, and the sheet lands on three spent
+  hands with the planned row reading legal and saying nothing.
+
+  The asymmetry is what made this easy to miss: grapple-after-loadout was already
+  caught, because Grapple's own gate reads `hands.remaining`. It is
+  loadout-after-grapple that was unguarded — including the common case of a
+  permanent grapple committed on an earlier turn, as here.
+
+  The guard is the DIAGNOSTIC, not a clamp: an `apply` error marks the row illegal
+  but the effect is still advertised, so the readout does go negative. Releasing the
+  grapple gives the hand back and the same configuration goes legal again, which is
+  what proves the gate reads the live aggregate rather than just refusing greataxes.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
+  - dnd-5e-2024/grapple
+  - dnd-5e-2024/greataxe
+
+steps:
+  # Grapple, target fails its save: a hand is tied up permanently.
+  - addOffer:
+      id: grapple-action
+      selections:
+        passed: 0
+      assert:
+        facts:
+          hands.remaining: 1
+
+  # The Grappling effect survives the turn. One hand left.
+  - endTurn:
+      assert:
+        facts:
+          hands.remaining: 1
+        effects:
+          exists:
+            - effect-grappling
+
+  # A greataxe needs both hands and only one is free. 2 > hands.max is false, so a
+  # gate that reads `hands.max` alone lets this through silently.
+  - addOffer:
+      id: set-loadout
+      selections:
+        loadout:
+          id: greataxe
+          hands: 2
+          handsFree: 0
+          items:
+            - id: greataxe
+              nameKey: rule.dnd-5e-2024.attacks.greataxe.name
+              hands: 2
+              twoHanded: false
+              state:
+                weapon.greataxe.equipped: 1
+      assert:
+        facts:
+          hands.remaining: -1
+        planErrors:
+          - id: set-loadout
+            errors:
+              - rule.dnd-5e-2024.loadout.set-loadout-offer.no-hands
+
+  # Release the grapple: the same configuration now fits, and the row goes clean.
+  - removeEffect:
+      id: effect-grappling
+      assert:
+        facts:
+          hands.remaining: 0
+          weapon.greataxe.equipped: 1
+        planErrors:
+          - id: set-loadout
+            errors: []

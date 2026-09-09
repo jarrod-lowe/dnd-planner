@@ -79,6 +79,7 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   'splint-armor': () => import('./rules/splint-armor'),
   shield: () => import('./rules/shield'),
   hands: () => import('./rules/hands'),
+  loadout: () => import('./rules/loadout'),
   dagger: () => import('./rules/dagger'),
   'dagger-mastery': () => import('./rules/dagger-mastery'),
   greataxe: () => import('./rules/greataxe'),

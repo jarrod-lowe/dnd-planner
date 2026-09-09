@@ -3,6 +3,7 @@ ruleGroups:
     requires:
       - ac
       - hands
+      - loadout
     translations:
       en:
         name: Shield

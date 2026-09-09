@@ -59,12 +59,9 @@ const splintEquipped = (): EffectInstance => ({
   expiry: permanent
 });
 
-/** A shield held: +2 AC. `handsSpent` mirrors a fixture that also used a hand. */
-const shieldEquipped = (handsSpent = 0): EffectInstance => {
-  const state: Record<string, number> = { 'ac.shieldBonus': 2, 'armor.shield.equipped': 1 };
-  if (handsSpent > 0) state['hands.spent'] = handsSpent;
-  return { id: 'effect-shield', state, expiry: permanent };
-};
+// A shield held used to have a translation here too. It no longer does: the
+// shield is only ever in hand via the loadout, so the scenarios that need one
+// reach it through a `set-loadout` step rather than a starting effect.
 
 /** A binary training/flag fact granted (e.g. `armor.light.proficient`). */
 const flag = (fact: string, value = 1): EffectInstance => ({
@@ -104,7 +101,6 @@ export const INITIAL_EFFECTS: Record<string, EffectInstance[]> = {
   'leather-armor-proficient': [flag('armor.light.proficient')],
   'splint-armor-already-equipped': [splintEquipped()],
   'splint-armor-proficient': [flag('armor.heavy.proficient')],
-  'shield-already-equipped': [shieldEquipped()],
   'shield-proficient': [flag('armor.shield.proficient')],
   'shield-with-splint-armor': [flag('armor.heavy.proficient'), flag('armor.shield.proficient')],
 
@@ -117,7 +113,6 @@ export const INITIAL_EFFECTS: Record<string, EffectInstance[]> = {
   'greataxe-cleave-mastery': [weaponEquipped('greataxe')],
   'javelin-slow-mastery': [weaponEquipped('javelin')],
   'spear-versatile-damage-die': [weaponEquipped('spear')],
-  'weapon-don-illegal-when-equipped': [weaponEquipped('dagger')],
   'weapon-donned-attacks-visible': [weaponEquipped('dagger')],
   'fighting-style-great-weapon-annotations': [weaponEquipped('greataxe')],
   'savage-attacker-annotations': [weaponEquipped('dagger')],
@@ -182,15 +177,13 @@ export const INITIAL_EFFECTS: Record<string, EffectInstance[]> = {
   'tsmite-upcast': [slot(2)],
 
   // === Hands budget (fixtures decremented hands.remaining; these set hands.spent) ===
-  'hands-two-daggers-legal': [shieldEquipped(1)],
-  'hands-shield-then-greataxe-illegal': [shieldEquipped(1)],
-  'hands-greataxe-then-shield-illegal': [weaponEquipped('greataxe', 2)],
+  // The hands/shield/spear scenarios that used to start from a pre-equipped item
+  // now reach the same state through a `set-loadout` step instead, so they need no
+  // translation here: the loadout is the only write path into the hands.
   'grapple-no-free-hand': [handsOccupied(2)],
   'grapple-no-free-hand-normal-effect': [handsOccupied(2)],
   'grapple-no-hand-even-when-saved': [handsOccupied(2)],
   'grapple-saved-frees-hand': [flag('extraAttacks.max')],
-  'spear-2h-effects-ordering': [weaponEquipped('dagger', 1), weaponEquipped('spear', 1)],
-  'spear-2h-reaction-no-free-hands': [weaponEquipped('dagger', 1), weaponEquipped('spear', 1)],
 
   // === Find Steed (casting) — a granted slot; the free use comes from the group ===
   'find-steed-basic-cast': [slot(2)],

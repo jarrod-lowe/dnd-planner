@@ -1,0 +1,76 @@
+name: 'Hands - Greataxe Plus Shield Is Over The Hand Budget'
+description: >
+  A greataxe fills both hands, so it can never be held alongside a shield. There
+  is no longer a per-item shield don to mark illegal — the enumerator simply never
+  offers greataxe+shield — so the property is asserted where it is reachable from
+  a scenario: the greataxe loadout leaves 0 hands and no shield, and a loadout
+  naming both items asks for 3 hands and is flagged with the hand-budget error.
+
+ruleGroups:
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/shield
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/greataxe
+
+# Shield training granted so the only diagnostic in play is the hand budget.
+initialFacts:
+  armor.shield.proficient: 1
+
+steps:
+  - addOffer:
+      id: set-loadout
+      selections:
+        loadout:
+          id: greataxe
+          hands: 2
+          handsFree: 0
+          items:
+            - id: greataxe
+              nameKey: rule.dnd-5e-2024.attacks.greataxe.name
+              hands: 2
+              twoHanded: false
+              state:
+                weapon.greataxe.equipped: 1
+      assert:
+        facts:
+          weapon.greataxe.equipped: 1
+          armor.shield.equipped: 0
+          hands.remaining: 0
+        planErrors:
+          - id: set-loadout
+            errors: []
+
+  # Both at once needs three hands, which the character does not have.
+  - updateSelections:
+      id: set-loadout
+      selections:
+        loadout:
+          id: greataxe+shield
+          hands: 3
+          handsFree: 0
+          items:
+            - id: greataxe
+              nameKey: rule.dnd-5e-2024.attacks.greataxe.name
+              hands: 2
+              twoHanded: false
+              state:
+                weapon.greataxe.equipped: 1
+            - id: shield
+              nameKey: rule.dnd-5e-2024.shield.effect-shield.name
+              hands: 1
+              twoHanded: false
+              state:
+                armor.shield.equipped: 1
+                ac.shieldBonus: 2
+      assert:
+        planErrors:
+          - id: set-loadout
+            errors:
+              - rule.dnd-5e-2024.loadout.set-loadout-offer.no-hands

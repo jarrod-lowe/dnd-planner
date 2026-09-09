@@ -1,0 +1,45 @@
+name: 'Weapon Loadout Planned - Attack Visible Same Turn'
+description: >
+  After adding set-loadout to the plan, the dagger's attack offers appear in the
+  SAME turn: the loadout's facts are folded into the plan before the offers are
+  re-derived, so the attack `when` gates see the weapon in hand immediately.
+
+ruleGroups:
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/dagger
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          weapon.dagger.equipped: 0
+        offers:
+          notExists:
+            - dagger-use-action
+  - addOffer:
+      id: set-loadout
+      selections:
+        loadout:
+          id: dagger
+          hands: 1
+          handsFree: 1
+          items:
+            - id: dagger
+              nameKey: rule.dnd-5e-2024.attacks.dagger.name
+              hands: 1
+              twoHanded: false
+              state:
+                weapon.dagger.equipped: 1
+      assert:
+        facts:
+          weapon.dagger.equipped: 1
+        offers:
+          exists:
+            - dagger-use-action

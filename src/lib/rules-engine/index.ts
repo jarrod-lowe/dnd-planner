@@ -37,6 +37,7 @@ export type {
   LegalWhen,
   Offer,
   OfferUI,
+  MappedLabelSource,
   Section,
   OfferEntry,
   PlannedRef,

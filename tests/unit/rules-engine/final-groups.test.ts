@@ -6,10 +6,12 @@ import {
   collectAnnotations,
   endTurn
 } from '$lib/rules-engine';
-import type { PlannedRef } from '$lib/rules-engine';
+import type { PlannedRef, RuleModule } from '$lib/rules-engine';
+import { enumerateLoadouts } from '$lib/rules-engine/loadout';
 import actionEconomy from '$lib/rules-engine/rules/action-economy';
 import attacks from '$lib/rules-engine/rules/attacks';
 import hands from '$lib/rules-engine/rules/hands';
+import loadout from '$lib/rules-engine/rules/loadout';
 import dagger from '$lib/rules-engine/rules/dagger';
 import spellcasting from '$lib/rules-engine/rules/spellcasting';
 import spearPlus1 from '$lib/rules-engine/rules/spear-plus1';
@@ -33,8 +35,15 @@ const ref = (
   ...(selections ? { selections } : {})
 });
 
+/** Setup: plan the loadout that puts `configId` in hand (the only equip path). */
+const equip = (instanceId: string, modules: RuleModule[], configId: string): PlannedRef => {
+  const config = enumerateLoadouts(modules).find((c) => c.id === configId);
+  if (!config) throw new Error(`no such loadout configuration: ${configId}`);
+  return { instanceId, ruleId: 'set-loadout', selections: { loadout: config } };
+};
+
 describe('spear-plus1 — magical weapon variant', () => {
-  const ALL = [actionEconomy, attacks, hands, spearPlus1];
+  const ALL = [actionEconomy, attacks, hands, loadout, spearPlus1];
   // STR +3, proficiency +2.
   const INPUT = { 'str.modifier': 3, 'proficiency.bonus': 2 };
 
@@ -44,14 +53,18 @@ describe('spear-plus1 — magical weapon variant', () => {
     expect(facts['attack.spear-plus1.damageBonus']).toBe(4); // 3 + 1
   });
 
-  it('offers don + attack profiles like the base spear (via weaponOffers)', () => {
+  it('is holdable and offers attack profiles like the base spear (via weaponOffers)', () => {
+    // It declares `equip`, so the enumerator offers it in both grips (versatile).
+    const configs = enumerateLoadouts(ALL).map((c) => c.id);
+    expect(configs).toContain('spear-plus1');
+    expect(configs).toContain('spear-plus1:2h');
+
     const stowed = evaluateOffers(ALL, evaluatePlan(ALL, INPUT, []).facts);
-    expect(stowed.some((o) => o.id === 'don-spear-plus1')).toBe(true);
     expect(stowed.some((o) => o.id === 'spear-plus1-use-action')).toBe(false); // needs equipping
 
-    const donned = evaluatePlan(ALL, INPUT, [ref('i0', 'don-spear-plus1')]);
-    expect(donned.facts['weapon.spear-plus1.equipped']).toBe(1);
-    expect(evaluateOffers(ALL, donned.facts).some((o) => o.id === 'spear-plus1-use-action')).toBe(
+    const held = evaluatePlan(ALL, INPUT, [equip('i0', ALL, 'spear-plus1')]);
+    expect(held.facts['weapon.spear-plus1.equipped']).toBe(1);
+    expect(evaluateOffers(ALL, held.facts).some((o) => o.id === 'spear-plus1-use-action')).toBe(
       true
     );
   });
@@ -64,7 +77,7 @@ describe('spear-plus1 — magical weapon variant', () => {
 });
 
 describe('feat-savage-attacker — once-per-turn reroll rider', () => {
-  const ALL = [actionEconomy, attacks, hands, dagger, featSavageAttacker];
+  const ALL = [actionEconomy, attacks, hands, loadout, dagger, featSavageAttacker];
 
   it('starts each turn with one use available', () => {
     const facts = evaluateSheet([featSavageAttacker], {});
@@ -87,7 +100,7 @@ describe('feat-savage-attacker — once-per-turn reroll rider', () => {
 
   it('spends its one use per turn, then reads already-used, and resets next turn', () => {
     const plan = [
-      ref('i0', 'don-dagger'),
+      equip('i0', ALL, 'dagger'),
       ref('i1', 'dagger-use-action'),
       ref('i2', 'savage-attacker-use'),
       ref('i3', 'savage-attacker-use')

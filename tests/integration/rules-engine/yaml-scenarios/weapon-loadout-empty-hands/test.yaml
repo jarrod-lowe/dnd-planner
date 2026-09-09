@@ -1,0 +1,69 @@
+name: 'Weapon Loadout - Empty Hands Puts The Weapon Away'
+description: >
+  "Already donned, so the don is illegal" has no successor — there is no per-item
+  don, and choosing a configuration you are already in is a no-op. What replaced
+  it is the path the old model had no offer for at all: empty hands. Setting the
+  empty configuration evicts the previous loadout, so the weapon is stowed, the
+  hands come back, and the weapon's attacks drop out of the list.
+
+ruleGroups:
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/dagger
+
+steps:
+  - addOffer:
+      id: set-loadout
+      selections:
+        loadout:
+          id: dagger
+          hands: 1
+          handsFree: 1
+          items:
+            - id: dagger
+              nameKey: rule.dnd-5e-2024.attacks.dagger.name
+              hands: 1
+              twoHanded: false
+              state:
+                weapon.dagger.equipped: 1
+      assert:
+        facts:
+          weapon.dagger.equipped: 1
+          hands.remaining: 1
+        offers:
+          exists:
+            - dagger-use-action
+
+  # The dagger is still held next turn — the loadout effect is permanent.
+  - endTurn:
+      assert:
+        facts:
+          weapon.dagger.equipped: 1
+          hands.remaining: 1
+
+  - addOffer:
+      id: set-loadout
+      selections:
+        loadout:
+          id: empty
+          hands: 0
+          handsFree: 2
+          items: []
+      assert:
+        facts:
+          weapon.dagger.equipped: 0
+          hands.remaining: 2
+        planErrors:
+          - id: set-loadout
+            errors: []
+        offers:
+          legal:
+            - set-loadout
+          notExists:
+            - dagger-use-action

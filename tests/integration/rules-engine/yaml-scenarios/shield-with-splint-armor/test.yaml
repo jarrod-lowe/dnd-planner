@@ -1,6 +1,11 @@
 name: 'Shield With Splint Armor'
-description: 'Shield +2 AC stacks with splint armor AC 17'
+description: >
+  Shield +2 AC stacks with splint armor AC 17. Body armor is still a per-item don
+  (it occupies no hands, so it is not part of the loadout); the shield comes from
+  the loadout, and the two contributions compose.
 ruleGroups:
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
   - dnd-5e-2024/ac
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/splint-armor
@@ -30,7 +35,7 @@ steps:
         offers:
           exists:
             - don-splint-armor
-            - don-shield
+            - set-loadout
   - addOffer:
       id: don-splint-armor
       assert:
@@ -39,10 +44,24 @@ steps:
           ac.dexBonus: 0
           ac.value: 17
   - addOffer:
-      id: don-shield
+      id: set-loadout
+      selections:
+        loadout:
+          id: shield
+          hands: 1
+          handsFree: 1
+          items:
+            - id: shield
+              nameKey: rule.dnd-5e-2024.shield.effect-shield.name
+              hands: 1
+              twoHanded: false
+              state:
+                armor.shield.equipped: 1
+                ac.shieldBonus: 2
       assert:
         facts:
           ac.shieldBonus: 2
           ac.value: 19
           armor.splint.equipped: 1
           armor.shield.equipped: 1
+          hands.remaining: 1

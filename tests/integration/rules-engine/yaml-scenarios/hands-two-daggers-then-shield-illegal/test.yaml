@@ -1,10 +1,13 @@
-name: 'Hands - Dagger And Greataxe Fill Hands'
+name: 'Hands - Two Daggers Leave No Hand For A Shield'
 description: >
-  Donning a greataxe uses 2 hands (0 remaining). The shield don offer should
-  then be illegal via the hands legality check.
+  Two daggers spend the whole 2-hand budget, so no shield can join them. The
+  enumerator never emits that configuration; the assertion reachable from a
+  scenario is the guard behind it — a loadout naming both daggers and a shield
+  asks for 3 hands and is flagged with the hand-budget error.
 
 ruleGroups:
   - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
   - dnd-5e-2024/ac
   - dnd-5e-2024/shield
   - dnd-5e-2024/core-events
@@ -13,7 +16,11 @@ ruleGroups:
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/attacks
-  - dnd-5e-2024/greataxe
+  - dnd-5e-2024/dagger
+
+# Shield training granted so the only diagnostic in play is the hand budget.
+initialFacts:
+  armor.shield.proficient: 1
 
 steps:
   - evaluate:
@@ -22,20 +29,73 @@ steps:
           hands.remaining: 2
         offers:
           exists:
-            - don-greataxe
+            - set-loadout
+
   - addOffer:
-      id: don-greataxe
+      id: set-loadout
+      selections:
+        loadout:
+          id: dagger+dagger
+          hands: 2
+          handsFree: 0
+          items:
+            - id: dagger
+              nameKey: rule.dnd-5e-2024.attacks.dagger.name
+              hands: 1
+              twoHanded: false
+              state:
+                weapon.dagger.equipped: 1
+            - id: dagger
+              nameKey: rule.dnd-5e-2024.attacks.dagger.name
+              hands: 1
+              twoHanded: false
+              state:
+                weapon.dagger.equipped: 1
       assert:
         facts:
-          weapon.greataxe.equipped: 1
+          weapon.dagger.equipped: 1
+          armor.shield.equipped: 0
           hands.remaining: 0
+        planErrors:
+          - id: set-loadout
+            errors: []
+
   - endTurn:
       assert:
         facts:
-          weapon.greataxe.equipped: 1
+          weapon.dagger.equipped: 1
           hands.remaining: 0
-  - evaluate:
+
+  # Adding the shield on top would need a third hand.
+  - addOffer:
+      id: set-loadout
+      selections:
+        loadout:
+          id: dagger+dagger+shield
+          hands: 3
+          handsFree: 0
+          items:
+            - id: dagger
+              nameKey: rule.dnd-5e-2024.attacks.dagger.name
+              hands: 1
+              twoHanded: false
+              state:
+                weapon.dagger.equipped: 1
+            - id: dagger
+              nameKey: rule.dnd-5e-2024.attacks.dagger.name
+              hands: 1
+              twoHanded: false
+              state:
+                weapon.dagger.equipped: 1
+            - id: shield
+              nameKey: rule.dnd-5e-2024.shield.effect-shield.name
+              hands: 1
+              twoHanded: false
+              state:
+                armor.shield.equipped: 1
+                ac.shieldBonus: 2
       assert:
-        offers:
-          illegal:
-            - don-shield
+        planErrors:
+          - id: set-loadout
+            errors:
+              - rule.dnd-5e-2024.loadout.set-loadout-offer.no-hands

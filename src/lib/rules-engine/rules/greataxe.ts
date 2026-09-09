@@ -1,4 +1,4 @@
-import { defineRule, weaponOffers, type RuleModule, type WeaponDef } from '../builder';
+import { defineRule, weaponEquip, weaponOffers, type RuleModule, type WeaponDef } from '../builder';
 
 const P = 'rule.dnd-5e-2024.attacks.greataxe';
 const CLEAVE = 'rule.dnd-5e-2024.attacks.greataxe-cleave.button';
@@ -49,11 +49,12 @@ const GREATAXE: WeaponDef = {
  */
 const greataxe: RuleModule = {
   id: 'greataxe',
+  equip: weaponEquip(GREATAXE),
   meta: {
     name: `${P}.name`,
     description: `${P}.description`,
     keywords: `${P}.keywords`,
-    requires: ['attacks', 'hands']
+    requires: ['attacks', 'hands', 'loadout']
   },
   derive: () => [
     {

@@ -1,4 +1,11 @@
-import { defineRule, weaponOffers, type RuleModule, type WeaponDef } from '../builder';
+import {
+  defineRule,
+  weaponEquip,
+  weaponGripDerives,
+  weaponOffers,
+  type RuleModule,
+  type WeaponDef
+} from '../builder';
 
 const P = 'rule.dnd-5e-2024.attacks.spear-plus1';
 const MAGICAL = 'rule.dnd-5e-2024.spear-plus1.magical';
@@ -6,14 +13,16 @@ const MAGICAL = 'rule.dnd-5e-2024.spear-plus1.magical';
 const SPEAR_PLUS1: WeaponDef = {
   id: 'spear-plus1',
   hands: 1,
+  versatile: true,
+  versatileDamageDie: 8,
   damageDie: 6,
   damageType: 'piercing',
   disadvantageFact: 'attack.str.disadvantage',
-  // Same Versatile/Thrown bands as the base spear; the +1 enhancement rides in
-  // the hit/damage derives below, not the dice sizes.
+  // Same Versatile/Thrown bands as the base spear (the grip lives in the loadout,
+  // so the melee band's die follows `weapon.spear-plus1.twoHanded`); the +1
+  // enhancement rides in the hit/damage derives below, not the dice sizes.
   ranges: [
-    { distance: 5, type: 'melee', label: '1H' },
-    { distance: 5, type: 'melee', label: '2H', damageDie: 8, extraHands: 1 },
+    { distance: 5, type: 'melee' },
     { distance: 20, type: 'thrown' },
     { distance: 60, type: 'thrown', disadvantage: true }
   ],
@@ -36,18 +45,20 @@ const SPEAR_PLUS1: WeaponDef = {
  */
 const spearPlus1: RuleModule = {
   id: 'spear-plus1',
+  equip: weaponEquip(SPEAR_PLUS1),
   meta: {
     name: `${P}.name`,
     description: `${P}.description`,
     keywords: `${P}.keywords`,
-    requires: ['attacks', 'hands']
+    requires: ['attacks', 'hands', 'loadout']
   },
   derive: () => [
     {
       fact: 'attack.spear-plus1.hitBonus',
       value: (f) => f.num('str.modifier') + f.num('proficiency.bonus') + 1
     },
-    { fact: 'attack.spear-plus1.damageBonus', value: (f) => f.num('str.modifier') + 1 }
+    { fact: 'attack.spear-plus1.damageBonus', value: (f) => f.num('str.modifier') + 1 },
+    ...weaponGripDerives(SPEAR_PLUS1)
   ],
   offer: () => weaponOffers(SPEAR_PLUS1),
   // Unconditional magical mark on the weapon (the legacy annotate-spear-plus1-magical).

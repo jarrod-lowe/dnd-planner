@@ -28,6 +28,8 @@ vi.mock('$lib/i18n', () => ({
 
 vi.mock('$lib/play/playStore.svelte', () => ({
   playStore: {
+    // PlanStack hands the character's modules down to the loadout control.
+    state: { modules: [] },
     getAlternativeEntries: vi.fn(() => []),
     getPlannedEntry: vi.fn(() => undefined)
   }

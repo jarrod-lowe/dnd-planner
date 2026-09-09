@@ -1,0 +1,23 @@
+ruleGroups:
+  - id: loadout
+    requires:
+      - hands
+    translations:
+      en:
+        name: Loadout (House Rule)
+        description:
+          Set what is in both hands at once, in play — swapping costs nothing
+        keywords:
+          - loadout
+          - equip
+          - hands
+          - swap
+          - wield
+          - shield
+      en-x-tlh:
+        name: ghopDu' qeng (tlhIngan chut)
+        description: ghopDu' Dochmey choH. bIQtIq Sam pagh.
+        keywords:
+          - qeng
+          - ghopDu'
+          - nuH

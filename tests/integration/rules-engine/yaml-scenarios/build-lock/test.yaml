@@ -3,6 +3,8 @@ description: >
   Selecting Lock sets build.locked, flipping every BUILD offer (STAT / PROFICIENCY /
   EQUIP / PREPARE) from legal to illegal so the BUILD group hides behind the eye.
   Removing the Lock effect from the ledger clears build.locked and restores them.
+  set-loadout is the deliberate exception: what is in your hands changes in play,
+  so it carries no build-lock gate and stays legal on both sides of the lock.
 ruleGroups:
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
@@ -15,6 +17,7 @@ ruleGroups:
   - spells/spell-bless
   - dnd-5e-2024/leather-armor
   - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
   - dnd-5e-2024/dagger
   - dnd-5e-2024/build-lock
 
@@ -29,11 +32,12 @@ steps:
             - set-strength # STAT
             - proficiency-str # PROFICIENCY
             - don-leather-armor # EQUIP (armor)
-            - don-dagger # EQUIP (weapon, inlined gate)
+            - set-loadout # EQUIP (hands, ungated)
             - prepare-bless # PREPARE
             - lock
 
-  # Locking flips every BUILD offer (including Lock itself) to illegal.
+  # Locking flips every BUILD offer (including Lock itself) to illegal — except
+  # the loadout, which is a play-time offer wearing an EQUIP section.
   - addOffer:
       id: lock
       assert:
@@ -44,9 +48,10 @@ steps:
             - set-strength
             - proficiency-str
             - don-leather-armor
-            - don-dagger
             - prepare-bless
             - lock
+          legal:
+            - set-loadout
 
   # The lock persists as a removable effect across the turn boundary.
   - endTurn:
@@ -61,6 +66,8 @@ steps:
             - set-strength
             - don-leather-armor
             - prepare-bless
+          legal:
+            - set-loadout
 
   # Removing the Lock effect from the ledger unlocks the build.
   - removeEffect:
@@ -73,6 +80,6 @@ steps:
             - set-strength
             - proficiency-str
             - don-leather-armor
-            - don-dagger
+            - set-loadout
             - prepare-bless
             - lock

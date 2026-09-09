@@ -1,6 +1,8 @@
 name: 'Shield AC'
-description: 'AC increases by 2 when shield is donned, persists across turns'
+description: 'AC increases by 2 when a loadout holding a shield is set, and persists across turns'
 ruleGroups:
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
   - dnd-5e-2024/ac
   - dnd-5e-2024/shield
 steps:
@@ -12,9 +14,22 @@ steps:
           ac.value: 10
         offers:
           exists:
-            - don-shield
+            - set-loadout
   - addOffer:
-      id: don-shield
+      id: set-loadout
+      selections:
+        loadout:
+          id: shield
+          hands: 1
+          handsFree: 1
+          items:
+            - id: shield
+              nameKey: rule.dnd-5e-2024.shield.effect-shield.name
+              hands: 1
+              twoHanded: false
+              state:
+                armor.shield.equipped: 1
+                ac.shieldBonus: 2
       assert:
         facts:
           ac.shieldBonus: 2

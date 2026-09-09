@@ -1,9 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { evaluatePlan, evaluateSheet } from '$lib/rules-engine';
-import type { PlannedRef } from '$lib/rules-engine';
+import type { PlannedRef, RuleModule } from '$lib/rules-engine';
+import { enumerateLoadouts } from '$lib/rules-engine/loadout';
 import actionEconomy from '$lib/rules-engine/rules/action-economy';
 import attacks from '$lib/rules-engine/rules/attacks';
 import hands from '$lib/rules-engine/rules/hands';
+import loadout from '$lib/rules-engine/rules/loadout';
 import dagger from '$lib/rules-engine/rules/dagger';
 import level1 from '$lib/rules-engine/rules/class-paladin-level1';
 import level5 from '$lib/rules-engine/rules/class-paladin-level5';
@@ -18,6 +20,13 @@ import level5 from '$lib/rules-engine/rules/class-paladin-level5';
  */
 const ref = (instanceId: string, ruleId: string): PlannedRef => ({ instanceId, ruleId });
 const NO_ACTION = 'rule.dnd-5e-2024.attacks.activation.no_action';
+
+/** Setup: plan the loadout that puts `configId` in hand (the only equip path). */
+const equip = (instanceId: string, modules: RuleModule[], configId: string): PlannedRef => {
+  const config = enumerateLoadouts(modules).find((c) => c.id === configId);
+  if (!config) throw new Error(`no such loadout configuration: ${configId}`);
+  return { instanceId, ruleId: 'set-loadout', selections: { loadout: config } };
+};
 
 describe('extra attack — level 5 grants the follow-up budget', () => {
   it('contributes extraAttacks.max (stacking) and +1 proficiency', () => {
@@ -44,10 +53,10 @@ describe('extra attack — level 5 grants the follow-up budget', () => {
     expect(three.planDiagnostics.get('i2')?.some((d) => d.code === NO_ACTION)).toBe(true);
   });
 
-  it('weapon: a donned dagger gets the same one free follow-up', () => {
-    const mods = [actionEconomy, attacks, hands, dagger, level5];
+  it('weapon: a held dagger gets the same one free follow-up', () => {
+    const mods = [actionEconomy, attacks, hands, loadout, dagger, level5];
     const two = evaluatePlan(mods, {}, [
-      ref('i0', 'don-dagger'),
+      equip('i0', mods, 'dagger'),
       ref('i1', 'dagger-use-action'),
       ref('i2', 'dagger-use-action')
     ]);
@@ -56,7 +65,7 @@ describe('extra attack — level 5 grants the follow-up budget', () => {
     expect(two.planDiagnostics.has('i2')).toBe(false); // second swing legal (free)
 
     const three = evaluatePlan(mods, {}, [
-      ref('i0', 'don-dagger'),
+      equip('i0', mods, 'dagger'),
       ref('i1', 'dagger-use-action'),
       ref('i2', 'dagger-use-action'),
       ref('i3', 'dagger-use-action')
@@ -77,9 +86,10 @@ describe('unarmed opportunity attack is not a weapon attack', () => {
     expect(out.facts['attack.last.weapon'] ?? 0).toBe(0);
   });
 
-  it('a donned weapon reaction DOES set attack.last.weapon (contrast)', () => {
-    const out = evaluatePlan([actionEconomy, attacks, hands, dagger], {}, [
-      ref('i0', 'don-dagger'),
+  it('a held weapon reaction DOES set attack.last.weapon (contrast)', () => {
+    const mods = [actionEconomy, attacks, hands, loadout, dagger];
+    const out = evaluatePlan(mods, {}, [
+      equip('i0', mods, 'dagger'),
       ref('i1', 'dagger-use-reaction-weapon')
     ]);
     expect(out.facts['attack.last.weapon']).toBe(1);

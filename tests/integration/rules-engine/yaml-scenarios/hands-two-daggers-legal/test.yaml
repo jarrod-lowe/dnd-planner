@@ -1,10 +1,13 @@
-name: 'Hands - Dagger Legal With Shield Equipped'
+name: 'Hands - Two Daggers Fill Both Hands'
 description: >
-  With a shield equipped (1 hand used, 1 remaining), donning a dagger should
-  still be legal since it only needs 1 hand.
+  A dagger is stackable, so a second copy may be held in the other hand. Both
+  copies set the same weapon.dagger.equipped fact once, and together they spend
+  exactly the 2-hand budget. Swapping one of them for a shield is the same shape:
+  two one-handed items, no hands left.
 
 ruleGroups:
   - dnd-5e-2024/hands
+  - dnd-5e-2024/loadout
   - dnd-5e-2024/ac
   - dnd-5e-2024/shield
   - dnd-5e-2024/core-events
@@ -15,39 +18,70 @@ ruleGroups:
   - dnd-5e-2024/attacks
   - dnd-5e-2024/dagger
 
-initialEffects:
-  - id: effect-shield
-    phase: normal
-    after:
-      - group: ac-calculation
-    group:
-      - ac-components
-    activities:
-      - type: numberIncrement
-        target:
-          fact: ac.shieldBonus
-        source:
-          number: 2
-      - type: numberSet
-        target:
-          fact: armor.shield.equipped
-        source:
-          number: 1
-      - type: numberIncrement
-        target:
-          fact: hands.remaining
-        source:
-          number: 1
-        subtract: true
-      - type: advertiseEffect
-        self: true
+# Shield training granted so the loadout rows carry no proficiency warning.
+initialFacts:
+  armor.shield.proficient: 1
 
 steps:
-  - evaluate:
+  - addOffer:
+      id: set-loadout
+      selections:
+        loadout:
+          id: dagger+dagger
+          hands: 2
+          handsFree: 0
+          items:
+            - id: dagger
+              nameKey: rule.dnd-5e-2024.attacks.dagger.name
+              hands: 1
+              twoHanded: false
+              state:
+                weapon.dagger.equipped: 1
+            - id: dagger
+              nameKey: rule.dnd-5e-2024.attacks.dagger.name
+              hands: 1
+              twoHanded: false
+              state:
+                weapon.dagger.equipped: 1
       assert:
         facts:
-          armor.shield.equipped: 1
-          hands.remaining: 1
+          weapon.dagger.equipped: 1
+          hands.remaining: 0
+        planErrors:
+          - id: set-loadout
+            errors: []
         offers:
-          legal:
-            - don-dagger
+          exists:
+            - dagger-use-action
+
+  # A dagger in one hand and a shield in the other is equally legal.
+  - updateSelections:
+      id: set-loadout
+      selections:
+        loadout:
+          id: dagger+shield
+          hands: 2
+          handsFree: 0
+          items:
+            - id: dagger
+              nameKey: rule.dnd-5e-2024.attacks.dagger.name
+              hands: 1
+              twoHanded: false
+              state:
+                weapon.dagger.equipped: 1
+            - id: shield
+              nameKey: rule.dnd-5e-2024.shield.effect-shield.name
+              hands: 1
+              twoHanded: false
+              state:
+                armor.shield.equipped: 1
+                ac.shieldBonus: 2
+      assert:
+        facts:
+          weapon.dagger.equipped: 1
+          armor.shield.equipped: 1
+          ac.shieldBonus: 2
+          hands.remaining: 0
+        planErrors:
+          - id: set-loadout
+            errors: []

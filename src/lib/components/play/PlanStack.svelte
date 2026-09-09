@@ -117,6 +117,7 @@
           {item}
           {entry}
           {facts}
+          modules={playStore.state.modules}
           {activeAnnotations}
           alternatives={correctedAlternatives(
             item,

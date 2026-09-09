@@ -1,4 +1,4 @@
-import { defineRule, weaponOffers, type RuleModule, type WeaponDef } from '../builder';
+import { defineRule, weaponEquip, weaponOffers, type RuleModule, type WeaponDef } from '../builder';
 
 const P = 'rule.dnd-5e-2024.attacks.javelin';
 const SLOW = 'rule.dnd-5e-2024.attacks.javelin-slow';
@@ -52,11 +52,12 @@ const JAVELIN: WeaponDef = {
  */
 const javelin: RuleModule = {
   id: 'javelin',
+  equip: weaponEquip(JAVELIN),
   meta: {
     name: `${P}.name`,
     description: `${P}.description`,
     keywords: `${P}.keywords`,
-    requires: ['attacks', 'hands']
+    requires: ['attacks', 'hands', 'loadout']
   },
   derive: () => [
     {
