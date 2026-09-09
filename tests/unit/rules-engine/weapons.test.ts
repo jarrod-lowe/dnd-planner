@@ -141,14 +141,15 @@ describe("weapons — a versatile weapon's melee band names the grip", () => {
    * The grip is fixed by the LOADOUT, not chosen per attack, so the only thing on
    * an attack row that moved with it was the damage die — "d6 or d8?" with nothing
    * saying which grip you are in. The melee band therefore carries a label that
-   * FOLLOWS the grip fact, reusing the loadout's own grip keys so the vocabulary
-   * is the same on the attack row and on the loadout chip.
+   * FOLLOWS the grip fact, onto the loadout's ABBREVIATED grip keys: the label
+   * shares a button with the range ("5ft 1H"), and the full words made that button
+   * change width as the grip changed. The picker's vertical list keeps the words.
    */
   const GRIP_LABEL = {
     fact: 'weapon.spear.twoHanded',
     map: {
-      0: 'rule.dnd-5e-2024.loadout.grip.one-handed',
-      1: 'rule.dnd-5e-2024.loadout.grip.two-handed'
+      0: 'rule.dnd-5e-2024.loadout.grip.one-handed-short',
+      1: 'rule.dnd-5e-2024.loadout.grip.two-handed-short'
     }
   };
 

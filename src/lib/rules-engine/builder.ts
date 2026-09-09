@@ -11,8 +11,8 @@ import type {
   RuleModule
 } from './types';
 import {
-  GRIP_ONE_HANDED,
-  GRIP_TWO_HANDED,
+  GRIP_ONE_HANDED_SHORT,
+  GRIP_TWO_HANDED_SHORT,
   LOADOUT_HANDS_SPENT,
   loadoutEffectState,
   MAX_HANDS,
@@ -305,15 +305,19 @@ const turnSpend = (state: Record<string, number>): EffectInstance => ({
 
 /**
  * The grip a versatile weapon's melee band announces, reusing the LOADOUT's own
- * grip keys so the attack row and the loadout chip say the same word. The grip is
- * no longer a per-attack choice, so without this the only thing that moved with it
- * was the damage die — d6 or d8 with nothing on the row saying which grip you are
- * in, and it is easy to forget.
+ * grip vocabulary so the attack row and the loadout chip say the same thing. The
+ * grip is no longer a per-attack choice, so without this the only thing that moved
+ * with it was the damage die — d6 or d8 with nothing on the row saying which grip
+ * you are in, and it is easy to forget.
+ *
+ * The ABBREVIATED keys, because this label shares the dice line's range button with
+ * the distance ("5ft 1H"): the full words made that button change width as the grip
+ * changed. The picker, a vertical list, keeps the words.
  */
 function gripLabel(def: WeaponDef): MappedLabelSource {
   return {
     fact: `weapon.${def.id}.twoHanded`,
-    map: { 0: GRIP_ONE_HANDED, 1: GRIP_TWO_HANDED }
+    map: { 0: GRIP_ONE_HANDED_SHORT, 1: GRIP_TWO_HANDED_SHORT }
   };
 }
 

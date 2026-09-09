@@ -373,7 +373,7 @@ describe('PanelDiceLine - versatile grip label follows the loadout', () => {
 
   it('translates a plain-string range label instead of rendering the raw key', () => {
     // A range label is an i18n KEY, not display text — it used to render raw,
-    // which is why the cosmetic 1H/2H labels had to be deleted. Uses a key the
+    // which is why the hardcoded 1H/2H labels had to be deleted. Uses a key the
     // test dictionary actually translates, so a missing `$t` call would show.
     const control = gripSpearControl();
     const vars = gripSpearVars();

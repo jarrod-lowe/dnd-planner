@@ -54,8 +54,8 @@ steps:
                       label:
                         fact: weapon.spear.twoHanded
                         map:
-                          '0': rule.dnd-5e-2024.loadout.grip.one-handed
-                          '1': rule.dnd-5e-2024.loadout.grip.two-handed
+                          '0': rule.dnd-5e-2024.loadout.grip.one-handed-short
+                          '1': rule.dnd-5e-2024.loadout.grip.two-handed-short
                     # A thrown band is not a melee weapon attack, so a two-handed
                     # grip's Great Weapon Fighting floor must not reach it.
                     - distance: 20

@@ -53,8 +53,8 @@ steps:
                       label:
                         fact: weapon.spear-plus1.twoHanded
                         map:
-                          '0': rule.dnd-5e-2024.loadout.grip.one-handed
-                          '1': rule.dnd-5e-2024.loadout.grip.two-handed
+                          '0': rule.dnd-5e-2024.loadout.grip.one-handed-short
+                          '1': rule.dnd-5e-2024.loadout.grip.two-handed-short
                     - distance: 20
                       type: thrown
                       meleeAttack: false

@@ -1351,7 +1351,9 @@
         },
         "grip": {
           "one-handed": "One-handed",
-          "two-handed": "Two-handed"
+          "one-handed-short": "1H",
+          "two-handed": "Two-handed",
+          "two-handed-short": "2H"
         },
         "hands-free": {
           "name": "Hand free"

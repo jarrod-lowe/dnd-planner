@@ -31,12 +31,23 @@ const L = 'rule.dnd-5e-2024.loadout';
 const EMPTY = `${L}.empty.name`;
 const FREE_HAND = `${L}.hands-free.name`;
 /**
- * The grip vocabulary. Exported because the attack row says it too: a versatile
- * weapon's melee band names its grip with these same keys, so the loadout chip and
- * the attack row can never drift into two different words for one thing.
+ * The grip vocabulary, in two lengths for the two places that say it.
+ *
+ * The full words are for the PICKER, a vertical list where every row has the same
+ * width to spend and "One-handed"/"Two-handed" read plainly. The abbreviations are
+ * for the ATTACK ROW, where the grip shares the dice line's range button with the
+ * distance ("5ft 1H"): there the full words made the button visibly change width
+ * as the grip changed, which is the one thing a button in a fixed row must not do.
+ *
+ * Both live here so the two lengths stay two spellings of ONE vocabulary and can
+ * never drift into two different ideas. The abbreviation is the visible text AND
+ * the accessible name wherever it is used — a control whose name does not contain
+ * its visible label breaks speech input (WCAG 2.5.3, Label in Name).
  */
 export const GRIP_ONE_HANDED = `${L}.grip.one-handed`;
 export const GRIP_TWO_HANDED = `${L}.grip.two-handed`;
+export const GRIP_ONE_HANDED_SHORT = `${L}.grip.one-handed-short`;
+export const GRIP_TWO_HANDED_SHORT = `${L}.grip.two-handed-short`;
 
 /** One held item within a configuration. */
 export interface LoadoutItem {

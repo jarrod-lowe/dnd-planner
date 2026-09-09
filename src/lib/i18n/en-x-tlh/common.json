@@ -1351,7 +1351,9 @@
         },
         "grip": {
           "one-handed": "wa' ghop",
-          "two-handed": "cha' ghop"
+          "one-handed-short": "1gh",
+          "two-handed": "cha' ghop",
+          "two-handed-short": "2gh"
         },
         "hands-free": {
           "name": "ghop tlhab"

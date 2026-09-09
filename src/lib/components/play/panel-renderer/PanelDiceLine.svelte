@@ -175,7 +175,8 @@
    * A band's TRANSLATED label. Whatever a band carries is an i18n key — a fixed
    * one, or a mapping ValueSource that picks the key from a fact (a versatile
    * weapon's grip: the loadout fixes it, so the row has to state it). This used to
-   * render the label raw, which is why the old cosmetic `1H`/`2H` labels had to go.
+   * render the label raw, which is why the old hardcoded `1H`/`2H` had to go; the
+   * abbreviations are back, but as translated keys the rules engine hands over.
    */
   function rangeLabel(range: RangeEntry | undefined): string | undefined {
     const label = range?.label;
