@@ -84,6 +84,23 @@
     {/if}
   </button>
 {:else}
+  <!--
+    Codex P2: `aria-label` on a bare `<span>` is prohibited ARIA — a span has
+    no role that supports naming, so a screen reader may ignore the label
+    and fall back to the chip's raw text content, losing the
+    purpose/range/critical context `dieAriaLabel()` builds. `role="img"`
+    (same fix as `WarningIndicator`'s `.panel-renderer__markers`) makes the
+    span a valid naming target AND makes the label the chip's only announced
+    content — role="img" carries presentational children, so the visible
+    text/badge inside is no longer separately read, exactly like a real
+    <img>'s alt text stands in for its pixels. That's correct here: the
+    label already incorporates the shown value, so nothing is lost, and
+    nothing gets read twice. Only applied when a name is actually supplied —
+    a chip with no ariaLabel (e.g. PanelLoadout's plain read-only chips) has
+    no author name to protect, so it stays a plain, role-less span and its
+    text reads for itself. The editable branch above stays a <button>,
+    which supports aria-label natively and is unaffected.
+  -->
   <span
     class="panel-renderer__die-chip"
     class:panel-renderer__die-chip--crit={crit}
@@ -91,6 +108,7 @@
     class:panel-renderer__die-chip--adv={advantage}
     class:panel-renderer__die-chip--disadv={disadvantage}
     class:panel-renderer__die-chip--crit-damage={critDamage}
+    role={ariaLabel ? 'img' : undefined}
     aria-label={ariaLabel}
     data-die-index={dieIndex}
     data-die-sides={dieSides}

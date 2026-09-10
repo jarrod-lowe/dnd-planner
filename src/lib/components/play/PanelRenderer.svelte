@@ -774,11 +774,29 @@
     text-overflow: ellipsis;
   }
 
+  /* Codex P2: this was `display: inline-flex`, which clips its own
+     overflowing content with no ellipsis — `text-overflow` does not apply
+     to a flex container's own overflow the way it does to a block
+     container's. When this control is the ONLY child of
+     `.panel-renderer__body` (a long loadout label, say), its `max-width:
+     100%` caps it at exactly the body's width, so it never overflows the
+     body box either — the ancestor's own `text-overflow: ellipsis` (see
+     `.panel-renderer__body` above) never gets a chance to fire, and the
+     text was hard-clipped mid-character. `inline-block` is still an atomic
+     inline-level box for `.panel-renderer__body`'s line layout — so the
+     multi-control case is unchanged: a control that doesn't fit at all
+     next to its siblings is still dropped whole, with `…` after the last
+     one that fits, same as before. What changes is the single-control case:
+     an `inline-block` (unlike a flex container) applies `text-overflow` to
+     its OWN overflowing inline content, so a lone too-long control now
+     ellipsizes itself instead of vanishing past its own hidden edge. */
   .panel-renderer--summary .panel-renderer__control {
-    display: inline-flex;
-    align-items: center;
+    display: inline-block;
     max-width: 100%;
     overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    vertical-align: bottom;
     padding-top: 0;
     margin-top: 0;
     border-top: none;

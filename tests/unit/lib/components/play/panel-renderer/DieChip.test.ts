@@ -84,4 +84,42 @@ describe('DieChip', () => {
     );
     expect(cursorRule).not.toBeNull();
   });
+
+  // Codex P2 finding: `aria-label` on a bare `<span>` is prohibited ARIA — a
+  // span has no role that supports naming, so screen readers may ignore the
+  // author-supplied name and fall back to the chip's raw text content,
+  // losing the purpose/range/critical context `dieAriaLabel()` builds. Same
+  // defect, same fix, as `WarningIndicator`'s `.panel-renderer__markers`
+  // (role="img" over a span of decorative content) elsewhere in this PR.
+  describe('read-only chip naming (Codex P2: aria-label on a bare span)', () => {
+    it('gets role="img" when an ariaLabel is supplied, so the name is actually exposed', () => {
+      const { container } = render(DieChip, {
+        props: {
+          text: '18',
+          editable: false,
+          ariaLabel: 'd20 attack roll, natural 18, critical hit'
+        }
+      });
+      const span = container.querySelector('span.panel-renderer__die-chip');
+      expect(span?.getAttribute('role')).toBe('img');
+      expect(span?.getAttribute('aria-label')).toBe('d20 attack roll, natural 18, critical hit');
+    });
+
+    it('stays a plain, role-less span when no ariaLabel is supplied (its text stands for itself)', () => {
+      const { container } = render(DieChip, { props: { text: '1d8', editable: false } });
+      const span = container.querySelector('span.panel-renderer__die-chip');
+      expect(span?.hasAttribute('role')).toBe(false);
+      expect(span?.hasAttribute('aria-label')).toBe(false);
+    });
+
+    it('does not add role="img" to the editable button branch, even with an ariaLabel', () => {
+      const { container } = render(DieChip, {
+        props: { text: '18', editable: true, ariaLabel: 'roll d20' }
+      });
+      const button = container.querySelector('button.panel-renderer__die-chip');
+      expect(button).not.toBeNull();
+      expect(button?.hasAttribute('role')).toBe(false);
+      expect(button?.getAttribute('aria-label')).toBe('roll d20');
+    });
+  });
 });
