@@ -313,6 +313,64 @@ describe('PanelDiceLine - summary short form', () => {
     expect(container.querySelector('.panel-renderer__disadv-indicator')).toBeNull();
   });
 
+  // Codex P2 finding: the indicator's accessible name was a hardcoded English
+  // literal ("Disadvantage") rather than routed through i18n, at both the
+  // summary branch (~618) and the pre-existing full render it was copied from
+  // (~685). CLAUDE.md requires all user-facing text, aria-labels included, to
+  // go through the translation system. The key `play.choices.attack.disadvantage`
+  // already exists in both locales. The i18n mock (tests/setup.ts) echoes back
+  // the key verbatim for any key it doesn't have a canned template for, so this
+  // assertion only passes if the component actually calls $t with that key —
+  // the hardcoded string "Disadvantage" would fail it, not pass it vacuously.
+  it("translates the disadvantage indicator's aria-label instead of hardcoding English", () => {
+    const entry = createDisadvantageEntry(); // range: disadvantage: true, not yet rolled
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {}, summary: true }
+    });
+    const indicator = container.querySelector('.panel-renderer__disadv-indicator');
+    expect(indicator).not.toBeNull();
+    expect(indicator?.getAttribute('aria-label')).toBe('play.choices.attack.disadvantage');
+  });
+
+  // Codex P2 finding: `.panel-renderer__dice-line` sets `flex-wrap: wrap` for
+  // the expanded render (which is meant to wrap), but the summary branch
+  // renders inside that same element, so a collapsed row with a long range
+  // label plus several dice could spill onto a second line — breaking the
+  // "short forms line stays on ONE line" rule from the design doc's
+  // Correction section.
+  //
+  // jsdom performs no layout AND does not apply component <style> block rules
+  // through the cascade for getComputedStyle (verified empirically: it echoes
+  // CSS-initial values, e.g. reporting flex-wrap as its initial 'nowrap' even
+  // for the unmodified, always-`wrap` element) — so a computed-style
+  // assertion here would pass vacuously regardless of the fix. Instead this
+  // asserts the structural marker the fix adds: a `--summary` modifier class
+  // that carries the `flex-wrap: nowrap` rule, present only in summary mode
+  // and absent from the expanded render (whose wrapping must stay untouched).
+  // This is weaker than measuring an actual single line in a real browser —
+  // it proves intent, not the visual outcome — which is why the report for
+  // this task also includes a real-browser measurement.
+  it('marks the collapsed dice line as non-wrapping, leaving the expanded render untouched', () => {
+    const entry = createAttackEntry(); // range + 2 dice, representative of a busy row
+    const { container: summaryContainer } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {}, summary: true }
+    });
+    const summaryDiceLine = summaryContainer.querySelector(
+      '.panel-renderer__dice-line'
+    ) as HTMLElement;
+    expect(summaryDiceLine).not.toBeNull();
+    expect(summaryDiceLine.classList.contains('panel-renderer__dice-line--summary')).toBe(true);
+
+    const { container: expandedContainer } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {}, summary: false }
+    });
+    const expandedDiceLine = expandedContainer.querySelector(
+      '.panel-renderer__dice-line'
+    ) as HTMLElement;
+    expect(expandedDiceLine).not.toBeNull();
+    expect(expandedDiceLine.classList.contains('panel-renderer__dice-line--summary')).toBe(false);
+  });
+
   it('keeps the default-disadvantage indicator alongside the rolled-mode styling once rolled', async () => {
     const entry = createDisadvantageEntry();
     vi.spyOn(Math, 'random')

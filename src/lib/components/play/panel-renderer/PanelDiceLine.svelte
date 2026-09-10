@@ -605,7 +605,11 @@
 
 <svelte:window onresize={repositionIfOpen} />
 
-<div class="panel-renderer__dice-line" role="group">
+<div
+  class="panel-renderer__dice-line"
+  class:panel-renderer__dice-line--summary={summary}
+  role="group"
+>
   {#if summary}
     {#each parts as part, i (i)}
       {#if part.type === 'label'}
@@ -615,7 +619,10 @@
       {:else if part.type === 'die'}
         {@const dieIsD20 = isD20(part.die!)}
         {#if defaultRollMode !== 'normal' && dieIsD20}
-          <span class="panel-renderer__disadv-indicator" aria-label="Disadvantage">▼</span>
+          <span
+            class="panel-renderer__disadv-indicator"
+            aria-label={$t('play.choices.attack.disadvantage')}>▼</span
+          >
         {/if}
         <DieChip
           text={formatDieChip(part.die!, part.dieIndex!)}
@@ -682,7 +689,10 @@
         {@const dieIsD20 = isD20(part.die!)}
         {@const dieHasOptions = hasOptions(part.die!)}
         {#if defaultRollMode !== 'normal' && dieIsD20}
-          <span class="panel-renderer__disadv-indicator" aria-label="Disadvantage">▼</span>
+          <span
+            class="panel-renderer__disadv-indicator"
+            aria-label={$t('play.choices.attack.disadvantage')}>▼</span
+          >
         {/if}
         <div class="panel-renderer__chip-wrapper">
           {#if part.die!.label}
@@ -831,6 +841,22 @@
     align-items: center;
     gap: var(--spacing-xs);
     flex-wrap: wrap;
+  }
+
+  /* Collapsed row only: the expanded render's `flex-wrap: wrap` above is
+     deliberate (a busy line of dice/modifiers is meant to wrap), but the
+     collapsed short-forms line is one of the strip's three fixed lines (see
+     docs/plans/ideas/better-summary-panels.md) and must stay on ONE line —
+     `white-space: nowrap` on an ancestor does not stop a flex container from
+     wrapping its own items onto a second flex line, so this needs its own
+     rule. `min-width: 0` lets it shrink below its content's natural width
+     instead of forcing its ancestors wider, so a long line clips (via the
+     ellipsis `.panel-renderer__body` already owns) instead of wrapping or
+     scrolling the page. */
+  .panel-renderer__dice-line--summary {
+    flex-wrap: nowrap;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .panel-renderer__dice-separator {
