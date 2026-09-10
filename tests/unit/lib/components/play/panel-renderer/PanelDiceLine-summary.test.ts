@@ -141,6 +141,39 @@ const createDisadvantageEntry = (): AvailableRuleEntry => ({
   diagnostics: []
 });
 
+// Codex P2 finding: the expanded branch renders a die's authored `label`
+// (`panel-renderer__die-label`, e.g. Divine Smite's "Fiend/Undead" d8) but the
+// summary branch dropped it, so two same-shaped dice on one line (Divine
+// Smite's base damage die and its Fiend/Undead die, both d8+0) collapsed into
+// indistinguishable chips. Mirrors the shape of
+// PanelDiceLine-divine-smite.test.ts's fixture: a plain die plus a labeled one.
+const createLabeledTwoDiceEntry = (): AvailableRuleEntry => ({
+  rule: {
+    id: 'labeled-two-dice',
+    description: 'Labeled Two Dice',
+    activities: [],
+    ui: {
+      section: 'action-attack',
+      name: 'rule.attacks.labeled.name',
+      primaryControl: {
+        type: 'dice-line',
+        dice: [
+          { sides: 8, damageType: { string: 'radiant' } },
+          {
+            sides: 8,
+            label: 'rule.spell-divine-smite.offer-divine-smite.fiendUndeadLabel',
+            damageType: { string: 'radiant' }
+          }
+        ]
+      }
+    },
+    vars: {}
+  } as Rule,
+  legal: true,
+  applicable: true,
+  diagnostics: []
+});
+
 describe('PanelDiceLine - summary short form', () => {
   it('shows the unrolled expression', () => {
     const entry = createDiceLineEntry();
@@ -369,6 +402,16 @@ describe('PanelDiceLine - summary short form', () => {
     ) as HTMLElement;
     expect(expandedDiceLine).not.toBeNull();
     expect(expandedDiceLine.classList.contains('panel-renderer__dice-line--summary')).toBe(false);
+  });
+
+  it("shows a die's authored label in the collapsed summary (Codex P2: Divine Smite's base and Fiend/Undead d8 chips were indistinguishable)", () => {
+    const entry = createLabeledTwoDiceEntry();
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {}, summary: true }
+    });
+    const labels = container.querySelectorAll('.panel-renderer__die-label');
+    expect(labels).toHaveLength(1);
+    expect(labels[0].textContent).toContain('fiendUndeadLabel');
   });
 
   it('keeps the default-disadvantage indicator alongside the rolled-mode styling once rolled', async () => {

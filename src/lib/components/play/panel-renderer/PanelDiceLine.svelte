@@ -624,6 +624,9 @@
             aria-label={$t('play.choices.attack.disadvantage')}>▼</span
           >
         {/if}
+        {#if part.die!.label}
+          <span class="panel-renderer__die-label">{$t(part.die!.label)}</span>
+        {/if}
         <DieChip
           text={formatDieChip(part.die!, part.dieIndex!)}
           editable={false}
