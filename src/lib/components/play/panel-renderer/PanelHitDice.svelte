@@ -1,9 +1,34 @@
-<script lang="ts">
+<script module lang="ts">
   import { resolveValueSource } from './resolveValueSource';
+  import type { HitDiceControl } from './types';
+  import type { Facts, VarDefinition } from '$lib/rules-view';
+
+  /**
+   * Whether this control has nothing to show in summary mode (every pool's
+   * `total` resolves to 0 — the same condition that hides a pool from the
+   * expanded render, see the `.filter((pool) => pool.total > 0)` below).
+   * Exported so `PanelRenderer` can decide whether to render this control's
+   * `.panel-renderer__control` wrapper at all — see `textInputIsEmpty` in
+   * `PanelTextInput.svelte` for why this must be resolved before mounting,
+   * not signalled back from a mounted instance.
+   */
+  export function hitDiceIsEmpty(
+    control: HitDiceControl,
+    facts: Facts,
+    vars: Record<string, VarDefinition>,
+    selections: Record<string, unknown>
+  ): boolean {
+    return !control.pools.some((pool) => {
+      const resolved = resolveValueSource(pool.total, facts, vars, selections);
+      return typeof resolved === 'number' && Number.isFinite(resolved) && resolved > 0;
+    });
+  }
+</script>
+
+<script lang="ts">
   import DieChip from './DieChip.svelte';
   import { SvelteMap } from 'svelte/reactivity';
-  import type { HitDiceControl, RollResult } from './types';
-  import type { Facts, VarDefinition } from '$lib/rules-view';
+  import type { RollResult } from './types';
   import type { EffectInstance } from '$lib/rules-engine';
   import { t } from '$lib/i18n';
 
@@ -17,6 +42,13 @@
     advertisedEffects?: EffectInstance[];
     onSelectionChange?: (selections: Record<string, unknown>) => void;
     onRoll?: (data: RollResult, slotIndex: number) => void;
+    /**
+     * Collapsed-row short form: pool counts ("3/4 d10"), never the rolled
+     * heals — `selections.rolls` persists across collapse (unlike a
+     * dice-line's local `rollResults`), but the summary deliberately doesn't
+     * surface it.
+     */
+    summary?: boolean;
   }
 
   let {
@@ -27,7 +59,8 @@
     selections = {},
     advertisedEffects = [],
     onSelectionChange,
-    onRoll
+    onRoll,
+    summary = false
   }: Props = $props();
 
   interface ResolvedPool {
@@ -312,30 +345,51 @@
 </script>
 
 {#if pools.length > 0}
-  <div class="panel-renderer__hit-dice" role="group" aria-label={$t('play.hitDice.groupLabel')}>
-    {#each pools as pool (pool.sides)}
-      <div
-        class="panel-renderer__hit-dice-pool"
-        role="group"
-        aria-label={poolAriaLabel(pool)}
-        data-die-sides={pool.sides}
-      >
-        {#each pool.slots as slot (slot)}
-          {@const spent = slot >= pool.threshold}
-          {@const rolled = slotRoll(pool, slot) !== undefined}
-          <DieChip
-            text={chipText(pool, slot)}
-            {editable}
-            ariaLabel={slotAriaLabel(pool, slot)}
-            disabled={spent && !rolled}
-            dieSides={pool.sides}
-            slotIndex={slot}
-            onclick={() => (spent ? clearRoll(pool, slot) : rollSlot(pool, slot))}
-          />
-        {/each}
-      </div>
-    {/each}
-  </div>
+  {#if summary}
+    <!--
+      Pool COUNTS, not the rolled heals: "3/4 d10" per pool. `pool.threshold`
+      is the same committed-based unspent count the non-summary pool
+      aria-label announces (poolAriaLabel), so a slot spent by an earlier
+      rest's committed spend shrinks the shown count exactly as it disables
+      that slot in the expanded view. Plain text, no words — dice notation
+      ("d10") isn't natural-language prose, matching the untranslated
+      `${remaining}/${total} d${dieSize}` precedent in extractTopBar's
+      `resolveEntryValue` for its `hitDie` entry type. Inline text only: no
+      separator between pools, no wrapper — a later task lays out the strip.
+    -->
+    <span class="panel-renderer__hit-dice-summary">
+      {#each pools as pool (pool.sides)}
+        <span class="panel-renderer__hit-dice-summary-pool"
+          >{pool.threshold}/{pool.total} d{pool.sides}</span
+        >
+      {/each}
+    </span>
+  {:else}
+    <div class="panel-renderer__hit-dice" role="group" aria-label={$t('play.hitDice.groupLabel')}>
+      {#each pools as pool (pool.sides)}
+        <div
+          class="panel-renderer__hit-dice-pool"
+          role="group"
+          aria-label={poolAriaLabel(pool)}
+          data-die-sides={pool.sides}
+        >
+          {#each pool.slots as slot (slot)}
+            {@const spent = slot >= pool.threshold}
+            {@const rolled = slotRoll(pool, slot) !== undefined}
+            <DieChip
+              text={chipText(pool, slot)}
+              {editable}
+              ariaLabel={slotAriaLabel(pool, slot)}
+              disabled={spent && !rolled}
+              dieSides={pool.sides}
+              slotIndex={slot}
+              onclick={() => (spent ? clearRoll(pool, slot) : rollSlot(pool, slot))}
+            />
+          {/each}
+        </div>
+      {/each}
+    </div>
+  {/if}
 {/if}
 
 <style>

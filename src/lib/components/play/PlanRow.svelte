@@ -330,10 +330,11 @@
         <WarningIndicator type={warningType} message={warningMessage} />
       {/if}
       {@render modChips()}
-    {:else if !collapsed}
+    {:else}
       <div class="plan-row__cost-chips">
         {#each costTags as tag (tag)}
-          {#if upcast && tag === `L${upcast.level}`}
+          {@const isUpcast = !!upcast && tag === `L${upcast.level}`}
+          {#if isUpcast && !collapsed}
             <button
               type="button"
               class="plan-row__cost-tag plan-row__cost-tag--upcast"
@@ -347,22 +348,33 @@
               {/if}
             </button>
           {:else}
-            <span class="plan-row__cost-tag">{formatCostTag(tag)}</span>
+            <!-- Collapsed keeps the upcast styling but drops the tooltip
+                 trigger: nothing inside the strip may be focusable. -->
+            <span class="plan-row__cost-tag" class:plan-row__cost-tag--upcast={isUpcast}
+              >{formatCostTag(tag)}</span
+            >
           {/if}
         {/each}
       </div>
 
-      {@render modChips()}
-    {:else}
-      <span class="plan-row__collapsed-name">{displayName}</span>
+      {#if !collapsed}
+        {@render modChips()}
+      {/if}
     {/if}
 
-    <!-- Always mounted, hidden with display:none rather than removed from the
-         DOM: unmounting discards the panel's component state, which silently
-         reset a modifier the player had switched off (and would do the same to
-         any future stateful control). display:none also takes it out of the tab
-         order and the accessibility tree, so a collapsed row stays unreachable. -->
-    <div class="plan-row__content" class:plan-row__content--hidden={rulesMode || collapsed}>
+    <!-- Always mounted, never unmounted: unmounting discards the panel's
+         component state (e.g. a rolled die, or a modifier the player
+         switched off). Collapsing passes `summary` so the SAME instance
+         swaps to its non-interactive short form instead of being hidden —
+         its rolls survive the collapse/expand toggle. The strip stays inert
+         apart from one deliberate exception: PanelRenderer's own warning
+         indicator (part of its header, rendered identically in both modes)
+         stays a focusable, clickable button so its message can be read
+         without expanding the row — the chevron remains the only expander.
+         Only `rulesMode` still removes this from view entirely (via
+         display:none), since the RulesPane replaces it outright rather than
+         collapsing it. -->
+    <div class="plan-row__content" class:plan-row__content--hidden={rulesMode}>
       <PanelRenderer
         {entry}
         editable={true}
@@ -372,6 +384,7 @@
         {activeAnnotations}
         {onSelectionChange}
         {onFollowup}
+        summary={collapsed}
       />
     </div>
 
@@ -572,6 +585,28 @@
     z-index: 2;
   }
 
+  /* Collapsed strip: three stacked lines — cost pills (this own line), then
+     PanelRenderer's own header (name, with the warning indicator overlaid on
+     it exactly as in the expanded row — see `.panel-renderer
+     :global(.warning-indicator)`) and its short-form control line, both
+     rendered by `.plan-row__content`'s `<PanelRenderer summary>` from the
+     SAME header markup the expanded row uses (no separate PlanRow-owned
+     copy). `.plan-row__right` is already `display:flex; flex-direction:
+     column` (the base rule below), so collapsing needs no layout override
+     here; only the pills row and the panel's own lines get their own
+     overflow handling. */
+  .plan-row--collapsed .plan-row__cost-chips {
+    flex-wrap: nowrap;
+  }
+
+  .plan-row--collapsed .plan-row__content {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .plan-row__cost-chips {
     display: flex;
     gap: var(--spacing-xs);
@@ -657,13 +692,6 @@
 
   .plan-row__content > :global(.panel-renderer:hover) {
     background: transparent;
-  }
-
-  .plan-row__collapsed-name {
-    font-family: var(--font-display);
-    font-size: var(--font-size-sm);
-    font-weight: 600;
-    color: var(--md-sys-color-on-surface);
   }
 
   /* Alternatives */

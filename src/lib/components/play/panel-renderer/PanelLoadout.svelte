@@ -1,9 +1,29 @@
-<script lang="ts">
-  import { untrack } from 'svelte';
-  import { t } from '$lib/i18n';
+<script module lang="ts">
   import { enumerateLoadouts, type LoadoutConfig } from '$lib/rules-engine/loadout';
   import type { LoadoutControl } from './types';
   import type { RuleModule } from '$lib/rules-engine/types';
+
+  /**
+   * Whether this control has nothing to show in summary mode (no legal
+   * configuration selected). Exported so `PanelRenderer` can decide whether
+   * to render this control's `.panel-renderer__control` wrapper at all — see
+   * `textInputIsEmpty` in `PanelTextInput.svelte` for why this must be
+   * resolved before mounting, not signalled back from a mounted instance.
+   */
+  export function loadoutIsEmpty(
+    control: LoadoutControl,
+    modules: RuleModule[],
+    selections: Record<string, unknown>
+  ): boolean {
+    const selectedId = (selections[control.var] as LoadoutConfig | undefined)?.id;
+    if (selectedId === undefined) return true;
+    return !enumerateLoadouts(modules).some((c) => c.id === selectedId);
+  }
+</script>
+
+<script lang="ts">
+  import { untrack } from 'svelte';
+  import { t } from '$lib/i18n';
 
   /**
    * The hand-configuration picker for `set-loadout`.
@@ -25,13 +45,24 @@
     modules?: RuleModule[];
     selections?: Record<string, unknown>;
     onSelectionChange?: (selections: Record<string, unknown>) => void;
+    /** Collapsed-row short form: plain `rowLabel` text for the selected configuration. */
+    summary?: boolean;
   }
 
-  let { control, editable, modules = [], selections = {}, onSelectionChange }: Props = $props();
+  let {
+    control,
+    editable,
+    modules = [],
+    selections = {},
+    onSelectionChange,
+    summary = false
+  }: Props = $props();
 
   const configs = $derived(enumerateLoadouts(modules));
 
   const selectedId = $derived((selections[control.var] as LoadoutConfig | undefined)?.id);
+
+  const selectedConfig = $derived(configs.find((c) => c.id === selectedId));
 
   /**
    * The loadout the character arrived with, read ONCE at mount rather than
@@ -126,38 +157,44 @@
   </span>
 {/snippet}
 
-<div class="loadout-picker" role="radiogroup" aria-label={$t('play.loadout.groupLabel')}>
-  {#each ordered as config, i (config.id)}
-    {#if editable}
-      <button
-        type="button"
-        bind:this={rowEls[i]}
-        class="loadout-picker__row"
-        class:loadout-picker__row--active={config.id === selectedId}
-        role="radio"
-        aria-checked={config.id === selectedId}
-        aria-label={rowLabel(config)}
-        data-loadout-id={config.id}
-        tabindex={i === focusIndex ? 0 : -1}
-        onclick={() => select(config)}
-        onkeydown={(event) => handleKeydown(event, i)}
-      >
-        {@render chips(config)}
-      </button>
-    {:else}
-      <span
-        class="loadout-picker__row loadout-picker__row--readonly"
-        class:loadout-picker__row--active={config.id === selectedId}
-        role="radio"
-        aria-checked={config.id === selectedId}
-        aria-label={rowLabel(config)}
-        data-loadout-id={config.id}
-      >
-        {@render chips(config)}
-      </span>
-    {/if}
-  {/each}
-</div>
+{#if summary}
+  {#if selectedConfig}
+    <span class="loadout-picker__summary">{rowLabel(selectedConfig)}</span>
+  {/if}
+{:else}
+  <div class="loadout-picker" role="radiogroup" aria-label={$t('play.loadout.groupLabel')}>
+    {#each ordered as config, i (config.id)}
+      {#if editable}
+        <button
+          type="button"
+          bind:this={rowEls[i]}
+          class="loadout-picker__row"
+          class:loadout-picker__row--active={config.id === selectedId}
+          role="radio"
+          aria-checked={config.id === selectedId}
+          aria-label={rowLabel(config)}
+          data-loadout-id={config.id}
+          tabindex={i === focusIndex ? 0 : -1}
+          onclick={() => select(config)}
+          onkeydown={(event) => handleKeydown(event, i)}
+        >
+          {@render chips(config)}
+        </button>
+      {:else}
+        <span
+          class="loadout-picker__row loadout-picker__row--readonly"
+          class:loadout-picker__row--active={config.id === selectedId}
+          role="radio"
+          aria-checked={config.id === selectedId}
+          aria-label={rowLabel(config)}
+          data-loadout-id={config.id}
+        >
+          {@render chips(config)}
+        </span>
+      {/if}
+    {/each}
+  </div>
+{/if}
 
 <style>
   .loadout-picker {
@@ -254,5 +291,12 @@
     border: 1.5px dashed var(--md-sys-color-outline);
     color: var(--md-sys-color-on-surface-variant);
     background: transparent;
+  }
+
+  /* Collapsed-row short form: plain text, not chips. */
+  .loadout-picker__summary {
+    font-family: var(--font-body);
+    font-size: var(--font-size-md);
+    color: var(--md-sys-color-on-surface);
   }
 </style>

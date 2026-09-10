@@ -7,11 +7,11 @@
   import { rollTypeKey } from './panel-renderer/rollType';
   import PanelSlider from './panel-renderer/PanelSlider.svelte';
   import PanelDiceLine from './panel-renderer/PanelDiceLine.svelte';
-  import PanelHitDice from './panel-renderer/PanelHitDice.svelte';
-  import PanelSelect from './panel-renderer/PanelSelect.svelte';
-  import PanelTextInput from './panel-renderer/PanelTextInput.svelte';
-  import PanelSegmented from './panel-renderer/PanelSegmented.svelte';
-  import PanelLoadout from './panel-renderer/PanelLoadout.svelte';
+  import PanelHitDice, { hitDiceIsEmpty } from './panel-renderer/PanelHitDice.svelte';
+  import PanelSelect, { selectIsEmpty } from './panel-renderer/PanelSelect.svelte';
+  import PanelTextInput, { textInputIsEmpty } from './panel-renderer/PanelTextInput.svelte';
+  import PanelSegmented, { segmentedIsEmpty } from './panel-renderer/PanelSegmented.svelte';
+  import PanelLoadout, { loadoutIsEmpty } from './panel-renderer/PanelLoadout.svelte';
   import DiceRollToast from './panel-renderer/DiceRollToast.svelte';
   import { evaluateCondition } from '$lib/play/panelCondition';
   import { getMatchingAnnotations } from '$lib/play/annotations';
@@ -47,6 +47,15 @@
     onMoveDown?: () => void;
     onFollowup?: (effect: EffectInstance) => void;
     onRoll?: (data: RollResult, dieIndex: number) => void;
+    /**
+     * Renders the collapsed-row short form: header, description, followups,
+     * the secondary enable button, and any secondary control still gated
+     * behind `enabled.button` (not yet activated) are all suppressed. The
+     * control components themselves keep rendering — they stay mounted so
+     * per-control state (e.g. `PanelDiceLine`'s rolled results) survives the
+     * collapse/expand toggle — and grow their own short forms separately.
+     */
+    summary?: boolean;
   }
 
   let {
@@ -65,7 +74,8 @@
     onMoveUp,
     onMoveDown,
     onFollowup,
-    onRoll
+    onRoll,
+    summary = false
   }: Props = $props();
 
   const descriptor = $derived(extractPanelDescriptor(entry.rule));
@@ -124,6 +134,29 @@
     descriptor.secondaryControl?.type === 'slider' ? descriptor.secondaryControl : undefined
   );
 
+  // A control that renders nothing in summary mode (an empty text input, an
+  // unselected loadout, a select with no matching option) must not get a
+  // `.panel-renderer__control` wrapper — that wrapper is exactly what the
+  // `::before` separator CSS targets (every wrapper but the first), so an
+  // empty-but-present wrapper paints a separator with nothing beside it:
+  // dangling if it's first/last, doubled if two sit together. Resolved here,
+  // from the same facts/vars/selections the control itself would read, so the
+  // wrapper's presence is decided WITHOUT mounting the control first — a
+  // mount-then-discover-it's-empty approach would either duplicate this same
+  // resolution logic again or force an unmount right after mount.
+  const primarySelectEmpty = $derived(
+    primarySelect ? selectIsEmpty(primarySelect, facts, vars, selections) : false
+  );
+  const primaryTextInputEmpty = $derived(
+    primaryTextInput ? textInputIsEmpty(primaryTextInput, facts, vars, selections) : false
+  );
+  const primaryLoadoutEmpty = $derived(
+    primaryLoadout ? loadoutIsEmpty(primaryLoadout, modules, selections) : false
+  );
+  const primaryHitDiceEmpty = $derived(
+    primaryHitDice ? hitDiceIsEmpty(primaryHitDice, facts, vars, selections) : false
+  );
+
   let secondaryActivated = $state(false);
 
   const secondaryConditionMet = $derived(
@@ -164,6 +197,20 @@
   );
   const secondarySegmented = $derived(
     descriptor.secondaryControl?.type === 'segmented' ? descriptor.secondaryControl : undefined
+  );
+
+  // See the primary-side comment above `primarySelectEmpty`.
+  const secondarySelectEmpty = $derived(
+    secondarySelect ? selectIsEmpty(secondarySelect, facts, vars, selections) : false
+  );
+  const secondaryTextInputEmpty = $derived(
+    secondaryTextInput ? textInputIsEmpty(secondaryTextInput, facts, vars, selections) : false
+  );
+  const secondaryHitDiceEmpty = $derived(
+    secondaryHitDice ? hitDiceIsEmpty(secondaryHitDice, facts, vars, selections) : false
+  );
+  const secondarySegmentedEmpty = $derived(
+    secondarySegmented ? segmentedIsEmpty(secondarySegmented, facts, vars, selections) : false
   );
 
   const textInfos = $derived(
@@ -327,16 +374,17 @@
 <div
   class="panel-renderer"
   class:panel-renderer--editable={editable}
-  role={!editable ? 'button' : undefined}
-  tabindex={!editable ? 0 : undefined}
-  aria-label={!editable
+  class:panel-renderer--summary={summary}
+  role={!editable && !summary ? 'button' : undefined}
+  tabindex={!editable && !summary ? 0 : undefined}
+  aria-label={!editable && !summary
     ? displayName +
       (displayDescription ? `. ${displayDescription}` : '') +
       (hasWarning && warningType
         ? ` (${warningMessage ?? $t(warningType === 'illegal' ? 'play.choices.illegal' : 'play.choices.inapplicable')})`
         : '')
     : undefined}
-  onclick={onTap}
+  onclick={summary ? undefined : onTap}
 >
   {#if hasWarning && warningType}
     <WarningIndicator type={warningType} message={warningMessage} />
@@ -344,263 +392,304 @@
   <div class="panel-renderer__header">
     <span class="panel-renderer__title">{displayName}</span>
   </div>
-  {#if displayDescription}
+  {#if !summary && displayDescription}
     <p class="panel-renderer__description">{displayDescription}</p>
   {/if}
-  {#if primarySlider}
-    <div class="panel-renderer__control">
-      <PanelSlider
-        control={primarySlider}
-        {editable}
-        {facts}
-        {vars}
-        {selections}
-        {onSelectionChange}
-      />
-    </div>
-  {/if}
-  {#if primaryDiceLine}
-    <div class="panel-renderer__control">
-      <PanelDiceLine
-        control={primaryDiceLine}
-        {editable}
-        {facts}
-        {vars}
-        {selections}
-        {onSelectionChange}
-        onRoll={handleDiceRoll}
-        {gwfActive}
-        modifiers={rollModifiers}
-      />
-    </div>
-  {/if}
-  {#if primaryHitDice}
-    <div class="panel-renderer__control">
-      <PanelHitDice
-        control={primaryHitDice}
-        {editable}
-        {facts}
-        {vars}
-        {selections}
-        advertisedEffects={entry.advertisedEffects}
-        {onSelectionChange}
-        onRoll={handleDiceRoll}
-      />
-    </div>
-  {/if}
-  {#if primarySelect}
-    <div class="panel-renderer__control">
-      <PanelSelect
-        control={primarySelect}
-        {editable}
-        {facts}
-        {vars}
-        {selections}
-        {onSelectionChange}
-      />
-    </div>
-  {/if}
-  {#if primaryTextInput}
-    <div class="panel-renderer__control">
-      <PanelTextInput
-        control={primaryTextInput}
-        {editable}
-        {facts}
-        {vars}
-        {selections}
-        {onSelectionChange}
-      />
-    </div>
-  {/if}
-  {#if primaryLoadout}
-    <div class="panel-renderer__control">
-      <PanelLoadout
-        control={primaryLoadout}
-        {editable}
-        {modules}
-        {selections}
-        {onSelectionChange}
-      />
-    </div>
-  {/if}
-  {#if secondaryShowEnableButton}
-    <div class="panel-renderer__control panel-renderer__control--secondary">
-      <button
-        class="panel-renderer__enable-button"
-        type="button"
-        onclick={() => {
-          secondaryActivated = true;
-        }}
-      >
-        {$t(descriptor.secondaryControl!.enabled!.button!)}
-      </button>
-    </div>
-  {/if}
-  {#if secondaryShouldRender && secondarySlider}
-    <div class="panel-renderer__control panel-renderer__control--secondary">
-      <PanelSlider
-        control={secondarySlider}
-        {editable}
-        {facts}
-        {vars}
-        {selections}
-        {onSelectionChange}
-      />
-    </div>
-  {/if}
-  {#if secondaryShouldRender && secondaryDiceLine}
-    <div class="panel-renderer__control panel-renderer__control--secondary">
-      <PanelDiceLine
-        control={secondaryDiceLine}
-        {editable}
-        {facts}
-        {vars}
-        {selections}
-        {onSelectionChange}
-        onRoll={handleDiceRoll}
-        {gwfActive}
-        modifiers={rollModifiers}
-      />
-    </div>
-  {/if}
-  {#if secondaryShouldRender && secondaryHitDice}
-    <div class="panel-renderer__control panel-renderer__control--secondary">
-      <PanelHitDice
-        control={secondaryHitDice}
-        {editable}
-        {facts}
-        {vars}
-        {selections}
-        advertisedEffects={entry.advertisedEffects}
-        {onSelectionChange}
-        onRoll={handleDiceRoll}
-      />
-    </div>
-  {/if}
-  {#if secondaryShouldRender && secondarySelect}
-    <div class="panel-renderer__control panel-renderer__control--secondary">
-      <PanelSelect
-        control={secondarySelect}
-        {editable}
-        {facts}
-        {vars}
-        {selections}
-        {onSelectionChange}
-      />
-    </div>
-  {/if}
-  {#if secondaryShouldRender && secondaryTextInput}
-    <div class="panel-renderer__control panel-renderer__control--secondary">
-      <PanelTextInput
-        control={secondaryTextInput}
-        {editable}
-        {facts}
-        {vars}
-        {selections}
-        {onSelectionChange}
-      />
-    </div>
-  {/if}
-  {#if secondaryShouldRender && secondarySegmented}
-    <div class="panel-renderer__control panel-renderer__control--secondary">
-      <PanelSegmented
-        control={secondarySegmented}
-        {editable}
-        {facts}
-        {vars}
-        {selections}
-        {onSelectionChange}
-      />
-    </div>
-  {/if}
-  {#each textInfos as text, i (i)}
-    <div class="panel-renderer__information panel-renderer__information--text">{text}</div>
-  {/each}
-  {#each countdownInfos as info (info.index)}
-    <div
-      class="panel-renderer__markers"
-      role="img"
-      aria-label="{info.filled} of {info.total} remaining"
-    >
-      {#each info.filledIndices as i (i)}
-        <span class="panel-renderer__marker panel-renderer__marker--filled" aria-hidden="true"
-        ></span>
-      {/each}
-      {#each info.emptyIndices as i (i)}
-        <span class="panel-renderer__marker panel-renderer__marker--empty" aria-hidden="true"
-        ></span>
-      {/each}
-    </div>
-  {/each}
-  {#if informationalAnnotations.length > 0}
-    <div class="panel-renderer__annotations" role="note">
-      {#each informationalAnnotations as annotation (annotation.key)}
-        <span class="panel-renderer__annotation">{$t(annotation.key)}</span>
-      {/each}
-    </div>
-  {/if}
-  {#if visibleFollowups.length > 0}
-    <div class="panel-renderer__followups" role="group">
-      {#each visibleFollowups as followup (followup.button)}
+  <div class="panel-renderer__body">
+    {#if primarySlider}
+      <div class="panel-renderer__control">
+        <PanelSlider
+          control={primarySlider}
+          {editable}
+          {facts}
+          {vars}
+          {selections}
+          {onSelectionChange}
+          {summary}
+        />
+      </div>
+    {/if}
+    {#if primaryDiceLine}
+      <div class="panel-renderer__control">
+        <PanelDiceLine
+          control={primaryDiceLine}
+          {editable}
+          {facts}
+          {vars}
+          {selections}
+          {onSelectionChange}
+          onRoll={handleDiceRoll}
+          {gwfActive}
+          modifiers={rollModifiers}
+          {summary}
+        />
+      </div>
+    {/if}
+    {#if primaryHitDice && (!summary || !primaryHitDiceEmpty)}
+      <div class="panel-renderer__control">
+        <PanelHitDice
+          control={primaryHitDice}
+          {editable}
+          {facts}
+          {vars}
+          {selections}
+          advertisedEffects={entry.advertisedEffects}
+          {onSelectionChange}
+          onRoll={handleDiceRoll}
+          {summary}
+        />
+      </div>
+    {/if}
+    {#if primarySelect && (!summary || !primarySelectEmpty)}
+      <div class="panel-renderer__control">
+        <PanelSelect
+          control={primarySelect}
+          {editable}
+          {facts}
+          {vars}
+          {selections}
+          {onSelectionChange}
+          {summary}
+        />
+      </div>
+    {/if}
+    {#if primaryTextInput && (!summary || !primaryTextInputEmpty)}
+      <div class="panel-renderer__control">
+        <PanelTextInput
+          control={primaryTextInput}
+          {editable}
+          {facts}
+          {vars}
+          {selections}
+          {onSelectionChange}
+          {summary}
+        />
+      </div>
+    {/if}
+    {#if primaryLoadout && (!summary || !primaryLoadoutEmpty)}
+      <div class="panel-renderer__control">
+        <PanelLoadout
+          control={primaryLoadout}
+          {editable}
+          {modules}
+          {selections}
+          {onSelectionChange}
+          {summary}
+        />
+      </div>
+    {/if}
+    {#if secondaryShowEnableButton && !summary}
+      <div class="panel-renderer__control panel-renderer__control--secondary">
         <button
+          class="panel-renderer__enable-button"
           type="button"
-          class="panel-renderer__followup-button"
           onclick={() => {
-            if (followup.type === 'effect') onFollowup?.(followup.addRule.effect);
+            secondaryActivated = true;
           }}
         >
-          {$t(followup.button)}
+          {$t(descriptor.secondaryControl!.enabled!.button!)}
         </button>
-      {/each}
-    </div>
-  {/if}
-  {#if hasActions}
-    <div class="panel-renderer__actions" role="group" aria-label={$t('play.plan.actions')}>
-      {#if onMoveUp}
-        <button
-          type="button"
-          class="panel-renderer__button panel-renderer__button--move-up"
-          disabled={!canMoveUp}
-          onclick={onMoveUp}
-          aria-label={$t('play.plan.moveUp')}
-          title={$t('play.plan.moveUp')}
+      </div>
+    {/if}
+    {#if secondaryShouldRender && secondarySlider}
+      <div class="panel-renderer__control panel-renderer__control--secondary">
+        <PanelSlider
+          control={secondarySlider}
+          {editable}
+          {facts}
+          {vars}
+          {selections}
+          {onSelectionChange}
+          {summary}
+        />
+      </div>
+    {/if}
+    {#if secondaryShouldRender && secondaryDiceLine}
+      <div class="panel-renderer__control panel-renderer__control--secondary">
+        <PanelDiceLine
+          control={secondaryDiceLine}
+          {editable}
+          {facts}
+          {vars}
+          {selections}
+          {onSelectionChange}
+          onRoll={handleDiceRoll}
+          {gwfActive}
+          modifiers={rollModifiers}
+          {summary}
+        />
+      </div>
+    {/if}
+    {#if secondaryShouldRender && secondaryHitDice && (!summary || !secondaryHitDiceEmpty)}
+      <div class="panel-renderer__control panel-renderer__control--secondary">
+        <PanelHitDice
+          control={secondaryHitDice}
+          {editable}
+          {facts}
+          {vars}
+          {selections}
+          advertisedEffects={entry.advertisedEffects}
+          {onSelectionChange}
+          onRoll={handleDiceRoll}
+          {summary}
+        />
+      </div>
+    {/if}
+    {#if secondaryShouldRender && secondarySelect && (!summary || !secondarySelectEmpty)}
+      <div class="panel-renderer__control panel-renderer__control--secondary">
+        <PanelSelect
+          control={secondarySelect}
+          {editable}
+          {facts}
+          {vars}
+          {selections}
+          {onSelectionChange}
+          {summary}
+        />
+      </div>
+    {/if}
+    {#if secondaryShouldRender && secondaryTextInput && (!summary || !secondaryTextInputEmpty)}
+      <div class="panel-renderer__control panel-renderer__control--secondary">
+        <PanelTextInput
+          control={secondaryTextInput}
+          {editable}
+          {facts}
+          {vars}
+          {selections}
+          {onSelectionChange}
+          {summary}
+        />
+      </div>
+    {/if}
+    {#if secondaryShouldRender && secondarySegmented && (!summary || !secondarySegmentedEmpty)}
+      <div class="panel-renderer__control panel-renderer__control--secondary">
+        <PanelSegmented
+          control={secondarySegmented}
+          {editable}
+          {facts}
+          {vars}
+          {selections}
+          {onSelectionChange}
+          {summary}
+        />
+      </div>
+    {/if}
+    {#each textInfos as text, i (i)}
+      {#if summary}
+        <span
+          class="panel-renderer__control panel-renderer__information panel-renderer__information--text"
+          >{text}</span
         >
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />
-          </svg>
-        </button>
+      {:else}
+        <div class="panel-renderer__information panel-renderer__information--text">{text}</div>
       {/if}
-      {#if onMoveDown}
-        <button
-          type="button"
-          class="panel-renderer__button panel-renderer__button--move-down"
-          disabled={!canMoveDown}
-          onclick={onMoveDown}
-          aria-label={$t('play.plan.moveDown')}
-          title={$t('play.plan.moveDown')}
+    {/each}
+    {#each countdownInfos as info (info.index)}
+      {#if summary}
+        <!--
+        `filled/total` replaces the marker-dot row: the dots are decorative
+        (aria-hidden) and the row's only accessible content is the
+        role="img" aria-label below, so plain visible text carrying the same
+        two numbers is the equivalent information, not a reduction of it.
+      -->
+        <span class="panel-renderer__control panel-renderer__markers-summary"
+          >{info.filled}/{info.total}</span
         >
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z" />
-          </svg>
-        </button>
-      {/if}
-      {#if onRemove}
-        <button
-          type="button"
-          class="panel-renderer__button panel-renderer__button--remove"
-          onclick={handleRemoveClick}
-          aria-label={$t(removeLabel)}
-          title={$t(removeLabel)}
+      {:else}
+        <div
+          class="panel-renderer__markers"
+          role="img"
+          aria-label="{info.filled} of {info.total} remaining"
         >
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path
-              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
-            />
-          </svg>
-        </button>
+          {#each info.filledIndices as i (i)}
+            <span class="panel-renderer__marker panel-renderer__marker--filled" aria-hidden="true"
+            ></span>
+          {/each}
+          {#each info.emptyIndices as i (i)}
+            <span class="panel-renderer__marker panel-renderer__marker--empty" aria-hidden="true"
+            ></span>
+          {/each}
+        </div>
       {/if}
-    </div>
-  {/if}
+    {/each}
+    {#if informationalAnnotations.length > 0 && !summary}
+      <!--
+      Informational annotations (e.g. the Great Weapon Fighting reroll
+      reminder) are valueless riders with no number to fold into the strip —
+      unlike valued riders, which become dice-line toggle chips. The block
+      below is a stacked (flex-column) list, not an inline "word", so
+      rendering it in summary mode would add a second line under the strip.
+      Summary mode is one line; expand to see the reminder text.
+    -->
+      <div class="panel-renderer__annotations" role="note">
+        {#each informationalAnnotations as annotation (annotation.key)}
+          <span class="panel-renderer__annotation">{$t(annotation.key)}</span>
+        {/each}
+      </div>
+    {/if}
+    {#if visibleFollowups.length > 0 && !summary}
+      <div class="panel-renderer__followups" role="group">
+        {#each visibleFollowups as followup (followup.button)}
+          <button
+            type="button"
+            class="panel-renderer__followup-button"
+            onclick={() => {
+              if (followup.type === 'effect') onFollowup?.(followup.addRule.effect);
+            }}
+          >
+            {$t(followup.button)}
+          </button>
+        {/each}
+      </div>
+    {/if}
+    {#if hasActions && !summary}
+      <div class="panel-renderer__actions" role="group" aria-label={$t('play.plan.actions')}>
+        {#if onMoveUp}
+          <button
+            type="button"
+            class="panel-renderer__button panel-renderer__button--move-up"
+            disabled={!canMoveUp}
+            onclick={onMoveUp}
+            aria-label={$t('play.plan.moveUp')}
+            title={$t('play.plan.moveUp')}
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />
+            </svg>
+          </button>
+        {/if}
+        {#if onMoveDown}
+          <button
+            type="button"
+            class="panel-renderer__button panel-renderer__button--move-down"
+            disabled={!canMoveDown}
+            onclick={onMoveDown}
+            aria-label={$t('play.plan.moveDown')}
+            title={$t('play.plan.moveDown')}
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z" />
+            </svg>
+          </button>
+        {/if}
+        {#if onRemove}
+          <button
+            type="button"
+            class="panel-renderer__button panel-renderer__button--remove"
+            onclick={handleRemoveClick}
+            aria-label={$t(removeLabel)}
+            title={$t(removeLabel)}
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+              />
+            </svg>
+          </button>
+        {/if}
+      </div>
+    {/if}
+  </div>
 </div>
 
 <style>
@@ -637,6 +726,80 @@
     background: var(--md-sys-color-surface-container-high);
   }
 
+  /* Collapsed-row short form. The header (title + warning) renders through
+     the exact same markup as the expanded row — see the template above,
+     which no longer branches on `summary` for either — so this block only
+     covers what sits BELOW the header: `.panel-renderer__body`, unconditionally
+     wrapping every control/information item, becomes a single line of
+     one-word-per-item text (see its own rule below). Padding/border reset to
+     zero here so the row reads as plain stacked text, not a card. */
+  .panel-renderer--summary {
+    display: block;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: default;
+  }
+
+  .panel-renderer--summary:hover {
+    background: transparent;
+  }
+
+  /* Non-summary: `display: contents` removes this wrapper from the box model
+     entirely, so its children (the controls) lay out as direct flex items of
+     `.panel-renderer` exactly as before this wrapper existed — zero visual
+     change from introducing it. */
+  .panel-renderer__body {
+    display: contents;
+  }
+
+  /* Summary: every control/information item becomes one inline-flex "word" on
+     a single line, in source order (primary control, secondary control, then
+     information lines). `PlanRow` renders this as the third of three stacked
+     lines (pills / name / this strip) and clips it with ellipsis.
+
+     display stays block deliberately. inline-flex was tried here so this box
+     could sit inline next to adjacent text, but an inline-flex box whose
+     width resolves from a percentage (100%/max-100%, needed to give
+     descendant ellipsis a definite containing-block width) reproducibly
+     failed to paint its own text content in Chromium while every
+     layout/accessibility signal (getBoundingClientRect, elementFromPoint, the
+     a11y tree) reported it laid out correctly — a real browser rendering
+     defect, not a logic bug. block + this rule's implicit full-width fill
+     sidesteps it. Don't reintroduce inline-flex here. */
+  .panel-renderer--summary .panel-renderer__body {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .panel-renderer--summary .panel-renderer__control {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    overflow: hidden;
+    padding-top: 0;
+    margin-top: 0;
+    border-top: none;
+  }
+
+  /* The separator is generated content, never a text node emitted by any
+     component — so it can never leak into a copy/paste or a screen reader's
+     word-by-word reading of the surrounding values. */
+  .panel-renderer--summary .panel-renderer__control:not(:first-child)::before {
+    content: '·';
+    margin: 0 var(--spacing-xs);
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .panel-renderer__markers-summary {
+    font-family: var(--font-body);
+    font-size: var(--font-size-md);
+    color: var(--md-sys-color-on-surface);
+    white-space: nowrap;
+  }
+
   /* Warning indicator positioned at top-left as overlay */
   .panel-renderer :global(.warning-indicator) {
     position: absolute;
@@ -656,6 +819,23 @@
     font-size: var(--font-size-md);
     font-weight: 500;
     color: var(--md-sys-color-on-surface);
+  }
+
+  /* Collapsed-row line 2 (pills / name+warning / short forms): the name has
+     no separate `PlanRow`-owned copy any more — this IS the name line, so it
+     needs its own single-line ellipsis. `min-width: 0` lets the flex item
+     (the header is `display: flex`) shrink below its content's natural width
+     so the ellipsis has room to apply instead of the header just overflowing. */
+  .panel-renderer--summary .panel-renderer__header {
+    min-width: 0;
+  }
+
+  .panel-renderer--summary .panel-renderer__title {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   .panel-renderer__description {
