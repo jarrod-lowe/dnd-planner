@@ -285,4 +285,50 @@ describe('PanelDiceLine - summary short form', () => {
     expect(summaryChip.classList.contains('panel-renderer__die-chip--disadv')).toBe(true);
     expect(summaryChip.tagName).toBe('SPAN');
   });
+
+  // Codex P2 finding: an UNROLLED d20 under default disadvantage (a range
+  // carrying `disadvantage: true`, or `control.advantage` resolving truthy)
+  // shows a `▼` indicator in the full render (`defaultRollMode !== 'normal'`)
+  // but the summary branch styled chips only from `rollResults`, so the
+  // default-disadvantage state vanished for a die nobody had rolled yet. The
+  // brief requires the short form to reflect adv/dis "taking it into
+  // account" even before a roll.
+  it('shows the default-disadvantage indicator on an unrolled d20 in summary', () => {
+    const entry = createDisadvantageEntry(); // range: disadvantage: true, not yet rolled
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {}, summary: true }
+    });
+    const indicator = container.querySelector('.panel-renderer__disadv-indicator');
+    expect(indicator).not.toBeNull();
+    expect(indicator?.textContent).toBe('▼');
+    // Still nothing focusable — the indicator is a plain span, not a control.
+    expect(focusableCount(container)).toBe(0);
+  });
+
+  it('does not show a disadvantage indicator on a normal-mode unrolled d20', () => {
+    const entry = createDiceLineEntry(); // no ranges, no control.advantage — normal mode
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {}, summary: true }
+    });
+    expect(container.querySelector('.panel-renderer__disadv-indicator')).toBeNull();
+  });
+
+  it('keeps the default-disadvantage indicator alongside the rolled-mode styling once rolled', async () => {
+    const entry = createDisadvantageEntry();
+    vi.spyOn(Math, 'random')
+      .mockReturnValueOnce(0.4) // disadvantage roll 1: floor(0.4*20)+1 = 9
+      .mockReturnValueOnce(0.7); // disadvantage roll 2: floor(0.7*20)+1 = 15 (dropped)
+    const { container, rerender } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {}, summary: false }
+    });
+    const chip = container.querySelector('.panel-renderer__die-chip') as HTMLElement;
+    await fireEvent.click(chip);
+
+    await rerender({ entry, editable: true, facts: {}, summary: true });
+
+    const indicator = container.querySelector('.panel-renderer__disadv-indicator');
+    expect(indicator).not.toBeNull();
+    const summaryChip = container.querySelector('.panel-renderer__die-chip') as HTMLElement;
+    expect(summaryChip.classList.contains('panel-renderer__die-chip--disadv')).toBe(true);
+  });
 });

@@ -354,15 +354,18 @@
       that slot in the expanded view. Plain text, no words — dice notation
       ("d10") isn't natural-language prose, matching the untranslated
       `${remaining}/${total} d${dieSize}` precedent in extractTopBar's
-      `resolveEntryValue` for its `hitDie` entry type. Inline text only: no
-      separator between pools, no wrapper — a later task lays out the strip.
+      `resolveEntryValue` for its `hitDie` entry type. A multiclass character
+      can carry two or more pools: an explicit space text node separates
+      each pool from the previous one (never the first), so two pools never
+      run together (`2/2 d83/4 d10`) the way plain adjacent spans would, and
+      a screen reader gets a genuine word boundary rather than a CSS-only gap
+      it cannot hear.
     -->
     <span class="panel-renderer__hit-dice-summary">
-      {#each pools as pool (pool.sides)}
-        <span class="panel-renderer__hit-dice-summary-pool"
+      {#each pools as pool, i (pool.sides)}{i > 0 ? ' ' : ''}<span
+          class="panel-renderer__hit-dice-summary-pool"
           >{pool.threshold}/{pool.total} d{pool.sides}</span
-        >
-      {/each}
+        >{/each}
     </span>
   {:else}
     <div class="panel-renderer__hit-dice" role="group" aria-label={$t('play.hitDice.groupLabel')}>

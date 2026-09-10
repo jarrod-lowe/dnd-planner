@@ -33,7 +33,11 @@
      * line's range (or authored inline `control.label`) still shows, as
      * plain non-interactive text. Roll modifiers and options triggers are
      * dropped — their value is already folded into the shown numbers, and
-     * nothing in a collapsed row may be focusable.
+     * nothing in a collapsed row may be focusable. A d20 under default
+     * disadvantage (`defaultRollMode !== 'normal'`) still shows the `▼`
+     * indicator here, exactly as the full render does — this is what lets
+     * an UNROLLED die's state read as "taking adv/dis into account" per the
+     * brief, not just a rolled one's chip styling.
      * See docs/plans/ideas/better-summary-panels.md.
      */
     summary?: boolean;
@@ -610,6 +614,9 @@
         <span class="panel-renderer__range">{formatRangeText(currentRange!)}</span>
       {:else if part.type === 'die'}
         {@const dieIsD20 = isD20(part.die!)}
+        {#if defaultRollMode !== 'normal' && dieIsD20}
+          <span class="panel-renderer__disadv-indicator" aria-label="Disadvantage">▼</span>
+        {/if}
         <DieChip
           text={formatDieChip(part.die!, part.dieIndex!)}
           editable={false}

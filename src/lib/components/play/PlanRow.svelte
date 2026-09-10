@@ -594,7 +594,20 @@
      copy). `.plan-row__right` is already `display:flex; flex-direction:
      column` (the base rule below), so collapsing needs no layout override
      here; only the pills row and the panel's own lines get their own
-     overflow handling. */
+     overflow handling.
+
+     Deliberately NOT clipped here: `overflow: hidden` on this element used
+     to give the whole subtree its single-line ellipsis, but the warning
+     indicator's `.warning-tooltip` (absolutely positioned, opened by
+     clicking the focusable `(!)`) is ALSO a descendant of this element — an
+     `overflow: hidden` ancestor clips it regardless of its own absolute
+     positioning, making a collapsed row's warning message unreadable. The
+     ellipsis doesn't need to live here: `.panel-renderer__title` (name,
+     line 2) and `.panel-renderer__body` (short forms, line 3) each already
+     carry their own self-contained `overflow: hidden; text-overflow:
+     ellipsis; white-space: nowrap` in PanelRenderer.svelte, and neither
+     contains the warning indicator (a sibling of both). See
+     PlanRowWarningTooltipClip.test.ts. */
   .plan-row--collapsed .plan-row__cost-chips {
     flex-wrap: nowrap;
   }
@@ -602,9 +615,6 @@
   .plan-row--collapsed .plan-row__content {
     flex: 1;
     min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .plan-row__cost-chips {
