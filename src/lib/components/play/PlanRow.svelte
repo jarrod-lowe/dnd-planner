@@ -635,25 +635,36 @@
     border-radius: var(--radius-sm);
   }
 
+  /* Visual identity only — applied to BOTH the expanded <button> and the
+     collapsed, non-interactive <span> (see the collapsed cost-chips markup
+     above): the red border/text mark a pill as "upcast" regardless of which
+     element renders it. Nothing here says "you can click this" — that's
+     scoped to the real button below, same split as DieChip's
+     editable/read-only chip (Codex P2: a shared class previously carried
+     `cursor: pointer` and hover/focus colours onto the inert collapsed span,
+     which advertised an affordance it couldn't deliver). */
   .plan-row__cost-tag--upcast {
     position: relative;
     display: inline-flex;
     align-items: center;
     border: 1px solid var(--md-sys-color-error);
     color: var(--md-sys-color-error);
+  }
+
+  button.plan-row__cost-tag--upcast {
     cursor: pointer;
     transition:
       background-color var(--transition-fast),
       color var(--transition-fast);
   }
 
-  .plan-row__cost-tag--upcast:hover,
-  .plan-row__cost-tag--upcast:focus-visible {
+  button.plan-row__cost-tag--upcast:hover,
+  button.plan-row__cost-tag--upcast:focus-visible {
     background: var(--md-sys-color-error-container);
     color: var(--md-sys-color-on-error-container);
   }
 
-  .plan-row__cost-tag--upcast:focus-visible {
+  button.plan-row__cost-tag--upcast:focus-visible {
     outline: 2px solid var(--md-sys-color-primary);
     outline-offset: 2px;
   }

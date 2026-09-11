@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 // Mock Element.animate for JSDOM (PanelDiceLine animates the chip on roll).
 beforeAll(() => {
@@ -93,6 +95,34 @@ const mockEntry: AvailableRuleEntry = {
 
 const mockAlternative: AvailableRuleEntry = {
   rule: { id: 'alt-1', activities: [] } as Rule,
+  legal: true,
+  applicable: true,
+  diagnostics: []
+};
+
+// An upcast: authored L1, cast at slot level 2, no slot-level slider — see
+// resolveCostTags in $lib/play/costTags.ts.
+function makeUpcastItem(): PlannedItem {
+  return {
+    instanceId: 'inst-upcast',
+    rule: {
+      id: 'burning-hands',
+      activities: [],
+      ui: { actionCost: ['L1'], detailKey: 'spell/burning-hands' },
+      selections: { slotLevel: 2 }
+    },
+    order: 0,
+    verb: 'ATTACK'
+  };
+}
+
+const mockUpcastEntry: AvailableRuleEntry = {
+  rule: {
+    id: 'burning-hands',
+    activities: [],
+    ui: { actionCost: ['L1'] },
+    selections: { slotLevel: 2 }
+  } as Rule,
   legal: true,
   applicable: true,
   diagnostics: []
@@ -396,5 +426,102 @@ describe('PlanRow collapsed summary strip', () => {
 
     expect(container.querySelector('.plan-row__mod-chips')).toBeNull();
     expect(container.querySelector('.plan-row__alternatives')).toBeNull();
+  });
+});
+
+describe('upcast cost pill affordance (Codex P2: collapsed span advertises a click it cannot do)', () => {
+  // The expanded upcast pill is a real, clickable <button> with a tooltip
+  // trigger. The collapsed strip is inert by design (see PlanRowSummary's
+  // "contains no focusable elements" test above) so the SAME pill renders as
+  // a non-interactive <span> there — but it kept the interactive styling
+  // (cursor: pointer, hover colour change) because both elements shared the
+  // single `.plan-row__cost-tag--upcast` class. That class must still mark
+  // the pill as "an upcast" (border/colour) in both renders; only the
+  // affordance that says "you can click this" belongs on the button.
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('renders the upcast pill as a <span> when collapsed and a <button> when expanded', async () => {
+    const { container } = render(PlanRow, {
+      props: {
+        item: makeUpcastItem(),
+        entry: mockUpcastEntry,
+        facts: mockFacts,
+        activeAnnotations: []
+      }
+    });
+
+    const expandedPill = container.querySelector('.plan-row__cost-tag--upcast');
+    expect(expandedPill).toBeTruthy();
+    expect(expandedPill?.tagName).toBe('BUTTON');
+
+    const chevron = container.querySelector(
+      '[aria-label="play.planRow.collapseAria"], [aria-label="play.planRow.expandAria"]'
+    ) as HTMLElement;
+    await fireEvent.click(chevron);
+
+    const collapsedPill = container.querySelector('.plan-row__cost-tag--upcast');
+    expect(collapsedPill).toBeTruthy();
+    expect(collapsedPill?.tagName).toBe('SPAN');
+  });
+
+  // jsdom applies no component <style> cascade (getComputedStyle would be a
+  // false green here — see PlanRowWarningTooltipClip.test.ts and DieChip.test.ts
+  // for the same limitation). This reads PlanRow's own stylesheet instead: the
+  // interactive-only rules (cursor, hover, focus-visible, the hover
+  // transition) must be scoped to `button.plan-row__cost-tag--upcast`, never
+  // to the bare `.plan-row__cost-tag--upcast` class the collapsed <span>
+  // still carries.
+  const planRowSource = readFileSync(
+    join(process.cwd(), 'src/lib/components/play/PlanRow.svelte'),
+    'utf8'
+  );
+
+  function styleBlock(source: string): string {
+    const start = source.indexOf('<style>');
+    const end = source.indexOf('</style>');
+    if (start === -1 || end === -1) throw new Error('no <style> block found');
+    return source.slice(start, end);
+  }
+
+  function ruleBody(source: string, selectorText: string): string {
+    const start = source.indexOf(selectorText);
+    if (start === -1) throw new Error(`selector not found in source: ${selectorText}`);
+    const braceOpen = source.indexOf('{', start);
+    const braceClose = source.indexOf('}', braceOpen);
+    if (braceOpen === -1 || braceClose === -1) {
+      throw new Error(`could not find rule body for selector: ${selectorText}`);
+    }
+    return source.slice(braceOpen + 1, braceClose);
+  }
+
+  it('keeps the visual identity (border/colour) on the bare shared class, without the click affordance', () => {
+    const css = styleBlock(planRowSource);
+    const bareRule = ruleBody(css, '.plan-row__cost-tag--upcast {');
+    expect(bareRule).toMatch(/border:\s*1px solid var\(--md-sys-color-error\)/);
+    expect(bareRule).toMatch(/color:\s*var\(--md-sys-color-error\)/);
+    // The bare, element-unscoped rule must not carry the affordance that
+    // tells the (possibly non-interactive) element it's clickable.
+    expect(bareRule).not.toMatch(/cursor\s*:\s*pointer/);
+  });
+
+  it('scopes cursor:pointer and the hover transition to the real button only', () => {
+    const css = styleBlock(planRowSource);
+    expect(css).toMatch(/button\.plan-row__cost-tag--upcast\s*\{[^}]*cursor:\s*pointer[^}]*\}/);
+  });
+
+  it('scopes :hover and :focus-visible colour changes to the button, not the bare class', () => {
+    const css = styleBlock(planRowSource);
+    // Every :hover / :focus-visible rule naming the upcast pill must be
+    // element-scoped to `button`, never applied to the bare class (which the
+    // collapsed, non-interactive <span> also carries).
+    const affordanceLines = css
+      .split('\n')
+      .filter((line) => /plan-row__cost-tag--upcast\s*:\s*(hover|focus-visible)/.test(line));
+    expect(affordanceLines.length).toBeGreaterThan(0);
+    for (const line of affordanceLines) {
+      expect(line.trim()).toMatch(/^button\.plan-row__cost-tag--upcast:(hover|focus-visible)/);
+    }
   });
 });
