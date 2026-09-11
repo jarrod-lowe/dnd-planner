@@ -307,5 +307,106 @@ describe('PanelRenderer - summary composition', () => {
       expect(items[0].querySelector('.panel-renderer__dice-line')).toBeTruthy();
       expect(container.querySelector('.panel-renderer__hit-dice-summary')).toBeNull();
     });
+
+    // A dice-line control never got the empty-wrapper treatment the other
+    // five control types received — `parts` was assumed to always contain at
+    // least one die, so the wrapper was always emitted unconditionally (see
+    // both `{#if primaryDiceLine}` and `{#if secondaryShouldRender &&
+    // secondaryDiceLine}` in PanelRenderer). A die whose `sides` is a
+    // ValueSource that fails to resolve (no matching var/default) is a real
+    // shape some weapon/attack rules can produce, and renders no visible die
+    // chip text nor a label/range — exactly the same "wrapper survives with
+    // nothing beside it" shape the other five controls already guard against.
+    // This shape is DISTINCT from the reported "Roll Initiative" defect
+    // (fixed separately as a CSS rendering issue — a dice-line control is
+    // never actually empty in that rule), but the construction the plan calls
+    // for — "impossible by construction" — means dice-line must get the same
+    // treatment as its siblings regardless.
+    const unresolvedDie = { sides: { var: 'missingSides' } };
+
+    const emptyDiceLineFirst = (): Rule =>
+      ({
+        id: 'empty-dice-line-first',
+        description: 'Empty dice-line first',
+        activities: [],
+        ui: {
+          name: 'rule.test.emptyDiceLineFirst.name',
+          primaryControl: { type: 'dice-line', dice: [unresolvedDie] },
+          secondaryControl: {
+            type: 'dice-line',
+            dice: [{ sides: 20, bonus: { var: 'hitBonus' } }]
+          }
+        },
+        vars: { hitBonus: { default: { number: 7 } } }
+      }) as unknown as Rule;
+
+    const emptyDiceLineLast = (): Rule =>
+      ({
+        id: 'empty-dice-line-last',
+        description: 'Empty dice-line last',
+        activities: [],
+        ui: {
+          name: 'rule.test.emptyDiceLineLast.name',
+          primaryControl: {
+            type: 'dice-line',
+            dice: [{ sides: 20, bonus: { var: 'hitBonus' } }]
+          },
+          secondaryControl: { type: 'dice-line', dice: [unresolvedDie] }
+        },
+        vars: { hitBonus: { default: { number: 7 } } }
+      }) as unknown as Rule;
+
+    const emptyDiceLineMiddle = (): Rule =>
+      ({
+        id: 'empty-dice-line-middle',
+        description: 'Empty dice-line middle',
+        activities: [],
+        ui: {
+          name: 'rule.test.emptyDiceLineMiddle.name',
+          primaryControl: {
+            type: 'dice-line',
+            dice: [{ sides: 20, bonus: { var: 'hitBonus' } }]
+          },
+          secondaryControl: { type: 'dice-line', dice: [unresolvedDie] },
+          information: [{ type: 'text', label: 'test.info.label' }]
+        },
+        vars: { hitBonus: { default: { number: 7 } } }
+      }) as unknown as Rule;
+
+    it('empty first item: primary dice-line (empty) + secondary dice-line (real) renders one wrapper with no leading separator', () => {
+      const entry = makeEntry(emptyDiceLineFirst());
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, summary: true }
+      });
+      const items = container.querySelectorAll('.panel-renderer__body > .panel-renderer__control');
+      expect(items.length).toBe(1);
+      expect(items[0].querySelector('.panel-renderer__dice-line')).toBeTruthy();
+      // The single remaining item is genuinely first-child (no dangling
+      // wrapper ahead of it), so it never matches the separator selector.
+      expect(
+        items[0].matches('.panel-renderer--summary .panel-renderer__control:not(:first-child)')
+      ).toBe(false);
+    });
+
+    it('empty last item: primary dice-line (real) + secondary dice-line (empty) renders one wrapper', () => {
+      const entry = makeEntry(emptyDiceLineLast());
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, summary: true }
+      });
+      const items = container.querySelectorAll('.panel-renderer__body > .panel-renderer__control');
+      expect(items.length).toBe(1);
+      expect(items[0].querySelector('.panel-renderer__dice-line')).toBeTruthy();
+    });
+
+    it('empty middle item: dice-line, empty dice-line, info text renders two wrappers (skipping the middle)', () => {
+      const entry = makeEntry(emptyDiceLineMiddle());
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, summary: true }
+      });
+      const items = container.querySelectorAll('.panel-renderer__body > .panel-renderer__control');
+      expect(items.length).toBe(2);
+      expect(items[0].querySelector('.panel-renderer__dice-line')).toBeTruthy();
+      expect(items[1].textContent).toContain('test.info.label');
+    });
   });
 });

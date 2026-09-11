@@ -1,18 +1,47 @@
-<script lang="ts">
+<script module lang="ts">
   import { resolveValueSource } from './resolveValueSource';
+  import type { DiceLineControl } from './types';
+  import type { Facts, VarDefinition } from '$lib/rules-view';
+
+  /**
+   * Whether this control has nothing to show in summary mode: no label, no
+   * (non-empty) range, and every die's `sides` fails to resolve to a real
+   * number — the same "renders nothing visible" shape `textInputIsEmpty` /
+   * `selectIsEmpty` / `loadoutIsEmpty` / `segmentedIsEmpty` / `hitDiceIsEmpty`
+   * already guard against for their own control types. A dice-line's `sides`
+   * is usually a literal number (always resolves, e.g. a d20 check), so this
+   * is false for most authored controls — but a versatile weapon's damage
+   * die (`sides: { var: 'damageDie' }`, see `attacks.ts` / `greataxe.ts` /
+   * `find-steed.ts`) can genuinely fail to resolve. Exported so
+   * `PanelRenderer` can decide whether to render this control's
+   * `.panel-renderer__control` wrapper at all, before mounting — see
+   * `textInputIsEmpty` in `PanelTextInput.svelte` for why.
+   */
+  export function diceLineIsEmpty(
+    control: DiceLineControl,
+    facts: Facts,
+    vars: Record<string, VarDefinition>,
+    selections: Record<string, unknown>
+  ): boolean {
+    if (control.label) return false;
+    if (control.ranges) {
+      const ranges = resolveValueSource(control.ranges, facts, vars, selections);
+      if (Array.isArray(ranges) && ranges.length > 0) return false;
+    }
+    return !control.dice.some((die) => {
+      if (typeof die.sides === 'number') return true;
+      const resolved = resolveValueSource(die.sides, facts, vars, selections);
+      return typeof resolved === 'number' && Number.isFinite(resolved);
+    });
+  }
+</script>
+
+<script lang="ts">
   import { rollTypeKey } from './rollType';
   import DamageTypeIcon from './DamageTypeIcon.svelte';
   import DieChip from './DieChip.svelte';
   import { nextDiceLineId } from './diceLineId';
-  import type {
-    CritMode,
-    DiceLineControl,
-    DiceEntry,
-    RollModifier,
-    RollResult,
-    ValueSource
-  } from './types';
-  import type { Facts, VarDefinition } from '$lib/rules-view';
+  import type { CritMode, DiceEntry, RollModifier, RollResult, ValueSource } from './types';
   import { t } from '$lib/i18n';
 
   interface Props {
@@ -855,11 +884,31 @@
      rule. `min-width: 0` lets it shrink below its content's natural width
      instead of forcing its ancestors wider, so a long line clips (via the
      ellipsis `.panel-renderer__body` already owns) instead of wrapping or
-     scrolling the page. */
+     scrolling the page.
+
+     `display: inline-flex` (overriding the block-level `display: flex`
+     above) is load-bearing, not cosmetic. `PanelRenderer`'s `::before`
+     separator is INLINE generated content painted immediately before
+     `.panel-renderer__control` — whichever control is not first. A
+     block-level box (plain `display: flex` is block-level) can never share
+     a line with preceding inline content: the browser is forced to start it
+     on its own line, so the separator dot renders alone on a line by
+     itself, with the dice line's actual d20/value content pushed to the
+     line below it — a leading-looking dot with the values apparently AFTER
+     it, reported as "the separator dot before the values" on Roll
+     Initiative's Alert secondary roll (a non-first dice-line control).
+     `inline-flex` makes the whole box atomic and inline-level, so it sits on
+     the same line as the separator exactly like every other (span-based)
+     control's short form already does. This is a genuine browser rendering
+     defect in the interaction between generated content and a block-level
+     flex child, not a logic bug — jsdom's DOM assertions can't see it
+     (no real layout), only a real browser can. */
   .panel-renderer__dice-line--summary {
+    display: inline-flex;
     flex-wrap: nowrap;
     min-width: 0;
     overflow: hidden;
+    vertical-align: bottom;
   }
 
   .panel-renderer__dice-separator {

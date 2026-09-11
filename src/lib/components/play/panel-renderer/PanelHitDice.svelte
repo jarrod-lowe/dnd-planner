@@ -43,10 +43,19 @@
     onSelectionChange?: (selections: Record<string, unknown>) => void;
     onRoll?: (data: RollResult, slotIndex: number) => void;
     /**
-     * Collapsed-row short form: pool counts ("3/4 d10"), never the rolled
-     * heals — `selections.rolls` persists across collapse (unlike a
-     * dice-line's local `rollResults`), but the summary deliberately doesn't
-     * surface it.
+     * Collapsed-row short form. Unlike a dice-line's local `rollResults`,
+     * `selections.rolls` persists across collapse, and the row's own
+     * `advertisedEffects` keep carrying the engine's committed heal for
+     * every accepted roll — so the summary CAN and does surface it: it leads
+     * with the summed `effective` heal of every rolled slot (never a
+     * recomputed raw roll+bonus — see `ownPendingHeal`), then the same
+     * COMMITTED-based `remaining/total dN` pool notation the non-summary
+     * aria-label announces (`poolAriaLabel`), unchanged by this row's own
+     * pending rolls exactly as that aria-label already is. "The player
+     * healed 5 hp so far; 4 of 4 dice are still uncommitted" is correct even
+     * though one of those 4 is the die that produced the 5 — the roll isn't
+     * committed until End Turn, matching the expanded view's own chips
+     * staying tappable in the meantime.
      */
     summary?: boolean;
   }
@@ -211,6 +220,30 @@
   // preview walks pools in that order (whatever order they render in).
   const orderedPools = $derived([...pools].sort((a, b) => a.sides - b.sides));
 
+  // Summary-only: whether ANY slot across ANY pool has been rolled — gates
+  // whether the collapsed line leads with a heal total at all (an
+  // untouched pool renders exactly as before, no heal segment).
+  const hasAnyRoll = $derived(
+    pools.some((pool) => pool.slots.some((slot) => slotRoll(pool, slot) !== undefined))
+  );
+
+  // Summary-only: the total healed so far, reusing `ownPendingHeal` — the
+  // engine's own committed (floored/capped) heals, never a recomputed
+  // roll+bonus. This is the same sum `missingHp` already folds in above, so
+  // no second summation is introduced. A roll the engine REJECTED
+  // (die_already_spent) advertises no effect and so contributes 0 here,
+  // which is correct: it heals nothing until cleared and re-rolled on an
+  // open slot.
+  const rolledHealTotal = $derived(ownPendingHeal());
+
+  // `control.unit` is a literal notation string authored on the rule (e.g.
+  // "hp"), concatenated raw exactly as `PanelSlider` concatenates its own
+  // `unit` — units and dice notation are deliberately unlocalized here,
+  // unlike prose (see `PanelSlider.svelte`'s `displayValue`).
+  const healSummaryText = $derived(
+    control.unit ? `${rolledHealTotal} ${control.unit}` : `${rolledHealTotal}`
+  );
+
   // The heal a given slot's roll would land, mirroring shortRestOffer exactly:
   // min(max(1, roll + bonus), budget left when this slot's turn comes), with
   // every earlier-in-order rolled slot having already claimed its capped heal.
@@ -347,22 +380,31 @@
 {#if pools.length > 0}
   {#if summary}
     <!--
-      Pool COUNTS, not the rolled heals: "3/4 d10" per pool. `pool.threshold`
-      is the same committed-based unspent count the non-summary pool
-      aria-label announces (poolAriaLabel), so a slot spent by an earlier
-      rest's committed spend shrinks the shown count exactly as it disables
-      that slot in the expanded view. Plain text, no words — dice notation
-      ("d10") isn't natural-language prose, matching the untranslated
-      `${remaining}/${total} d${dieSize}` precedent in extractTopBar's
-      `resolveEntryValue` for its `hitDie` entry type. A multiclass character
-      can carry two or more pools: an explicit space text node separates
-      each pool from the previous one (never the first), so two pools never
-      run together (`2/2 d83/4 d10`) the way plain adjacent spans would, and
-      a screen reader gets a genuine word boundary rather than a CSS-only gap
-      it cannot hear.
+      Leads with the summed heal actually landed so far (the owner's
+      correction: "pooling" means adding the rolled results together, not
+      omitting them), THEN the pool counts: "5 hp 4/4 d10". The heal total
+      is `rolledHealTotal` (the engine's own committed/effective heals via
+      `ownPendingHeal`, never a recomputed roll+bonus) with `control.unit`
+      concatenated raw, exactly as `PanelSlider` renders its own unit — no
+      i18n key, units are literal notation here. The pool tail keeps
+      `pool.threshold`, the same committed-based unspent count the
+      non-summary aria-label announces (poolAriaLabel): a slot spent by an
+      EARLIER rest's committed spend shrinks it, but THIS row's own pending
+      (uncommitted) rolls do not — same invariant the expanded chips rely on
+      to stay tappable. Plain text, no words for the pool part — dice
+      notation ("d10") isn't natural-language prose, matching the
+      untranslated `${remaining}/${total} d${dieSize}` precedent in
+      extractTopBar's `resolveEntryValue` for its `hitDie` entry type. A
+      multiclass character can carry two or more pools: an explicit space
+      text node separates each pool from the previous one (never the
+      first), and another separates the heal segment from the first pool,
+      so nothing ever runs together (`2/2 d83/4 d10`) the way plain adjacent
+      spans would, and a screen reader gets genuine word boundaries rather
+      than a CSS-only gap it cannot hear.
     -->
     <span class="panel-renderer__hit-dice-summary">
-      {#each pools as pool, i (pool.sides)}{i > 0 ? ' ' : ''}<span
+      {#if hasAnyRoll}<span class="panel-renderer__hit-dice-summary-heal">{healSummaryText}</span
+        >{/if}{hasAnyRoll ? ' ' : ''}{#each pools as pool, i (pool.sides)}{i > 0 ? ' ' : ''}<span
           class="panel-renderer__hit-dice-summary-pool"
           >{pool.threshold}/{pool.total} d{pool.sides}</span
         >{/each}

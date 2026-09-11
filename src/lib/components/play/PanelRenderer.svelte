@@ -6,7 +6,7 @@
   import { resolveValueSource } from './panel-renderer/resolveValueSource';
   import { rollTypeKey } from './panel-renderer/rollType';
   import PanelSlider from './panel-renderer/PanelSlider.svelte';
-  import PanelDiceLine from './panel-renderer/PanelDiceLine.svelte';
+  import PanelDiceLine, { diceLineIsEmpty } from './panel-renderer/PanelDiceLine.svelte';
   import PanelHitDice, { hitDiceIsEmpty } from './panel-renderer/PanelHitDice.svelte';
   import PanelSelect, { selectIsEmpty } from './panel-renderer/PanelSelect.svelte';
   import PanelTextInput, { textInputIsEmpty } from './panel-renderer/PanelTextInput.svelte';
@@ -156,6 +156,9 @@
   const primaryHitDiceEmpty = $derived(
     primaryHitDice ? hitDiceIsEmpty(primaryHitDice, facts, vars, selections) : false
   );
+  const primaryDiceLineEmpty = $derived(
+    primaryDiceLine ? diceLineIsEmpty(primaryDiceLine, facts, vars, selections) : false
+  );
 
   let secondaryActivated = $state(false);
 
@@ -211,6 +214,9 @@
   );
   const secondarySegmentedEmpty = $derived(
     secondarySegmented ? segmentedIsEmpty(secondarySegmented, facts, vars, selections) : false
+  );
+  const secondaryDiceLineEmpty = $derived(
+    secondaryDiceLine ? diceLineIsEmpty(secondaryDiceLine, facts, vars, selections) : false
   );
 
   const textInfos = $derived(
@@ -409,7 +415,7 @@
         />
       </div>
     {/if}
-    {#if primaryDiceLine}
+    {#if primaryDiceLine && (!summary || !primaryDiceLineEmpty)}
       <div class="panel-renderer__control">
         <PanelDiceLine
           control={primaryDiceLine}
@@ -504,7 +510,7 @@
         />
       </div>
     {/if}
-    {#if secondaryShouldRender && secondaryDiceLine}
+    {#if secondaryShouldRender && secondaryDiceLine && (!summary || !secondaryDiceLineEmpty)}
       <div class="panel-renderer__control panel-renderer__control--secondary">
         <PanelDiceLine
           control={secondaryDiceLine}
