@@ -48,14 +48,16 @@
      * `advertisedEffects` keep carrying the engine's committed heal for
      * every accepted roll — so the summary CAN and does surface it: it leads
      * with the summed `effective` heal of every rolled slot (never a
-     * recomputed raw roll+bonus — see `ownPendingHeal`), then the same
-     * COMMITTED-based `remaining/total dN` pool notation the non-summary
-     * aria-label announces (`poolAriaLabel`), unchanged by this row's own
-     * pending rolls exactly as that aria-label already is. "The player
-     * healed 5 hp so far; 4 of 4 dice are still uncommitted" is correct even
-     * though one of those 4 is the die that produced the 5 — the roll isn't
-     * committed until End Turn, matching the expanded view's own chips
-     * staying tappable in the meantime.
+     * recomputed raw roll+bonus — see `ownPendingHeal`), then a
+     * `remaining/total dN` pool notation built from `pool.remaining` (the raw
+     * POST-plan fact) — NOT the `pool.threshold` the non-summary aria-label
+     * announces. `threshold` deliberately offsets this row's own accepted
+     * rolls back open so the expanded roller's chips stay tappable for a
+     * re-roll; the summary has no tappability to protect, so it must show
+     * the dice actually spent so far, THIS rest included. "The player
+     * healed 5 hp so far; 3 of 4 dice are still available" — the 4th die is
+     * the one that produced the 5, and reads as spent even though its chip
+     * stays tappable (to clear/re-roll) until End Turn commits it.
      */
     summary?: boolean;
   }
@@ -78,16 +80,28 @@
     /** Total dice ever owned at this size — one slot roller per die. */
     total: number;
     /**
+     * POST-plan availability — the raw `remaining` fact (clamped to `total`).
+     * It is resolved against POST-plan facts, so it already reflects BOTH an
+     * EARLIER rest's committed spends AND this row's own accepted rolls: it
+     * is exactly the count of chips the expanded roller still shows blank
+     * (unrolled and unspent). This is the number the SUMMARY's remaining/
+     * total notation must use — see `threshold` below for why the expanded
+     * roller's tappability uses a different number.
+     */
+    remaining: number;
+    /**
      * COMMITTED-based availability — slots at index >= threshold are spent by
-     * an EARLIER rest and render disabled. The raw `remaining` fact is resolved
-     * against POST-plan facts, so it already includes this row's own pending
-     * spends; offsetting it back by the row's own ADVERTISED hit-die spends
-     * yields availability that the row's own accepted rolls cannot shrink. A
-     * retained roll the engine REJECTED (die_already_spent) advertises no
-     * spend, so it correctly does NOT count back in — the slot stays blocked
-     * and the roll is only clearable. Rest rows are plan-terminal (at most one
-     * per plan), so the offset is exact — the row's spends can never
-     * double-count.
+     * an EARLIER rest and render disabled/untappable. Unlike `remaining`
+     * above, this DELIBERATELY offsets the row's own ADVERTISED hit-die
+     * spends back open, so the row's own accepted rolls cannot shrink it —
+     * a just-rolled slot must stay tappable (re-rollable) until End Turn
+     * commits it, exactly like a dice-line's chips stay tappable after a
+     * roll. A retained roll the engine REJECTED (die_already_spent)
+     * advertises no spend, so it correctly does NOT count back in — the slot
+     * stays blocked and the roll is only clearable. Rest rows are
+     * plan-terminal (at most one per plan), so the offset is exact — the
+     * row's spends can never double-count. Used only for the expanded
+     * roller's disabled state and aria-labels, never for the summary.
      */
     threshold: number;
     slots: number[];
@@ -154,6 +168,7 @@
         return {
           sides: pool.sides,
           total,
+          remaining,
           threshold: Math.min(remaining + advertisedSpends(pool.sides), total),
           slots: [] as number[]
         };
@@ -382,17 +397,23 @@
     <!--
       Leads with the summed heal actually landed so far (the owner's
       correction: "pooling" means adding the rolled results together, not
-      omitting them), THEN the pool counts: "5 hp 4/4 d10". The heal total
+      omitting them), THEN the pool counts: "5 hp 3/4 d10". The heal total
       is `rolledHealTotal` (the engine's own committed/effective heals via
       `ownPendingHeal`, never a recomputed roll+bonus) with `control.unit`
       concatenated raw, exactly as `PanelSlider` renders its own unit — no
-      i18n key, units are literal notation here. The pool tail keeps
-      `pool.threshold`, the same committed-based unspent count the
-      non-summary aria-label announces (poolAriaLabel): a slot spent by an
-      EARLIER rest's committed spend shrinks it, but THIS row's own pending
-      (uncommitted) rolls do not — same invariant the expanded chips rely on
-      to stay tappable. Plain text, no words for the pool part — dice
-      notation ("d10") isn't natural-language prose, matching the
+      i18n key, units are literal notation here. The pool tail uses
+      `pool.remaining` (the raw POST-plan fact, clamped to total) — NOT
+      `pool.threshold`. Both a slot spent by an EARLIER rest's committed
+      spend AND a slot rolled by THIS row shrink `remaining`, because the
+      summary is read-only informational text, not the tappability gate the
+      expanded roller's `threshold` drives: a die this row just rolled is
+      still "spent" from the reader's point of view (the heal above already
+      counts it), even though its chip stays tappable in the expanded view
+      to allow a re-roll before End Turn commits it. Collapsing and
+      expanding must never disagree about how many dice are left — this is
+      exactly the count of chips the expanded roller still shows blank
+      (see `slotRoll`/`chipText`). Plain text, no words for the pool part —
+      dice notation ("d10") isn't natural-language prose, matching the
       untranslated `${remaining}/${total} d${dieSize}` precedent in
       extractTopBar's `resolveEntryValue` for its `hitDie` entry type. A
       multiclass character can carry two or more pools: an explicit space
@@ -406,7 +427,7 @@
       {#if hasAnyRoll}<span class="panel-renderer__hit-dice-summary-heal">{healSummaryText}</span
         >{/if}{hasAnyRoll ? ' ' : ''}{#each pools as pool, i (pool.sides)}{i > 0 ? ' ' : ''}<span
           class="panel-renderer__hit-dice-summary-pool"
-          >{pool.threshold}/{pool.total} d{pool.sides}</span
+          >{pool.remaining}/{pool.total} d{pool.sides}</span
         >{/each}
     </span>
   {:else}

@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/svelte';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import PanelRenderer from '$lib/components/play/PanelRenderer.svelte';
 import type { AvailableRuleEntry, Rule } from '$lib/rules-view';
 
@@ -65,13 +67,13 @@ describe('PanelRenderer - summary composition', () => {
     expect(countdown?.textContent?.trim()).toBe('3/4');
   });
 
-  it('never emits the separator as a text node', () => {
+  it('never emits the separator as a text node inside a control wrapper', () => {
     const entry = createEntry();
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts: {}, summary: true }
     });
-    // The separator is CSS-generated content (::before), so no element's own
-    // text content may contain the '·' glyph.
+    // The separator is its own real sibling element (`.panel-renderer__separator`),
+    // never text painted inside a `.panel-renderer__control` wrapper.
     const items = container.querySelectorAll('.panel-renderer__control');
     for (const item of items) {
       for (const node of item.childNodes) {
@@ -80,6 +82,72 @@ describe('PanelRenderer - summary composition', () => {
         }
       }
     }
+  });
+
+  // Codex P2: the separator used to be CSS `::before` generated content on
+  // `.panel-renderer__control:not(:first-child)`. A pseudo-element cannot
+  // carry `aria-hidden`, and several screen readers DO expose ::before/::after
+  // generated text in the accessibility tree — so a collapsed row could be
+  // announced with a decorative middle dot interrupting each value. The fix
+  // is a REAL element carrying `aria-hidden="true"`, with its presence
+  // decided in script (not a `:not(:first-child)` selector) so a leading,
+  // trailing or doubled separator is impossible by construction.
+  describe('separator is a real aria-hidden element, not CSS-generated content', () => {
+    it('renders exactly one real separator between two controls, carrying aria-hidden', () => {
+      const entry = createEntry();
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, summary: true }
+      });
+      const separators = container.querySelectorAll('.panel-renderer__separator');
+      // 4 items (dice-line, slider, text info, countdown) => 3 separators.
+      expect(separators.length).toBe(3);
+      for (const sep of separators) {
+        expect(sep.getAttribute('aria-hidden')).toBe('true');
+      }
+    });
+
+    it('the component source never uses ::before content for the separator', () => {
+      const source = readFileSync(
+        join(process.cwd(), 'src/lib/components/play/PanelRenderer.svelte'),
+        'utf8'
+      );
+      expect(source).not.toMatch(/::before\s*\{[^}]*content:\s*'·'/);
+    });
+
+    it('the first rendered item in the strip is not preceded by a separator', () => {
+      const entry = createEntry();
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, summary: true }
+      });
+      const body = container.querySelector('.panel-renderer__body');
+      const firstChild = body?.firstElementChild;
+      expect(firstChild?.classList.contains('panel-renderer__separator')).toBe(false);
+    });
+
+    it('the last rendered item in the strip is not followed by a separator', () => {
+      const entry = createEntry();
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, summary: true }
+      });
+      const body = container.querySelector('.panel-renderer__body');
+      const lastChild = body?.lastElementChild;
+      expect(lastChild?.classList.contains('panel-renderer__separator')).toBe(false);
+    });
+
+    it('never places two separators next to each other', () => {
+      const entry = createEntry();
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, summary: true }
+      });
+      const body = container.querySelector('.panel-renderer__body');
+      const children = Array.from(body?.children ?? []);
+      for (let i = 0; i < children.length - 1; i++) {
+        const bothSeparators =
+          children[i].classList.contains('panel-renderer__separator') &&
+          children[i + 1].classList.contains('panel-renderer__separator');
+        expect(bothSeparators).toBe(false);
+      }
+    });
   });
 
   it('applies the same-line wrapper class to every summary item, secondary included', () => {
@@ -191,6 +259,8 @@ describe('PanelRenderer - summary composition', () => {
       expect(items.length).toBe(1);
       expect(items[0].querySelector('.panel-renderer__dice-line')).toBeTruthy();
       expect(container.querySelector('.panel-renderer__text-summary')).toBeNull();
+      // One real item, so no separator at all — no dangling leading one.
+      expect(container.querySelectorAll('.panel-renderer__separator').length).toBe(0);
     });
 
     it('empty last item: primary dice-line (real) + secondary select (empty) renders one wrapper', () => {
@@ -202,6 +272,8 @@ describe('PanelRenderer - summary composition', () => {
       expect(items.length).toBe(1);
       expect(items[0].querySelector('.panel-renderer__dice-line')).toBeTruthy();
       expect(container.querySelector('.panel-renderer__select-summary')).toBeNull();
+      // One real item, so no separator at all — no dangling trailing one.
+      expect(container.querySelectorAll('.panel-renderer__separator').length).toBe(0);
     });
 
     it('empty middle item: dice-line, empty text, info text renders two wrappers (skipping the middle)', () => {
@@ -214,6 +286,9 @@ describe('PanelRenderer - summary composition', () => {
       expect(items[0].querySelector('.panel-renderer__dice-line')).toBeTruthy();
       expect(items[1].textContent).toContain('test.info.label');
       expect(container.querySelector('.panel-renderer__text-summary')).toBeNull();
+      // Two real items either side of the suppressed empty one — exactly one
+      // separator between them, not one dangling next to the skipped middle.
+      expect(container.querySelectorAll('.panel-renderer__separator').length).toBe(1);
     });
 
     it('several empties in a row: empty text + empty select + info text renders one wrapper', () => {
@@ -226,6 +301,8 @@ describe('PanelRenderer - summary composition', () => {
       expect(items[0].textContent).toContain('test.info.label');
       expect(container.querySelector('.panel-renderer__text-summary')).toBeNull();
       expect(container.querySelector('.panel-renderer__select-summary')).toBeNull();
+      // One real item survives two consecutive empties — no doubled separator.
+      expect(container.querySelectorAll('.panel-renderer__separator').length).toBe(0);
     });
 
     // Same treatment for PanelSegmented (no option matches the current value)
@@ -290,6 +367,7 @@ describe('PanelRenderer - summary composition', () => {
       expect(items.length).toBe(1);
       expect(items[0].querySelector('.panel-renderer__dice-line')).toBeTruthy();
       expect(container.querySelector('.panel-renderer__segmented-summary')).toBeNull();
+      expect(container.querySelectorAll('.panel-renderer__separator').length).toBe(0);
     });
 
     it('empty hit dice (every pool total resolves to 0): secondary dice-line (real) renders one wrapper', () => {
@@ -306,6 +384,7 @@ describe('PanelRenderer - summary composition', () => {
       expect(items.length).toBe(1);
       expect(items[0].querySelector('.panel-renderer__dice-line')).toBeTruthy();
       expect(container.querySelector('.panel-renderer__hit-dice-summary')).toBeNull();
+      expect(container.querySelectorAll('.panel-renderer__separator').length).toBe(0);
     });
 
     // A dice-line control never got the empty-wrapper treatment the other
@@ -382,10 +461,12 @@ describe('PanelRenderer - summary composition', () => {
       expect(items.length).toBe(1);
       expect(items[0].querySelector('.panel-renderer__dice-line')).toBeTruthy();
       // The single remaining item is genuinely first-child (no dangling
-      // wrapper ahead of it), so it never matches the separator selector.
+      // wrapper ahead of it). No separator element exists at all — real
+      // elements, decided in script, never a leading `::before`.
       expect(
         items[0].matches('.panel-renderer--summary .panel-renderer__control:not(:first-child)')
       ).toBe(false);
+      expect(container.querySelectorAll('.panel-renderer__separator').length).toBe(0);
     });
 
     it('empty last item: primary dice-line (real) + secondary dice-line (empty) renders one wrapper', () => {
@@ -396,6 +477,7 @@ describe('PanelRenderer - summary composition', () => {
       const items = container.querySelectorAll('.panel-renderer__body > .panel-renderer__control');
       expect(items.length).toBe(1);
       expect(items[0].querySelector('.panel-renderer__dice-line')).toBeTruthy();
+      expect(container.querySelectorAll('.panel-renderer__separator').length).toBe(0);
     });
 
     it('empty middle item: dice-line, empty dice-line, info text renders two wrappers (skipping the middle)', () => {
@@ -407,6 +489,7 @@ describe('PanelRenderer - summary composition', () => {
       expect(items.length).toBe(2);
       expect(items[0].querySelector('.panel-renderer__dice-line')).toBeTruthy();
       expect(items[1].textContent).toContain('test.info.label');
+      expect(container.querySelectorAll('.panel-renderer__separator').length).toBe(1);
     });
   });
 });

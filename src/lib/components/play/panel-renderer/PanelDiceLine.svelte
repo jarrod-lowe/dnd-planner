@@ -887,9 +887,9 @@
      scrolling the page.
 
      `display: inline-flex` (overriding the block-level `display: flex`
-     above) is load-bearing, not cosmetic. `PanelRenderer`'s `::before`
-     separator is INLINE generated content painted immediately before
-     `.panel-renderer__control` — whichever control is not first. A
+     above) is load-bearing, not cosmetic. `PanelRenderer` paints a real
+     `<span class="panel-renderer__separator" aria-hidden="true">` (plain
+     inline content) immediately before whichever control isn't first. A
      block-level box (plain `display: flex` is block-level) can never share
      a line with preceding inline content: the browser is forced to start it
      on its own line, so the separator dot renders alone on a line by
@@ -900,9 +900,9 @@
      `inline-flex` makes the whole box atomic and inline-level, so it sits on
      the same line as the separator exactly like every other (span-based)
      control's short form already does. This is a genuine browser rendering
-     defect in the interaction between generated content and a block-level
-     flex child, not a logic bug — jsdom's DOM assertions can't see it
-     (no real layout), only a real browser can. */
+     defect in the interaction between inline content and a block-level flex
+     child, not a logic bug — jsdom's DOM assertions can't see it (no real
+     layout), only a real browser can. */
   .panel-renderer__dice-line--summary {
     display: inline-flex;
     flex-wrap: nowrap;

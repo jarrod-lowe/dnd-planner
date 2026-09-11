@@ -136,14 +136,15 @@
 
   // A control that renders nothing in summary mode (an empty text input, an
   // unselected loadout, a select with no matching option) must not get a
-  // `.panel-renderer__control` wrapper — that wrapper is exactly what the
-  // `::before` separator CSS targets (every wrapper but the first), so an
-  // empty-but-present wrapper paints a separator with nothing beside it:
-  // dangling if it's first/last, doubled if two sit together. Resolved here,
-  // from the same facts/vars/selections the control itself would read, so the
-  // wrapper's presence is decided WITHOUT mounting the control first — a
-  // mount-then-discover-it's-empty approach would either duplicate this same
-  // resolution logic again or force an unmount right after mount.
+  // `.panel-renderer__control` wrapper — the separator (see `showsPrimary*`/
+  // `before*` below) is only ever emitted next to a wrapper that actually
+  // renders, so an empty-but-present wrapper would still leave a separator
+  // with nothing real beside it: dangling if it's first/last, doubled if two
+  // sit together. Resolved here, from the same facts/vars/selections the
+  // control itself would read, so the wrapper's presence is decided WITHOUT
+  // mounting the control first — a mount-then-discover-it's-empty approach
+  // would either duplicate this same resolution logic again or force an
+  // unmount right after mount.
   const primarySelectEmpty = $derived(
     primarySelect ? selectIsEmpty(primarySelect, facts, vars, selections) : false
   );
@@ -274,6 +275,65 @@
         } => v !== null
       )
   );
+
+  // Whether each summary-mode item actually renders — mirrors the template's
+  // `{#if}` gates for that same control exactly, so there is one source of
+  // truth for both "does this control's `.panel-renderer__control` wrapper
+  // appear" and "does a separator sit in front of it" (see the `before*`
+  // flags below). A control that is empty-and-suppressed (see the
+  // `*Empty` derivations above) contributes `false` here, same as it
+  // contributes no wrapper.
+  const showsPrimarySlider = $derived(!!primarySlider);
+  const showsPrimaryDiceLine = $derived(!!primaryDiceLine && !primaryDiceLineEmpty);
+  const showsPrimaryHitDice = $derived(!!primaryHitDice && !primaryHitDiceEmpty);
+  const showsPrimarySelect = $derived(!!primarySelect && !primarySelectEmpty);
+  const showsPrimaryTextInput = $derived(!!primaryTextInput && !primaryTextInputEmpty);
+  const showsPrimaryLoadout = $derived(!!primaryLoadout && !primaryLoadoutEmpty);
+  const showsSecondarySlider = $derived(secondaryShouldRender && !!secondarySlider);
+  const showsSecondaryDiceLine = $derived(
+    secondaryShouldRender && !!secondaryDiceLine && !secondaryDiceLineEmpty
+  );
+  const showsSecondaryHitDice = $derived(
+    secondaryShouldRender && !!secondaryHitDice && !secondaryHitDiceEmpty
+  );
+  const showsSecondarySelect = $derived(
+    secondaryShouldRender && !!secondarySelect && !secondarySelectEmpty
+  );
+  const showsSecondaryTextInput = $derived(
+    secondaryShouldRender && !!secondaryTextInput && !secondaryTextInputEmpty
+  );
+  const showsSecondarySegmented = $derived(
+    secondaryShouldRender && !!secondarySegmented && !secondarySegmentedEmpty
+  );
+
+  // The separator between collapsed controls is a REAL `aria-hidden` element
+  // (see `.panel-renderer__separator` below), not CSS-generated `::before`
+  // content — a pseudo-element cannot carry `aria-hidden`, and several
+  // screen readers DO expose ::before/::after generated text in the
+  // accessibility tree, so a CSS dot would be announced mid-value. Its
+  // presence is decided here, in script, rather than a `:not(:first-child)`
+  // selector: each `before*` flag below is "has anything already rendered
+  // ahead of me in the strip", threaded through in template source order.
+  // `primarySlider` is always structurally first, so nothing ever precedes
+  // it. This makes a leading, trailing or doubled separator impossible by
+  // construction — a separator is only ever emitted immediately before a
+  // control block we already know is about to render, and only when we
+  // already know at least one earlier control rendered too; nothing ever
+  // appends a separator *after* the last item, so there is never a trailing
+  // one to hide.
+  const beforePrimaryDiceLine = $derived(showsPrimarySlider);
+  const beforePrimaryHitDice = $derived(beforePrimaryDiceLine || showsPrimaryDiceLine);
+  const beforePrimarySelect = $derived(beforePrimaryHitDice || showsPrimaryHitDice);
+  const beforePrimaryTextInput = $derived(beforePrimarySelect || showsPrimarySelect);
+  const beforePrimaryLoadout = $derived(beforePrimaryTextInput || showsPrimaryTextInput);
+  const beforeSecondarySlider = $derived(beforePrimaryLoadout || showsPrimaryLoadout);
+  const beforeSecondaryDiceLine = $derived(beforeSecondarySlider || showsSecondarySlider);
+  const beforeSecondaryHitDice = $derived(beforeSecondaryDiceLine || showsSecondaryDiceLine);
+  const beforeSecondarySelect = $derived(beforeSecondaryHitDice || showsSecondaryHitDice);
+  const beforeSecondaryTextInput = $derived(beforeSecondarySelect || showsSecondarySelect);
+  const beforeSecondarySegmented = $derived(beforeSecondaryTextInput || showsSecondaryTextInput);
+  const beforeTextInfos = $derived(beforeSecondarySegmented || showsSecondarySegmented);
+  const beforeCountdownInfos = $derived(beforeTextInfos || textInfos.length > 0);
 
   const annotationLabels = $derived(descriptor.annotationLabels ?? []);
 
@@ -416,6 +476,9 @@
       </div>
     {/if}
     {#if primaryDiceLine && (!summary || !primaryDiceLineEmpty)}
+      {#if summary && beforePrimaryDiceLine}
+        <span class="panel-renderer__separator" aria-hidden="true">·</span>
+      {/if}
       <div class="panel-renderer__control">
         <PanelDiceLine
           control={primaryDiceLine}
@@ -432,6 +495,9 @@
       </div>
     {/if}
     {#if primaryHitDice && (!summary || !primaryHitDiceEmpty)}
+      {#if summary && beforePrimaryHitDice}
+        <span class="panel-renderer__separator" aria-hidden="true">·</span>
+      {/if}
       <div class="panel-renderer__control">
         <PanelHitDice
           control={primaryHitDice}
@@ -447,6 +513,9 @@
       </div>
     {/if}
     {#if primarySelect && (!summary || !primarySelectEmpty)}
+      {#if summary && beforePrimarySelect}
+        <span class="panel-renderer__separator" aria-hidden="true">·</span>
+      {/if}
       <div class="panel-renderer__control">
         <PanelSelect
           control={primarySelect}
@@ -460,6 +529,9 @@
       </div>
     {/if}
     {#if primaryTextInput && (!summary || !primaryTextInputEmpty)}
+      {#if summary && beforePrimaryTextInput}
+        <span class="panel-renderer__separator" aria-hidden="true">·</span>
+      {/if}
       <div class="panel-renderer__control">
         <PanelTextInput
           control={primaryTextInput}
@@ -473,6 +545,9 @@
       </div>
     {/if}
     {#if primaryLoadout && (!summary || !primaryLoadoutEmpty)}
+      {#if summary && beforePrimaryLoadout}
+        <span class="panel-renderer__separator" aria-hidden="true">·</span>
+      {/if}
       <div class="panel-renderer__control">
         <PanelLoadout
           control={primaryLoadout}
@@ -498,6 +573,9 @@
       </div>
     {/if}
     {#if secondaryShouldRender && secondarySlider}
+      {#if summary && beforeSecondarySlider}
+        <span class="panel-renderer__separator" aria-hidden="true">·</span>
+      {/if}
       <div class="panel-renderer__control panel-renderer__control--secondary">
         <PanelSlider
           control={secondarySlider}
@@ -511,6 +589,9 @@
       </div>
     {/if}
     {#if secondaryShouldRender && secondaryDiceLine && (!summary || !secondaryDiceLineEmpty)}
+      {#if summary && beforeSecondaryDiceLine}
+        <span class="panel-renderer__separator" aria-hidden="true">·</span>
+      {/if}
       <div class="panel-renderer__control panel-renderer__control--secondary">
         <PanelDiceLine
           control={secondaryDiceLine}
@@ -527,6 +608,9 @@
       </div>
     {/if}
     {#if secondaryShouldRender && secondaryHitDice && (!summary || !secondaryHitDiceEmpty)}
+      {#if summary && beforeSecondaryHitDice}
+        <span class="panel-renderer__separator" aria-hidden="true">·</span>
+      {/if}
       <div class="panel-renderer__control panel-renderer__control--secondary">
         <PanelHitDice
           control={secondaryHitDice}
@@ -542,6 +626,9 @@
       </div>
     {/if}
     {#if secondaryShouldRender && secondarySelect && (!summary || !secondarySelectEmpty)}
+      {#if summary && beforeSecondarySelect}
+        <span class="panel-renderer__separator" aria-hidden="true">·</span>
+      {/if}
       <div class="panel-renderer__control panel-renderer__control--secondary">
         <PanelSelect
           control={secondarySelect}
@@ -555,6 +642,9 @@
       </div>
     {/if}
     {#if secondaryShouldRender && secondaryTextInput && (!summary || !secondaryTextInputEmpty)}
+      {#if summary && beforeSecondaryTextInput}
+        <span class="panel-renderer__separator" aria-hidden="true">·</span>
+      {/if}
       <div class="panel-renderer__control panel-renderer__control--secondary">
         <PanelTextInput
           control={secondaryTextInput}
@@ -568,6 +658,9 @@
       </div>
     {/if}
     {#if secondaryShouldRender && secondarySegmented && (!summary || !secondarySegmentedEmpty)}
+      {#if summary && beforeSecondarySegmented}
+        <span class="panel-renderer__separator" aria-hidden="true">·</span>
+      {/if}
       <div class="panel-renderer__control panel-renderer__control--secondary">
         <PanelSegmented
           control={secondarySegmented}
@@ -582,6 +675,9 @@
     {/if}
     {#each textInfos as text, i (i)}
       {#if summary}
+        {#if beforeTextInfos || i > 0}
+          <span class="panel-renderer__separator" aria-hidden="true">·</span>
+        {/if}
         <span
           class="panel-renderer__control panel-renderer__information panel-renderer__information--text"
           >{text}</span
@@ -590,7 +686,7 @@
         <div class="panel-renderer__information panel-renderer__information--text">{text}</div>
       {/if}
     {/each}
-    {#each countdownInfos as info (info.index)}
+    {#each countdownInfos as info, i (info.index)}
       {#if summary}
         <!--
         `filled/total` replaces the marker-dot row: the dots are decorative
@@ -598,6 +694,9 @@
         role="img" aria-label below, so plain visible text carrying the same
         two numbers is the equivalent information, not a reduction of it.
       -->
+        {#if beforeCountdownInfos || i > 0}
+          <span class="panel-renderer__separator" aria-hidden="true">·</span>
+        {/if}
         <span class="panel-renderer__control panel-renderer__markers-summary"
           >{info.filled}/{info.total}</span
         >
@@ -808,11 +907,15 @@
     border-top: none;
   }
 
-  /* The separator is generated content, never a text node emitted by any
-     component — so it can never leak into a copy/paste or a screen reader's
-     word-by-word reading of the surrounding values. */
-  .panel-renderer--summary .panel-renderer__control:not(:first-child)::before {
-    content: '·';
+  /* The separator is a REAL `aria-hidden` element (see the template), never
+     CSS-generated `::before` content. Generated content can never leak into
+     a copy/paste — that part of the old reasoning here was correct — but a
+     pseudo-element cannot carry `aria-hidden`, and several screen readers DO
+     expose ::before/::after text in the accessibility tree, so a CSS dot
+     would have been announced mid-value. `display: inline-block` on
+     `.panel-renderer__control` above means a plain inline `<span>` sibling
+     sits on the same line without needing its own `display` override. */
+  .panel-renderer__separator {
     margin: 0 var(--spacing-xs);
     color: var(--md-sys-color-on-surface-variant);
   }

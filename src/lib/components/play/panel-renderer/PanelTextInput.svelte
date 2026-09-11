@@ -7,10 +7,11 @@
    * Whether this control has nothing to show in summary mode (no text
    * entered). Exported so `PanelRenderer` can decide whether to render this
    * control's `.panel-renderer__control` wrapper at all — an empty-but-present
-   * wrapper is exactly what left a dangling/doubled `·` separator (the
-   * separator CSS targets every wrapper but the first). Deciding this
-   * up front, rather than mounting the component and reading back an "I'm
-   * empty" signal, avoids mounting then immediately unmounting the control.
+   * wrapper would leave a dangling/doubled `·` separator next to nothing
+   * (`PanelRenderer` only emits a real, `aria-hidden` separator element next
+   * to a wrapper it already knows will render). Deciding this up front,
+   * rather than mounting the component and reading back an "I'm empty"
+   * signal, avoids mounting then immediately unmounting the control.
    */
   export function textInputIsEmpty(
     control: TextInputControl,

@@ -20,24 +20,24 @@ Use subagents for tasks - the main agent should only be used for coordination an
 
 ## Decisions (settled with the human)
 
-| #                      | Decision                                                                                                                                                                  |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Scope                  | Collapsed `PlanRow` only. Picker panels (`PackedChoiceGroup`, `AddRowPicker`, `QuickSearch`) untouched.                                                                   |
-| Line contents          | `[cost pills] Name · <primary short> · <secondary short> · <information lines>`. Warning indicator kept. Mod chips dropped (their value is folded into the shown number). |
-| Separator              | `·` via CSS `::before`, `aria-hidden`. Not a translated string.                                                                                                           |
-| Dice line              | Rolled dice show their **value** (`▲ 18`); unrolled dice show the expression (`d20+7`). Partially-rolled lines mix per die.                                               |
-| Adv/dis/crit           | Reuse `DieChip` non-editable + its existing `advantage`/`disadvantage`/`critDamage` styling. No new notation, no new colours.                                             |
-| Effective value        | Show `RollResult.effective` when present, else `total`. No strikethrough.                                                                                                 |
-| Hit dice               | ~~Pool counts, `3/4 d10`. Not the rolled heals.~~ SUPERSEDED — see the third correction. The wording was ambiguous: "pool" was read as "add the results together", which is what it should have said.                                                                                                                             |
-| Slider                 | Formatted value (`Level 2`, `Free Use`).                                                                                                                                  |
-| Select / segmented     | Selected option label.                                                                                                                                                    |
-| Text                   | Entered text, ellipsized. Nothing when empty.                                                                                                                             |
-| Loadout                | Plain text from `PanelLoadout.rowLabel(config)`. Not chips.                                                                                                               |
-| Un-activated secondary | Omitted (gated behind `enabled.button`, has no current value).                                                                                                            |
-| Staleness              | Inherit `PanelDiceLine`'s existing invalidation exactly. Collapse is a view change, not a state change.                                                                   |
-| Overflow               | Single line, ellipsis on the strip. Cost pills never truncate.                                                                                                            |
-| Tap target             | Chevron button only (unchanged). The strip is inert. Revised after Q17's strip-as-button collided with the mounted-instance requirement — see Architecture.               |
-| Name                   | Kept in the strip (left column's verb+subject is not always populated).                                                                                                   |
+| #                      | Decision                                                                                                                                                                                              |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Scope                  | Collapsed `PlanRow` only. Picker panels (`PackedChoiceGroup`, `AddRowPicker`, `QuickSearch`) untouched.                                                                                               |
+| Line contents          | `[cost pills] Name · <primary short> · <secondary short> · <information lines>`. Warning indicator kept. Mod chips dropped (their value is folded into the shown number).                             |
+| Separator              | `·` via CSS `::before`, `aria-hidden`. Not a translated string.                                                                                                                                       |
+| Dice line              | Rolled dice show their **value** (`▲ 18`); unrolled dice show the expression (`d20+7`). Partially-rolled lines mix per die.                                                                           |
+| Adv/dis/crit           | Reuse `DieChip` non-editable + its existing `advantage`/`disadvantage`/`critDamage` styling. No new notation, no new colours.                                                                         |
+| Effective value        | Show `RollResult.effective` when present, else `total`. No strikethrough.                                                                                                                             |
+| Hit dice               | ~~Pool counts, `3/4 d10`. Not the rolled heals.~~ SUPERSEDED — see the third correction. The wording was ambiguous: "pool" was read as "add the results together", which is what it should have said. |
+| Slider                 | Formatted value (`Level 2`, `Free Use`).                                                                                                                                                              |
+| Select / segmented     | Selected option label.                                                                                                                                                                                |
+| Text                   | Entered text, ellipsized. Nothing when empty.                                                                                                                                                         |
+| Loadout                | Plain text from `PanelLoadout.rowLabel(config)`. Not chips.                                                                                                                                           |
+| Un-activated secondary | Omitted (gated behind `enabled.button`, has no current value).                                                                                                                                        |
+| Staleness              | Inherit `PanelDiceLine`'s existing invalidation exactly. Collapse is a view change, not a state change.                                                                                               |
+| Overflow               | Single line, ellipsis on the strip. Cost pills never truncate.                                                                                                                                        |
+| Tap target             | Chevron button only (unchanged). The strip is inert. Revised after Q17's strip-as-button collided with the mounted-instance requirement — see Architecture.                                           |
+| Name                   | Kept in the strip (left column's verb+subject is not always populated).                                                                                                                               |
 
 ## Plan
 
