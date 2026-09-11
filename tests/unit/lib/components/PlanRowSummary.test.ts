@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
-import { render, fireEvent } from '@testing-library/svelte';
+import { render, fireEvent, within } from '@testing-library/svelte';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -523,5 +523,83 @@ describe('upcast cost pill affordance (Codex P2: collapsed span advertises a cli
     for (const line of affordanceLines) {
       expect(line.trim()).toMatch(/^button\.plan-row__cost-tag--upcast:(hover|focus-visible)/);
     }
+  });
+
+  // Codex P2 (second finding): the collapsed <span> carried the upcast
+  // meaning ONLY via its red styling — `formatCostTag(tag)` renders the
+  // abbreviated `L2`, and nothing told assistive tech this pill differs from
+  // an ordinary cost pill. The expanded <button> names that meaning via
+  // `aria-label={upcastAria}`; a bare `<span aria-label>` is prohibited ARIA
+  // (same mistake already made and fixed on `WarningIndicator` and
+  // `DieChip` — a span has no role that supports naming), so this reuses
+  // that established `role="img"` fix. `upcastAria` already incorporates the
+  // shown value ("Casting at L{{level}} — base level L{{base}}"), so naming
+  // the whole span with it and letting `role="img"` make the visible `L2`
+  // text presentational loses nothing and isn't read twice.
+  it("exposes the upcast meaning as the collapsed pill's accessible name via role=img", async () => {
+    const { container } = render(PlanRow, {
+      props: {
+        item: makeUpcastItem(),
+        entry: mockUpcastEntry,
+        facts: mockFacts,
+        activeAnnotations: []
+      }
+    });
+
+    await collapse(container);
+
+    // getByRole computes the accessible name per the ARIA spec (dom-
+    // accessibility-api): for role="img", that's the aria-label, with child
+    // text treated as presentational — a bare `<span aria-label>` would NOT
+    // be picked up here, since a role-less span isn't a valid naming target.
+    // Scoped to this render's own `container` (via `within`), not the
+    // shared `document.body` `render()` queries default to — this file has
+    // no global RTL `cleanup()` between tests, so unscoped queries can match
+    // leftover markup other tests in this file left mounted.
+    const collapsedPill = within(container).getByRole('img', {
+      name: 'play.costTags.upcastAria'
+    });
+    expect(collapsedPill.tagName).toBe('SPAN');
+    expect(collapsedPill.classList.contains('plan-row__cost-tag--upcast')).toBe(true);
+  });
+
+  it('keeps the collapsed upcast pill out of the tab order', async () => {
+    const { container } = render(PlanRow, {
+      props: {
+        item: makeUpcastItem(),
+        entry: mockUpcastEntry,
+        facts: mockFacts,
+        activeAnnotations: []
+      }
+    });
+
+    await collapse(container);
+
+    const strip = container.querySelector('.plan-row__right') as HTMLElement;
+    const interactive = strip.querySelectorAll('button, input, select, [tabindex]');
+    expect(interactive.length).toBe(0);
+  });
+
+  it('leaves ordinary (non-upcast) collapsed pills without a role or aria-label', async () => {
+    // Guards against over-applying the fix: an ordinary pill's visible text
+    // (e.g. "ACT") is already its own accessible name — it needs no naming
+    // help, and giving it role="img" would be a no-op at best.
+    const { container } = render(PlanRow, {
+      props: {
+        item: makeItem(),
+        entry: mockEntry,
+        facts: mockFacts,
+        activeAnnotations: []
+      }
+    });
+
+    await collapse(container);
+
+    const pill = container.querySelector(
+      '.plan-row__cost-tag:not(.plan-row__cost-tag--upcast)'
+    ) as HTMLElement;
+    expect(pill).toBeTruthy();
+    expect(pill.hasAttribute('role')).toBe(false);
+    expect(pill.hasAttribute('aria-label')).toBe(false);
   });
 });

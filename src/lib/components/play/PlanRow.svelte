@@ -347,12 +347,30 @@
                 <span class="plan-row__upcast-tooltip" aria-hidden="true">{upcastAria}</span>
               {/if}
             </button>
-          {:else}
+          {:else if isUpcast}
             <!-- Collapsed keeps the upcast styling but drops the tooltip
-                 trigger: nothing inside the strip may be focusable. -->
-            <span class="plan-row__cost-tag" class:plan-row__cost-tag--upcast={isUpcast}
-              >{formatCostTag(tag)}</span
+                 trigger: nothing inside the strip may be focusable. The red
+                 border is the ONLY thing that says "upcast" to a sighted
+                 user, so a screen reader needs the same meaning restated in
+                 words — `aria-label` on a bare `<span>` is prohibited ARIA
+                 (a span has no role that supports naming; axe only flags
+                 this on elements with an explicit role, so a clean axe run
+                 would NOT have caught it), the same mistake already made and
+                 fixed on `WarningIndicator` and `DieChip`. `role="img"`
+                 reuses that precedent: it makes the span a valid naming
+                 target and makes `upcastAria` the pill's only announced
+                 content (children become presentational, so the visible
+                 abbreviation like "L2" is no longer read separately) —
+                 correct here because `upcastAria` already incorporates the
+                 shown value ("Casting at L2 — base level L1"), so nothing is
+                 lost and nothing is read twice. -->
+            <span
+              class="plan-row__cost-tag plan-row__cost-tag--upcast"
+              role="img"
+              aria-label={upcastAria}>{formatCostTag(tag)}</span
             >
+          {:else}
+            <span class="plan-row__cost-tag">{formatCostTag(tag)}</span>
           {/if}
         {/each}
       </div>
