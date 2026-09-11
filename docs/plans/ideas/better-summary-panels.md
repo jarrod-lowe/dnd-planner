@@ -28,7 +28,7 @@ Use subagents for tasks - the main agent should only be used for coordination an
 | Dice line              | Rolled dice show their **value** (`▲ 18`); unrolled dice show the expression (`d20+7`). Partially-rolled lines mix per die.                                               |
 | Adv/dis/crit           | Reuse `DieChip` non-editable + its existing `advantage`/`disadvantage`/`critDamage` styling. No new notation, no new colours.                                             |
 | Effective value        | Show `RollResult.effective` when present, else `total`. No strikethrough.                                                                                                 |
-| Hit dice               | Pool counts, `3/4 d10`. Not the rolled heals.                                                                                                                             |
+| Hit dice               | ~~Pool counts, `3/4 d10`. Not the rolled heals.~~ SUPERSEDED — see the third correction. The wording was ambiguous: "pool" was read as "add the results together", which is what it should have said.                                                                                                                             |
 | Slider                 | Formatted value (`Level 2`, `Free Use`).                                                                                                                                  |
 | Select / segmented     | Selected option label.                                                                                                                                                    |
 | Text                   | Entered text, ellipsized. Nothing when empty.                                                                                                                             |
@@ -118,6 +118,14 @@ Roll modifiers stay dropped (value already folded into the numbers).
 - Empty-control wrappers no longer emit a stray `·`: pure predicates (`textInputIsEmpty`, `selectIsEmpty`, `loadoutIsEmpty`, `segmentedIsEmpty`, `hitDiceIsEmpty`) gate the wrapper in `PanelRenderer` before the child mounts.
 
 Final state: `make test` green end to end (2031 unit, 16/16 e2e, lint, svelte-check 0 errors). Click-through verified in a real browser at 1024×768.
+
+## Third correction (2026-09-12)
+
+From the owner playing with real collapsed rows:
+
+- **Hit dice show the SUMMED heal**, then remaining capacity: `18 hp 2/2 d8 4/4 d10`. The earlier "pool counts, not the rolled heals" decision is reversed — "pooling" was understood as adding the results together, which is the more useful reading. The sum comes from `ownPendingHeal()` (the engine's advertised effects), so a heal floored at 1 or capped by missing HP shows what landed, not raw dice math. Unrolled renders exactly as before.
+- **Units are literal strings, never i18n keys.** `unit: 'hp'` is authored directly on the control (`record-heal`, `prayer-of-healing`, the hit-dice control, `'ft'` on movement sliders) and concatenated raw. Lay on Hands authored no unit at all, so both the expanded and collapsed panels showed a bare number — the fix is in the rule, not the renderer.
+- **`.panel-renderer__dice-line` must be inline-level in summary.** As `display: flex` it is a block box, and inline generated content (the `·` separator) can never share a line with one, so the browser broke before it and the dot appeared alone on its own line above the values. jsdom has no line boxes, so no unit test in this repo could have caught it.
 
 ## Outcome
 
