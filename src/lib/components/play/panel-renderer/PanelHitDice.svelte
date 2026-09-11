@@ -1,9 +1,34 @@
-<script lang="ts">
+<script module lang="ts">
   import { resolveValueSource } from './resolveValueSource';
+  import type { HitDiceControl } from './types';
+  import type { Facts, VarDefinition } from '$lib/rules-view';
+
+  /**
+   * Whether this control has nothing to show in summary mode (every pool's
+   * `total` resolves to 0 — the same condition that hides a pool from the
+   * expanded render, see the `.filter((pool) => pool.total > 0)` below).
+   * Exported so `PanelRenderer` can decide whether to render this control's
+   * `.panel-renderer__control` wrapper at all — see `textInputIsEmpty` in
+   * `PanelTextInput.svelte` for why this must be resolved before mounting,
+   * not signalled back from a mounted instance.
+   */
+  export function hitDiceIsEmpty(
+    control: HitDiceControl,
+    facts: Facts,
+    vars: Record<string, VarDefinition>,
+    selections: Record<string, unknown>
+  ): boolean {
+    return !control.pools.some((pool) => {
+      const resolved = resolveValueSource(pool.total, facts, vars, selections);
+      return typeof resolved === 'number' && Number.isFinite(resolved) && resolved > 0;
+    });
+  }
+</script>
+
+<script lang="ts">
   import DieChip from './DieChip.svelte';
   import { SvelteMap } from 'svelte/reactivity';
-  import type { HitDiceControl, RollResult } from './types';
-  import type { Facts, VarDefinition } from '$lib/rules-view';
+  import type { RollResult } from './types';
   import type { EffectInstance } from '$lib/rules-engine';
   import { t } from '$lib/i18n';
 
@@ -17,6 +42,24 @@
     advertisedEffects?: EffectInstance[];
     onSelectionChange?: (selections: Record<string, unknown>) => void;
     onRoll?: (data: RollResult, slotIndex: number) => void;
+    /**
+     * Collapsed-row short form. Unlike a dice-line's local `rollResults`,
+     * `selections.rolls` persists across collapse, and the row's own
+     * `advertisedEffects` keep carrying the engine's committed heal for
+     * every accepted roll — so the summary CAN and does surface it: it leads
+     * with the summed `effective` heal of every rolled slot (never a
+     * recomputed raw roll+bonus — see `ownPendingHeal`), then a
+     * `remaining/total dN` pool notation built from `pool.remaining` (the raw
+     * POST-plan fact) — NOT the `pool.threshold` the non-summary aria-label
+     * announces. `threshold` deliberately offsets this row's own accepted
+     * rolls back open so the expanded roller's chips stay tappable for a
+     * re-roll; the summary has no tappability to protect, so it must show
+     * the dice actually spent so far, THIS rest included. "The player
+     * healed 5 hp so far; 3 of 4 dice are still available" — the 4th die is
+     * the one that produced the 5, and reads as spent even though its chip
+     * stays tappable (to clear/re-roll) until End Turn commits it.
+     */
+    summary?: boolean;
   }
 
   let {
@@ -27,7 +70,8 @@
     selections = {},
     advertisedEffects = [],
     onSelectionChange,
-    onRoll
+    onRoll,
+    summary = false
   }: Props = $props();
 
   interface ResolvedPool {
@@ -36,16 +80,28 @@
     /** Total dice ever owned at this size — one slot roller per die. */
     total: number;
     /**
+     * POST-plan availability — the raw `remaining` fact (clamped to `total`).
+     * It is resolved against POST-plan facts, so it already reflects BOTH an
+     * EARLIER rest's committed spends AND this row's own accepted rolls: it
+     * is exactly the count of chips the expanded roller still shows blank
+     * (unrolled and unspent). This is the number the SUMMARY's remaining/
+     * total notation must use — see `threshold` below for why the expanded
+     * roller's tappability uses a different number.
+     */
+    remaining: number;
+    /**
      * COMMITTED-based availability — slots at index >= threshold are spent by
-     * an EARLIER rest and render disabled. The raw `remaining` fact is resolved
-     * against POST-plan facts, so it already includes this row's own pending
-     * spends; offsetting it back by the row's own ADVERTISED hit-die spends
-     * yields availability that the row's own accepted rolls cannot shrink. A
-     * retained roll the engine REJECTED (die_already_spent) advertises no
-     * spend, so it correctly does NOT count back in — the slot stays blocked
-     * and the roll is only clearable. Rest rows are plan-terminal (at most one
-     * per plan), so the offset is exact — the row's spends can never
-     * double-count.
+     * an EARLIER rest and render disabled/untappable. Unlike `remaining`
+     * above, this DELIBERATELY offsets the row's own ADVERTISED hit-die
+     * spends back open, so the row's own accepted rolls cannot shrink it —
+     * a just-rolled slot must stay tappable (re-rollable) until End Turn
+     * commits it, exactly like a dice-line's chips stay tappable after a
+     * roll. A retained roll the engine REJECTED (die_already_spent)
+     * advertises no spend, so it correctly does NOT count back in — the slot
+     * stays blocked and the roll is only clearable. Rest rows are
+     * plan-terminal (at most one per plan), so the offset is exact — the
+     * row's spends can never double-count. Used only for the expanded
+     * roller's disabled state and aria-labels, never for the summary.
      */
     threshold: number;
     slots: number[];
@@ -112,6 +168,7 @@
         return {
           sides: pool.sides,
           total,
+          remaining,
           threshold: Math.min(remaining + advertisedSpends(pool.sides), total),
           slots: [] as number[]
         };
@@ -177,6 +234,30 @@
   // The engine consumes the budget in ascending size-then-slot order, so the
   // preview walks pools in that order (whatever order they render in).
   const orderedPools = $derived([...pools].sort((a, b) => a.sides - b.sides));
+
+  // Summary-only: whether ANY slot across ANY pool has been rolled — gates
+  // whether the collapsed line leads with a heal total at all (an
+  // untouched pool renders exactly as before, no heal segment).
+  const hasAnyRoll = $derived(
+    pools.some((pool) => pool.slots.some((slot) => slotRoll(pool, slot) !== undefined))
+  );
+
+  // Summary-only: the total healed so far, reusing `ownPendingHeal` — the
+  // engine's own committed (floored/capped) heals, never a recomputed
+  // roll+bonus. This is the same sum `missingHp` already folds in above, so
+  // no second summation is introduced. A roll the engine REJECTED
+  // (die_already_spent) advertises no effect and so contributes 0 here,
+  // which is correct: it heals nothing until cleared and re-rolled on an
+  // open slot.
+  const rolledHealTotal = $derived(ownPendingHeal());
+
+  // `control.unit` is a literal notation string authored on the rule (e.g.
+  // "hp"), concatenated raw exactly as `PanelSlider` concatenates its own
+  // `unit` — units and dice notation are deliberately unlocalized here,
+  // unlike prose (see `PanelSlider.svelte`'s `displayValue`).
+  const healSummaryText = $derived(
+    control.unit ? `${rolledHealTotal} ${control.unit}` : `${rolledHealTotal}`
+  );
 
   // The heal a given slot's roll would land, mirroring shortRestOffer exactly:
   // min(max(1, roll + bonus), budget left when this slot's turn comes), with
@@ -312,30 +393,69 @@
 </script>
 
 {#if pools.length > 0}
-  <div class="panel-renderer__hit-dice" role="group" aria-label={$t('play.hitDice.groupLabel')}>
-    {#each pools as pool (pool.sides)}
-      <div
-        class="panel-renderer__hit-dice-pool"
-        role="group"
-        aria-label={poolAriaLabel(pool)}
-        data-die-sides={pool.sides}
-      >
-        {#each pool.slots as slot (slot)}
-          {@const spent = slot >= pool.threshold}
-          {@const rolled = slotRoll(pool, slot) !== undefined}
-          <DieChip
-            text={chipText(pool, slot)}
-            {editable}
-            ariaLabel={slotAriaLabel(pool, slot)}
-            disabled={spent && !rolled}
-            dieSides={pool.sides}
-            slotIndex={slot}
-            onclick={() => (spent ? clearRoll(pool, slot) : rollSlot(pool, slot))}
-          />
-        {/each}
-      </div>
-    {/each}
-  </div>
+  {#if summary}
+    <!--
+      Leads with the summed heal actually landed so far (the owner's
+      correction: "pooling" means adding the rolled results together, not
+      omitting them), THEN the pool counts: "5 hp 3/4 d10". The heal total
+      is `rolledHealTotal` (the engine's own committed/effective heals via
+      `ownPendingHeal`, never a recomputed roll+bonus) with `control.unit`
+      concatenated raw, exactly as `PanelSlider` renders its own unit — no
+      i18n key, units are literal notation here. The pool tail uses
+      `pool.remaining` (the raw POST-plan fact, clamped to total) — NOT
+      `pool.threshold`. Both a slot spent by an EARLIER rest's committed
+      spend AND a slot rolled by THIS row shrink `remaining`, because the
+      summary is read-only informational text, not the tappability gate the
+      expanded roller's `threshold` drives: a die this row just rolled is
+      still "spent" from the reader's point of view (the heal above already
+      counts it), even though its chip stays tappable in the expanded view
+      to allow a re-roll before End Turn commits it. Collapsing and
+      expanding must never disagree about how many dice are left — this is
+      exactly the count of chips the expanded roller still shows blank
+      (see `slotRoll`/`chipText`). Plain text, no words for the pool part —
+      dice notation ("d10") isn't natural-language prose, matching the
+      untranslated `${remaining}/${total} d${dieSize}` precedent in
+      extractTopBar's `resolveEntryValue` for its `hitDie` entry type. A
+      multiclass character can carry two or more pools: an explicit space
+      text node separates each pool from the previous one (never the
+      first), and another separates the heal segment from the first pool,
+      so nothing ever runs together (`2/2 d83/4 d10`) the way plain adjacent
+      spans would, and a screen reader gets genuine word boundaries rather
+      than a CSS-only gap it cannot hear.
+    -->
+    <span class="panel-renderer__hit-dice-summary">
+      {#if hasAnyRoll}<span class="panel-renderer__hit-dice-summary-heal">{healSummaryText}</span
+        >{/if}{hasAnyRoll ? ' ' : ''}{#each pools as pool, i (pool.sides)}{i > 0 ? ' ' : ''}<span
+          class="panel-renderer__hit-dice-summary-pool"
+          >{pool.remaining}/{pool.total} d{pool.sides}</span
+        >{/each}
+    </span>
+  {:else}
+    <div class="panel-renderer__hit-dice" role="group" aria-label={$t('play.hitDice.groupLabel')}>
+      {#each pools as pool (pool.sides)}
+        <div
+          class="panel-renderer__hit-dice-pool"
+          role="group"
+          aria-label={poolAriaLabel(pool)}
+          data-die-sides={pool.sides}
+        >
+          {#each pool.slots as slot (slot)}
+            {@const spent = slot >= pool.threshold}
+            {@const rolled = slotRoll(pool, slot) !== undefined}
+            <DieChip
+              text={chipText(pool, slot)}
+              {editable}
+              ariaLabel={slotAriaLabel(pool, slot)}
+              disabled={spent && !rolled}
+              dieSides={pool.sides}
+              slotIndex={slot}
+              onclick={() => (spent ? clearRoll(pool, slot) : rollSlot(pool, slot))}
+            />
+          {/each}
+        </div>
+      {/each}
+    </div>
+  {/if}
 {/if}
 
 <style>

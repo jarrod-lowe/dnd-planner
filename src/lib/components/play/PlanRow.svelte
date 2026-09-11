@@ -330,10 +330,11 @@
         <WarningIndicator type={warningType} message={warningMessage} />
       {/if}
       {@render modChips()}
-    {:else if !collapsed}
+    {:else}
       <div class="plan-row__cost-chips">
         {#each costTags as tag (tag)}
-          {#if upcast && tag === `L${upcast.level}`}
+          {@const isUpcast = !!upcast && tag === `L${upcast.level}`}
+          {#if isUpcast && !collapsed}
             <button
               type="button"
               class="plan-row__cost-tag plan-row__cost-tag--upcast"
@@ -346,23 +347,52 @@
                 <span class="plan-row__upcast-tooltip" aria-hidden="true">{upcastAria}</span>
               {/if}
             </button>
+          {:else if isUpcast}
+            <!-- Collapsed keeps the upcast styling but drops the tooltip
+                 trigger: nothing inside the strip may be focusable. The red
+                 border is the ONLY thing that says "upcast" to a sighted
+                 user, so a screen reader needs the same meaning restated in
+                 words — `aria-label` on a bare `<span>` is prohibited ARIA
+                 (a span has no role that supports naming; axe only flags
+                 this on elements with an explicit role, so a clean axe run
+                 would NOT have caught it), the same mistake already made and
+                 fixed on `WarningIndicator` and `DieChip`. `role="img"`
+                 reuses that precedent: it makes the span a valid naming
+                 target and makes `upcastAria` the pill's only announced
+                 content (children become presentational, so the visible
+                 abbreviation like "L2" is no longer read separately) —
+                 correct here because `upcastAria` already incorporates the
+                 shown value ("Casting at L2 — base level L1"), so nothing is
+                 lost and nothing is read twice. -->
+            <span
+              class="plan-row__cost-tag plan-row__cost-tag--upcast"
+              role="img"
+              aria-label={upcastAria}>{formatCostTag(tag)}</span
+            >
           {:else}
             <span class="plan-row__cost-tag">{formatCostTag(tag)}</span>
           {/if}
         {/each}
       </div>
 
-      {@render modChips()}
-    {:else}
-      <span class="plan-row__collapsed-name">{displayName}</span>
+      {#if !collapsed}
+        {@render modChips()}
+      {/if}
     {/if}
 
-    <!-- Always mounted, hidden with display:none rather than removed from the
-         DOM: unmounting discards the panel's component state, which silently
-         reset a modifier the player had switched off (and would do the same to
-         any future stateful control). display:none also takes it out of the tab
-         order and the accessibility tree, so a collapsed row stays unreachable. -->
-    <div class="plan-row__content" class:plan-row__content--hidden={rulesMode || collapsed}>
+    <!-- Always mounted, never unmounted: unmounting discards the panel's
+         component state (e.g. a rolled die, or a modifier the player
+         switched off). Collapsing passes `summary` so the SAME instance
+         swaps to its non-interactive short form instead of being hidden —
+         its rolls survive the collapse/expand toggle. The strip stays inert
+         apart from one deliberate exception: PanelRenderer's own warning
+         indicator (part of its header, rendered identically in both modes)
+         stays a focusable, clickable button so its message can be read
+         without expanding the row — the chevron remains the only expander.
+         Only `rulesMode` still removes this from view entirely (via
+         display:none), since the RulesPane replaces it outright rather than
+         collapsing it. -->
+    <div class="plan-row__content" class:plan-row__content--hidden={rulesMode}>
       <PanelRenderer
         {entry}
         editable={true}
@@ -372,6 +402,7 @@
         {activeAnnotations}
         {onSelectionChange}
         {onFollowup}
+        summary={collapsed}
       />
     </div>
 
@@ -572,6 +603,38 @@
     z-index: 2;
   }
 
+  /* Collapsed strip: three stacked lines — cost pills (this own line), then
+     PanelRenderer's own header (name, with the warning indicator overlaid on
+     it exactly as in the expanded row — see `.panel-renderer
+     :global(.warning-indicator)`) and its short-form control line, both
+     rendered by `.plan-row__content`'s `<PanelRenderer summary>` from the
+     SAME header markup the expanded row uses (no separate PlanRow-owned
+     copy). `.plan-row__right` is already `display:flex; flex-direction:
+     column` (the base rule below), so collapsing needs no layout override
+     here; only the pills row and the panel's own lines get their own
+     overflow handling.
+
+     Deliberately NOT clipped here: `overflow: hidden` on this element used
+     to give the whole subtree its single-line ellipsis, but the warning
+     indicator's `.warning-tooltip` (absolutely positioned, opened by
+     clicking the focusable `(!)`) is ALSO a descendant of this element — an
+     `overflow: hidden` ancestor clips it regardless of its own absolute
+     positioning, making a collapsed row's warning message unreadable. The
+     ellipsis doesn't need to live here: `.panel-renderer__title` (name,
+     line 2) and `.panel-renderer__body` (short forms, line 3) each already
+     carry their own self-contained `overflow: hidden; text-overflow:
+     ellipsis; white-space: nowrap` in PanelRenderer.svelte, and neither
+     contains the warning indicator (a sibling of both). See
+     PlanRowWarningTooltipClip.test.ts. */
+  .plan-row--collapsed .plan-row__cost-chips {
+    flex-wrap: nowrap;
+  }
+
+  .plan-row--collapsed .plan-row__content {
+    flex: 1;
+    min-width: 0;
+  }
+
   .plan-row__cost-chips {
     display: flex;
     gap: var(--spacing-xs);
@@ -590,25 +653,36 @@
     border-radius: var(--radius-sm);
   }
 
+  /* Visual identity only — applied to BOTH the expanded <button> and the
+     collapsed, non-interactive <span> (see the collapsed cost-chips markup
+     above): the red border/text mark a pill as "upcast" regardless of which
+     element renders it. Nothing here says "you can click this" — that's
+     scoped to the real button below, same split as DieChip's
+     editable/read-only chip (Codex P2: a shared class previously carried
+     `cursor: pointer` and hover/focus colours onto the inert collapsed span,
+     which advertised an affordance it couldn't deliver). */
   .plan-row__cost-tag--upcast {
     position: relative;
     display: inline-flex;
     align-items: center;
     border: 1px solid var(--md-sys-color-error);
     color: var(--md-sys-color-error);
+  }
+
+  button.plan-row__cost-tag--upcast {
     cursor: pointer;
     transition:
       background-color var(--transition-fast),
       color var(--transition-fast);
   }
 
-  .plan-row__cost-tag--upcast:hover,
-  .plan-row__cost-tag--upcast:focus-visible {
+  button.plan-row__cost-tag--upcast:hover,
+  button.plan-row__cost-tag--upcast:focus-visible {
     background: var(--md-sys-color-error-container);
     color: var(--md-sys-color-on-error-container);
   }
 
-  .plan-row__cost-tag--upcast:focus-visible {
+  button.plan-row__cost-tag--upcast:focus-visible {
     outline: 2px solid var(--md-sys-color-primary);
     outline-offset: 2px;
   }
@@ -657,13 +731,6 @@
 
   .plan-row__content > :global(.panel-renderer:hover) {
     background: transparent;
-  }
-
-  .plan-row__collapsed-name {
-    font-family: var(--font-display);
-    font-size: var(--font-size-sm);
-    font-weight: 600;
-    color: var(--md-sys-color-on-surface);
   }
 
   /* Alternatives */

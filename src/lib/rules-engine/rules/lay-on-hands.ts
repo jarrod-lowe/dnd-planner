@@ -34,7 +34,8 @@ const layOnHands: RuleModule = {
           type: 'slider',
           var: 'amount',
           min: { number: 1 },
-          max: { var: 'maxValue' }
+          max: { var: 'maxValue' },
+          unit: 'hp'
         },
         intents: { AID: 'self' },
         actionCost: ['bonus', 'LoH']

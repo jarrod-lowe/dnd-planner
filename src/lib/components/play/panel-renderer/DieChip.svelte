@@ -84,6 +84,23 @@
     {/if}
   </button>
 {:else}
+  <!--
+    Codex P2: `aria-label` on a bare `<span>` is prohibited ARIA — a span has
+    no role that supports naming, so a screen reader may ignore the label
+    and fall back to the chip's raw text content, losing the
+    purpose/range/critical context `dieAriaLabel()` builds. `role="img"`
+    (same fix as `WarningIndicator`'s `.panel-renderer__markers`) makes the
+    span a valid naming target AND makes the label the chip's only announced
+    content — role="img" carries presentational children, so the visible
+    text/badge inside is no longer separately read, exactly like a real
+    <img>'s alt text stands in for its pixels. That's correct here: the
+    label already incorporates the shown value, so nothing is lost, and
+    nothing gets read twice. Only applied when a name is actually supplied —
+    a chip with no ariaLabel (e.g. PanelLoadout's plain read-only chips) has
+    no author name to protect, so it stays a plain, role-less span and its
+    text reads for itself. The editable branch above stays a <button>,
+    which supports aria-label natively and is unaffected.
+  -->
   <span
     class="panel-renderer__die-chip"
     class:panel-renderer__die-chip--crit={crit}
@@ -91,6 +108,7 @@
     class:panel-renderer__die-chip--adv={advantage}
     class:panel-renderer__die-chip--disadv={disadvantage}
     class:panel-renderer__die-chip--crit-damage={critDamage}
+    role={ariaLabel ? 'img' : undefined}
     aria-label={ariaLabel}
     data-die-index={dieIndex}
     data-die-sides={dieSides}
@@ -126,8 +144,27 @@
     cursor: not-allowed;
   }
 
+  /* Every read-only chip (rendered as a <span> once the row collapses) gets a
+     non-pointer cursor regardless of state — it is never a control. */
   span.panel-renderer__die-chip {
     cursor: default;
+  }
+
+  /* The plain, borderless, unpadded "reads as text, not a button" look is
+     deliberate for a read-only chip that carries NO state — but this reset
+     must not touch a chip that DID roll a state (crit/fumble/crit-damage):
+     unscoped, `span.panel-renderer__die-chip` has specificity (0,1,1) —
+     element + class — which unconditionally beats the state rules' (0,1,0)
+     regardless of source order, so a natural-20/natural-1/critical-damage die
+     would lose its fill and border the instant its row collapsed and the chip
+     became a <span> (Codex P2). Excluding the state classes here lets the
+     state rules below — same specificity as the base rule, later in source —
+     win normally, and the base rule's own padding comes along for the ride so
+     a stated read-only chip reads as the same filled badge its editable
+     counterpart does. */
+  span.panel-renderer__die-chip:not(.panel-renderer__die-chip--crit):not(
+      .panel-renderer__die-chip--fumble
+    ):not(.panel-renderer__die-chip--crit-damage) {
     background: transparent;
     border: none;
     padding: 0;

@@ -1,18 +1,47 @@
-<script lang="ts">
+<script module lang="ts">
   import { resolveValueSource } from './resolveValueSource';
+  import type { DiceLineControl } from './types';
+  import type { Facts, VarDefinition } from '$lib/rules-view';
+
+  /**
+   * Whether this control has nothing to show in summary mode: no label, no
+   * (non-empty) range, and every die's `sides` fails to resolve to a real
+   * number — the same "renders nothing visible" shape `textInputIsEmpty` /
+   * `selectIsEmpty` / `loadoutIsEmpty` / `segmentedIsEmpty` / `hitDiceIsEmpty`
+   * already guard against for their own control types. A dice-line's `sides`
+   * is usually a literal number (always resolves, e.g. a d20 check), so this
+   * is false for most authored controls — but a versatile weapon's damage
+   * die (`sides: { var: 'damageDie' }`, see `attacks.ts` / `greataxe.ts` /
+   * `find-steed.ts`) can genuinely fail to resolve. Exported so
+   * `PanelRenderer` can decide whether to render this control's
+   * `.panel-renderer__control` wrapper at all, before mounting — see
+   * `textInputIsEmpty` in `PanelTextInput.svelte` for why.
+   */
+  export function diceLineIsEmpty(
+    control: DiceLineControl,
+    facts: Facts,
+    vars: Record<string, VarDefinition>,
+    selections: Record<string, unknown>
+  ): boolean {
+    if (control.label) return false;
+    if (control.ranges) {
+      const ranges = resolveValueSource(control.ranges, facts, vars, selections);
+      if (Array.isArray(ranges) && ranges.length > 0) return false;
+    }
+    return !control.dice.some((die) => {
+      if (typeof die.sides === 'number') return true;
+      const resolved = resolveValueSource(die.sides, facts, vars, selections);
+      return typeof resolved === 'number' && Number.isFinite(resolved);
+    });
+  }
+</script>
+
+<script lang="ts">
   import { rollTypeKey } from './rollType';
   import DamageTypeIcon from './DamageTypeIcon.svelte';
   import DieChip from './DieChip.svelte';
   import { nextDiceLineId } from './diceLineId';
-  import type {
-    CritMode,
-    DiceLineControl,
-    DiceEntry,
-    RollModifier,
-    RollResult,
-    ValueSource
-  } from './types';
-  import type { Facts, VarDefinition } from '$lib/rules-view';
+  import type { CritMode, DiceEntry, RollModifier, RollResult, ValueSource } from './types';
   import { t } from '$lib/i18n';
 
   interface Props {
@@ -25,6 +54,22 @@
     onRoll?: (data: RollResult, dieIndex: number) => void;
     gwfActive?: boolean;
     modifiers?: RollModifier[];
+    /**
+     * Collapsed-row short form: renders the dice as non-interactive chips
+     * (`DieChip` with `editable={false}`) showing the rolled value or the
+     * unrolled expression per `formatDieChip`, with adv/dis/crit styling
+     * carried over, and a damage die's damage-type icon alongside it. The
+     * line's range (or authored inline `control.label`) still shows, as
+     * plain non-interactive text. Roll modifiers and options triggers are
+     * dropped — their value is already folded into the shown numbers, and
+     * nothing in a collapsed row may be focusable. A d20 under default
+     * disadvantage (`defaultRollMode !== 'normal'`) still shows the `▼`
+     * indicator here, exactly as the full render does — this is what lets
+     * an UNROLLED die's state read as "taking adv/dis into account" per the
+     * brief, not just a rolled one's chip styling.
+     * See docs/plans/ideas/better-summary-panels.md.
+     */
+    summary?: boolean;
   }
 
   let {
@@ -36,7 +81,8 @@
     onSelectionChange: _onSelectionChange,
     onRoll,
     gwfActive = false,
-    modifiers = []
+    modifiers = [],
+    summary = false
   }: Props = $props();
 
   void _onSelectionChange;
@@ -243,7 +289,11 @@
     if (result !== undefined) {
       const prefix =
         result.mode === 'advantage' ? '▲ ' : result.mode === 'disadvantage' ? '▼ ' : '';
-      return `${prefix}${result.total}`;
+      // `effective` is never set by this component's own rolls today (only
+      // PanelHitDice produces it) — the fallback is defensive, so an
+      // `effective` value shown here (should one ever reach this state) wins
+      // over `total` without changing today's behaviour.
+      return `${prefix}${result.effective ?? result.total}`;
     }
     let text = formatDieExpression(die);
     text += formatBonus(die);
@@ -584,58 +634,214 @@
 
 <svelte:window onresize={repositionIfOpen} />
 
-<div class="panel-renderer__dice-line" role="group">
-  {#each parts as part, i (i)}
-    {#if i > 0}
-      <span class="panel-renderer__dice-separator">|</span>
-    {/if}
-    {#if part.type === 'label'}
-      <span class="panel-renderer__range">{$t(control.label!)}</span>
-    {:else if part.type === 'range'}
-      {#if editable}
-        <button
-          class="panel-renderer__range"
-          class:panel-renderer__range--clickable={ranges && ranges.length > 1}
-          type="button"
-          onclick={handleRangeTap}
-          disabled={!ranges || ranges.length <= 1}
-        >
-          {formatRangeText(currentRange!)}
-        </button>
-      {:else}
+<div
+  class="panel-renderer__dice-line"
+  class:panel-renderer__dice-line--summary={summary}
+  role="group"
+>
+  {#if summary}
+    {#each parts as part, i (i)}
+      {#if part.type === 'label'}
+        <span class="panel-renderer__range">{$t(control.label!)}</span>
+      {:else if part.type === 'range'}
         <span class="panel-renderer__range">{formatRangeText(currentRange!)}</span>
-      {/if}
-    {:else if part.type === 'modifier'}
-      {@const m = part.modifier!}
-      {@const on = modifierOn(m)}
-      {#if editable}
-        <button
-          class="panel-renderer__modifier"
-          class:panel-renderer__modifier--on={on}
-          type="button"
-          aria-pressed={on}
-          data-modifier-key={m.key}
-          onclick={() => toggleModifier(m)}
-        >
-          {formatModifier(m)}
-        </button>
-      {:else}
-        <span class="panel-renderer__modifier" data-modifier-key={m.key}>{formatModifier(m)}</span>
-      {/if}
-    {:else}
-      {@const dieIsD20 = isD20(part.die!)}
-      {@const dieHasOptions = hasOptions(part.die!)}
-      {#if defaultRollMode !== 'normal' && dieIsD20}
-        <span class="panel-renderer__disadv-indicator" aria-label="Disadvantage">▼</span>
-      {/if}
-      <div class="panel-renderer__chip-wrapper">
+      {:else if part.type === 'die'}
+        {@const dieIsD20 = isD20(part.die!)}
+        {#if defaultRollMode !== 'normal' && dieIsD20}
+          <span
+            class="panel-renderer__disadv-indicator"
+            aria-label={$t('play.choices.attack.disadvantage')}>▼</span
+          >
+        {/if}
         {#if part.die!.label}
           <span class="panel-renderer__die-label">{$t(part.die!.label)}</span>
         {/if}
-        {#if editable && dieHasOptions}
-          <div class="panel-renderer__chip-split">
+        <DieChip
+          text={formatDieChip(part.die!, part.dieIndex!)}
+          editable={false}
+          ariaLabel={dieAriaLabel(part.die!, part.dieIndex!)}
+          crit={rollResults[part.dieIndex!]?.natural === 20}
+          fumble={rollResults[part.dieIndex!]?.natural === 1}
+          advantage={rollResults[part.dieIndex!]?.mode === 'advantage'}
+          disadvantage={rollResults[part.dieIndex!]?.mode === 'disadvantage'}
+          critDamage={rollResults[part.dieIndex!]?.critical}
+          critical={rollResults[part.dieIndex!]?.critical}
+          dieIndex={part.dieIndex}
+        />
+        {#if !dieIsD20 && formatDamageType(part.die!)}
+          <span class="panel-renderer__damage-type-icon">
+            <DamageTypeIcon type={formatDamageType(part.die!)} />
+          </span>
+        {/if}
+      {/if}
+      <!-- 'modifier' parts are intentionally dropped: their value is already
+           folded into the die's shown bonus (formatBonus), so a summary chip
+           for them would double up on information without adding any. -->
+    {/each}
+  {:else}
+    {#each parts as part, i (i)}
+      {#if i > 0}
+        <span class="panel-renderer__dice-separator">|</span>
+      {/if}
+      {#if part.type === 'label'}
+        <span class="panel-renderer__range">{$t(control.label!)}</span>
+      {:else if part.type === 'range'}
+        {#if editable}
+          <button
+            class="panel-renderer__range"
+            class:panel-renderer__range--clickable={ranges && ranges.length > 1}
+            type="button"
+            onclick={handleRangeTap}
+            disabled={!ranges || ranges.length <= 1}
+          >
+            {formatRangeText(currentRange!)}
+          </button>
+        {:else}
+          <span class="panel-renderer__range">{formatRangeText(currentRange!)}</span>
+        {/if}
+      {:else if part.type === 'modifier'}
+        {@const m = part.modifier!}
+        {@const on = modifierOn(m)}
+        {#if editable}
+          <button
+            class="panel-renderer__modifier"
+            class:panel-renderer__modifier--on={on}
+            type="button"
+            aria-pressed={on}
+            data-modifier-key={m.key}
+            onclick={() => toggleModifier(m)}
+          >
+            {formatModifier(m)}
+          </button>
+        {:else}
+          <span class="panel-renderer__modifier" data-modifier-key={m.key}>{formatModifier(m)}</span
+          >
+        {/if}
+      {:else}
+        {@const dieIsD20 = isD20(part.die!)}
+        {@const dieHasOptions = hasOptions(part.die!)}
+        {#if defaultRollMode !== 'normal' && dieIsD20}
+          <span
+            class="panel-renderer__disadv-indicator"
+            aria-label={$t('play.choices.attack.disadvantage')}>▼</span
+          >
+        {/if}
+        <div class="panel-renderer__chip-wrapper">
+          {#if part.die!.label}
+            <span class="panel-renderer__die-label">{$t(part.die!.label)}</span>
+          {/if}
+          {#if editable && dieHasOptions}
+            <div class="panel-renderer__chip-split">
+              <DieChip
+                main
+                text={formatDieChip(part.die!, part.dieIndex!)}
+                {editable}
+                ariaLabel={dieAriaLabel(part.die!, part.dieIndex!)}
+                crit={rollResults[part.dieIndex!]?.natural === 20}
+                fumble={rollResults[part.dieIndex!]?.natural === 1}
+                advantage={rollResults[part.dieIndex!]?.mode === 'advantage'}
+                disadvantage={rollResults[part.dieIndex!]?.mode === 'disadvantage'}
+                critDamage={rollResults[part.dieIndex!]?.critical}
+                critical={rollResults[part.dieIndex!]?.critical}
+                dieIndex={part.dieIndex}
+                bind:ref={chipRefs[part.dieIndex!]}
+                onclick={() => handleRoll(part.dieIndex!)}
+              />
+              <button
+                id="{uid}-trigger-{part.dieIndex}"
+                class="panel-renderer__options-trigger"
+                type="button"
+                data-die-index={part.dieIndex}
+                popovertarget="{uid}-popover-{part.dieIndex}"
+                aria-haspopup="menu"
+                aria-expanded={openDieIndex === part.dieIndex}
+                aria-controls="{uid}-popover-{part.dieIndex}"
+                aria-label={$t('play.choices.attack.optionsLabel', {
+                  label:
+                    dieAriaLabel(part.die!, part.dieIndex!) ??
+                    formatDieChip(part.die!, part.dieIndex!)
+                })}
+                bind:this={triggerRefs[part.dieIndex!]}
+                onpointerdown={markPointerOpen}
+                onkeydown={(e) => onTriggerKeydown(e, part.dieIndex!)}
+              >
+                <svg class="panel-renderer__chevron" aria-hidden="true" viewBox="0 0 16 16">
+                  <path
+                    d="M4 6l4 4 4-4"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+              <div
+                id="{uid}-popover-{part.dieIndex}"
+                class="panel-renderer__popover"
+                data-die-index={part.dieIndex}
+                popover="auto"
+                role="menu"
+                tabindex="-1"
+                aria-label={$t('play.choices.attack.rollMode')}
+                bind:this={popoverRefs[part.dieIndex!]}
+                ontoggle={(e) => handlePopoverToggle(part.dieIndex!, e)}
+                onkeydown={(e) => onMenuKeydown(e, part.dieIndex!)}
+              >
+                {#if isDamageDie(part.die!)}
+                  <button
+                    type="button"
+                    class="panel-renderer__popover-item"
+                    role="menuitem"
+                    data-crit-mode="normal"
+                    onclick={() => selectCritMode(part.dieIndex!, 'normal')}
+                  >
+                    {$t('play.choices.attack.normal')}
+                  </button>
+                  <button
+                    type="button"
+                    class="panel-renderer__popover-item"
+                    role="menuitem"
+                    data-crit-mode="critical"
+                    aria-label={$t('play.choices.attack.critical')}
+                    onclick={() => selectCritMode(part.dieIndex!, 'critical')}
+                  >
+                    {$t('play.choices.attack.criticalSymbol')}
+                    {$t('play.choices.attack.critical')}
+                  </button>
+                {:else}
+                  <button
+                    type="button"
+                    class="panel-renderer__popover-item"
+                    role="menuitem"
+                    data-roll-mode="advantage"
+                    onclick={() => selectRollMode(part.dieIndex!, 'advantage')}
+                  >
+                    {$t('play.choices.attack.advantage')}
+                  </button>
+                  <button
+                    type="button"
+                    class="panel-renderer__popover-item"
+                    role="menuitem"
+                    data-roll-mode="normal"
+                    onclick={() => selectRollMode(part.dieIndex!, 'normal')}
+                  >
+                    {$t('play.choices.attack.normal')}
+                  </button>
+                  <button
+                    type="button"
+                    class="panel-renderer__popover-item"
+                    role="menuitem"
+                    data-roll-mode="disadvantage"
+                    onclick={() => selectRollMode(part.dieIndex!, 'disadvantage')}
+                  >
+                    {$t('play.choices.attack.disadvantage')}
+                  </button>
+                {/if}
+              </div>
+            </div>
+          {:else}
             <DieChip
-              main
               text={formatDieChip(part.die!, part.dieIndex!)}
               {editable}
               ariaLabel={dieAriaLabel(part.die!, part.dieIndex!)}
@@ -649,123 +855,16 @@
               bind:ref={chipRefs[part.dieIndex!]}
               onclick={() => handleRoll(part.dieIndex!)}
             />
-            <button
-              id="{uid}-trigger-{part.dieIndex}"
-              class="panel-renderer__options-trigger"
-              type="button"
-              data-die-index={part.dieIndex}
-              popovertarget="{uid}-popover-{part.dieIndex}"
-              aria-haspopup="menu"
-              aria-expanded={openDieIndex === part.dieIndex}
-              aria-controls="{uid}-popover-{part.dieIndex}"
-              aria-label={$t('play.choices.attack.optionsLabel', {
-                label:
-                  dieAriaLabel(part.die!, part.dieIndex!) ??
-                  formatDieChip(part.die!, part.dieIndex!)
-              })}
-              bind:this={triggerRefs[part.dieIndex!]}
-              onpointerdown={markPointerOpen}
-              onkeydown={(e) => onTriggerKeydown(e, part.dieIndex!)}
-            >
-              <svg class="panel-renderer__chevron" aria-hidden="true" viewBox="0 0 16 16">
-                <path
-                  d="M4 6l4 4 4-4"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </button>
-            <div
-              id="{uid}-popover-{part.dieIndex}"
-              class="panel-renderer__popover"
-              data-die-index={part.dieIndex}
-              popover="auto"
-              role="menu"
-              tabindex="-1"
-              aria-label={$t('play.choices.attack.rollMode')}
-              bind:this={popoverRefs[part.dieIndex!]}
-              ontoggle={(e) => handlePopoverToggle(part.dieIndex!, e)}
-              onkeydown={(e) => onMenuKeydown(e, part.dieIndex!)}
-            >
-              {#if isDamageDie(part.die!)}
-                <button
-                  type="button"
-                  class="panel-renderer__popover-item"
-                  role="menuitem"
-                  data-crit-mode="normal"
-                  onclick={() => selectCritMode(part.dieIndex!, 'normal')}
-                >
-                  {$t('play.choices.attack.normal')}
-                </button>
-                <button
-                  type="button"
-                  class="panel-renderer__popover-item"
-                  role="menuitem"
-                  data-crit-mode="critical"
-                  aria-label={$t('play.choices.attack.critical')}
-                  onclick={() => selectCritMode(part.dieIndex!, 'critical')}
-                >
-                  {$t('play.choices.attack.criticalSymbol')}
-                  {$t('play.choices.attack.critical')}
-                </button>
-              {:else}
-                <button
-                  type="button"
-                  class="panel-renderer__popover-item"
-                  role="menuitem"
-                  data-roll-mode="advantage"
-                  onclick={() => selectRollMode(part.dieIndex!, 'advantage')}
-                >
-                  {$t('play.choices.attack.advantage')}
-                </button>
-                <button
-                  type="button"
-                  class="panel-renderer__popover-item"
-                  role="menuitem"
-                  data-roll-mode="normal"
-                  onclick={() => selectRollMode(part.dieIndex!, 'normal')}
-                >
-                  {$t('play.choices.attack.normal')}
-                </button>
-                <button
-                  type="button"
-                  class="panel-renderer__popover-item"
-                  role="menuitem"
-                  data-roll-mode="disadvantage"
-                  onclick={() => selectRollMode(part.dieIndex!, 'disadvantage')}
-                >
-                  {$t('play.choices.attack.disadvantage')}
-                </button>
-              {/if}
-            </div>
-          </div>
-        {:else}
-          <DieChip
-            text={formatDieChip(part.die!, part.dieIndex!)}
-            {editable}
-            ariaLabel={dieAriaLabel(part.die!, part.dieIndex!)}
-            crit={rollResults[part.dieIndex!]?.natural === 20}
-            fumble={rollResults[part.dieIndex!]?.natural === 1}
-            advantage={rollResults[part.dieIndex!]?.mode === 'advantage'}
-            disadvantage={rollResults[part.dieIndex!]?.mode === 'disadvantage'}
-            critDamage={rollResults[part.dieIndex!]?.critical}
-            critical={rollResults[part.dieIndex!]?.critical}
-            dieIndex={part.dieIndex}
-            bind:ref={chipRefs[part.dieIndex!]}
-            onclick={() => handleRoll(part.dieIndex!)}
-          />
+          {/if}
+        </div>
+        {#if !dieIsD20 && formatDamageType(part.die!)}
+          <span class="panel-renderer__damage-type-icon">
+            <DamageTypeIcon type={formatDamageType(part.die!)} />
+          </span>
         {/if}
-      </div>
-      {#if !dieIsD20 && formatDamageType(part.die!)}
-        <span class="panel-renderer__damage-type-icon">
-          <DamageTypeIcon type={formatDamageType(part.die!)} />
-        </span>
       {/if}
-    {/if}
-  {/each}
+    {/each}
+  {/if}
 </div>
 
 <style>
@@ -774,6 +873,42 @@
     align-items: center;
     gap: var(--spacing-xs);
     flex-wrap: wrap;
+  }
+
+  /* Collapsed row only: the expanded render's `flex-wrap: wrap` above is
+     deliberate (a busy line of dice/modifiers is meant to wrap), but the
+     collapsed short-forms line is one of the strip's three fixed lines (see
+     docs/plans/ideas/better-summary-panels.md) and must stay on ONE line —
+     `white-space: nowrap` on an ancestor does not stop a flex container from
+     wrapping its own items onto a second flex line, so this needs its own
+     rule. `min-width: 0` lets it shrink below its content's natural width
+     instead of forcing its ancestors wider, so a long line clips (via the
+     ellipsis `.panel-renderer__body` already owns) instead of wrapping or
+     scrolling the page.
+
+     `display: inline-flex` (overriding the block-level `display: flex`
+     above) is load-bearing, not cosmetic. `PanelRenderer` paints a real
+     `<span class="panel-renderer__separator" aria-hidden="true">` (plain
+     inline content) immediately before whichever control isn't first. A
+     block-level box (plain `display: flex` is block-level) can never share
+     a line with preceding inline content: the browser is forced to start it
+     on its own line, so the separator dot renders alone on a line by
+     itself, with the dice line's actual d20/value content pushed to the
+     line below it — a leading-looking dot with the values apparently AFTER
+     it, reported as "the separator dot before the values" on Roll
+     Initiative's Alert secondary roll (a non-first dice-line control).
+     `inline-flex` makes the whole box atomic and inline-level, so it sits on
+     the same line as the separator exactly like every other (span-based)
+     control's short form already does. This is a genuine browser rendering
+     defect in the interaction between inline content and a block-level flex
+     child, not a logic bug — jsdom's DOM assertions can't see it (no real
+     layout), only a real browser can. */
+  .panel-renderer__dice-line--summary {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    min-width: 0;
+    overflow: hidden;
+    vertical-align: bottom;
   }
 
   .panel-renderer__dice-separator {

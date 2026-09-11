@@ -20,6 +20,15 @@ steps:
         offers:
           exists:
             - loh-heal
+        offerUi:
+          - id: loh-heal
+            ui:
+              primaryControl:
+                type: slider
+                var: amount
+                min: { number: 1 }
+                max: { var: maxValue }
+                unit: hp
   - addOffer:
       id: loh-heal
       selections:

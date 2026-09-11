@@ -11,9 +11,23 @@
     vars: Record<string, VarDefinition>;
     selections?: Record<string, unknown>;
     onSelectionChange?: (selections: Record<string, unknown>) => void;
+    /**
+     * Collapsed-row short form: renders only the formatted current value
+     * (`displayValue`), no track/notches/input. The control instance stays
+     * mounted across the collapse/expand toggle.
+     */
+    summary?: boolean;
   }
 
-  let { control, editable, facts, vars, selections = {}, onSelectionChange }: Props = $props();
+  let {
+    control,
+    editable,
+    facts,
+    vars,
+    selections = {},
+    onSelectionChange,
+    summary = false
+  }: Props = $props();
 
   // --- Notch-based slider ---
   // When `notches` is defined, the slider shows explicit values (e.g. [0, 2, 3, 4, 5])
@@ -98,7 +112,9 @@
   }
 </script>
 
-{#if activeNotches}
+{#if summary}
+  <span class="panel-renderer__slider-summary">{displayValue}</span>
+{:else if activeNotches}
   <div class="panel-renderer__slider">
     <input
       type="range"
@@ -149,5 +165,12 @@
     white-space: nowrap;
     min-width: 4ch;
     text-align: right;
+  }
+
+  .panel-renderer__slider-summary {
+    font-family: var(--font-body);
+    font-size: var(--font-size-md);
+    color: var(--md-sys-color-on-surface);
+    white-space: nowrap;
   }
 </style>
