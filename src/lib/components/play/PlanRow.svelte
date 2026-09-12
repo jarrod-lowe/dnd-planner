@@ -260,7 +260,10 @@
     {#if subjectLabel}
       <span class="plan-row__subject-label">{subjectLabel}</span>
     {/if}
-    {#if hasDetail}
+    <!-- Expanded only: the rules pane has no shrunk form, so offering the flip
+         on a shrunk row would open a pane the row cannot show — the chevron is
+         the way back to a state that can hold it. -->
+    {#if hasDetail && !collapsed}
       <button
         type="button"
         class="plan-row__flip-btn"

@@ -365,3 +365,39 @@ describe('PlanRow Rules mode and the shrunk form', () => {
     );
   });
 });
+
+describe('PlanRow entering rules mode from the shrunk form', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('hides the rules flip while the row is shrunk, and restores it on expand', async () => {
+    mockedPeekDetail.mockReturnValue({
+      source: 'srd52',
+      body: [{ text: ['test'] }]
+    });
+    const { container } = render(PlanRow, {
+      props: {
+        item: makeItem(),
+        entry: mockEntry,
+        facts: mockFacts,
+        activeAnnotations: []
+      }
+    });
+
+    expect(container.querySelector('[data-rules-toggle]')).toBeTruthy();
+
+    await fireEvent.click(container.querySelector('[aria-label="play.planRow.collapseAria"]')!);
+
+    // The shrunk row is a one-line summary and the rules pane has no shrunk
+    // form, so the flip goes with the rest of the expanded-only controls —
+    // there is no way to open a pane the row could not show.
+    expect(container.querySelector('[data-rules-toggle]')).toBeNull();
+
+    // Expanding brings it back, and it still works.
+    await fireEvent.click(container.querySelector('[aria-label="play.planRow.expandAria"]')!);
+    expect(container.querySelector('[data-rules-toggle]')).toBeTruthy();
+    await fireEvent.click(container.querySelector('[data-rules-toggle]')!);
+    expect(container.querySelector('.rules-shell')).toBeTruthy();
+  });
+});
