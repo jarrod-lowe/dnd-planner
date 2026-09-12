@@ -69,6 +69,25 @@ describe('getMatchingAnnotations', () => {
     ]);
   });
 
+  it('carries addsOffer through so the panel can render an actionable annotation', () => {
+    const active: Annotation[] = [
+      {
+        key: 'rule.dnd-5e-2024.heroic-inspiration.annotation',
+        targets: ['dice.any'],
+        addsOffer: 'use-hi'
+      }
+    ];
+    expect(getMatchingAnnotations(['dice.any'], active)).toEqual([
+      { key: 'rule.dnd-5e-2024.heroic-inspiration.annotation', addsOffer: 'use-hi' }
+    ]);
+  });
+
+  it('leaves addsOffer absent for a purely advisory annotation', () => {
+    const active: Annotation[] = [{ key: 'smite.annotation', targets: ['attack.melee'] }];
+    const [match] = getMatchingAnnotations(['attack.melee'], active);
+    expect(match.addsOffer).toBeUndefined();
+  });
+
   it('scopes the Extra Attack annotation to action attacks via attack.action', () => {
     const extraAttack: Annotation[] = [
       { key: 'rule.dnd-5e-2024.attacks.extra-attack.annotation', targets: ['attack.action'] }

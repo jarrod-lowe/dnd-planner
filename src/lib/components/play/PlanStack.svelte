@@ -24,6 +24,8 @@
     onSwapPlanItemRule: (instanceId: string, entry: AvailableRuleEntry) => void;
     onEndTurn: () => void;
     onFollowup?: (effect: EffectInstance) => void;
+    /** Plans the offer an actionable annotation names (see PanelRenderer). */
+    onAddOfferToPlan?: (offerId: string) => void;
   }
 
   let {
@@ -37,7 +39,8 @@
     onSelectionChange,
     onSwapPlanItemRule,
     onEndTurn,
-    onFollowup
+    onFollowup,
+    onAddOfferToPlan
   }: Props = $props();
 
   // Which rows are collapsed. Adding a row folds the ones already in the plan
@@ -149,6 +152,7 @@
           onMoveDown={() => onMovePlanItem(item.instanceId, 'down')}
           onSwapAlternative={(alt) => onSwapPlanItemRule(item.instanceId, alt)}
           {onFollowup}
+          {onAddOfferToPlan}
         />
       </div>
     {/each}

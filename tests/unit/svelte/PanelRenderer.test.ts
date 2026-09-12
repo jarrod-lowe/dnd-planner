@@ -116,3 +116,98 @@ describe('PanelRenderer roll toast', () => {
     expect(lastToastModifiers()).toEqual(['rule.demo.info']);
   });
 });
+
+describe('PanelRenderer actionable annotations', () => {
+  const diceEntry = makeEntry({
+    name: 'rule.check.name',
+    annotationLabels: ['dice.any'],
+    primaryControl: {
+      type: 'dice-line',
+      dice: [{ sides: 20, bonus: { number: 2 }, purpose: 'check' }]
+    }
+  });
+
+  const hiAnnotation: Annotation[] = [
+    {
+      key: 'rule.dnd-5e-2024.heroic-inspiration.annotation',
+      targets: ['dice.any'],
+      addsOffer: 'use-hi'
+    }
+  ];
+
+  const advisoryAnnotation: Annotation[] = [
+    { key: 'rule.dnd-5e-2024.attacks.extra-attack.annotation', targets: ['dice.any'] }
+  ];
+
+  it('renders an annotation that names an offer as a button', () => {
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: diceEntry,
+        editable: true,
+        activeAnnotations: hiAnnotation,
+        onAddOfferToPlan: vi.fn()
+      }
+    });
+    const action = container.querySelector('button.panel-renderer__annotation--action');
+    expect(action).not.toBeNull();
+    expect(action?.textContent).toContain('rule.dnd-5e-2024.heroic-inspiration.annotation');
+    // The accessible name says what the tap DOES, not just what is available.
+    expect(action?.getAttribute('aria-label')).toBe(
+      'Add to plan: rule.dnd-5e-2024.heroic-inspiration.annotation'
+    );
+  });
+
+  it('adds the named offer to the plan when tapped', async () => {
+    const onAddOfferToPlan = vi.fn();
+    const { container } = render(PanelRenderer, {
+      props: { entry: diceEntry, editable: true, activeAnnotations: hiAnnotation, onAddOfferToPlan }
+    });
+    await fireEvent.click(container.querySelector('button.panel-renderer__annotation--action')!);
+    expect(onAddOfferToPlan).toHaveBeenCalledWith('use-hi');
+  });
+
+  it('leaves an annotation with no offer as plain text', () => {
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: diceEntry,
+        editable: true,
+        activeAnnotations: advisoryAnnotation,
+        onAddOfferToPlan: vi.fn()
+      }
+    });
+    expect(container.querySelector('button.panel-renderer__annotation--action')).toBeNull();
+    expect(container.querySelector('span.panel-renderer__annotation')).not.toBeNull();
+  });
+
+  it('leaves the annotation as plain text on a non-editable picker panel', () => {
+    // Picker panels are one big tap target that adds the panel's OWN offer; a
+    // nested button there would be a second, conflicting action.
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: diceEntry,
+        editable: false,
+        activeAnnotations: hiAnnotation,
+        onAddOfferToPlan: vi.fn()
+      }
+    });
+    expect(container.querySelector('button.panel-renderer__annotation--action')).toBeNull();
+    expect(container.querySelector('span.panel-renderer__annotation')).not.toBeNull();
+  });
+
+  it('does not let the tap bubble into the panel-level tap handler', async () => {
+    const onTap = vi.fn();
+    const onAddOfferToPlan = vi.fn();
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: diceEntry,
+        editable: true,
+        activeAnnotations: hiAnnotation,
+        onAddOfferToPlan,
+        onTap
+      }
+    });
+    await fireEvent.click(container.querySelector('button.panel-renderer__annotation--action')!);
+    expect(onAddOfferToPlan).toHaveBeenCalledWith('use-hi');
+    expect(onTap).not.toHaveBeenCalled();
+  });
+});

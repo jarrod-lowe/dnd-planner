@@ -123,3 +123,33 @@ describe('PlanRow rider chips', () => {
     expect(container.textContent).not.toContain('FX');
   });
 });
+
+describe('PlanRow actionable annotations', () => {
+  // A plain advisory annotation (no rider) that names an offer — the shape
+  // Heroic Inspiration produces.
+  const actionable: Annotation = {
+    key: 'rule.dnd-5e-2024.heroic-inspiration.annotation',
+    targets: ['save.any'],
+    addsOffer: 'use-hi'
+  };
+
+  it('hands the offer id up when the annotation is tapped', async () => {
+    let added: string | undefined;
+    const { container } = render(PlanRow, {
+      props: {
+        ...props,
+        activeAnnotations: [actionable],
+        onAddOfferToPlan: (offerId: string) => (added = offerId)
+      }
+    });
+    await fireEvent.click(container.querySelector('button.panel-renderer__annotation--action')!);
+    expect(added).toBe('use-hi');
+  });
+
+  it('leaves the annotation as plain text when no handler is wired', () => {
+    const { container } = render(PlanRow, {
+      props: { ...props, activeAnnotations: [actionable] }
+    });
+    expect(container.querySelector('button.panel-renderer__annotation--action')).toBeNull();
+  });
+});

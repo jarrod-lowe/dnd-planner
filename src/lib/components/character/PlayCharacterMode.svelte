@@ -177,6 +177,7 @@
         onSelectionChange={handleSelectionChange}
         onSwapPlanItemRule={(id, entry) => playStore.swapPlanItemRule(id, entry)}
         onFollowup={(effect) => playStore.addFollowupEffect(effect)}
+        onAddOfferToPlan={(offerId) => playStore.addOfferToPlan(offerId)}
         onEndTurn={() => playStore.endTurn()}
       />
       <Ledger

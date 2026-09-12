@@ -382,6 +382,14 @@ export interface Annotation {
   key: string;
   targets: string[];
   rider?: AnnotationRider;
+  /**
+   * The id of the offer this annotation advises the player to take. Most
+   * annotations are advisory ("Heroic Inspiration available") — naming the
+   * offer here turns the reminder into a one-tap shortcut that plans that
+   * action, exactly as picking it from the add-row picker would. Absent → the
+   * annotation is read-only text.
+   */
+  addsOffer?: string;
 }
 
 /**

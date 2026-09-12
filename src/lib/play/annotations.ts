@@ -3,6 +3,8 @@ import type { Annotation, AnnotationRider } from '$lib/rules-view';
 export interface ActiveAnnotation {
   key: string;
   rider?: AnnotationRider;
+  /** Offer id to plan when the annotation is tapped; absent → not actionable. */
+  addsOffer?: string;
 }
 
 export function getAnnotationLabels(ui: Record<string, unknown> | undefined): string[] {
@@ -20,7 +22,11 @@ export function getMatchingAnnotations(
   const result: ActiveAnnotation[] = [];
   for (const annotation of activeAnnotations) {
     if (annotation.targets.some((t) => labels.has(t))) {
-      result.push({ key: annotation.key, rider: annotation.rider });
+      result.push({
+        key: annotation.key,
+        rider: annotation.rider,
+        addsOffer: annotation.addsOffer
+      });
     }
   }
   return result;

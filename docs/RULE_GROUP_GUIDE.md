@@ -160,6 +160,30 @@ the add-picker grouping; `ui.actionCost` tags the cost chip;
 copy an existing offer with the control you need (slider: `movement`,
 dice-line: weapons via the builder, select: `skill-checks`).
 
+### `annotate` — reminders on other panels
+
+`annotate(f)` returns `{ key, targets }` reminders that render on every panel
+whose `ui.annotationLabels` overlap `targets`. Most are advisory ("Heroic
+Inspiration available") — naming an offer turns one into a shortcut:
+
+```ts
+annotate: (f) =>
+  f.num('heroicInspiration.remaining') > 0
+    ? [{ key: `${HI}.annotation`, targets: ['dice.any'], addsOffer: 'use-hi' }]
+    : [];
+```
+
+`addsOffer` is an offer id (the same id the add-row picker plans). The panel
+renders that annotation as a button; tapping it plans the offer exactly as
+picking it by hand would. Only editable plan panels make it tappable — on a
+picker panel it stays text, so it never competes with the panel's own tap.
+`annotation-targets.test.ts` fails the build if `addsOffer` names an offer no
+module declares. Omit it for a reminder with no single action behind it.
+
+Note it pairs with a plain reminder, not with a **valued** rider: an annotation
+carrying `rider.value` is rendered as a dice-line toggle chip instead of a text
+chip, and a toggle has nowhere to put the add affordance.
+
 ### Effects
 
 - Per-turn spends: keyless, `expiry: { kind: 'endOfTurn' }`.

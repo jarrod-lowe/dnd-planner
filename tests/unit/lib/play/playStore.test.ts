@@ -605,6 +605,48 @@ describe('playStore', () => {
     });
   });
 
+  describe('addOfferToPlan', () => {
+    it('plans the named offer from the catalog, exactly as a picker tap would', async () => {
+      vi.mocked(evaluateCharacter).mockReturnValue(
+        playOut({
+          raw: rawOutput({
+            availableRules: [
+              {
+                rule: {
+                  id: 'use-hi',
+                  ui: { section: 'other', name: 'rule.hi.use-hi.name', intents: { AID: 'self' } }
+                },
+                legal: true,
+                applicable: true,
+                diagnostics: []
+              }
+            ]
+          })
+        })
+      );
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      // Populate the catalog the lookup reads.
+      playStore.addFollowupEffect({ id: 'e1', expiry: { kind: 'permanent' } });
+      vi.runAllTimers();
+
+      playStore.addOfferToPlan('use-hi');
+
+      expect(playStore.state.plannedItems).toHaveLength(1);
+      expect(playStore.state.plannedItems[0].originalRuleId).toBe('use-hi');
+      expect(playStore.state.plannedItems[0].verb).toBe('AID');
+    });
+
+    it('does nothing when the named offer is not in the catalog', async () => {
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      playStore.addOfferToPlan('no-such-offer');
+
+      expect(playStore.state.plannedItems).toHaveLength(0);
+    });
+  });
+
   describe('swapPlanItemRule', () => {
     it('swaps a planned item rule and updates verb and originalRuleId', async () => {
       const { playStore } = await import('$lib/play/playStore.svelte');
