@@ -1,10 +1,12 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { t } from '$lib/i18n';
   import { SvelteMap } from 'svelte/reactivity';
   import { playStore } from '$lib/play/playStore.svelte';
   import PlanRow from './PlanRow.svelte';
   import AddRowPicker from './AddRowPicker.svelte';
   import { groupChoicesByVerb } from '$lib/play/groupChoicesByVerb';
+  import { PlanCollapseState } from '$lib/play/planCollapse.svelte';
   import { getSubject } from '$lib/play/subjectUtils';
   import type { PlannedItem } from '$lib/play/types';
   import type { AvailableRuleEntry, Annotation, Facts, Verb } from '$lib/rules-view';
@@ -37,6 +39,18 @@
     onEndTurn,
     onFollowup
   }: Props = $props();
+
+  // Which rows are collapsed. Adding a row folds the ones already in the plan
+  // (unless the player expanded them by hand), so the row just added is the one
+  // on show. `$effect.pre` so the fold lands with the same DOM update as the
+  // new row, not a frame later.
+  const collapse = new PlanCollapseState();
+  $effect.pre(() => {
+    const instanceIds = items.map((item) => item.instanceId);
+    // The plan's rows are the ONLY trigger: untracked so the state sync() keeps
+    // for itself can't feed back in and re-run this.
+    untrack(() => collapse.sync(instanceIds));
+  });
 
   const itemsWithEntries = $derived(
     items.map((item) => {
@@ -125,6 +139,10 @@
           )}
           canMoveUp={i > 0}
           canMoveDown={i < items.length - 1}
+          bind:collapsed={
+            () => collapse.isCollapsed(item.instanceId),
+            (next) => collapse.setCollapsed(item.instanceId, next)
+          }
           onSelectionChange={(selections) => onSelectionChange(item.instanceId, selections)}
           onRemove={() => onRemoveFromPlan(item.instanceId)}
           onMoveUp={() => onMovePlanItem(item.instanceId, 'up')}

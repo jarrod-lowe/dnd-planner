@@ -27,6 +27,12 @@
     alternatives?: AvailableRuleEntry[];
     canMoveUp?: boolean;
     canMoveDown?: boolean;
+    /**
+     * Bindable so the stack can own the collapse state across rows (adding a
+     * row collapses the others — see `PlanCollapseState`). Unbound, the row
+     * keeps its own state and behaves exactly as it did standalone.
+     */
+    collapsed?: boolean;
     onSelectionChange?: (selections: Record<string, unknown>) => void;
     onRemove?: () => void;
     onMoveUp?: () => void;
@@ -44,6 +50,7 @@
     alternatives = [],
     canMoveUp = true,
     canMoveDown = true,
+    collapsed = $bindable(false),
     onSelectionChange,
     onRemove,
     onMoveUp,
@@ -52,7 +59,6 @@
     onFollowup
   }: Props = $props();
 
-  let collapsed = $state(false);
   let openTooltipAltId: string | null = $state(null);
   let rightEl: HTMLDivElement | undefined = $state();
   let tooltipStyle = $state('');
