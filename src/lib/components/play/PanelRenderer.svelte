@@ -1140,13 +1140,18 @@
   }
 
   /* The actionable form of the same chip: identical surface, plus an add
-     affordance and the interactive states a button needs. */
+     affordance and the interactive states a button needs. The chip's own
+     type scale only adds up to 28px, well under a thumb, so this variant
+     takes the 2.75rem touch target every other tappable control uses. It is
+     a minimum, not a height: the flex box still grows when the text wraps,
+     and align-items keeps a single line centred in the taller box. */
   .panel-renderer__annotation--action {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--spacing-sm);
     width: 100%;
+    min-height: 2.75rem;
     text-align: left;
     border: 1px solid var(--md-sys-color-outline-variant);
     cursor: pointer;
