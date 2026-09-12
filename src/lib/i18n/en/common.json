@@ -510,7 +510,7 @@
       },
       "offer-use-divine-favour": {
         "not_active": "Divine Favour is not active",
-        "no_attack": "You must take the Attack action first"
+        "no_attack": "You must make a weapon attack first"
       },
       "prepare-divine-favour-offer": {
         "name": "Prepare Divine Favour",

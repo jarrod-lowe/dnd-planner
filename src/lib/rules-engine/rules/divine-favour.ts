@@ -138,7 +138,7 @@ const divineFavour: RuleModule = {
     {
       // Free per-attack damage rider while the buff is up. No cost, repeatable.
       // No `when` gate: always offered,
-      // illegal-but-visible until the buff is active AND an attack was made.
+      // illegal-but-visible until the buff is active AND a weapon attack was made.
       id: 'use-divine-favour',
       ui: {
         section: 'free',
@@ -157,17 +157,37 @@ const divineFavour: RuleModule = {
           diagnostics: [{ code: `${USE}.not_active`, severity: 'error' }]
         },
         {
-          condition: (f) => f.num('attack.last.activation.action') >= 1,
+          // WEAPON attack, not Attack action. SRD 5.2: "Until the spell ends,
+          // your attacks with weapons deal an extra 1d4 Radiant damage on a
+          // hit" — no Attack-action qualifier (contrast Extra Attack, which says
+          // "whenever you take the Attack action on your turn"). An Opportunity
+          // Attack is "one melee attack with a weapon or an Unarmed Strike", so
+          // its weapon branch carries the rider even on a turn with no Attack
+          // action. `attack.last.weapon` is set by weapon swings only (the
+          // Attack-action path, the reaction, and the Light off-hand bonus
+          // swing) and never by an Unarmed Strike, which is not a weapon.
+          // Same gate, same reason, as feat-savage-attacker.
+          condition: (f) => f.num('attack.last.weapon') >= 1,
           diagnostics: [{ code: `${USE}.no_attack`, severity: 'error' }]
         }
       ],
       apply: (): ActionResult => ({ advertise: [] })
     }
   ],
-  // Surface "+1d4 radiant available" on weapon attacks while the buff is up.
+  // Surface "+1d4 radiant available" on weapon attacks, but only once the rider
+  // is actually addable — buff up AND a weapon attack made. The gate is the use
+  // offer's two legality conditions exactly, which is what lets the reminder
+  // hand the player the action (`addsToPlan`) without ever offering an illegal
+  // row. Same shape as divine-smite's annotation.
   annotate: (f: FactReader) =>
-    f.num('divineFavour.active') > 0
-      ? [{ key: `${DF}.annotation`, targets: ['attack.weapon'] }]
+    f.num('divineFavour.active') > 0 && f.num('attack.last.weapon') >= 1
+      ? [
+          {
+            key: `${DF}.annotation`,
+            targets: ['attack.weapon'],
+            addsToPlan: { offer: 'use-divine-favour' }
+          }
+        ]
       : []
 };
 
