@@ -50,14 +50,16 @@ const createSpellLevelSliderEntry = (): AvailableRuleEntry => {
 };
 
 describe('PanelSlider - summary short form', () => {
-  it('shows the formatted current value with unit, and no other markup', () => {
+  it('shows the formatted current value with the translated unit, and no other markup', () => {
     const entry = createSliderEntry();
     const facts = { 'character.movement.remaining': 20, 'character.movement.total': 30 };
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts, summary: true }
     });
+    // Mock i18n translates 'ft' -> 'FEET' (see tests/setup.ts); a raw,
+    // untranslated 'ft' concatenation would fail this assertion.
     expect(container.querySelector('.panel-renderer__slider-summary')?.textContent?.trim()).toBe(
-      '20 ft'
+      '20 FEET'
     );
   });
 
@@ -78,7 +80,7 @@ describe('PanelSlider - summary short form', () => {
       props: { entry, editable: true, facts, summary: true, selections: { distance: 5 } }
     });
     expect(container.querySelector('.panel-renderer__slider-summary')?.textContent?.trim()).toBe(
-      '5 ft'
+      '5 FEET'
     );
     await rerender({
       entry,
@@ -88,7 +90,7 @@ describe('PanelSlider - summary short form', () => {
       selections: { distance: 15 }
     });
     expect(container.querySelector('.panel-renderer__slider-summary')?.textContent?.trim()).toBe(
-      '15 ft'
+      '15 FEET'
     );
   });
 

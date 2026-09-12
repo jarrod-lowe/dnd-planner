@@ -253,7 +253,7 @@ describe('PanelDiceLine - summary short form', () => {
     const range = container.querySelector('.panel-renderer__range');
     expect(range).not.toBeNull();
     expect(range?.tagName).toBe('SPAN');
-    expect(range?.textContent).toBe('5ft');
+    expect(range?.textContent).toBe('5FEET');
     expect(focusableCount(container)).toBe(0);
   });
 

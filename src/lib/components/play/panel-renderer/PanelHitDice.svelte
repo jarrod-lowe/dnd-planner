@@ -31,6 +31,7 @@
   import type { RollResult } from './types';
   import type { EffectInstance } from '$lib/rules-engine';
   import { t } from '$lib/i18n';
+  import { formatUnitValue } from './unitLabel';
 
   interface Props {
     control: HitDiceControl;
@@ -251,13 +252,12 @@
   // open slot.
   const rolledHealTotal = $derived(ownPendingHeal());
 
-  // `control.unit` is a literal notation string authored on the rule (e.g.
-  // "hp"), concatenated raw exactly as `PanelSlider` concatenates its own
-  // `unit` — units and dice notation are deliberately unlocalized here,
-  // unlike prose (see `PanelSlider.svelte`'s `displayValue`).
-  const healSummaryText = $derived(
-    control.unit ? `${rolledHealTotal} ${control.unit}` : `${rolledHealTotal}`
-  );
+  // `control.unit` is a literal notation token authored on the rule (e.g.
+  // "hp") — composed with the healed total at this render edge via
+  // `formatUnitValue`, exactly as `PanelSlider` composes its own `unit`
+  // (see `unitLabel.ts`); dice notation ("d10") stays untranslated
+  // prose-free shorthand, unlike the unit word itself.
+  const healSummaryText = $derived(formatUnitValue($t, control.unit, rolledHealTotal));
 
   // The heal a given slot's roll would land, mirroring shortRestOffer exactly:
   // min(max(1, roll + bonus), budget left when this slot's turn comes), with
@@ -397,11 +397,12 @@
     <!--
       Leads with the summed heal actually landed so far (the owner's
       correction: "pooling" means adding the rolled results together, not
-      omitting them), THEN the pool counts: "5 hp 3/4 d10". The heal total
+      omitting them), THEN the pool counts: "5 HP 3/4 d10". The heal total
       is `rolledHealTotal` (the engine's own committed/effective heals via
-      `ownPendingHeal`, never a recomputed roll+bonus) with `control.unit`
-      concatenated raw, exactly as `PanelSlider` renders its own unit — no
-      i18n key, units are literal notation here. The pool tail uses
+      `ownPendingHeal`, never a recomputed roll+bonus) composed with
+      `control.unit` via `formatUnitValue` (see `unitLabel.ts`), exactly as
+      `PanelSlider` composes its own `unit` — dice notation ("d10") stays
+      untranslated shorthand, unlike the unit word. The pool tail uses
       `pool.remaining` (the raw POST-plan fact, clamped to total) — NOT
       `pool.threshold`. Both a slot spent by an EARLIER rest's committed
       spend AND a slot rolled by THIS row shrink `remaining`, because the
