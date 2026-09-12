@@ -27,6 +27,12 @@
     alternatives?: AvailableRuleEntry[];
     canMoveUp?: boolean;
     canMoveDown?: boolean;
+    /**
+     * Bindable so the stack can own the collapse state across rows (adding a
+     * row collapses the others — see `PlanCollapseState`). Unbound, the row
+     * keeps its own state and behaves exactly as it did standalone.
+     */
+    collapsed?: boolean;
     onSelectionChange?: (selections: Record<string, unknown>) => void;
     onRemove?: () => void;
     onMoveUp?: () => void;
@@ -44,6 +50,7 @@
     alternatives = [],
     canMoveUp = true,
     canMoveDown = true,
+    collapsed = $bindable(false),
     onSelectionChange,
     onRemove,
     onMoveUp,
@@ -52,7 +59,6 @@
     onFollowup
   }: Props = $props();
 
-  let collapsed = $state(false);
   let openTooltipAltId: string | null = $state(null);
   let rightEl: HTMLDivElement | undefined = $state();
   let tooltipStyle = $state('');
@@ -183,11 +189,25 @@
 
   const hasDetail = $derived(detailKey !== '' && peekDetail(detailKey) !== null);
 
+  function exitRulesMode() {
+    rulesMode = false;
+    rulesDetail = undefined;
+    rulesLoading = false;
+  }
+
+  // The rules pane has no shrunk form — it renders in its own branch, which
+  // never consulted `collapsed`, so a shrinking row used to stay full height
+  // while its chevron reported it collapsed. Shrinking means the player has
+  // moved on (they collapsed it, or adding a row collapsed it for them), so
+  // every route into the shrunk form drops the pane and takes the row back to
+  // the plan panel.
+  $effect(() => {
+    if (collapsed) exitRulesMode();
+  });
+
   function toggleRulesMode() {
     if (rulesMode) {
-      rulesMode = false;
-      rulesDetail = undefined;
-      rulesLoading = false;
+      exitRulesMode();
       return;
     }
     const cached = peekDetail(detailKey);
@@ -240,7 +260,10 @@
     {#if subjectLabel}
       <span class="plan-row__subject-label">{subjectLabel}</span>
     {/if}
-    {#if hasDetail}
+    <!-- Expanded only: the rules pane has no shrunk form, so offering the flip
+         on a shrunk row would open a pane the row cannot show — the chevron is
+         the way back to a state that can hold it. -->
+    {#if hasDetail && !collapsed}
       <button
         type="button"
         class="plan-row__flip-btn"

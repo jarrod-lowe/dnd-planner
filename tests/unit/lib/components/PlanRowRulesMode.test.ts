@@ -306,3 +306,98 @@ describe('PlanRow Rules mode', () => {
     expect(loadingEl?.textContent).toContain('rules.loadingDetails');
   });
 });
+
+describe('PlanRow Rules mode and the shrunk form', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('leaves rules mode when the row shrinks, whoever shrank it', async () => {
+    mockedPeekDetail.mockReturnValue({
+      source: 'srd52',
+      body: [{ text: ['test'] }]
+    });
+    const { container } = render(PlanRow, {
+      props: {
+        item: makeItem(),
+        entry: mockEntry,
+        facts: mockFacts,
+        activeAnnotations: []
+      }
+    });
+
+    await fireEvent.click(container.querySelector('[data-rules-toggle]')!);
+    expect(container.querySelector('.rules-shell')).toBeTruthy();
+
+    // Shrinking the row: a rules pane has no shrunk form, so the row drops back
+    // to the plan panel's short form rather than staying full height while its
+    // chevron claims it is collapsed.
+    await fireEvent.click(container.querySelector('[aria-label="play.planRow.collapseAria"]')!);
+
+    expect(container.querySelector('.rules-shell')).toBeNull();
+    expect(container.querySelector('.plan-row__content--hidden')).toBeNull();
+    expect(container.querySelector('[aria-label="play.planRow.expandAria"]')).toBeTruthy();
+  });
+
+  it('stays in the plan view when the row is expanded again', async () => {
+    mockedPeekDetail.mockReturnValue({
+      source: 'srd52',
+      body: [{ text: ['test'] }]
+    });
+    const { container } = render(PlanRow, {
+      props: {
+        item: makeItem(),
+        entry: mockEntry,
+        facts: mockFacts,
+        activeAnnotations: []
+      }
+    });
+
+    await fireEvent.click(container.querySelector('[data-rules-toggle]')!);
+    await fireEvent.click(container.querySelector('[aria-label="play.planRow.collapseAria"]')!);
+    await fireEvent.click(container.querySelector('[aria-label="play.planRow.expandAria"]')!);
+
+    // The player is done with the rules text — expanding brings back the plan
+    // panel, not the pane they had open before.
+    expect(container.querySelector('.rules-shell')).toBeNull();
+    expect(container.querySelector('[data-rules-toggle]')?.getAttribute('aria-pressed')).toBe(
+      'false'
+    );
+  });
+});
+
+describe('PlanRow entering rules mode from the shrunk form', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('hides the rules flip while the row is shrunk, and restores it on expand', async () => {
+    mockedPeekDetail.mockReturnValue({
+      source: 'srd52',
+      body: [{ text: ['test'] }]
+    });
+    const { container } = render(PlanRow, {
+      props: {
+        item: makeItem(),
+        entry: mockEntry,
+        facts: mockFacts,
+        activeAnnotations: []
+      }
+    });
+
+    expect(container.querySelector('[data-rules-toggle]')).toBeTruthy();
+
+    await fireEvent.click(container.querySelector('[aria-label="play.planRow.collapseAria"]')!);
+
+    // The shrunk row is a one-line summary and the rules pane has no shrunk
+    // form, so the flip goes with the rest of the expanded-only controls —
+    // there is no way to open a pane the row could not show.
+    expect(container.querySelector('[data-rules-toggle]')).toBeNull();
+
+    // Expanding brings it back, and it still works.
+    await fireEvent.click(container.querySelector('[aria-label="play.planRow.expandAria"]')!);
+    expect(container.querySelector('[data-rules-toggle]')).toBeTruthy();
+    await fireEvent.click(container.querySelector('[data-rules-toggle]')!);
+    expect(container.querySelector('.rules-shell')).toBeTruthy();
+  });
+});
