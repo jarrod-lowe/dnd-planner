@@ -9,7 +9,13 @@
   import { PlanCollapseState } from '$lib/play/planCollapse.svelte';
   import { getSubject } from '$lib/play/subjectUtils';
   import type { PlannedItem } from '$lib/play/types';
-  import type { AvailableRuleEntry, Annotation, Facts, Verb } from '$lib/rules-view';
+  import type {
+    AvailableRuleEntry,
+    Annotation,
+    AnnotationSeedSource,
+    Facts,
+    Verb
+  } from '$lib/rules-view';
   import type { EffectInstance } from '$lib/rules-engine';
 
   interface Props {
@@ -25,7 +31,11 @@
     onEndTurn: () => void;
     onFollowup?: (effect: EffectInstance) => void;
     /** Plans the offer an actionable annotation names (see PanelRenderer). */
-    onAddOfferToPlan?: (offerId: string, seed?: Record<string, unknown>) => void;
+    onAddOfferToPlan?: (
+      offerId: string,
+      seed?: Record<string, AnnotationSeedSource>,
+      sourceInstanceId?: string
+    ) => void;
   }
 
   let {

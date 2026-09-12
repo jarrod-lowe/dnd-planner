@@ -1060,11 +1060,15 @@ const findSteed: RuleModule = {
           {
             key: `${S}.annotate-life-bond.text`,
             targets: ['healing.any'],
-            // Life Bond heals the steed for the SAME number of hit points, so
-            // the steed's row opens on the amount already set on the heal row
-            // that raised this reminder. Both vars are called `amount`; the
-            // mapping is spelled out rather than matched by name.
-            addsToPlan: { offer: 'steed-record-heal', seed: { amount: 'amount' } }
+            // "When you REGAIN Hit Points … the steed regains the same number":
+            // healing past your maximum is lost, so the steed follows what the
+            // heal row actually contributed to `hp.modifier.current` — already
+            // capped at the HP you were missing — and not the raw slider value,
+            // which would hand the steed 10 for a heal that gave you 1.
+            addsToPlan: {
+              offer: 'steed-record-heal',
+              seed: { amount: { effect: 'hp.modifier.current' } }
+            }
           }
         ]
       : []

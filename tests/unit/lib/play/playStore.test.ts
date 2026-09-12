@@ -682,12 +682,99 @@ describe('playStore', () => {
       return playStore;
     };
 
-    it('opens the new row on the seeded value instead of the offer default', async () => {
-      const playStore = await seedStore({ 'companion.steed.hp.max': 30 });
+    /**
+     * A planned source row — the player's Record Healing — with its own
+     * selection and the effect it advertised. `hp.modifier.current` on that
+     * effect is the EFFECTIVE heal: `record-heal` caps it at the HP the
+     * character was missing, so it can be less than the slider says.
+     */
+    const healRow = (instanceId: string, selected: number, effective: number) => ({
+      instanceId,
+      rule: { id: 'record-heal', ui: {}, selections: { amount: selected } },
+      legal: true,
+      applicable: true,
+      diagnostics: [],
+      advertisedEffects: [
+        {
+          id: `${instanceId}#effect-hp-heal`,
+          state: { 'hp.modifier.current': effective },
+          expiry: { kind: 'untilLongRest' as const }
+        }
+      ]
+    });
 
-      playStore.addOfferToPlan('steed-record-heal', { amount: 7 });
+    const storeWithHealRow = async (
+      facts: Record<string, number>,
+      selected: number,
+      effective: number
+    ) => {
+      // Keyed off the refs the store actually passes: `addToPlan` generates the
+      // instance id, so a fixed one here would never match the row under test.
+      vi.mocked(evaluateCharacter).mockImplementation((_m, _c, planned) =>
+        playOut({
+          raw: rawOutput({ availableRules: [steedHealOffer], facts }),
+          plannedEntries: planned
+            .filter((ref) => ref.ruleId === 'record-heal')
+            .map((ref) => healRow(ref.instanceId, selected, effective))
+        })
+      );
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      playStore.addToPlan({
+        id: 'record-heal',
+        activities: [],
+        selections: { amount: selected }
+      });
+      vi.runAllTimers();
+      const instanceId = playStore.state.plannedItems[0].instanceId;
+      return { playStore, instanceId };
+    };
 
-      expect(playStore.state.plannedItems[0].rule.selections).toMatchObject({ amount: 7 });
+    it('seeds what the source row contributed to the fact', async () => {
+      const { playStore, instanceId } = await storeWithHealRow(
+        { 'companion.steed.hp.max': 30 },
+        7,
+        7
+      );
+
+      playStore.addOfferToPlan(
+        'steed-record-heal',
+        { amount: { effect: 'hp.modifier.current' } },
+        instanceId
+      );
+
+      expect(playStore.state.plannedItems[1].rule.selections).toMatchObject({ amount: 7 });
+    });
+
+    it('seeds the EFFECTIVE heal, not the slider, when the player was nearly full', async () => {
+      // Life Bond: "when you REGAIN Hit Points … the steed regains the same
+      // number". Missing 1 HP and recording a heal of 10 regains 1, so the
+      // steed gets 1 — the raw 10 would heal the steed for what was lost.
+      const { playStore, instanceId } = await storeWithHealRow(
+        { 'companion.steed.hp.max': 30 },
+        10,
+        1
+      );
+
+      playStore.addOfferToPlan(
+        'steed-record-heal',
+        { amount: { effect: 'hp.modifier.current' } },
+        instanceId
+      );
+
+      expect(playStore.state.plannedItems[1].rule.selections).toMatchObject({ amount: 1 });
+    });
+
+    it('can still seed a plain var, taken from the source row as selected', async () => {
+      const { playStore, instanceId } = await storeWithHealRow(
+        { 'companion.steed.hp.max': 30 },
+        10,
+        1
+      );
+
+      playStore.addOfferToPlan('steed-record-heal', { amount: 'amount' }, instanceId);
+
+      expect(playStore.state.plannedItems[1].rule.selections).toMatchObject({ amount: 10 });
     });
 
     it("keeps the offer's own default when no seed is given", async () => {
@@ -698,15 +785,35 @@ describe('playStore', () => {
       expect(playStore.state.plannedItems[0].rule.selections).toMatchObject({ amount: 0 });
     });
 
+    it('keeps the default when the source row cannot be found', async () => {
+      const playStore = await seedStore({ 'companion.steed.hp.max': 30 });
+
+      playStore.addOfferToPlan(
+        'steed-record-heal',
+        { amount: { effect: 'hp.modifier.current' } },
+        'no-such-instance'
+      );
+
+      expect(playStore.state.plannedItems[0].rule.selections).toMatchObject({ amount: 0 });
+    });
+
     it("clamps a seed above the target slider's max, so it cannot open out of range", async () => {
-      // Heal yourself 20 beside a steed whose max HP is 12: Life Bond cannot
-      // give the steed more than its maximum, and PanelSlider does not clamp
-      // what it is handed — it would show 20 against a control that stops at 12.
-      const playStore = await seedStore({ 'companion.steed.hp.max': 12 });
+      // Heal yourself 20 beside a steed whose max HP is 12: the steed cannot be
+      // healed past its own maximum, and PanelSlider does not clamp what it is
+      // handed — it would show 20 against a control that stops at 12.
+      const { playStore, instanceId } = await storeWithHealRow(
+        { 'companion.steed.hp.max': 12 },
+        20,
+        20
+      );
 
-      playStore.addOfferToPlan('steed-record-heal', { amount: 20 });
+      playStore.addOfferToPlan(
+        'steed-record-heal',
+        { amount: { effect: 'hp.modifier.current' } },
+        instanceId
+      );
 
-      expect(playStore.state.plannedItems[0].rule.selections).toMatchObject({ amount: 12 });
+      expect(playStore.state.plannedItems[1].rule.selections).toMatchObject({ amount: 12 });
     });
   });
 

@@ -20,6 +20,7 @@
     Facts,
     Annotation,
     AnnotationAction,
+    AnnotationSeedSource,
     RiderValue
   } from '$lib/rules-view';
   import type { EffectInstance } from '$lib/rules-engine';
@@ -60,7 +61,7 @@
      * reminder the player then has to act on by hand. Absent (or a non-editable
      * picker panel) → every annotation stays read-only text.
      */
-    onAddOfferToPlan?: (offerId: string, seed?: Record<string, unknown>) => void;
+    onAddOfferToPlan?: (offerId: string, seed?: Record<string, AnnotationSeedSource>) => void;
     /**
      * The offer ids currently addable — the post-plan catalog the store resolves
      * a tap against. An annotation is only actionable when the offer it advises
@@ -451,28 +452,22 @@
   }
 
   /**
-   * The values the new row should open on, read from THIS panel's selections
-   * under the names the target offer uses. Life Bond heals the steed for the
-   * same number of hit points, so the steed's heal row starts on the amount
-   * already set here instead of on zero.
-   *
-   * A var the player has not set is left out rather than sent as undefined, so
-   * the target keeps its own `default` instead of being overridden with nothing.
+   * The seed SPEC, passed along unresolved. Resolving it here would read
+   * `entry.advertisedEffects`, which trails the evaluation debounce — drag a
+   * slider and tap the reminder beneath it and the value would be the one from
+   * before the drag. The store owns evaluation timing, so it flushes and then
+   * resolves; this component only says which row the tap came from.
    */
-  function resolveAnnotationSeed(adds: AnnotationAction): Record<string, unknown> | undefined {
-    if (adds === 'again' || !adds.seed) return undefined;
-    const seeded: Record<string, unknown> = {};
-    for (const [targetVar, sourceVar] of Object.entries(adds.seed)) {
-      const value = selections[sourceVar];
-      if (value !== undefined) seeded[targetVar] = value;
-    }
-    return seeded;
+  function annotationSeed(
+    adds: AnnotationAction
+  ): Record<string, AnnotationSeedSource> | undefined {
+    return adds === 'again' ? undefined : adds.seed;
   }
 
   function addAnnotationOffer(
     e: MouseEvent,
     offerId: string,
-    seed: Record<string, unknown> | undefined
+    seed: Record<string, AnnotationSeedSource> | undefined
   ) {
     e.stopPropagation();
     onAddOfferToPlan?.(offerId, seed);
@@ -824,7 +819,7 @@
               class="panel-renderer__annotation panel-renderer__annotation--action"
               aria-label={$t('play.annotation.addToPlan', { annotation: $t(annotation.key) })}
               onclick={(e) =>
-                addAnnotationOffer(e, addsOffer, resolveAnnotationSeed(annotation.addsToPlan!))}
+                addAnnotationOffer(e, addsOffer, annotationSeed(annotation.addsToPlan!))}
             >
               <span class="panel-renderer__annotation-text">{$t(annotation.key)}</span>
               <span class="panel-renderer__annotation-add" aria-hidden="true">

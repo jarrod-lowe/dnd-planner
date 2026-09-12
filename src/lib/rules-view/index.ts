@@ -41,6 +41,7 @@ export type {
   Annotation,
   AnnotationRider,
   AnnotationAction,
+  AnnotationSeedSource,
   RiderValue,
   RollPurpose,
   ActionCostTag,

@@ -287,13 +287,21 @@ export type AnnotationAction =
   | {
       offer: string;
       /**
-       * `targetVar: sourcePanelVar` values copied from the tapped panel into the
-       * new row, so it opens on what the player already set rather than on a
+       * Values copied from the tapped row into the new one, keyed by the
+       * TARGET's var name, so it opens on what is already true rather than on a
        * default. A one-time copy, not a binding.
        */
-      seed?: Record<string, string>;
+      seed?: Record<string, AnnotationSeedSource>;
     }
   | 'again';
+
+/**
+ * Where a seeded value comes from: a var as the source row has it set, or
+ * `{ effect }` for what that row actually contributed to a fact — Life Bond
+ * follows the HP you regained, which is capped at your maximum, not the number
+ * on the slider.
+ */
+export type AnnotationSeedSource = string | { effect: string };
 
 // === ACTIVITIES ===
 

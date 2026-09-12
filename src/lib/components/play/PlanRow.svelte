@@ -13,7 +13,13 @@
   import { peekDetail, getDetail } from '$lib/details/index';
   import type { ItemDetail } from '$lib/details/types';
   import type { PlannedItem } from '$lib/play/types';
-  import type { AvailableRuleEntry, Annotation, Facts, ActionCostTag } from '$lib/rules-view';
+  import type {
+    AvailableRuleEntry,
+    Annotation,
+    AnnotationSeedSource,
+    Facts,
+    ActionCostTag
+  } from '$lib/rules-view';
   import type { EffectInstance } from '$lib/rules-engine';
   import type { RuleModule } from '$lib/rules-engine/types';
 
@@ -40,7 +46,11 @@
     onSwapAlternative?: (entry: AvailableRuleEntry) => void;
     onFollowup?: (effect: EffectInstance) => void;
     /** Plans the offer an actionable annotation on this row's panel advises. */
-    onAddOfferToPlan?: (offerId: string, seed?: Record<string, unknown>) => void;
+    onAddOfferToPlan?: (
+      offerId: string,
+      seed?: Record<string, AnnotationSeedSource>,
+      sourceInstanceId?: string
+    ) => void;
     /** The addable offer catalog an actionable annotation is gated on. */
     addableOfferIds?: Set<string>;
   }
@@ -138,6 +148,20 @@
   const resolvedCostTags = $derived(resolveCostTags(rule));
   const costTags = $derived(resolvedCostTags.tags);
   const upcast = $derived(resolvedCostTags.upcast);
+
+  // The panel names the offer to add but not the row it was tapped on, so this
+  // row supplies its own instance id — the store resolves an annotation's seed
+  // against that row's selections and advertised effects.
+  //
+  // Stays undefined when nothing is wired above: the panel reads a handler's
+  // presence as "annotations are actionable here", so an unconditional wrapper
+  // would turn every reminder into a button that calls nothing.
+  const annotationAdder = $derived(
+    onAddOfferToPlan
+      ? (offerId: string, seed?: Record<string, AnnotationSeedSource>) =>
+          onAddOfferToPlan(offerId, seed, item.instanceId)
+      : undefined
+  );
 
   const annotationLabels = $derived(descriptor.annotationLabels ?? []);
   const matchingAnnotations = $derived(getMatchingAnnotations(annotationLabels, activeAnnotations));
@@ -431,7 +455,7 @@
         {activeAnnotations}
         {onSelectionChange}
         {onFollowup}
-        {onAddOfferToPlan}
+        onAddOfferToPlan={annotationAdder}
         {addableOfferIds}
         summary={collapsed}
       />

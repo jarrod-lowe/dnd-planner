@@ -380,13 +380,16 @@ describe('PanelRenderer annotation seeds', () => {
     {
       key: 'rule.spell-find-steed.annotate-life-bond.text',
       targets: ['healing.any'],
-      addsToPlan: { offer: 'steed-record-heal', seed: { amount: 'amount' } }
+      addsToPlan: {
+        offer: 'steed-record-heal',
+        seed: { amount: { effect: 'hp.modifier.current' } }
+      }
     }
   ];
 
   const catalog = new Set(['steed-record-heal']);
 
-  it("carries the tapped panel's value across under the target's var name", async () => {
+  it('hands the seed SPEC to the store rather than resolving it here', async () => {
     const onAddOfferToPlan = vi.fn();
     const { container } = render(PanelRenderer, {
       props: {
@@ -399,10 +402,14 @@ describe('PanelRenderer annotation seeds', () => {
       }
     });
     await fireEvent.click(container.querySelector('button.panel-renderer__annotation--action')!);
-    expect(onAddOfferToPlan).toHaveBeenCalledWith('steed-record-heal', { amount: 7 });
+    expect(onAddOfferToPlan).toHaveBeenCalledWith('steed-record-heal', {
+      amount: { effect: 'hp.modifier.current' }
+    });
   });
 
-  it('omits a seed value the panel has not set, leaving the target to default', async () => {
+  it('passes the same spec whatever this panel currently has selected', async () => {
+    // The spec is authored by the rule, not derived from panel state — the
+    // store resolves it after flushing, so nothing here depends on selections.
     const onAddOfferToPlan = vi.fn();
     const { container } = render(PanelRenderer, {
       props: {
@@ -415,7 +422,9 @@ describe('PanelRenderer annotation seeds', () => {
       }
     });
     await fireEvent.click(container.querySelector('button.panel-renderer__annotation--action')!);
-    expect(onAddOfferToPlan).toHaveBeenCalledWith('steed-record-heal', {});
+    expect(onAddOfferToPlan).toHaveBeenCalledWith('steed-record-heal', {
+      amount: { effect: 'hp.modifier.current' }
+    });
   });
 
   it('passes no seed at all for an annotation that declares none', async () => {

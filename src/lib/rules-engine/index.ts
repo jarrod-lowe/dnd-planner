@@ -51,6 +51,7 @@ export type {
   AnnotationRider,
   Annotation,
   AnnotationAction,
+  AnnotationSeedSource,
   EngineInput,
   EngineOutput,
   SerializableInput

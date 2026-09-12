@@ -72,4 +72,4 @@ steps:
           # so tapping it can always add the steed's heal row.
           addsToPlan:
             - key: rule.spell-find-steed.annotate-life-bond.text
-              adds: { offer: steed-record-heal, seed: { amount: amount } }
+              adds: { offer: steed-record-heal, seed: { amount: { effect: hp.modifier.current } } }

@@ -408,19 +408,31 @@ export type AnnotationAction =
   | {
       offer: string;
       /**
-       * Values to carry over from the panel the annotation was tapped on into
-       * the new row, as `targetVar: sourcePanelVar`. Life Bond heals the steed
-       * for the same number of hit points the spell healed you, so the steed's
-       * heal row opens on the amount already set on the heal row that raised
-       * the reminder, rather than on zero.
-       *
-       * A one-time copy, not a binding: editing the source row afterwards does
-       * not follow. Only the panel's own captured vars can be read — this
-       * cannot reach for facts, which have their own `default` mechanism.
+       * Values to carry over from the row the annotation was tapped on into the
+       * new row, keyed by the TARGET's var name. A one-time copy, not a
+       * binding: editing the source row afterwards does not follow.
        */
-      seed?: Record<string, string>;
+      seed?: Record<string, AnnotationSeedSource>;
     }
   | 'again';
+
+/**
+ * Where one seeded value comes from.
+ *
+ *  - `'amount'` — the named var as the source row has it set. What the player
+ *    typed, before any rule touched it.
+ *  - `{ effect: 'hp.modifier.current' }` — what the source row actually
+ *    CONTRIBUTED to that fact, summed from the effects it advertised. Life Bond
+ *    gives the steed "the same number of Hit Points" you *regained*, and healing
+ *    past your maximum is lost, so the steed follows the capped figure and not
+ *    the number on the slider. Only a row's own effects are visible this way, so
+ *    it cannot read the rest of the turn.
+ *
+ * The effect form is resolved after flushing any pending evaluation — advertised
+ * effects trail the debounce, and a stale read would seed the value from before
+ * the player last moved the slider.
+ */
+export type AnnotationSeedSource = string | { effect: string };
 
 /**
  * Complete input to the engine. `evaluate` runs `modules` directly and stays

@@ -1,5 +1,5 @@
 import { apiGet, apiPost, apiDelete } from '$lib/api/client';
-import type { Rule, AvailableRuleEntry } from '$lib/rules-view';
+import type { Rule, AvailableRuleEntry, AnnotationSeedSource } from '$lib/rules-view';
 import {
   loadModules,
   endTurn as ageCommittedEffects,
@@ -405,18 +405,76 @@ function addToPlan(rule: Rule, seed?: Record<string, unknown>): void {
  * since closed simply isn't addable. `annotation-targets.test.ts` guards the
  * other miss — an annotation naming an offer that never existed.
  */
-function addOfferToPlan(offerId: string, seed?: Record<string, unknown>): void {
+function addOfferToPlan(
+  offerId: string,
+  seed?: Record<string, AnnotationSeedSource>,
+  sourceInstanceId?: string
+): void {
+  // Resolve the seed BEFORE the catalog lookup: an `{ effect }` source reads
+  // what the source row advertised, and advertised effects trail the debounce by
+  // up to DEBOUNCE_MS. Drag the slider and tap the reminder under it inside that
+  // window and an unflushed read seeds the value from before the drag — usually
+  // the row's opening zero. Flushing also refreshes the catalog this then reads.
+  const resolved = resolveSeed(seed, sourceInstanceId);
+
   const entry = state.engineOutput?.availableRules.find((e) => e.rule.id === offerId);
   if (!entry) return;
-  if (!seed || Object.keys(seed).length === 0) {
+  if (!resolved) {
     addToPlan(entry.rule);
     return;
   }
-  // The seed carries values from the panel the annotation was tapped on (Life
-  // Bond: the steed heals for what the spell healed you). It is applied as the
-  // rule's `selections`, which `addToPlan` then lets the capture-var defaults
-  // override — so the seed goes on TOP of the resolved defaults, not under them.
-  addToPlan(entry.rule, clampSeed(entry.rule, seed));
+  addToPlan(entry.rule, clampSeed(entry.rule, resolved));
+}
+
+/**
+ * Turn a seed spec into the values the new row opens on, read from the row the
+ * annotation was tapped on. Undefined when there is nothing to seed, so the
+ * target keeps its own capture-var defaults.
+ *
+ * A source that resolves to nothing is dropped rather than written as
+ * undefined — the target's default is a better answer than a hole.
+ */
+function resolveSeed(
+  seed: Record<string, AnnotationSeedSource> | undefined,
+  sourceInstanceId: string | undefined
+): Record<string, unknown> | undefined {
+  if (!seed || Object.keys(seed).length === 0 || !sourceInstanceId) return undefined;
+  flushPendingEvaluation();
+
+  const item = state.plannedItems.find((i) => i.instanceId === sourceInstanceId);
+  if (!item) return undefined;
+  const selections = (item.rule.selections ?? {}) as Record<string, unknown>;
+  const advertised = _plannedEntriesMap.get(sourceInstanceId)?.advertisedEffects ?? [];
+
+  const resolved: Record<string, unknown> = {};
+  for (const [targetVar, source] of Object.entries(seed)) {
+    const value =
+      typeof source === 'string' ? selections[source] : contributionTo(advertised, source.effect);
+    if (value !== undefined) resolved[targetVar] = value;
+  }
+  return Object.keys(resolved).length > 0 ? resolved : undefined;
+}
+
+/**
+ * What one row contributed to a fact, summed over the effects it advertised.
+ *
+ * This is the post-rule figure and that is the point: `record-heal` caps its
+ * heal at the HP the character was missing, and Life Bond follows the HP
+ * actually regained. The cap is applied inside `apply` and cannot be recovered
+ * from the facts afterwards — post-plan facts already fold this row in, so
+ * re-deriving `missing` from them would subtract the same heal twice.
+ */
+function contributionTo(effects: EffectInstance[], fact: string): number | undefined {
+  let total = 0;
+  let found = false;
+  for (const effect of effects) {
+    const value = effect.state?.[fact];
+    if (typeof value === 'number') {
+      total += value;
+      found = true;
+    }
+  }
+  return found ? total : undefined;
 }
 
 /**
