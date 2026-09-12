@@ -112,17 +112,22 @@ describe('PanelRenderer - dice-line control', () => {
     expect(container.textContent).toContain('d20');
   });
 
-  it('shows range with ft suffix', () => {
+  it('shows range with the translated unit, not literal ft', () => {
     const entry = createAttackEntry();
     const { container } = render(PanelRenderer, { props: { entry, editable: true, facts: {} } });
-    expect(container.textContent).toContain('5ft');
+    // The mock i18n dictionary (tests/setup.ts) deliberately translates the
+    // 'ft' unit token to a value that isn't the raw literal, so a component
+    // that concatenates the raw token instead of routing it through
+    // `unitLabel` fails this assertion rather than passing by coincidence.
+    expect(container.textContent).toContain('5FEET');
+    expect(container.textContent).not.toContain('5ft');
   });
 
   it('shows pipe separators between range and dice entries', () => {
     const entry = createAttackEntry();
     const { container } = render(PanelRenderer, { props: { entry, editable: true, facts: {} } });
     const text = container.textContent ?? '';
-    // Attack should have separators: "5ft | d20+5 | d12+3 slashing"
+    // Attack should have separators: "5FEET | d20+5 | d12+3 slashing"
     expect(text).toContain('|');
   });
 
@@ -227,13 +232,13 @@ describe('PanelRenderer - dice-line control', () => {
     } as Rule;
     const { container } = render(PanelRenderer, { props: { entry, editable: true, facts: {} } });
     // Initially shows first range
-    expect(container.textContent).toContain('5ft');
+    expect(container.textContent).toContain('5FEET');
     // Tap the range to cycle
     const rangeEl = container.querySelector('.panel-renderer__range') as HTMLElement;
     expect(rangeEl).toBeTruthy();
     await fireEvent.click(rangeEl);
     // After tap, should show second range
-    expect(container.textContent).toContain('20ft');
+    expect(container.textContent).toContain('20FEET');
   });
 
   it('shows range from fact when ranges use fact source', () => {
@@ -249,7 +254,7 @@ describe('PanelRenderer - dice-line control', () => {
       'weapon.ranges': [{ distance: 10, type: 'melee' }]
     };
     const { container } = render(PanelRenderer, { props: { entry, editable: true, facts } });
-    expect(container.textContent).toContain('10ft');
+    expect(container.textContent).toContain('10FEET');
   });
 
   it('rolls d20 and displays result when chip is clicked', async () => {

@@ -185,9 +185,11 @@ describe('PanelHitDice - summary short form', () => {
       }
     });
     const heal = container.querySelector('.panel-renderer__hit-dice-summary-heal');
-    expect(heal?.textContent).toBe('5 hp');
+    // Mock i18n translates 'hp' -> 'HIT_POINTS' (see tests/setup.ts); a raw,
+    // untranslated 'hp' concatenation would fail this assertion.
+    expect(heal?.textContent).toBe('5 HIT_POINTS');
     const hitDice = container.querySelector('.panel-renderer__hit-dice-summary');
-    expect(hitDice?.textContent?.replace(/\s+/g, ' ').trim()).toBe('5 hp 3/4 d10');
+    expect(hitDice?.textContent?.replace(/\s+/g, ' ').trim()).toBe('5 HIT_POINTS 3/4 d10');
   });
 
   // The defect report: rolling a d8 and a d10 in the same rest must decrement
@@ -214,7 +216,7 @@ describe('PanelHitDice - summary short form', () => {
       }
     });
     const hitDice = container.querySelector('.panel-renderer__hit-dice-summary');
-    expect(hitDice?.textContent?.replace(/\s+/g, ' ').trim()).toBe('12 hp 1/2 d8 3/4 d10');
+    expect(hitDice?.textContent?.replace(/\s+/g, ' ').trim()).toBe('12 HIT_POINTS 1/2 d8 3/4 d10');
   });
 
   // A pool fully spent within this rest (every die of that size rolled) must
@@ -258,7 +260,7 @@ describe('PanelHitDice - summary short form', () => {
       }
     });
     const heal = container.querySelector('.panel-renderer__hit-dice-summary-heal');
-    expect(heal?.textContent).toBe('2 hp');
+    expect(heal?.textContent).toBe('2 HIT_POINTS');
   });
 
   it('sums heals across multiple rolled slots and pools', () => {
@@ -281,7 +283,7 @@ describe('PanelHitDice - summary short form', () => {
       }
     });
     const heal = container.querySelector('.panel-renderer__hit-dice-summary-heal');
-    expect(heal?.textContent).toBe('12 hp');
+    expect(heal?.textContent).toBe('12 HIT_POINTS');
     // Both pools still show their remaining/total tail alongside the sum,
     // decremented for the die each pool spent in this very rest.
     const pools = container.querySelectorAll('.panel-renderer__hit-dice-summary-pool');
@@ -306,7 +308,7 @@ describe('PanelHitDice - summary short form', () => {
       }
     });
     expect(container.querySelector('.panel-renderer__hit-dice-summary-heal')?.textContent).toBe(
-      '5 hp'
+      '5 HIT_POINTS'
     );
     expect(container.querySelector('.panel-renderer__hit-dice-summary-pool')?.textContent).toBe(
       '3/4 d10'

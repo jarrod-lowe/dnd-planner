@@ -1773,9 +1773,6 @@
       "modifier": {
         "advantage": "Advantage",
         "disadvantage": "Disadvantage"
-      },
-      "unit": {
-        "hp": "HP"
       }
     },
     "information": {
@@ -1920,6 +1917,13 @@
       "hpValue": "{{current}} / {{max}}",
       "viewPlayer": "👤 You",
       "viewSteed": "🐴 Sargh"
+    },
+    "units": {
+      "hp": "{{value}} 'Iw",
+      "ft": "{{value}} qam",
+      "compact": {
+        "ft": "{{value}} qam"
+      }
     },
     "verbs": {
       "ATTACK": "ATTACK",

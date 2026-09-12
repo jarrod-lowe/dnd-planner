@@ -30,7 +30,19 @@ vi.mock('sveltekit-i18n', () => {
     'play.hitDice.bonusLabel': 'Each die: CON {{bonus}}',
     'play.loadout.handsFree.none': 'no hands free',
     'play.loadout.handsFree.one': '1 hand free',
-    'play.loadout.handsFree.many': '{{count}} hands free'
+    'play.loadout.handsFree.many': '{{count}} hands free',
+    // Deliberately spelled differently from the raw rule-authored tokens
+    // ('hp', 'ft') they translate: a component that skips
+    // `formatUnitValue`/`unitLabel` and concatenates `control.unit` raw
+    // would render the untranslated token and fail these assertions, rather
+    // than passing by coincidence. Patterns carry the value interpolation
+    // themselves (see `unitLabel.ts`), matching the real locale files; the
+    // `compact.ft` override stays closed up (no space) to match the real
+    // English pattern used by a dice-line's distance ("5FEET"), while the
+    // default `ft` pattern is spaced ("20 FEET") like every other site.
+    'play.units.hp': '{{value}} HIT_POINTS',
+    'play.units.ft': '{{value}} FEET',
+    'play.units.compact.ft': '{{value}}FEET'
   };
 
   return {

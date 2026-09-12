@@ -97,7 +97,7 @@ describe('PanelDiceLine - a planned versatile attack keeps the grip it was plann
   it('keeps the two-handed label when a later loadout change drops the grip', () => {
     const { container } = addedTwoHandedRenderedOneHanded();
     expect(container.querySelector('.panel-renderer__range')?.textContent?.trim()).toBe(
-      `5ft ${TWO_HANDED_SHORT}`
+      `5FEET ${TWO_HANDED_SHORT}`
     );
   });
 
@@ -109,7 +109,7 @@ describe('PanelDiceLine - a planned versatile attack keeps the grip it was plann
     const { container } = renderRow(offer, factsHolding('spear:2h'), captured);
 
     expect(container.querySelector('.panel-renderer__range')?.textContent?.trim()).toBe(
-      `5ft ${ONE_HANDED_SHORT}`
+      `5FEET ${ONE_HANDED_SHORT}`
     );
     expect(container.textContent).toContain('d6');
     expect(container.textContent).not.toContain('d8');
@@ -122,9 +122,9 @@ describe('PanelDiceLine - a planned versatile attack keeps the grip it was plann
 
     const { container } = renderRow(offer, twoHandedFacts, captured);
     const rangeEl = container.querySelector('.panel-renderer__range') as HTMLElement;
-    await fireEvent.click(rangeEl); // -> 20ft thrown
+    await fireEvent.click(rangeEl); // -> 20FEET thrown
 
-    expect(container.querySelector('.panel-renderer__range')?.textContent?.trim()).toBe('20ft');
+    expect(container.querySelector('.panel-renderer__range')?.textContent?.trim()).toBe('20FEET');
     expect(container.textContent).toContain('d6');
     expect(container.textContent).not.toContain(TWO_HANDED_SHORT);
   });
