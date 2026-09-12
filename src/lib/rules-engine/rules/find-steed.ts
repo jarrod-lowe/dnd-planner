@@ -19,6 +19,29 @@ const O = 'rule.spell-find-steed.offer-find-steed';
 const S = 'rule.spell-find-steed';
 const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
 
+/**
+ * Every steed panel that rolls dice carries this, NOT the plain `dice.any` the
+ * player's own rollers carry.
+ *
+ * SRD 5.2 Heroic Inspiration: "you can expend it to reroll ANY die immediately
+ * after rolling it". "Any die" is deliberately broad — the 2024 wording widened
+ * the 2014 "one attack roll, saving throw, or ability check" — and the player
+ * physically rolls the steed's dice at the table. So the case for offering the
+ * reroll here is real. It is declined because the rules attribute a roll to the
+ * CREATURE making it, not to whoever handles the dice: the steed's save is the
+ * steed's save, in the same way a DM rolling for an NPC does not get to spend
+ * the NPC's resources. That is already this module's settled reading — the
+ * steed's saves carry `save.*.companion` precisely so a self-only rider (Aura of
+ * Protection) cannot leak onto the mount — and an unsuffixed `dice.any` here
+ * would quietly undo that opt-in.
+ *
+ * The scoped label, rather than no label, is what makes the reading reversible:
+ * if the "the player rolled it" reading wins, heroic-inspiration.ts targets
+ * `['dice.any', 'dice.any.companion']` and every steed roller lights up. Nothing
+ * else needs to move.
+ */
+const COMPANION_DICE_LABEL = 'dice.any.companion';
+
 // The Otherworldly Steed's physical stat block is the same for every creature
 // type; only the damage type, the granted special ability, and (at higher levels)
 // flight differ. HP and AC scale with the slot level the spell was cast at.
@@ -206,7 +229,8 @@ function steedSlamOffer(
       // chip reads `play.costTags.<tag>` (only action/bonus/reaction) — so map the
       // non-reaction case to `action`, not the raw section.
       actionCost: [section === 'reaction' ? 'reaction' : 'action'],
-      annotationLabels: ['attack.any', 'attack.melee'],
+      // `dice.any.companion`, not `dice.any`: see COMPANION_DICE_LABEL.
+      annotationLabels: ['attack.any', 'attack.melee', COMPANION_DICE_LABEL],
       primaryControl: STEED_SLAM_CONTROL
     },
     vars: STEED_SLAM_VARS,
@@ -271,6 +295,8 @@ interface AbilityConfig {
   /** Optional roll control + vars (Healing Touch's 2d8 + level heal line). */
   primaryControl?: Record<string, unknown>;
   vars?: Record<string, unknown>;
+  /** Panel labels — a roller needs `COMPANION_DICE_LABEL`; a bare row needs none. */
+  annotationLabels?: string[];
 }
 // creatureType → its special ability, with the UI intent verb it files under.
 const ABILITY_BY_TYPE: readonly AbilityConfig[] = [
@@ -279,7 +305,8 @@ const ABILITY_BY_TYPE: readonly AbilityConfig[] = [
     pool: 'healingTouch',
     intents: { AID: 'heal' },
     primaryControl: HEAL_TOUCH_CONTROL,
-    vars: HEAL_TOUCH_VARS
+    vars: HEAL_TOUCH_VARS,
+    annotationLabels: [COMPANION_DICE_LABEL]
   },
   { id: 'fey-step', pool: 'feyStep', intents: { MOVE: 'travel' } },
   { id: 'fell-glare', pool: 'fellGlare', intents: { CONTROL: 'single' } }
@@ -290,7 +317,8 @@ const ABILITY_BY_TYPE: readonly AbilityConfig[] = [
  * long-rest pool, surfaced only for the matching creature type.
  */
 function steedAbilityOffer(creatureType: number): Offer {
-  const { id, pool, intents, primaryControl, vars } = ABILITY_BY_TYPE[creatureType];
+  const { id, pool, intents, primaryControl, vars, annotationLabels } =
+    ABILITY_BY_TYPE[creatureType];
   const offerId = `steed-${id}`;
   const noBonus = `${S}.${offerId}.no_bonus_action`;
   const noUses = `${S}.${offerId}.no_uses`;
@@ -303,6 +331,7 @@ function steedAbilityOffer(creatureType: number): Offer {
       subject: 'steed',
       name: `${S}.${offerId}.name`,
       description: `${S}.${offerId}.description`,
+      ...(annotationLabels ? { annotationLabels } : {}),
       ...(primaryControl ? { primaryControl } : {}),
       intents,
       actionCost: ['bonus']
@@ -385,7 +414,7 @@ const steedSaveOffer = (a: (typeof ABILITIES)[number]): Offer => ({
     name: `planner.record.save.${a}`,
     // Companion-scoped so a rider must opt in to buffing the mount (see
     // ISSUES.md 1.9 — these are the first annotationLabels steed panels carry).
-    annotationLabels: ['save.any.companion', `save.${a}.companion`],
+    annotationLabels: ['save.any.companion', `save.${a}.companion`, COMPANION_DICE_LABEL],
     primaryControl: {
       type: 'dice-line',
       dice: [{ sides: 20, bonus: { var: 'rollBonus' }, purpose: 'save' }]
@@ -431,6 +460,7 @@ const steedSkillOffer = (skill: (typeof STEED_SKILLS)[number]): Offer => ({
     section: 'free',
     subject: 'steed',
     name: `play.stats.skills.${skill}`,
+    annotationLabels: [COMPANION_DICE_LABEL],
     primaryControl: {
       type: 'dice-line',
       dice: [{ sides: 20, bonus: { var: 'rollBonus' }, purpose: 'check' }]

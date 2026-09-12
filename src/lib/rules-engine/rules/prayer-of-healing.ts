@@ -68,6 +68,8 @@ const prayerOfHealing: RuleModule = {
         name: `${O}.name`,
         description: `${O}.description`,
         detailKey: 'spell/prayer-of-healing',
+        // The secondary control rolls the healing dice — "any die" includes them.
+        annotationLabels: ['dice.any'],
         // Slot-level slider (opens at L2, grows with owned slots) and a healing
         // dice line whose die count tracks the slider (N d8 at slot level N).
         primaryControl: {

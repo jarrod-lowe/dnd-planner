@@ -4,6 +4,13 @@ description: >
   that `record-check` carries `dice.any` at the top-level `ui` (not nested
   inside a control, where it would never be matched) — the placement fix in
   cd9429a4 that made this annotation reach a real panel.
+
+  SRD 5.2 says Heroic Inspiration rerolls "any die", so the same label must
+  reach the OTHER rollers core-events offers: the six saving throws (which
+  carried only `save.*` and so never showed the reminder) and the short rest's
+  hit dice. The annotation's `targets` are pinned too, so the deliberate
+  exclusion of companion rollers (`dice.any.companion`) cannot be widened by
+  accident.
 ruleGroups:
   - dnd-5e-2024/core-events
   - dnd-5e-2024/heroic-inspiration
@@ -35,8 +42,20 @@ steps:
           addsToPlan:
             - key: rule.dnd-5e-2024.heroic-inspiration.annotation
               adds: { offer: use-hi }
+          targets:
+            - key: rule.dnd-5e-2024.heroic-inspiration.annotation
+              targets: [dice.any]
         offerUi:
           - id: record-check
+            ui:
+              annotationLabels: [dice.any]
+          - id: record-save-wis
+            ui:
+              annotationLabels: [save.any, save.wis, dice.any]
+          - id: record-save-dex
+            ui:
+              annotationLabels: [save.any, save.dex, dice.any]
+          - id: record-short-rest
             ui:
               annotationLabels: [dice.any]
   - addOffer:

@@ -32,7 +32,9 @@ function saveOffer(a: string): Offer {
       // Protection), `save.{ability}` for ability-specific bonuses. The
       // `.companion` forms on the steed's rows are deliberately distinct so a
       // self-only bonus cannot leak onto the mount (matching is set intersection).
-      annotationLabels: ['save.any', `save.${a}`],
+      // `dice.any` because this panel rolls a d20: Heroic Inspiration rerolls
+      // "any die", saving throws emphatically included.
+      annotationLabels: ['save.any', `save.${a}`, 'dice.any'],
       primaryControl: {
         type: 'dice-line',
         dice: [{ sides: 20, bonus: { var: 'saveBonus' }, purpose: 'save' }]
@@ -133,6 +135,8 @@ function shortRestOffer(): Offer {
       name: 'planner.record.rest.short',
       intents: { REST: 'rest' },
       actionCost: [],
+      // Hit dice are dice, and Heroic Inspiration rerolls "any die".
+      annotationLabels: ['dice.any'],
       primaryControl: hitDiceControl()
     },
     apply: (f, selections): ActionResult => {

@@ -103,6 +103,9 @@ const divineSmite: RuleModule = {
         name: `${D}.name`,
         description: `${D}.description`,
         detailKey: 'spell/divine-smite',
+        // The secondary control rolls the radiant damage dice, so Heroic
+        // Inspiration's "reroll any die" reminder belongs on this panel.
+        annotationLabels: ['dice.any'],
         primaryControl: {
           type: 'slider',
           var: 'slotLevel',
