@@ -272,12 +272,18 @@ export interface Annotation {
   /** Optional rider data for rendering as a modifier chip */
   rider?: AnnotationRider;
   /**
-   * Id of the offer this annotation advises taking. Present → the panel renders
-   * the annotation as a button that plans that offer, exactly as picking it
-   * from the add-row picker would. Absent → read-only reminder text.
+   * What this annotation advises planning. Present → the panel renders the
+   * annotation as a button that plans it, exactly as picking it from the
+   * add-row picker would. Absent → read-only reminder text.
    */
-  addsOffer?: string;
+  addsToPlan?: AnnotationAction;
 }
+
+/**
+ * What an actionable annotation adds: a named offer, or `'again'` for the offer
+ * of the panel it is rendered on (Extra Attack repeats the weapon on the row).
+ */
+export type AnnotationAction = { offer: string } | 'again';
 
 // === ACTIVITIES ===
 

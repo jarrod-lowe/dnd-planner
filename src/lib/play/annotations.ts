@@ -1,10 +1,10 @@
-import type { Annotation, AnnotationRider } from '$lib/rules-view';
+import type { Annotation, AnnotationAction, AnnotationRider } from '$lib/rules-view';
 
 export interface ActiveAnnotation {
   key: string;
   rider?: AnnotationRider;
-  /** Offer id to plan when the annotation is tapped; absent → not actionable. */
-  addsOffer?: string;
+  /** What to plan when the annotation is tapped; absent → not actionable. */
+  addsToPlan?: AnnotationAction;
 }
 
 export function getAnnotationLabels(ui: Record<string, unknown> | undefined): string[] {
@@ -25,7 +25,7 @@ export function getMatchingAnnotations(
       result.push({
         key: annotation.key,
         rider: annotation.rider,
-        addsOffer: annotation.addsOffer
+        addsToPlan: annotation.addsToPlan
       });
     }
   }

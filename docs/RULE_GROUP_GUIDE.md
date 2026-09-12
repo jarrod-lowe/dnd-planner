@@ -164,21 +164,45 @@ dice-line: weapons via the builder, select: `skill-checks`).
 
 `annotate(f)` returns `{ key, targets }` reminders that render on every panel
 whose `ui.annotationLabels` overlap `targets`. Most are advisory ("Heroic
-Inspiration available") — naming an offer turns one into a shortcut:
+Inspiration available") — saying what the advice IS, via `addsToPlan`, turns
+one into a shortcut. Two forms:
 
 ```ts
+// A named offer — the same action wherever the reminder lands.
 annotate: (f) =>
   f.num('heroicInspiration.remaining') > 0
-    ? [{ key: `${HI}.annotation`, targets: ['dice.any'], addsOffer: 'use-hi' }]
+    ? [{ key: `${HI}.annotation`, targets: ['dice.any'], addsToPlan: { offer: 'use-hi' } }]
+    : [];
+
+// `again` — another of whichever panel the reminder is rendered ON.
+annotate: (f) =>
+  f.num('attackAction.extraRemaining') > 0
+    ? [{ key: EXTRA_ATTACK, targets: ['attack.action'], addsToPlan: 'again' as const }]
     : [];
 ```
 
-`addsOffer` is an offer id (the same id the add-row picker plans). The panel
-renders that annotation as a button; tapping it plans the offer exactly as
-picking it by hand would. Only editable plan panels make it tappable — on a
-picker panel it stays text, so it never competes with the panel's own tap.
-`annotation-targets.test.ts` fails the build if `addsOffer` names an offer no
-module declares. Omit it for a reminder with no single action behind it.
+Reach for `again` when the advice is "do that again" and the rule cannot know
+what "that" is. Extra Attack is the case: one annotation lands on every
+Attack-action panel the character has, and the follow-up swing is almost always
+with the weapon already in hand. Because the weapon IS the offer
+(`greataxe-use-action`), repeating the offer repeats the weapon; the new row
+captures its vars fresh, so it picks up the current grip rather than inheriting
+the tapped row's.
+
+Either form only becomes a button while the offer behind it is still in the
+post-plan addable catalog — the same catalog the tap resolves against — so a
+reminder can never outlive its action. Both ways of losing one are covered by
+that: a later row that closes the offer's gate (a `set-loadout` that stows the
+weapon takes its own "attack again" button with it), and a row the engine
+skipped, which renders from the planned item and so carries an instance id no
+catalog holds. The annotation falls back to plain text; it does not disappear.
+
+The panel renders an actionable annotation as a button; tapping it plans the
+action exactly as picking it by hand would. Only editable plan panels make it
+tappable — on a picker panel it stays text, so it never competes with the
+panel's own tap. `annotation-targets.test.ts` fails the build if a
+`{ offer }` names an offer no module declares. Omit `addsToPlan` for a reminder
+with no single action behind it.
 
 Note it pairs with a plain reminder, not with a **valued** rider: an annotation
 carrying `rider.value` is rendered as a dice-line toggle chip instead of a text

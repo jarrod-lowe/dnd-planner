@@ -130,7 +130,7 @@ describe('PlanRow actionable annotations', () => {
   const actionable: Annotation = {
     key: 'rule.dnd-5e-2024.heroic-inspiration.annotation',
     targets: ['save.any'],
-    addsOffer: 'use-hi'
+    addsToPlan: { offer: 'use-hi' }
   };
 
   it('hands the offer id up when the annotation is tapped', async () => {
@@ -139,6 +139,7 @@ describe('PlanRow actionable annotations', () => {
       props: {
         ...props,
         activeAnnotations: [actionable],
+        addableOfferIds: new Set(['use-hi']),
         onAddOfferToPlan: (offerId: string) => (added = offerId)
       }
     });
@@ -148,7 +149,21 @@ describe('PlanRow actionable annotations', () => {
 
   it('leaves the annotation as plain text when no handler is wired', () => {
     const { container } = render(PlanRow, {
-      props: { ...props, activeAnnotations: [actionable] }
+      props: { ...props, activeAnnotations: [actionable], addableOfferIds: new Set(['use-hi']) }
+    });
+    expect(container.querySelector('button.panel-renderer__annotation--action')).toBeNull();
+  });
+
+  it('gates on the catalog it was given rather than one of its own', () => {
+    // The row is a conduit for the stack's catalog; it must not substitute a
+    // permissive one of its own making when the offer is no longer addable.
+    const { container } = render(PlanRow, {
+      props: {
+        ...props,
+        activeAnnotations: [actionable],
+        addableOfferIds: new Set(['some-other-offer']),
+        onAddOfferToPlan: () => {}
+      }
     });
     expect(container.querySelector('button.panel-renderer__annotation--action')).toBeNull();
   });

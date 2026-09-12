@@ -15,7 +15,13 @@
   import DiceRollToast from './panel-renderer/DiceRollToast.svelte';
   import { evaluateCondition } from '$lib/play/panelCondition';
   import { getMatchingAnnotations } from '$lib/play/annotations';
-  import type { AvailableRuleEntry, Facts, Annotation, RiderValue } from '$lib/rules-view';
+  import type {
+    AvailableRuleEntry,
+    Facts,
+    Annotation,
+    AnnotationAction,
+    RiderValue
+  } from '$lib/rules-view';
   import type { EffectInstance } from '$lib/rules-engine';
   import type { RuleModule } from '$lib/rules-engine/types';
   import type {
@@ -47,13 +53,22 @@
     onMoveDown?: () => void;
     onFollowup?: (effect: EffectInstance) => void;
     /**
-     * Plans the offer an annotation names (`annotation.addsOffer`). Most
-     * annotations are advisory — "Heroic Inspiration available" — and the one
-     * that names an offer becomes a tap-to-plan shortcut instead of a reminder
-     * the player then has to act on by hand. Absent (or a non-editable picker
-     * panel) → every annotation stays read-only text.
+     * Plans the offer an annotation advises (`annotation.addsToPlan`, resolved
+     * by `resolveAnnotationOffer`). Most annotations are advisory — "Heroic
+     * Inspiration available", "Extra Attack: you can attack again" — and one
+     * that says what it is advising becomes a tap-to-plan shortcut instead of a
+     * reminder the player then has to act on by hand. Absent (or a non-editable
+     * picker panel) → every annotation stays read-only text.
      */
     onAddOfferToPlan?: (offerId: string) => void;
+    /**
+     * The offer ids currently addable — the post-plan catalog the store resolves
+     * a tap against. An annotation is only actionable when the offer it advises
+     * is in here, so the button can never outlive the offer behind it. Absent
+     * means deny, not allow: a caller that forgets to wire it shows a missing
+     * button, which is visible, rather than a dead one, which is silent.
+     */
+    addableOfferIds?: Set<string>;
     onRoll?: (data: RollResult, dieIndex: number) => void;
     /**
      * Renders the collapsed-row short form: header, description, followups,
@@ -83,6 +98,7 @@
     onMoveDown,
     onFollowup,
     onAddOfferToPlan,
+    addableOfferIds,
     onRoll,
     summary = false
   }: Props = $props();
@@ -410,6 +426,29 @@
   // panel with a handler. A picker panel is one big tap target that adds its OWN
   // offer, so a nested add-this-other-thing button there would fight it.
   const annotationsActionable = $derived(editable && !!onAddOfferToPlan);
+
+  /**
+   * The offer an annotation's tap should plan, or undefined when there is no
+   * addable offer behind it — in which case the annotation renders as plain
+   * text rather than as a button that would do nothing.
+   *
+   * `again` means "another of this panel's own offer" (Extra Attack: swing
+   * again with the weapon already on the row), so it resolves to `entry.rule.id`.
+   *
+   * Membership of the addable catalog is the whole test, for both forms, because
+   * that catalog is exactly what the store's lookup will consult. Two distinct
+   * ways to end up with a row whose offer is not in it, both covered by the one
+   * check:
+   *  - the offer RAN at its step and a later row closed its gate (a set-loadout
+   *    that stows the weapon) — the row still reads `applicable`, since that is
+   *    step-time, but the offer is gone from the post-plan catalog;
+   *  - the engine SKIPPED the row, so PlanStack renders it from the planned item
+   *    itself, whose id is the instance id and is never a catalog member.
+   */
+  function resolveAnnotationOffer(adds: AnnotationAction): string | undefined {
+    const offerId = adds === 'again' ? entry.rule.id : adds.offer;
+    return addableOfferIds?.has(offerId) ? offerId : undefined;
+  }
 
   function addAnnotationOffer(e: MouseEvent, offerId: string) {
     e.stopPropagation();
@@ -747,7 +786,11 @@
     -->
       <div class="panel-renderer__annotations" role="note">
         {#each informationalAnnotations as annotation (annotation.key)}
-          {#if annotation.addsOffer && annotationsActionable}
+          {@const addsOffer =
+            annotation.addsToPlan && annotationsActionable
+              ? resolveAnnotationOffer(annotation.addsToPlan)
+              : undefined}
+          {#if addsOffer}
             <!--
               An advisory annotation that names an offer is a shortcut: tapping
               it plans that action exactly as the add-row picker would. The
@@ -757,7 +800,7 @@
               type="button"
               class="panel-renderer__annotation panel-renderer__annotation--action"
               aria-label={$t('play.annotation.addToPlan', { annotation: $t(annotation.key) })}
-              onclick={(e) => addAnnotationOffer(e, annotation.addsOffer!)}
+              onclick={(e) => addAnnotationOffer(e, addsOffer)}
             >
               <span class="panel-renderer__annotation-text">{$t(annotation.key)}</span>
               <span class="panel-renderer__annotation-add" aria-hidden="true">

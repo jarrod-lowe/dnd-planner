@@ -93,7 +93,7 @@ const heroicInspiration: RuleModule = {
   // the spend instead of making the player hunt for it in the add-row picker.
   annotate: (f) =>
     f.num('heroicInspiration.remaining') > 0
-      ? [{ key: `${HI}.annotation`, targets: ['dice.any'], addsOffer: 'use-hi' }]
+      ? [{ key: `${HI}.annotation`, targets: ['dice.any'], addsToPlan: { offer: 'use-hi' } }]
       : []
 };
 

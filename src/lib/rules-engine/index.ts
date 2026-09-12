@@ -50,6 +50,7 @@ export type {
   AvailableRuleEntry,
   AnnotationRider,
   Annotation,
+  AnnotationAction,
   EngineInput,
   EngineOutput,
   SerializableInput

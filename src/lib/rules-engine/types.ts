@@ -383,14 +383,28 @@ export interface Annotation {
   targets: string[];
   rider?: AnnotationRider;
   /**
-   * The id of the offer this annotation advises the player to take. Most
-   * annotations are advisory ("Heroic Inspiration available") — naming the
-   * offer here turns the reminder into a one-tap shortcut that plans that
-   * action, exactly as picking it from the add-row picker would. Absent → the
-   * annotation is read-only text.
+   * What tapping this annotation plans. Most annotations are advisory
+   * ("Heroic Inspiration available"); saying what the advice IS turns the
+   * reminder into a one-tap shortcut, exactly as picking the action from the
+   * add-row picker would. Absent → the annotation is read-only text.
+   *
+   *  - `{ offer: 'use-hi' }` — that specific offer, wherever the annotation
+   *    happens to render.
+   *  - `'again'` — another of the offer belonging to the panel the annotation
+   *    is rendered ON. Extra Attack advises a second swing and the player
+   *    almost always wants the same weapon, so the reminder on the greataxe row
+   *    adds another greataxe swing rather than one generic "attack".
    */
-  addsOffer?: string;
+  addsToPlan?: AnnotationAction;
 }
+
+/**
+ * What an actionable annotation adds to the plan: a named offer, or `'again'`
+ * for the offer of the panel it is rendered on. A bare offer id would not do
+ * for the second case — the annotation is authored once, by a rule that cannot
+ * know which weapon's panel it will land on.
+ */
+export type AnnotationAction = { offer: string } | 'again';
 
 /**
  * Complete input to the engine. `evaluate` runs `modules` directly and stays
