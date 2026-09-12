@@ -68,3 +68,8 @@ steps:
         annotations:
           exists:
             - rule.spell-find-steed.annotate-life-bond.text
+          # Both the reminder and the steed heal recorder gate on `summoned`,
+          # so tapping it can always add the steed's heal row.
+          addsToPlan:
+            - key: rule.spell-find-steed.annotate-life-bond.text
+              adds: { offer: steed-record-heal }

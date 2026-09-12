@@ -67,3 +67,8 @@ steps:
         annotations:
           exists:
             - rule.dnd-5e-2024.feat-savage-attacker.annotation
+          # The reminder's gate is exactly the use-offer's two legality
+          # conditions, so tapping it can always plan the reroll.
+          addsToPlan:
+            - key: rule.dnd-5e-2024.feat-savage-attacker.annotation
+              adds: { offer: savage-attacker-use }

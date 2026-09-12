@@ -36,3 +36,11 @@ steps:
         offers:
           legal:
             - cast-divine-smite
+        # The reminder's gate is the cast offer's `when` plus its four legality
+        # conditions, so tapping it can always plan the smite.
+        annotations:
+          exists:
+            - rule.spell-divine-smite.annotation
+          addsToPlan:
+            - key: rule.spell-divine-smite.annotation
+              adds: { offer: cast-divine-smite }

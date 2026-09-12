@@ -1052,7 +1052,18 @@ const findSteed: RuleModule = {
   annotate: (f) =>
     // Rides the Record Healing panel: spell healing within 5 ft also
     // heals the steed, so the reminder targets `healing.any`, not a steed label.
-    summoned(f) ? [{ key: `${S}.annotate-life-bond.text`, targets: ['healing.any'] }] : []
+    // Both this gate and the steed heal recorder are `summoned`, so the
+    // reminder can carry that offer: tapping it adds the steed's heal row
+    // (amount starting at 0, as the steed's own +ADD picker does).
+    summoned(f)
+      ? [
+          {
+            key: `${S}.annotate-life-bond.text`,
+            targets: ['healing.any'],
+            addsToPlan: { offer: 'steed-record-heal' }
+          }
+        ]
+      : []
 };
 
 export default defineRule(findSteed);
