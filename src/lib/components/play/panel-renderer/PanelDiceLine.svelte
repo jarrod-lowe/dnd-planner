@@ -41,7 +41,7 @@
   import DamageTypeIcon from './DamageTypeIcon.svelte';
   import DieChip from './DieChip.svelte';
   import { nextDiceLineId } from './diceLineId';
-  import { unitLabel } from './unitLabel';
+  import { formatUnitValue } from './unitLabel';
   import type { CritMode, DiceEntry, RollModifier, RollResult, ValueSource } from './types';
   import { t } from '$lib/i18n';
 
@@ -241,9 +241,12 @@
   // `RangeEntry` (unlike a slider's `control.unit`), so 'ft' is hardcoded here as
   // the token to resolve, matching the same literal every `unit: 'ft'` rule
   // authors (movement.ts, find-steed.ts) for its own `play.units.ft` render.
+  // `compact: true` selects the tight "5ft" tabletop-shorthand pattern — see
+  // `unitLabel.ts` for why this reads differently from a slider's spaced
+  // "20 ft" even though both resolve the same token.
   function formatRangeText(range: RangeEntry): string {
     const label = rangeLabel(range);
-    const distanceText = `${range.distance}${unitLabel($t, 'ft')}`;
+    const distanceText = formatUnitValue($t, 'ft', range.distance, { compact: true });
     return label ? `${distanceText} ${label}` : distanceText;
   }
 

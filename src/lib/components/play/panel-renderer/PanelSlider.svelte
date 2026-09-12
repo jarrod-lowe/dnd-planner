@@ -1,6 +1,6 @@
 <script lang="ts">
   import { resolveValueSource } from './resolveValueSource';
-  import { unitLabel } from './unitLabel';
+  import { formatUnitValue } from './unitLabel';
   import type { SliderControl, SliderNotch } from './types';
   import type { Facts, VarDefinition } from '$lib/rules-view';
   import { t } from '$lib/i18n';
@@ -59,11 +59,6 @@
   const min = $derived(resolvedMin ?? 0);
   const max = $derived(resolvedMax ?? 0);
   const step = $derived(control.step ?? 1);
-  // `control.unit` is a literal notation token authored on the rule (e.g.
-  // 'ft') — translated at this render edge via `unitLabel`, under the
-  // `play.units.<token>` namespace; an unrecognized token falls back to the
-  // raw token rather than leaking a dotted key (see `unitLabel.ts`).
-  const unit = $derived(unitLabel($t, control.unit));
 
   // --- Shared state ---
   // Local state for immediate visual feedback during drag.
@@ -92,13 +87,18 @@
   });
 
   // Spell upcast sliders render the value as "Free Use" (0) / "Level N" (>=1)
-  // instead of a raw number; everything else keeps the plain numeric + unit.
+  // instead of a raw number; everything else keeps the plain numeric + unit,
+  // composed via `formatUnitValue` — `control.unit` is a literal notation
+  // token authored on the rule (e.g. 'ft'), translated (and spaced) at this
+  // render edge under the `play.units.<token>` namespace; an unrecognized
+  // token falls back to the raw token rather than leaking a dotted key, and
+  // no token at all just renders the bare number (see `unitLabel.ts`).
   const displayValue = $derived(
     control.valueFormat === 'spellLevel'
       ? localValue === 0
         ? $t('play.slider.freeUse')
         : $t('play.slider.level', { level: localValue })
-      : `${localValue}${unit ? ` ${unit}` : ''}`
+      : formatUnitValue($t, control.unit, localValue)
   );
 
   function handleNotchChange(e: Event): void {

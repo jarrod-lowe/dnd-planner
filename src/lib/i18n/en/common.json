@@ -1919,8 +1919,11 @@
       "viewSteed": "🐴 Steed"
     },
     "units": {
-      "hp": "HP",
-      "ft": "ft"
+      "hp": "{{value}} HP",
+      "ft": "{{value}} ft",
+      "compact": {
+        "ft": "{{value}}ft"
+      }
     },
     "verbs": {
       "ATTACK": "Attack",

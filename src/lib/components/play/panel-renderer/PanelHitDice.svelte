@@ -31,7 +31,7 @@
   import type { RollResult } from './types';
   import type { EffectInstance } from '$lib/rules-engine';
   import { t } from '$lib/i18n';
-  import { unitLabel } from './unitLabel';
+  import { formatUnitValue } from './unitLabel';
 
   interface Props {
     control: HitDiceControl;
@@ -253,14 +253,11 @@
   const rolledHealTotal = $derived(ownPendingHeal());
 
   // `control.unit` is a literal notation token authored on the rule (e.g.
-  // "hp") — translated at this render edge via `unitLabel`, exactly as
-  // `PanelSlider` translates its own `unit` (see `unitLabel.ts`); dice
-  // notation ("d10") stays untranslated prose-free shorthand, unlike the
-  // unit word itself.
-  const unitText = $derived(unitLabel($t, control.unit));
-  const healSummaryText = $derived(
-    unitText ? `${rolledHealTotal} ${unitText}` : `${rolledHealTotal}`
-  );
+  // "hp") — composed with the healed total at this render edge via
+  // `formatUnitValue`, exactly as `PanelSlider` composes its own `unit`
+  // (see `unitLabel.ts`); dice notation ("d10") stays untranslated
+  // prose-free shorthand, unlike the unit word itself.
+  const healSummaryText = $derived(formatUnitValue($t, control.unit, rolledHealTotal));
 
   // The heal a given slot's roll would land, mirroring shortRestOffer exactly:
   // min(max(1, roll + bonus), budget left when this slot's turn comes), with
@@ -402,9 +399,9 @@
       correction: "pooling" means adding the rolled results together, not
       omitting them), THEN the pool counts: "5 HP 3/4 d10". The heal total
       is `rolledHealTotal` (the engine's own committed/effective heals via
-      `ownPendingHeal`, never a recomputed roll+bonus) with `control.unit`
-      translated via `unitLabel` (see `unitLabel.ts`), exactly as
-      `PanelSlider` translates its own `unit` — dice notation ("d10") stays
+      `ownPendingHeal`, never a recomputed roll+bonus) composed with
+      `control.unit` via `formatUnitValue` (see `unitLabel.ts`), exactly as
+      `PanelSlider` composes its own `unit` — dice notation ("d10") stays
       untranslated shorthand, unlike the unit word. The pool tail uses
       `pool.remaining` (the raw POST-plan fact, clamped to total) — NOT
       `pool.threshold`. Both a slot spent by an EARLIER rest's committed

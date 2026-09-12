@@ -1919,8 +1919,11 @@
       "viewSteed": "🐴 Sargh"
     },
     "units": {
-      "hp": "'Iw",
-      "ft": "qam"
+      "hp": "{{value}} 'Iw",
+      "ft": "{{value}} qam",
+      "compact": {
+        "ft": "{{value}} qam"
+      }
     },
     "verbs": {
       "ATTACK": "ATTACK",
