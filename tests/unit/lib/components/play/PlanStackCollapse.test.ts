@@ -19,6 +19,15 @@ vi.mock('$lib/play/playStore.svelte', () => ({
   }
 }));
 
+// A row only offers its rules flip when a detail is cached for its detailKey.
+vi.mock('$lib/details/index', () => ({
+  peekDetail: vi.fn((key: string) =>
+    key === 'spell/bless' ? { source: 'srd52', body: [{ text: ['Bless rules text.'] }] } : undefined
+  ),
+  getDetail: vi.fn(async () => undefined),
+  prefetchDetail: vi.fn()
+}));
+
 import PlanStackCollapseHarness from './PlanStackCollapseHarness.svelte';
 import type { PlannedItem } from '$lib/play/types';
 import type { AvailableRuleEntry } from '$lib/rules-view';
@@ -102,5 +111,37 @@ describe('PlanStack auto-collapse', () => {
     flushSync();
 
     expect(isCollapsed(container, 0)).toBe(false);
+  });
+});
+
+describe('PlanStack auto-collapse and rules mode', () => {
+  let container: HTMLElement;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    vi.clearAllMocks();
+  });
+
+  it('closes the rules pane of a row it collapses', () => {
+    const harness = mount(PlanStackCollapseHarness, {
+      target: container,
+      props: { entries: [makeEntry('bless')] }
+    });
+    const withRules = makeItem('bless');
+    (withRules.rule.ui as Record<string, unknown>).detailKey = 'spell/bless';
+    harness.addItem(withRules);
+    flushSync();
+
+    // The player flips the row to read its rules text, then adds another row.
+    container.querySelector<HTMLButtonElement>('[data-rules-toggle]')!.click();
+    flushSync();
+    expect(container.querySelector('.rules-shell')).toBeTruthy();
+
+    harness.addItem(makeItem('second'));
+    flushSync();
+
+    expect(isCollapsed(container, 0)).toBe(true);
+    expect(container.querySelector('.rules-shell')).toBeNull();
   });
 });

@@ -189,11 +189,25 @@
 
   const hasDetail = $derived(detailKey !== '' && peekDetail(detailKey) !== null);
 
+  function exitRulesMode() {
+    rulesMode = false;
+    rulesDetail = undefined;
+    rulesLoading = false;
+  }
+
+  // The rules pane has no shrunk form — it renders in its own branch, which
+  // never consulted `collapsed`, so a shrinking row used to stay full height
+  // while its chevron reported it collapsed. Shrinking means the player has
+  // moved on (they collapsed it, or adding a row collapsed it for them), so
+  // every route into the shrunk form drops the pane and takes the row back to
+  // the plan panel.
+  $effect(() => {
+    if (collapsed) exitRulesMode();
+  });
+
   function toggleRulesMode() {
     if (rulesMode) {
-      rulesMode = false;
-      rulesDetail = undefined;
-      rulesLoading = false;
+      exitRulesMode();
       return;
     }
     const cached = peekDetail(detailKey);
