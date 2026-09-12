@@ -180,7 +180,7 @@
         "no_action": "No action available"
       },
       "annotate-life-bond": {
-        "text": "Life Bond: Steed also regains HP (within 5 ft, from a level 1+ spell) [manual]"
+        "text": "Life Bond: Steed also regains HP (within 5 ft, from a level 1+ spell)"
       },
       "prepare-find-steed-offer": {
         "name": "Prepare Find Steed",
