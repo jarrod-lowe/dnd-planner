@@ -44,6 +44,47 @@ const recoverOnShort: RuleModule = {
       : []
 };
 
+// Refunds on a SHORT rest only while a spend is outstanding — the shape of the
+// Channel Divinity recovery, reduced to the mechanism. If the hook could see a
+// spend made AFTER the rest, this would hand the point straight back.
+const refundOutstanding: RuleModule = {
+  id: 'test-refund-outstanding',
+  derive: () => [
+    { fact: 'test.spent', value: (f) => f.num('test.spent.sum') },
+    { fact: 'test.refunded', value: (f) => f.num('test.refunded.sum') }
+  ],
+  onRest: (kind, f): EffectInstance[] =>
+    kind === 'short' && f.num('test.spent') > f.num('test.refunded')
+      ? [
+          {
+            id: 'effect-test-refund',
+            state: { 'test.refunded.sum': 1 },
+            expiry: { kind: 'untilLongRest' }
+          }
+        ]
+      : []
+};
+
+// Spends a point. Costs nothing else, so it is legal wherever it is planned.
+const spendPoint: RuleModule = {
+  id: 'test-spend-point',
+  offer: () => [
+    {
+      id: 'test-spend',
+      ui: { section: 'action-other', name: 'test.spend' },
+      apply: () => ({
+        advertise: [
+          {
+            id: 'effect-test-spend',
+            state: { 'test.spent.sum': 1 },
+            expiry: { kind: 'untilLongRest' as const }
+          }
+        ]
+      })
+    }
+  ]
+};
+
 const ref = (instanceId: string, ruleId: string): PlannedRef => ({ instanceId, ruleId });
 
 describe('rest hook — onRest', () => {
@@ -101,5 +142,26 @@ describe('rest hook — onRest', () => {
     const t3 = evaluatePlan([coreEvents, recoverOnShort], {}, [ref('i2', 'record-long-rest')], c2);
     const c3 = endTurn(c2, t3.advertised, {});
     expect(evaluateSheet([coreEvents, recoverOnShort], {}, c3)['test.recovered'] ?? 0).toBe(0);
+  });
+
+  it('reads the state as it stood at the rest — a spend planned AFTER it is invisible', () => {
+    const MODULES = [coreEvents, refundOutstanding, spendPoint];
+
+    // Spend BEFORE the rest: outstanding at the rest, so it is refunded.
+    const before = evaluatePlan(MODULES, {}, [
+      ref('i0', 'test-spend'),
+      ref('i1', 'record-short-rest')
+    ]);
+    expect(before.facts['test.spent']).toBe(1);
+    expect(before.facts['test.refunded']).toBe(1);
+
+    // Spend AFTER the rest: it still executes (illegal-but-visible), but it did
+    // not exist when the rest happened — the hook must not refund it.
+    const after = evaluatePlan(MODULES, {}, [
+      ref('i0', 'record-short-rest'),
+      ref('i1', 'test-spend')
+    ]);
+    expect(after.facts['test.spent']).toBe(1);
+    expect(after.facts['test.refunded'] ?? 0).toBe(0);
   });
 });

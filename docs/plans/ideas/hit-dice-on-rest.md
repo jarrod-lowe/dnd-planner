@@ -68,5 +68,9 @@ Long rest resets the hit die, as per D&D5e(2024) rules.
 
 - `hit-die.ts` already derives `remaining = total − spent`; nothing writes `spent`
   today — this plan adds the writers.
-- Rests are plan-terminal (`plan.ts`): dice on the rest row itself avoids ordering
-  problems.
+- Dice on the rest row itself avoids ordering problems. (Rests were plan-terminal
+  when this was written; they no longer are — a row planned after a rest is
+  illegal but still executes, so two rest rows in one plan can both spend dice.
+  The engine's `die_already_spent` check reads `committed + advertised-so-far` and
+  handles that; only `PanelHitDice`'s per-row `threshold` offset is approximate in
+  that case. See ISSUES.md §1.41.)

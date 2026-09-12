@@ -158,7 +158,10 @@ Two distinct gates:
 - **`legalWhen` (legality)**: false → the offer stays **visible but illegal**,
   with diagnostics attached (illegal-but-visible). Planned illegal actions
   still execute — the projection shows the over-commit (e.g.
-  `actions.remaining: -1`) and the row shows the diagnostic.
+  `actions.remaining: -1`) and the row shows the diagnostic. This holds with
+  **no exceptions**: an action planned after a rest row is illegal
+  (`planner.after-rest`, kept alongside the action's own diagnostics) and runs
+  anyway. A row that silently did nothing would make the projection lie.
 
 `apply` is the pure transition run when the offer is planned:
 
@@ -190,6 +193,14 @@ the **only** way a non-planned module emits effects. It exists for recoveries
 that can't be expressed as expiry aging (Channel Divinity regains exactly one
 use on a short rest; a Human regains Heroic Inspiration on a long rest). Emit
 **keyed** effects so a second rest doesn't stack the grant.
+
+It runs after the plan settles but reads the state **as it stood at the rest** —
+`committed` plus the effects advertised through the rest row's own apply — not
+the post-plan facts. A spend planned after the rest executes, but it had not
+happened as far as the rest is concerned, so a recovery gated on "is a spend
+outstanding?" cannot hand it straight back. Hooks all read that same snapshot,
+so one module's recovery is never visible to another's. Rest-scoped effect
+**expiry** has no such boundary yet — see ISSUES.md §1.41.
 
 ---
 

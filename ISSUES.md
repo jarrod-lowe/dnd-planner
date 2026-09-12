@@ -542,16 +542,59 @@ adapter.test.ts.
 
 ### 1.41 A rest recovered/expired spends from actions planned after it
 
-**FIXED** (found by Codex review on PR #363, round 13; owner chose to gate rather
-than reorder rest handling). The rest hook (`onRest`) and `endTurn` aging run once
-against the final post-plan facts, so a rest recorded BEFORE later actions in the
-same plan recovered/expired those later spends — e.g. `record-short-rest` then
+**PARTIALLY FIXED** (found by Codex review on PR #363, round 13; the original gate
+was narrowed later — see below). The rest hook (`onRest`) and `endTurn` aging run
+once against the final post-plan facts, so a rest recorded BEFORE later actions in
+the same plan recovered/expired those later spends — e.g. `record-short-rest` then
 Divine Sense refunded the Channel Divinity use, and a long rest before a spell
-dropped that spell's until-rest effect. A rest is now terminal for the plan: any
-action planned after a rest is illegal and does not execute (the one case where an
-illegal planned item is not applied), so no post-rest spend exists for the rest to
-recover. Rest flags are `endOfTurn`, so this fires only within one plan, never on
-turns after a committed rest. Unit: rest-terminal.test.ts.
+dropped that spell's until-rest effect.
+
+The first fix made a rest **terminal**: an action planned after a rest was illegal
+AND did not execute. That over-reached. This app does not prevent things — it
+projects what a plan would do and shows where the player has over-committed, and
+every other illegal row still executes so the projection stays honest. A row that
+silently did nothing made the projection lie.
+
+**What holds now.** A post-rest action is still illegal (`planner.after-rest`, any
+severity of its own `legalWhen` diagnostics kept alongside), but it EXECUTES like
+any other illegal row. What keeps the rest honest is a boundary in the plan fold:
+`onRest` is handed the state as it stood AT the rest — `committed` plus the
+`advertised` prefix through the rest row's own apply — instead of the post-plan
+facts. A spend made after the rest is outside that window, so the recovery cannot
+see it. Short rest → Divine Sense now really spends the point. Rest flags are
+`endOfTurn`, so all of this fires only within one plan, never on turns after a
+committed rest. Unit: post-rest-actions.test.ts, rest-hooks.test.ts; yaml:
+rest-then-spend.
+
+**What is still wrong.** The boundary fixes what the rest HOOK sees. It does not
+fix rest-scoped effect **expiry**, which is still set-wise over a flat, unordered
+effect bag with no notion of before/after:
+
+- `sheet.ts` (`endsOnRest`) drops every rest-scoped effect on each re-derive. So
+  long rest → cast a spell spends the slot but the sheet still eats that spell's
+  `untilLongRest` spend; and a concentration spell's `untilShortRest` buff still
+  vanishes behind a short rest planned earlier in the same turn.
+- `effects.ts` `endTurn` aging applies the same set-wise treatment at commit, so
+  the post-rest effect does not survive the turn boundary either.
+- `slotLevels.ts` and `actionPools.ts` mirror the same predicate for the UI, so
+  the panels agree with the wrong answer.
+
+Fixing those needs a per-effect "advertised after the rest" marker that survives
+into persisted state — roughly six files including the committed-effect shape, so
+it is deliberately a separate change. Until then: post-rest execution is honest
+about the spends the hook sees, not about rest-scoped effects expiring.
+
+Two knock-on notes:
+
+- `PanelHitDice.svelte`'s expanded-roller `threshold` offsets the row's OWN
+  advertised hit-die spends back open against a POST-plan `remaining`. That was
+  exact while rests were plan-terminal (at most one rest row could execute). Two
+  short-rest rows in one plan now both execute, so the first row's threshold is
+  short by the second row's spends and shows an extra slot disabled. Cosmetic and
+  confined to that (unusual) plan; the engine-side `die_already_spent` check is
+  unaffected — it reads `committed + advertised-so-far`, which already includes
+  the earlier rest row.
+- A second rest row in a plan now executes too, so its flag and its effects land.
 
 ### 1.42 Steed Slam's action cost chip rendered the raw section
 

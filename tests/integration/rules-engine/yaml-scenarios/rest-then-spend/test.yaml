@@ -1,0 +1,48 @@
+name: 'Rest Then Spend'
+description: >-
+  An action planned AFTER a rest is illegal (planner.after-rest) but still
+  EXECUTES, like every other illegal planned row — the planner projects
+  over-commitment, it does not prevent it. The rest hook reads the state as it
+  stood at the rest, so the post-rest Channel Divinity spend is outside its
+  window and the short rest refunds nothing: the point really goes.
+ruleGroups:
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-divinity
+  - class-paladin/class-paladin-level3
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/core-events
+steps:
+  - evaluate:
+      assert:
+        facts:
+          divinity.total: 2
+          divinity.remaining: 2
+  # The rest row itself is legal and sets the flag.
+  - addOffer:
+      id: record-short-rest
+      assert:
+        facts:
+          rest.short: 1
+          divinity.recovered: 0
+          divinity.remaining: 2
+  # Divine Sense AFTER the rest: illegal, but the point is spent and the rest
+  # does not hand it back (the hook never saw the spend).
+  - addOffer:
+      id: divine-sense
+      assert:
+        facts:
+          divinity.spent: 1
+          divinity.recovered: 0
+          divinity.remaining: 1
+        planErrors:
+          - id: divine-sense
+            errors:
+              - planner.after-rest
+  # The spend survives the turn boundary — it was a real spend, not a projection.
+  - endTurn:
+      assert:
+        facts:
+          divinity.spent: 1
+          divinity.recovered: 0
+          divinity.remaining: 1

@@ -12,7 +12,10 @@ import { collectOffersWithModule } from './offers';
 import { plainReader } from './reader';
 import { checkDeadline, DEFAULT_BUDGET_MS } from './watchdog';
 
-/** Diagnostic for an action planned after a rest — a rest is terminal for the plan. */
+/**
+ * Diagnostic for an action planned after a rest. The row is illegal but still
+ * executes, like every other illegal planned row — see the fold for why.
+ */
 const AFTER_REST = 'planner.after-rest';
 
 export interface PlanResult {
@@ -102,6 +105,11 @@ export function evaluatePlan(
   const planIllegal = new Set<string>();
   const plannedOffers = new Map<string, Offer>();
   const advertised: EffectInstance[] = [];
+  // How much of `advertised` existed at the moment a rest flag first read true —
+  // i.e. everything up to and including the rest row's own apply. The rest hook
+  // reads the state at that boundary, never the post-plan state. Null until a
+  // rest is seen (and stays null on a plan with no rest).
+  let restBoundary: number | null = null;
 
   for (const ref of planned) {
     checkDeadline(deadline, 'plan fold', budgetMs);
@@ -117,20 +125,33 @@ export function evaluatePlan(
     // shows the row as inapplicable rather than spending its resources.
     if (offer.when && !offer.when(reader)) continue;
 
-    // A rest recorded at an EARLIER step is terminal for the plan: any later
-    // action is illegal AND does not execute. Otherwise the post-fold rest hook
-    // (onRest) and endTurn aging, which run against the final facts, would
-    // recover/expire effects the post-rest action created — e.g. a short rest
-    // then Divine Sense would refund the Channel Divinity use. This is the one
-    // case where an illegal planned item is NOT applied (no spend), since a spend
-    // after the rest is exactly what must not happen. Rest flags are endOfTurn, so
-    // this only fires within the same plan, never on turns after a committed rest.
-    if (reader.num('rest.short') > 0 || reader.num('rest.long') > 0) {
-      plannedOffers.set(ref.instanceId, offer);
-      planIllegal.add(ref.instanceId);
-      planDiagnostics.set(ref.instanceId, [{ code: AFTER_REST, severity: 'error' }]);
-      continue;
-    }
+    // A rest recorded at an EARLIER step makes this action illegal (you can't act
+    // out of a rest you already took), but — like every other illegal planned row
+    // — it STILL EXECUTES. The planner projects over-commitment; it does not
+    // prevent it, and a row that silently did nothing would make the projection
+    // lie. Rest flags are endOfTurn, so this only fires within the same plan,
+    // never on turns after a committed rest.
+    //
+    // What keeps the projection honest is the boundary below: the rest hook
+    // (onRest) reads the state as it stood AT the rest, so a spend made after it
+    // is invisible to the recovery — a short rest then Divine Sense no longer
+    // refunds the Channel Divinity use.
+    //
+    // KNOWN REMAINING GAP (see ISSUES.md §1.41). The boundary fixes what the rest
+    // HOOK sees; it does not fix rest-scoped effect EXPIRY, which is still
+    // set-wise and has no notion of before/after:
+    //   - `sheet.ts` drops every `endsOnRest` effect on each re-derive, so a
+    //     long rest then a spell still loses that spell's `untilLongRest` slot
+    //     spend, and a concentration spell's `untilShortRest` buff still vanishes
+    //     behind a short rest planned earlier in the same turn.
+    //   - `effects.ts` `endTurn` ages the same set the same way at commit.
+    //   - `slotLevels.ts` / `actionPools.ts` mirror the predicate for the UI.
+    // Fixing those needs a per-effect "advertised after the rest" marker that
+    // survives into persisted state — a separate change. Until then, post-rest
+    // execution is honest about spends the hook sees, not about rest-scoped
+    // effects expiring.
+    const afterRest = reader.num('rest.short') > 0 || reader.num('rest.long') > 0;
+    if (afterRest && restBoundary === null) restBoundary = advertised.length;
 
     // The offer ran (its `when` held at this step). Record it so the row resolves
     // even if its own apply closes the gate (dropping it from the final catalog).
@@ -139,8 +160,8 @@ export function evaluatePlan(
     // Legality mirrors the catalog: a failed `legalWhen` gate is illegal
     // regardless of its diagnostics' severity (a warning gate still blocks), and
     // an `apply` that returns an error is illegal too.
-    let legal = true;
-    const diagnostics: Diagnostic[] = [];
+    let legal = !afterRest;
+    const diagnostics: Diagnostic[] = afterRest ? [{ code: AFTER_REST, severity: 'error' }] : [];
     for (const gate of offer.legalWhen ?? []) {
       if (!gate.condition(reader)) {
         legal = false;
@@ -179,14 +200,31 @@ export function evaluatePlan(
   // re-derive so they are visible this evaluation and commit at end of turn.
   checkDeadline(deadline, 'rest hooks', budgetMs);
   const settled = evaluateSheet(modules, inputFacts, [...committed, ...advertised]);
-  const reader = plainReader(settled);
-  const restKind: RestKind | null =
-    reader.num('rest.long') > 0 ? 'long' : reader.num('rest.short') > 0 ? 'short' : null;
+  const restKind: RestKind | null = (() => {
+    const r = plainReader(settled);
+    return r.num('rest.long') > 0 ? 'long' : r.num('rest.short') > 0 ? 'short' : null;
+  })();
   if (restKind) {
+    // The hook must see the state AT the rest, not the post-plan state: a spend
+    // planned after the rest has not happened yet as far as the rest is
+    // concerned, and a recovery gated on "is a spend outstanding?" (Channel
+    // Divinity) would otherwise hand that later spend straight back. `advertised`
+    // is append-ordered, so the prefix up to `restBoundary` is exactly
+    // "committed + everything through the rest row's own apply". A rest row that
+    // was the plan's last step never tripped the check inside the fold, so its
+    // boundary is the whole of `advertised` — which is the same window.
+    const boundary = restBoundary ?? advertised.length;
+    const preRest = evaluateSheet(modules, inputFacts, [
+      ...committed,
+      ...advertised.slice(0, boundary)
+    ]);
+    const reader = plainReader(preRest);
     for (const m of modules) {
       if (!m.onRest) continue;
       // Rest-recovery effects (Channel Divinity, Heroic Inspiration) carry the
-      // same owning-group stamp so unassign drops them too.
+      // same owning-group stamp so unassign drops them too. They are appended
+      // PAST the boundary, so they are part of the final projection but never
+      // feed back into the pre-rest reader another module's hook sees.
       for (const e of m.onRest(restKind, reader))
         advertised.push({ ...e, ruleGroupId: e.ruleGroupId ?? m.id });
     }
