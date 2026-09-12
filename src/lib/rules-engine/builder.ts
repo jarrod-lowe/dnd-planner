@@ -466,10 +466,51 @@ export function attackActionSpend(
   };
 }
 
-function attackActionApply() {
-  return (s: FactReader): ActionResult => {
-    // `attack.last.weapon` marks the swing as a weapon attack (feat annotations).
-    const { effect, overCommitted } = attackActionSpend(s, { 'attack.last.weapon': 1 });
+/**
+ * The attack-kind markers a weapon swing writes, given the range band the row is
+ * cycled to.
+ *
+ * `attack.last.weapon` is unconditional — throwing a dagger is still an attack
+ * with a weapon. `attack.last.melee` is not: a thrown hit at 20ft is a RANGED
+ * attack, so it must not unlock the melee-only riders (the smites), while the
+ * melee band of the same weapon must.
+ *
+ * Which band a row is on is a per-row choice the engine cannot derive from facts
+ * — but it is not invisible either. The dice line persists the tapped band as the
+ * `rangeIndex` SELECTION (PanelDiceLine → playStore.updateSelections →
+ * `PlannedRef.selections`), and {@link rangesFor} already stamps `meleeAttack` on
+ * every band for the renderer's sake. So the apply reads the same selection the
+ * renderer does and looks the band up in the same array, which is why this takes
+ * the `def` the offer was built from: the reaction is built from a melee-only
+ * `def`, so its band indices are its own.
+ *
+ * No selection means band 0 — the band the panel opens on and the one the player
+ * is looking at when they add the row without touching the range chip. Every
+ * weapon today declares its melee band first, so the default is "melee", and a
+ * weapon with no melee band would default to its own first (ranged) band rather
+ * than to a melee attack it cannot make.
+ */
+function attackKindState(
+  def: WeaponDef,
+  selections: Record<string, unknown>
+): Record<string, number> {
+  const state: Record<string, number> = { 'attack.last.weapon': 1 };
+  const bands = rangesFor(def);
+  if (bands.length === 0) return state;
+  const picked = selections.rangeIndex;
+  const index =
+    typeof picked === 'number' && Number.isInteger(picked) && picked >= 0
+      ? picked % bands.length
+      : 0;
+  if (bands[index].meleeAttack === true) state['attack.last.melee'] = 1;
+  return state;
+}
+
+function attackActionApply(def: WeaponDef) {
+  return (s: FactReader, selections: Record<string, unknown>): ActionResult => {
+    // `attack.last.weapon` marks the swing as a weapon attack (feat annotations);
+    // `attack.last.melee` marks it as a MELEE one (the smites) — see attackKindState.
+    const { effect, overCommitted } = attackActionSpend(s, attackKindState(def, selections));
     return {
       advertise: [effect],
       diagnostics: overCommitted ? [{ code: NO_ACTION, severity: 'error' }] : []
@@ -478,10 +519,13 @@ function attackActionApply() {
 }
 
 /** A simple cost transition (reaction / bonus action) with an over-spend guard. */
-function costApply(costFact: string, remainingFact: string, code: string) {
-  return (s: FactReader): ActionResult => {
+function costApply(def: WeaponDef, costFact: string, remainingFact: string, code: string) {
+  return (s: FactReader, selections: Record<string, unknown>): ActionResult => {
     const diagnostics: Diagnostic[] = s.num(remainingFact) > 0 ? [] : [{ code, severity: 'error' }];
-    return { advertise: [turnSpend({ [costFact]: 1, 'attack.last.weapon': 1 })], diagnostics };
+    return {
+      advertise: [turnSpend({ [costFact]: 1, ...attackKindState(def, selections) })],
+      diagnostics
+    };
   };
 }
 
@@ -525,7 +569,7 @@ export function weaponOffers(def: WeaponDef): Offer[] {
         diagnostics: [{ code: NO_ACTION, severity: 'error' }]
       }
     ],
-    apply: attackActionApply()
+    apply: attackActionApply(def)
   };
 
   // An opportunity attack is melee-only: drop the thrown range bands so a
@@ -553,7 +597,9 @@ export function weaponOffers(def: WeaponDef): Offer[] {
         diagnostics: [{ code: NO_REACTION, severity: 'error' }]
       }
     ],
-    apply: costApply('reactions.spent', 'reactions.remaining', NO_REACTION)
+    // Built from `meleeDef`, so its band list is the melee-only one: an
+    // opportunity attack is always a melee attack, whatever the weapon can throw.
+    apply: costApply(meleeDef, 'reactions.spent', 'reactions.remaining', NO_REACTION)
   };
 
   const offers: Offer[] = [useAction, useReaction];
@@ -581,7 +627,9 @@ export function weaponOffers(def: WeaponDef): Offer[] {
           diagnostics: [{ code: NO_BONUS_ACTION, severity: 'error' }]
         }
       ],
-      apply: costApply('bonusActions.spent', 'bonusActions.remaining', NO_BONUS_ACTION)
+      // The off-hand swing keeps the weapon's full band list — a Light thrown
+      // weapon can be thrown with it, and a thrown hit is not a melee attack.
+      apply: costApply(def, 'bonusActions.spent', 'bonusActions.remaining', NO_BONUS_ACTION)
     });
   }
 

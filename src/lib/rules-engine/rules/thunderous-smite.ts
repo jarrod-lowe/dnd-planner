@@ -6,6 +6,7 @@ import {
   type Contribution,
   type Diagnostic,
   type EffectInstance,
+  type FactReader,
   type RuleModule
 } from '../builder';
 
@@ -109,7 +110,12 @@ const thunderousSmite: RuleModule = {
           diagnostics: [{ code: `${T}.no_bonus_action`, severity: 'error' }]
         },
         {
-          condition: (f) => f.num('attack.last.activation.action') >= 1,
+          // A MELEE attack, not the Attack action — the same trigger and the
+          // same gate as Divine Smite, for the same reason: an opportunity
+          // attack and a Light off-hand swing are melee hits that take no Attack
+          // action, while Grapple, Shove and a thrown hit take the Attack action
+          // and are not melee hits. See `attackKindState` for the writers.
+          condition: (f) => f.num('attack.last.melee') >= 1,
           diagnostics: [{ code: `${T}.no_attack`, severity: 'error' }]
         },
         {
@@ -136,7 +142,7 @@ const thunderousSmite: RuleModule = {
         const diagnostics: Diagnostic[] = [];
         if (f.num('bonusActions.remaining') <= 0)
           diagnostics.push({ code: `${T}.no_bonus_action`, severity: 'error' });
-        if (f.num('attack.last.activation.action') < 1)
+        if (f.num('attack.last.melee') < 1)
           diagnostics.push({ code: `${T}.no_attack`, severity: 'error' });
         if (f.num('spellcasting.remaining') <= 0)
           diagnostics.push({ code: `${T}.no_spellcasting`, severity: 'error' });
@@ -154,7 +160,28 @@ const thunderousSmite: RuleModule = {
         return { advertise, diagnostics };
       }
     }
-  ]
+  ],
+  // "Thunderous Smite available" on melee/unarmed attack panels — the reminder
+  // the legacy group carried (targets `attack.melee` / `attack.unarmed`) and
+  // that the module port dropped, while Divine Smite kept its.
+  //
+  // The gate is the cast offer's `when` plus its four legality conditions,
+  // exactly — which is what lets the reminder hand the player the row
+  // (`addsToPlan`) instead of only telling them about it.
+  annotate: (f: FactReader) =>
+    f.num('spell.l1.thunderousSmite.prepared') === 1 &&
+    f.num('bonusActions.remaining') > 0 &&
+    f.num('attack.last.melee') >= 1 &&
+    f.num('tsmite.eligibleSlotsRemaining') > 0 &&
+    f.num('spellcasting.remaining') > 0
+      ? [
+          {
+            key: 'rule.spell-thunderous-smite.annotation',
+            targets: ['attack.melee', 'attack.unarmed'],
+            addsToPlan: { offer: 'cast-thunderous-smite' }
+          }
+        ]
+      : []
 };
 
 export default defineRule(thunderousSmite);

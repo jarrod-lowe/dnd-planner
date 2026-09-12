@@ -21,6 +21,11 @@ steps:
   - addOffer:
       id: prepare-divine-smite
       assert:
+        facts:
+          attack.last.melee: 0
         offers:
           illegal:
             - cast-divine-smite
+        annotations:
+          notExists:
+            - rule.spell-divine-smite.annotation

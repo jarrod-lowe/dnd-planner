@@ -335,7 +335,7 @@
         "keywords": "smite thunder damage push knock",
         "description": "After a melee hit | +2d6 thunder | STR save or pushed 10ft & prone",
         "no_bonus_action": "No bonus action available",
-        "no_attack": "You must take the Attack action first",
+        "no_attack": "You must make a melee attack first",
         "no_slots": "No spell slots remaining",
         "no_spellcasting": "Already cast a spell this turn"
       },
@@ -365,7 +365,7 @@
         "description": "After a melee hit | +2d8 radiant (+1d8 per extra slot level)",
         "fiendUndeadLabel": "Fiend/Undead",
         "no_bonus_action": "No bonus action available",
-        "no_attack": "You must take the Attack action first",
+        "no_attack": "You must make a melee attack first",
         "no_resource": "No spell slots or free uses remaining",
         "no_spellcasting": "Already cast a spell this turn",
         "no_free_use": "No free uses remaining",

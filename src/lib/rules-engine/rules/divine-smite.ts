@@ -138,7 +138,15 @@ const divineSmite: RuleModule = {
           diagnostics: [{ code: `${D}.no_bonus_action`, severity: 'error' }]
         },
         {
-          condition: (f) => f.num('attack.last.activation.action') >= 1,
+          // A MELEE attack, not the Attack action. The spell triggers on hitting
+          // with a Melee weapon or an Unarmed Strike, and those two axes are not
+          // the same set in either direction: an opportunity attack and a Light
+          // off-hand swing are melee hits that take no Attack action, while
+          // Grapple, Shove and a thrown hit at 20ft all take the Attack action
+          // without ever being a melee hit. `attack.last.melee` is written by the
+          // melee band of a weapon swing (action, reaction, or off-hand bonus)
+          // and by both Unarmed Strike paths — see `attackKindState`.
+          condition: (f) => f.num('attack.last.melee') >= 1,
           diagnostics: [{ code: `${D}.no_attack`, severity: 'error' }]
         },
         {
@@ -195,13 +203,14 @@ const divineSmite: RuleModule = {
     }
   ],
   // Surface the "Divine Smite available" related-info on melee/unarmed attacks,
-  // but only while it is actually castable this turn — prepared, an attack has
-  // been taken, and a bonus action, the one-spell-per-turn, and a resource all
-  // remain. Mirrors the legacy annotate-divine-smite gate exactly.
+  // but only while it is actually castable this turn — prepared, a melee attack
+  // has been made, and a bonus action, the one-spell-per-turn, and a resource
+  // all remain. Still the cast offer's `when` plus its four legality conditions,
+  // so the reminder can never offer a row the plan would reject.
   annotate: (f: FactReader) =>
     f.num('spell.l1.divineSmite.prepared') === 1 &&
     f.num('bonusActions.remaining') > 0 &&
-    f.num('attack.last.activation.action') >= 1 &&
+    f.num('attack.last.melee') >= 1 &&
     f.num('smite.anyResourceRemaining') > 0 &&
     f.num('spellcasting.remaining') > 0
       ? [

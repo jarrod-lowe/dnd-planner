@@ -301,8 +301,10 @@ const EXPECTED_RUNNABLE = [
   'divine-favour-weapon-only',
   'divine-smite-prepare',
   'divine-smite-slot-cast',
+  'smite-after-opportunity-attack',
   'smite-available-after-attack',
   'smite-illegal-no-bonus-action',
+  'smite-illegal-without-melee-attack',
   'smite-illegal-no-slots',
   'smite-not-available-without-attack',
   // M3 — concentration + bless (first concentration spell)
@@ -312,8 +314,10 @@ const EXPECTED_RUNNABLE = [
   'bless-prepare',
   // M3 — thunderous-smite (L1 bonus-action on-hit smite)
   'thunderous-smite-prepare',
+  'tsmite-after-opportunity-attack',
   'tsmite-available-after-attack',
   'tsmite-cap-ordering',
+  'tsmite-illegal-without-melee-attack',
   'tsmite-no-slots',
   'tsmite-not-available-without-attack',
   'tsmite-usage',

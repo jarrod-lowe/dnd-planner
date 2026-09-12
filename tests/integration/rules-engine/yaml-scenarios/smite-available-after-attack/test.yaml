@@ -1,5 +1,8 @@
 name: 'Divine Smite - Available After Attack'
-description: 'A prepared Divine Smite is legal after taking an Attack action'
+description: >
+  A prepared Divine Smite is legal after an Unarmed Strike. The gate is the
+  melee attack, not the Attack action - and an Unarmed Strike is a melee attack
+  the spell names explicitly, so it qualifies even though it is not a weapon.
 ruleGroups:
   - species-human/species-human
   - dnd-5e-2024/action-economy
@@ -30,6 +33,8 @@ steps:
       assert:
         facts:
           actions.remaining: 0
+          attack.last.melee: 1
+          attack.last.weapon: 0
           attack.last.activation.action: 1
           bonusActions.remaining: 1
           spellcasting.remaining: 1

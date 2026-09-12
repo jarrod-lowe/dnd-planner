@@ -50,11 +50,21 @@ const spend = (state: Record<string, number>): EffectInstance => ({
  * extraSpent`, both summed from per-turn effects: a new Attack action grants
  * `extraAttacks.max`; each extra swing spends 1.
  */
+/**
+ * `attack.last.melee` — an Unarmed Strike is a MELEE attack, with no band to
+ * choose: it reaches 5ft and nothing else. It is not a WEAPON attack, so it
+ * still writes no `attack.last.weapon`; the two markers answer different
+ * questions and the Unarmed Strike is exactly where they part company.
+ */
+const UNARMED_MELEE = { 'attack.last.melee': 1 };
+
 function applyUnarmedStrike(s: FactReader): ActionResult {
   if (s.num('attackAction.extraRemaining') > 0) {
     // Free follow-up swing.
     return {
-      advertise: [spend({ 'attackAction.extraSpent': 1, 'attack.activation.count': 1 })]
+      advertise: [
+        spend({ 'attackAction.extraSpent': 1, 'attack.activation.count': 1, ...UNARMED_MELEE })
+      ]
     };
   }
   // New Attack action: spend an action and grant the follow-up budget — unless
@@ -65,7 +75,8 @@ function applyUnarmedStrike(s: FactReader): ActionResult {
       spend({
         'actions.spent': 1,
         'attackAction.extraGranted': granted,
-        'attack.activation.count': 1
+        'attack.activation.count': 1,
+        ...UNARMED_MELEE
       })
     ]
   };
@@ -148,8 +159,10 @@ const attacks: RuleModule = {
       // must NOT unlock the weapon-only riders (Savage Attacker, Great Weapon
       // Fighting) that read that marker — and the unarmed ACTION path never sets
       // it either. (The weapon reaction in weaponOffers sets it; unarmed doesn't.)
+      // It DOES set `attack.last.melee`: the melee-only riders (the smites) name
+      // the Unarmed Strike alongside the Melee weapon.
       apply: (f): ActionResult => ({
-        advertise: [spend({ 'reactions.spent': 1 })],
+        advertise: [spend({ 'reactions.spent': 1, ...UNARMED_MELEE })],
         diagnostics:
           f.num('reactions.remaining') > 0 ? [] : [{ code: NO_REACTION, severity: 'error' }]
       })
