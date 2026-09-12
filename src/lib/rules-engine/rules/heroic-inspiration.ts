@@ -29,6 +29,7 @@ const heroicInspiration: RuleModule = {
         section: 'other',
         name: `${HI}.grant-hi.name`,
         description: `${HI}.grant-hi.description`,
+        detailKey: 'rule/heroic-inspiration',
         intents: { AID: 'self' },
         actionCost: []
       },
@@ -61,6 +62,7 @@ const heroicInspiration: RuleModule = {
         section: 'other',
         name: `${HI}.use-hi.name`,
         description: `${HI}.use-hi.description`,
+        detailKey: 'rule/heroic-inspiration',
         intents: { AID: 'self' },
         actionCost: []
       },
