@@ -271,6 +271,12 @@ export interface Annotation {
   targets: string[];
   /** Optional rider data for rendering as a modifier chip */
   rider?: AnnotationRider;
+  /**
+   * Id of the offer this annotation advises taking. Present → the panel renders
+   * the annotation as a button that plans that offer, exactly as picking it
+   * from the add-row picker would. Absent → read-only reminder text.
+   */
+  addsOffer?: string;
 }
 
 // === ACTIVITIES ===

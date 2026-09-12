@@ -1868,6 +1868,9 @@
       "title": "This Turn I Want To…",
       "placeholder": "Tap + ADD to plan your turn"
     },
+    "annotation": {
+      "addToPlan": "nab chel: {{annotation}}"
+    },
     "ledger": {
       "title": "Resources",
       "overBudget": "Over budget",

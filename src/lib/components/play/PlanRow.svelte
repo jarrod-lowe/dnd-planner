@@ -39,6 +39,8 @@
     onMoveDown?: () => void;
     onSwapAlternative?: (entry: AvailableRuleEntry) => void;
     onFollowup?: (effect: EffectInstance) => void;
+    /** Plans the offer an actionable annotation on this row's panel names. */
+    onAddOfferToPlan?: (offerId: string) => void;
   }
 
   let {
@@ -56,7 +58,8 @@
     onMoveUp,
     onMoveDown,
     onSwapAlternative,
-    onFollowup
+    onFollowup,
+    onAddOfferToPlan
   }: Props = $props();
 
   let openTooltipAltId: string | null = $state(null);
@@ -425,6 +428,7 @@
         {activeAnnotations}
         {onSelectionChange}
         {onFollowup}
+        {onAddOfferToPlan}
         summary={collapsed}
       />
     </div>

@@ -392,6 +392,22 @@ function addToPlan(rule: Rule): void {
   scheduleEvaluation();
 }
 
+/**
+ * Plan an offer by its id — the shortcut an actionable annotation takes when
+ * tapped. Resolves against the SAME addable catalog the add-row picker reads,
+ * so the resulting row is indistinguishable from one the player picked by hand
+ * (capture vars, verb and all).
+ *
+ * A miss is a no-op: the catalog is post-plan, so an offer whose `when` gate has
+ * since closed simply isn't addable. `annotation-targets.test.ts` guards the
+ * other miss — an annotation naming an offer that never existed.
+ */
+function addOfferToPlan(offerId: string): void {
+  const entry = state.engineOutput?.availableRules.find((e) => e.rule.id === offerId);
+  if (!entry) return;
+  addToPlan(entry.rule);
+}
+
 function removeFromPlan(instanceId: string): void {
   const filtered = state.plannedItems.filter((item) => item.instanceId !== instanceId);
 
@@ -914,6 +930,7 @@ export const playStore = {
   isLocked,
   getDependents,
   addToPlan,
+  addOfferToPlan,
   removeFromPlan,
   movePlanItem,
   updateSelections,

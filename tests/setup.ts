@@ -42,7 +42,8 @@ vi.mock('sveltekit-i18n', () => {
     // default `ft` pattern is spaced ("20 FEET") like every other site.
     'play.units.hp': '{{value}} HIT_POINTS',
     'play.units.ft': '{{value}} FEET',
-    'play.units.compact.ft': '{{value}}FEET'
+    'play.units.compact.ft': '{{value}}FEET',
+    'play.annotation.addToPlan': 'Add to plan: {{annotation}}'
   };
 
   return {

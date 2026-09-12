@@ -47,6 +47,26 @@ describe('annotation targets', () => {
     expect(orphans, `annotation targets no panel carries: ${orphans.join(', ')}`).toEqual([]);
   });
 
+  it('every offer an annotation adds is a real offer', () => {
+    const all = modules();
+    const offerIds = new Set<string>();
+    for (const m of all) for (const o of offersOf(m)) offerIds.add(o.id);
+
+    const orphans: string[] = [];
+    for (const m of all) {
+      if (!m.annotate) continue;
+      for (const annotation of m.annotate(permissiveReader)) {
+        const adds = annotation.addsOffer;
+        // A tap on an annotation naming an offer that does not exist is a
+        // dead button — the store finds nothing to plan and silently does
+        // nothing. Same silent-failure class as an orphaned target label.
+        if (adds !== undefined && !offerIds.has(adds)) orphans.push(`${m.id} → ${adds}`);
+      }
+    }
+
+    expect(orphans, `annotations adding unknown offers: ${orphans.join(', ')}`).toEqual([]);
+  });
+
   it('the six save recorders carry save labels, and steed saves carry companion labels', () => {
     const core = getModule('core-events');
     expect(core, 'core-events module is registered').toBeDefined();

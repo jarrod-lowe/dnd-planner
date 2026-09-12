@@ -46,6 +46,14 @@
     onMoveUp?: () => void;
     onMoveDown?: () => void;
     onFollowup?: (effect: EffectInstance) => void;
+    /**
+     * Plans the offer an annotation names (`annotation.addsOffer`). Most
+     * annotations are advisory — "Heroic Inspiration available" — and the one
+     * that names an offer becomes a tap-to-plan shortcut instead of a reminder
+     * the player then has to act on by hand. Absent (or a non-editable picker
+     * panel) → every annotation stays read-only text.
+     */
+    onAddOfferToPlan?: (offerId: string) => void;
     onRoll?: (data: RollResult, dieIndex: number) => void;
     /**
      * Renders the collapsed-row short form: header, description, followups,
@@ -74,6 +82,7 @@
     onMoveUp,
     onMoveDown,
     onFollowup,
+    onAddOfferToPlan,
     onRoll,
     summary = false
   }: Props = $props();
@@ -396,6 +405,16 @@
         )
       : []
   );
+
+  // An annotation is tappable only where a tap is unambiguous: an editable plan
+  // panel with a handler. A picker panel is one big tap target that adds its OWN
+  // offer, so a nested add-this-other-thing button there would fight it.
+  const annotationsActionable = $derived(editable && !!onAddOfferToPlan);
+
+  function addAnnotationOffer(e: MouseEvent, offerId: string) {
+    e.stopPropagation();
+    onAddOfferToPlan?.(offerId);
+  }
 
   const hasActions = $derived(!!onRemove || !!onMoveUp || !!onMoveDown);
 
@@ -728,7 +747,28 @@
     -->
       <div class="panel-renderer__annotations" role="note">
         {#each informationalAnnotations as annotation (annotation.key)}
-          <span class="panel-renderer__annotation">{$t(annotation.key)}</span>
+          {#if annotation.addsOffer && annotationsActionable}
+            <!--
+              An advisory annotation that names an offer is a shortcut: tapping
+              it plans that action exactly as the add-row picker would. The
+              accessible name says what the tap does; the plus icon is decorative.
+            -->
+            <button
+              type="button"
+              class="panel-renderer__annotation panel-renderer__annotation--action"
+              aria-label={$t('play.annotation.addToPlan', { annotation: $t(annotation.key) })}
+              onclick={(e) => addAnnotationOffer(e, annotation.addsOffer!)}
+            >
+              <span class="panel-renderer__annotation-text">{$t(annotation.key)}</span>
+              <span class="panel-renderer__annotation-add" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                </svg>
+              </span>
+            </button>
+          {:else}
+            <span class="panel-renderer__annotation">{$t(annotation.key)}</span>
+          {/if}
         {/each}
       </div>
     {/if}
@@ -1097,6 +1137,44 @@
     padding: var(--spacing-xs) var(--spacing-sm);
     border-radius: var(--radius-sm);
     line-height: var(--line-height-md);
+  }
+
+  /* The actionable form of the same chip: identical surface, plus an add
+     affordance and the interactive states a button needs. */
+  .panel-renderer__annotation--action {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    width: 100%;
+    text-align: left;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+  }
+
+  .panel-renderer__annotation--action:hover {
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+  }
+
+  .panel-renderer__annotation--action:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: 2px;
+  }
+
+  .panel-renderer__annotation-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .panel-renderer__annotation-add svg {
+    width: 1rem;
+    height: 1rem;
   }
 
   .panel-renderer__followups {
