@@ -1128,7 +1128,19 @@
     padding-top: var(--spacing-xs);
   }
 
+  /* Sizing lives on the base chip, not on the actionable variant, so the two
+     forms stack at the same height. The tappable one needs the 2.75rem touch
+     target every other tappable control uses (its own type scale only adds up
+     to 28px, well under a thumb), and a reminder sitting beside it at 28px
+     reads as a rendering fault rather than as a different kind of thing. It is
+     a minimum, not a height: either form still grows when its text wraps, and
+     align-items keeps a single line centred in the taller box. `box-sizing:
+     border-box` (base.css) is what lets the bordered variant match the
+     borderless one exactly. */
   .panel-renderer__annotation {
+    display: flex;
+    align-items: center;
+    min-height: 2.75rem;
     font-family: var(--font-body);
     font-size: var(--font-size-xs);
     font-weight: 500;
@@ -1139,19 +1151,12 @@
     line-height: var(--line-height-md);
   }
 
-  /* The actionable form of the same chip: identical surface, plus an add
-     affordance and the interactive states a button needs. The chip's own
-     type scale only adds up to 28px, well under a thumb, so this variant
-     takes the 2.75rem touch target every other tappable control uses. It is
-     a minimum, not a height: the flex box still grows when the text wraps,
-     and align-items keeps a single line centred in the taller box. */
+  /* The actionable form of the same chip: identical surface and size, plus an
+     add affordance and the interactive states a button needs. */
   .panel-renderer__annotation--action {
-    display: flex;
-    align-items: center;
     justify-content: space-between;
     gap: var(--spacing-sm);
     width: 100%;
-    min-height: 2.75rem;
     text-align: left;
     border: 1px solid var(--md-sys-color-outline-variant);
     cursor: pointer;
