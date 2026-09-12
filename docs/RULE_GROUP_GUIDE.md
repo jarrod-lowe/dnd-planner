@@ -456,3 +456,9 @@ sibling `assert:`) and cover `facts`, `offers` / `effects` / `annotations`
   silently matches nothing. `annotation-targets.test.ts` catches a target label
   no panel carries at all, but not a label that is nested-and-dead here while
   another panel still carries it correctly.
+- **A roller with no `dice.any`.** Any offer whose `ui` carries a `dice-line` or
+  `hit-dice` control must also carry `dice.any` — `dice.any.companion` when the
+  panel is `subject: 'steed'`. Heroic Inspiration rerolls "any die", and it finds
+  the panel through that label alone, so a roller without it silently never
+  offers the reroll (this is how the six save recorders were missed).
+  `annotation-targets.test.ts` now fails the build on a roller that lacks it.

@@ -91,6 +91,16 @@ const heroicInspiration: RuleModule = {
   ],
   // Advisory AND actionable: the reminder names `use-hi`, so tapping it plans
   // the spend instead of making the player hunt for it in the add-row picker.
+  //
+  // `dice.any` is the whole target list because the SRD 5.2 wording is "reroll
+  // ANY die immediately after rolling it" — attacks, checks, saves, damage,
+  // healing and hit dice alike. Every panel carrying a dice-line or hit-dice
+  // control therefore carries the label, and `annotation-targets.test.ts` fails
+  // the build if a new roller is authored without it.
+  //
+  // Companion rollers are deliberately excluded: they carry `dice.any.companion`
+  // instead (see `COMPANION_DICE_LABEL` in find-steed.ts for the reading). To
+  // reverse that, add `'dice.any.companion'` to the targets below.
   annotate: (f) =>
     f.num('heroicInspiration.remaining') > 0
       ? [{ key: `${HI}.annotation`, targets: ['dice.any'], addsToPlan: { offer: 'use-hi' } }]

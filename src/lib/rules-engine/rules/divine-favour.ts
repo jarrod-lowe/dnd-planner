@@ -144,6 +144,8 @@ const divineFavour: RuleModule = {
         section: 'free',
         name: `${DF}.use-divine-favour.name`,
         description: `${DF}.use-divine-favour.description`,
+        // The 1d4 is a die the player rolls, so Heroic Inspiration can reroll it.
+        annotationLabels: ['dice.any'],
         primaryControl: {
           type: 'dice-line',
           dice: [{ sides: 4, damageType: { string: RADIANT }, purpose: 'damage' }]
