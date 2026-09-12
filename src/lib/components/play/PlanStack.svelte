@@ -77,6 +77,12 @@
     })
   );
 
+  // The ids a plan row's annotation shortcut may offer to add. `entries` IS the
+  // post-plan addable catalog the store resolves a tap against, so gating on it
+  // here means the button can never outlive the offer behind it — a weapon
+  // stowed by a later row takes its own "attack again" button with it.
+  const addableOfferIds = $derived(new Set(entries.map((e) => e.rule.id)));
+
   // Group entries by verb for computing alternatives
   const verbGroups = $derived(groupChoicesByVerb(entries));
   const verbGroupMap = $derived(new Map(verbGroups.map((g) => [g.verb, g])));
@@ -153,6 +159,7 @@
           onSwapAlternative={(alt) => onSwapPlanItemRule(item.instanceId, alt)}
           {onFollowup}
           {onAddOfferToPlan}
+          {addableOfferIds}
         />
       </div>
     {/each}

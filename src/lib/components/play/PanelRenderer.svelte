@@ -61,6 +61,14 @@
      * picker panel) → every annotation stays read-only text.
      */
     onAddOfferToPlan?: (offerId: string) => void;
+    /**
+     * The offer ids currently addable — the post-plan catalog the store resolves
+     * a tap against. An annotation is only actionable when the offer it advises
+     * is in here, so the button can never outlive the offer behind it. Absent
+     * means deny, not allow: a caller that forgets to wire it shows a missing
+     * button, which is visible, rather than a dead one, which is silent.
+     */
+    addableOfferIds?: Set<string>;
     onRoll?: (data: RollResult, dieIndex: number) => void;
     /**
      * Renders the collapsed-row short form: header, description, followups,
@@ -90,6 +98,7 @@
     onMoveDown,
     onFollowup,
     onAddOfferToPlan,
+    addableOfferIds,
     onRoll,
     summary = false
   }: Props = $props();
@@ -419,20 +428,26 @@
   const annotationsActionable = $derived(editable && !!onAddOfferToPlan);
 
   /**
-   * The offer an annotation's tap should plan, or undefined when it cannot be
-   * resolved here — in which case the annotation renders as plain text rather
-   * than as a button that would do nothing.
+   * The offer an annotation's tap should plan, or undefined when there is no
+   * addable offer behind it — in which case the annotation renders as plain
+   * text rather than as a button that would do nothing.
    *
    * `again` means "another of this panel's own offer" (Extra Attack: swing
-   * again with the weapon already on the row). That reads `entry.rule.id`,
-   * which is the catalog offer id for a live planned row — but a row the engine
-   * SKIPPED is rendered from the planned item itself, whose id is the instance
-   * id and resolves to nothing. `applicable` is exactly that distinction, so a
-   * stale row keeps the reminder and loses the button.
+   * again with the weapon already on the row), so it resolves to `entry.rule.id`.
+   *
+   * Membership of the addable catalog is the whole test, for both forms, because
+   * that catalog is exactly what the store's lookup will consult. Two distinct
+   * ways to end up with a row whose offer is not in it, both covered by the one
+   * check:
+   *  - the offer RAN at its step and a later row closed its gate (a set-loadout
+   *    that stows the weapon) — the row still reads `applicable`, since that is
+   *    step-time, but the offer is gone from the post-plan catalog;
+   *  - the engine SKIPPED the row, so PlanStack renders it from the planned item
+   *    itself, whose id is the instance id and is never a catalog member.
    */
   function resolveAnnotationOffer(adds: AnnotationAction): string | undefined {
-    if (adds === 'again') return entry.applicable ? entry.rule.id : undefined;
-    return adds.offer;
+    const offerId = adds === 'again' ? entry.rule.id : adds.offer;
+    return addableOfferIds?.has(offerId) ? offerId : undefined;
   }
 
   function addAnnotationOffer(e: MouseEvent, offerId: string) {

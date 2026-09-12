@@ -187,9 +187,15 @@ Attack-action panel the character has, and the follow-up swing is almost always
 with the weapon already in hand. Because the weapon IS the offer
 (`greataxe-use-action`), repeating the offer repeats the weapon; the new row
 captures its vars fresh, so it picks up the current grip rather than inheriting
-the tapped row's. A row the engine skipped renders from the planned item rather
-than its offer, so `again` goes back to plain text there instead of becoming a
-button that resolves to nothing.
+the tapped row's.
+
+Either form only becomes a button while the offer behind it is still in the
+post-plan addable catalog — the same catalog the tap resolves against — so a
+reminder can never outlive its action. Both ways of losing one are covered by
+that: a later row that closes the offer's gate (a `set-loadout` that stows the
+weapon takes its own "attack again" button with it), and a row the engine
+skipped, which renders from the planned item and so carries an instance id no
+catalog holds. The annotation falls back to plain text; it does not disappear.
 
 The panel renders an actionable annotation as a button; tapping it plans the
 action exactly as picking it by hand would. Only editable plan panels make it

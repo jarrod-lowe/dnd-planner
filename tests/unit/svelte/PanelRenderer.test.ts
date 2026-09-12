@@ -139,12 +139,16 @@ describe('PanelRenderer actionable annotations', () => {
     { key: 'rule.dnd-5e-2024.attacks.extra-attack.annotation', targets: ['dice.any'] }
   ];
 
+  /** The addable catalog the annotation shortcut resolves against. */
+  const catalog = new Set(['use-hi']);
+
   it('renders an annotation that names an offer as a button', () => {
     const { container } = render(PanelRenderer, {
       props: {
         entry: diceEntry,
         editable: true,
         activeAnnotations: hiAnnotation,
+        addableOfferIds: catalog,
         onAddOfferToPlan: vi.fn()
       }
     });
@@ -160,7 +164,13 @@ describe('PanelRenderer actionable annotations', () => {
   it('adds the named offer to the plan when tapped', async () => {
     const onAddOfferToPlan = vi.fn();
     const { container } = render(PanelRenderer, {
-      props: { entry: diceEntry, editable: true, activeAnnotations: hiAnnotation, onAddOfferToPlan }
+      props: {
+        entry: diceEntry,
+        editable: true,
+        activeAnnotations: hiAnnotation,
+        addableOfferIds: catalog,
+        onAddOfferToPlan
+      }
     });
     await fireEvent.click(container.querySelector('button.panel-renderer__annotation--action')!);
     expect(onAddOfferToPlan).toHaveBeenCalledWith('use-hi');
@@ -172,6 +182,38 @@ describe('PanelRenderer actionable annotations', () => {
         entry: diceEntry,
         editable: true,
         activeAnnotations: advisoryAnnotation,
+        addableOfferIds: catalog,
+        onAddOfferToPlan: vi.fn()
+      }
+    });
+    expect(container.querySelector('button.panel-renderer__annotation--action')).toBeNull();
+    expect(container.querySelector('span.panel-renderer__annotation')).not.toBeNull();
+  });
+
+  it('leaves a named offer absent from the addable catalog as plain text', () => {
+    // The offer's `when` gate has closed post-plan, so the store's lookup would
+    // miss and the tap would do nothing. A dead button is worse than no button.
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: diceEntry,
+        editable: true,
+        activeAnnotations: hiAnnotation,
+        addableOfferIds: new Set(['something-else']),
+        onAddOfferToPlan: vi.fn()
+      }
+    });
+    expect(container.querySelector('button.panel-renderer__annotation--action')).toBeNull();
+    expect(container.querySelector('span.panel-renderer__annotation')).not.toBeNull();
+  });
+
+  it('leaves the annotation as plain text when no catalog is wired through', () => {
+    // Deny by default: a caller that forgot to pass the catalog shows a missing
+    // button (visible) rather than a dead one (silent).
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: diceEntry,
+        editable: true,
+        activeAnnotations: hiAnnotation,
         onAddOfferToPlan: vi.fn()
       }
     });
@@ -187,6 +229,7 @@ describe('PanelRenderer actionable annotations', () => {
         entry: diceEntry,
         editable: false,
         activeAnnotations: hiAnnotation,
+        addableOfferIds: catalog,
         onAddOfferToPlan: vi.fn()
       }
     });
@@ -202,6 +245,7 @@ describe('PanelRenderer actionable annotations', () => {
         entry: diceEntry,
         editable: true,
         activeAnnotations: hiAnnotation,
+        addableOfferIds: catalog,
         onAddOfferToPlan,
         onTap
       }
@@ -241,6 +285,9 @@ describe('PanelRenderer "again" annotations', () => {
     diagnostics: []
   });
 
+  /** Both weapons still wielded post-plan, so both attacks remain addable. */
+  const catalog = new Set(['greataxe-use-action', 'spear-use-action']);
+
   it("re-plans the panel's own offer, so the swing reuses the same weapon", async () => {
     const onAddOfferToPlan = vi.fn();
     const { container } = render(PanelRenderer, {
@@ -248,6 +295,7 @@ describe('PanelRenderer "again" annotations', () => {
         entry: attackEntry('greataxe-use-action'),
         editable: true,
         activeAnnotations: extraAttack,
+        addableOfferIds: catalog,
         onAddOfferToPlan
       }
     });
@@ -263,6 +311,7 @@ describe('PanelRenderer "again" annotations', () => {
         entry: attackEntry('spear-use-action'),
         editable: true,
         activeAnnotations: extraAttack,
+        addableOfferIds: catalog,
         onAddOfferToPlan
       }
     });
@@ -270,18 +319,36 @@ describe('PanelRenderer "again" annotations', () => {
     expect(onAddOfferToPlan).toHaveBeenCalledWith('spear-use-action');
   });
 
-  it('stays plain text on an inapplicable row, whose id is not an offer id', () => {
-    // A stale row (its `when` closed mid-plan) is rendered from the planned
-    // item itself, whose rule id is the INSTANCE id — not something the offer
-    // catalog can resolve. Tapping would be a dead button, so it must not be
-    // one; a named-offer annotation is unaffected and stays tappable.
-    const stale = attackEntry('inst-42');
-    stale.applicable = false;
+  it('stays plain text once a later row has stowed the weapon', () => {
+    // The greataxe swing RAN at its own step, so its row is applicable — but a
+    // later set-loadout row stowed the weapon, so `greataxe-use-action` is gated
+    // out of the post-plan addable catalog and the store's lookup would miss.
+    // Applicability cannot see this; only the catalog can.
     const { container } = render(PanelRenderer, {
       props: {
-        entry: stale,
+        entry: attackEntry('greataxe-use-action'),
         editable: true,
         activeAnnotations: extraAttack,
+        addableOfferIds: new Set(['spear-use-action']),
+        onAddOfferToPlan: vi.fn()
+      }
+    });
+    expect(container.querySelector('button.panel-renderer__annotation--action')).toBeNull();
+    expect(container.querySelector('span.panel-renderer__annotation')).not.toBeNull();
+  });
+
+  it('stays plain text on a skipped row, whose id is an instance id', () => {
+    // A row the engine SKIPPED is rendered from the planned item itself, whose
+    // rule id is the INSTANCE id — never a member of the offer catalog, so the
+    // same membership test that covers the stowed weapon covers this too.
+    const skipped = attackEntry('inst-42');
+    skipped.applicable = false;
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: skipped,
+        editable: true,
+        activeAnnotations: extraAttack,
+        addableOfferIds: catalog,
         onAddOfferToPlan: vi.fn()
       }
     });
