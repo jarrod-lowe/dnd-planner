@@ -66,10 +66,18 @@ const featSavageAttacker: RuleModule = {
       }
     }
   ],
-  // "Reroll available" on weapon attacks while a use remains this turn.
+  // "Reroll available" on weapon attacks while a use remains this turn. The
+  // gate is exactly the use-offer's two legality conditions, so the reminder
+  // can carry the offer itself: it never shows without the action behind it.
   annotate: (f) =>
     f.num('attack.last.weapon') >= 1 && f.num('savageAttacker.remaining') > 0
-      ? [{ key: `${S}.annotation`, targets: ['attack.weapon'] }]
+      ? [
+          {
+            key: `${S}.annotation`,
+            targets: ['attack.weapon'],
+            addsToPlan: { offer: 'savage-attacker-use' }
+          }
+        ]
       : []
 };
 

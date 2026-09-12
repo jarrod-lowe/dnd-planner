@@ -204,7 +204,15 @@ const divineSmite: RuleModule = {
     f.num('attack.last.activation.action') >= 1 &&
     f.num('smite.anyResourceRemaining') > 0 &&
     f.num('spellcasting.remaining') > 0
-      ? [{ key: 'rule.spell-divine-smite.annotation', targets: ['attack.melee', 'attack.unarmed'] }]
+      ? [
+          {
+            key: 'rule.spell-divine-smite.annotation',
+            targets: ['attack.melee', 'attack.unarmed'],
+            // The gate above is the cast offer's `when` plus its four legality
+            // conditions, so the reminder never shows without the action.
+            addsToPlan: { offer: 'cast-divine-smite' }
+          }
+        ]
       : []
 };
 
