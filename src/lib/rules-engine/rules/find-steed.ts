@@ -1065,6 +1065,16 @@ const findSteed: RuleModule = {
             // heal row actually contributed to `hp.modifier.current` — already
             // capped at the HP you were missing — and not the raw slider value,
             // which would hand the steed 10 for a heal that gave you 1.
+            //
+            // That contribution is the HP you regained EXCEPT while overkill is
+            // banked (#395): `hp.modifier.current` can sit below `-hp.max`, so
+            // the heal caps at the banked shortfall rather than the visible one
+            // and the steed is seeded more than the sheet moved. The seed is
+            // not the defect — `record-heal` advertises the same overstated
+            // figure to the player's own chip — and re-pointing the seed at the
+            // clamped `hp.current` delta would seed a number that is wrong the
+            // other way. Pinned in `hp-record-chips.test.ts`; it comes right on
+            // its own when #395 replaces the summed fact with an ordered replay.
             addsToPlan: {
               offer: 'steed-record-heal',
               seed: { amount: { effect: 'hp.modifier.current' } }
