@@ -1,0 +1,100 @@
+name: 'Divine Smite - Illegal Without a Melee Attack'
+description: >
+  Taking the Attack action is not enough. Grapple and Shove spend it without any
+  attack roll, and a thrown spear is a ranged attack - none of them is the melee
+  hit Divine Smite rides on, so the cast stays illegal and the reminder stays
+  away through all three.
+
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/grapple
+  - dnd-5e-2024/shove
+  - dnd-5e-2024/spear
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - spells/spell-divine-smite
+
+initialFacts:
+  weapon.spear.equipped: 1
+
+steps:
+  - addOffer:
+      id: prepare-divine-smite
+
+  # Grapple: the Attack action, a free hand, and a STR save - no attack roll.
+  - addOffer:
+      id: grapple-action
+      assert:
+        facts:
+          attack.last.activation.action: 1
+          attack.last.melee: 0
+          actions.remaining: 0
+        offers:
+          illegal:
+            - cast-divine-smite
+        annotations:
+          notExists:
+            - rule.spell-divine-smite.annotation
+
+  - endTurn:
+      assert:
+        facts:
+          actions.remaining: 1
+          attack.last.melee: 0
+          spell.l1.divineSmite.prepared: 1
+
+  # Shove: same shape, same verdict.
+  - addOffer:
+      id: shove-action
+      assert:
+        facts:
+          attack.last.activation.action: 1
+          attack.last.melee: 0
+        offers:
+          illegal:
+            - cast-divine-smite
+        annotations:
+          notExists:
+            - rule.spell-divine-smite.annotation
+
+  - endTurn:
+
+  # A spear thrown at 20ft (range band 1): a weapon attack, and the Attack
+  # action - but a RANGED one, so the smite still has nothing to ride on.
+  - addOffer:
+      id: spear-use-action
+      selections:
+        rangeIndex: 1
+      assert:
+        facts:
+          attack.last.activation.action: 1
+          attack.last.weapon: 1
+          attack.last.melee: 0
+        offers:
+          illegal:
+            - cast-divine-smite
+        annotations:
+          notExists:
+            - rule.spell-divine-smite.annotation
+
+  # Cycled back to the 5ft band, the same weapon and the same action unlock it.
+  - updateSelections:
+      id: spear-use-action
+      selections:
+        rangeIndex: 0
+      assert:
+        facts:
+          attack.last.melee: 1
+        offers:
+          legal:
+            - cast-divine-smite
+        annotations:
+          exists:
+            - rule.spell-divine-smite.annotation

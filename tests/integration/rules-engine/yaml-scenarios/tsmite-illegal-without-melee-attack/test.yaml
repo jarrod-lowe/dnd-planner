@@ -1,0 +1,95 @@
+name: 'Thunderous Smite - Illegal Without a Melee Attack'
+description: >
+  Grapple and Shove spend the Attack action without an attack roll, and a thrown
+  spear is a ranged attack. None of the three is the melee hit Thunderous Smite
+  rides on, so the cast stays illegal and the reminder stays away until the same
+  spear row is cycled back to its 5ft band.
+
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/hands
+  - dnd-5e-2024/grapple
+  - dnd-5e-2024/shove
+  - dnd-5e-2024/spear
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - spells/spell-thunderous-smite
+
+initialFacts:
+  weapon.spear.equipped: 1
+
+steps:
+  - addOffer:
+      id: prepare-thunderous-smite
+
+  - addOffer:
+      id: grapple-action
+      assert:
+        facts:
+          attack.last.activation.action: 1
+          attack.last.melee: 0
+          actions.remaining: 0
+        offers:
+          illegal:
+            - cast-thunderous-smite
+        annotations:
+          notExists:
+            - rule.spell-thunderous-smite.annotation
+
+  - endTurn:
+      assert:
+        facts:
+          actions.remaining: 1
+          attack.last.melee: 0
+          spell.l1.thunderousSmite.prepared: 1
+
+  - addOffer:
+      id: shove-action
+      assert:
+        facts:
+          attack.last.activation.action: 1
+          attack.last.melee: 0
+        offers:
+          illegal:
+            - cast-thunderous-smite
+        annotations:
+          notExists:
+            - rule.spell-thunderous-smite.annotation
+
+  - endTurn:
+
+  - addOffer:
+      id: spear-use-action
+      selections:
+        rangeIndex: 1
+      assert:
+        facts:
+          attack.last.activation.action: 1
+          attack.last.weapon: 1
+          attack.last.melee: 0
+        offers:
+          illegal:
+            - cast-thunderous-smite
+        annotations:
+          notExists:
+            - rule.spell-thunderous-smite.annotation
+
+  - updateSelections:
+      id: spear-use-action
+      selections:
+        rangeIndex: 0
+      assert:
+        facts:
+          attack.last.melee: 1
+        offers:
+          legal:
+            - cast-thunderous-smite
+        annotations:
+          exists:
+            - rule.spell-thunderous-smite.annotation

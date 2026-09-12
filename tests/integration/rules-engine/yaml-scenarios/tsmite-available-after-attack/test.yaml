@@ -1,5 +1,8 @@
 name: 'Thunderous Smite - Available After Attack'
-description: 'Thunderous Smite is legal after taking an Attack action'
+description: >
+  Thunderous Smite is legal after an Unarmed Strike. The gate is the melee
+  attack, not the Attack action - and an Unarmed Strike is a melee attack the
+  spell names explicitly, so it qualifies even though it is not a weapon.
 ruleGroups:
   - species-human/species-human
   - dnd-5e-2024/action-economy
@@ -30,9 +33,19 @@ steps:
       assert:
         facts:
           actions.remaining: 0
+          attack.last.melee: 1
+          attack.last.weapon: 0
           attack.last.activation.action: 1
           bonusActions.remaining: 1
           spellcasting.remaining: 1
         offers:
           legal:
             - cast-thunderous-smite
+        # The reminder the legacy group carried, back on the same gate as the
+        # cast offer, so tapping it can always plan the smite.
+        annotations:
+          exists:
+            - rule.spell-thunderous-smite.annotation
+          addsToPlan:
+            - key: rule.spell-thunderous-smite.annotation
+              adds: { offer: cast-thunderous-smite }

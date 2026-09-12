@@ -24,3 +24,8 @@ steps:
         offers:
           illegal:
             - cast-thunderous-smite
+        # The reminder shares the cast offer's gate exactly, so it stays away
+        # while the cast is illegal rather than offering a row the plan rejects.
+        annotations:
+          notExists:
+            - rule.spell-thunderous-smite.annotation

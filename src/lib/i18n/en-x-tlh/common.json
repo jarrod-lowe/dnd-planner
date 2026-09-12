@@ -335,7 +335,7 @@
         "keywords": "smite thunder damage push knock",
         "description": "nuH DIch tlhej | +2d6 thunder | STR ra' pagh puv 10ft 'ej DoH",
         "no_bonus_action": "Quv DIvI' tu'lu'be'",
-        "no_attack": "DIch nuH DIvI' tu'lu'be'",
+        "no_attack": "wa'DIch HIv lo'nIS",
         "no_slots": "mugh laH tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'"
       },
@@ -365,7 +365,7 @@
         "description": "nuH DIch tlhej | +2d8 radiant (+1d8 DIvI' Hoch)",
         "fiendUndeadLabel": "mIgh Do' Ha'DIbaH",
         "no_bonus_action": "Quv DIvI' tu'lu'be'",
-        "no_attack": "DIch nuH DIvI' tu'lu'be'",
+        "no_attack": "wa'DIch HIv lo'nIS",
         "no_resource": "mugh laH free je tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
         "no_free_use": "lo'Ha' tu'lu'be'",
