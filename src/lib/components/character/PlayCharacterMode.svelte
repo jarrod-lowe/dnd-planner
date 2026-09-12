@@ -116,6 +116,16 @@
     playStore.updateSelections(instanceId, selections);
   }
 
+  // Passed by reference rather than wrapped in an arrow. A wrapper has to
+  // restate the parameter list, and an arrow naming fewer parameters is still
+  // assignable to the wider type — so dropping one compiles clean and silently
+  // discards it. That is exactly how the third argument (the id of the row the
+  // annotation was tapped on) was lost here, leaving Life Bond's steed heal row
+  // to open on its default 0 instead of the HP the player had just regained.
+  // The store is an object literal of module-level functions, so detaching a
+  // method from it is safe: nothing here depends on `this`.
+  const addOfferToPlan = playStore.addOfferToPlan;
+
   // Load rule groups on mount
   onMount(() => {
     playStore.loadRuleGroups(character.characterId);
@@ -177,7 +187,7 @@
         onSelectionChange={handleSelectionChange}
         onSwapPlanItemRule={(id, entry) => playStore.swapPlanItemRule(id, entry)}
         onFollowup={(effect) => playStore.addFollowupEffect(effect)}
-        onAddOfferToPlan={(offerId, seed) => playStore.addOfferToPlan(offerId, seed)}
+        onAddOfferToPlan={addOfferToPlan}
         onEndTurn={() => playStore.endTurn()}
       />
       <Ledger
