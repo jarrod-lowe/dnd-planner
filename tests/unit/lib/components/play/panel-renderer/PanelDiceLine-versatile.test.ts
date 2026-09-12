@@ -55,54 +55,54 @@ const createVersatileSpearEntry = (): AvailableRuleEntry => ({
 });
 
 describe('PanelRenderer - versatile weapon (spear)', () => {
-  it('shows range label when present - "5ft 1H" for first range', () => {
+  it('shows range label when present - "5FEET 1H" for first range', () => {
     const entry = createVersatileSpearEntry();
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts: {} }
     });
-    expect(container.textContent).toContain('5ft 1H');
+    expect(container.textContent).toContain('5FEET 1H');
   });
 
-  it('cycles to "5ft 2H" when range is tapped once', async () => {
+  it('cycles to "5FEET 2H" when range is tapped once', async () => {
     const entry = createVersatileSpearEntry();
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts: {} }
     });
-    // Initially shows "5ft 1H"
-    expect(container.textContent).toContain('5ft 1H');
+    // Initially shows "5FEET 1H"
+    expect(container.textContent).toContain('5FEET 1H');
     // Tap to cycle
     const rangeEl = container.querySelector('.panel-renderer__range') as HTMLElement;
     await fireEvent.click(rangeEl);
-    // Now shows "5ft 2H"
-    expect(container.textContent).toContain('5ft 2H');
+    // Now shows "5FEET 2H"
+    expect(container.textContent).toContain('5FEET 2H');
   });
 
-  it('cycles to "20ft" (no label) for thrown range', async () => {
+  it('cycles to "20FEET" (no label) for thrown range', async () => {
     const entry = createVersatileSpearEntry();
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts: {} }
     });
     const rangeEl = container.querySelector('.panel-renderer__range') as HTMLElement;
-    // Cycle twice to reach 20ft thrown
+    // Cycle twice to reach 20FEET thrown
     await fireEvent.click(rangeEl);
     await fireEvent.click(rangeEl);
-    expect(container.textContent).toContain('20ft');
+    expect(container.textContent).toContain('20FEET');
     // Should NOT contain "1H" or "2H" label for thrown
-    expect(container.textContent).not.toContain('20ft 1H');
-    expect(container.textContent).not.toContain('20ft 2H');
+    expect(container.textContent).not.toContain('20FEET 1H');
+    expect(container.textContent).not.toContain('20FEET 2H');
   });
 
-  it('cycles to "60ft" with disadvantage indicator for long thrown range', async () => {
+  it('cycles to "60FEET" with disadvantage indicator for long thrown range', async () => {
     const entry = createVersatileSpearEntry();
     const { container } = render(PanelRenderer, {
       props: { entry, editable: true, facts: {} }
     });
     const rangeEl = container.querySelector('.panel-renderer__range') as HTMLElement;
-    // Cycle three times to reach 60ft thrown
+    // Cycle three times to reach 60FEET thrown
     await fireEvent.click(rangeEl);
     await fireEvent.click(rangeEl);
     await fireEvent.click(rangeEl);
-    expect(container.textContent).toContain('60ft');
+    expect(container.textContent).toContain('60FEET');
     // Disadvantage indicator should be visible
     expect(container.querySelector('.panel-renderer__disadv-indicator')).toBeTruthy();
   });
@@ -183,7 +183,7 @@ describe('PanelRenderer - versatile weapon (spear)', () => {
     await fireEvent.click(rangeEl); // -> 20ft
     await fireEvent.click(rangeEl); // -> 60ft
     await fireEvent.click(rangeEl); // -> back to 1H
-    expect(container.textContent).toContain('5ft 1H');
+    expect(container.textContent).toContain('5FEET 1H');
     // Damage die should be d6 again
     expect(container.textContent).toContain('d6');
   });
@@ -216,8 +216,8 @@ describe('PanelRenderer - versatile weapon (spear)', () => {
         selections: { rangeIndex: 1 }
       }
     });
-    // Should show "5ft 2H" (range index 1)
-    expect(container.textContent).toContain('5ft 2H');
+    // Should show "5FEET 2H" (range index 1)
+    expect(container.textContent).toContain('5FEET 2H');
     // Damage die should be d8 (2H override)
     expect(container.textContent).toContain('d8');
   });
@@ -343,7 +343,7 @@ describe('PanelDiceLine - versatile grip label follows the loadout', () => {
   it('reads one-handed when the grip fact is unset', () => {
     const { container } = renderGripSpear({ 'attack.spear.damageDie': 6 });
     expect(container.querySelector('.panel-renderer__range')?.textContent?.trim()).toBe(
-      `5ft ${ONE_HANDED}`
+      `5FEET ${ONE_HANDED}`
     );
     expect(container.textContent).toContain('d6');
   });
@@ -354,7 +354,7 @@ describe('PanelDiceLine - versatile grip label follows the loadout', () => {
       'attack.spear.damageDie': 8
     });
     expect(container.querySelector('.panel-renderer__range')?.textContent?.trim()).toBe(
-      `5ft ${TWO_HANDED}`
+      `5FEET ${TWO_HANDED}`
     );
     expect(container.textContent).toContain('d8');
   });
@@ -365,8 +365,8 @@ describe('PanelDiceLine - versatile grip label follows the loadout', () => {
       'attack.spear.damageDie': 8
     });
     const rangeEl = container.querySelector('.panel-renderer__range') as HTMLElement;
-    await fireEvent.click(rangeEl); // -> 20ft thrown
-    expect(container.querySelector('.panel-renderer__range')?.textContent?.trim()).toBe('20ft');
+    await fireEvent.click(rangeEl); // -> 20FEET thrown
+    expect(container.querySelector('.panel-renderer__range')?.textContent?.trim()).toBe('20FEET');
     expect(container.textContent).not.toContain(TWO_HANDED);
     expect(container.textContent).not.toContain(ONE_HANDED);
   });
@@ -383,7 +383,7 @@ describe('PanelDiceLine - versatile grip label follows the loadout', () => {
       props: { control, editable: true, facts: {}, vars }
     });
     expect(container.querySelector('.panel-renderer__range')?.textContent?.trim()).toBe(
-      '5ft 1 hand free'
+      '5FEET 1 hand free'
     );
   });
 

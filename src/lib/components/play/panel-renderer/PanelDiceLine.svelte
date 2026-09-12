@@ -41,6 +41,7 @@
   import DamageTypeIcon from './DamageTypeIcon.svelte';
   import DieChip from './DieChip.svelte';
   import { nextDiceLineId } from './diceLineId';
+  import { unitLabel } from './unitLabel';
   import type { CritMode, DiceEntry, RollModifier, RollResult, ValueSource } from './types';
   import { t } from '$lib/i18n';
 
@@ -236,9 +237,14 @@
 
   const currentRangeLabel = $derived(rangeLabel(currentRange));
 
+  // A range's distance is always in feet — there's no authored `unit` token on
+  // `RangeEntry` (unlike a slider's `control.unit`), so 'ft' is hardcoded here as
+  // the token to resolve, matching the same literal every `unit: 'ft'` rule
+  // authors (movement.ts, find-steed.ts) for its own `play.units.ft` render.
   function formatRangeText(range: RangeEntry): string {
     const label = rangeLabel(range);
-    return label ? `${range.distance}ft ${label}` : `${range.distance}ft`;
+    const distanceText = `${range.distance}${unitLabel($t, 'ft')}`;
+    return label ? `${distanceText} ${label}` : distanceText;
   }
 
   // The chip must read as the roll you are ABOUT to make, so active modifiers are

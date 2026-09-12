@@ -1,5 +1,6 @@
 <script lang="ts">
   import { resolveValueSource } from './resolveValueSource';
+  import { unitLabel } from './unitLabel';
   import type { SliderControl, SliderNotch } from './types';
   import type { Facts, VarDefinition } from '$lib/rules-view';
   import { t } from '$lib/i18n';
@@ -58,7 +59,11 @@
   const min = $derived(resolvedMin ?? 0);
   const max = $derived(resolvedMax ?? 0);
   const step = $derived(control.step ?? 1);
-  const unit = $derived(control.unit ?? '');
+  // `control.unit` is a literal notation token authored on the rule (e.g.
+  // 'ft') — translated at this render edge via `unitLabel`, under the
+  // `play.units.<token>` namespace; an unrecognized token falls back to the
+  // raw token rather than leaking a dotted key (see `unitLabel.ts`).
+  const unit = $derived(unitLabel($t, control.unit));
 
   // --- Shared state ---
   // Local state for immediate visual feedback during drag.

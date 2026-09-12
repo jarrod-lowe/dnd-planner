@@ -30,7 +30,13 @@ vi.mock('sveltekit-i18n', () => {
     'play.hitDice.bonusLabel': 'Each die: CON {{bonus}}',
     'play.loadout.handsFree.none': 'no hands free',
     'play.loadout.handsFree.one': '1 hand free',
-    'play.loadout.handsFree.many': '{{count}} hands free'
+    'play.loadout.handsFree.many': '{{count}} hands free',
+    // Deliberately spelled differently from the raw rule-authored tokens
+    // ('hp', 'ft') they translate: a component that skips `unitLabel` and
+    // concatenates `control.unit` raw would render the untranslated token
+    // and fail these assertions, rather than passing by coincidence.
+    'play.units.hp': 'HIT_POINTS',
+    'play.units.ft': 'FEET'
   };
 
   return {

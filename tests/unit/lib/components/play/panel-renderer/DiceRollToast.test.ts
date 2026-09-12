@@ -298,15 +298,32 @@ describe('DiceRollToast', () => {
   });
 
   // === Unit (e.g. HP for healing) ===
+  //
+  // The toast used to look up its own parallel `play.toast.unit.*` namespace;
+  // it now shares the same `play.units.<token>` key every other unit-bearing
+  // renderer (PanelSlider, PanelHitDice) uses, via `unitLabel`. The shared
+  // test dictionary in tests/setup.ts deliberately translates the `hp` token
+  // to a value that is NOT the raw token and NOT the old namespace's string,
+  // so a regression to either the raw token or the retired namespace fails
+  // these assertions rather than passing by coincidence.
 
-  it('renders the unit after the total when unitKey is provided', () => {
+  it('renders the unit after the total, through the shared play.units key', () => {
     const result: RollResult = { total: 8, natural: 8, sides: 8, rolls: [5, 3], count: 2 };
     const { container } = render(DiceRollToast, {
       props: { title: 'Prayer of Healing', rollType: 'Roll', result, unitKey: 'hp' }
     });
-    // i18n mock returns the key
-    expect(container.textContent).toContain('play.toast.unit.hp');
+    expect(container.textContent).toContain('HIT_POINTS');
     expect(container.querySelector('.dice-toast__unit')).toBeTruthy();
+  });
+
+  it('falls back to the raw token for a unit with no translation, not a dotted key', () => {
+    const result: RollResult = { total: 8, natural: 8, sides: 8, rolls: [5, 3], count: 2 };
+    const { container } = render(DiceRollToast, {
+      props: { title: 'Weird Roll', rollType: 'Roll', result, unitKey: 'weird' }
+    });
+    const unitEl = container.querySelector('.dice-toast__unit');
+    expect(unitEl?.textContent).toBe('weird');
+    expect(container.textContent).not.toContain('play.units.weird');
   });
 
   it('does not render the unit when no unitKey', () => {
@@ -315,6 +332,7 @@ describe('DiceRollToast', () => {
       props: { title: 'Prayer of Healing', rollType: 'Roll', result }
     });
     expect(container.querySelector('.dice-toast__unit')).toBeNull();
+    expect(container.textContent).not.toContain('undefined');
   });
 
   it('prefers the damage type over a unit when both are present', () => {

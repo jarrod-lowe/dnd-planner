@@ -1,5 +1,6 @@
 <script lang="ts">
   import DamageTypeIcon from './DamageTypeIcon.svelte';
+  import { unitLabel } from './unitLabel';
   import { t } from '$lib/i18n';
   import type { RollResult } from './types';
 
@@ -125,7 +126,7 @@
       </span>
       <span class="dice-toast__damage-name">{$t(`damage-type.${damageTypeKey}`)}</span>
     {:else if unitKey}
-      <span class="dice-toast__unit">{$t(`play.toast.unit.${unitKey}`)}</span>
+      <span class="dice-toast__unit">{unitLabel($t, unitKey)}</span>
     {/if}
   </div>
 
