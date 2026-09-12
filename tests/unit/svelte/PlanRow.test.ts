@@ -147,6 +147,33 @@ describe('PlanRow actionable annotations', () => {
     expect(added).toBe('use-hi');
   });
 
+  it('names the row the tap came from, so a seed has a source to resolve against', async () => {
+    // The panel knows the offer but not the row; only this hop can add the
+    // instance id, and the store needs it to read that row's advertised
+    // effects (Life Bond's steed heal opens on the HP the player regained).
+    const seeded: Annotation = {
+      key: 'rule.dnd-5e-2024.find-steed.annotate-life-bond.text',
+      targets: ['save.any'],
+      addsToPlan: {
+        offer: 'use-hi',
+        seed: { amount: { effect: 'hp.modifier.current' } }
+      }
+    };
+    const calls: unknown[][] = [];
+    const { container } = render(PlanRow, {
+      props: {
+        ...props,
+        activeAnnotations: [seeded],
+        addableOfferIds: new Set(['use-hi']),
+        onAddOfferToPlan: (...args: unknown[]) => calls.push(args)
+      }
+    });
+    await fireEvent.click(container.querySelector('button.panel-renderer__annotation--action')!);
+    expect(calls).toEqual([
+      ['use-hi', { amount: { effect: 'hp.modifier.current' } }, item.instanceId]
+    ]);
+  });
+
   it('leaves the annotation as plain text when no handler is wired', () => {
     const { container } = render(PlanRow, {
       props: { ...props, activeAnnotations: [actionable], addableOfferIds: new Set(['use-hi']) }

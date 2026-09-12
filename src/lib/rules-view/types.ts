@@ -283,7 +283,25 @@ export interface Annotation {
  * What an actionable annotation adds: a named offer, or `'again'` for the offer
  * of the panel it is rendered on (Extra Attack repeats the weapon on the row).
  */
-export type AnnotationAction = { offer: string } | 'again';
+export type AnnotationAction =
+  | {
+      offer: string;
+      /**
+       * Values copied from the tapped row into the new one, keyed by the
+       * TARGET's var name, so it opens on what is already true rather than on a
+       * default. A one-time copy, not a binding.
+       */
+      seed?: Record<string, AnnotationSeedSource>;
+    }
+  | 'again';
+
+/**
+ * Where a seeded value comes from: a var as the source row has it set, or
+ * `{ effect }` for what that row actually contributed to a fact — Life Bond
+ * follows the HP you regained, which is capped at your maximum, not the number
+ * on the slider.
+ */
+export type AnnotationSeedSource = string | { effect: string };
 
 // === ACTIVITIES ===
 

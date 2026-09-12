@@ -189,6 +189,37 @@ with the weapon already in hand. Because the weapon IS the offer
 captures its vars fresh, so it picks up the current grip rather than inheriting
 the tapped row's.
 
+A named offer can also carry values over from the row that was tapped, keyed by
+the **target's** var name. Two sources:
+
+```ts
+addsToPlan: {
+  offer: 'steed-record-heal',
+  // What the tapped row CONTRIBUTED to a fact — Life Bond gives the steed the
+  // HP you regained, and healing past your maximum is lost, so the steed
+  // follows the capped figure rather than the number on the slider.
+  seed: { amount: { effect: 'hp.modifier.current' } }
+  // `seed: { amount: 'amount' }` would copy the var as selected instead.
+}
+```
+
+Prefer `{ effect }` whenever a rule capped or adjusted the raw input — the cap
+lives inside `apply` and **cannot** be recovered from the facts afterwards, since
+post-plan facts already fold the row in and re-deriving would count it twice.
+
+The seed beats the target's own capture-var default (that is the point); a source
+that resolves to nothing is dropped so the default still applies. It is a
+one-time copy, not a binding — editing the source row afterwards does not follow
+it. To start from a fact instead, give the target var a `default`.
+
+Resolution happens in the store, after flushing any pending evaluation, because
+advertised effects trail the evaluation debounce: resolving in the component
+would seed the value from before the player last moved the slider. A seeded
+number is then clamped to its slider's `max`, since the slider renders what it is
+handed without clamping. That clamp is cosmetic — the target's own `apply` still
+applies the real rule — and it reads post-plan facts, so a slider whose `max`
+depends on a fact the tapped row itself moves would need more care.
+
 Either form only becomes a button while the offer behind it is still in the
 post-plan addable catalog — the same catalog the tap resolves against — so a
 reminder can never outlive its action. Both ways of losing one are covered by

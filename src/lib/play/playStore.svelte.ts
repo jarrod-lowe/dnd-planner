@@ -1,5 +1,5 @@
 import { apiGet, apiPost, apiDelete } from '$lib/api/client';
-import type { Rule, AvailableRuleEntry } from '$lib/rules-view';
+import type { Rule, AvailableRuleEntry, AnnotationSeedSource } from '$lib/rules-view';
 import {
   loadModules,
   endTurn as ageCommittedEffects,
@@ -367,7 +367,7 @@ async function loadRuleGroups(characterId: string): Promise<void> {
   }
 }
 
-function addToPlan(rule: Rule): void {
+function addToPlan(rule: Rule, seed?: Record<string, unknown>): void {
   const instanceId = generateInstanceId();
   // Resolve capture vars from current facts
   const initialSelections = resolveInitialSelections(rule, state.facts, state.modules);
@@ -377,7 +377,10 @@ function addToPlan(rule: Rule): void {
     rule: {
       ...rule,
       id: instanceId, // Unique ID so engine processes each instance separately
-      selections: { ...(rule.selections ?? {}), ...initialSelections }
+      // `seed` goes last deliberately: a value carried over from the panel that
+      // opened this row is a deliberate choice by the player and must beat the
+      // capture-var default it is standing in for.
+      selections: { ...(rule.selections ?? {}), ...initialSelections, ...(seed ?? {}) }
     },
     order: state.plannedItems.length,
     originalRuleId: rule.id,
@@ -402,10 +405,101 @@ function addToPlan(rule: Rule): void {
  * since closed simply isn't addable. `annotation-targets.test.ts` guards the
  * other miss — an annotation naming an offer that never existed.
  */
-function addOfferToPlan(offerId: string): void {
+function addOfferToPlan(
+  offerId: string,
+  seed?: Record<string, AnnotationSeedSource>,
+  sourceInstanceId?: string
+): void {
+  // Resolve the seed BEFORE the catalog lookup: an `{ effect }` source reads
+  // what the source row advertised, and advertised effects trail the debounce by
+  // up to DEBOUNCE_MS. Drag the slider and tap the reminder under it inside that
+  // window and an unflushed read seeds the value from before the drag — usually
+  // the row's opening zero. Flushing also refreshes the catalog this then reads.
+  const resolved = resolveSeed(seed, sourceInstanceId);
+
   const entry = state.engineOutput?.availableRules.find((e) => e.rule.id === offerId);
   if (!entry) return;
-  addToPlan(entry.rule);
+  if (!resolved) {
+    addToPlan(entry.rule);
+    return;
+  }
+  addToPlan(entry.rule, clampSeed(entry.rule, resolved));
+}
+
+/**
+ * Turn a seed spec into the values the new row opens on, read from the row the
+ * annotation was tapped on. Undefined when there is nothing to seed, so the
+ * target keeps its own capture-var defaults.
+ *
+ * A source that resolves to nothing is dropped rather than written as
+ * undefined — the target's default is a better answer than a hole.
+ */
+function resolveSeed(
+  seed: Record<string, AnnotationSeedSource> | undefined,
+  sourceInstanceId: string | undefined
+): Record<string, unknown> | undefined {
+  if (!seed || Object.keys(seed).length === 0 || !sourceInstanceId) return undefined;
+  flushPendingEvaluation();
+
+  const item = state.plannedItems.find((i) => i.instanceId === sourceInstanceId);
+  if (!item) return undefined;
+  const selections = (item.rule.selections ?? {}) as Record<string, unknown>;
+  const advertised = _plannedEntriesMap.get(sourceInstanceId)?.advertisedEffects ?? [];
+
+  const resolved: Record<string, unknown> = {};
+  for (const [targetVar, source] of Object.entries(seed)) {
+    const value =
+      typeof source === 'string' ? selections[source] : contributionTo(advertised, source.effect);
+    if (value !== undefined) resolved[targetVar] = value;
+  }
+  return Object.keys(resolved).length > 0 ? resolved : undefined;
+}
+
+/**
+ * What one row contributed to a fact, summed over the effects it advertised.
+ *
+ * This is the post-rule figure and that is the point: `record-heal` caps its
+ * heal at the HP the character was missing, and Life Bond follows the HP
+ * actually regained. The cap is applied inside `apply` and cannot be recovered
+ * from the facts afterwards — post-plan facts already fold this row in, so
+ * re-deriving `missing` from them would subtract the same heal twice.
+ */
+function contributionTo(effects: EffectInstance[], fact: string): number | undefined {
+  let total = 0;
+  let found = false;
+  for (const effect of effects) {
+    const value = effect.state?.[fact];
+    if (typeof value === 'number') {
+      total += value;
+      found = true;
+    }
+  }
+  return found ? total : undefined;
+}
+
+/**
+ * Hold a seeded value inside its control's range.
+ *
+ * `PanelSlider` renders what it is handed without clamping — and writes it back
+ * to selections — so a heal larger than the steed's maximum HP would open a
+ * slider showing a value its own control stops short of. Only the slider's
+ * `max` is enforced, and only when it resolves to a number: an unresolvable
+ * source (or any other control type) is left alone rather than guessed at.
+ */
+function clampSeed(rule: Rule, seed: Record<string, unknown>): Record<string, unknown> {
+  const control = rule.ui?.primaryControl as
+    | { type?: string; var?: string; max?: { number?: number; fact?: string } }
+    | undefined;
+  if (control?.type !== 'slider' || !control.var) return seed;
+  const value = seed[control.var];
+  if (typeof value !== 'number') return seed;
+
+  const max =
+    control.max?.number ??
+    (control.max?.fact !== undefined ? state.facts[control.max.fact] : undefined);
+  if (typeof max !== 'number') return seed;
+
+  return { ...seed, [control.var]: Math.min(value, max) };
 }
 
 function removeFromPlan(instanceId: string): void {

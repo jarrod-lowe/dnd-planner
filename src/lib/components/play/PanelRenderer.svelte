@@ -20,6 +20,7 @@
     Facts,
     Annotation,
     AnnotationAction,
+    AnnotationSeedSource,
     RiderValue
   } from '$lib/rules-view';
   import type { EffectInstance } from '$lib/rules-engine';
@@ -60,7 +61,7 @@
      * reminder the player then has to act on by hand. Absent (or a non-editable
      * picker panel) → every annotation stays read-only text.
      */
-    onAddOfferToPlan?: (offerId: string) => void;
+    onAddOfferToPlan?: (offerId: string, seed?: Record<string, AnnotationSeedSource>) => void;
     /**
      * The offer ids currently addable — the post-plan catalog the store resolves
      * a tap against. An annotation is only actionable when the offer it advises
@@ -450,9 +451,26 @@
     return addableOfferIds?.has(offerId) ? offerId : undefined;
   }
 
-  function addAnnotationOffer(e: MouseEvent, offerId: string) {
+  /**
+   * The seed SPEC, passed along unresolved. Resolving it here would read
+   * `entry.advertisedEffects`, which trails the evaluation debounce — drag a
+   * slider and tap the reminder beneath it and the value would be the one from
+   * before the drag. The store owns evaluation timing, so it flushes and then
+   * resolves; this component only says which row the tap came from.
+   */
+  function annotationSeed(
+    adds: AnnotationAction
+  ): Record<string, AnnotationSeedSource> | undefined {
+    return adds === 'again' ? undefined : adds.seed;
+  }
+
+  function addAnnotationOffer(
+    e: MouseEvent,
+    offerId: string,
+    seed: Record<string, AnnotationSeedSource> | undefined
+  ) {
     e.stopPropagation();
-    onAddOfferToPlan?.(offerId);
+    onAddOfferToPlan?.(offerId, seed);
   }
 
   const hasActions = $derived(!!onRemove || !!onMoveUp || !!onMoveDown);
@@ -800,7 +818,8 @@
               type="button"
               class="panel-renderer__annotation panel-renderer__annotation--action"
               aria-label={$t('play.annotation.addToPlan', { annotation: $t(annotation.key) })}
-              onclick={(e) => addAnnotationOffer(e, addsOffer)}
+              onclick={(e) =>
+                addAnnotationOffer(e, addsOffer, annotationSeed(annotation.addsToPlan!))}
             >
               <span class="panel-renderer__annotation-text">{$t(annotation.key)}</span>
               <span class="panel-renderer__annotation-add" aria-hidden="true">
