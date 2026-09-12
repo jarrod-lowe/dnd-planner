@@ -40,7 +40,7 @@
     onSwapAlternative?: (entry: AvailableRuleEntry) => void;
     onFollowup?: (effect: EffectInstance) => void;
     /** Plans the offer an actionable annotation on this row's panel advises. */
-    onAddOfferToPlan?: (offerId: string) => void;
+    onAddOfferToPlan?: (offerId: string, seed?: Record<string, unknown>) => void;
     /** The addable offer catalog an actionable annotation is gated on. */
     addableOfferIds?: Set<string>;
   }

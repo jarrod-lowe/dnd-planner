@@ -647,6 +647,69 @@ describe('playStore', () => {
     });
   });
 
+  describe('addOfferToPlan seeds', () => {
+    const steedHealOffer = {
+      rule: {
+        id: 'steed-record-heal',
+        ui: {
+          section: 'free',
+          name: 'steed.heal',
+          intents: { HEALTH: 'hp' },
+          primaryControl: {
+            type: 'slider',
+            var: 'amount',
+            min: { number: 0 },
+            max: { fact: 'companion.steed.hp.max' }
+          }
+        },
+        vars: { amount: { capture: true, default: { number: 0 } } }
+      },
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    };
+
+    const withSteedOffer = (facts: Record<string, number>) =>
+      playOut({ raw: rawOutput({ availableRules: [steedHealOffer], facts }) });
+
+    const seedStore = async (facts: Record<string, number>) => {
+      vi.mocked(evaluateCharacter).mockReturnValue(withSteedOffer(facts));
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      // Populate the catalog the lookup reads.
+      playStore.addFollowupEffect({ id: 'e1', expiry: { kind: 'permanent' } });
+      vi.runAllTimers();
+      return playStore;
+    };
+
+    it('opens the new row on the seeded value instead of the offer default', async () => {
+      const playStore = await seedStore({ 'companion.steed.hp.max': 30 });
+
+      playStore.addOfferToPlan('steed-record-heal', { amount: 7 });
+
+      expect(playStore.state.plannedItems[0].rule.selections).toMatchObject({ amount: 7 });
+    });
+
+    it("keeps the offer's own default when no seed is given", async () => {
+      const playStore = await seedStore({ 'companion.steed.hp.max': 30 });
+
+      playStore.addOfferToPlan('steed-record-heal');
+
+      expect(playStore.state.plannedItems[0].rule.selections).toMatchObject({ amount: 0 });
+    });
+
+    it("clamps a seed above the target slider's max, so it cannot open out of range", async () => {
+      // Heal yourself 20 beside a steed whose max HP is 12: Life Bond cannot
+      // give the steed more than its maximum, and PanelSlider does not clamp
+      // what it is handed — it would show 20 against a control that stops at 12.
+      const playStore = await seedStore({ 'companion.steed.hp.max': 12 });
+
+      playStore.addOfferToPlan('steed-record-heal', { amount: 20 });
+
+      expect(playStore.state.plannedItems[0].rule.selections).toMatchObject({ amount: 12 });
+    });
+  });
+
   describe('swapPlanItemRule', () => {
     it('swaps a planned item rule and updates verb and originalRuleId', async () => {
       const { playStore } = await import('$lib/play/playStore.svelte');

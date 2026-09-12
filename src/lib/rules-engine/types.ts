@@ -404,7 +404,23 @@ export interface Annotation {
  * for the second case — the annotation is authored once, by a rule that cannot
  * know which weapon's panel it will land on.
  */
-export type AnnotationAction = { offer: string } | 'again';
+export type AnnotationAction =
+  | {
+      offer: string;
+      /**
+       * Values to carry over from the panel the annotation was tapped on into
+       * the new row, as `targetVar: sourcePanelVar`. Life Bond heals the steed
+       * for the same number of hit points the spell healed you, so the steed's
+       * heal row opens on the amount already set on the heal row that raised
+       * the reminder, rather than on zero.
+       *
+       * A one-time copy, not a binding: editing the source row afterwards does
+       * not follow. Only the panel's own captured vars can be read — this
+       * cannot reach for facts, which have their own `default` mechanism.
+       */
+      seed?: Record<string, string>;
+    }
+  | 'again';
 
 /**
  * Complete input to the engine. `evaluate` runs `modules` directly and stays

@@ -189,6 +189,22 @@ with the weapon already in hand. Because the weapon IS the offer
 captures its vars fresh, so it picks up the current grip rather than inheriting
 the tapped row's.
 
+A named offer can also carry values over from the panel that was tapped, as
+`targetVar: sourcePanelVar`:
+
+```ts
+// Life Bond heals the steed for the same HP the spell healed you, so the
+// steed's heal row opens on the amount already set on the player's heal row.
+addsToPlan: { offer: 'steed-record-heal', seed: { amount: 'amount' } }
+```
+
+The seed beats the target's own capture-var default (that is the point), and a
+var the source panel has not set is left out so the default still applies. It is
+a one-time copy, not a binding — editing the source row afterwards does not
+follow it. Only the tapped panel's vars can be read; to start from a fact, give
+the target var a `default` instead. A seeded number is clamped to its slider's
+`max`, since the slider renders what it is handed without clamping.
+
 Either form only becomes a button while the offer behind it is still in the
 post-plan addable catalog — the same catalog the tap resolves against — so a
 reminder can never outlive its action. Both ways of losing one are covered by

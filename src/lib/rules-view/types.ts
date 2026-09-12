@@ -283,7 +283,17 @@ export interface Annotation {
  * What an actionable annotation adds: a named offer, or `'again'` for the offer
  * of the panel it is rendered on (Extra Attack repeats the weapon on the row).
  */
-export type AnnotationAction = { offer: string } | 'again';
+export type AnnotationAction =
+  | {
+      offer: string;
+      /**
+       * `targetVar: sourcePanelVar` values copied from the tapped panel into the
+       * new row, so it opens on what the player already set rather than on a
+       * default. A one-time copy, not a binding.
+       */
+      seed?: Record<string, string>;
+    }
+  | 'again';
 
 // === ACTIVITIES ===
 

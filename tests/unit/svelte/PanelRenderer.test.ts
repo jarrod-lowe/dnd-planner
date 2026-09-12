@@ -173,7 +173,7 @@ describe('PanelRenderer actionable annotations', () => {
       }
     });
     await fireEvent.click(container.querySelector('button.panel-renderer__annotation--action')!);
-    expect(onAddOfferToPlan).toHaveBeenCalledWith('use-hi');
+    expect(onAddOfferToPlan).toHaveBeenCalledWith('use-hi', undefined);
   });
 
   it('leaves an annotation with no offer as plain text', () => {
@@ -251,7 +251,7 @@ describe('PanelRenderer actionable annotations', () => {
       }
     });
     await fireEvent.click(container.querySelector('button.panel-renderer__annotation--action')!);
-    expect(onAddOfferToPlan).toHaveBeenCalledWith('use-hi');
+    expect(onAddOfferToPlan).toHaveBeenCalledWith('use-hi', undefined);
     expect(onTap).not.toHaveBeenCalled();
   });
 });
@@ -300,7 +300,7 @@ describe('PanelRenderer "again" annotations', () => {
       }
     });
     await fireEvent.click(container.querySelector('button.panel-renderer__annotation--action')!);
-    expect(onAddOfferToPlan).toHaveBeenCalledWith('greataxe-use-action');
+    expect(onAddOfferToPlan).toHaveBeenCalledWith('greataxe-use-action', undefined);
   });
 
   it('resolves against the panel it is on, not a fixed offer', async () => {
@@ -316,7 +316,7 @@ describe('PanelRenderer "again" annotations', () => {
       }
     });
     await fireEvent.click(container.querySelector('button.panel-renderer__annotation--action')!);
-    expect(onAddOfferToPlan).toHaveBeenCalledWith('spear-use-action');
+    expect(onAddOfferToPlan).toHaveBeenCalledWith('spear-use-action', undefined);
   });
 
   it('stays plain text once a later row has stowed the weapon', () => {
@@ -354,5 +354,90 @@ describe('PanelRenderer "again" annotations', () => {
     });
     expect(container.querySelector('button.panel-renderer__annotation--action')).toBeNull();
     expect(container.querySelector('span.panel-renderer__annotation')).not.toBeNull();
+  });
+});
+
+describe('PanelRenderer annotation seeds', () => {
+  // Life Bond: the reminder rides the player's Record Healing panel and adds
+  // the steed's own heal row, which should open on the amount already set here.
+  const healEntry: AvailableRuleEntry = {
+    rule: {
+      id: 'record-heal',
+      activities: [],
+      ui: {
+        name: 'planner.record.heal',
+        annotationLabels: ['healing.any'],
+        primaryControl: { type: 'slider', var: 'amount', min: { number: 0 }, max: { number: 50 } }
+      },
+      vars: { amount: { capture: true, default: { number: 0 } } }
+    },
+    legal: true,
+    applicable: true,
+    diagnostics: []
+  };
+
+  const lifeBond: Annotation[] = [
+    {
+      key: 'rule.spell-find-steed.annotate-life-bond.text',
+      targets: ['healing.any'],
+      addsToPlan: { offer: 'steed-record-heal', seed: { amount: 'amount' } }
+    }
+  ];
+
+  const catalog = new Set(['steed-record-heal']);
+
+  it("carries the tapped panel's value across under the target's var name", async () => {
+    const onAddOfferToPlan = vi.fn();
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: healEntry,
+        editable: true,
+        selections: { amount: 7 },
+        activeAnnotations: lifeBond,
+        addableOfferIds: catalog,
+        onAddOfferToPlan
+      }
+    });
+    await fireEvent.click(container.querySelector('button.panel-renderer__annotation--action')!);
+    expect(onAddOfferToPlan).toHaveBeenCalledWith('steed-record-heal', { amount: 7 });
+  });
+
+  it('omits a seed value the panel has not set, leaving the target to default', async () => {
+    const onAddOfferToPlan = vi.fn();
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: healEntry,
+        editable: true,
+        selections: {},
+        activeAnnotations: lifeBond,
+        addableOfferIds: catalog,
+        onAddOfferToPlan
+      }
+    });
+    await fireEvent.click(container.querySelector('button.panel-renderer__annotation--action')!);
+    expect(onAddOfferToPlan).toHaveBeenCalledWith('steed-record-heal', {});
+  });
+
+  it('passes no seed at all for an annotation that declares none', async () => {
+    const onAddOfferToPlan = vi.fn();
+    const noSeed: Annotation[] = [
+      {
+        key: 'rule.spell-find-steed.annotate-life-bond.text',
+        targets: ['healing.any'],
+        addsToPlan: { offer: 'steed-record-heal' }
+      }
+    ];
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: healEntry,
+        editable: true,
+        selections: { amount: 7 },
+        activeAnnotations: noSeed,
+        addableOfferIds: catalog,
+        onAddOfferToPlan
+      }
+    });
+    await fireEvent.click(container.querySelector('button.panel-renderer__annotation--action')!);
+    expect(onAddOfferToPlan).toHaveBeenCalledWith('steed-record-heal', undefined);
   });
 });

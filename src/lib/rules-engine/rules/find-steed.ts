@@ -1060,7 +1060,11 @@ const findSteed: RuleModule = {
           {
             key: `${S}.annotate-life-bond.text`,
             targets: ['healing.any'],
-            addsToPlan: { offer: 'steed-record-heal' }
+            // Life Bond heals the steed for the SAME number of hit points, so
+            // the steed's row opens on the amount already set on the heal row
+            // that raised this reminder. Both vars are called `amount`; the
+            // mapping is spelled out rather than matched by name.
+            addsToPlan: { offer: 'steed-record-heal', seed: { amount: 'amount' } }
           }
         ]
       : []

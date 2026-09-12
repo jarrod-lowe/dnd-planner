@@ -25,7 +25,7 @@
     onEndTurn: () => void;
     onFollowup?: (effect: EffectInstance) => void;
     /** Plans the offer an actionable annotation names (see PanelRenderer). */
-    onAddOfferToPlan?: (offerId: string) => void;
+    onAddOfferToPlan?: (offerId: string, seed?: Record<string, unknown>) => void;
   }
 
   let {

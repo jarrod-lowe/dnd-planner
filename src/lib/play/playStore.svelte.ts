@@ -367,7 +367,7 @@ async function loadRuleGroups(characterId: string): Promise<void> {
   }
 }
 
-function addToPlan(rule: Rule): void {
+function addToPlan(rule: Rule, seed?: Record<string, unknown>): void {
   const instanceId = generateInstanceId();
   // Resolve capture vars from current facts
   const initialSelections = resolveInitialSelections(rule, state.facts, state.modules);
@@ -377,7 +377,10 @@ function addToPlan(rule: Rule): void {
     rule: {
       ...rule,
       id: instanceId, // Unique ID so engine processes each instance separately
-      selections: { ...(rule.selections ?? {}), ...initialSelections }
+      // `seed` goes last deliberately: a value carried over from the panel that
+      // opened this row is a deliberate choice by the player and must beat the
+      // capture-var default it is standing in for.
+      selections: { ...(rule.selections ?? {}), ...initialSelections, ...(seed ?? {}) }
     },
     order: state.plannedItems.length,
     originalRuleId: rule.id,
@@ -402,10 +405,43 @@ function addToPlan(rule: Rule): void {
  * since closed simply isn't addable. `annotation-targets.test.ts` guards the
  * other miss — an annotation naming an offer that never existed.
  */
-function addOfferToPlan(offerId: string): void {
+function addOfferToPlan(offerId: string, seed?: Record<string, unknown>): void {
   const entry = state.engineOutput?.availableRules.find((e) => e.rule.id === offerId);
   if (!entry) return;
-  addToPlan(entry.rule);
+  if (!seed || Object.keys(seed).length === 0) {
+    addToPlan(entry.rule);
+    return;
+  }
+  // The seed carries values from the panel the annotation was tapped on (Life
+  // Bond: the steed heals for what the spell healed you). It is applied as the
+  // rule's `selections`, which `addToPlan` then lets the capture-var defaults
+  // override — so the seed goes on TOP of the resolved defaults, not under them.
+  addToPlan(entry.rule, clampSeed(entry.rule, seed));
+}
+
+/**
+ * Hold a seeded value inside its control's range.
+ *
+ * `PanelSlider` renders what it is handed without clamping — and writes it back
+ * to selections — so a heal larger than the steed's maximum HP would open a
+ * slider showing a value its own control stops short of. Only the slider's
+ * `max` is enforced, and only when it resolves to a number: an unresolvable
+ * source (or any other control type) is left alone rather than guessed at.
+ */
+function clampSeed(rule: Rule, seed: Record<string, unknown>): Record<string, unknown> {
+  const control = rule.ui?.primaryControl as
+    | { type?: string; var?: string; max?: { number?: number; fact?: string } }
+    | undefined;
+  if (control?.type !== 'slider' || !control.var) return seed;
+  const value = seed[control.var];
+  if (typeof value !== 'number') return seed;
+
+  const max =
+    control.max?.number ??
+    (control.max?.fact !== undefined ? state.facts[control.max.fact] : undefined);
+  if (typeof max !== 'number') return seed;
+
+  return { ...seed, [control.var]: Math.min(value, max) };
 }
 
 function removeFromPlan(instanceId: string): void {
