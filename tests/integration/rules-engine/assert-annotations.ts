@@ -9,16 +9,17 @@ import type { Annotation } from '$lib/rules-engine';
  * `targets` asserts the full `targets` array of a matched annotation, so a
  * scenario can pin WHICH panels a modifier reaches (e.g. that it also reaches
  * a companion's panel) and not merely that the annotation exists somewhere.
- * `addsOffer` asserts the offer a matched annotation adds when tapped, so a
+ * `addsToPlan` asserts what a matched annotation adds when tapped, so a
  * scenario can pin that an advisory annotation is actionable and WHICH action
- * it hands the player.
+ * it hands the player — a named offer (`adds: { offer: use-hi }`) or the panel's
+ * own offer again (`adds: again`).
  */
 export interface AnnotationAssert {
   exists?: string[];
   notExists?: string[];
   riders?: { key: string; rider: Record<string, unknown> }[];
   targets?: { key: string; targets: string[] }[];
-  addsOffer?: { key: string; offer: string }[];
+  addsToPlan?: { key: string; adds: unknown }[];
 }
 
 export function assertAnnotations(
@@ -49,9 +50,9 @@ export function assertAnnotations(
     expect(found, `${where}: annotation "${key}" exists`).toBeDefined();
     expect(found!.targets, `${where}: annotation "${key}".targets`).toEqual(targets);
   }
-  for (const { key, offer } of expected.addsOffer ?? []) {
+  for (const { key, adds } of expected.addsToPlan ?? []) {
     const found = actual.find((a) => a.key === key);
     expect(found, `${where}: annotation "${key}" exists`).toBeDefined();
-    expect(found!.addsOffer, `${where}: annotation "${key}".addsOffer`).toEqual(offer);
+    expect(found!.addsToPlan, `${where}: annotation "${key}".addsToPlan`).toEqual(adds);
   }
 }

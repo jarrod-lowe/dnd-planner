@@ -15,7 +15,13 @@
   import DiceRollToast from './panel-renderer/DiceRollToast.svelte';
   import { evaluateCondition } from '$lib/play/panelCondition';
   import { getMatchingAnnotations } from '$lib/play/annotations';
-  import type { AvailableRuleEntry, Facts, Annotation, RiderValue } from '$lib/rules-view';
+  import type {
+    AvailableRuleEntry,
+    Facts,
+    Annotation,
+    AnnotationAction,
+    RiderValue
+  } from '$lib/rules-view';
   import type { EffectInstance } from '$lib/rules-engine';
   import type { RuleModule } from '$lib/rules-engine/types';
   import type {
@@ -47,11 +53,12 @@
     onMoveDown?: () => void;
     onFollowup?: (effect: EffectInstance) => void;
     /**
-     * Plans the offer an annotation names (`annotation.addsOffer`). Most
-     * annotations are advisory — "Heroic Inspiration available" — and the one
-     * that names an offer becomes a tap-to-plan shortcut instead of a reminder
-     * the player then has to act on by hand. Absent (or a non-editable picker
-     * panel) → every annotation stays read-only text.
+     * Plans the offer an annotation advises (`annotation.addsToPlan`, resolved
+     * by `resolveAnnotationOffer`). Most annotations are advisory — "Heroic
+     * Inspiration available", "Extra Attack: you can attack again" — and one
+     * that says what it is advising becomes a tap-to-plan shortcut instead of a
+     * reminder the player then has to act on by hand. Absent (or a non-editable
+     * picker panel) → every annotation stays read-only text.
      */
     onAddOfferToPlan?: (offerId: string) => void;
     onRoll?: (data: RollResult, dieIndex: number) => void;
@@ -411,6 +418,23 @@
   // offer, so a nested add-this-other-thing button there would fight it.
   const annotationsActionable = $derived(editable && !!onAddOfferToPlan);
 
+  /**
+   * The offer an annotation's tap should plan, or undefined when it cannot be
+   * resolved here — in which case the annotation renders as plain text rather
+   * than as a button that would do nothing.
+   *
+   * `again` means "another of this panel's own offer" (Extra Attack: swing
+   * again with the weapon already on the row). That reads `entry.rule.id`,
+   * which is the catalog offer id for a live planned row — but a row the engine
+   * SKIPPED is rendered from the planned item itself, whose id is the instance
+   * id and resolves to nothing. `applicable` is exactly that distinction, so a
+   * stale row keeps the reminder and loses the button.
+   */
+  function resolveAnnotationOffer(adds: AnnotationAction): string | undefined {
+    if (adds === 'again') return entry.applicable ? entry.rule.id : undefined;
+    return adds.offer;
+  }
+
   function addAnnotationOffer(e: MouseEvent, offerId: string) {
     e.stopPropagation();
     onAddOfferToPlan?.(offerId);
@@ -747,7 +771,11 @@
     -->
       <div class="panel-renderer__annotations" role="note">
         {#each informationalAnnotations as annotation (annotation.key)}
-          {#if annotation.addsOffer && annotationsActionable}
+          {@const addsOffer =
+            annotation.addsToPlan && annotationsActionable
+              ? resolveAnnotationOffer(annotation.addsToPlan)
+              : undefined}
+          {#if addsOffer}
             <!--
               An advisory annotation that names an offer is a shortcut: tapping
               it plans that action exactly as the add-row picker would. The
@@ -757,7 +785,7 @@
               type="button"
               class="panel-renderer__annotation panel-renderer__annotation--action"
               aria-label={$t('play.annotation.addToPlan', { annotation: $t(annotation.key) })}
-              onclick={(e) => addAnnotationOffer(e, annotation.addsOffer!)}
+              onclick={(e) => addAnnotationOffer(e, addsOffer)}
             >
               <span class="panel-renderer__annotation-text">{$t(annotation.key)}</span>
               <span class="panel-renderer__annotation-add" aria-hidden="true">

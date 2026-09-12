@@ -131,7 +131,7 @@ describe('PanelRenderer actionable annotations', () => {
     {
       key: 'rule.dnd-5e-2024.heroic-inspiration.annotation',
       targets: ['dice.any'],
-      addsOffer: 'use-hi'
+      addsToPlan: { offer: 'use-hi' }
     }
   ];
 
@@ -209,5 +209,83 @@ describe('PanelRenderer actionable annotations', () => {
     await fireEvent.click(container.querySelector('button.panel-renderer__annotation--action')!);
     expect(onAddOfferToPlan).toHaveBeenCalledWith('use-hi');
     expect(onTap).not.toHaveBeenCalled();
+  });
+});
+
+describe('PanelRenderer "again" annotations', () => {
+  // Extra Attack's reminder lands on every Attack-action panel the character
+  // has, so it names no offer — it repeats whichever panel it is rendered on.
+  const extraAttack: Annotation[] = [
+    {
+      key: 'rule.dnd-5e-2024.attacks.extra-attack.annotation',
+      targets: ['attack.action'],
+      addsToPlan: 'again'
+    }
+  ];
+
+  const attackEntry = (id: string): AvailableRuleEntry => ({
+    rule: {
+      id,
+      activities: [],
+      ui: {
+        name: 'rule.attack.name',
+        annotationLabels: ['attack.any', 'attack.action'],
+        primaryControl: {
+          type: 'dice-line',
+          dice: [{ sides: 20, bonus: { number: 5 }, purpose: 'to-hit' }]
+        }
+      }
+    },
+    legal: true,
+    applicable: true,
+    diagnostics: []
+  });
+
+  it("re-plans the panel's own offer, so the swing reuses the same weapon", async () => {
+    const onAddOfferToPlan = vi.fn();
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: attackEntry('greataxe-use-action'),
+        editable: true,
+        activeAnnotations: extraAttack,
+        onAddOfferToPlan
+      }
+    });
+    await fireEvent.click(container.querySelector('button.panel-renderer__annotation--action')!);
+    expect(onAddOfferToPlan).toHaveBeenCalledWith('greataxe-use-action');
+  });
+
+  it('resolves against the panel it is on, not a fixed offer', async () => {
+    // The same annotation on a different weapon's panel must add THAT weapon.
+    const onAddOfferToPlan = vi.fn();
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: attackEntry('spear-use-action'),
+        editable: true,
+        activeAnnotations: extraAttack,
+        onAddOfferToPlan
+      }
+    });
+    await fireEvent.click(container.querySelector('button.panel-renderer__annotation--action')!);
+    expect(onAddOfferToPlan).toHaveBeenCalledWith('spear-use-action');
+  });
+
+  it('stays plain text on an inapplicable row, whose id is not an offer id', () => {
+    // A stale row (its `when` closed mid-plan) is rendered from the planned
+    // item itself, whose rule id is the INSTANCE id — not something the offer
+    // catalog can resolve. Tapping would be a dead button, so it must not be
+    // one; a named-offer annotation is unaffected and stays tappable.
+    const stale = attackEntry('inst-42');
+    stale.applicable = false;
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: stale,
+        editable: true,
+        activeAnnotations: extraAttack,
+        onAddOfferToPlan: vi.fn()
+      }
+    });
+    expect(container.querySelector('button.panel-renderer__annotation--action')).toBeNull();
+    expect(container.querySelector('span.panel-renderer__annotation')).not.toBeNull();
   });
 });

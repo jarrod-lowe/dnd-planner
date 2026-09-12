@@ -130,7 +130,7 @@ describe('PlanRow actionable annotations', () => {
   const actionable: Annotation = {
     key: 'rule.dnd-5e-2024.heroic-inspiration.annotation',
     targets: ['save.any'],
-    addsOffer: 'use-hi'
+    addsToPlan: { offer: 'use-hi' }
   };
 
   it('hands the offer id up when the annotation is tapped', async () => {

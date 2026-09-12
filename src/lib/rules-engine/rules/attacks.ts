@@ -158,9 +158,22 @@ const attacks: RuleModule = {
   // Remind the player an Extra Attack follow-up is available — once the Attack
   // action has been taken and a charge remains (extraRemaining > 0). Targets
   // attack.action so it shows only on Attack-action attacks.
+  //
+  // `again` rather than a named offer: this one annotation lands on every
+  // Attack-action panel the character has, and the follow-up swing is almost
+  // always with the weapon already in hand, so it re-plans whichever panel the
+  // player tapped it on. The weapon IS the offer here (`greataxe-use-action`),
+  // so repeating the offer repeats the weapon; the new row captures its vars
+  // fresh, picking up the current grip rather than inheriting the old row's.
   annotate: (f) =>
     f.num('attackAction.extraRemaining') > 0
-      ? [{ key: 'rule.dnd-5e-2024.attacks.extra-attack.annotation', targets: ['attack.action'] }]
+      ? [
+          {
+            key: 'rule.dnd-5e-2024.attacks.extra-attack.annotation',
+            targets: ['attack.action'],
+            addsToPlan: 'again' as const
+          }
+        ]
       : []
 };
 

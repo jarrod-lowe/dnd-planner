@@ -68,6 +68,12 @@ steps:
         annotations:
           exists:
             - rule.dnd-5e-2024.attacks.extra-attack.annotation
+          # Tapping the reminder re-plans the panel it sits on, so the follow-up
+          # swing reuses the weapon already on the row rather than sending the
+          # player back to the picker to find the greataxe again.
+          addsToPlan:
+            - key: rule.dnd-5e-2024.attacks.extra-attack.annotation
+              adds: again
 
   # Second attack: consumes the free follow-up, no action spent. No follow-up
   # remains, so the annotation must no longer show.

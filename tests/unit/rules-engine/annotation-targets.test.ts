@@ -56,11 +56,15 @@ describe('annotation targets', () => {
     for (const m of all) {
       if (!m.annotate) continue;
       for (const annotation of m.annotate(permissiveReader)) {
-        const adds = annotation.addsOffer;
+        const adds = annotation.addsToPlan;
+        // `again` names no offer — it resolves to whichever panel the
+        // annotation renders on, so there is nothing to check here; the
+        // orphan-target test above already pins that those panels exist.
+        if (adds === undefined || adds === 'again') continue;
         // A tap on an annotation naming an offer that does not exist is a
         // dead button — the store finds nothing to plan and silently does
         // nothing. Same silent-failure class as an orphaned target label.
-        if (adds !== undefined && !offerIds.has(adds)) orphans.push(`${m.id} → ${adds}`);
+        if (!offerIds.has(adds.offer)) orphans.push(`${m.id} → ${adds.offer}`);
       }
     }
 
