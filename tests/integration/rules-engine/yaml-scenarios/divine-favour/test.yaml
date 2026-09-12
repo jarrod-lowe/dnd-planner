@@ -8,9 +8,24 @@ ruleGroups:
   - dnd-5e-2024/spellcasting
   - dnd-5e-2024/core-events
   - dnd-5e-2024/attacks
+  - dnd-5e-2024/spear
   - species-human/species-human
   - class-paladin/class-paladin-level1
   - spells/spell-divine-favour
+
+initialEffects:
+  - id: effect-spear
+    phase: normal
+    group: [equipment-state]
+    activities:
+      - type: numberSet
+        target:
+          fact: weapon.spear.equipped
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+
 steps:
   - evaluate:
   - addOffer:
@@ -46,12 +61,15 @@ steps:
           illegal:
             - cast-divine-favour
 
-  # Attack - annotation appears, use-divine-favour offered
+  # Weapon attack - annotation appears, use-divine-favour offered. It must be a
+  # WEAPON attack: the rider reads attack.last.weapon, so an unarmed strike
+  # (not a weapon) would leave it illegal - see divine-favour-weapon-only.
   - addOffer:
-      id: unarmed-strike-use-action
+      id: spear-use-action
       assert:
         facts:
           attack.last.activation.action: 1
+          attack.last.weapon: 1
         annotations:
           exists:
             - rule.spell-divine-favour.annotation

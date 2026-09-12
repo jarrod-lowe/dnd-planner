@@ -1,0 +1,88 @@
+name: 'Divine Favour - Weapon Reaction'
+description: >-
+  Divine Favour rides on ANY weapon attack, not only one made with the Attack
+  action. SRD 5.2: "Until the spell ends, your attacks with weapons deal an
+  extra 1d4 Radiant damage on a hit" - no Attack-action qualifier - and a 2024
+  Opportunity Attack is "one melee attack with a weapon or an Unarmed Strike".
+  So a spear opportunity attack, taken on a turn with no Attack action at all,
+  unlocks the +1d4 rider and the reminder that adds it to the plan.
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spear
+  - species-human/species-human
+  - class-paladin/class-paladin-level1
+  - spells/spell-divine-favour
+
+initialEffects:
+  - id: effect-spear
+    phase: normal
+    group: [equipment-state]
+    activities:
+      - type: numberSet
+        target:
+          fact: weapon.spear.equipped
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+
+steps:
+  - addOffer:
+      id: prepare-divine-favour
+
+  # Buff up. No attack yet: the rider stays illegal-but-visible and the
+  # reminder stays away until there is a weapon attack to ride on.
+  - addOffer:
+      id: cast-divine-favour
+      assert:
+        facts:
+          divineFavour.active: 1
+          attack.last.weapon: 0
+          attack.last.activation.action: 0
+        offers:
+          illegal:
+            - use-divine-favour
+        annotations:
+          notExists:
+            - rule.spell-divine-favour.annotation
+
+  # Opportunity attack with the spear: a REACTION. No Attack action is taken
+  # this turn (actions.remaining stays 1, attack.last.activation.action stays
+  # 0) - but a weapon attack was made, so Divine Favour applies.
+  - addOffer:
+      id: spear-use-reaction-weapon
+      assert:
+        facts:
+          attack.last.weapon: 1
+          attack.last.activation.action: 0
+          actions.remaining: 1
+          reactions.remaining: 0
+        offers:
+          legal:
+            - use-divine-favour
+        annotations:
+          exists:
+            - rule.spell-divine-favour.annotation
+          targets:
+            - key: rule.spell-divine-favour.annotation
+              targets: [attack.weapon]
+          addsToPlan:
+            - key: rule.spell-divine-favour.annotation
+              adds: { offer: use-divine-favour }
+
+  # Tapping the reminder adds the rider: free, legal, and the turn stays legal.
+  - addOffer:
+      id: use-divine-favour
+      assert:
+        planErrors:
+          - id: use-divine-favour
+            index: 0
+            errors: []
+        status:
+          legal: true

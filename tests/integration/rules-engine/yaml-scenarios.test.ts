@@ -297,6 +297,8 @@ const EXPECTED_RUNNABLE = [
   // M3 — prepare path (prepare/unprepare offers + prepared.count/max/remaining)
   'divine-favour',
   'divine-favour-prepare',
+  'divine-favour-reaction-attack',
+  'divine-favour-weapon-only',
   'divine-smite-prepare',
   'divine-smite-slot-cast',
   'smite-available-after-attack',

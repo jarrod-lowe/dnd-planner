@@ -117,6 +117,9 @@ export const INITIAL_EFFECTS: Record<string, EffectInstance[]> = {
   'fighting-style-great-weapon-annotations': [weaponEquipped('greataxe')],
   'savage-attacker-annotations': [weaponEquipped('dagger')],
   'savage-attacker-weapon-only': [weaponEquipped('dagger')],
+  'divine-favour': [weaponEquipped('spear')],
+  'divine-favour-reaction-attack': [weaponEquipped('spear')],
+  'divine-favour-weapon-only': [weaponEquipped('spear')],
   'savage-attacker-usage': [weaponEquipped('dagger')],
 
   // === Spell slots (fixtures set total+remaining; remaining is derived from total − spent) ===

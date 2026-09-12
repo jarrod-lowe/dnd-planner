@@ -1,0 +1,84 @@
+name: 'Divine Favour - Weapon Only'
+description: >-
+  Divine Favour's rider is gated on a WEAPON attack, not on the Attack action.
+  An Unarmed Strike is not a weapon (2024: "A weapon is an object that is in
+  the Simple or Martial weapon category"), so an unarmed strike alone - even
+  though it IS the Attack action - must leave the rider illegal and the
+  reminder absent. A spear swing then unlocks both.
+ruleGroups:
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spear
+  - species-human/species-human
+  - class-paladin/class-paladin-level1
+  - spells/spell-divine-favour
+
+initialEffects:
+  - id: effect-spear
+    phase: normal
+    group: [equipment-state]
+    activities:
+      - type: numberSet
+        target:
+          fact: weapon.spear.equipped
+        source:
+          number: 1
+      - type: advertiseEffect
+        self: true
+
+steps:
+  - addOffer:
+      id: prepare-divine-favour
+
+  - addOffer:
+      id: cast-divine-favour
+      assert:
+        facts:
+          divineFavour.active: 1
+
+  # Unarmed strike: the Attack action IS taken, but no weapon attack was made.
+  # The rider must stay illegal and the reminder must stay away.
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          attack.last.activation.action: 1
+          attack.last.weapon: 0
+        offers:
+          illegal:
+            - use-divine-favour
+        annotations:
+          notExists:
+            - rule.spell-divine-favour.annotation
+
+  # Fresh turn: the buff persists (10 rounds), the attack markers reset.
+  - endTurn:
+      assert:
+        facts:
+          divineFavour.active: 1
+          attack.last.weapon: 0
+          attack.last.activation.action: 0
+        offers:
+          illegal:
+            - use-divine-favour
+        annotations:
+          notExists:
+            - rule.spell-divine-favour.annotation
+
+  # A spear swing IS a weapon attack: rider legal, reminder present.
+  - addOffer:
+      id: spear-use-action
+      assert:
+        facts:
+          attack.last.weapon: 1
+        offers:
+          legal:
+            - use-divine-favour
+        annotations:
+          exists:
+            - rule.spell-divine-favour.annotation
