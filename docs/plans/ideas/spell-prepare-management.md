@@ -217,6 +217,7 @@ Guards that will bite: `module-coverage`, `module-i18n-coverage`, `sections.test
 
 ## Follow-ups (not this branch)
 
+- ~~Migration for old per-spell `prep:<spellId>` effects~~ **Rejected (settled):** no migration system. One real character — dismiss the stale chips manually from Active State; the new `prepared-spells` effect then governs. PR-review decision.
 - Per-row detail text in the picker. Today a spell's rules text is reachable **only** from its cast offer, which is gated `when: prepared === 1` — so you cannot read a spell while deciding whether to prepare it. Needs plumbing: `detailKey` is per-offer, not per-row.
 - Long-rest gate on re-preparing (2024 rules).
 - Four orphan detail keys, already published and unreachable: `action/healing-touch`, `action/fey-step`, `action/fell-glare` (`steedAbilityOffer()` omits `detailKey`, unlike sibling `steedSlamOffer()`), and `equipment/shield`.
