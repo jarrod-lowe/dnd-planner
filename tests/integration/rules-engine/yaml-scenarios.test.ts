@@ -191,6 +191,7 @@ const EXPECTED_RUNNABLE = [
   'hi-use-effect-removed',
   'hi-use-twice',
   'hi-human-long-rest-no-duplicate',
+  'hi-human-long-rest-then-use',
   'extra-attack-disabled',
   'extra-attack-grapple',
   'extra-attack-greataxe',

@@ -14,7 +14,10 @@ import { checkDeadline, DEFAULT_BUDGET_MS } from './watchdog';
 
 /**
  * Diagnostic for an action planned after a rest. The row is illegal but still
- * executes, like every other illegal planned row — see the fold for why.
+ * executes, like every other illegal planned row — see the fold for why. Its
+ * wording is deliberately a WARNING, not a prohibition: the action does happen,
+ * and what the player is being told is that its projection may be inaccurate
+ * (see the KNOWN REMAINING GAP note below for exactly how).
  */
 const AFTER_REST = 'planner.after-rest';
 
@@ -146,10 +149,22 @@ export function evaluatePlan(
     //     behind a short rest planned earlier in the same turn.
     //   - `effects.ts` `endTurn` ages the same set the same way at commit.
     //   - `slotLevels.ts` / `actionPools.ts` mirror the predicate for the UI.
-    // Fixing those needs a per-effect "advertised after the rest" marker that
-    // survives into persisted state — a separate change. Until then, post-rest
-    // execution is honest about spends the hook sees, not about rest-scoped
-    // effects expiring.
+    // Two more accepted imperfections, both downstream of `onRest` running ONCE,
+    // post-settle (the contract RULES_ENGINE.md documents):
+    //   - ONLY THE FIRST rest boundary is taken, and the hooks run once. A plan
+    //     with two short rests therefore yields ONE recovery, not two.
+    //   - A post-rest row cannot SEE the hook's own effects at its own step, so
+    //     e.g. `use-hi` after a long rest reports "no inspiration" even though
+    //     the splice below makes it spend correctly.
+    // Both are knowingly accepted rather than fixed: post-rest plans are a rare
+    // corner, and making hooks run per-rest inside the fold would complicate the
+    // engine for every other plan. `planner.after-rest` warns the player that a
+    // post-rest row's projection may be inaccurate instead.
+    //
+    // Fixing any of this needs a per-effect "advertised after the rest" marker
+    // that survives into persisted state — a separate change. Until then,
+    // post-rest execution is honest about spends the hook sees, not about
+    // rest-scoped effects expiring.
     const afterRest = reader.num('rest.short') > 0 || reader.num('rest.long') > 0;
     if (afterRest && restBoundary === null) restBoundary = advertised.length;
 
@@ -219,15 +234,24 @@ export function evaluatePlan(
       ...advertised.slice(0, boundary)
     ]);
     const reader = plainReader(preRest);
+    const hookEffects: EffectInstance[] = [];
     for (const m of modules) {
       if (!m.onRest) continue;
       // Rest-recovery effects (Channel Divinity, Heroic Inspiration) carry the
-      // same owning-group stamp so unassign drops them too. They are appended
-      // PAST the boundary, so they are part of the final projection but never
-      // feed back into the pre-rest reader another module's hook sees.
+      // same owning-group stamp so unassign drops them too. Collected first, so
+      // no hook's output feeds back into the pre-rest reader another hook sees.
       for (const e of m.onRest(restKind, reader))
-        advertised.push({ ...e, ruleGroupId: e.ruleGroupId ?? m.id });
+        hookEffects.push({ ...e, ruleGroupId: e.ruleGroupId ?? m.id });
     }
+    // SPLICE at the boundary rather than append. `advertised` is chronological
+    // and keyed effects dedupe newest-wins (`dedupeByKey`), so a hook effect
+    // appended last would outrank a planned row that came AFTER the rest and
+    // shares its key. Heroic Inspiration is exactly that: the Human long-rest
+    // grant and `use-hi` share a key so the use replaces the grant — append it
+    // last and the player spends HI and still has it. The rest happened at the
+    // boundary, so its effects belong there and everything planned after it
+    // stays chronologically newer.
+    advertised.splice(boundary, 0, ...hookEffects);
   }
 
   // Final projection includes every spend from the plan plus any rest effects.

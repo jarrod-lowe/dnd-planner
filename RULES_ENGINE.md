@@ -162,6 +162,9 @@ Two distinct gates:
   **no exceptions**: an action planned after a rest row is illegal
   (`planner.after-rest`, kept alongside the action's own diagnostics) and runs
   anyway. A row that silently did nothing would make the projection lie.
+  `planner.after-rest` reads as a warning rather than a prohibition, because the
+  action does happen — what it flags is that the projection for that row may be
+  inaccurate (ISSUES.md §1.41).
 
 `apply` is the pure transition run when the offer is planned:
 
@@ -199,8 +202,19 @@ It runs after the plan settles but reads the state **as it stood at the rest** �
 the post-plan facts. A spend planned after the rest executes, but it had not
 happened as far as the rest is concerned, so a recovery gated on "is a spend
 outstanding?" cannot hand it straight back. Hooks all read that same snapshot,
-so one module's recovery is never visible to another's. Rest-scoped effect
-**expiry** has no such boundary yet — see ISSUES.md §1.41.
+so one module's recovery is never visible to another's.
+
+Its effects are **spliced into `advertised` at that same boundary**, not appended
+after the plan. Keyed effects dedupe newest-wins, so a hook effect appended last
+would outrank a planned row that came after the rest and shares its key — a Human
+who long-rests and then spends Heroic Inspiration would spend it and still have
+it. At the boundary, everything planned after the rest stays newer.
+
+`onRest` runs **once** per evaluation, at the FIRST rest in the plan. A plan with
+two short rests therefore gets one recovery, and a post-rest row cannot see the
+hook's effects at its own step. Those, and rest-scoped effect **expiry** (which
+has no boundary at all), are knowingly accepted post-rest imperfections surfaced
+by the `planner.after-rest` warning — see ISSUES.md §1.41.
 
 ---
 

@@ -579,10 +579,47 @@ effect bag with no notion of before/after:
 - `slotLevels.ts` and `actionPools.ts` mirror the same predicate for the UI, so
   the panels agree with the wrong answer.
 
-Fixing those needs a per-effect "advertised after the rest" marker that survives
-into persisted state — roughly six files including the committed-effect shape, so
-it is deliberately a separate change. Until then: post-rest execution is honest
-about the spends the hook sees, not about rest-scoped effects expiring.
+**Hook effects now sit AT the rest, not after the whole plan.** (Found by Codex
+review on PR #414.) `advertised` is chronological and keyed effects dedupe
+newest-wins (`dedupeByKey`), so `onRest` output appended after the fold outranked
+a planned row that came AFTER the rest and shared its key. Heroic Inspiration is
+exactly that shape — the Human long-rest grant and `use-hi` deliberately share a
+key so the use replaces the grant — so a Human who took a long rest and then
+spent HI spent it and still had it. `plan.ts` now SPLICES the hook effects in at
+`restBoundary` instead of pushing them onto the end, so everything planned after
+the rest stays chronologically newer. This ordering is not optional for HI: a
+long-rest grant can only ever be followed by the spend, never preceded by it.
+Unit: post-rest-actions.test.ts; yaml: hi-human-long-rest-then-use.
+
+**Knowingly accepted: post-rest rows are not guaranteed to project correctly.**
+`onRest` runs ONCE, post-settle — the contract RULES_ENGINE.md documents — and
+that is deliberately unchanged. Two consequences are accepted rather than fixed:
+
+- **Only the first rest boundary is processed.** A plan such as Divine Sense →
+  short rest → Divine Sense → short rest executes both rest rows, but the
+  boundary is captured at the first rest and the hooks run once, so Channel
+  Divinity gets ONE recovery and ends at 1/2. (Also reported by Codex on PR
+  #414.)
+- **A post-rest row cannot see the hook's own effects at its own step.** During
+  the fold the grant does not exist yet, so `use-hi` after a long rest reports
+  its own `no_inspiration` error alongside `planner.after-rest` — even though
+  the splice above makes it spend correctly. The outcome is right; only that
+  row's diagnostics are pessimistic.
+
+Making hooks run per-rest inside the fold would fix both, but it changes the
+`onRest` contract (a module author's hook could fire more than once in a plan,
+so modules would have to be idempotent by condition rather than by luck) and
+complicates the engine for every plan in order to serve a rare corner. The
+deliberate trade is to accept the imperfection and SURFACE it: `planner.after-rest`
+is now worded as a warning — "Planned after a rest — it still applies, but this
+projection may be off." — rather than the old prohibition, "No actions after a
+rest this turn.", which was wrong twice over (the action does happen, and this
+app does not prohibit).
+
+Fixing the expiry half needs a per-effect "advertised after the rest" marker that
+survives into persisted state — roughly six files including the committed-effect
+shape, so it is deliberately a separate change. Until then: post-rest execution is
+honest about the spends the hook sees, not about rest-scoped effects expiring.
 
 Two knock-on notes:
 

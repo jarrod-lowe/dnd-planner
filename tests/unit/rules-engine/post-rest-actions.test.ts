@@ -3,6 +3,8 @@ import { evaluate, plannedEntries } from '$lib/rules-engine';
 import type { PlannedRef } from '$lib/rules-engine';
 import coreEvents from '$lib/rules-engine/rules/core-events';
 import divinity from '$lib/rules-engine/rules/class-paladin-divinity';
+import speciesHuman from '$lib/rules-engine/rules/species-human';
+import heroicInspiration from '$lib/rules-engine/rules/heroic-inspiration';
 
 /**
  * An action planned AFTER a rest recorder is illegal — but it still EXECUTES,
@@ -19,10 +21,13 @@ import divinity from '$lib/rules-engine/rules/class-paladin-divinity';
  * recovers it" flow, and the regression guard for the window's lower edge.
  */
 const MODULES = [coreEvents, divinity];
+// A Human (grants Heroic Inspiration on a long rest) who can also spend it.
+const HUMAN_MODULES = [coreEvents, speciesHuman, heroicInspiration];
 // A Channel Divinity pool + a bonus action, so Divine Sense is otherwise legal.
 const READY = { 'divinity.total': 2, 'bonusActions.remaining': 1 };
 const AFTER_REST = 'planner.after-rest';
 const NO_BONUS_ACTION = 'rule.class-paladin-divinity.offer-divine-sense.no_bonus_action';
+const NO_INSPIRATION = 'rule.dnd-5e-2024.heroic-inspiration.use-hi-offer.no_inspiration';
 
 const ref = (instanceId: string, ruleId: string): PlannedRef => ({ instanceId, ruleId });
 
@@ -70,5 +75,50 @@ describe('plan — an action planned after a rest', () => {
     expect(out.facts['divinity.spent']).toBe(1);
     expect(out.facts['divinity.recovered']).toBe(1);
     expect(out.facts['divinity.remaining']).toBe(2);
+  });
+});
+
+/**
+ * The other half of "a post-rest row executes": the rest hook's OWN effects must
+ * stay chronologically where the rest happened, so a planned row after it is
+ * still newer. Heroic Inspiration is the case that proves it — the Human grant
+ * and the `use-hi` consumption deliberately share a key, and `dedupeByKey` keeps
+ * the LAST entry. If the hook's grant were appended after the fold it would win
+ * over a `use-hi` planned later, and the player would spend HI and still have it.
+ *
+ * This ordering is not optional for HI: a long-rest grant can only ever be
+ * followed by the spend, never preceded by it.
+ */
+describe('plan — rest-hook effects sit at the rest, not after the whole plan', () => {
+  it('lets a use-hi planned after a long rest consume the rest’s own grant', () => {
+    const planned = [ref('i0', 'record-long-rest'), ref('i1', 'use-hi')];
+    const out = evaluate({ modules: HUMAN_MODULES, inputFacts: {}, planned });
+
+    expect(out.plannedOffers['i1'].legal).toBe(false);
+    expect(out.planDiagnostics['i1']?.map((d) => d.code)).toContain(AFTER_REST);
+
+    // It RAN: the consumption effect is newer than the hook's grant, so
+    // newest-key-wins leaves HI spent, not sitting there unspent.
+    expect(out.facts['heroicInspiration.consumed']).toBe(1);
+    expect(out.facts['heroicInspiration.remaining'] ?? 0).toBe(0);
+  });
+
+  it('KNOWN LIMITATION: the post-rest row cannot see the hook grant at its own step', () => {
+    // `onRest` runs once, post-settle (RULES_ENGINE.md), so during the fold
+    // `use-hi` still reads remaining = 0 and reports its own no_inspiration
+    // error on top of the after-rest one. The outcome above is right; only this
+    // row's diagnostics are pessimistic. Pinned as an ACCEPTED imperfection, not
+    // as correct behaviour — `planner.after-rest` now warns the player that a
+    // post-rest row's projection may be inaccurate. See ISSUES.md §1.41.
+    const planned = [ref('i0', 'record-long-rest'), ref('i1', 'use-hi')];
+    const out = evaluate({ modules: HUMAN_MODULES, inputFacts: {}, planned });
+    expect(out.planDiagnostics['i1']?.map((d) => d.code)).toContain(NO_INSPIRATION);
+  });
+
+  it('still grants Heroic Inspiration on a long rest with nothing planned after it', () => {
+    const planned = [ref('i0', 'record-long-rest')];
+    const out = evaluate({ modules: HUMAN_MODULES, inputFacts: {}, planned });
+    expect(out.facts['heroicInspiration.remaining']).toBe(1);
+    expect(out.facts['heroicInspiration.consumed'] ?? 0).toBe(0);
   });
 });
