@@ -77,14 +77,17 @@ describe('shield-of-faith — effect lifetimes', () => {
     expect(next['ac.value']).toBe(14); // the ward carries into the next turn
   });
 
-  it('the ward ages out after its 10-round duration and AC falls back', () => {
+  it('the ward persists across quiet turns — no round counting, only rests (or dismissal) end it', () => {
     const { advertised } = evaluatePlan(ALL, PREPARED, [cast('c1')]);
-    let committed = endTurn([], advertised, { longRest: false }); // round 1 ends → 9 left
+    let committed = endTurn([], advertised, { longRest: false });
     expect(evaluateSheet(ALL, PREPARED, committed)['ac.value']).toBe(14);
 
-    // Nine more quiet turns drain the remaining rounds; the 10th drops it.
-    for (let i = 0; i < 9; i++) committed = endTurn(committed, [], { longRest: false });
-    expect(evaluateSheet(ALL, PREPARED, committed)['ac.value']).toBe(12);
+    // Ten minutes is impractical to count in combat rounds, so the ward carries
+    // across any number of quiet turns; the user dismisses it when it lapses and
+    // any rest (always 10+ minutes) clears it.
+    for (let i = 0; i < 12; i++) committed = endTurn(committed, [], { longRest: false });
+    expect(evaluateSheet(ALL, PREPARED, committed)['ac.value']).toBe(14);
+    expect(evaluateSheet(ALL, PREPARED, committed)['concentration.remaining']).toBe(0);
   });
 
   it('ends the ward and restores the slot on a long rest, before the duration', () => {

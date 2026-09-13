@@ -11,7 +11,7 @@ import detectEvilAndGood from '$lib/rules-engine/rules/detect-evil-and-good';
  * minutes). Structurally the same shape as Protection from Evil and Good:
  * prepare path + L1–5 slot cascade + a cast that spends an action, the turn
  * spell, and a slot, holding concentration via `effect-detect-evil-and-good`
- * (`[turns 10, untilShortRest]`). Everything the spell SENSES (aberrations,
+ * (`[untilShortRest]` — ten minutes is not counted in combat rounds). Everything the spell SENSES (aberrations,
  * celestials, elementals, fey, fiends, undead, Hallow within 30 ft) is world
  * state the app does not track, so the effect is a pure concentration-holding
  * marker — descriptive, like Protection's ward.
@@ -72,7 +72,14 @@ describe('detect-evil-and-good — effect lifetimes', () => {
     expect(next['concentration.remaining']).toBe(0); // still sensing
   });
 
-  it('ends on any rest, before the duration (multi-predicate expiry)', () => {
+  it('persists across quiet turns — no round counting, only a rest (or dismissal) ends it', () => {
+    const { advertised } = evaluatePlan(ALL, PREPARED, [cast('c1')]);
+    let committed = endTurn([], advertised, { longRest: false });
+    for (let i = 0; i < 12; i++) committed = endTurn(committed, [], { longRest: false });
+    expect(evaluateSheet(ALL, PREPARED, committed)['concentration.remaining']).toBe(0);
+  });
+
+  it('ends on any rest, releasing concentration (multi-predicate expiry)', () => {
     const { advertised } = evaluatePlan(ALL, PREPARED, [cast('c1')]);
     const afterLong = evaluateSheet(ALL, PREPARED, endTurn([], advertised, { longRest: true }));
     expect(afterLong['concentration.remaining']).toBe(1); // ward released

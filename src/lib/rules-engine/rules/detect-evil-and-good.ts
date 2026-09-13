@@ -16,9 +16,11 @@ const SLOTS = 'detectEvilAndGood';
  * Detect Evil and Good — a Level 1 action concentration divination. The same
  * shape as Protection from Evil and Good: prepare path + L1–5 slot cascade + a
  * cast that spends an action, the turn spell, and a slot, holding concentration
- * via `effect-detect-evil-and-good` (`[turns 10, untilShortRest]`,
- * `concentration.spent` = 1) so it ends on the duration or any rest and blocks a
- * second concentration spell meanwhile.
+ * via `effect-detect-evil-and-good` (`[untilShortRest]`,
+ * `concentration.spent` = 1). Ten minutes is impractical to count in combat
+ * rounds, so the sensing carries until the user dismisses it or any rest
+ * (always 10+ minutes) ends it; it blocks a second concentration spell
+ * meanwhile.
  *
  * Everything the spell senses — Aberrations, Celestials, Elementals, Fey,
  * Fiends, and Undead within 30 feet, plus Hallow — is world state the app does
@@ -106,15 +108,15 @@ const detectEvilAndGood: RuleModule = {
             state: { 'actions.spent': 1, 'spellcasting.spent': 1 },
             expiry: { kind: 'endOfTurn' }
           },
-          // The senses: a pure concentration-holding duration marker; ends after
-          // 10 rounds or on any rest.
+          // The senses: a pure concentration-holding duration marker; ends on
+          // dismissal or any rest (10 minutes is not counted in rounds).
           {
             id: 'effect-detect-evil-and-good',
             state: { 'concentration.spent': 1 },
             display: {
               name: 'rule.spell-detect-evil-and-good.effect-detect-evil-and-good.name'
             },
-            expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]
+            expiry: [{ kind: 'untilShortRest' }]
           }
         ];
         const diagnostics: Diagnostic[] = [];

@@ -14,10 +14,11 @@ const SLOTS = 'shieldOfFaith';
 
 /**
  * Shield of Faith — a Level 1 bonus-action concentration ward (+2 AC for 10
- * rounds). Same shape as Bless: prepare path + L1–5 slot cascade + a cast that
+ * minutes). Same shape as Bless: prepare path + L1–5 slot cascade + a cast that
  * spends a bonus action, the turn spell, and a slot, holding concentration via
- * `effect-shield-of-faith` (`[turns 10, untilShortRest]`,
- * `concentration.spent` = 1) so it ends on the duration or any rest and blocks a
+ * `effect-shield-of-faith` (`[untilShortRest]`, `concentration.spent` = 1). Ten
+ * minutes is impractical to count in combat rounds, so the ward carries until
+ * the user dismisses it or any rest (always 10+ minutes) ends it; it blocks a
  * second concentration spell meanwhile.
  *
  * The buff also contributes `ac.miscBonus` 2 (the effect's state, not a derive),
@@ -116,7 +117,7 @@ const shieldOfFaith: RuleModule = {
             display: {
               name: 'rule.spell-shield-of-faith.effect-shield-of-faith.name'
             },
-            expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]
+            expiry: [{ kind: 'untilShortRest' }]
           }
         ];
         const diagnostics: Diagnostic[] = [];
