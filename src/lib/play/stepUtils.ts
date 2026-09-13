@@ -28,7 +28,7 @@ function deriveVerbFromSection(rule: Rule): Verb {
     case 'bonus-action-other':
       return 'AID';
     case 'reaction':
-      return 'DEFEND';
+      return 'REACT';
     case 'move':
       return 'MOVE';
     case 'free':

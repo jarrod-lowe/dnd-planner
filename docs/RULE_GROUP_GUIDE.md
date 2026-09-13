@@ -445,6 +445,10 @@ sibling `assert:`) and cover `facts`, `offers` / `effects` / `annotations`
 - **A section with no verb.** An offer whose `ui.section` has no verb mapping
   and no `ui.intents` lands in the generic HANDLE picker bucket —
   `sections.test.ts` fails the build.
+- **A reaction in the wrong verb.** A `reaction`-section offer whose
+  `ui.intents` names another verb (e.g. a stale `DEFEND`) overrides the
+  section's `REACT` fallback and scatters the one-reaction budget across the
+  picker — `sections.test.ts` pins every reaction-section offer to `REACT`.
 - **Keyed vs keyless effects.** Forgetting a `key` on replaceable state makes
   re-application stack; putting a `key` on a per-turn spend makes the second
   spend evict the first.

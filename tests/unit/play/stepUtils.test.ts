@@ -36,6 +36,14 @@ describe('deriveVerbFromRule', () => {
     expect(deriveVerbFromRule(rule)).toBe('ATTACK');
   });
 
+  it('falls back to REACT for reaction sections', () => {
+    const rule = makeRule({
+      id: 'opportunity-attack',
+      ui: { section: 'reaction' }
+    });
+    expect(deriveVerbFromRule(rule)).toBe('REACT');
+  });
+
   it('falls back to HANDLE for unknown sections', () => {
     const rule = makeRule({
       id: 'mystery',

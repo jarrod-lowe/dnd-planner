@@ -54,7 +54,7 @@ const oath: RuleModule = {
         name: `${O}.aura-of-the-guardian.name`,
         description: `${O}.aura-of-the-guardian.description`,
         detailKey: 'class-feature/aura-of-the-guardian',
-        intents: { DEFEND: 'ward' },
+        intents: { REACT: 'ward' },
         actionCost: ['reaction'],
         primaryControl: {
           type: 'slider',

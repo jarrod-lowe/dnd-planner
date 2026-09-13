@@ -93,6 +93,22 @@ describe('AddRowPicker quick search', () => {
   });
 });
 
+describe('AddRowPicker verb rail', () => {
+  it('renders a REACT entry as a verb button in the plan group, after ATTACK', () => {
+    const reactEntries = [
+      makeEntry('greataxe', 'Greataxe'),
+      makeEntry('opportunity', 'Opportunity Attack', 'REACT')
+    ];
+    const { container } = render(AddRowPicker, {
+      props: { entries: reactEntries, onAddStep: vi.fn() }
+    });
+    const labels = [...container.querySelectorAll('.add-row-picker__verb')].map((b) =>
+      b.textContent?.trim()
+    );
+    expect(labels).toEqual(['play.verbs.ATTACK', 'play.verbs.REACT']);
+  });
+});
+
 describe('AddRowPicker illegal-options eye toggle', () => {
   it('renders the eye toggle closed by default with a localised aria-label', () => {
     const { container } = render(AddRowPicker, {

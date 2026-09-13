@@ -468,7 +468,7 @@ export function weaponOffers(def: WeaponDef): Offer[] {
       name,
       description,
       detailKey,
-      intents: { DEFEND: 'weapons' },
+      intents: { REACT: 'weapons' },
       actionCost: ['reaction'],
       annotationLabels: [...def.annotationLabels, 'attack.reaction'],
       primaryControl: diceControl(meleeDef)

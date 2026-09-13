@@ -61,7 +61,7 @@ const oath: RuleModule = {
             labelValues: { dc: { fact: 'spellcasting.saveDC' } }
           }
         ],
-        intents: { DEFEND: 'ward' },
+        intents: { REACT: 'ward' },
         actionCost: ['reaction', 'CD']
       },
       legalWhen: [
