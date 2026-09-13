@@ -328,6 +328,8 @@ const EXPECTED_RUNNABLE = [
   'sanctuary-cast',
   // Shield of Faith — L1 bonus-action concentration ward (+2 AC)
   'shield-of-faith-cast',
+  // Shield of Faith cast on an ally — full spend, concentration held, no self AC
+  'shield-of-faith-ally-cast',
   // Searing Smite — L1 bonus-action on-hit smite (fire rider, no concentration)
   'searing-smite-usage',
   // Cure Wounds — L1 action heal (2d8 + spellcasting modifier dice line)

@@ -24,9 +24,11 @@ const SLOTS = 'shieldOfFaith';
  * The buff also contributes `ac.miscBonus` 2 (the effect's state, not a derive),
  * so the `ac` group's sum raises the sheet AC while the ward lives — visible the
  * same turn via the fold. SRD 5.2 targets "a creature of your choice within
- * range", but the app tracks only the character's own AC, so this models the
- * SELF cast; warding an ally is untracked world state (the Protection from Evil
- * and Good precedent — descriptive, not modelled).
+ * range"; the app tracks only the character's own AC, so the cast carries a
+ * Self/Ally target control (Self by default). Casting on an ally still spends
+ * the bonus action, the turn spell, the slot, and concentration — but writes no
+ * `ac.miscBonus`, since the +2 lives on the ally (untracked world state, like
+ * the Protection from Evil and Good ward).
  */
 const shieldOfFaith: RuleModule = {
   id: 'spell-shield-of-faith',
@@ -74,11 +76,23 @@ const shieldOfFaith: RuleModule = {
         description: `${S}.description`,
         detailKey: 'spell/shield-of-faith',
         // No save DC line: the ward forces no saving throw (it raises AC).
+        secondaryControl: {
+          type: 'segmented',
+          var: 'target',
+          options: [
+            { value: 1, label: `${S}.targetSelf` },
+            { value: 0, label: `${S}.targetAlly` }
+          ]
+        },
         intents: { DEFEND: 'ward' },
         actionCost: ['bonus', 'conc', 'L1']
       },
       vars: {
-        slotLevel: { capture: true, default: { fact: `${SLOTS}.lowestAvailableSlotLevel` } }
+        slotLevel: { capture: true, default: { fact: `${SLOTS}.lowestAvailableSlotLevel` } },
+        // 1 = ward yourself (the +2 lands on your AC); 0 = ward an ally (the +2
+        // is theirs — untracked — so no self AC, but the spend and concentration
+        // still apply).
+        target: { capture: true, default: { number: 1 } }
       },
       legalWhen: [
         {
@@ -103,17 +117,19 @@ const shieldOfFaith: RuleModule = {
           typeof selections.slotLevel === 'number'
             ? selections.slotLevel
             : f.num(`${SLOTS}.lowestAvailableSlotLevel`);
+        const onSelf = (typeof selections.target === 'number' ? selections.target : 1) === 1;
         const advertise: EffectInstance[] = [
           {
             id: 'cost',
             state: { 'bonusActions.spent': 1, 'spellcasting.spent': 1 },
             expiry: { kind: 'endOfTurn' }
           },
-          // The ward: holds concentration and raises AC for the duration or
-          // until any rest.
+          // The ward: holds concentration and — when self-cast — raises AC for
+          // the duration or until any rest. An ally's ward holds concentration
+          // but writes no self AC.
           {
             id: 'effect-shield-of-faith',
-            state: { 'concentration.spent': 1, 'ac.miscBonus': 2 },
+            state: { 'concentration.spent': 1, ...(onSelf ? { 'ac.miscBonus': 2 } : {}) },
             display: {
               name: 'rule.spell-shield-of-faith.effect-shield-of-faith.name'
             },

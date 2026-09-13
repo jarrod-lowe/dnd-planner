@@ -282,6 +282,8 @@
         "name": "Shield of Faith",
         "keywords": "ward shield ac abjuration defend bonus",
         "description": "Bonus action | 10 min | +2 AC | Concentration",
+        "targetSelf": "Self",
+        "targetAlly": "Ally",
         "no_bonus_action": "No bonus action available",
         "no_spellcasting": "Already cast a spell this turn",
         "already_concentrating": "Already concentrating",

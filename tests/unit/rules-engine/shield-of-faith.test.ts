@@ -26,7 +26,11 @@ const PREPARED: Facts = {
 };
 const UNPREPARED: Facts = { 'spellcasting.slots.level1.total': 2, 'dex.modifier': 2 };
 
-const cast = (instanceId: string): PlannedRef => ({ instanceId, ruleId: 'cast-shield-of-faith' });
+const cast = (instanceId: string, target?: number): PlannedRef => ({
+  instanceId,
+  ruleId: 'cast-shield-of-faith',
+  ...(target !== undefined ? { selections: { target } } : {})
+});
 
 const offer = (facts: Facts, id: string): OfferEntry | undefined =>
   evaluateOffers(ALL, facts).find((o) => o.id === id);
@@ -51,6 +55,15 @@ describe('shield-of-faith — casting', () => {
     // The buff effect contributes ac.miscBonus 2 and the fold re-derives AC with
     // it, so the +2 lands the SAME turn the spell is cast.
     expect(facts['ac.value']).toBe(14); // 10 base + 2 dex + 2 ward
+  });
+
+  it('casts on an ally: spends the slot and holds concentration but grants no self AC', () => {
+    const { facts, planDiagnostics } = evaluatePlan(ALL, PREPARED, [cast('c1', 0)]);
+    expect(planDiagnostics.get('c1')).toBeUndefined();
+    expect(facts['bonusActions.remaining']).toBe(0);
+    expect(facts['spellcasting.slots.level1.remaining']).toBe(1); // 2 - 1
+    expect(facts['concentration.remaining']).toBe(0); // still concentrating — on the ally's ward
+    expect(facts['ac.value']).toBe(12); // 10 base + 2 dex; the +2 lives on the ally (untracked)
   });
 
   it('flags a second planned cast illegal-but-visible (already concentrating)', () => {
