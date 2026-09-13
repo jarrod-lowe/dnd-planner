@@ -446,6 +446,8 @@ const EXPECTED_RUNNABLE = [
   'loadout-versatile-grip',
   'loadout-while-locked',
   // prepared-spells — the whole-set picker (one offer, one keyed effect)
+  'prepared-spells-always-prepared',
+  'prepared-spells-over-cap',
   'prepared-spells-set',
   // M3 — initiative (dex-modifier bonus + display-only Roll Initiative offer)
   'alert-no-feat-no-annotations',

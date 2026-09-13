@@ -1,0 +1,87 @@
+name: 'Prepared Spells - always-prepared spells are checked, uncounted, cannot be unprepared'
+description: >
+  Paladin's Smite (L2) grants Divine Smite always-prepared. The grant alone
+  prepares the spell (combine: max) without consuming a prepared slot. Preparing
+  a different spell via set-prepared-spells cannot unprepare the granted one —
+  the set effect omits it, but the grant's max keeps its fact at 1 — and even a
+  selection that INCLUDES the granted spell leaves the count excluding it:
+  apply counts only the non-always-prepared selections, and the count derive
+  ignores always-prepared facts.
+
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/prepared-spells
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-paladin-smite
+  - spells/spell-divine-smite
+  - spells/spell-bless
+
+steps:
+  # TC1: The grant alone prepares Divine Smite, and the count excludes
+  # always-prepared spells — the paladin's full capacity is still available.
+  - evaluate:
+      assert:
+        facts:
+          spell.l1.divineSmite.prepared: 1
+          spell.l1.divineSmite.alwaysPrepared: 1
+          spellcasting.prepared.max: 3
+          spellcasting.prepared.count: 0
+          spellcasting.prepared.remaining: 3
+        offers:
+          legal:
+            - set-prepared-spells
+
+  # TC2: Preparing a different spell cannot unprepare the granted one: the set
+  # effect omits Divine Smite, but the grant's combine: max holds its prepared
+  # fact at 1, and the count still excludes it.
+  - addOffer:
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: bless
+            level: 1
+            nameKey: rule.spell-bless.offer-bless.name
+            preparedFact: spell.l1.bless.prepared
+            alwaysPreparedFact: spell.l1.bless.alwaysPrepared
+      assert:
+        facts:
+          spell.l1.divineSmite.prepared: 1
+          spell.l1.bless.prepared: 1
+          spellcasting.prepared.count: 1
+        planErrors:
+          - id: set-prepared-spells
+            errors: []
+
+  # TC3: Re-shape the selection to INCLUDE the granted spell too (the row
+  # renders checked+disabled, so this is what a committed picker state looks
+  # like). Committing must not consume a slot for it: apply counts only
+  # non-always-prepared selections, so the count stays at bless alone.
+  - updateSelections:
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: bless
+            level: 1
+            nameKey: rule.spell-bless.offer-bless.name
+            preparedFact: spell.l1.bless.prepared
+            alwaysPreparedFact: spell.l1.bless.alwaysPrepared
+          - spellId: divineSmite
+            level: 1
+            nameKey: rule.spell-divine-smite.offer-divine-smite.name
+            preparedFact: spell.l1.divineSmite.prepared
+            alwaysPreparedFact: spell.l1.divineSmite.alwaysPrepared
+      assert:
+        facts:
+          spell.l1.divineSmite.prepared: 1
+          spell.l1.bless.prepared: 1
+          spellcasting.prepared.count: 1
+        planErrors:
+          - id: set-prepared-spells
+            errors: []
