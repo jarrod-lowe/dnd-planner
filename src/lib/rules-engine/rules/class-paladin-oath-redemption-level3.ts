@@ -11,8 +11,8 @@ const O = 'rule.class-paladin-oath-redemption-level3';
 
 /**
  * An always-prepared grant for a level-1 oath spell: `prepared` via `max` so it
- * composes with the spell's own prepare effect (also `max`) without a combine
- * conflict, and `alwaysPrepared` to block its Unprepare offer. Mirrors how
+ * composes with the set picker's whole-set effect (also `max`) without a combine
+ * conflict, and `alwaysPrepared` so the picker's count excludes it. Mirrors how
  * class-paladin-paladin-smite grants Divine Smite.
  */
 const alwaysPrepared = (spell: string): Contribution[] => [

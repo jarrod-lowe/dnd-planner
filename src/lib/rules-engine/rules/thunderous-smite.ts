@@ -1,7 +1,6 @@
 import {
   defineRule,
   preparedSpellCount,
-  preparedSpellOffers,
   type ActionResult,
   type Contribution,
   type Diagnostic,
@@ -70,13 +69,6 @@ const thunderousSmite: RuleModule = {
     return c;
   },
   offer: () => [
-    ...preparedSpellOffers({
-      spellId: 'thunderous-smite',
-      i18nPrefix: 'rule.spell-thunderous-smite',
-      preparedFact: 'spell.l1.thunderousSmite.prepared',
-      alwaysPreparedFact: 'spell.l1.thunderousSmite.alwaysPrepared',
-      intentLevel: 'L1'
-    }),
     {
       id: 'cast-thunderous-smite',
       when: (f) => f.num('spell.l1.thunderousSmite.prepared') === 1,

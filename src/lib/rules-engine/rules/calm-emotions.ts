@@ -1,7 +1,6 @@
 import {
   defineRule,
   preparedSpellCount,
-  preparedSpellOffers,
   type ActionResult,
   type Contribution,
   type Diagnostic,
@@ -56,13 +55,6 @@ const calmEmotions: RuleModule = {
     return c;
   },
   offer: () => [
-    ...preparedSpellOffers({
-      spellId: 'calm-emotions',
-      i18nPrefix: 'rule.spell-calm-emotions',
-      preparedFact: 'spell.l2.calmEmotions.prepared',
-      alwaysPreparedFact: 'spell.l2.calmEmotions.alwaysPrepared',
-      intentLevel: 'L2'
-    }),
     {
       id: 'cast-calm-emotions',
       when: (f) => f.num('spell.l2.calmEmotions.prepared') === 1,

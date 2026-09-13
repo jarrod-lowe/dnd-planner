@@ -3,6 +3,7 @@ description: >-
   Casting Bless, then planning a second cast while concentration is still held,
   marks the second planned item illegal with an already_concentrating error.
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -15,7 +16,14 @@ ruleGroups:
 steps:
   - evaluate:
   - addOffer:
-      id: prepare-bless
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: bless
+            level: 1
+            nameKey: rule.spell-bless.offer-bless.name
+            preparedFact: spell.l1.bless.prepared
+            alwaysPreparedFact: spell.l1.bless.alwaysPrepared
   - evaluate:
       assert:
         facts:

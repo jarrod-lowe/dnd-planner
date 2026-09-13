@@ -1,6 +1,7 @@
 name: 'Divine Smite - Illegal No Slots'
 description: 'A prepared Divine Smite (no free use) is illegal when all spell slots are exhausted'
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - species-human/species-human
   - dnd-5e-2024/action-economy
   - dnd-5e-2024/free-actions
@@ -14,7 +15,14 @@ ruleGroups:
 steps:
   - evaluate: {}
   - addOffer:
-      id: prepare-divine-smite
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: divine-smite
+            level: 1
+            nameKey: rule.spell-divine-smite.offer-divine-smite.name
+            preparedFact: spell.l1.divineSmite.prepared
+            alwaysPreparedFact: spell.l1.divineSmite.alwaysPrepared
       assert:
         facts:
           bonusActions.remaining: 1

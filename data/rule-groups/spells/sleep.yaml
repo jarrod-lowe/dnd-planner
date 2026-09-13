@@ -3,6 +3,7 @@ ruleGroups:
     requires:
       - spellcasting
       - concentration
+      - prepared-spells
     translations:
       en:
         name: Sleep

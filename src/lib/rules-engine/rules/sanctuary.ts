@@ -1,7 +1,6 @@
 import {
   defineRule,
   preparedSpellCount,
-  preparedSpellOffers,
   type ActionResult,
   type Contribution,
   type Diagnostic,
@@ -56,13 +55,6 @@ const sanctuary: RuleModule = {
     return c;
   },
   offer: () => [
-    ...preparedSpellOffers({
-      spellId: 'sanctuary',
-      i18nPrefix: 'rule.spell-sanctuary',
-      preparedFact: 'spell.l1.sanctuary.prepared',
-      alwaysPreparedFact: 'spell.l1.sanctuary.alwaysPrepared',
-      intentLevel: 'L1'
-    }),
     {
       id: 'cast-sanctuary',
       when: (f) => f.num('spell.l1.sanctuary.prepared') === 1,

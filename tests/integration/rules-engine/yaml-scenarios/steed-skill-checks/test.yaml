@@ -1,6 +1,7 @@
 name: 'Steed Skill Checks'
 description: 'Steed has 18 skill check offers with correct ability modifiers'
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -30,7 +31,14 @@ initialEffects:
 steps:
   - evaluate:
   - addOffer:
-      id: prepare-find-steed
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: find-steed
+            level: 2
+            nameKey: rule.spell-find-steed.offer-find-steed.name
+            preparedFact: spell.l2.findSteed.prepared
+            alwaysPreparedFact: spell.l2.findSteed.alwaysPrepared
   # Cast Find Steed at L2
   - evaluate:
       assert:

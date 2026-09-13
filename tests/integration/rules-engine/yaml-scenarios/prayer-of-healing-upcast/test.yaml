@@ -1,6 +1,7 @@
 name: 'Prayer of Healing Upcast'
 description: 'Casting Prayer of Healing with a higher-level slot consumes that slot and persists it (per-level blocks above the base work)'
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -30,7 +31,14 @@ initialEffects:
 steps:
   - evaluate:
   - addOffer:
-      id: prepare-prayer-of-healing
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: prayer-of-healing
+            level: 2
+            nameKey: rule.spell-prayer-of-healing.offer-prayer-of-healing.name
+            preparedFact: spell.l2.prayerOfHealing.prepared
+            alwaysPreparedFact: spell.l2.prayerOfHealing.alwaysPrepared
   - evaluate:
       assert:
         facts:

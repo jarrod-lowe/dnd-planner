@@ -3,6 +3,7 @@ description: >-
   Casting Sleep, then planning a second cast while concentration is still held,
   marks the second planned item illegal with an already_concentrating error.
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -15,7 +16,14 @@ ruleGroups:
 steps:
   - evaluate:
   - addOffer:
-      id: prepare-sleep
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: sleep
+            level: 1
+            nameKey: rule.spell-sleep.offer-sleep.name
+            preparedFact: spell.l1.sleep.prepared
+            alwaysPreparedFact: spell.l1.sleep.alwaysPrepared
   - endTurn: {}
   - addOffer:
       id: cast-sleep

@@ -8,23 +8,6 @@
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
         "no_slots": "mugh laH tu'lu'be'"
-      },
-      "prepare-command-offer": {
-        "name": "ra' mugh chenmoH",
-        "keywords": "compel order force control enchantment",
-        "max_prepared": "mugh DIvI' nIb",
-        "already_prepared": "ra' already prepared"
-      },
-      "unprepare-command-offer": {
-        "name": "ra' mugh lISmoH",
-        "keywords": "compel order force control enchantment",
-        "not_prepared": "ra' not prepared"
-      },
-      "effect-command-prepared": {
-        "name": "ra' Prepared"
-      },
-      "effect-command-removing": {
-        "name": "Removing ra'"
       }
     },
     "spell-sanctuary": {
@@ -38,24 +21,6 @@
       },
       "effect-sanctuary": {
         "name": "chal"
-      },
-      "prepare-sanctuary-offer": {
-        "name": "chal mugh chenmoH",
-        "keywords": "protect ward shield abjuration safe",
-        "max_prepared": "mugh DIvI' nIb",
-        "already_prepared": "chal already prepared"
-      },
-      "unprepare-sanctuary-offer": {
-        "name": "chal mugh lISmoH",
-        "keywords": "protect ward shield abjuration safe",
-        "not_prepared": "chal not prepared",
-        "always_prepared": "chal always prepared"
-      },
-      "effect-sanctuary-prepared": {
-        "name": "chal Prepared"
-      },
-      "effect-sanctuary-removing": {
-        "name": "Removing chal"
       }
     },
     "spell-find-steed": {
@@ -182,24 +147,6 @@
       "annotate-life-bond": {
         "text": "yIn DIch: Sargh DIvI' DIch (vagh 'uy' DIch, mugh level 1+)"
       },
-      "prepare-find-steed-offer": {
-        "name": "Sargh Sam mugh chenmoH",
-        "keywords": "summon mount horse companion conjure",
-        "max_prepared": "mugh DIvI' nIb",
-        "already_prepared": "Sargh Sam already prepared"
-      },
-      "unprepare-find-steed-offer": {
-        "name": "Sargh Sam mugh lISmoH",
-        "keywords": "summon mount horse companion conjure",
-        "not_prepared": "Sargh Sam not prepared",
-        "always_prepared": "Sargh Sam reH mugh"
-      },
-      "effect-find-steed-prepared": {
-        "name": "Sargh Sam Prepared"
-      },
-      "effect-find-steed-removing": {
-        "name": "Removing Sargh Sam"
-      },
       "effect-find-steed-free": {
         "name": "Sargh Sam lo'Ha'"
       }
@@ -216,24 +163,6 @@
       },
       "effect-sleep": {
         "name": "Qong"
-      },
-      "effect-sleep-prepared": {
-        "name": "Qong Prepared"
-      },
-      "effect-sleep-removing": {
-        "name": "Removing Qong"
-      },
-      "prepare-sleep-offer": {
-        "name": "Prepare Qong",
-        "keywords": "knock unconscious incapacitate control enchantment",
-        "max_prepared": "mugh DIvI' nIb",
-        "already_prepared": "Qong already prepared"
-      },
-      "unprepare-sleep-offer": {
-        "name": "Unprepare Qong",
-        "keywords": "knock unconscious incapacitate control enchantment",
-        "not_prepared": "Qong not prepared",
-        "always_prepared": "Qong always prepared"
       }
     },
     "spell-calm-emotions": {
@@ -248,24 +177,6 @@
       },
       "effect-calm-emotions": {
         "name": "tam tIq"
-      },
-      "effect-calm-emotions-prepared": {
-        "name": "tam tIq Prepared"
-      },
-      "effect-calm-emotions-removing": {
-        "name": "Removing tam tIq"
-      },
-      "prepare-calm-emotions-offer": {
-        "name": "Prepare tam tIq",
-        "keywords": "charm fear pacify soothe control enchantment",
-        "max_prepared": "mugh DIvI' nIb",
-        "already_prepared": "tam tIq already prepared"
-      },
-      "unprepare-calm-emotions-offer": {
-        "name": "Unprepare tam tIq",
-        "keywords": "charm fear pacify soothe control enchantment",
-        "not_prepared": "tam tIq not prepared",
-        "always_prepared": "tam tIq always prepared"
       }
     },
     "spell-hold-person": {
@@ -280,24 +191,6 @@
       },
       "effect-hold-person": {
         "name": "nuv mevmoH"
-      },
-      "effect-hold-person-prepared": {
-        "name": "nuv mevmoH Prepared"
-      },
-      "effect-hold-person-removing": {
-        "name": "Removing nuv mevmoH"
-      },
-      "prepare-hold-person-offer": {
-        "name": "Prepare nuv mevmoH",
-        "keywords": "paralyse paralyze stun freeze control humanoid",
-        "max_prepared": "mugh DIvI' nIb",
-        "already_prepared": "nuv mevmoH already prepared"
-      },
-      "unprepare-hold-person-offer": {
-        "name": "Unprepare nuv mevmoH",
-        "keywords": "paralyse paralyze stun freeze control humanoid",
-        "not_prepared": "nuv mevmoH not prepared",
-        "always_prepared": "nuv mevmoH always prepared"
       }
     },
     "spell-aid": {
@@ -308,24 +201,6 @@
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
         "no_slots": "mugh laH tu'lu'be'"
-      },
-      "prepare-aid-offer": {
-        "name": "Prepare QaH",
-        "keywords": "heal hit points boost maximum buff support",
-        "max_prepared": "mugh DIvI' nIb",
-        "already_prepared": "QaH already prepared"
-      },
-      "unprepare-aid-offer": {
-        "name": "Unprepare QaH",
-        "keywords": "heal hit points boost maximum buff support",
-        "not_prepared": "QaH not prepared",
-        "always_prepared": "QaH always prepared"
-      },
-      "effect-aid-prepared": {
-        "name": "QaH Prepared"
-      },
-      "effect-aid-removing": {
-        "name": "Removing QaH"
       }
     },
     "spell-thunderous-smite": {
@@ -338,23 +213,6 @@
         "no_attack": "wa'DIch HIv lo'nIS",
         "no_slots": "mugh laH tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'"
-      },
-      "prepare-thunderous-smite-offer": {
-        "name": "raQ muHta mugh chenmoH",
-        "keywords": "smite thunder damage push knock",
-        "max_prepared": "mugh DIvI' nIb",
-        "already_prepared": "raQ muHta already prepared"
-      },
-      "unprepare-thunderous-smite-offer": {
-        "name": "raQ muHta mugh lISmoH",
-        "keywords": "smite thunder damage push knock",
-        "not_prepared": "raQ muHta not prepared"
-      },
-      "effect-thunderous-smite-prepared": {
-        "name": "raQ muHta Prepared"
-      },
-      "effect-thunderous-smite-removing": {
-        "name": "Removing raQ muHta"
       }
     },
     "spell-divine-smite": {
@@ -376,24 +234,6 @@
         "no_l5_slots": "patlh 5 mugh laH tu'lu'be'",
         "wrong_level": "mugh laH patlh qar'be'"
       },
-      "prepare-divine-smite-offer": {
-        "name": "quv Qaw' mugh chenmoH",
-        "keywords": "smite radiant damage burst nova",
-        "max_prepared": "mugh DIvI' nIb",
-        "already_prepared": "quv Qaw' already prepared"
-      },
-      "unprepare-divine-smite-offer": {
-        "name": "quv Qaw' mugh lISmoH",
-        "keywords": "smite radiant damage burst nova",
-        "not_prepared": "quv Qaw' not prepared",
-        "always_prepared": "quv Qaw' reH mugh, lISlaH'be'"
-      },
-      "effect-divine-smite-prepared": {
-        "name": "quv Qaw' Prepared"
-      },
-      "effect-divine-smite-removing": {
-        "name": "Removing quv Qaw'"
-      },
       "effect-divine-smite-free": {
         "name": "quv Qaw' free lo'pu'"
       }
@@ -410,23 +250,6 @@
       },
       "effect-protection-from-evil-and-good": {
         "name": "mIgh Do' Ha'DIbaH je"
-      },
-      "prepare-protection-from-evil-and-good-offer": {
-        "name": "mIgh Do' Ha'DIbaH je mugh chenmoH",
-        "keywords": "ward defend shield abjuration protect",
-        "max_prepared": "mugh DIvI' nIb",
-        "already_prepared": "mIgh Do' Ha'DIbaH je already prepared"
-      },
-      "unprepare-protection-from-evil-and-good-offer": {
-        "name": "mIgh Do' Ha'DIbaH je mugh lISmoH",
-        "keywords": "ward defend shield abjuration protect",
-        "not_prepared": "mIgh Do' Ha'DIbaH je not prepared"
-      },
-      "effect-protection-from-evil-and-good-prepared": {
-        "name": "mIgh Do' Ha'DIbaH je Prepared"
-      },
-      "effect-protection-from-evil-and-good-removing": {
-        "name": "Removing mIgh Do' Ha'DIbaH je"
       }
     },
     "spell-bless": {
@@ -441,23 +264,6 @@
       },
       "effect-bless": {
         "name": "DIch"
-      },
-      "prepare-bless-offer": {
-        "name": "DIch mugh chenmoH",
-        "keywords": "buff bonus attack save support d4",
-        "max_prepared": "mugh DIvI' nIb",
-        "already_prepared": "DIch already prepared"
-      },
-      "unprepare-bless-offer": {
-        "name": "DIch mugh lISmoH",
-        "keywords": "buff bonus attack save support d4",
-        "not_prepared": "DIch not prepared"
-      },
-      "effect-bless-prepared": {
-        "name": "DIch Prepared"
-      },
-      "effect-bless-removing": {
-        "name": "Removing DIch"
       }
     },
     "spell-prayer-of-healing": {
@@ -469,24 +275,6 @@
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
         "no_slots": "mugh laH tu'lu'be'"
-      },
-      "prepare-prayer-of-healing-offer": {
-        "name": "Qor' nIvbogh mugh chenmoH",
-        "keywords": "heal restore hit points group rest",
-        "max_prepared": "mugh DIvI' nIb",
-        "already_prepared": "Qor' nIvbogh already prepared"
-      },
-      "unprepare-prayer-of-healing-offer": {
-        "name": "Qor' nIvbogh mugh lISmoH",
-        "keywords": "heal restore hit points group rest",
-        "not_prepared": "Qor' nIvbogh not prepared",
-        "always_prepared": "Qor' nIvbogh always prepared"
-      },
-      "effect-prayer-of-healing-prepared": {
-        "name": "Qor' nIvbogh Prepared"
-      },
-      "effect-prayer-of-healing-removing": {
-        "name": "Removing Qor' nIvbogh"
       }
     },
     "spell-divine-favour": {
@@ -511,23 +299,6 @@
       "offer-use-divine-favour": {
         "not_active": "quv DIvI'be'",
         "no_attack": "wa'DIch nuH DIch lo'nIS"
-      },
-      "prepare-divine-favour-offer": {
-        "name": "quv mugh chenmoH",
-        "keywords": "smite radiant damage weapon buff favor",
-        "max_prepared": "mugh DIvI' nIb",
-        "already_prepared": "quv already prepared"
-      },
-      "unprepare-divine-favour-offer": {
-        "name": "quv mugh lISmoH",
-        "keywords": "smite radiant damage weapon buff favor",
-        "not_prepared": "quv not prepared"
-      },
-      "effect-divine-favour-prepared": {
-        "name": "quv Prepared"
-      },
-      "effect-divine-favour-removing": {
-        "name": "Removing quv"
       }
     },
     "spell-create-and-destroy-water": {
@@ -540,23 +311,6 @@
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
         "no_slots": "mugh laH tu'lu'be'"
-      },
-      "prepare-create-and-destroy-water-offer": {
-        "name": "bIQ chenmoH 'ej HochHom mugh chenmoH",
-        "keywords": "water create destroy utility",
-        "max_prepared": "mugh DIvI' nIb",
-        "already_prepared": "bIQ chenmoH 'ej HochHom already prepared"
-      },
-      "unprepare-create-and-destroy-water-offer": {
-        "name": "bIQ chenmoH 'ej HochHom mugh lISmoH",
-        "keywords": "water create destroy utility",
-        "not_prepared": "bIQ chenmoH 'ej HochHom not prepared"
-      },
-      "effect-create-and-destroy-water-prepared": {
-        "name": "bIQ chenmoH 'ej HochHom Prepared"
-      },
-      "effect-create-and-destroy-water-removing": {
-        "name": "Removing bIQ chenmoH 'ej HochHom"
       }
     },
     "class-paladin-lay-on-hands": {
@@ -2038,8 +1792,6 @@
         "skill": "Skill"
       },
       "PREPARE": {
-        "L1": "Level 1",
-        "L2": "Level 2",
         "spells": "jupmey"
       },
       "EQUIP": {

@@ -11,9 +11,8 @@
    * resolved before mounting, not signalled back from a mounted instance.
    */
   export function spellPrepareIsEmpty(
-    _control: SpellPrepareControl,
-    modules: RuleModule[],
-    _selections: Record<string, unknown>
+    control: SpellPrepareControl,
+    modules: RuleModule[]
   ): boolean {
     return enumeratePreparableSpells(modules).length === 0;
   }

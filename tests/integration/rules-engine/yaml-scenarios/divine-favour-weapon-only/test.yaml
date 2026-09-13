@@ -6,6 +6,7 @@ description: >-
   though it IS the Attack action - must leave the rider illegal and the
   reminder absent. A spear swing then unlocks both.
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -33,7 +34,14 @@ initialEffects:
 
 steps:
   - addOffer:
-      id: prepare-divine-favour
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: divine-favour
+            level: 1
+            nameKey: rule.spell-divine-favour.offer-divine-favour.name
+            preparedFact: spell.l1.divineFavour.prepared
+            alwaysPreparedFact: spell.l1.divineFavour.alwaysPrepared
 
   - addOffer:
       id: cast-divine-favour

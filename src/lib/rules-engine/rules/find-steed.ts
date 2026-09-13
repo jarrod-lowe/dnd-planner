@@ -2,7 +2,6 @@ import {
   currentHp,
   defineRule,
   preparedSpellCount,
-  preparedSpellOffers,
   statToModifier,
   type ActionResult,
   type Contribution,
@@ -702,13 +701,6 @@ const findSteed: RuleModule = {
     return c;
   },
   offer: () => [
-    ...preparedSpellOffers({
-      spellId: 'find-steed',
-      i18nPrefix: 'rule.spell-find-steed',
-      preparedFact: 'spell.l2.findSteed.prepared',
-      alwaysPreparedFact: 'spell.l2.findSteed.alwaysPrepared',
-      intentLevel: 'L2'
-    }),
     {
       id: 'cast-find-steed',
       when: (f) => f.num('spell.l2.findSteed.prepared') === 1,

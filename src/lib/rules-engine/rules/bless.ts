@@ -1,7 +1,6 @@
 import {
   defineRule,
   preparedSpellCount,
-  preparedSpellOffers,
   type ActionResult,
   type Contribution,
   type Diagnostic,
@@ -14,8 +13,8 @@ const B = 'rule.spell-bless.offer-bless';
 
 /**
  * Bless — a Level 1 concentration buff (+1d4 to allies' attacks and saves for
- * 10 rounds). Prepared via the shared prepare offers; cast as an action that
- * spends a slot (L1–5 by the chosen level) and takes concentration.
+ * 10 rounds). Prepared via the prepared-spells set picker; cast as an action
+ * that spends a slot (L1–5 by the chosen level) and takes concentration.
  *
  * Concentration is held by the persistent `effect-bless` (`concentration.spent`
  * = 1), so it lights the same turn (the fold) and a second concentration spell
@@ -61,13 +60,6 @@ const bless: RuleModule = {
     return c;
   },
   offer: () => [
-    ...preparedSpellOffers({
-      spellId: 'bless',
-      i18nPrefix: 'rule.spell-bless',
-      preparedFact: 'spell.l1.bless.prepared',
-      alwaysPreparedFact: 'spell.l1.bless.alwaysPrepared',
-      intentLevel: 'L1'
-    }),
     {
       id: 'cast-bless',
       when: (f) => f.num('spell.l1.bless.prepared') === 1,

@@ -9,6 +9,7 @@ ruleGroups:
   - dnd-5e-2024/core-events
   - dnd-5e-2024/attacks
   - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/prepared-spells
   - class-paladin/class-paladin-level1
   - class-paladin/class-paladin-level2
   - class-paladin/class-paladin-paladin-smite
@@ -22,7 +23,14 @@ steps:
           # Granted for free — does not consume a prepared-spell slot
           spellcasting.prepared.count: 0
           paladinSmite.remaining: 1
-        offers:
-          # Cannot unprepare an always-prepared spell
-          illegal:
-            - unprepare-divine-smite
+  # Cannot unprepare an always-prepared spell: re-committing a set that OMITS it
+  # replaces the keyed set effect but cannot drop the grant's prepared fact.
+  - addOffer:
+      id: set-prepared-spells
+      selections:
+        prepared: []
+      assert:
+        facts:
+          spell.l1.divineSmite.prepared: 1
+          spell.l1.divineSmite.alwaysPrepared: 1
+          spellcasting.prepared.count: 0

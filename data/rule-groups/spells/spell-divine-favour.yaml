@@ -2,6 +2,7 @@ ruleGroups:
   - id: spell-divine-favour
     requires:
       - spellcasting
+      - prepared-spells
     translations:
       en:
         name: Divine Favour

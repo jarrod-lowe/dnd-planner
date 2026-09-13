@@ -2,6 +2,7 @@ ruleGroups:
   - id: spell-prayer-of-healing
     requires:
       - spellcasting
+      - prepared-spells
     translations:
       en:
         name: Prayer of Healing

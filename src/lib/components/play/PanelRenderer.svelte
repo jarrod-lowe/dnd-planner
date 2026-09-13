@@ -187,7 +187,7 @@
     primaryLoadout ? loadoutIsEmpty(primaryLoadout, modules, selections) : false
   );
   const primarySpellPrepareEmpty = $derived(
-    primarySpellPrepare ? spellPrepareIsEmpty(primarySpellPrepare, modules, selections) : false
+    primarySpellPrepare ? spellPrepareIsEmpty(primarySpellPrepare, modules) : false
   );
   const primaryHitDiceEmpty = $derived(
     primaryHitDice ? hitDiceIsEmpty(primaryHitDice, facts, vars, selections) : false

@@ -4,6 +4,7 @@ description: >-
   still held, marks the second planned item illegal with an already_concentrating
   error. A slot remains, so no_slots does not co-fire.
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -34,7 +35,14 @@ initialEffects:
 steps:
   - evaluate:
   - addOffer:
-      id: prepare-hold-person
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: hold-person
+            level: 2
+            nameKey: rule.spell-hold-person.offer-hold-person.name
+            preparedFact: spell.l2.holdPerson.prepared
+            alwaysPreparedFact: spell.l2.holdPerson.alwaysPrepared
   - endTurn: {}
   # Turn 1: cast Hold Person, starting concentration
   - addOffer:

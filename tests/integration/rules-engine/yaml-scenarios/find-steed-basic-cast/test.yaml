@@ -1,6 +1,7 @@
 name: 'Find Steed Basic Cast'
 description: 'Casting Find Steed consumes an action and L2 spell slot, creates a persistent steed effect with computed stats'
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -30,7 +31,14 @@ initialEffects:
 steps:
   - evaluate:
   - addOffer:
-      id: prepare-find-steed
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: find-steed
+            level: 2
+            nameKey: rule.spell-find-steed.offer-find-steed.name
+            preparedFact: spell.l2.findSteed.prepared
+            alwaysPreparedFact: spell.l2.findSteed.alwaysPrepared
   # Verify initial state: Find Steed offer exists and is legal
   - evaluate:
       assert:

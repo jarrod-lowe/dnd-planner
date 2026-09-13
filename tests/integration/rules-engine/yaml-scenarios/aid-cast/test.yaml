@@ -1,6 +1,7 @@
 name: 'Aid Cast'
 description: 'Casting Aid consumes action, spellcasting, and L2 slot. No ongoing visible effect.'
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -31,7 +32,14 @@ steps:
   - evaluate:
   # Prepare Aid
   - addOffer:
-      id: prepare-aid
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: aid
+            level: 2
+            nameKey: rule.spell-aid.offer-aid.name
+            preparedFact: spell.l2.aid.prepared
+            alwaysPreparedFact: spell.l2.aid.alwaysPrepared
   # Cast offer available
   - evaluate:
       assert:

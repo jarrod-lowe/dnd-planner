@@ -177,23 +177,24 @@ Guards that will bite: `module-coverage`, `module-i18n-coverage`, `sections.test
 
 ## Checklist
 
-- [ ] Branch off main
-- [ ] RED: `tests/unit/rules-engine/prepared-spells.test.ts` — `enumeratePreparableSpells` over a fixture module set
-- [ ] GREEN: `src/lib/rules-engine/preparedSpells.ts` + `RuleModule.prepare` in `types.ts` + re-export in `builder.ts`
-- [ ] Add `prepare: PrepareDef` to all 14 spell modules (offers untouched this step)
-- [ ] RED: yaml scenario `prepared-spells-set` + `EXPECTED_RUNNABLE` entry
-- [ ] GREEN: export `notLockedLegal` from `builder.ts`; `rules/prepared-spells.ts`, yaml metadata, `registry.ts`, `lazy.ts`, i18n both locales
-- [ ] RED→GREEN: scenario `prepared-spells-over-cap` (illegal, executes anyway)
-- [ ] RED→GREEN: scenario `prepared-spells-always-prepared` (checked, uncounted, cannot unprepare)
-- [ ] RED: `tests/unit/svelte/PanelSpellPrepare.test.ts` — rows, fieldset/legend, counter, disabled always-prepared, keyboard
-- [ ] GREEN: `PanelSpellPrepare.svelte` + `SpellPrepareControl` in `panel-renderer/types.ts` + `PanelRenderer.svelte` wiring + `spellPrepareIsEmpty`
-- [ ] RED→GREEN: `PanelSpellPrepare-summary.test.ts` (counter-only collapsed row)
-- [ ] RED→GREEN: `tests/unit/lib/play/currentPrepared.test.ts` + `currentPrepared.ts` + `resolveInitialSelections.ts`
-- [ ] Delete `preparedSpellOffers` from `builder.ts`; strip its spread from all 14 modules
-- [ ] Rewrite the 14 `*-prepare` yaml scenarios onto `set-prepared-spells`; delete the 3 legacy skips + their skip-list entries
-- [ ] Update `build-lock/test.yaml` (`prepare-bless` → `set-prepared-spells`) and `tests/integration/rules-engine/slot-levels.test.ts`
-- [ ] Add `requires: [prepared-spells]` to every spell yaml
-- [ ] Purge dead i18n keys (`prepare-*`/`unprepare-*` offer names + diagnostics) from both locales
+- [x] Branch off main — `spell-prepare-management`
+- [x] RED: `tests/unit/rules-engine/prepared-spells.test.ts` — `enumeratePreparableSpells` over a fixture module set (7 tests)
+- [x] GREEN: `src/lib/rules-engine/preparedSpells.ts` + `RuleModule.prepare` in `types.ts` + re-export in `builder.ts` — `PrepareDef` defined in `types.ts` (EquipDef precedent)
+- [x] Add `prepare: PrepareDef` to all 14 spell modules (offers untouched this step)
+- [x] RED: yaml scenario `prepared-spells-set` + `EXPECTED_RUNNABLE` entry
+- [x] GREEN: export `notLockedLegal` from `builder.ts`; `rules/prepared-spells.ts`, yaml metadata, `registry.ts`, `lazy.ts`, i18n both locales — **selection shape: full `PrepareDef` objects, not spellIds** (loadout's self-describing-selection mechanism; `apply` has no module list). `section: 'configuration'` confirmed in SECTIONS
+- [x] RED→GREEN: scenario `prepared-spells-over-cap` (illegal, executes anyway) — behavior already green; mutation-checked non-vacuous
+- [x] RED→GREEN: scenario `prepared-spells-always-prepared` (checked, uncounted, cannot unprepare) — same; real group id is `class-paladin/class-paladin-paladin-smite`
+- [x] RED: `tests/unit/svelte/PanelSpellPrepare.test.ts` — rows, fieldset/legend, counter, disabled always-prepared, keyboard (15 tests incl. PanelRenderer wiring)
+- [x] GREEN: `PanelSpellPrepare.svelte` + `SpellPrepareControl` in `panel-renderer/types.ts` + `PanelRenderer.svelte` wiring + `spellPrepareIsEmpty` — + `spellPrepareId.ts`; contrast 5.26:1 light / 8.42:1 dark (AA+AAA); svelte-autofixer clean; zero new colours (`--md-sys-color-error` token)
+- [x] RED→GREEN: `PanelSpellPrepare-summary.test.ts` (counter-only collapsed row) — 4 tests
+- [x] RED→GREEN: `tests/unit/lib/play/currentPrepared.test.ts` + `currentPrepared.ts` + `resolveInitialSelections.ts` — always-prepared-but-unprepared NOT seeded (facts are facts; panel renders checked via fact anyway)
+- [ ] Delete `preparedSpellOffers` from `builder.ts`; strip its spread from all 14 modules — IN FLIGHT (subagent)
+- [ ] Rewrite the 14 `*-prepare` yaml scenarios onto `set-prepared-spells`; delete the 3 legacy skips + their skip-list entries — IN FLIGHT
+- [ ] Update `build-lock/test.yaml` (`prepare-bless` → `set-prepared-spells`) and `tests/integration/rules-engine/slot-levels.test.ts` — IN FLIGHT
+- [ ] Add `requires: [prepared-spells]` to every spell yaml — IN FLIGHT. **Correction: yamls live in `data/rule-groups/spells/` (not dnd-5e-2024/) and all already carry `requires:` — APPEND, don't add**
+- [ ] Purge dead i18n keys (`prepare-*`/`unprepare-*` offer names + diagnostics) from both locales — IN FLIGHT. Also the 14 pre-existing stale `effect-*-removing` keys per locale
+- [ ] Found during execution: rewrite `prep:<spellId>` literals in `tests/unit/rules-engine/effect-model.test.ts:95` + `tests/unit/play/engineBridge.test.ts:88`; rewrite 4 `*-prepared-then-granted` scenarios that drive `prepare-*` offers (divine-smite-, find-steed-, oath-redemption-oath-spells-, oath-redemption-l5-) — IN FLIGHT
 - [ ] a11y pass: `mcp__a11y__test_accessibility` on the picker; contrast on the over-cap counter
 - [ ] CSS audit: zero new colours, semantic reused classes
 - [ ] `make validate-rules-schema && make check && make test-unit`
@@ -201,6 +202,16 @@ Guards that will bite: `module-coverage`, `module-i18n-coverage`, `sections.test
 - [ ] `make sync-rule-groups` then `make deploy-test`
 - [ ] Playwright against `http://localhost:5173` (check `pgrep -f vite.js` first): open picker, tick past the cap, confirm counter + illegal treatment
 - [ ] Commit (signed, no amend, no co-author attribution beyond session lines), PR
+
+### Progress log
+
+| Phase                                       | Commit     | Verified by main agent                                           |
+| ------------------------------------------- | ---------- | ---------------------------------------------------------------- |
+| Lib + types + 14 `prepare:` defs            | `00fb66ea` | `make check` 0 errors; 7/7 targeted tests                        |
+| Rule group + scenario + registration + i18n | `3b9e7180` | `make check` 0 errors; scenario green; subagent gates green      |
+| over-cap + always-prepared scenarios        | `25e30471` | subagent: 367 passed, mutation-checked; full scenario file green |
+| PanelSpellPrepare + wiring + summary        | `3f4c8e72` | `make check` 0 errors; 39/39 panel tests                         |
+| currentPrepared seeding                     | `73d85fdf` | 33/33 play tests                                                 |
 
 ## Follow-ups (not this branch)
 

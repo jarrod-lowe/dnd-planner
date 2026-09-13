@@ -1,6 +1,7 @@
 name: 'Calm Emotions Slot Selection'
 description: 'Calm Emotions (L2) can be cast using L2 or a higher slot; defaults to the lowest available (L2). Higher slots give no extra benefit.'
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -46,10 +47,17 @@ steps:
           spellcasting.slots.level3.remaining: 1
         offers:
           exists:
-            - prepare-calm-emotions
+            - set-prepared-spells
   # Prepare Calm Emotions
   - addOffer:
-      id: prepare-calm-emotions
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: calm-emotions
+            level: 2
+            nameKey: rule.spell-calm-emotions.offer-calm-emotions.name
+            preparedFact: spell.l2.calmEmotions.prepared
+            alwaysPreparedFact: spell.l2.calmEmotions.alwaysPrepared
   - endTurn: {}
   # Cast using default (lowest = L2) slot
   - addOffer:

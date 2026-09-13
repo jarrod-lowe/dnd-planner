@@ -3,6 +3,7 @@ import { evaluate, endTurn } from '$lib/rules-engine';
 import { resolveModules } from '$lib/rules-engine/registry';
 import type { EffectInstance, PlannedRef } from '$lib/rules-engine';
 import { deriveSlotLevels } from '$lib/play/slotLevels';
+import bless from '$lib/rules-engine/rules/bless';
 
 /**
  * Phase 1 proof — `deriveSlotLevels` over a REAL evaluation, not hand-built facts.
@@ -29,10 +30,20 @@ const GROUPS = [
   'concentration',
   'core-events',
   'class-paladin-level1',
-  'spell-bless'
+  'spell-bless',
+  'prepared-spells'
 ];
 
 const SLOT_L1_SPENT = 'spellcasting.slots.level1.spent';
+
+/** Prepare Bless via the set picker (its selection is the spell's own prepare def). */
+function prepareBless(): PlannedRef {
+  return {
+    instanceId: 'p1',
+    ruleId: 'set-prepared-spells',
+    selections: { prepared: [bless.prepare!] }
+  };
+}
 
 function planned(instanceId: string, ruleId: string): PlannedRef {
   return { instanceId, ruleId };
@@ -49,7 +60,7 @@ describe('deriveSlotLevels over a real engine evaluation', () => {
     const prepare = evaluate({
       modules,
       inputFacts: {},
-      planned: [planned('p1', 'prepare-bless')],
+      planned: [prepareBless()],
       committed
     });
     committed = endTurn(committed, prepare.effects);
@@ -106,7 +117,7 @@ describe('deriveSlotLevels over a real engine evaluation', () => {
     const prepare = evaluate({
       modules,
       inputFacts: {},
-      planned: [planned('p1', 'prepare-bless')],
+      planned: [prepareBless()],
       committed
     });
     committed = endTurn(committed, prepare.effects);
@@ -146,7 +157,7 @@ describe('deriveSlotLevels over a real engine evaluation', () => {
     const prepare = evaluate({
       modules,
       inputFacts: {},
-      planned: [planned('p1', 'prepare-bless')],
+      planned: [prepareBless()],
       committed
     });
     committed = endTurn(committed, prepare.effects);

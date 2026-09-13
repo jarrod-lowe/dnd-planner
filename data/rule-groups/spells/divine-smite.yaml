@@ -2,6 +2,7 @@ ruleGroups:
   - id: spell-divine-smite
     requires:
       - spellcasting
+      - prepared-spells
     translations:
       en:
         name: Divine Smite

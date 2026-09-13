@@ -1,6 +1,7 @@
 name: 'Aid Prepare'
-description: 'Can prepare and unprepare Aid; prepared fact tracks correctly'
+description: 'The prepared-set picker prepares Aid; re-committing the set without it unprepares'
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -31,15 +32,25 @@ steps:
   - evaluate:
   # Prepare Aid
   - addOffer:
-      id: prepare-aid
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: aid
+            level: 2
+            nameKey: rule.spell-aid.offer-aid.name
+            preparedFact: spell.l2.aid.prepared
+            alwaysPreparedFact: spell.l2.aid.alwaysPrepared
   # Aid prepared
   - evaluate:
       assert:
         facts:
           spell.l2.aid.prepared: 1
-  # Unprepare Aid
-  - addOffer:
-      id: unprepare-aid
+  # Unprepare Aid: re-commit the whole set WITHOUT it — the keyed effect is
+  # replaced, so the spell's prepared fact drops with it.
+  - updateSelections:
+      id: set-prepared-spells
+      selections:
+        prepared: []
   # Aid unprepared
   - evaluate:
       assert:

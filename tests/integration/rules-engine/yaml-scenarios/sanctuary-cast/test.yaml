@@ -1,6 +1,7 @@
 name: 'Sanctuary Cast'
 description: 'Casting Sanctuary consumes a bonus action and spell slot, creates a timed effect with countDown=10'
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -12,7 +13,14 @@ ruleGroups:
 steps:
   - evaluate:
   - addOffer:
-      id: prepare-sanctuary
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: sanctuary
+            level: 1
+            nameKey: rule.spell-sanctuary.offer-sanctuary.name
+            preparedFact: spell.l1.sanctuary.prepared
+            alwaysPreparedFact: spell.l1.sanctuary.alwaysPrepared
   - evaluate:
       assert:
         facts:

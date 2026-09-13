@@ -1,7 +1,6 @@
 import {
   defineRule,
   preparedSpellCount,
-  preparedSpellOffers,
   type ActionResult,
   type Contribution,
   type Diagnostic,
@@ -55,13 +54,6 @@ const holdPerson: RuleModule = {
     return c;
   },
   offer: () => [
-    ...preparedSpellOffers({
-      spellId: 'hold-person',
-      i18nPrefix: 'rule.spell-hold-person',
-      preparedFact: 'spell.l2.holdPerson.prepared',
-      alwaysPreparedFact: 'spell.l2.holdPerson.alwaysPrepared',
-      intentLevel: 'L2'
-    }),
     {
       id: 'cast-hold-person',
       when: (f) => f.num('spell.l2.holdPerson.prepared') === 1,

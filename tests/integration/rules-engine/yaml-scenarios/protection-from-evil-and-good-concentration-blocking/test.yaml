@@ -1,6 +1,7 @@
 name: 'Protection from Evil and Good Concentration Blocking'
 description: 'Cannot cast Protection from Evil and Good while already concentrating. Concentration resource prevents second cast.'
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -13,7 +14,14 @@ ruleGroups:
 steps:
   - evaluate:
   - addOffer:
-      id: prepare-protection-from-evil-and-good
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: protection-from-evil-and-good
+            level: 1
+            nameKey: rule.spell-protection-from-evil-and-good.offer-protection-from-evil-and-good.name
+            preparedFact: spell.l1.protectionFromEvilAndGood.prepared
+            alwaysPreparedFact: spell.l1.protectionFromEvilAndGood.alwaysPrepared
   - evaluate:
       assert:
         facts:

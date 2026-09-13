@@ -1,6 +1,7 @@
 name: 'Bless Prepare'
 description: 'Cast offer requires preparation first; prepare/unprepare lifecycle works'
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -20,10 +21,17 @@ steps:
           notExists:
             - cast-bless
           exists:
-            - prepare-bless
+            - set-prepared-spells
   # TC2: After preparing, cast-bless becomes available
   - addOffer:
-      id: prepare-bless
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: bless
+            level: 1
+            nameKey: rule.spell-bless.offer-bless.name
+            preparedFact: spell.l1.bless.prepared
+            alwaysPreparedFact: spell.l1.bless.alwaysPrepared
       assert:
         facts:
           spell.l1.bless.prepared: 1

@@ -45,7 +45,7 @@ const spellcasting: RuleModule = {
     },
     {
       // How many more spells can be prepared: capacity (from the class) minus the
-      // count of currently-prepared spells (each prepare offer adds 1, except
+      // count of currently-prepared spells (each prepared spell adds 1, except
       // always-prepared spells which are free).
       fact: 'spellcasting.prepared.remaining',
       value: (f) => f.num('spellcasting.prepared.max') - f.num('spellcasting.prepared.count')

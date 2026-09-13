@@ -1,6 +1,7 @@
 name: 'Sleep Cast'
 description: 'Casting Sleep consumes a spell slot and concentration, creates a timed effect with countDown=10 and a concentration effect'
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -22,10 +23,17 @@ steps:
           notExists:
             - cast-sleep
           exists:
-            - prepare-sleep
+            - set-prepared-spells
   # Prepare Sleep first
   - addOffer:
-      id: prepare-sleep
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: sleep
+            level: 1
+            nameKey: rule.spell-sleep.offer-sleep.name
+            preparedFact: spell.l1.sleep.prepared
+            alwaysPreparedFact: spell.l1.sleep.alwaysPrepared
   - endTurn:
       assert:
         offers:

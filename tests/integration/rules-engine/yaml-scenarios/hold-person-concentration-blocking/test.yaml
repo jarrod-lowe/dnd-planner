@@ -1,6 +1,7 @@
 name: 'Hold Person Concentration Blocking'
 description: 'Cannot cast Hold Person while already concentrating. Concentration resource prevents a second cast.'
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -35,9 +36,16 @@ steps:
           concentration.remaining: 1
         offers:
           exists:
-            - prepare-hold-person
+            - set-prepared-spells
   - addOffer:
-      id: prepare-hold-person
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: hold-person
+            level: 2
+            nameKey: rule.spell-hold-person.offer-hold-person.name
+            preparedFact: spell.l2.holdPerson.prepared
+            alwaysPreparedFact: spell.l2.holdPerson.alwaysPrepared
   - endTurn: {}
   - addOffer:
       id: set-charisma

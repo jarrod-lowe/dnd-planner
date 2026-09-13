@@ -1,7 +1,6 @@
 import {
   defineRule,
   preparedSpellCount,
-  preparedSpellOffers,
   type ActionResult,
   type Contribution,
   type Diagnostic,
@@ -57,13 +56,6 @@ const sleep: RuleModule = {
     return c;
   },
   offer: () => [
-    ...preparedSpellOffers({
-      spellId: 'sleep',
-      i18nPrefix: 'rule.spell-sleep',
-      preparedFact: 'spell.l1.sleep.prepared',
-      alwaysPreparedFact: 'spell.l1.sleep.alwaysPrepared',
-      intentLevel: 'L1'
-    }),
     {
       id: 'cast-sleep',
       when: (f) => f.num('spell.l1.sleep.prepared') === 1,

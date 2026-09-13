@@ -2,6 +2,7 @@ ruleGroups:
   - id: spell-aid
     requires:
       - spellcasting
+      - prepared-spells
     translations:
       en:
         name: Aid

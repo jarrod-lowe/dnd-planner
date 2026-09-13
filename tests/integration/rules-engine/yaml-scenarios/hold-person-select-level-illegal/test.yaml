@@ -3,6 +3,7 @@ description: >-
   If the player up-casts to L3 but only L2 slots remain, the planned action is
   illegal with a no_slots error. The overall offer is still legal (L2 available).
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -43,7 +44,14 @@ initialEffects:
 steps:
   - evaluate:
   - addOffer:
-      id: prepare-hold-person
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: hold-person
+            level: 2
+            nameKey: rule.spell-hold-person.offer-hold-person.name
+            preparedFact: spell.l2.holdPerson.prepared
+            alwaysPreparedFact: spell.l2.holdPerson.alwaysPrepared
   - evaluate:
       assert:
         offers:
