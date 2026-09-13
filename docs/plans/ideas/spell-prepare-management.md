@@ -206,13 +206,13 @@ Guards that will bite: `module-coverage`, `module-i18n-coverage`, `sections.test
 
 ### Progress log
 
-| Phase                                       | Commit     | Verified by main agent                                           |
-| ------------------------------------------- | ---------- | ---------------------------------------------------------------- |
-| Lib + types + 14 `prepare:` defs            | `00fb66ea` | `make check` 0 errors; 7/7 targeted tests                        |
-| Rule group + scenario + registration + i18n | `3b9e7180` | `make check` 0 errors; scenario green; subagent gates green      |
-| over-cap + always-prepared scenarios        | `25e30471` | subagent: 367 passed, mutation-checked; full scenario file green |
-| PanelSpellPrepare + wiring + summary        | `3f4c8e72` | `make check` 0 errors; 39/39 panel tests                         |
-| currentPrepared seeding                     | `73d85fdf` | 33/33 play tests                                                 |
+| Phase                                                                             | Commit     | Verified by main agent                                                                              |
+| --------------------------------------------------------------------------------- | ---------- | --------------------------------------------------------------------------------------------------- |
+| Lib + types + 14 `prepare:` defs                                                  | `00fb66ea` | `make check` 0 errors; 7/7 targeted tests                                                           |
+| Rule group + scenario + registration + i18n                                       | `3b9e7180` | `make check` 0 errors; scenario green; subagent gates green                                         |
+| over-cap + always-prepared scenarios                                              | `25e30471` | subagent: 367 passed, mutation-checked; full scenario file green                                    |
+| PanelSpellPrepare + wiring + summary                                              | `3f4c8e72` | `make check` 0 errors; 39/39 panel tests                                                            |
+| currentPrepared seeding                                                           | `73d85fdf` | 33/33 play tests                                                                                    |
 | Teardown: offers deleted, ~130 scenarios migrated, i18n purged, requires appended | `362f1826` | schema 86 files, `make check` 0 errors, `make test-unit` 175 files / 2204 passed, `make lint` clean |
 
 ## Follow-ups (not this branch)
