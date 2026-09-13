@@ -1,0 +1,20 @@
+name: 'Long Rest - No Swap Reminder Without Prepared Capacity'
+description: >
+  The swap reminder is gated on prepared capacity: with no caster class
+  contributing spellcasting.prepared.max, finishing a Long Rest carries no
+  "swap a spell" advice.
+
+ruleGroups:
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/prepared-spells
+  - dnd-5e-2024/spellcasting
+
+steps:
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - record-long-rest
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.prepared-spells.annotation-long-rest

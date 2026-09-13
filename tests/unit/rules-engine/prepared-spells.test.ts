@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
+import { evaluate } from '$lib/rules-engine';
 import { enumeratePreparableSpells, preparedEffectState } from '$lib/rules-engine/preparedSpells';
+import coreEvents from '$lib/rules-engine/rules/core-events';
+import preparedSpells from '$lib/rules-engine/rules/prepared-spells';
+import spellcasting from '$lib/rules-engine/rules/spellcasting';
 import type { PrepareDef } from '$lib/rules-engine/types';
 import type { RuleModule } from '$lib/rules-engine/types';
 
@@ -120,5 +124,41 @@ describe('preparedEffectState', () => {
 
   it('sets no facts when nothing is selected', () => {
     expect(preparedEffectState([])).toEqual({ state: {}, stateCombine: {} });
+  });
+});
+
+/**
+ * A finished Long Rest is when a prepared caster may swap spells out, so the
+ * module reminds the player ON the long-rest recorder — and the reminder names
+ * the set picker, because re-committing the set with the change IS the swap.
+ */
+const SWAP_KEY = 'rule.dnd-5e-2024.prepared-spells.annotation-long-rest';
+// Class levels contribute prepared.max; none is in this module set, so it is a
+// genuine input (the sheet rejects inputs a module derives).
+const CAPACITY = { 'spellcasting.prepared.max': 2 };
+
+describe('prepared-spells annotate — long-rest swap reminder', () => {
+  it('targets the long-rest panel while the character can prepare spells', () => {
+    const out = evaluate({ modules: [preparedSpells, spellcasting], inputFacts: CAPACITY });
+    const ann = out.annotations.find((a) => a.key === SWAP_KEY);
+    expect(ann).toBeDefined();
+    expect(ann!.targets).toEqual(['rest.long']);
+    expect(ann!.addsToPlan).toEqual({ offer: 'set-prepared-spells' });
+  });
+
+  it('is absent for a character with no prepared capacity', () => {
+    // No class level → prepared.max unset → 0: a known-spells caster (or no
+    // caster at all) cannot swap prepared spells, so no reminder.
+    const out = evaluate({ modules: [preparedSpells, spellcasting] });
+    expect(out.annotations.find((a) => a.key === SWAP_KEY)).toBeUndefined();
+  });
+
+  it('lands: the long-rest recorder carries the rest.long label', () => {
+    const out = evaluate({ modules: [coreEvents], planned: [] });
+    const entry = out.availableRules.find((e) => e.rule.id === 'record-long-rest');
+    expect(entry, 'record-long-rest offer exists').toBeDefined();
+    expect((entry!.rule.ui as Record<string, unknown> | undefined)?.annotationLabels).toEqual([
+      'rest.long'
+    ]);
   });
 });

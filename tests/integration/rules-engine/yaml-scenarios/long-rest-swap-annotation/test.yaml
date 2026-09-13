@@ -1,0 +1,30 @@
+name: 'Long Rest - Prepared Spells Swap Reminder'
+description: >
+  A prepared caster finishing a Long Rest may swap a spell out, so the
+  prepared-spells group annotates the long-rest recorder with that reminder.
+  It names the set picker — re-committing the set with the change IS the swap —
+  so the reminder is a one-tap shortcut, exactly as picking the offer by hand.
+
+ruleGroups:
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/prepared-spells
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.prepared.max: 2
+        offers:
+          exists:
+            - record-long-rest
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.prepared-spells.annotation-long-rest
+          targets:
+            - key: rule.dnd-5e-2024.prepared-spells.annotation-long-rest
+              targets: [rest.long]
+          addsToPlan:
+            - key: rule.dnd-5e-2024.prepared-spells.annotation-long-rest
+              adds: { offer: set-prepared-spells }
