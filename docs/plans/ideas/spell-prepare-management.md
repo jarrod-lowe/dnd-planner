@@ -201,7 +201,7 @@ Guards that will bite: `module-coverage`, `module-i18n-coverage`, `sections.test
 - [x] `make validate-rules-schema && make check && make test-unit` — schema 86 files / check 0 errors / 175 files 2204 passed
 - [x] `make test` green — full gate exit 0 (validate, security, schema, check, unit, e2e, lint)
 - [x] `make sync-rule-groups` then `make deploy-test` — sync: 1 added, 58 updated, index rebuilt (2049 entries); deploy exit 0
-- [x] Playwright against `http://localhost:5173`: picker opens seeded `6 / 7` → `7 / 7`; always-prepared rows checked+disabled with hints; effect chip on Active State. **Over-cap not reachable in-browser for this character** — exactly 7 preparable spells, cap 7 (covered by scenario + component tests instead)
+- [x] Playwright against `http://localhost:5173`: picker opens seeded `6 / 7` → `7 / 7`; always-prepared rows checked+disabled with hints; effect chip on Active State. **Over-cap verified in-browser too**: assigned `spell-create-and-destroy-water` via Manage Rules (8 preparable, cap 7), ticked all → counter `8 / 7` in error colour, title warning badge, over-budget footer indicator, diagnostic "That is more spells than you can prepare"; projection facts `count: 8, max: 7, remaining: -1`; nothing blocked. Character restored (group unassigned, set back to 6/7)
 - [x] Commit (signed, no amend, no co-author attribution beyond session lines), PR
 
 ### Progress log
