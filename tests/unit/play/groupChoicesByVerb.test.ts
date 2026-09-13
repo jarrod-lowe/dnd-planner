@@ -74,6 +74,19 @@ describe('groupChoicesByVerb', () => {
     expect(groups.map((g) => g.verb)).toEqual(['ATTACK', 'AID', 'REST']);
   });
 
+  it('orders REACT after HANDLE (reactions fire around the turn)', () => {
+    const entries = [
+      makeEntry('steed-slam-reaction', { section: 'reaction' }),
+      makeEntry('greataxe', { intents: { ATTACK: 'weapons' } }),
+      makeEntry('dodge', { intents: { DEFEND: 'evade' } }),
+      makeEntry('effects', { intents: { HANDLE: 'effects' } })
+    ];
+
+    const groups = groupChoicesByVerb(entries);
+
+    expect(groups.map((g) => g.verb)).toEqual(['ATTACK', 'DEFEND', 'HANDLE', 'REACT']);
+  });
+
   it('includes illegal entries alongside legal ones', () => {
     const entries = [
       makeEntry('greataxe', { intents: { ATTACK: 'weapons' }, legal: true }),
@@ -193,5 +206,9 @@ describe('subBucketLabelKey', () => {
 describe('getVerbGroup', () => {
   it('HEALTH is in record group', () => {
     expect(getVerbGroup('HEALTH')).toBe('record');
+  });
+
+  it('REACT is in plan group', () => {
+    expect(getVerbGroup('REACT')).toBe('plan');
   });
 });

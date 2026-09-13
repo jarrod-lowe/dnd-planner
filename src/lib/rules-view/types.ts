@@ -14,6 +14,7 @@ export type Verb =
   | 'MOVE'
   | 'INSPECT'
   | 'HANDLE'
+  | 'REACT'
   | 'HEALTH'
   | 'SAVE'
   | 'CHECK'

@@ -1704,6 +1704,7 @@
       "MOVE": "MOVE",
       "INSPECT": "INSPECT",
       "HANDLE": "HANDLE",
+      "REACT": "chup",
       "HEALTH": "HEALTH",
       "SAVE": "SAVE",
       "CHECK": "CHECK",
@@ -1737,9 +1738,7 @@
       "DEFEND": {
         "default": "OTHER",
         "evade": "EVADE",
-        "ward": "WARD",
-        "weapons": "WEAPONS",
-        "brawl": "Brawl"
+        "ward": "WARD"
       },
       "MOVE": {
         "default": "OTHER",
@@ -1758,6 +1757,13 @@
         "consume": "CONSUME",
         "effects": "EFFECTS",
         "spells": "SPELLS",
+        "steed": "Sargh"
+      },
+      "REACT": {
+        "default": "latlh",
+        "weapons": "nuHmey",
+        "brawl": "Suv",
+        "ward": "Hub",
         "steed": "Sargh"
       },
       "HEALTH": {

@@ -1704,6 +1704,7 @@
       "MOVE": "Move",
       "INSPECT": "Inspect",
       "HANDLE": "Handle",
+      "REACT": "React",
       "HEALTH": "Health",
       "SAVE": "Save",
       "CHECK": "Check",
@@ -1737,9 +1738,7 @@
       "DEFEND": {
         "default": "Other",
         "evade": "Evade",
-        "ward": "Ward",
-        "weapons": "Weapons",
-        "brawl": "Brawl"
+        "ward": "Ward"
       },
       "MOVE": {
         "default": "Other",
@@ -1758,6 +1757,13 @@
         "consume": "Consume",
         "effects": "Effects",
         "spells": "Spells",
+        "steed": "Steed"
+      },
+      "REACT": {
+        "default": "Other",
+        "weapons": "Weapons",
+        "brawl": "Brawl",
+        "ward": "Ward",
         "steed": "Steed"
       },
       "HEALTH": {

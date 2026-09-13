@@ -142,7 +142,7 @@ const attacks: RuleModule = {
         name: `${UNARMED}.name`,
         description: `${UNARMED}.description`,
         detailKey: 'attack/unarmed-strike',
-        intents: { DEFEND: 'brawl' },
+        intents: { REACT: 'brawl' },
         actionCost: ['reaction'],
         disadvantageFact: 'attack.str.disadvantage',
         annotationLabels: [...UNARMED_LABELS, 'attack.reaction'],

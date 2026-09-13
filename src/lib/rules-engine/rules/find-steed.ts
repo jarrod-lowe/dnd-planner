@@ -936,7 +936,7 @@ const findSteed: RuleModule = {
       'reaction',
       'companion.steed.reactions.spent',
       'companion.steed.reactions.remaining',
-      { DEFEND: 'brawl' },
+      { REACT: 'steed' },
       'no_reaction'
     ),
     // Creature-type special abilities (only the matching type surfaces).

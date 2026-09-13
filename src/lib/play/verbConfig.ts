@@ -8,6 +8,7 @@ export const VERB_ORDER: Verb[] = [
   'MOVE',
   'INSPECT',
   'HANDLE',
+  'REACT',
   'HEALTH',
   'SAVE',
   'CHECK',
@@ -26,7 +27,8 @@ export const PLAN_VERBS: Verb[] = [
   'DEFEND',
   'MOVE',
   'INSPECT',
-  'HANDLE'
+  'HANDLE',
+  'REACT'
 ];
 
 export const RECORD_VERBS: Verb[] = ['HEALTH', 'SAVE', 'CHECK', 'REST', 'NOTE'];

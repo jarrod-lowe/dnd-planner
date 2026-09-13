@@ -67,4 +67,17 @@ describe('offer sections', () => {
       .map((o) => `${o.moduleId} › ${o.offerId}: '${o.section}'`);
     expect(trapped, 'intentless offers falling to the HANDLE bucket').toEqual([]);
   });
+
+  it('every reaction-section offer lands in the REACT verb (intents agree with the section)', () => {
+    // The reaction section maps to REACT; an offer that still carries explicit
+    // DEFEND (or other) intents overrides the fallback and scatters the
+    // reaction budget across the picker.
+    const misplaced = offers
+      .filter((o) => o.section === 'reaction')
+      .filter(
+        (o) => deriveVerbFromRule({ id: o.offerId, activities: [], ui: o.ui } as Rule) !== 'REACT'
+      )
+      .map((o) => `${o.moduleId} › ${o.offerId}`);
+    expect(misplaced, 'reaction offers not in the REACT verb').toEqual([]);
+  });
 });
