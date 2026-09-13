@@ -1114,6 +1114,7 @@
         }
       },
       "prepared-spells": {
+        "annotation-long-rest": "You can swap one prepared spell",
         "set-prepared-spells": {
           "name": "Prepare Spells",
           "keywords": "prepare spells memorize study set",

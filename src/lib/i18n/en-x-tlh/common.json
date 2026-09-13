@@ -1114,6 +1114,7 @@
         }
       },
       "prepared-spells": {
+        "annotation-long-rest": "wa' tlham jup choqlaH SoH",
         "set-prepared-spells": {
           "name": "jupmey tlham",
           "keywords": "prepare spells memorize study set",

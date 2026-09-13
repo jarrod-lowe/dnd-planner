@@ -246,6 +246,10 @@ const EXPECTED_RUNNABLE = [
   'steed-overheal-caps-at-damage',
   'long-rest-resets-hit-dice',
   'long-rest-sets-flag',
+  // The long-rest recorder carries the swap-spells reminder (and its negative:
+  // no prepared capacity, no reminder).
+  'long-rest-swap-annotation',
+  'long-rest-swap-annotation-no-capacity',
   'savage-attacker-no-feat',
   'short-rest-hit-dice',
   'short-rest-sets-flag',

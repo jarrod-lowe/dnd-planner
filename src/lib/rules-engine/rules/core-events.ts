@@ -72,13 +72,21 @@ function saveOffer(a: string): Offer {
   };
 }
 
-/** Set a rest flag for the current evaluation (consumed by the rest groups). */
+/**
+ * Set a rest flag for the current evaluation (consumed by the rest groups).
+ *
+ * The panel carries the rest signal it sets as its annotation label, so
+ * rest-scoped advice can find it: prepared-spells' "you can swap a spell"
+ * reminder targets `rest.long` (the long rest is the only caller today; the
+ * short rest has its own offer above).
+ */
 function restOffer(id: string, fact: string): Offer {
   return {
     id,
     ui: {
       section: 'rest',
       name: `planner.record.rest.${id === 'record-long-rest' ? 'long' : 'short'}`,
+      annotationLabels: [fact],
       intents: { REST: 'rest' },
       actionCost: []
     },

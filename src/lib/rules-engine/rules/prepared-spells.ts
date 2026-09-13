@@ -101,7 +101,23 @@ const preparedSpells: RuleModule = {
         };
       }
     }
-  ]
+  ],
+  // Advisory AND actionable: finishing a Long Rest is when a prepared caster
+  // may swap a spell out, so the reminder lands on the long-rest recorder and
+  // names the set picker — re-committing the set with the change IS the swap,
+  // so one tap hands the player the picker instead of a hunt through the
+  // add-row catalog. Gated on prepared capacity: a known-spells caster (or no
+  // caster at all — `spellcasting.prepared.max` unset → 0) has nothing to swap.
+  annotate: (f) =>
+    f.num('spellcasting.prepared.max') > 0
+      ? [
+          {
+            key: `${P}.annotation-long-rest`,
+            targets: ['rest.long'],
+            addsToPlan: { offer: 'set-prepared-spells' }
+          }
+        ]
+      : []
 };
 
 export default defineRule(preparedSpells);
