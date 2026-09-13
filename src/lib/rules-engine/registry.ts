@@ -74,6 +74,7 @@ import spellAid from './rules/spell-aid';
 import prayerOfHealing from './rules/prayer-of-healing';
 import shieldOfFaith from './rules/shield-of-faith';
 import searingSmite from './rules/searing-smite';
+import cureWounds from './rules/cure-wounds';
 
 /**
  * Static ruleGroupId -> module registry, keyed by each module's own `id` — which
@@ -162,7 +163,8 @@ const MODULES: RuleModule[] = [
   spellAid,
   prayerOfHealing,
   shieldOfFaith,
-  searingSmite
+  searingSmite,
+  cureWounds
 ];
 
 const REGISTRY: Record<string, RuleModule> = Object.fromEntries(MODULES.map((m) => [m.id, m]));

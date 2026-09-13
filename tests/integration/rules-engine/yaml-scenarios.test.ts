@@ -330,6 +330,8 @@ const EXPECTED_RUNNABLE = [
   'shield-of-faith-cast',
   // Searing Smite — L1 bonus-action on-hit smite (fire rider, no concentration)
   'searing-smite-usage',
+  // Cure Wounds — L1 action heal (2d8 + spellcasting modifier dice line)
+  'cure-wounds-cast',
   'sanctuary-long-rest-dismissal',
   'sanctuary-prepare',
   'sanctuary-rest-dismissal',

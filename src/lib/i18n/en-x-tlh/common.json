@@ -303,6 +303,17 @@
         "no_spellcasting": "mugh DIvI' tu'lu'be'"
       }
     },
+    "spell-cure-wounds": {
+      "offer-cure-wounds": {
+        "name": "Qaw' vor",
+        "keywords": "heal restore hit points touch abjuration",
+        "description": "Hot | 2d8 + mugh laH HP (+2d8 patlh)",
+        "healLabel": "vor",
+        "no_action": "DIvI' tu'lu'be'",
+        "no_spellcasting": "mugh DIvI' tu'lu'be'",
+        "no_slots": "mugh laH tu'lu'be'"
+      }
+    },
     "spell-divine-favour": {
       "offer-divine-favour": {
         "name": "quv",

@@ -3,6 +3,7 @@ ruleGroups:
     requires:
       - spell-bless
       - spell-command
+      - spell-cure-wounds
       - spell-divine-favour
       - spell-divine-smite
       - spell-protection-from-evil-and-good

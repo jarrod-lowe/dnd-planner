@@ -303,6 +303,17 @@
         "no_spellcasting": "Already cast a spell this turn"
       }
     },
+    "spell-cure-wounds": {
+      "offer-cure-wounds": {
+        "name": "Cure Wounds",
+        "keywords": "heal restore hit points touch abjuration",
+        "description": "Touch | 2d8 + spellcasting modifier HP (+2d8 per slot level above 1)",
+        "healLabel": "Heal",
+        "no_action": "No action available",
+        "no_spellcasting": "Already cast a spell this turn",
+        "no_slots": "No spell slots remaining"
+      }
+    },
     "spell-divine-favour": {
       "offer-divine-favour": {
         "name": "Divine Favour",
