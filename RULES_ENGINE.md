@@ -158,7 +158,13 @@ Two distinct gates:
 - **`legalWhen` (legality)**: false → the offer stays **visible but illegal**,
   with diagnostics attached (illegal-but-visible). Planned illegal actions
   still execute — the projection shows the over-commit (e.g.
-  `actions.remaining: -1`) and the row shows the diagnostic.
+  `actions.remaining: -1`) and the row shows the diagnostic. This holds with
+  **no exceptions**: an action planned after a rest row is illegal
+  (`planner.after-rest`, kept alongside the action's own diagnostics) and runs
+  anyway. A row that silently did nothing would make the projection lie.
+  `planner.after-rest` reads as a warning rather than a prohibition, because the
+  action does happen — what it flags is that the projection for that row may be
+  inaccurate (ISSUES.md §1.41).
 
 `apply` is the pure transition run when the offer is planned:
 
@@ -190,6 +196,29 @@ the **only** way a non-planned module emits effects. It exists for recoveries
 that can't be expressed as expiry aging (Channel Divinity regains exactly one
 use on a short rest; a Human regains Heroic Inspiration on a long rest). Emit
 **keyed** effects so a second rest doesn't stack the grant.
+
+It runs after the plan settles but reads the state **as it stood at the rest** —
+`committed` plus the effects advertised through the rest row's own apply — not
+the post-plan facts. A spend planned after the rest executes, but it had not
+happened as far as the rest is concerned, so a recovery gated on "is a spend
+outstanding?" cannot hand it straight back. Hooks all read that same snapshot,
+so one module's recovery is never visible to another's.
+
+Its effects are **spliced into `advertised` at that same boundary**, not appended
+after the plan. Keyed effects dedupe newest-wins, so a hook effect appended last
+would outrank a planned row that came after the rest and shares its key — a Human
+who long-rests and then spends Heroic Inspiration would spend it and still have
+it. At the boundary, everything planned after the rest stays newer.
+
+`onRest` runs **once** per evaluation, at the FIRST rest in the plan, and `kind`
+is that same first rest's — captured with the boundary, never derived from the
+settled facts (which carry every rest flag the plan raised). So on `short rest →
+… → long rest` only the SHORT rest's hooks fire: the Human long-rest Heroic
+Inspiration grant does not happen. A plan with two short rests likewise gets one
+recovery, and a post-rest row cannot see the hook's effects at its own step.
+Those, and rest-scoped effect **expiry** (which has no boundary at all), are
+knowingly accepted post-rest imperfections surfaced by the `planner.after-rest`
+warning — see ISSUES.md §1.41.
 
 ---
 

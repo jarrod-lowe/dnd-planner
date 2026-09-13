@@ -276,9 +276,11 @@ journey-level property._
   Turn. Expect: exactly one CD use returns (2/2), with a single recovery chip.
 - **W9.2** Do: take a second short rest at full CD. Expect: no extra use is
   banked (still 2/2, no stacking recovery chips).
-- **W9.3** Do: plan a Short Rest row and THEN an action row after it in the
-  same plan. Expect: the post-rest action row shows illegal (a rest ends the
-  turn's plan) and does not execute at End Turn.
+- **W9.3** Do: with 2/2 Channel Divinity, plan a Short Rest row and THEN Divine
+  Sense after it in the same plan. Expect: the Divine Sense row shows illegal
+  (you can't act out of a rest you already took) but it still EXECUTES like any
+  other illegal row — Channel Divinity drops to 1/2, with no recovery chip
+  handing the point back, and the spend survives End Turn.
 - **W9.4** Do: with damage recorded, slots spent, and Heroic Inspiration used:
   record a Long Rest and End Turn. Expect: HP back to full (damage/heal chips
   cleared), spell slots restored, the free Find Steed use restored, and Heroic

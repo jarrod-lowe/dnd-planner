@@ -2120,7 +2120,7 @@
     "psychic": "Psychic"
   },
   "planner": {
-    "after-rest": "No actions after a rest this turn.",
+    "after-rest": "Planned after a rest — it still applies, but this projection may be off.",
     "concentration": {
       "check": "Concentration Check"
     },

@@ -542,16 +542,110 @@ adapter.test.ts.
 
 ### 1.41 A rest recovered/expired spends from actions planned after it
 
-**FIXED** (found by Codex review on PR #363, round 13; owner chose to gate rather
-than reorder rest handling). The rest hook (`onRest`) and `endTurn` aging run once
-against the final post-plan facts, so a rest recorded BEFORE later actions in the
-same plan recovered/expired those later spends — e.g. `record-short-rest` then
+**PARTIALLY FIXED** (found by Codex review on PR #363, round 13; the original gate
+was narrowed later — see below). The rest hook (`onRest`) and `endTurn` aging run
+once against the final post-plan facts, so a rest recorded BEFORE later actions in
+the same plan recovered/expired those later spends — e.g. `record-short-rest` then
 Divine Sense refunded the Channel Divinity use, and a long rest before a spell
-dropped that spell's until-rest effect. A rest is now terminal for the plan: any
-action planned after a rest is illegal and does not execute (the one case where an
-illegal planned item is not applied), so no post-rest spend exists for the rest to
-recover. Rest flags are `endOfTurn`, so this fires only within one plan, never on
-turns after a committed rest. Unit: rest-terminal.test.ts.
+dropped that spell's until-rest effect.
+
+The first fix made a rest **terminal**: an action planned after a rest was illegal
+AND did not execute. That over-reached. This app does not prevent things — it
+projects what a plan would do and shows where the player has over-committed, and
+every other illegal row still executes so the projection stays honest. A row that
+silently did nothing made the projection lie.
+
+**What holds now.** A post-rest action is still illegal (`planner.after-rest`, any
+severity of its own `legalWhen` diagnostics kept alongside), but it EXECUTES like
+any other illegal row. What keeps the rest honest is a boundary in the plan fold:
+`onRest` is handed the state as it stood AT the rest — `committed` plus the
+`advertised` prefix through the rest row's own apply — instead of the post-plan
+facts. A spend made after the rest is outside that window, so the recovery cannot
+see it. Short rest → Divine Sense now really spends the point. Rest flags are
+`endOfTurn`, so all of this fires only within one plan, never on turns after a
+committed rest. Unit: post-rest-actions.test.ts, rest-hooks.test.ts; yaml:
+rest-then-spend.
+
+**What is still wrong.** The boundary fixes what the rest HOOK sees. It does not
+fix rest-scoped effect **expiry**, which is still set-wise over a flat, unordered
+effect bag with no notion of before/after:
+
+- `sheet.ts` (`endsOnRest`) drops every rest-scoped effect on each re-derive. So
+  long rest → cast a spell spends the slot but the sheet still eats that spell's
+  `untilLongRest` spend; and a concentration spell's `untilShortRest` buff still
+  vanishes behind a short rest planned earlier in the same turn.
+- `effects.ts` `endTurn` aging applies the same set-wise treatment at commit, so
+  the post-rest effect does not survive the turn boundary either.
+- `slotLevels.ts` and `actionPools.ts` mirror the same predicate for the UI, so
+  the panels agree with the wrong answer.
+
+**Hook effects now sit AT the rest, not after the whole plan.** (Found by Codex
+review on PR #414.) `advertised` is chronological and keyed effects dedupe
+newest-wins (`dedupeByKey`), so `onRest` output appended after the fold outranked
+a planned row that came AFTER the rest and shared its key. Heroic Inspiration is
+exactly that shape — the Human long-rest grant and `use-hi` deliberately share a
+key so the use replaces the grant — so a Human who took a long rest and then
+spent HI spent it and still had it. `plan.ts` now SPLICES the hook effects in at
+`restBoundary` instead of pushing them onto the end, so everything planned after
+the rest stays chronologically newer. This ordering is not optional for HI: a
+long-rest grant can only ever be followed by the spend, never preceded by it.
+Unit: post-rest-actions.test.ts; yaml: hi-human-long-rest-then-use.
+
+**Knowingly accepted: post-rest rows are not guaranteed to project correctly.**
+`onRest` runs ONCE, post-settle — the contract RULES_ENGINE.md documents — and
+that is deliberately unchanged. Two consequences are accepted rather than fixed:
+
+- **Only the first rest boundary is processed.** A plan such as Divine Sense →
+  short rest → Divine Sense → short rest executes both rest rows, but the
+  boundary is captured at the first rest and the hooks run once, so Channel
+  Divinity gets ONE recovery and ends at 1/2. (Also reported by Codex on PR
+  #414.)
+
+  The rest's **kind** is captured with that boundary, in the fold. It used to be
+  derived afterwards from the settled facts, which carry EVERY rest flag the plan
+  raised (long winning the tie) — so on `short rest → … → long rest` the kind and
+  the boundary described DIFFERENT rests, and the later rest's hooks ran at the
+  earlier rest's position. The Human long-rest HI grant was spliced in at the
+  short rest, where an intervening `use-hi` could consume it, leaving the
+  character with neither the grant nor a coherent story. (Found by Codex on PR
+  #414.) The consequence of capturing both together: in a short-rest-then-long-rest
+  plan only the SHORT rest's hooks fire, so the Human long-rest Heroic
+  Inspiration grant does not happen at all. That is the once-only limitation
+  applied honestly — the previous behaviour was not more correct, it was
+  incoherent. Unit: rest-hooks.test.ts, post-rest-actions.test.ts.
+
+- **A post-rest row cannot see the hook's own effects at its own step.** During
+  the fold the grant does not exist yet, so `use-hi` after a long rest reports
+  its own `no_inspiration` error alongside `planner.after-rest` — even though
+  the splice above makes it spend correctly. The outcome is right; only that
+  row's diagnostics are pessimistic.
+
+Making hooks run per-rest inside the fold would fix both, but it changes the
+`onRest` contract (a module author's hook could fire more than once in a plan,
+so modules would have to be idempotent by condition rather than by luck) and
+complicates the engine for every plan in order to serve a rare corner. The
+deliberate trade is to accept the imperfection and SURFACE it: `planner.after-rest`
+is now worded as a warning — "Planned after a rest — it still applies, but this
+projection may be off." — rather than the old prohibition, "No actions after a
+rest this turn.", which was wrong twice over (the action does happen, and this
+app does not prohibit).
+
+Fixing the expiry half needs a per-effect "advertised after the rest" marker that
+survives into persisted state — roughly six files including the committed-effect
+shape, so it is deliberately a separate change. Until then: post-rest execution is
+honest about the spends the hook sees, not about rest-scoped effects expiring.
+
+Two knock-on notes:
+
+- `PanelHitDice.svelte`'s expanded-roller `threshold` offsets the row's OWN
+  advertised hit-die spends back open against a POST-plan `remaining`. That was
+  exact while rests were plan-terminal (at most one rest row could execute). Two
+  short-rest rows in one plan now both execute, so the first row's threshold is
+  short by the second row's spends and shows an extra slot disabled. Cosmetic and
+  confined to that (unusual) plan; the engine-side `die_already_spent` check is
+  unaffected — it reads `committed + advertised-so-far`, which already includes
+  the earlier rest row.
+- A second rest row in a plan now executes too, so its flag and its effects land.
 
 ### 1.42 Steed Slam's action cost chip rendered the raw section
 

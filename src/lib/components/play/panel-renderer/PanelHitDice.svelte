@@ -99,10 +99,18 @@
      * commits it, exactly like a dice-line's chips stay tappable after a
      * roll. A retained roll the engine REJECTED (die_already_spent)
      * advertises no spend, so it correctly does NOT count back in — the slot
-     * stays blocked and the roll is only clearable. Rest rows are
-     * plan-terminal (at most one per plan), so the offset is exact — the
-     * row's spends can never double-count. Used only for the expanded
-     * roller's disabled state and aria-labels, never for the summary.
+     * stays blocked and the roll is only clearable. Used only for the
+     * expanded roller's disabled state and aria-labels, never for the summary.
+     *
+     * The offset is exact for the ONE rest row a normal plan carries. It is
+     * approximate if a plan holds TWO short-rest rows: a row planned after a
+     * rest is illegal but still executes (it used to be skipped entirely, which
+     * made the offset exact by construction), so `remaining` above reflects both
+     * rows' spends while this offsets only this row's — leaving the earlier
+     * row's roller showing one extra slot disabled per die the later row spent.
+     * Cosmetic, and confined to that unusual plan: the engine-side
+     * `die_already_spent` check reads `committed + advertised-so-far`, so the
+     * spends themselves stay correct. See ISSUES.md §1.41.
      */
     threshold: number;
     slots: number[];

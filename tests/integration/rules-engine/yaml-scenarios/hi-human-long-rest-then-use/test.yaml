@@ -1,0 +1,48 @@
+name: 'Heroic Inspiration - Human Long Rest Then Use'
+description: >-
+  A Human takes a long rest and then spends the Heroic Inspiration it granted.
+  The row after the rest is illegal (planner.after-rest) but still EXECUTES, and
+  the rest hook's grant sits AT the rest — so the later use-hi, which shares the
+  grant's effect key, is chronologically newer and wins the newest-key-wins
+  dedupe. HI ends spent. The row also carries use-hi's own no_inspiration error:
+  onRest runs once post-settle, so the row cannot see the grant at its own step.
+  That is an accepted post-rest imperfection (ISSUES.md 1.41), which is why
+  planner.after-rest warns the projection may be inaccurate.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/heroic-inspiration
+steps:
+  - evaluate:
+      assert:
+        facts:
+          heroicInspiration.max: 1
+          heroicInspiration.remaining: 0
+  # The long rest is legal and grants HI.
+  - addOffer:
+      id: record-long-rest
+      assert:
+        facts:
+          rest.long: 1
+          heroicInspiration.remaining: 1
+  # Spending it after the rest: illegal, but it really spends.
+  - addOffer:
+      id: use-hi
+      assert:
+        facts:
+          heroicInspiration.remaining: 0
+          heroicInspiration.consumed: 1
+        planErrors:
+          - id: use-hi
+            errors:
+              - planner.after-rest
+              - rule.dnd-5e-2024.heroic-inspiration.use-hi-offer.no_inspiration
+  # The spend was real: no HI carries into the next turn.
+  - endTurn:
+      assert:
+        facts:
+          heroicInspiration.remaining: 0
+  - evaluate:
+      assert:
+        facts:
+          heroicInspiration.remaining: 0

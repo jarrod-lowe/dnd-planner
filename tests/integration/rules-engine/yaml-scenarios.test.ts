@@ -191,6 +191,7 @@ const EXPECTED_RUNNABLE = [
   'hi-use-effect-removed',
   'hi-use-twice',
   'hi-human-long-rest-no-duplicate',
+  'hi-human-long-rest-then-use',
   'extra-attack-disabled',
   'extra-attack-grapple',
   'extra-attack-greataxe',
@@ -384,6 +385,9 @@ const EXPECTED_RUNNABLE = [
   'divinity-short-rest-reset',
   'divinity-short-rest-no-banking',
   'divinity-recovery-caps-at-spent',
+  // ...and the hook's window: an action planned AFTER the rest still executes,
+  // but its spend is outside what the hook reads, so the rest can't refund it.
+  'rest-then-spend',
   'hi-human-long-rest-grant',
   // M3 — oath-redemption-level3 Channel Divinity options (first runnable reaction
   // spend, via Rebuke the Violent) + Emissary of Peace
