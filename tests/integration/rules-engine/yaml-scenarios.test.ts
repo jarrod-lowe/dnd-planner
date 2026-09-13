@@ -498,6 +498,8 @@ const EXPECTED_RUNNABLE = [
   'find-steed-free-cast',
   'find-steed-no-slots-error',
   'find-steed-prepared-then-granted',
+  // The steed's slam neither arms nor advertises the paladin's own melee riders.
+  'steed-slam-no-self-riders',
   // M3 — class-paladin-level6 + oath-redemption-level6. Level 6 is a flat step on
   // the class table (proficiency / prepared / slots hold), so these scenarios pin
   // the "no change" as much as the hit die / HP / LoH additions.

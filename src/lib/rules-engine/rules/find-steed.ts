@@ -42,6 +42,28 @@ const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
  */
 const COMPANION_DICE_LABEL = 'dice.any.companion';
 
+/**
+ * Otherworldly Slam's attack labels, scoped for exactly the reason above.
+ *
+ * The slam is a melee attack, so the bare `attack.any` / `attack.melee` read as
+ * the obvious labels — but they are the labels the PLAYER's melee riders target.
+ * Divine Smite and Thunderous Smite both annotate `['attack.melee',
+ * 'attack.unarmed']`, and `getMatchingAnnotations` is a plain string
+ * intersection with no idea whose panel it is, so an unsuffixed `attack.melee`
+ * here put "Divine Smite available" — tappable, via `addsToPlan` — on the
+ * STEED's panel as soon as the paladin had swung once themselves that turn. The
+ * smite it planned rode the paladin's own attack and was legal; it was just
+ * advertised on the wrong creature.
+ *
+ * Both spells trigger on a melee hit *you* make (SRD 5.2), so the steed's slam
+ * is not a trigger, and the engine already agrees: the slam's `apply`
+ * advertises no `attack.last.melee` / `attack.last.weapon`, so it can never make
+ * a smite castable. This is the view half of that same reading. Reversible the
+ * same way `dice.any.companion` is: a rider that genuinely should reach the
+ * mount adds the `.companion` label to its own `targets`.
+ */
+const COMPANION_ATTACK_LABELS = ['attack.any.companion', 'attack.melee.companion'];
+
 // The Otherworldly Steed's physical stat block is the same for every creature
 // type; only the damage type, the granted special ability, and (at higher levels)
 // flight differ. HP and AC scale with the slot level the spell was cast at.
@@ -229,8 +251,8 @@ function steedSlamOffer(
       // chip reads `play.costTags.<tag>` (only action/bonus/reaction) — so map the
       // non-reaction case to `action`, not the raw section.
       actionCost: [section === 'reaction' ? 'reaction' : 'action'],
-      // `dice.any.companion`, not `dice.any`: see COMPANION_DICE_LABEL.
-      annotationLabels: ['attack.any', 'attack.melee', COMPANION_DICE_LABEL],
+      // All three scoped, not bare: see COMPANION_DICE_LABEL / COMPANION_ATTACK_LABELS.
+      annotationLabels: [...COMPANION_ATTACK_LABELS, COMPANION_DICE_LABEL],
       primaryControl: STEED_SLAM_CONTROL
     },
     vars: STEED_SLAM_VARS,
