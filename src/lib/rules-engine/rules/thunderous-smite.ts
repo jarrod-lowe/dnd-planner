@@ -32,7 +32,7 @@ const thunderousSmite: RuleModule = {
     name: `${T}.name`,
     description: `${T}.description`,
     keywords: `${T}.keywords`,
-    requires: ['spellcasting']
+    requires: ['spellcasting', 'prepared-spells']
   },
   derive: () => {
     const c: Contribution[] = [

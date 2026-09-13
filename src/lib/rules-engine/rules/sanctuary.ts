@@ -31,7 +31,7 @@ const sanctuary: RuleModule = {
     name: `${S}.name`,
     description: `${S}.description`,
     keywords: `${S}.keywords`,
-    requires: ['spellcasting']
+    requires: ['spellcasting', 'prepared-spells']
   },
   derive: () => {
     const c: Contribution[] = [

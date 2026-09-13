@@ -29,7 +29,7 @@ const createAndDestroyWater: RuleModule = {
     name: `${CAST}.name`,
     description: `${CAST}.description`,
     keywords: `${CAST}.keywords`,
-    requires: ['spellcasting']
+    requires: ['spellcasting', 'prepared-spells']
   },
   derive: () => [
     preparedSpellCount({

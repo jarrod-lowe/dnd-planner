@@ -39,7 +39,7 @@ const divineSmite: RuleModule = {
     name: `${D}.name`,
     description: `${D}.description`,
     keywords: `${D}.keywords`,
-    requires: ['spellcasting']
+    requires: ['spellcasting', 'prepared-spells']
   },
   derive: () => [
     preparedSpellCount({

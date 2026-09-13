@@ -35,7 +35,7 @@ const bless: RuleModule = {
     name: `${B}.name`,
     description: `${B}.description`,
     keywords: `${B}.keywords`,
-    requires: ['spellcasting', 'concentration']
+    requires: ['spellcasting', 'concentration', 'prepared-spells']
   },
   derive: () => {
     const c: Contribution[] = [

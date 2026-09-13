@@ -30,7 +30,7 @@ const holdPerson: RuleModule = {
     name: `${P}.name`,
     description: `${P}.description`,
     keywords: `${P}.keywords`,
-    requires: ['spellcasting', 'concentration']
+    requires: ['spellcasting', 'concentration', 'prepared-spells']
   },
   derive: () => {
     const c: Contribution[] = [
