@@ -303,6 +303,9 @@
         "no_attack": "wa'DIch HIv lo'nIS",
         "no_slots": "mugh laH tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'"
+      },
+      "effect-searing-smite": {
+        "name": "meQ muHta — {{score}}d6 qul/rep"
       }
     },
     "spell-cure-wounds": {

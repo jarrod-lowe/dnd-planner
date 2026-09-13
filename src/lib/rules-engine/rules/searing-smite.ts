@@ -20,10 +20,13 @@ const FIRE = 'fire';
  * Thunderous Smite — prepare path + a L1–5 slot cascade + a cast that spends a
  * bonus action, the turn spell, and a slot — with one deliberate difference:
  * SRD 5.2 gives Searing Smite a FLAT 1-minute duration (the paladin spell table
- * shows Special = "—"), so this is NOT concentration and advertises no self
- * effect. The hit's extra fire damage is a dice-line rider; the ongoing burn and
- * the target's saves are untracked world state (the Thunderous Smite push
- * precedent — descriptive, not modelled).
+ * shows Special = "—"), so this is NOT concentration. The cast raises
+ * `effect-searing-smite`, a 10-round marker carrying the per-turn fire dice
+ * (`ssmite.burnDice`, the chip's displayFact — "Nd6 fire/turn" for a slot-N
+ * cast); the hit's extra fire damage is a dice-line rider, and the target's
+ * saves are untracked world state — a successful save ends the spell early, so
+ * the user dismisses the chip (the Thunderous Smite push precedent for the
+ * parts that live on the target).
  */
 const searingSmite: RuleModule = {
   id: 'spell-searing-smite',
@@ -153,6 +156,19 @@ const searingSmite: RuleModule = {
             id: 'cost',
             state: { 'bonusActions.spent': 1, 'spellcasting.spent': 1 },
             expiry: { kind: 'endOfTurn' }
+          },
+          // The burn: a 10-round marker (flat 1-minute duration — NOT
+          // concentration) carrying the per-turn fire dice. The chip shows
+          // "Nd6 fire/turn" for the slot the smite was cast at; a successful
+          // target save ends the spell early, so the user dismisses it.
+          {
+            id: 'effect-searing-smite',
+            state: { 'ssmite.burnDice': level },
+            display: {
+              name: 'rule.spell-searing-smite.effect-searing-smite.name',
+              displayFact: 'ssmite.burnDice'
+            },
+            expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]
           }
         ];
         const diagnostics: Diagnostic[] = [];

@@ -303,6 +303,9 @@
         "no_attack": "You must make a melee attack first",
         "no_slots": "No spell slots remaining",
         "no_spellcasting": "Already cast a spell this turn"
+      },
+      "effect-searing-smite": {
+        "name": "Searing Smite — {{score}}d6 fire/turn"
       }
     },
     "spell-cure-wounds": {

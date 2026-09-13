@@ -2,8 +2,9 @@ name: 'Searing Smite - Usage'
 description: >-
   Searing Smite rides a melee hit like Thunderous Smite: illegal until one
   lands, then a bonus-action cast spends the turn spell and an L1 slot. The
-  hit's extra fire dice is a rider on the panel; the ongoing burn and the
-  target's CON save live on the target (untracked), so no self effect — and,
+  hit's extra fire dice is a rider on the panel; the ongoing burn is a 10-round
+  marker effect showing the per-turn fire dice, while the target's CON save
+  lives on the target (untracked — a success means dismissing the chip) — and,
   per SRD 5.2, the spell is NOT concentration (flat 1-minute duration).
 ruleGroups:
   - dnd-5e-2024/prepared-spells
@@ -82,12 +83,17 @@ steps:
           bonusActions.remaining: 0
           spellcasting.remaining: 0
           spellcasting.slots.level1.remaining: 1
-          # NOT concentration: the slot is the only thing the cast leaves behind.
+          # NOT concentration: the slot and the burn marker are what the cast
+          # leaves behind.
           concentration.spent: 0
+          # The burn marker's roll value: 1d6 fire/turn for a slot-1 cast.
+          ssmite.burnDice: 1
   - endTurn:
       assert:
         effects:
           exists:
             - effect-searing-smite-slot-l1
+            - effect-searing-smite
         facts:
           spellcasting.slots.level1.remaining: 1
+          ssmite.burnDice: 1

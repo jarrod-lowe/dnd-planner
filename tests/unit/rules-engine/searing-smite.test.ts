@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { evaluate, evaluateSheet, evaluatePlan, evaluateOffers } from '$lib/rules-engine';
+import { evaluate, evaluateSheet, evaluatePlan, evaluateOffers, endTurn } from '$lib/rules-engine';
 import type { Facts, OfferEntry, PlannedRef } from '$lib/rules-engine';
 import actionEconomy from '$lib/rules-engine/rules/action-economy';
 import attacks from '$lib/rules-engine/rules/attacks';
@@ -13,9 +13,10 @@ import spear from '$lib/rules-engine/rules/spear';
  * target). Same resource mechanics as Thunderous Smite — prepare path + L1–5
  * slot cascade + a cast that spends a bonus action, the turn spell, and a slot —
  * but deliberately NOT concentration: SRD 5.2 gives Searing Smite a flat
- * 1-minute duration (no Concentration tag), so the module must neither spend
- * `concentration` nor advertise any self-effect for the ongoing burn (the
- * target's saves are untracked world state, like Thunderous Smite's push).
+ * 1-minute duration (no Concentration tag), so the module spends no
+ * `concentration`; the ongoing burn is a 10-round marker effect carrying the
+ * per-turn fire dice, while the target's CON save (a success ends it early)
+ * remains untracked world state — the user dismisses the chip.
  */
 const ALL = [actionEconomy, attacks, spellcasting, searingSmite, spear];
 // Paladin L1 kit: two L1 slots + Searing Smite prepared, spear in hand.
@@ -63,16 +64,36 @@ describe('searing-smite — casting', () => {
     expect(facts['spellcasting.slots.level1.remaining']).toBe(1); // 2 - 1
   });
 
-  it('is NOT concentration: no self effect, no concentration spend (SRD 5.2 flat duration)', () => {
+  it('is NOT concentration, but leaves a 10-round burn marker (SRD 5.2 flat duration)', () => {
     const { advertised, facts } = evaluatePlan(ALL, PREPARED, [unarmed('a1'), cast('c1')]);
-    // Only the per-turn cost and the slot spend — the ongoing burn lives on the
-    // TARGET (untracked), so nothing of it lands on this sheet.
+    // The per-turn cost, the slot spend, and the burn marker — no concentration.
     const fromCast = advertised.filter((e) => e.id.startsWith('c1#'));
-    expect(fromCast).toHaveLength(2);
+    expect(fromCast).toHaveLength(3);
     expect(fromCast.some((e) => JSON.stringify(e.state).includes('concentration'))).toBe(false);
     expect(fromCast.some((e) => e.id.includes('effect-searing-smite-slot'))).toBe(true);
     // And no fact the concentration group would own is ever written.
     expect(facts['concentration.spent'] ?? 0).toBe(0);
+  });
+
+  it('the burn marker carries the roll — dice count follows the slot level', () => {
+    const L3: Facts = {
+      'spellcasting.slots.level3.total': 1,
+      'spell.l1.searingSmite.prepared': 1,
+      'attack.last.melee': 1
+    };
+    const { facts } = evaluatePlan(ALL, L3, [cast('c1', 3)]);
+    expect(facts['ssmite.burnDice']).toBe(3); // 3d6 fire/turn for a slot-3 cast
+  });
+
+  it('the burn ages out after its 10-round duration (1 minute)', () => {
+    const { advertised } = evaluatePlan(ALL, PREPARED, [unarmed('a1'), cast('c1')]);
+    let committed = endTurn([], advertised, { longRest: false }); // 9 rounds left
+    for (let i = 0; i < 8; i++) committed = endTurn(committed, [], { longRest: false });
+    // Nine quiet turns in: still burning (a successful target save would have
+    // the user dismiss the chip early).
+    expect(evaluateSheet(ALL, PREPARED, committed)['ssmite.burnDice']).toBe(1);
+    committed = endTurn(committed, [], { longRest: false }); // the 10th drops it
+    expect(evaluateSheet(ALL, PREPARED, committed)['ssmite.burnDice'] ?? 0).toBe(0);
   });
 
   it('is illegal without a melee attack first (no_attack)', () => {
