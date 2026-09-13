@@ -2,6 +2,7 @@ ruleGroups:
   - id: spell-command
     requires:
       - spellcasting
+      - prepared-spells
     translations:
       en:
         name: Command

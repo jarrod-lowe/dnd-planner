@@ -4,6 +4,7 @@ description: >-
   smite.lowestAvailableSlotLevel and smite.defaultDieCount should reflect
   the lowest available slot level, not hardcoded L1.
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/action-economy
   - dnd-5e-2024/free-actions
   - dnd-5e-2024/proficiency
@@ -36,7 +37,14 @@ steps:
   # Prepare first; initial state: 2 L1 slots, 1 L2 slot
   - evaluate: {}
   - addOffer:
-      id: prepare-divine-smite
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: divine-smite
+            level: 1
+            nameKey: rule.spell-divine-smite.offer-divine-smite.name
+            preparedFact: spell.l1.divineSmite.prepared
+            alwaysPreparedFact: spell.l1.divineSmite.alwaysPrepared
       assert:
         facts:
           bonusActions.remaining: 1

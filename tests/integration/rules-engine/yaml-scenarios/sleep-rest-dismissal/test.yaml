@@ -1,6 +1,7 @@
 name: 'Sleep Rest Dismissal'
 description: 'Sleep effect and concentration are dismissed on short rest'
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -18,10 +19,17 @@ steps:
           concentration.remaining: 1
         offers:
           exists:
-            - prepare-sleep
+            - set-prepared-spells
   # Prepare Sleep
   - addOffer:
-      id: prepare-sleep
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: sleep
+            level: 1
+            nameKey: rule.spell-sleep.offer-sleep.name
+            preparedFact: spell.l1.sleep.prepared
+            alwaysPreparedFact: spell.l1.sleep.alwaysPrepared
   - endTurn: {}
   # Cast Sleep
   - addOffer:

@@ -2,6 +2,7 @@ ruleGroups:
   - id: spell-create-and-destroy-water
     requires:
       - spellcasting
+      - prepared-spells
     translations:
       en:
         name: Create and Destroy Water

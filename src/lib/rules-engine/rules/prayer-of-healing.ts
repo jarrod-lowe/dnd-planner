@@ -1,7 +1,6 @@
 import {
   defineRule,
   preparedSpellCount,
-  preparedSpellOffers,
   type ActionResult,
   type Contribution,
   type Diagnostic,
@@ -22,11 +21,18 @@ const SLOTS = 'prayerOfHealing';
  */
 const prayerOfHealing: RuleModule = {
   id: 'spell-prayer-of-healing',
+  prepare: {
+    spellId: 'prayer-of-healing',
+    level: 2,
+    nameKey: `${O}.name`,
+    preparedFact: 'spell.l2.prayerOfHealing.prepared',
+    alwaysPreparedFact: 'spell.l2.prayerOfHealing.alwaysPrepared'
+  },
   meta: {
     name: `${O}.name`,
     description: `${O}.description`,
     keywords: `${O}.keywords`,
-    requires: ['spellcasting']
+    requires: ['spellcasting', 'prepared-spells']
   },
   derive: () => {
     const c: Contribution[] = [
@@ -53,13 +59,6 @@ const prayerOfHealing: RuleModule = {
     return c;
   },
   offer: () => [
-    ...preparedSpellOffers({
-      spellId: 'prayer-of-healing',
-      i18nPrefix: 'rule.spell-prayer-of-healing',
-      preparedFact: 'spell.l2.prayerOfHealing.prepared',
-      alwaysPreparedFact: 'spell.l2.prayerOfHealing.alwaysPrepared',
-      intentLevel: 'L2'
-    }),
     {
       id: 'cast-prayer-of-healing',
       when: (f) => f.num('spell.l2.prayerOfHealing.prepared') === 1,

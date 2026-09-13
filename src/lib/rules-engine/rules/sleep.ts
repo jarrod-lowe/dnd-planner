@@ -1,7 +1,6 @@
 import {
   defineRule,
   preparedSpellCount,
-  preparedSpellOffers,
   type ActionResult,
   type Contribution,
   type Diagnostic,
@@ -22,11 +21,18 @@ const SLOTS = 'sleep';
  */
 const sleep: RuleModule = {
   id: 'spell-sleep',
+  prepare: {
+    spellId: 'sleep',
+    level: 1,
+    nameKey: `${P}.name`,
+    preparedFact: 'spell.l1.sleep.prepared',
+    alwaysPreparedFact: 'spell.l1.sleep.alwaysPrepared'
+  },
   meta: {
     name: `${P}.name`,
     description: `${P}.description`,
     keywords: `${P}.keywords`,
-    requires: ['spellcasting', 'concentration']
+    requires: ['spellcasting', 'concentration', 'prepared-spells']
   },
   derive: () => {
     const c: Contribution[] = [
@@ -50,13 +56,6 @@ const sleep: RuleModule = {
     return c;
   },
   offer: () => [
-    ...preparedSpellOffers({
-      spellId: 'sleep',
-      i18nPrefix: 'rule.spell-sleep',
-      preparedFact: 'spell.l1.sleep.prepared',
-      alwaysPreparedFact: 'spell.l1.sleep.alwaysPrepared',
-      intentLevel: 'L1'
-    }),
     {
       id: 'cast-sleep',
       when: (f) => f.num('spell.l1.sleep.prepared') === 1,

@@ -2,6 +2,7 @@ ruleGroups:
   - id: spell-find-steed
     requires:
       - spellcasting
+      - prepared-spells
     translations:
       en:
         name: Find Steed

@@ -4,6 +4,7 @@ description: >-
   still held, marks the second planned item illegal with an already_concentrating
   error. A slot remains, so no_slots does not co-fire.
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -34,7 +35,14 @@ initialEffects:
 steps:
   - evaluate:
   - addOffer:
-      id: prepare-calm-emotions
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: calm-emotions
+            level: 2
+            nameKey: rule.spell-calm-emotions.offer-calm-emotions.name
+            preparedFact: spell.l2.calmEmotions.prepared
+            alwaysPreparedFact: spell.l2.calmEmotions.alwaysPrepared
   - endTurn: {}
   # Turn 1: cast Calm Emotions, starting concentration
   - addOffer:

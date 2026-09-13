@@ -58,6 +58,7 @@ import splintArmor from './rules/splint-armor';
 import shield from './rules/shield';
 import hands from './rules/hands';
 import loadout from './rules/loadout';
+import preparedSpells from './rules/prepared-spells';
 import dagger from './rules/dagger';
 import daggerMastery from './rules/dagger-mastery';
 import greataxe from './rules/greataxe';
@@ -144,6 +145,7 @@ const MODULES: RuleModule[] = [
   shield,
   hands,
   loadout,
+  preparedSpells,
   dagger,
   daggerMastery,
   greataxe,

@@ -3,6 +3,7 @@ description: >-
   If the player up-casts to L3 but only L2 slots remain, the planned action is
   illegal with a no_slots error. The overall offer is still legal (L2 available).
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -43,7 +44,14 @@ initialEffects:
 steps:
   - evaluate:
   - addOffer:
-      id: prepare-calm-emotions
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: calm-emotions
+            level: 2
+            nameKey: rule.spell-calm-emotions.offer-calm-emotions.name
+            preparedFact: spell.l2.calmEmotions.prepared
+            alwaysPreparedFact: spell.l2.calmEmotions.alwaysPrepared
   - evaluate:
       assert:
         offers:

@@ -1,7 +1,6 @@
 import {
   defineRule,
   preparedSpellCount,
-  preparedSpellOffers,
   type ActionResult,
   type Diagnostic,
   type EffectInstance,
@@ -19,11 +18,18 @@ const CAST = `${C}.cast-create-and-destroy-water`;
  */
 const createAndDestroyWater: RuleModule = {
   id: 'spell-create-and-destroy-water',
+  prepare: {
+    spellId: 'create-and-destroy-water',
+    level: 1,
+    nameKey: `${CAST}.name`,
+    preparedFact: 'spell.l1.createAndDestroyWater.prepared',
+    alwaysPreparedFact: 'spell.l1.createAndDestroyWater.alwaysPrepared'
+  },
   meta: {
     name: `${CAST}.name`,
     description: `${CAST}.description`,
     keywords: `${CAST}.keywords`,
-    requires: ['spellcasting']
+    requires: ['spellcasting', 'prepared-spells']
   },
   derive: () => [
     preparedSpellCount({
@@ -32,13 +38,6 @@ const createAndDestroyWater: RuleModule = {
     })
   ],
   offer: () => [
-    ...preparedSpellOffers({
-      spellId: 'create-and-destroy-water',
-      i18nPrefix: C,
-      preparedFact: 'spell.l1.createAndDestroyWater.prepared',
-      alwaysPreparedFact: 'spell.l1.createAndDestroyWater.alwaysPrepared',
-      intentLevel: 'L1'
-    }),
     {
       id: 'cast-create-and-destroy-water',
       when: (f) => f.num('spell.l1.createAndDestroyWater.prepared') === 1,

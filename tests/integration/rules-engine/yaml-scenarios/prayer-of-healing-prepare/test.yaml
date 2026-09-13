@@ -1,6 +1,7 @@
 name: 'Prayer of Healing Prepare'
-description: 'Cast offer requires preparation first; prepare/unprepare lifecycle works'
+description: 'Cast offer requires preparation first; the whole-set lifecycle works'
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -37,10 +38,17 @@ steps:
           notExists:
             - cast-prayer-of-healing
           exists:
-            - prepare-prayer-of-healing
+            - set-prepared-spells
   # After preparing, cast offer becomes available
   - addOffer:
-      id: prepare-prayer-of-healing
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: prayer-of-healing
+            level: 2
+            nameKey: rule.spell-prayer-of-healing.offer-prayer-of-healing.name
+            preparedFact: spell.l2.prayerOfHealing.prepared
+            alwaysPreparedFact: spell.l2.prayerOfHealing.alwaysPrepared
       assert:
         facts:
           spell.l2.prayerOfHealing.prepared: 1
@@ -50,9 +58,12 @@ steps:
         offers:
           exists:
             - cast-prayer-of-healing
-  # Unpreparing removes the cast offer again
-  - addOffer:
-      id: unprepare-prayer-of-healing
+  # Unpreparing removes the cast offer again: re-commit the set WITHOUT the
+  # spell — the keyed effect is replaced, so the fact (and cast offer) drop.
+  - updateSelections:
+      id: set-prepared-spells
+      selections:
+        prepared: []
       assert:
         facts:
           spell.l2.prayerOfHealing.prepared: 0

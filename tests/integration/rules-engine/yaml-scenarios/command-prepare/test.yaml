@@ -1,6 +1,7 @@
 name: 'Command Prepare'
 description: 'Cast offer requires preparation first; prepare/unprepare lifecycle works'
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -19,10 +20,17 @@ steps:
           notExists:
             - cast-command
           exists:
-            - prepare-command
+            - set-prepared-spells
   # TC2: After preparing, cast-command becomes available
   - addOffer:
-      id: prepare-command
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: command
+            level: 1
+            nameKey: rule.spell-command.offer-command.name
+            preparedFact: spell.l1.command.prepared
+            alwaysPreparedFact: spell.l1.command.alwaysPrepared
       assert:
         facts:
           spell.l1.command.prepared: 1

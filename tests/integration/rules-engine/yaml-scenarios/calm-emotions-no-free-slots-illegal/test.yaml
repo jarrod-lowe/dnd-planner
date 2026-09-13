@@ -6,6 +6,7 @@ description: >-
   varsRuntime.errors, so the cast must record no_slots even when no per-level
   slot subtraction fires (selectedLevel resolves to 0).
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -36,7 +37,14 @@ initialEffects:
 steps:
   - evaluate:
   - addOffer:
-      id: prepare-calm-emotions
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: calm-emotions
+            level: 2
+            nameKey: rule.spell-calm-emotions.offer-calm-emotions.name
+            preparedFact: spell.l2.calmEmotions.prepared
+            alwaysPreparedFact: spell.l2.calmEmotions.alwaysPrepared
   # Offer itself is illegal (no slots at all)
   - evaluate:
       assert:

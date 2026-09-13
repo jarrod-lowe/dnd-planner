@@ -7,6 +7,7 @@ description: >-
   So a spear opportunity attack, taken on a turn with no Attack action at all,
   unlocks the +1d4 rider and the reminder that adds it to the plan.
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -34,7 +35,14 @@ initialEffects:
 
 steps:
   - addOffer:
-      id: prepare-divine-favour
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: divine-favour
+            level: 1
+            nameKey: rule.spell-divine-favour.offer-divine-favour.name
+            preparedFact: spell.l1.divineFavour.prepared
+            alwaysPreparedFact: spell.l1.divineFavour.alwaysPrepared
 
   # Buff up. No attack yet: the rider stays illegal-but-visible and the
   # reminder stays away until there is a weapon attack to ride on.

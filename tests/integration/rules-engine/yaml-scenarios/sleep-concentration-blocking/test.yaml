@@ -1,6 +1,7 @@
 name: 'Sleep Concentration Blocking'
 description: 'Cannot cast Sleep while already concentrating. Concentration resource prevents second cast.'
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -18,9 +19,16 @@ steps:
           concentration.remaining: 1
         offers:
           exists:
-            - prepare-sleep
+            - set-prepared-spells
   - addOffer:
-      id: prepare-sleep
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: sleep
+            level: 1
+            nameKey: rule.spell-sleep.offer-sleep.name
+            preparedFact: spell.l1.sleep.prepared
+            alwaysPreparedFact: spell.l1.sleep.alwaysPrepared
   - endTurn: {}
   - addOffer:
       id: set-charisma

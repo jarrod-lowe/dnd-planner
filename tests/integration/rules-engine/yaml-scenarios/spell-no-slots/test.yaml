@@ -1,6 +1,7 @@
 name: 'Spell No Slots'
 description: 'Casting a spell twice exhausts all level 1 slots, and the spell is no longer available'
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/action-economy
   - dnd-5e-2024/free-actions
   - dnd-5e-2024/spellcasting
@@ -9,7 +10,14 @@ ruleGroups:
 steps:
   - evaluate:
   - addOffer:
-      id: prepare-create-and-destroy-water
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: create-and-destroy-water
+            level: 1
+            nameKey: rule.spell-create-and-destroy-water.cast-create-and-destroy-water.name
+            preparedFact: spell.l1.createAndDestroyWater.prepared
+            alwaysPreparedFact: spell.l1.createAndDestroyWater.alwaysPrepared
   - evaluate:
       assert:
         facts:

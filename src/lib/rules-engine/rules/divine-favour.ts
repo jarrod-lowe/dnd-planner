@@ -1,7 +1,6 @@
 import {
   defineRule,
   preparedSpellCount,
-  preparedSpellOffers,
   type ActionResult,
   type Diagnostic,
   type EffectInstance,
@@ -27,9 +26,6 @@ const RADIANT = 'radiant';
  * lights up the same turn (the fold re-derives with advertised effects) and
  * persists across turns until the buff ages out.
  *
- * `prepared` is an input fact for the spike (the prepare/unprepare offers are M3
- * proper).
- *
  * The buff ends when the EARLIEST condition fires — 10 rounds OR any rest — via
  * a multi-predicate `expiry` (M3 step 0), matching the legacy buff re-advertise guard
  * `when rest.short == 0 && rest.long == 0`. (This rest-cancellation was the gap
@@ -38,11 +34,18 @@ const RADIANT = 'radiant';
  */
 const divineFavour: RuleModule = {
   id: 'spell-divine-favour',
+  prepare: {
+    spellId: 'divine-favour',
+    level: 1,
+    nameKey: `${O}.name`,
+    preparedFact: 'spell.l1.divineFavour.prepared',
+    alwaysPreparedFact: 'spell.l1.divineFavour.alwaysPrepared'
+  },
   meta: {
     name: `${O}.name`,
     description: `${O}.description`,
     keywords: `${O}.keywords`,
-    requires: ['spellcasting']
+    requires: ['spellcasting', 'prepared-spells']
   },
   derive: () => [
     preparedSpellCount({
@@ -56,13 +59,6 @@ const divineFavour: RuleModule = {
     }
   ],
   offer: () => [
-    ...preparedSpellOffers({
-      spellId: 'divine-favour',
-      i18nPrefix: 'rule.spell-divine-favour',
-      preparedFact: 'spell.l1.divineFavour.prepared',
-      alwaysPreparedFact: 'spell.l1.divineFavour.alwaysPrepared',
-      intentLevel: 'L1'
-    }),
     {
       id: 'cast-divine-favour',
       when: (f) => f.num('spell.l1.divineFavour.prepared') === 1,

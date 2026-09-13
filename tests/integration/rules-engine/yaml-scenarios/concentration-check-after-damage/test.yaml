@@ -1,6 +1,7 @@
 name: 'Concentration Check After Damage'
 description: 'Recording damage while concentrating triggers a concentration check offer'
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -13,7 +14,14 @@ ruleGroups:
 steps:
   - evaluate:
   - addOffer:
-      id: prepare-bless
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: bless
+            level: 1
+            nameKey: rule.spell-bless.offer-bless.name
+            preparedFact: spell.l1.bless.prepared
+            alwaysPreparedFact: spell.l1.bless.alwaysPrepared
   - evaluate:
       assert:
         facts:

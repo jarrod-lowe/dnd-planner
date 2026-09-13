@@ -2,7 +2,6 @@ import {
   currentHp,
   defineRule,
   preparedSpellCount,
-  preparedSpellOffers,
   statToModifier,
   type ActionResult,
   type Contribution,
@@ -567,11 +566,18 @@ function steedHpModifier(
  */
 const findSteed: RuleModule = {
   id: 'spell-find-steed',
+  prepare: {
+    spellId: 'find-steed',
+    level: 2,
+    nameKey: `${O}.name`,
+    preparedFact: 'spell.l2.findSteed.prepared',
+    alwaysPreparedFact: 'spell.l2.findSteed.alwaysPrepared'
+  },
   meta: {
     name: `${O}.name`,
     description: `${O}.description`,
     keywords: `${O}.keywords`,
-    requires: ['spellcasting']
+    requires: ['spellcasting', 'prepared-spells']
   },
   derive: () => {
     const c: Contribution[] = [
@@ -695,13 +701,6 @@ const findSteed: RuleModule = {
     return c;
   },
   offer: () => [
-    ...preparedSpellOffers({
-      spellId: 'find-steed',
-      i18nPrefix: 'rule.spell-find-steed',
-      preparedFact: 'spell.l2.findSteed.prepared',
-      alwaysPreparedFact: 'spell.l2.findSteed.alwaysPrepared',
-      intentLevel: 'L2'
-    }),
     {
       id: 'cast-find-steed',
       when: (f) => f.num('spell.l2.findSteed.prepared') === 1,

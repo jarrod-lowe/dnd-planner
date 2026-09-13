@@ -11,6 +11,7 @@ ruleGroups:
   - dnd-5e-2024/core-events
   - dnd-5e-2024/attacks
   - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/prepared-spells
   - class-paladin/class-paladin-level1
   - class-paladin/class-paladin-level2
   - class-paladin/class-paladin-level3
@@ -26,7 +27,14 @@ steps:
           spell.l2.findSteed.alwaysPrepared: 1
           # Granted for free — does not consume a prepared-spell slot
           spellcasting.prepared.count: 0
-        offers:
-          # Cannot unprepare an always-prepared spell
-          illegal:
-            - unprepare-find-steed
+  # Cannot unprepare an always-prepared spell: re-committing a set that OMITS it
+  # replaces the keyed set effect but cannot drop the grant's prepared fact.
+  - addOffer:
+      id: set-prepared-spells
+      selections:
+        prepared: []
+      assert:
+        facts:
+          spell.l2.findSteed.prepared: 1
+          spell.l2.findSteed.alwaysPrepared: 1
+          spellcasting.prepared.count: 0

@@ -1,6 +1,7 @@
 name: 'Divine Favour'
 description: 'Casting Divine Favour consumes bonus action, spellcasting, and a spell slot. Creates a persistent effect that annotates weapon attacks and offers a free damage option.'
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -29,7 +30,14 @@ initialEffects:
 steps:
   - evaluate:
   - addOffer:
-      id: prepare-divine-favour
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: divine-favour
+            level: 1
+            nameKey: rule.spell-divine-favour.offer-divine-favour.name
+            preparedFact: spell.l1.divineFavour.prepared
+            alwaysPreparedFact: spell.l1.divineFavour.alwaysPrepared
   # Initial state: spell is available
   - evaluate:
       assert:

@@ -7,6 +7,7 @@ description: >
   status.ok must remain true and the attack must consume an action normally.
 
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -54,7 +55,14 @@ steps:
   # --- Turn 1: summon the steed ---
   - evaluate:
   - addOffer:
-      id: prepare-find-steed
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: find-steed
+            level: 2
+            nameKey: rule.spell-find-steed.offer-find-steed.name
+            preparedFact: spell.l2.findSteed.prepared
+            alwaysPreparedFact: spell.l2.findSteed.alwaysPrepared
   - addOffer:
       id: cast-find-steed
       assert:

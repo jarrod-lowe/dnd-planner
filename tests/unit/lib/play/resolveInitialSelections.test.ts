@@ -289,4 +289,61 @@ describe('resolveInitialSelections', () => {
       expect(resolveInitialSelections(rule, {}, [spear])).toEqual({});
     });
   });
+
+  describe('spell-prepare control', () => {
+    const command = {
+      spellId: 'command',
+      level: 1,
+      nameKey: 'rule.test.command.name',
+      preparedFact: 'spell.l1.command.prepared',
+      alwaysPreparedFact: 'spell.l1.command.alwaysPrepared'
+    };
+    const aid = {
+      spellId: 'aid',
+      level: 2,
+      nameKey: 'rule.test.aid.name',
+      preparedFact: 'spell.l2.aid.prepared',
+      alwaysPreparedFact: 'spell.l2.aid.alwaysPrepared'
+    };
+    const modules = [
+      { id: 'command', prepare: command },
+      { id: 'aid', prepare: aid }
+    ];
+
+    const prepareRule: Rule = {
+      id: 'set-prepared-spells',
+      activities: [],
+      ui: { primaryControl: { type: 'spell-prepare', var: 'prepared' } }
+    };
+
+    it('captures the set the character already has prepared so the picker opens on it', () => {
+      // Without this the picker would open empty and its committed effect — a
+      // whole-set replacement — would unprepare every spell the moment the row
+      // is added to the plan.
+      const selections = resolveInitialSelections(
+        prepareRule,
+        {
+          'spell.l1.command.prepared': 1
+        },
+        modules
+      );
+
+      expect(selections).toEqual({ prepared: [command] });
+    });
+
+    it('captures an empty set when nothing is prepared', () => {
+      expect(resolveInitialSelections(prepareRule, {}, modules)).toEqual({ prepared: [] });
+    });
+
+    it('leaves rules whose control is not a spell-prepare alone', () => {
+      // Same var name, different control: the branch is type-gated, not var-gated.
+      const rule: Rule = {
+        id: 'other',
+        activities: [],
+        ui: { primaryControl: { type: 'slider', var: 'prepared' } }
+      };
+
+      expect(resolveInitialSelections(rule, {}, modules)).toEqual({});
+    });
+  });
 });

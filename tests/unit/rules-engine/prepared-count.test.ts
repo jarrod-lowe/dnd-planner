@@ -4,26 +4,32 @@ import type { PlannedRef, RuleModule } from '$lib/rules-engine';
 import spellcasting from '$lib/rules-engine/rules/spellcasting';
 import paladinL1 from '$lib/rules-engine/rules/class-paladin-level1';
 import holdPerson from '$lib/rules-engine/rules/hold-person';
+import preparedSpells from '$lib/rules-engine/rules/prepared-spells';
 import oathL5 from '$lib/rules-engine/rules/class-paladin-oath-redemption-level5';
 
 /**
  * The prepared-spell count is LIVE, not baked: a manual preparation counts
  * against `spellcasting.prepared.count` only while the spell is not granted
  * always-prepared. The grant can arrive AFTER the preparation (prepare Hold
- * Person early, take Oath of Redemption L5 later); the persisted prepare effect
- * must stop consuming a slot the moment the grant is active — and unprepare is
- * illegal for an always-prepared spell, so a baked count could never be evicted.
- * The yaml scenario covers the grant-already-active order; this pins the
- * prepare-BEFORE-grant order, which needs the module set to change between
- * evaluations.
+ * Person early, take Oath of Redemption L5 later); the persisted prepared-spells
+ * set effect must stop consuming a slot the moment the grant is active — and the
+ * set picker has no unprepare path that could re-shape the committed selection,
+ * so a baked count could never be corrected. The yaml scenario covers the
+ * grant-already-active order; this pins the prepare-BEFORE-grant order, which
+ * needs the module set to change between evaluations.
  */
 
-const base: RuleModule[] = [spellcasting, paladinL1, holdPerson];
+const base: RuleModule[] = [spellcasting, paladinL1, holdPerson, preparedSpells];
 const ref = (instanceId: string, ruleId: string): PlannedRef => ({ instanceId, ruleId });
 
-/** Prepare Hold Person with no always-prepared grant assigned, and commit it. */
+/** Prepare Hold Person via the set picker with no always-prepared grant assigned, and commit it. */
 function prepareThenCommit(): ReturnType<typeof endTurn> {
-  const out = evaluatePlan(base, {}, [ref('i0', 'prepare-hold-person')]);
+  const out = evaluatePlan(base, {}, [
+    {
+      ...ref('i0', 'set-prepared-spells'),
+      selections: { prepared: [holdPerson.prepare!] }
+    }
+  ]);
   return endTurn([], out.advertised, {});
 }
 

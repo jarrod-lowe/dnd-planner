@@ -92,10 +92,15 @@ describe('endTurn — key dedupe + permanent', () => {
 
   it('keeps permanent effects across a long rest; drops untilLongRest', () => {
     const committed: EffectInstance[] = [
-      { id: 'prepared', key: 'prep:divine-smite', state: { prepared: 1 }, expiry: permanent },
+      {
+        id: 'effect-prepared-spells',
+        key: 'prepared-spells',
+        state: { 'spell.l1.divineSmite.prepared': 1 },
+        expiry: permanent
+      },
       { id: 'slot', state: { 'spellcasting.slots.level1.spent': 1 }, expiry: untilLongRest }
     ];
     const next = endTurn(committed, [], { longRest: true });
-    expect(next.map((e) => e.id)).toEqual(['prepared']);
+    expect(next.map((e) => e.id)).toEqual(['effect-prepared-spells']);
   });
 });

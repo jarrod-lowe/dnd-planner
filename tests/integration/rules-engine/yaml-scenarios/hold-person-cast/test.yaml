@@ -1,6 +1,7 @@
 name: 'Hold Person Cast'
 description: 'Casting Hold Person consumes an L2 slot and concentration, creates a timed effect with countDown=10 and a concentration effect'
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -39,10 +40,17 @@ steps:
           notExists:
             - cast-hold-person
           exists:
-            - prepare-hold-person
+            - set-prepared-spells
   # Prepare Hold Person first
   - addOffer:
-      id: prepare-hold-person
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: hold-person
+            level: 2
+            nameKey: rule.spell-hold-person.offer-hold-person.name
+            preparedFact: spell.l2.holdPerson.prepared
+            alwaysPreparedFact: spell.l2.holdPerson.alwaysPrepared
   - endTurn: {}
   # Set charisma and cast
   - addOffer:

@@ -1,0 +1,66 @@
+name: 'Prepared Spells - over-cap selection is illegal-but-permitted'
+description: >
+  Paladin level 1 gives spellcasting.prepared.max = 2, but selecting THREE
+  preparable L1 spells still executes: the app never prevents, it flags. All
+  three prepared facts land, the derived count reads 3 (remaining goes
+  negative), and the planned offer carries the over-cap error diagnostic. The
+  offer itself stays legal — over-cap depends on the selection, which legalWhen
+  cannot read.
+
+ruleGroups:
+  - dnd-5e-2024/prepared-spells
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - spells/spell-bless
+  - spells/spell-sleep
+  - spells/spell-command
+
+steps:
+  # TC1: Under capacity, the picker is legal with nothing prepared.
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.prepared.max: 2
+          spellcasting.prepared.count: 0
+          spellcasting.prepared.remaining: 2
+        offers:
+          legal:
+            - set-prepared-spells
+
+  # TC2: Three selections against a cap of 2 — every other over-commit in the
+  # app, one shape: the fold still executes the offer (all three facts set and
+  # the count follows the facts past the cap), while the planned offer is
+  # flagged with the over-cap error.
+  - addOffer:
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: bless
+            level: 1
+            nameKey: rule.spell-bless.offer-bless.name
+            preparedFact: spell.l1.bless.prepared
+            alwaysPreparedFact: spell.l1.bless.alwaysPrepared
+          - spellId: sleep
+            level: 1
+            nameKey: rule.spell-sleep.offer-sleep.name
+            preparedFact: spell.l1.sleep.prepared
+            alwaysPreparedFact: spell.l1.sleep.alwaysPrepared
+          - spellId: command
+            level: 1
+            nameKey: rule.spell-command.offer-command.name
+            preparedFact: spell.l1.command.prepared
+            alwaysPreparedFact: spell.l1.command.alwaysPrepared
+      assert:
+        facts:
+          spell.l1.bless.prepared: 1
+          spell.l1.sleep.prepared: 1
+          spell.l1.command.prepared: 1
+          spellcasting.prepared.count: 3
+          spellcasting.prepared.remaining: -1
+        offers:
+          legal:
+            - set-prepared-spells
+        planErrors:
+          - id: set-prepared-spells
+            errors:
+              - rule.dnd-5e-2024.prepared-spells.set-prepared-spells-offer.over-cap

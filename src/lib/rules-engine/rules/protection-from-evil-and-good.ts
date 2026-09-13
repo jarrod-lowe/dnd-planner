@@ -1,7 +1,6 @@
 import {
   defineRule,
   preparedSpellCount,
-  preparedSpellOffers,
   type ActionResult,
   type Contribution,
   type Diagnostic,
@@ -22,11 +21,18 @@ const SLOTS = 'protection-from-evil-and-good';
  */
 const protectionFromEvilAndGood: RuleModule = {
   id: 'spell-protection-from-evil-and-good',
+  prepare: {
+    spellId: 'protection-from-evil-and-good',
+    level: 1,
+    nameKey: `${P}.name`,
+    preparedFact: 'spell.l1.protectionFromEvilAndGood.prepared',
+    alwaysPreparedFact: 'spell.l1.protectionFromEvilAndGood.alwaysPrepared'
+  },
   meta: {
     name: `${P}.name`,
     description: `${P}.description`,
     keywords: `${P}.keywords`,
-    requires: ['spellcasting', 'concentration']
+    requires: ['spellcasting', 'concentration', 'prepared-spells']
   },
   derive: () => {
     const c: Contribution[] = [
@@ -50,13 +56,6 @@ const protectionFromEvilAndGood: RuleModule = {
     return c;
   },
   offer: () => [
-    ...preparedSpellOffers({
-      spellId: 'protection-from-evil-and-good',
-      i18nPrefix: 'rule.spell-protection-from-evil-and-good',
-      preparedFact: 'spell.l1.protectionFromEvilAndGood.prepared',
-      alwaysPreparedFact: 'spell.l1.protectionFromEvilAndGood.alwaysPrepared',
-      intentLevel: 'L1'
-    }),
     {
       id: 'cast-protection-from-evil-and-good',
       when: (f) => f.num('spell.l1.protectionFromEvilAndGood.prepared') === 1,

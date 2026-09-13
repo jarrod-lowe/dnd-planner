@@ -5,6 +5,7 @@ description: >-
   slotLevel + 1 floored at 2 (free use & L1 = 2d8); Fiend/Undead uses one more
   die (slotLevel + 2, floored at 3).
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/action-economy
   - dnd-5e-2024/free-actions
   - dnd-5e-2024/proficiency
@@ -36,7 +37,14 @@ initialEffects:
 steps:
   - evaluate: {}
   - addOffer:
-      id: prepare-divine-smite
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: divine-smite
+            level: 1
+            nameKey: rule.spell-divine-smite.offer-divine-smite.name
+            preparedFact: spell.l1.divineSmite.prepared
+            alwaysPreparedFact: spell.l1.divineSmite.alwaysPrepared
   - addOffer:
       id: unarmed-strike-use-action
   - evaluate:

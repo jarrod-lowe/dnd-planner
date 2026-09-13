@@ -1,0 +1,23 @@
+ruleGroups:
+  - id: prepared-spells
+    requires:
+      - spellcasting
+    translations:
+      en:
+        name: Prepared Spells
+        description: Choose every prepared spell at once, as one whole set
+        keywords:
+          - prepare
+          - spells
+          - prepared
+          - memorize
+          - study
+      en-x-tlh:
+        name: tlham jupmey
+        description: Hoch tlham jup wIv wa'logh
+        keywords:
+          - prepare
+          - spells
+          - prepared
+          - memorize
+          - study

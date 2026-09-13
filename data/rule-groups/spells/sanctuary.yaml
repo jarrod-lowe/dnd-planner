@@ -2,6 +2,7 @@ ruleGroups:
   - id: spell-sanctuary
     requires:
       - spellcasting
+      - prepared-spells
     translations:
       en:
         name: Sanctuary

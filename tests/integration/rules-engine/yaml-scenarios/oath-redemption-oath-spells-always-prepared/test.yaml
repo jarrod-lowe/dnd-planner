@@ -11,6 +11,7 @@ ruleGroups:
   - dnd-5e-2024/core-events
   - dnd-5e-2024/attacks
   - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/concentration
   - class-paladin/class-paladin-level1
   - class-paladin/class-paladin-level2
@@ -29,8 +30,16 @@ steps:
           spell.l1.sanctuary.alwaysPrepared: 1
           # Granted for free — does not consume prepared-spell slots
           spellcasting.prepared.count: 0
-        offers:
-          # Cannot unprepare always-prepared spells
-          illegal:
-            - unprepare-sleep
-            - unprepare-sanctuary
+  # Cannot unprepare always-prepared spells: re-committing a set that OMITS them
+  # replaces the keyed set effect but cannot drop the grants' prepared facts.
+  - addOffer:
+      id: set-prepared-spells
+      selections:
+        prepared: []
+      assert:
+        facts:
+          spell.l1.sleep.prepared: 1
+          spell.l1.sleep.alwaysPrepared: 1
+          spell.l1.sanctuary.prepared: 1
+          spell.l1.sanctuary.alwaysPrepared: 1
+          spellcasting.prepared.count: 0

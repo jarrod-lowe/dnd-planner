@@ -1,6 +1,7 @@
 name: 'Calm Emotions Cast'
 description: 'Casting Calm Emotions consumes an L2 slot and concentration, creates a timed effect with countDown=10 and a concentration effect'
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -39,10 +40,17 @@ steps:
           notExists:
             - cast-calm-emotions
           exists:
-            - prepare-calm-emotions
+            - set-prepared-spells
   # Prepare Calm Emotions first
   - addOffer:
-      id: prepare-calm-emotions
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: calm-emotions
+            level: 2
+            nameKey: rule.spell-calm-emotions.offer-calm-emotions.name
+            preparedFact: spell.l2.calmEmotions.prepared
+            alwaysPreparedFact: spell.l2.calmEmotions.alwaysPrepared
   - endTurn:
       assert:
         offers:

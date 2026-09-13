@@ -84,14 +84,17 @@ describe('engineBridge — effectInstanceToRule', () => {
 
     // display.hidden keeps the name (for the reveal toggle) but stays off the strip.
     const named = effectInstanceToRule({
-      id: 'prepared',
-      key: 'prep:bless',
+      id: 'effect-prepared-spells',
+      key: 'prepared-spells',
       state: { 'spell.l1.bless.prepared': 1 },
-      display: { name: 'rule.spell-bless.effect-bless-prepared.name', hidden: true },
+      display: {
+        name: 'rule.dnd-5e-2024.prepared-spells.effect-prepared-spells.name',
+        hidden: true
+      },
       expiry: { kind: 'permanent' }
     });
     expect(isHiddenEffect(named)).toBe(true);
-    expect(named.ui?.name).toBe('rule.spell-bless.effect-bless-prepared.name');
+    expect(named.ui?.name).toBe('rule.dnd-5e-2024.prepared-spells.effect-prepared-spells.name');
 
     // display.subject flows to ui.subject (steed view filtering).
     const steedChip = effectInstanceToRule({

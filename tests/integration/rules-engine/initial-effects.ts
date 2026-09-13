@@ -143,8 +143,8 @@ export const INITIAL_EFFECTS: Record<string, EffectInstance[]> = {
   'hold-person-select-level-illegal': [slot(2), slot(3, 1, 0)],
   'hold-person-slot-selection': [slot(2), slot(3)],
   'hold-person-upcast-slider': [slot(2)],
-  // prepare/unprepare scenarios that assert only the final prepared state (no
-  // legacy `removing` intermediate), so the immediate-evict reproduces them.
+  // -prepare scenarios that assert only the final prepared state; they need a
+  // granted L2 slot for their cast-offer visibility asserts.
   'aid-prepare': [slot(2)],
   'prayer-of-healing-prepare': [slot(2)],
   'find-steed-prepare': [slot(2)],

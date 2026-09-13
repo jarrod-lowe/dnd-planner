@@ -33,7 +33,7 @@ describe('metadata extraction', () => {
       name: 'rule.spell-divine-smite.offer-divine-smite.name',
       description: 'rule.spell-divine-smite.offer-divine-smite.description',
       keywords: 'rule.spell-divine-smite.offer-divine-smite.keywords',
-      requires: ['spellcasting']
+      requires: ['spellcasting', 'prepared-spells']
     });
   });
 

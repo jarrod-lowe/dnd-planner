@@ -1,7 +1,6 @@
 import {
   defineRule,
   preparedSpellCount,
-  preparedSpellOffers,
   type ActionResult,
   type Diagnostic,
   type EffectInstance,
@@ -27,13 +26,20 @@ const D = 'rule.spell-divine-smite.offer-divine-smite';
  */
 const divineSmite: RuleModule = {
   id: 'spell-divine-smite',
+  prepare: {
+    spellId: 'divine-smite',
+    level: 1,
+    nameKey: `${D}.name`,
+    preparedFact: 'spell.l1.divineSmite.prepared',
+    alwaysPreparedFact: 'spell.l1.divineSmite.alwaysPrepared'
+  },
   // Discovery metadata for the search index (i18n keys reused from the offer; no
   // new translations). `requires` mirrors the published group prerequisite.
   meta: {
     name: `${D}.name`,
     description: `${D}.description`,
     keywords: `${D}.keywords`,
-    requires: ['spellcasting']
+    requires: ['spellcasting', 'prepared-spells']
   },
   derive: () => [
     preparedSpellCount({
@@ -88,13 +94,6 @@ const divineSmite: RuleModule = {
     }
   ],
   offer: () => [
-    ...preparedSpellOffers({
-      spellId: 'divine-smite',
-      i18nPrefix: 'rule.spell-divine-smite',
-      preparedFact: 'spell.l1.divineSmite.prepared',
-      alwaysPreparedFact: 'spell.l1.divineSmite.alwaysPrepared',
-      intentLevel: 'L1'
-    }),
     {
       id: 'cast-divine-smite',
       when: (f) => f.num('spell.l1.divineSmite.prepared') === 1,

@@ -1,6 +1,7 @@
 name: 'Thunderous Smite Prepare'
 description: 'Cast offer requires preparation first; prepare/unprepare lifecycle works'
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
   - dnd-5e-2024/action-economy
@@ -17,10 +18,17 @@ steps:
           spell.l1.thunderousSmite.prepared: 0
         offers:
           exists:
-            - prepare-thunderous-smite
+            - set-prepared-spells
   # TC2: After preparing, cast offer becomes available (still gated on attack)
   - addOffer:
-      id: prepare-thunderous-smite
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: thunderous-smite
+            level: 1
+            nameKey: rule.spell-thunderous-smite.offer-thunderous-smite.name
+            preparedFact: spell.l1.thunderousSmite.prepared
+            alwaysPreparedFact: spell.l1.thunderousSmite.alwaysPrepared
       assert:
         facts:
           spell.l1.thunderousSmite.prepared: 1

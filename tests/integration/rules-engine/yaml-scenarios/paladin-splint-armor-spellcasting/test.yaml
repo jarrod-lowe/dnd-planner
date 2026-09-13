@@ -1,6 +1,7 @@
 name: 'Paladin with Splint Armor Spellcasting'
 description: 'A proficient paladin wearing splint armor should be able to cast spells on subsequent turns'
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ac
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/action-economy
@@ -14,7 +15,14 @@ ruleGroups:
 steps:
   - evaluate:
   - addOffer:
-      id: prepare-bless
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: bless
+            level: 1
+            nameKey: rule.spell-bless.offer-bless.name
+            preparedFact: spell.l1.bless.prepared
+            alwaysPreparedFact: spell.l1.bless.alwaysPrepared
   # Verify initial state: paladin has heavy armor proficiency and spellcasting
   - evaluate:
       assert:

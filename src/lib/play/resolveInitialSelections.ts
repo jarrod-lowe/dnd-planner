@@ -8,7 +8,10 @@
  * A loadout control captures the same way, without needing a `capture` var: its
  * value is the whole `LoadoutConfig` the character is already holding, read back
  * off the facts. Capturing it at add time is what stops the row from opening on
- * "empty hands" — which, committed, would silently disarm the character.
+ * "empty hands" — which, committed, would silently disarm the character. A
+ * spell-prepare control captures identically: the whole prepared set read back
+ * off the prepared facts, so the picker never opens on a set whose commit would
+ * unprepare everything.
  *
  * @param rule - The rule being added to the plan
  * @param facts - Current facts from the engine output
@@ -18,11 +21,12 @@
 import type { Rule, Facts } from '$lib/rules-view';
 import type { RuleModule } from '$lib/rules-engine/types';
 import { currentLoadout } from './currentLoadout';
+import { currentPrepared } from './currentPrepared';
 
-/** The loadout control's var, if this rule's primary control is one. */
-function loadoutVar(rule: Rule): string | undefined {
+/** The primary control's var, if it is a control type whose value lives in facts. */
+function controlVar(rule: Rule, type: 'loadout' | 'spell-prepare'): string | undefined {
   const control = rule.ui?.primaryControl as { type?: string; var?: string } | undefined;
-  if (!control || control.type !== 'loadout' || typeof control.var !== 'string') return undefined;
+  if (!control || control.type !== type || typeof control.var !== 'string') return undefined;
   return control.var;
 }
 
@@ -33,9 +37,16 @@ export function resolveInitialSelections(
 ): Record<string, unknown> {
   const selections: Record<string, unknown> = {};
 
-  const loadout = loadoutVar(rule);
+  const loadout = controlVar(rule, 'loadout');
   if (loadout) {
     selections[loadout] = currentLoadout(modules, facts);
+  }
+
+  // Same capture, same reason: the prepared set is a whole-set replacement, so
+  // an unseeded picker opening empty would unprepare everything on commit.
+  const prepared = controlVar(rule, 'spell-prepare');
+  if (prepared) {
+    selections[prepared] = currentPrepared(modules, facts);
   }
 
   if (!rule.vars) {

@@ -247,7 +247,8 @@ chip, and a toggle has nowhere to put the add affordance.
   aging backfills `total` for the pips), usually paired in an array with
   `{ kind: 'untilShortRest' }` so a rest also ends it.
 - Replaceable state: give the effect a `key` — newest same-key effect evicts
-  the older one (this is how prepare/unprepare and set-value modifiers work).
+  the older one (this is how the prepared-spells set picker and set-value
+  modifiers work).
 - **Display contract**: no `display` → hidden and nameless (pure
   bookkeeping); `display: { name }` → a named chip on the active-effects
   strip; `display: { name, hidden: true }` → named but only in the "show
@@ -257,10 +258,12 @@ chip, and a toggle has nowhere to put the add affordance.
 ### Shared builders
 
 `builder.ts` is the toolkit: `defineRule` (validates the module),
-`preparedSpellOffers` (the prepare/unprepare pair every prepared spell uses),
-the weapon-definition builder (attack/equip/stow/reaction offers from one
-`def`), and `statToModifier`. Reuse them — do not hand-roll a prepared spell
-or a weapon.
+`preparedSpellCount` (the live prepared-count contribution every prepared spell
+spreads into its `derive`), the weapon-definition builder (attack/equip/stow/
+reaction offers from one `def`), and `statToModifier`. Reuse them — do not
+hand-roll a weapon. Preparing spells is not an offer here at all: a spell
+module declares `prepare: PrepareDef` and the `prepared-spells` group's
+`set-prepared-spells` picker commits the whole set as one keyed effect.
 
 ### `meta` — search discovery
 

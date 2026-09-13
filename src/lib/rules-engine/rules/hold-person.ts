@@ -1,7 +1,6 @@
 import {
   defineRule,
   preparedSpellCount,
-  preparedSpellOffers,
   type ActionResult,
   type Contribution,
   type Diagnostic,
@@ -20,11 +19,18 @@ const SLOTS = 'hold-person';
  */
 const holdPerson: RuleModule = {
   id: 'spell-hold-person',
+  prepare: {
+    spellId: 'hold-person',
+    level: 2,
+    nameKey: `${P}.name`,
+    preparedFact: 'spell.l2.holdPerson.prepared',
+    alwaysPreparedFact: 'spell.l2.holdPerson.alwaysPrepared'
+  },
   meta: {
     name: `${P}.name`,
     description: `${P}.description`,
     keywords: `${P}.keywords`,
-    requires: ['spellcasting', 'concentration']
+    requires: ['spellcasting', 'concentration', 'prepared-spells']
   },
   derive: () => {
     const c: Contribution[] = [
@@ -48,13 +54,6 @@ const holdPerson: RuleModule = {
     return c;
   },
   offer: () => [
-    ...preparedSpellOffers({
-      spellId: 'hold-person',
-      i18nPrefix: 'rule.spell-hold-person',
-      preparedFact: 'spell.l2.holdPerson.prepared',
-      alwaysPreparedFact: 'spell.l2.holdPerson.alwaysPrepared',
-      intentLevel: 'L2'
-    }),
     {
       id: 'cast-hold-person',
       when: (f) => f.num('spell.l2.holdPerson.prepared') === 1,

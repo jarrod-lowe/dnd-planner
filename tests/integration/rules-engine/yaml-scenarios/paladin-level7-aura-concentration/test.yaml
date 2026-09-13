@@ -5,6 +5,7 @@ description: >
   raises `concentration.damage-taken` and puts the concentration check in front
   of the player.
 ruleGroups:
+  - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/hp
   - dnd-5e-2024/ability-scores
   - dnd-5e-2024/proficiency
@@ -30,7 +31,14 @@ ruleGroups:
 steps:
   - evaluate:
   - addOffer:
-      id: prepare-bless
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: bless
+            level: 1
+            nameKey: rule.spell-bless.offer-bless.name
+            preparedFact: spell.l1.bless.prepared
+            alwaysPreparedFact: spell.l1.bless.alwaysPrepared
   - evaluate:
       assert:
         facts:

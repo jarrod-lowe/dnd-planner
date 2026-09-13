@@ -59,15 +59,6 @@ const SKIP_BY_NAME: Record<string, string> = {
   // Same as paladin-level3-loh-pool: asserts layOnHands.pool.remaining but omits
   // the class-paladin-lay-on-hands group that derives it.
   'oath-redemption-level4': 'omits the lay-on-hands group, which derives pool.remaining',
-  // Tests the legacy `removing` 2-turn unprepare lifecycle (spell.l1.sleep.removing +
-  // effect-sleep-prepared/-removing). The engine evicts the prepare effect immediately
-  // (same end state), as bless/protection prepare already do. sleep-prepare only.
-  'sleep-prepare':
-    'legacy `removing` unprepare lifecycle; the engine evicts immediately (same end state)',
-  'calm-emotions-prepare':
-    'legacy `removing` unprepare lifecycle; the engine evicts immediately (same end state)',
-  'hold-person-prepare':
-    'legacy `removing` unprepare lifecycle; the engine evicts immediately (same end state)',
   // The steed's damage type is a STRING fact ('radiant'/'psychic'/'necrotic');
   // facts are numeric only (creatureType 0/1/2 is set, the string label is not).
   'steed-creature-type-fey': 'string fact (companion.steed.damageType) — facts are numeric',
@@ -423,7 +414,7 @@ const EXPECTED_RUNNABLE = [
   'splint-armor-speed-penalty-low-str',
   'paladin-splint-armor-spellcasting',
   // M3 — sleep (L1 action concentration spell, protection template) + the empty
-  // paladin-spells-l1 spell-list group. sleep-prepare is skip-listed (above).
+  // paladin-spells-l1 spell-list group.
   'sleep-cast',
   'sleep-concentration-blocking',
   'sleep-concentration-illegal-planned',
@@ -445,6 +436,10 @@ const EXPECTED_RUNNABLE = [
   'loadout-swap',
   'loadout-versatile-grip',
   'loadout-while-locked',
+  // prepared-spells — the whole-set picker (one offer, one keyed effect)
+  'prepared-spells-always-prepared',
+  'prepared-spells-over-cap',
+  'prepared-spells-set',
   // M3 — initiative (dex-modifier bonus + display-only Roll Initiative offer)
   'alert-no-feat-no-annotations',
   'initiative-bonus',
@@ -488,7 +483,7 @@ const EXPECTED_RUNNABLE = [
   // M3 — spear (versatile/thrown; one-handed don works, 2H free-hand check deferred)
   'hands-weapon-spear-uses-1',
   // M3 — calm-emotions + hold-person (L2 concentration wards) + oath L5 granting
-  // them always-prepared (their own -prepare scenarios use the legacy removing path)
+  // them always-prepared
   'oath-redemption-l5-oath-spells-always-prepared',
   'oath-redemption-l5-oath-spells-prepared-then-granted',
   // M3 — find-steed (companion summon as companion.steed.* facts) + the paladin
