@@ -189,16 +189,17 @@ Guards that will bite: `module-coverage`, `module-i18n-coverage`, `sections.test
 - [x] GREEN: `PanelSpellPrepare.svelte` + `SpellPrepareControl` in `panel-renderer/types.ts` + `PanelRenderer.svelte` wiring + `spellPrepareIsEmpty` — + `spellPrepareId.ts`; contrast 5.26:1 light / 8.42:1 dark (AA+AAA); svelte-autofixer clean; zero new colours (`--md-sys-color-error` token)
 - [x] RED→GREEN: `PanelSpellPrepare-summary.test.ts` (counter-only collapsed row) — 4 tests
 - [x] RED→GREEN: `tests/unit/lib/play/currentPrepared.test.ts` + `currentPrepared.ts` + `resolveInitialSelections.ts` — always-prepared-but-unprepared NOT seeded (facts are facts; panel renders checked via fact anyway)
-- [ ] Delete `preparedSpellOffers` from `builder.ts`; strip its spread from all 14 modules — IN FLIGHT (subagent)
-- [ ] Rewrite the 14 `*-prepare` yaml scenarios onto `set-prepared-spells`; delete the 3 legacy skips + their skip-list entries — IN FLIGHT
-- [ ] Update `build-lock/test.yaml` (`prepare-bless` → `set-prepared-spells`) and `tests/integration/rules-engine/slot-levels.test.ts` — IN FLIGHT
-- [ ] Add `requires: [prepared-spells]` to every spell yaml — IN FLIGHT. **Correction: yamls live in `data/rule-groups/spells/` (not dnd-5e-2024/) and all already carry `requires:` — APPEND, don't add**
-- [ ] Purge dead i18n keys (`prepare-*`/`unprepare-*` offer names + diagnostics) from both locales — IN FLIGHT. Also the 14 pre-existing stale `effect-*-removing` keys per locale
-- [ ] Found during execution: rewrite `prep:<spellId>` literals in `tests/unit/rules-engine/effect-model.test.ts:95` + `tests/unit/play/engineBridge.test.ts:88`; rewrite 4 `*-prepared-then-granted` scenarios that drive `prepare-*` offers (divine-smite-, find-steed-, oath-redemption-oath-spells-, oath-redemption-l5-) — IN FLIGHT
-- [ ] a11y pass: `mcp__a11y__test_accessibility` on the picker; contrast on the over-cap counter
-- [ ] CSS audit: zero new colours, semantic reused classes
-- [ ] `make validate-rules-schema && make check && make test-unit`
-- [ ] `make test` green
+- [x] Delete `preparedSpellOffers` from `builder.ts`; strip its spread from all 14 modules
+- [x] Rewrite the 14 `*-prepare` yaml scenarios onto `set-prepared-spells`; delete the 3 legacy skips + their skip-list entries — 11 rewritten, 3 deleted; ~110 further scenarios that injected preparation via `prepare-*` steps also migrated (engine silently skips unknown offer ids — they'd pass vacuously); `smite-blocks-other-spells`' two sequential prepares merged into one whole-set selection
+- [x] Update `build-lock/test.yaml` (`prepare-bless` → `set-prepared-spells`) and `tests/integration/rules-engine/slot-levels.test.ts` — + `tests/unit/rules-engine/prepared-count.test.ts` (found during execution)
+- [x] Add `requires: [prepared-spells]` to every spell yaml — **Correction: yamls live in `data/rule-groups/spells/` (not dnd-5e-2024/) and all already carry `requires:` — appended**
+- [x] Purge dead i18n keys (`prepare-*`/`unprepare-*` offer names + diagnostics) from both locales — 248 lines per locale incl. the 14 pre-existing stale `effect-*-removing` keys
+- [x] Found during execution: rewrite `prep:<spellId>` literals in `tests/unit/rules-engine/effect-model.test.ts` + `tests/unit/play/engineBridge.test.ts`; rewrite 4 `*-prepared-then-granted` scenarios — 4 always-prepared scenarios' dead `illegal: [unprepare-*]` asserts replaced with behavioral empty-set steps
+- [x] Fixed: lint error from UI phase (`_selections` unused → 2-param `spellPrepareIsEmpty`, sibling arity kept)
+- [x] a11y pass: component-level asserts in `PanelSpellPrepare.test.ts` (fieldset/legend, implicit labels, native checkboxes keyboard-operable, `aria-describedby` counter link, `aria-live`); over-cap contrast `--md-sys-color-error` on `surface-container-high` = 5.26:1 light / 8.42:1 dark (AA+AAA both themes). Axe-on-page scan folded into the in-browser pass
+- [x] CSS audit: zero literal colours in all new files (rg verified); theme vars only (`--md-sys-color-*`, `--spacing-*`, `--font-*`); `--illegal` modifier naming matches `warning-indicator--illegal` convention
+- [x] `make validate-rules-schema && make check && make test-unit` — schema 86 files / check 0 errors / 175 files 2204 passed
+- [x] `make test` green — full gate exit 0 (validate, security, schema, check, unit, e2e, lint)
 - [ ] `make sync-rule-groups` then `make deploy-test`
 - [ ] Playwright against `http://localhost:5173` (check `pgrep -f vite.js` first): open picker, tick past the cap, confirm counter + illegal treatment
 - [ ] Commit (signed, no amend, no co-author attribution beyond session lines), PR
@@ -212,6 +213,7 @@ Guards that will bite: `module-coverage`, `module-i18n-coverage`, `sections.test
 | over-cap + always-prepared scenarios        | `25e30471` | subagent: 367 passed, mutation-checked; full scenario file green |
 | PanelSpellPrepare + wiring + summary        | `3f4c8e72` | `make check` 0 errors; 39/39 panel tests                         |
 | currentPrepared seeding                     | `73d85fdf` | 33/33 play tests                                                 |
+| Teardown: offers deleted, ~130 scenarios migrated, i18n purged, requires appended | `362f1826` | schema 86 files, `make check` 0 errors, `make test-unit` 175 files / 2204 passed, `make lint` clean |
 
 ## Follow-ups (not this branch)
 
