@@ -332,6 +332,8 @@ const EXPECTED_RUNNABLE = [
   'searing-smite-usage',
   // Cure Wounds — L1 action heal (2d8 + spellcasting modifier dice line)
   'cure-wounds-cast',
+  // Detect Evil and Good — L1 action concentration divination (descriptive senses)
+  'detect-evil-and-good-cast',
   'sanctuary-long-rest-dismissal',
   'sanctuary-prepare',
   'sanctuary-rest-dismissal',

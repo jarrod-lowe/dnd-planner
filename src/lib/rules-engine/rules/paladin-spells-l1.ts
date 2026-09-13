@@ -4,7 +4,7 @@ import { defineRule, type RuleModule } from '../builder';
  * Paladin Spells (Level 1) — a spell-list grouping with no rules of its
  * own (`rules: []`); it exists so a character can be granted the level-1 paladin
  * spell list as a unit (its `requires` pulls in bless / command / cure-wounds /
- * divine-favour /
+ * detect-evil-and-good / divine-favour /
  * divine-smite / protection-from-evil-and-good / searing-smite /
  * shield-of-faith). The individual spell groups carry
  * the actual behaviour, so this module contributes nothing and needs no meta.

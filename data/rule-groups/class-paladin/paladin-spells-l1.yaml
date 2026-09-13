@@ -4,6 +4,7 @@ ruleGroups:
       - spell-bless
       - spell-command
       - spell-cure-wounds
+      - spell-detect-evil-and-good
       - spell-divine-favour
       - spell-divine-smite
       - spell-protection-from-evil-and-good

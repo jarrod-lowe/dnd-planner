@@ -314,6 +314,20 @@
         "no_slots": "mugh laH tu'lu'be'"
       }
     },
+    "spell-detect-evil-and-good": {
+      "offer-detect-evil-and-good": {
+        "name": "mIgh 'ej QaH tu'",
+        "keywords": "detect sense aberration celestial elemental fey fiend undead divination",
+        "description": "wa' | 10 tup | mIgh Ha'DIbaH je 30ft tu'",
+        "no_action": "DIvI' tu'lu'be'",
+        "no_spellcasting": "mugh DIvI' tu'lu'be'",
+        "already_concentrating": "buQ DIvI'",
+        "no_slots": "mugh laH tu'lu'be'"
+      },
+      "effect-detect-evil-and-good": {
+        "name": "mIgh 'ej QaH tu'"
+      }
+    },
     "spell-divine-favour": {
       "offer-divine-favour": {
         "name": "quv",
