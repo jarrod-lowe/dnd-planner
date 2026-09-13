@@ -600,6 +600,20 @@ that is deliberately unchanged. Two consequences are accepted rather than fixed:
   boundary is captured at the first rest and the hooks run once, so Channel
   Divinity gets ONE recovery and ends at 1/2. (Also reported by Codex on PR
   #414.)
+
+  The rest's **kind** is captured with that boundary, in the fold. It used to be
+  derived afterwards from the settled facts, which carry EVERY rest flag the plan
+  raised (long winning the tie) — so on `short rest → … → long rest` the kind and
+  the boundary described DIFFERENT rests, and the later rest's hooks ran at the
+  earlier rest's position. The Human long-rest HI grant was spliced in at the
+  short rest, where an intervening `use-hi` could consume it, leaving the
+  character with neither the grant nor a coherent story. (Found by Codex on PR
+  #414.) The consequence of capturing both together: in a short-rest-then-long-rest
+  plan only the SHORT rest's hooks fire, so the Human long-rest Heroic
+  Inspiration grant does not happen at all. That is the once-only limitation
+  applied honestly — the previous behaviour was not more correct, it was
+  incoherent. Unit: rest-hooks.test.ts, post-rest-actions.test.ts.
+
 - **A post-rest row cannot see the hook's own effects at its own step.** During
   the fold the grant does not exist yet, so `use-hi` after a long rest reports
   its own `no_inspiration` error alongside `planner.after-rest` — even though

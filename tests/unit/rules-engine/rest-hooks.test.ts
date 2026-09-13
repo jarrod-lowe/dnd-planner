@@ -164,4 +164,38 @@ describe('rest hook — onRest', () => {
     expect(after.facts['test.spent']).toBe(1);
     expect(after.facts['test.refunded'] ?? 0).toBe(0);
   });
+
+  it('takes the KIND of the rest at the boundary, not of the last rest in the plan', () => {
+    const MODULES = [coreEvents, grantOnLong];
+
+    // Short rest FIRST. Only the first rest is processed (ISSUES.md §1.41) and
+    // it is a SHORT one, so a long-rest-only hook must not fire. Deriving the
+    // kind from the settled facts (which carry BOTH flags, long winning) would
+    // run the LATER rest's hooks at the EARLIER rest's position.
+    const shortFirst = evaluatePlan(MODULES, {}, [
+      ref('i0', 'record-short-rest'),
+      ref('i1', 'record-long-rest')
+    ]);
+    expect(shortFirst.facts['test.points'] ?? 0).toBe(0);
+    expect(shortFirst.advertised.some((e) => e.id.includes('effect-test-grant'))).toBe(false);
+
+    // Long rest FIRST: that IS the processed rest, so the grant fires.
+    const longFirst = evaluatePlan(MODULES, {}, [
+      ref('i0', 'record-long-rest'),
+      ref('i1', 'record-short-rest')
+    ]);
+    expect(longFirst.facts['test.points']).toBe(1);
+  });
+
+  it('still reads the kind from the settled facts when the rest is the plan’s last row', () => {
+    // A rest row that is the last step never trips the in-fold check (the flag
+    // only reads true at the NEXT step's top), so neither boundary nor kind is
+    // captured. Such a plan has exactly one rest, so the settled facts describe
+    // it unambiguously — the fallback must still fire its hooks.
+    const long = evaluatePlan([coreEvents, grantOnLong], {}, [ref('i0', 'record-long-rest')]);
+    expect(long.facts['test.points']).toBe(1);
+
+    const short = evaluatePlan([coreEvents, recoverOnShort], {}, [ref('i0', 'record-short-rest')]);
+    expect(short.facts['test.recovered']).toBe(1);
+  });
 });

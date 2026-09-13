@@ -121,4 +121,26 @@ describe('plan — rest-hook effects sit at the rest, not after the whole plan',
     expect(out.facts['heroicInspiration.remaining']).toBe(1);
     expect(out.facts['heroicInspiration.consumed'] ?? 0).toBe(0);
   });
+
+  it('runs the FIRST rest’s hooks, never a later rest’s kind at the first rest’s place', () => {
+    // short rest → use-hi → long rest. Only the FIRST rest is processed
+    // (ISSUES.md §1.41), and that rest is the SHORT one — so the Human's
+    // long-rest grant does not fire at all. The kind and the boundary must
+    // describe the SAME rest: pairing the LATER rest's kind with the EARLIER
+    // rest's position would splice the long-rest grant in *before* `use-hi`,
+    // letting the use consume a grant that, coherently, was never made.
+    const planned = [
+      ref('i0', 'record-short-rest'),
+      ref('i1', 'use-hi'),
+      ref('i2', 'record-long-rest')
+    ];
+    const out = evaluate({ modules: HUMAN_MODULES, inputFacts: {}, planned });
+
+    // No grant was emitted — the processed rest was the short one.
+    expect(out.effects.filter((e) => e.id.includes('effect-hi-set'))).toEqual([]);
+    expect(out.facts['heroicInspiration.remaining'] ?? 0).toBe(0);
+    // `use-hi` still executed (illegal-but-visible), spending nothing it had.
+    expect(out.facts['heroicInspiration.consumed']).toBe(1);
+    expect(out.planDiagnostics['i1']?.map((d) => d.code)).toContain(AFTER_REST);
+  });
 });

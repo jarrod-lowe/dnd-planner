@@ -210,11 +210,15 @@ would outrank a planned row that came after the rest and shares its key — a Hu
 who long-rests and then spends Heroic Inspiration would spend it and still have
 it. At the boundary, everything planned after the rest stays newer.
 
-`onRest` runs **once** per evaluation, at the FIRST rest in the plan. A plan with
-two short rests therefore gets one recovery, and a post-rest row cannot see the
-hook's effects at its own step. Those, and rest-scoped effect **expiry** (which
-has no boundary at all), are knowingly accepted post-rest imperfections surfaced
-by the `planner.after-rest` warning — see ISSUES.md §1.41.
+`onRest` runs **once** per evaluation, at the FIRST rest in the plan, and `kind`
+is that same first rest's — captured with the boundary, never derived from the
+settled facts (which carry every rest flag the plan raised). So on `short rest →
+… → long rest` only the SHORT rest's hooks fire: the Human long-rest Heroic
+Inspiration grant does not happen. A plan with two short rests likewise gets one
+recovery, and a post-rest row cannot see the hook's effects at its own step.
+Those, and rest-scoped effect **expiry** (which has no boundary at all), are
+knowingly accepted post-rest imperfections surfaced by the `planner.after-rest`
+warning — see ISSUES.md §1.41.
 
 ---
 

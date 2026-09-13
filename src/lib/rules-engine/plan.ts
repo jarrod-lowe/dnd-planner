@@ -113,6 +113,12 @@ export function evaluatePlan(
   // reads the state at that boundary, never the post-plan state. Null until a
   // rest is seen (and stays null on a plan with no rest).
   let restBoundary: number | null = null;
+  // The KIND of that same first rest, captured at the same moment as the
+  // boundary so the two can never describe DIFFERENT rests. Deriving the kind
+  // afterwards from the settled facts was incoherent on a mixed plan (short rest
+  // → … → long rest): the settled facts carry BOTH flags and long wins, so the
+  // LATER rest's hooks ran at the EARLIER rest's position — the worst of both.
+  let restKindAtBoundary: RestKind | null = null;
 
   for (const ref of planned) {
     checkDeadline(deadline, 'plan fold', budgetMs);
@@ -152,7 +158,13 @@ export function evaluatePlan(
     // Two more accepted imperfections, both downstream of `onRest` running ONCE,
     // post-settle (the contract RULES_ENGINE.md documents):
     //   - ONLY THE FIRST rest boundary is taken, and the hooks run once. A plan
-    //     with two short rests therefore yields ONE recovery, not two.
+    //     with two short rests therefore yields ONE recovery, not two. The KIND
+    //     is captured with the boundary (below) so both always describe that
+    //     same first rest; the consequence is that in `short rest → … → long
+    //     rest` only the SHORT rest's hooks fire, so a Human gets no long-rest
+    //     Heroic Inspiration. That is the once-only limitation applied honestly
+    //     — running the later rest's hooks at the earlier rest's position was
+    //     not a better answer, it was an incoherent one.
     //   - A post-rest row cannot SEE the hook's own effects at its own step, so
     //     e.g. `use-hi` after a long rest reports "no inspiration" even though
     //     the splice below makes it spend correctly.
@@ -166,7 +178,13 @@ export function evaluatePlan(
     // post-rest execution is honest about spends the hook sees, not about
     // rest-scoped effects expiring.
     const afterRest = reader.num('rest.short') > 0 || reader.num('rest.long') > 0;
-    if (afterRest && restBoundary === null) restBoundary = advertised.length;
+    if (afterRest && restBoundary === null) {
+      restBoundary = advertised.length;
+      // Read from THIS reader (the state at the boundary), not from the settled
+      // facts: at this point only the first rest's flag is set, so the kind and
+      // the position are guaranteed to be the same rest's.
+      restKindAtBoundary = reader.num('rest.long') > 0 ? 'long' : 'short';
+    }
 
     // The offer ran (its `when` held at this step). Record it so the row resolves
     // even if its own apply closes the gate (dropping it from the final catalog).
@@ -215,10 +233,18 @@ export function evaluatePlan(
   // re-derive so they are visible this evaluation and commit at end of turn.
   checkDeadline(deadline, 'rest hooks', budgetMs);
   const settled = evaluateSheet(modules, inputFacts, [...committed, ...advertised]);
-  const restKind: RestKind | null = (() => {
-    const r = plainReader(settled);
-    return r.num('rest.long') > 0 ? 'long' : r.num('rest.short') > 0 ? 'short' : null;
-  })();
+  // The kind of the rest the boundary points at, captured in the fold. FALLBACK:
+  // a rest row that is the plan's LAST step never trips the in-fold check (the
+  // flag only reads true at the NEXT step's top), so neither the boundary nor
+  // the kind was captured. That plan necessarily has exactly one rest — a second
+  // one would have been a step after the first — so the settled facts describe
+  // it unambiguously and reading the kind from them is exact.
+  const restKind: RestKind | null =
+    restKindAtBoundary ??
+    (() => {
+      const r = plainReader(settled);
+      return r.num('rest.long') > 0 ? 'long' : r.num('rest.short') > 0 ? 'short' : null;
+    })();
   if (restKind) {
     // The hook must see the state AT the rest, not the post-plan state: a spend
     // planned after the rest has not happened yet as far as the rest is
