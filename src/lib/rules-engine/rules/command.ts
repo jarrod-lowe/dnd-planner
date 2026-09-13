@@ -21,6 +21,13 @@ const SLOTS = 'command';
  */
 const command: RuleModule = {
   id: 'spell-command',
+  prepare: {
+    spellId: 'command',
+    level: 1,
+    nameKey: `${O}.name`,
+    preparedFact: 'spell.l1.command.prepared',
+    alwaysPreparedFact: 'spell.l1.command.alwaysPrepared'
+  },
   meta: {
     name: `${O}.name`,
     description: `${O}.description`,

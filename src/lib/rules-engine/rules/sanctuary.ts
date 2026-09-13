@@ -21,6 +21,13 @@ const S = 'rule.spell-sanctuary.offer-sanctuary';
  */
 const sanctuary: RuleModule = {
   id: 'spell-sanctuary',
+  prepare: {
+    spellId: 'sanctuary',
+    level: 1,
+    nameKey: `${S}.name`,
+    preparedFact: 'spell.l1.sanctuary.prepared',
+    alwaysPreparedFact: 'spell.l1.sanctuary.alwaysPrepared'
+  },
   meta: {
     name: `${S}.name`,
     description: `${S}.description`,

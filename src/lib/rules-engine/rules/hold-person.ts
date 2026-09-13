@@ -20,6 +20,13 @@ const SLOTS = 'hold-person';
  */
 const holdPerson: RuleModule = {
   id: 'spell-hold-person',
+  prepare: {
+    spellId: 'hold-person',
+    level: 2,
+    nameKey: `${P}.name`,
+    preparedFact: 'spell.l2.holdPerson.prepared',
+    alwaysPreparedFact: 'spell.l2.holdPerson.alwaysPrepared'
+  },
   meta: {
     name: `${P}.name`,
     description: `${P}.description`,

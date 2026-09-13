@@ -19,6 +19,7 @@ import {
   type LoadoutConfig,
   type LoadoutItem
 } from './loadout';
+import { enumeratePreparableSpells, preparedEffectState } from './preparedSpells';
 
 /** Pure, deterministic helpers that are part of the authoring toolkit. */
 export { statToModifier } from './functions';
@@ -687,10 +688,14 @@ export function armorTrainingPenalties(armorId: string, proficiencyFact: string)
 export { loadoutEffectState, LOADOUT_HANDS_SPENT, MAX_HANDS };
 export type { LoadoutConfig, LoadoutItem };
 
+/** The prepared-spells combinator surface a rule module may use (see preparedSpells.ts). */
+export { enumeratePreparableSpells, preparedEffectState };
+
 export type {
   RuleModule,
   RuleMeta,
   EquipDef,
+  PrepareDef,
   Contribution,
   FactReader,
   SheetCtx,

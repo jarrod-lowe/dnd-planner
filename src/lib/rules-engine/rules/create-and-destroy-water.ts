@@ -19,6 +19,13 @@ const CAST = `${C}.cast-create-and-destroy-water`;
  */
 const createAndDestroyWater: RuleModule = {
   id: 'spell-create-and-destroy-water',
+  prepare: {
+    spellId: 'create-and-destroy-water',
+    level: 1,
+    nameKey: `${CAST}.name`,
+    preparedFact: 'spell.l1.createAndDestroyWater.prepared',
+    alwaysPreparedFact: 'spell.l1.createAndDestroyWater.alwaysPrepared'
+  },
   meta: {
     name: `${CAST}.name`,
     description: `${CAST}.description`,

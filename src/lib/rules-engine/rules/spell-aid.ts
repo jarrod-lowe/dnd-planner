@@ -23,6 +23,13 @@ const SLOTS = 'aid';
  */
 const aid: RuleModule = {
   id: 'spell-aid',
+  prepare: {
+    spellId: 'aid',
+    level: 2,
+    nameKey: `${O}.name`,
+    preparedFact: 'spell.l2.aid.prepared',
+    alwaysPreparedFact: 'spell.l2.aid.alwaysPrepared'
+  },
   meta: {
     name: `${O}.name`,
     description: `${O}.description`,

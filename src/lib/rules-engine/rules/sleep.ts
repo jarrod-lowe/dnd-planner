@@ -22,6 +22,13 @@ const SLOTS = 'sleep';
  */
 const sleep: RuleModule = {
   id: 'spell-sleep',
+  prepare: {
+    spellId: 'sleep',
+    level: 1,
+    nameKey: `${P}.name`,
+    preparedFact: 'spell.l1.sleep.prepared',
+    alwaysPreparedFact: 'spell.l1.sleep.alwaysPrepared'
+  },
   meta: {
     name: `${P}.name`,
     description: `${P}.description`,

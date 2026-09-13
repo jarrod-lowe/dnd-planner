@@ -25,6 +25,13 @@ const B = 'rule.spell-bless.offer-bless';
  */
 const bless: RuleModule = {
   id: 'spell-bless',
+  prepare: {
+    spellId: 'bless',
+    level: 1,
+    nameKey: `${B}.name`,
+    preparedFact: 'spell.l1.bless.prepared',
+    alwaysPreparedFact: 'spell.l1.bless.alwaysPrepared'
+  },
   meta: {
     name: `${B}.name`,
     description: `${B}.description`,

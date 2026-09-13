@@ -567,6 +567,13 @@ function steedHpModifier(
  */
 const findSteed: RuleModule = {
   id: 'spell-find-steed',
+  prepare: {
+    spellId: 'find-steed',
+    level: 2,
+    nameKey: `${O}.name`,
+    preparedFact: 'spell.l2.findSteed.prepared',
+    alwaysPreparedFact: 'spell.l2.findSteed.alwaysPrepared'
+  },
   meta: {
     name: `${O}.name`,
     description: `${O}.description`,

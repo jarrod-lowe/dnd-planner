@@ -21,6 +21,13 @@ const SLOTS = 'calm-emotions';
  */
 const calmEmotions: RuleModule = {
   id: 'spell-calm-emotions',
+  prepare: {
+    spellId: 'calm-emotions',
+    level: 2,
+    nameKey: `${P}.name`,
+    preparedFact: 'spell.l2.calmEmotions.prepared',
+    alwaysPreparedFact: 'spell.l2.calmEmotions.alwaysPrepared'
+  },
   meta: {
     name: `${P}.name`,
     description: `${P}.description`,

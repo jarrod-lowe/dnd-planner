@@ -22,6 +22,13 @@ const SLOTS = 'protection-from-evil-and-good';
  */
 const protectionFromEvilAndGood: RuleModule = {
   id: 'spell-protection-from-evil-and-good',
+  prepare: {
+    spellId: 'protection-from-evil-and-good',
+    level: 1,
+    nameKey: `${P}.name`,
+    preparedFact: 'spell.l1.protectionFromEvilAndGood.prepared',
+    alwaysPreparedFact: 'spell.l1.protectionFromEvilAndGood.alwaysPrepared'
+  },
   meta: {
     name: `${P}.name`,
     description: `${P}.description`,

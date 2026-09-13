@@ -22,6 +22,13 @@ const T = 'rule.spell-thunderous-smite.offer-thunderous-smite';
  */
 const thunderousSmite: RuleModule = {
   id: 'spell-thunderous-smite',
+  prepare: {
+    spellId: 'thunderous-smite',
+    level: 1,
+    nameKey: `${T}.name`,
+    preparedFact: 'spell.l1.thunderousSmite.prepared',
+    alwaysPreparedFact: 'spell.l1.thunderousSmite.alwaysPrepared'
+  },
   meta: {
     name: `${T}.name`,
     description: `${T}.description`,

@@ -38,6 +38,13 @@ const RADIANT = 'radiant';
  */
 const divineFavour: RuleModule = {
   id: 'spell-divine-favour',
+  prepare: {
+    spellId: 'divine-favour',
+    level: 1,
+    nameKey: `${O}.name`,
+    preparedFact: 'spell.l1.divineFavour.prepared',
+    alwaysPreparedFact: 'spell.l1.divineFavour.alwaysPrepared'
+  },
   meta: {
     name: `${O}.name`,
     description: `${O}.description`,

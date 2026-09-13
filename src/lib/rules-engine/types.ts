@@ -94,11 +94,33 @@ export interface EquipDef {
   twoHandedState?: Record<string, number>;
 }
 
+/**
+ * What a module contributes to the prepared-spells picker — declared by every
+ * spell a character may PREPARE. The spell module (not the picker) owns its own
+ * fact names (`spell.l<N>.<camelId>.prepared` / `.alwaysPrepared`), so the
+ * picker stays a pure combinator over whatever is assigned, exactly as the
+ * loadout is over `equip`.
+ */
+export interface PrepareDef {
+  /** The spell id used in effect ids / i18n keys, e.g. `divine-smite`. */
+  spellId: string;
+  /** The spell's level — the picker groups rows by it (L1, L2, …). */
+  level: number;
+  /** i18n key for the spell's row name. */
+  nameKey: string;
+  /** The spell's prepared fact, e.g. `spell.l1.divineSmite.prepared`. */
+  preparedFact: string;
+  /** The always-prepared fact, e.g. `spell.l1.divineSmite.alwaysPrepared`. */
+  alwaysPreparedFact: string;
+}
+
 export interface RuleModule {
   id: string;
   meta?: RuleMeta;
   /** Hand-slot declaration — present only on items you can hold. See {@link EquipDef}. */
   equip?: EquipDef;
+  /** Prepared-spell declaration — present only on spells a character may prepare. See {@link PrepareDef}. */
+  prepare?: PrepareDef;
   derive?: (ctx: SheetCtx) => Contribution[];
   offer?: (ctx: SheetCtx) => Offer[];
   /**

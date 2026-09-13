@@ -27,6 +27,13 @@ const D = 'rule.spell-divine-smite.offer-divine-smite';
  */
 const divineSmite: RuleModule = {
   id: 'spell-divine-smite',
+  prepare: {
+    spellId: 'divine-smite',
+    level: 1,
+    nameKey: `${D}.name`,
+    preparedFact: 'spell.l1.divineSmite.prepared',
+    alwaysPreparedFact: 'spell.l1.divineSmite.alwaysPrepared'
+  },
   // Discovery metadata for the search index (i18n keys reused from the offer; no
   // new translations). `requires` mirrors the published group prerequisite.
   meta: {

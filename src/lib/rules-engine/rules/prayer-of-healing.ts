@@ -22,6 +22,13 @@ const SLOTS = 'prayerOfHealing';
  */
 const prayerOfHealing: RuleModule = {
   id: 'spell-prayer-of-healing',
+  prepare: {
+    spellId: 'prayer-of-healing',
+    level: 2,
+    nameKey: `${O}.name`,
+    preparedFact: 'spell.l2.prayerOfHealing.prepared',
+    alwaysPreparedFact: 'spell.l2.prayerOfHealing.alwaysPrepared'
+  },
   meta: {
     name: `${O}.name`,
     description: `${O}.description`,
