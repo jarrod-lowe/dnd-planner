@@ -73,6 +73,7 @@ import featSavageAttacker from './rules/feat-savage-attacker';
 import spellAid from './rules/spell-aid';
 import prayerOfHealing from './rules/prayer-of-healing';
 import shieldOfFaith from './rules/shield-of-faith';
+import searingSmite from './rules/searing-smite';
 
 /**
  * Static ruleGroupId -> module registry, keyed by each module's own `id` — which
@@ -160,7 +161,8 @@ const MODULES: RuleModule[] = [
   featSavageAttacker,
   spellAid,
   prayerOfHealing,
-  shieldOfFaith
+  shieldOfFaith,
+  searingSmite
 ];
 
 const REGISTRY: Record<string, RuleModule> = Object.fromEntries(MODULES.map((m) => [m.id, m]));

@@ -328,6 +328,8 @@ const EXPECTED_RUNNABLE = [
   'sanctuary-cast',
   // Shield of Faith — L1 bonus-action concentration ward (+2 AC)
   'shield-of-faith-cast',
+  // Searing Smite — L1 bonus-action on-hit smite (fire rider, no concentration)
+  'searing-smite-usage',
   'sanctuary-long-rest-dismissal',
   'sanctuary-prepare',
   'sanctuary-rest-dismissal',

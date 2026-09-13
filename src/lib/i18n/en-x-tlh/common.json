@@ -291,6 +291,18 @@
         "name": "Suto' quv"
       }
     },
+    "spell-searing-smite": {
+      "annotation": "meQ muHta chen",
+      "offer-searing-smite": {
+        "name": "meQ muHta",
+        "keywords": "smite fire damage burn evocation",
+        "description": "nuH DIch tlhej | +1d6 qul, ghIq 1d6/rep | CON ra' meQ mev",
+        "no_bonus_action": "Quv DIvI' tu'lu'be'",
+        "no_attack": "wa'DIch HIv lo'nIS",
+        "no_slots": "mugh laH tu'lu'be'",
+        "no_spellcasting": "mugh DIvI' tu'lu'be'"
+      }
+    },
     "spell-divine-favour": {
       "offer-divine-favour": {
         "name": "quv",
@@ -1560,6 +1572,7 @@
     "information": {
       "saveDcStr": "HoS DIvI' {{dc}}",
       "saveDcStrDex": "HoS/ghu' DIvI' {{dc}}",
+      "saveDcCon": "DIr DIvI' {{dc}}",
       "saveDcWis": "val DIvI' {{dc}}",
       "saveDcCha": "vam DIvI' {{dc}}",
       "aidBonus": "+{{hp}} HP"

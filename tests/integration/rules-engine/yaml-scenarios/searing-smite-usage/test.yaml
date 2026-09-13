@@ -1,0 +1,93 @@
+name: 'Searing Smite - Usage'
+description: >-
+  Searing Smite rides a melee hit like Thunderous Smite: illegal until one
+  lands, then a bonus-action cast spends the turn spell and an L1 slot. The
+  hit's extra fire dice is a rider on the panel; the ongoing burn and the
+  target's CON save live on the target (untracked), so no self effect — and,
+  per SRD 5.2, the spell is NOT concentration (flat 1-minute duration).
+ruleGroups:
+  - dnd-5e-2024/prepared-spells
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - spells/spell-searing-smite
+steps:
+  - evaluate:
+  - addOffer:
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: searing-smite
+            level: 1
+            nameKey: rule.spell-searing-smite.offer-searing-smite.name
+            preparedFact: spell.l1.searingSmite.prepared
+            alwaysPreparedFact: spell.l1.searingSmite.alwaysPrepared
+  - evaluate:
+      assert:
+        facts:
+          bonusActions.remaining: 1
+          spellcasting.remaining: 1
+          spellcasting.slots.level1.remaining: 2
+        offers:
+          exists:
+            - cast-searing-smite
+          illegal:
+            - cast-searing-smite
+  - addOffer:
+      id: unarmed-strike-use-action
+      assert:
+        facts:
+          attack.last.melee: 1
+        offers:
+          legal:
+            - cast-searing-smite
+        annotations:
+          exists:
+            - rule.spell-searing-smite.annotation
+          targets:
+            - key: rule.spell-searing-smite.annotation
+              targets: [attack.melee, attack.unarmed]
+          addsToPlan:
+            - key: rule.spell-searing-smite.annotation
+              adds: { offer: cast-searing-smite }
+  - evaluate:
+      assert:
+        offerUi:
+          - id: cast-searing-smite
+            ui:
+              secondaryControl:
+                type: dice-line
+                dice:
+                  - sides: 6
+                    count: { var: slotLevel, min: 1 }
+                    damageType: { string: fire }
+                    purpose: damage
+              information:
+                - type: text
+                  label: play.information.saveDcCon
+                  labelValues:
+                    dc: { fact: spellcasting.saveDC }
+  - addOffer:
+      id: cast-searing-smite
+      selections:
+        slotLevel: 1
+      assert:
+        facts:
+          bonusActions.remaining: 0
+          spellcasting.remaining: 0
+          spellcasting.slots.level1.remaining: 1
+          # NOT concentration: the slot is the only thing the cast leaves behind.
+          concentration.spent: 0
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-searing-smite-slot-l1
+        facts:
+          spellcasting.slots.level1.remaining: 1

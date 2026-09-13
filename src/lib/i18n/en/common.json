@@ -291,6 +291,18 @@
         "name": "Shield of Faith"
       }
     },
+    "spell-searing-smite": {
+      "annotation": "Searing Smite available",
+      "offer-searing-smite": {
+        "name": "Searing Smite",
+        "keywords": "smite fire damage burn evocation",
+        "description": "After a melee hit | +1d6 fire, then 1d6/turn | CON save ends the burn",
+        "no_bonus_action": "No bonus action available",
+        "no_attack": "You must make a melee attack first",
+        "no_slots": "No spell slots remaining",
+        "no_spellcasting": "Already cast a spell this turn"
+      }
+    },
     "spell-divine-favour": {
       "offer-divine-favour": {
         "name": "Divine Favour",
@@ -1560,6 +1572,7 @@
     "information": {
       "saveDcStr": "STR Save DC {{dc}}",
       "saveDcStrDex": "STR/DEX Save DC {{dc}}",
+      "saveDcCon": "CON Save DC {{dc}}",
       "saveDcWis": "WIS Save DC {{dc}}",
       "saveDcCha": "CHA Save DC {{dc}}",
       "aidBonus": "+{{hp}} HP"
