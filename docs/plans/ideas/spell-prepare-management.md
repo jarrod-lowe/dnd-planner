@@ -200,9 +200,9 @@ Guards that will bite: `module-coverage`, `module-i18n-coverage`, `sections.test
 - [x] CSS audit: zero literal colours in all new files (rg verified); theme vars only (`--md-sys-color-*`, `--spacing-*`, `--font-*`); `--illegal` modifier naming matches `warning-indicator--illegal` convention
 - [x] `make validate-rules-schema && make check && make test-unit` — schema 86 files / check 0 errors / 175 files 2204 passed
 - [x] `make test` green — full gate exit 0 (validate, security, schema, check, unit, e2e, lint)
-- [ ] `make sync-rule-groups` then `make deploy-test`
-- [ ] Playwright against `http://localhost:5173` (check `pgrep -f vite.js` first): open picker, tick past the cap, confirm counter + illegal treatment
-- [ ] Commit (signed, no amend, no co-author attribution beyond session lines), PR
+- [x] `make sync-rule-groups` then `make deploy-test` — sync: 1 added, 58 updated, index rebuilt (2049 entries); deploy exit 0
+- [x] Playwright against `http://localhost:5173`: picker opens seeded `6 / 7` → `7 / 7`; always-prepared rows checked+disabled with hints; effect chip on Active State. **Over-cap not reachable in-browser for this character** — exactly 7 preparable spells, cap 7 (covered by scenario + component tests instead)
+- [x] Commit (signed, no amend, no co-author attribution beyond session lines), PR
 
 ### Progress log
 
