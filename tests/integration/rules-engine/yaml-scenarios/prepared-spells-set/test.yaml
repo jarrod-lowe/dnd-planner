@@ -1,0 +1,67 @@
+name: 'Prepared Spells - sets the whole prepared set'
+description: >
+  The set-prepared-spells offer commits the WHOLE prepared set as ONE permanent
+  keyed effect. Selecting Bless and Sleep sets both prepared facts at once (the
+  same facts the old per-spell prepare offers wrote), and the derived
+  spellcasting.prepared.count follows. Under the cap (paladin level 1 gives 2),
+  so the row plans clean with no diagnostics.
+
+ruleGroups:
+  - dnd-5e-2024/prepared-spells
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - spells/spell-bless
+  - spells/spell-sleep
+
+steps:
+  # TC1: The picker offer exists before anything is prepared; nothing is.
+  - evaluate:
+      assert:
+        facts:
+          spellcasting.prepared.max: 2
+          spellcasting.prepared.count: 0
+          spellcasting.prepared.remaining: 2
+          spell.l1.bless.prepared: 0
+          spell.l1.sleep.prepared: 0
+        offers:
+          legal:
+            - set-prepared-spells
+
+  # TC2: One offer, one selection, the whole set. The selection is
+  # self-describing (the picker's rows are the modules' own prepare defs), so
+  # apply can resolve facts from it without reaching the module list — the same
+  # contract set-loadout's config selection follows.
+  - addOffer:
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: bless
+            level: 1
+            nameKey: rule.spell-bless.offer-bless.name
+            preparedFact: spell.l1.bless.prepared
+            alwaysPreparedFact: spell.l1.bless.alwaysPrepared
+          - spellId: sleep
+            level: 1
+            nameKey: rule.spell-sleep.offer-sleep.name
+            preparedFact: spell.l1.sleep.prepared
+            alwaysPreparedFact: spell.l1.sleep.alwaysPrepared
+      assert:
+        facts:
+          spell.l1.bless.prepared: 1
+          spell.l1.sleep.prepared: 1
+          spellcasting.prepared.count: 2
+          spellcasting.prepared.remaining: 0
+        planErrors:
+          - id: set-prepared-spells
+            errors: []
+
+  # TC3: Permanent and keyed — the whole set survives the turn as ONE effect.
+  - endTurn:
+      assert:
+        facts:
+          spell.l1.bless.prepared: 1
+          spell.l1.sleep.prepared: 1
+          spellcasting.prepared.count: 2
+        effects:
+          exists:
+            - effect-prepared-spells

@@ -80,6 +80,7 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   shield: () => import('./rules/shield'),
   hands: () => import('./rules/hands'),
   loadout: () => import('./rules/loadout'),
+  'prepared-spells': () => import('./rules/prepared-spells'),
   dagger: () => import('./rules/dagger'),
   'dagger-mastery': () => import('./rules/dagger-mastery'),
   greataxe: () => import('./rules/greataxe'),

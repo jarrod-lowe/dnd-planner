@@ -13,17 +13,17 @@ Be extremely concise. Sacrifice grammar for the sake of concision.
 
 ## Settled decisions
 
-| # | Decision |
-| --- | --- |
-| Scope | Paladin only class implemented; mechanism class-agnostic. Known-casters: n/a (none exist). |
-| Timing | No long-rest gate. Picker always available. Follow-up. |
-| Cantrips | None exist in repo. Out. |
-| Always-prepared | Row shown, checked, disabled. Excluded from count (already true via `preparedSpellCount`). |
-| Grouping | Sections by **spell level** (L1, L2 today). Not by class. |
-| Granularity | One effect carrying whole set. Replace, not diff. |
-| Over-limit | Allowed. Diagnostic `severity: 'error'` (app idiom for illegal-but-permitted). Counter shows `n / max`. |
-| Old offers | `preparedSpellOffers` deleted. No two ways in (Loadout precedent). |
-| Detail text | Untouched — prepare offers never carried `detailKey`. Per-row detail = follow-up. |
+| #               | Decision                                                                                                |
+| --------------- | ------------------------------------------------------------------------------------------------------- |
+| Scope           | Paladin only class implemented; mechanism class-agnostic. Known-casters: n/a (none exist).              |
+| Timing          | No long-rest gate. Picker always available. Follow-up.                                                  |
+| Cantrips        | None exist in repo. Out.                                                                                |
+| Always-prepared | Row shown, checked, disabled. Excluded from count (already true via `preparedSpellCount`).              |
+| Grouping        | Sections by **spell level** (L1, L2 today). Not by class.                                               |
+| Granularity     | One effect carrying whole set. Replace, not diff.                                                       |
+| Over-limit      | Allowed. Diagnostic `severity: 'error'` (app idiom for illegal-but-permitted). Counter shows `n / max`. |
+| Old offers      | `preparedSpellOffers` deleted. No two ways in (Loadout precedent).                                      |
+| Detail text     | Untouched — prepare offers never carried `detailKey`. Per-row detail = follow-up.                       |
 
 ## Architecture
 
@@ -46,7 +46,7 @@ Mirrors Loadout throughout (`389d1b18`, `docs/plans/ideas/loadout-change.md`).
 - `src/lib/rules-engine/rules/prepared-spells.ts`, `data/rule-groups/dnd-5e-2024/prepared-spells.yaml` (`requires: [spellcasting]`)
 - Register in `registry.ts` AND `lazy.ts`
 - One offer `set-prepared-spells`: `section: 'configuration'`, `intents: { PREPARE: 'spells' }`, `actionCost: []`, `primaryControl: { type: 'spell-prepare', var: 'prepared' }`
-- `legalWhen: [notLockedLegal]` **only** — over-cap depends on *selections*, which `legalWhen` cannot read (fact-only). Loadout does the same.
+- `legalWhen: [notLockedLegal]` **only** — over-cap depends on _selections_, which `legalWhen` cannot read (fact-only). Loadout does the same.
 - `apply(f, selections)`: over-cap diagnostic computed here — count selected non-always-prepared vs `spellcasting.prepared.max`. Advertise one effect: `key: 'prepared-spells'`, `expiry: permanent`, `state: { [preparedFact]: 1 }` per selected, `stateCombine: 'max'` per fact (composes with always-prepared grants), `display: { name }`.
 
 **Every spell yaml** gains `requires: [prepared-spells]` (Loadout precedent: the items require the picker).
@@ -71,16 +71,16 @@ Mirrors Loadout throughout (`389d1b18`, `docs/plans/ideas/loadout-change.md`).
 
 ## Reference implementations — copy these
 
-| New file | Copy from |
-| --- | --- |
-| `src/lib/rules-engine/preparedSpells.ts` | `src/lib/rules-engine/loadout.ts` |
-| `src/lib/rules-engine/rules/prepared-spells.ts` | `src/lib/rules-engine/rules/loadout.ts` |
-| `data/rule-groups/dnd-5e-2024/prepared-spells.yaml` | `data/rule-groups/dnd-5e-2024/loadout.yaml` |
-| `.../panel-renderer/PanelSpellPrepare.svelte` | `.../panel-renderer/PanelLoadout.svelte` |
-| `src/lib/play/currentPrepared.ts` | `src/lib/play/currentLoadout.ts` |
-| `tests/unit/svelte/PanelSpellPrepare.test.ts` | `tests/unit/svelte/PanelLoadout.test.ts` |
-| `...PanelSpellPrepare-summary.test.ts` | `tests/unit/lib/components/play/panel-renderer/PanelLoadout-summary.test.ts` |
-| `tests/unit/lib/play/currentPrepared.test.ts` | `tests/unit/lib/play/currentLoadout.test.ts` |
+| New file                                            | Copy from                                                                    |
+| --------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `src/lib/rules-engine/preparedSpells.ts`            | `src/lib/rules-engine/loadout.ts`                                            |
+| `src/lib/rules-engine/rules/prepared-spells.ts`     | `src/lib/rules-engine/rules/loadout.ts`                                      |
+| `data/rule-groups/dnd-5e-2024/prepared-spells.yaml` | `data/rule-groups/dnd-5e-2024/loadout.yaml`                                  |
+| `.../panel-renderer/PanelSpellPrepare.svelte`       | `.../panel-renderer/PanelLoadout.svelte`                                     |
+| `src/lib/play/currentPrepared.ts`                   | `src/lib/play/currentLoadout.ts`                                             |
+| `tests/unit/svelte/PanelSpellPrepare.test.ts`       | `tests/unit/svelte/PanelLoadout.test.ts`                                     |
+| `...PanelSpellPrepare-summary.test.ts`              | `tests/unit/lib/components/play/panel-renderer/PanelLoadout-summary.test.ts` |
+| `tests/unit/lib/play/currentPrepared.test.ts`       | `tests/unit/lib/play/currentLoadout.test.ts`                                 |
 
 `EquipDef` shape to mirror: `src/lib/rules-engine/types.ts:73-95`. Whole-feature diff: `git show 389d1b18`.
 
@@ -88,22 +88,22 @@ Mirrors Loadout throughout (`389d1b18`, `docs/plans/ideas/loadout-change.md`).
 
 All in `src/lib/rules-engine/rules/`. Each: delete the `...preparedSpellOffers({...})` spread, add `prepare: {...}`, leave `preparedSpellCount` in `derive` alone. `alwaysPreparedFact` is always `<preparedFact minus .prepared>.alwaysPrepared`.
 
-| module | preparedFact | level |
-| --- | --- | --- |
-| `bless.ts` | `spell.l1.bless.prepared` | 1 |
-| `command.ts` | `spell.l1.command.prepared` | 1 |
-| `create-and-destroy-water.ts` | `spell.l1.createAndDestroyWater.prepared` | 1 |
-| `divine-favour.ts` | `spell.l1.divineFavour.prepared` | 1 |
-| `divine-smite.ts` | `spell.l1.divineSmite.prepared` | 1 |
-| `protection-from-evil-and-good.ts` | `spell.l1.protectionFromEvilAndGood.prepared` | 1 |
-| `sanctuary.ts` | `spell.l1.sanctuary.prepared` | 1 |
-| `sleep.ts` | `spell.l1.sleep.prepared` | 1 |
-| `thunderous-smite.ts` | `spell.l1.thunderousSmite.prepared` | 1 |
-| `calm-emotions.ts` | `spell.l2.calmEmotions.prepared` | 2 |
-| `find-steed.ts` | `spell.l2.findSteed.prepared` | 2 |
-| `hold-person.ts` | `spell.l2.holdPerson.prepared` | 2 |
-| `prayer-of-healing.ts` | `spell.l2.prayerOfHealing.prepared` | 2 |
-| `spell-aid.ts` | `spell.l2.aid.prepared` | 2 |
+| module                             | preparedFact                                  | level |
+| ---------------------------------- | --------------------------------------------- | ----- |
+| `bless.ts`                         | `spell.l1.bless.prepared`                     | 1     |
+| `command.ts`                       | `spell.l1.command.prepared`                   | 1     |
+| `create-and-destroy-water.ts`      | `spell.l1.createAndDestroyWater.prepared`     | 1     |
+| `divine-favour.ts`                 | `spell.l1.divineFavour.prepared`              | 1     |
+| `divine-smite.ts`                  | `spell.l1.divineSmite.prepared`               | 1     |
+| `protection-from-evil-and-good.ts` | `spell.l1.protectionFromEvilAndGood.prepared` | 1     |
+| `sanctuary.ts`                     | `spell.l1.sanctuary.prepared`                 | 1     |
+| `sleep.ts`                         | `spell.l1.sleep.prepared`                     | 1     |
+| `thunderous-smite.ts`              | `spell.l1.thunderousSmite.prepared`           | 1     |
+| `calm-emotions.ts`                 | `spell.l2.calmEmotions.prepared`              | 2     |
+| `find-steed.ts`                    | `spell.l2.findSteed.prepared`                 | 2     |
+| `hold-person.ts`                   | `spell.l2.holdPerson.prepared`                | 2     |
+| `prayer-of-healing.ts`             | `spell.l2.prayerOfHealing.prepared`           | 2     |
+| `spell-aid.ts`                     | `spell.l2.aid.prepared`                       | 2     |
 
 `nameKey`: reuse the module's existing `meta.name` key (its `O`/prefix const).
 
@@ -138,7 +138,7 @@ play.spellPrepare.alwaysPrepared # disabled-row hint
 
 Interpolated keys need stubs in `tests/setup.ts` (see the `play.loadout.handsFree.*` precedent at :31-33).
 
-Delete (both locales): every `rule.spell-*.prepare-*-offer.*`, `rule.spell-*.unprepare-*-offer.*`, `rule.spell-*.effect-*-prepared.name`, and `play.verbBuckets.PREPARE.L1` / `.L2` — all dead once the offers go. `module-i18n-coverage` will not catch a *stale* key, so sweep by hand.
+Delete (both locales): every `rule.spell-*.prepare-*-offer.*`, `rule.spell-*.unprepare-*-offer.*`, `rule.spell-*.effect-*-prepared.name`, and `play.verbBuckets.PREPARE.L1` / `.L2` — all dead once the offers go. `module-i18n-coverage` will not catch a _stale_ key, so sweep by hand.
 
 ## Gotchas found while planning
 

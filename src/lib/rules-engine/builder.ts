@@ -25,8 +25,12 @@ import { enumeratePreparableSpells, preparedEffectState } from './preparedSpells
 export { statToModifier } from './functions';
 
 const BUILD_LOCKED = 'rule.dnd-5e-2024.build-lock.locked';
-/** A BUILD offer is illegal while the build is locked (the build-lock group). */
-const notLockedLegal: LegalWhen = {
+/**
+ * A BUILD offer is illegal while the build is locked (the build-lock group).
+ * Shared by the offer builders here and by rule modules that carry their own
+ * build-time offers (e.g. prepared-spells' set picker).
+ */
+export const notLockedLegal: LegalWhen = {
   condition: (f) => f.num('build.locked') === 0,
   diagnostics: [{ code: BUILD_LOCKED, severity: 'error' }]
 };

@@ -14,7 +14,10 @@ import type { RuleModule } from '$lib/rules-engine/types';
  */
 
 /** A module that declares a preparable spell — everything but `prepare` is noise here. */
-const preparable = (prepare: PrepareDef): RuleModule => ({ id: `spell-${prepare.spellId}`, prepare });
+const preparable = (prepare: PrepareDef): RuleModule => ({
+  id: `spell-${prepare.spellId}`,
+  prepare
+});
 
 const BLESS: PrepareDef = {
   spellId: 'bless',
@@ -63,15 +66,38 @@ describe('enumeratePreparableSpells', () => {
   });
 
   it('orders by level ascending, then spellId ascending', () => {
-    const modules = [HANDS, preparable(AID), preparable(CALM_EMOTIONS), preparable(SLEEP), preparable(BLESS)];
-    expect(
-      enumeratePreparableSpells(modules).map((d) => `${d.level}|${d.spellId}`)
-    ).toEqual(['1|bless', '1|sleep', '2|aid', '2|calm-emotions']);
+    const modules = [
+      HANDS,
+      preparable(AID),
+      preparable(CALM_EMOTIONS),
+      preparable(SLEEP),
+      preparable(BLESS)
+    ];
+    expect(enumeratePreparableSpells(modules).map((d) => `${d.level}|${d.spellId}`)).toEqual([
+      '1|bless',
+      '1|sleep',
+      '2|aid',
+      '2|calm-emotions'
+    ]);
   });
 
   it('is pure: the same modules in a different order yield the same list', () => {
-    const modules = [HANDS, preparable(AID), preparable(SLEEP), preparable(BLESS), AC, preparable(CALM_EMOTIONS)];
-    const shuffled = [AC, preparable(CALM_EMOTIONS), HANDS, preparable(BLESS), preparable(AID), preparable(SLEEP)];
+    const modules = [
+      HANDS,
+      preparable(AID),
+      preparable(SLEEP),
+      preparable(BLESS),
+      AC,
+      preparable(CALM_EMOTIONS)
+    ];
+    const shuffled = [
+      AC,
+      preparable(CALM_EMOTIONS),
+      HANDS,
+      preparable(BLESS),
+      preparable(AID),
+      preparable(SLEEP)
+    ];
     expect(enumeratePreparableSpells(shuffled)).toEqual(enumeratePreparableSpells(modules));
   });
 

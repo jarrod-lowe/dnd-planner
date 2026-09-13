@@ -1359,6 +1359,19 @@
           "name": "Hand free"
         }
       },
+      "prepared-spells": {
+        "set-prepared-spells": {
+          "name": "Prepare Spells",
+          "keywords": "prepare spells memorize study set",
+          "description": "Choose your prepared spells as one whole set"
+        },
+        "set-prepared-spells-offer": {
+          "over-cap": "That is more spells than you can prepare"
+        },
+        "effect-prepared-spells": {
+          "name": "Prepared Spells"
+        }
+      },
       "leather-armor": {
         "don-leather-armor": {
           "name": "Don Leather Armor",
@@ -2026,7 +2039,8 @@
       },
       "PREPARE": {
         "L1": "Level 1",
-        "L2": "Level 2"
+        "L2": "Level 2",
+        "spells": "Spells"
       },
       "EQUIP": {
         "weapons": "Weapons",
