@@ -31,6 +31,10 @@ vi.mock('sveltekit-i18n', () => {
     'play.loadout.handsFree.none': 'no hands free',
     'play.loadout.handsFree.one': '1 hand free',
     'play.loadout.handsFree.many': '{{count}} hands free',
+    'play.spellPrepare.groupLabel': 'Prepared spells',
+    'play.spellPrepare.level': 'Level {{level}}',
+    'play.spellPrepare.counter': '{{count}} / {{max}} prepared',
+    'play.spellPrepare.alwaysPrepared': 'Always prepared',
     // Deliberately spelled differently from the raw rule-authored tokens
     // ('hp', 'ft') they translate: a component that skips
     // `formatUnitValue`/`unitLabel` and concatenates `control.unit` raw

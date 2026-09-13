@@ -2101,6 +2101,12 @@
         "many": "{{count}} ghopDu' chIm"
       }
     },
+    "spellPrepare": {
+      "groupLabel": "lay'lu'bogh ghommey",
+      "level": "ghom {{level}}",
+      "counter": "{{count}} / {{max}} lay'lu'",
+      "alwaysPrepared": "reH lay'lu'"
+    },
     "costTags": {
       "action": "ACT",
       "bonus": "BON",

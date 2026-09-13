@@ -2101,6 +2101,12 @@
         "many": "{{count}} hands free"
       }
     },
+    "spellPrepare": {
+      "groupLabel": "Prepared spells",
+      "level": "Level {{level}}",
+      "counter": "{{count}} / {{max}} prepared",
+      "alwaysPrepared": "Always prepared"
+    },
     "costTags": {
       "action": "ACT",
       "bonus": "BON",

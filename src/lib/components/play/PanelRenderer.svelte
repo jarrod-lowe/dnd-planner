@@ -12,6 +12,9 @@
   import PanelTextInput, { textInputIsEmpty } from './panel-renderer/PanelTextInput.svelte';
   import PanelSegmented, { segmentedIsEmpty } from './panel-renderer/PanelSegmented.svelte';
   import PanelLoadout, { loadoutIsEmpty } from './panel-renderer/PanelLoadout.svelte';
+  import PanelSpellPrepare, {
+    spellPrepareIsEmpty
+  } from './panel-renderer/PanelSpellPrepare.svelte';
   import DiceRollToast from './panel-renderer/DiceRollToast.svelte';
   import { evaluateCondition } from '$lib/play/panelCondition';
   import { getMatchingAnnotations } from '$lib/play/annotations';
@@ -156,6 +159,9 @@
   const primaryLoadout = $derived(
     descriptor.primaryControl?.type === 'loadout' ? descriptor.primaryControl : undefined
   );
+  const primarySpellPrepare = $derived(
+    descriptor.primaryControl?.type === 'spell-prepare' ? descriptor.primaryControl : undefined
+  );
   const secondarySlider = $derived(
     descriptor.secondaryControl?.type === 'slider' ? descriptor.secondaryControl : undefined
   );
@@ -179,6 +185,9 @@
   );
   const primaryLoadoutEmpty = $derived(
     primaryLoadout ? loadoutIsEmpty(primaryLoadout, modules, selections) : false
+  );
+  const primarySpellPrepareEmpty = $derived(
+    primarySpellPrepare ? spellPrepareIsEmpty(primarySpellPrepare, modules, selections) : false
   );
   const primaryHitDiceEmpty = $derived(
     primaryHitDice ? hitDiceIsEmpty(primaryHitDice, facts, vars, selections) : false
@@ -315,6 +324,7 @@
   const showsPrimarySelect = $derived(!!primarySelect && !primarySelectEmpty);
   const showsPrimaryTextInput = $derived(!!primaryTextInput && !primaryTextInputEmpty);
   const showsPrimaryLoadout = $derived(!!primaryLoadout && !primaryLoadoutEmpty);
+  const showsPrimarySpellPrepare = $derived(!!primarySpellPrepare && !primarySpellPrepareEmpty);
   const showsSecondarySlider = $derived(secondaryShouldRender && !!secondarySlider);
   const showsSecondaryDiceLine = $derived(
     secondaryShouldRender && !!secondaryDiceLine && !secondaryDiceLineEmpty
@@ -352,7 +362,8 @@
   const beforePrimarySelect = $derived(beforePrimaryHitDice || showsPrimaryHitDice);
   const beforePrimaryTextInput = $derived(beforePrimarySelect || showsPrimarySelect);
   const beforePrimaryLoadout = $derived(beforePrimaryTextInput || showsPrimaryTextInput);
-  const beforeSecondarySlider = $derived(beforePrimaryLoadout || showsPrimaryLoadout);
+  const beforePrimarySpellPrepare = $derived(beforePrimaryLoadout || showsPrimaryLoadout);
+  const beforeSecondarySlider = $derived(beforePrimarySpellPrepare || showsPrimarySpellPrepare);
   const beforeSecondaryDiceLine = $derived(beforeSecondarySlider || showsSecondarySlider);
   const beforeSecondaryHitDice = $derived(beforeSecondaryDiceLine || showsSecondaryDiceLine);
   const beforeSecondarySelect = $derived(beforeSecondaryHitDice || showsSecondaryHitDice);
@@ -628,6 +639,26 @@
         <PanelLoadout
           control={primaryLoadout}
           {editable}
+          {modules}
+          {selections}
+          {onSelectionChange}
+          {summary}
+        />
+      </div>
+    {/if}
+    <!-- Unlike the loadout (which always has at least the empty-hands
+         configuration), a spell-prepare picker with no preparable spells has
+         NOTHING to render — not even a counter worth reading — so the empty
+         check hides it in expanded mode too, not only in summary mode. -->
+    {#if primarySpellPrepare && !primarySpellPrepareEmpty}
+      {#if summary && beforePrimarySpellPrepare}
+        <span class="panel-renderer__separator" aria-hidden="true">·</span>
+      {/if}
+      <div class="panel-renderer__control">
+        <PanelSpellPrepare
+          control={primarySpellPrepare}
+          {editable}
+          {facts}
           {modules}
           {selections}
           {onSelectionChange}

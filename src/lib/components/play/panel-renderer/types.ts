@@ -231,6 +231,21 @@ export interface LoadoutControl extends ControlBase {
   var: string;
 }
 
+/**
+ * The prepared-spells picker (`set-prepared-spells`).
+ *
+ * Carries no options: the preparable spells are not authorable, they are
+ * enumerated from the spell modules the character has assigned
+ * (`enumeratePreparableSpells`). The selection written to `var` is the whole
+ * ARRAY of chosen `PrepareDef` objects, not a value — the committed effect is
+ * one whole-set replacement, which is why no single-select control can serve
+ * here.
+ */
+export interface SpellPrepareControl extends ControlBase {
+  type: 'spell-prepare';
+  var: string;
+}
+
 export type Control =
   | DiceLineControl
   | HitDiceControl
@@ -238,7 +253,8 @@ export type Control =
   | SelectControl
   | TextInputControl
   | SegmentedControl
-  | LoadoutControl;
+  | LoadoutControl
+  | SpellPrepareControl;
 
 export interface TextInformation {
   type: 'text';
