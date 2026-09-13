@@ -326,6 +326,8 @@ const EXPECTED_RUNNABLE = [
   'spell-no-slots',
   // M3 — sanctuary (L1 bonus-action ward, dismissed on rest)
   'sanctuary-cast',
+  // Shield of Faith — L1 bonus-action concentration ward (+2 AC)
+  'shield-of-faith-cast',
   'sanctuary-long-rest-dismissal',
   'sanctuary-prepare',
   'sanctuary-rest-dismissal',

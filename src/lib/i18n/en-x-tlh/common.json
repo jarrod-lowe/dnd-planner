@@ -277,6 +277,20 @@
         "no_slots": "mugh laH tu'lu'be'"
       }
     },
+    "spell-shield-of-faith": {
+      "offer-shield-of-faith": {
+        "name": "Suto' quv",
+        "keywords": "ward shield ac abjuration defend bonus",
+        "description": "Quv DIvI' | 10 rep | +2 Suto' | buQ",
+        "no_bonus_action": "Quv DIvI' tu'lu'be'",
+        "no_spellcasting": "mugh DIvI' tu'lu'be'",
+        "already_concentrating": "buQ DIvI'",
+        "no_slots": "mugh laH tu'lu'be'"
+      },
+      "effect-shield-of-faith": {
+        "name": "Suto' quv"
+      }
+    },
     "spell-divine-favour": {
       "offer-divine-favour": {
         "name": "quv",

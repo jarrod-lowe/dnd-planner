@@ -6,6 +6,7 @@ ruleGroups:
       - spell-divine-favour
       - spell-divine-smite
       - spell-protection-from-evil-and-good
+      - spell-shield-of-faith
     translations:
       en:
         name: Paladin Spells Level 1

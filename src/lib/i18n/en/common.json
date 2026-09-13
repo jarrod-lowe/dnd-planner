@@ -277,6 +277,20 @@
         "no_slots": "No spell slots remaining"
       }
     },
+    "spell-shield-of-faith": {
+      "offer-shield-of-faith": {
+        "name": "Shield of Faith",
+        "keywords": "ward shield ac abjuration defend bonus",
+        "description": "Bonus action | 10 rnds | +2 AC | Concentration",
+        "no_bonus_action": "No bonus action available",
+        "no_spellcasting": "Already cast a spell this turn",
+        "already_concentrating": "Already concentrating",
+        "no_slots": "No spell slots remaining"
+      },
+      "effect-shield-of-faith": {
+        "name": "Shield of Faith"
+      }
+    },
     "spell-divine-favour": {
       "offer-divine-favour": {
         "name": "Divine Favour",

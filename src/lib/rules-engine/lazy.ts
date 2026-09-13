@@ -93,7 +93,8 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   'spear-plus1': () => import('./rules/spear-plus1'),
   'feat-savage-attacker': () => import('./rules/feat-savage-attacker'),
   'spell-aid': () => import('./rules/spell-aid'),
-  'spell-prayer-of-healing': () => import('./rules/prayer-of-healing')
+  'spell-prayer-of-healing': () => import('./rules/prayer-of-healing'),
+  'spell-shield-of-faith': () => import('./rules/shield-of-faith')
 };
 
 export interface LoadResult {
