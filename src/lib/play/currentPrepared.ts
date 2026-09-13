@@ -15,11 +15,18 @@ import type { PrepareDef, RuleModule } from '$lib/rules-engine/types';
  * than on an empty one (which, committed, would unprepare everything). Like
  * `currentLoadout`, it claims only what the facts carry: an absent fact reads as
  * 0 — the engine drops facts that settle to nothing — and `alwaysPrepared`
- * alone does not seed a spell. The panel renders such rows checked from its own
- * read of the `alwaysPrepared` fact and excludes them from every count, so
- * membership would be inert; seeding it would only make an untouched commit
- * write a `prepared` fact the character never had.
+ * alone does not seed a spell.
+ *
+ * A grant-covered spell — `alwaysPrepared` 1 — does not seed either, even when
+ * the grant also wrote `prepared` 1. The panel renders such rows checked from
+ * its own `locked ||` read of the `alwaysPrepared` fact and excludes them from
+ * every count; seeding one would make an untouched commit bake `prepared: 1`
+ * into the permanent `prepared-spells` effect, turning a class-granted
+ * preparation into a manual one that outlives the grant (e.g. after unassigning
+ * the granting feature) and silently consumes cap.
  */
 export function currentPrepared(modules: RuleModule[], facts: Facts): PrepareDef[] {
-  return enumeratePreparableSpells(modules).filter((def) => (facts[def.preparedFact] ?? 0) === 1);
+  return enumeratePreparableSpells(modules).filter(
+    (def) => (facts[def.preparedFact] ?? 0) === 1 && (facts[def.alwaysPreparedFact] ?? 0) !== 1
+  );
 }
