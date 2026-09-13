@@ -102,7 +102,7 @@ const cureWounds: RuleModule = {
             }
           ]
         },
-        intents: { AID: 'self' },
+        intents: { AID: 'ally' },
         actionCost: ['action', 'L1']
       },
       vars: {

@@ -39,6 +39,7 @@ Source files: `data/rule-groups/`, `data/rule-sources/weapons.yaml`
 | ally     | Influence                    | action             | `simple-actions.yaml`                       |
 | ally     | Help                         | action             | `free-actions.yaml`                         |
 | ally     | Bless                        | action + conc + L1 | `spells/bless.yaml`                         |
+| ally     | Cure Wounds                  | action + L1        | `spells/cure-wounds.yaml`                   |
 | self     | Lay on Hands — Heal          | bonus + LoH        | `class-paladin/lay-on-hands.yaml`           |
 | self     | Lay on Hands — Purify Poison | bonus + LoH        | `class-paladin/lay-on-hands.yaml`           |
 | self     | Use Heroic Inspiration       | free               | `heroic-inspiration.yaml`                   |

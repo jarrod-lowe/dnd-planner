@@ -42,6 +42,10 @@ describe('cure-wounds — structural gate', () => {
     expect(offer(evaluateSheet(ALL, UNPREPARED))).toBeUndefined();
     expect(offer(evaluateSheet(ALL, PREPARED))).toBeDefined();
   });
+
+  it('files the cast under the ally aid bucket — the touch target is usually an ally', () => {
+    expect(offer(evaluateSheet(ALL, PREPARED))?.ui.intents).toEqual({ AID: 'ally' });
+  });
 });
 
 describe('cure-wounds — casting', () => {
