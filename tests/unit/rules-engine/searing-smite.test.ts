@@ -26,11 +26,6 @@ const PREPARED: Facts = {
 };
 const UNPREPARED: Facts = { 'spellcasting.slots.level1.total': 2, 'weapon.spear.equipped': 1 };
 
-/** A spear swing with the Attack action — a melee hit. */
-const attack = (instanceId: string): PlannedRef => ({
-  instanceId,
-  ruleId: 'spear-use-action'
-});
 /** A spear opportunity attack — a melee hit that spends the REACTION. */
 const reaction = (instanceId: string): PlannedRef => ({
   instanceId,
