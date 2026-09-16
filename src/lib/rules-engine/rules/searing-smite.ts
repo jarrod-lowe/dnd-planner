@@ -22,8 +22,9 @@ const FIRE = 'fire';
  * SRD 5.2 gives Searing Smite a FLAT 1-minute duration (the paladin spell table
  * shows Special = "—"), so this is NOT concentration. The cast raises
  * `effect-searing-smite`, a 10-round marker carrying the per-turn fire dice
- * (`ssmite.burnDice`, the chip's displayFact — "Nd6 fire/turn" for a slot-N
- * cast); the hit's extra fire damage is a dice-line rider, and the target's
+ * (a literal display value — "Nd6 fire/turn" for a slot-N cast, so stacked
+ * burns on several targets each show their own dice); the hit's extra fire
+ * damage is a dice-line rider, and the target's
  * saves are untracked world state — a successful save ends the spell early, so
  * the user dismisses the chip (the Thunderous Smite push precedent for the
  * parts that live on the target).
@@ -166,7 +167,10 @@ const searingSmite: RuleModule = {
             state: { 'ssmite.burnDice': level },
             display: {
               name: 'rule.spell-searing-smite.effect-searing-smite.name',
-              displayFact: 'ssmite.burnDice'
+              // The literal per-effect amount, NOT a displayFact: burns on
+              // several targets stack as separate chips, and the summed fact
+              // would show the total on every chip.
+              value: level
             },
             expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]
           }

@@ -85,6 +85,22 @@ describe('searing-smite — casting', () => {
     expect(facts['ssmite.burnDice']).toBe(3); // 3d6 fire/turn for a slot-3 cast
   });
 
+  it("keeps each burn's dice on its own effect — two targets, two slot levels", () => {
+    const TWO: Facts = {
+      'spellcasting.slots.level1.total': 1,
+      'spellcasting.slots.level3.total': 1,
+      'spell.l1.searingSmite.prepared': 1,
+      'attack.last.melee': 1
+    };
+    // The second cast is bonus-action-starved (planned anyway) but still
+    // advertises its burn — the two chips must each carry their OWN dice,
+    // not the summed fact.
+    const { advertised } = evaluatePlan(ALL, TWO, [cast('c1'), cast('c2', 3)]);
+    const burns = advertised.filter((e) => e.id.split('#').pop() === 'effect-searing-smite');
+    expect(burns).toHaveLength(2);
+    expect(burns.map((e) => (e.display as { value?: number }).value ?? 0).sort()).toEqual([1, 3]);
+  });
+
   it('the burn ages out after its 10-round duration (1 minute)', () => {
     const { advertised } = evaluatePlan(ALL, PREPARED, [unarmed('a1'), cast('c1')]);
     let committed = endTurn([], advertised, { longRest: false }); // 9 rounds left
