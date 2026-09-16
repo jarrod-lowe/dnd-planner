@@ -26,9 +26,9 @@ describe('feat-sentinel annotate — notices + reaction rider', () => {
   it('emits exactly three annotations: two notices, one reaction-panel rider', () => {
     const out = evaluate({ modules: [featSentinel], inputFacts: {}, planned: [] });
     expect(out.annotations.map((a) => a.key).sort()).toEqual([
+      `${S}.annotation-speed`,
       `${S}.notice-disengage`,
-      `${S}.notice-retaliate`,
-      `${S}.notice-speed`
+      `${S}.notice-retaliate`
     ]);
 
     const notices = out.annotations.filter((a) => a.targets.includes(NOTICE_TARGET));
@@ -43,7 +43,7 @@ describe('feat-sentinel annotate — notices + reaction rider', () => {
     // Exactly one panel-targeted annotation, and it is the post-hoc speed
     // rider aimed at the reaction panels' label.
     const riders = out.annotations.filter((a) => !a.targets.includes(NOTICE_TARGET));
-    expect(riders.map((a) => a.key)).toEqual([`${S}.notice-speed`]);
+    expect(riders.map((a) => a.key)).toEqual([`${S}.annotation-speed`]);
     for (const a of riders) {
       expect(a.targets, `${a.key} rides the reaction panel label`).toEqual([REACTION_PANEL_LABEL]);
     }
@@ -58,8 +58,8 @@ describe('feat-sentinel annotate — notices + reaction rider', () => {
       expect(ann!.body).toBe(`${S}.${suffix}.body`);
     }
 
-    const speed = out.annotations.find((a) => a.key === `${S}.notice-speed`);
-    expect(speed, `${S}.notice-speed exists`).toBeDefined();
+    const speed = out.annotations.find((a) => a.key === `${S}.annotation-speed`);
+    expect(speed, `${S}.annotation-speed exists`).toBeDefined();
     expect(speed!.source).toBe(`${S}.name`);
     // Panels render $t(annotation.key) only, so a body key — and its
     // translation — would be dead weight.

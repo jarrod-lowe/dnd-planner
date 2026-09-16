@@ -14,8 +14,10 @@ const S = 'rule.dnd-5e-2024.feat-sentinel';
  * The speed-to-0 benefit is post-hoc — it only matters AFTER the player
  * plans an Opportunity Attack — so it rides the reaction panels via their
  * `'attack.reaction'` annotationLabels (same confinement rule as 'notice':
- * a literal here, pinned by the tests). Panels render the annotation label
- * only (`$t(annotation.key)`), so it carries no `body`.
+ * a literal here, pinned by the tests), and its key follows the panel-rider
+ * `annotation-*` naming (feat-alert's annotation-swap idiom). Panels render
+ * the annotation label only (`$t(annotation.key)`), so the full sentence
+ * lives in the label copy and it carries no `body`.
  *
  * The feat's Ability Score Improvement offer is deferred (no runnable
  * scenario exercises it). Foundational, so no search meta.
@@ -39,7 +41,7 @@ const featSentinel: RuleModule = {
             body: `${S}.notice-retaliate.body`
           },
           {
-            key: `${S}.notice-speed`,
+            key: `${S}.annotation-speed`,
             targets: ['attack.reaction'],
             source: `${S}.name`
           }

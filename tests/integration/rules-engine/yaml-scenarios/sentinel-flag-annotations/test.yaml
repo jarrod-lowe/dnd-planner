@@ -16,7 +16,7 @@ steps:
           exists:
             - rule.dnd-5e-2024.feat-sentinel.notice-disengage
             - rule.dnd-5e-2024.feat-sentinel.notice-retaliate
-            - rule.dnd-5e-2024.feat-sentinel.notice-speed
+            - rule.dnd-5e-2024.feat-sentinel.annotation-speed
           # Disengage and ally-hit retaliation are standing notices; the
           # speed-to-0 rider is post-hoc (matters only after an Opportunity
           # Attack is planned), so it targets the reaction panels' label.
@@ -25,5 +25,5 @@ steps:
               targets: [notice]
             - key: rule.dnd-5e-2024.feat-sentinel.notice-retaliate
               targets: [notice]
-            - key: rule.dnd-5e-2024.feat-sentinel.notice-speed
+            - key: rule.dnd-5e-2024.feat-sentinel.annotation-speed
               targets: [attack.reaction]
