@@ -207,7 +207,7 @@
       "annotation": "Thunderous Smite available",
       "offer-thunderous-smite": {
         "name": "Thunderous Smite",
-        "keywords": "smite thunder damage push knock",
+        "keywords": "smite thunder damage push knock unarmed",
         "description": "After a melee hit | +2d6 thunder | STR save or pushed 10ft & prone",
         "no_bonus_action": "No bonus action available",
         "no_attack": "You must make a melee attack first",
