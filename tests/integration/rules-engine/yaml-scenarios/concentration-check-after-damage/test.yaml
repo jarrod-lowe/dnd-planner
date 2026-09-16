@@ -31,9 +31,9 @@ steps:
           exists:
             - cast-bless
         annotations:
-          # Slot free: no concentrating notice.
+          # Slot free: no damage-recorder annotation.
           notExists:
-            - planner.concentration.notice
+            - planner.concentration.annotation
   - addOffer:
       id: cast-bless
       assert:
@@ -41,10 +41,13 @@ steps:
           concentration.remaining: 0
         annotations:
           exists:
-            - planner.concentration.notice
+            - planner.concentration.annotation
           targets:
-            - key: planner.concentration.notice
-              targets: [notice]
+            # Post-hoc reminder: it rides the record-damage panel via the
+            # recorder's damage.any annotationLabel (the record-heal /
+            # healing.any idiom), not the notices strip.
+            - key: planner.concentration.annotation
+              targets: [damage.any]
   - endTurn:
       assert:
         effects:

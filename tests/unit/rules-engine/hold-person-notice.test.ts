@@ -1,29 +1,22 @@
 import { describe, it, expect } from 'vitest';
-import { evaluate, evaluatePlan, NOTICE_TARGET } from '$lib/rules-engine';
+import { evaluate, NOTICE_TARGET } from '$lib/rules-engine';
 import type { Facts, PlannedRef } from '$lib/rules-engine';
-import enCommon from '$lib/i18n/en/common.json';
-import tlhCommon from '$lib/i18n/en-x-tlh/common.json';
 import actionEconomy from '$lib/rules-engine/rules/action-economy';
 import spellcasting from '$lib/rules-engine/rules/spellcasting';
 import concentration from '$lib/rules-engine/rules/concentration';
 import holdPerson from '$lib/rules-engine/rules/hold-person';
 
 /**
- * Notices batch 2 — Hold Person's repeat-save reminder.
- *
- * The hold used to be a display-only duration chip: it wrote
- * `concentration.spent` but no spell-specific fact, so nothing could gate a
- * reminder on the spell itself. The cast now also writes `holdPerson.active: 1`
- * on the committed `effect-hold-person` marker (the `ssmite.burnDice`
- * precedent): the fact lives exactly as long as the effect — dismissing the
- * chip (un-committing) removes the state delta (and releases concentration),
- * so the fact reads 0 again and the notice goes with it. While a target is
- * held, a NOTICE carries the repeat-save rule, its DC interpolated from
- * `spellcasting.saveDC`. The rule module cannot import the constant (rule
- * modules import only the builder), so this test pins its literal 'notice' to
- * NOTICE_TARGET.
+ * Notices batch 2 follow-up (user ruling): Hold Person is a concentration
+ * spell, so its repeat-save reminder gets the SAME treatment as Concentrating,
+ * not a spell-specific one. The cast's `effect-hold-person` marker spends the
+ * concentration slot; the generic concentration reminder, keyed on
+ * `concentration.remaining`, is what covers a held target — exactly as for
+ * every other concentration spell. This pins that the module itself annotates
+ * nothing and writes no private hold marker fact, so the held state cannot
+ * grow a second reminder surface.
  */
-const P = 'rule.spell-hold-person';
+const R = 'rule.spell-hold-person';
 const ALL = [actionEconomy, spellcasting, concentration, holdPerson];
 // A genuine L2 caster kit for this module set: slots + prepared are inputs (no
 // class-level module here), and prof/modifier make the save DC a real number.
@@ -35,65 +28,18 @@ const FACTS: Facts = {
 };
 const cast = (instanceId: string): PlannedRef => ({ instanceId, ruleId: 'cast-hold-person' });
 
-describe('hold-person annotate — notice', () => {
-  it('a committed hold raises a notice carrying the spell save DC', () => {
+describe('hold-person annotate — no notice', () => {
+  it('a held target raises no hold-person notice; concentration is the reminder', () => {
     const out = evaluate({ modules: ALL, inputFacts: FACTS, planned: [cast('c1')] });
-    expect(out.facts['holdPerson.active'], 'a target is held in this state').toBe(1);
-    expect(out.facts['spellcasting.saveDC']).toBe(14); // 8 + 2 prof + 4 modifier
-    const notice = out.annotations.find((a) => a.key === `${P}.notice`);
-    expect(notice, 'notice exists while a target is held').toBeDefined();
-    expect(notice!.targets).toEqual([NOTICE_TARGET]);
-    expect(notice!.source).toBe(`${P}.offer-hold-person.name`);
-    expect(notice!.body).toBe(`${P}.notice.body`);
-    expect(notice!.values).toEqual({ dc: out.facts['spellcasting.saveDC'] });
-    // Concentration is held too, so the concentration damage-save notice rides
-    // along — the two must coexist, not replace each other.
-    expect(out.annotations.find((a) => a.key === 'planner.concentration.notice')).toBeDefined();
-  });
-
-  it('emits no notice while nothing is held', () => {
-    const out = evaluate({ modules: ALL, inputFacts: FACTS, planned: [] });
-    expect(out.facts['holdPerson.active'] ?? 0).toBe(0);
-    expect(out.annotations.find((a) => a.key === `${P}.notice`)).toBeUndefined();
-  });
-
-  it('un-committing the hold chip removes the fact, the notice, and the concentration hold', () => {
-    const { advertised } = evaluatePlan(ALL, FACTS, [cast('c1')]);
-    // The committed marker keeps the hold (and its notice) alive…
-    const committed = evaluate({
-      modules: ALL,
-      inputFacts: FACTS,
-      planned: [],
-      committed: advertised
-    });
-    expect(committed.facts['holdPerson.active']).toBe(1);
-    expect(committed.annotations.some((a) => a.key === `${P}.notice`)).toBe(true);
-
-    // …and dismissing the chip drops the effect, whose state delta was the ONLY
-    // writer of the fact — the hold (and both notices it gates) is gone, and
-    // the concentration spend went with the same effect.
-    const dismissed = advertised.filter((e) => e.id.split('#').pop() !== 'effect-hold-person');
-    const after = evaluate({
-      modules: ALL,
-      inputFacts: FACTS,
-      planned: [],
-      committed: dismissed
-    });
-    expect(after.facts['holdPerson.active'] ?? 0).toBe(0);
-    expect(after.annotations.find((a) => a.key === `${P}.notice`)).toBeUndefined();
-    expect(after.facts['concentration.remaining']).toBe(1);
-    expect(after.annotations.find((a) => a.key === 'planner.concentration.notice')).toBeUndefined();
-  });
-
-  it('the body template interpolates only the DC — in both locales', () => {
-    for (const catalog of [enCommon, tlhCommon]) {
-      const ns = (catalog.rule as unknown as Record<string, Record<string, string | undefined>>)[
-        'spell-hold-person'
-      ];
-      const body = ns?.['notice.body'];
-      expect(body, 'body template exists').toBeDefined();
-      // {{dc}} double-brace (sveltekit-i18n), and it is the ONLY param.
-      expect(body?.match(/{{[a-zA-Z]+}}/g)).toEqual(['{{dc}}']);
-    }
+    // The cast holds concentration: the effect's `concentration.spent` is the
+    // held state — the fact the generic concentration reminder keys on.
+    expect(out.facts['concentration.remaining'], 'the hold spends the concentration slot').toBe(0);
+    expect(out.facts['holdPerson.active'], 'no private hold marker fact').toBeUndefined();
+    const own = out.annotations.filter((a) => a.key.startsWith(`${R}.`));
+    expect(own, 'hold-person itself annotates nothing').toEqual([]);
+    expect(
+      own.some((a) => a.targets.includes(NOTICE_TARGET)),
+      'no notice-targeted annotation while held'
+    ).toBe(false);
   });
 });

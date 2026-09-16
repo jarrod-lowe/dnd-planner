@@ -23,15 +23,19 @@ const concentration: RuleModule = {
       value: (f) => f.num('concentration.max') - f.num('concentration.spent')
     }
   ],
-  // While the slot is held, a NOTICE carries the damage-save rule (DC 10, or
-  // half the damage taken, whichever is higher — 2024). 'notice' ==
-  // NOTICE_TARGET; rule modules may import only the builder, so the reserved
-  // label is a literal here (see feat-sentinel) and the unit test pins it to
-  // the exported constant. Keys sit in the module's existing
+  // While the slot is held, an annotation carries the damage-save rule (DC 10,
+  // or half the damage taken, whichever is higher — 2024). The reminder is
+  // post-hoc — it matters when the player records damage — so it rides the
+  // record-damage panel via its 'damage.any' annotationLabel (the recorder
+  // idiom: record-heal carries 'healing.any'), not the notices strip. Panels
+  // render the label only ($t(annotation.key), no values), so the DC 10 rule
+  // text is baked into the label copy. Rule modules may import only the
+  // builder, so the label is a literal here and the unit test pins it to the
+  // recorder's declared annotationLabels. Keys sit in the module's existing
   // planner.concentration.* namespace (the check offer's name key).
   annotate: (f): Annotation[] =>
     f.num('concentration.remaining') <= 0
-      ? [{ key: `${P}.notice`, targets: ['notice'], body: `${P}.notice.body` }]
+      ? [{ key: `${P}.annotation`, targets: ['damage.any'] }]
       : [],
   offer: () => [
     {

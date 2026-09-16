@@ -501,9 +501,7 @@ const EXPECTED_RUNNABLE = [
   // M3 — spear (versatile/thrown; one-handed don works, 2H free-hand check deferred)
   'hands-weapon-spear-uses-1',
   // M3 — calm-emotions + hold-person (L2 concentration wards) + oath L5 granting
-  // them always-prepared; and the live hold's repeat-save notice (DC
-  // interpolated from spellcasting.saveDC)
-  'hold-person-held-notice',
+  // them always-prepared
   'oath-redemption-l5-oath-spells-always-prepared',
   'oath-redemption-l5-oath-spells-prepared-then-granted',
   // M3 — find-steed (companion summon as companion.steed.* facts) + the paladin

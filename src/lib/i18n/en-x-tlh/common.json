@@ -182,8 +182,6 @@
       }
     },
     "spell-hold-person": {
-      "notice": "mevtaH",
-      "notice.body": "moparlu'taHbogh DoS poH rInDI', mugh mevmeH {{dc}} WIS waH chegh yInab.",
       "offer-hold-person": {
         "name": "nuv mevmoH",
         "keywords": "paralyse paralyze stun freeze control humanoid",
@@ -1986,8 +1984,7 @@
     "after-rest": "leS rInpu'DI' ghItlhlu' — qaSbej, 'ach chov luj.",
     "concentration": {
       "check": "buQ waH",
-      "notice": "buQtaH",
-      "notice.body": "qID DaqIpchugh, wa'maH DIch buQ waH yInab 'e' yIwuq; qID waH nIvchugh, pov waH yIlo'."
+      "annotation": "buQ waH — qID DaqIpchugh, wa'maH DIch buQ waH yInab 'e' yIwuq; qID waH nIvchugh, pov waH yIlo'."
     },
     "record": {
       "damage": "QInvID DIvI'",

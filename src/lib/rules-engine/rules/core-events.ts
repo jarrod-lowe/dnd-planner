@@ -237,6 +237,10 @@ const coreEvents: RuleModule = {
       ui: {
         section: 'free',
         name: 'planner.record.damage',
+        // The recorder idiom (record-heal carries 'healing.any'): the panel
+        // the post-hoc damage reminders ride — concentration's DC 10
+        // save-to-keep-the-spell annotation while the slot is held.
+        annotationLabels: ['damage.any'],
         primaryControl: {
           type: 'slider',
           var: 'amount',

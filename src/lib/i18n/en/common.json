@@ -182,8 +182,6 @@
       }
     },
     "spell-hold-person": {
-      "notice": "Held",
-      "notice.body": "At the end of each held target's turn, it repeats a DC {{dc}} Wisdom save to end the spell.",
       "offer-hold-person": {
         "name": "Hold Person",
         "keywords": "paralyse paralyze stun freeze control humanoid",
@@ -1986,8 +1984,7 @@
     "after-rest": "Planned after a rest — it still applies, but this projection may be off.",
     "concentration": {
       "check": "Concentration Check",
-      "notice": "Concentrating",
-      "notice.body": "If you take damage, make a DC 10 Constitution save to keep the spell (DC half the damage, if higher)."
+      "annotation": "Concentration save — DC 10 Constitution save to keep the spell, or half the damage taken if higher."
     },
     "record": {
       "damage": "Record Damage",
