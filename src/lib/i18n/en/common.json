@@ -1123,7 +1123,7 @@
         "notice-disengage": "Opportunity Attack on Disengage",
         "notice-disengage.body": "A creature within 5 ft that takes the Disengage action still provokes your Opportunity Attack.",
         "notice-retaliate": "Opportunity Attack on ally hit",
-        "notice-retaliate.body": "When a creature within 5 ft attacks someone other than you, you can make an Opportunity Attack against it.",
+        "notice-retaliate.body": "When a creature within 5 ft hits someone other than you with an attack, you can make an Opportunity Attack against it.",
         "notice-speed": "Hit stops movement",
         "notice-speed.body": "A creature you hit with an Opportunity Attack has its Speed reduced to 0 for the rest of the turn."
       },
