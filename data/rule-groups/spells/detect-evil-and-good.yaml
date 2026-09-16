@@ -8,8 +8,8 @@ ruleGroups:
       en:
         name: Detect Evil and Good
         description: Level 1 action spell (self). Sense aberrations, celestials,
-          elementals, fey, fiends, and undead within 30 feet. Concentration, up
-          to 10 minutes.
+          elementals, fey, fiends, and undead within 30 feet, and whether Hallow
+          is active. Concentration, up to 10 minutes.
         keywords:
           - spell
           - level1
@@ -17,19 +17,21 @@ ruleGroups:
           - evil
           - good
           - sense
+          - hallow
           - divination
           - action
           - concentration
       en-x-tlh:
         name: mIgh 'ej QaH tu'
-        description: DIch level 1 action. mIgh Ha'DIbaH je 30ft tu'. buQ, 10
-          rep.
+        description: DIch level 1 action. mIgh Ha'DIbaH je 30ft tu' pagh Hallow
+          tu'. buQ, 10 rep.
         keywords:
           - spell
           - level1
           - tu
           - mIgh
           - sense
+          - hallow
           - action
           - buQ
     detail:
