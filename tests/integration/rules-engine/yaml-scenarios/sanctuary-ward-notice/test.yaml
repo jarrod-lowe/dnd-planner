@@ -1,9 +1,11 @@
 name: 'Sanctuary - Ward Notice'
 description: >-
   Once the Sanctuary ward is live (sanctuary.active, written by the committed
-  effect-sanctuary marker), a NOTICE reminds the player that an attacker who
-  targets them must first pass a Wisdom save against the spell save DC, or the
-  attack misses and is wasted. The DC is interpolated from
+  effect-sanctuary marker), a NOTICE reminds the player that any creature
+  targeting them with an attack roll or a damaging spell must succeed on a
+  Wisdom save against the spell save DC or choose a new target or lose the
+  attack or spell, and that the spell ends if they make an attack roll, cast
+  a spell, or deal damage. The DC is interpolated from
   spellcasting.saveDC. Dismissing the chip (un-committing the effect) removes
   the state delta, so the fact and the notice go with it; no ward committed,
   no notice.

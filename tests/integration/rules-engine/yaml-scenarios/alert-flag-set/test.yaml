@@ -16,7 +16,3 @@ steps:
           exists:
             - rule.dnd-5e-2024.feat-alert.annotation-swap
             - rule.dnd-5e-2024.feat-alert.annotation-proficiency
-            - rule.dnd-5e-2024.feat-alert.notice-surprise
-          targets:
-            - key: rule.dnd-5e-2024.feat-alert.notice-surprise
-              targets: [notice]

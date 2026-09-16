@@ -12,7 +12,7 @@
     },
     "spell-sanctuary": {
       "notice": "Sanctuary",
-      "notice.body": "An attacker who targets you must first pass a DC {{dc}} Wisdom save, or the attack misses and is wasted.",
+      "notice.body": "Any creature that targets you with an attack roll or a damaging spell must succeed on a DC {{dc}} Wisdom save or choose a new target or lose the attack or spell. The spell ends if you make an attack roll, cast a spell, or deal damage.",
       "offer-sanctuary": {
         "name": "Sanctuary",
         "keywords": "protect ward shield abjuration safe",
@@ -1106,9 +1106,7 @@
         "annotation-proficiency": "Alert: May add proficiency",
         "initiative-proficiency": {
           "button": "With Proficiency"
-        },
-        "notice-surprise": "Can't be surprised",
-        "notice-surprise.body": "You can't be surprised while you're conscious."
+        }
       },
       "feat-savage-attacker": {
         "annotation": "Savage Attacker: Reroll damage dice once per turn",
