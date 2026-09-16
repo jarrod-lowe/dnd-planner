@@ -68,8 +68,15 @@
     </button>
   </h2>
 
-  {#if expanded}
-    <div class="notice-strip__collapsible" id={collapsibleId}>
+  <!-- The controlled region stays mounted in both states, so the button's
+       aria-controls IDREF never dangles — collapsed (including the initial
+       zero-notice render) still points at a real element. It hides via the
+       hidden attribute, which only works because this wrapper is a plain
+       block: any display rule here would override the UA's
+       [hidden] { display: none }. The {#if} inside keeps the cells (or the
+       placeholder) out of the DOM while collapsed. -->
+  <div class="notice-strip__collapsible" id={collapsibleId} hidden={!expanded}>
+    {#if expanded}
       {#if notices.length === 0}
         <p class="notice-strip__placeholder">{$t('play.notices.placeholder')}</p>
       {:else}
@@ -87,8 +94,8 @@
           {/each}
         </ul>
       {/if}
-    </div>
-  {/if}
+    {/if}
+  </div>
 </section>
 
 <style>
@@ -150,6 +157,9 @@
     transform: rotate(-90deg);
   }
 
+  /* .notice-strip__collapsible deliberately has no rule: the disclosure
+     hides that wrapper via the hidden attribute, and any display
+     declaration on it (grid, flex…) would override the attribute. */
   /* Variant D: a dense two-column grid. Cells size to their content and heights
      stay ragged on purpose — a clamp here would hide exactly the sentences
      that carry a DC. */

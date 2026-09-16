@@ -227,17 +227,63 @@ describe('NoticeStrip', () => {
     expect(region).not.toBeNull();
     expect(region?.querySelector('.notice-strip__grid')).not.toBeNull();
 
-    // Toggling flips both the state and the region's presence ({#if}, not a
-    // hidden attribute a grid's display rules would beat).
+    // Toggling flips the region's visibility, not its existence: the element
+    // stays mounted so the aria-controls IDREF never dangles, hiding via the
+    // hidden attribute on a display-less wrapper (the grid itself keeps
+    // display:grid precisely because a display rule on the hidden element
+    // would beat the attribute).
     button!.click();
     flushSync();
     expect(button!.getAttribute('aria-expanded')).toBe('false');
-    expect(regionId ? document.getElementById(regionId) : null).toBeNull();
+    const collapsed = regionId ? document.getElementById(regionId) : null;
+    expect(collapsed).toBe(region);
+    expect(collapsed?.hasAttribute('hidden')).toBe(true);
+    expect(collapsed?.querySelector('.notice-strip__grid')).toBeNull();
 
     button!.click();
     flushSync();
     expect(button!.getAttribute('aria-expanded')).toBe('true');
-    expect(regionId ? document.getElementById(regionId) : null).not.toBeNull();
+    expect(regionId ? document.getElementById(regionId) : null).toBe(region);
+    expect(region?.hasAttribute('hidden')).toBe(false);
+  });
+
+  it('keeps the aria-controls region mounted while collapsed — the IDREF never dangles', () => {
+    // The play screen mounts the strip on a zero-notices render (the effects
+    // fetch precedes performEvaluation), so collapsed is every session's
+    // first state: the disclosure must point at a real element, not an id
+    // that only exists once the section is open.
+    mount(NoticeStrip, { target: container, props: { notices: [] } });
+
+    const button = disclosure(container);
+    const regionId = button!.getAttribute('aria-controls');
+    expect(regionId).toBeTruthy();
+
+    // Collapsed: the controlled element is in the DOM and effectively
+    // hidden — the hidden attribute, on a wrapper with no display rule of
+    // its own (an author display value would override the UA's
+    // [hidden] { display: none }).
+    const region = document.getElementById(regionId!);
+    expect(region).not.toBeNull();
+    expect(region!.hasAttribute('hidden')).toBe(true);
+
+    // Expanded: the same element, visible, now holding the placeholder.
+    button!.click();
+    flushSync();
+    const expandedRegion = document.getElementById(regionId!);
+    expect(expandedRegion).toBe(region);
+    expect(expandedRegion!.hasAttribute('hidden')).toBe(false);
+    expect(expandedRegion!.querySelector('.notice-strip__placeholder')).not.toBeNull();
+
+    // CSS guard: no rule targeting the wrapper may declare display, or the
+    // hidden attribute stops hiding it (the repo's display-beats-hidden
+    // trap). Svelte injects the strip's styles into the document head.
+    const css = Array.from(document.querySelectorAll('style'))
+      .map((element) => element.textContent ?? '')
+      .join('\n');
+    const wrapperRules = css.match(/\.notice-strip__collapsible[^{]*\{[^}]*\}/g) ?? [];
+    for (const rule of wrapperRules) {
+      expect(rule).not.toContain('display');
+    }
   });
 
   it('shows the placeholder when the player expands an empty section', () => {
