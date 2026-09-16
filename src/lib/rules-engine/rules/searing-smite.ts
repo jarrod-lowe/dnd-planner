@@ -1,6 +1,7 @@
 import {
   defineRule,
   preparedSpellCount,
+  type Annotation,
   type ActionResult,
   type Contribution,
   type Diagnostic,
@@ -11,6 +12,7 @@ import {
 
 const LEVELS = [1, 2, 3, 4, 5] as const;
 const S = 'rule.spell-searing-smite.offer-searing-smite';
+const R = 'rule.spell-searing-smite';
 const FIRE = 'fire';
 
 /**
@@ -201,20 +203,42 @@ const searingSmite: RuleModule = {
   // and Divine Smite. The gate is the cast offer's `when` plus its four legality
   // conditions, exactly — which is what lets the reminder hand the player the row
   // (`addsToPlan`) instead of only telling them about it.
-  annotate: (f: FactReader) =>
-    f.num('spell.l1.searingSmite.prepared') === 1 &&
-    f.num('bonusActions.remaining') > 0 &&
-    f.num('attack.last.melee') >= 1 &&
-    f.num('ssmite.eligibleSlotsRemaining') > 0 &&
-    f.num('spellcasting.remaining') > 0
-      ? [
-          {
-            key: 'rule.spell-searing-smite.annotation',
-            targets: ['attack.melee', 'attack.unarmed'],
-            addsToPlan: { offer: 'cast-searing-smite' }
-          }
-        ]
-      : []
+  //
+  // While a burn is live (`ssmite.burnDice > 0`, i.e. at least one committed
+  // burn marker), a NOTICE reminds the player of the burning target's turn-start
+  // ritual. The DC interpolates from `spellcasting.saveDC`; the dice are
+  // deliberately NOT in the string — `ssmite.burnDice` folds `combine: 'sum'`,
+  // so burns on several targets would read as one wrong number, and the
+  // per-target dice already live on each effect chip's `display.value`.
+  annotate: (f: FactReader) => {
+    const annotations: Annotation[] = [];
+    if (
+      f.num('spell.l1.searingSmite.prepared') === 1 &&
+      f.num('bonusActions.remaining') > 0 &&
+      f.num('attack.last.melee') >= 1 &&
+      f.num('ssmite.eligibleSlotsRemaining') > 0 &&
+      f.num('spellcasting.remaining') > 0
+    ) {
+      annotations.push({
+        key: `${R}.annotation`,
+        targets: ['attack.melee', 'attack.unarmed'],
+        addsToPlan: { offer: 'cast-searing-smite' }
+      });
+    }
+    if (f.num('ssmite.burnDice') > 0) {
+      annotations.push({
+        key: `${R}.notice-burning`,
+        // 'notice' == NOTICE_TARGET; rule modules may import only the builder,
+        // so the reserved label is a literal here (see feat-sentinel) and the
+        // unit test pins it to the exported constant.
+        targets: ['notice'],
+        source: `${S}.name`,
+        body: `${R}.notice-burning.body`,
+        values: { dc: f.num('spellcasting.saveDC') }
+      });
+    }
+    return annotations;
+  }
 };
 
 export default defineRule(searingSmite);

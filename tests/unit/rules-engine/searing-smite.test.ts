@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { evaluate, evaluateSheet, evaluatePlan, evaluateOffers, endTurn } from '$lib/rules-engine';
+import { NOTICE_TARGET } from '$lib/rules-engine';
 import type { Facts, OfferEntry, PlannedRef } from '$lib/rules-engine';
+import enCommon from '$lib/i18n/en/common.json';
 import actionEconomy from '$lib/rules-engine/rules/action-economy';
 import attacks from '$lib/rules-engine/rules/attacks';
 import spellcasting from '$lib/rules-engine/rules/spellcasting';
@@ -173,5 +175,57 @@ describe('searing-smite — annotation', () => {
     expect(after.annotations.some((a) => a.key === 'rule.spell-searing-smite.annotation')).toBe(
       false
     );
+  });
+});
+
+describe('searing-smite — burning notice', () => {
+  /**
+   * Notices plan, Phase 3 — a live burn raises a NOTICE: source eyebrow (the
+   * spell name) + label + a body sentence interpolating ONLY the save DC.
+   * `ssmite.burnDice` folds `combine: 'sum'`, so burns on several targets would
+   * read as one wrong number — the dice deliberately never enter the string
+   * (plan Decisions table); per-target dice live on each effect chip.
+   */
+  const R = 'rule.spell-searing-smite';
+  // The flat-dotted en body template, as sveltekit-i18n flattens it. The cast
+  // goes through unknown: the nested catalog mixes leaf strings and sub-objects.
+  const enSmite = (enCommon.rule as unknown as Record<string, Record<string, string | undefined>>)[
+    'spell-searing-smite'
+  ];
+  const enBody = enSmite?.['notice-burning.body'];
+
+  it('a committed burn raises a notice carrying the spell save DC', () => {
+    const out = evaluate({
+      modules: ALL,
+      inputFacts: PREPARED,
+      planned: [unarmed('a1'), cast('c1')]
+    });
+    expect(out.facts['ssmite.burnDice'], 'the burn is live in this state').toBe(1);
+    const notice = out.annotations.find((a) => a.key === `${R}.notice-burning`);
+    expect(notice, 'notice exists while a burn is live').toBeDefined();
+    expect(notice!.targets).toEqual([NOTICE_TARGET]);
+    expect(notice!.source).toBe(`${R}.offer-searing-smite.name`);
+    expect(notice!.body).toBe(`${R}.notice-burning.body`);
+    expect(notice!.values).toEqual({ dc: out.facts['spellcasting.saveDC'] });
+  });
+
+  it('the en body template interpolates only the DC — no dice placeholder', () => {
+    expect(enBody, 'en body template exists').toBeDefined();
+    // {{dc}} double-brace (sveltekit-i18n), and it is the ONLY param: any dice
+    // placeholder here would render the summed burnDice as one wrong number.
+    expect(enBody?.match(/{{[a-zA-Z]+}}/g)).toEqual(['{{dc}}']);
+  });
+
+  it('no notice while nothing burns', () => {
+    const before = evaluate({
+      modules: ALL,
+      inputFacts: PREPARED,
+      planned: [unarmed('a1')]
+    });
+    expect(before.facts['ssmite.burnDice'] ?? 0).toBe(0);
+    expect(
+      before.annotations.some((a) => a.key === `${R}.notice-burning`),
+      'no burn committed, no notice'
+    ).toBe(false);
   });
 });

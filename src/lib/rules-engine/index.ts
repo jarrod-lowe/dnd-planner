@@ -20,7 +20,7 @@ export { loadModules, lazyRuleGroupIds, type LoadResult } from './lazy';
 export { ENGINE_API_VERSION, isEngineCompatible } from './version';
 export { endTurn, dedupeByKey, endsOnRest, type EndTurnOptions } from './effects';
 export { statToModifier } from './functions';
-export { SECTIONS } from './types';
+export { SECTIONS, NOTICE_TARGET } from './types';
 // Type-only re-exports are erased at build time, so they don't pull the registry.
 export type { ResolvedInput } from './registry';
 export type { MetadataEntry, ModuleRuleGroup, LocaleTranslation, LocaleDict } from './metadata';
