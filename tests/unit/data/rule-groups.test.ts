@@ -242,4 +242,12 @@ describe('rule group dependencies', () => {
 
     expect(cycles, `requires cycles detected: ${cycles.join('; ')}`).toEqual([]);
   });
+
+  // Thunderous Smite is a 2024-PHB general paladin L1 spell that is absent from
+  // SRD 5.2 (its detail source is `custom`, not `srd52`) — the one deliberate
+  // non-SRD member of the list. Without this requires edge it is reachable only
+  // via manual rule-group assignment, so fresh paladins never see it.
+  it('pulls Thunderous Smite into the paladin L1 spell list', () => {
+    expect(requiresById.get('paladin-spells-l1')).toContain('spell-thunderous-smite');
+  });
 });

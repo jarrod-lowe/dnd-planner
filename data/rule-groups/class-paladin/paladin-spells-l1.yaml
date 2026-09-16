@@ -10,6 +10,7 @@ ruleGroups:
       - spell-protection-from-evil-and-good
       - spell-searing-smite
       - spell-shield-of-faith
+      - spell-thunderous-smite
     translations:
       en:
         name: Paladin Spells Level 1
