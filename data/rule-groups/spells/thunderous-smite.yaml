@@ -7,8 +7,9 @@ ruleGroups:
       en:
         name: Thunderous Smite
         description: Level 1 bonus action spell. After hitting with a melee weapon
-          attack, deal an extra 2d6 thunder damage. Target must make a STR save or
-          be pushed 10 feet and knocked prone. Upcasting adds +1d6 per level.
+          or an unarmed strike, deal an extra 2d6 thunder damage. Target must make
+          a STR save or be pushed 10 feet and knocked prone. Upcasting adds +1d6
+          per level.
         keywords:
           - spell
           - level1
@@ -16,14 +17,17 @@ ruleGroups:
           - smite
           - thunder
           - damage
+          - unarmed
           - bonus action
       en-x-tlh:
         name: raQ muHta
-        description: DIch level 1 bonus action. DIch nuH DIch DIvI' 2d6 thunder DIvI'.
+        description: DIch level 1 bonus action. DIch nuW pagh qoH DIch DIvI' 2d6
+          thunder DIvI'.
         keywords:
           - spell
           - level1
           - raQ
+          - unarmed
           - bonus action
     detail:
       key: spell/thunderous-smite
