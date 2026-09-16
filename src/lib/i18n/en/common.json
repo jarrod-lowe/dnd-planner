@@ -323,7 +323,7 @@
       "offer-detect-evil-and-good": {
         "name": "Detect Evil and Good",
         "keywords": "detect sense aberration celestial elemental fey fiend undead divination",
-        "description": "Self | 10 min | Sense aberrations, celestials, fey, fiends & undead within 30ft",
+        "description": "Self | 10 min | Sense aberrations, celestials, elementals, fey, fiends & undead within 30ft",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
         "already_concentrating": "Already concentrating",
