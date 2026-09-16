@@ -30,6 +30,7 @@ describe('steed save recorders', () => {
     expect(o.ui.secondaryControl).toEqual({
       type: 'segmented',
       var: 'passed',
+      prefix: 'play.choices.save.outcome',
       options: [
         { value: -1, label: 'planner.record.outcome.none' },
         { value: 1, label: 'planner.record.passed' },
@@ -98,6 +99,7 @@ describe('Find Steed cast controls', () => {
     expect(o.ui.secondaryControl).toEqual({
       type: 'segmented',
       var: 'creatureType',
+      prefix: 'play.choices.find-steed.type',
       options: [
         { value: 0, label: `${S}.offer-find-steed.creature-type.celestial` },
         { value: 1, label: `${S}.offer-find-steed.creature-type.fey` },

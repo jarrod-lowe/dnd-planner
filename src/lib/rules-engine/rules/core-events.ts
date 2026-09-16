@@ -42,6 +42,7 @@ function saveOffer(a: string): Offer {
       secondaryControl: {
         type: 'segmented',
         var: 'passed',
+        prefix: 'play.choices.save.outcome',
         options: [
           { value: -1, label: 'planner.record.outcome.none' },
           { value: 1, label: 'planner.record.passed' },
