@@ -42,6 +42,12 @@ describe('shield-of-faith — structural gate', () => {
     expect(offer(evaluateSheet(ALL, UNPREPARED), 'cast-shield-of-faith')).toBeUndefined();
     expect(offer(evaluateSheet(ALL, PREPARED), 'cast-shield-of-faith')).toBeDefined();
   });
+
+  it('names the Self/Ally target group so the fieldset has an accessible name', () => {
+    const control = offer(evaluateSheet(ALL, PREPARED), 'cast-shield-of-faith')?.ui
+      ?.secondaryControl as { prefix?: string } | undefined;
+    expect(control?.prefix).toBe('play.choices.shield-of-faith.target');
+  });
 });
 
 describe('shield-of-faith — casting', () => {

@@ -79,6 +79,9 @@ const shieldOfFaith: RuleModule = {
         secondaryControl: {
           type: 'segmented',
           var: 'target',
+          // Names the fieldset (aria-labelledby) and shows a visible "Target:"
+          // label — the grapple/shove convention.
+          prefix: 'play.choices.shield-of-faith.target',
           options: [
             { value: 1, label: `${S}.targetSelf` },
             { value: 0, label: `${S}.targetAlly` }
