@@ -277,6 +277,62 @@
         "no_slots": "mugh laH tu'lu'be'"
       }
     },
+    "spell-shield-of-faith": {
+      "offer-shield-of-faith": {
+        "name": "Suto' quv",
+        "keywords": "ward shield ac abjuration defend bonus",
+        "description": "Quv DIvI' | 10 tup | +2 Suto' | buQ",
+        "targetSelf": "wa' ghot",
+        "targetAlly": "latlh ghot",
+        "no_bonus_action": "Quv DIvI' tu'lu'be'",
+        "no_spellcasting": "mugh DIvI' tu'lu'be'",
+        "already_concentrating": "buQ DIvI'",
+        "no_slots": "mugh laH tu'lu'be'"
+      },
+      "effect-shield-of-faith": {
+        "name": "Suto' quv"
+      }
+    },
+    "spell-searing-smite": {
+      "annotation": "meQ muHta chen",
+      "offer-searing-smite": {
+        "name": "meQ muHta",
+        "keywords": "smite fire damage burn unarmed evocation",
+        "description": "nuH DIch tlhej | +1d6 qul, ghIq 1d6/rep | CON ra' meQ mev",
+        "no_bonus_action": "Quv DIvI' tu'lu'be'",
+        "no_attack": "wa'DIch HIv lo'nIS",
+        "no_slots": "mugh laH tu'lu'be'",
+        "no_spellcasting": "mugh DIvI' tu'lu'be'"
+      },
+      "effect-searing-smite": {
+        "name": "meQ muHta — {{score}}d6 qul/rep"
+      }
+    },
+    "spell-cure-wounds": {
+      "offer-cure-wounds": {
+        "name": "Qaw' vor",
+        "keywords": "heal restore hit points touch abjuration",
+        "description": "Hot | 2d8 + mugh laH HP (+2d8 patlh)",
+        "healLabel": "vor",
+        "no_action": "DIvI' tu'lu'be'",
+        "no_spellcasting": "mugh DIvI' tu'lu'be'",
+        "no_slots": "mugh laH tu'lu'be'"
+      }
+    },
+    "spell-detect-evil-and-good": {
+      "offer-detect-evil-and-good": {
+        "name": "mIgh 'ej QaH tu'",
+        "keywords": "detect sense aberration celestial elemental fey fiend undead hallow divination",
+        "description": "wa' | 10 tup | mIgh Ha'DIbaH je 30ft tu'",
+        "no_action": "DIvI' tu'lu'be'",
+        "no_spellcasting": "mugh DIvI' tu'lu'be'",
+        "already_concentrating": "buQ DIvI'",
+        "no_slots": "mugh laH tu'lu'be'"
+      },
+      "effect-detect-evil-and-good": {
+        "name": "mIgh 'ej QaH tu'"
+      }
+    },
     "spell-divine-favour": {
       "offer-divine-favour": {
         "name": "quv",
@@ -1505,6 +1561,9 @@
       },
       "shove": {
         "target": "DoS"
+      },
+      "shield-of-faith": {
+        "target": "DoS"
       }
     },
     "plan": {
@@ -1546,6 +1605,7 @@
     "information": {
       "saveDcStr": "HoS DIvI' {{dc}}",
       "saveDcStrDex": "HoS/ghu' DIvI' {{dc}}",
+      "saveDcCon": "DIr DIvI' {{dc}}",
       "saveDcWis": "val DIvI' {{dc}}",
       "saveDcCha": "vam DIvI' {{dc}}",
       "aidBonus": "+{{hp}} HP"

@@ -3,9 +3,13 @@ ruleGroups:
     requires:
       - spell-bless
       - spell-command
+      - spell-cure-wounds
+      - spell-detect-evil-and-good
       - spell-divine-favour
       - spell-divine-smite
       - spell-protection-from-evil-and-good
+      - spell-searing-smite
+      - spell-shield-of-faith
     translations:
       en:
         name: Paladin Spells Level 1

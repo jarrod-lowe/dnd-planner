@@ -16,8 +16,10 @@ const SLOTS = 'protection-from-evil-and-good';
  * Protection from Evil and Good — a Level 1 action concentration ward. Same shape
  * as Bless: prepare path + L1–5 slot cascade + a cast that spends an action, the
  * turn spell, and a slot, holding concentration via `effect-protection-...`
- * (`[turns 10, untilShortRest]`, `concentration.spent` = 1) so it ends on the
- * duration or any rest and blocks a second concentration spell meanwhile.
+ * (`[untilShortRest]`, `concentration.spent` = 1). Ten minutes is impractical to
+ * count in combat rounds, so the ward carries until the user dismisses it or any
+ * rest (always 10+ minutes) ends it; it blocks a second concentration spell
+ * meanwhile.
  */
 const protectionFromEvilAndGood: RuleModule = {
   id: 'spell-protection-from-evil-and-good',
@@ -107,7 +109,7 @@ const protectionFromEvilAndGood: RuleModule = {
             display: {
               name: 'rule.spell-protection-from-evil-and-good.effect-protection-from-evil-and-good.name'
             },
-            expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]
+            expiry: [{ kind: 'untilShortRest' }]
           }
         ];
         const diagnostics: Diagnostic[] = [];

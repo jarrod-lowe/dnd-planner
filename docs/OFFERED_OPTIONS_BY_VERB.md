@@ -31,6 +31,7 @@ Source files: `data/rule-groups/`, `data/rule-sources/weapons.yaml`
 | spells   | Divine Favour (cast)     | bonus + L1 | `spells/spell-divine-favour.yaml`                   |
 | spells   | Divine Favour (use)      | free       | `spells/spell-divine-favour.yaml`                   |
 | spells   | Thunderous Smite         | bonus + L1 | `spells/thunderous-smite.yaml`                      |
+| spells   | Searing Smite            | bonus + L1 | `spells/searing-smite.yaml`                         |
 
 ### AID
 
@@ -39,6 +40,7 @@ Source files: `data/rule-groups/`, `data/rule-sources/weapons.yaml`
 | ally     | Influence                    | action             | `simple-actions.yaml`                       |
 | ally     | Help                         | action             | `free-actions.yaml`                         |
 | ally     | Bless                        | action + conc + L1 | `spells/bless.yaml`                         |
+| ally     | Cure Wounds                  | action + L1        | `spells/cure-wounds.yaml`                   |
 | self     | Lay on Hands — Heal          | bonus + LoH        | `class-paladin/lay-on-hands.yaml`           |
 | self     | Lay on Hands — Purify Poison | bonus + LoH        | `class-paladin/lay-on-hands.yaml`           |
 | self     | Use Heroic Inspiration       | free               | `heroic-inspiration.yaml`                   |
@@ -64,6 +66,7 @@ Source files: `data/rule-groups/`, `data/rule-sources/weapons.yaml`
 | evade    | Disengage                     | action             | `simple-actions.yaml`                          |
 | evade    | Dodge                         | action             | `simple-actions.yaml`                          |
 | ward     | Protection from Evil and Good | action + conc + L1 | `spells/protection-from-evil-and-good.yaml`    |
+| ward     | Shield of Faith               | bonus + conc + L1  | `spells/shield-of-faith.yaml`                  |
 | ward     | Sanctuary                     | bonus + L1         | `spells/sanctuary.yaml`                        |
 | ward     | Rebuke the Violent            | reaction + CD      | `class-paladin/oath-redemption-level3.yaml`    |
 
@@ -80,12 +83,13 @@ Source files: `data/rule-groups/`, `data/rule-sources/weapons.yaml`
 
 ### INSPECT
 
-| Sub-verb | Option          | Cost       | Source                        |
-| -------- | --------------- | ---------- | ----------------------------- |
-| sense    | Search          | action     | `simple-actions.yaml`         |
-| sense    | Divine Sense    | bonus + CD | `class-paladin/divinity.yaml` |
-| sense    | Roll Initiative | free       | `initiative.yaml`             |
-| check    | Study           | action     | `simple-actions.yaml`         |
+| Sub-verb | Option               | Cost               | Source                             |
+| -------- | -------------------- | ------------------ | ---------------------------------- |
+| sense    | Search               | action             | `simple-actions.yaml`              |
+| sense    | Divine Sense         | bonus + CD         | `class-paladin/divinity.yaml`      |
+| sense    | Detect Evil and Good | action + conc + L1 | `spells/detect-evil-and-good.yaml` |
+| sense    | Roll Initiative      | free               | `initiative.yaml`                  |
+| check    | Study                | action             | `simple-actions.yaml`              |
 
 ### HANDLE
 

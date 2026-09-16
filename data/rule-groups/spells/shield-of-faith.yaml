@@ -1,0 +1,48 @@
+ruleGroups:
+  - id: spell-shield-of-faith
+    requires:
+      - spellcasting
+      - concentration
+      - prepared-spells
+    translations:
+      en:
+        name: Shield of Faith
+        description: Level 1 bonus action spell (60ft). A shimmering field grants
+          a creature +2 AC. Concentration, up to 10 minutes.
+        keywords:
+          - spell
+          - level1
+          - shield
+          - faith
+          - ward
+          - abjuration
+          - bonus action
+          - concentration
+      en-x-tlh:
+        name: Suto' quv
+        description: DIch level 1 bonus action. Suto' quv DIvI' +2 Suto'. buQ,
+          10 tup.
+        keywords:
+          - spell
+          - level1
+          - suto
+          - quv
+          - ward
+          - bonus action
+    detail:
+      key: spell/shield-of-faith
+      source: srd52
+      translations:
+        en:
+          meta: Level 1 Abjuration (Cleric, Paladin)
+          fields:
+            - labelKey: rules.field.castingTime
+              value: Bonus Action
+            - labelKey: rules.field.range
+              value: 60 feet
+            - labelKey: rules.field.components
+              value: V, S, M (a prayer scroll)
+            - labelKey: rules.field.duration
+              value: Concentration, up to 10 minutes
+          body: 'A shimmering field surrounds a creature of your choice within
+            range, granting it a +2 bonus to AC for the duration.'

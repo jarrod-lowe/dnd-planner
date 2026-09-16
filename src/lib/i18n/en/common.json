@@ -277,6 +277,62 @@
         "no_slots": "No spell slots remaining"
       }
     },
+    "spell-shield-of-faith": {
+      "offer-shield-of-faith": {
+        "name": "Shield of Faith",
+        "keywords": "ward shield ac abjuration defend bonus",
+        "description": "Bonus action | 10 min | +2 AC | Concentration",
+        "targetSelf": "Self",
+        "targetAlly": "Ally",
+        "no_bonus_action": "No bonus action available",
+        "no_spellcasting": "Already cast a spell this turn",
+        "already_concentrating": "Already concentrating",
+        "no_slots": "No spell slots remaining"
+      },
+      "effect-shield-of-faith": {
+        "name": "Shield of Faith"
+      }
+    },
+    "spell-searing-smite": {
+      "annotation": "Searing Smite available",
+      "offer-searing-smite": {
+        "name": "Searing Smite",
+        "keywords": "smite fire damage burn unarmed evocation",
+        "description": "After a melee hit | +1d6 fire, then 1d6/turn | CON save ends the burn",
+        "no_bonus_action": "No bonus action available",
+        "no_attack": "You must make a melee attack first",
+        "no_slots": "No spell slots remaining",
+        "no_spellcasting": "Already cast a spell this turn"
+      },
+      "effect-searing-smite": {
+        "name": "Searing Smite — {{score}}d6 fire/turn"
+      }
+    },
+    "spell-cure-wounds": {
+      "offer-cure-wounds": {
+        "name": "Cure Wounds",
+        "keywords": "heal restore hit points touch abjuration",
+        "description": "Touch | 2d8 + spellcasting modifier HP (+2d8 per slot level above 1)",
+        "healLabel": "Heal",
+        "no_action": "No action available",
+        "no_spellcasting": "Already cast a spell this turn",
+        "no_slots": "No spell slots remaining"
+      }
+    },
+    "spell-detect-evil-and-good": {
+      "offer-detect-evil-and-good": {
+        "name": "Detect Evil and Good",
+        "keywords": "detect sense aberration celestial elemental fey fiend undead hallow divination",
+        "description": "Self | 10 min | Sense aberrations, celestials, elementals, fey, fiends & undead within 30ft, plus whether Hallow is active",
+        "no_action": "No action available",
+        "no_spellcasting": "Already cast a spell this turn",
+        "already_concentrating": "Already concentrating",
+        "no_slots": "No spell slots remaining"
+      },
+      "effect-detect-evil-and-good": {
+        "name": "Detect Evil and Good"
+      }
+    },
     "spell-divine-favour": {
       "offer-divine-favour": {
         "name": "Divine Favour",
@@ -1505,6 +1561,9 @@
       },
       "shove": {
         "target": "Target"
+      },
+      "shield-of-faith": {
+        "target": "Target"
       }
     },
     "plan": {
@@ -1546,6 +1605,7 @@
     "information": {
       "saveDcStr": "STR Save DC {{dc}}",
       "saveDcStrDex": "STR/DEX Save DC {{dc}}",
+      "saveDcCon": "CON Save DC {{dc}}",
       "saveDcWis": "WIS Save DC {{dc}}",
       "saveDcCha": "CHA Save DC {{dc}}",
       "aidBonus": "+{{hp}} HP"

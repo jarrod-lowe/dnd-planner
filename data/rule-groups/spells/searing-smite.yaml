@@ -1,0 +1,58 @@
+ruleGroups:
+  - id: spell-searing-smite
+    requires:
+      - spellcasting
+      - prepared-spells
+    translations:
+      en:
+        name: Searing Smite
+        description: Level 1 bonus action spell. After hitting with a melee weapon
+          or an unarmed strike, deal an extra 1d6 fire damage; the target burns
+          for 1d6 per turn until it makes a CON save. Upcasting adds +1d6 per
+          level.
+        keywords:
+          - spell
+          - level1
+          - searing
+          - smite
+          - fire
+          - damage
+          - unarmed
+          - bonus action
+      en-x-tlh:
+        name: meQ muHta
+        description: DIch level 1 bonus action. DIch nuW pagh qoH DIch DIvI' 1d6
+          qul DIvI'; DIch meQ 1d6 rep CON ra'. patlh chel +1d6.
+        keywords:
+          - spell
+          - level1
+          - meQ
+          - smite
+          - fire
+          - unarmed
+          - bonus action
+    detail:
+      key: spell/searing-smite
+      source: srd52
+      translations:
+        en:
+          meta: Level 1 Evocation (Paladin)
+          fields:
+            - labelKey: rules.field.castingTime
+              value: Bonus Action, which you take immediately after hitting a target
+                with a Melee weapon or an Unarmed Strike
+            - labelKey: rules.field.range
+              value: Self
+            - labelKey: rules.field.components
+              value: V
+            - labelKey: rules.field.duration
+              value: 1 minute
+          body: 'As you hit the target, it takes an extra 1d6 Fire damage from the
+            attack. At the start of each of its turns until the spell ends, the
+            target takes 1d6 Fire damage and then makes a Constitution saving
+            throw. On a failed save, the spell continues. On a successful save,
+            the spell ends.
+
+
+            *Using a Higher-Level Spell Slot.* All the damage increases by 1d6 for
+            each spell slot level above 1.'

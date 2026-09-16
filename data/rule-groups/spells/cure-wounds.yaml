@@ -1,0 +1,51 @@
+ruleGroups:
+  - id: spell-cure-wounds
+    requires:
+      - spellcasting
+      - prepared-spells
+    translations:
+      en:
+        name: Cure Wounds
+        description: Level 1 action spell (touch). A creature regains 2d8 + spellcasting
+          modifier HP. Upcasting adds +2d8 per level.
+        keywords:
+          - spell
+          - level1
+          - cure
+          - wounds
+          - heal
+          - touch
+          - abjuration
+          - action
+      en-x-tlh:
+        name: Qaw' vor
+        description: DIch level 1 action. DIvI' regain 2d8 + mugh laH HP. patlh
+          chel +2d8.
+        keywords:
+          - spell
+          - level1
+          - vor
+          - heal
+          - touch
+          - action
+    detail:
+      key: spell/cure-wounds
+      source: srd52
+      translations:
+        en:
+          meta: Level 1 Abjuration (Bard, Cleric, Druid, Paladin, Ranger)
+          fields:
+            - labelKey: rules.field.castingTime
+              value: Action
+            - labelKey: rules.field.range
+              value: Touch
+            - labelKey: rules.field.components
+              value: V, S
+            - labelKey: rules.field.duration
+              value: Instantaneous
+          body: 'A creature you touch regains a number of Hit Points equal to 2d8
+            plus your spellcasting ability modifier.
+
+
+            *Using a Higher-Level Spell Slot.* The healing increases by 2d8 for
+            each spell slot level above 1.'

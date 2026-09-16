@@ -1,0 +1,83 @@
+name: 'Cure Wounds Cast'
+description: >-
+  Casting Cure Wounds consumes the action, the turn spell, and an L1 slot; the
+  healing dice line tracks the slot-level slider (2d8 at L1, +2d8 per level
+  above) with the spellcasting modifier as the roll's bonus. The heal itself
+  lands on the touched creature (untracked), so no HP effect is committed.
+ruleGroups:
+  - dnd-5e-2024/prepared-spells
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/spellcasting
+  - class-paladin/class-paladin-level1
+  - spells/spell-cure-wounds
+# A second, higher slot so the upcast path is reachable in this scenario.
+initialFacts:
+  spellcasting.slots.level2.total: 1
+steps:
+  - evaluate:
+  - addOffer:
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: cure-wounds
+            level: 1
+            nameKey: rule.spell-cure-wounds.offer-cure-wounds.name
+            preparedFact: spell.l1.cureWounds.prepared
+            alwaysPreparedFact: spell.l1.cureWounds.alwaysPrepared
+  - evaluate:
+      assert:
+        facts:
+          actions.remaining: 1
+          spellcasting.remaining: 1
+          spellcasting.slots.level1.remaining: 2
+          spellcasting.slots.level2.remaining: 1
+          cureWounds.maxCastLevel: 2
+        offers:
+          exists:
+            - cast-cure-wounds
+        offerUi:
+          - id: cast-cure-wounds
+            ui:
+              primaryControl:
+                type: slider
+                var: slotLevel
+                min: { number: 1 }
+                max: { fact: cureWounds.maxCastLevel }
+                valueFormat: spellLevel
+              secondaryControl:
+                type: dice-line
+                label: rule.spell-cure-wounds.offer-cure-wounds.healLabel
+                dice:
+                  - sides: 8
+                    count: { var: slotLevel, scale: 2 }
+                    bonus: { fact: spellcasting.modifier }
+                    unit: hp
+                    purpose: healing
+  - addOffer:
+      id: cast-cure-wounds
+      assert:
+        facts:
+          actions.remaining: 0
+          spellcasting.remaining: 0
+          spellcasting.slots.level1.remaining: 1
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-cure-wounds-slot-l1
+        facts:
+          spellcasting.slots.level1.remaining: 1
+          spellcasting.slots.level2.remaining: 1
+  # Next turn: upcast to the L2 slot — 4d8 + modifier of healing.
+  - addOffer:
+      id: cast-cure-wounds
+      selections:
+        slotLevel: 2
+      assert:
+        facts:
+          spellcasting.slots.level2.remaining: 0
+          spellcasting.slots.level1.remaining: 1

@@ -1,0 +1,56 @@
+ruleGroups:
+  - id: spell-detect-evil-and-good
+    requires:
+      - spellcasting
+      - concentration
+      - prepared-spells
+    translations:
+      en:
+        name: Detect Evil and Good
+        description: Level 1 action spell (self). Sense aberrations, celestials,
+          elementals, fey, fiends, and undead within 30 feet, and whether Hallow
+          is active. Concentration, up to 10 minutes.
+        keywords:
+          - spell
+          - level1
+          - detect
+          - evil
+          - good
+          - sense
+          - hallow
+          - divination
+          - action
+          - concentration
+      en-x-tlh:
+        name: mIgh 'ej QaH tu'
+        description: DIch level 1 action. mIgh Ha'DIbaH je 30ft tu' pagh Hallow
+          tu'. buQ, 10 tup.
+        keywords:
+          - spell
+          - level1
+          - tu
+          - mIgh
+          - sense
+          - hallow
+          - action
+          - buQ
+    detail:
+      key: spell/detect-evil-and-good
+      source: srd52
+      translations:
+        en:
+          meta: Level 1 Divination (Cleric, Paladin)
+          fields:
+            - labelKey: rules.field.castingTime
+              value: Action
+            - labelKey: rules.field.range
+              value: Self
+            - labelKey: rules.field.components
+              value: V, S
+            - labelKey: rules.field.duration
+              value: Concentration, up to 10 minutes
+          body: 'For the duration, you sense the location of any Aberration,
+            Celestial, Elemental, Fey, Fiend, or Undead within 30 feet of
+            yourself. You also sense whether the Hallow spell is active there
+            and, if so, where. The spell is blocked by 1 foot of stone, dirt, or
+            wood; 1 inch of metal; or a thin sheet of lead.'
