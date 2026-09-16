@@ -23,6 +23,7 @@ steps:
               secondaryControl:
                 type: segmented
                 var: passed
+                prefix: play.choices.save.outcome
                 options:
                   - value: -1
                     label: planner.record.outcome.none

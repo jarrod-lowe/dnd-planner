@@ -1564,6 +1564,12 @@
       },
       "shield-of-faith": {
         "target": "Target"
+      },
+      "save": {
+        "outcome": "Outcome"
+      },
+      "find-steed": {
+        "type": "Type"
       }
     },
     "plan": {

@@ -413,6 +413,7 @@ const STEED_SKILLS = [
 const SAVE_OUTCOME_CONTROL = {
   type: 'segmented',
   var: 'passed',
+  prefix: 'play.choices.save.outcome',
   options: [
     { value: -1, label: 'planner.record.outcome.none' },
     { value: 1, label: 'planner.record.passed' },
@@ -730,6 +731,7 @@ const findSteed: RuleModule = {
         secondaryControl: {
           type: 'segmented',
           var: 'creatureType',
+          prefix: 'play.choices.find-steed.type',
           options: [
             { value: 0, label: `${O}.creature-type.celestial` },
             { value: 1, label: `${O}.creature-type.fey` },

@@ -1564,6 +1564,12 @@
       },
       "shield-of-faith": {
         "target": "DoS"
+      },
+      "save": {
+        "outcome": "Dotlh"
+      },
+      "find-steed": {
+        "type": "Segh"
       }
     },
     "plan": {

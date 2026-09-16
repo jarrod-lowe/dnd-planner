@@ -50,6 +50,20 @@ steps:
         offers:
           exists:
             - cast-find-steed
+        offerUi:
+          - id: cast-find-steed
+            ui:
+              secondaryControl:
+                type: segmented
+                var: creatureType
+                prefix: play.choices.find-steed.type
+                options:
+                  - value: 0
+                    label: rule.spell-find-steed.offer-find-steed.creature-type.celestial
+                  - value: 1
+                    label: rule.spell-find-steed.offer-find-steed.creature-type.fey
+                  - value: 2
+                    label: rule.spell-find-steed.offer-find-steed.creature-type.fiend
   # Cast Find Steed using default (L2) slot
   # After addOffer: only action/slot consumption is visible
   # Steed stats are inside advertiseEffect, not visible until effect is committed
