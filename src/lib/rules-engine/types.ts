@@ -403,6 +403,23 @@ export interface AnnotationRider {
 export interface Annotation {
   key: string;
   targets: string[];
+  /**
+   * i18n key naming the annotation's ORIGIN — the eyebrow above the label in
+   * the notices strip (the feat or spell a reminder belongs to). Absent on
+   * ordinary panel annotations.
+   */
+  source?: string;
+  /**
+   * i18n key for the longer sentence rendered under a notice's label.
+   * Interpolated with {@link values} — `$t(body, values)`, double-brace params.
+   */
+  body?: string;
+  /**
+   * Interpolation params for {@link body} (string/number only), e.g. a save DC
+   * read from facts at annotate time. Never dice: a folded dice count is a
+   * wrong number waiting to be printed.
+   */
+  values?: Record<string, string | number>;
   rider?: AnnotationRider;
   /**
    * What tapping this annotation plans. Most annotations are advisory
@@ -419,6 +436,17 @@ export interface Annotation {
    */
   addsToPlan?: AnnotationAction;
 }
+
+/**
+ * The reserved annotation `targets` label for NOTICES — passive reminders the
+ * player needs during play that follow no taken choice (Sentinel's opportunity
+ * attacks, a burning Searing Smite target). No panel declares it in
+ * `ui.annotationLabels`, so `getMatchingAnnotations` never claims a
+ * notice-targeted annotation; the notices strip selects on exactly this label.
+ * An annotation MAY carry a panel target alongside this one, but one aimed only
+ * at the strip carries only this.
+ */
+export const NOTICE_TARGET = 'notice';
 
 /**
  * What an actionable annotation adds to the plan: a named offer, or `'again'`

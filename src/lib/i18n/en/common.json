@@ -295,6 +295,8 @@
     },
     "spell-searing-smite": {
       "annotation": "Searing Smite available",
+      "notice-burning": "Burning",
+      "notice-burning.body": "At the start of each burning target's turn: roll its fire dice, then it makes a DC {{dc}} CON save to end the spell.",
       "offer-searing-smite": {
         "name": "Searing Smite",
         "keywords": "smite fire damage burn unarmed evocation",
@@ -1117,9 +1119,13 @@
         }
       },
       "feat-sentinel": {
-        "annotation-disengage": "Sentinel: Bypasses Disengage",
-        "annotation-retaliate": "Sentinel: Attack on non-you triggers reaction",
-        "annotation-speed": "Sentinel: Hit creature's speed becomes 0"
+        "name": "Sentinel",
+        "notice-disengage": "Opportunity Attack on Disengage",
+        "notice-disengage.body": "A creature within 5 ft that takes the Disengage action still provokes your Opportunity Attack.",
+        "notice-retaliate": "Opportunity Attack on ally hit",
+        "notice-retaliate.body": "When a creature within 5 ft hits someone other than you with an attack, you can make an Opportunity Attack against it.",
+        "notice-speed": "Hit stops movement",
+        "notice-speed.body": "A creature you hit with an Opportunity Attack has its Speed reduced to 0 for the rest of the turn."
       },
       "heroic-inspiration": {
         "annotation": "Heroic Inspiration available",
@@ -1701,6 +1707,13 @@
     "planStack": {
       "title": "This Turn I Want To…",
       "placeholder": "Tap + ADD to plan your turn"
+    },
+    "notices": {
+      "title": "Notices",
+      "count": "{{count}}",
+      "expand": "Expand notices ({{count}})",
+      "collapse": "Collapse notices ({{count}})",
+      "placeholder": "Nothing to keep in mind right now."
     },
     "annotation": {
       "addToPlan": "Add to plan: {{annotation}}"

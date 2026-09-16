@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getModule, registeredRuleGroupIds } from '$lib/rules-engine/registry';
+import { NOTICE_TARGET } from '$lib/rules-engine';
 import type { FactReader, Offer, RuleModule } from '$lib/rules-engine';
 
 /**
@@ -57,8 +58,13 @@ describe('annotation targets', () => {
     for (const m of all) {
       if (!m.annotate) continue;
       for (const annotation of m.annotate(permissiveReader))
-        for (const target of annotation.targets)
+        for (const target of annotation.targets) {
+          // The reserved notice label is carried by no panel BY DESIGN — the
+          // notices strip owns it (it selects on exactly this label), so a
+          // notice-targeted annotation must not count as orphaned here.
+          if (target === NOTICE_TARGET) continue;
           if (!carried.has(target)) orphans.push(`${m.id} → ${target}`);
+        }
     }
 
     expect(orphans, `annotation targets no panel carries: ${orphans.join(', ')}`).toEqual([]);

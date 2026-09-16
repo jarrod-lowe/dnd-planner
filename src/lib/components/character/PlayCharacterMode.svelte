@@ -5,11 +5,13 @@
   import { playStore } from '$lib/play/playStore.svelte';
   import IntentTopBar from '../play/IntentTopBar.svelte';
   import ActiveStateStrip from '../play/ActiveStateStrip.svelte';
+  import NoticeStrip from '../play/NoticeStrip.svelte';
   import PlanStack from '../play/PlanStack.svelte';
   import Ledger from '../play/Ledger.svelte';
   import type { Character } from '$lib/character/types';
   import type { AvailableRuleEntry } from '$lib/rules-view';
   import { getConcentrationEffectName, mergeActiveEffects } from '$lib/play/effectUtils';
+  import { getNotices } from '$lib/play/notices';
   import { getCompanionView, setCompanionView } from '$lib/play/companionStore.svelte';
   import { getSubject } from '$lib/play/subjectUtils';
 
@@ -57,6 +59,10 @@
 
   // Collect active annotations from engine output
   const activeAnnotations = $derived(playStore.state.engineOutput?.annotations ?? []);
+
+  // The passive reminders for the notices strip: the same engine annotations,
+  // filtered to the reserved notice target (everything no panel claims).
+  const notices = $derived(getNotices(activeAnnotations));
 
   // Current effects: committed + this turn's advertised, deduped by id AND by
   // replacement key (mergeActiveEffects), so a planned key-replacement suppresses
@@ -176,6 +182,7 @@
         onDismissEffect={handleRemoveEffect}
         onToggleHiddenEffects={() => (showHiddenEffects = !showHiddenEffects)}
       />
+      <NoticeStrip {notices} />
       <PlanStack
         items={playStore.state.plannedItems}
         entries={availableRules}
@@ -250,6 +257,10 @@
     max-height: 8.5rem;
     overflow-x: auto;
     overflow-y: hidden;
+  }
+
+  .play-character__intent-body > :global(.notice-strip) {
+    flex-shrink: 0;
   }
 
   .play-character__intent-body > :global(.plan-stack) {

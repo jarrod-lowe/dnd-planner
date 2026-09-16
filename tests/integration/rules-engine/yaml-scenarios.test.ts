@@ -332,6 +332,8 @@ const EXPECTED_RUNNABLE = [
   'shield-of-faith-ally-cast',
   // Searing Smite — L1 bonus-action on-hit smite (fire rider, no concentration)
   'searing-smite-usage',
+  // Searing Smite — the live burn's notice (DC interpolated, no dice in string)
+  'searing-smite-burning-notice',
   // Cure Wounds — L1 action heal (2d8 + spellcasting modifier dice line)
   'cure-wounds-cast',
   // Detect Evil and Good — L1 action concentration divination (descriptive senses)

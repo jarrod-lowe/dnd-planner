@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { mount } from 'svelte';
+import { mount, tick } from 'svelte';
 import { readable } from 'svelte/store';
 
 // English translations for testing
@@ -16,6 +16,11 @@ const mockFns = vi.hoisted(() => ({
   removeFromPlan: vi.fn(),
   movePlanItem: vi.fn()
 }));
+
+// Vitest hoists EVERY vi.mock call in the file, even one written inside a test,
+// so a second in-test playStore mock would hijack the whole file's store. One
+// registration with a mutable flag instead; the loading test flips it.
+const mockState = vi.hoisted(() => ({ isLoading: false }));
 
 // Mock $lib/i18n module
 vi.mock('$lib/i18n', () => ({
@@ -35,7 +40,7 @@ vi.mock('$lib/play/playStore.svelte', () => ({
   playStore: {
     get state() {
       return {
-        isLoadingRuleGroups: false,
+        isLoadingRuleGroups: mockState.isLoading,
         ruleGroupError: null,
         ruleGroups: [],
         topBarEntries: [],
@@ -48,7 +53,21 @@ vi.mock('$lib/play/playStore.svelte', () => ({
           },
           collections: {},
           availableRules: [],
-          annotations: [],
+          // One notice-targeted annotation (must reach the notice strip) and
+          // one panel-targeted (must NOT — proves PlayCharacterMode filters
+          // through getNotices rather than passing the raw list).
+          annotations: [
+            {
+              key: 'rule.dnd-5e-2024.feat-sentinel.notice-disengage',
+              targets: ['notice'],
+              source: 'rule.dnd-5e-2024.feat-sentinel.name',
+              body: 'rule.dnd-5e-2024.feat-sentinel.notice-disengage.body'
+            },
+            {
+              key: 'rule.dnd-5e-2024.find-steed.annotate-life-bond.text',
+              targets: ['healing.any']
+            }
+          ],
           effects: [],
           diagnostics: { errors: [], warnings: [], notices: [] },
           trace: {
@@ -81,17 +100,29 @@ vi.mock('$lib/play/playStore.svelte', () => ({
   }
 }));
 
+// The strips we assert ORDER against are stubbed to single marker elements
+// carrying their real root class, so compareDocumentPosition can see where
+// PlayCharacterMode places them in the DOM. A bare vi.fn() renders nothing,
+// leaving no anchor to compare against.
+function stubStrip(className: string) {
+  return vi.fn((anchor: ChildNode) => {
+    const marker = document.createElement('div');
+    marker.className = className;
+    anchor.before(marker);
+  });
+}
+
 // Mock child components
 vi.mock('$lib/components/play/IntentTopBar.svelte', () => ({
   default: vi.fn()
 }));
 
 vi.mock('$lib/components/play/ActiveStateStrip.svelte', () => ({
-  default: vi.fn()
+  default: stubStrip('active-state-strip')
 }));
 
 vi.mock('$lib/components/play/PlanStack.svelte', () => ({
-  default: vi.fn()
+  default: stubStrip('plan-stack')
 }));
 
 vi.mock('$lib/components/play/Ledger.svelte', () => ({
@@ -123,6 +154,7 @@ describe('PlayCharacterMode', () => {
     container = document.createElement('div');
     document.body.appendChild(container);
     vi.clearAllMocks();
+    mockState.isLoading = false;
   });
 
   it('calls loadRuleGroups on mount with character ID', async () => {
@@ -156,31 +188,48 @@ describe('PlayCharacterMode', () => {
     expect(container.querySelector('.play-character')).toBeTruthy();
   });
 
-  it('shows loading state when isLoadingRuleGroups is true', async () => {
-    vi.mock('$lib/play/playStore.svelte', () => ({
-      playStore: {
-        get state() {
-          return {
-            isLoadingRuleGroups: true,
-            ruleGroupError: null,
-            topBarEntries: [],
-            resourceEntries: [],
-            effects: [],
-            plannedItems: [],
-            facts: {},
-            stats: [],
-            engineOutput: null,
-            isEvaluating: false
-          };
-        },
-        loadRuleGroups: mockFns.loadRuleGroups
+  it('mounts the notice strip between the active states and the plan stack', async () => {
+    mount(PlayCharacterMode, {
+      target: container,
+      props: {
+        character: mockCharacter,
+        email: 'test@example.com',
+        onLogout: vi.fn(),
+        onBack: vi.fn()
       }
-    }));
+    });
+    await tick();
 
-    const { default: PlayCharacterModeLocal } =
-      await import('$lib/components/character/PlayCharacterMode.svelte');
+    const noticeStrip = container.querySelector('.notice-strip');
+    expect(noticeStrip, 'NoticeStrip should be mounted').toBeTruthy();
 
-    mount(PlayCharacterModeLocal, {
+    const activeStates = container.querySelector('.active-state-strip');
+    const planStack = container.querySelector('.plan-stack');
+    expect(activeStates, 'active states marker should render').toBeTruthy();
+    expect(planStack, 'plan stack marker should render').toBeTruthy();
+
+    expect(
+      activeStates!.compareDocumentPosition(noticeStrip!) & Node.DOCUMENT_POSITION_FOLLOWING,
+      'notices come after the active states'
+    ).toBeTruthy();
+    expect(
+      noticeStrip!.compareDocumentPosition(planStack!) & Node.DOCUMENT_POSITION_FOLLOWING,
+      'notices come before the plan stack'
+    ).toBeTruthy();
+
+    // Only the notice-targeted annotation reaches the strip — the raw engine
+    // annotation list must be filtered through getNotices on the way in.
+    const cells = container.querySelectorAll('.notice-strip__cell');
+    expect(cells).toHaveLength(1);
+    expect(cells[0].querySelector('.notice-strip__label')?.textContent).toContain(
+      'rule.dnd-5e-2024.feat-sentinel.notice-disengage'
+    );
+  });
+
+  it('shows loading state when isLoadingRuleGroups is true', async () => {
+    mockState.isLoading = true;
+
+    mount(PlayCharacterMode, {
       target: container,
       props: {
         character: mockCharacter,

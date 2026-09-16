@@ -295,6 +295,8 @@
     },
     "spell-searing-smite": {
       "annotation": "meQ muHta chen",
+      "notice-burning": "meQtaH",
+      "notice-burning.body": "meQbogh DoS poH chonghugh: qul HIqchaj tIghuHmoH, ghIq {{dc}} CON ra' cheghlaH mugh mev.",
       "offer-searing-smite": {
         "name": "meQ muHta",
         "keywords": "smite fire damage burn unarmed evocation",
@@ -1117,9 +1119,13 @@
         }
       },
       "feat-sentinel": {
-        "annotation-disengage": "Sentinel: DIch DIvI' DIch",
-        "annotation-retaliate": "Sentinel: DIvI' DIch DIch DIvI' 'ej DIvI'",
-        "annotation-speed": "Sentinel: DIch DIvI' DIvI' DIch DIch"
+        "name": "Sentinel",
+        "notice-disengage": "mevchu' DIch HIv",
+        "notice-disengage.body": "vagh qejmeyDaq Sepbogh Doch, mevchu' Qu' Data'chugh, DIch HIvlIj tongtaH 'e'.",
+        "notice-retaliate": "jup HIv DIch",
+        "notice-retaliate.body": "vagh qejmeyDaq Sepbogh Doch, SoHbe'bogh latlh HIv qIpchugh, DIch HIv DangeHlaH SoH.",
+        "notice-speed": "qIp leng tov",
+        "notice-speed.body": "DIch HIvDaq Doch Data'pu' SoH, Dochvam leng HeDtaH 'e' chav."
       },
       "heroic-inspiration": {
         "annotation": "SuvwI' SubchI' DIch",
@@ -1701,6 +1707,13 @@
     "planStack": {
       "title": "This Turn I Want To…",
       "placeholder": "Tap + ADD to plan your turn"
+    },
+    "notices": {
+      "title": "qawnIS",
+      "count": "{{count}}",
+      "expand": "qawnIS poSmoH ({{count}})",
+      "collapse": "qawnIS SoQmoH ({{count}})",
+      "placeholder": "DaH pagh qawnIS"
     },
     "annotation": {
       "addToPlan": "nab chel: {{annotation}}"
