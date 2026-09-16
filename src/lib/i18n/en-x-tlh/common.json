@@ -297,7 +297,7 @@
       "annotation": "meQ muHta chen",
       "offer-searing-smite": {
         "name": "meQ muHta",
-        "keywords": "smite fire damage burn evocation",
+        "keywords": "smite fire damage burn unarmed evocation",
         "description": "nuH DIch tlhej | +1d6 qul, ghIq 1d6/rep | CON ra' meQ mev",
         "no_bonus_action": "Quv DIvI' tu'lu'be'",
         "no_attack": "wa'DIch HIv lo'nIS",
@@ -322,7 +322,7 @@
     "spell-detect-evil-and-good": {
       "offer-detect-evil-and-good": {
         "name": "mIgh 'ej QaH tu'",
-        "keywords": "detect sense aberration celestial elemental fey fiend undead divination",
+        "keywords": "detect sense aberration celestial elemental fey fiend undead hallow divination",
         "description": "wa' | 10 tup | mIgh Ha'DIbaH je 30ft tu'",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
