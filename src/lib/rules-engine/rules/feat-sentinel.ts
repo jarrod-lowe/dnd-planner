@@ -3,15 +3,22 @@ import { defineRule, type RuleModule } from '../builder';
 const S = 'rule.dnd-5e-2024.feat-sentinel';
 
 /**
- * Sentinel feat — sets `feat.sentinel.active` and emits its three benefits as
- * NOTICES: each annotation targets only the reserved `'notice'` label (equal to
- * `NOTICE_TARGET`; rule modules may import only the builder, so the label is a
- * literal here and the unit test pins it to the exported constant), names the
- * feat as its `source` (the strip's eyebrow) and carries a `body` key for the
- * longer sentence. None target a panel, so the reminders render in the notices
- * strip rather than on reaction rows. The feat's Ability Score Improvement
- * offer is deferred (no runnable scenario exercises it). Foundational, so no
- * search meta.
+ * Sentinel feat — sets `feat.sentinel.active` and emits its three benefits.
+ * Two are standing reminders the player needs with no choice made, so they
+ * are NOTICES: they target only the reserved `'notice'` label (equal to
+ * `NOTICE_TARGET`; rule modules may import only the builder, so the label is
+ * a literal here and the unit test pins it to the exported constant), name
+ * the feat as their `source` (the strip's eyebrow) and carry a `body` key
+ * for the longer sentence.
+ *
+ * The speed-to-0 benefit is post-hoc — it only matters AFTER the player
+ * plans an Opportunity Attack — so it rides the reaction panels via their
+ * `'attack.reaction'` annotationLabels (same confinement rule as 'notice':
+ * a literal here, pinned by the tests). Panels render the annotation label
+ * only (`$t(annotation.key)`), so it carries no `body`.
+ *
+ * The feat's Ability Score Improvement offer is deferred (no runnable
+ * scenario exercises it). Foundational, so no search meta.
  */
 const featSentinel: RuleModule = {
   id: 'feat-sentinel',
@@ -33,9 +40,8 @@ const featSentinel: RuleModule = {
           },
           {
             key: `${S}.notice-speed`,
-            targets: ['notice'],
-            source: `${S}.name`,
-            body: `${S}.notice-speed.body`
+            targets: ['attack.reaction'],
+            source: `${S}.name`
           }
         ]
       : []

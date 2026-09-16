@@ -1,0 +1,70 @@
+name: 'Sanctuary - Ward Notice'
+description: >-
+  Once the Sanctuary ward is live (sanctuary.active, written by the committed
+  effect-sanctuary marker), a NOTICE reminds the player that an attacker who
+  targets them must first pass a Wisdom save against the spell save DC, or the
+  attack misses and is wasted. The DC is interpolated from
+  spellcasting.saveDC. Dismissing the chip (un-committing the effect) removes
+  the state delta, so the fact and the notice go with it; no ward committed,
+  no notice.
+ruleGroups:
+  - dnd-5e-2024/prepared-spells
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-sanctuary
+steps:
+  - evaluate:
+  - addOffer:
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: sanctuary
+            level: 1
+            nameKey: rule.spell-sanctuary.offer-sanctuary.name
+            preparedFact: spell.l1.sanctuary.prepared
+            alwaysPreparedFact: spell.l1.sanctuary.alwaysPrepared
+  # Set Charisma 16 so the save DC is a real number (8 + 2 prof + 3 mod = 13).
+  - addOffer:
+      id: set-charisma
+      selections:
+        score: 16
+      assert:
+        facts:
+          spellcasting.saveDC: 13
+        annotations:
+          # Prepared but unwarded: no notice.
+          notExists:
+            - rule.spell-sanctuary.notice
+  - addOffer:
+      id: cast-sanctuary
+      assert:
+        facts:
+          sanctuary.active: 1
+        annotations:
+          exists:
+            - rule.spell-sanctuary.notice
+          targets:
+            - key: rule.spell-sanctuary.notice
+              targets: [notice]
+  - endTurn:
+      assert:
+        facts:
+          sanctuary.active: 1
+        annotations:
+          # The ward marker survives the turn boundary, and so does the notice.
+          exists:
+            - rule.spell-sanctuary.notice
+  - removeEffect:
+      id: effect-sanctuary
+      assert:
+        facts:
+          sanctuary.active: 0
+        annotations:
+          # Dismissed chip: no ward fact, no notice.
+          notExists:
+            - rule.spell-sanctuary.notice

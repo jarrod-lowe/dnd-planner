@@ -30,11 +30,21 @@ steps:
         offers:
           exists:
             - cast-bless
+        annotations:
+          # Slot free: no concentrating notice.
+          notExists:
+            - planner.concentration.notice
   - addOffer:
       id: cast-bless
       assert:
         facts:
           concentration.remaining: 0
+        annotations:
+          exists:
+            - planner.concentration.notice
+          targets:
+            - key: planner.concentration.notice
+              targets: [notice]
   - endTurn:
       assert:
         effects:

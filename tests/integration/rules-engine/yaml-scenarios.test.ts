@@ -324,8 +324,10 @@ const EXPECTED_RUNNABLE = [
   'spell-effect-persists',
   'spell-long-rest-resets',
   'spell-no-slots',
-  // M3 — sanctuary (L1 bonus-action ward, dismissed on rest)
+  // M3 — sanctuary (L1 bonus-action ward, dismissed on rest) and its live
+  // ward's notice (DC interpolated from spellcasting.saveDC)
   'sanctuary-cast',
+  'sanctuary-ward-notice',
   // Shield of Faith — L1 bonus-action concentration ward (+2 AC)
   'shield-of-faith-cast',
   // Shield of Faith cast on an ally — full spend, concentration held, no self AC
@@ -499,7 +501,9 @@ const EXPECTED_RUNNABLE = [
   // M3 — spear (versatile/thrown; one-handed don works, 2H free-hand check deferred)
   'hands-weapon-spear-uses-1',
   // M3 — calm-emotions + hold-person (L2 concentration wards) + oath L5 granting
-  // them always-prepared
+  // them always-prepared; and the live hold's repeat-save notice (DC
+  // interpolated from spellcasting.saveDC)
+  'hold-person-held-notice',
   'oath-redemption-l5-oath-spells-always-prepared',
   'oath-redemption-l5-oath-spells-prepared-then-granted',
   // M3 — find-steed (companion summon as companion.steed.* facts) + the paladin

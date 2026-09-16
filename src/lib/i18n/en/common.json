@@ -11,6 +11,8 @@
       }
     },
     "spell-sanctuary": {
+      "notice": "Sanctuary",
+      "notice.body": "An attacker who targets you must first pass a DC {{dc}} Wisdom save, or the attack misses and is wasted.",
       "offer-sanctuary": {
         "name": "Sanctuary",
         "keywords": "protect ward shield abjuration safe",
@@ -180,6 +182,8 @@
       }
     },
     "spell-hold-person": {
+      "notice": "Held",
+      "notice.body": "At the end of each held target's turn, it repeats a DC {{dc}} Wisdom save to end the spell.",
       "offer-hold-person": {
         "name": "Hold Person",
         "keywords": "paralyse paralyze stun freeze control humanoid",
@@ -1104,7 +1108,9 @@
         "annotation-proficiency": "Alert: May add proficiency",
         "initiative-proficiency": {
           "button": "With Proficiency"
-        }
+        },
+        "notice-surprise": "Can't be surprised",
+        "notice-surprise.body": "You can't be surprised while you're conscious."
       },
       "feat-savage-attacker": {
         "annotation": "Savage Attacker: Reroll damage dice once per turn",
@@ -1124,8 +1130,7 @@
         "notice-disengage.body": "A creature within 5 ft that takes the Disengage action still provokes your Opportunity Attack.",
         "notice-retaliate": "Opportunity Attack on ally hit",
         "notice-retaliate.body": "When a creature within 5 ft hits someone other than you with an attack, you can make an Opportunity Attack against it.",
-        "notice-speed": "Hit stops movement",
-        "notice-speed.body": "A creature you hit with an Opportunity Attack has its Speed reduced to 0 for the rest of the turn."
+        "notice-speed": "Speed 0 on hit"
       },
       "heroic-inspiration": {
         "annotation": "Heroic Inspiration available",
@@ -1980,7 +1985,9 @@
   "planner": {
     "after-rest": "Planned after a rest — it still applies, but this projection may be off.",
     "concentration": {
-      "check": "Concentration Check"
+      "check": "Concentration Check",
+      "notice": "Concentrating",
+      "notice.body": "If you take damage, make a DC 10 Constitution save to keep the spell (DC half the damage, if higher)."
     },
     "record": {
       "damage": "Record Damage",
