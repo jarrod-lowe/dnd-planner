@@ -415,9 +415,10 @@ export interface Annotation {
    */
   body?: string;
   /**
-   * Interpolation params for {@link body} (string/number only), e.g. a save DC
-   * read from facts at annotate time. Never dice: a folded dice count is a
-   * wrong number waiting to be printed.
+   * Interpolation params for {@link body} — and, on bodyless panel
+   * annotations, for the label itself (`$t(key, values)`) — (string/number
+   * only), e.g. a save DC read from facts at annotate time. Never dice: a
+   * folded dice count is a wrong number waiting to be printed.
    */
   values?: Record<string, string | number>;
   rider?: AnnotationRider;

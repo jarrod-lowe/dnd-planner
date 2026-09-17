@@ -75,14 +75,17 @@ steps:
   - removeFromPlan:
       id: record-damage
 
-  # Record damage while concentrating
+  # Record damage while concentrating — 25 so the DC computation takes the
+  # interesting branch (half rounded down = 12, above the DC 10 floor and
+  # below the DC 30 cap). The marker carries the amount for the label.
   - addOffer:
       id: record-damage
       selections:
-        amount: 15
+        amount: 25
       assert:
         facts:
           concentration.damage-taken: 1
+          concentration.last-damage: 25
         offers:
           exists:
             - concentration-check
@@ -90,7 +93,8 @@ steps:
           # The save is owed NOW, and the post-hoc reminder rides the
           # record-damage panel via the recorder's damage.any
           # annotationLabel (the record-heal / healing.any idiom), not the
-          # notices strip — appearing exactly with the check.
+          # notices strip — appearing exactly with the check. The label
+          # interpolates the computed DC (12 here) from the marker's amount.
           exists:
             - planner.concentration.annotation
           targets:

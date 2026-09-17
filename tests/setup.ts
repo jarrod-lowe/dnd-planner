@@ -47,7 +47,12 @@ vi.mock('sveltekit-i18n', () => {
     'play.units.hp': '{{value}} HIT_POINTS',
     'play.units.ft': '{{value}} FEET',
     'play.units.compact.ft': '{{value}}FEET',
-    'play.annotation.addToPlan': 'Add to plan: {{annotation}}'
+    'play.annotation.addToPlan': 'Add to plan: {{annotation}}',
+    // A label-with-values template (the concentration save DC reminder is the
+    // production user): panel annotations interpolate $t(key, values) exactly
+    // as the notices strip interpolates bodies.
+    'play.annotations.concentration-save':
+      'Concentration save — DC {{dc}} Constitution save to keep the spell.'
   };
 
   return {

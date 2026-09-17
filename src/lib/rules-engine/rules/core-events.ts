@@ -238,8 +238,9 @@ const coreEvents: RuleModule = {
         section: 'free',
         name: 'planner.record.damage',
         // The recorder idiom (record-heal carries 'healing.any'): the panel
-        // the post-hoc damage reminders ride — concentration's DC 10
-        // save-to-keep-the-spell annotation while the slot is held.
+        // the post-hoc damage reminders ride — concentration's
+        // save-to-keep-the-spell annotation (with the computed DC) while the
+        // slot is held.
         annotationLabels: ['damage.any'],
         primaryControl: {
           type: 'slider',
@@ -275,12 +276,16 @@ const coreEvents: RuleModule = {
           }
         ];
         // Taking damage while concentrating (the slot is held → remaining ≤ 0)
-        // trips the concentration group's check trigger. Keyed + endOfTurn so it
-        // lasts only this turn and a planned concentration-check can clear it
-        // (same key, newest wins). Gated on the group being loaded so it never
-        // sets a phantom fact when concentration isn't in play, and on the
-        // amount: a row left at the slider's default 0 is no damage taken, so it
-        // must not put a concentration check in front of the player.
+        // trips the concentration group's check trigger, carrying the amount so
+        // the reminder can SAY the save DC (SRD 5.2: the DC equals 10 or half
+        // the damage taken, round down, whichever is higher, max 30 — computed
+        // by the concentration group's annotation, not here). Keyed +
+        // endOfTurn so it lasts only this turn and a planned
+        // concentration-check can clear it (same key, newest wins). Gated on
+        // the group being loaded so it never sets a phantom fact when
+        // concentration isn't in play, and on the amount: a row left at the
+        // slider's default 0 is no damage taken, so it must not put a
+        // concentration check in front of the player.
         if (
           amount > 0 &&
           f.has('concentration.remaining') &&
@@ -289,7 +294,10 @@ const coreEvents: RuleModule = {
           advertise.push({
             id: 'concentration-damage-taken',
             key: 'concentration-damage-taken',
-            state: { 'concentration.damage-taken': 1 },
+            state: {
+              'concentration.damage-taken': 1,
+              'concentration.last-damage': amount
+            },
             expiry: { kind: 'endOfTurn' }
           });
         }

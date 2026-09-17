@@ -24,27 +24,38 @@ const concentration: RuleModule = {
     }
   ],
   // While the slot is held AND damage was recorded while holding it, an
-  // annotation carries the damage-save rule (DC 10, or half the damage taken,
-  // whichever is higher — 2024). The reminder is post-hoc — it matters when
-  // the player records damage — so it rides the record-damage panel via its
-  // 'damage.any' annotationLabel (the recorder idiom: record-heal carries
-  // 'healing.any'), not the notices strip. Annotations derive from the FINAL
-  // post-plan facts and render on every matching row, so the gate is the
-  // step-time marker `concentration.damage-taken` (record-damage sets it only
-  // when the slot was held at record time): ungated, damage planned before
-  // the cast would show the save instruction for a save that is not owed
-  // (SRD 5.2: only damage taken while concentrating demands the check).
-  // Gated, the annotation coincides with the concentration-check offer — the
-  // standing undamaged heads-up on the recorder is gone by design. Panels
-  // render the label only ($t(annotation.key), no values), so the DC 10 rule
-  // text is baked into the label copy. Rule modules may import only the
-  // builder, so the label is a literal here and the unit test pins it to the
-  // recorder's declared annotationLabels. Keys sit in the module's existing
-  // planner.concentration.* namespace (the check offer's name key).
-  annotate: (f): Annotation[] =>
-    f.num('concentration.damage-taken') === 1 && f.num('concentration.remaining') <= 0
-      ? [{ key: `${P}.annotation`, targets: ['damage.any'] }]
-      : [],
+  // annotation carries the damage-save rule with the COMPUTED DC. The reminder
+  // is post-hoc — it matters when the player records damage — so it rides the
+  // record-damage panel via its 'damage.any' annotationLabel (the recorder
+  // idiom: record-heal carries 'healing.any'), not the notices strip.
+  // Annotations derive from the FINAL post-plan facts and render on every
+  // matching row, so the gate is the step-time marker
+  // `concentration.damage-taken` (record-damage sets it only when the slot
+  // was held at record time): ungated, damage planned before the cast would
+  // show the save instruction for a save that is not owed (SRD 5.2: only
+  // damage taken while concentrating demands the check). Gated, the
+  // annotation coincides with the concentration-check offer — the standing
+  // undamaged heads-up on the recorder is gone by design. The damage amount
+  // rides the same keyed marker (`concentration.last-damage`, newest wins),
+  // so the label interpolates the DC rather than reciting the min/max prose:
+  // SRD 5.2 — "The DC equals 10 or half the damage taken (round down),
+  // whichever number is higher, up to a maximum DC of 30." Panels render
+  // $t(annotation.key, annotation.values), the same double-brace
+  // interpolation the notices strip uses for bodies. Rule modules may import
+  // only the builder, so the label key is a literal here and the unit test
+  // pins it to the recorder's declared annotationLabels. Keys sit in the
+  // module's existing planner.concentration.* namespace (the check offer's
+  // name key).
+  annotate: (f): Annotation[] => {
+    if (f.num('concentration.damage-taken') !== 1 || f.num('concentration.remaining') > 0)
+      return [];
+    // Half the damage, round down, clamped 10..30. `last-damage` is 0/unset
+    // only when the marker arrived without an amount (never from
+    // record-damage, which gates on amount > 0); the clamp then serves the
+    // DC 10 floor — a sane label, not an undefined number.
+    const dc = Math.min(30, Math.max(10, Math.floor(f.num('concentration.last-damage') / 2)));
+    return [{ key: `${P}.annotation`, targets: ['damage.any'], values: { dc } }];
+  },
   offer: () => [
     {
       // Surfaces only while concentrating (slot held → remaining ≤ 0) and damage
@@ -70,11 +81,12 @@ const concentration: RuleModule = {
               expiry: { kind: 'endOfTurn' }
             },
             // Same key as record-damage's marker → planning the check (later in the
-            // fold) clears damage-taken back to 0 (newest wins).
+            // fold) clears damage-taken AND its carried amount back to 0 (newest
+            // wins), so a later reminder's DC cannot quote stale damage.
             {
               id: 'concentration-damage-taken',
               key: 'concentration-damage-taken',
-              state: { 'concentration.damage-taken': 0 },
+              state: { 'concentration.damage-taken': 0, 'concentration.last-damage': 0 },
               expiry: { kind: 'endOfTurn' }
             }
           ]
