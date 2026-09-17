@@ -1982,7 +1982,7 @@
     "after-rest": "Planned after a rest — it still applies, but this projection may be off.",
     "concentration": {
       "check": "Concentration Check",
-      "annotation": "Concentration save — DC 10 Constitution save to keep the spell, or half the damage taken if higher."
+      "annotation": "Concentration save — DC 10 Constitution save to keep the spell, or half the damage taken (round down) if higher, maximum DC 30."
     },
     "record": {
       "damage": "Record Damage",
