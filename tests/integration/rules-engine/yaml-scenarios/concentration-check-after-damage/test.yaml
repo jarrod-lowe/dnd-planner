@@ -40,14 +40,10 @@ steps:
         facts:
           concentration.remaining: 0
         annotations:
-          exists:
+          # The slot is held but no damage is recorded: no save is owed yet, so
+          # the recorder reminder is off — it coincides with the check itself.
+          notExists:
             - planner.concentration.annotation
-          targets:
-            # Post-hoc reminder: it rides the record-damage panel via the
-            # recorder's damage.any annotationLabel (the record-heal /
-            # healing.any idiom), not the notices strip.
-            - key: planner.concentration.annotation
-              targets: [damage.any]
   - endTurn:
       assert:
         effects:
@@ -62,7 +58,7 @@ steps:
           exists:
             - record-damage
   # A damage row left at the slider's default 0 records no damage, so it must
-  # not trigger a concentration check.
+  # not trigger a concentration check — nor the recorder reminder.
   - addOffer:
       id: record-damage
       selections:
@@ -73,6 +69,9 @@ steps:
         offers:
           notExists:
             - concentration-check
+        annotations:
+          notExists:
+            - planner.concentration.annotation
   - removeFromPlan:
       id: record-damage
 
@@ -87,3 +86,13 @@ steps:
         offers:
           exists:
             - concentration-check
+        annotations:
+          # The save is owed NOW, and the post-hoc reminder rides the
+          # record-damage panel via the recorder's damage.any
+          # annotationLabel (the record-heal / healing.any idiom), not the
+          # notices strip — appearing exactly with the check.
+          exists:
+            - planner.concentration.annotation
+          targets:
+            - key: planner.concentration.annotation
+              targets: [damage.any]

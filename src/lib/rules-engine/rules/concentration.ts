@@ -23,18 +23,26 @@ const concentration: RuleModule = {
       value: (f) => f.num('concentration.max') - f.num('concentration.spent')
     }
   ],
-  // While the slot is held, an annotation carries the damage-save rule (DC 10,
-  // or half the damage taken, whichever is higher — 2024). The reminder is
-  // post-hoc — it matters when the player records damage — so it rides the
-  // record-damage panel via its 'damage.any' annotationLabel (the recorder
-  // idiom: record-heal carries 'healing.any'), not the notices strip. Panels
+  // While the slot is held AND damage was recorded while holding it, an
+  // annotation carries the damage-save rule (DC 10, or half the damage taken,
+  // whichever is higher — 2024). The reminder is post-hoc — it matters when
+  // the player records damage — so it rides the record-damage panel via its
+  // 'damage.any' annotationLabel (the recorder idiom: record-heal carries
+  // 'healing.any'), not the notices strip. Annotations derive from the FINAL
+  // post-plan facts and render on every matching row, so the gate is the
+  // step-time marker `concentration.damage-taken` (record-damage sets it only
+  // when the slot was held at record time): ungated, damage planned before
+  // the cast would show the save instruction for a save that is not owed
+  // (SRD 5.2: only damage taken while concentrating demands the check).
+  // Gated, the annotation coincides with the concentration-check offer — the
+  // standing undamaged heads-up on the recorder is gone by design. Panels
   // render the label only ($t(annotation.key), no values), so the DC 10 rule
   // text is baked into the label copy. Rule modules may import only the
   // builder, so the label is a literal here and the unit test pins it to the
   // recorder's declared annotationLabels. Keys sit in the module's existing
   // planner.concentration.* namespace (the check offer's name key).
   annotate: (f): Annotation[] =>
-    f.num('concentration.remaining') <= 0
+    f.num('concentration.damage-taken') === 1 && f.num('concentration.remaining') <= 0
       ? [{ key: `${P}.annotation`, targets: ['damage.any'] }]
       : [],
   offer: () => [

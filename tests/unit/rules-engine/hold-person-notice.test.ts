@@ -51,10 +51,23 @@ describe('hold-person annotate — notice', () => {
     expect(notice!.source).toBe(`${P}.offer-hold-person.name`);
     expect(notice!.body).toBe(`${P}.notice.body`);
     expect(notice!.values).toEqual({ dc: out.facts['spellcasting.saveDC'] });
-    // Concentration is held too, so the concentration damage-save reminder
-    // rides along on the damage recorder — the two surfaces coexist, neither
-    // replaces the other.
-    expect(out.annotations.find((a) => a.key === 'planner.concentration.annotation')).toBeDefined();
+    // Concentration is held too, but no damage was recorded while holding
+    // it, so the recorder reminder is off — no concentration save is owed,
+    // and the reminder coincides with the concentration-check offer.
+    expect(
+      out.annotations.find((a) => a.key === 'planner.concentration.annotation')
+    ).toBeUndefined();
+    // With damage recorded while held (the `concentration.damage-taken` marker
+    // is core-events' committed effect — a genuine input fact for this module
+    // set), the two surfaces coexist, neither replaces the other.
+    const damaged = evaluate({
+      modules: ALL,
+      inputFacts: { ...FACTS, 'concentration.damage-taken': 1 },
+      planned: [cast('c1')]
+    });
+    expect(
+      damaged.annotations.find((a) => a.key === 'planner.concentration.annotation')
+    ).toBeDefined();
   });
 
   it('emits no notice while nothing is held', () => {
@@ -64,24 +77,31 @@ describe('hold-person annotate — notice', () => {
   });
 
   it('un-committing the hold chip removes the fact, the notice, and the concentration hold', () => {
-    const { advertised } = evaluatePlan(ALL, FACTS, [cast('c1')]);
+    // Damage recorded while held, so the recorder reminder is live too — its
+    // disappearance below is the slot releasing, not an absent marker.
+    const damaged: Facts = { ...FACTS, 'concentration.damage-taken': 1 };
+    const { advertised } = evaluatePlan(ALL, damaged, [cast('c1')]);
     // The committed marker keeps the hold (and its notice) alive…
     const committed = evaluate({
       modules: ALL,
-      inputFacts: FACTS,
+      inputFacts: damaged,
       planned: [],
       committed: advertised
     });
     expect(committed.facts['holdPerson.active']).toBe(1);
     expect(committed.annotations.some((a) => a.key === `${P}.notice`)).toBe(true);
+    expect(committed.annotations.some((a) => a.key === 'planner.concentration.annotation')).toBe(
+      true
+    );
 
     // …and dismissing the chip drops the effect, whose state delta was the ONLY
-    // writer of the fact — the hold (and both reminders it gates) is gone, and
-    // the concentration spend went with the same effect.
+    // writer of the fact — the hold (and the notice) is gone, and the
+    // concentration spend went with the same effect: the slot is free, so no
+    // spell is at risk and the recorder reminder goes too, marker or not.
     const dismissed = advertised.filter((e) => e.id.split('#').pop() !== 'effect-hold-person');
     const after = evaluate({
       modules: ALL,
-      inputFacts: FACTS,
+      inputFacts: damaged,
       planned: [],
       committed: dismissed
     });

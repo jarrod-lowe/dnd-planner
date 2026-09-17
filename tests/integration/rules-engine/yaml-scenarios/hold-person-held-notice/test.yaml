@@ -7,8 +7,12 @@ description: >-
   interpolated from spellcasting.saveDC. Dismissing the chip (un-committing
   the effect) removes the state delta — fact, notice, and the concentration
   hold all go with it; nothing held, no notice. The concentration damage-save
-  reminder stays on the damage recorder (planner.concentration.annotation):
-  one spell legitimately owns both surfaces.
+  reminder stays on the damage recorder (planner.concentration.annotation) —
+  one spell legitimately owns both surfaces — but only once damage is
+  recorded while held: annotations render from final post-plan facts, so an
+  ungated reminder would show on a damage row planned BEFORE the cast for a
+  save that is not owed (SRD 5.2: only damage taken while concentrating
+  demands the check).
 ruleGroups:
   - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
@@ -55,19 +59,45 @@ steps:
         annotations:
           exists:
             - rule.spell-hold-person.notice
+          # No damage recorded while the slot is held yet, so no save is owed:
+          # the recorder reminder is off (a damage row planned BEFORE this
+          # cast trips no marker and must not show it either).
+          notExists:
             - planner.concentration.annotation
           targets:
             - key: rule.spell-hold-person.notice
               targets: [notice]
+  # Damage recorded while the slot is held: now the save is owed, and the
+  # reminder appears on the recorder exactly when the check does.
+  - addOffer:
+      id: record-damage
+      selections:
+        amount: 15
+      assert:
+        facts:
+          concentration.damage-taken: 1
+        annotations:
+          exists:
+            - rule.spell-hold-person.notice
+            - planner.concentration.annotation
+          targets:
+            - key: planner.concentration.annotation
+              targets: [damage.any]
+        offers:
+          exists:
+            - concentration-check
   - endTurn:
       assert:
         facts:
           holdPerson.active: 1
           concentration.remaining: 0
         annotations:
-          # The hold marker survives the turn boundary, and so does the notice.
+          # The hold marker survives the turn boundary, and so does the notice;
+          # the damage-taken marker is endOfTurn, so the reminder does not.
           exists:
             - rule.spell-hold-person.notice
+          notExists:
+            - planner.concentration.annotation
   - removeEffect:
       id: effect-hold-person
       assert:
