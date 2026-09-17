@@ -182,6 +182,8 @@
       }
     },
     "spell-hold-person": {
+      "notice": "mevtaH",
+      "notice.body": "moparlu'taHbogh DoS poH rInDI', mugh mevmeH {{dc}} WIS waH chegh yInab.",
       "offer-hold-person": {
         "name": "nuv mevmoH",
         "keywords": "paralyse paralyze stun freeze control humanoid",

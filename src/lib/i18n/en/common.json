@@ -182,6 +182,8 @@
       }
     },
     "spell-hold-person": {
+      "notice": "Held",
+      "notice.body": "At the end of each held target's turn, it repeats a DC {{dc}} Wisdom save to end the spell.",
       "offer-hold-person": {
         "name": "Hold Person",
         "keywords": "paralyse paralyze stun freeze control humanoid",
