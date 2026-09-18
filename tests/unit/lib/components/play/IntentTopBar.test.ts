@@ -19,6 +19,9 @@ const translations: Record<string, string> = {
   'play.topBar.concNone': 'None',
   'play.topBar.abilities': 'Abilities',
   'play.topBar.viewPlayer': 'Player',
+  // Distinctive so the assertions pin that the progressbar's name comes from
+  // this key via $t, not a hardcoded string.
+  'play.topBar.hpBarLabel': 'Hit points meter',
   'play.stats.str': 'STR',
   'play.stats.dex': 'DEX',
   'play.stats.con': 'CON',
@@ -321,6 +324,42 @@ describe('IntentTopBar', () => {
     );
     // First chip should be HP
     expect(chips[0].classList.contains('intent-top-bar__chip--hp')).toBe(true);
+  });
+
+  it('names the HP progressbar through i18n so axe resolves an accessible name', () => {
+    // aria-progressbar-name: a role="progressbar" div has no native name, so
+    // without an aria-label screen readers announce an unnamed meter.
+    renderComponent(
+      [{ type: 'usedMax', label: 'play.topBar.hp', total: 'hp.max', remaining: 'hp.current' }],
+      { 'hp.current': 28, 'hp.max': 60 }
+    );
+    const bar = container.querySelector('.intent-top-bar__hp-bar');
+    expect(bar?.getAttribute('role')).toBe('progressbar');
+    expect(bar?.getAttribute('aria-label')).toBe('Hit points meter');
+  });
+
+  it('exposes the HP facts as the progressbar AAPI state', () => {
+    renderComponent(
+      [{ type: 'usedMax', label: 'play.topBar.hp', total: 'hp.max', remaining: 'hp.current' }],
+      { 'hp.current': 28, 'hp.max': 60 }
+    );
+    const bar = container.querySelector('.intent-top-bar__hp-bar');
+    expect(bar?.getAttribute('aria-valuenow')).toBe('28');
+    expect(bar?.getAttribute('aria-valuemin')).toBe('0');
+    expect(bar?.getAttribute('aria-valuemax')).toBe('60');
+  });
+
+  it('keeps the name and AAPI state on the bar at zero HP', () => {
+    // A depleted bar is exactly when the meter is glanced at; the name must
+    // survive the 0/60 state too.
+    renderComponent(
+      [{ type: 'usedMax', label: 'play.topBar.hp', total: 'hp.max', remaining: 'hp.current' }],
+      { 'hp.current': 0, 'hp.max': 60 }
+    );
+    const bar = container.querySelector('.intent-top-bar__hp-bar');
+    expect(bar?.getAttribute('aria-label')).toBe('Hit points meter');
+    expect(bar?.getAttribute('aria-valuenow')).toBe('0');
+    expect(bar?.getAttribute('aria-valuemax')).toBe('60');
   });
 });
 

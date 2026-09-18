@@ -448,8 +448,12 @@
     border-radius: var(--radius-md);
   }
 
-  .ledger__cell--muted {
-    opacity: 0.4;
+  /* Depleted. The muted read comes from the softer on-surface-variant on the
+     value (the label already uses it), NOT opacity: 0.4-opacity text composites
+     to ~2:1 on the surface-container strip and fails WCAG AA (axe
+     color-contrast). on-surface-variant clears 4.5:1 in both themes. */
+  .ledger__cell--muted .ledger__cell-value {
+    color: var(--md-sys-color-on-surface-variant);
   }
 
   .ledger__cell--warn {
