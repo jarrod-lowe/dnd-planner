@@ -803,7 +803,9 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--md-sys-color-outline);
+    /* Matches the bucket labels beside it; outline sat at ~3.6:1 here and
+       failed WCAG AA (axe color-contrast). */
+    color: var(--md-sys-color-on-surface-variant);
   }
 
   .plan-row__alt-bucket {

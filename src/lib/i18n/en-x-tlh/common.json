@@ -1765,6 +1765,7 @@
       "proficientDotFull": "●",
       "proficientDotDouble": "◉",
       "hpValue": "{{current}} / {{max}}",
+      "hpBarLabel": "yIn 'Iw",
       "viewPlayer": "👤 You",
       "viewSteed": "🐴 Sargh"
     },
