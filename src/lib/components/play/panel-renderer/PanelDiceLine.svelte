@@ -37,6 +37,7 @@
 </script>
 
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { rollTypeKey } from './rollType';
   import DamageTypeIcon from './DamageTypeIcon.svelte';
   import DieChip from './DieChip.svelte';
@@ -79,14 +80,12 @@
     facts,
     vars,
     selections = {},
-    onSelectionChange: _onSelectionChange,
+    onSelectionChange,
     onRoll,
     gwfActive = false,
     modifiers = [],
     summary = false
   }: Props = $props();
-
-  void _onSelectionChange;
 
   // Unique per component instance so two dice-line panels on the same page don't
   // collide on popover/trigger ids (which would also break aria-controls).
@@ -205,17 +204,85 @@
   );
   // A roll total is only meaningful for the dice AND modifiers that produced it;
   // clear stale results when either changes so a chip never shows a total that no
-  // longer matches its current expression.
+  // longer matches its current expression. On the effect's FIRST run this also
+  // seeds any rolls a writeBack die already carries in `selections` — a
+  // re-mounted row shows its persisted roll instead of the unrolled expression.
+  // The seeding lives HERE, one-shot, rather than in its own reactive block,
+  // precisely so it cannot fight this reset; and it reads selections through
+  // `untrack` because a tracked read would re-arm this effect on every
+  // selections change — the store round-trip after a persisted roll would then
+  // re-run it and wipe the very roll the user just made.
+  let seededFromSelections = false;
   $effect(() => {
     void diceSignature;
     void modifierSignature;
+    if (!seededFromSelections) {
+      seededFromSelections = true;
+      rollResults = untrack(seedRollResults);
+      return;
+    }
     rollResults = {};
   });
+
+  /**
+   * Restores the persisted rolls of `writeBack` dice from `selections` (see
+   * `DiceEntry.writeBack`). Only a positive natural restores a chip: the var
+   * reads 0 while unrolled (its captured default rides selections from add
+   * time), which must keep the expression rendered. The authored bonus folds
+   * into the restored total exactly as it did on the live roll, so a
+   * re-mounted chip reads the same as before the remount; situational
+   * modifier toggles are ephemeral by design and stay unfolded.
+   */
+  function seedRollResults(): Record<number, RollResult> {
+    const seeded: Record<number, RollResult> = {};
+    for (let i = 0; i < control.dice.length; i++) {
+      const die = control.dice[i];
+      if (!die.writeBack) continue;
+      const kept = selections[die.writeBack.var];
+      if (typeof kept !== 'number' || kept <= 0) continue;
+      const bonus = authoredBonus(die);
+      seeded[i] = { natural: kept, total: kept + (bonus ?? 0) };
+    }
+    return seeded;
+  }
+
+  /**
+   * A die's AUTHORED bonus, resolved live from its ValueSource — the `base`
+   * leg of `formatBonus` without the situational modifier toggles folded in.
+   * Shared by the roll seeding and the outcome chip, both of which must match
+   * what the engine re-reads rather than what a one-off toggle added.
+   */
+  function authoredBonus(die: DiceEntry): number | undefined {
+    if (die.bonus === undefined) return undefined;
+    const resolved = resolveValueSource(die.bonus, facts, vars, selections) as number | undefined;
+    return typeof resolved === 'number' ? resolved : undefined;
+  }
+
+  /**
+   * The pass/fail outcome for a die, rendered as a chip after it (see
+   * `DiceLineControl.outcomeVs`). Present only when the die's roll persists
+   * (`writeBack` — the roll that decides an outcome is the one the engine
+   * re-reads), that roll exists (fresh, or seeded back from selections), and
+   * the control's `outcomeVs` resolves to a number. The comparison uses the
+   * kept natural plus the AUTHORED bonus only — never the situational toggles
+   * (see `authoredBonus`) — with a total equal to the target passing, exactly
+   * as the engine's apply decides the same roll.
+   */
+  function dieOutcome(die: DiceEntry, dieIndex: number): { passed: boolean } | undefined {
+    if (!die.writeBack || !control.outcomeVs) return undefined;
+    const result = rollResults[dieIndex];
+    if (result === undefined) return undefined;
+    const target = resolveValueSource(control.outcomeVs, facts, vars, selections) as
+      | number
+      | undefined;
+    if (typeof target !== 'number') return undefined;
+    return { passed: result.natural + (authoredBonus(die) ?? 0) >= target };
+  }
 
   function handleRangeTap(): void {
     if (!editable || !ranges || ranges.length <= 1) return;
     rangeIndex = (rangeIndex + 1) % ranges.length;
-    _onSelectionChange?.({ rangeIndex });
+    onSelectionChange?.({ rangeIndex });
   }
 
   /**
@@ -446,6 +513,14 @@
     };
     rollResults[dieIndex] = result;
     rollMode = 'normal';
+    // Opt-in persistence (see DiceEntry.writeBack): record the KEPT natural —
+    // advantage/disadvantage has already resolved by here — through the
+    // selections channel, exactly as the hit-dice roller does. A die without
+    // `writeBack` never writes; `editable` is guaranteed by the guard at the
+    // top of this handler.
+    if (die.writeBack) {
+      onSelectionChange?.({ [die.writeBack.var]: natural });
+    }
     onRoll?.(result, dieIndex);
     const el = chipRefs[dieIndex];
     if (el) {
@@ -682,6 +757,16 @@
             <DamageTypeIcon type={formatDamageType(part.die!)} />
           </span>
         {/if}
+        {@const outcome = dieOutcome(part.die!, part.dieIndex!)}
+        {#if outcome}
+          <span
+            class="panel-renderer__outcome"
+            class:panel-renderer__outcome--pass={outcome.passed}
+            class:panel-renderer__outcome--fail={!outcome.passed}
+            aria-live="polite"
+            >{$t(outcome.passed ? 'planner.record.passed' : 'planner.record.failed')}</span
+          >
+        {/if}
       {/if}
       <!-- 'modifier' parts are intentionally dropped: their value is already
            folded into the die's shown bonus (formatBonus), so a summary chip
@@ -871,6 +956,16 @@
             <DamageTypeIcon type={formatDamageType(part.die!)} />
           </span>
         {/if}
+        {@const outcome = dieOutcome(part.die!, part.dieIndex!)}
+        {#if outcome}
+          <span
+            class="panel-renderer__outcome"
+            class:panel-renderer__outcome--pass={outcome.passed}
+            class:panel-renderer__outcome--fail={!outcome.passed}
+            aria-live="polite"
+            >{$t(outcome.passed ? 'planner.record.passed' : 'planner.record.failed')}</span
+          >
+        {/if}
       {/if}
     {/each}
   {/if}
@@ -992,6 +1087,30 @@
     color: var(--md-sys-color-on-surface-variant);
     margin-right: var(--spacing-xs);
     white-space: nowrap;
+  }
+
+  /* The pass/fail verdict after a die whose roll decides an outcome (see
+     `DiceLineControl.outcomeVs`). Same shape as the modifier chip; the two
+     states reuse the exact crit/fumble token pairs the die chip beside it
+     already owns — pass fills primary (a nat-20 chip's "success" look), fail
+     fills error (a nat-1 chip's) — so no new colours enter the theme. Always
+     rendered with exactly one of the two modifiers. */
+  .panel-renderer__outcome {
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    white-space: nowrap;
+  }
+
+  .panel-renderer__outcome--pass {
+    color: var(--md-sys-color-on-primary);
+    background: var(--md-sys-color-primary);
+  }
+
+  .panel-renderer__outcome--fail {
+    color: var(--md-sys-color-on-error);
+    background: var(--md-sys-color-error);
   }
 
   .panel-renderer__disadv-indicator {

@@ -115,6 +115,16 @@ export interface DiceEntry {
   label?: string;
   /** Semantic role of this die (e.g. "to-hit", "damage", "healing", "save", "check"). */
   purpose?: DicePurpose;
+  /**
+   * Opt-in roll persistence. A die authored with `writeBack` records its KEPT
+   * NATURAL into the selections channel under `var` on every roll (the
+   * hit-dice precedent: the natural only — bonuses and situational modifiers
+   * are the engine's business and resolve again on re-evaluation, so only the
+   * roll survives the round-trip). A die WITHOUT this never writes: ordinary
+   * attack and damage rolls are ephemeral and must not ride the plan's
+   * selections. An unrolled row reads the var as 0 (its captured default).
+   */
+  writeBack?: { var: string };
 }
 
 export interface ControlBase {
@@ -130,6 +140,17 @@ export interface DiceLineControl extends ControlBase {
   advantage?: ValueSource;
   label?: string; // i18n key - inline text rendered like range text (e.g. "5ft")
   dice: DiceEntry[];
+  /**
+   * Outcome indicator target for a `writeBack` die: once that die has a roll
+   * (fresh, or seeded back from selections), the line renders a pass/fail
+   * chip comparing the kept natural plus the die's AUTHORED bonus against
+   * this resolved value — a total equal to the target passes. Only the
+   * authored bonus participates: situational modifier toggles are ephemeral
+   * panel state the engine's apply never sees, so the chip must not fold
+   * them in. Nothing renders while the die is unrolled or the target fails
+   * to resolve.
+   */
+  outcomeVs?: ValueSource;
 }
 
 /** One die-size pool on a hit-dice control, resolved from facts at render time. */
