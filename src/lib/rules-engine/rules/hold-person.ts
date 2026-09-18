@@ -1,4 +1,5 @@
 import {
+  CONCENTRATION_SPELL_KEY,
   defineRule,
   preparedSpellCount,
   type ActionResult,
@@ -121,8 +122,11 @@ const holdPerson: RuleModule = {
             state: { 'actions.spent': 1, 'spellcasting.spent': 1 },
             expiry: { kind: 'endOfTurn' }
           },
+          // Keyed so a failed concentration check's eviction (an empty
+          // same-key effect) replaces it, releasing the hold AND the marker.
           {
             id: 'effect-hold-person',
+            key: CONCENTRATION_SPELL_KEY,
             state: { 'concentration.spent': 1, 'holdPerson.active': 1 },
             display: { name: 'rule.spell-hold-person.effect-hold-person.name' },
             expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]

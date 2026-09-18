@@ -1984,7 +1984,9 @@
     "after-rest": "Planned after a rest — it still applies, but this projection may be off.",
     "concentration": {
       "check": "Concentration Check",
-      "annotation": "Concentration save — DC {{dc}} Constitution save to keep the spell."
+      "check.invalid_roll": "Invalid concentration roll",
+      "annotation": "Concentration save — DC {{dc}} Constitution save to keep the spell.",
+      "broken": "Concentration broken"
     },
     "record": {
       "damage": "Record Damage",

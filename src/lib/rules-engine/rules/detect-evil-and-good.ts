@@ -1,4 +1,5 @@
 import {
+  CONCENTRATION_SPELL_KEY,
   defineRule,
   preparedSpellCount,
   type ActionResult,
@@ -109,9 +110,12 @@ const detectEvilAndGood: RuleModule = {
             expiry: { kind: 'endOfTurn' }
           },
           // The senses: a pure concentration-holding duration marker; ends on
-          // dismissal or any rest (10 minutes is not counted in rounds).
+          // dismissal or any rest (10 minutes is not counted in rounds). Keyed
+          // so a failed concentration check's eviction (an empty same-key
+          // effect) replaces it, releasing the slot.
           {
             id: 'effect-detect-evil-and-good',
+            key: CONCENTRATION_SPELL_KEY,
             state: { 'concentration.spent': 1 },
             display: {
               name: 'rule.spell-detect-evil-and-good.effect-detect-evil-and-good.name'

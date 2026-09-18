@@ -1,4 +1,5 @@
 import {
+  CONCENTRATION_SPELL_KEY,
   defineRule,
   preparedSpellCount,
   type ActionResult,
@@ -108,8 +109,11 @@ const sleep: RuleModule = {
             state: { 'actions.spent': 1, 'spellcasting.spent': 1 },
             expiry: { kind: 'endOfTurn' }
           },
+          // Keyed so a failed concentration check's eviction (an empty
+          // same-key effect) replaces it, releasing the slot.
           {
             id: 'effect-sleep',
+            key: CONCENTRATION_SPELL_KEY,
             state: { 'concentration.spent': 1 },
             display: { name: 'rule.spell-sleep.effect-sleep.name' },
             expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]

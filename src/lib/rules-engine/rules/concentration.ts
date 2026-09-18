@@ -1,4 +1,11 @@
-import { defineRule, type ActionResult, type Annotation, type RuleModule } from '../builder';
+import {
+  CONCENTRATION_SPELL_KEY,
+  defineRule,
+  type ActionResult,
+  type Annotation,
+  type EffectInstance,
+  type RuleModule
+} from '../builder';
 
 const P = 'planner.concentration';
 
@@ -12,7 +19,10 @@ const P = 'planner.concentration';
  * `concentration.damage-taken`, which surfaces the free `concentration-check`
  * offer below. Recording the check clears the marker via the SAME keyed effect
  * record-damage used (newest wins), so the "summed marker" never needs an
- * imperative mid-turn subtract. Foundational, so no search meta.
+ * imperative mid-turn subtract. The check's ROLL decides the outcome: a failed
+ * save additionally advertises an empty same-key effect (the shared
+ * CONCENTRATION_SPELL_KEY) that evicts the held spell — undoably while
+ * planned, permanently once committed. Foundational, so no search meta.
  */
 const concentration: RuleModule = {
   id: 'concentration',
@@ -21,6 +31,17 @@ const concentration: RuleModule = {
     {
       fact: 'concentration.remaining',
       value: (f) => f.num('concentration.max') - f.num('concentration.spent')
+    },
+    // The save DC the damage demands, derived once so every consumer (the
+    // recorder annotation's interpolated DC, the check offer's captured `dc`
+    // var) reads the SAME number. SRD 5.2 — "The DC equals 10 or half the
+    // damage taken (round down), whichever number is higher, up to a maximum
+    // DC of 30." `last-damage` is 0/unset only when the marker arrived without
+    // an amount (never from record-damage, which gates on amount > 0); the
+    // clamp then serves the DC 10 floor — a sane DC, not an undefined number.
+    {
+      fact: 'concentration.dc',
+      value: (f) => Math.min(30, Math.max(10, Math.floor(f.num('concentration.last-damage') / 2)))
     }
   ],
   // While the slot is held AND damage was recorded while holding it, an
@@ -49,48 +70,128 @@ const concentration: RuleModule = {
   annotate: (f): Annotation[] => {
     if (f.num('concentration.damage-taken') !== 1 || f.num('concentration.remaining') > 0)
       return [];
-    // Half the damage, round down, clamped 10..30. `last-damage` is 0/unset
-    // only when the marker arrived without an amount (never from
-    // record-damage, which gates on amount > 0); the clamp then serves the
-    // DC 10 floor — a sane label, not an undefined number.
-    const dc = Math.min(30, Math.max(10, Math.floor(f.num('concentration.last-damage') / 2)));
-    return [{ key: `${P}.annotation`, targets: ['damage.any'], values: { dc } }];
+    // The DC is the DERIVED fact (single source): the label interpolates what
+    // the check itself will demand, not a second computation of it.
+    return [
+      { key: `${P}.annotation`, targets: ['damage.any'], values: { dc: f.num('concentration.dc') } }
+    ];
   },
   offer: () => [
     {
       // Surfaces only while concentrating (slot held → remaining ≤ 0) and damage
       // was taken this turn. Recording the outcome clears the trigger.
+      //
+      // The ROLL decides (SRD 5.2: a CON save against the damage's DC — a pure
+      // comparison, no nat-20/nat-1 auto rule; the boundary total === DC
+      // passes). The panel persists the kept d20 natural into the `roll`
+      // selection (0 = unrolled, 1–20 = the natural) and captures the DC and
+      // the CON save bonus at add time; an unrolled row records no outcome and
+      // keeps the save owed, and a failed roll evicts the concentration spell.
       id: 'concentration-check',
       when: (f) =>
         f.num('concentration.damage-taken') === 1 && f.num('concentration.remaining') <= 0,
       ui: {
         section: 'free',
         name: 'planner.concentration.check',
+        // The record-save label set on a check the PLAYER rolls: save-scoped
+        // riders (Aura of Protection's save.any, a CON-specific save.con)
+        // reach the roller, and dice.any lets the reroll-any-die reminder
+        // find it (the annotation-targets gate pins the dice label).
+        annotationLabels: ['save.any', 'save.con', 'dice.any'],
+        // The check is ROLLABLE: a d20 + the captured CON save bonus, the
+        // record-save shape. `writeBack` persists the kept natural into the
+        // `roll` selection (the var the apply above decides on), and
+        // `outcomeVs` hands the panel's pass/fail chip the same captured `dc`
+        // the apply compares against — chip and engine verdict can't diverge.
+        primaryControl: {
+          type: 'dice-line',
+          dice: [
+            { sides: 20, bonus: { var: 'saveBonus' }, purpose: 'save', writeBack: { var: 'roll' } }
+          ],
+          outcomeVs: { var: 'dc' }
+        },
+        // The DC the save demands, from the same captured var the apply reads
+        // (the label the damage reminder already interpolates) — so the row
+        // keeps showing the DC it was added against, not the post-clear floor.
+        information: [
+          { type: 'text', label: 'play.information.saveDcCon', labelValues: { dc: { var: 'dc' } } }
+        ],
         intents: { SAVE: 'you' },
         actionCost: []
       },
-      vars: { passed: { capture: true, default: { number: 1 } } },
-      apply: (_f, selections): ActionResult => {
-        const passed = typeof selections.passed === 'number' ? selections.passed : 1;
-        return {
-          advertise: [
-            {
-              id: 'concentration-check-result',
-              key: 'concentration-check-result',
-              state: { 'concentration.check-passed': passed },
-              expiry: { kind: 'endOfTurn' }
-            },
-            // Same key as record-damage's marker → planning the check (later in the
-            // fold) clears damage-taken AND its carried amount back to 0 (newest
-            // wins), so a later reminder's DC cannot quote stale damage.
-            {
-              id: 'concentration-damage-taken',
-              key: 'concentration-damage-taken',
-              state: { 'concentration.damage-taken': 0, 'concentration.last-damage': 0 },
-              expiry: { kind: 'endOfTurn' }
-            }
-          ]
-        };
+      vars: {
+        // CAPTURED: the check's own marker-clear zeroes `concentration.last-damage`
+        // (hence the dc derive) mid-fold, so a live read would collapse to the
+        // DC 10 floor on a row added behind an earlier check row. The capture
+        // preserves the DC the save is owed against; a NEW row re-captures.
+        dc: { capture: true, default: { fact: 'concentration.dc' } },
+        // The kept d20 natural, written back by the panel's dice line once the
+        // player rolls (advantage/disadvantage keeps the kept natural). 0 —
+        // the default — means no roll yet.
+        roll: { capture: true, default: { number: 0 } },
+        // The CON save bonus at add time. The AUTHORED bonus only: situational
+        // modifier toggles (Aura of Protection's rider) are ephemeral panel
+        // state; the engine's apply must decide on the same bonus the row
+        // captured, not on a toggle the fold cannot see.
+        saveBonus: { capture: true, default: { fact: 'con.save' } }
+      },
+      apply: (f, selections): ActionResult => {
+        const dc = typeof selections.dc === 'number' ? selections.dc : f.num('concentration.dc');
+        const saveBonus =
+          typeof selections.saveBonus === 'number' ? selections.saveBonus : f.num('con.save');
+        const raw = selections.roll;
+        const roll = typeof raw === 'number' ? raw : 0;
+
+        // The outcome marker, keyed so the latest check this turn wins.
+        const result = (passed: number): EffectInstance => ({
+          id: 'concentration-check-result',
+          key: 'concentration-check-result',
+          state: { 'concentration.check-passed': passed },
+          expiry: { kind: 'endOfTurn' }
+        });
+
+        // Unrolled: no outcome, and the marker survives — the save is still
+        // owed, so the offer stays up and no reminder disappears early.
+        if (roll === 0) return { advertise: [result(-1)] };
+
+        // A "roll" outside 1..20 is input the engine must not act on: mirror
+        // the short-rest roller's guard — diagnose, treat as unrolled (no
+        // eviction, no clear), never end a spell on garbage input.
+        if (!Number.isInteger(roll) || roll < 1 || roll > 20) {
+          return {
+            advertise: [result(-1)],
+            diagnostics: [{ code: `${P}.check.invalid_roll`, severity: 'error' }]
+          };
+        }
+
+        const passed = roll + saveBonus >= dc;
+        // A ROLLED outcome resolves the save, so the trigger clears — pass or
+        // fail. Same key as record-damage's marker → planning the check (later
+        // in the fold) clears damage-taken AND its carried amount back to 0
+        // (newest wins), so a later reminder's DC cannot quote stale damage.
+        const advertise: EffectInstance[] = [
+          result(passed ? 1 : 0),
+          {
+            id: 'concentration-damage-taken',
+            key: 'concentration-damage-taken',
+            state: { 'concentration.damage-taken': 0, 'concentration.last-damage': 0 },
+            expiry: { kind: 'endOfTurn' }
+          }
+        ];
+        if (passed) return { advertise };
+
+        // Failed: additionally evict the spell. The eviction is an EMPTY
+        // same-key effect (the find-steed Dismiss pattern): it replaces the
+        // holding effect's contributions while merely planned — remove the row
+        // (or re-roll) and the spell folds back — and endTurn merges it
+        // permanently. Post-commit permanence is correct per 5e.
+        advertise.push({
+          id: 'concentration-broken',
+          key: CONCENTRATION_SPELL_KEY,
+          display: { name: `${P}.broken`, section: 'other' },
+          expiry: { kind: 'permanent' }
+        });
+        return { advertise };
       }
     }
   ]

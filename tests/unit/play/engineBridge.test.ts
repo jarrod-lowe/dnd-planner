@@ -1,7 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { effectInstanceToRule, adaptEngineOutput } from '$lib/play/engineBridge';
-import { getEffectKind, getDurationState, isHiddenEffect } from '$lib/play/effectUtils';
-import type { EngineOutput } from '$lib/rules-engine';
+import {
+  getEffectKind,
+  getDurationState,
+  isHiddenEffect,
+  mergeActiveEffects
+} from '$lib/play/effectUtils';
+import { evaluate, endTurn, type EngineOutput } from '$lib/rules-engine';
+import concentration from '$lib/rules-engine/rules/concentration';
+import coreEvents from '$lib/rules-engine/rules/core-events';
+import bless from '$lib/rules-engine/rules/bless';
 
 /**
  * The engine→view bridges: committed EffectInstance → effect Rule (so the
@@ -210,5 +218,60 @@ describe('engineBridge — adaptEngineOutput', () => {
         'companion.steed.damageType'
       ]
     ).toBeUndefined();
+  });
+});
+
+/**
+ * The concentration-eviction strip behavior, through the REAL shapes the app
+ * runs: PlayCharacterMode derives the strip as `mergeActiveEffects(
+ * committed.map(effectInstanceToRule), engineOutput.effects)` — and the engine
+ * side of that chain is the actual concentration-check fold (cast committed,
+ * damage recorded, failed roll advertising the empty same-key eviction).
+ * mergeActiveEffects' same-key suppression is already pinned generically
+ * (Dismiss Steed); this pins that the concentration pair survives the bridge:
+ * the committed spell chip drops, and the eviction's own chip — an EMPTY
+ * effect whose only payload is `display` — renders visible under section
+ * 'other'.
+ */
+describe('engineBridge — the concentration-broken eviction on the strip', () => {
+  it('a failed check drops the committed spell chip and shows the broken chip', () => {
+    const modules = [concentration, coreEvents, bless];
+    const inputFacts = { 'spell.l1.bless.prepared': 1, 'con.save': 2 };
+    // Turn 1: cast Bless, commit it.
+    const cast = evaluate({
+      modules,
+      inputFacts,
+      planned: [{ instanceId: 'b1', ruleId: 'cast-bless' }]
+    });
+    const committed = endTurn([], cast.effects);
+    // Turn 2: 25 damage (DC 12), then a rolled natural 1 (+2 = 3) — a fail.
+    const failed = evaluate({
+      modules,
+      inputFacts,
+      committed,
+      planned: [
+        { instanceId: 'd1', ruleId: 'record-damage', selections: { amount: 25 } },
+        { instanceId: 'c1', ruleId: 'concentration-check', selections: { roll: 1 } }
+      ]
+    });
+    expect(failed.facts['concentration.remaining']).toBe(1); // the fold evicted
+
+    // The strip, composed exactly as PlayCharacterMode composes it.
+    const strip = mergeActiveEffects(
+      committed.map(effectInstanceToRule),
+      failed.effects.map(effectInstanceToRule)
+    );
+    // The spell's chip is gone: the eviction shares its key, so the committed
+    // keyed chip is suppressed while the failure is still merely planned.
+    expect(strip.some((r) => r.id === 'effect-bless')).toBe(false);
+    // The eviction's own chip renders: display opts it onto the strip (an
+    // EMPTY effect — no state, so no concentration activity — is hidden
+    // without one), named, section 'other' (in the SECTIONS union), an
+    // ONGOING chip.
+    const broken = strip.find((r) => r.ui?.name === 'planner.concentration.broken');
+    expect(broken, 'the broken chip is on the strip').toBeDefined();
+    expect(broken!.ui?.section).toBe('other');
+    expect(isHiddenEffect(broken!)).toBe(false);
+    expect(getEffectKind(broken!)).toBe('ONGOING');
   });
 });

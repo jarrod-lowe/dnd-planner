@@ -1,4 +1,5 @@
 import {
+  CONCENTRATION_SPELL_KEY,
   defineRule,
   preparedSpellCount,
   type ActionResult,
@@ -103,9 +104,12 @@ const bless: RuleModule = {
             state: { 'actions.spent': 1, 'spellcasting.spent': 1 },
             expiry: { kind: 'endOfTurn' }
           },
-          // Concentration held for the duration or until a rest.
+          // Concentration held for the duration or until a rest. Keyed so a
+          // failed concentration check's eviction (an empty same-key effect)
+          // replaces it, releasing the slot (see CONCENTRATION_SPELL_KEY).
           {
             id: 'effect-bless',
+            key: CONCENTRATION_SPELL_KEY,
             state: { 'concentration.spent': 1 },
             display: { name: 'rule.spell-bless.effect-bless.name' },
             expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]

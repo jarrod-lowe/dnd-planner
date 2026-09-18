@@ -141,19 +141,33 @@ describe('concentration annotate — damage-recorder annotation', () => {
     });
     expect(replanned.facts['concentration.last-damage']).toBe(5);
     expect(replanned.annotations.find((a) => a.key === KEY)!.values).toEqual({ dc: 10 });
-    // Planning the check clears the marker AND its carried amount (newest
-    // wins again), so no later reminder quotes stale damage.
+    // Planning the check with a ROLLED pass clears the marker AND its carried
+    // amount (newest wins again), so no later reminder quotes stale damage.
+    // The roll decides now: a natural 20 against DC 12 passes with any save
+    // bonus, and only a resolved save clears the marker.
     const checked = evaluate({
       modules: [concentration, coreEvents],
       inputFacts: { 'concentration.spent': 1 },
       planned: [
         damage('d1', 25),
-        { instanceId: 'c1', ruleId: 'concentration-check', selections: { passed: 1 } }
+        { instanceId: 'c1', ruleId: 'concentration-check', selections: { roll: 20 } }
       ]
     });
     expect(checked.facts['concentration.damage-taken']).toBe(0);
     expect(checked.facts['concentration.last-damage']).toBe(0);
     expect(checked.annotations.find((a) => a.key === KEY)).toBeUndefined();
+
+    // An UNROLLED check row records no outcome: the save is still owed, so
+    // the marker (and its amount, and the reminder) survive until a roll
+    // resolves it.
+    const unrolled = evaluate({
+      modules: [concentration, coreEvents],
+      inputFacts: { 'concentration.spent': 1 },
+      planned: [damage('d1', 25), { instanceId: 'c1', ruleId: 'concentration-check' }]
+    });
+    expect(unrolled.facts['concentration.damage-taken']).toBe(1);
+    expect(unrolled.facts['concentration.last-damage']).toBe(25);
+    expect(unrolled.annotations.find((a) => a.key === KEY)!.values).toEqual({ dc: 12 });
   });
 
   it('emits no annotation for a damage marker with the slot free', () => {

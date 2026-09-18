@@ -1984,7 +1984,9 @@
     "after-rest": "leS rInpu'DI' ghItlhlu' — qaSbej, 'ach chov luj.",
     "concentration": {
       "check": "buQ waH",
-      "annotation": "buQ waH — DIch {{dc}} buQ waH yInab; qID yIpol."
+      "check.invalid_roll": "waH qaSHa'",
+      "annotation": "buQ waH — DIch {{dc}} buQ waH yInab; qID yIpol.",
+      "broken": "buQ luj"
     },
     "record": {
       "damage": "QInvID DIvI'",

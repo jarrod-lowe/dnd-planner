@@ -1,4 +1,5 @@
 import {
+  CONCENTRATION_SPELL_KEY,
   defineRule,
   preparedSpellCount,
   type ActionResult,
@@ -129,9 +130,12 @@ const shieldOfFaith: RuleModule = {
           },
           // The ward: holds concentration and — when self-cast — raises AC for
           // the duration or until any rest. An ally's ward holds concentration
-          // but writes no self AC.
+          // but writes no self AC. Keyed so a failed concentration check's
+          // eviction (an empty same-key effect) replaces it, releasing the
+          // slot and (via the same effect) the AC bonus.
           {
             id: 'effect-shield-of-faith',
+            key: CONCENTRATION_SPELL_KEY,
             state: { 'concentration.spent': 1, ...(onSelf ? { 'ac.miscBonus': 2 } : {}) },
             display: {
               name: 'rule.spell-shield-of-faith.effect-shield-of-faith.name'

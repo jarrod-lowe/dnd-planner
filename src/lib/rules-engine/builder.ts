@@ -43,6 +43,19 @@ export const notLockedLegal: LegalWhen = {
 export const HIT_DIE_SIZES = [6, 8, 10, 12] as const;
 
 /**
+ * The shared `key` every concentration spell's holding effect carries. Keyed,
+ * so an EMPTY same-key effect advertised later (a failed concentration check's
+ * eviction, the find-steed Dismiss pattern) REPLACES the holding effect rather
+ * than stacking beside it: the spell's `concentration.spent` contribution
+ * drops while the eviction is merely planned — remove the check row and the
+ * spell folds back — and `endTurn` merges the replacement permanently. It
+ * also makes an illegal double cast replace the hold instead of stacking a
+ * second `concentration.spent`. Lives in the builder (not concentration.ts)
+ * because the spell modules must import it and may import only the builder.
+ */
+export const CONCENTRATION_SPELL_KEY = 'concentration-spell';
+
+/**
  * Current HP from a max and the NET current-HP modifier. Damage drives the
  * modifier negative and healing carries it back toward 0, so:
  *  - `min(0, …)` clamps a positive modifier — current never exceeds the max;
