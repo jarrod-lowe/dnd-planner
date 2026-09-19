@@ -1,0 +1,107 @@
+name: 'Concentration Replacement Moots Pending Save'
+description: >-
+  A replacement concentration cast clears the keyed damage marker (SRD 5.2:
+  you lose Concentration on an effect the moment you start casting a spell
+  that requires Concentration), so a save owed against the pre-cast hold can
+  never end the new spell.
+ruleGroups:
+  - dnd-5e-2024/prepared-spells
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/concentration
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - class-paladin/class-paladin-level2
+  - class-paladin/class-paladin-level3
+  - class-paladin/class-paladin-level4
+  - class-paladin/class-paladin-level5
+  - spells/spell-hold-person
+  - spells/spell-bless
+steps:
+  - evaluate:
+  # Both concentration spells prepared — Hold Person (L2) to hold first, Bless
+  # (L1) as the replacement cast. Paladin 5 for the L2 slots.
+  - addOffer:
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: bless
+            level: 1
+            nameKey: rule.spell-bless.offer-bless.name
+            preparedFact: spell.l1.bless.prepared
+            alwaysPreparedFact: spell.l1.bless.alwaysPrepared
+          - spellId: hold-person
+            level: 2
+            nameKey: rule.spell-hold-person.offer-hold-person.name
+            preparedFact: spell.l2.holdPerson.prepared
+            alwaysPreparedFact: spell.l2.holdPerson.alwaysPrepared
+  # Turn 1: hold the slot with Hold Person and commit the hold.
+  - addOffer:
+      id: cast-hold-person
+      assert:
+        facts:
+          concentration.remaining: 0
+          holdPerson.active: 1
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-hold-person
+  # Turn 2: damage while holding trips the marker (25 → DC 12) and offers the
+  # check against the committed Hold Person hold.
+  - addOffer:
+      id: record-damage
+      selections:
+        amount: 25
+      assert:
+        facts:
+          concentration.damage-taken: 1
+          concentration.last-damage: 25
+          concentration.dc: 12
+        offers:
+          exists:
+            - concentration-check
+        annotations:
+          exists:
+            - planner.concentration.annotation
+  # Cast Bless as the replacement — LEGAL per SRD 5.2, and the cast itself
+  # advertises the same keyed clear the check uses, so the pending save is
+  # mooted the moment the cast starts: the marker and its amount are gone, the
+  # check offer with them, and no failed save can evict the new hold. The old
+  # hold's marker (holdPerson.active) leaves with the replaced effect.
+  - addOffer:
+      id: cast-bless
+      assert:
+        facts:
+          concentration.spent: 1
+          concentration.remaining: 0
+          concentration.damage-taken: 0
+          concentration.last-damage: 0
+          holdPerson.active: 0
+        offers:
+          notExists:
+            - concentration-check
+        annotations:
+          notExists:
+            - planner.concentration.annotation
+        effects:
+          notExists:
+            - concentration-broken
+  # Damage recorded AFTER the cast re-trips the marker — its row is later in
+  # the fold, newest wins — so the check returns against the new hold at the
+  # new damage's DC (15 → the DC 10 floor).
+  - addOffer:
+      id: record-damage
+      selections:
+        amount: 15
+      assert:
+        facts:
+          concentration.damage-taken: 1
+          concentration.last-damage: 15
+          concentration.dc: 10
+        offers:
+          exists:
+            - concentration-check

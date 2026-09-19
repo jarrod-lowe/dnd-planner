@@ -1,5 +1,6 @@
 import {
   CONCENTRATION_SPELL_KEY,
+  concentrationDamageMarkerClear,
   defineRule,
   type ActionResult,
   type Annotation,
@@ -22,7 +23,10 @@ const P = 'planner.concentration';
  * `concentration.damage-taken`, which surfaces the free `concentration-check`
  * offer below. Recording the check clears the marker via the SAME keyed effect
  * record-damage used (newest wins), so the "summed marker" never needs an
- * imperative mid-turn subtract. The check's ROLL decides the outcome: a failed
+ * imperative mid-turn subtract; newest-wins is also why damage rows batched
+ * ahead of any check collapse into one check at the latest DC (an accepted
+ * limitation, documented at the marker's authoring site in core-events). The
+ * check's ROLL decides the outcome: a failed
  * save additionally advertises an empty same-key effect (the shared
  * CONCENTRATION_SPELL_KEY) that evicts the held spell — undoably while
  * planned, permanently once committed. Foundational, so no search meta.
@@ -193,17 +197,15 @@ const concentration: RuleModule = {
 
         const passed = roll + saveBonus + riderBonus >= dc;
         // A ROLLED outcome resolves the save, so the trigger clears — pass or
-        // fail. Same key as record-damage's marker → planning the check (later
-        // in the fold) clears damage-taken AND its carried amount back to 0
-        // (newest wins), so a later reminder's DC cannot quote stale damage.
+        // fail. The clear is the shared builder helper (same key as
+        // record-damage's marker → planning the check, later in the fold,
+        // clears damage-taken AND its carried amount back to 0, newest wins),
+        // so a later reminder's DC cannot quote stale damage — and the
+        // concentration spells' casts advertise the identical effect to moot a
+        // save pending against a replaced hold.
         const advertise: EffectInstance[] = [
           result(passed ? 1 : 0),
-          {
-            id: 'concentration-damage-taken',
-            key: 'concentration-damage-taken',
-            state: { 'concentration.damage-taken': 0, 'concentration.last-damage': 0 },
-            expiry: { kind: 'endOfTurn' }
-          }
+          concentrationDamageMarkerClear()
         ];
         if (passed) return { advertise };
 

@@ -1,5 +1,6 @@
 import {
   CONCENTRATION_SPELL_KEY,
+  concentrationDamageMarkerClear,
   defineRule,
   preparedSpellCount,
   type ActionResult,
@@ -119,7 +120,11 @@ const detectEvilAndGood: RuleModule = {
               name: 'rule.spell-detect-evil-and-good.effect-detect-evil-and-good.name'
             },
             expiry: [{ kind: 'untilShortRest' }]
-          }
+          },
+          // The cast moots a save owed against the replaced hold (SRD 5.2):
+          // it clears the damage marker with the same keyed effect the check
+          // resolves a save with — see concentrationDamageMarkerClear.
+          concentrationDamageMarkerClear()
         ];
         const diagnostics: Diagnostic[] = [];
         if (f.num('actions.remaining') <= 0)

@@ -59,6 +59,25 @@ export const HIT_DIE_SIZES = [6, 8, 10, 12] as const;
 export const CONCENTRATION_SPELL_KEY = 'concentration-spell';
 
 /**
+ * The keyed clear of the concentration damage marker — the exact effect the
+ * concentration check advertises to resolve a save. Exported so every
+ * concentration spell's CAST advertises the same clear (newest wins in the
+ * fold): SRD 5.2 — "You lose Concentration on an effect the moment you start
+ * casting a spell that requires Concentration" — a save owed against the
+ * PRE-CAST hold could only ever have ended that hold, so the replacement cast
+ * moots the pending save rather than leaving it to evict the new spell.
+ * Damage recorded AFTER the cast re-trips the marker normally (its row is
+ * later in the fold). Lives in the builder (like CONCENTRATION_SPELL_KEY)
+ * because the spell modules must import it and may import only the builder.
+ */
+export const concentrationDamageMarkerClear = (): EffectInstance => ({
+  id: 'concentration-damage-taken',
+  key: 'concentration-damage-taken',
+  state: { 'concentration.damage-taken': 0, 'concentration.last-damage': 0 },
+  expiry: { kind: 'endOfTurn' }
+});
+
+/**
  * Current HP from a max and the NET current-HP modifier. Damage drives the
  * modifier negative and healing carries it back toward 0, so:
  *  - `min(0, …)` clamps a positive modifier — current never exceeds the max;

@@ -281,7 +281,12 @@ const coreEvents: RuleModule = {
         // the damage taken, round down, whichever is higher, max 30 — computed
         // by the concentration group's annotation, not here). Keyed +
         // endOfTurn so it lasts only this turn and a planned
-        // concentration-check can clear it (same key, newest wins). Gated on
+        // concentration-check can clear it (same key, newest wins). Newest-wins
+        // is an accepted limitation: damage rows batched before any check is
+        // resolved collapse into ONE check at the latest row's DC (the first
+        // save is skipped) — the supported flow is interleaved (record damage,
+        // resolve the check, record the next), and a faithful fix needs a
+        // pending-damage queue the engine deliberately lacks. Gated on
         // the group being loaded so it never sets a phantom fact when
         // concentration isn't in play, and on the amount: a row left at the
         // slider's default 0 is no damage taken, so it must not put a

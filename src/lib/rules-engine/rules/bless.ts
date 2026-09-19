@@ -1,5 +1,6 @@
 import {
   CONCENTRATION_SPELL_KEY,
+  concentrationDamageMarkerClear,
   defineRule,
   preparedSpellCount,
   type ActionResult,
@@ -22,7 +23,9 @@ const B = 'rule.spell-bless.offer-bless';
  * Effect"): a second concentration spell is LEGAL — you lose Concentration on
  * an effect the moment you start casting a spell that requires Concentration —
  * and the shared CONCENTRATION_SPELL_KEY makes the recast REPLACE this hold
- * instead of stacking beside it. The hold ends after 10 rounds OR on any rest
+ * instead of stacking beside it. The recast also moots a damage save pending
+ * against the replaced hold: the cast clears the damage marker with the same
+ * keyed effect the check resolves a save with. The hold ends after 10 rounds OR on any rest
  * (`[turns, untilShortRest]`), releasing concentration. The +1d4 itself is a
  * UI rider (M4); this models the resource mechanics.
  */
@@ -114,7 +117,11 @@ const bless: RuleModule = {
             state: { 'concentration.spent': 1 },
             display: { name: 'rule.spell-bless.effect-bless.name' },
             expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]
-          }
+          },
+          // The cast moots a save owed against the replaced hold (SRD 5.2):
+          // it clears the damage marker with the same keyed effect the check
+          // resolves a save with — see concentrationDamageMarkerClear.
+          concentrationDamageMarkerClear()
         ];
         const diagnostics: Diagnostic[] = [];
         if (f.num('actions.remaining') <= 0)

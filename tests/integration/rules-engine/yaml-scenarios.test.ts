@@ -131,6 +131,9 @@ const EXPECTED_RUNNABLE = [
   'attack-unarmed-strike',
   'ability-modifier-ordering',
   'concentration-check-after-damage',
+  // A replacement concentration cast moots a pending damage save (SRD 5.2:
+  // the recast ends the old hold the moment the cast starts)
+  'concentration-replacement-moots-pending-save',
   'spear-2h-excludes-second-weapon',
   'savage-attacker-usage',
   // Migrated from legacy initialEffects (see INITIAL_EFFECTS):

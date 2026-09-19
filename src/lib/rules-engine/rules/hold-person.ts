@@ -1,5 +1,6 @@
 import {
   CONCENTRATION_SPELL_KEY,
+  concentrationDamageMarkerClear,
   defineRule,
   preparedSpellCount,
   type ActionResult,
@@ -128,7 +129,11 @@ const holdPerson: RuleModule = {
             state: { 'concentration.spent': 1, 'holdPerson.active': 1 },
             display: { name: 'rule.spell-hold-person.effect-hold-person.name' },
             expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]
-          }
+          },
+          // The cast moots a save owed against the replaced hold (SRD 5.2):
+          // it clears the damage marker with the same keyed effect the check
+          // resolves a save with — see concentrationDamageMarkerClear.
+          concentrationDamageMarkerClear()
         ];
         const diagnostics: Diagnostic[] = [];
         if (f.num('actions.remaining') <= 0)

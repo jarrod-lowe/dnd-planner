@@ -177,6 +177,69 @@ describe('CONCENTRATION_SPELL_KEY — the shared concentration key', () => {
 });
 
 /**
+ * The pending-save moot. SRD 5.2: "You lose Concentration on an effect the
+ * moment you start casting a spell that requires Concentration" — so a damage
+ * save owed against the PRE-CAST hold could only ever have ended that hold,
+ * and the replacement cast moots it. Every concentration spell's cast
+ * advertises the SAME keyed clear the check uses (newest wins in the fold),
+ * which is also why damage recorded AFTER the cast re-trips the marker
+ * normally: its row is later in the plan.
+ */
+describe('the cast moots a pending concentration save', () => {
+  const SPELL_MODULES = [
+    bless,
+    sleep,
+    holdPerson,
+    shieldOfFaith,
+    detectEvilAndGood,
+    protectionFromEvilAndGood,
+    calmEmotions
+  ];
+
+  it('every concentration spell advertises the keyed damage-marker clear', () => {
+    // A zero-facts reader (the cast gates' diagnostics are irrelevant here):
+    // each cast must advertise the exact clear the check resolves a save with
+    // — same key, both facts zeroed, endOfTurn — or a save owed against the
+    // old hold could evict the NEW spell.
+    const zero: FactReader = { num: () => 0, has: () => false };
+    for (const mod of SPELL_MODULES) {
+      const offers = mod.offer!({ selections: {} });
+      const cast = offers.find((o) => o.id.startsWith('cast-'));
+      const result = cast!.apply!(zero, { slotLevel: 1 });
+      const clear = result.advertise!.find((e) => e.key === 'concentration-damage-taken');
+      expect(clear, `${mod.id} advertises the marker clear`).toBeDefined();
+      expect(clear!.state, `${mod.id} zeroes both marker facts`).toEqual({
+        'concentration.damage-taken': 0,
+        'concentration.last-damage': 0
+      });
+      expect(clear!.expiry, `${mod.id}'s clear ages out with the turn`).toEqual({
+        kind: 'endOfTurn'
+      });
+    }
+  });
+
+  it('a replacement cast clears the marker and drops the check offer mid-fold', () => {
+    // Hold Bless, take 25 (marker tripped, DC 12, check offered), then plan the
+    // replacement cast: the marker and its amount are cleared by the cast row,
+    // so the save the damage demanded is mooted — no check offer — while the
+    // new hold keeps the slot.
+    const out = evaluate({
+      modules: [concentration, coreEvents, bless],
+      inputFacts: { 'spell.l1.bless.prepared': 1 },
+      planned: [
+        { instanceId: 'b1', ruleId: 'cast-bless' },
+        { instanceId: 'd1', ruleId: 'record-damage', selections: { amount: 25 } },
+        { instanceId: 'b2', ruleId: 'cast-bless' }
+      ]
+    });
+    expect(out.facts['concentration.damage-taken']).toBe(0);
+    expect(out.facts['concentration.last-damage']).toBe(0);
+    expect(out.facts['concentration.spent']).toBe(1);
+    expect(out.availableRules.some((r) => r.rule.id === 'concentration-check')).toBe(false);
+  });
+});
+
+/**
  * The roll-decides apply. The panel persists the kept d20 natural into the
  * `roll` selection (0 = unrolled, 1–20 = the natural); the CON save bonus is
  * captured at add time; the DC is the captured `concentration.dc`. Saves are a

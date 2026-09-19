@@ -40,6 +40,20 @@ const FACTS: Facts = {
 };
 const cast = (instanceId: string): PlannedRef => ({ instanceId, ruleId: 'cast-hold-person' });
 
+/**
+ * record-damage's committed marker (core-events) — the genuine shape. The cast
+ * itself now writes the same facts (its keyed clear, the pending-save moot), so
+ * an INPUT fact would collide with the write (inputs are immutable); the marker
+ * must ride the committed set, ordered AFTER the cast's effects so the damage
+ * survives the fold (keyed, newest wins).
+ */
+const damageMarker = {
+  id: 'concentration-damage-taken',
+  key: 'concentration-damage-taken',
+  state: { 'concentration.damage-taken': 1, 'concentration.last-damage': 25 },
+  expiry: { kind: 'endOfTurn' as const }
+};
+
 describe('hold-person annotate — notice', () => {
   it('a committed hold raises a notice carrying the spell save DC', () => {
     const out = evaluate({ modules: ALL, inputFacts: FACTS, planned: [cast('c1')] });
@@ -57,13 +71,15 @@ describe('hold-person annotate — notice', () => {
     expect(
       out.annotations.find((a) => a.key === 'planner.concentration.annotation')
     ).toBeUndefined();
-    // With damage recorded while held (the `concentration.damage-taken` marker
-    // is core-events' committed effect — a genuine input fact for this module
-    // set), the two surfaces coexist, neither replaces the other.
+    // With damage recorded while held, the two surfaces coexist, neither
+    // replaces the other. The marker rides the committed set AFTER the hold
+    // (the cast's advertised effects include its keyed clear of the same
+    // facts; newest wins keeps the damage live).
     const damaged = evaluate({
       modules: ALL,
-      inputFacts: { ...FACTS, 'concentration.damage-taken': 1 },
-      planned: [cast('c1')]
+      inputFacts: FACTS,
+      planned: [],
+      committed: [...out.effects, damageMarker]
     });
     expect(
       damaged.annotations.find((a) => a.key === 'planner.concentration.annotation')
@@ -77,16 +93,18 @@ describe('hold-person annotate — notice', () => {
   });
 
   it('un-committing the hold chip removes the fact, the notice, and the concentration hold', () => {
-    // Damage recorded while held, so the recorder reminder is live too — its
-    // disappearance below is the slot releasing, not an absent marker.
-    const damaged: Facts = { ...FACTS, 'concentration.damage-taken': 1 };
-    const { advertised } = evaluatePlan(ALL, damaged, [cast('c1')]);
+    // Damage recorded while held (the marker committed after the cast's
+    // advertised effects, so the damage survives the clear), so the recorder
+    // reminder is live too — its disappearance below is the slot releasing,
+    // not an absent marker.
+    const { advertised } = evaluatePlan(ALL, FACTS, [cast('c1')]);
+    const damaged = [...advertised, damageMarker];
     // The committed marker keeps the hold (and its notice) alive…
     const committed = evaluate({
       modules: ALL,
-      inputFacts: damaged,
+      inputFacts: FACTS,
       planned: [],
-      committed: advertised
+      committed: damaged
     });
     expect(committed.facts['holdPerson.active']).toBe(1);
     expect(committed.annotations.some((a) => a.key === `${P}.notice`)).toBe(true);
@@ -98,10 +116,10 @@ describe('hold-person annotate — notice', () => {
     // writer of the fact — the hold (and the notice) is gone, and the
     // concentration spend went with the same effect: the slot is free, so no
     // spell is at risk and the recorder reminder goes too, marker or not.
-    const dismissed = advertised.filter((e) => e.id.split('#').pop() !== 'effect-hold-person');
+    const dismissed = damaged.filter((e) => e.id.split('#').pop() !== 'effect-hold-person');
     const after = evaluate({
       modules: ALL,
-      inputFacts: damaged,
+      inputFacts: FACTS,
       planned: [],
       committed: dismissed
     });
