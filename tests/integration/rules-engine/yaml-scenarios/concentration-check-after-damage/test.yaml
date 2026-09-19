@@ -30,11 +30,20 @@ steps:
         offers:
           exists:
             - cast-bless
+        annotations:
+          # Slot free: no damage-recorder annotation.
+          notExists:
+            - planner.concentration.annotation
   - addOffer:
       id: cast-bless
       assert:
         facts:
           concentration.remaining: 0
+        annotations:
+          # The slot is held but no damage is recorded: no save is owed yet, so
+          # the recorder reminder is off — it coincides with the check itself.
+          notExists:
+            - planner.concentration.annotation
   - endTurn:
       assert:
         effects:
@@ -49,7 +58,7 @@ steps:
           exists:
             - record-damage
   # A damage row left at the slider's default 0 records no damage, so it must
-  # not trigger a concentration check.
+  # not trigger a concentration check — nor the recorder reminder.
   - addOffer:
       id: record-damage
       selections:
@@ -60,17 +69,161 @@ steps:
         offers:
           notExists:
             - concentration-check
+        annotations:
+          notExists:
+            - planner.concentration.annotation
   - removeFromPlan:
       id: record-damage
 
-  # Record damage while concentrating
+  # Record damage while concentrating — 25 so the DC computation takes the
+  # interesting branch (half rounded down = 12, above the DC 10 floor and
+  # below the DC 30 cap). The marker carries the amount for the label.
   - addOffer:
       id: record-damage
       selections:
-        amount: 15
+        amount: 25
       assert:
         facts:
+          concentration.damage-taken: 1
+          concentration.last-damage: 25
+        offers:
+          exists:
+            - concentration-check
+        # The check panel is rollable: a d20 save roller that writes the kept
+        # natural into the `roll` selection the apply decides on — and, via
+        # the writeBack riderVar, the active save riders (Aura of Protection)
+        # into `riderBonus`, so the apply judges the total the line displayed.
+        # Judged against the captured `dc` by the outcome chip, with the DC
+        # shown as the same label the damage reminder interpolates. The labels
+        # let save-scoped riders reach the roller and the reroll reminder find
+        # it.
+        offerUi:
+          - id: concentration-check
+            ui:
+              annotationLabels:
+                - save.any
+                - save.con
+                - dice.any
+              primaryControl:
+                type: dice-line
+                dice:
+                  - sides: 20
+                    bonus: { var: saveBonus }
+                    purpose: save
+                    writeBack: { var: roll, riderVar: riderBonus }
+                outcomeVs: { var: dc }
+              information:
+                - type: text
+                  label: play.information.saveDcCon
+                  labelValues:
+                    dc: { var: dc }
+        annotations:
+          # The save is owed NOW, and the post-hoc reminder rides the
+          # record-damage panel via the recorder's damage.any
+          # annotationLabel (the record-heal / healing.any idiom), not the
+          # notices strip — appearing exactly with the check. The label
+          # interpolates the computed DC (12 here) from the marker's amount.
+          exists:
+            - planner.concentration.annotation
+          targets:
+            - key: planner.concentration.annotation
+              targets: [damage.any]
+
+  # The DC the save demands is a derived fact — the single source for the
+  # annotation's label and the check's captured dc var.
+  - evaluate:
+      assert:
+        facts:
+          concentration.dc: 12
+
+  # An UNROLLED check row: the die has not been rolled, so no outcome is
+  # recorded (check-passed -1), the marker survives (the save is still
+  # owed), and the offer stays up for the roll.
+  - addOffer:
+      id: concentration-check
+      assert:
+        facts:
+          concentration.check-passed: -1
           concentration.damage-taken: 1
         offers:
           exists:
             - concentration-check
+  - removeFromPlan:
+      id: concentration-check
+
+  # A rolled natural 1 (+0 CON save) against DC 12 FAILS: the check records
+  # the failure, clears the marker, and advertises the eviction — an empty
+  # same-key effect (CONCENTRATION_SPELL_KEY) replacing Bless's holding
+  # effect, so the slot frees and cast-bless returns while the failure is
+  # still merely planned.
+  - addOffer:
+      id: concentration-check
+      selections:
+        roll: 1
+      assert:
+        facts:
+          concentration.check-passed: 0
+          concentration.damage-taken: 0
+          concentration.remaining: 1
+        offers:
+          exists:
+            - cast-bless
+
+  # Removing the failed row re-folds the spell back — the break is undoable
+  # pre-commit: slot held again, the marker (and its amount) restored, the
+  # recorder reminder back with the same DC.
+  - removeFromPlan:
+      id: concentration-check
+      assert:
+        facts:
+          concentration.remaining: 0
+          concentration.damage-taken: 1
+          concentration.last-damage: 25
+        annotations:
+          exists:
+            - planner.concentration.annotation
+
+  # A rider-captured PASS: the same natural 9 that fails alone (9 + 1 = 10 <
+  # 12) passes with the rider the roll captured — Aura of Protection,
+  # persisted as riderBonus 3 by the writeBack riderVar — at 9 + 1 + 3 = 13.
+  # The check records the pass, clears the marker, and evicts NOTHING: this
+  # is exactly the case that used to display a passing total while evicting
+  # the spell.
+  - addOffer:
+      id: concentration-check
+      selections:
+        roll: 9
+        saveBonus: 1
+        riderBonus: 3
+      assert:
+        facts:
+          concentration.check-passed: 1
+          concentration.damage-taken: 0
+          concentration.remaining: 0
+        effects:
+          notExists:
+            - concentration-broken
+  - removeFromPlan:
+      id: concentration-check
+      assert:
+        facts:
+          concentration.damage-taken: 1
+          concentration.remaining: 0
+
+  # Re-add the failure and commit: endTurn merges the keyed eviction into
+  # the committed set permanently — effect-bless is gone for good (5e: a
+  # broken concentration is not re-gained by un-planning a past turn) and
+  # the broken marker stays on the strip.
+  - addOffer:
+      id: concentration-check
+      selections:
+        roll: 1
+  - endTurn:
+      assert:
+        facts:
+          concentration.remaining: 1
+        effects:
+          notExists:
+            - effect-bless
+          exists:
+            - concentration-broken

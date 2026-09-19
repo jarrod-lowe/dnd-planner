@@ -94,6 +94,27 @@ function parsePersistedEffects(json: string): EffectInstance[] {
   }
 }
 
+/**
+ * Dismiss, once at load, committed concentration effects that were persisted
+ * WITHOUT a `key` — the shape every concentration spell's hold had before the
+ * shared CONCENTRATION_SPELL_KEY landed. The SRD 5.2 recast ruling ("Another
+ * Concentration Effect": you lose Concentration the moment you start casting a
+ * second Concentration spell) leans on that key — newest replaces oldest — so a
+ * keyless legacy hold would STACK with a fresh cast (`concentration.spent` =
+ * 2). Not a key-normalization migration: single-user app, and
+ * `parsePersistedEffects` above documents the no-migration policy, so the
+ * legacy hold is simply dropped and the player re-concentrates by casting
+ * (PR #425 review thread 4051725201). KEYED concentration effects — every cast
+ * since the key landed, including character imports that funnel through this
+ * same load — and keyless non-concentration effects pass through untouched.
+ * Idempotent: with no keyless holds left in the blob it is the identity.
+ */
+function dismissLegacyKeylessConcentration(effects: EffectInstance[]): EffectInstance[] {
+  const holdsConcentration = (e: EffectInstance): boolean =>
+    e.state !== undefined && 'concentration.spent' in e.state;
+  return effects.filter((e) => e.key !== undefined || !holdsConcentration(e));
+}
+
 function performEvaluation(): void {
   // A direct evaluation supersedes any still-scheduled one.
   cancelScheduledEvaluation();
@@ -343,7 +364,7 @@ async function loadRuleGroups(characterId: string): Promise<void> {
       if (effectsResponse?.ok) {
         const { effects: effectsJson } = await effectsResponse.json();
         if (effectsJson) {
-          const committed = parsePersistedEffects(effectsJson);
+          const committed = dismissLegacyKeylessConcentration(parsePersistedEffects(effectsJson));
           const effects = committed.map(effectInstanceToRule);
           state = { ...state, committed, effects };
           prefetchDetailsForEffects(effects);

@@ -2,8 +2,9 @@ name: 'Paladin: Aura of the Guardian while concentrating'
 description: >
   The damage Aura of the Guardian takes on is real damage to the paladin, so
   using it while concentrating (Bless is up, so `concentration.remaining` is 0)
-  raises `concentration.damage-taken` and puts the concentration check in front
-  of the player.
+  raises `concentration.damage-taken` — carrying the amount, so the save's DC
+  is derived from it exactly like record-damage's — and puts the concentration
+  check in front of the player.
 ruleGroups:
   - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/hp
@@ -85,6 +86,8 @@ steps:
       id: aura-of-the-guardian
 
   # Taking 8 for an ally is damage to the paladin: concentration is now at risk.
+  # The marker carries the amount (the record-damage idiom), so the save's DC is
+  # derived from it — half of 8 is 4, under the DC 10 floor.
   - addOffer:
       id: aura-of-the-guardian
       selections:
@@ -94,3 +97,36 @@ steps:
           reactions.remaining: 0
           hp.current: 38
           concentration.damage-taken: 1
+          concentration.last-damage: 8
+          concentration.dc: 10
+        # The aura row carries the recorder's damage label, so the post-hoc
+        # save-to-keep-the-spell reminder (with the computed DC) rides THIS
+        # panel too, not only the record-damage row.
+        offerUi:
+          - id: aura-of-the-guardian
+            ui:
+              annotationLabels:
+                - damage.any
+        annotations:
+          exists:
+            - planner.concentration.annotation
+          targets:
+            - key: planner.concentration.annotation
+              targets: [damage.any]
+  - removeFromPlan:
+      id: aura-of-the-guardian
+
+  # A big transfer — 40 — takes the interesting branch: half of 40 is 20, above
+  # the DC 10 floor and below the DC 30 cap, so the save demands DC 20 rather
+  # than the floor 10 a marker without an amount collapses to.
+  - addOffer:
+      id: aura-of-the-guardian
+      selections:
+        amount: 40
+      assert:
+        facts:
+          reactions.remaining: 0
+          hp.current: 6
+          concentration.damage-taken: 1
+          concentration.last-damage: 40
+          concentration.dc: 20

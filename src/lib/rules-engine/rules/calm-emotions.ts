@@ -1,4 +1,6 @@
 import {
+  CONCENTRATION_SPELL_KEY,
+  concentrationDamageMarkerClear,
   defineRule,
   preparedSpellCount,
   type ActionResult,
@@ -97,10 +99,8 @@ const calmEmotions: RuleModule = {
           condition: (f) => f.num('spellcasting.remaining') > 0,
           diagnostics: [{ code: `${P}.no_spellcasting`, severity: 'error' }]
         },
-        {
-          condition: (f) => f.num('concentration.remaining') > 0,
-          diagnostics: [{ code: `${P}.already_concentrating`, severity: 'error' }]
-        },
+        // No concentration gate: SRD 5.2 makes the recast legal — it dismisses
+        // the current hold via the shared CONCENTRATION_SPELL_KEY (newest wins).
         {
           condition: (f) => f.num(`${SLOTS}.eligibleSlotsRemaining`) > 0,
           diagnostics: [{ code: `${P}.no_slots`, severity: 'error' }]
@@ -117,20 +117,25 @@ const calmEmotions: RuleModule = {
             state: { 'actions.spent': 1, 'spellcasting.spent': 1 },
             expiry: { kind: 'endOfTurn' }
           },
+          // Keyed so a failed concentration check's eviction (an empty
+          // same-key effect) replaces it, releasing the slot.
           {
             id: 'effect-calm-emotions',
+            key: CONCENTRATION_SPELL_KEY,
             state: { 'concentration.spent': 1 },
             display: { name: 'rule.spell-calm-emotions.effect-calm-emotions.name' },
             expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]
-          }
+          },
+          // The cast moots a save owed against the replaced hold (SRD 5.2):
+          // it clears the damage marker with the same keyed effect the check
+          // resolves a save with — see concentrationDamageMarkerClear.
+          concentrationDamageMarkerClear()
         ];
         const diagnostics: Diagnostic[] = [];
         if (f.num('actions.remaining') <= 0)
           diagnostics.push({ code: `${P}.no_action`, severity: 'error' });
         if (f.num('spellcasting.remaining') <= 0)
           diagnostics.push({ code: `${P}.no_spellcasting`, severity: 'error' });
-        if (f.num('concentration.remaining') <= 0)
-          diagnostics.push({ code: `${P}.already_concentrating`, severity: 'error' });
         if (level >= 2 && level <= 5) {
           advertise.push({
             id: `effect-calm-emotions-slot-l${level}`,
