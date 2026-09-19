@@ -259,3 +259,38 @@ describe('PanelDiceLine - outcome chip', () => {
     expect(chip?.textContent).toBe('planner.record.passed');
   });
 });
+
+// The toggle-after-roll half of the chip==engine invariant: a modifier toggle
+// is display state and must never hide or flip a RECORDED verdict. The
+// engine's apply re-reads the persisted riderBonus the roll captured, so the
+// chip keeps judging that captured rider — the alternative (clearing the roll
+// on toggle) would un-render the verdict while the engine still resolved it.
+describe('PanelDiceLine - outcome chip across a modifier toggle', () => {
+  it('keeps judging the captured rider after the aura is toggled off', async () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.4); // floor(0.4*20)+1 = 9
+    const mods = [aura(true)];
+    const propsFor = (selections: Record<string, unknown>) => ({
+      control: createRiderCheckControl(),
+      editable: true,
+      facts: {},
+      vars: {},
+      selections,
+      modifiers: mods
+    });
+    const { container, rerender } = render(PanelDiceLine, { props: propsFor({}) });
+    await fireEvent.click(container.querySelector('.panel-renderer__die-chip')!);
+    // The parent's round-trip: the plan row now carries what the roll wrote.
+    await rerender(propsFor({ roll: 9, riderBonus: 3 }));
+
+    // Rolled with the aura ON (9 + 1 + 3 = 13 ≥ 12 → passed). Toggling it off
+    // moves the would-be total to 10 (a fail) — the verdict must stay the
+    // roll-time one, re-seeded from the persisted pair.
+    await fireEvent.click(container.querySelector('button.panel-renderer__modifier')!);
+    const outcome = container.querySelector('.panel-renderer__outcome');
+    expect(outcome).not.toBeNull();
+    expect(outcome?.textContent).toBe('planner.record.passed');
+    expect(outcome?.classList.contains('panel-renderer__outcome--pass')).toBe(true);
+    // And the die chip beside it still shows the roll-time total.
+    expect(container.querySelector('.panel-renderer__die-chip')?.textContent?.trim()).toBe('13');
+  });
+});

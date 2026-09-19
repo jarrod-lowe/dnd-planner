@@ -272,3 +272,137 @@ describe('PanelDiceLine - writeBack roll persistence', () => {
     expect(onSelectionChange).not.toHaveBeenCalled();
   });
 });
+
+// The toggle-after-roll contract (option (b), the rider-captured-at-roll-time
+// discipline): a recorded writeBack roll is FROZEN — the chip keeps showing
+// the roll-time total and verdict while a situational modifier toggles,
+// because the persisted natural + captured rider keep driving the engine's
+// decision either way. Clearing the chip on a toggle would leave the UI
+// showing the unrolled expression while the engine still judged the recorded
+// roll — UI and engine diverging over display state.
+describe('PanelDiceLine - toggle after roll', () => {
+  // The concentration-check shape judged end to end: d20 save, authored +1,
+  // rider-capturing writeBack, outcomeVs DC 12. One modifier (the aura, +3)
+  // starts ON.
+  const CHECK_CONTROL = {
+    type: 'dice-line',
+    outcomeVs: { number: 12 },
+    dice: [
+      {
+        sides: 20,
+        bonus: { number: 1 },
+        purpose: 'save',
+        writeBack: { var: 'roll', riderVar: 'riderBonus' }
+      }
+    ]
+  } as DiceLineControl;
+  // One stable array reference across render and rerender: a new instance
+  // would needlessly dirty the modifiers-derived signatures the reset effect
+  // tracks, muddying which change actually armed it.
+  const MODS = [AURA_MODIFIER];
+  const propsFor = (selections: Record<string, unknown>) => ({
+    control: CHECK_CONTROL,
+    editable: true,
+    facts: {},
+    vars: {},
+    selections,
+    modifiers: MODS
+  });
+
+  it('keeps a rolled writeBack die on its roll-time total and verdict across a toggle', async () => {
+    const onSelectionChange = vi.fn();
+    vi.spyOn(Math, 'random').mockReturnValue(0.4); // floor(0.4*20)+1 = 9
+    const { container, rerender } = render(PanelDiceLine, {
+      props: { ...propsFor({}), onSelectionChange }
+    });
+    await fireEvent.click(container.querySelector('.panel-renderer__die-chip')!);
+    // Roll-time state: 9 + 1 authored + 3 aura = 13 vs DC 12 → passed.
+    expect(onSelectionChange).toHaveBeenCalledWith({ roll: 9, riderBonus: 3 });
+    // The parent's round-trip: the plan row stores exactly what the roll
+    // wrote, and the selections prop flows back down.
+    await rerender({ ...propsFor({ roll: 9, riderBonus: 3 }), onSelectionChange });
+
+    // Toggle the aura OFF: the would-be total drops to 10 (a fail), but the
+    // recorded roll is what the engine still judges — the chip must keep
+    // showing it, not regress to the unrolled expression.
+    await fireEvent.click(container.querySelector('button.panel-renderer__modifier')!);
+    const chip = container.querySelector('.panel-renderer__die-chip');
+    expect(chip?.textContent?.trim()).toBe('13');
+    const outcome = container.querySelector('.panel-renderer__outcome');
+    expect(outcome).not.toBeNull();
+    expect(outcome?.textContent).toBe('planner.record.passed');
+
+    // The engine agreement, by construction: a toggle is display state and
+    // NEVER fires onSelectionChange, so the persisted pair { roll: 9,
+    // riderBonus: 3 } — the exact inputs whose verdict concentration-check
+    // pins ("a captured rider joins the verdict") — is unchanged, and the
+    // engine resolves the same pass it did before the toggle. Re-roll to
+    // change a recorded outcome; a re-roll captures the new modifier state.
+    expect(onSelectionChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('still clears a die WITHOUT writeBack when a modifier toggles', async () => {
+    // Regression pin of today's behaviour: an ephemeral die's total matched
+    // the expression that produced it, and a toggle changes that expression —
+    // nothing is persisted to re-seed from, so the chip must reset.
+    const control = {
+      type: 'dice-line',
+      dice: [{ sides: 20, bonus: { number: 1 }, purpose: 'save' }]
+    } as DiceLineControl;
+    vi.spyOn(Math, 'random').mockReturnValue(0.4); // 9 + 1 + 3 = 13
+    const { container } = render(PanelDiceLine, {
+      props: { control, editable: true, facts: {}, vars: {}, selections: {}, modifiers: MODS }
+    });
+    await fireEvent.click(container.querySelector('.panel-renderer__die-chip')!);
+    expect(container.querySelector('.panel-renderer__die-chip')?.textContent?.trim()).toBe('13');
+    await fireEvent.click(container.querySelector('button.panel-renderer__modifier')!);
+    // Aura off now: the expression reads d20+1, not the stale 13.
+    expect(container.querySelector('.panel-renderer__die-chip')?.textContent?.trim()).toBe('d20+1');
+  });
+
+  it('still clears a writeBack die when the dice change shape', async () => {
+    // Only the MODIFIER path preserves; a dice-signature change (the die's
+    // shape moved) clears everything, writeBack included — the persisted
+    // natural described a die this line no longer rolls. The die's sides
+    // resolve from a selection, the smite/slider shape of shape change.
+    const control = {
+      type: 'dice-line',
+      outcomeVs: { number: 10 },
+      dice: [
+        {
+          sides: { var: 'dieSides' },
+          bonus: { number: 1 },
+          purpose: 'save',
+          writeBack: { var: 'roll', riderVar: 'riderBonus' }
+        }
+      ]
+    } as DiceLineControl;
+    vi.spyOn(Math, 'random').mockReturnValue(0.4); // d20 → 9
+    const { container, rerender } = render(PanelDiceLine, {
+      props: {
+        control,
+        editable: true,
+        facts: {},
+        vars: {},
+        selections: { dieSides: 20 },
+        modifiers: MODS,
+        onSelectionChange: vi.fn()
+      }
+    });
+    await fireEvent.click(container.querySelector('.panel-renderer__die-chip')!);
+    expect(container.querySelector('.panel-renderer__die-chip')?.textContent?.trim()).toBe('13');
+    // The die shrinks to a d12 while the rolled values ride the selections —
+    // the shape change must win over any re-seed. The aura never toggled, so
+    // the restored expression still folds it in (d12 + authored 1 + aura 3).
+    await rerender({
+      control,
+      editable: true,
+      facts: {},
+      vars: {},
+      selections: { dieSides: 12, roll: 9, riderBonus: 3 },
+      modifiers: MODS
+    });
+    expect(container.querySelector('.panel-renderer__die-chip')?.textContent?.trim()).toBe('d12+4');
+    expect(container.querySelector('.panel-renderer__outcome')).toBeNull();
+  });
+});

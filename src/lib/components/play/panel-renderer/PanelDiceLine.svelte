@@ -206,7 +206,8 @@
     control.dice.map((d) => `${getDieSides(d) ?? ''}x${getDieCount(d)}`).join('|')
   );
   // Which modifiers are currently switched on, per die. Toggling one changes the
-  // expression just as surely as swapping a die does, so it invalidates totals too.
+  // expression just as surely as swapping a die does, so it invalidates totals
+  // too — with one carve-out for recorded rolls, explained at the effect below.
   const modifierSignature = $derived(
     shownModifiers
       .filter((m) => modifierOn(m))
@@ -215,24 +216,52 @@
   );
   // A roll total is only meaningful for the dice AND modifiers that produced it;
   // clear stale results when either changes so a chip never shows a total that no
-  // longer matches its current expression. On the effect's FIRST run this also
-  // seeds any rolls a writeBack die already carries in `selections` — a
-  // re-mounted row shows its persisted roll instead of the unrolled expression.
-  // The seeding lives HERE, one-shot, rather than in its own reactive block,
-  // precisely so it cannot fight this reset; and it reads selections through
-  // `untrack` because a tracked read would re-arm this effect on every
-  // selections change — the store round-trip after a persisted roll would then
-  // re-run it and wipe the very roll the user just made.
+  // longer matches its current expression — with ONE carve-out. When ONLY the
+  // modifiers moved (a situational toggle), a writeBack die RE-SEEDS its frozen
+  // roll-time result instead of clearing: the roll-time verdict is the contract
+  // (the persisted natural + captured rider keep driving the engine's decision,
+  // see the rider-captured-at-roll-time discipline), and a toggle is display
+  // state a recorded outcome must not depend on — wiping the chip would show
+  // the unrolled expression while the engine still judged the recorded roll.
+  // Re-roll to change a recorded outcome; a re-roll captures the new modifier
+  // state. Dice WITHOUT writeBack keep the full clearing (their rolls are
+  // ephemeral, nothing is persisted to re-seed from). A DICE-signature change
+  // (the die's shape changed) still clears everything, writeBack included —
+  // the persisted natural described a die this line no longer rolls. On the
+  // effect's FIRST run this also seeds any rolls a writeBack die already
+  // carries in `selections` — a re-mounted row shows its persisted roll
+  // instead of the unrolled expression. The seeding lives HERE, one-shot and
+  // on the toggle path, rather than in its own reactive block, precisely so it
+  // cannot fight this reset; and it reads selections through `untrack`
+  // because a tracked read would re-arm this effect on every selections
+  // change — the store round-trip after a persisted roll would then re-run it
+  // and wipe the very roll the user just made.
   let seededFromSelections = false;
+  // What the dice signature read on the effect's previous run. Svelte re-runs
+  // the effect only when a tracked signature's VALUE changed, and the dice and
+  // modifier signatures are its only two dependencies — so an unchanged dice
+  // signature means the MODIFIERS alone moved, which is exactly the toggle
+  // path that re-seeds instead of clearing.
+  let lastDiceSignature: string | undefined;
   $effect(() => {
     void diceSignature;
     void modifierSignature;
     if (!seededFromSelections) {
       seededFromSelections = true;
+      lastDiceSignature = diceSignature;
       rollResults = untrack(seedRollResults);
       return;
     }
-    rollResults = {};
+    const diceChanged = diceSignature !== lastDiceSignature;
+    lastDiceSignature = diceSignature;
+    if (diceChanged) {
+      rollResults = {};
+      return;
+    }
+    // Only the modifiers moved: re-seed, which restores every writeBack die's
+    // roll-time result (authored bonus + captured rider, never the live
+    // toggles) and drops every ephemeral die's result in the same sweep.
+    rollResults = untrack(seedRollResults);
   });
 
   /**
@@ -536,9 +565,9 @@
     };
     rollResults[dieIndex] = result;
     // The rider leg this roll's OUTCOME will judge (see `outcomeRiders`):
-    // captured HERE, at roll time, because a later modifier toggle clears the
-    // roll result entirely — whenever a result survives, this captured value
-    // is the modifier total that produced it.
+    // captured HERE, at roll time, and persisted beside the natural — a later
+    // modifier toggle re-seeds from that persisted pair (never re-deriving
+    // from the live chips), and a re-roll captures the new toggle state.
     setOutcomeRider(dieIndex, die, modifierTotal);
     rollMode = 'normal';
     // Opt-in persistence (see DiceEntry.writeBack): record the KEPT natural —
