@@ -76,6 +76,32 @@ describe('concentration annotate — damage-recorder annotation', () => {
     expect(ann!.values).toEqual({ dc: 12 });
   });
 
+  it('carries a tap-to-plan action for the check — naming the offer, seeding nothing', () => {
+    // The reminder is a one-tap shortcut for the check it announces (the
+    // divine-smite / Heroic Inspiration idiom): tapping it plans
+    // `concentration-check` exactly as picking it from the add-row picker
+    // would. NO seed rides along, deliberately — the seed vocabulary can only
+    // copy what the SOURCE row (record-damage) holds, and its `amount` is the
+    // raw damage, not the clamped half, so seeding the check's `dc` var would
+    // corrupt the DC. The check's own capture var is the right channel: the
+    // annotation's gate IS the offer's `when`, both read on the same
+    // post-plan facts the store captures from at add time, so a tappable
+    // reminder implies a live marker implies the captured `concentration.dc`
+    // still equals the DC the label interpolated.
+    const out = evaluate({
+      modules: [concentration],
+      inputFacts: {
+        'concentration.spent': 1,
+        'concentration.damage-taken': 1,
+        'concentration.last-damage': 25
+      },
+      planned: []
+    });
+    expect(out.annotations.find((a) => a.key === KEY)!.addsToPlan).toEqual({
+      offer: 'concentration-check'
+    });
+  });
+
   it('interpolates the DC at its floor — small damage still demands DC 10', () => {
     const out = evaluate({
       modules: [concentration],

@@ -128,6 +128,14 @@ steps:
           targets:
             - key: planner.concentration.annotation
               targets: [damage.any]
+          # The reminder is actionable: tapping it plans the very check it
+          # announces. Its gate is the offer's own `when`, so the button is
+          # live exactly when the check is addable (asserted above), and the
+          # check's captured `dc` var re-reads the same derived fact the label
+          # interpolated — the row opens on the DC the player saw.
+          addsToPlan:
+            - key: planner.concentration.annotation
+              adds: { offer: concentration-check }
 
   # The DC the save demands is a derived fact — the single source for the
   # annotation's label and the check's captured dc var.

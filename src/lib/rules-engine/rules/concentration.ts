@@ -21,7 +21,8 @@ const P = 'planner.concentration';
  *
  * Taking damage while concentrating (core-events' record-damage) trips
  * `concentration.damage-taken`, which surfaces the free `concentration-check`
- * offer below. Recording the check clears the marker via the SAME keyed effect
+ * offer below; the recorder reminder over the damage row is TAPPABLE and
+ * plans that same check. Recording the check clears the marker via the SAME keyed effect
  * record-damage used (newest wins), so the "summed marker" never needs an
  * imperative mid-turn subtract; newest-wins is also why damage rows batched
  * ahead of any check collapse into one check at the latest DC (an accepted
@@ -80,7 +81,23 @@ const concentration: RuleModule = {
     // The DC is the DERIVED fact (single source): the label interpolates what
     // the check itself will demand, not a second computation of it.
     return [
-      { key: `${P}.annotation`, targets: ['damage.any'], values: { dc: f.num('concentration.dc') } }
+      {
+        key: `${P}.annotation`,
+        targets: ['damage.any'],
+        values: { dc: f.num('concentration.dc') },
+        // One tap plans the check the save demands (the divine-smite / Heroic
+        // Inspiration idiom). NO seed, deliberately: the seed vocabulary can
+        // only copy what the SOURCE row holds — record-damage's `amount`, the
+        // raw damage, not the clamped half — so seeding the check's `dc` var
+        // would corrupt the DC. The check's own `dc` capture var is the right
+        // channel: this gate IS the offer's `when`, and both read the same
+        // post-plan facts the store captures from at add time, so a tappable
+        // reminder implies a live marker implies the captured
+        // `concentration.dc` is still the DC the label interpolated (a rolled
+        // check's marker clear removes the annotation with it, so the collapse
+        // to the DC 10 floor can never hide under a visible button).
+        addsToPlan: { offer: 'concentration-check' }
+      }
     ];
   },
   offer: () => [
