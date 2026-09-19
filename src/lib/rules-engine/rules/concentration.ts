@@ -84,9 +84,13 @@ const concentration: RuleModule = {
       // The ROLL decides (SRD 5.2: a CON save against the damage's DC — a pure
       // comparison, no nat-20/nat-1 auto rule; the boundary total === DC
       // passes). The panel persists the kept d20 natural into the `roll`
-      // selection (0 = unrolled, 1–20 = the natural) and captures the DC and
-      // the CON save bonus at add time; an unrolled row records no outcome and
-      // keeps the save owed, and a failed roll evicts the concentration spell.
+      // selection (0 = unrolled, 1–20 = the natural) and, because the dice
+      // line FOLDS active save riders (Aura of Protection) into the total it
+      // displays, the rider it captured at roll time into `riderBonus` — so
+      // this apply's verdict matches the total the player watched. The DC and
+      // the CON save bonus are captured at add time; an unrolled row records
+      // no outcome and keeps the save owed, and a failed roll evicts the
+      // concentration spell.
       id: 'concentration-check',
       when: (f) =>
         f.num('concentration.damage-taken') === 1 && f.num('concentration.remaining') <= 0,
@@ -100,13 +104,21 @@ const concentration: RuleModule = {
         annotationLabels: ['save.any', 'save.con', 'dice.any'],
         // The check is ROLLABLE: a d20 + the captured CON save bonus, the
         // record-save shape. `writeBack` persists the kept natural into the
-        // `roll` selection (the var the apply above decides on), and
+        // `roll` selection (the var the apply above decides on) AND — via
+        // `riderVar` — the active modifier total the dice line folded into
+        // its displayed total (Aura of Protection, +CHA to saves) into
+        // `riderBonus`, so the engine decides on the total the player saw.
         // `outcomeVs` hands the panel's pass/fail chip the same captured `dc`
         // the apply compares against — chip and engine verdict can't diverge.
         primaryControl: {
           type: 'dice-line',
           dice: [
-            { sides: 20, bonus: { var: 'saveBonus' }, purpose: 'save', writeBack: { var: 'roll' } }
+            {
+              sides: 20,
+              bonus: { var: 'saveBonus' },
+              purpose: 'save',
+              writeBack: { var: 'roll', riderVar: 'riderBonus' }
+            }
           ],
           outcomeVs: { var: 'dc' }
         },
@@ -129,16 +141,28 @@ const concentration: RuleModule = {
         // player rolls (advantage/disadvantage keeps the kept natural). 0 —
         // the default — means no roll yet.
         roll: { capture: true, default: { number: 0 } },
-        // The CON save bonus at add time. The AUTHORED bonus only: situational
-        // modifier toggles (Aura of Protection's rider) are ephemeral panel
-        // state; the engine's apply must decide on the same bonus the row
-        // captured, not on a toggle the fold cannot see.
+        // The rider the ROLL captured: the active save modifiers (Aura of
+        // Protection) the dice line folded into its displayed total, persisted
+        // alongside the natural by the writeBack `riderVar`. The engine cannot
+        // see panel toggle state, so the panel hands over the number at roll
+        // time — the same capture discipline as `roll`, one moment later. 0 —
+        // the default — covers an unrolled row and a roll made with every
+        // rider switched off.
+        riderBonus: { capture: true, default: { number: 0 } },
+        // The CON save bonus at add time. The AUTHORED bonus only: the panel's
+        // toggle chips are riders, not save-bonus edits, and each persists
+        // through its own channel above; the engine's apply must decide on the
+        // same bonus the row captured, not on a toggle the fold cannot see.
         saveBonus: { capture: true, default: { fact: 'con.save' } }
       },
       apply: (f, selections): ActionResult => {
         const dc = typeof selections.dc === 'number' ? selections.dc : f.num('concentration.dc');
         const saveBonus =
           typeof selections.saveBonus === 'number' ? selections.saveBonus : f.num('con.save');
+        // The rider the roll captured (0 when nothing rode the roll): the
+        // third leg of the verdict, so the total the dice line DISPLAYED is
+        // the total this apply judges.
+        const riderBonus = typeof selections.riderBonus === 'number' ? selections.riderBonus : 0;
         const raw = selections.roll;
         const roll = typeof raw === 'number' ? raw : 0;
 
@@ -164,7 +188,7 @@ const concentration: RuleModule = {
           };
         }
 
-        const passed = roll + saveBonus >= dc;
+        const passed = roll + saveBonus + riderBonus >= dc;
         // A ROLLED outcome resolves the save, so the trigger clears — pass or
         // fail. Same key as record-damage's marker → planning the check (later
         // in the fold) clears damage-taken AND its carried amount back to 0

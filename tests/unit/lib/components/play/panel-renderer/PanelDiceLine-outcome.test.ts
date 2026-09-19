@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
-import { render } from '@testing-library/svelte';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, fireEvent } from '@testing-library/svelte';
 import PanelRenderer from '$lib/components/play/PanelRenderer.svelte';
 import PanelDiceLine from '$lib/components/play/panel-renderer/PanelDiceLine.svelte';
-import type { DiceLineControl } from '$lib/components/play/panel-renderer/types';
+import type { DiceLineControl, RollModifier } from '$lib/components/play/panel-renderer/types';
 import type { AvailableRuleEntry, Rule } from '$lib/rules-view';
 
 // Mirrors the concentration check the engine authors: a d20 save die whose
@@ -42,6 +42,37 @@ const createCheckEntry = (withOutcomeVs = true): AvailableRuleEntry => ({
   legal: true,
   applicable: true,
   diagnostics: []
+});
+
+// The rider-capturing concentration shape: the same d20 save die, but its
+// writeBack names a riderVar, so the roll persists the active modifier total
+// beside the natural — and the outcome chip must judge the SAME total the
+// engine re-reads (natural + authored bonus + the rider captured at roll
+// time), never the natural alone.
+const createRiderCheckControl = (): DiceLineControl => ({
+  type: 'dice-line',
+  outcomeVs: { number: 12 },
+  dice: [
+    {
+      sides: 20,
+      bonus: { number: 1 },
+      purpose: 'save',
+      writeBack: { var: 'roll', riderVar: 'riderBonus' }
+    }
+  ]
+});
+
+/** The Aura of Protection chip the concentration panel surfaces on saves. */
+const aura = (defaultOn: boolean): RollModifier => ({
+  key: 'aura',
+  label: 'rule.demo.aura',
+  appliesTo: 'save',
+  value: 3,
+  defaultOn
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe('PanelDiceLine - outcome chip', () => {
@@ -163,5 +194,68 @@ describe('PanelDiceLine - outcome chip', () => {
     expect(chip?.getAttribute('aria-live')).toBe('polite');
     // The summary strip stays non-interactive: no button, input, or tabindex.
     expect(container.querySelectorAll('button, input, a[href], [tabindex]').length).toBe(0);
+  });
+
+  // The bug this branch fixes, pinned from the live roll side: the dice line
+  // DISPLAYS natural + base + active modifiers (formatBonus folds the aura
+  // in), so a natural 9 with the aura reads as 13 vs DC 12 — the chip used to
+  // judge the natural and authored bonus alone (10) and announced failure
+  // while the player watched a passing total. With a riderVar the roll
+  // captures the rider and the chip judges the same 13.
+  it('judges the rider the roll captured: natural 9 + base 1 + aura 3 vs 12 passes', async () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.4); // floor(0.4*20)+1 = 9
+    const { container } = render(PanelDiceLine, {
+      props: {
+        control: createRiderCheckControl(),
+        editable: true,
+        facts: {},
+        vars: {},
+        selections: {},
+        modifiers: [aura(true)]
+      }
+    });
+    await fireEvent.click(container.querySelector('.panel-renderer__die-chip')!);
+    const chip = container.querySelector('.panel-renderer__outcome');
+    expect(chip?.textContent).toBe('planner.record.passed');
+    expect(chip?.classList.contains('panel-renderer__outcome--pass')).toBe(true);
+  });
+
+  it('fails the same natural when the rider is switched off — it never applied', async () => {
+    // The aura chip starts OFF, so the roll captures a rider of 0: 9 + 1 + 0 =
+    // 10 < 12 fails. The toggle state at ROLL time is what persists, exactly
+    // as the engine's apply will re-read it.
+    vi.spyOn(Math, 'random').mockReturnValue(0.4); // floor(0.4*20)+1 = 9
+    const { container } = render(PanelDiceLine, {
+      props: {
+        control: createRiderCheckControl(),
+        editable: true,
+        facts: {},
+        vars: {},
+        selections: {},
+        modifiers: [aura(false)]
+      }
+    });
+    await fireEvent.click(container.querySelector('.panel-renderer__die-chip')!);
+    const chip = container.querySelector('.panel-renderer__outcome');
+    expect(chip?.textContent).toBe('planner.record.failed');
+    expect(chip?.classList.contains('panel-renderer__outcome--fail')).toBe(true);
+  });
+
+  it('judges the PERSISTED rider on a seeded roll without rolling', () => {
+    // A re-mounted row carrying its persisted roll AND rider: the verdict
+    // comes from selections (9 + 1 + 3 = 13 vs 12 → passed), matching the
+    // engine's apply, which reads the same two selections — even though no
+    // live modifier chip exists on the remounted line to re-derive it from.
+    const { container } = render(PanelDiceLine, {
+      props: {
+        control: createRiderCheckControl(),
+        editable: true,
+        facts: {},
+        vars: {},
+        selections: { roll: 9, riderBonus: 3 }
+      }
+    });
+    const chip = container.querySelector('.panel-renderer__outcome');
+    expect(chip?.textContent).toBe('planner.record.passed');
   });
 });

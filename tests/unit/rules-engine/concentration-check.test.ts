@@ -194,6 +194,12 @@ describe('concentration-check — the roll decides', () => {
     ruleId: 'concentration-check',
     ...(roll !== undefined ? { selections: { roll } } : {})
   });
+  /** A check row carrying its full persisted state (what the panel wrote). */
+  const checkWith = (instanceId: string, selections: Record<string, unknown>): PlannedRef => ({
+    instanceId,
+    ruleId: 'concentration-check',
+    selections
+  });
   const run = (planned: PlannedRef[]) => evaluate({ modules: MODULES, inputFacts: FACTS, planned });
   const base = () => [castBless('b1'), takeDamage('d1', 25)];
   const broken = (out: ReturnType<typeof evaluate>) =>
@@ -289,6 +295,45 @@ describe('concentration-check — the roll decides', () => {
     expect(out.facts['concentration.check-passed']).toBe(0);
     expect(out.facts['concentration.remaining']).toBe(1);
   });
+
+  // The rider the roll captured (Aura of Protection folded into the roll by
+  // the panel's riderVar write-back) joins the verdict: without it the chip
+  // could display a passing total (natural + base + aura) while the apply
+  // judged the natural and base alone — and a failure evicts the spell.
+  it('a captured rider joins the verdict — the same roll that fails alone passes with it', () => {
+    const alone = run([
+      ...base(),
+      checkWith('c1', { roll: 9, saveBonus: 1, riderBonus: 0, dc: 12 })
+    ]);
+    // 9 + 1 = 10 < 12 → fails and evicts.
+    expect(alone.facts['concentration.check-passed']).toBe(0);
+    expect(alone.facts['concentration.remaining']).toBe(1);
+    const withAura = run([
+      ...base(),
+      checkWith('c1', { roll: 9, saveBonus: 1, riderBonus: 3, dc: 12 })
+    ]);
+    // 9 + 1 + 3 = 13 ≥ 12 → passes, no eviction, marker cleared.
+    expect(withAura.facts['concentration.check-passed']).toBe(1);
+    expect(withAura.facts['concentration.damage-taken']).toBe(0);
+    expect(withAura.facts['concentration.remaining']).toBe(0);
+    expect(broken(withAura)).toEqual([]);
+  });
+
+  it('the rider sits inside the same pass boundary — roll + save + rider === dc passes', () => {
+    // 8 + 1 + 3 = 12 === dc 12: the boundary comparison spans all three legs.
+    const out = run([...base(), checkWith('c1', { roll: 8, saveBonus: 1, riderBonus: 3, dc: 12 })]);
+    expect(out.facts['concentration.check-passed']).toBe(1);
+    expect(broken(out)).toEqual([]);
+  });
+
+  it('an unset rider reads as 0 — a row that never rolled riders still decides', () => {
+    // The captured default is 0, and the apply's 0 fallback covers a row
+    // whose selections carry no riderBonus at all (the pre-riderVar shape).
+    const out = run([...base(), checkWith('c1', { roll: 9, saveBonus: 1, dc: 12 })]);
+    expect(out.facts['concentration.check-passed']).toBe(0);
+    expect(broken(out)).toBeDefined();
+    expect(broken(out).length).toBe(1);
+  });
 });
 
 /**
@@ -316,7 +361,7 @@ describe('concentration-check — the panel ui', () => {
     expect(ui.annotationLabels).toEqual(['save.any', 'save.con', 'dice.any']);
   });
 
-  it('primaryControl is a d20 save roller that writes the natural back and is judged against the DC', () => {
+  it('primaryControl is a d20 save roller that writes the natural and rider back, judged against the DC', () => {
     expect(ui.primaryControl).toEqual({
       type: 'dice-line',
       dice: [
@@ -324,7 +369,7 @@ describe('concentration-check — the panel ui', () => {
           sides: 20,
           bonus: { var: 'saveBonus' },
           purpose: 'save',
-          writeBack: { var: 'roll' }
+          writeBack: { var: 'roll', riderVar: 'riderBonus' }
         }
       ],
       outcomeVs: { var: 'dc' }

@@ -118,13 +118,22 @@ export interface DiceEntry {
   /**
    * Opt-in roll persistence. A die authored with `writeBack` records its KEPT
    * NATURAL into the selections channel under `var` on every roll (the
-   * hit-dice precedent: the natural only — bonuses and situational modifiers
-   * are the engine's business and resolve again on re-evaluation, so only the
-   * roll survives the round-trip). A die WITHOUT this never writes: ordinary
-   * attack and damage rolls are ephemeral and must not ride the plan's
-   * selections. An unrolled row reads the var as 0 (its captured default).
+   * hit-dice precedent: the natural only — bonuses resolve again on
+   * re-evaluation, so only the roll survives the round-trip). A die WITHOUT
+   * this never writes: ordinary attack and damage rolls are ephemeral and must
+   * not ride the plan's selections. An unrolled row reads the var as 0 (its
+   * captured default).
+   *
+   * `riderVar` opts the die's SITUATIONAL modifiers into the same discipline:
+   * the roll then also persists the ACTIVE modifier total (the folded riders
+   * the shown total carried, e.g. Aura of Protection on a save) under
+   * `riderVar`, in the same selections payload. Needed where the roll decides
+   * an outcome the engine re-reads — without it the panel could display a
+   * passing total (natural + base + rider) while the engine judged the natural
+   * and base alone. A die without `riderVar` keeps the legacy contract:
+   * toggles are ephemeral panel state and never persist.
    */
-  writeBack?: { var: string };
+  writeBack?: { var: string; riderVar?: string };
 }
 
 export interface ControlBase {

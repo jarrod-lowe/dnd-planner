@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import PanelRenderer from '$lib/components/play/PanelRenderer.svelte';
+import PanelDiceLine from '$lib/components/play/panel-renderer/PanelDiceLine.svelte';
+import type { DiceLineControl, RollModifier } from '$lib/components/play/panel-renderer/types';
 import type { AvailableRuleEntry, Rule } from '$lib/rules-view';
 
 // Mirrors the shape the concentration check authors: a d20 save whose KEPT
@@ -92,6 +94,33 @@ const createDisadvantageEntry = (): AvailableRuleEntry => ({
   applicable: true,
   diagnostics: []
 });
+
+// The concentration check's rider-capturing shape: the same d20 save, but the
+// writeBack names a riderVar, so a roll persists the kept natural AND the active
+// modifier total (Aura of Protection folded in at roll time — the total the
+// engine's apply re-reads as its riderBonus and the outcome chip must judge).
+const RIDER_CONTROL = {
+  type: 'dice-line',
+  dice: [
+    {
+      sides: 20,
+      bonus: { number: 1 },
+      purpose: 'save',
+      writeBack: { var: 'roll', riderVar: 'riderBonus' }
+    }
+  ]
+} as DiceLineControl;
+
+// The save-scoped modifier the concentration panel surfaces as a toggle chip:
+// default-on, so a plain roll folds it into both the shown total and — with a
+// riderVar — the persisted rider.
+const AURA_MODIFIER: RollModifier = {
+  key: 'aura',
+  label: 'rule.demo.aura',
+  appliesTo: 'save',
+  value: 3,
+  defaultOn: true
+};
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -196,6 +225,50 @@ describe('PanelDiceLine - writeBack roll persistence', () => {
     const span = container.querySelector('.panel-renderer__die-chip');
     expect(span?.tagName).toBe('SPAN');
     await fireEvent.click(span!);
+    expect(onSelectionChange).not.toHaveBeenCalled();
+  });
+
+  // The rider half of the persistence: a die whose writeBack carries a
+  // `riderVar` persists the ACTIVE modifier total alongside the natural, in the
+  // same selections payload — the engine's verdict then sees the total the dice
+  // line showed (natural + authored + aura), not the natural alone.
+  it('persists the active modifier total alongside the natural when writeBack carries a riderVar', async () => {
+    const onSelectionChange = vi.fn();
+    vi.spyOn(Math, 'random').mockReturnValue(0.4); // floor(0.4*20)+1 = 9
+    const { container } = render(PanelDiceLine, {
+      props: {
+        control: RIDER_CONTROL,
+        editable: true,
+        facts: {},
+        vars: {},
+        selections: {},
+        onSelectionChange,
+        modifiers: [AURA_MODIFIER]
+      }
+    });
+    const chip = container.querySelector('.panel-renderer__die-chip');
+    await fireEvent.click(chip!);
+    expect(onSelectionChange).toHaveBeenCalledTimes(1);
+    expect(onSelectionChange).toHaveBeenCalledWith({ roll: 9, riderBonus: 3 });
+  });
+
+  it('seeds the persisted rider back into the restored chip total', () => {
+    // A re-mounted row carrying its persisted roll AND rider: the chip shows
+    // the same total the roll produced (natural 9 + authored 1 + rider 3),
+    // restored from BOTH persisted values without writing anything back.
+    const onSelectionChange = vi.fn();
+    const { container } = render(PanelDiceLine, {
+      props: {
+        control: RIDER_CONTROL,
+        editable: true,
+        facts: {},
+        vars: {},
+        selections: { roll: 9, riderBonus: 3 },
+        onSelectionChange
+      }
+    });
+    const chip = container.querySelector('.panel-renderer__die-chip');
+    expect(chip?.textContent?.trim()).toBe('13');
     expect(onSelectionChange).not.toHaveBeenCalled();
   });
 });

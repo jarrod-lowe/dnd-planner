@@ -142,6 +142,17 @@
     return `${$t(m.label)} ${m.value >= 0 ? '+' : ''}${m.value}`;
   }
   let rollResults = $state<Record<number, RollResult>>({});
+  // The rider total each die's OUTCOME judges, for dice whose writeBack
+  // carries a `riderVar`: captured at ROLL time (the active modifiers folded
+  // into that roll's total) or restored from the persisted selection on seed.
+  // Reading it through a captured value — rather than re-deriving from the
+  // live toggle chips — is what keeps the chip's verdict equal to the
+  // engine's, which re-reads the same persisted rider. Dice without a
+  // `riderVar` never consult this (their toggles stay excluded, by design).
+  const outcomeRiders: Record<number, number> = $state({});
+  const setOutcomeRider = (dieIndex: number, die: DiceEntry, rider: number): void => {
+    if (die.writeBack?.riderVar !== undefined) outcomeRiders[dieIndex] = rider;
+  };
   let rollMode = $state<RollMode>('normal');
   let openDieIndex = $state(-1);
   // The Popover API methods are absent in jsdom and older browsers; typed as
@@ -230,8 +241,10 @@
    * reads 0 while unrolled (its captured default rides selections from add
    * time), which must keep the expression rendered. The authored bonus folds
    * into the restored total exactly as it did on the live roll, so a
-   * re-mounted chip reads the same as before the remount; situational
-   * modifier toggles are ephemeral by design and stay unfolded.
+   * re-mounted chip reads the same as before the remount. A `riderVar` die
+   * restores its CAPTURED rider the same way — the engine re-reads that rider,
+   * so the display must not drop it — while dice without one keep their
+   * situational toggles ephemeral and unfolded.
    */
   function seedRollResults(): Record<number, RollResult> {
     const seeded: Record<number, RollResult> = {};
@@ -241,7 +254,13 @@
       const kept = selections[die.writeBack.var];
       if (typeof kept !== 'number' || kept <= 0) continue;
       const bonus = authoredBonus(die);
-      seeded[i] = { natural: kept, total: kept + (bonus ?? 0) };
+      const riderVar = die.writeBack.riderVar;
+      const rider =
+        riderVar !== undefined && typeof selections[riderVar] === 'number'
+          ? (selections[riderVar] as number)
+          : 0;
+      setOutcomeRider(i, die, rider);
+      seeded[i] = { natural: kept, total: kept + (bonus ?? 0) + rider };
     }
     return seeded;
   }
@@ -264,9 +283,12 @@
    * (`writeBack` — the roll that decides an outcome is the one the engine
    * re-reads), that roll exists (fresh, or seeded back from selections), and
    * the control's `outcomeVs` resolves to a number. The comparison uses the
-   * kept natural plus the AUTHORED bonus only — never the situational toggles
-   * (see `authoredBonus`) — with a total equal to the target passing, exactly
-   * as the engine's apply decides the same roll.
+   * kept natural plus the AUTHORED bonus — never the live situational toggles
+   * (see `authoredBonus`) — PLUS, for a die whose writeBack carries a
+   * `riderVar`, the rider that roll captured (see `outcomeRiders`): the
+   * engine's apply re-reads that persisted rider, so the chip must judge the
+   * same leg or the two verdicts diverge. A total equal to the target passes,
+   * exactly as the engine's apply decides the same roll.
    */
   function dieOutcome(die: DiceEntry, dieIndex: number): { passed: boolean } | undefined {
     if (!die.writeBack || !control.outcomeVs) return undefined;
@@ -276,7 +298,8 @@
       | number
       | undefined;
     if (typeof target !== 'number') return undefined;
-    return { passed: result.natural + (authoredBonus(die) ?? 0) >= target };
+    const rider = die.writeBack.riderVar !== undefined ? (outcomeRiders[dieIndex] ?? 0) : 0;
+    return { passed: result.natural + (authoredBonus(die) ?? 0) + rider >= target };
   }
 
   function handleRangeTap(): void {
@@ -512,14 +535,26 @@
           : undefined
     };
     rollResults[dieIndex] = result;
+    // The rider leg this roll's OUTCOME will judge (see `outcomeRiders`):
+    // captured HERE, at roll time, because a later modifier toggle clears the
+    // roll result entirely — whenever a result survives, this captured value
+    // is the modifier total that produced it.
+    setOutcomeRider(dieIndex, die, modifierTotal);
     rollMode = 'normal';
     // Opt-in persistence (see DiceEntry.writeBack): record the KEPT natural —
     // advantage/disadvantage has already resolved by here — through the
-    // selections channel, exactly as the hit-dice roller does. A die without
-    // `writeBack` never writes; `editable` is guaranteed by the guard at the
-    // top of this handler.
+    // selections channel, exactly as the hit-dice roller does. A die whose
+    // writeBack carries a `riderVar` also records the ACTIVE modifier total in
+    // the SAME payload (the rider-captured-at-roll-time contract): the engine's
+    // verdict must see the total this line displayed, riders included. A die
+    // without `writeBack` never writes; `editable` is guaranteed by the guard
+    // at the top of this handler.
     if (die.writeBack) {
-      onSelectionChange?.({ [die.writeBack.var]: natural });
+      onSelectionChange?.(
+        die.writeBack.riderVar === undefined
+          ? { [die.writeBack.var]: natural }
+          : { [die.writeBack.var]: natural, [die.writeBack.riderVar]: modifierTotal }
+      );
     }
     onRoll?.(result, dieIndex);
     const el = chipRefs[dieIndex];
