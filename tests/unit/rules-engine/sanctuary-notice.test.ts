@@ -88,4 +88,22 @@ describe('sanctuary annotate — notice', () => {
       expect(body?.match(/{{[a-zA-Z]+}}/g)).toEqual(['{{dc}}']);
     }
   });
+
+  it('the body addresses the warded creature, never "you" — in both locales', () => {
+    // SRD 5.2 Sanctuary speaks of "the warded creature" on both sides of the
+    // rule: who the attackers must avoid targeting, and whose offence ends the
+    // spell. The ward can land on anyone (the caster's ally included), so a
+    // second-person body would misread whenever it is not the caster who is
+    // warded. The canary locale carries the same construction its own way.
+    const bodyOf = (catalog: unknown): string | undefined =>
+      (catalog as { rule: Record<string, Record<string, string | undefined>> }).rule[
+        'spell-sanctuary'
+      ]?.['notice.body'];
+    const en = bodyOf(enCommon);
+    const tlh = bodyOf(tlhCommon);
+    expect(en).toContain('the warded creature');
+    expect(en?.match(/\byou\b/i), 'en body has no second person').toBeNull();
+    expect(tlh).toContain("chal DIvI'");
+    expect(tlh?.match(/SoH/), 'tlh body has no second person').toBeNull();
+  });
 });

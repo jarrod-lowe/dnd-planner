@@ -12,7 +12,7 @@
     },
     "spell-sanctuary": {
       "notice": "chal",
-      "notice.body": "SoH HIv waH ghap qIp mu' lo'taHbogh Doch, {{dc}} WIS waH yInab 'e' QapnIS — Qapbe'chugh, DIvI' chu' wIv ghap HIv chIl. SoH HIv waH Data'chugh, mu' DachenmoHchugh, ghap qIp DaneHchugh, mu' rIn.",
+      "notice.body": "chal DIvI' HIv waH ghap qIp mu' lo'taHbogh Doch, {{dc}} WIS waH yInab 'e' QapnIS — Qapbe'chugh, DIvI' chu' wIv ghap HIv chIl. chal DIvI' HIv waH Data'chugh, mu' chenmoHchugh, ghap QIH rInmoHchugh, mu' rIn.",
       "offer-sanctuary": {
         "name": "chal",
         "keywords": "protect ward shield abjuration safe",
