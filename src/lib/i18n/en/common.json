@@ -160,7 +160,6 @@
         "description": "60ft | WIS save or Incapacitated; 2nd fail: Unconscious | 10 rnds",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
-        "already_concentrating": "Already concentrating",
         "no_slots": "No spell slots remaining"
       },
       "effect-sleep": {
@@ -174,7 +173,6 @@
         "description": "60ft | CHA save or immune to Charmed/Frightened, or Indifferent | 10 rnds",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
-        "already_concentrating": "Already concentrating",
         "no_slots": "No spell slots remaining"
       },
       "effect-calm-emotions": {
@@ -190,7 +188,6 @@
         "description": "60ft | WIS save or Paralyzed; repeats save each turn | 10 rnds",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
-        "already_concentrating": "Already concentrating",
         "no_slots": "No spell slots remaining"
       },
       "effect-hold-person": {
@@ -249,7 +246,6 @@
         "description": "Touch | 10 min | Warded vs aberrations, fiends, undead & more",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
-        "already_concentrating": "Already concentrating",
         "no_slots": "No spell slots remaining"
       },
       "effect-protection-from-evil-and-good": {
@@ -263,7 +259,6 @@
         "description": "30ft | 10 rnds | Allies gain +1d4 to attacks & saves",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
-        "already_concentrating": "Already concentrating",
         "no_slots": "No spell slots remaining"
       },
       "effect-bless": {
@@ -290,7 +285,6 @@
         "targetAlly": "Ally",
         "no_bonus_action": "No bonus action available",
         "no_spellcasting": "Already cast a spell this turn",
-        "already_concentrating": "Already concentrating",
         "no_slots": "No spell slots remaining"
       },
       "effect-shield-of-faith": {
@@ -332,7 +326,6 @@
         "description": "Self | 10 min | Sense aberrations, celestials, elementals, fey, fiends & undead within 30ft, plus whether Hallow is active",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
-        "already_concentrating": "Already concentrating",
         "no_slots": "No spell slots remaining"
       },
       "effect-detect-evil-and-good": {

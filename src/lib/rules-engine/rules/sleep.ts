@@ -18,7 +18,8 @@ const SLOTS = 'sleep';
  * Evil and Good: prepare path + L1–5 slot cascade + a cast that spends an action,
  * the turn spell, and a slot, holding concentration via `effect-sleep`
  * (`[turns 10, untilShortRest]`, `concentration.spent` = 1) so it ends on its
- * duration or any rest and blocks a second concentration spell meanwhile.
+ * duration or any rest; a second concentration spell (legal per SRD 5.2)
+ * replaces it via the shared key.
  */
 const sleep: RuleModule = {
   id: 'spell-sleep',
@@ -89,10 +90,8 @@ const sleep: RuleModule = {
           condition: (f) => f.num('spellcasting.remaining') > 0,
           diagnostics: [{ code: `${P}.no_spellcasting`, severity: 'error' }]
         },
-        {
-          condition: (f) => f.num('concentration.remaining') > 0,
-          diagnostics: [{ code: `${P}.already_concentrating`, severity: 'error' }]
-        },
+        // No concentration gate: SRD 5.2 makes the recast legal — it dismisses
+        // the current hold via the shared CONCENTRATION_SPELL_KEY (newest wins).
         {
           condition: (f) => f.num(`${SLOTS}.eligibleSlotsRemaining`) > 0,
           diagnostics: [{ code: `${P}.no_slots`, severity: 'error' }]
@@ -124,8 +123,6 @@ const sleep: RuleModule = {
           diagnostics.push({ code: `${P}.no_action`, severity: 'error' });
         if (f.num('spellcasting.remaining') <= 0)
           diagnostics.push({ code: `${P}.no_spellcasting`, severity: 'error' });
-        if (f.num('concentration.remaining') <= 0)
-          diagnostics.push({ code: `${P}.already_concentrating`, severity: 'error' });
         if (level >= 1 && level <= 5) {
           advertise.push({
             id: `effect-sleep-slot-l${level}`,

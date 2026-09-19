@@ -102,10 +102,8 @@ const holdPerson: RuleModule = {
           condition: (f) => f.num('spellcasting.remaining') > 0,
           diagnostics: [{ code: `${P}.no_spellcasting`, severity: 'error' }]
         },
-        {
-          condition: (f) => f.num('concentration.remaining') > 0,
-          diagnostics: [{ code: `${P}.already_concentrating`, severity: 'error' }]
-        },
+        // No concentration gate: SRD 5.2 makes the recast legal — it dismisses
+        // the current hold via the shared CONCENTRATION_SPELL_KEY (newest wins).
         {
           condition: (f) => f.num(`${SLOTS}.eligibleSlotsRemaining`) > 0,
           diagnostics: [{ code: `${P}.no_slots`, severity: 'error' }]
@@ -137,8 +135,6 @@ const holdPerson: RuleModule = {
           diagnostics.push({ code: `${P}.no_action`, severity: 'error' });
         if (f.num('spellcasting.remaining') <= 0)
           diagnostics.push({ code: `${P}.no_spellcasting`, severity: 'error' });
-        if (f.num('concentration.remaining') <= 0)
-          diagnostics.push({ code: `${P}.already_concentrating`, severity: 'error' });
         if (level >= 2 && level <= 5) {
           advertise.push({
             id: `effect-hold-person-slot-l${level}`,

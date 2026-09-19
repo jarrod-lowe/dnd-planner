@@ -48,9 +48,12 @@ export const HIT_DIE_SIZES = [6, 8, 10, 12] as const;
  * eviction, the find-steed Dismiss pattern) REPLACES the holding effect rather
  * than stacking beside it: the spell's `concentration.spent` contribution
  * drops while the eviction is merely planned — remove the check row and the
- * spell folds back — and `endTurn` merges the replacement permanently. It
- * also makes an illegal double cast replace the hold instead of stacking a
- * second `concentration.spent`. Lives in the builder (not concentration.ts)
+ * spell folds back — and `endTurn` merges the replacement permanently. It is
+ * also the SRD 5.2 recast mechanism: starting a second concentration spell is
+ * legal ("Another Concentration Effect" — you lose Concentration the moment
+ * you start casting), and the newest same-key effect dismisses the old hold —
+ * in-plan, at commit, and carrying the old spell's side state (the Shield of
+ * Faith AC bonus) with it. Lives in the builder (not concentration.ts)
  * because the spell modules must import it and may import only the builder.
  */
 export const CONCENTRATION_SPELL_KEY = 'concentration-spell';

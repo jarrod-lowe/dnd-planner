@@ -11,8 +11,11 @@ const P = 'planner.concentration';
 
 /**
  * Concentration: a one-slot binary resource. `remaining = max − spent`; a
- * concentration spell holds the slot via a persistent `concentration.spent`
- * effect, so a second concentration spell sees `remaining = 0` and is illegal,
+ * concentration spell holds the slot via a persistent, keyed
+ * `concentration.spent` effect (the shared CONCENTRATION_SPELL_KEY), so a
+ * second concentration spell is LEGAL (SRD 5.2: you lose Concentration on an
+ * effect the moment you start casting a spell that requires Concentration) and
+ * its keyed effect REPLACES the current hold — `spent` never stacks past 1 —
  * and the hold releases when that spell's effect ends (duration or rest).
  *
  * Taking damage while concentrating (core-events' record-damage) trips

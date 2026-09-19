@@ -1,7 +1,8 @@
-name: 'Bless - Planned Item Illegal While Concentrating'
+name: 'Bless Concentration Replacement'
 description: >-
-  Casting Bless, then planning a second cast while concentration is still held,
-  marks the second planned item illegal with an already_concentrating error.
+  Casting Bless while already concentrating is legal (SRD 5.2): the moment the
+  second concentration spell starts, the first is dismissed — the shared
+  concentration key replaces the hold, so concentration.spent stays 1.
 ruleGroups:
   - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
@@ -31,6 +32,7 @@ steps:
         offers:
           exists:
             - cast-bless
+  # Cast Bless — consumes concentration
   - addOffer:
       id: cast-bless
       assert:
@@ -42,16 +44,26 @@ steps:
         effects:
           exists:
             - effect-bless
+  # Turn 2: the recast is LEGAL — SRD 5.2 "Another Concentration Effect" loses
+  # the first concentration the moment the second cast starts.
   - evaluate:
       assert:
         facts:
           concentration.remaining: 0
-          spellcasting.slots.level1.remaining: 1
+        offers:
+          legal:
+            - cast-bless
+  # Recast Bless: the second cast's keyed effect REPLACES the committed hold, so
+  # the slot still reads as held once (not stacked) while the second slot spends.
   - addOffer:
       id: cast-bless
       assert:
-        planErrors:
-          - id: cast-bless
-            index: 0
-            errors:
-              - rule.spell-bless.offer-bless.already_concentrating
+        facts:
+          concentration.spent: 1
+          concentration.remaining: 0
+          spellcasting.slots.level1.remaining: 0
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-bless

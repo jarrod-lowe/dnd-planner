@@ -160,7 +160,6 @@
         "description": "60ft | WIS ra' pagh roj; cha'logh luj: Qong | 10 rep",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
-        "already_concentrating": "buQ DIvI'",
         "no_slots": "mugh laH tu'lu'be'"
       },
       "effect-sleep": {
@@ -174,7 +173,6 @@
         "description": "60ft | CHA ra' pagh charmed/frightened Qaw', pagh tam | 10 rep",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
-        "already_concentrating": "buQ DIvI'",
         "no_slots": "mugh laH tu'lu'be'"
       },
       "effect-calm-emotions": {
@@ -190,7 +188,6 @@
         "description": "60ft | WIS ra' pagh Qam Qaw', repeat DIch | 10 rep",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
-        "already_concentrating": "buQ DIvI'",
         "no_slots": "mugh laH tu'lu'be'"
       },
       "effect-hold-person": {
@@ -249,7 +246,6 @@
         "description": "Hot | 10 tup | mIgh Do' Ha'DIbaH je DIvI'",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
-        "already_concentrating": "buQ DIvI'",
         "no_slots": "mugh laH tu'lu'be'"
       },
       "effect-protection-from-evil-and-good": {
@@ -263,7 +259,6 @@
         "description": "30ft | 10 rep | DIvI' +1d4 DIvI' DIvI'",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
-        "already_concentrating": "buQ DIvI'",
         "no_slots": "mugh laH tu'lu'be'"
       },
       "effect-bless": {
@@ -290,7 +285,6 @@
         "targetAlly": "latlh ghot",
         "no_bonus_action": "Quv DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
-        "already_concentrating": "buQ DIvI'",
         "no_slots": "mugh laH tu'lu'be'"
       },
       "effect-shield-of-faith": {
@@ -332,7 +326,6 @@
         "description": "wa' | 10 tup | mIgh Ha'DIbaH je 30ft tu'",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
-        "already_concentrating": "buQ DIvI'",
         "no_slots": "mugh laH tu'lu'be'"
       },
       "effect-detect-evil-and-good": {

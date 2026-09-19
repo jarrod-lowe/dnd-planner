@@ -19,8 +19,8 @@ const SLOTS = 'shieldOfFaith';
  * spends a bonus action, the turn spell, and a slot, holding concentration via
  * `effect-shield-of-faith` (`[untilShortRest]`, `concentration.spent` = 1). Ten
  * minutes is impractical to count in combat rounds, so the ward carries until
- * the user dismisses it or any rest (always 10+ minutes) ends it; it blocks a
- * second concentration spell meanwhile.
+ * the user dismisses it or any rest (always 10+ minutes) ends it; a second
+ * concentration spell (legal per SRD 5.2) replaces it via the shared key.
  *
  * The buff also contributes `ac.miscBonus` 2 (the effect's state, not a derive),
  * so the `ac` group's sum raises the sheet AC while the ward lives — visible the
@@ -107,10 +107,8 @@ const shieldOfFaith: RuleModule = {
           condition: (f) => f.num('spellcasting.remaining') > 0,
           diagnostics: [{ code: `${S}.no_spellcasting`, severity: 'error' }]
         },
-        {
-          condition: (f) => f.num('concentration.remaining') > 0,
-          diagnostics: [{ code: `${S}.already_concentrating`, severity: 'error' }]
-        },
+        // No concentration gate: SRD 5.2 makes the recast legal — it dismisses
+        // the current hold via the shared CONCENTRATION_SPELL_KEY (newest wins).
         {
           condition: (f) => f.num(`${SLOTS}.eligibleSlotsRemaining`) > 0,
           diagnostics: [{ code: `${S}.no_slots`, severity: 'error' }]
@@ -148,8 +146,6 @@ const shieldOfFaith: RuleModule = {
           diagnostics.push({ code: `${S}.no_bonus_action`, severity: 'error' });
         if (f.num('spellcasting.remaining') <= 0)
           diagnostics.push({ code: `${S}.no_spellcasting`, severity: 'error' });
-        if (f.num('concentration.remaining') <= 0)
-          diagnostics.push({ code: `${S}.already_concentrating`, severity: 'error' });
         if (level >= 1 && level <= 5) {
           advertise.push({
             id: `effect-shield-of-faith-slot-l${level}`,

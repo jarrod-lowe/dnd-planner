@@ -2,8 +2,8 @@ name: 'Detect Evil and Good Cast'
 description: >-
   Casting Detect Evil and Good consumes the action, spellcasting, concentration,
   and a spell slot. Everything it senses is untracked world state, so the effect
-  is a pure concentration-holding marker — and it blocks a second concentration
-  spell next turn.
+  is a pure concentration-holding marker — and a second concentration spell
+  next turn is legal (SRD 5.2) and replaces it via the shared key.
 ruleGroups:
   - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
@@ -51,9 +51,10 @@ steps:
             - effect-detect-evil-and-good
         facts:
           concentration.remaining: 0
-  # Turn 2: illegal while still sensing (concentration held).
+  # Turn 2: legal while still sensing — SRD 5.2: starting a second
+  # concentration spell dismisses the first (the shared key replaces it).
   - evaluate:
       assert:
         offers:
-          illegal:
+          legal:
             - cast-detect-evil-and-good

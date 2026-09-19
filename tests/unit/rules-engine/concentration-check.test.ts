@@ -139,7 +139,7 @@ describe('CONCENTRATION_SPELL_KEY — the shared concentration key', () => {
     }
   });
 
-  it('an illegal double cast replaces the hold instead of stacking it', () => {
+  it('a double cast is concentration-legal and replaces the hold instead of stacking it', () => {
     const out = evaluate({
       modules: [concentration, bless],
       inputFacts: { 'spell.l1.bless.prepared': 1 },
@@ -148,6 +148,11 @@ describe('CONCENTRATION_SPELL_KEY — the shared concentration key', () => {
         { instanceId: 'b2', ruleId: 'cast-bless' }
       ]
     });
+    // SRD 5.2, "Another Concentration Effect": starting the second concentration
+    // spell is legal and merely dismisses the first — no already_concentrating
+    // error rides the row (the over-spent action is no_action's business).
+    const codes = (out.planDiagnostics['b2'] ?? []).map((d) => d.code);
+    expect(codes).not.toContain('rule.spell-bless.offer-bless.already_concentrating');
     expect(out.facts['concentration.spent']).toBe(1);
   });
 

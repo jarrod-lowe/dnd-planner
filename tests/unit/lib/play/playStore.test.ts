@@ -366,6 +366,89 @@ describe('playStore', () => {
       expect(playStore.state.effects.map((e) => e.id)).toEqual(['effect-bless']);
     });
 
+    it('dismisses a legacy KEYLESS concentration effect once at load', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+
+      // Concentration spells committed before the shared CONCENTRATION_SPELL_KEY
+      // landed were persisted WITHOUT a key. The SRD 5.2 recast ruling leans on
+      // the key (newest wins), so a keyless hold would STACK with a fresh cast
+      // (`concentration.spent` = 2). Characters are current-format with a stated
+      // no-migration policy, so the legacy hold is simply dismissed at load
+      // (PR #425 review thread 4051725201).
+      const legacy = {
+        id: 'effect-bless',
+        state: { 'concentration.spent': 1 },
+        expiry: { kind: 'permanent' as const }
+      };
+
+      mockApiGet
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ ruleGroups: [] }) } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ effects: JSON.stringify([legacy]) })
+        } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      await playStore.loadRuleGroups('char-1');
+
+      expect(playStore.state.committed).toEqual([]);
+      expect(playStore.state.effects).toEqual([]);
+    });
+
+    it('keeps a KEYED concentration effect at load — post-key casts survive reloads', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+
+      // The discriminator: the strip must drop only KEYLESS concentration
+      // effects. Every cast since CONCENTRATION_SPELL_KEY carries
+      // `key: 'concentration-spell'`, and dismissing those would end live
+      // concentration on every reload.
+      const keyed = {
+        id: 'effect-hold-person',
+        key: 'concentration-spell',
+        state: { 'concentration.spent': 1, 'holdPerson.active': 1 },
+        expiry: { kind: 'permanent' as const }
+      };
+
+      mockApiGet
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ ruleGroups: [] }) } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ effects: JSON.stringify([keyed]) })
+        } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      await playStore.loadRuleGroups('char-1');
+
+      expect(playStore.state.committed).toEqual([keyed]);
+    });
+
+    it('leaves keyless NON-concentration effects untouched at load', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+
+      // The strip is scoped to concentration holds: an ordinary keyless spend
+      // (damage riding `hp.modifier.current`) survives exactly as before.
+      const damage = {
+        id: 'effect-hp-damage',
+        state: { 'hp.modifier.current': -5 },
+        expiry: { kind: 'untilLongRest' as const }
+      };
+
+      mockApiGet
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ ruleGroups: [] }) } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ effects: JSON.stringify([damage]) })
+        } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      await playStore.loadRuleGroups('char-1');
+
+      expect(playStore.state.committed).toEqual([damage]);
+    });
+
     it('shows toast on effects load failure and falls back to empty', async () => {
       const mockApiGet = vi.mocked(apiGet);
       vi.mocked(toast.error).mockClear();
@@ -1477,6 +1560,9 @@ describe('playStore', () => {
       const blessEffect = {
         id: 'inst-2#0#effect-bless',
         ruleGroupId: 'bless',
+        // The post-key concentration shape: keyed, so the load-time legacy strip
+        // (keyless concentration holds only) leaves it for this ownership test.
+        key: 'concentration-spell',
         state: { 'concentration.spent': 1 },
         expiry: { kind: 'permanent' as const }
       };

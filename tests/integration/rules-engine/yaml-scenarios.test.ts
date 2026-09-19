@@ -159,15 +159,15 @@ const EXPECTED_RUNNABLE = [
   'sleep-slot-selection',
   'protection-from-evil-and-good-slot-selection',
   'calm-emotions-cast',
-  'calm-emotions-concentration-blocking',
-  'calm-emotions-concentration-illegal-planned',
+  'calm-emotions-concentration-replacement',
+  'calm-emotions-concentration-replacement-planned',
   'calm-emotions-no-free-slots-illegal',
   'calm-emotions-select-level-illegal',
   'calm-emotions-slot-selection',
   'calm-emotions-upcast-slider',
   'hold-person-cast',
-  'hold-person-concentration-blocking',
-  'hold-person-concentration-illegal-planned',
+  'hold-person-concentration-replacement',
+  'hold-person-concentration-replacement-planned',
   'hold-person-no-free-slots-illegal',
   'hold-person-select-level-illegal',
   'hold-person-slot-selection',
@@ -305,8 +305,8 @@ const EXPECTED_RUNNABLE = [
   'smite-not-available-without-attack',
   // M3 — concentration + bless (first concentration spell)
   'bless-cast',
-  'bless-concentration-blocking',
-  'bless-concentration-illegal-planned',
+  'bless-concentration-replacement',
+  'bless-concentration-replacement-planned',
   'bless-prepare',
   // M3 — thunderous-smite (L1 bonus-action on-hit smite)
   'thunderous-smite-prepare',
@@ -345,8 +345,8 @@ const EXPECTED_RUNNABLE = [
   'sanctuary-rest-dismissal',
   // M3 — protection-from-evil-and-good (L1 action concentration ward)
   'protection-from-evil-and-good-cast',
-  'protection-from-evil-and-good-concentration-blocking',
-  'protection-from-evil-and-good-concentration-illegal-planned',
+  'protection-from-evil-and-good-concentration-replacement',
+  'protection-from-evil-and-good-concentration-replacement-planned',
   'protection-from-evil-and-good-prepare',
   'protection-from-evil-and-good-rest-dismissal',
   // M3 — weapons spike (hands + dagger/greataxe + masteries), replacing the legacy
@@ -434,8 +434,8 @@ const EXPECTED_RUNNABLE = [
   // M3 — sleep (L1 action concentration spell, protection template) + the empty
   // paladin-spells-l1 spell-list group.
   'sleep-cast',
-  'sleep-concentration-blocking',
-  'sleep-concentration-illegal-planned',
+  'sleep-concentration-replacement',
+  'sleep-concentration-replacement-planned',
   'sleep-rest-dismissal',
   // …and now that Sleep is ported, the oath's always-prepared grant for its oath
   // spells (Sleep + Sanctuary) is exercisable

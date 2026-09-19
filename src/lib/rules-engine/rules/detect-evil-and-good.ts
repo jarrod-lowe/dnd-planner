@@ -20,8 +20,8 @@ const SLOTS = 'detectEvilAndGood';
  * via `effect-detect-evil-and-good` (`[untilShortRest]`,
  * `concentration.spent` = 1). Ten minutes is impractical to count in combat
  * rounds, so the sensing carries until the user dismisses it or any rest
- * (always 10+ minutes) ends it; it blocks a second concentration spell
- * meanwhile.
+ * (always 10+ minutes) ends it; a second concentration spell (legal per
+ * SRD 5.2) replaces it via the shared key.
  *
  * Everything the spell senses — Aberrations, Celestials, Elementals, Fey,
  * Fiends, and Undead within 30 feet, plus Hallow — is world state the app does
@@ -89,10 +89,8 @@ const detectEvilAndGood: RuleModule = {
           condition: (f) => f.num('spellcasting.remaining') > 0,
           diagnostics: [{ code: `${D}.no_spellcasting`, severity: 'error' }]
         },
-        {
-          condition: (f) => f.num('concentration.remaining') > 0,
-          diagnostics: [{ code: `${D}.already_concentrating`, severity: 'error' }]
-        },
+        // No concentration gate: SRD 5.2 makes the recast legal — it dismisses
+        // the current hold via the shared CONCENTRATION_SPELL_KEY (newest wins).
         {
           condition: (f) => f.num(`${SLOTS}.eligibleSlotsRemaining`) > 0,
           diagnostics: [{ code: `${D}.no_slots`, severity: 'error' }]
@@ -128,8 +126,6 @@ const detectEvilAndGood: RuleModule = {
           diagnostics.push({ code: `${D}.no_action`, severity: 'error' });
         if (f.num('spellcasting.remaining') <= 0)
           diagnostics.push({ code: `${D}.no_spellcasting`, severity: 'error' });
-        if (f.num('concentration.remaining') <= 0)
-          diagnostics.push({ code: `${D}.already_concentrating`, severity: 'error' });
         if (level >= 1 && level <= 5) {
           advertise.push({
             id: `effect-detect-evil-and-good-slot-l${level}`,
