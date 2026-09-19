@@ -431,11 +431,15 @@ function addOfferToPlan(
   seed?: Record<string, AnnotationSeedSource>,
   sourceInstanceId?: string
 ): void {
-  // Resolve the seed BEFORE the catalog lookup: an `{ effect }` source reads
-  // what the source row advertised, and advertised effects trail the debounce by
-  // up to DEBOUNCE_MS. Drag the slider and tap the reminder under it inside that
-  // window and an unflushed read seeds the value from before the drag — usually
-  // the row's opening zero. Flushing also refreshes the catalog this then reads.
+  // Flush BEFORE anything here reads evaluation output. Both readers trail the
+  // debounce by up to DEBOUNCE_MS: the catalog below reflects the `when` gates
+  // of the LAST evaluation, and an `{ effect }` seed source reads what the
+  // source row advertised. Drag the slider and tap the reminder under it inside
+  // that window and an unflushed add resolves against the PREVIOUS facts — a
+  // seeded value from before the drag, or a seedless offer (the concentration
+  // reminder) added while its gate was still open on stale damage facts.
+  flushPendingEvaluation();
+
   const resolved = resolveSeed(seed, sourceInstanceId);
 
   const entry = state.engineOutput?.availableRules.find((e) => e.rule.id === offerId);
@@ -460,7 +464,6 @@ function resolveSeed(
   sourceInstanceId: string | undefined
 ): Record<string, unknown> | undefined {
   if (!seed || Object.keys(seed).length === 0 || !sourceInstanceId) return undefined;
-  flushPendingEvaluation();
 
   const item = state.plannedItems.find((i) => i.instanceId === sourceInstanceId);
   if (!item) return undefined;

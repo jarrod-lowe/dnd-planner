@@ -160,6 +160,12 @@ const concentration: RuleModule = {
         // (hence the dc derive) mid-fold, so a live read would collapse to the
         // DC 10 floor on a row added behind an earlier check row. The capture
         // preserves the DC the save is owed against; a NEW row re-captures.
+        // Accepted limitation (AUTHORITATIVE note; the batched-damage sibling
+        // lives in core-events): the capture is one-time, so EDITING the damage
+        // row after the check was added leaves the check at the captured DC —
+        // the check row's label can diverge from the damage row's. Correcting
+        // means removing the check row and re-tapping the reminder, which
+        // re-captures against the edited facts.
         dc: { capture: true, default: { fact: 'concentration.dc' } },
         // The kept d20 natural, written back by the panel's dice line once the
         // player rolls (advantage/disadvantage keeps the kept natural). 0 —

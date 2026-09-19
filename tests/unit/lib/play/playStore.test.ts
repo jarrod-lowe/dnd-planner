@@ -728,6 +728,93 @@ describe('playStore', () => {
 
       expect(playStore.state.plannedItems).toHaveLength(0);
     });
+
+    describe('inside the debounce window', () => {
+      // The concentration reminder's action carries only `{ offer }` — no seed —
+      // so its add used to skip the flush the seeded path runs inside
+      // resolveSeed: a tap within DEBOUNCE_MS of a slider edit resolved against
+      // the PREVIOUS evaluation's facts and catalog.
+      const concentrationCheckOffer = {
+        rule: {
+          id: 'concentration-check',
+          ui: {
+            section: 'free',
+            name: 'planner.concentration.check',
+            intents: { SAVE: 'you' }
+          },
+          vars: { dc: { capture: true, default: { fact: 'concentration.dc' } } }
+        },
+        legal: true,
+        applicable: true,
+        diagnostics: []
+      };
+
+      /**
+       * The world as one evaluation sees it: the check is offered (and the DC
+       * derivable) only while damage has a save owed — no DC means no damage
+       * taken, so the offer's gate is closed and the catalog drops it.
+       */
+      const worldAt = (dc: number | undefined) =>
+        playOut({
+          raw: rawOutput({
+            availableRules: dc === undefined ? [] : [concentrationCheckOffer],
+            facts: dc === undefined ? {} : { 'concentration.dc': dc }
+          })
+        });
+
+      /**
+       * A settled store holding one damage row, then a slider edit on that row
+       * whose debounced evaluation is STILL PENDING when the caller taps — the
+       * drag moves the facts from `settledDc` to `nextDc` (slider showing
+       * `sliderTo`), but nothing has re-evaluated yet.
+       */
+      const storeWithPendingDrag = async (
+        settledDc: number | undefined,
+        nextDc: number | undefined,
+        sliderTo: number
+      ) => {
+        vi.mocked(evaluateCharacter).mockReturnValue(worldAt(settledDc));
+        const { playStore } = await import('$lib/play/playStore.svelte');
+        playStore.reset();
+        playStore.addToPlan({
+          id: 'record-damage',
+          activities: [],
+          vars: { amount: { capture: true, default: { number: 0 } } }
+        });
+        vi.runAllTimers(); // settle: the pre-drag facts and catalog are live
+        const damageRowId = playStore.state.plannedItems[0].instanceId;
+
+        // The drag: once the debounced evaluation runs, facts and gate describe
+        // nextDc — but it has not run.
+        vi.mocked(evaluateCharacter).mockReturnValue(worldAt(nextDc));
+        playStore.updateSelections(damageRowId, { amount: sliderTo });
+        return playStore;
+      };
+
+      it('captures the post-drag DC on a seedless add', async () => {
+        // Drag the damage slider and tap the reminder before the debounce
+        // fires: the check row must open on the DC the drag produced, not the
+        // one the previous evaluation still shows.
+        const playStore = await storeWithPendingDrag(10, 25, 25);
+
+        playStore.addOfferToPlan('concentration-check');
+
+        const checkRow = playStore.state.plannedItems.find(
+          (item) => item.originalRuleId === 'concentration-check'
+        );
+        expect(checkRow?.rule.selections).toMatchObject({ dc: 25 });
+      });
+
+      it('no-ops when the drag closed the offer gate', async () => {
+        // Damage dragged to 0 is no damage taken: after the flush the catalog
+        // no longer offers the check, so the late tap must add nothing.
+        const playStore = await storeWithPendingDrag(12, undefined, 0);
+
+        playStore.addOfferToPlan('concentration-check');
+
+        expect(playStore.state.plannedItems).toHaveLength(1); // the damage row only
+      });
+    });
   });
 
   describe('addOfferToPlan seeds', () => {

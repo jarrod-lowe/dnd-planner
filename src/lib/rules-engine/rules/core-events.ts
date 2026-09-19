@@ -286,7 +286,9 @@ const coreEvents: RuleModule = {
         // resolved collapse into ONE check at the latest row's DC (the first
         // save is skipped) — the supported flow is interleaved (record damage,
         // resolve the check, record the next), and a faithful fix needs a
-        // pending-damage queue the engine deliberately lacks. Gated on
+        // pending-damage queue the engine deliberately lacks. Its sibling — a
+        // resolved check's captured DC not following later edits of its damage
+        // row — is owned by the `dc` capture in the concentration group. Gated on
         // the group being loaded so it never sets a phantom fact when
         // concentration isn't in play, and on the amount: a row left at the
         // slider's default 0 is no damage taken, so it must not put a
