@@ -821,9 +821,12 @@ describe('PanelRenderer - slider control', () => {
       const declarations = cssDeclarations(match?.[1] ?? '');
       // Absolute insets grow the hit box around the unchanged visible stack;
       // horizontal inset stays <= 12px so neighbours' hit areas cannot swamp
-      // each other at 10 marks (~30px minimum gap).
+      // each other at 10 marks (~30px minimum gap). The TOP inset fills the
+      // row gap exactly (--spacing-xs, 4px) and must not cross onto the
+      // input: the notch row paints after the input, so any overlap would
+      // steal touches from the thumb's lower half and block drag starts.
       expect(declarations.get('position')).toBe('absolute');
-      expect(declarations.get('top')).toBe('-14px');
+      expect(declarations.get('top')).toBe('-4px');
       expect(declarations.get('bottom')).toBe('-14px');
       expect(declarations.get('left')).toBe('-12px');
       expect(declarations.get('right')).toBe('-12px');

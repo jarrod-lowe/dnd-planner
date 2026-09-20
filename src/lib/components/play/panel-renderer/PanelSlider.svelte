@@ -330,19 +330,22 @@
   }
 
   /* Finger-sized hit area: a transparent ::after extends each mark's click
-     target to roughly 40px square while the visible tick/label stack stays
-     byte-identical (padding/margin would shift the stack or fight the
-     explicit row height). The horizontal inset is capped at 12px so
-     neighbours' hit areas cannot swamp each other at 10 marks (~30px
-     minimum gap; touching at midpoints is fine). No content text — the row
-     is aria-hidden, but a stray string could still leak into some a11y tree
-     implementations. */
+     target (~48x46px) while the visible tick/label stack stays byte-identical
+     (padding/margin would shift the stack or fight the explicit row height).
+     Asymmetric vertically: the top inset fills the row gap exactly
+     (--spacing-xs, 4px) and must NOT cross onto the input — the notch row
+     paints after the input, so any overlap would steal touches from the
+     thumb's lower half and block drag starts. The horizontal inset is capped
+     at 12px so neighbours' hit areas cannot swamp each other at 10 marks
+     (~30px minimum gap; touching at midpoints is fine). No content text —
+     the row is aria-hidden, but a stray string could still leak into some
+     a11y tree implementations. */
   .panel-renderer__slider-notch::after {
     content: '';
     position: absolute;
     left: -12px;
     right: -12px;
-    top: -14px;
+    top: -4px;
     bottom: -14px;
   }
 
