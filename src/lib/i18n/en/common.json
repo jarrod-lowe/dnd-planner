@@ -1660,7 +1660,9 @@
     },
     "slider": {
       "freeUse": "Free Use",
-      "level": "Level {{level}}"
+      "level": "Level {{level}}",
+      "freeShort": "Free",
+      "levelShort": "L{{level}}"
     },
     "hitDice": {
       "groupLabel": "Hit Dice",

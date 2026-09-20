@@ -48,6 +48,11 @@ vi.mock('sveltekit-i18n', () => {
     'play.units.ft': '{{value}} FEET',
     'play.units.compact.ft': '{{value}}FEET',
     'play.annotation.addToPlan': 'Add to plan: {{annotation}}',
+    // Short notch-row labels under slider tracks. Deliberately unlike the real
+    // English 'Free' / 'L{{level}}' (same convention as the units above) so a
+    // component that skips $t and hardcodes English fails the assertions.
+    'play.slider.freeShort': 'FREE',
+    'play.slider.levelShort': 'LVL{{level}}',
     // A label-with-values template (the concentration save DC reminder is the
     // production user): panel annotations interpolate $t(key, values) exactly
     // as the notices strip interpolates bodies.

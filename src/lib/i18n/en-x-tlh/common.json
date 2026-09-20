@@ -1660,7 +1660,9 @@
     },
     "slider": {
       "freeUse": "lo'Ha'",
-      "level": "patlh {{level}}"
+      "level": "patlh {{level}}",
+      "freeShort": "lo'",
+      "levelShort": "p{{level}}"
     },
     "hitDice": {
       "groupLabel": "mI' Hegh",
