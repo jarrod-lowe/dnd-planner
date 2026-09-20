@@ -93,13 +93,41 @@
   // render edge under the `play.units.<token>` namespace; an unrecognized
   // token falls back to the raw token rather than leaking a dotted key, and
   // no token at all just renders the bare number (see `unitLabel.ts`).
-  const displayValue = $derived(
-    control.valueFormat === 'spellLevel'
-      ? localValue === 0
+  function formatSliderValue(value: number): string {
+    return control.valueFormat === 'spellLevel'
+      ? value === 0
         ? $t('play.slider.freeUse')
-        : $t('play.slider.level', { level: localValue })
-      : formatUnitValue($t, control.unit, localValue)
-  );
+        : $t('play.slider.level', { level: value })
+      : formatUnitValue($t, control.unit, value);
+  }
+
+  const displayValue = $derived(formatSliderValue(localValue));
+
+  // The value cell must not change width with the CURRENT value ("Free Use"
+  // <-> "Level 2" would reflow the track mid-drag), so it is sized by a
+  // hidden sizer holding the WIDEST candidate string: the same formatting
+  // path as `displayValue`, applied to every value the slider can show.
+  const candidateValues = $derived.by(() => {
+    if (activeNotches) {
+      const values = (activeNotches as SliderNotch[]).map((n) => n.value);
+      // A persisted selection can outlive the notch it points at (slot spent
+      // after the selection was made); keep the shown string among candidates.
+      if (!values.includes(localValue)) values.push(localValue);
+      return values;
+    }
+    const values: number[] = [];
+    for (let v = min; v <= max; v += step) values.push(v);
+    return values;
+  });
+
+  const valueSizerText = $derived.by(() => {
+    let widest = '';
+    for (const v of candidateValues) {
+      const text = formatSliderValue(v);
+      if (text.length > widest.length) widest = text;
+    }
+    return widest;
+  });
 
   function handleNotchChange(e: Event): void {
     const target = e.target as HTMLInputElement;
@@ -176,14 +204,16 @@
        accessible (and keyboard-operable) control, so the row is hidden from
        assistive tech and carries no focus. -->
   {#if notchMarks}
-    <div class="panel-renderer__slider-notches" aria-hidden="true">
-      {#each notchMarks as mark (mark.value)}
+    <div class="panel-renderer__slider-notches" style="position: relative" aria-hidden="true">
+      {#each notchMarks as mark, i (mark.value)}
+        {@const position = notchMarks.length > 1 ? (i / (notchMarks.length - 1)) * 100 : 0}
         <!-- Intentionally no role and no key handler: the mark is a pointer-only
              shortcut inside the aria-hidden row; the input is the keyboard path. -->
         <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
         <span
           class="panel-renderer__slider-notch"
           class:panel-renderer__slider-notch--current={mark.value === localValue}
+          style:left={position + '%'}
           onclick={editable ? () => handleMarkClick(mark.value) : undefined}
         >
           <span class="panel-renderer__slider-notch-tick"></span>
@@ -212,7 +242,12 @@
       />
       {@render notchRow()}
     </div>
-    <span class="panel-renderer__slider-value">{displayValue}</span>
+    <span class="panel-renderer__slider-value-cell">
+      <span class="panel-renderer__slider-value-sizer" aria-hidden="true">
+        {valueSizerText}
+      </span>
+      <span class="panel-renderer__slider-value">{displayValue}</span>
+    </span>
   </div>
 {:else}
   <div class="panel-renderer__slider">
@@ -230,7 +265,12 @@
       />
       {@render notchRow()}
     </div>
-    <span class="panel-renderer__slider-value">{displayValue}</span>
+    <span class="panel-renderer__slider-value-cell">
+      <span class="panel-renderer__slider-value-sizer" aria-hidden="true">
+        {valueSizerText}
+      </span>
+      <span class="panel-renderer__slider-value">{displayValue}</span>
+    </span>
   </div>
 {/if}
 
@@ -254,12 +294,19 @@
     gap: var(--spacing-xs);
   }
 
+  /* Marks are absolutely placed at i/(n-1) fractions of this row — the same
+     box the input's thumb percentages reference — so tick centers sit under
+     thumb positions regardless of label widths. Edge labels overhang the row
+     by half their width (overflow stays visible; card padding absorbs it).
+     The height is explicit because absolutely-positioned marks contribute
+     none; it mirrors a mark's stack: 6px tick + xs gap + xs label line. */
   .panel-renderer__slider-notches {
-    display: flex;
-    justify-content: space-between;
+    height: calc(6px + var(--spacing-xs) + var(--font-size-xs) * 1.5);
   }
 
   .panel-renderer__slider-notch {
+    position: absolute;
+    transform: translateX(-50%);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -281,6 +328,26 @@
 
   .panel-renderer__slider-notch--current .panel-renderer__slider-notch-tick {
     background: var(--md-sys-color-primary);
+  }
+
+  /* The value cell stacks a hidden sizer under the live value (grid, one
+     cell): the sizer's text — the widest candidate — fixes the cell width,
+     so value changes never reflow the track. */
+  .panel-renderer__slider-value-cell {
+    display: grid;
+    justify-items: end;
+    align-items: center;
+  }
+
+  .panel-renderer__slider-value-cell > * {
+    grid-area: 1 / 1;
+  }
+
+  .panel-renderer__slider-value-sizer {
+    visibility: hidden;
+    font-family: var(--font-body);
+    font-size: var(--font-size-md);
+    white-space: nowrap;
   }
 
   .panel-renderer__slider-value {

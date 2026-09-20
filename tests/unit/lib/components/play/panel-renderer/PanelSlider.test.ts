@@ -639,5 +639,143 @@ describe('PanelRenderer - slider control', () => {
       });
       expect(container.querySelector('.panel-renderer__slider-notches')).toBeNull();
     });
+
+    // === Value-cell sizer (width-stable value text) ===
+    // The value cell is sized by a hidden sizer holding the WIDEST candidate
+    // string, so "Free Use" <-> "Level 2" width changes never reflow the
+    // track mid-drag. jsdom cannot measure layout; these assert the sizing
+    // mechanism (which string the sizer holds) with the raw-key mock texts —
+    // 'play.slider.freeUse' is longer than 'play.slider.level', exactly the
+    // discrimination the sizer exists to make.
+    it('sizes the value cell from the widest candidate, not the current value', () => {
+      const entry = createSequentialSpellLevelEntry(0, 2);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, selections: { distance: 2 } }
+      });
+      const cell = container.querySelector('.panel-renderer__slider-value-cell');
+      const sizer = container.querySelector('.panel-renderer__slider-value-sizer') as HTMLElement;
+      const value = container.querySelector('.panel-renderer__slider-value') as HTMLElement;
+      expect(cell).toBeTruthy();
+      expect(cell?.contains(sizer)).toBe(true);
+      expect(cell?.contains(value)).toBe(true);
+      expect(sizer.getAttribute('aria-hidden')).toBe('true');
+      // Current value 2 renders the SHORTER level key; the sizer must hold
+      // the longer freeUse key, proving it looked at every candidate.
+      expect(sizer.textContent?.trim()).toBe('play.slider.freeUse');
+      expect(value.textContent?.trim()).toBe('play.slider.level');
+    });
+
+    it('keeps the sizer string constant while the value changes', async () => {
+      const entry = createSequentialSpellLevelEntry(0, 2);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, selections: { distance: 0 } }
+      });
+      const sizer = container.querySelector('.panel-renderer__slider-value-sizer') as HTMLElement;
+      const value = container.querySelector('.panel-renderer__slider-value') as HTMLElement;
+      expect(value.textContent?.trim()).toBe('play.slider.freeUse');
+      expect(sizer.textContent?.trim()).toBe('play.slider.freeUse');
+      const slider = container.querySelector('input[type="range"]') as HTMLInputElement;
+      slider.value = '2';
+      await fireEvent.input(slider);
+      // The live text changes; the sizer (and so the cell width) does not.
+      expect(value.textContent?.trim()).toBe('play.slider.level');
+      expect(sizer.textContent?.trim()).toBe('play.slider.freeUse');
+    });
+
+    it('sizes notch-form sliders from their enabled notch values', () => {
+      // No value-0 notch: every candidate renders the level key
+      const entry = createExplicitNotchEntry([2, 3]);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, selections: { slotLevel: 3 } }
+      });
+      const sizer = container.querySelector('.panel-renderer__slider-value-sizer') as HTMLElement;
+      expect(sizer.textContent?.trim()).toBe('play.slider.level');
+    });
+
+    it('includes the free-use candidate when a value-0 notch is enabled', () => {
+      const entry = createExplicitNotchEntry([0, 3]);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, selections: { slotLevel: 3 } }
+      });
+      const sizer = container.querySelector('.panel-renderer__slider-value-sizer') as HTMLElement;
+      const value = container.querySelector('.panel-renderer__slider-value') as HTMLElement;
+      expect(value.textContent?.trim()).toBe('play.slider.level');
+      expect(sizer.textContent?.trim()).toBe('play.slider.freeUse');
+    });
+
+    it('excludes disabled notches from the sizer candidates', () => {
+      const base = createSliderEntry();
+      const entry: AvailableRuleEntry = {
+        ...base,
+        rule: {
+          ...base.rule,
+          id: 'cast-find-steed',
+          ui: {
+            ...base.rule.ui,
+            primaryControl: {
+              type: 'slider',
+              var: 'slotLevel',
+              notches: [
+                { value: 0, enabled: { fact: 'spellcasting.slots.level0.total' } },
+                { value: 3 }
+              ],
+              valueFormat: 'spellLevel'
+            }
+          },
+          vars: { slotLevel: { default: { number: 3 } } }
+        } as Rule
+      };
+      // The level0 fact is absent, so the value-0 notch is disabled: the
+      // freeUse string must not size the cell.
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, selections: { slotLevel: 3 } }
+      });
+      const sizer = container.querySelector('.panel-renderer__slider-value-sizer') as HTMLElement;
+      expect(sizer.textContent?.trim()).toBe('play.slider.level');
+    });
+
+    // === Tick alignment ===
+    // Marks are absolutely positioned at i/(n-1) percentages of the row (the
+    // same box the native range's thumb fractions reference), so tick centers
+    // land under thumb positions instead of drifting with label widths.
+    const markPositions = (container: HTMLElement): string[] =>
+      Array.from(container.querySelectorAll('.panel-renderer__slider-notch')).map(
+        (el) => (el as HTMLElement).style.left
+      );
+
+    it('positions notch-form marks at uniform track fractions', () => {
+      const entry = createExplicitNotchEntry([0, 2, 3]);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, selections: { slotLevel: 0 } }
+      });
+      expect(markPositions(container)).toEqual(['0%', '50%', '100%']);
+    });
+
+    it('positions sequential marks at uniform track fractions', () => {
+      const entry = createSequentialSpellLevelEntry(1, 5);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, selections: { distance: 1 } }
+      });
+      expect(markPositions(container)).toEqual(['0%', '25%', '50%', '75%', '100%']);
+    });
+
+    it('marks the row as the positioning context for the marks', () => {
+      const entry = createSequentialSpellLevelEntry(0, 5);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, selections: { distance: 0 } }
+      });
+      const row = container.querySelector('.panel-renderer__slider-notches') as HTMLElement;
+      expect(row.style.position).toBe('relative');
+    });
+
+    it('positions a single mark finitely (no divide by zero)', () => {
+      const entry = createExplicitNotchEntry([2]);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, selections: { slotLevel: 2 } }
+      });
+      const positions = markPositions(container);
+      expect(positions).toEqual(['0%']);
+      expect(positions[0]).not.toContain('NaN');
+    });
   });
 });
