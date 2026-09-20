@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount, flushSync } from 'svelte';
 import { readable } from 'svelte/store';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 // The mock returns the raw key for unknown keys (as tests/setup.ts does), so a
 // rendered raw key proves the string went through `$t` rather than being
@@ -28,8 +30,15 @@ vi.mock('$lib/i18n', () => ({
   locales: ['en']
 }));
 
+// The strip's toast path goes through the shared helper; asserting on the
+// mock proves the strip delegates rather than re-implementing the toast.
+vi.mock('$lib/components/play/panel-renderer/diceRollToast', () => ({
+  showDiceRollToast: vi.fn()
+}));
+
 import NoticeStrip from '$lib/components/play/NoticeStrip.svelte';
 import NoticeStripHarness from './NoticeStripHarness.svelte';
+import { showDiceRollToast } from '$lib/components/play/panel-renderer/diceRollToast';
 import type { Annotation } from '$lib/rules-engine';
 
 const SENTINEL_DISENGAGE: Annotation = {
@@ -61,9 +70,49 @@ const SEARING_BURNING: Annotation = {
   values: { dc: 13 }
 };
 
+// The same notice once the burn actually rides it: a roll the PLAYER makes
+// each turn (the fire damage), authored through the structured `roll` channel.
+const SEARING_BURNING_ROLL: Annotation = {
+  ...SEARING_BURNING,
+  roll: { sides: 6, count: 2, purpose: 'damage', damageType: 'fire' }
+};
+
+// R2 emits ONE notice PER committed burn, and all of them share the same i18n
+// `key` (the sentence is the same) while each carries a distinct `id`
+// (`Annotation.id`) — the committed effect instance's id
+// (`effect-searing-smite-slot-lN`), whose slot level is that burn's own dice
+// count.
+const SEARING_BURNING_SLOT_1: Annotation = {
+  ...SEARING_BURNING,
+  id: 'effect-searing-smite-slot-l1',
+  roll: { sides: 6, count: 1, purpose: 'damage', damageType: 'fire' }
+};
+
+const SEARING_BURNING_SLOT_2: Annotation = {
+  ...SEARING_BURNING,
+  id: 'effect-searing-smite-slot-l2',
+  roll: { sides: 6, count: 2, purpose: 'damage', damageType: 'fire' }
+};
+
 /** The header disclosure — the only control in the strip. */
 function disclosure(container: HTMLElement): HTMLButtonElement | null {
   return container.querySelector<HTMLButtonElement>('.notice-strip__disclosure');
+}
+
+// jsdom applies no <style> cascade, so facts about the cell's layout (the
+// row that puts the roller beside the text) are asserted against the
+// component's own stylesheet — the same source-reading idiom as
+// panel-renderer/DieChip.test.ts.
+const noticeStripSource = readFileSync(
+  join(process.cwd(), 'src/lib/components/play/NoticeStrip.svelte'),
+  'utf8'
+);
+
+function styleBlock(source: string): string {
+  const start = source.indexOf('<style>');
+  const end = source.indexOf('</style>');
+  if (start === -1 || end === -1) throw new Error('no <style> block found');
+  return source.slice(start, end);
 }
 
 function cells(container: HTMLElement): HTMLElement[] {
@@ -80,6 +129,7 @@ describe('NoticeStrip', () => {
   beforeEach(() => {
     container = document.createElement('div');
     document.body.appendChild(container);
+    vi.mocked(showDiceRollToast).mockClear();
   });
 
   it('renders one cell per notice, in engine order, with source, label and body', () => {
@@ -358,5 +408,217 @@ describe('NoticeStrip', () => {
     expect(stripText(container)).not.toContain('Notices');
     expect(stripText(container)).not.toContain('Expand');
     expect(stripText(container)).not.toContain('Collapse');
+  });
+
+  it('renders a die chip inside the cell of a notice carrying a roll', () => {
+    mount(NoticeStrip, {
+      target: container,
+      props: { notices: [SENTINEL_DISENGAGE, SEARING_BURNING_ROLL] }
+    });
+
+    const rendered = cells(container);
+    // The rolling notice's cell — and only it — owns a die chip button,
+    // showing the unrolled expression as its text.
+    expect(rendered[0].querySelector('.panel-renderer__die-chip')).toBeNull();
+    const chip = rendered[1].querySelector<HTMLButtonElement>('button.panel-renderer__die-chip');
+    expect(chip).not.toBeNull();
+    expect(chip!.textContent?.trim()).toBe('2d6');
+
+    // The chip's accessible name comes from PanelDiceLine's purpose-derived
+    // machinery; the i18n mock renders the raw roll-type key.
+    expect(chip!.getAttribute('aria-label')).toContain('play.toast.rollType.damage');
+
+    // A burn can never be crit-doubled, so no options trigger may appear.
+    expect(rendered[1].querySelector('.panel-renderer__options-trigger')).toBeNull();
+  });
+
+  it('wraps the text spans in a content block, with the roller as its right-hand sibling', () => {
+    mount(NoticeStrip, {
+      target: container,
+      props: { notices: [SENTINEL_DISENGAGE, SEARING_BURNING_ROLL] }
+    });
+
+    // The rolling cell: source, label and body sit inside one wrapper…
+    const rolling = cells(container)[1];
+    const content = rolling.querySelector<HTMLElement>('.notice-strip__content');
+    expect(content).not.toBeNull();
+    for (const span of ['.notice-strip__source', '.notice-strip__label', '.notice-strip__body']) {
+      const text = content!.querySelector(span);
+      expect(text).not.toBeNull();
+      expect(text!.parentElement).toBe(content);
+    }
+
+    // …the wrapper is a direct child of the cell, and the roller is its
+    // sibling — beside the text, not a child stacked under the body span.
+    expect(content!.parentElement).toBe(rolling);
+    const roll = rolling.querySelector<HTMLElement>('.notice-strip__roll');
+    expect(roll).not.toBeNull();
+    expect(roll!.parentElement).toBe(rolling);
+    expect(roll!.previousElementSibling).toBe(content);
+
+    // DOM order matches visual order: text first, chip second — of the two,
+    // the chip is the one on the right.
+    expect(rolling.children[0]).toBe(content);
+    expect(rolling.children[1]).toBe(roll);
+
+    // A cell without a roll keeps a single child (the wrapper), so the row
+    // layout changes nothing about how it renders.
+    const plain = cells(container)[0];
+    expect(plain.children).toHaveLength(1);
+    expect(plain.children[0].matches('.notice-strip__content')).toBe(true);
+  });
+
+  it('lays the cell out as a row so the chip sits beside the text, not under it', () => {
+    // jsdom applies no <style> cascade; the row layout — the whole point of
+    // the restructure, invisible to the DOM assertions above — is read
+    // straight from the component's stylesheet, formatting-tolerantly.
+    const css = styleBlock(noticeStripSource);
+
+    // The cell is a row: the roller rides to the right of the text instead
+    // of adding a second line of height to a strip squeezed for it.
+    const cellRule = css.match(/\.notice-strip__cell[^{]*\{[^}]*\}/);
+    expect(cellRule).not.toBeNull();
+    expect(cellRule![0]).toMatch(/flex-direction:\s*row\b/);
+
+    // The text wrapper is the column the cell used to be (same rhythm
+    // between eyebrow, label and body) and yields to the chip: it takes the
+    // width left over, and long bodies wrap inside it rather than squeezing
+    // the chip out of the cell.
+    const contentRule = css.match(/\.notice-strip__content[^{]*\{[^}]*\}/);
+    expect(contentRule).not.toBeNull();
+    expect(contentRule![0]).toMatch(/flex-direction:\s*column\b/);
+    expect(contentRule![0]).toMatch(/gap:\s*0\.125rem/);
+    expect(contentRule![0]).toMatch(/flex:\s*1\b/);
+    expect(contentRule![0]).toMatch(/min-width:\s*0\b/);
+
+    // The roller holds its size and no longer pushes off with a top margin.
+    const rollRule = css.match(/\.notice-strip__roll[^{]*\{[^}]*\}/);
+    expect(rollRule).not.toBeNull();
+    expect(rollRule![0]).toMatch(/flex-shrink:\s*0\b/);
+    expect(rollRule![0]).not.toContain('margin-top');
+  });
+
+  it('rolling a notice die updates the chip and toasts through the shared helper', () => {
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0.4); // each d6 → 3
+    try {
+      mount(NoticeStrip, {
+        target: container,
+        props: { notices: [SEARING_BURNING_ROLL] }
+      });
+      // Settle the mount before tapping: PanelDiceLine's initial effect
+      // batch (roll-result seeding) is still pending right after mount(), and
+      // a click that lands first would be wiped when that batch flushes.
+      flushSync();
+
+      const chip = container.querySelector<HTMLButtonElement>('button.panel-renderer__die-chip');
+      expect(chip).not.toBeNull();
+      chip!.click();
+      flushSync();
+
+      // floor(0.4 * 6) + 1 = 3 per die; two dice → the chip shows the total.
+      expect(chip!.textContent?.trim()).toBe('6');
+
+      // The toast is the shared helper, titled by the notice's translated
+      // source (the mock falls back to the raw key), with no rider labels.
+      expect(showDiceRollToast).toHaveBeenCalledTimes(1);
+      const call = vi.mocked(showDiceRollToast).mock.calls[0];
+      expect(call[0]).toBe('rule.spells.searing-smite.name');
+      expect(call[1].total).toBe(6);
+      expect(call[1].sides).toBe(6);
+      expect(call[1].count).toBe(2);
+      expect(call[1].damageType).toBe('fire');
+      expect(call.length).toBe(2);
+    } finally {
+      random.mockRestore();
+    }
+  });
+
+  it('renders two cells for two notices sharing one key but carrying distinct ids', () => {
+    // One notice per committed burn: same `key`, different `id`. Svelte 5
+    // hard-errors (`each_key_duplicate`) when the strip keys its cells by
+    // `key` alone, so this mount is the whole regression — it must render
+    // both burns without throwing.
+    mount(NoticeStrip, {
+      target: container,
+      props: { notices: [SEARING_BURNING_SLOT_1, SEARING_BURNING_SLOT_2] }
+    });
+
+    const rendered = cells(container);
+    expect(rendered).toHaveLength(2);
+
+    // Both cells carry the shared sentence…
+    for (const cell of rendered) {
+      expect(cell.querySelector('.notice-strip__label')?.textContent).toContain(
+        'rule.spells.searing-smite.notice-burning'
+      );
+    }
+    // …and the count badge counts notices, not distinct keys.
+    expect(container.querySelector('.notice-strip__count')?.textContent?.trim()).toBe('×2');
+  });
+
+  it('still keys cells by key when notices carry no id — one cell each, in order', () => {
+    // id-less notices (panel annotations, single-instance notices) keep the
+    // pre-R3 identity: the i18n key alone.
+    mount(NoticeStrip, {
+      target: container,
+      props: { notices: [SENTINEL_DISENGAGE, SENTINEL_RETALIATE] }
+    });
+
+    const rendered = cells(container);
+    expect(rendered).toHaveLength(2);
+    expect(rendered[0].querySelector('.notice-strip__label')?.textContent).toContain(
+      'rule.dnd-5e-2024.feat-sentinel.notice-disengage'
+    );
+    expect(rendered[1].querySelector('.notice-strip__label')?.textContent).toContain(
+      'rule.dnd-5e-2024.feat-sentinel.notice-retaliate'
+    );
+  });
+
+  it("maps each cell's roller to its own notice's roll — two burns, two chips, independent state", () => {
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0.4); // each d6 → 3
+    try {
+      mount(NoticeStrip, {
+        target: container,
+        props: { notices: [SEARING_BURNING_SLOT_1, SEARING_BURNING_SLOT_2] }
+      });
+      // Settle the mount before tapping (same PanelDiceLine effect-batch
+      // harness artifact as the single-roll test above).
+      flushSync();
+
+      // One chip per cell, in engine order, each showing its OWN notice's
+      // expression: the slot-1 burn's single d6 (count prefix elided) and
+      // the slot-2 burn's pair.
+      const chips = Array.from(
+        container.querySelectorAll<HTMLButtonElement>('button.panel-renderer__die-chip')
+      );
+      expect(chips).toHaveLength(2);
+      expect(chips[0].closest('.notice-strip__cell')).toBe(cells(container)[0]);
+      expect(chips[1].closest('.notice-strip__cell')).toBe(cells(container)[1]);
+      expect(chips[0].textContent?.trim()).toBe('d6');
+      expect(chips[1].textContent?.trim()).toBe('2d6');
+
+      // Each roller rolls its own dice — the single d6 totals 3, the pair
+      // 6 — and neither roll disturbs the other chip.
+      chips[0].click();
+      flushSync();
+      expect(chips[0].textContent?.trim()).toBe('3');
+      expect(chips[1].textContent?.trim()).toBe('2d6');
+
+      chips[1].click();
+      flushSync();
+      expect(chips[0].textContent?.trim()).toBe('3');
+      expect(chips[1].textContent?.trim()).toBe('6');
+
+      // Two toasts, each carrying its own notice's dice: the single d6
+      // totals 3 (its `count` is omitted — PanelDiceLine only reports a
+      // count for multi-die rolls), the pair totals 6 with count 2.
+      expect(showDiceRollToast).toHaveBeenCalledTimes(2);
+      expect(vi.mocked(showDiceRollToast).mock.calls[0][1].total).toBe(3);
+      expect(vi.mocked(showDiceRollToast).mock.calls[0][1].count).toBeUndefined();
+      expect(vi.mocked(showDiceRollToast).mock.calls[1][1].total).toBe(6);
+      expect(vi.mocked(showDiceRollToast).mock.calls[1][1].count).toBe(2);
+    } finally {
+      random.mockRestore();
+    }
   });
 });

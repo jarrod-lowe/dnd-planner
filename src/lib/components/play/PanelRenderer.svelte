@@ -1,10 +1,9 @@
 <script lang="ts">
   import { t } from '$lib/i18n';
-  import { toast } from 'svelte-sonner';
   import WarningIndicator from './WarningIndicator.svelte';
   import { extractPanelDescriptor } from './panel-renderer/extractPanelDescriptor';
   import { resolveValueSource } from './panel-renderer/resolveValueSource';
-  import { rollTypeKey } from './panel-renderer/rollType';
+  import { showDiceRollToast } from './panel-renderer/diceRollToast';
   import PanelSlider from './panel-renderer/PanelSlider.svelte';
   import PanelDiceLine, { diceLineIsEmpty } from './panel-renderer/PanelDiceLine.svelte';
   import PanelHitDice, { hitDiceIsEmpty } from './panel-renderer/PanelHitDice.svelte';
@@ -15,7 +14,6 @@
   import PanelSpellPrepare, {
     spellPrepareIsEmpty
   } from './panel-renderer/PanelSpellPrepare.svelte';
-  import DiceRollToast from './panel-renderer/DiceRollToast.svelte';
   import { evaluateCondition } from '$lib/play/panelCondition';
   import { getMatchingAnnotations } from '$lib/play/annotations';
   import type {
@@ -494,32 +492,17 @@
   function handleDiceRoll(result: RollResult, _dieIndex: number) {
     onRoll?.(result, _dieIndex);
 
-    const rollType = $t(rollTypeKey(result.purpose, result));
-
-    const modifiers: string[] = [];
-    if (result.mode === 'advantage') modifiers.push($t('play.toast.modifier.advantage'));
-    if (result.mode === 'disadvantage') modifiers.push($t('play.toast.modifier.disadvantage'));
+    // Valueless riders ride the toast as bare labels; the toast's assembly
+    // (roll type, advantage/disadvantage, these labels, valued modifiers) is
+    // shared with every other roller parent via `showDiceRollToast`.
+    const riderLabels: string[] = [];
     for (const ann of informationalAnnotations) {
       if (ann.rider?.type === 'dice' || ann.rider?.type === 'modifier') {
-        modifiers.push($t(ann.rider.label));
+        riderLabels.push(ann.rider.label);
       }
     }
-    for (const m of result.modifiers ?? []) {
-      modifiers.push(`${$t(m.label)} ${m.value >= 0 ? '+' : ''}${m.value}`);
-    }
 
-    toast.custom(DiceRollToast, {
-      componentProps: {
-        title: displayName,
-        rollType,
-        result,
-        modifiers: modifiers.length > 0 ? modifiers : undefined,
-        damageTypeKey: result.damageType,
-        unitKey: result.unit
-      },
-      duration: 4000,
-      unstyled: true
-    });
+    showDiceRollToast(displayName, result, riderLabels);
   }
 </script>
 

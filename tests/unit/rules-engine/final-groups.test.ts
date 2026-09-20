@@ -70,7 +70,7 @@ describe('spear-plus1 — magical weapon variant', () => {
   });
 
   it('marks the weapon magical unconditionally', () => {
-    const anns = collectAnnotations(ALL, evaluateSheet(ALL, INPUT));
+    const anns = collectAnnotations(ALL, evaluateSheet(ALL, INPUT), []);
     const magical = anns.find((a) => a.key === 'rule.dnd-5e-2024.spear-plus1.magical');
     expect(magical?.targets).toContain('property.magical');
   });
@@ -121,7 +121,8 @@ describe('feat-savage-attacker — once-per-turn reroll rider', () => {
   it('annotates weapon attacks only while a use remains', () => {
     const available = collectAnnotations(
       [featSavageAttacker],
-      evaluateSheet([featSavageAttacker], { 'attack.last.weapon': 1 })
+      evaluateSheet([featSavageAttacker], { 'attack.last.weapon': 1 }),
+      []
     );
     expect(
       available.some((a) => a.key === 'rule.dnd-5e-2024.feat-savage-attacker.annotation')
@@ -130,7 +131,8 @@ describe('feat-savage-attacker — once-per-turn reroll rider', () => {
     // A used-up turn (spent === max) → no reroll available → no annotation.
     const used = collectAnnotations(
       [featSavageAttacker],
-      evaluateSheet([featSavageAttacker], { 'attack.last.weapon': 1, 'savageAttacker.spent': 1 })
+      evaluateSheet([featSavageAttacker], { 'attack.last.weapon': 1, 'savageAttacker.spent': 1 }),
+      []
     );
     expect(used.some((a) => a.key === 'rule.dnd-5e-2024.feat-savage-attacker.annotation')).toBe(
       false

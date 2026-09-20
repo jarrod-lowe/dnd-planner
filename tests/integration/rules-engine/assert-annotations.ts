@@ -13,6 +13,10 @@ import type { Annotation } from '$lib/rules-engine';
  * scenario can pin that an advisory annotation is actionable and WHICH action
  * it hands the player — a named offer (`adds: { offer: use-hi }`) or the panel's
  * own offer again (`adds: again`).
+ * `rolls` asserts a matched annotation's roll whole-object (the `targets`
+ * style, not the rider field-by-field style), so a scenario can pin exactly
+ * WHAT the player rolls on a notice's cadence — dice belong on `roll` and a
+ * partial assert could let a wrong `count` or `purpose` slip through.
  */
 export interface AnnotationAssert {
   exists?: string[];
@@ -20,6 +24,7 @@ export interface AnnotationAssert {
   riders?: { key: string; rider: Record<string, unknown> }[];
   targets?: { key: string; targets: string[] }[];
   addsToPlan?: { key: string; adds: unknown }[];
+  rolls?: { key: string; roll: unknown }[];
 }
 
 export function assertAnnotations(
@@ -54,5 +59,10 @@ export function assertAnnotations(
     const found = actual.find((a) => a.key === key);
     expect(found, `${where}: annotation "${key}" exists`).toBeDefined();
     expect(found!.addsToPlan, `${where}: annotation "${key}".addsToPlan`).toEqual(adds);
+  }
+  for (const { key, roll } of expected.rolls ?? []) {
+    const found = actual.find((a) => a.key === key);
+    expect(found, `${where}: annotation "${key}" exists`).toBeDefined();
+    expect(found!.roll, `${where}: annotation "${key}".roll`).toEqual(roll);
   }
 }

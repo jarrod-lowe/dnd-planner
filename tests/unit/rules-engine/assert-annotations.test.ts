@@ -16,6 +16,11 @@ const annotations: Annotation[] = [
       value: { kind: 'flat', bonus: 3 },
       appliesTo: 'save'
     }
+  },
+  {
+    key: 'rule.demo.rolling',
+    targets: ['notice'],
+    roll: { sides: 6, count: 2, purpose: 'damage', damageType: 'fire' }
   }
 ];
 
@@ -106,6 +111,50 @@ describe('assertAnnotations', () => {
       assertAnnotations(
         annotations,
         { targets: [{ key: 'rule.demo.absent', targets: ['save.any'] }] },
+        'where'
+      )
+    ).toThrow();
+  });
+
+  it('passes when the asserted roll matches exactly', () => {
+    expect(() =>
+      assertAnnotations(
+        annotations,
+        {
+          rolls: [
+            {
+              key: 'rule.demo.rolling',
+              roll: { sides: 6, count: 2, purpose: 'damage', damageType: 'fire' }
+            }
+          ]
+        },
+        'where'
+      )
+    ).not.toThrow();
+  });
+
+  it('fails when the roll differs', () => {
+    expect(() =>
+      assertAnnotations(
+        annotations,
+        {
+          rolls: [
+            {
+              key: 'rule.demo.rolling',
+              roll: { sides: 6, count: 1, purpose: 'damage', damageType: 'fire' }
+            }
+          ]
+        },
+        'where'
+      )
+    ).toThrow();
+  });
+
+  it('fails when asserting a roll on an annotation that is absent', () => {
+    expect(() =>
+      assertAnnotations(
+        annotations,
+        { rolls: [{ key: 'rule.demo.absent', roll: { sides: 6, count: 1, purpose: 'damage' } }] },
         'where'
       )
     ).toThrow();

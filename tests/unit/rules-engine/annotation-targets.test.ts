@@ -57,7 +57,7 @@ describe('annotation targets', () => {
     const orphans: string[] = [];
     for (const m of all) {
       if (!m.annotate) continue;
-      for (const annotation of m.annotate(permissiveReader))
+      for (const annotation of m.annotate(permissiveReader, []))
         for (const target of annotation.targets) {
           // The reserved notice label is carried by no panel BY DESIGN — the
           // notices strip owns it (it selects on exactly this label), so a
@@ -78,7 +78,7 @@ describe('annotation targets', () => {
     const orphans: string[] = [];
     for (const m of all) {
       if (!m.annotate) continue;
-      for (const annotation of m.annotate(permissiveReader)) {
+      for (const annotation of m.annotate(permissiveReader, [])) {
         const adds = annotation.addsToPlan;
         // `again` names no offer — it resolves to whichever panel the
         // annotation renders on, so there is nothing to check here; the

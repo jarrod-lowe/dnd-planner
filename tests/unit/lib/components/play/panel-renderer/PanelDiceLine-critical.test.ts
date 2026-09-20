@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import PanelRenderer from '$lib/components/play/PanelRenderer.svelte';
+import PanelDiceLine from '$lib/components/play/panel-renderer/PanelDiceLine.svelte';
+import type { DiceLineControl } from '$lib/components/play/panel-renderer/types';
 import type { AvailableRuleEntry, Rule } from '$lib/rules-view';
 
 // d20 to-hit + d12+3 slashing damage. Damage chip is index 1.
@@ -205,5 +207,82 @@ describe('PanelDiceLine - critical damage selector', () => {
     expect(result.critical).toBeUndefined();
     expect(chips[1].classList.contains('panel-renderer__die-chip--crit-damage')).toBe(false);
     expect(container.querySelector('.panel-renderer__crit-badge')).toBeNull();
+  });
+});
+
+// A burn-style damage die: fixed sides/count, literal damage type, NO writeBack
+// — the shape NoticeStrip mounts for a notice carrying a `roll`. It is a
+// damage die by every existing rule, so without an opt-out it would inherit
+// the Normal/Critical selector, which can never apply to it.
+const BURN_CONTROL: DiceLineControl = {
+  type: 'dice-line',
+  dice: [{ sides: 6, count: 2, damageType: { string: 'fire' }, purpose: 'damage' }]
+};
+
+describe('PanelDiceLine - criticalOption opt-out', () => {
+  it('offers the Normal/Critical selector on a plain damage die by default', () => {
+    // Guard: panels are unchanged — omitting the prop keeps the split trigger
+    // and the critical entry on a writeBack-less damage die.
+    const { container } = render(PanelDiceLine, {
+      props: { control: BURN_CONTROL, editable: true, facts: {}, vars: {} }
+    });
+    expect(container.querySelector('.panel-renderer__options-trigger')).not.toBeNull();
+    expect(
+      itemsFor(container, 0).some((b) =>
+        b.getAttribute('aria-label')?.includes('play.choices.attack.critical')
+      )
+    ).toBe(true);
+  });
+
+  it('criticalOption=false renders the damage die as a plain chip — no trigger, no popover', () => {
+    const { container } = render(PanelDiceLine, {
+      props: { control: BURN_CONTROL, editable: true, facts: {}, vars: {}, criticalOption: false }
+    });
+
+    // No options machinery at all: a burn die has nothing to choose between
+    // (Normal is what a plain tap does), so the menu would carry no meaning.
+    expect(container.querySelector('.panel-renderer__options-trigger')).toBeNull();
+    expect(container.querySelector('.panel-renderer__popover')).toBeNull();
+    expect(container.textContent ?? '').not.toContain('play.choices.attack.critical');
+
+    // The chip itself stays a tappable button.
+    const chip = container.querySelector('.panel-renderer__die-chip');
+    expect(chip?.tagName).toBe('BUTTON');
+  });
+
+  it('criticalOption=false still rolls the base dice on a chip tap', async () => {
+    const onRoll = vi.fn();
+    vi.spyOn(Math, 'random').mockReturnValue(0.4); // floor(0.4*6)+1 = 3 per die
+    const { container } = render(PanelDiceLine, {
+      props: {
+        control: BURN_CONTROL,
+        editable: true,
+        facts: {},
+        vars: {},
+        criticalOption: false,
+        onRoll
+      }
+    });
+
+    await fireEvent.click(container.querySelector('.panel-renderer__die-chip')!);
+
+    expect(onRoll).toHaveBeenCalledTimes(1);
+    const [result] = onRoll.mock.calls[0];
+    expect(result.critical).toBeUndefined();
+    expect(result.total).toBe(6); // 3 + 3, never doubled
+  });
+
+  it('criticalOption=false leaves a d20 its advantage/disadvantage menu', () => {
+    // The prop governs critical doubling only — a d20's adv/dis menu is a
+    // different selector and must survive the opt-out.
+    const control: DiceLineControl = {
+      type: 'dice-line',
+      dice: [{ sides: 20, purpose: 'check' }]
+    };
+    const { container } = render(PanelDiceLine, {
+      props: { control, editable: true, facts: {}, vars: {}, criticalOption: false }
+    });
+
+    expect(itemsFor(container, 0).length).toBe(3); // advantage / normal / disadvantage
   });
 });

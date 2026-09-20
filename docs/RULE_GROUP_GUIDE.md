@@ -162,10 +162,17 @@ dice-line: weapons via the builder, select: `skill-checks`).
 
 ### `annotate` — reminders on other panels
 
-`annotate(f)` returns `{ key, targets }` reminders that render on every panel
-whose `ui.annotationLabels` overlap `targets`. Most are advisory ("Heroic
-Inspiration available") — saying what the advice IS, via `addsToPlan`, turns
-one into a shortcut. Two forms:
+`annotate(f, committed)` returns `{ key, targets }` reminders that render on
+every panel whose `ui.annotationLabels` overlap `targets`. Most are advisory
+("Heroic Inspiration available") — saying what the advice IS, via `addsToPlan`,
+turns one into a shortcut. The second parameter is the committed-effects list:
+every effect in force when annotate runs (the committed effects plus this
+turn's advertised, key-deduped newest-wins, ids in the plan fold's namespaced
+`instance#index#effectId` form). When a reminder tracks one specific live
+effect, emit one annotation per effect and give each `id` the effect's
+instance id — several notices may then share a `key` (one Searing Smite burn
+notice per burning target) and stay distinct for keyed rendering. Rules that
+don't need the list declare just `(f)`. Two forms:
 
 ```ts
 // A named offer — the same action wherever the reminder lands.

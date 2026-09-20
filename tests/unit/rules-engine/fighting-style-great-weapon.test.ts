@@ -16,7 +16,8 @@ describe('fighting-style-great-weapon — reroll rider', () => {
   const anns = (facts: Record<string, number>) =>
     collectAnnotations(
       [fightingStyleGreatWeapon],
-      evaluateSheet([fightingStyleGreatWeapon], facts)
+      evaluateSheet([fightingStyleGreatWeapon], facts),
+      []
     );
 
   it('does not annotate before any weapon attack this turn', () => {

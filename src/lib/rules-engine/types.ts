@@ -130,12 +130,21 @@ export interface RuleModule {
    */
   effectContributions?: (effect: EffectInstance) => Contribution[];
   /**
-   * Related-info pass: pure function of the final post-plan facts, returning the
-   * annotations to surface (illegal-but-visible riders, "+Nd8 radiant" chips,
-   * etc.). Evaluated once against the settled sheet; the UI matches each
-   * annotation's `targets` against panel `annotationLabels` (an unchanged view-contract convention).
+   * Related-info pass: pure function of the final post-plan facts and the
+   * effects in force, returning the annotations to surface (illegal-but-visible
+   * riders, "+Nd8 radiant" chips, etc.). Evaluated once against the settled
+   * sheet; the UI matches each annotation's `targets` against panel
+   * `annotationLabels` (an unchanged view-contract convention).
+   *
+   * The second parameter is the committed-effects list — every effect in force
+   * when annotate runs: the input committed effects PLUS this turn's advertised
+   * effects, key-deduped newest-wins, the same set whose `state` the sheet
+   * folded to settle the facts `f` reads. It lets a rule emit one annotation
+   * per LIVE effect (each carrying the effect's instance id as `Annotation.id`)
+   * instead of re-deriving per-effect state from summed facts. Additive: a rule
+   * that ignores it may declare just `(f)`.
    */
-  annotate?: (f: FactReader) => Annotation[];
+  annotate?: (f: FactReader, committed: EffectInstance[]) => Annotation[];
   /**
    * Passive reaction to a rest recorded THIS turn: return persistent effects to
    * emit. This is the ONLY way a non-planned module contributes effects — every
@@ -399,10 +408,36 @@ export interface AnnotationRider {
   illegalReason?: string;
 }
 
+/**
+ * A roll the PLAYER makes on a notice's cadence — dice the notice exists to
+ * remind them of (Searing Smite's per-turn burn). Dice ARE allowed here, unlike
+ * the {@link Annotation.values} channel: a `roll` is rolled by the UI, never
+ * printed as interpolation, so a folded dice count cannot become a wrong
+ * number in a sentence. Engine-side plain string for `damageType` (the
+ * `WeaponDef.damageType` convention); the UI maps it to its i18n key.
+ */
+export interface AnnotationRoll {
+  sides: number;
+  count: number;
+  purpose: RollPurpose;
+  damageType?: string;
+  /** What a non-damage roll measures (e.g. `'hp'` for healing). */
+  unit?: string;
+}
+
 /** Related-info annotation produced for action panels (view-contract shape). */
 export interface Annotation {
   key: string;
   targets: string[];
+  /**
+   * Per-instance identity for annotations emitted one-per-effect: the id of the
+   * committed `EffectInstance` the annotation describes (the plan fold's
+   * namespaced form, `instance#index#effectId`). Absent on ordinary annotations,
+   * which are identified by `key` alone. Lets a rule emit several annotations
+   * sharing one `key` (one Searing Smite notice per burning target) and keyed
+   * rendering multiplex them instead of colliding.
+   */
+  id?: string;
   /**
    * i18n key naming the annotation's ORIGIN — the eyebrow above the label in
    * the notices strip (the feat or spell a reminder belongs to). Absent on
@@ -421,6 +456,12 @@ export interface Annotation {
    * folded dice count is a wrong number waiting to be printed.
    */
   values?: Record<string, string | number>;
+  /**
+   * A roll the notice's cadence asks the player to make (see
+   * {@link AnnotationRoll}). Dice belong HERE and never in {@link values}.
+   * Currently renders in the notices strip only.
+   */
+  roll?: AnnotationRoll;
   rider?: AnnotationRider;
   /**
    * What tapping this annotation plans. Most annotations are advisory
