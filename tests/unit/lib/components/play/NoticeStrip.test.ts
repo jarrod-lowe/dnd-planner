@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount, flushSync } from 'svelte';
 import { readable } from 'svelte/store';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 // The mock returns the raw key for unknown keys (as tests/setup.ts does), so a
 // rendered raw key proves the string went through `$t` rather than being
@@ -78,6 +80,22 @@ const SEARING_BURNING_ROLL: Annotation = {
 /** The header disclosure — the only control in the strip. */
 function disclosure(container: HTMLElement): HTMLButtonElement | null {
   return container.querySelector<HTMLButtonElement>('.notice-strip__disclosure');
+}
+
+// jsdom applies no <style> cascade, so facts about the cell's layout (the
+// row that puts the roller beside the text) are asserted against the
+// component's own stylesheet — the same source-reading idiom as
+// panel-renderer/DieChip.test.ts.
+const noticeStripSource = readFileSync(
+  join(process.cwd(), 'src/lib/components/play/NoticeStrip.svelte'),
+  'utf8'
+);
+
+function styleBlock(source: string): string {
+  const start = source.indexOf('<style>');
+  const end = source.indexOf('</style>');
+  if (start === -1 || end === -1) throw new Error('no <style> block found');
+  return source.slice(start, end);
 }
 
 function cells(container: HTMLElement): HTMLElement[] {
@@ -395,6 +413,72 @@ describe('NoticeStrip', () => {
 
     // A burn can never be crit-doubled, so no options trigger may appear.
     expect(rendered[1].querySelector('.panel-renderer__options-trigger')).toBeNull();
+  });
+
+  it('wraps the text spans in a content block, with the roller as its right-hand sibling', () => {
+    mount(NoticeStrip, {
+      target: container,
+      props: { notices: [SENTINEL_DISENGAGE, SEARING_BURNING_ROLL] }
+    });
+
+    // The rolling cell: source, label and body sit inside one wrapper…
+    const rolling = cells(container)[1];
+    const content = rolling.querySelector<HTMLElement>('.notice-strip__content');
+    expect(content).not.toBeNull();
+    for (const span of ['.notice-strip__source', '.notice-strip__label', '.notice-strip__body']) {
+      const text = content!.querySelector(span);
+      expect(text).not.toBeNull();
+      expect(text!.parentElement).toBe(content);
+    }
+
+    // …the wrapper is a direct child of the cell, and the roller is its
+    // sibling — beside the text, not a child stacked under the body span.
+    expect(content!.parentElement).toBe(rolling);
+    const roll = rolling.querySelector<HTMLElement>('.notice-strip__roll');
+    expect(roll).not.toBeNull();
+    expect(roll!.parentElement).toBe(rolling);
+    expect(roll!.previousElementSibling).toBe(content);
+
+    // DOM order matches visual order: text first, chip second — of the two,
+    // the chip is the one on the right.
+    expect(rolling.children[0]).toBe(content);
+    expect(rolling.children[1]).toBe(roll);
+
+    // A cell without a roll keeps a single child (the wrapper), so the row
+    // layout changes nothing about how it renders.
+    const plain = cells(container)[0];
+    expect(plain.children).toHaveLength(1);
+    expect(plain.children[0].matches('.notice-strip__content')).toBe(true);
+  });
+
+  it('lays the cell out as a row so the chip sits beside the text, not under it', () => {
+    // jsdom applies no <style> cascade; the row layout — the whole point of
+    // the restructure, invisible to the DOM assertions above — is read
+    // straight from the component's stylesheet, formatting-tolerantly.
+    const css = styleBlock(noticeStripSource);
+
+    // The cell is a row: the roller rides to the right of the text instead
+    // of adding a second line of height to a strip squeezed for it.
+    const cellRule = css.match(/\.notice-strip__cell[^{]*\{[^}]*\}/);
+    expect(cellRule).not.toBeNull();
+    expect(cellRule![0]).toMatch(/flex-direction:\s*row\b/);
+
+    // The text wrapper is the column the cell used to be (same rhythm
+    // between eyebrow, label and body) and yields to the chip: it takes the
+    // width left over, and long bodies wrap inside it rather than squeezing
+    // the chip out of the cell.
+    const contentRule = css.match(/\.notice-strip__content[^{]*\{[^}]*\}/);
+    expect(contentRule).not.toBeNull();
+    expect(contentRule![0]).toMatch(/flex-direction:\s*column\b/);
+    expect(contentRule![0]).toMatch(/gap:\s*0\.125rem/);
+    expect(contentRule![0]).toMatch(/flex:\s*1\b/);
+    expect(contentRule![0]).toMatch(/min-width:\s*0\b/);
+
+    // The roller holds its size and no longer pushes off with a top margin.
+    const rollRule = css.match(/\.notice-strip__roll[^{]*\{[^}]*\}/);
+    expect(rollRule).not.toBeNull();
+    expect(rollRule![0]).toMatch(/flex-shrink:\s*0\b/);
+    expect(rollRule![0]).not.toContain('margin-top');
   });
 
   it('rolling a notice die updates the chip and toasts through the shared helper', () => {

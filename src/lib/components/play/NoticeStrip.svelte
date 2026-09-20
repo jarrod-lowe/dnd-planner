@@ -108,14 +108,19 @@
       {:else}
         <ul class="notice-strip__grid">
           {#each notices as notice (notice.key)}
+            <!-- Text left, roller right: the strip is squeezed for vertical
+                 space (density is its whole design), so the chip rides beside
+                 the sentence instead of under it. -->
             <li class="notice-strip__cell">
-              {#if notice.source}
-                <span class="notice-strip__source">{$t(notice.source)}</span>
-              {/if}
-              <span class="notice-strip__label">{$t(notice.key)}</span>
-              {#if notice.body}
-                <span class="notice-strip__body">{$t(notice.body, notice.values)}</span>
-              {/if}
+              <div class="notice-strip__content">
+                {#if notice.source}
+                  <span class="notice-strip__source">{$t(notice.source)}</span>
+                {/if}
+                <span class="notice-strip__label">{$t(notice.key)}</span>
+                {#if notice.body}
+                  <span class="notice-strip__body">{$t(notice.body, notice.values)}</span>
+                {/if}
+              </div>
               {#if notice.roll}
                 {@const control = noticeRollControl(notice.roll)}
                 <!-- Ephemeral, freely re-rollable: no writeBack, no plan
@@ -214,14 +219,31 @@
     padding: 0;
   }
 
+  /* A row: text on the left, the roller (when present) on the right. With
+     only the text block as a child the direction is moot — no-roll cells
+     render exactly as they always have. The gap governs text-to-chip
+     spacing only; single-child cells see none of it. */
   .notice-strip__cell {
     display: flex;
-    flex-direction: column;
-    gap: 0.125rem;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacing-sm);
     padding: var(--spacing-sm) var(--spacing-md);
     border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: var(--radius-md);
     background: var(--md-sys-color-surface-container-lowest);
+  }
+
+  /* The text half of the cell: the column the cell itself used to be, same
+     0.125rem rhythm between eyebrow, label and body. It yields to the chip
+     (flex: 1) and, with min-width: 0, long bodies wrap inside it instead of
+     squeezing the chip out of the cell. */
+  .notice-strip__content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    flex: 1;
+    min-width: 0;
   }
 
   /* The eyebrow: where a notice comes from (the feat or spell name). */
@@ -250,12 +272,11 @@
     color: var(--md-sys-color-on-surface-variant);
   }
 
-  /* The notice's roller (a PanelDiceLine): a little more air than the text
-     rows get, so the tappable chip reads as its own control. Chip styling,
-     focus and roll states are the dice line's own — nothing re-specified
-     here. */
+  /* The notice's roller (a PanelDiceLine): the cell's row centers it
+     against the text block. Chip styling, focus and roll states are the
+     dice line's own — nothing re-specified here. */
   .notice-strip__roll {
-    margin-top: var(--spacing-xs);
+    flex-shrink: 0;
   }
 
   .notice-strip__placeholder {
