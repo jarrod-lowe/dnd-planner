@@ -1,5 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { compile } from 'svelte/compiler';
 import PanelRenderer from '$lib/components/play/PanelRenderer.svelte';
 import type { AvailableRuleEntry, Rule } from '$lib/rules-view';
 
@@ -735,28 +738,29 @@ describe('PanelRenderer - slider control', () => {
     });
 
     // === Tick alignment ===
-    // Marks are absolutely positioned at i/(n-1) percentages of the row (the
-    // same box the native range's thumb fractions reference), so tick centers
-    // land under thumb positions instead of drifting with label widths.
-    const markPositions = (container: HTMLElement): string[] =>
-      Array.from(container.querySelectorAll('.panel-renderer__slider-notch')).map(
-        (el) => (el as HTMLElement).style.left
+    // Marks carry a --notch-fraction custom property (i/(n-1), 0 when n===1)
+    // and CSS positions them along the thumb's TRAVEL — the input's inner
+    // width minus the thumb — because the native thumb's centre stops ~half a
+    // thumb short of each edge; percentages of the full box would overshoot.
+    const markFractions = (container: HTMLElement): string[] =>
+      Array.from(container.querySelectorAll('.panel-renderer__slider-notch')).map((el) =>
+        (el as HTMLElement).style.getPropertyValue('--notch-fraction')
       );
 
-    it('positions notch-form marks at uniform track fractions', () => {
+    it('positions notch-form marks at uniform thumb-travel fractions', () => {
       const entry = createExplicitNotchEntry([0, 2, 3]);
       const { container } = render(PanelRenderer, {
         props: { entry, editable: true, facts: {}, selections: { slotLevel: 0 } }
       });
-      expect(markPositions(container)).toEqual(['0%', '50%', '100%']);
+      expect(markFractions(container)).toEqual(['0', '0.5', '1']);
     });
 
-    it('positions sequential marks at uniform track fractions', () => {
+    it('positions sequential marks at uniform thumb-travel fractions', () => {
       const entry = createSequentialSpellLevelEntry(1, 5);
       const { container } = render(PanelRenderer, {
         props: { entry, editable: true, facts: {}, selections: { distance: 1 } }
       });
-      expect(markPositions(container)).toEqual(['0%', '25%', '50%', '75%', '100%']);
+      expect(markFractions(container)).toEqual(['0', '0.25', '0.5', '0.75', '1']);
     });
 
     it('marks the row as the positioning context for the marks', () => {
@@ -773,9 +777,74 @@ describe('PanelRenderer - slider control', () => {
       const { container } = render(PanelRenderer, {
         props: { entry, editable: true, facts: {}, selections: { slotLevel: 2 } }
       });
-      const positions = markPositions(container);
-      expect(positions).toEqual(['0%']);
-      expect(positions[0]).not.toContain('NaN');
+      const fractions = markFractions(container);
+      expect(fractions).toEqual(['0']);
+      expect(fractions[0]).not.toContain('NaN');
+    });
+
+    // === Tap-target hit area ===
+    // jsdom cannot measure hit boxes, and this harness injects NO component
+    // CSS at all (Vitest stubs stylesheets — probed: document.styleSheets is
+    // empty and getComputedStyle(el, '::after') resolves nothing), so no
+    // runtime observation of the rule is possible. The closest workable
+    // mechanism assertion compiles the component's own source with
+    // svelte/compiler and checks the scoped ::after rule survives into the
+    // emitted CSS (Svelte prunes unused selectors, so its presence proves
+    // the rule is live): a transparent hit-area pseudo that extends each
+    // mark's click target to roughly 40px square without touching the
+    // visible tick/label stack (no padding or margin — they would shift the
+    // stack or fight the explicit row height).
+    const compileNotchCss = (): string => {
+      const source = readFileSync(
+        path.resolve(process.cwd(), 'src/lib/components/play/panel-renderer/PanelSlider.svelte'),
+        'utf-8'
+      );
+      const compiled = compile(source, { generate: 'client' }) as {
+        css?: { code?: string };
+      };
+      return (compiled.css?.code ?? '').replace(/\/\*[\s\S]*?\*\//g, '');
+    };
+
+    const cssDeclarations = (ruleBody: string): Map<string, string> =>
+      new Map(
+        ruleBody
+          .split(';')
+          .map((decl) => decl.split(':'))
+          .filter((parts): parts is string[] => parts.length === 2)
+          .map(([prop, value]) => [prop.trim(), value.trim()])
+      );
+
+    it('gives each mark a transparent expanded hit area via ::after', () => {
+      const css = compileNotchCss();
+      const match = css.match(/\.panel-renderer__slider-notch[^{}]*::after\s*\{([^}]*)\}/);
+      expect(match, 'scoped ::after rule on the notch mark class').toBeTruthy();
+      const declarations = cssDeclarations(match?.[1] ?? '');
+      // Absolute insets grow the hit box around the unchanged visible stack;
+      // horizontal inset stays <= 12px so neighbours' hit areas cannot swamp
+      // each other at 10 marks (~30px minimum gap).
+      expect(declarations.get('position')).toBe('absolute');
+      expect(declarations.get('top')).toBe('-14px');
+      expect(declarations.get('bottom')).toBe('-14px');
+      expect(declarations.get('left')).toBe('-12px');
+      expect(declarations.get('right')).toBe('-12px');
+      // No text content: the row is aria-hidden, but a stray string would
+      // still risk leaking into some a11y tree implementations.
+      expect(['""', "''"]).toContain(declarations.get('content'));
+    });
+
+    it('consumes the fraction against the thumb travel, not the box width', () => {
+      const css = compileNotchCss();
+      const rule = css.match(/\.panel-renderer__slider-notch\.svelte-[a-z0-9]+\s*\{([^}]*)\}/);
+      expect(rule, 'scoped base rule on the notch mark class').toBeTruthy();
+      const declarations = cssDeclarations(rule?.[1] ?? '');
+      const left = declarations.get('left') ?? '';
+      // The fraction must be consumed by the positioning calc — a custom
+      // property nothing reads would silently strand every mark at left: 0.
+      expect(left.startsWith('calc(')).toBe(true);
+      expect(left).toContain('var(--notch-fraction)');
+      expect(left).toContain('var(--slider-thumb-width)');
+      // The thumb-width ruler is defined once, in component CSS.
+      expect(css).toContain('--slider-thumb-width: 16px');
     });
   });
 });

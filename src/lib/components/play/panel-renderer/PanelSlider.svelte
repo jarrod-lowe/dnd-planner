@@ -206,14 +206,14 @@
   {#if notchMarks}
     <div class="panel-renderer__slider-notches" style="position: relative" aria-hidden="true">
       {#each notchMarks as mark, i (mark.value)}
-        {@const position = notchMarks.length > 1 ? (i / (notchMarks.length - 1)) * 100 : 0}
+        {@const fraction = notchMarks.length > 1 ? i / (notchMarks.length - 1) : 0}
         <!-- Intentionally no role and no key handler: the mark is a pointer-only
              shortcut inside the aria-hidden row; the input is the keyboard path. -->
         <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
         <span
           class="panel-renderer__slider-notch"
           class:panel-renderer__slider-notch--current={mark.value === localValue}
-          style:left={position + '%'}
+          style:--notch-fraction={fraction}
           onclick={editable ? () => handleMarkClick(mark.value) : undefined}
         >
           <span class="panel-renderer__slider-notch-tick"></span>
@@ -294,18 +294,25 @@
     gap: var(--spacing-xs);
   }
 
-  /* Marks are absolutely placed at i/(n-1) fractions of this row — the same
-     box the input's thumb percentages reference — so tick centers sit under
-     thumb positions regardless of label widths. Edge labels overhang the row
-     by half their width (overflow stays visible; card padding absorbs it).
-     The height is explicit because absolutely-positioned marks contribute
-     none; it mirrors a mark's stack: 6px tick + xs gap + xs label line. */
+  /* Marks are absolutely placed along the thumb's TRAVEL — the input's
+     inner width minus the thumb — because the native thumb's centre stops
+     ~half a thumb short of each edge; fractions of the full box would
+     overshoot the first and last thumb positions. Edge labels overhang the
+     row by half their width (overflow stays visible; card padding absorbs
+     it). The height is explicit because absolutely-positioned marks
+     contribute none; it mirrors a mark's stack: 6px tick + xs gap + xs
+     label line. --slider-thumb-width approximates the native Chromium range
+     thumb; the ruler need not be pixel-exact on other engines. */
   .panel-renderer__slider-notches {
+    --slider-thumb-width: 16px;
     height: calc(6px + var(--spacing-xs) + var(--font-size-xs) * 1.5);
   }
 
   .panel-renderer__slider-notch {
     position: absolute;
+    left: calc(
+      var(--slider-thumb-width) / 2 + (100% - var(--slider-thumb-width)) * var(--notch-fraction)
+    );
     transform: translateX(-50%);
     display: flex;
     flex-direction: column;
@@ -320,6 +327,23 @@
     width: 1px;
     height: 6px;
     background: var(--md-sys-color-outline-variant);
+  }
+
+  /* Finger-sized hit area: a transparent ::after extends each mark's click
+     target to roughly 40px square while the visible tick/label stack stays
+     byte-identical (padding/margin would shift the stack or fight the
+     explicit row height). The horizontal inset is capped at 12px so
+     neighbours' hit areas cannot swamp each other at 10 marks (~30px
+     minimum gap; touching at midpoints is fine). No content text — the row
+     is aria-hidden, but a stray string could still leak into some a11y tree
+     implementations. */
+  .panel-renderer__slider-notch::after {
+    content: '';
+    position: absolute;
+    left: -12px;
+    right: -12px;
+    top: -14px;
+    bottom: -14px;
   }
 
   .panel-renderer__slider-notch--current {
