@@ -28,7 +28,7 @@ sheet(committed effects)            — derive the character sheet
 → plan fold                         — apply planned actions in player order,
                                       re-deriving the sheet with effects-so-far
 → offers(final facts)               — the action catalog, judged post-plan
-→ annotate(final facts)             — related-info chips (riders)
+→ annotate(final facts, live effects) — related-info chips (riders, notices)
 ```
 
 Three ideas carry the whole design:
@@ -105,7 +105,7 @@ interface RuleModule {
   derive?: (ctx: SheetCtx) => Contribution[];
   offer?: (ctx: SheetCtx) => Offer[];
   effectContributions?: (effect: EffectInstance) => Contribution[];
-  annotate?: (f: FactReader) => Annotation[];
+  annotate?: (f: FactReader, committed: EffectInstance[]) => Annotation[]; // related info; sees the effects in force
   onRest?: (kind: RestKind, facts: FactReader) => EffectInstance[];
 }
 ```
@@ -183,10 +183,20 @@ effect's `ruleId`) provides it. Used sparingly.
 
 ### `annotate` — related info
 
-A pure function of the **final post-plan facts** returning annotations
-(`{ key, targets, rider? }`). The UI matches `targets` against panel
-`annotationLabels` — e.g. Divine Smite's "+Nd8 radiant" rider on melee attack
-panels while the smite is usable.
+A pure function of the **final post-plan facts** and the **effects in force**
+returning annotations (`{ key, targets, id?, rider? }`). The UI matches
+`targets` against panel `annotationLabels` — e.g. Divine Smite's "+Nd8 radiant"
+rider on melee attack panels while the smite is usable.
+
+The second parameter is the committed-effects list: every effect in force when
+annotate runs — the input committed effects **plus** this turn's advertised
+effects, key-deduped newest-wins, the same set whose `state` the sheet folded
+to settle the facts `f` reads (ids in the plan fold's namespaced form,
+`instance#index#effectId`). A rule that emits one annotation per live effect
+gives each the effect's instance id as `Annotation.id`, so several annotations
+may share a `key` (one Searing Smite burn notice per burning target) and keyed
+rendering can tell them apart. Rules that don't need the list declare just
+`(f)`.
 
 ### `onRest` — passive rest recoveries
 

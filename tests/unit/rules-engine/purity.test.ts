@@ -54,7 +54,7 @@ function moduleSnapshot(ruleGroupId: string) {
       legal: (o.legalWhen ?? []).map((g) => g.condition(f)),
       apply: o.apply ? o.apply(f, {}) : null
     })),
-    annotations: m.annotate?.(f) ?? []
+    annotations: m.annotate?.(f, []) ?? []
   };
 }
 

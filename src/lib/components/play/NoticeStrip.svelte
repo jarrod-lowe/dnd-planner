@@ -63,6 +63,16 @@
       ]
     };
   }
+
+  /**
+   * A cell's identity. One notice arrives PER committed burn, all sharing one
+   * i18n key, and Svelte 5 hard-errors on duplicate each-keys — so the
+   * effect-instance id (`Annotation.id`) keys when present, falling back to
+   * the key for notices without an instance.
+   */
+  function cellKey(notice: Annotation): string {
+    return notice.id ?? notice.key;
+  }
 </script>
 
 <section class="notice-strip" aria-label={$t('play.notices.title')}>
@@ -107,7 +117,7 @@
         <p class="notice-strip__placeholder">{$t('play.notices.placeholder')}</p>
       {:else}
         <ul class="notice-strip__grid">
-          {#each notices as notice (notice.key)}
+          {#each notices as notice (cellKey(notice))}
             <!-- Text left, roller right: the strip is squeezed for vertical
                  space (density is its whole design), so the chip rides beside
                  the sentence instead of under it. -->

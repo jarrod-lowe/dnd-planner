@@ -2,6 +2,7 @@ import type { AvailableRuleEntry, Diagnostic, EngineInput, EngineOutput } from '
 import { evaluatePlan } from './plan';
 import { evaluateOffers } from './offers';
 import { collectAnnotations } from './annotate';
+import { dedupeByKey } from './effects';
 import { checkDeadline, deadlineFrom, DEFAULT_BUDGET_MS } from './watchdog';
 
 /** Options for a single evaluation. */
@@ -58,7 +59,15 @@ export function evaluate(input: EngineInput, opts: EvaluateOptions = {}): Engine
   }
 
   checkDeadline(deadline, 'annotate', budgetMs);
-  const annotations = collectAnnotations(modules, plan.facts);
+  // The effects in force when annotate runs: committed plus this turn's
+  // advertised, key-deduped newest-wins exactly as the sheet folds them — so a
+  // rule can emit one annotation per LIVE effect (id'd by its instance id)
+  // rather than re-deriving per-effect state from summed facts.
+  const annotations = collectAnnotations(
+    modules,
+    plan.facts,
+    dedupeByKey([...committed, ...plan.advertised])
+  );
   // Final checkpoint so a slow annotate cannot overrun the budget silently.
   checkDeadline(deadline, 'done', budgetMs);
 

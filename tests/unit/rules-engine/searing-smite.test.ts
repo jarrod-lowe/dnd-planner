@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { evaluate, evaluateSheet, evaluatePlan, evaluateOffers, endTurn } from '$lib/rules-engine';
 import { NOTICE_TARGET } from '$lib/rules-engine';
-import type { Facts, OfferEntry, PlannedRef } from '$lib/rules-engine';
+import type { EngineOutput, Facts, OfferEntry, PlannedRef } from '$lib/rules-engine';
 import enCommon from '$lib/i18n/en/common.json';
 import actionEconomy from '$lib/rules-engine/rules/action-economy';
 import attacks from '$lib/rules-engine/rules/attacks';
@@ -182,11 +182,22 @@ describe('searing-smite — burning notice', () => {
   /**
    * Notices plan, Phase 3 — a live burn raises a NOTICE: source eyebrow (the
    * spell name) + label + a body sentence interpolating ONLY the save DC.
-   * `ssmite.burnDice` folds `combine: 'sum'`, so burns on several targets would
-   * read as one wrong number — the dice deliberately never enter the string
-   * (plan Decisions table); per-target dice live on each effect chip.
+   * `ssmite.burnDice` folds `combine: 'sum'`, so a total in the string would
+   * read as one wrong number with burns on several targets — the dice
+   * deliberately never enter the body.
+   *
+   * Phase R amendment — ONE NOTICE PER BURN: the spell is flat 1-minute (NOT
+   * concentration), so several burns may be live at once, and each burns on its
+   * own target's turn. Each notice is id'd by its burn effect's instance id
+   * (same key, distinct ids — keyed rendering multiplexes them) and rolls only
+   * THAT burn's dice (the effect's literal `display.value`, the slot level it
+   * was cast at). The summed `ssmite.burnDice` fact is no longer read here.
    */
   const R = 'rule.spell-searing-smite';
+  const BURN_SUFFIX = '#effect-searing-smite';
+  const burnsOf = (out: EngineOutput) => out.effects.filter((e) => e.id.endsWith(BURN_SUFFIX));
+  const noticesOf = (out: EngineOutput) =>
+    out.annotations.filter((a) => a.key === `${R}.notice-burning`);
   // The flat-dotted en body template, as sveltekit-i18n flattens it. The cast
   // goes through unknown: the nested catalog mixes leaf strings and sub-objects.
   const enSmite = (enCommon.rule as unknown as Record<string, Record<string, string | undefined>>)[
@@ -194,19 +205,22 @@ describe('searing-smite — burning notice', () => {
   ];
   const enBody = enSmite?.['notice-burning.body'];
 
-  it('a committed burn raises a notice carrying the spell save DC', () => {
+  it('a live burn raises one notice carrying the spell save DC', () => {
     const out = evaluate({
       modules: ALL,
       inputFacts: PREPARED,
       planned: [unarmed('a1'), cast('c1')]
     });
     expect(out.facts['ssmite.burnDice'], 'the burn is live in this state').toBe(1);
-    const notice = out.annotations.find((a) => a.key === `${R}.notice-burning`);
-    expect(notice, 'notice exists while a burn is live').toBeDefined();
-    expect(notice!.targets).toEqual([NOTICE_TARGET]);
-    expect(notice!.source).toBe(`${R}.offer-searing-smite.name`);
-    expect(notice!.body).toBe(`${R}.notice-burning.body`);
-    expect(notice!.values).toEqual({ dc: out.facts['spellcasting.saveDC'] });
+    expect(burnsOf(out)).toHaveLength(1);
+    const notices = noticesOf(out);
+    expect(notices, 'exactly one notice for one burn').toHaveLength(1);
+    const notice = notices[0]!;
+    expect(notice.targets).toEqual([NOTICE_TARGET]);
+    expect(notice.source).toBe(`${R}.offer-searing-smite.name`);
+    expect(notice.body).toBe(`${R}.notice-burning.body`);
+    expect(notice.values).toEqual({ dc: out.facts['spellcasting.saveDC'] });
+    expect(notice.id).toBe(burnsOf(out)[0]!.id);
   });
 
   it('the en body template interpolates only the DC — no dice placeholder', () => {
@@ -225,7 +239,7 @@ describe('searing-smite — burning notice', () => {
     expect(before.facts['ssmite.burnDice'] ?? 0).toBe(0);
     expect(
       before.annotations.some((a) => a.key === `${R}.notice-burning`),
-      'no burn committed, no notice'
+      'no burn live, no notice'
     ).toBe(false);
   });
 
@@ -233,33 +247,55 @@ describe('searing-smite — burning notice', () => {
    * Notices-rolls plan, Phase 3 — the burn notice carries its per-turn fire
    * dice as a structured `roll` (the player rolls THEM at each burning turn's
    * start; the target's save is the target's). The dice still never enter the
-   * body string — `roll` is the dice channel, `values` stays text-only.
+   * body string — `roll` is the dice channel, `values` stays text-only. Phase R:
+   * the roll is per-burn, its count the burn's OWN dice, not the summed fact.
    */
-  it("a committed burn carries the notice's per-turn fire dice as a roll", () => {
+  it("one burn → one notice rolling that burn's own dice (1d6 for a slot-1 cast)", () => {
     const out = evaluate({
       modules: ALL,
       inputFacts: PREPARED,
       planned: [unarmed('a1'), cast('c1')]
     });
     expect(out.facts['ssmite.burnDice'], 'the burn is live in this state').toBe(1);
-    const notice = out.annotations.find((a) => a.key === `${R}.notice-burning`);
-    expect(notice, 'notice exists while a burn is live').toBeDefined();
-    expect(notice!.roll).toEqual({ sides: 6, count: 1, damageType: 'fire', purpose: 'damage' });
+    const notices = noticesOf(out);
+    expect(notices).toHaveLength(1);
+    expect(notices[0]!.id).toBe(burnsOf(out)[0]!.id);
+    expect(notices[0]!.roll).toEqual({ sides: 6, count: 1, damageType: 'fire', purpose: 'damage' });
   });
 
-  it('two concurrent burns sum their dice on the roll — the d6s are one fungible pool', () => {
-    // Two slot-1 casts (the second is bonus-action-starved but planned anyway,
-    // and still advertises its burn — see the two-targets test above): two
-    // level-1 burns fold `ssmite.burnDice` to 2, and the notice hands the
-    // player both dice as one 2d6 roll to split across the burning targets.
+  it('two concurrent burns → two id-distinct notices rolling 1d6 and 2d6', () => {
+    const TWO: Facts = {
+      'spellcasting.slots.level1.total': 1,
+      'spellcasting.slots.level2.total': 1,
+      'spell.l1.searingSmite.prepared': 1,
+      'attack.last.melee': 1
+    };
+    // A slot-1 and a slot-2 cast (the second is bonus-action-starved but
+    // planned anyway, and still advertises its burn — see the two-targets test
+    // above): two burning targets, each with its OWN notice and its OWN dice —
+    // never one summed roll.
     const out = evaluate({
       modules: ALL,
-      inputFacts: PREPARED,
-      planned: [unarmed('a1'), cast('c1'), cast('c2')]
+      inputFacts: TWO,
+      planned: [cast('c1'), cast('c2', 2)]
     });
-    expect(out.facts['ssmite.burnDice'], 'both burns are live').toBe(2);
-    const notice = out.annotations.find((a) => a.key === `${R}.notice-burning`);
-    expect(notice).toBeDefined();
-    expect(notice!.roll).toEqual({ sides: 6, count: 2, damageType: 'fire', purpose: 'damage' });
+    expect(out.facts['ssmite.burnDice'], 'both burns are live (1d6 + 2d6)').toBe(3);
+    const burns = burnsOf(out);
+    expect(burns).toHaveLength(2);
+    const notices = noticesOf(out);
+    expect(notices, 'one notice per burn').toHaveLength(2);
+    // Same key, DISTINCT ids — the two burn effects' instance ids.
+    expect(new Set(notices.map((n) => n.id)).size).toBe(2);
+    for (const burn of burns) {
+      const notice = notices.find((n) => n.id === burn.id);
+      expect(notice, `a notice id'd by burn ${burn.id}`).toBeDefined();
+      expect(notice!.roll).toEqual({
+        sides: 6,
+        count: burn.display?.value,
+        damageType: 'fire',
+        purpose: 'damage'
+      });
+    }
+    expect(notices.map((n) => n.roll!.count).sort()).toEqual([1, 2]);
   });
 });

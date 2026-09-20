@@ -14,6 +14,8 @@ const LEVELS = [1, 2, 3, 4, 5] as const;
 const S = 'rule.spell-searing-smite.offer-searing-smite';
 const R = 'rule.spell-searing-smite';
 const FIRE = 'fire';
+/** The burn marker's authored effect id (annotate matches it by id suffix). */
+const BURN_EFFECT_ID = 'effect-searing-smite';
 
 /**
  * Searing Smite — a Level 1 bonus-action smite cast immediately after hitting
@@ -165,7 +167,7 @@ const searingSmite: RuleModule = {
           // "Nd6 fire/turn" for the slot the smite was cast at; a successful
           // target save ends the spell early, so the user dismisses it.
           {
-            id: 'effect-searing-smite',
+            id: BURN_EFFECT_ID,
             state: { 'ssmite.burnDice': level },
             display: {
               name: 'rule.spell-searing-smite.effect-searing-smite.name',
@@ -204,15 +206,12 @@ const searingSmite: RuleModule = {
   // conditions, exactly — which is what lets the reminder hand the player the row
   // (`addsToPlan`) instead of only telling them about it.
   //
-  // While a burn is live (`ssmite.burnDice > 0`, i.e. at least one committed
-  // burn marker), a NOTICE reminds the player of the burning target's turn-start
-  // ritual. The DC interpolates from `spellcasting.saveDC`; the dice are
-  // deliberately NOT in the string — `ssmite.burnDice` folds `combine: 'sum'`,
-  // so burns on several targets would read as one wrong number, and the
-  // per-target dice already live on each effect chip's `display.value`. The
-  // dice instead ride the structured `roll` field: the player rolls them (the
-  // target's save is the target's), so the notice strip mounts a roller.
-  annotate: (f: FactReader) => {
+  // While burns are live, each raises its own NOTICE reminding the player of
+  // that burning target's turn-start ritual. The DC interpolates from
+  // `spellcasting.saveDC`; the dice are deliberately NOT in the string —
+  // `ssmite.burnDice` folds `combine: 'sum'`, so burns on several targets
+  // would read as one wrong number.
+  annotate: (f: FactReader, committed: EffectInstance[]) => {
     const annotations: Annotation[] = [];
     if (
       f.num('spell.l1.searingSmite.prepared') === 1 &&
@@ -227,8 +226,21 @@ const searingSmite: RuleModule = {
         addsToPlan: { offer: 'cast-searing-smite' }
       });
     }
-    if (f.num('ssmite.burnDice') > 0) {
-      annotations.push({
+    // ONE NOTICE PER BURN: the spell is flat 1-minute (NOT concentration), so
+    // burns on several targets are legal, and each burns on its own target's
+    // turn — enumerate the live burn effects (matched by their committed-id
+    // suffix; the slot spends are `…-slot-lN` and do not match) and emit a
+    // notice id'd by each effect's instance id, rolling only THAT burn's dice
+    // (the effect's literal `display.value`, the slot level it was cast at —
+    // the same number its chip shows). The summed `ssmite.burnDice` fact is no
+    // longer read here: it folds burns across targets into one number, which
+    // is exactly the wrong shape for per-target reminders. The player rolls
+    // the dice (the target's save is the target's), so the notice strip mounts
+    // a roller per notice.
+    for (const effect of committed) {
+      if (!effect.id.endsWith(`#${BURN_EFFECT_ID}`)) continue;
+      const notice: Annotation = {
+        id: effect.id,
         key: `${R}.notice-burning`,
         // 'notice' == NOTICE_TARGET; rule modules may import only the builder,
         // so the reserved label is a literal here (see feat-sentinel) and the
@@ -236,15 +248,16 @@ const searingSmite: RuleModule = {
         targets: ['notice'],
         source: `${S}.name`,
         body: `${R}.notice-burning.body`,
-        values: { dc: f.num('spellcasting.saveDC') },
-        // The burn dice as ONE roll of the summed count: the spell is flat
-        // 1-minute (NOT concentration), so burns on several targets are legal,
-        // and their d6s are fungible — one tap rolls the pool and the player
-        // splits dice across targets. Per-target counts stay on the effect
-        // chips' `display.value`; a folded count here could never be printed
-        // as text (that is what `roll` exists to avoid).
-        roll: { sides: 6, count: f.num('ssmite.burnDice'), damageType: FIRE, purpose: 'damage' }
-      });
+        values: { dc: f.num('spellcasting.saveDC') }
+      };
+      // The burn always authors `display.value` (its own die count). Should a
+      // future burn omit it, the notice still fires — it just carries no roll
+      // rather than guessing a count.
+      const dice = effect.display?.value;
+      if (dice !== undefined) {
+        notice.roll = { sides: 6, count: dice, damageType: FIRE, purpose: 'damage' };
+      }
+      annotations.push(notice);
     }
     return annotations;
   }

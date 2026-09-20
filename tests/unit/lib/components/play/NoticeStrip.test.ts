@@ -77,6 +77,23 @@ const SEARING_BURNING_ROLL: Annotation = {
   roll: { sides: 6, count: 2, purpose: 'damage', damageType: 'fire' }
 };
 
+// R2 emits ONE notice PER committed burn, and all of them share the same i18n
+// `key` (the sentence is the same) while each carries a distinct `id`
+// (`Annotation.id`) — the committed effect instance's id
+// (`effect-searing-smite-slot-lN`), whose slot level is that burn's own dice
+// count.
+const SEARING_BURNING_SLOT_1: Annotation = {
+  ...SEARING_BURNING,
+  id: 'effect-searing-smite-slot-l1',
+  roll: { sides: 6, count: 1, purpose: 'damage', damageType: 'fire' }
+};
+
+const SEARING_BURNING_SLOT_2: Annotation = {
+  ...SEARING_BURNING,
+  id: 'effect-searing-smite-slot-l2',
+  roll: { sides: 6, count: 2, purpose: 'damage', damageType: 'fire' }
+};
+
 /** The header disclosure — the only control in the strip. */
 function disclosure(container: HTMLElement): HTMLButtonElement | null {
   return container.querySelector<HTMLButtonElement>('.notice-strip__disclosure');
@@ -511,6 +528,95 @@ describe('NoticeStrip', () => {
       expect(call[1].count).toBe(2);
       expect(call[1].damageType).toBe('fire');
       expect(call.length).toBe(2);
+    } finally {
+      random.mockRestore();
+    }
+  });
+
+  it('renders two cells for two notices sharing one key but carrying distinct ids', () => {
+    // One notice per committed burn: same `key`, different `id`. Svelte 5
+    // hard-errors (`each_key_duplicate`) when the strip keys its cells by
+    // `key` alone, so this mount is the whole regression — it must render
+    // both burns without throwing.
+    mount(NoticeStrip, {
+      target: container,
+      props: { notices: [SEARING_BURNING_SLOT_1, SEARING_BURNING_SLOT_2] }
+    });
+
+    const rendered = cells(container);
+    expect(rendered).toHaveLength(2);
+
+    // Both cells carry the shared sentence…
+    for (const cell of rendered) {
+      expect(cell.querySelector('.notice-strip__label')?.textContent).toContain(
+        'rule.spells.searing-smite.notice-burning'
+      );
+    }
+    // …and the count badge counts notices, not distinct keys.
+    expect(container.querySelector('.notice-strip__count')?.textContent?.trim()).toBe('×2');
+  });
+
+  it('still keys cells by key when notices carry no id — one cell each, in order', () => {
+    // id-less notices (panel annotations, single-instance notices) keep the
+    // pre-R3 identity: the i18n key alone.
+    mount(NoticeStrip, {
+      target: container,
+      props: { notices: [SENTINEL_DISENGAGE, SENTINEL_RETALIATE] }
+    });
+
+    const rendered = cells(container);
+    expect(rendered).toHaveLength(2);
+    expect(rendered[0].querySelector('.notice-strip__label')?.textContent).toContain(
+      'rule.dnd-5e-2024.feat-sentinel.notice-disengage'
+    );
+    expect(rendered[1].querySelector('.notice-strip__label')?.textContent).toContain(
+      'rule.dnd-5e-2024.feat-sentinel.notice-retaliate'
+    );
+  });
+
+  it("maps each cell's roller to its own notice's roll — two burns, two chips, independent state", () => {
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0.4); // each d6 → 3
+    try {
+      mount(NoticeStrip, {
+        target: container,
+        props: { notices: [SEARING_BURNING_SLOT_1, SEARING_BURNING_SLOT_2] }
+      });
+      // Settle the mount before tapping (same PanelDiceLine effect-batch
+      // harness artifact as the single-roll test above).
+      flushSync();
+
+      // One chip per cell, in engine order, each showing its OWN notice's
+      // expression: the slot-1 burn's single d6 (count prefix elided) and
+      // the slot-2 burn's pair.
+      const chips = Array.from(
+        container.querySelectorAll<HTMLButtonElement>('button.panel-renderer__die-chip')
+      );
+      expect(chips).toHaveLength(2);
+      expect(chips[0].closest('.notice-strip__cell')).toBe(cells(container)[0]);
+      expect(chips[1].closest('.notice-strip__cell')).toBe(cells(container)[1]);
+      expect(chips[0].textContent?.trim()).toBe('d6');
+      expect(chips[1].textContent?.trim()).toBe('2d6');
+
+      // Each roller rolls its own dice — the single d6 totals 3, the pair
+      // 6 — and neither roll disturbs the other chip.
+      chips[0].click();
+      flushSync();
+      expect(chips[0].textContent?.trim()).toBe('3');
+      expect(chips[1].textContent?.trim()).toBe('2d6');
+
+      chips[1].click();
+      flushSync();
+      expect(chips[0].textContent?.trim()).toBe('3');
+      expect(chips[1].textContent?.trim()).toBe('6');
+
+      // Two toasts, each carrying its own notice's dice: the single d6
+      // totals 3 (its `count` is omitted — PanelDiceLine only reports a
+      // count for multi-die rolls), the pair totals 6 with count 2.
+      expect(showDiceRollToast).toHaveBeenCalledTimes(2);
+      expect(vi.mocked(showDiceRollToast).mock.calls[0][1].total).toBe(3);
+      expect(vi.mocked(showDiceRollToast).mock.calls[0][1].count).toBeUndefined();
+      expect(vi.mocked(showDiceRollToast).mock.calls[1][1].total).toBe(6);
+      expect(vi.mocked(showDiceRollToast).mock.calls[1][1].count).toBe(2);
     } finally {
       random.mockRestore();
     }
