@@ -12,7 +12,10 @@
 
 <script lang="ts">
   import { t } from '$lib/i18n';
-  import type { Annotation } from '$lib/rules-engine';
+  import PanelDiceLine from './panel-renderer/PanelDiceLine.svelte';
+  import { showDiceRollToast } from './panel-renderer/diceRollToast';
+  import type { DiceLineControl } from './panel-renderer/types';
+  import type { Annotation, AnnotationRoll } from '$lib/rules-engine';
 
   interface Props {
     notices: Annotation[];
@@ -36,6 +39,29 @@
 
   function toggleExpanded() {
     manualExpanded = !expanded;
+  }
+
+  /**
+   * A notice's structured roll (see `AnnotationRoll`), mapped onto the dice
+   * line the panels already own — the chip, its roll and its toast are the
+   * shared machinery, re-mounted here rather than re-implemented. The dice
+   * are engine-authored literals (facts/vars play no part), and a notice
+   * roll can never be crit-doubled (a burn is not a weapon attack's hit),
+   * hence `criticalOption={false}`.
+   */
+  function noticeRollControl(roll: AnnotationRoll): DiceLineControl {
+    return {
+      type: 'dice-line',
+      dice: [
+        {
+          sides: roll.sides,
+          count: roll.count,
+          purpose: roll.purpose,
+          damageType: roll.damageType ? { string: roll.damageType } : undefined,
+          unit: roll.unit
+        }
+      ]
+    };
   }
 </script>
 
@@ -89,6 +115,21 @@
               <span class="notice-strip__label">{$t(notice.key)}</span>
               {#if notice.body}
                 <span class="notice-strip__body">{$t(notice.body, notice.values)}</span>
+              {/if}
+              {#if notice.roll}
+                {@const control = noticeRollControl(notice.roll)}
+                <!-- Ephemeral, freely re-rollable: no writeBack, no plan
+                     recording — the toast is the whole record. -->
+                <div class="notice-strip__roll">
+                  <PanelDiceLine
+                    {control}
+                    editable={true}
+                    facts={{}}
+                    vars={{}}
+                    criticalOption={false}
+                    onRoll={(result) => showDiceRollToast($t(notice.source ?? notice.key), result)}
+                  />
+                </div>
               {/if}
             </li>
           {/each}
@@ -207,6 +248,14 @@
     font-size: var(--font-size-xs);
     line-height: var(--line-height-md);
     color: var(--md-sys-color-on-surface-variant);
+  }
+
+  /* The notice's roller (a PanelDiceLine): a little more air than the text
+     rows get, so the tappable chip reads as its own control. Chip styling,
+     focus and roll states are the dice line's own — nothing re-specified
+     here. */
+  .notice-strip__roll {
+    margin-top: var(--spacing-xs);
   }
 
   .notice-strip__placeholder {

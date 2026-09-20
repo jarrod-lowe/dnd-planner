@@ -399,6 +399,23 @@ export interface AnnotationRider {
   illegalReason?: string;
 }
 
+/**
+ * A roll the PLAYER makes on a notice's cadence — dice the notice exists to
+ * remind them of (Searing Smite's per-turn burn). Dice ARE allowed here, unlike
+ * the {@link Annotation.values} channel: a `roll` is rolled by the UI, never
+ * printed as interpolation, so a folded dice count cannot become a wrong
+ * number in a sentence. Engine-side plain string for `damageType` (the
+ * `WeaponDef.damageType` convention); the UI maps it to its i18n key.
+ */
+export interface AnnotationRoll {
+  sides: number;
+  count: number;
+  purpose: RollPurpose;
+  damageType?: string;
+  /** What a non-damage roll measures (e.g. `'hp'` for healing). */
+  unit?: string;
+}
+
 /** Related-info annotation produced for action panels (view-contract shape). */
 export interface Annotation {
   key: string;
@@ -421,6 +438,12 @@ export interface Annotation {
    * folded dice count is a wrong number waiting to be printed.
    */
   values?: Record<string, string | number>;
+  /**
+   * A roll the notice's cadence asks the player to make (see
+   * {@link AnnotationRoll}). Dice belong HERE and never in {@link values}.
+   * Currently renders in the notices strip only.
+   */
+  roll?: AnnotationRoll;
   rider?: AnnotationRider;
   /**
    * What tapping this annotation plans. Most annotations are advisory

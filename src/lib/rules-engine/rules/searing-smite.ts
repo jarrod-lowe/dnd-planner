@@ -209,7 +209,9 @@ const searingSmite: RuleModule = {
   // ritual. The DC interpolates from `spellcasting.saveDC`; the dice are
   // deliberately NOT in the string — `ssmite.burnDice` folds `combine: 'sum'`,
   // so burns on several targets would read as one wrong number, and the
-  // per-target dice already live on each effect chip's `display.value`.
+  // per-target dice already live on each effect chip's `display.value`. The
+  // dice instead ride the structured `roll` field: the player rolls them (the
+  // target's save is the target's), so the notice strip mounts a roller.
   annotate: (f: FactReader) => {
     const annotations: Annotation[] = [];
     if (
@@ -234,7 +236,14 @@ const searingSmite: RuleModule = {
         targets: ['notice'],
         source: `${S}.name`,
         body: `${R}.notice-burning.body`,
-        values: { dc: f.num('spellcasting.saveDC') }
+        values: { dc: f.num('spellcasting.saveDC') },
+        // The burn dice as ONE roll of the summed count: the spell is flat
+        // 1-minute (NOT concentration), so burns on several targets are legal,
+        // and their d6s are fungible — one tap rolls the pool and the player
+        // splits dice across targets. Per-target counts stay on the effect
+        // chips' `display.value`; a folded count here could never be printed
+        // as text (that is what `roll` exists to avoid).
+        roll: { sides: 6, count: f.num('ssmite.burnDice'), damageType: FIRE, purpose: 'damage' }
       });
     }
     return annotations;

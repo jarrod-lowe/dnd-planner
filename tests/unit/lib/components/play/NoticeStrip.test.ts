@@ -28,8 +28,15 @@ vi.mock('$lib/i18n', () => ({
   locales: ['en']
 }));
 
+// The strip's toast path goes through the shared helper; asserting on the
+// mock proves the strip delegates rather than re-implementing the toast.
+vi.mock('$lib/components/play/panel-renderer/diceRollToast', () => ({
+  showDiceRollToast: vi.fn()
+}));
+
 import NoticeStrip from '$lib/components/play/NoticeStrip.svelte';
 import NoticeStripHarness from './NoticeStripHarness.svelte';
+import { showDiceRollToast } from '$lib/components/play/panel-renderer/diceRollToast';
 import type { Annotation } from '$lib/rules-engine';
 
 const SENTINEL_DISENGAGE: Annotation = {
@@ -61,6 +68,13 @@ const SEARING_BURNING: Annotation = {
   values: { dc: 13 }
 };
 
+// The same notice once the burn actually rides it: a roll the PLAYER makes
+// each turn (the fire damage), authored through the structured `roll` channel.
+const SEARING_BURNING_ROLL: Annotation = {
+  ...SEARING_BURNING,
+  roll: { sides: 6, count: 2, purpose: 'damage', damageType: 'fire' }
+};
+
 /** The header disclosure — the only control in the strip. */
 function disclosure(container: HTMLElement): HTMLButtonElement | null {
   return container.querySelector<HTMLButtonElement>('.notice-strip__disclosure');
@@ -80,6 +94,7 @@ describe('NoticeStrip', () => {
   beforeEach(() => {
     container = document.createElement('div');
     document.body.appendChild(container);
+    vi.mocked(showDiceRollToast).mockClear();
   });
 
   it('renders one cell per notice, in engine order, with source, label and body', () => {
@@ -358,5 +373,62 @@ describe('NoticeStrip', () => {
     expect(stripText(container)).not.toContain('Notices');
     expect(stripText(container)).not.toContain('Expand');
     expect(stripText(container)).not.toContain('Collapse');
+  });
+
+  it('renders a die chip inside the cell of a notice carrying a roll', () => {
+    mount(NoticeStrip, {
+      target: container,
+      props: { notices: [SENTINEL_DISENGAGE, SEARING_BURNING_ROLL] }
+    });
+
+    const rendered = cells(container);
+    // The rolling notice's cell — and only it — owns a die chip button,
+    // showing the unrolled expression as its text.
+    expect(rendered[0].querySelector('.panel-renderer__die-chip')).toBeNull();
+    const chip = rendered[1].querySelector<HTMLButtonElement>('button.panel-renderer__die-chip');
+    expect(chip).not.toBeNull();
+    expect(chip!.textContent?.trim()).toBe('2d6');
+
+    // The chip's accessible name comes from PanelDiceLine's purpose-derived
+    // machinery; the i18n mock renders the raw roll-type key.
+    expect(chip!.getAttribute('aria-label')).toContain('play.toast.rollType.damage');
+
+    // A burn can never be crit-doubled, so no options trigger may appear.
+    expect(rendered[1].querySelector('.panel-renderer__options-trigger')).toBeNull();
+  });
+
+  it('rolling a notice die updates the chip and toasts through the shared helper', () => {
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0.4); // each d6 → 3
+    try {
+      mount(NoticeStrip, {
+        target: container,
+        props: { notices: [SEARING_BURNING_ROLL] }
+      });
+      // Settle the mount before tapping: PanelDiceLine's initial effect
+      // batch (roll-result seeding) is still pending right after mount(), and
+      // a click that lands first would be wiped when that batch flushes.
+      flushSync();
+
+      const chip = container.querySelector<HTMLButtonElement>('button.panel-renderer__die-chip');
+      expect(chip).not.toBeNull();
+      chip!.click();
+      flushSync();
+
+      // floor(0.4 * 6) + 1 = 3 per die; two dice → the chip shows the total.
+      expect(chip!.textContent?.trim()).toBe('6');
+
+      // The toast is the shared helper, titled by the notice's translated
+      // source (the mock falls back to the raw key), with no rider labels.
+      expect(showDiceRollToast).toHaveBeenCalledTimes(1);
+      const call = vi.mocked(showDiceRollToast).mock.calls[0];
+      expect(call[0]).toBe('rule.spells.searing-smite.name');
+      expect(call[1].total).toBe(6);
+      expect(call[1].sides).toBe(6);
+      expect(call[1].count).toBe(2);
+      expect(call[1].damageType).toBe('fire');
+      expect(call.length).toBe(2);
+    } finally {
+      random.mockRestore();
+    }
   });
 });

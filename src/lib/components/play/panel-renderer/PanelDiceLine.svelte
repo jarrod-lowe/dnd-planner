@@ -72,6 +72,17 @@
      * See docs/plans/ideas/better-summary-panels.md.
      */
     summary?: boolean;
+    /**
+     * Whether this line's damage dice may offer the Normal/Critical selector.
+     * Defaults true — an attack's damage can be crit-doubled, so panels are
+     * unchanged. A die that can NEVER be doubled (e.g. Searing Smite's
+     * per-turn burn, mounted by NoticeStrip) opts out: its damage chip then
+     * renders as a plain tap-to-roll chip with no options trigger, since
+     * "Normal" (the only remaining entry) is what a plain tap already does.
+     * A d20's advantage/disadvantage menu is unaffected — this governs
+     * critical doubling only.
+     */
+    criticalOption?: boolean;
   }
 
   let {
@@ -84,7 +95,8 @@
     onRoll,
     gwfActive = false,
     modifiers = [],
-    summary = false
+    summary = false,
+    criticalOption = true
   }: Props = $props();
 
   // Unique per component instance so two dice-line panels on the same page don't
@@ -476,9 +488,10 @@
 
   // A die earns a split-button options trigger only when it has meaningful roll
   // modes: d20 rolls offer advantage/disadvantage, damage dice offer
-  // normal/critical. Healing and other utility dice just roll.
+  // normal/critical. Healing and other utility dice just roll, as does a
+  // damage die on a line that opted out of critical doubling (`criticalOption`).
   function hasOptions(die: DiceEntry): boolean {
-    return isD20(die) || isDamageDie(die);
+    return isD20(die) || (criticalOption && isDamageDie(die));
   }
 
   function rollMultiple(sides: number, count: number): number[] {

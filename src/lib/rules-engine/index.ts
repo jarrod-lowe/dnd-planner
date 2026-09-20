@@ -49,6 +49,7 @@ export type {
   OfferRuleDescriptor,
   AvailableRuleEntry,
   AnnotationRider,
+  AnnotationRoll,
   Annotation,
   AnnotationAction,
   AnnotationSeedSource,

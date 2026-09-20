@@ -228,4 +228,38 @@ describe('searing-smite — burning notice', () => {
       'no burn committed, no notice'
     ).toBe(false);
   });
+
+  /**
+   * Notices-rolls plan, Phase 3 — the burn notice carries its per-turn fire
+   * dice as a structured `roll` (the player rolls THEM at each burning turn's
+   * start; the target's save is the target's). The dice still never enter the
+   * body string — `roll` is the dice channel, `values` stays text-only.
+   */
+  it("a committed burn carries the notice's per-turn fire dice as a roll", () => {
+    const out = evaluate({
+      modules: ALL,
+      inputFacts: PREPARED,
+      planned: [unarmed('a1'), cast('c1')]
+    });
+    expect(out.facts['ssmite.burnDice'], 'the burn is live in this state').toBe(1);
+    const notice = out.annotations.find((a) => a.key === `${R}.notice-burning`);
+    expect(notice, 'notice exists while a burn is live').toBeDefined();
+    expect(notice!.roll).toEqual({ sides: 6, count: 1, damageType: 'fire', purpose: 'damage' });
+  });
+
+  it('two concurrent burns sum their dice on the roll — the d6s are one fungible pool', () => {
+    // Two slot-1 casts (the second is bonus-action-starved but planned anyway,
+    // and still advertises its burn — see the two-targets test above): two
+    // level-1 burns fold `ssmite.burnDice` to 2, and the notice hands the
+    // player both dice as one 2d6 roll to split across the burning targets.
+    const out = evaluate({
+      modules: ALL,
+      inputFacts: PREPARED,
+      planned: [unarmed('a1'), cast('c1'), cast('c2')]
+    });
+    expect(out.facts['ssmite.burnDice'], 'both burns are live').toBe(2);
+    const notice = out.annotations.find((a) => a.key === `${R}.notice-burning`);
+    expect(notice).toBeDefined();
+    expect(notice!.roll).toEqual({ sides: 6, count: 2, damageType: 'fire', purpose: 'damage' });
+  });
 });
