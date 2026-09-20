@@ -2,6 +2,8 @@ import type { Annotation, AnnotationAction, AnnotationRider } from '$lib/rules-v
 
 export interface ActiveAnnotation {
   key: string;
+  /** Interpolation params for the label — `$t(key, values)`. Absent → plain. */
+  values?: Record<string, string | number>;
   rider?: AnnotationRider;
   /** What to plan when the annotation is tapped; absent → not actionable. */
   addsToPlan?: AnnotationAction;
@@ -24,6 +26,7 @@ export function getMatchingAnnotations(
     if (annotation.targets.some((t) => labels.has(t))) {
       result.push({
         key: annotation.key,
+        values: annotation.values,
         rider: annotation.rider,
         addsToPlan: annotation.addsToPlan
       });

@@ -51,9 +51,15 @@ describe('detect-evil-and-good — casting', () => {
     expect(facts['concentration.remaining']).toBe(0);
   });
 
-  it('flags a second planned cast illegal-but-visible (already concentrating)', () => {
-    const { planDiagnostics } = evaluatePlan(ALL, PREPARED, [cast('c1'), cast('c2')]);
-    expect(hasCode(planDiagnostics.get('c2'), 'already_concentrating')).toBe(true);
+  it('a second planned cast is concentration-legal and replaces the hold (SRD 5.2)', () => {
+    const { facts, planDiagnostics } = evaluatePlan(ALL, PREPARED, [cast('c1'), cast('c2')]);
+    // SRD 5.2, "Another Concentration Effect": starting a second concentration
+    // spell merely ends the first — no already_concentrating error. (The second
+    // cast still over-spends the action; no_action is its own diagnostic.)
+    expect(hasCode(planDiagnostics.get('c2'), 'already_concentrating')).toBe(false);
+    // Both casts share CONCENTRATION_SPELL_KEY, so the hold is replaced, not
+    // stacked: concentration.spent stays 1.
+    expect(facts['concentration.spent']).toBe(1);
   });
 
   it('flags a cast with no slots remaining illegal (no_slots)', () => {

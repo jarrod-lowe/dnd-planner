@@ -848,11 +848,15 @@
             <button
               type="button"
               class="panel-renderer__annotation panel-renderer__annotation--action"
-              aria-label={$t('play.annotation.addToPlan', { annotation: $t(annotation.key) })}
+              aria-label={$t('play.annotation.addToPlan', {
+                annotation: $t(annotation.key, annotation.values)
+              })}
               onclick={(e) =>
                 addAnnotationOffer(e, addsOffer, annotationSeed(annotation.addsToPlan!))}
             >
-              <span class="panel-renderer__annotation-text">{$t(annotation.key)}</span>
+              <span class="panel-renderer__annotation-text"
+                >{$t(annotation.key, annotation.values)}</span
+              >
               <span class="panel-renderer__annotation-add" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="currentColor">
                   <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
@@ -860,7 +864,7 @@
               </span>
             </button>
           {:else}
-            <span class="panel-renderer__annotation">{$t(annotation.key)}</span>
+            <span class="panel-renderer__annotation">{$t(annotation.key, annotation.values)}</span>
           {/if}
         {/each}
       </div>

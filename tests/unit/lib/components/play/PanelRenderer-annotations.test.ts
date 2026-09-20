@@ -127,4 +127,40 @@ describe('PanelRenderer - annotations', () => {
     });
     expect(container.querySelector('.panel-renderer__annotations')).toBeTruthy();
   });
+
+  it('interpolates annotation values into the label', () => {
+    // The concentration save reminder carries the computed DC in `values`;
+    // the panel renders $t(key, values) with double-brace params, exactly as
+    // the notices strip interpolates a body. An uninterpolated {{dc}} left in
+    // the text would hand the player a template, not a number.
+    const entry = createEntryWithAnnotations();
+    const annotations: Annotation[] = [
+      {
+        key: 'play.annotations.concentration-save',
+        targets: ['attack.any'],
+        values: { dc: 13 }
+      }
+    ];
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {}, activeAnnotations: annotations }
+    });
+    const annotationSpan = container.querySelector('.panel-renderer__annotation');
+    expect(annotationSpan).toBeTruthy();
+    expect(annotationSpan?.textContent).toContain('DC 13');
+    expect(annotationSpan?.textContent).not.toContain('{{dc}}');
+  });
+
+  it('renders a plain label for an annotation without values', () => {
+    // Backward compatible: no values → plain $t(key), nothing to interpolate.
+    const entry = createEntryWithAnnotations();
+    const annotations: Annotation[] = [
+      { key: 'play.annotations.some-buff', targets: ['attack.any'] }
+    ];
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {}, activeAnnotations: annotations }
+    });
+    const annotationSpan = container.querySelector('.panel-renderer__annotation');
+    expect(annotationSpan).toBeTruthy();
+    expect(annotationSpan?.textContent).toContain('play.annotations.some-buff');
+  });
 });

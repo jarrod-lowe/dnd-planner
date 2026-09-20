@@ -11,6 +11,8 @@
       }
     },
     "spell-sanctuary": {
+      "notice": "Sanctuary",
+      "notice.body": "Any creature that targets the warded creature with an attack roll or a damaging spell must succeed on a DC {{dc}} Wisdom save or choose a new target or lose the attack or spell. The spell ends if the warded creature makes an attack roll, casts a spell, or deals damage.",
       "offer-sanctuary": {
         "name": "Sanctuary",
         "keywords": "protect ward shield abjuration safe",
@@ -158,7 +160,6 @@
         "description": "60ft | WIS save or Incapacitated; 2nd fail: Unconscious | 10 rnds",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
-        "already_concentrating": "Already concentrating",
         "no_slots": "No spell slots remaining"
       },
       "effect-sleep": {
@@ -172,7 +173,6 @@
         "description": "60ft | CHA save or immune to Charmed/Frightened, or Indifferent | 10 rnds",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
-        "already_concentrating": "Already concentrating",
         "no_slots": "No spell slots remaining"
       },
       "effect-calm-emotions": {
@@ -180,13 +180,14 @@
       }
     },
     "spell-hold-person": {
+      "notice": "Held",
+      "notice.body": "At the end of each held target's turn, it repeats a DC {{dc}} Wisdom save to end the spell.",
       "offer-hold-person": {
         "name": "Hold Person",
         "keywords": "paralyse paralyze stun freeze control humanoid",
         "description": "60ft | WIS save or Paralyzed; repeats save each turn | 10 rnds",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
-        "already_concentrating": "Already concentrating",
         "no_slots": "No spell slots remaining"
       },
       "effect-hold-person": {
@@ -245,7 +246,6 @@
         "description": "Touch | 10 min | Warded vs aberrations, fiends, undead & more",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
-        "already_concentrating": "Already concentrating",
         "no_slots": "No spell slots remaining"
       },
       "effect-protection-from-evil-and-good": {
@@ -259,7 +259,6 @@
         "description": "30ft | 10 rnds | Allies gain +1d4 to attacks & saves",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
-        "already_concentrating": "Already concentrating",
         "no_slots": "No spell slots remaining"
       },
       "effect-bless": {
@@ -286,7 +285,6 @@
         "targetAlly": "Ally",
         "no_bonus_action": "No bonus action available",
         "no_spellcasting": "Already cast a spell this turn",
-        "already_concentrating": "Already concentrating",
         "no_slots": "No spell slots remaining"
       },
       "effect-shield-of-faith": {
@@ -328,7 +326,6 @@
         "description": "Self | 10 min | Sense aberrations, celestials, elementals, fey, fiends & undead within 30ft, plus whether Hallow is active",
         "no_action": "No action available",
         "no_spellcasting": "Already cast a spell this turn",
-        "already_concentrating": "Already concentrating",
         "no_slots": "No spell slots remaining"
       },
       "effect-detect-evil-and-good": {
@@ -1124,8 +1121,7 @@
         "notice-disengage.body": "A creature within 5 ft that takes the Disengage action still provokes your Opportunity Attack.",
         "notice-retaliate": "Opportunity Attack on ally hit",
         "notice-retaliate.body": "When a creature within 5 ft hits someone other than you with an attack, you can make an Opportunity Attack against it.",
-        "notice-speed": "Hit stops movement",
-        "notice-speed.body": "A creature you hit with an Opportunity Attack has its Speed reduced to 0 for the rest of the turn."
+        "annotation-speed": "A creature you hit with an Opportunity Attack has its Speed reduced to 0 for the rest of the turn."
       },
       "heroic-inspiration": {
         "annotation": "Heroic Inspiration available",
@@ -1980,7 +1976,10 @@
   "planner": {
     "after-rest": "Planned after a rest — it still applies, but this projection may be off.",
     "concentration": {
-      "check": "Concentration Check"
+      "check": "Concentration Check",
+      "check.invalid_roll": "Invalid concentration roll",
+      "annotation": "Concentration save — DC {{dc}} Constitution save to keep the spell.",
+      "broken": "Concentration broken"
     },
     "record": {
       "damage": "Record Damage",

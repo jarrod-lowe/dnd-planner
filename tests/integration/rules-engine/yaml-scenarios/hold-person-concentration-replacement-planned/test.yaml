@@ -1,5 +1,8 @@
-name: 'Hold Person Concentration Blocking'
-description: 'Cannot cast Hold Person while already concentrating. Concentration resource prevents a second cast.'
+name: 'Hold Person - Planned Recast Legal and Replacing While Concentrating'
+description: >-
+  Casting Hold Person, then planning a second cast while concentration is
+  still held, is legal (SRD 5.2) and replaces the hold: no plan errors, and the
+  keyed concentration effect keeps concentration.spent at 1 instead of stacking.
 ruleGroups:
   - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
@@ -12,7 +15,7 @@ ruleGroups:
   - class-paladin/class-paladin-level1
   - spells/spell-hold-person
 initialEffects:
-  - id: test-grant-level2-slot
+  - id: test-grant-level2-slots
     phase: early
     group:
       - spellcasting-slots-set
@@ -31,12 +34,6 @@ initialEffects:
         self: true
 steps:
   - evaluate:
-      assert:
-        facts:
-          concentration.remaining: 1
-        offers:
-          exists:
-            - set-prepared-spells
   - addOffer:
       id: set-prepared-spells
       selections:
@@ -47,11 +44,7 @@ steps:
             preparedFact: spell.l2.holdPerson.prepared
             alwaysPreparedFact: spell.l2.holdPerson.alwaysPrepared
   - endTurn: {}
-  - addOffer:
-      id: set-charisma
-      selections:
-        score: 16
-  # Cast Hold Person — consumes concentration
+  # Turn 1: cast Hold Person, starting concentration
   - addOffer:
       id: cast-hold-person
       assert:
@@ -63,11 +56,20 @@ steps:
         effects:
           exists:
             - effect-hold-person
-  # Turn 2: Hold Person should be illegal due to concentration being active
+  # Turn 2: still concentrating; planning a second cast is LEGAL (SRD 5.2 — the
+  # recast dismisses the first hold) and a slot remains, so NO errors at all.
   - evaluate:
       assert:
         facts:
           concentration.remaining: 0
-        offers:
-          illegal:
-            - cast-hold-person
+          spellcasting.slots.level2.remaining: 1
+  - addOffer:
+      id: cast-hold-person
+      assert:
+        planErrors:
+          - id: cast-hold-person
+            index: 0
+            errors: []
+        facts:
+          concentration.spent: 1
+          spellcasting.slots.level2.remaining: 0

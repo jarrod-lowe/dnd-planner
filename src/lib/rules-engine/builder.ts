@@ -43,6 +43,41 @@ export const notLockedLegal: LegalWhen = {
 export const HIT_DIE_SIZES = [6, 8, 10, 12] as const;
 
 /**
+ * The shared `key` every concentration spell's holding effect carries. Keyed,
+ * so an EMPTY same-key effect advertised later (a failed concentration check's
+ * eviction, the find-steed Dismiss pattern) REPLACES the holding effect rather
+ * than stacking beside it: the spell's `concentration.spent` contribution
+ * drops while the eviction is merely planned — remove the check row and the
+ * spell folds back — and `endTurn` merges the replacement permanently. It is
+ * also the SRD 5.2 recast mechanism: starting a second concentration spell is
+ * legal ("Another Concentration Effect" — you lose Concentration the moment
+ * you start casting), and the newest same-key effect dismisses the old hold —
+ * in-plan, at commit, and carrying the old spell's side state (the Shield of
+ * Faith AC bonus) with it. Lives in the builder (not concentration.ts)
+ * because the spell modules must import it and may import only the builder.
+ */
+export const CONCENTRATION_SPELL_KEY = 'concentration-spell';
+
+/**
+ * The keyed clear of the concentration damage marker — the exact effect the
+ * concentration check advertises to resolve a save. Exported so every
+ * concentration spell's CAST advertises the same clear (newest wins in the
+ * fold): SRD 5.2 — "You lose Concentration on an effect the moment you start
+ * casting a spell that requires Concentration" — a save owed against the
+ * PRE-CAST hold could only ever have ended that hold, so the replacement cast
+ * moots the pending save rather than leaving it to evict the new spell.
+ * Damage recorded AFTER the cast re-trips the marker normally (its row is
+ * later in the fold). Lives in the builder (like CONCENTRATION_SPELL_KEY)
+ * because the spell modules must import it and may import only the builder.
+ */
+export const concentrationDamageMarkerClear = (): EffectInstance => ({
+  id: 'concentration-damage-taken',
+  key: 'concentration-damage-taken',
+  state: { 'concentration.damage-taken': 0, 'concentration.last-damage': 0 },
+  expiry: { kind: 'endOfTurn' }
+});
+
+/**
  * Current HP from a max and the NET current-HP modifier. Damage drives the
  * modifier negative and healing carries it back toward 0, so:
  *  - `min(0, …)` clamps a positive modifier — current never exceeds the max;

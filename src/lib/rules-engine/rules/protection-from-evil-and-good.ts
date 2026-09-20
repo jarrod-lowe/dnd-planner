@@ -1,4 +1,6 @@
 import {
+  CONCENTRATION_SPELL_KEY,
+  concentrationDamageMarkerClear,
   defineRule,
   preparedSpellCount,
   type ActionResult,
@@ -18,8 +20,8 @@ const SLOTS = 'protection-from-evil-and-good';
  * turn spell, and a slot, holding concentration via `effect-protection-...`
  * (`[untilShortRest]`, `concentration.spent` = 1). Ten minutes is impractical to
  * count in combat rounds, so the ward carries until the user dismisses it or any
- * rest (always 10+ minutes) ends it; it blocks a second concentration spell
- * meanwhile.
+ * rest (always 10+ minutes) ends it; a second concentration spell (legal per
+ * SRD 5.2) replaces it via the shared key.
  */
 const protectionFromEvilAndGood: RuleModule = {
   id: 'spell-protection-from-evil-and-good',
@@ -83,10 +85,8 @@ const protectionFromEvilAndGood: RuleModule = {
           condition: (f) => f.num('spellcasting.remaining') > 0,
           diagnostics: [{ code: `${P}.no_spellcasting`, severity: 'error' }]
         },
-        {
-          condition: (f) => f.num('concentration.remaining') > 0,
-          diagnostics: [{ code: `${P}.already_concentrating`, severity: 'error' }]
-        },
+        // No concentration gate: SRD 5.2 makes the recast legal — it dismisses
+        // the current hold via the shared CONCENTRATION_SPELL_KEY (newest wins).
         {
           condition: (f) => f.num(`${SLOTS}.eligibleSlotsRemaining`) > 0,
           diagnostics: [{ code: `${P}.no_slots`, severity: 'error' }]
@@ -103,22 +103,27 @@ const protectionFromEvilAndGood: RuleModule = {
             state: { 'actions.spent': 1, 'spellcasting.spent': 1 },
             expiry: { kind: 'endOfTurn' }
           },
+          // Keyed so a failed concentration check's eviction (an empty
+          // same-key effect) replaces it, releasing the slot.
           {
             id: 'effect-protection-from-evil-and-good',
+            key: CONCENTRATION_SPELL_KEY,
             state: { 'concentration.spent': 1 },
             display: {
               name: 'rule.spell-protection-from-evil-and-good.effect-protection-from-evil-and-good.name'
             },
             expiry: [{ kind: 'untilShortRest' }]
-          }
+          },
+          // The cast moots a save owed against the replaced hold (SRD 5.2):
+          // it clears the damage marker with the same keyed effect the check
+          // resolves a save with — see concentrationDamageMarkerClear.
+          concentrationDamageMarkerClear()
         ];
         const diagnostics: Diagnostic[] = [];
         if (f.num('actions.remaining') <= 0)
           diagnostics.push({ code: `${P}.no_action`, severity: 'error' });
         if (f.num('spellcasting.remaining') <= 0)
           diagnostics.push({ code: `${P}.no_spellcasting`, severity: 'error' });
-        if (f.num('concentration.remaining') <= 0)
-          diagnostics.push({ code: `${P}.already_concentrating`, severity: 'error' });
         if (level >= 1 && level <= 5) {
           advertise.push({
             id: `effect-protection-from-evil-and-good-slot-l${level}`,

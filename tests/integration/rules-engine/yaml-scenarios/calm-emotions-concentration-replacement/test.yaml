@@ -1,5 +1,8 @@
-name: 'Calm Emotions Concentration Blocking'
-description: 'Cannot cast Calm Emotions while already concentrating. Concentration resource prevents a second cast.'
+name: 'Calm Emotions Concentration Replacement'
+description: >-
+  Casting Calm Emotions while already concentrating is legal (SRD 5.2): the
+  moment the second concentration spell starts, the first is dismissed — the
+  shared concentration key replaces the hold, so concentration.spent stays 1.
 ruleGroups:
   - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
@@ -63,11 +66,26 @@ steps:
         effects:
           exists:
             - effect-calm-emotions
-  # Turn 2: Calm Emotions should be illegal due to concentration being active
+  # Turn 2: the recast is LEGAL — SRD 5.2 "Another Concentration Effect" loses
+  # the first concentration the moment the second cast starts.
   - evaluate:
       assert:
         facts:
           concentration.remaining: 0
         offers:
-          illegal:
+          legal:
             - cast-calm-emotions
+  # Recast Calm Emotions: the keyed effect REPLACES the committed hold, so the
+  # slot still reads as held once (not stacked) while the second slot spends.
+  - addOffer:
+      id: cast-calm-emotions
+      assert:
+        facts:
+          concentration.spent: 1
+          concentration.remaining: 0
+          spellcasting.slots.level2.remaining: 0
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-calm-emotions

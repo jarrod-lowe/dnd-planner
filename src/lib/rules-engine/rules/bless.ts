@@ -1,4 +1,6 @@
 import {
+  CONCENTRATION_SPELL_KEY,
+  concentrationDamageMarkerClear,
   defineRule,
   preparedSpellCount,
   type ActionResult,
@@ -17,8 +19,13 @@ const B = 'rule.spell-bless.offer-bless';
  * that spends a slot (L1–5 by the chosen level) and takes concentration.
  *
  * Concentration is held by the persistent `effect-bless` (`concentration.spent`
- * = 1), so it lights the same turn (the fold) and a second concentration spell
- * is illegal while it lives; it ends after 10 rounds OR on any rest
+ * = 1), so it lights the same turn (the fold). SRD 5.2 ("Another Concentration
+ * Effect"): a second concentration spell is LEGAL — you lose Concentration on
+ * an effect the moment you start casting a spell that requires Concentration —
+ * and the shared CONCENTRATION_SPELL_KEY makes the recast REPLACE this hold
+ * instead of stacking beside it. The recast also moots a damage save pending
+ * against the replaced hold: the cast clears the damage marker with the same
+ * keyed effect the check resolves a save with. The hold ends after 10 rounds OR on any rest
  * (`[turns, untilShortRest]`), releasing concentration. The +1d4 itself is a
  * UI rider (M4); this models the resource mechanics.
  */
@@ -83,10 +90,8 @@ const bless: RuleModule = {
           condition: (f) => f.num('spellcasting.remaining') > 0,
           diagnostics: [{ code: `${B}.no_spellcasting`, severity: 'error' }]
         },
-        {
-          condition: (f) => f.num('concentration.remaining') > 0,
-          diagnostics: [{ code: `${B}.already_concentrating`, severity: 'error' }]
-        },
+        // No concentration gate: SRD 5.2 makes the recast legal — it dismisses
+        // the current hold via the shared CONCENTRATION_SPELL_KEY (newest wins).
         {
           condition: (f) => f.num('bless.eligibleSlotsRemaining') > 0,
           diagnostics: [{ code: `${B}.no_slots`, severity: 'error' }]
@@ -103,21 +108,26 @@ const bless: RuleModule = {
             state: { 'actions.spent': 1, 'spellcasting.spent': 1 },
             expiry: { kind: 'endOfTurn' }
           },
-          // Concentration held for the duration or until a rest.
+          // Concentration held for the duration or until a rest. Keyed so a
+          // failed concentration check's eviction (an empty same-key effect)
+          // replaces it, releasing the slot (see CONCENTRATION_SPELL_KEY).
           {
             id: 'effect-bless',
+            key: CONCENTRATION_SPELL_KEY,
             state: { 'concentration.spent': 1 },
             display: { name: 'rule.spell-bless.effect-bless.name' },
             expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]
-          }
+          },
+          // The cast moots a save owed against the replaced hold (SRD 5.2):
+          // it clears the damage marker with the same keyed effect the check
+          // resolves a save with — see concentrationDamageMarkerClear.
+          concentrationDamageMarkerClear()
         ];
         const diagnostics: Diagnostic[] = [];
         if (f.num('actions.remaining') <= 0)
           diagnostics.push({ code: `${B}.no_action`, severity: 'error' });
         if (f.num('spellcasting.remaining') <= 0)
           diagnostics.push({ code: `${B}.no_spellcasting`, severity: 'error' });
-        if (f.num('concentration.remaining') <= 0)
-          diagnostics.push({ code: `${B}.already_concentrating`, severity: 'error' });
         if (level >= 1 && level <= 5) {
           advertise.push({
             id: `effect-bless-slot-l${level}`,

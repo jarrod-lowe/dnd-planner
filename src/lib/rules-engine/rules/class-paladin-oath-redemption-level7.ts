@@ -24,10 +24,12 @@ const O = 'rule.class-paladin-oath-redemption-level7';
  * - The HP loss is a keyless `untilLongRest` effect, so repeated uses STACK
  *   (each turn's transfer is its own chip on the health strip) and a long rest
  *   clears them with the rest of the damage record.
- * - Taking the damage while concentrating trips `concentration.damage-taken`,
- *   mirroring `record-damage`: keyed + `endOfTurn` so a planned concentration
- *   check can clear it, and gated on `f.has` so it never sets a phantom fact
- *   when the concentration group is not loaded.
+ * - Taking the damage while concentrating trips `concentration.damage-taken`
+ *   with the amount on `concentration.last-damage`, mirroring `record-damage`:
+ *   keyed + `endOfTurn` so a planned concentration check can clear it, and
+ *   gated on `f.has` so it never sets a phantom fact when the concentration
+ *   group is not loaded. The row carries the `damage.any` label so the
+ *   concentration reminder (and its derived DC) renders on the aura row.
  *
  * The offer is deliberately legal at any amount, and there is no gate on having
  * enough HP — dropping yourself to 0 to save an ally is the point of the
@@ -54,6 +56,11 @@ const oath: RuleModule = {
         name: `${O}.aura-of-the-guardian.name`,
         description: `${O}.aura-of-the-guardian.description`,
         detailKey: 'class-feature/aura-of-the-guardian',
+        // The recorder idiom (`record-damage` carries `damage.any`): the
+        // transfer IS damage taken, so the concentration group's post-hoc
+        // save-to-keep-the-spell reminder (with the DC derived from the
+        // amount) rides this row, not only the record-damage panel.
+        annotationLabels: ['damage.any'],
         intents: { REACT: 'ward' },
         actionCost: ['reaction'],
         primaryControl: {
@@ -107,7 +114,14 @@ const oath: RuleModule = {
           advertise.push({
             id: 'concentration-damage-taken',
             key: 'concentration-damage-taken',
-            state: { 'concentration.damage-taken': 1 },
+            state: {
+              'concentration.damage-taken': 1,
+              // The amount rides the same keyed marker (newest wins), so the
+              // concentration group derives the save DC from the damage THIS
+              // transfer took on — not the DC 10 floor an amount-less marker
+              // collapses to (the `record-damage` idiom).
+              'concentration.last-damage': amount
+            },
             expiry: { kind: 'endOfTurn' }
           });
         }
