@@ -109,44 +109,127 @@
     onSelectionChange?.({ [control.var]: localValue });
   }
 
+  // --- Notch label row ---
+  // A row of tick + short label under the track, one per position. Explicit
+  // notches are labelled by each notch's own value (gaps preserved); a
+  // sequential slider synthesises its positions from the resolved min/max/step.
+  // Only spell-level sliders have a short label form ("Free"/"Ln"); other
+  // sliders (distance, hp, ability scores…) keep their numeric display and
+  // render no row, whatever their positions.
+  interface NotchMark {
+    value: number;
+    label: string;
+  }
+
+  function notchLabel(value: number): string {
+    return value === 0
+      ? $t('play.slider.freeShort')
+      : $t('play.slider.levelShort', { level: value });
+  }
+
+  const notchMarks = $derived.by(() => {
+    if (control.valueFormat !== 'spellLevel') return undefined;
+    if (activeNotches) {
+      return (activeNotches as SliderNotch[]).map((n) => ({
+        value: n.value,
+        label: notchLabel(n.value)
+      }));
+    }
+    // Synthesise only when the positions are integer-spaced: step >= 1 and
+    // the step divides the range into whole positions, so every value is an
+    // integer (a fractional step like 0.5 has no label form).
+    const span = max - min;
+    const integerSpaced =
+      Number.isInteger(min) && Number.isInteger(step) && step >= 1 && Number.isInteger(span / step);
+    if (!integerSpaced) return undefined;
+    const marks: NotchMark[] = [];
+    for (let v = min; v <= max; v += step) {
+      if (marks.length >= 10) return undefined; // too many positions to label legibly
+      marks.push({ value: v, label: notchLabel(v) });
+    }
+    return marks;
+  });
+
   function handleChange(e: Event): void {
     const target = e.target as HTMLInputElement;
     const newValue = Number(target.value);
     localValue = newValue;
     onSelectionChange?.({ [control.var]: newValue });
   }
+
+  // Tapping a notch-label mark is a shortcut to the same change the input
+  // reports: it selects the mark's own VALUE (never its index — the input's
+  // index space differs on notch sliders with gaps).
+  function handleMarkClick(value: number): void {
+    if (!editable) return;
+    localValue = value;
+    if (activeNotches) {
+      const idx = (activeNotches as SliderNotch[]).findIndex((n) => n.value === value);
+      if (idx >= 0) localIndex = idx;
+    }
+    onSelectionChange?.({ [control.var]: value });
+  }
 </script>
+
+{#snippet notchRow()}
+  <!-- Decorative pointer shortcut: the native range input remains the sole
+       accessible (and keyboard-operable) control, so the row is hidden from
+       assistive tech and carries no focus. -->
+  {#if notchMarks}
+    <div class="panel-renderer__slider-notches" aria-hidden="true">
+      {#each notchMarks as mark (mark.value)}
+        <!-- Intentionally no role and no key handler: the mark is a pointer-only
+             shortcut inside the aria-hidden row; the input is the keyboard path. -->
+        <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+        <span
+          class="panel-renderer__slider-notch"
+          class:panel-renderer__slider-notch--current={mark.value === localValue}
+          onclick={editable ? () => handleMarkClick(mark.value) : undefined}
+        >
+          <span class="panel-renderer__slider-notch-tick"></span>
+          <span class="panel-renderer__slider-notch-label">{mark.label}</span>
+        </span>
+      {/each}
+    </div>
+  {/if}
+{/snippet}
 
 {#if summary}
   <span class="panel-renderer__slider-summary">{displayValue}</span>
 {:else if activeNotches}
   <div class="panel-renderer__slider">
-    <input
-      type="range"
-      min={0}
-      max={activeNotches.length - 1}
-      step={1}
-      value={localIndex}
-      disabled={!editable}
-      oninput={editable ? handleNotchChange : undefined}
-      aria-label={control.var}
-      aria-valuetext={displayValue}
-    />
+    <div class="panel-renderer__slider-track">
+      <input
+        type="range"
+        min={0}
+        max={activeNotches.length - 1}
+        step={1}
+        value={localIndex}
+        disabled={!editable}
+        oninput={editable ? handleNotchChange : undefined}
+        aria-label={control.var}
+        aria-valuetext={displayValue}
+      />
+      {@render notchRow()}
+    </div>
     <span class="panel-renderer__slider-value">{displayValue}</span>
   </div>
 {:else}
   <div class="panel-renderer__slider">
-    <input
-      type="range"
-      {min}
-      {max}
-      {step}
-      value={localValue}
-      disabled={!editable}
-      oninput={editable ? handleChange : undefined}
-      aria-label={control.var}
-      aria-valuetext={displayValue}
-    />
+    <div class="panel-renderer__slider-track">
+      <input
+        type="range"
+        {min}
+        {max}
+        {step}
+        value={localValue}
+        disabled={!editable}
+        oninput={editable ? handleChange : undefined}
+        aria-label={control.var}
+        aria-valuetext={displayValue}
+      />
+      {@render notchRow()}
+    </div>
     <span class="panel-renderer__slider-value">{displayValue}</span>
   </div>
 {/if}
@@ -161,6 +244,43 @@
   .panel-renderer__slider input[type='range'] {
     flex: 1;
     accent-color: var(--md-sys-color-primary);
+  }
+
+  .panel-renderer__slider-track {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
+  .panel-renderer__slider-notches {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .panel-renderer__slider-notch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .panel-renderer__slider-notch-tick {
+    width: 1px;
+    height: 6px;
+    background: var(--md-sys-color-outline-variant);
+  }
+
+  .panel-renderer__slider-notch--current {
+    color: var(--md-sys-color-primary);
+  }
+
+  .panel-renderer__slider-notch--current .panel-renderer__slider-notch-tick {
+    background: var(--md-sys-color-primary);
   }
 
   .panel-renderer__slider-value {

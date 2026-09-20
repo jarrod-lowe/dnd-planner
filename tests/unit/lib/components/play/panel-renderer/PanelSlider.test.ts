@@ -423,4 +423,221 @@ describe('PanelRenderer - slider control', () => {
     await fireEvent.input(slider);
     expect(onSelectionChange).toHaveBeenCalledWith({ slotLevel: 3 });
   });
+
+  // === Notch label row (tick + short label under the track) ===
+  // The i18n mock renders the short keys as 'FREE' / 'LVL{{level}}' —
+  // deliberately unlike the real English 'Free' / 'L{{level}}', mirroring the
+  // units convention in tests/setup.ts — so a label that bypasses $t and
+  // hardcodes English fails these assertions.
+  describe('notch label row', () => {
+    const createSequentialSpellLevelEntry = (
+      min: number,
+      max: number,
+      step?: number
+    ): AvailableRuleEntry => {
+      const base = createSliderEntry();
+      return {
+        ...base,
+        rule: {
+          ...base.rule,
+          ui: {
+            ...base.rule.ui,
+            primaryControl: {
+              type: 'slider',
+              var: 'distance',
+              min: { number: min },
+              max: { number: max },
+              ...(step !== undefined ? { step } : {}),
+              valueFormat: 'spellLevel'
+            }
+          }
+        } as Rule
+      };
+    };
+
+    it('renders L1..L5 labels for a sequential 1..5 spell-level slider', () => {
+      const entry = createSequentialSpellLevelEntry(1, 5);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, selections: { distance: 1 } }
+      });
+      const labels = Array.from(
+        container.querySelectorAll('.panel-renderer__slider-notch-label')
+      ).map((el) => el.textContent?.trim());
+      expect(labels).toEqual(['LVL1', 'LVL2', 'LVL3', 'LVL4', 'LVL5']);
+    });
+
+    it('renders the Free label for value 0', () => {
+      const entry = createSequentialSpellLevelEntry(0, 5);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, selections: { distance: 0 } }
+      });
+      const labels = Array.from(
+        container.querySelectorAll('.panel-renderer__slider-notch-label')
+      ).map((el) => el.textContent?.trim());
+      expect(labels).toEqual(['FREE', 'LVL1', 'LVL2', 'LVL3', 'LVL4', 'LVL5']);
+    });
+
+    const createExplicitNotchEntry = (values: number[]): AvailableRuleEntry => ({
+      rule: {
+        id: 'cast-find-steed',
+        description: 'Find Steed',
+        activities: [],
+        ui: {
+          section: 'action-spell',
+          name: 'Find Steed',
+          primaryControl: {
+            type: 'slider',
+            var: 'slotLevel',
+            notches: values.map((value) => ({ value })),
+            valueFormat: 'spellLevel'
+          }
+        },
+        vars: { slotLevel: { default: { number: 0 } } }
+      } as Rule,
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    });
+
+    it('labels explicit notches by their own values, so gaps do not collapse', () => {
+      // find-steed's notches are 0,2,3,4,5 — no L1. Reduced to 0,2,3 here.
+      const entry = createExplicitNotchEntry([0, 2, 3]);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, selections: { slotLevel: 0 } }
+      });
+      const labels = Array.from(
+        container.querySelectorAll('.panel-renderer__slider-notch-label')
+      ).map((el) => el.textContent?.trim());
+      expect(labels).toEqual(['FREE', 'LVL2', 'LVL3']);
+    });
+
+    it('renders no notch row when there are more than 10 positions', () => {
+      const entry = createSequentialSpellLevelEntry(0, 10); // 11 positions
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, selections: { distance: 0 } }
+      });
+      expect(container.querySelector('.panel-renderer__slider-notches')).toBeNull();
+    });
+
+    it('renders no notch row when positions are not integer-spaced', () => {
+      // 5 positions, but step 0.5 makes the values non-integers
+      const entry = createSequentialSpellLevelEntry(0, 2, 0.5);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, selections: { distance: 0 } }
+      });
+      expect(container.querySelector('.panel-renderer__slider-notches')).toBeNull();
+    });
+
+    it("emphasises the current value's tick and label", () => {
+      const entry = createSequentialSpellLevelEntry(0, 5);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, selections: { distance: 2 } }
+      });
+      const current = container.querySelectorAll('.panel-renderer__slider-notch--current');
+      expect(current.length).toBe(1);
+      expect(
+        current[0].querySelector('.panel-renderer__slider-notch-label')?.textContent?.trim()
+      ).toBe('LVL2');
+    });
+
+    const findMarkByLabel = (container: HTMLElement, label: string): Element => {
+      const mark = Array.from(container.querySelectorAll('.panel-renderer__slider-notch')).find(
+        (el) =>
+          el.querySelector('.panel-renderer__slider-notch-label')?.textContent?.trim() === label
+      );
+      if (!mark) throw new Error(`no notch labelled ${label}`);
+      return mark;
+    };
+
+    it('fires onSelectionChange with the value when a sequential label is clicked', async () => {
+      const entry = createSequentialSpellLevelEntry(0, 5);
+      const onSelectionChange = vi.fn();
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, selections: { distance: 2 }, onSelectionChange }
+      });
+      await fireEvent.click(findMarkByLabel(container, 'LVL3'));
+      expect(onSelectionChange).toHaveBeenLastCalledWith({ distance: 3 });
+    });
+
+    it('reports the notch value (not its index) when an explicit label is clicked', async () => {
+      // Notches 0,2,3: the L3 mark sits at index 2, so an index-mapped click
+      // would wrongly report 2.
+      const entry = createExplicitNotchEntry([0, 2, 3]);
+      const onSelectionChange = vi.fn();
+      const { container } = render(PanelRenderer, {
+        props: {
+          entry,
+          editable: true,
+          facts: {},
+          selections: { slotLevel: 0 },
+          onSelectionChange
+        }
+      });
+      await fireEvent.click(findMarkByLabel(container, 'LVL3'));
+      expect(onSelectionChange).toHaveBeenLastCalledWith({ slotLevel: 3 });
+    });
+
+    it('hides the notch label row from assistive tech', () => {
+      // The native range input stays the sole accessible control; the label
+      // row is a decorative pointer shortcut.
+      const entry = createSequentialSpellLevelEntry(0, 5);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, selections: { distance: 0 } }
+      });
+      const row = container.querySelector('.panel-renderer__slider-notches') as HTMLElement;
+      expect(row.getAttribute('aria-hidden')).toBe('true');
+    });
+
+    // Non-spell sliders (movement distance, lay-on-hands hp, ability scores)
+    // are integer sequential sliders under the position cap — without a
+    // valueFormat gate they would render "Free/L5/L10…" nonsense labels.
+    const createSequentialUnitEntry = (
+      min: number,
+      max: number,
+      step: number,
+      unit: string
+    ): AvailableRuleEntry => {
+      const base = createSliderEntry();
+      return {
+        ...base,
+        rule: {
+          ...base.rule,
+          ui: {
+            ...base.rule.ui,
+            primaryControl: {
+              type: 'slider',
+              var: 'distance',
+              min: { number: min },
+              max: { number: max },
+              step,
+              unit
+            }
+          }
+        } as Rule
+      };
+    };
+
+    it('renders no notch row for a non-spell slider (no valueFormat)', () => {
+      // movement-style: distance 0..30 step 5, unit ft — 7 integer positions
+      const entry = createSequentialUnitEntry(0, 30, 5, 'ft');
+      const { container } = render(PanelRenderer, {
+        props: {
+          entry,
+          editable: true,
+          facts: { 'character.movement.remaining': 10, 'character.movement.total': 30 },
+          selections: { distance: 10 }
+        }
+      });
+      expect(container.querySelector('.panel-renderer__slider-notches')).toBeNull();
+    });
+
+    it('renders no notch row for a small non-spell slider either (hp-style)', () => {
+      // 7 positions — proves the 10-position cap is not what suppresses it
+      const entry = createSequentialUnitEntry(0, 6, 1, 'hp');
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, selections: { distance: 2 } }
+      });
+      expect(container.querySelector('.panel-renderer__slider-notches')).toBeNull();
+    });
+  });
 });
