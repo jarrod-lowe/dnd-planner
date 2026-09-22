@@ -270,6 +270,12 @@ export interface AnnotationRider {
 export interface Annotation {
   key: string;
   targets: string[];
+  /**
+   * Interpolation params for the label, `$t(key, values)` with double-brace
+   * params (the same pattern the notices strip uses for bodies) — e.g. the
+   * concentration save reminder's computed DC. Absent → plain `$t(key)`.
+   */
+  values?: Record<string, string | number>;
   /** Optional rider data for rendering as a modifier chip */
   rider?: AnnotationRider;
   /**

@@ -1,8 +1,8 @@
-name: 'Hold Person - Planned Item Illegal While Concentrating'
+name: 'Hold Person Concentration Replacement'
 description: >-
-  Casting Hold Person, then planning a second cast while concentration is
-  still held, marks the second planned item illegal with an already_concentrating
-  error. A slot remains, so no_slots does not co-fire.
+  Casting Hold Person while already concentrating is legal (SRD 5.2): the
+  moment the second concentration spell starts, the first is dismissed — the
+  shared concentration key replaces the hold, so concentration.spent stays 1.
 ruleGroups:
   - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
@@ -15,7 +15,7 @@ ruleGroups:
   - class-paladin/class-paladin-level1
   - spells/spell-hold-person
 initialEffects:
-  - id: test-grant-level2-slots
+  - id: test-grant-level2-slot
     phase: early
     group:
       - spellcasting-slots-set
@@ -34,6 +34,12 @@ initialEffects:
         self: true
 steps:
   - evaluate:
+      assert:
+        facts:
+          concentration.remaining: 1
+        offers:
+          exists:
+            - set-prepared-spells
   - addOffer:
       id: set-prepared-spells
       selections:
@@ -44,7 +50,11 @@ steps:
             preparedFact: spell.l2.holdPerson.prepared
             alwaysPreparedFact: spell.l2.holdPerson.alwaysPrepared
   - endTurn: {}
-  # Turn 1: cast Hold Person, starting concentration
+  - addOffer:
+      id: set-charisma
+      selections:
+        score: 16
+  # Cast Hold Person — consumes concentration
   - addOffer:
       id: cast-hold-person
       assert:
@@ -56,18 +66,28 @@ steps:
         effects:
           exists:
             - effect-hold-person
-  # Turn 2: still concentrating; planning a second cast is illegal (concentration),
-  # but a slot still remains so no_slots does not fire.
+  # Turn 2: the recast is LEGAL — SRD 5.2 "Another Concentration Effect" loses
+  # the first concentration the moment the second cast starts.
   - evaluate:
       assert:
         facts:
           concentration.remaining: 0
-          spellcasting.slots.level2.remaining: 1
+        offers:
+          legal:
+            - cast-hold-person
+  # Recast Hold Person: the keyed effect REPLACES the committed hold (the
+  # holdPerson.active marker rides the same effect, so the old hold's marker
+  # goes with it), and the second slot spends.
   - addOffer:
       id: cast-hold-person
       assert:
-        planErrors:
-          - id: cast-hold-person
-            index: 0
-            errors:
-              - rule.spell-hold-person.offer-hold-person.already_concentrating
+        facts:
+          concentration.spent: 1
+          concentration.remaining: 0
+          holdPerson.active: 1
+          spellcasting.slots.level2.remaining: 0
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-hold-person

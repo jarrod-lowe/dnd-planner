@@ -1,20 +1,25 @@
-import type { Annotation, Facts, RuleModule } from './types';
+import type { Annotation, EffectInstance, Facts, RuleModule } from './types';
 import { plainReader } from './reader';
 
 /**
  * The annotate pass: evaluate every module's `annotate` against the final
- * post-plan facts and concatenate the results in module order.
+ * post-plan facts and the effects in force, concatenating the results in module
+ * order.
  *
  * Each annotation carries `targets` the UI matches against panel
  * `annotationLabels` (via getMatchingAnnotations) — an unchanged view-contract convention. Pure:
- * same (modules, facts) → same annotations.
+ * same (modules, facts, committed) → same annotations.
  */
-export function collectAnnotations(modules: RuleModule[], facts: Facts): Annotation[] {
+export function collectAnnotations(
+  modules: RuleModule[],
+  facts: Facts,
+  committed: EffectInstance[]
+): Annotation[] {
   const reader = plainReader(facts);
   const annotations: Annotation[] = [];
   for (const m of modules) {
     if (!m.annotate) continue;
-    annotations.push(...m.annotate(reader));
+    annotations.push(...m.annotate(reader, committed));
   }
   return annotations;
 }

@@ -72,12 +72,19 @@ describe('shield-of-faith — casting', () => {
     expect(facts['ac.value']).toBe(12); // 10 base + 2 dex; the +2 lives on the ally (untracked)
   });
 
-  it('flags a second planned cast illegal-but-visible (already concentrating)', () => {
+  it('a second planned cast is concentration-legal and replaces the ward (SRD 5.2)', () => {
     const { facts, planDiagnostics } = evaluatePlan(ALL, PREPARED, [cast('c1'), cast('c2')]);
-    expect(hasCode(planDiagnostics.get('c2'), 'already_concentrating')).toBe(true);
-    // Planned-anyway rows still execute, so the projection shows the over-commit:
-    // both wards' effects fold and AC reads +4. The error is the player's signal.
-    expect(facts['ac.value']).toBe(16);
+    // SRD 5.2, "Another Concentration Effect": you lose Concentration on an
+    // effect the moment you start casting a spell that requires Concentration —
+    // the recast is LEGAL (no already_concentrating error) and dismisses the
+    // first ward. The second cast here still over-spends the bonus action; that
+    // no_bonus_action diagnostic is its own affair.
+    expect(hasCode(planDiagnostics.get('c2'), 'already_concentrating')).toBe(false);
+    // Both wards share CONCENTRATION_SPELL_KEY, so the second cast's effect
+    // REPLACES the first instead of stacking: AC reads +2 once and
+    // concentration.spent stays 1 — the projection never shows two wards.
+    expect(facts['ac.value']).toBe(14);
+    expect(facts['concentration.spent']).toBe(1);
   });
 
   it('flags a cast with no slots remaining illegal (no_slots)', () => {

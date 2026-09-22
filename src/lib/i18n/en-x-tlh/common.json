@@ -11,6 +11,8 @@
       }
     },
     "spell-sanctuary": {
+      "notice": "chal",
+      "notice.body": "chal DIvI' HIv waH ghap qIp mu' lo'taHbogh Doch, {{dc}} WIS waH yInab 'e' QapnIS — Qapbe'chugh, DIvI' chu' wIv ghap HIv chIl. chal DIvI' HIv waH Data'chugh, mu' chenmoHchugh, ghap QIH rInmoHchugh, mu' rIn.",
       "offer-sanctuary": {
         "name": "chal",
         "keywords": "protect ward shield abjuration safe",
@@ -158,7 +160,6 @@
         "description": "60ft | WIS ra' pagh roj; cha'logh luj: Qong | 10 rep",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
-        "already_concentrating": "buQ DIvI'",
         "no_slots": "mugh laH tu'lu'be'"
       },
       "effect-sleep": {
@@ -172,7 +173,6 @@
         "description": "60ft | CHA ra' pagh charmed/frightened Qaw', pagh tam | 10 rep",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
-        "already_concentrating": "buQ DIvI'",
         "no_slots": "mugh laH tu'lu'be'"
       },
       "effect-calm-emotions": {
@@ -180,13 +180,14 @@
       }
     },
     "spell-hold-person": {
+      "notice": "mevtaH",
+      "notice.body": "moparlu'taHbogh DoS poH rInDI', mugh mevmeH {{dc}} WIS waH chegh yInab.",
       "offer-hold-person": {
         "name": "nuv mevmoH",
         "keywords": "paralyse paralyze stun freeze control humanoid",
         "description": "60ft | WIS ra' pagh Qam Qaw', repeat DIch | 10 rep",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
-        "already_concentrating": "buQ DIvI'",
         "no_slots": "mugh laH tu'lu'be'"
       },
       "effect-hold-person": {
@@ -245,7 +246,6 @@
         "description": "Hot | 10 tup | mIgh Do' Ha'DIbaH je DIvI'",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
-        "already_concentrating": "buQ DIvI'",
         "no_slots": "mugh laH tu'lu'be'"
       },
       "effect-protection-from-evil-and-good": {
@@ -259,7 +259,6 @@
         "description": "30ft | 10 rep | DIvI' +1d4 DIvI' DIvI'",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
-        "already_concentrating": "buQ DIvI'",
         "no_slots": "mugh laH tu'lu'be'"
       },
       "effect-bless": {
@@ -286,7 +285,6 @@
         "targetAlly": "latlh ghot",
         "no_bonus_action": "Quv DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
-        "already_concentrating": "buQ DIvI'",
         "no_slots": "mugh laH tu'lu'be'"
       },
       "effect-shield-of-faith": {
@@ -328,7 +326,6 @@
         "description": "wa' | 10 tup | mIgh Ha'DIbaH je 30ft tu'",
         "no_action": "DIvI' tu'lu'be'",
         "no_spellcasting": "mugh DIvI' tu'lu'be'",
-        "already_concentrating": "buQ DIvI'",
         "no_slots": "mugh laH tu'lu'be'"
       },
       "effect-detect-evil-and-good": {
@@ -1124,8 +1121,7 @@
         "notice-disengage.body": "vagh qejmeyDaq Sepbogh Doch, mevchu' Qu' Data'chugh, DIch HIvlIj tongtaH 'e'.",
         "notice-retaliate": "jup HIv DIch",
         "notice-retaliate.body": "vagh qejmeyDaq Sepbogh Doch, SoHbe'bogh latlh HIv qIpchugh, DIch HIv DangeHlaH SoH.",
-        "notice-speed": "qIp leng tov",
-        "notice-speed.body": "DIch HIvDaq Doch Data'pu' SoH, Dochvam leng HeDtaH 'e' chav."
+        "annotation-speed": "DIch HIvDaq DaqIpbogh Doch, rInpa' lengDaj paghchoH 'e'."
       },
       "heroic-inspiration": {
         "annotation": "SuvwI' SubchI' DIch",
@@ -1664,7 +1660,9 @@
     },
     "slider": {
       "freeUse": "lo'Ha'",
-      "level": "patlh {{level}}"
+      "level": "patlh {{level}}",
+      "freeShort": "lo'",
+      "levelShort": "p{{level}}"
     },
     "hitDice": {
       "groupLabel": "mI' Hegh",
@@ -1981,7 +1979,10 @@
   "planner": {
     "after-rest": "leS rInpu'DI' ghItlhlu' — qaSbej, 'ach chov luj.",
     "concentration": {
-      "check": "buQ waH"
+      "check": "buQ waH",
+      "check.invalid_roll": "waH qaSHa'",
+      "annotation": "buQ waH — DIch {{dc}} buQ waH yInab; qID yIpol.",
+      "broken": "buQ luj"
     },
     "record": {
       "damage": "QInvID DIvI'",

@@ -62,7 +62,7 @@ describe('companion panel annotation labels', () => {
       registeredRuleGroupIds().flatMap(
         (id) =>
           getModule(id)
-            ?.annotate?.(reader)
+            ?.annotate?.(reader, [])
             ?.flatMap((a) => a.targets) ?? []
       )
     );

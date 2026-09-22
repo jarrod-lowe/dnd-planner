@@ -94,6 +94,27 @@ function parsePersistedEffects(json: string): EffectInstance[] {
   }
 }
 
+/**
+ * Dismiss, once at load, committed concentration effects that were persisted
+ * WITHOUT a `key` — the shape every concentration spell's hold had before the
+ * shared CONCENTRATION_SPELL_KEY landed. The SRD 5.2 recast ruling ("Another
+ * Concentration Effect": you lose Concentration the moment you start casting a
+ * second Concentration spell) leans on that key — newest replaces oldest — so a
+ * keyless legacy hold would STACK with a fresh cast (`concentration.spent` =
+ * 2). Not a key-normalization migration: single-user app, and
+ * `parsePersistedEffects` above documents the no-migration policy, so the
+ * legacy hold is simply dropped and the player re-concentrates by casting
+ * (PR #425 review thread 4051725201). KEYED concentration effects — every cast
+ * since the key landed, including character imports that funnel through this
+ * same load — and keyless non-concentration effects pass through untouched.
+ * Idempotent: with no keyless holds left in the blob it is the identity.
+ */
+function dismissLegacyKeylessConcentration(effects: EffectInstance[]): EffectInstance[] {
+  const holdsConcentration = (e: EffectInstance): boolean =>
+    e.state !== undefined && 'concentration.spent' in e.state;
+  return effects.filter((e) => e.key !== undefined || !holdsConcentration(e));
+}
+
 function performEvaluation(): void {
   // A direct evaluation supersedes any still-scheduled one.
   cancelScheduledEvaluation();
@@ -343,7 +364,7 @@ async function loadRuleGroups(characterId: string): Promise<void> {
       if (effectsResponse?.ok) {
         const { effects: effectsJson } = await effectsResponse.json();
         if (effectsJson) {
-          const committed = parsePersistedEffects(effectsJson);
+          const committed = dismissLegacyKeylessConcentration(parsePersistedEffects(effectsJson));
           const effects = committed.map(effectInstanceToRule);
           state = { ...state, committed, effects };
           prefetchDetailsForEffects(effects);
@@ -410,11 +431,15 @@ function addOfferToPlan(
   seed?: Record<string, AnnotationSeedSource>,
   sourceInstanceId?: string
 ): void {
-  // Resolve the seed BEFORE the catalog lookup: an `{ effect }` source reads
-  // what the source row advertised, and advertised effects trail the debounce by
-  // up to DEBOUNCE_MS. Drag the slider and tap the reminder under it inside that
-  // window and an unflushed read seeds the value from before the drag — usually
-  // the row's opening zero. Flushing also refreshes the catalog this then reads.
+  // Flush BEFORE anything here reads evaluation output. Both readers trail the
+  // debounce by up to DEBOUNCE_MS: the catalog below reflects the `when` gates
+  // of the LAST evaluation, and an `{ effect }` seed source reads what the
+  // source row advertised. Drag the slider and tap the reminder under it inside
+  // that window and an unflushed add resolves against the PREVIOUS facts — a
+  // seeded value from before the drag, or a seedless offer (the concentration
+  // reminder) added while its gate was still open on stale damage facts.
+  flushPendingEvaluation();
+
   const resolved = resolveSeed(seed, sourceInstanceId);
 
   const entry = state.engineOutput?.availableRules.find((e) => e.rule.id === offerId);
@@ -439,7 +464,6 @@ function resolveSeed(
   sourceInstanceId: string | undefined
 ): Record<string, unknown> | undefined {
   if (!seed || Object.keys(seed).length === 0 || !sourceInstanceId) return undefined;
-  flushPendingEvaluation();
 
   const item = state.plannedItems.find((i) => i.instanceId === sourceInstanceId);
   if (!item) return undefined;

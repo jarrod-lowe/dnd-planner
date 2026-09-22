@@ -2,6 +2,7 @@ import {
   defineRule,
   preparedSpellCount,
   type ActionResult,
+  type Annotation,
   type Contribution,
   type Diagnostic,
   type EffectInstance,
@@ -10,13 +11,16 @@ import {
 
 const LEVELS = [1, 2, 3, 4, 5] as const;
 const S = 'rule.spell-sanctuary.offer-sanctuary';
+const R = 'rule.spell-sanctuary';
 
 /**
  * Sanctuary — a Level 1 bonus-action ward (10 rounds, dismissed on a rest). Not
  * modelled as concentration here (the legacy rules had no concentration gate). Prepare path +
  * an L1–5 slot cascade + a cast that spends a bonus action, the turn's spell, and
- * a slot, raising `effect-sanctuary` — a pure duration marker that ages out after
- * 10 rounds OR on any rest (`[turns, untilShortRest]`).
+ * a slot, raising `effect-sanctuary` — a duration marker that ages out after
+ * 10 rounds OR on any rest (`[turns, untilShortRest]`). The marker carries
+ * `sanctuary.active` in its state (the `ssmite.burnDice` precedent): the fact
+ * lives exactly as long as the effect, so dismissing the chip removes it.
  */
 const sanctuary: RuleModule = {
   id: 'spell-sanctuary',
@@ -104,9 +108,11 @@ const sanctuary: RuleModule = {
             state: { 'bonusActions.spent': 1, 'spellcasting.spent': 1 },
             expiry: { kind: 'endOfTurn' }
           },
-          // The ward: a pure duration marker; ends after 10 rounds or on any rest.
+          // The ward: a duration marker carrying the ward fact; ends after 10
+          // rounds or on any rest, and dismissing the chip removes the fact.
           {
             id: 'effect-sanctuary',
+            state: { 'sanctuary.active': 1 },
             display: { name: 'rule.spell-sanctuary.effect-sanctuary.name' },
             expiry: [{ kind: 'turns', remaining: 10 }, { kind: 'untilShortRest' }]
           }
@@ -130,7 +136,25 @@ const sanctuary: RuleModule = {
         return { advertise, diagnostics };
       }
     }
-  ]
+  ],
+  // While the ward is live (`sanctuary.active` — written only by the committed
+  // effect marker), a NOTICE carries the attacker-save rule. The DC
+  // interpolates from `spellcasting.saveDC`. 'notice' == NOTICE_TARGET; rule
+  // modules may import only the builder, so the reserved label is a literal
+  // here (see feat-sentinel) and the unit test pins it to the exported
+  // constant.
+  annotate: (f): Annotation[] =>
+    f.num('sanctuary.active') > 0
+      ? [
+          {
+            key: `${R}.notice`,
+            targets: ['notice'],
+            source: `${S}.name`,
+            body: `${R}.notice.body`,
+            values: { dc: f.num('spellcasting.saveDC') }
+          }
+        ]
+      : []
 };
 
 export default defineRule(sanctuary);

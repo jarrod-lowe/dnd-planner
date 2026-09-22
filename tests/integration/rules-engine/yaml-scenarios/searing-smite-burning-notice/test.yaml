@@ -51,6 +51,11 @@ steps:
           targets:
             - key: rule.spell-searing-smite.notice-burning
               targets: [notice]
+          # The slot-1 burn's per-turn fire dice as the roll the player makes
+          # each burning turn; count = the scenario's burnDice.
+          rolls:
+            - key: rule.spell-searing-smite.notice-burning
+              roll: { sides: 6, count: 1, damageType: fire, purpose: damage }
   - endTurn:
       assert:
         facts:
