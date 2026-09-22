@@ -22,6 +22,10 @@ Settled via grilling. Design:
 
 Execution: subagents do all task work (tests, implementation, triage); main agent co-ordinates + talks to human only. Load /tdd; RED must compile, run, fail.
 
+**If any step proves unworkable, STOP.** Do not change tack or improvise a different approach — ask the user how to proceed before continuing. Applies to subagents too: report the blocker up, do not route around it.
+
+> **Status: DONE.** Shipped as #430 (squashed to `3f27f736`), merged and deployed to prod. The checklist below is a historical record of that run, not work to repeat.
+
 ### PR 1 — notch row in PanelSlider (only PR)
 
 Files:
@@ -58,13 +62,14 @@ TDD inside PR:
 - [x] Follow-up (user, fixed d76563b2): ticks off at range ends — native thumb travels input width minus thumb width; marks now on thumb-travel model (`--notch-fraction` × `calc`, `--slider-thumb-width: 16px`)
 - [x] Follow-up (codex P2, valid, fixed d76563b2): tap targets were label-sized — transparent `::after` hit area ±12px/±14px, no visual change; `elementFromPoint` verified
 - [x] Follow-up (codex P2, valid, fixed 7522bc32): hit area overlapped the input (paint order stole thumb drag-starts) — asymmetric insets, top stops at the 4px row gap
+- [x] Commit (signed; 1Password locked → commit unsigned, re-sign later; no AI attribution, no amend)
+- [x] Push, open PR — #430
+- [x] Monitor PR for codex comments / thumbs-up; triage each (valid → fix + reply; unsure → ask user) — 3 rounds, 3 × P2, all valid, all fixed + replied
+- [x] Repeat until reviews quiet + pipelines green — merged as `3f27f736`, prod deploy green
 
 Notes:
 
 - Added gate: row renders only when `valueFormat === 'spellLevel'` — non-spell sliders (movement, LoH, heal amount) otherwise got bogus Free/Ln labels. Covered by 2 extra tests (33 total).
 - `make dev` side effect: regenerated `.env.local` via a test-env terraform apply (flipped account-level api-gateway CloudWatch role prod→test; same flip every test deploy). Started vite with `pnpm dev` instead after.
-- Screenshots: `notched-cure-wounds-light.png`, `notched-find-steed-dark.png`, `notched-narrow-dark.png` (repo root, untracked).
-- [ ] Commit (signed; 1Password locked → commit unsigned, re-sign later; no AI attribution, no amend)
-- [ ] Push, open PR
-- [ ] Monitor PR ~15 min for codex comments / thumbs-up; triage each (valid → fix + reply; unsure → ask user)
-- [ ] Repeat until reviews quiet + pipelines green
+- `make check` earns its keep: vitest does not type-check tests, so an `Element` vs `HTMLElement` slip in a new test passed vitest and failed the gate.
+- Verification screenshots were scratch artifacts, deliberately not committed.
