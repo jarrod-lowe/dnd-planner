@@ -83,11 +83,13 @@ Searing Smite populates `{ sides: 6, count: f.num('ssmite.burnDice'), damageType
 
 ## Checklist
 
+> **Status: DONE.** Shipped as #429 (`8703e598`), merged. The checklist below is a historical record of that run, not work to repeat.
+
 ### Phase 0 — setup
 
 - [x] Branch off main (`notices-rolls`)
 - [x] Dev server check (`pgrep -f vite.js`) — not running; start before Phase 7 Playwright
-- [ ] Read `docs/RULE_GROUP_GUIDE.md` §1 + §7 (delegated to Phase 1–3 agent)
+- [ ] Read `docs/RULE_GROUP_GUIDE.md` §1 + §7 — delegated to the Phase 1–3 agent; left unticked at the time and not separately confirmed. Recorded as-is rather than back-ticked, since whether that agent read the guide cannot be established after the fact
 
 ### Phase 1 — engine type (RED → GREEN)
 
