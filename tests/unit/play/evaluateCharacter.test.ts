@@ -56,10 +56,10 @@ describe('evaluateCharacter', () => {
     expect(byId['a2'].legal).toBe(false); // no action left for the second swing
   });
 
-  it('hypotheticalOffers evaluates the plan minus each item, keyed by instance', () => {
+  it('hypotheticalOffers evaluates the plan prefix ahead of each item, keyed by instance', () => {
     const map = hypotheticalOffers(MODULES, [STR16], [attack]);
     expect(map.has('a1')).toBe(true);
-    // Removing the only attack → the offer is legal again in that hypothetical.
+    // The only row's prefix is the empty plan → the offer is legal there.
     const entry = map.get('a1')!.find((e) => e.rule.id === 'unarmed-strike-use-action');
     expect(entry?.legal).toBe(true);
   });

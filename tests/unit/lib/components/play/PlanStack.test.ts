@@ -253,6 +253,8 @@ describe('PlanStack', () => {
     const playerEntry = makeEntry('attack-sword', 'action', 'ATTACK');
     const playerAlt = makeEntry('attack-bow', 'action', 'ATTACK');
     const steedEntry = makeEntry('steed-attack', 'action', 'ATTACK', 'steed');
+    // No pre-choice evaluation for this row — the post-plan fallback path.
+    vi.mocked(playStore.getAlternativeEntries).mockReturnValue(undefined);
 
     mount(PlanStack, {
       target: container,
@@ -275,6 +277,128 @@ describe('PlanStack', () => {
     const altTexts = Array.from(altButtons).map((el) => el.textContent?.trim());
     expect(altTexts).toContain('attack-bow');
     expect(altTexts).not.toContain('steed-attack');
+  });
+
+  describe('OR INSTEAD alternatives are gated on the pre-choice state', () => {
+    // The hypothetical catalog (getAlternativeEntries) is the evaluation of the
+    // plan PREFIX ahead of the row — the state at the moment of its choice.
+    // Taking an alternative means the row's current option is NOT taken, so the
+    // current option's effects must decide neither an alternative's PRESENCE
+    // (its structural `when` gate) nor its legality. The post-plan `entries`
+    // include those effects and are only a fallback when no hypothetical exists.
+
+    function altButton(id: string): HTMLButtonElement | null {
+      return Array.from(container.querySelectorAll('.plan-row__alt-btn')).find(
+        (el) => el.textContent?.trim() === id
+      ) as HTMLButtonElement | null;
+    }
+
+    function altTexts(): string[] {
+      return Array.from(container.querySelectorAll('.plan-row__alt-btn')).map(
+        (el) => el.textContent?.trim() ?? ''
+      );
+    }
+
+    function mountRow(
+      baseEntries: AvailableRuleEntry[],
+      hypothetical: AvailableRuleEntry[] | undefined
+    ): void {
+      const item = makeItem('attack-sword', 'action', 'ATTACK');
+      vi.mocked(playStore.getPlannedEntry).mockReturnValue(baseEntries[0]);
+      vi.mocked(playStore.getAlternativeEntries).mockImplementation((id: string) =>
+        id === item.instanceId ? hypothetical : undefined
+      );
+      mount(PlanStack, {
+        target: container,
+        props: {
+          items: [item],
+          entries: baseEntries,
+          facts: {} as Facts,
+          activeAnnotations: [] as Annotation[],
+          onAddToPlan: noop,
+          onRemoveFromPlan: noop,
+          onMovePlanItem: noop,
+          onSelectionChange: noop,
+          onSwapPlanItemRule: noop,
+          onEndTurn: noop
+        }
+      });
+    }
+
+    it('takes membership and gates from the hypothetical catalog, not the post-plan one', () => {
+      const current = makeEntry('attack-sword', 'action', 'ATTACK');
+      // Post-plan catalog (current option's effects applied): attack-bow is only
+      // addable BECAUSE the current option ran; attack-dagger is illegal here.
+      const bow = makeEntry('attack-bow', 'action', 'ATTACK');
+      const daggerPost = makeEntry('attack-dagger', 'action', 'ATTACK');
+      const daggerPostIllegal: AvailableRuleEntry = {
+        ...daggerPost,
+        legal: false,
+        diagnostics: [{ code: 'no_action', severity: 'error' }]
+      };
+      // Pre-choice catalog: attack-axe's `when` is closed by the current option's
+      // effects (absent post-plan) but open before it; attack-hammer is present
+      // pre-choice but already illegal there; attack-dagger is legal pre-choice.
+      const axe = makeEntry('attack-axe', 'action', 'ATTACK');
+      const hammerIllegal: AvailableRuleEntry = {
+        ...makeEntry('attack-hammer', 'action', 'ATTACK'),
+        legal: false,
+        diagnostics: [{ code: 'no_action', severity: 'error' }]
+      };
+      const daggerPre = makeEntry('attack-dagger', 'action', 'ATTACK');
+
+      mountRow([current, bow, daggerPostIllegal], [current, axe, hammerIllegal, daggerPre]);
+
+      const texts = altTexts();
+      // Presence follows the pre-choice catalog: axe and hammer are listed even
+      // though the post-plan catalog omits them...
+      expect(texts).toContain('attack-axe');
+      expect(texts).toContain('attack-hammer');
+      // ...and bow is NOT listed even though the post-plan catalog has it.
+      expect(texts).not.toContain('attack-bow');
+      // The row's own option is never an alternative for itself.
+      expect(texts).not.toContain('attack-sword');
+
+      // Gates follow the pre-choice catalog: dagger renders legal (the post-plan
+      // verdict said illegal), hammer renders illegal with its diagnostic.
+      expect(altButton('attack-dagger')?.classList.contains('plan-row__alt-btn--illegal')).toBe(
+        false
+      );
+      const hammer = altButton('attack-hammer');
+      expect(hammer?.classList.contains('plan-row__alt-btn--illegal')).toBe(true);
+      expect(hammer?.getAttribute('aria-label')).toContain('no_action');
+    });
+
+    it('still applies the subject filter to the hypothetical catalog', () => {
+      const current = makeEntry('attack-sword', 'action', 'ATTACK');
+      const steedAlt = makeEntry('steed-attack', 'action', 'ATTACK', 'steed');
+
+      mountRow([current], [current, steedAlt]);
+
+      expect(altTexts()).not.toContain('steed-attack');
+    });
+
+    it('falls back to the post-plan catalog when no hypothetical exists for the row', () => {
+      // The debounced evaluation has not run for this instance yet (or the
+      // engine threw): undefined, not an empty list.
+      const current = makeEntry('attack-sword', 'action', 'ATTACK');
+      const bow = makeEntry('attack-bow', 'action', 'ATTACK');
+
+      mountRow([current, bow], undefined);
+
+      expect(altTexts()).toContain('attack-bow');
+    });
+
+    it('renders no alternatives when the pre-choice catalog is empty', () => {
+      // An EMPTY hypothetical is authoritative — nothing is addable before the
+      // row's choice — not a signal to fall back to the post-plan catalog.
+      const current = makeEntry('attack-sword', 'action', 'ATTACK');
+      const bow = makeEntry('attack-bow', 'action', 'ATTACK');
+
+      mountRow([current, bow], []);
+
+      expect(altTexts()).toEqual([]);
+    });
   });
 
   describe('cost chips follow the slot-level selection', () => {

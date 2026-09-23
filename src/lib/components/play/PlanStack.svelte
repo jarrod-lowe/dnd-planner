@@ -127,17 +127,29 @@
     );
   }
 
-  function correctedAlternatives(
+  /**
+   * The row's OR INSTEAD options, gated on the pre-choice state. The
+   * hypothetical catalog (`getAlternativeEntries`) is the evaluation of the
+   * plan PREFIX ahead of the row — the state at the moment of its choice — so
+   * an alternative's presence (its structural `when` gate) AND its legality
+   * both come from it: taking an alternative means the row's current option
+   * is not taken, so that option's effects must not gate the swap. The
+   * post-plan catalog (which folds every row's effects in) is only a fallback
+   * for the window where no hypothetical exists for the instance.
+   */
+  function preChoiceAlternatives(
     item: PlannedItem,
-    baseAlts: AvailableRuleEntry[]
+    verb: Verb,
+    currentRuleId: string,
+    currentSubject: string | undefined
   ): AvailableRuleEntry[] {
-    if (baseAlts.length === 0) return baseAlts;
+    const baseAlts = getAlternatives(verb, currentRuleId, currentSubject);
     const hypothetical = playStore.getAlternativeEntries(item.instanceId);
-    const hypById = new Map(hypothetical.map((e) => [e.rule.id, e]));
-    return baseAlts.map((alt) => {
-      const hypEntry = hypById.get(alt.rule.id);
-      return hypEntry ? { ...alt, legal: hypEntry.legal, diagnostics: hypEntry.diagnostics } : alt;
-    });
+    if (!hypothetical) return baseAlts;
+    const group = groupChoicesByVerb(hypothetical).find((g) => g.verb === verb);
+    return (group?.entries ?? []).filter(
+      (e) => e.rule.id !== currentRuleId && getSubject(e.rule) === currentSubject
+    );
   }
 </script>
 
@@ -153,9 +165,11 @@
           {facts}
           modules={playStore.state.modules}
           {activeAnnotations}
-          alternatives={correctedAlternatives(
+          alternatives={preChoiceAlternatives(
             item,
-            getAlternatives(item.verb, item.originalRuleId ?? '', getSubject(item.rule))
+            item.verb,
+            item.originalRuleId ?? '',
+            getSubject(item.rule)
           )}
           canMoveUp={i > 0}
           canMoveDown={i < items.length - 1}
