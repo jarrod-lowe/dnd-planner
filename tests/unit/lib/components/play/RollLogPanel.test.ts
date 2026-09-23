@@ -158,4 +158,39 @@ describe('RollLogPanel', () => {
     expect(document.activeElement).toBe(opener);
     opener.remove();
   });
+
+  it('traps Tab within the dialog: focus never leaves the panel', () => {
+    rollLog.open();
+    mountPanel();
+
+    const dialog = container.querySelector('[role="dialog"]') as HTMLElement;
+    const close = container.querySelector('.roll-log__close') as HTMLButtonElement;
+    // Focus starts on the dialog itself (tabindex="-1") — Tab must move to
+    // the first focusable INSIDE the panel, not the play screen behind it.
+    dialog.focus();
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+    flushSync();
+    expect(document.activeElement).toBe(close);
+
+    // Tab from the last focusable wraps to the first, and the native Tab
+    // default (which would walk out of the modal) is suppressed.
+    close.focus();
+    const tab = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+    window.dispatchEvent(tab);
+    flushSync();
+    expect(tab.defaultPrevented).toBe(true);
+    expect(dialog.contains(document.activeElement)).toBe(true);
+
+    // Shift+Tab from the first focusable wraps to the last, likewise trapped.
+    const shiftTab = new KeyboardEvent('keydown', {
+      key: 'Tab',
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true
+    });
+    window.dispatchEvent(shiftTab);
+    flushSync();
+    expect(shiftTab.defaultPrevented).toBe(true);
+    expect(dialog.contains(document.activeElement)).toBe(true);
+  });
 });

@@ -32,8 +32,48 @@
     }
   });
 
+  // Tab trap: aria-modal="true" promises assistive tech the background is
+  // inert, but nothing enforces that for keyboards (the scrim only stops
+  // pointers) — Tab from the close button would walk into the play screen.
+  // Tab/Shift+Tab wrap inside the drawer instead. The panel is the only
+  // tabbable region while open, so the window-level handler sees every press.
+  const FOCUSABLE = [
+    'a[href]',
+    'button:not([disabled])',
+    'input:not([disabled])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])'
+  ].join(', ');
+
   function handleKeydown(e: KeyboardEvent): void {
-    if (e.key === 'Escape') rollLog.close();
+    if (e.key === 'Escape') {
+      rollLog.close();
+      return;
+    }
+    if (e.key !== 'Tab' || !panelEl) return;
+    const focusables = Array.from(panelEl.querySelectorAll<HTMLElement>(FOCUSABLE));
+    if (focusables.length === 0) {
+      // Nothing to hand focus to — the dialog itself keeps it.
+      e.preventDefault();
+      return;
+    }
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    // Focus not on a tabbable element — outside the panel, or still on the
+    // dialog root itself (tabindex="-1") right after open — counts as
+    // "before first": Tab enters at the top, Shift+Tab wraps to the last.
+    const beforeFirst =
+      !panelEl.contains(document.activeElement) || document.activeElement === panelEl;
+    if (e.shiftKey) {
+      if (beforeFirst || document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else if (beforeFirst || document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
   }
 </script>
 
