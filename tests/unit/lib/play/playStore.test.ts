@@ -20,7 +20,8 @@ vi.mock('$lib/rules-engine', async (importOriginal) => {
 // Mock the store's evaluation seam so tests can inject facts/offers/effects.
 vi.mock('$lib/play/evaluateCharacter', () => ({
   evaluateCharacter: vi.fn(),
-  hypotheticalOffers: vi.fn(() => new Map())
+  hypotheticalOffers: vi.fn(() => new Map()),
+  factsBeforeRow: vi.fn(() => ({}))
 }));
 
 // Mock $lib/i18n with a proper mock store
@@ -67,7 +68,7 @@ vi.mock('svelte-sonner', () => ({
 
 import { apiGet, apiPost, apiDelete } from '$lib/api/client';
 import { loadModules } from '$lib/rules-engine';
-import { evaluateCharacter, hypotheticalOffers } from '$lib/play/evaluateCharacter';
+import { evaluateCharacter, hypotheticalOffers, factsBeforeRow } from '$lib/play/evaluateCharacter';
 import { locale } from '$lib/i18n';
 import { toast } from 'svelte-sonner';
 import type { Rule } from '$lib/rules-view';
@@ -115,6 +116,8 @@ describe('playStore', () => {
     vi.mocked(loadModules).mockResolvedValue({ modules: [], missing: [], incompatible: [] });
     vi.mocked(evaluateCharacter).mockReturnValue(playOut());
     vi.mocked(hypotheticalOffers).mockReturnValue(new Map());
+    // Prefix facts default to empty (no captures resolve); tests override as needed.
+    vi.mocked(factsBeforeRow).mockReturnValue({});
   });
 
   afterEach(() => {
@@ -540,30 +543,21 @@ describe('playStore', () => {
       expect(item.order).toBe(0);
     });
 
-    it('resolves capture vars from facts when adding to plan', async () => {
-      const mockApiGet = vi.mocked(apiGet);
-
-      // Mock rule group IDs response
-      mockApiGet.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ ruleGroups: [] })
-      } as Response);
-
-      // The evaluation returns the facts capture vars resolve against.
+    it('resolves capture vars from the plan PREFIX, not the display cache', async () => {
+      // The display cache (state.facts) shows a settled evaluation reading 25;
+      // the prefix at the append position says 18. The row must open on 18 —
+      // the old state.facts read made every add inside the debounce window
+      // capture the stale cache instead of the state at the row's position.
       vi.mocked(evaluateCharacter).mockReturnValue(
         playOut({ facts: { 'character.movement.remaining': 25, 'character.movement.total': 30 } })
       );
+      vi.mocked(factsBeforeRow).mockReturnValue({ 'character.movement.remaining': 18 });
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
-      // Load rule groups triggers evaluation which populates facts
-      await playStore.loadRuleGroups('char-123');
-
-      // Verify facts are populated
-      expect(playStore.state.facts['character.movement.remaining']).toBe(25);
-
-      // Rule with a capture var
+      // No loadRuleGroups needed: the capture no longer reads state.facts, so
+      // nothing has to populate the display cache first.
       const rule: Rule = {
         id: 'move-walk',
         description: 'Walk',
@@ -580,26 +574,15 @@ describe('playStore', () => {
 
       expect(playStore.state.plannedItems).toHaveLength(1);
       expect(playStore.state.plannedItems[0].rule.selections).toEqual({
-        distance: 25
+        distance: 18
       });
     });
 
     it('preserves rule default selections alongside capture vars', async () => {
-      const mockApiGet = vi.mocked(apiGet);
-
-      mockApiGet.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ ruleGroups: [] })
-      } as Response);
-
-      vi.mocked(evaluateCharacter).mockReturnValue(
-        playOut({ facts: { 'character.movement.remaining': 25 } })
-      );
+      vi.mocked(factsBeforeRow).mockReturnValue({ 'character.movement.remaining': 25 });
 
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
-
-      await playStore.loadRuleGroups('char-123');
 
       // Rule with both default selections and a capture var
       const rule: Rule = {
@@ -621,6 +604,33 @@ describe('playStore', () => {
         slotLevel: 1,
         distance: 25
       });
+    });
+
+    it('skips the capture when the prefix evaluation throws — the add is never blocked', async () => {
+      vi.mocked(factsBeforeRow).mockImplementation(() => {
+        throw new Error('Dependency cycle detected: a -> b -> a');
+      });
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      const rule: Rule = {
+        id: 'move-walk',
+        description: 'Walk',
+        activities: [],
+        vars: {
+          distance: {
+            default: { fact: 'character.movement.remaining' },
+            capture: true
+          }
+        }
+      };
+
+      expect(() => playStore.addToPlan(rule)).not.toThrow();
+
+      expect(playStore.state.plannedItems).toHaveLength(1);
+      // No capture survived the throw: the row opens on the rule's own defaults.
+      expect(playStore.state.plannedItems[0].rule.selections).toEqual({});
     });
 
     it('does not resolve vars without capture property', async () => {
@@ -785,8 +795,13 @@ describe('playStore', () => {
         const damageRowId = playStore.state.plannedItems[0].instanceId;
 
         // The drag: once the debounced evaluation runs, facts and gate describe
-        // nextDc — but it has not run.
+        // nextDc — but it has not run. The CAPTURE no longer reads that pending
+        // cache: it derives from the plan prefix, which already includes the
+        // dragged row, so the prefix facts are the post-drag ones by construction.
         vi.mocked(evaluateCharacter).mockReturnValue(worldAt(nextDc));
+        vi.mocked(factsBeforeRow).mockReturnValue(
+          nextDc === undefined ? {} : { 'concentration.dc': nextDc }
+        );
         playStore.updateSelections(damageRowId, { amount: sliderTo });
         return playStore;
       };

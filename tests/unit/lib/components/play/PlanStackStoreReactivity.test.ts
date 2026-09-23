@@ -19,7 +19,10 @@ vi.mock('$lib/rules-engine', async (importOriginal) => {
 // The store's evaluation seam: the test injects per-instance planned entries.
 vi.mock('$lib/play/evaluateCharacter', () => ({
   evaluateCharacter: vi.fn(),
-  hypotheticalOffers: vi.fn(() => new Map())
+  hypotheticalOffers: vi.fn(() => new Map()),
+  // The harness adds capture-var-less rules only; the prefix seam returns no
+  // facts rather than throwing for the store's captureSelections.
+  factsBeforeRow: vi.fn(() => ({}))
 }));
 
 vi.mock('$lib/i18n', () => ({

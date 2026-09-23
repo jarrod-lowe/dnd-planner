@@ -82,6 +82,52 @@ describe('resolveInitialSelections', () => {
 
       expect(selections).toEqual({ distance: 0 });
     });
+
+    /**
+     * A capture reads the plan PREFIX (factsBeforeRow), and earlier rows can
+     * over-commit it — the planner projects over-commitment rather than
+     * preventing it — so `remaining` can legitimately be negative there. A
+     * slider opening on a negative distance is never a meaningful default;
+     * captured numbers floor at zero. (Undefined → 0 above is the existing
+     * behaviour; number defaults and the loadout/spell-prepare captures below
+     * are authored shapes, not fact reads — untouched by the floor.)
+     */
+    describe('numeric fact captures floor at zero', () => {
+      const rule: Rule = {
+        id: 'test-rule',
+        activities: [],
+        vars: {
+          distance: {
+            default: { fact: 'character.movement.remaining' },
+            capture: true
+          }
+        }
+      };
+
+      it('captures 0 for a negative fact (an over-committed prefix)', () => {
+        const selections = resolveInitialSelections(rule, {
+          'character.movement.remaining': -5
+        });
+
+        expect(selections).toEqual({ distance: 0 });
+      });
+
+      it("keeps the floor's boundary: a zero fact stays zero", () => {
+        const selections = resolveInitialSelections(rule, {
+          'character.movement.remaining': 0
+        });
+
+        expect(selections).toEqual({ distance: 0 });
+      });
+
+      it('leaves positive fact captures above the floor untouched', () => {
+        const selections = resolveInitialSelections(rule, {
+          'character.movement.remaining': 15
+        });
+
+        expect(selections).toEqual({ distance: 15 });
+      });
+    });
   });
 
   describe('capture: false or missing vars', () => {
