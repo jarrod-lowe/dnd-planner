@@ -1,0 +1,35 @@
+name: 'Condition Prone - Drop Legal With No Movement Left'
+description: >-
+  SRD 5.2 "Dropping Prone" uses no action and none of your Speed, so only the
+  SPEED STAT being 0 forbids it (see condition-prone-drop-speed-zero) —
+  spending every foot of movement does not. Pins the contrast with Get Up,
+  which SPENDS half your Speed and so is out-of-movement illegal once you have
+  walked it all: you can drop prone at 0 remaining, you just cannot get back
+  up this turn.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-prone
+steps:
+  - addOffer:
+      id: move-walk
+      assert:
+        facts:
+          character.movement.remaining: 0
+          character.movement.speed: 30
+        offers:
+          legal:
+            - drop-prone
+  - addOffer:
+      id: drop-prone
+      assert:
+        facts:
+          condition.prone: 1
+          character.movement.remaining: 0
+        planErrors:
+          - id: drop-prone
+            errors: []
+        # Down with nothing left — Get Up's affordability gate is closed.
+        offers:
+          illegal:
+            - get-up

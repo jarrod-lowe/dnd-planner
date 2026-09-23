@@ -486,6 +486,11 @@ const EXPECTED_RUNNABLE = [
   'condition-prone-record',
   'condition-prone-record-speed-zero',
   'condition-prone-rest-clears',
+  // …and the voluntary SRD "Dropping Prone" free action (same keyed effect)
+  'condition-prone-drop',
+  'condition-prone-drop-speed-zero',
+  'condition-prone-drop-then-get-up',
+  'condition-prone-drop-no-movement',
   // Get Up reads half your SPEED (species-contributed, floored) — not the
   // Dash-boosted movement.total
   'half-speed-derived',

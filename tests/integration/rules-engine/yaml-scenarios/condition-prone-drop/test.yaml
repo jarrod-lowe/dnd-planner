@@ -1,0 +1,68 @@
+name: 'Condition Prone - Drop'
+description: >-
+  SRD 5.2 "Dropping Prone": on your turn you can give yourself the Prone
+  condition without using an action or any of your Speed. A second free-section
+  offer alongside the Knocked Prone recorder — the recorder models an enemy
+  imposing the condition (legal at any Speed), Drop Prone is the voluntary
+  choice. Like Get Up it is structurally gated on the condition itself: it does
+  not exist while already Prone, and it commits the SAME keyed 'prone' effect
+  as the recorder, so the disadvantage flags, the notice, and rest-clearing
+  all behave identically.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-prone
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.prone: 0
+          character.movement.half_speed: 15
+        offers:
+          exists:
+            - drop-prone
+          legal:
+            - drop-prone
+          notExists:
+            - get-up
+  - addOffer:
+      id: drop-prone
+      assert:
+        facts:
+          condition.prone: 1
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+          # Free — SRD: "without using an action or any of your Speed"
+          actions.spent: 0
+          actions.remaining: 1
+          character.movement.spent: 0
+          character.movement.remaining: 30
+        planErrors:
+          - id: drop-prone
+            errors: []
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-prone.notice
+          targets:
+            - key: rule.dnd-5e-2024.condition-prone.notice
+              targets: [notice]
+        # Already Prone — the offer's own gate closes (mirrors get-up's gate).
+        offers:
+          notExists:
+            - drop-prone
+          exists:
+            - get-up
+  - endTurn:
+      assert:
+        facts:
+          condition.prone: 1
+        effects:
+          exists:
+            - effect-prone
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-prone.notice
+        offers:
+          notExists:
+            - drop-prone

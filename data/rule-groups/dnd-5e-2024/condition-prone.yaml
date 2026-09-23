@@ -5,20 +5,22 @@ ruleGroups:
     translations:
       en:
         name: Prone
-        description: Rules while you have the Prone condition; record it when you are knocked prone
+        description: Rules while you have the Prone condition; record it when knocked prone, or drop prone voluntarily
         keywords:
           - prone
           - knocked
+          - drop
           - condition
           - fall
           - ground
           - crawl
       en-x-tlh:
         name: pum
-        description: pum Dotlh; pummoHlu'DI' yIghun
+        description: pum Dotlh; pummoHlu'DI' yIghun, pagh pumchoHneS
         keywords:
           - pum
           - pummoH
+          - pumchoH
           - Dotlh
     detail:
       key: condition/prone
