@@ -41,7 +41,6 @@ Module `src/lib/rules-engine/rules/condition-prone.ts`, id `condition-prone`; re
 Facts:
 
 - `condition.prone` — 1 while prone; written ONLY by the committed effect (hold-person/sanctuary pattern); annotate + legality read it
-- `condition.prone` — 1 while prone; written ONLY by the committed effect (hold-person/sanctuary pattern); annotate + legality read it
 - `character.movement.speed` — species-human adds `{ fact, combine: 'sum', value: () => 30 }`
 - `character.movement.half_speed` — movement.ts derives `floor(speed × 0.5)`
 
@@ -98,7 +97,7 @@ Tests (RED first — yaml scenario asserts are the RED for rule changes):
 - [x] terraform seed `char_condition_prone_rulegroup_seed` (dynamodb-items.tf); `make validate` passes
 - [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → merge; `make deploy-test`
 
-PR1 notes: effect carries `stateCombine: max` on the two disadvantage facts (armor modules derive them `combine: 'max'`; default `sum` on the effect write would conflict-throw for armored characters — leather-armor idiom). `record-prone.description` key omitted: record-* offers carry name only.
+PR1 notes: effect carries `stateCombine: max` on the two disadvantage facts (armor modules derive them `combine: 'max'`; default `sum` on the effect write would conflict-throw for armored characters — leather-armor idiom). `record-prone.description` key omitted: record-\* offers carry name only.
 
 ### PR2 — Get Up (+ speed facts)
 
