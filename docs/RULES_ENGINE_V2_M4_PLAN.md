@@ -49,7 +49,8 @@ and consumes:
 - `output.effects` — advertised effects (v1 `Rule[]`), **committed into
   `state.effects` at End Turn** and persisted to `/api/characters/{id}/effects`.
 - Per-planned-item **hypothetical** re-evaluations (the "alternatives" picker) —
-  one `evaluate` per planned item with that item removed.
+  one `evaluate` per planned item over the plan **prefix** ahead of it (the
+  state at the moment of that row's choice).
 
 v2 `evaluate({ modules, ruleGroupIds, inputFacts, planned, committed })` returns:
 
@@ -77,7 +78,9 @@ Four gaps to bridge:
    equipped/prepared flags — everything v1 set via BUILD rules). Deriving
    `inputFacts` from the persisted character is the biggest single piece.
 4. **Hypotheticals.** The per-item "alternatives" map is a plan-fold variant — v2's
-   `evaluatePlan` over the plan minus one ref; cheaper than v1 (no rule re-parse).
+   `evaluatePlan` over the plan prefix ahead of each ref (the pre-choice state:
+   taking an alternative means the row's own option is not taken); cheaper than
+   v1 (no rule re-parse).
 
 ## 3. Increments (ordered; each shippable + testable)
 

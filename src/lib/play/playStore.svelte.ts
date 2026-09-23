@@ -216,8 +216,14 @@ function performEvaluation(): void {
   };
 }
 
-function getAlternativeEntries(instanceId: string): AvailableRuleEntry[] {
-  return _hypotheticalEntriesMap.get(instanceId) ?? [];
+/**
+ * The row's pre-choice (OR INSTEAD) catalog from the last evaluation, or
+ * `undefined` when no evaluation covers the instance (the debounce window
+ * after a plan edit, or a failed evaluation) — distinct from an empty list,
+ * which is an authoritative "nothing is addable before this row's choice".
+ */
+function getAlternativeEntries(instanceId: string): AvailableRuleEntry[] | undefined {
+  return _hypotheticalEntriesMap.get(instanceId);
 }
 
 /**

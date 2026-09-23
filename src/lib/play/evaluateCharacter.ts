@@ -57,10 +57,14 @@ export function evaluateCharacter(
 }
 
 /**
- * The per-planned-item "alternatives" map (one hypothetical
- * evaluation per planned item, with that item removed, for the picker). This
- * is the same offer catalog evaluated over the plan minus one ref — cheaper (no
- * rule re-parse). Keyed by the removed instance's id.
+ * The per-planned-item "alternatives" map (one hypothetical evaluation per
+ * planned item, for the OR INSTEAD picker): the offer catalog evaluated over
+ * the plan PREFIX ahead of that item — the state at the moment of the row's
+ * choice. An alternative replaces the row's current option, so the gates it
+ * must pass are the ones at the row's position in the fold: `evaluatePlan`
+ * judges each row's own legality against exactly this state (committed +
+ * earlier rows), and a later row's spend happens after this row's choice.
+ * Keyed by the row's instance id.
  */
 export function hypotheticalOffers(
   modules: RuleModule[],
@@ -69,11 +73,10 @@ export function hypotheticalOffers(
   inputFacts: Facts = {}
 ): Map<string, AvailableRuleEntry[]> {
   const map = new Map<string, AvailableRuleEntry[]>();
-  for (const item of planned) {
-    const others = planned.filter((p) => p.instanceId !== item.instanceId);
+  for (const [index, item] of planned.entries()) {
     map.set(
       item.instanceId,
-      evaluate({ modules, inputFacts, planned: others, committed }).availableRules
+      evaluate({ modules, inputFacts, planned: planned.slice(0, index), committed }).availableRules
     );
   }
   return map;

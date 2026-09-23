@@ -2564,8 +2564,9 @@ describe('playStore', () => {
 
   describe('getAlternativeEntries', () => {
     it('returns hypothetical availableRules for a planned item', async () => {
-      // hypotheticals come from `hypotheticalOffers`, keyed by the removed
-      // instance's id. Build the map from the refs the store passes.
+      // hypotheticals come from `hypotheticalOffers` (the plan-prefix
+      // evaluation per row), keyed by the row's instance id. Build the map
+      // from the refs the store passes.
       vi.mocked(hypotheticalOffers).mockImplementation((_m, _c, planned) => {
         const map = new Map();
         for (const ref of planned) {
@@ -2588,15 +2589,20 @@ describe('playStore', () => {
 
       const instanceId = playStore.state.plannedItems[0].instanceId;
       const result = playStore.getAlternativeEntries(instanceId);
+      expect(result).toBeDefined();
 
-      expect(result).toHaveLength(2);
-      expect(result[0].legal).toBe(true);
-      expect(result[1].legal).toBe(true);
+      expect(result!).toHaveLength(2);
+      expect(result![0].legal).toBe(true);
+      expect(result![1].legal).toBe(true);
       // Adapted to the view entry shape the UI reads (descriptor gains activities).
-      expect(result[0].rule.activities).toEqual([]);
+      expect(result![0].rule.activities).toEqual([]);
     });
 
-    it('returns empty array when instanceId is not in the map', async () => {
+    it('returns undefined when instanceId is not in the map', async () => {
+      // undefined — not an empty list — distinguishes "no pre-choice evaluation
+      // for this row" (stale window / engine error) from "the evaluation ran and
+      // offered nothing"; the UI falls back to the post-plan catalog only on
+      // the former.
       const { playStore } = await import('$lib/play/playStore.svelte');
       playStore.reset();
 
@@ -2604,7 +2610,7 @@ describe('playStore', () => {
       vi.advanceTimersByTime(300);
 
       const result = playStore.getAlternativeEntries('nonexistent-id');
-      expect(result).toEqual([]);
+      expect(result).toBeUndefined();
     });
 
     it('replaces map between evaluations so removed items have no stale entries', async () => {
@@ -2636,7 +2642,7 @@ describe('playStore', () => {
       playStore.removeFromPlan(idB);
       vi.advanceTimersByTime(300);
 
-      expect(playStore.getAlternativeEntries(idB)).toEqual([]);
+      expect(playStore.getAlternativeEntries(idB)).toBeUndefined();
     });
 
     it('clears map on reset so no stale entries persist', async () => {
@@ -2664,7 +2670,7 @@ describe('playStore', () => {
       // Reset clears everything
       playStore.reset();
 
-      expect(playStore.getAlternativeEntries(instanceId)).toEqual([]);
+      expect(playStore.getAlternativeEntries(instanceId)).toBeUndefined();
     });
 
     it('passes plain planned refs (instanceId + ruleId) to hypothetical evaluations', async () => {
