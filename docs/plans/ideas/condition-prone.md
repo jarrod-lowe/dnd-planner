@@ -121,7 +121,7 @@ PR1 notes: effect carries `stateCombine: max` on the two disadvantage facts (arm
 - [x] RED: `condition-prone-drop` scenario fails (offer absent)
 - [x] `drop-prone` offer: `when: not prone` (mirror of get-up's gate — cannot stack a second copy), `legalWhen: speed > 0`, apply advertises the SAME keyed prone effect (extracted `proneEffect()` helper, shared with the recorder)
 - [x] i18n `drop-prone.name/.description/.keywords` + `drop-prone-offer.cannot_drop`, both locales
-- [x] GREEN: `condition-prone-drop` → `condition-prone-drop-speed-zero` (legality gate, planned-anyway plan error) → `condition-prone-drop-then-get-up` (green-immediate pin: full cycle, drop spends nothing)
+- [x] GREEN: `condition-prone-drop` → `condition-prone-drop-speed-zero` (legality gate, planned-anyway plan error) → `condition-prone-drop-then-get-up` (green-immediate pin: full cycle, drop spends nothing) → `condition-prone-drop-no-movement` (green-immediate pin: 0 remaining is NOT Speed 0 — drop legal, Get Up out-of-movement illegal)
 - [x] stale "dropping prone is unmodelled" notes updated (record + record-speed-zero scenario descriptions, module doc comment, this doc)
 - [x] group yaml description/keywords mention drop (en + tlh)
 - [ ] gates → PR → codex monitor → merge

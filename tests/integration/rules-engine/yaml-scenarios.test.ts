@@ -490,6 +490,7 @@ const EXPECTED_RUNNABLE = [
   'condition-prone-drop',
   'condition-prone-drop-speed-zero',
   'condition-prone-drop-then-get-up',
+  'condition-prone-drop-no-movement',
   // Get Up reads half your SPEED (species-contributed, floored) — not the
   // Dash-boosted movement.total
   'half-speed-derived',
