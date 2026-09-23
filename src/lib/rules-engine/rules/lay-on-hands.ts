@@ -41,7 +41,10 @@ const layOnHands: RuleModule = {
         actionCost: ['bonus', 'LoH']
       },
       vars: {
-        amount: { capture: true, default: { fact: 'layOnHands.pool.remaining' } },
+        // min 1 — the slider's own floor: an over-committed prefix can read
+        // remaining negative, and a verbatim capture would advertise a
+        // refunding negative spend (authored min, mirroring the player moves).
+        amount: { capture: true, min: 1, default: { fact: 'layOnHands.pool.remaining' } },
         maxValue: { capture: true, default: { fact: 'layOnHands.pool.total' } }
       },
       legalWhen: [
