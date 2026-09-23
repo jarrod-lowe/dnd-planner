@@ -97,6 +97,13 @@ function colorDecl(componentPath: string, selectorNeedle: string): string {
 const PANEL = 'src/lib/components/play/RollLogPanel.svelte';
 const TOAST = 'src/lib/components/play/panel-renderer/DiceRollToast.svelte';
 
+/** The raw <style> block of a component. */
+function styleBlock(componentPath: string): string {
+  return readFileSync(join(ROOT, componentPath), 'utf8').match(
+    /<style[^>]*>([\s\S]*)<\/style>/
+  )![1];
+}
+
 /** The `background:` declaration the replaced variant paints on the card. */
 function replacedBackground(): string {
   const rule = rulesFor(PANEL, '.roll-log__entry--replaced')[0];
@@ -105,6 +112,33 @@ function replacedBackground(): string {
   expect(bg, 'the replaced variant sets a background').toBeTruthy();
   return bg!;
 }
+
+describe('RollLogPanel chrome tiers and motion', () => {
+  it('sits the drawer and scrim on the modal tier, above overlay popovers', () => {
+    // The drawer is aria-modal: its scrim must cover --z-overlay cards
+    // (ReminderPopover), or their outcome actions stay clickable through the
+    // "modal" and mutate the background it claims to inert.
+    const drawer = cssRules(PANEL).find((r) => r.selector === '.roll-log');
+    expect(drawer, 'the drawer rule exists').toBeTruthy();
+    expect(drawer!.decls).toMatch(/z-index:\s*var\(--z-modal\)/);
+    const scrim = cssRules(PANEL).find((r) => r.selector === '.roll-log__scrim');
+    expect(scrim, 'the scrim rule exists').toBeTruthy();
+    expect(scrim!.decls).toMatch(/z-index:\s*calc\(var\(--z-modal\) - 1\)/);
+  });
+
+  it('gates the slide-in behind prefers-reduced-motion: no-preference', () => {
+    const style = styleBlock(PANEL);
+    expect(style, 'the motion-gated media block exists (QuickSearch convention)').toContain(
+      '@media (prefers-reduced-motion: no-preference)'
+    );
+    // The base rule must not animate unconditionally…
+    const base = cssRules(PANEL).find((r) => r.selector === '.roll-log');
+    expect(base, 'the drawer rule exists').toBeTruthy();
+    expect(base!.decls).not.toMatch(/(?:^|;)\s*animation:/);
+    // …but the animation itself survives, inside the gate.
+    expect(style).toMatch(/animation:\s*roll-log-enter/);
+  });
+});
 
 describe('RollLogPanel replaced-entry contrast', () => {
   it('mutes with token colours, never opacity', () => {

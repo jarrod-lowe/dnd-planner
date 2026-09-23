@@ -140,10 +140,13 @@
 {/if}
 
 <style>
+  /* Modal tier, not overlay: the scrim must sit ABOVE --z-overlay cards
+     (ReminderPopover) — an aria-modal drawer leaves nothing behind it
+     clickable. */
   .roll-log__scrim {
     position: fixed;
     inset: 0;
-    z-index: calc(var(--z-overlay) - 1);
+    z-index: calc(var(--z-modal) - 1);
     background: color-mix(in srgb, var(--md-sys-color-scrim) 50%, transparent);
   }
 
@@ -152,14 +155,21 @@
     top: 0;
     right: 0;
     bottom: 0;
-    z-index: var(--z-overlay);
+    z-index: var(--z-modal);
     width: min(24rem, 90vw);
     display: flex;
     flex-direction: column;
     background: var(--md-sys-color-surface-container-low);
     border-left: 1px solid var(--md-sys-color-outline-variant);
     box-shadow: var(--shadow-lg);
-    animation: roll-log-enter 0.2s ease-out;
+  }
+
+  /* The slide-in is motion-gated (QuickSearch convention): with
+     prefers-reduced-motion the drawer simply appears in place. */
+  @media (prefers-reduced-motion: no-preference) {
+    .roll-log {
+      animation: roll-log-enter 0.2s ease-out;
+    }
   }
 
   @keyframes roll-log-enter {
