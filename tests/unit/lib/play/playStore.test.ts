@@ -2085,6 +2085,47 @@ describe('playStore', () => {
     });
   });
 
+  describe('roll log', () => {
+    // afterEach resets modules, so rollLogStore must be imported INSIDE each
+    // test alongside playStore — a static import would watch a stale instance
+    // the re-imported playStore never touches (the seedCache pattern).
+
+    it('endTurn clears the roll log', async () => {
+      const { rollLog } = await import('$lib/play/rollLogStore.svelte');
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      rollLog.logRoll({
+        title: 'Greataxe',
+        rollType: 'play.toast.rollType.damage',
+        result: { total: 11, natural: 8, bonus: 3, sides: 12 }
+      });
+      expect(rollLog.rolls.length).toBe(1); // precondition: entries exist
+
+      playStore.addToPlan({ id: 'test-rule', activities: [] });
+      vi.advanceTimersByTime(300);
+      playStore.endTurn();
+
+      expect(rollLog.rolls).toEqual([]);
+    });
+
+    it('reset clears the roll log', async () => {
+      const { rollLog } = await import('$lib/play/rollLogStore.svelte');
+      const { playStore } = await import('$lib/play/playStore.svelte');
+
+      rollLog.logRoll({
+        title: 'Check',
+        rollType: 'play.toast.rollType.ability',
+        result: { total: 14, natural: 14, sides: 20 }
+      });
+      expect(rollLog.rolls.length).toBe(1); // precondition: entries exist
+
+      playStore.reset();
+
+      expect(rollLog.rolls).toEqual([]);
+    });
+  });
+
   describe('removeEffect', () => {
     it("evicts the removed effect's declared dependents, keeps unrelated effects", async () => {
       const mockApiGet = vi.mocked(apiGet);

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // The helper fires the roll toast through svelte-sonner's imperative API; mock
 // it so we can inspect the component and props it was called with instead of
@@ -13,6 +13,7 @@ vi.mock('svelte-sonner', () => ({
 import { toast } from 'svelte-sonner';
 import DiceRollToast from '$lib/components/play/panel-renderer/DiceRollToast.svelte';
 import { showDiceRollToast } from '$lib/components/play/panel-renderer/diceRollToast';
+import { rollLog } from '$lib/play/rollLogStore.svelte';
 import type { RollResult } from '$lib/components/play/panel-renderer/types';
 
 const lastCall = (): { componentProps: Record<string, unknown> } => {
@@ -22,6 +23,10 @@ const lastCall = (): { componentProps: Record<string, unknown> } => {
 };
 
 describe('showDiceRollToast', () => {
+  beforeEach(() => {
+    rollLog.clearRollLog();
+  });
+
   it('fires toast.custom with DiceRollToast, the translated roll type, and the toast chrome', () => {
     const result: RollResult = {
       total: 11,
@@ -115,5 +120,41 @@ describe('showDiceRollToast', () => {
     const result: RollResult = { total: 14, natural: 14, sides: 20 };
     showDiceRollToast('Check', result, []);
     expect(lastCall().componentProps['modifiers']).toBeUndefined();
+  });
+
+  it('logs an entry carrying exactly the toast payload plus the rollKey', () => {
+    const result: RollResult = {
+      total: 25,
+      natural: 18,
+      mode: 'advantage',
+      droppedRoll: 4,
+      bonus: 3,
+      sides: 20,
+      purpose: 'to-hit',
+      modifiers: [{ label: 'rule.demo.aura', value: 3 }]
+    };
+    showDiceRollToast('Javelin', result, ['rule.demo.info'], 'item1:ctrl:0');
+
+    expect(rollLog.rolls.length).toBe(1);
+    const logged = rollLog.rolls[0];
+    // The log entry is the toast payload verbatim, keyed for replacement.
+    // (result/modifiers use structural equality: the log's $state wraps stored
+    // objects in reactive proxies, so reference identity never holds.)
+    const { componentProps } = lastCall();
+    expect(logged.key).toBe('item1:ctrl:0');
+    expect(logged.title).toBe(componentProps['title']);
+    expect(logged.rollType).toBe(componentProps['rollType']);
+    expect(logged.result).toEqual(result);
+    expect(logged.modifiers).toEqual(componentProps['modifiers']);
+    expect(logged.damageTypeKey).toBe(componentProps['damageTypeKey']);
+    expect(logged.unitKey).toBe(componentProps['unitKey']);
+  });
+
+  it('logs key: undefined when no rollKey is passed', () => {
+    const result: RollResult = { total: 14, natural: 14, sides: 20 };
+    showDiceRollToast('Check', result);
+
+    expect(rollLog.rolls.length).toBe(1);
+    expect(rollLog.rolls[0].key).toBeUndefined();
   });
 });
