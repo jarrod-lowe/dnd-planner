@@ -426,7 +426,7 @@
             resolveInitialSelections
           </text>
           <text x="246" y="511" text-anchor="middle" class="t-sub">
-            capture vars → selections · numbers floored at 0
+            capture vars → selections · authored minimums applied
           </text>
 
           <line
@@ -646,7 +646,7 @@
             resolveInitialSelections —
           </text>
           <text x="350" y="341" text-anchor="middle" class="mono t-code">
-            capture · floor numbers at 0
+            capture · authored minimums applied
           </text>
           <line
             x1="350"
@@ -849,7 +849,7 @@
           <tr>
             <td class="inter">swap row 1 after a Walk@35 row</td>
             <td class="opens">0 ft</td>
-            <td class="why">earlier rows did over-commit → prefix negative → floored at 0</td>
+            <td class="why">earlier rows did over-commit → prefix negative → min 0 applies</td>
           </tr>
         </tbody>
       </table>
@@ -857,7 +857,8 @@
     <p class="tbl-note">
       The last row is the clamp earning its keep: the prefix can legitimately be negative when
       <em>earlier</em> rows over-commit, because the planner projects over-commitment rather than
-      preventing it — so captured numbers floor at zero.
+      preventing it — so distance vars declare a minimum of 0, and capture applies it. Signed
+      captures (save/skill bonuses) author no minimum and pass through verbatim.
     </p>
   </section>
 
@@ -894,8 +895,8 @@
   <footer>
     playStore.svelte.ts · addToPlan / swapPlanItemRule / captureSelections<br />
     evaluateCharacter.ts · factsBeforeRow — evaluate() + adaptEngineOutput<br />
-    resolveInitialSelections.ts · capture + floor 0 &nbsp;·&nbsp; plan.ts:126 · the fold's per-row
-    re-derivation<br />
+    resolveInitialSelections.ts · capture + authored mins &nbsp;·&nbsp; plan.ts:126 · the fold's
+    per-row re-derivation<br />
     plan · docs/plans/ideas/move-defaults.md
   </footer>
 </main>

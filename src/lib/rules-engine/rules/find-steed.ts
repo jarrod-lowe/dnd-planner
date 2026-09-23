@@ -186,7 +186,9 @@ const STEED_MOVE_CONTROL = {
   unit: 'ft'
 } as const;
 const STEED_MOVE_VARS = {
-  distance: { capture: true, default: { fact: 'companion.steed.movement.remaining' } }
+  // min 0: an over-committed prefix can read remaining negative — never a
+  // meaningful opening distance (authored min, mirroring the player moves).
+  distance: { capture: true, min: 0, default: { fact: 'companion.steed.movement.remaining' } }
 } as const;
 /** Feet to spend for a steed move: the captured distance, else all remaining. */
 const steedMoveDistance = (f: FactReader, selections: Record<string, unknown>): number =>

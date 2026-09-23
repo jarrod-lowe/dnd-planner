@@ -87,24 +87,26 @@ describe('resolveInitialSelections', () => {
      * A capture reads the plan PREFIX (factsBeforeRow), and earlier rows can
      * over-commit it — the planner projects over-commitment rather than
      * preventing it — so `remaining` can legitimately be negative there. A
-     * slider opening on a negative distance is never a meaningful default;
-     * captured numbers floor at zero. (Undefined → 0 above is the existing
-     * behaviour; number defaults and the loadout/spell-prepare captures below
-     * are authored shapes, not fact reads — untouched by the floor.)
+     * slider opening on a negative distance is never a meaningful default, so
+     * such a var AUTHORS a minimum (`min: 0`) and the capture clamps at it —
+     * the clamp is authored per var, never global. (Undefined → 0 above is the
+     * existing behaviour; number defaults and the loadout/spell-prepare
+     * captures below are authored shapes, not fact reads — unclamped.)
      */
-    describe('numeric fact captures floor at zero', () => {
+    describe('authored minimums on numeric fact captures', () => {
       const rule: Rule = {
         id: 'test-rule',
         activities: [],
         vars: {
           distance: {
             default: { fact: 'character.movement.remaining' },
-            capture: true
+            capture: true,
+            min: 0
           }
         }
       };
 
-      it('captures 0 for a negative fact (an over-committed prefix)', () => {
+      it('clamps a negative fact (an over-committed prefix) to the authored min', () => {
         const selections = resolveInitialSelections(rule, {
           'character.movement.remaining': -5
         });
@@ -112,7 +114,7 @@ describe('resolveInitialSelections', () => {
         expect(selections).toEqual({ distance: 0 });
       });
 
-      it("keeps the floor's boundary: a zero fact stays zero", () => {
+      it("keeps the clamp's boundary: a zero fact stays at the min", () => {
         const selections = resolveInitialSelections(rule, {
           'character.movement.remaining': 0
         });
@@ -120,13 +122,36 @@ describe('resolveInitialSelections', () => {
         expect(selections).toEqual({ distance: 0 });
       });
 
-      it('leaves positive fact captures above the floor untouched', () => {
+      it('leaves positive fact captures above the min untouched', () => {
         const selections = resolveInitialSelections(rule, {
           'character.movement.remaining': 15
         });
 
         expect(selections).toEqual({ distance: 15 });
       });
+    });
+
+    /**
+     * The authored-min counterpart, and the codex P1: with no `min` declared
+     * there is NO clamp — a signed fact (a save bonus, a skill bonus) must
+     * survive capture verbatim. A global floor here would silently zero every
+     * negative ability modifier the moment its row was added.
+     */
+    it('captures a signed fact verbatim when no min is authored', () => {
+      const rule: Rule = {
+        id: 'test-rule',
+        activities: [],
+        vars: {
+          saveBonus: {
+            default: { fact: 'con.save' },
+            capture: true
+          }
+        }
+      };
+
+      const selections = resolveInitialSelections(rule, { 'con.save': -2 });
+
+      expect(selections).toEqual({ saveBonus: -2 });
     });
   });
 

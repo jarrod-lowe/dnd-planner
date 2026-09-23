@@ -58,8 +58,11 @@ length, swap → the row's index). No discipline to forget.
   Correct by construction; debounce-independence pinned by test.
 - A choice and its swap receive identical facts — same function the fold uses (#438
   semantics, `evaluateCharacter.ts:69-83`).
-- Numeric fact captures floored at 0 (`resolveInitialSelections`): prefix `remaining` can
-  be negative when earlier rows over-commit (planner projects over-commit by design).
+- Numeric fact captures clamp at the var's authored `min` (`VarDefinition.min`,
+  `resolveInitialSelections`): prefix `remaining` can be negative when earlier rows
+  over-commit (planner projects over-commit by design), so the movement/steed `distance`
+  vars author `min: 0`. NO global floor — signed captures (save/skill bonuses) are
+  preserved verbatim (codex P1 on PR1).
 - `capture: true` freeze-at-add semantics KEPT (untouched rows don't track later edits to
   earlier rows — semantics choice, out of scope).
 - Slider max stays `total`/`half_total` — over-commit dragging stays (illegal-but-visible).
@@ -77,8 +80,9 @@ length, swap → the row's index). No discipline to forget.
 factsBeforeRow(state.modules, state.committed, buildPlannedRefs(), index),
 state.modules)` wrapped in try/catch → `{}` on throw. Wire into `addToPlan` +
   `swapPlanItemRule`; delete their direct `state.facts` reads.
-- `resolveInitialSelections.ts`: numeric `fact` captures `Math.max(0, value)` (loadout /
-  spell-prepare / string captures untouched).
+- `resolveInitialSelections.ts`: numeric `fact` captures `Math.max(varDef.min, value)` only
+  when the var authors a `min` (no `min` → verbatim; loadout / spell-prepare / string
+  captures untouched).
 - Reference diagram: `prefix-capture-flow.html` (this folder) — future-state data flow,
   ships with PR1 as the mechanism's documentation.
 - Class coverage: fix is entirely in the generic path — movement rules untouched; every
@@ -157,6 +161,10 @@ state.modules)` wrapped in try/catch → `{}` on throw. Wire into `addToPlan` +
       merge
   - gates green (check 0 errors, test-unit 2502 pass, format-check clean); PR open,
     merge pending
+  - codex P1 review fix: the unconditional `Math.max(0, …)` floor on numeric fact
+    captures broke signed captures (save/skill bonuses read negative legitimately) —
+    clamp is now authored per var (`min?: number` on `VarDefinition`; movement factory +
+    steed `distance` declare `min: 0`), no-min captures verbatim; tests repointed
 
 ### PR2 — wire `swapPlanItemRule` from prefix
 
