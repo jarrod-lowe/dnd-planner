@@ -28,12 +28,13 @@ The frozen capture then outranks derivation forever (`resolveValueSource.ts:21-2
 
 Symptoms (speed 30, one row):
 
-| Action                                     | Today                         | Cause                |
-| ------------------------------------------ | ----------------------------- | -------------------- |
-| add Walk, drag to 15, add Fly within 300ms | Fly opens 30 (2× the 15 left) | stale cache          |
-| swap Walk@15 → Fly                         | opens 15 (old value)          | final facts: 30−15   |
-| swap Walk@30 → Fly                         | opens 0                       | final facts: 0       |
-| swap over-committed Walk@35 → Fly          | opens −5                      | final facts negative |
+| Action                                     | Today                         | Cause                 |
+| ------------------------------------------ | ----------------------------- | --------------------- |
+| add Walk, drag to 15, add Fly within 300ms | Fly opens 30 (2× the 15 left) | stale cache           |
+| swap Walk@15 → Fly                         | opens 15 (old value)          | final facts: 30−15    |
+| swap Walk@30 → Fly                         | opens 0                       | final facts: 0        |
+| swap over-committed Walk@35 → Fly          | opens −5                      | final facts negative  |
+| MOVE chip → Dash, swap to Walk             | opens 60 (2× speed)           | final facts: Dash +30 |
 
 Architectural framing: the engine fold is pure (`plan.ts:78`); the store broke "operations
 take state in, return varied state" by resolving row INPUTS from a time-lagged cache of
@@ -172,6 +173,10 @@ state.modules)` wrapped in try/catch → `{}` on throw. Wire into `addToPlan` +
 
 - [ ] RED: store swap tests (30 not 15 / not 0 / not −5; multi-row earlier-rows-count;
       no-advance variants identical)
+- [ ] RED: swap [Dash] → Walk: 30 not 60 — Dash's +30 `total` boost sits in the final
+      facts; the ORIGINALLY reported "2× speed" repro (MOVE chip defaults to Dash, user
+      swaps to Walk; manual repro confirmed 2026-09-24 on a fresh character, top bar 30,
+      swapped row 60, search-added row 30)
 - [ ] `swapPlanItemRule` uses `captureSelections(entry.rule, index)`; delete its
       `state.facts` read
 - [ ] GREEN; guards (seed beats capture; existing captures unaffected)
