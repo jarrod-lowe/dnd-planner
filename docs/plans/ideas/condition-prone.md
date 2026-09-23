@@ -101,12 +101,12 @@ PR1 notes: effect carries `stateCombine: max` on the two disadvantage facts (arm
 
 ### PR2 — Get Up (+ speed facts)
 
-- [ ] RED: `condition-prone-get-up` scenario fails
-- [ ] species-human contributes `character.movement.speed`; movement.ts derives `half_speed`
-- [ ] `get-up` offer (when/legalWhen/apply: empty-keyed clear + spend)
-- [ ] i18n get-up keys + `play.verbBuckets.MOVE.rise`, both locales
-- [ ] GREEN: get-up + `get-up-illegal-low-movement` + `half-speed-derived` scenarios; Speed-0 unit test
-- [ ] gates → PR → codex monitor → merge
+- [x] RED: `condition-prone-get-up` scenario fails
+- [x] species-human contributes `character.movement.speed`; movement.ts derives `half_speed`
+- [x] `get-up` offer (when/legalWhen/apply: empty-keyed clear + spend)
+- [x] i18n get-up keys + `play.verbBuckets.MOVE.rise`, both locales (also get-up keywords — move/dash offers carry them)
+- [x] GREEN: get-up + `get-up-illegal-low-movement` + `half-speed-derived` scenarios; Speed-0 done as scenario `get-up-illegal-speed-zero`; notice `values` as unit test `condition-prone-notice.test.ts` (yaml grammar can't assert annotation values)
+- [x] gates → PR → codex monitor → merge — merged as 0d01826f (PR #436); codex P2 fixed: splint-armor penalty now REDUCES `speed`+`total` (−10) instead of consuming `.spent`, so the Get Up cost sees armored Speed (`get-up-splint-armor-cost` scenario)
 
 ### PR3 — crawl + prone movement restriction
 

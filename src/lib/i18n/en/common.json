@@ -487,6 +487,11 @@
           "keywords": "movement move difficult slow",
           "description": "Difficult terrain — each foot of movement costs 2"
         },
+        "move-crawl": {
+          "name": "Crawl",
+          "keywords": "movement move prone ground hands knees",
+          "description": "While prone — each foot of movement costs 2"
+        },
         "action-move-walk-offer": {
           "out_of_movement": "Out of movement"
         },
@@ -510,7 +515,8 @@
         "action-move-fly-offer": {
           "cannot_fly": "You cannot fly",
           "out_of_movement": "Out of movement"
-        }
+        },
+        "cannot_while_prone": "You are prone — you can only crawl or Get Up"
       },
       "ability-scores": {
         "set-strength": {

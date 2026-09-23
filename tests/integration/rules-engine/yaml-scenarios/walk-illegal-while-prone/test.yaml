@@ -1,0 +1,67 @@
+name: 'Condition Prone - Movement Restricted While Prone'
+description: >-
+  SRD 5.2 Prone, Restricted Movement: while prone your only movement options
+  are to crawl or Get Up, so every other travel offer (walk, rough terrain,
+  both swims, fly) is ILLEGAL — a legality gate, not a structural one, so the
+  player still sees why (the shared cannot_while_prone diagnostic, which a
+  planned-anyway row also carries from the apply re-check while still spending
+  the movement). Get Up rights you and walk is legal again.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-prone
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.prone: 0
+          character.movement.remaining: 30
+        offers:
+          legal:
+            - move-walk
+            - move-rough-terrain
+            - move-swim-costly
+          notExists:
+            - move-swim
+            - move-crawl
+  - addOffer:
+      id: record-prone
+      assert:
+        facts:
+          condition.prone: 1
+        offers:
+          illegal:
+            - move-walk
+            - move-rough-terrain
+            - move-swim-costly
+            - move-fly
+          legal:
+            - move-crawl
+            - get-up
+  - addOffer:
+      id: move-walk
+      assert:
+        facts:
+          character.movement.remaining: 0
+        planErrors:
+          - id: move-walk
+            index: 0
+            errors:
+              - rule.dnd-5e-2024.movement.cannot_while_prone
+  - removeFromPlan:
+      id: move-walk
+      assert:
+        facts:
+          character.movement.remaining: 30
+  - addOffer:
+      id: get-up
+      assert:
+        facts:
+          condition.prone: 0
+          character.movement.remaining: 15
+        offers:
+          legal:
+            - move-walk
+          notExists:
+            - move-crawl
+            - get-up
