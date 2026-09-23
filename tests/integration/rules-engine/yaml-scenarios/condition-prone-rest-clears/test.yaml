@@ -1,0 +1,64 @@
+name: 'Condition Prone - Rest Clears'
+description: >-
+  Any rest clears the Prone condition: the keyed effect carries
+  untilShortRest, which a short rest satisfies directly and a long rest
+  includes. The facts, the disadvantage flags, and the notice all go with the
+  effect. A deliberate player-convenience deviation (docs/plans/ideas/
+  condition-prone.md) — SRD 5.2 leaves the condition standing until righted.
+ruleGroups:
+  - dnd-5e-2024/condition-prone
+  - dnd-5e-2024/core-events
+steps:
+  - addOffer:
+      id: record-prone
+      assert:
+        facts:
+          condition.prone: 1
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-prone.notice
+  # A long rest (the explicit endTurn flag) clears it.
+  - endTurn:
+      longRest: true
+      assert:
+        facts:
+          condition.prone: 0
+          attack.str.disadvantage: 0
+          attack.dex.disadvantage: 0
+        effects:
+          notExists:
+            - effect-prone
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-prone.notice
+  # ...and so does a recorded short rest: the rest flag effect restores its
+  # scoped effects within the same evaluation, so the facts and notice are
+  # already gone before the turn even ends.
+  - addOffer:
+      id: record-prone
+      assert:
+        facts:
+          condition.prone: 1
+  - addOffer:
+      id: record-short-rest
+      assert:
+        facts:
+          rest.short: 1
+          condition.prone: 0
+          attack.str.disadvantage: 0
+          attack.dex.disadvantage: 0
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-prone.notice
+  - endTurn:
+      assert:
+        facts:
+          condition.prone: 0
+        effects:
+          notExists:
+            - effect-prone
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-prone.notice

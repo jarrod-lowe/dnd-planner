@@ -1,0 +1,25 @@
+name: 'Condition Prone - Record At Speed Zero'
+description: >-
+  The recorder has NO Speed-0 gate — a deliberate deviation (docs/plans/ideas/
+  condition-prone.md): SRD 5.2 forbids DROPPING prone at Speed 0, but being
+  knocked prone is not a choice, so the recorder stays legal with no movement.
+  `character.movement.total` is an input fact here (no species module in this
+  rule set derives it).
+ruleGroups:
+  - dnd-5e-2024/condition-prone
+initialFacts:
+  character.movement.total: 0
+steps:
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - record-prone
+  - addOffer:
+      id: record-prone
+      assert:
+        facts:
+          condition.prone: 1
+        planErrors:
+          - id: record-prone
+            errors: []

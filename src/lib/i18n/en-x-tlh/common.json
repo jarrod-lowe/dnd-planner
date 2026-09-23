@@ -965,6 +965,16 @@
           "no_action": "DIvI' tu'lu'be'"
         }
       },
+      "condition-prone": {
+        "record-prone": {
+          "name": "pum"
+        },
+        "effect-prone": {
+          "name": "pum"
+        },
+        "notice": "pum",
+        "notice.body": "HIv Daghu'taHvIS DIvI' ngor. vagh qejmeyDaq Sepbogh Doch SoH HIvchugh, DIch Suq; latlh DaqDaq DIvI' ngor. yIngheSqa'meH Do'lIj vaghDIch yInobta', pagh yIngheS."
+      },
       "grapple": {
         "grapple-action": {
           "name": "DIvI' qop",
@@ -1794,6 +1804,7 @@
       "CHECK": "CHECK",
       "REST": "REST",
       "NOTE": "NOTE",
+      "CONDITION": "Dotlh",
       "STAT": "STAT",
       "PROFICIENCY": "PROFICIENCY",
       "PREPARE": "PREPARE",
@@ -1872,6 +1883,9 @@
       },
       "NOTE": {
         "freeform": "Note"
+      },
+      "CONDITION": {
+        "prone": "pum"
       },
       "STAT": {
         "set": "Set",
