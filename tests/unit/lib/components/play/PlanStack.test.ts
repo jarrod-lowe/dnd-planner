@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { mount } from 'svelte';
+import { mount, flushSync } from 'svelte';
 import { readable } from 'svelte/store';
 
 const translations: Record<string, string> = {
@@ -11,6 +11,7 @@ const translations: Record<string, string> = {
   'play.addRow.buildGroup': 'build →',
   'play.addRow.steedSublabel': 'Steed',
   'play.plan.endTurn': 'End Turn',
+  'play.rollLog.openButton': 'Open roll log',
   'play.costTags.action': 'ACT',
   'play.costTags.L2': 'L2',
   'play.costTags.L4': 'L4',
@@ -36,6 +37,7 @@ vi.mock('$lib/play/playStore.svelte', () => ({
 }));
 
 import { playStore } from '$lib/play/playStore.svelte';
+import { rollLog } from '$lib/play/rollLogStore.svelte';
 import PlanStack from '$lib/components/play/PlanStack.svelte';
 import type { AvailableRuleEntry, Facts, Annotation } from '$lib/rules-view';
 import type { PlannedItem } from '$lib/play/types';
@@ -90,6 +92,7 @@ describe('PlanStack', () => {
   beforeEach(() => {
     container = document.createElement('div');
     document.body.appendChild(container);
+    rollLog.close();
     vi.clearAllMocks();
   });
 
@@ -379,5 +382,58 @@ describe('PlanStack', () => {
 
     const followupButton = container.querySelector('.panel-renderer__followup-button');
     expect(followupButton).toBeTruthy();
+  });
+
+  describe('roll log open button', () => {
+    function mountPlanStack(): void {
+      mount(PlanStack, {
+        target: container,
+        props: {
+          items: [],
+          entries: [],
+          facts: {} as Facts,
+          activeAnnotations: [] as Annotation[],
+          onAddToPlan: noop,
+          onRemoveFromPlan: noop,
+          onMovePlanItem: noop,
+          onSelectionChange: noop,
+          onSwapPlanItemRule: noop,
+          onEndTurn: noop
+        }
+      });
+    }
+
+    it('sits immediately right of End Turn in the footer', () => {
+      mountPlanStack();
+
+      const footer = container.querySelector('.plan-stack__footer');
+      expect(footer).toBeTruthy();
+      const buttons = footer?.querySelectorAll('button') ?? [];
+      expect(buttons.length).toBe(2);
+      expect(buttons[0].classList.contains('plan-stack__end-turn')).toBe(true);
+      expect(buttons[1].classList.contains('plan-stack__open-roll-log')).toBe(true);
+    });
+
+    it('is icon-only, named by its aria-label', () => {
+      mountPlanStack();
+
+      const button = container.querySelector('.plan-stack__open-roll-log') as HTMLButtonElement;
+      expect(button).toBeTruthy();
+      expect(button.getAttribute('aria-label')).toBe('Open roll log');
+      expect(button.textContent?.trim()).toBe('');
+    });
+
+    it('is always enabled — even with an empty plan — and opens the roll log', () => {
+      mountPlanStack();
+
+      const button = container.querySelector('.plan-stack__open-roll-log') as HTMLButtonElement;
+      // End Turn disables on an empty plan; the log must not.
+      expect(button.disabled).toBe(false);
+
+      button.click();
+      flushSync();
+
+      expect(rollLog.isOpen).toBe(true);
+    });
   });
 });

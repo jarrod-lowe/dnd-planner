@@ -1706,6 +1706,12 @@
       "title": "This Turn I Want To…",
       "placeholder": "Tap + ADD to plan your turn"
     },
+    "rollLog": {
+      "openButton": "Open roll log",
+      "title": "Roll Log",
+      "empty": "No rolls this turn yet",
+      "close": "Close roll log"
+    },
     "notices": {
       "title": "Notices",
       "count": "{{count}}",

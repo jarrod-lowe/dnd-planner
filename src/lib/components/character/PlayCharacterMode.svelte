@@ -8,6 +8,7 @@
   import NoticeStrip from '../play/NoticeStrip.svelte';
   import PlanStack from '../play/PlanStack.svelte';
   import Ledger from '../play/Ledger.svelte';
+  import RollLogPanel from '../play/RollLogPanel.svelte';
   import type { Character } from '$lib/character/types';
   import type { AvailableRuleEntry } from '$lib/rules-view';
   import { getConcentrationEffectName, mergeActiveEffects } from '$lib/play/effectUtils';
@@ -207,6 +208,12 @@
       />
     </div>
   {/if}
+
+  <!-- The roll log overlay. Sibling of the main column and fixed-positioned,
+       so it spans the whole play screen regardless of the grid's own scroll
+       containers (no transformed ancestor intervenes: .play-character and
+       .app-layout__body only set flex/overflow). -->
+  <RollLogPanel />
 </div>
 
 <style>

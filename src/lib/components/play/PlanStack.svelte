@@ -3,6 +3,7 @@
   import { t } from '$lib/i18n';
   import { SvelteMap } from 'svelte/reactivity';
   import { playStore } from '$lib/play/playStore.svelte';
+  import { rollLog } from '$lib/play/rollLogStore.svelte';
   import PlanRow from './PlanRow.svelte';
   import AddRowPicker from './AddRowPicker.svelte';
   import { groupChoicesByVerb } from '$lib/play/groupChoicesByVerb';
@@ -194,6 +195,29 @@
     >
       {$t('play.plan.endTurn')}
     </button>
+    <!-- Opens the roll log panel: always enabled (there is nothing about the
+         plan that gates looking at past rolls). -->
+    <button
+      type="button"
+      class="plan-stack__open-roll-log"
+      aria-label={$t('play.rollLog.openButton')}
+      onclick={() => rollLog.open()}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        aria-hidden="true"
+      >
+        <rect x="3" y="3" width="18" height="18" rx="4" />
+        <circle cx="8" cy="8" r="1.5" fill="currentColor" stroke="none" />
+        <circle cx="16" cy="8" r="1.5" fill="currentColor" stroke="none" />
+        <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+        <circle cx="8" cy="16" r="1.5" fill="currentColor" stroke="none" />
+        <circle cx="16" cy="16" r="1.5" fill="currentColor" stroke="none" />
+      </svg>
+    </button>
   </div>
 </section>
 
@@ -226,6 +250,8 @@
   .plan-stack__footer {
     display: flex;
     justify-content: flex-end;
+    align-items: center;
+    gap: var(--spacing-sm);
     padding-top: var(--spacing-xs);
   }
 
@@ -259,5 +285,36 @@
   .plan-stack__end-turn:disabled {
     opacity: 0.4;
     cursor: not-allowed;
+  }
+
+  /* Icon-only dice button: the roll log's opener, sized to the same 2.75rem
+     touch target as every other control on the play screen. */
+  .plan-stack__open-roll-log {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    color: var(--md-sys-color-on-surface-variant);
+    background: var(--md-sys-color-surface-container);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+  }
+
+  .plan-stack__open-roll-log svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .plan-stack__open-roll-log:hover {
+    background: var(--md-sys-color-surface-container-high);
+  }
+
+  .plan-stack__open-roll-log:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: 2px;
   }
 </style>
