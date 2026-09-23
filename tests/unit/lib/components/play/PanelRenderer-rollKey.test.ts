@@ -202,6 +202,49 @@ describe('PanelRenderer - roll-log key', () => {
     expect(rollKeys()).toEqual(['greataxe:primary:die:0', 'shortbow:primary:die:0']);
   });
 
+  it('keys two rows of the same offer apart by plan instance', async () => {
+    // Extra Attack plans the same greataxe offer twice: each row's view entry
+    // carries the OFFER's rule id (the engine re-resolves the offer per row),
+    // so only the plan item's instance id tells the two rows' dice apart.
+    const first = render(PanelRenderer, {
+      props: {
+        entry: createDiceLineEntry('greataxe'),
+        editable: true,
+        facts: {},
+        instanceId: 'inst-1'
+      }
+    });
+    const second = render(PanelRenderer, {
+      props: {
+        entry: createDiceLineEntry('greataxe'),
+        editable: true,
+        facts: {},
+        instanceId: 'inst-2'
+      }
+    });
+    await fireEvent.click(first.container.querySelector('.panel-renderer__die-chip')!);
+    await fireEvent.click(second.container.querySelector('.panel-renderer__die-chip')!);
+
+    expect(rollKeys()).toEqual(['inst-1:primary:die:0', 'inst-2:primary:die:0']);
+  });
+
+  it('reuses the instance-scoped key when the same die is re-rolled', async () => {
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: createDiceLineEntry('greataxe'),
+        editable: true,
+        facts: {},
+        instanceId: 'inst-1'
+      }
+    });
+    const chip = container.querySelector('.panel-renderer__die-chip')!;
+    await fireEvent.click(chip);
+    await fireEvent.click(chip);
+
+    // Same instance, same die: identical keys, so a re-roll still replaces.
+    expect(rollKeys()).toEqual(['inst-1:primary:die:0', 'inst-1:primary:die:0']);
+  });
+
   it('keys a hit-dice slot roll by pool size and slot index', async () => {
     const { container } = render(PanelRenderer, {
       props: { entry: createHitDiceEntry(), editable: true, facts: hitDiceFacts() }

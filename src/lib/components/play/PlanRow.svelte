@@ -448,6 +448,7 @@
     <div class="plan-row__content" class:plan-row__content--hidden={rulesMode}>
       <PanelRenderer
         {entry}
+        instanceId={item.instanceId}
         editable={true}
         {facts}
         {modules}
