@@ -22,6 +22,7 @@ describe('derivePanels — top bar', () => {
       'hp.max': 12,
       'hp.current': 12,
       'ac.value': 16,
+      'character.movement.total': 30,
       'character.movement.remaining': 30,
       'concentration.max': 1,
       'str.modifier': 3
@@ -45,6 +46,22 @@ describe('derivePanels — top bar', () => {
       'cha.modifier'
     ]);
   });
+
+  it('shows the modified movement total in the speed chip, not the remaining', () => {
+    // Splint armor dropped the species' 30 to 20 and 10 feet are spent: the
+    // chip is the modified total (the ledger's usedMax row carries avail/total).
+    const facts = { 'character.movement.total': 20, 'character.movement.remaining': 10 };
+    const speed = deriveTopBarEntries(facts).find((e) => e.label === 'play.topBar.speed');
+    expect(speed?.type).toBe('value');
+    expect(resolveEntryValue(speed!, facts)).toBe('20');
+  });
+
+  it('surfaces the speed chip from the total fact alone (before anything is spent)', () => {
+    const facts = { 'character.movement.total': 30 };
+    const speed = deriveTopBarEntries(facts).find((e) => e.label === 'play.topBar.speed');
+    expect(speed).toBeDefined();
+    expect(resolveEntryValue(speed!, facts)).toBe('30');
+  });
 });
 
 describe('derivePanels — top bar (steed subject)', () => {
@@ -56,9 +73,12 @@ describe('derivePanels — top bar (steed subject)', () => {
   });
 
   it('emits steed AC and speed value chips from the steed facts', () => {
+    // The speed chip is the modified total (Dash doubles the steed's base),
+    // not the remaining — same rule as the player chip.
     const facts = {
       'companion.steed.ac.value': 12,
-      'companion.steed.movement.remaining': 60
+      'companion.steed.movement.total': 60,
+      'companion.steed.movement.remaining': 45
     };
     const steed = deriveTopBarEntries(facts).filter((e) => e.subject === 'steed');
     expect(steed.map((e) => e.label)).toEqual(['play.topBar.ac', 'play.topBar.speed']);
@@ -110,6 +130,7 @@ describe('derivePanels — top bar (steed subject)', () => {
       'companion.steed.hp.max': 25,
       'companion.steed.hp.current': 25,
       'companion.steed.ac.value': 12,
+      'companion.steed.movement.total': 60,
       'companion.steed.movement.remaining': 60,
       'companion.steed.str.modifier': 4,
       'concentration.max': 1
