@@ -129,6 +129,32 @@ describe('resolveInitialSelections', () => {
 
         expect(selections).toEqual({ distance: 15 });
       });
+
+      /**
+       * A nonzero floor: remaining-RESOURCE captures (a healing pool) author
+       * `min: 1` — the slider's own floor — so an over-committed prefix can
+       * open the row on 1 but never on 0 or a refunding negative.
+       */
+      it('clamps at a nonzero authored min (a spend floor of 1)', () => {
+        const spend: Rule = {
+          id: 'test-rule',
+          activities: [],
+          vars: {
+            amount: {
+              default: { fact: 'layOnHands.pool.remaining' },
+              capture: true,
+              min: 1
+            }
+          }
+        };
+
+        expect(resolveInitialSelections(spend, { 'layOnHands.pool.remaining': -2 })).toEqual({
+          amount: 1
+        });
+        expect(resolveInitialSelections(spend, { 'layOnHands.pool.remaining': 0 })).toEqual({
+          amount: 1
+        });
+      });
     });
 
     /**
