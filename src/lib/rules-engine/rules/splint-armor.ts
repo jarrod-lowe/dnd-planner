@@ -18,16 +18,19 @@ const BUILD_LOCKED = 'rule.dnd-5e-2024.build-lock.locked';
  * Worn without Heavy-armor training it raises the untrained penalties
  * (disadvantage + no spellcasting); a proficient paladin keeps casting.
  *
- * The speed penalty is a `combine: sum` contribution to `character.movement.spent`
- * (movement derives `remaining = total − spent`), gated on the live equipped +
- * STR facts — so it persists while worn and lifts if STR reaches 15, with no
- * change to the movement group. Foundational equip group, so no search meta.
+ * The speed penalty REDUCES Speed — `combine: sum` contributions of −10 to both
+ * `character.movement.speed` and `character.movement.total` (so remaining, the
+ * move sliders, Dash's boost, and the half-Speed Get Up cost all see the
+ * reduced Speed), gated on the live equipped + STR facts — so it persists while
+ * worn and lifts if STR reaches 15, with no change to the movement group.
+ * `movement.spent` stays reserved for movement actually consumed. Foundational
+ * equip group, so no search meta.
  */
-const speedPenalty: Contribution = {
-  fact: 'character.movement.spent',
+const speedPenalty = (fact: string): Contribution => ({
+  fact,
   combine: 'sum',
-  value: (f) => (f.num('armor.splint.equipped') === 1 && f.num('str.value') < 15 ? 10 : 0)
-};
+  value: (f) => (f.num('armor.splint.equipped') === 1 && f.num('str.value') < 15 ? -10 : 0)
+});
 
 // Heavy armor imposes Stealth disadvantage unconditionally (a property of the
 // armor, not a training penalty), so it applies even to a proficient wearer.
@@ -41,7 +44,8 @@ const splintArmor: RuleModule = {
   id: 'splint-armor',
   derive: () => [
     ...armorTrainingPenalties('splint', 'armor.heavy.proficient'),
-    speedPenalty,
+    speedPenalty('character.movement.speed'),
+    speedPenalty('character.movement.total'),
     stealthPenalty
   ],
   offer: () => [

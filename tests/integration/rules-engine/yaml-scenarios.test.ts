@@ -492,6 +492,7 @@ const EXPECTED_RUNNABLE = [
   'condition-prone-get-up',
   'get-up-illegal-low-movement',
   'get-up-illegal-speed-zero',
+  'get-up-splint-armor-cost',
   // M3 — feat-alert (initiative-with-proficiency + annotations) and hit-die
   // (d10 pool from the class levels; remaining = total - spent)
   'alert-flag-set',

@@ -26,6 +26,7 @@ steps:
       assert:
         facts:
           character.movement.total: 30
+          character.movement.speed: 30
           character.movement.remaining: 30
         offers:
           exists:
@@ -43,5 +44,6 @@ steps:
       assert:
         facts:
           character.movement.total: 30
+          character.movement.speed: 30
           character.movement.remaining: 30
           armor.splint.equipped: 1

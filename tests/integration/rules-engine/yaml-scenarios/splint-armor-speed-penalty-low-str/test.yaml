@@ -26,22 +26,26 @@ steps:
       assert:
         facts:
           character.movement.total: 30
+          character.movement.speed: 30
           character.movement.remaining: 30
         offers:
           exists:
             - don-splint-armor
-  # Don splint armor -- immediate speed penalty reduces remaining by 10
+  # Don splint armor -- the penalty reduces Speed and total by 10
   - addOffer:
       id: don-splint-armor
       assert:
         facts:
           ac.base: 17
           armor.splint.equipped: 1
+          character.movement.speed: 20
+          character.movement.total: 20
           character.movement.remaining: 20
-  # End turn -- persistent effect reduces remaining by 10 again (after reset sets it to 30)
+  # End turn -- the reduction persists (spent resets; total stays reduced)
   - endTurn:
       assert:
         facts:
-          character.movement.total: 30
+          character.movement.total: 20
+          character.movement.speed: 20
           character.movement.remaining: 20
           armor.splint.equipped: 1
