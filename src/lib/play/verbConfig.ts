@@ -14,6 +14,7 @@ export const VERB_ORDER: Verb[] = [
   'CHECK',
   'REST',
   'NOTE',
+  'CONDITION',
   'STAT',
   'PROFICIENCY',
   'PREPARE',
@@ -31,7 +32,7 @@ export const PLAN_VERBS: Verb[] = [
   'REACT'
 ];
 
-export const RECORD_VERBS: Verb[] = ['HEALTH', 'SAVE', 'CHECK', 'REST', 'NOTE'];
+export const RECORD_VERBS: Verb[] = ['HEALTH', 'SAVE', 'CHECK', 'REST', 'NOTE', 'CONDITION'];
 
 export const BUILD_VERBS: Verb[] = ['STAT', 'PROFICIENCY', 'PREPARE', 'EQUIP'];
 

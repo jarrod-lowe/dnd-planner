@@ -1,0 +1,25 @@
+name: 'Condition Prone - Record At Speed Zero'
+description: >-
+  The recorder models BEING KNOCKED prone, which enemies impose regardless of
+  your Speed, so it stays legal with no movement (docs/plans/ideas/
+  condition-prone.md; the SRD's Speed-0 restriction on DROPPING prone does not
+  apply — dropping prone is unmodelled). `character.movement.total` is an
+  input fact here (no species module in this rule set derives it).
+ruleGroups:
+  - dnd-5e-2024/condition-prone
+initialFacts:
+  character.movement.total: 0
+steps:
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - record-prone
+  - addOffer:
+      id: record-prone
+      assert:
+        facts:
+          condition.prone: 1
+        planErrors:
+          - id: record-prone
+            errors: []

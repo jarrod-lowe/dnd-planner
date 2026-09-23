@@ -47,6 +47,7 @@ import simpleActions from './rules/simple-actions';
 import dash from './rules/dash';
 import grapple from './rules/grapple';
 import shove from './rules/shove';
+import conditionProne from './rules/condition-prone';
 import featAlert from './rules/feat-alert';
 import featSentinel from './rules/feat-sentinel';
 import fightingStyleGreatWeapon from './rules/fighting-style-great-weapon';
@@ -138,6 +139,7 @@ const MODULES: RuleModule[] = [
   dash,
   grapple,
   shove,
+  conditionProne,
   featAlert,
   featSentinel,
   fightingStyleGreatWeapon,

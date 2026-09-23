@@ -482,6 +482,10 @@ const EXPECTED_RUNNABLE = [
   'grapple-grappled-effect',
   'grapple-escaped-no-effect',
   'shove-action',
+  // condition-prone (the Prone condition recorder: keyed effect + notice)
+  'condition-prone-record',
+  'condition-prone-record-speed-zero',
+  'condition-prone-rest-clears',
   // M3 — feat-alert (initiative-with-proficiency + annotations) and hit-die
   // (d10 pool from the class levels; remaining = total - spent)
   'alert-flag-set',

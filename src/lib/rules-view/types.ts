@@ -20,6 +20,7 @@ export type Verb =
   | 'CHECK'
   | 'REST'
   | 'NOTE'
+  | 'CONDITION'
   | 'STAT'
   | 'PROFICIENCY'
   | 'PREPARE'

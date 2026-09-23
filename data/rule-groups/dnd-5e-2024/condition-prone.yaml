@@ -1,0 +1,38 @@
+ruleGroups:
+  - id: condition-prone
+    requires:
+      - movement
+    translations:
+      en:
+        name: Prone
+        description: Rules while you have the Prone condition; record it when you are knocked prone
+        keywords:
+          - prone
+          - knocked
+          - condition
+          - fall
+          - ground
+          - crawl
+      en-x-tlh:
+        name: pum
+        description: pum Dotlh; pummoHlu'DI' yIghun
+        keywords:
+          - pum
+          - pummoH
+          - Dotlh
+    detail:
+      key: condition/prone
+      source: srd52
+      translations:
+        en:
+          meta: Condition
+          body: |
+            **Prone [Condition].** While you have the Prone condition, you experience the following effects.
+
+            **Restricted Movement.** Your only movement options are to crawl or to spend an amount of movement equal to half your Speed (round down) to right yourself and thereby end the condition. If your Speed is 0, you can't right yourself.
+
+            **Attacks Affected.** You have Disadvantage on attack rolls. An attack roll against you has Advantage if the attacker is within 5 feet of you. Otherwise, that attack roll has Disadvantage.
+
+            **Dropping Prone.** On your turn, you can give yourself the Prone condition (see "Rules Glossary") without using an action or any of your Speed, but you can't do so if your Speed is 0.
+
+            **Crawling.** While you're crawling, each foot of movement costs 1 extra foot (2 extra feet in Difficult Terrain).

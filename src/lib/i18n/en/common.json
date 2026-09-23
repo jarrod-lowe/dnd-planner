@@ -965,6 +965,16 @@
           "no_action": "No action available"
         }
       },
+      "condition-prone": {
+        "record-prone": {
+          "name": "Knocked Prone"
+        },
+        "effect-prone": {
+          "name": "Prone"
+        },
+        "notice": "Prone",
+        "notice.body": "Disadvantage on your attack rolls. Attack rolls against you have Advantage from within 5 feet, Disadvantage otherwise. You can only crawl, or spend half your Speed to right yourself."
+      },
       "grapple": {
         "grapple-action": {
           "name": "Grapple",
@@ -1794,6 +1804,7 @@
       "CHECK": "Check",
       "REST": "Rest",
       "NOTE": "Note",
+      "CONDITION": "Condition",
       "STAT": "Stat",
       "PROFICIENCY": "Proficiency",
       "PREPARE": "Prepare",
@@ -1872,6 +1883,9 @@
       },
       "NOTE": {
         "freeform": "Note"
+      },
+      "CONDITION": {
+        "prone": "Prone"
       },
       "STAT": {
         "set": "Set",
