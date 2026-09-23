@@ -95,8 +95,8 @@ const ge = (fact: string, value: number, code: string): LegalWhen => ({
  * then decremented; here remaining is derived and each move advertises an
  * endOfTurn spend, so movement resets next turn with no reset rule. Rough terrain
  * and costly swimming spend ×2; `half_remaining`/`half_total` are derived for
- * their slider defaults. The base distances come from the species. Foundational,
- * so no search meta.
+ * their slider defaults, and `half_speed` (floored) is the Get Up cost base.
+ * The base distances come from the species. Foundational, so no search meta.
  */
 const movement: RuleModule = {
   id: 'movement',
@@ -108,6 +108,14 @@ const movement: RuleModule = {
     {
       fact: 'character.movement.half_total',
       value: (f) => f.num('character.movement.total') * 0.5
+    },
+    // Half your SPEED, floored (SRD 5.2 Prone: "half your Speed (round down)"
+    // to right yourself) — unlike half_total/half_remaining, which stay
+    // unrounded slider defaults. The species contributes `speed`; Dash never
+    // touches it, so dashing does not raise the Get Up cost.
+    {
+      fact: 'character.movement.half_speed',
+      value: (f) => Math.floor(f.num('character.movement.speed') * 0.5)
     },
     { fact: 'character.movement.half_remaining', value: (f) => f.num(REMAINING) * 0.5 }
   ],

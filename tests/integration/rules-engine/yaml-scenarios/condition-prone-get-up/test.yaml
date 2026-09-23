@@ -1,0 +1,73 @@
+name: 'Condition Prone - Get Up'
+description: >-
+  While prone, a Get Up offer (section move, hidden entirely when not prone —
+  a planned get-up row whose gate closed is skipped, so it cannot be
+  pre-planned before dropping) spends half your SPEED (floored, unaffected by
+  Dash, which boosts movement.total only) to right yourself. Its apply
+  advertises TWO effects: an EMPTY same-key 'prone' effect (the
+  concentration-broken idiom — newest-wins evicts the prone effect, clearing
+  condition.prone, both disadvantage flags, and the notice) plus a keyless
+  endOfTurn movement spend of half_speed (the move idiom). Committing the turn
+  keeps the eviction: the permanent clear evicts effect-prone from the
+  committed set too, and the endOfTurn spend ages out with the turn.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-prone
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.prone: 0
+          character.movement.half_speed: 15
+        offers:
+          exists:
+            - record-prone
+          notExists:
+            - get-up
+  - addOffer:
+      id: record-prone
+      assert:
+        facts:
+          condition.prone: 1
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+        offers:
+          exists:
+            - get-up
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-prone.notice
+  - addOffer:
+      id: get-up
+      assert:
+        facts:
+          condition.prone: 0
+          attack.str.disadvantage: 0
+          attack.dex.disadvantage: 0
+          character.movement.spent: 15
+          character.movement.remaining: 15
+        planErrors:
+          - id: get-up
+            errors: []
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-prone.notice
+        # Prone is gone from the post-plan facts, so the offer's own gate closes.
+        offers:
+          notExists:
+            - get-up
+  - endTurn:
+      assert:
+        facts:
+          condition.prone: 0
+          character.movement.spent: 0
+          character.movement.remaining: 30
+        # The permanent clear (key 'prone') evicted the prone effect at commit;
+        # the endOfTurn spend aged out with the turn.
+        effects:
+          notExists:
+            - effect-prone
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-prone.notice

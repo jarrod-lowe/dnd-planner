@@ -15,6 +15,10 @@ const speciesHuman: RuleModule = {
   derive: () => [
     // combine:sum so per-turn movement boosts (e.g. Dash) can add to the base.
     { fact: 'character.movement.total', combine: 'sum', value: () => 30 },
+    // The species SPEED — the base Get Up spends half of (floored by the
+    // movement group's half_speed). Dash boosts `total` only, never this, so
+    // righting yourself never costs more because you dashed.
+    { fact: 'character.movement.speed', combine: 'sum', value: () => 30 },
     { fact: 'character.movement.swim.can', value: () => 1 },
     { fact: 'character.movement.swim.cost', value: () => 2 },
     { fact: 'character.movement.fly.can', value: () => 0 }

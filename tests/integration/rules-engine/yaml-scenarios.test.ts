@@ -486,6 +486,12 @@ const EXPECTED_RUNNABLE = [
   'condition-prone-record',
   'condition-prone-record-speed-zero',
   'condition-prone-rest-clears',
+  // Get Up reads half your SPEED (species-contributed, floored) — not the
+  // Dash-boosted movement.total
+  'half-speed-derived',
+  'condition-prone-get-up',
+  'get-up-illegal-low-movement',
+  'get-up-illegal-speed-zero',
   // M3 — feat-alert (initiative-with-proficiency + annotations) and hit-die
   // (d10 pool from the class levels; remaining = total - spent)
   'alert-flag-set',
