@@ -35,6 +35,16 @@
 
   interface Props {
     entry: AvailableRuleEntry;
+    /**
+     * The plan item this panel renders a row of, when there is one. A plan
+     * row's view entry carries the OFFER's rule id (the engine re-resolves the
+     * offer per row), so two rows of the same offer — Extra Attack planning
+     * the greataxe twice — would otherwise build identical roll keys and each
+     * row's roll would replace the other's log entry. The instance id keys
+     * the rows apart; absent (picker/available panels, where the catalog's
+     * rule ids are unique) the key falls back to `entry.rule.id` as before.
+     */
+    instanceId?: string;
     editable?: boolean;
     onTap?: () => void;
     facts?: Facts;
@@ -85,6 +95,7 @@
 
   let {
     entry,
+    instanceId,
     editable = false,
     onTap,
     facts = {},
@@ -489,8 +500,20 @@
     onRemove?.();
   }
 
-  function handleDiceRoll(result: RollResult, _dieIndex: number) {
-    onRoll?.(result, _dieIndex);
+  /**
+   * The roll-log identity of the die that rolled: the row's key stem (the
+   * plan item's instance id on a plan row — two rows of the same offer must
+   * key apart, see `instanceId` — else the panel's own rule id, unique in the
+   * catalog), which control owns the die, and the die's index within that
+   * control — opaque (never rendered, never translated) and stable across
+   * re-rolls, so a re-roll logs a new entry sharing the key, which the roll
+   * log reads as "replaces the earlier one". Each wiring site builds its own
+   * suffix: a dice-line die keys by its index in `dice`, a hit-dice slot by
+   * its pool's die size AND its slot index (slot indexes restart per pool on
+   * a multiclass rest panel, so `d8:0` and `d10:0` are different dice).
+   */
+  function handleDiceRoll(result: RollResult, dieIndex: number, dieKey: string) {
+    onRoll?.(result, dieIndex);
 
     // Valueless riders ride the toast as bare labels; the toast's assembly
     // (roll type, advantage/disadvantage, these labels, valued modifiers) is
@@ -502,7 +525,7 @@
       }
     }
 
-    showDiceRollToast(displayName, result, riderLabels);
+    showDiceRollToast(displayName, result, riderLabels, `${instanceId ?? entry.rule.id}:${dieKey}`);
   }
 </script>
 
@@ -557,7 +580,7 @@
           {vars}
           {selections}
           {onSelectionChange}
-          onRoll={handleDiceRoll}
+          onRoll={(result, dieIndex) => handleDiceRoll(result, dieIndex, `primary:die:${dieIndex}`)}
           {gwfActive}
           modifiers={rollModifiers}
           {summary}
@@ -577,7 +600,8 @@
           {selections}
           advertisedEffects={entry.advertisedEffects}
           {onSelectionChange}
-          onRoll={handleDiceRoll}
+          onRoll={(result, slotIndex) =>
+            handleDiceRoll(result, slotIndex, `primary:slot:d${result.sides}:${slotIndex}`)}
           {summary}
         />
       </div>
@@ -690,7 +714,8 @@
           {vars}
           {selections}
           {onSelectionChange}
-          onRoll={handleDiceRoll}
+          onRoll={(result, dieIndex) =>
+            handleDiceRoll(result, dieIndex, `secondary:die:${dieIndex}`)}
           {gwfActive}
           modifiers={rollModifiers}
           {summary}
@@ -710,7 +735,8 @@
           {selections}
           advertisedEffects={entry.advertisedEffects}
           {onSelectionChange}
-          onRoll={handleDiceRoll}
+          onRoll={(result, slotIndex) =>
+            handleDiceRoll(result, slotIndex, `secondary:slot:d${result.sides}:${slotIndex}`)}
           {summary}
         />
       </div>

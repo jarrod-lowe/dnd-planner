@@ -134,7 +134,13 @@
               {#if notice.roll}
                 {@const control = noticeRollControl(notice.roll)}
                 <!-- Ephemeral, freely re-rollable: no writeBack, no plan
-                     recording — the toast is the whole record. -->
+                     recording — the toast is the whole record. The toast's
+                     roll key names the CELL (`cellKey`: the effect instance
+                     id, falling back to the shared key) and the die, so a
+                     re-roll replaces its own log entry and never a sibling
+                     burn's — two committed burns share one sentence (and so
+                     one `key`), but their dice are not each other's
+                     re-rolls. -->
                 <div class="notice-strip__roll">
                   <PanelDiceLine
                     {control}
@@ -142,7 +148,13 @@
                     facts={{}}
                     vars={{}}
                     criticalOption={false}
-                    onRoll={(result) => showDiceRollToast($t(notice.source ?? notice.key), result)}
+                    onRoll={(result, dieIndex) =>
+                      showDiceRollToast(
+                        $t(notice.source ?? notice.key),
+                        result,
+                        undefined,
+                        `notice:${cellKey(notice)}:${dieIndex}`
+                      )}
                   />
                 </div>
               {/if}
