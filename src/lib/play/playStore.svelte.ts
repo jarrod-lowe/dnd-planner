@@ -627,7 +627,11 @@ function swapPlanItemRule(instanceId: string, entry: AvailableRuleEntry): void {
   const index = state.plannedItems.findIndex((i) => i.instanceId === instanceId);
   if (index === -1) return;
 
-  const initialSelections = resolveInitialSelections(entry.rule, state.facts, state.modules);
+  // Resolve capture vars from the row's PREFIX facts — the state its OR
+  // INSTEAD choice was made over (committed + earlier rows), never the
+  // debounced display cache `state.facts`, which folds the OUTGOING row's
+  // own spend (and any later rows') into the capture.
+  const initialSelections = captureSelections(entry.rule, index);
   const updated = [...state.plannedItems];
   updated[index] = {
     ...updated[index],
