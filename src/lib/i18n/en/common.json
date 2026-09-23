@@ -972,8 +972,20 @@
         "effect-prone": {
           "name": "Prone"
         },
+        "get-up": {
+          "name": "Get Up",
+          "keywords": "stand rise right prone recover ground",
+          "description": "Spend half your Speed to end the Prone condition"
+        },
+        "get-up.effect-cleared": {
+          "name": "Got Up"
+        },
+        "get-up-offer": {
+          "cannot_get_up": "Your Speed is 0 — you can't right yourself",
+          "out_of_movement": "Not enough movement left"
+        },
         "notice": "Prone",
-        "notice.body": "Disadvantage on your attack rolls. Attack rolls against you have Advantage from within 5 feet, Disadvantage otherwise. You can only crawl, or spend half your Speed to right yourself."
+        "notice.body": "Disadvantage on your attack rolls. Attack rolls against you have Advantage from within 5 feet, Disadvantage otherwise. You can only crawl, or spend {{cost}} ft to right yourself."
       },
       "grapple": {
         "grapple-action": {
@@ -1839,6 +1851,7 @@
         "default": "Other",
         "travel": "Travel",
         "dash": "Dash",
+        "rise": "Rise",
         "special": "Special"
       },
       "INSPECT": {

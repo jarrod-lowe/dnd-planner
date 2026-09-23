@@ -972,8 +972,20 @@
         "effect-prone": {
           "name": "pum"
         },
+        "get-up": {
+          "name": "yIngheSqa'",
+          "keywords": "stand rise right prone recover ground",
+          "description": "Do'lIj vaghDIch yInob 'ej pum yIvangHa'"
+        },
+        "get-up.effect-cleared": {
+          "name": "yIngheSqa'pu'"
+        },
+        "get-up-offer": {
+          "cannot_get_up": "Do'lIj chIm — bIngheSlaHbe'",
+          "out_of_movement": "Do' poSmoHlaHbe'"
+        },
         "notice": "pum",
-        "notice.body": "HIv Daghu'taHvIS DIvI' ngor. vagh qejmeyDaq Sepbogh Doch SoH HIvchugh, DIch Suq; latlh DaqDaq DIvI' ngor. yIngheSqa'meH Do'lIj vaghDIch yInobta', pagh yIngheS."
+        "notice.body": "HIv Daghu'taHvIS DIvI' ngor. vagh qejmeyDaq Sepbogh Doch SoH HIvchugh, DIch Suq; latlh DaqDaq DIvI' ngor. yIngheSqa'meH {{cost}} qejmey yInobta', pagh yIngheS."
       },
       "grapple": {
         "grapple-action": {
@@ -1839,6 +1851,7 @@
         "default": "OTHER",
         "travel": "TRAVEL",
         "dash": "DASH",
+        "rise": "Qam",
         "special": "SPECIAL"
       },
       "INSPECT": {

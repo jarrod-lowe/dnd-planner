@@ -95,7 +95,7 @@ Tests (RED first — yaml scenario asserts are the RED for rule changes):
 - [x] GREEN: record + rest-clears scenarios; `EXPECTED_RUNNABLE` (rest-clears green-immediate: expiry landed with slice A — kept as pin)
 - [x] unit: recorder legal at Speed 0 — done as scenario `condition-prone-record-speed-zero` (green-immediate pin by design: no gate)
 - [x] terraform seed `char_condition_prone_rulegroup_seed` (dynamodb-items.tf); `make validate` passes
-- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → merge; `make deploy-test`
+- [x] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → merge; `make deploy-test` — merged as 4d3c7378 (PR #435); codex P1 backfill comment answered won't-fix; mid-review reframe: recorder = "Knocked Prone" (being knocked, not dropping)
 
 PR1 notes: effect carries `stateCombine: max` on the two disadvantage facts (armor modules derive them `combine: 'max'`; default `sum` on the effect write would conflict-throw for armored characters — leather-armor idiom). `record-prone.description` key omitted: record-\* offers carry name only.
 

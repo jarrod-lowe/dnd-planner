@@ -1,0 +1,28 @@
+name: 'Half Speed derived from species Speed'
+description: >-
+  The Get Up cost reads half your SPEED (docs/plans/ideas/condition-prone.md),
+  which is distinct from movement.total (Dash boosts total only): the species
+  contributes character.movement.speed (combine:sum, so future speed boosts
+  can compose) and movement derives the floored half — SRD 5.2 "half your
+  Speed (round down)". half_total stays unrounded; only half_speed floors.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/dash
+steps:
+  - evaluate:
+      assert:
+        facts:
+          character.movement.speed: 30
+          character.movement.half_speed: 15
+          character.movement.total: 30
+          character.movement.half_total: 15
+  # Dash adds to movement.total only — Speed (the Get Up cost base) is untouched.
+  - addOffer:
+      id: dash-action
+      assert:
+        facts:
+          character.movement.total: 60
+          character.movement.speed: 30
+          character.movement.half_speed: 15

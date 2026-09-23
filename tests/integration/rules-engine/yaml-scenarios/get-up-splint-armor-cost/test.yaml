@@ -1,0 +1,51 @@
+name: 'Get Up Splint Armor Cost'
+description: >-
+  Splint armor's 10-ft Speed penalty lowers the SPEED the Get Up cost derives
+  from (SRD 5.2 Prone: half your Speed, round down) — with STR below 15 the
+  species 30 becomes an effective 20, so righting yourself costs 10, not 15.
+  The penalty is a combine:sum contribution to character.movement.speed AND
+  character.movement.total (not movement.spent), so remaining, the move
+  sliders, and the Get Up cost all see the reduced Speed.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/splint-armor
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/condition-prone
+steps:
+  # Set STR to 12 (below 15) so the armor's speed penalty applies.
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 12
+      assert:
+        facts:
+          str.value: 12
+  # Don the armor: Speed drops to 20 everywhere.
+  - addOffer:
+      id: don-splint-armor
+      assert:
+        facts:
+          armor.splint.equipped: 1
+          character.movement.speed: 20
+          character.movement.total: 20
+          character.movement.half_speed: 10
+          character.movement.remaining: 20
+  # Knocked prone.
+  - addOffer:
+      id: record-prone
+      assert:
+        facts:
+          condition.prone: 1
+  # Get Up costs half the REDUCED Speed: 10 feet, leaving 10.
+  - addOffer:
+      id: get-up
+      assert:
+        facts:
+          character.movement.spent: 10
+          character.movement.remaining: 10
+          condition.prone: 0
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-prone.notice

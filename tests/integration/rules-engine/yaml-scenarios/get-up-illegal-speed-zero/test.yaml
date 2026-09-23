@@ -1,0 +1,20 @@
+name: 'Condition Prone - Get Up Illegal At Speed Zero'
+description: >-
+  SRD 5.2 Prone: "If your Speed is 0, you can't right yourself." The recorder
+  stays legal at Speed 0 (it models BEING KNOCKED prone, which enemies impose
+  regardless — see condition-prone-record-speed-zero), but Get Up is illegal.
+  `character.movement.speed` is an input fact here (no species module in this
+  rule set derives it), so the scenario pins the gate directly.
+ruleGroups:
+  - dnd-5e-2024/condition-prone
+initialFacts:
+  character.movement.speed: 0
+steps:
+  - addOffer:
+      id: record-prone
+      assert:
+        facts:
+          condition.prone: 1
+        offers:
+          illegal:
+            - get-up

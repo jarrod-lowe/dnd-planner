@@ -1,0 +1,34 @@
+name: 'Condition Prone - Get Up Illegal Without Enough Movement'
+description: >-
+  Righting yourself costs half your SPEED regardless of what you have left:
+  after spending 20 of 30 feet (remaining 10 < half_speed 15), Get Up stays
+  visible (you are still prone) but is ILLEGAL for want of movement — the
+  resource-gate idiom (legalWhen, not when), so the row still shows the player
+  why they cannot stand. Get Up with full movement is legal (pinned in
+  condition-prone-get-up).
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-prone
+steps:
+  - addOffer:
+      id: record-prone
+      assert:
+        facts:
+          condition.prone: 1
+          character.movement.half_speed: 15
+        offers:
+          legal:
+            - get-up
+  - addOffer:
+      id: move-walk
+      selections:
+        distance: 20
+      assert:
+        facts:
+          character.movement.remaining: 10
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - get-up
