@@ -197,11 +197,13 @@
   /* The entry wrapper itself paints nothing: the shared DiceRollToast card is
      the entry. A re-roll superseding one is signalled structurally, never with
      opacity (compositing towards the background is what sank the depleted
-     ledger cells): the card's solid border goes dotted and its surface steps
-     to a different container token. The toast's text colours are untouched
-     and AA on that surface in both themes (roll-log-contrast.test.ts). */
+     ledger cells) and never by ADDING prominence — a replaced roll is spent,
+     not emphasised. So the card hollows out: it drops to the flat page
+     surface, below both its own raised card and the list it sits on, and its
+     solid border goes dotted. The toast's text colours are untouched and AA
+     on that surface in both themes (roll-log-contrast.test.ts). */
   .roll-log__entry--replaced :global(.dice-toast) {
-    background: var(--md-sys-color-surface-container-highest);
+    background: var(--md-sys-color-surface);
     border-style: dotted;
   }
 

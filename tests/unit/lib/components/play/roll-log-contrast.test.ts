@@ -6,7 +6,7 @@ import { join } from 'node:path';
  * WCAG AA contrast regression tests for the roll log's replaced-entry styling.
  *
  * The replaced cue re-chromes the shared DiceRollToast card (dotted border +
- * a different container surface) via the `--replaced` wrapper variant. The
+ * a hollowed-out surface) via the `--replaced` wrapper variant. The
  * toast's own text tokens stay untouched, so the pin is: the variant must
  * never mute with `opacity` (the composite-towards-background trap that sank
  * the depleted ledger cells), the chrome it paints must be theme tokens, and
@@ -113,13 +113,17 @@ describe('RollLogPanel replaced-entry contrast', () => {
     }
   });
 
-  it('re-chromes the card structurally: dotted border on a different token surface', () => {
+  it('re-chromes the card structurally: dotted border on a hollowed surface', () => {
     const rule = rulesFor(PANEL, '.roll-log__entry--replaced')[0];
     expect(rule, 'the replaced wrapper restyles its toast card').toBeTruthy();
     expect(rule!.decls, 'the border goes dotted — the structural cue').toMatch(
       /border-style:\s*dotted/
     );
-    // A different surface from the toast's own card, else the cue vanishes.
+    // The card hollows out: it drops to the flat page-level surface token,
+    // BELOW both the toast's own raised card and the list it sits on. The cue
+    // must subtract prominence (a replaced roll is spent, not emphasised) —
+    // never step up to a higher container tier.
+    expect(replacedBackground().trim()).toMatch(/background:\s*var\(--md-sys-color-surface\)$/);
     const toastBg = cssRules(TOAST)
       .find((r) => r.selector === '.dice-toast')!
       .decls.match(/(?:^|;)\s*background:[^;]+/)![0];
