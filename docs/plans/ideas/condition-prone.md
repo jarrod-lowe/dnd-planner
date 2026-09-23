@@ -120,6 +120,7 @@ PR1 notes: effect carries `stateCombine: max` on the two disadvantage facts (arm
 
 - shove/other effects auto-recording prone (NPC state, not ours)
 - voluntarily dropping prone (recorder models being knocked prone only)
+- backfilling seeded groups (this or grapple/shove) to pre-existing characters — known limitation; codex P1 answered won't-fix on PR1; recreate character or build a forward-assignment mechanism as its own idea
 - end-of-turn-in-occupied-space auto-prone
 - flying + prone → falling
 - crawl in difficult terrain (×3)
