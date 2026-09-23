@@ -119,8 +119,10 @@
       {:else}
         <!-- The store reads latest-first, so plain order puts the newest roll
              on top. Scroll position is never touched: a player scrolled down
-             the history stays put when a new roll lands. -->
-        <ol class="roll-log__list">
+             the history stays put when a new roll lands. role="list" because
+             the list-style:none below makes WebKit (Safari/VoiceOver) drop
+             the list from the accessibility tree without it. -->
+        <ol class="roll-log__list" role="list">
           {#each rollLog.rolls as entry (entry.id)}
             <li class="roll-log__entry" class:roll-log__entry--replaced={entry.replaced}>
               <DiceRollToast

@@ -159,6 +159,18 @@ describe('RollLogPanel', () => {
     opener.remove();
   });
 
+  it('keeps list semantics under Safari/VoiceOver (role=list on the ol)', () => {
+    logRoll({ title: 'Only roll' });
+    rollLog.open();
+    mountPanel();
+
+    // list-style: none makes WebKit drop the list from the accessibility
+    // tree; role="list" restores it so VoiceOver announces list + position.
+    const list = container.querySelector('.roll-log__list');
+    expect(list?.tagName).toBe('OL');
+    expect(list?.getAttribute('role')).toBe('list');
+  });
+
   it('traps Tab within the dialog: focus never leaves the panel', () => {
     rollLog.open();
     mountPanel();
