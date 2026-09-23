@@ -18,6 +18,12 @@ const A = 'rule.class-paladin-level6';
  * modifier, so `{a}.save` — and the top bar that displays it — stay untouched.
  * It targets every save panel plus the steed's (`save.any.companion`: an ally
  * in the 10-foot emanation), and the UI renders it as a default-on toggle chip.
+ * The same annotation carries the reserved `notice` target, so the notices
+ * strip also shows the standing condition — its body quotes the live floored
+ * bonus (from the same computation the rider uses, so the sentence and the
+ * chip can never drift) and the Incapacitated clause, but NOT the derivation:
+ * "(Charisma modifier, minimum +1)" is the maths, and the table only needs
+ * the answer.
  *
  * Deliberately not modelled: the 10-foot radius and ally positioning, the
  * "inactive while Incapacitated" clause (the player switches the chip off —
@@ -32,18 +38,24 @@ const paladinLevel6: RuleModule = {
     { fact: 'hp.base.max', combine: 'sum', value: (f) => 6 + f.num('con.modifier') },
     { fact: 'layOnHands.pool.total', combine: 'sum', value: () => 5 }
   ],
-  annotate: (f) => [
-    {
-      key: `${A}.aura-of-protection`,
-      targets: ['save.any', 'save.any.companion'],
-      rider: {
-        label: `${A}.aura-of-protection`,
-        type: 'modifier',
-        value: { kind: 'flat', bonus: Math.max(1, f.num('cha.modifier')) },
-        appliesTo: 'save'
+  annotate: (f) => {
+    const bonus = Math.max(1, f.num('cha.modifier'));
+    return [
+      {
+        key: `${A}.aura-of-protection`,
+        targets: ['save.any', 'save.any.companion', 'notice'],
+        source: `${A}.name`,
+        body: `${A}.aura-of-protection.body`,
+        values: { bonus },
+        rider: {
+          label: `${A}.aura-of-protection`,
+          type: 'modifier',
+          value: { kind: 'flat', bonus },
+          appliesTo: 'save'
+        }
       }
-    }
-  ]
+    ];
+  }
 };
 
 export default defineRule(paladinLevel6);

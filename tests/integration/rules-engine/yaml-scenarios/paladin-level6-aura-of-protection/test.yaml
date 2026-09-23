@@ -1,9 +1,10 @@
 name: 'Paladin: Aura of Protection at level 6'
 description: >
   A level 6 paladin's Aura of Protection annotates every save panel (and the
-  steed's) with a toggleable modifier worth the Charisma modifier, minimum +1.
-  The `{a}.save` facts themselves are untouched — the aura is a bonus to the
-  roll, not a change to the saving throw modifier.
+  steed's) with a toggleable modifier worth the Charisma modifier, minimum +1,
+  and doubles as a notices-strip reminder of the standing condition. The
+  `{a}.save` facts themselves are untouched — the aura is a bonus to the roll,
+  not a change to the saving throw modifier.
 
 ruleGroups:
   - dnd-5e-2024/ability-scores
@@ -31,6 +32,7 @@ steps:
               targets:
                 - save.any
                 - save.any.companion
+                - notice
           riders:
             - key: rule.class-paladin-level6.aura-of-protection
               rider:
