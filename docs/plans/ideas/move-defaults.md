@@ -165,6 +165,8 @@ state.modules)` wrapped in try/catch → `{}` on throw. Wire into `addToPlan` +
     captures broke signed captures (save/skill bonuses read negative legitimately) —
     clamp is now authored per var (`min?: number` on `VarDefinition`; movement factory +
     steed `distance` declare `min: 0`), no-min captures verbatim; tests repointed
+  - second codex round (P2): lay-on-hands `amount` authored `min: 1` (remaining-resource
+    capture class; a negative prefix could commit a refunding negative spend)
 
 ### PR2 — wire `swapPlanItemRule` from prefix
 

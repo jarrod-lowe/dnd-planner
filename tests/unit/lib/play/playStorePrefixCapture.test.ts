@@ -67,17 +67,24 @@ import type { Rule } from '$lib/rules-view';
  * directly.
  */
 
-/** A loaded, settled store: modules loaded, initial evaluation run (empty plan). */
-async function loadedPlayStore(): Promise<{
-  playStore: (typeof import('$lib/play/playStore.svelte'))['playStore'];
-  walk: Rule;
-}> {
-  // Character load: assigned groups [species-human, movement], no persisted
-  // effects, no group metadata (the batch response's metadata is cache-only).
+/** The store under test (dynamically imported, so the type is spelled out). */
+type PlayStore = (typeof import('$lib/play/playStore.svelte'))['playStore'];
+
+/**
+ * A loaded, settled store: modules loaded, initial evaluation run (empty plan).
+ * The probe pins one fact so a wrong group list fails loudly at load, not as a
+ * mysterious capture mismatch later.
+ */
+async function loadedPlayStore(
+  ruleGroups: string[] = ['species-human', 'movement'],
+  probe: readonly [fact: string, expected: number] = ['character.movement.remaining', 30]
+): Promise<{ playStore: PlayStore }> {
+  // Character load: the assigned groups, no persisted effects, no group
+  // metadata (the batch response's metadata is cache-only).
   vi.mocked(apiGet)
     .mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ ruleGroups: ['species-human', 'movement'] })
+      json: async () => ({ ruleGroups })
     } as Response)
     .mockResolvedValueOnce({
       ok: true,
@@ -92,14 +99,17 @@ async function loadedPlayStore(): Promise<{
   playStore.reset();
   await playStore.loadRuleGroups('char-1');
 
-  // The initial (synchronous, empty-plan) evaluation has settled: speed 30.
-  expect(playStore.state.facts['character.movement.remaining']).toBe(30);
+  // The initial (synchronous, empty-plan) evaluation has settled.
+  expect(playStore.state.facts[probe[0]]).toBe(probe[1]);
+  return { playStore };
+}
 
-  const walk =
-    playStore.state.engineOutput?.availableRules.find((e) => e.rule.id === 'move-walk')?.rule ??
-    undefined;
-  if (!walk) throw new Error('move-walk missing from the offer catalog');
-  return { playStore, walk };
+/** The catalog's live Rule for an offer id — the object addToPlan takes. */
+function catalogRule(playStore: PlayStore, id: string): Rule {
+  const rule =
+    playStore.state.engineOutput?.availableRules.find((e) => e.rule.id === id)?.rule ?? undefined;
+  if (!rule) throw new Error(`${id} missing from the offer catalog`);
+  return rule;
 }
 
 describe('playStore addToPlan captures from the plan prefix', () => {
@@ -115,7 +125,8 @@ describe('playStore addToPlan captures from the plan prefix', () => {
   });
 
   it('a second Walk added inside the debounce window opens on the dragged-to distance (not the stale 30)', async () => {
-    const { playStore, walk } = await loadedPlayStore();
+    const { playStore } = await loadedPlayStore();
+    const walk = catalogRule(playStore, 'move-walk');
 
     playStore.addToPlan(walk); // captures 30 — the empty-plan facts
     const first = playStore.state.plannedItems[0].instanceId;
@@ -130,7 +141,8 @@ describe('playStore addToPlan captures from the plan prefix', () => {
   });
 
   it('a second Walk added after the first row settled at a full spend opens on the dragged-to distance (not the stale 0)', async () => {
-    const { playStore, walk } = await loadedPlayStore();
+    const { playStore } = await loadedPlayStore();
+    const walk = catalogRule(playStore, 'move-walk');
 
     playStore.addToPlan(walk); // captures 30
     vi.advanceTimersByTime(300); // the fold sees Walk@30 → facts remaining 0
@@ -144,5 +156,67 @@ describe('playStore addToPlan captures from the plan prefix', () => {
     // The new row's prefix is [Walk 15] — the drag IS in plannedItems, the
     // source of truth, so the capture sees it despite the pending debounce.
     expect(playStore.state.plannedItems[1].rule.selections).toEqual({ distance: 15 });
+  });
+});
+
+/**
+ * The lay-on-hands capture class: a remaining-RESOURCE pool (not movement)
+ * whose var authors a spend floor of `min: 1` — the slider's own floor. The
+ * prefix can read the pool NEGATIVE (an earlier heal over-committed it — the
+ * planner projects over-commitment rather than preventing it), and a verbatim
+ * capture there would open the row on a negative amount whose committed
+ * `layOnHands.pool.spent` effect REFUNDS the pool at End Turn. The capture
+ * must clamp at 1 instead.
+ */
+describe('playStore addToPlan clamps an over-committed pool capture (lay-on-hands)', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.runAllTimers();
+    vi.useRealTimers();
+    vi.resetModules();
+  });
+
+  it('a second heal added over an over-committed first opens on 1 point and never advertises a negative spend', async () => {
+    // The loh yaml scenarios' group list: everything level1 + lay-on-hands
+    // evaluate against, with the pool probe standing in for the settle check.
+    const { playStore } = await loadedPlayStore(
+      [
+        'species-human',
+        'action-economy',
+        'hp',
+        'core-events',
+        'ability-scores',
+        'proficiency',
+        'ac',
+        'class-paladin-level1',
+        'class-paladin-lay-on-hands'
+      ],
+      ['layOnHands.pool.total', 5]
+    );
+    const heal = catalogRule(playStore, 'loh-heal');
+
+    playStore.addToPlan(heal); // captures the full pool: amount 5
+    const first = playStore.state.plannedItems[0].instanceId;
+    // Over-commit: 8 of 5 points. The prefix for the next row now reads
+    // remaining −3.
+    playStore.updateSelections(first, { amount: 8 });
+    playStore.addToPlan(heal);
+
+    // Clamped at the spend floor: 1 point, never −3 (maxValue — pool.total —
+    // is a total, never negative, and needs no floor).
+    const second = playStore.state.plannedItems[1];
+    expect(second.rule.selections).toEqual({ amount: 1, maxValue: 5 });
+
+    // And what the row would commit can never refund the pool.
+    vi.runAllTimers();
+    const effects = playStore.getPlannedEntry(second.instanceId)?.advertisedEffects ?? [];
+    const spend = effects
+      .map((e) => e.state?.['layOnHands.pool.spent'])
+      .find((v): v is number => v !== undefined);
+    expect(spend).toBeGreaterThanOrEqual(1);
   });
 });
