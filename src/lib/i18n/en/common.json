@@ -967,7 +967,7 @@
       },
       "condition-prone": {
         "record-prone": {
-          "name": "Prone"
+          "name": "Knocked Prone"
         },
         "effect-prone": {
           "name": "Prone"

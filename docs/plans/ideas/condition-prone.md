@@ -21,14 +21,14 @@ Be extremely concise. Sacrifice grammar for the sake of concision.
 >
 > **Crawling** — While you're crawling, each foot of movement costs 1 extra foot (2 extra feet in Difficult Terrain).
 
-Deviations (deliberate): recorder has no Speed-0 gate (covers being knocked prone at Speed 0); rests clear Prone (player convenience).
+Modelled: BEING KNOCKED prone (imposed — free, ungated). NOT modelled: voluntarily DROPPING prone (SRD "Dropping Prone" rule). Deviation (deliberate): rests clear Prone (player convenience; SRD leaves it until righted).
 
 ## Decisions (grilled)
 
 - Disadvantage on OUR attack rolls: **set mechanically** — effect writes `attack.str.disadvantage` + `attack.dex.disadvantage`; weapon/unarmed dice-lines already read these → roller defaults to 2d20-take-low (per-die override stays). Attacks vs us: notice text only (no NPC modelling). No spell-attack offers exist yet; future ones must wire `advantage: { fact }`.
 - Get Up cost: half **Speed** (not movement total), round down. New facts: `character.movement.speed` (species-contributed, `combine: 'sum'`; Dash keeps touching only `total`), `character.movement.half_speed` (derived, floored).
 - Get Up: `when` prone only; legal when `speed > 0` AND `remaining >= half_speed`.
-- Recorder `record-prone`: always legal, free, no action cost.
+- Recorder `record-prone` ("Knocked Prone"): always legal, free, no action cost — models being knocked prone; dropping prone voluntarily unmodelled.
 - Universal group: terraform `SEED#CHAR` record + yaml `requires: [movement]` self-heal for existing characters.
 - Clearing: Get Up (empty same-`key` effect — concentration-broken idiom); any rest (effect `expiry: untilShortRest` — long rest includes short); manual chip dismissal on ActiveStateStrip (automatic for committed effects).
 - Crawl: `move-crawl` ×2 cost, visible only while prone. Walk / rough-terrain / swim / swim-costly / fly **illegal while prone** (shared diagnostic code). Crawl-in-difficult-terrain (×3) out of scope.
@@ -119,6 +119,7 @@ PR1 notes: effect carries `stateCombine: max` on the two disadvantage facts (arm
 ## Out of scope
 
 - shove/other effects auto-recording prone (NPC state, not ours)
+- voluntarily dropping prone (recorder models being knocked prone only)
 - end-of-turn-in-occupied-space auto-prone
 - flying + prone → falling
 - crawl in difficult terrain (×3)

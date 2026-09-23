@@ -1,13 +1,13 @@
 name: 'Condition Prone - Record'
 description: >-
-  Recording the Prone condition commits a keyed effect setting condition.prone
+  Recording being knocked Prone commits a keyed effect setting condition.prone
   plus the STR/DEX attack-roll disadvantage flags (the weapon and unarmed
   dice-lines already read those facts, so the rollers default to disadvantage
   with zero roller changes), and a NOTICE carries the condition's standing
-  effects while it is live. The recorder is deliberately ungated — legal even
-  at Speed 0 (a deviation from SRD "you can't drop prone at Speed 0" that
-  covers being knocked prone) — and any rest clears it (untilShortRest covers
-  both rest kinds; see condition-prone-rest-clears).
+  effects while it is live. The recorder models BEING KNOCKED prone, so it is
+  free and ungated (dropping prone voluntarily is unmodelled), and any rest
+  clears it (untilShortRest covers both rest kinds; see
+  condition-prone-rest-clears).
 ruleGroups:
   - dnd-5e-2024/condition-prone
 steps:

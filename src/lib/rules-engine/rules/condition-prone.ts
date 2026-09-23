@@ -3,17 +3,19 @@ import { defineRule, type ActionResult, type Annotation, type RuleModule } from 
 const CP = 'rule.dnd-5e-2024.condition-prone';
 
 /**
- * Prone — the first D&D condition, as a recorder. Recording it commits a keyed
- * effect holding `condition.prone` plus the STR/DEX attack-disadvantage flags
- * the weapon and unarmed dice-lines already read (so the rollers default to
- * 2d20-take-low with zero roller changes), and a NOTICE carries the condition's
- * standing effects — attacks against you stay notice text only (no NPC
- * modelling).
+ * Prone — the first D&D condition, as a recorder. This models BEING KNOCKED
+ * PRONE (imposed by an enemy effect), so the recorder is free and ungated —
+ * legal at any Speed. Voluntarily DROPPING prone (a free choice under the SRD
+ * "Dropping Prone" rule) is not modelled. Recording it commits a keyed effect
+ * holding `condition.prone` plus the STR/DEX attack-disadvantage flags the
+ * weapon and unarmed dice-lines already read (so the rollers default to
+ * 2d20-take-low with zero roller changes), and a NOTICE carries the
+ * condition's standing effects — attacks against you stay notice text only
+ * (no NPC modelling).
  *
- * Two deliberate deviations (docs/plans/ideas/condition-prone.md): the recorder
- * is ungated — legal even at Speed 0, since being knocked prone is not a
- * choice — and any rest clears it (`untilShortRest`; a long rest includes a
- * short), where SRD 5.2 leaves the condition standing until righted.
+ * One deliberate deviation (docs/plans/ideas/condition-prone.md): any rest
+ * clears the condition (`untilShortRest`; a long rest includes a short),
+ * where SRD 5.2 leaves it standing until righted.
  *
  * The disadvantage flags carry `stateCombine: 'max'` (the armor idiom): the
  * armor modules derive the same facts with `combine: 'max'`, and the default
@@ -63,7 +65,7 @@ const conditionProne: RuleModule = {
           {
             key: `${CP}.notice`,
             targets: ['notice'],
-            source: `${CP}.record-prone.name`,
+            source: `${CP}.effect-prone.name`,
             body: `${CP}.notice.body`
           }
         ]

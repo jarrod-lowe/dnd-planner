@@ -5,18 +5,20 @@ ruleGroups:
     translations:
       en:
         name: Prone
-        description: Core rules for the Prone condition
+        description: Rules while you have the Prone condition; record it when you are knocked prone
         keywords:
           - prone
+          - knocked
           - condition
           - fall
           - ground
           - crawl
       en-x-tlh:
         name: pum
-        description: pum Dotlh DIvI' naQ
+        description: pum Dotlh; pummoHlu'DI' yIghun
         keywords:
           - pum
+          - pummoH
           - Dotlh
     detail:
       key: condition/prone
