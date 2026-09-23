@@ -1763,6 +1763,7 @@
       "proficientDotFull": "●",
       "proficientDotDouble": "◉",
       "hpValue": "{{current}} / {{max}}",
+      "hpBarLabel": "Hit points",
       "viewPlayer": "👤 You",
       "viewSteed": "🐴 Steed"
     },

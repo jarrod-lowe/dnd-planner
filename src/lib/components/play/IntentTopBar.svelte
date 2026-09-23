@@ -156,6 +156,7 @@
             <div
               class="intent-top-bar__hp-bar"
               role="progressbar"
+              aria-label={$t('play.topBar.hpBarLabel')}
               aria-valuenow={hpCurrent}
               aria-valuemin={0}
               aria-valuemax={hpMax}
