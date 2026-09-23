@@ -171,17 +171,29 @@ state.modules)` wrapped in try/catch → `{}` on throw. Wire into `addToPlan` +
 
 ### PR2 — wire `swapPlanItemRule` from prefix
 
-- [ ] RED: store swap tests (30 not 15 / not 0 / not −5; multi-row earlier-rows-count;
+- [x] RED: store swap tests (30 not 15 / not 0 / not −5; multi-row earlier-rows-count;
       no-advance variants identical)
-- [ ] RED: swap [Dash] → Walk: 30 not 60 — Dash's +30 `total` boost sits in the final
-      facts; the ORIGINALLY reported "2× speed" repro (MOVE chip defaults to Dash, user
-      swaps to Walk; manual repro confirmed 2026-09-24 on a fresh character, top bar 30,
-      swapped row 60, search-added row 30)
-- [ ] `swapPlanItemRule` uses `captureSelections(entry.rule, index)`; delete its
+  - done: extended `tests/unit/lib/play/playStorePrefixCapture.test.ts` (same real-engine
+    harness). Swap driven the UI way — entry from `getAlternativeEntries` (the
+    hypothetical catalog), post-plan catalog as the in-debounce fallback, then
+    `swapPlanItemRule`. Target is Fly (illegal-for-a-human but rendered + tappable in the
+    picker — no committed fly-grant needed, unlike PR1's second-row add). REDs: Dash→Walk
+    got 60; Walk@15 got 15; Walk@30 got 0; Walk@35 got 0 (−5 floors at PR1's authored
+    `min: 0` through the old facts read — still the leftover, not max legal); multi-row
+    got 0. One debounce-window pin (row just added, no advance) passes on main BY DESIGN
+    — cache coincides with the prefix there; its settled twin is the RED.
+  - Dash→Walk is the ORIGINALLY reported "2× speed" repro — MOVE chip defaults to Dash,
+    user swaps to Walk; Dash's +30 `total` boost sits in the final facts. Manual repro
+    confirmed 2026-09-24 (fresh character, top bar 30, swapped row 60, search-added row 30)
+- [x] `swapPlanItemRule` uses `captureSelections(entry.rule, index)`; delete its
       `state.facts` read
-- [ ] GREEN; guards (seed beats capture; existing captures unaffected)
+- [x] GREEN; guards (seed beats capture; existing captures unaffected)
+  - done: 2510 unit tests / 200 files pass — `playStore.test.ts` (93, incl. the
+    seed-beats-capture guard) and the PR1 prefix tests untouched by the change
 - [ ] gates → PR → codex monitor → merge; playwright sanity (all add/swap cases default
       to max legal)
+  - gates green (test-unit 2510 pass, check 0 errors, format-check clean); PR open,
+    merge pending; playwright sanity still to run against a dev server
 
 ## Out of scope
 

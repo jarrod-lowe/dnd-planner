@@ -50,7 +50,7 @@ vi.mock('svelte-sonner', () => ({
 }));
 
 import { apiGet, apiPost } from '$lib/api/client';
-import type { Rule } from '$lib/rules-view';
+import type { AvailableRuleEntry, Rule } from '$lib/rules-view';
 
 /**
  * Capture-var regression at the store seam — the real engine path, no
@@ -112,6 +112,28 @@ function catalogRule(playStore: PlayStore, id: string): Rule {
   return rule;
 }
 
+/**
+ * The entry a row's OR INSTEAD picker would hand the swap, mirroring
+ * PlanStack's `preChoiceAlternatives`: the row's pre-choice (hypothetical)
+ * catalog when an evaluation covers the instance, else the post-plan catalog —
+ * the documented fallback inside the debounce window. Illegal entries are
+ * shown and tappable in the picker (tagged, not filtered), so an illegal-for-
+ * a-human Fly is a faithful target.
+ */
+function alternativeEntry(
+  playStore: (typeof import('$lib/play/playStore.svelte'))['playStore'],
+  instanceId: string,
+  ruleId: string
+): AvailableRuleEntry {
+  const catalog =
+    playStore.getAlternativeEntries(instanceId) ??
+    playStore.state.engineOutput?.availableRules ??
+    [];
+  const entry = catalog.find((e) => e.rule.id === ruleId);
+  if (!entry) throw new Error(`${ruleId} missing from the row's OR INSTEAD catalog`);
+  return entry;
+}
+
 describe('playStore addToPlan captures from the plan prefix', () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -155,6 +177,147 @@ describe('playStore addToPlan captures from the plan prefix', () => {
 
     // The new row's prefix is [Walk 15] — the drag IS in plannedItems, the
     // source of truth, so the capture sees it despite the pending debounce.
+    expect(playStore.state.plannedItems[1].rule.selections).toEqual({ distance: 15 });
+  });
+});
+
+describe('playStore swapPlanItemRule captures from the plan prefix', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.runAllTimers();
+    vi.useRealTimers();
+    vi.resetModules();
+  });
+
+  it('swapping a Dash row to Walk opens on the species speed, not the doubled dashed total', async () => {
+    // The originally reported repro: the MOVE chip defaults to Dash, the player
+    // swaps to Walk. Dash's apply advertises the CURRENT total (combine:sum),
+    // so the post-plan facts read 60 — but the row's choice was made over the
+    // pre-Dash state, where 30 feet were legal.
+    const { playStore } = await loadedPlayStore(['species-human', 'movement', 'dash']);
+    const dash =
+      playStore.state.engineOutput?.availableRules.find((e) => e.rule.id === 'dash-action')?.rule ??
+      undefined;
+    if (!dash) throw new Error('dash-action missing from the offer catalog');
+
+    playStore.addToPlan(dash);
+    const row = playStore.state.plannedItems[0].instanceId;
+    vi.advanceTimersByTime(300);
+    // The final fold includes Dash's +30: both total and remaining read 60.
+    expect(playStore.state.facts['character.movement.total']).toBe(60);
+    expect(playStore.state.facts['character.movement.remaining']).toBe(60);
+
+    playStore.swapPlanItemRule(row, alternativeEntry(playStore, row, 'move-walk'));
+
+    // The row's prefix is the EMPTY plan (its own Dash excluded): speed 30.
+    expect(playStore.state.plannedItems[0].rule.selections).toEqual({ distance: 30 });
+  });
+
+  it('swapping an evaluated Walk@15 row opens on the full remaining, not the old value', async () => {
+    const { playStore } = await loadedPlayStore();
+    const walk = catalogRule(playStore, 'move-walk');
+
+    playStore.addToPlan(walk);
+    const first = playStore.state.plannedItems[0].instanceId;
+    playStore.updateSelections(first, { distance: 15 });
+    vi.advanceTimersByTime(300);
+    expect(playStore.state.facts['character.movement.remaining']).toBe(15); // final facts
+
+    playStore.swapPlanItemRule(first, alternativeEntry(playStore, first, 'move-fly'));
+
+    // The row's prefix excludes its own spend: all 30 feet are legal again.
+    expect(playStore.state.plannedItems[0].rule.selections).toEqual({ distance: 30 });
+  });
+
+  it('swapping a fully-spent Walk row opens on the full remaining, not 0', async () => {
+    const { playStore } = await loadedPlayStore();
+    const walk = catalogRule(playStore, 'move-walk');
+
+    playStore.addToPlan(walk); // captures 30 — a full spend
+    const first = playStore.state.plannedItems[0].instanceId;
+    vi.advanceTimersByTime(300);
+    expect(playStore.state.facts['character.movement.remaining']).toBe(0); // final facts
+
+    playStore.swapPlanItemRule(first, alternativeEntry(playStore, first, 'move-fly'));
+
+    expect(playStore.state.plannedItems[0].rule.selections).toEqual({ distance: 30 });
+  });
+
+  it('swapping an over-committed Walk row opens on the full remaining, not the clamped leftover', async () => {
+    const { playStore } = await loadedPlayStore();
+    const walk = catalogRule(playStore, 'move-walk');
+
+    playStore.addToPlan(walk);
+    const first = playStore.state.plannedItems[0].instanceId;
+    playStore.updateSelections(first, { distance: 35 }); // over-commit drag stays draggable
+    vi.advanceTimersByTime(300);
+    // The planner projects over-commitment: final facts read negative.
+    expect(playStore.state.facts['character.movement.remaining']).toBe(-5);
+
+    playStore.swapPlanItemRule(first, alternativeEntry(playStore, first, 'move-fly'));
+
+    expect(playStore.state.plannedItems[0].rule.selections).toEqual({ distance: 30 });
+  });
+
+  it('a multi-row swap counts earlier rows and excludes the swapped row itself', async () => {
+    const { playStore } = await loadedPlayStore();
+    const walk = catalogRule(playStore, 'move-walk');
+
+    playStore.addToPlan(walk);
+    const first = playStore.state.plannedItems[0].instanceId;
+    playStore.updateSelections(first, { distance: 15 });
+    vi.advanceTimersByTime(300); // [Walk 15] settled
+    playStore.addToPlan(walk); // second Walk opens on 15 (the prefix)
+    const second = playStore.state.plannedItems[1].instanceId;
+    vi.advanceTimersByTime(300); // [Walk 15, Walk 15] settled
+    expect(playStore.state.facts['character.movement.remaining']).toBe(0); // final facts
+
+    playStore.swapPlanItemRule(second, alternativeEntry(playStore, second, 'move-fly'));
+
+    // The second row's prefix is [Walk 15]: 15 feet legal, its own 15 excluded.
+    expect(playStore.state.plannedItems[1].rule.selections).toEqual({ distance: 15 });
+  });
+
+  it('the same swap with NO timer advance after the drag captures identically', async () => {
+    const { playStore } = await loadedPlayStore();
+    const walk = catalogRule(playStore, 'move-walk');
+
+    playStore.addToPlan(walk); // captures 30
+    const first = playStore.state.plannedItems[0].instanceId;
+    vi.advanceTimersByTime(300); // the fold sees Walk@30
+    playStore.updateSelections(first, { distance: 15 });
+    // NO advance: the drag is in plannedItems (source of truth) but the
+    // debounced facts still read the Walk@30 evaluation.
+    expect(playStore.state.facts['character.movement.remaining']).toBe(0);
+
+    playStore.swapPlanItemRule(first, alternativeEntry(playStore, first, 'move-fly'));
+
+    // Identical to the settled variant: the prefix (empty) is untouched by
+    // either the debounce or the row's own spend.
+    expect(playStore.state.plannedItems[0].rule.selections).toEqual({ distance: 30 });
+  });
+
+  it('a multi-row swap inside the debounce window (row just added) captures identically', async () => {
+    const { playStore } = await loadedPlayStore();
+    const walk = catalogRule(playStore, 'move-walk');
+
+    playStore.addToPlan(walk);
+    const first = playStore.state.plannedItems[0].instanceId;
+    playStore.updateSelections(first, { distance: 15 });
+    vi.advanceTimersByTime(300); // [Walk 15] settled
+    playStore.addToPlan(walk); // second Walk opens on 15
+    const second = playStore.state.plannedItems[1].instanceId;
+    // NO advance: no hypothetical catalog covers the new instance yet — the
+    // picker falls back to the post-plan catalog (also pre-settlement here).
+    expect(playStore.state.facts['character.movement.remaining']).toBe(15);
+
+    playStore.swapPlanItemRule(second, alternativeEntry(playStore, second, 'move-fly'));
+
+    // Identical to the settled variant: the prefix [Walk 15] reads 15 legal.
     expect(playStore.state.plannedItems[1].rule.selections).toEqual({ distance: 15 });
   });
 });
