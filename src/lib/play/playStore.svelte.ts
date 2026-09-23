@@ -19,6 +19,7 @@ import { deriveVerbFromRule } from './stepUtils';
 import { locale, t } from '$lib/i18n';
 import { prefetchDetailsForEffects } from '$lib/details/rehydrate';
 import { get } from 'svelte/store';
+import { rollLog } from './rollLogStore.svelte';
 import { getCache, ensureCached } from '$lib/rules/ruleGroupCache.svelte';
 import { resolveDependencies } from '$lib/rules/resolveDependencies';
 import { toast } from 'svelte-sonner';
@@ -927,6 +928,9 @@ function endTurn(): void {
   // not been evaluated yet — flush it so the commit below reads the CURRENT
   // plan's advertised effects, not the previous evaluation's.
   flushPendingEvaluation();
+  // The roll log is current-turn scratch: End Turn empties it. A cross-turn
+  // re-roll starts fresh (no replaced marker).
+  rollLog.clearRollLog();
   // Age the committed set across the turn boundary: merge in this turn's advertised
   // effects, collapse replacements by key, and drop any whose expiry fired. Rests
   // recorded this turn are detected from the effects themselves (`endTurn`).
@@ -967,6 +971,7 @@ function reset(): void {
   _hypotheticalEntriesMap = new Map();
   _plannedEntriesMap = new Map();
   _lastAdvertised = [];
+  rollLog.clearRollLog();
   state = { ...initialState };
 }
 
