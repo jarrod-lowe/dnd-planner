@@ -406,7 +406,9 @@
       }
     },
     "class-paladin-level6": {
-      "aura-of-protection": "Aura of Protection"
+      "name": "Paladin Level 6",
+      "aura-of-protection": "Aura of Protection",
+      "aura-of-protection.body": "You and your allies within the 10-foot aura gain +{{bonus}} to saving throws. Inactive while you have the Incapacitated condition."
     },
     "class-paladin-oath-redemption-level3": {
       "rebuke-the-violent": {

@@ -406,7 +406,9 @@
       }
     },
     "class-paladin-level6": {
-      "aura-of-protection": "Hub Hurgh"
+      "name": "Paladin Level 6",
+      "aura-of-protection": "Hub Hurgh",
+      "aura-of-protection.body": "Hub Hurgh ngop 10-foy: SoH rarlu'ta' nuvpu' 'ej {{bonus}} chel qaS DIch. SoH qaS DIch Incapacitated DIch, Hurgh Qaw'lu'."
     },
     "class-paladin-oath-redemption-level3": {
       "rebuke-the-violent": {
