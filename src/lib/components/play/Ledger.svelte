@@ -448,12 +448,21 @@
     border-radius: var(--radius-md);
   }
 
-  /* Depleted. The muted read comes from the softer on-surface-variant on the
-     value (the label already uses it), NOT opacity: 0.4-opacity text composites
-     to ~2:1 on the surface-container strip and fails WCAG AA (axe
-     color-contrast). on-surface-variant clears 4.5:1 in both themes. */
+  /* Depleted. A compound, AA-safe cue — colour alone is not a state signal:
+     on-surface → on-surface-variant at the same weight reads as a rounding
+     error next to a positive cell. The value steps to the softer variant AND
+     drops weight, and the cell itself turns into the hollow box the spent
+     slot tiles next to it already use (transparent bg, outline-variant
+     border). Never opacity: 0.4-opacity text composites to ~2:1 on the
+     surface-container strip and fails WCAG AA (axe color-contrast);
+     on-surface-variant clears 4.5:1 in both themes. */
   .ledger__cell--muted .ledger__cell-value {
     color: var(--md-sys-color-on-surface-variant);
+    font-weight: 400;
+  }
+
+  .ledger__cell--muted {
+    border: 1px solid var(--md-sys-color-outline-variant);
   }
 
   .ledger__cell--warn {

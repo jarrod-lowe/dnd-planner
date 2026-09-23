@@ -116,6 +116,43 @@ describe('Ledger depleted-cell contrast (axe color-contrast)', () => {
     expect(overrides.length).toBeGreaterThan(0);
   });
 
+  it('carries a structural cue beyond colour: the hollow spent-tile border', () => {
+    // Colour alone cannot signal depletion. on-surface → on-surface-variant is
+    // the only AA-safe neutral step, and at the same weight and size it reads
+    // as a rounding error, not a state change — the 0.4-opacity ghost it
+    // replaced was LOUD. The depleted read therefore needs a second axis on a
+    // different channel than text colour. The strip already has one: spent
+    // slot tiles are hollow boxes (transparent bg, outline-variant border).
+    // The numeric cells borrow that same vocabulary.
+    const muted = rulesFor(LEDGER, '.ledger__cell--muted');
+    const borders = muted.flatMap((r) =>
+      [...r.decls.matchAll(/(?:^|;)\s*border:[^;]+/g)].map((m) => m[0])
+    );
+    expect(borders.length, 'a --muted rule sets a border').toBeGreaterThan(0);
+    const spentTileBorder = cssRules(LEDGER)
+      .find((r) => r.selector === '.ledger__slot-tile--spent')!
+      .decls.match(/border-color:[^;]+/)![0];
+    for (const border of borders) {
+      expect(border, 'border uses the spent-tile outline token').toContain(
+        spentTileBorder.match(/var\((--md-sys-color-[a-z-]+)\)/)![1]
+      );
+    }
+  });
+
+  it('drops the depleted value below the positive value in weight', () => {
+    // The second half of the compound cue: lighter colour AND lighter weight,
+    // so a depleted cell cannot masquerade as a positive one.
+    const weightOf = (selector: string): number => {
+      const rule = cssRules(LEDGER).find((r) => r.selector === selector);
+      expect(rule, `${selector} exists`).toBeTruthy();
+      expect(rule!.decls, `${selector} sets a numeric font-weight`).toMatch(/font-weight:\s*\d+/);
+      return Number(rule!.decls.match(/font-weight:\s*(\d+)/)![1]);
+    };
+    expect(weightOf('.ledger__cell--muted .ledger__cell-value')).toBeLessThan(
+      weightOf('.ledger__cell-value')
+    );
+  });
+
   const ledgerBgDecl = cssRules(LEDGER)
     .find((r) => r.selector === '.ledger')!
     .decls.match(/background:[^;]+/)![0];
