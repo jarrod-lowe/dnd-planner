@@ -34,8 +34,11 @@ const TOP_BAR: { gate: string; entry: UiEntry }[] = [
   },
   { gate: 'ac.value', entry: { type: 'value', label: 'play.topBar.ac', fact: 'ac.value' } },
   {
-    gate: 'character.movement.remaining',
-    entry: { type: 'value', label: 'play.topBar.speed', fact: 'character.movement.remaining' }
+    // The modified total (species base + armor penalty, Dash boost — a
+    // combine:sum fact), not the remaining: the ledger's movement row already
+    // carries avail/total.
+    gate: 'character.movement.total',
+    entry: { type: 'value', label: 'play.topBar.speed', fact: 'character.movement.total' }
   },
   {
     gate: 'concentration.max',
@@ -162,11 +165,12 @@ const STEED_TOP_BAR: { gate: string; entry: UiEntry }[] = [
     }
   },
   {
-    gate: 'companion.steed.movement.remaining',
+    // The modified total (base ×2 while Dashed), matching the player chip.
+    gate: 'companion.steed.movement.total',
     entry: {
       type: 'value',
       label: 'play.topBar.speed',
-      fact: 'companion.steed.movement.remaining',
+      fact: 'companion.steed.movement.total',
       subject: 'steed'
     }
   },
