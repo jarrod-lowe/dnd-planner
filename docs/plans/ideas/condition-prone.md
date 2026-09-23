@@ -21,14 +21,14 @@ Be extremely concise. Sacrifice grammar for the sake of concision.
 >
 > **Crawling** — While you're crawling, each foot of movement costs 1 extra foot (2 extra feet in Difficult Terrain).
 
-Modelled: BEING KNOCKED prone (imposed — free, ungated). NOT modelled: voluntarily DROPPING prone (SRD "Dropping Prone" rule). Deviation (deliberate): rests clear Prone (player convenience; SRD leaves it until righted).
+Modelled: BEING KNOCKED prone (imposed — free, ungated) AND voluntarily DROPPING prone (SRD "Dropping Prone" rule — PR4). Deviation (deliberate): rests clear Prone (player convenience; SRD leaves it until righted).
 
 ## Decisions (grilled)
 
 - Disadvantage on OUR attack rolls: **set mechanically** — effect writes `attack.str.disadvantage` + `attack.dex.disadvantage`; weapon/unarmed dice-lines already read these → roller defaults to 2d20-take-low (per-die override stays). Attacks vs us: notice text only (no NPC modelling). No spell-attack offers exist yet; future ones must wire `advantage: { fact }`.
 - Get Up cost: half **Speed** (not movement total), round down. New facts: `character.movement.speed` (species-contributed, `combine: 'sum'`; Dash keeps touching only `total`), `character.movement.half_speed` (derived, floored).
 - Get Up: `when` prone only; legal when `speed > 0` AND `remaining >= half_speed`.
-- Recorder `record-prone` ("Knocked Prone"): always legal, free, no action cost — models being knocked prone; dropping prone voluntarily unmodelled.
+- Recorder `record-prone` ("Knocked Prone"): always legal, free, no action cost — models being knocked prone. `drop-prone` ("Drop Prone", PR4): voluntary SRD choice — `when: not prone` (mirror of get-up's gate), `legalWhen: speed > 0`.
 - Universal group: terraform `SEED#CHAR` record + yaml `requires: [movement]` self-heal for existing characters.
 - Clearing: Get Up (empty same-`key` effect — concentration-broken idiom); any rest (effect `expiry: untilShortRest` — long rest includes short); manual chip dismissal on ActiveStateStrip (automatic for committed effects).
 - Crawl: `move-crawl` ×2 cost, visible only while prone. Walk / rough-terrain / swim / swim-costly / fly **illegal while prone** (shared diagnostic code). Crawl-in-difficult-terrain (×3) out of scope.
@@ -110,16 +110,25 @@ PR1 notes: effect carries `stateCombine: max` on the two disadvantage facts (arm
 
 ### PR3 — crawl + prone movement restriction
 
-- [ ] RED: `move-crawl-while-prone`, `walk-illegal-while-prone` scenarios fail
-- [ ] movement.ts: `move-crawl` offer; not-prone legality on 5 move offers; shared `cannot_while_prone` code
-- [ ] i18n crawl keys, both locales
-- [ ] GREEN
+- [x] RED: `move-crawl-while-prone`, `walk-illegal-while-prone` scenarios fail
+- [x] movement.ts: `move-crawl` offer; not-prone legality on 5 move offers; shared `cannot_while_prone` code
+- [x] i18n crawl keys, both locales
+- [x] GREEN
+- [x] gates → PR → codex monitor → merge — merged as 921fde70 (PR #437)
+
+### PR4 — voluntary Drop Prone (SRD "Dropping Prone")
+
+- [x] RED: `condition-prone-drop` scenario fails (offer absent)
+- [x] `drop-prone` offer: `when: not prone` (mirror of get-up's gate — cannot stack a second copy), `legalWhen: speed > 0`, apply advertises the SAME keyed prone effect (extracted `proneEffect()` helper, shared with the recorder)
+- [x] i18n `drop-prone.name/.description/.keywords` + `drop-prone-offer.cannot_drop`, both locales
+- [x] GREEN: `condition-prone-drop` → `condition-prone-drop-speed-zero` (legality gate, planned-anyway plan error) → `condition-prone-drop-then-get-up` (green-immediate pin: full cycle, drop spends nothing)
+- [x] stale "dropping prone is unmodelled" notes updated (record + record-speed-zero scenario descriptions, module doc comment, this doc)
+- [x] group yaml description/keywords mention drop (en + tlh)
 - [ ] gates → PR → codex monitor → merge
 
 ## Out of scope
 
 - shove/other effects auto-recording prone (NPC state, not ours)
-- voluntarily dropping prone (recorder models being knocked prone only)
 - backfilling seeded groups (this or grapple/shove) to pre-existing characters — known limitation; codex P1 answered won't-fix on PR1; recreate character or build a forward-assignment mechanism as its own idea
 - end-of-turn-in-occupied-space auto-prone
 - flying + prone → falling

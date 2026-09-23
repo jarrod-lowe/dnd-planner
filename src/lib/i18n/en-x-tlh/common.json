@@ -977,6 +977,11 @@
         "record-prone": {
           "name": "pummoH"
         },
+        "drop-prone": {
+          "name": "pumchoH",
+          "keywords": "drop fall ground lie down voluntary",
+          "description": "pum yIDal — chon pagh, Do' pagh"
+        },
         "effect-prone": {
           "name": "pum"
         },
@@ -991,6 +996,9 @@
         "get-up-offer": {
           "cannot_get_up": "Do'lIj chIm — bIngheSlaHbe'",
           "out_of_movement": "Do' poSmoHlaHbe'"
+        },
+        "drop-prone-offer": {
+          "cannot_drop": "Do'lIj chIm — bIpumlaHbe'"
         },
         "notice": "pum",
         "notice.body": "HIv Daghu'taHvIS DIvI' ngor. vagh qejmeyDaq Sepbogh Doch SoH HIvchugh, DIch Suq; latlh DaqDaq DIvI' ngor. yIngheSqa'meH {{cost}} qejmey yInobta', pagh yIngheS."

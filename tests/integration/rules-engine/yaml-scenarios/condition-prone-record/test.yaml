@@ -5,9 +5,9 @@ description: >-
   dice-lines already read those facts, so the rollers default to disadvantage
   with zero roller changes), and a NOTICE carries the condition's standing
   effects while it is live. The recorder models BEING KNOCKED prone, so it is
-  free and ungated (dropping prone voluntarily is unmodelled), and any rest
-  clears it (untilShortRest covers both rest kinds; see
-  condition-prone-rest-clears).
+  free and ungated (the voluntary choice is the separate drop-prone offer; see
+  condition-prone-drop), and any rest clears it (untilShortRest covers both
+  rest kinds; see condition-prone-rest-clears).
 ruleGroups:
   - dnd-5e-2024/condition-prone
 steps:

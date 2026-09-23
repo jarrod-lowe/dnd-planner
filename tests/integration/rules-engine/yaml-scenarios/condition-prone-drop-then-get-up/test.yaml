@@ -1,0 +1,50 @@
+name: 'Condition Prone - Drop Then Get Up'
+description: >-
+  The full cycle in one plan: Drop Prone (free) then Get Up (half Speed). The
+  rows execute in plan order — drop closes its own not-prone gate and opens
+  get-up's prone-only gate, then get-up's empty same-key 'prone' effect evicts
+  the dropped condition while still merely planned. Pins that dropping itself
+  spends nothing: the turn's only movement spend is the get-up cost.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-prone
+steps:
+  - addOffer:
+      id: drop-prone
+      assert:
+        facts:
+          condition.prone: 1
+          character.movement.spent: 0
+        offers:
+          notExists:
+            - drop-prone
+          legal:
+            - get-up
+  - addOffer:
+      id: get-up
+      assert:
+        facts:
+          condition.prone: 0
+          attack.str.disadvantage: 0
+          attack.dex.disadvantage: 0
+          character.movement.spent: 15
+          character.movement.remaining: 15
+        planErrors:
+          - id: get-up
+            errors: []
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-prone.notice
+        # Standing again — drop-prone's gate has reopened.
+        offers:
+          legal:
+            - drop-prone
+  - endTurn:
+      assert:
+        facts:
+          condition.prone: 0
+          character.movement.remaining: 30
+        effects:
+          notExists:
+            - effect-prone

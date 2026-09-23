@@ -1,0 +1,32 @@
+name: 'Condition Prone - Drop Illegal At Speed Zero'
+description: >-
+  SRD 5.2 "Dropping Prone": "you can't do so if your Speed is 0." The gate is
+  legality, not existence — the offer stays visible with its diagnostic (the
+  get-up Speed-0 idiom), and a planned-anyway row still executes, showing the
+  over-commit via its plan error. The Knocked Prone recorder stays legal at
+  Speed 0 — being knocked prone is imposed regardless of Speed (see
+  condition-prone-record-speed-zero). `character.movement.speed` is an input
+  fact here (no species module in this rule set derives it).
+ruleGroups:
+  - dnd-5e-2024/condition-prone
+initialFacts:
+  character.movement.speed: 0
+steps:
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - record-prone
+          illegal:
+            - drop-prone
+  - addOffer:
+      id: drop-prone
+      assert:
+        # Planned-anyway still executes (legalWhen semantics)…
+        facts:
+          condition.prone: 1
+        # …with its own diagnostic from the fold.
+        planErrors:
+          - id: drop-prone
+            errors:
+              - rule.dnd-5e-2024.condition-prone.drop-prone-offer.cannot_drop
