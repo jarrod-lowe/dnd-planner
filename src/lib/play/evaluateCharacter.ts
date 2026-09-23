@@ -7,6 +7,8 @@ import type {
   PlannedRef,
   RuleModule
 } from '$lib/rules-engine';
+import type { Facts as ViewFacts } from '$lib/rules-view';
+import { adaptEngineOutput } from './engineBridge';
 import { deriveTopBarEntries, deriveResourceEntries } from './derivePanels';
 import type { UiEntry } from './extractTopBar';
 
@@ -80,4 +82,30 @@ export function hypotheticalOffers(
     );
   }
   return map;
+}
+
+/**
+ * The facts at a row's POSITION in the fold — `committed` plus the refs ahead
+ * of `index`, nothing later: the same state `evaluatePlan` re-derives before
+ * each row (`plan.ts` fold), so what a row OPENED on and how the eventual fold
+ * judges it cannot disagree by construction.
+ *
+ * This is the pure seam a row's capture-var defaults are read from (the store's
+ * `captureSelections`): the plan and committed set are the synchronous source
+ * of truth, so the debounced display cache (`state.facts`) never enters the
+ * capture path. Returned through `adaptEngineOutput` — the same bridge
+ * `performEvaluation` stores — because capture vars read VIEW facts (a loadout
+ * or spell-prepare capture reads facts the bridge synthesizes). `inputFacts`
+ * is `{}` for the same reason `performEvaluation` passes none.
+ *
+ * Pure: same (modules, committed, refs, index) → same facts.
+ */
+export function factsBeforeRow(
+  modules: RuleModule[],
+  committed: EffectInstance[],
+  refs: PlannedRef[],
+  index: number
+): ViewFacts {
+  const output = evaluate({ modules, inputFacts: {}, planned: refs.slice(0, index), committed });
+  return adaptEngineOutput(output).facts;
 }

@@ -1,0 +1,902 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Prefix capture data flow</title>
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
+/>
+<style>
+  :root {
+    --ground: #fafaf7;
+    --surface: #ffffff;
+    --ink: #1d2420;
+    --soft: #5a6660;
+    --hairline: #dce0da;
+    --truth: #0e6e5c;
+    --truth-soft: #e2f0ec;
+    --derived: #8a671c;
+    --derived-soft: #f6eedc;
+    --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --ground: #151a18;
+      --surface: #1d2421;
+      --ink: #e7ece8;
+      --soft: #9caba2;
+      --hairline: #2d352f;
+      --truth: #57c2a9;
+      --truth-soft: #19332c;
+      --derived: #d2a94e;
+      --derived-soft: #332b17;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme='dark'] {
+    --ground: #151a18;
+    --surface: #1d2421;
+    --ink: #e7ece8;
+    --soft: #9caba2;
+    --hairline: #2d352f;
+    --truth: #57c2a9;
+    --truth-soft: #19332c;
+    --derived: #d2a94e;
+    --derived-soft: #332b17;
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.65;
+  }
+  .col {
+    max-width: 1020px;
+    margin-inline: auto;
+    padding-inline: clamp(16px, 4vw, 40px);
+    padding-block: 12px 72px;
+  }
+  .prose {
+    max-width: 68ch;
+  }
+  .prose p {
+    margin-block: 0 1em;
+  }
+
+  header.masthead {
+    padding-block: 40px 8px;
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--soft);
+    margin: 0 0 14px;
+  }
+  h1 {
+    font-size: clamp(28px, 5vw, 40px);
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 0 0 18px;
+  }
+  .thesis {
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--ink);
+  }
+  .thesis strong {
+    font-weight: 600;
+  }
+
+  section {
+    border-top: 1px solid var(--hairline);
+    margin-top: 44px;
+    padding-top: 26px;
+  }
+  h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 10px 0 6px;
+    text-wrap: balance;
+  }
+  .lede {
+    color: var(--soft);
+    margin: 0 0 18px;
+    max-width: 68ch;
+  }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: 5px;
+    padding: 0.08em 0.36em;
+    white-space: nowrap;
+  }
+
+  figure {
+    margin: 22px 0 0;
+  }
+  .figwrap {
+    overflow-x: auto;
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    background: var(--surface);
+    padding: 10px;
+  }
+  .figwrap svg {
+    display: block;
+    min-width: 760px;
+    max-width: 100%;
+    height: auto;
+  }
+  figcaption {
+    font-size: 13.5px;
+    color: var(--soft);
+    margin-top: 10px;
+    max-width: 68ch;
+    line-height: 1.55;
+  }
+  figcaption b {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* svg internals — themed entirely through page tokens */
+  svg text {
+    fill: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 12px;
+  }
+  svg text.mono {
+    font-family: var(--font-mono);
+  }
+  svg text.t-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+  }
+  svg text.t-name {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  svg text.t-code {
+    font-size: 11.5px;
+  }
+  svg text.t-sub {
+    fill: var(--soft);
+    font-size: 11px;
+  }
+  svg text.small {
+    font-size: 10.5px;
+  }
+  svg .box {
+    fill: var(--surface);
+    stroke: var(--hairline);
+    stroke-width: 1.2;
+  }
+  svg .chip-truth {
+    fill: var(--truth-soft);
+    stroke: var(--truth);
+    stroke-width: 1.2;
+  }
+  svg .chip-derived {
+    fill: var(--derived-soft);
+    stroke: var(--derived);
+    stroke-width: 1.2;
+  }
+  svg .lane-truth {
+    fill: none;
+    stroke: var(--truth);
+    stroke-opacity: 0.5;
+    stroke-width: 1.2;
+  }
+  svg .lane-derived {
+    fill: none;
+    stroke: var(--derived);
+    stroke-opacity: 0.5;
+    stroke-width: 1.2;
+  }
+  svg .band {
+    fill: var(--truth-soft);
+    fill-opacity: 0.45;
+    stroke: var(--hairline);
+    stroke-width: 1.2;
+  }
+  svg .edge {
+    stroke: var(--ink);
+    stroke-width: 1.6;
+    fill: none;
+  }
+  svg .edge.truth {
+    stroke: var(--truth);
+  }
+  svg .edge.derived {
+    stroke: var(--derived);
+  }
+  svg .edge.return {
+    stroke-dasharray: 2 4;
+  }
+  svg .lifeline {
+    stroke: var(--soft);
+    stroke-width: 1;
+    stroke-dasharray: 2 5;
+    opacity: 0.65;
+  }
+  svg .note {
+    fill: var(--truth-soft);
+    stroke: var(--truth);
+    stroke-opacity: 0.4;
+    stroke-width: 1;
+  }
+  svg .note-derived {
+    fill: var(--derived-soft);
+    stroke: var(--derived);
+    stroke-opacity: 0.4;
+    stroke-width: 1;
+  }
+  svg .c-truth {
+    fill: var(--truth);
+  }
+  svg .c-derived {
+    fill: var(--derived);
+  }
+  svg .c-ink {
+    fill: var(--ink);
+  }
+  svg .txt-truth {
+    fill: var(--truth);
+  }
+  svg .txt-derived {
+    fill: var(--derived);
+  }
+  svg .txt-soft {
+    fill: var(--soft);
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 20px;
+    font-size: 14.5px;
+    font-variant-numeric: tabular-nums;
+  }
+  th,
+  td {
+    text-align: left;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--hairline);
+    vertical-align: top;
+  }
+  th {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--soft);
+    border-bottom: 1.5px solid var(--soft);
+  }
+  td.inter {
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+  td.opens {
+    color: var(--truth);
+    font-weight: 600;
+  }
+  td.why {
+    color: var(--soft);
+    font-size: 13.5px;
+  }
+  .tbl-note {
+    color: var(--soft);
+    font-size: 13.5px;
+    margin-top: 10px;
+    max-width: 68ch;
+  }
+
+  ul.residual {
+    max-width: 72ch;
+    padding-left: 1.2em;
+    margin-top: 14px;
+  }
+  ul.residual li {
+    margin-block: 7px;
+  }
+
+  footer {
+    margin-top: 56px;
+    border-top: 1px solid var(--hairline);
+    padding-top: 18px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--soft);
+    line-height: 1.9;
+  }
+</style>
+
+<main class="col">
+  <header class="masthead">
+    <p class="eyebrow">dnd-planner · play store · reference</p>
+    <h1>How a move opens: prefix capture</h1>
+    <p class="thesis prose">
+      A move's opening amount is a <strong>pure function of the plan prefix</strong> — the facts at
+      the row's position in the fold, derived synchronously from source-of-truth state. The
+      300&nbsp;ms debounce exists only for displays: it can affect what you <em>see</em>, never what
+      a choice opens at.
+    </p>
+  </header>
+
+  <section id="planes">
+    <p class="eyebrow">Fig 1 · the state landscape</p>
+    <h2>Two planes that never touch</h2>
+    <p class="lede">
+      Store state splits into a synchronous plane that every mutation updates immediately, and a
+      derived plane that trails it by up to 300&nbsp;ms. Decisions read the first; displays read the
+      second.
+    </p>
+    <figure>
+      <div class="figwrap">
+        <svg
+          viewBox="0 0 960 584"
+          role="img"
+          aria-label="The capture path reads the synchronous source of truth — plannedItems, committed, modules — through captureSelections and factsBeforeRow into frozen selections. The debounced performEvaluation reads the same source of truth and refreshes the state.facts display cache for panels, top bar and ledger. The two paths do not intersect."
+        >
+          <defs>
+            <marker
+              id="f1-truth"
+              viewBox="0 0 10 10"
+              refX="8.5"
+              refY="5"
+              markerWidth="6.5"
+              markerHeight="6.5"
+              orient="auto-start-reverse"
+            >
+              <path d="M0 0 L10 5 L0 10 z" class="c-truth" />
+            </marker>
+            <marker
+              id="f1-derived"
+              viewBox="0 0 10 10"
+              refX="8.5"
+              refY="5"
+              markerWidth="6.5"
+              markerHeight="6.5"
+              orient="auto-start-reverse"
+            >
+              <path d="M0 0 L10 5 L0 10 z" class="c-derived" />
+            </marker>
+          </defs>
+
+          <!-- band: source of truth -->
+          <rect x="20" y="20" width="920" height="148" rx="10" class="band" />
+          <text x="40" y="46" class="mono t-title txt-truth">SOURCE OF TRUTH — SYNCHRONOUS</text>
+          <rect x="40" y="64" width="300" height="82" rx="8" class="box" />
+          <text x="190" y="92" text-anchor="middle" class="mono t-name">plannedItems</text>
+          <text x="190" y="112" text-anchor="middle" class="t-sub">
+            the ordered plan — each row's rule
+          </text>
+          <text x="190" y="128" text-anchor="middle" class="t-sub">plus its frozen selections</text>
+          <rect x="364" y="64" width="280" height="82" rx="8" class="box" />
+          <text x="504" y="92" text-anchor="middle" class="mono t-name">committed</text>
+          <text x="504" y="112" text-anchor="middle" class="t-sub">effects persisted</text>
+          <text x="504" y="128" text-anchor="middle" class="t-sub">from prior turns</text>
+          <rect x="668" y="64" width="252" height="82" rx="8" class="box" />
+          <text x="794" y="92" text-anchor="middle" class="mono t-name">modules</text>
+          <text x="794" y="112" text-anchor="middle" class="t-sub">rule modules — movement,</text>
+          <text x="794" y="128" text-anchor="middle" class="t-sub">conditions, gear…</text>
+
+          <!-- left lane: capture -->
+          <rect x="20" y="196" width="452" height="356" rx="10" class="lane-truth" />
+          <text x="40" y="222" class="mono t-title txt-truth">
+            CAPTURE — ADD &amp; SWAP, SYNCHRONOUS
+          </text>
+          <rect x="44" y="246" width="404" height="48" rx="8" class="box" />
+          <text x="246" y="266" text-anchor="middle" class="mono t-name">
+            captureSelections(rule, index)
+          </text>
+          <text x="246" y="284" text-anchor="middle" class="t-sub">
+            index = items.length (add) · the row's index (swap)
+          </text>
+          <rect x="44" y="322" width="404" height="48" rx="8" class="box" />
+          <text x="246" y="342" text-anchor="middle" class="mono t-code">
+            factsBeforeRow(modules, committed,
+          </text>
+          <text x="246" y="359" text-anchor="middle" class="mono t-code">
+            refs.slice(0, index))
+          </text>
+          <rect x="44" y="398" width="404" height="44" rx="8" class="chip-truth" />
+          <text x="246" y="418" text-anchor="middle" class="mono t-code txt-truth">
+            prefix facts — the state at the row's position
+          </text>
+          <text x="246" y="435" text-anchor="middle" class="t-sub">
+            committed + rows 0…i−1, nothing later
+          </text>
+          <rect x="44" y="474" width="404" height="48" rx="8" class="box" />
+          <text x="246" y="494" text-anchor="middle" class="mono t-name">
+            resolveInitialSelections
+          </text>
+          <text x="246" y="511" text-anchor="middle" class="t-sub">
+            capture vars → selections · authored minimums applied
+          </text>
+
+          <line
+            x1="246"
+            y1="168"
+            x2="246"
+            y2="243"
+            class="edge truth"
+            marker-end="url(#f1-truth)"
+          />
+          <text x="256" y="212" class="mono t-code txt-soft">reads source of truth</text>
+          <line
+            x1="246"
+            y1="294"
+            x2="246"
+            y2="319"
+            class="edge truth"
+            marker-end="url(#f1-truth)"
+          />
+          <line
+            x1="246"
+            y1="370"
+            x2="246"
+            y2="395"
+            class="edge truth"
+            marker-end="url(#f1-truth)"
+          />
+          <line
+            x1="246"
+            y1="442"
+            x2="246"
+            y2="471"
+            class="edge truth"
+            marker-end="url(#f1-truth)"
+          />
+
+          <path d="M 246 522 V 566 H 32 V 174" class="edge truth" marker-end="url(#f1-truth)" />
+          <text x="68" y="558" class="mono t-code txt-truth">selections frozen into the row</text>
+
+          <!-- right lane: display -->
+          <rect x="492" y="196" width="448" height="356" rx="10" class="lane-derived" />
+          <text x="512" y="222" class="mono t-title txt-derived">
+            DISPLAY — DEBOUNCED, TRAILS ≤ 300 MS
+          </text>
+          <rect x="516" y="246" width="400" height="48" rx="8" class="box" />
+          <text x="716" y="266" text-anchor="middle" class="mono t-name">scheduleEvaluation()</text>
+          <text x="716" y="283" text-anchor="middle" class="t-sub">
+            re-arms on every plan edit · DEBOUNCE_MS = 300
+          </text>
+          <rect x="516" y="322" width="400" height="48" rx="8" class="box" />
+          <text x="716" y="342" text-anchor="middle" class="mono t-name">performEvaluation()</text>
+          <text x="716" y="359" text-anchor="middle" class="t-sub">
+            evaluatePlan — the pure left fold over all rows
+          </text>
+          <rect x="516" y="398" width="400" height="44" rx="8" class="chip-derived" />
+          <text x="716" y="418" text-anchor="middle" class="mono t-code txt-derived">
+            state.facts — final-fold facts
+          </text>
+          <text x="716" y="435" text-anchor="middle" class="t-sub">
+            a display cache, nothing more
+          </text>
+          <rect x="516" y="474" width="400" height="48" rx="8" class="box" />
+          <text x="716" y="494" text-anchor="middle" class="mono t-name">
+            panels · top bar · ledger
+          </text>
+          <text x="716" y="511" text-anchor="middle" class="t-sub">
+            everything the player reads
+          </text>
+
+          <line
+            x1="716"
+            y1="168"
+            x2="716"
+            y2="243"
+            class="edge derived"
+            marker-end="url(#f1-derived)"
+          />
+          <text x="726" y="212" class="mono t-code txt-soft">reads source of truth</text>
+          <line
+            x1="716"
+            y1="294"
+            x2="716"
+            y2="319"
+            class="edge derived"
+            marker-end="url(#f1-derived)"
+          />
+          <line
+            x1="716"
+            y1="370"
+            x2="716"
+            y2="395"
+            class="edge derived"
+            marker-end="url(#f1-derived)"
+          />
+          <line
+            x1="716"
+            y1="442"
+            x2="716"
+            y2="471"
+            class="edge derived"
+            marker-end="url(#f1-derived)"
+          />
+          <text x="726" y="462" class="mono t-code txt-soft">render</text>
+        </svg>
+      </div>
+      <figcaption>
+        <b>Two consumers, one origin.</b> The capture path (left) touches only the synchronous plane
+        — <code>plannedItems</code>, <code>committed</code>, <code>modules</code> — and freezes its
+        result back into the row. The debounced fold (right) reads the same origin and refreshes
+        <code>state.facts</code> for everything the player reads. Nothing decision-shaped reads the
+        cache; nothing display-shaped reads the capture.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section id="sequence">
+    <p class="eyebrow">Fig 2 · the interactions</p>
+    <h2>The tap is synchronous; the refresh is not</h2>
+    <p class="lede">
+      Every add and every OR&nbsp;INSTEAD swap runs the same exchange. The capture completes inside
+      the tap, from source-of-truth inputs. The debounce fires later and refreshes displays only —
+      it has no path back into a capture.
+    </p>
+    <figure>
+      <div class="figwrap">
+        <svg
+          viewBox="0 0 960 644"
+          role="img"
+          aria-label="Sequence: the player's tap triggers captureSelections, which calls factsBeforeRow on the engine, receives prefix facts, and freezes selections — all synchronously before the tap returns. Up to 300 ms later the debounce runs performEvaluation, refreshes state.facts, and panels re-render; nothing in that phase feeds the capture."
+        >
+          <defs>
+            <marker
+              id="f2-ink"
+              viewBox="0 0 10 10"
+              refX="8.5"
+              refY="5"
+              markerWidth="6.5"
+              markerHeight="6.5"
+              orient="auto-start-reverse"
+            >
+              <path d="M0 0 L10 5 L0 10 z" class="c-ink" />
+            </marker>
+            <marker
+              id="f2-truth"
+              viewBox="0 0 10 10"
+              refX="8.5"
+              refY="5"
+              markerWidth="6.5"
+              markerHeight="6.5"
+              orient="auto-start-reverse"
+            >
+              <path d="M0 0 L10 5 L0 10 z" class="c-truth" />
+            </marker>
+            <marker
+              id="f2-derived"
+              viewBox="0 0 10 10"
+              refX="8.5"
+              refY="5"
+              markerWidth="6.5"
+              markerHeight="6.5"
+              orient="auto-start-reverse"
+            >
+              <path d="M0 0 L10 5 L0 10 z" class="c-derived" />
+            </marker>
+          </defs>
+
+          <!-- lifelines -->
+          <rect x="25" y="16" width="170" height="30" rx="6" class="box" />
+          <text x="110" y="36" text-anchor="middle" class="mono">Player</text>
+          <rect x="265" y="16" width="170" height="30" rx="6" class="box" />
+          <text x="350" y="36" text-anchor="middle" class="mono">playStore</text>
+          <rect x="535" y="16" width="170" height="30" rx="6" class="box" />
+          <text x="620" y="36" text-anchor="middle" class="mono">engine — pure</text>
+          <rect x="745" y="16" width="170" height="30" rx="6" class="box" />
+          <text x="830" y="36" text-anchor="middle" class="mono">display</text>
+          <line x1="110" y1="46" x2="110" y2="600" class="lifeline" />
+          <line x1="350" y1="46" x2="350" y2="600" class="lifeline" />
+          <line x1="620" y1="46" x2="620" y2="600" class="lifeline" />
+          <line x1="830" y1="46" x2="830" y2="600" class="lifeline" />
+
+          <!-- phase 1 -->
+          <rect x="28" y="66" width="904" height="316" rx="10" class="lane-truth" />
+          <text x="44" y="90" class="mono t-title txt-truth">SYNCHRONOUS — INSIDE THE TAP</text>
+          <line x1="110" y1="138" x2="344" y2="138" class="edge" marker-end="url(#f2-ink)" />
+          <text x="227" y="130" text-anchor="middle">tap a move · OR INSTEAD swap</text>
+          <rect x="230" y="158" width="240" height="44" rx="6" class="note" />
+          <text x="350" y="176" text-anchor="middle" class="mono t-code">
+            index ← items.length (add)
+          </text>
+          <text x="350" y="193" text-anchor="middle" class="mono t-code">
+            ← the row's index (swap)
+          </text>
+          <line
+            x1="350"
+            y1="242"
+            x2="614"
+            y2="242"
+            class="edge truth"
+            marker-end="url(#f2-truth)"
+          />
+          <text x="482" y="234" text-anchor="middle" class="mono t-code txt-truth">
+            factsBeforeRow( refs[0..index) )
+          </text>
+          <line
+            x1="620"
+            y1="282"
+            x2="356"
+            y2="282"
+            class="edge truth return"
+            marker-end="url(#f2-truth)"
+          />
+          <text x="488" y="274" text-anchor="middle" class="mono t-code txt-truth">
+            prefix facts — { remaining: 15 }
+          </text>
+          <rect x="225" y="306" width="250" height="44" rx="6" class="note" />
+          <text x="350" y="324" text-anchor="middle" class="mono t-code">
+            resolveInitialSelections —
+          </text>
+          <text x="350" y="341" text-anchor="middle" class="mono t-code">
+            capture · authored minimums applied
+          </text>
+          <line
+            x1="350"
+            y1="366"
+            x2="116"
+            y2="366"
+            class="edge truth"
+            marker-end="url(#f2-truth)"
+          />
+          <text x="233" y="358" text-anchor="middle" class="txt-truth">
+            row lands — opens at 15 ft
+          </text>
+
+          <!-- phase 2 -->
+          <rect x="28" y="406" width="904" height="168" rx="10" class="lane-derived" />
+          <text x="44" y="430" class="mono t-title txt-derived">
+            ASYNCHRONOUS — ≤ 300 MS LATER · DISPLAY ONLY
+          </text>
+          <rect x="205" y="446" width="290" height="44" rx="6" class="note-derived" />
+          <text x="350" y="464" text-anchor="middle" class="mono t-code">
+            300 ms timer → performEvaluation
+          </text>
+          <text x="350" y="481" text-anchor="middle" class="mono t-code">
+            evaluatePlan folds the whole plan
+          </text>
+          <line
+            x1="350"
+            y1="514"
+            x2="824"
+            y2="514"
+            class="edge derived"
+            marker-end="url(#f2-derived)"
+          />
+          <text x="587" y="506" text-anchor="middle" class="mono t-code txt-derived">
+            final facts → state.facts (cache)
+          </text>
+          <rect x="735" y="530" width="190" height="40" rx="6" class="note-derived" />
+          <text x="830" y="546" text-anchor="middle" class="mono t-code">
+            panels · top bar · ledger
+          </text>
+          <text x="830" y="562" text-anchor="middle" class="mono t-code">
+            re-render from the cache
+          </text>
+
+          <text x="480" y="622" text-anchor="middle" class="txt-soft" style="font-style: italic">
+            Nothing in phase 2 feeds phase 1 — a capture run at any moment derives the same value.
+          </text>
+        </svg>
+      </div>
+      <figcaption>
+        <b>One exchange, both interactions.</b> Add and swap differ only in the index handed to
+        <code>captureSelections</code> — append uses <code>items.length</code>, swap uses the row's
+        position. The engine call is the same pure evaluation the fold itself performs at that row
+        (<code>plan.ts:126</code>), so the tap and the eventual fold agree on the facts by
+        construction.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section id="fold">
+    <p class="eyebrow">Fig 3 · the fold</p>
+    <h2>A choice and its swap receive identical facts</h2>
+    <p class="lede">
+      The swap's default never sees the outgoing row's spend, because it is computed from the same
+      prefix node the original choice opened against. Speed&nbsp;30, one-row plan.
+    </p>
+    <figure>
+      <div class="figwrap">
+        <svg
+          viewBox="0 0 960 344"
+          role="img"
+          aria-label="The prefix at row i — committed plus earlier rows, here remaining 30 — feeds both the original choice (Walk) and its swap (Fly); both open on remaining 30. The outgoing row's spend happens after the choice and never enters the prefix."
+        >
+          <defs>
+            <marker
+              id="f3-truth"
+              viewBox="0 0 10 10"
+              refX="8.5"
+              refY="5"
+              markerWidth="6.5"
+              markerHeight="6.5"
+              orient="auto-start-reverse"
+            >
+              <path d="M0 0 L10 5 L0 10 z" class="c-truth" />
+            </marker>
+          </defs>
+
+          <rect x="36" y="120" width="212" height="96" rx="8" class="box" />
+          <text x="142" y="150" text-anchor="middle" class="mono t-name">committed</text>
+          <text x="142" y="170" text-anchor="middle" class="mono t-name">+ rows 0…i−1</text>
+          <text x="142" y="190" text-anchor="middle" class="t-sub">nothing later counts</text>
+
+          <line
+            x1="248"
+            y1="168"
+            x2="302"
+            y2="168"
+            class="edge truth"
+            marker-end="url(#f3-truth)"
+          />
+
+          <rect x="306" y="118" width="308" height="104" rx="8" class="chip-truth" />
+          <text
+            x="460"
+            y="146"
+            text-anchor="middle"
+            class="mono t-code txt-truth"
+            style="font-weight: 600"
+          >
+            prefix facts at row i
+          </text>
+          <text x="460" y="168" text-anchor="middle" class="mono t-code">
+            { total 30 · spent 0 · remaining 30 }
+          </text>
+          <text x="460" y="192" text-anchor="middle" class="t-sub">
+            factsBeforeRow — pure; the fold's own inputs
+          </text>
+
+          <path
+            d="M 614 150 L 648 150 L 648 92 L 672 92"
+            class="edge truth"
+            marker-end="url(#f3-truth)"
+          />
+          <path
+            d="M 614 200 L 648 200 L 648 268 L 672 268"
+            class="edge truth"
+            marker-end="url(#f3-truth)"
+          />
+          <text x="638" y="248" text-anchor="end" class="mono small txt-truth">same facts</text>
+
+          <rect x="676" y="48" width="248" height="88" rx="8" class="box" />
+          <text x="800" y="76" text-anchor="middle" class="mono t-name">the choice — Walk</text>
+          <text x="800" y="96" text-anchor="middle">opens on remaining → 30 ft</text>
+          <text x="800" y="116" text-anchor="middle" class="t-sub">
+            player drags to 15 · spends 15
+          </text>
+
+          <rect x="676" y="244" width="248" height="88" rx="8" class="box" />
+          <text x="800" y="272" text-anchor="middle" class="mono t-name">the swap — Fly</text>
+          <text x="800" y="292" text-anchor="middle">opens on remaining → 30 ft</text>
+          <text x="800" y="312" text-anchor="middle" class="t-sub">
+            the outgoing spend is invisible here
+          </text>
+        </svg>
+      </div>
+      <figcaption>
+        <b>Both rows hang off the same prefix node.</b> Replacing a row cannot change what its
+        replacement opens on: the outgoing row's spend happens after the choice, so it never enters
+        the prefix — the swap opens on the full remaining 30, exactly as the original choice did.
+        Player edits (<em>drags to 15</em>) are frozen into <code>selections</code> and likewise
+        leave the prefix untouched.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section id="numbers">
+    <p class="eyebrow">Worked example</p>
+    <h2>What each interaction opens on</h2>
+    <p class="lede">
+      Character speed 30 ft. The rule: open on as much movement as is legal at the row's position.
+    </p>
+    <div class="figwrap" style="background: none; border: none; padding: 0; overflow-x: auto">
+      <table>
+        <thead>
+          <tr>
+            <th>interaction</th>
+            <th>opens at</th>
+            <th>why</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="inter">add Walk, empty plan</td>
+            <td class="opens">30 ft</td>
+            <td class="why">prefix = the whole budget, as legal as it gets</td>
+          </tr>
+          <tr>
+            <td class="inter">Walk@15 planned → add Fly immediately</td>
+            <td class="opens">15 ft</td>
+            <td class="why">
+              capture derives from <code style="white-space: nowrap">plannedItems</code>; a pending
+              debounce refresh changes nothing
+            </td>
+          </tr>
+          <tr>
+            <td class="inter">swap Walk@15 → Fly</td>
+            <td class="opens">30 ft</td>
+            <td class="why">prefix excludes the outgoing row's own spend</td>
+          </tr>
+          <tr>
+            <td class="inter">swap Walk@30 → Fly</td>
+            <td class="opens">30 ft</td>
+            <td class="why">same — the whole plan is the row being replaced</td>
+          </tr>
+          <tr>
+            <td class="inter">swap over-committed Walk@35 → Fly</td>
+            <td class="opens">30 ft</td>
+            <td class="why">same; over-commitment never reaches the prefix</td>
+          </tr>
+          <tr>
+            <td class="inter">swap row 1 after a Walk@35 row</td>
+            <td class="opens">0 ft</td>
+            <td class="why">earlier rows did over-commit → prefix negative → min 0 applies</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="tbl-note">
+      The last row is the clamp earning its keep: the prefix can legitimately be negative when
+      <em>earlier</em> rows over-commit, because the planner projects over-commitment rather than
+      preventing it — so distance vars declare a minimum of 0, and capture applies it. Signed
+      captures (save/skill bonuses) author no minimum and pass through verbatim.
+    </p>
+  </section>
+
+  <section id="boundaries">
+    <p class="eyebrow">Design decisions</p>
+    <h2>Boundaries, deliberate</h2>
+    <ul class="residual">
+      <li>
+        <b>Freeze-at-add.</b> An untouched row's amount doesn't re-derive when earlier rows change
+        later — the value is frozen when the row lands; only the opening default is derived. Live
+        re-derivation is a separate future idea.
+      </li>
+      <li>
+        <b>The slider max is <code>total</code> / <code>half_total</code>.</b> Dragging past what's
+        left remains possible and shows the illegal-but-visible projection, per the engine's design.
+      </li>
+      <li>
+        <b><code>addOfferToPlan</code> flushes first.</b> It reads the offer <em>catalog</em> — gate
+        freshness at the append position — a genuinely cache-shaped need. The capture has no such
+        need: it derives from source of truth directly.
+      </li>
+      <li>
+        <b>The engine stays pure (<code>plan.ts:78</code>).</b> The capture path is generic: every
+        <code>capture: true</code> var — movement, steed moves, loadout, spell-prepare — flows
+        through the same seam, and movement rules themselves carry no capture logic at all.
+      </li>
+      <li>
+        <b>Prefix evaluation throws → no capture.</b> The row opens on the rule's own authored
+        defaults; a capture failure never blocks an add or swap.
+      </li>
+    </ul>
+  </section>
+
+  <footer>
+    playStore.svelte.ts · addToPlan / swapPlanItemRule / captureSelections<br />
+    evaluateCharacter.ts · factsBeforeRow — evaluate() + adaptEngineOutput<br />
+    resolveInitialSelections.ts · capture + authored mins &nbsp;·&nbsp; plan.ts:126 · the fold's
+    per-row re-derivation<br />
+    plan · docs/plans/ideas/move-defaults.md
+  </footer>
+</main>

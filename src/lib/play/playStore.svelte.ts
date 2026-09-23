@@ -8,7 +8,7 @@ import {
 } from '$lib/rules-engine';
 import type { PlannedItem, PlayState } from './types';
 import { resolveInitialSelections } from './resolveInitialSelections';
-import { evaluateCharacter, hypotheticalOffers } from './evaluateCharacter';
+import { evaluateCharacter, hypotheticalOffers, factsBeforeRow } from './evaluateCharacter';
 import {
   effectInstanceToRule,
   adaptEngineOutput,
@@ -395,10 +395,34 @@ async function loadRuleGroups(characterId: string): Promise<void> {
   }
 }
 
+/**
+ * Resolve a rule's capture vars against the PREFIX facts at `index` — the
+ * state at the new/replacement row's position in the fold, derived
+ * synchronously from the source of truth (`plannedItems` + `committed`), so
+ * the 300ms evaluation debounce cannot affect what a row opens on. Callers
+ * pass only the index (append: items.length; swap: the row's) — there is no
+ * facts argument to get wrong.
+ *
+ * A prefix-evaluation throw (engine error) skips the capture: the row opens on
+ * the rule's own authored defaults rather than the add being blocked.
+ */
+function captureSelections(rule: Rule, index: number): Record<string, unknown> {
+  try {
+    return resolveInitialSelections(
+      rule,
+      factsBeforeRow(state.modules, state.committed, buildPlannedRefs(), index),
+      state.modules
+    );
+  } catch {
+    return {};
+  }
+}
+
 function addToPlan(rule: Rule, seed?: Record<string, unknown>): void {
   const instanceId = generateInstanceId();
-  // Resolve capture vars from current facts
-  const initialSelections = resolveInitialSelections(rule, state.facts, state.modules);
+  // Resolve capture vars from the row's PREFIX facts (committed + earlier
+  // rows — never the debounced display cache `state.facts`).
+  const initialSelections = captureSelections(rule, state.plannedItems.length);
 
   const newItem: PlannedItem = {
     instanceId,

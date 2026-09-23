@@ -70,7 +70,22 @@ export function resolveInitialSelections(
     // Resolve fact default
     if (defaultSource.fact !== undefined) {
       const factValue = facts[defaultSource.fact];
-      selections[varName] = factValue !== undefined && factValue !== null ? factValue : 0;
+      // Numeric captures clamp to the var's authored `min` when one is
+      // declared: the fact is read from the plan PREFIX, and earlier rows
+      // can over-commit it (the planner projects over-commitment rather
+      // than preventing it), so `remaining`-shaped facts can legitimately
+      // read negative there — never a meaningful opening default, which is
+      // why such vars author `min: 0`. Without a `min` the value is
+      // captured verbatim — signed facts (a save or skill bonus) must
+      // survive. Non-numeric values (and missing facts → 0) are untouched.
+      selections[varName] =
+        typeof factValue === 'number'
+          ? varDef.min !== undefined
+            ? Math.max(varDef.min, factValue)
+            : factValue
+          : factValue !== undefined && factValue !== null
+            ? factValue
+            : 0;
       continue;
     }
   }

@@ -74,7 +74,11 @@ function moveOffer(cfg: MoveCfg): Offer {
       actionCost: ['move']
     },
     vars: {
-      distance: { capture: true, default: { fact: cfg.defaultDistanceFact } },
+      // min 0: the prefix can over-commit `remaining` (the planner projects
+      // over-commitment), so a negative capture is never a meaningful
+      // opening distance. Authored here, not global — signed captures
+      // elsewhere must survive verbatim.
+      distance: { capture: true, min: 0, default: { fact: cfg.defaultDistanceFact } },
       maxDistance: { default: { fact: cfg.maxDistanceFact } }
     },
     legalWhen: cfg.legalWhen,
