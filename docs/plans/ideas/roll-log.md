@@ -14,7 +14,7 @@ Be extremely concise. Sacrifice grammar for the sake of concision.
 - Capture: every roll that toasts. `showDiceRollToast` (diceRollToast.ts) is the sole funnel (PanelRenderer + NoticeStrip both go through it) — hook the log there. Nothing else records rolls today.
 - Log entry = exact toast payload (`title`, `rollType`, `result`, `modifiers?`, `damageTypeKey`, `unitKey`) + `id`, `rollKey?`, `replaced`.
 - Replaced: nothing marks re-rolls today (rollers overwrite in place), so callers pass a `rollKey` (panel: `rule.id` + primary/secondary + die index / hit-dice pool die size + slot index; notice: per-cell key `notice.id ?? notice.key` + die index — `id` not shared i18n `key`, so sibling burns don't cross-mark). A new entry marks **all earlier same-key entries** `replaced`. In-roll replacements (`droppedRoll`/`gwfFloor`/`effective`) already render inside the entry — untouched.
-- Replaced styling: stays at chronological position; dotted border (`outline-variant`) + muted background, structural cue, **no opacity** (contrast law — see depleted-ledger lesson).
+- Replaced styling: stays at chronological position; hollow card — flat `surface` bg + 1px dotted border. Subtracts prominence (a replaced roll is spent, never emphasised — no heavier border, no label), structural cue, **no opacity** (contrast law — see depleted-ledger lesson).
 - State: new runes module `src/lib/play/rollLogStore.svelte.ts` (companionStore pattern): `rolls` (latest first), `isOpen`, `logRoll`, `clearRollLog`, `open`/`close`. Memory only — no server sync, refresh empties, fine.
 - Clearing: `playStore.endTurn()` and `playStore.reset()` call `clearRollLog()`. Notice rolls persist across turns in their components, but the log is current-turn only — a cross-turn re-roll starts fresh (no replaced marker). Accepted.
 - Button: dice icon **right of End Turn** (PlanStack footer), always enabled, no badge, `aria-label` from i18n.
@@ -50,8 +50,8 @@ Subagents perform tasks; main agent coordinates + talks to human. TDD inside eac
 ### Checklist
 
 - [x] PR 1 merged (store + funnel + clearing) — #432
-- [ ] PR 2 merged (roll keys)
+- [x] PR 2 merged (roll keys) — #433, incl. codex P1 instance-key fix
 - [ ] PR 3 merged (panel UI + i18n)
 - [ ] Each PR: make test / make check / make format-check / lint green before push
 - [ ] Each PR: codex monitor run, all comments answered, pipelines green
-- [ ] PR 3: Playwright pass on localhost:5173 (open, roll, replaced entry, end-turn clear, close gestures)
+- [x] PR 3: Playwright pass on localhost:5173 (open, roll, replaced entry — restyled hollow after user feedback, end-turn clear, close gestures; 0 console errors)
