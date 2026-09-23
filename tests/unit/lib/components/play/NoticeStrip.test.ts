@@ -527,7 +527,21 @@ describe('NoticeStrip', () => {
       expect(call[1].sides).toBe(6);
       expect(call[1].count).toBe(2);
       expect(call[1].damageType).toBe('fire');
-      expect(call.length).toBe(2);
+      // The 4th argument is the roll-log key: the cell's identity (see
+      // `cellKey` — the effect instance id, falling back to the shared key)
+      // plus the die's index in the cell's single-die line.
+      expect(call.length).toBe(4);
+      expect(call[2]).toBeUndefined();
+      expect(call[3]).toBe('notice:rule.spells.searing-smite.notice-burning:0');
+
+      // Re-rolling the same chip reuses the key, so the new log entry
+      // replaces the earlier one (the rollLogStore contract).
+      chip!.click();
+      flushSync();
+      expect(showDiceRollToast).toHaveBeenCalledTimes(2);
+      expect(vi.mocked(showDiceRollToast).mock.calls[1][3]).toBe(
+        'notice:rule.spells.searing-smite.notice-burning:0'
+      );
     } finally {
       random.mockRestore();
     }
@@ -617,6 +631,17 @@ describe('NoticeStrip', () => {
       expect(vi.mocked(showDiceRollToast).mock.calls[0][1].count).toBeUndefined();
       expect(vi.mocked(showDiceRollToast).mock.calls[1][1].total).toBe(6);
       expect(vi.mocked(showDiceRollToast).mock.calls[1][1].count).toBe(2);
+
+      // Each roll key names its OWN burn: the two cells share one sentence
+      // (and so one `key`), but their dice are not each other's re-rolls —
+      // only the effect instance id keeps the log entries from replacing
+      // each other across burns.
+      expect(vi.mocked(showDiceRollToast).mock.calls[0][3]).toBe(
+        'notice:effect-searing-smite-slot-l1:0'
+      );
+      expect(vi.mocked(showDiceRollToast).mock.calls[1][3]).toBe(
+        'notice:effect-searing-smite-slot-l2:0'
+      );
     } finally {
       random.mockRestore();
     }
