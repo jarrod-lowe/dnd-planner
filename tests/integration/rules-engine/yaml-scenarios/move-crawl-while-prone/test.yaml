@@ -1,0 +1,50 @@
+name: 'Condition Prone - Crawl'
+description: >-
+  While prone, your only travel option is CRAWL: a move offer hidden entirely
+  while standing (a structural `when` gate, like Get Up — crawling is not a
+  thing an upright character does) that spends 2 feet per foot crawled (the
+  rough-terrain shape: the slider is feet traversed, defaulting to
+  half_remaining with a half_total max, and the spend doubles it). Crawling 10
+  feet of a 30-foot Speed spends 20, leaving 10 — enough to crawl again (the
+  legality floor is remaining 10, i.e. 5 feet crawled at ×2) but the scenario
+  pins the single crawl.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-prone
+steps:
+  - evaluate:
+      assert:
+        facts:
+          character.movement.remaining: 30
+        offers:
+          notExists:
+            - move-crawl
+  - addOffer:
+      id: record-prone
+      assert:
+        facts:
+          condition.prone: 1
+        offers:
+          exists:
+            - move-crawl
+          legal:
+            - move-crawl
+  - addOffer:
+      id: move-crawl
+      selections:
+        distance: 10
+      assert:
+        facts:
+          character.movement.spent: 20
+          character.movement.remaining: 10
+        planErrors:
+          - id: move-crawl
+            index: 0
+            errors: []
+  - removeFromPlan:
+      id: move-crawl
+      assert:
+        facts:
+          character.movement.spent: 0
+          character.movement.remaining: 30

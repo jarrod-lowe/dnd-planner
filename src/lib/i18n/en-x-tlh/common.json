@@ -487,6 +487,11 @@
           "keywords": "movement move difficult slow",
           "description": "qIb DIch — Hoch qam cha'"
         },
+        "move-crawl": {
+          "name": "Do (yav)",
+          "keywords": "movement move prone ground hands knees",
+          "description": "pumtaHvIS — Hoch qam cha'"
+        },
         "action-move-walk-offer": {
           "out_of_movement": "Do tu'lu'be'"
         },
@@ -510,7 +515,8 @@
         "action-move-fly-offer": {
           "cannot_fly": "peng DaDolaHbe'",
           "out_of_movement": "Do tu'lu'be'"
-        }
+        },
+        "cannot_while_prone": "bIpumtaH — yav Do ghap yIngheSqa' neH Daghu'laH"
       },
       "ability-scores": {
         "set-strength": {

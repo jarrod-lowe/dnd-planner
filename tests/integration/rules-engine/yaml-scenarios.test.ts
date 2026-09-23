@@ -493,6 +493,9 @@ const EXPECTED_RUNNABLE = [
   'get-up-illegal-low-movement',
   'get-up-illegal-speed-zero',
   'get-up-splint-armor-cost',
+  // PR3 — crawl (×2 spend while prone) + the prone movement restriction
+  'move-crawl-while-prone',
+  'walk-illegal-while-prone',
   // M3 — feat-alert (initiative-with-proficiency + annotations) and hit-die
   // (d10 pool from the class levels; remaining = total - spent)
   'alert-flag-set',
