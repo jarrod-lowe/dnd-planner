@@ -65,7 +65,7 @@ Tests (RED first — yaml scenario asserts are the RED for rule changes; registe
 - `condition-incapacitated-record` (groups: condition-incapacitated + action-economy): facts `condition.incapacitated: 1`, `initiative.disadvantage: 1`, `actions/bonusActions/reactions.remaining: 0` + notice exists, targets [notice]
 - `dash-illegal-while-incapacitated` (groups: + species-human/movement/dash): dash legal before, illegal after record
 - `extra-attack-followup-illegal-while-incapacitated` (groups: + a weapon + attacks): first swing legal, record, follow-up illegal — the `extraRemaining` clamp leg
-- `concentration-broken-on-record` (bless stack, bless-concentration-replacement shape): prepare+cast bless → `concentration.spent: 1`, endTurn (effect-bless committed), record → `concentration.spent: 0`, `concentration.remaining: 1`, effects notExists `effect-bless`
+- `concentration-broken-on-record` (bless stack, bless-concentration-replacement shape): prepare+cast bless → `concentration.spent: 1`, endTurn (effect-bless committed), record-damage (a save owed — marker live: `concentration.damage-taken: 1`), record → `concentration.spent: 0`, `concentration.remaining: 1`, effects notExists `effect-bless`, AND the marker cleared: `concentration.damage-taken: 0`, `concentration.last-damage: 0`, the free concentration-check notice gone. Without the damage leg an implementation that evicts the spell but skips `concentrationDamageMarkerClear()` passes green — the children's break scenarios inherit this shape by reference
 - `condition-incapacitated-rest-clears` (condition-prone-rest-clears shape): short AND long → facts + notice gone
 
 ## Execution rules
