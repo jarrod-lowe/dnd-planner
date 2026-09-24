@@ -21,7 +21,7 @@ Modelled: record offer (imposed — free, ungated, prone-recorder shape) + keyed
 ## Decisions (defaults — re-grill before execution)
 
 - **The cycle trap — why splint's −10 does not transfer.** Zeroing `character.movement.speed`/`total` from a condition module needs a derive contribution reading the fact it contributes: a dynamic zero must subtract everything else (species base, splint −10, Dash's boost) = read its own fact = self-cycle; the engine derives order from reads, a fact cannot feed itself. Splint works only because −10 is a STATIC constant (reads equipped + STR only). Hardcoded −30 also rejected (wrong under splint/dash/other species). Rejected: condition modules contribute movement derives.
-- **Recommended: a NEW halted fact** (grill this). movement.ts derives `character.movement.halted` = 1 when any of `condition.{grappled,restrained,paralyzed,petrified,unconscious}` > 0 (unset facts read 0 → safe with those groups unloaded). `character.movement.remaining` derives `halted ? 0 : total − spent`. `speed`/`total` stay live for derived math (`half_speed` Get Up cost) — BUT the top-bar SPD chip reads `character.movement.total` directly (derivePanels.ts) and would show 30, or a planned-anyway-Dashed 60, while SRD says Speed 0. Derive `character.movement.effective_total` = `halted ? 0 : total`; point the chip's entry fact at it (one derivePanels line). Display reads effective; math keeps base; gates carry the semantics.
+- **Recommended: a NEW halted fact** (grill this). movement.ts derives `character.movement.halted` = 1 when any of `condition.{grappled,restrained,paralyzed,petrified,unconscious}` > 0 (unset facts read 0 → safe with those groups unloaded). `character.movement.remaining` derives `halted ? 0 : total − spent`. `speed`/`total` stay live for derived math (`half_speed` Get Up cost) — BUT TWO derivePanels consumers read `character.movement.total` directly and would show 30 (or a planned-anyway-Dashed 60) while SRD says Speed 0: the top-bar SPD chip (entry `fact`) AND the stats-ledger `usedMax` resource entry (renders `remaining/total` → "Speed 0/30" with the accessible "0 of 30"). Derive `character.movement.effective_total` = `halted ? 0 : total`; point BOTH entries at it (the resource entry's `total` field too — while halted it reads 0/0, honest; its zero-value visibility follows). Display reads effective; math keeps base; gates carry the semantics.
 - ALL 6 move offers (walk, rough-terrain, crawl, swim, swim-costly, fly) gain not-halted legality + apply re-check, shared code `rule.dnd-5e-2024.movement.cannot_while_halted` (the `cannot_while_prone` shape). Speed 0 beats prone's crawl allowance: prone+grappled → crawl illegal too (no movement at all).
 - DASH gains not-halted legality ("can't increase"), code `rule.dnd-5e-2024.dash.action-dash-offer.cannot_while_halted` + apply re-check. `remaining` 0 already masks a planned-anyway boost; the gate adds the honest diagnostic + stops the wasted action.
 - Prone's Get Up / Drop Prone gates EXTENDED to `speed > 0 ∧ halted = 0` — current `speed > 0` alone misses grapple (speed stays 30); halted is the cleaner gate. Same SRD clause ("If your Speed is 0…"), so REUSE the existing codes (`get-up-offer.cannot_get_up`, `drop-prone-offer.cannot_drop`); grill whether a distinct code reads better.
@@ -38,7 +38,7 @@ Facts:
 - `condition.grappled` — 1 while grappled; written ONLY by the committed effect
 - `character.movement.halted` — movement.ts derive over the 5 Speed-0 conditions
 - `character.movement.remaining` — now `halted ? 0 : total − spent`
-- `character.movement.effective_total` — `halted ? 0 : total`; the top-bar SPD chip reads it (derivePanels.ts `entry.fact` swap)
+- `character.movement.effective_total` — `halted ? 0 : total`; BOTH derivePanels consumers read it (top-bar SPD entry `fact` + the stats-ledger `usedMax` entry's `total`)
 
 Effect: `{ id: 'effect-grappled', key: 'grappled', state: { 'condition.grappled': 1 }, display: { name, detailKey: 'condition/grappled' }, expiry: { kind: 'untilShortRest' } }` — attack flags join `state` in PR2.
 
@@ -86,7 +86,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 
 - [ ] RED: `condition-grappled-record` scenario fails — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
 - [ ] movement.ts: `character.movement.halted` derive (5 conditions); `remaining` 0-when-halted; not-halted legality + recheck on all 6 move offers, shared `cannot_while_halted`
-- [ ] `character.movement.effective_total` derive; derivePanels.ts SPD chip entry reads it (shows 0 while halted); unit test in tests/unit/play/derivePanels.test.ts pins the chip's entry fact = `effective_total`
+- [ ] `character.movement.effective_total` derive; derivePanels.ts — BOTH consumers swapped to it (top-bar SPD entry shows 0 while halted; the `usedMax` resource entry renders 0/0, not 0/30); unit test in tests/unit/play/derivePanels.test.ts pins BOTH entry facts = `effective_total`
 - [ ] `condition-grappled.ts`: `record-grappled` offer, keyed grappled effect (fact only — flags PR2), notice annotate
 - [ ] i18n both locales: `play.verbBuckets.CONDITION.grappled` + record/effect/notice keys + `movement.cannot_while_halted`
 - [ ] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details` (output gitignored — published, not committed)
