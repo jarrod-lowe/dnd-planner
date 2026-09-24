@@ -46,7 +46,7 @@ Facts (both written ONLY by the committed effect, prone pattern): `condition.pet
 
 Effects:
 
-- petrified: `{ id: 'effect-petrified', key: 'petrified', state: { 'condition.petrified': 1, 'condition.incapacitated': 1 }, stateCombine: { 'condition.incapacitated': 'max' }, display: { name }, expiry: { kind: 'untilShortRest' } }`
+- petrified: `{ id: 'effect-petrified', key: 'petrified', state: { 'condition.petrified': 1, 'condition.incapacitated': 1 }, stateCombine: { 'condition.incapacitated': 'max' }, display: { name, detailKey: 'condition/petrified' }, expiry: { kind: 'untilShortRest' } }`
 
 Offers:
 

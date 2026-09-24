@@ -40,7 +40,7 @@ Facts:
 - `character.movement.remaining` — now `halted ? 0 : total − spent`
 - `character.movement.effective_total` — `halted ? 0 : total`; the top-bar SPD chip reads it (derivePanels.ts `entry.fact` swap)
 
-Effect: `{ id: 'effect-grappled', key: 'grappled', state: { 'condition.grappled': 1 }, display: { name }, expiry: { kind: 'untilShortRest' } }` — attack flags join `state` in PR2.
+Effect: `{ id: 'effect-grappled', key: 'grappled', state: { 'condition.grappled': 1 }, display: { name, detailKey: 'condition/grappled' }, expiry: { kind: 'untilShortRest' } }` — attack flags join `state` in PR2.
 
 Offers:
 

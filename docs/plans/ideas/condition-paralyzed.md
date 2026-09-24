@@ -44,7 +44,7 @@ Facts (both written ONLY by the committed effect, prone pattern): `condition.par
 
 Effects:
 
-- paralyzed: `{ id: 'effect-paralyzed', key: 'paralyzed', state: { 'condition.paralyzed': 1, 'condition.incapacitated': 1 }, stateCombine: { 'condition.incapacitated': 'max' }, display: { name }, expiry: { kind: 'untilShortRest' } }`
+- paralyzed: `{ id: 'effect-paralyzed', key: 'paralyzed', state: { 'condition.paralyzed': 1, 'condition.incapacitated': 1 }, stateCombine: { 'condition.incapacitated': 'max' }, display: { name, detailKey: 'condition/paralyzed' }, expiry: { kind: 'untilShortRest' } }`
 
 Offers:
 

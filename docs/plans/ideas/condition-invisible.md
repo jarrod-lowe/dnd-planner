@@ -45,7 +45,7 @@ Facts:
 - `attack.str.advantage` / `attack.dex.advantage` — same effect; weapon/unarmed dice-lines read them (Knot 2 wiring)
 - `initiative.advantage` — same effect; initiative dice-line reads it (PR3)
 
-Effect: `{ id: 'effect-invisible', key: 'invisible', state: { 'condition.invisible': 1, 'attack.str.advantage': 1, 'attack.dex.advantage': 1, 'initiative.advantage': 1 }, stateCombine: 'max' ×3, display: { name }, expiry: { kind: 'untilShortRest' } }`
+Effect: `{ id: 'effect-invisible', key: 'invisible', state: { 'condition.invisible': 1, 'attack.str.advantage': 1, 'attack.dex.advantage': 1, 'initiative.advantage': 1 }, stateCombine: 'max' ×3, display: { name, detailKey: 'condition/invisible' }, expiry: { kind: 'untilShortRest' } }`
 
 Offer: `record-invisible` — section `free`, `detailKey: 'condition/invisible'` (the published SRD detail), `intents: { CONDITION: 'invisible' }`, no control, no gate, name only (record-\* precedent: no `.description` key).
 

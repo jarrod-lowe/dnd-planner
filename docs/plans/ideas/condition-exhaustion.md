@@ -42,7 +42,7 @@ Derive: the two speed contributions above (splint-armor shape, dynamic value).
 
 Effects:
 
-- `effect-exhaustion`: `{ key: 'exhaustion', state: { 'condition.exhaustion': level }, display: { name, value: level }, expiry: permanent }` — chip shows the live level
+- `effect-exhaustion`: `{ key: 'exhaustion', state: { 'condition.exhaustion': level }, display: { name, detailKey: 'condition/exhaustion', value: level }, expiry: permanent }` — chip shows the live level
 - level-0 clear: EMPTY same-`key` effect with display (newest-wins evicts; the get-up idiom), `expiry: permanent`
 
 Offers:

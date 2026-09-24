@@ -31,7 +31,7 @@ Modelled: record offer (imposed — free, ungated) + keyed effect (restrained fa
 
 Module `src/lib/rules-engine/rules/condition-restrained.ts`, id `condition-restrained`; register `registry.ts` AND `lazy.ts`. YAML `data/rule-groups/dnd-5e-2024/condition-restrained.yaml`: translations, `requires: [movement]`, detail (SRD body verbatim, en-only) → `make publish-details`. Terraform seed `char_condition_restrained_rulegroup_seed` (dynamodb-items.tf); `make validate`. No search meta.
 
-Effect: `{ id: 'effect-restrained', key: 'restrained', state: { 'condition.restrained': 1, 'attack.str.disadvantage': 1, 'attack.dex.disadvantage': 1, 'save.dex.disadvantage': 1 }, stateCombine: { max on the 3 flags }, display: { name }, expiry: { kind: 'untilShortRest' } }`.
+Effect: `{ id: 'effect-restrained', key: 'restrained', state: { 'condition.restrained': 1, 'attack.str.disadvantage': 1, 'attack.dex.disadvantage': 1, 'save.dex.disadvantage': 1 }, stateCombine: { max on the 3 flags }, display: { name, detailKey: 'condition/restrained' }, expiry: { kind: 'untilShortRest' } }`.
 
 Offers:
 

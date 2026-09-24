@@ -36,7 +36,7 @@ Facts:
 
 Effect (loop `SKILLS`, both maps built in one pass):
 
-- `{ id: 'effect-poisoned', key: 'poisoned', state: { 'condition.poisoned': 1, 'attack.str.disadvantage': 1, 'attack.dex.disadvantage': 1, 'initiative.disadvantage': 1, 'check.disadvantage': 1, …`skill.${s}.disadvantage`: 1 for each of 18 }, stateCombine: 'max' on all 22 flags, display: { name }, expiry: { kind: 'untilShortRest' } }`
+- `{ id: 'effect-poisoned', key: 'poisoned', state: { 'condition.poisoned': 1, 'attack.str.disadvantage': 1, 'attack.dex.disadvantage': 1, 'initiative.disadvantage': 1, 'check.disadvantage': 1, …`skill.${s}.disadvantage`: 1 for each of 18 }, stateCombine: 'max' on all 22 flags, display: { name, detailKey: 'condition/poisoned' }, expiry: { kind: 'untilShortRest' } }`
 
 Offer:
 

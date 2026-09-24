@@ -39,7 +39,7 @@ Facts (both written ONLY by the committed effect, prone pattern): `condition.stu
 
 Effects:
 
-- stunned: `{ id: 'effect-stunned', key: 'stunned', state: { 'condition.stunned': 1, 'condition.incapacitated': 1 }, stateCombine: { 'condition.incapacitated': 'max' }, display: { name }, expiry: { kind: 'untilShortRest' } }`
+- stunned: `{ id: 'effect-stunned', key: 'stunned', state: { 'condition.stunned': 1, 'condition.incapacitated': 1 }, stateCombine: { 'condition.incapacitated': 'max' }, display: { name, detailKey: 'condition/stunned' }, expiry: { kind: 'untilShortRest' } }`
 
 Offers:
 

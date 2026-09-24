@@ -40,7 +40,7 @@ Module `src/lib/rules-engine/rules/condition-unconscious.ts`, id `condition-unco
 
 Effects:
 
-- unconscious: `{ id: 'effect-unconscious', key: 'unconscious', state: { 'condition.unconscious': 1, 'condition.incapacitated': 1, 'condition.prone': 1 }, stateCombine: { 'condition.incapacitated': 'max' }, display, expiry: { kind: 'untilShortRest' } }` — `condition.incapacitated` MUST be `max`: `effect-incapacitated` writes it `max` and sheet.ts THROWS on conflicting combine modes when standalone Incapacitated co-stands. `condition.prone` stays default-sum on BOTH its writers (prone effect + this) — same mode, no conflict; doubling reads 2, harmless (`> 0` gates)
+- unconscious: `{ id: 'effect-unconscious', key: 'unconscious', state: { 'condition.unconscious': 1, 'condition.incapacitated': 1, 'condition.prone': 1 }, stateCombine: { 'condition.incapacitated': 'max' }, display: { name, detailKey: 'condition/unconscious' }, expiry: { kind: 'untilShortRest' } }` — `condition.incapacitated` MUST be `max`: `effect-incapacitated` writes it `max` and sheet.ts THROWS on conflicting combine modes when standalone Incapacitated co-stands. `condition.prone` stays default-sum on BOTH its writers (prone effect + this) — same mode, no conflict; doubling reads 2, harmless (`> 0` gates)
 - regain clear: empty same-`key` 'unconscious' effect, `display`, `expiry: permanent` (get-up idiom)
 - fresh prone: `proneEffect()` extracted to the builder (`attackActionSpend` precedent — no rule imports another rule; condition-prone keeps using it)
 
