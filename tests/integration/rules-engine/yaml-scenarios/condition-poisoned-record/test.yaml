@@ -1,0 +1,39 @@
+name: 'Condition Poisoned - Record'
+description: >-
+  Recording being Poisoned commits a keyed effect setting condition.poisoned plus
+  the attack-disadvantage flags AND the ability-check flags: initiative (the
+  roll-initiative dice-line reads it) and the generic check (record-check reads
+  check.disadvantage), while the 18 skill rollers read the skill flags the
+  effect also writes (see condition-poisoned-skill-flags). A NOTICE carries the
+  condition's standing effect while it is live. The recorder models BEING
+  POISONED (imposed by an enemy effect), so it is free and ungated (the prone
+  "Knocked Prone" precedent), and any rest clears it (untilShortRest covers
+  both rest kinds; see condition-poisoned-rest-clears).
+ruleGroups:
+  - dnd-5e-2024/condition-poisoned
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.poisoned: 0
+        offers:
+          exists:
+            - record-poisoned
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-poisoned.notice
+  - addOffer:
+      id: record-poisoned
+      assert:
+        facts:
+          condition.poisoned: 1
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+          initiative.disadvantage: 1
+          check.disadvantage: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-poisoned.notice
+          targets:
+            - key: rule.dnd-5e-2024.condition-poisoned.notice
+              targets: [notice]

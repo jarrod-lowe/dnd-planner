@@ -509,6 +509,13 @@ const EXPECTED_RUNNABLE = [
   'condition-blinded-record',
   'condition-blinded-rest-clears',
   'condition-blinded-attack-flags',
+  // condition-poisoned (wave 2: blinded's flags PLUS the ability-check flags —
+  // initiative, the generic check, and all 18 skills, uniform stateCombine max
+  // so armor and stacked conditions co-write the flags)
+  'condition-poisoned-record',
+  'condition-poisoned-rest-clears',
+  'condition-poisoned-skill-flags',
+  'condition-poisoned-with-blinded',
   // PR3 — crawl (×2 spend while prone) + the prone movement restriction
   'move-crawl-while-prone',
   'walk-illegal-while-prone',

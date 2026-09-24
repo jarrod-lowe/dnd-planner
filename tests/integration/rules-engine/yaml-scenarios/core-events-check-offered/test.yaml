@@ -19,3 +19,5 @@ steps:
                 dice:
                   - sides: 20
                     purpose: check
+                advantage:
+                  fact: check.disadvantage

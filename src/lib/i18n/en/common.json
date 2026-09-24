@@ -1033,6 +1033,16 @@
         "notice": "Blinded",
         "notice.body": "You can't see and automatically fail any ability check that requires sight. Your attack rolls have Disadvantage. Attack rolls against you have Advantage."
       },
+      "condition-poisoned": {
+        "record-poisoned": {
+          "name": "Poisoned"
+        },
+        "effect-poisoned": {
+          "name": "Poisoned"
+        },
+        "notice": "Poisoned",
+        "notice.body": "You have Disadvantage on attack rolls and ability checks."
+      },
       "grapple": {
         "grapple-action": {
           "name": "Grapple",
@@ -1947,7 +1957,8 @@
         "prone": "Prone",
         "charmed": "Charmed",
         "deafened": "Deafened",
-        "blinded": "Blinded"
+        "blinded": "Blinded",
+        "poisoned": "Poisoned"
       },
       "STAT": {
         "set": "Set",

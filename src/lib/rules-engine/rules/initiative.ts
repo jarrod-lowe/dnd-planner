@@ -29,7 +29,12 @@ const initiative: RuleModule = {
           type: 'dice-line',
           enabled: { condition: { fact: 'feat.alert.active', operator: 'equals', value: 1 } },
           label: 'rule.dnd-5e-2024.feat-alert.initiative-proficiency.button',
-          dice: [{ sides: 20, bonus: { var: 'alertBonus' }, purpose: 'check' }]
+          dice: [{ sides: 20, bonus: { var: 'alertBonus' }, purpose: 'check' }],
+          // The Alert roll is still an initiative roll: while the disadvantage
+          // flag is live (Poisoned, untrained armor) it defaults to
+          // 2d20-take-low, exactly like the primary control above (the Cleave
+          // secondary-control shape).
+          advantage: { fact: 'initiative.disadvantage' }
         },
         intents: { INSPECT: 'sense' },
         actionCost: []

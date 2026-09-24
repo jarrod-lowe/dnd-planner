@@ -365,7 +365,11 @@ const coreEvents: RuleModule = {
         annotationLabels: ['dice.any'],
         primaryControl: {
           type: 'dice-line',
-          dice: [{ sides: 20, purpose: 'check' }]
+          dice: [{ sides: 20, purpose: 'check' }],
+          // A generic ability check suffers disadvantage like any other (the
+          // Poisoned condition writes this fact; the Restrained save-wiring
+          // shape).
+          advantage: { fact: 'check.disadvantage' }
         },
         intents: { CHECK: 'skill' },
         actionCost: []

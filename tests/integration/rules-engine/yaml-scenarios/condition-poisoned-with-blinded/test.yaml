@@ -1,0 +1,32 @@
+name: 'Condition Poisoned - With Blinded'
+description: >-
+  The stacking pin (uniform-max dividend). Blinded and Poisoned BOTH write the
+  attack-disadvantage flags — two condition effects on the same facts, the
+  first two live conditions that overlap. Both write with stateCombine max, so
+  the flags read 1 (disadvantage is a flag, not a stack) instead of summing to
+  2 or conflict-throwing, while each condition fact stands on its own.
+ruleGroups:
+  - dnd-5e-2024/condition-blinded
+  - dnd-5e-2024/condition-poisoned
+steps:
+  - addOffer:
+      id: record-blinded
+      assert:
+        facts:
+          condition.blinded: 1
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+  - addOffer:
+      id: record-poisoned
+      assert:
+        facts:
+          condition.blinded: 1
+          condition.poisoned: 1
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+          initiative.disadvantage: 1
+          check.disadvantage: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-blinded.notice
+            - rule.dnd-5e-2024.condition-poisoned.notice

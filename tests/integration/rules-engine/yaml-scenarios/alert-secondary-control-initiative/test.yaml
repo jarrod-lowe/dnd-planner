@@ -41,6 +41,8 @@ steps:
                     operator: equals
                     value: 1
                 label: rule.dnd-5e-2024.feat-alert.initiative-proficiency.button
+                advantage:
+                  fact: initiative.disadvantage
                 dice:
                   - sides: 20
                     bonus:

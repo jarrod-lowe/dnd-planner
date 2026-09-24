@@ -1,0 +1,31 @@
+ruleGroups:
+  - id: condition-poisoned
+    requires: []
+    translations:
+      en:
+        name: Poisoned
+        description: Rules while you have the Poisoned condition; record it when an enemy poisons you
+        keywords:
+          - poisoned
+          - poison
+          - condition
+          - venom
+          - toxin
+          - sick
+      en-x-tlh:
+        name: Dujlu'pu'
+        description: Dujlu'pu' Dotlh; DujmoHlu'DI' yIghun
+        keywords:
+          - Duj
+          - Dujlu'pu'
+          - Dotlh
+    detail:
+      key: condition/poisoned
+      source: srd52
+      translations:
+        en:
+          meta: Condition
+          body: |
+            **Poisoned [Condition].** While you have the Poisoned condition, you experience the following effect.
+
+            **Ability Checks and Attacks Affected.** You have Disadvantage on attack rolls and ability checks.
