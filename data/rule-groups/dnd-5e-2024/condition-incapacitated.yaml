@@ -1,0 +1,34 @@
+ruleGroups:
+  - id: condition-incapacitated
+    translations:
+      en:
+        name: Incapacitated
+        description: Rules while you have the Incapacitated condition; record it when an enemy incapacitates you
+        keywords:
+          - incapacitated
+          - incapacitate
+          - condition
+          - helpless
+          - inactive
+      en-x-tlh:
+        name: laHtaHbe'
+        description: laHtaHbe' Dotlh; laHtaHbe'moHlu'DI' yIghun
+        keywords:
+          - laHtaHbe'
+          - Dotlh
+    detail:
+      key: condition/incapacitated
+      source: srd52
+      translations:
+        en:
+          meta: Condition
+          body: |
+            **Incapacitated [Condition].** While you have the Incapacitated condition, you experience the following effects.
+
+            **Inactive.** You can't take any action, Bonus Action, or Reaction.
+
+            **No Concentration.** Your Concentration is broken.
+
+            **Speechless.** You can't speak.
+
+            **Surprised.** If you're Incapacitated when you roll Initiative, you have Disadvantage on the roll.

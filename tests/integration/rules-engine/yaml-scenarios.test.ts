@@ -516,6 +516,14 @@ const EXPECTED_RUNNABLE = [
   'condition-poisoned-rest-clears',
   'condition-poisoned-skill-flags',
   'condition-poisoned-with-blinded',
+  // condition-incapacitated (wave 3 enabler: the economy remaining derives +
+  // extraRemaining read the condition fact — Inactive — and the module derives
+  // initiative.disadvantage from it — Surprised; dash goes illegal off the
+  // clamped pool for free)
+  'condition-incapacitated-record',
+  'condition-incapacitated-rest-clears',
+  'dash-illegal-while-incapacitated',
+  'extra-attack-followup-illegal-while-incapacitated',
   // PR3 — crawl (×2 spend while prone) + the prone movement restriction
   'move-crawl-while-prone',
   'walk-illegal-while-prone',

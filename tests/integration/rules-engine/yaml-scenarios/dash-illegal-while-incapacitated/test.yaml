@@ -1,0 +1,32 @@
+name: 'Dash illegal while Incapacitated'
+description: >-
+  SRD 5.2 Incapacitated, Inactive: you can't take any action, Bonus Action, or
+  Reaction. The action-economy remaining derives read condition.incapacitated
+  and clamp to 0 while it is set, so every actions.remaining > 0 gate — dash
+  here, bless and the weapon/spell costApply legs elsewhere — goes illegal FOR
+  FREE off the clamped pool: no dash-side change. A legality gate, not a
+  structural one, so the row still shows why (the shared no-action diagnostic).
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/dash
+  - dnd-5e-2024/condition-incapacitated
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.incapacitated: 0
+          actions.remaining: 1
+        offers:
+          legal:
+            - dash-action
+  - addOffer:
+      id: record-incapacitated
+      assert:
+        facts:
+          condition.incapacitated: 1
+          actions.remaining: 0
+        offers:
+          illegal:
+            - dash-action

@@ -1043,6 +1043,16 @@
         "notice": "Poisoned",
         "notice.body": "You have Disadvantage on attack rolls and ability checks."
       },
+      "condition-incapacitated": {
+        "record-incapacitated": {
+          "name": "Incapacitated"
+        },
+        "effect-incapacitated": {
+          "name": "Incapacitated"
+        },
+        "notice": "Incapacitated",
+        "notice.body": "You can't take any action, Bonus Action, or Reaction; your Concentration is broken; you can't speak; and you have Disadvantage on Initiative rolls."
+      },
       "grapple": {
         "grapple-action": {
           "name": "Grapple",
@@ -1958,7 +1968,8 @@
         "charmed": "Charmed",
         "deafened": "Deafened",
         "blinded": "Blinded",
-        "poisoned": "Poisoned"
+        "poisoned": "Poisoned",
+        "incapacitated": "Incapacitated"
       },
       "STAT": {
         "set": "Set",

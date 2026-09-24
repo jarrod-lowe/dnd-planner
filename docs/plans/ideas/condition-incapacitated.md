@@ -88,15 +88,15 @@ Tests (RED first — yaml scenario asserts are the RED for rule changes; registe
 
 ### PR1 — condition-incapacitated module + action-economy denial (+ initiative flag)
 
-- [ ] RED: `condition-incapacitated-record`, `dash-illegal-while-incapacitated` fail — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
-- [ ] `condition-incapacitated.ts`: record offer, keyed effect (condition fact, `max`, `display.detailKey`), `initiative.disadvantage` derive, notice annotate
-- [ ] Bridge extension: `EffectDisplay.detailKey` + `effectInstanceToRule` copy + chip component test — SKIP if wave 1 already landed it (check first; it should have)
-- [ ] `action-economy.ts`: three `remaining` derives clamp to 0 while `condition.incapacitated > 0`; `attacks.ts`: `attackAction.extraRemaining` derive gains the same clamp
-- [ ] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details` (output `static/details/` gitignored — published, not committed)
-- [ ] i18n keys above, both locales
-- [ ] terraform seed `char_condition_incapacitated_rulegroup_seed` (dynamodb-items.tf); `make validate` passes
-- [ ] GREEN: both scenarios + `condition-incapacitated-rest-clears` (green-immediate pin: expiry lands with the effect) + `EXPECTED_RUNNABLE`
-- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod)
+- [x] RED: `condition-incapacitated-record`, `dash-illegal-while-incapacitated` fail — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE` — all four scenarios (incl. `extra-attack-followup-illegal-while-incapacitated`, `condition-incapacitated-rest-clears`) registered first; coverage diff listed exactly those four missing
+- [x] `condition-incapacitated.ts`: record offer, keyed effect (condition fact, `max`, `display.detailKey`), `initiative.disadvantage` derive, notice annotate
+- [x] Bridge extension: `EffectDisplay.detailKey` + `effectInstanceToRule` copy + chip component test — done via #446 (wave 1; types.ts `EffectDisplay.detailKey` already on main — the doc's bridge line was stale)
+- [x] `action-economy.ts`: three `remaining` derives clamp to 0 while `condition.incapacitated > 0`; `attacks.ts`: `attackAction.extraRemaining` derive gains the same clamp
+- [x] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details` (output `static/details/` gitignored — published, not committed) — yaml omits `requires` entirely (optional; every read baseline or absent-safe)
+- [x] i18n keys above, both locales
+- [x] terraform seed `char_condition_incapacitated_rulegroup_seed` (dynamodb-items.tf); `make validate` passes
+- [x] GREEN: both scenarios + `condition-incapacitated-rest-clears` (green-immediate pin: expiry lands with the effect) + `EXPECTED_RUNNABLE`
+- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod) — on branch `condition-incapacitated-1`; gates green, PR pending at commit time
 
 ### PR2 — concentration break on record
 

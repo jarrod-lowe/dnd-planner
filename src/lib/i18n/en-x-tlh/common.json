@@ -1043,6 +1043,16 @@
         "notice": "Dujlu'pu'",
         "notice.body": "HIv Daghu'meH 'ej laH Daghu'meH DIvI' ngor bISuqnIS."
       },
+      "condition-incapacitated": {
+        "record-incapacitated": {
+          "name": "laHtaHbe'"
+        },
+        "effect-incapacitated": {
+          "name": "laHtaHbe'"
+        },
+        "notice": "laHtaHbe'",
+        "notice.body": "ra' DangeHlaHbe' 'ej DIvI' ngor Qaw'pu'; DajatlhlaHbe' 'ej ngor DIvI' Hov SuqnIS."
+      },
       "grapple": {
         "grapple-action": {
           "name": "DIvI' qop",
@@ -1958,7 +1968,8 @@
         "charmed": "parmaq",
         "deafened": "QoylaHbe'",
         "blinded": "leghlaHbe'",
-        "poisoned": "Dujlu'pu'"
+        "poisoned": "Dujlu'pu'",
+        "incapacitated": "laHtaHbe'"
       },
       "STAT": {
         "set": "Set",

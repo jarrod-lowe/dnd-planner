@@ -1,0 +1,46 @@
+name: 'Condition Incapacitated - Record'
+description: >-
+  Recording being Incapacitated commits a keyed effect setting
+  condition.incapacitated, and the module DERIVES initiative.disadvantage from
+  the fact (Surprised — a derive, not an effect write, so the wave-5
+  composition children that write the fact inherit the flag for free). The
+  action-economy remaining derives read the condition fact, so all three pools
+  (actions, bonusActions, reactions) sit at 0 while it is live — the Inactive
+  effect. A NOTICE carries the condition's standing effects (Inactive,
+  No Concentration, Speechless, Surprised) while it is live. The recorder
+  models BEING INCAPACITATED (imposed by an enemy effect), so it is free and
+  ungated (the prone "Knocked Prone" precedent), and any rest clears it
+  (untilShortRest covers both rest kinds; see condition-incapacitated-rest-clears).
+ruleGroups:
+  - dnd-5e-2024/condition-incapacitated
+  - dnd-5e-2024/action-economy
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.incapacitated: 0
+          initiative.disadvantage: 0
+          actions.remaining: 1
+          bonusActions.remaining: 1
+          reactions.remaining: 1
+        offers:
+          exists:
+            - record-incapacitated
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-incapacitated.notice
+  - addOffer:
+      id: record-incapacitated
+      assert:
+        facts:
+          condition.incapacitated: 1
+          initiative.disadvantage: 1
+          actions.remaining: 0
+          bonusActions.remaining: 0
+          reactions.remaining: 0
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-incapacitated.notice
+          targets:
+            - key: rule.dnd-5e-2024.condition-incapacitated.notice
+              targets: [notice]
