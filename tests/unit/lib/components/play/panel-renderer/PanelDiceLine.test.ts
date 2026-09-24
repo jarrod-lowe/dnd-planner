@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import PanelRenderer from '$lib/components/play/PanelRenderer.svelte';
+import type { DiceLineControl } from '$lib/components/play/panel-renderer/types';
 import type { AvailableRuleEntry, Rule } from '$lib/rules-view';
 
 const createDiceLineEntry = (): AvailableRuleEntry => ({
@@ -450,5 +451,115 @@ describe('PanelRenderer - dice-line control', () => {
     // Single melee range - no disadvantage
     const { container } = render(PanelRenderer, { props: { entry, editable: true, facts: {} } });
     expect(container.querySelector('.panel-renderer__disadv-indicator')).toBeFalsy();
+  });
+
+  // === Rules-driven advantage (advantageUp) ===
+
+  // A to-hit d20 whose control carries `advantageUp` — the rules-driven
+  // ADVANTAGE source (e.g. Invisible's `attack.str.advantage` fact), the ▲
+  // counterpart of the historical `advantage` field (which, despite its
+  // name, is the DISadvantage source). Overrides fold into the primary
+  // control so the cancel cases can layer a disadvantage source on top.
+  const createAdvantageEntry = (
+    primaryControlOverrides: Partial<DiceLineControl> = {}
+  ): AvailableRuleEntry => ({
+    rule: {
+      id: 'adv-attack',
+      description: 'Advantage Attack',
+      activities: [],
+      ui: {
+        section: 'action-attack',
+        name: 'rule.attacks.adv.name',
+        primaryControl: {
+          type: 'dice-line',
+          advantageUp: { fact: 'attack.str.advantage' },
+          dice: [{ sides: 20, bonus: { var: 'hitBonus' }, purpose: 'to-hit' }],
+          ...primaryControlOverrides
+        }
+      },
+      vars: { hitBonus: { default: { number: 5 } } }
+    } as Rule,
+    legal: true,
+    applicable: true,
+    diagnostics: []
+  });
+
+  it('shows the advantage indicator (▲) when advantageUp resolves truthy', () => {
+    const entry = createAdvantageEntry();
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: { 'attack.str.advantage': 1 } }
+    });
+    const indicator = container.querySelector('.panel-renderer__disadv-indicator');
+    expect(indicator).toBeTruthy();
+    expect(indicator?.textContent).toBe('▲');
+    // i18n key echoes back in the test env — proves the label is translated,
+    // and that it names ADVANTAGE, not the ▼ leg's disadvantage key.
+    expect(indicator?.getAttribute('aria-label')).toBe('play.choices.attack.advantage');
+  });
+
+  it('rolls d20 at advantage when advantageUp resolves truthy', async () => {
+    const entry = createAdvantageEntry(); // d20+5
+    vi.spyOn(Math, 'random')
+      .mockReturnValueOnce(0.4) // advantage roll 1: floor(0.4*20)+1 = 9 (dropped)
+      .mockReturnValueOnce(0.7); // advantage roll 2: floor(0.7*20)+1 = 15 (kept)
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: { 'attack.str.advantage': 1 } }
+    });
+    const chip = container.querySelector('.panel-renderer__die-chip') as HTMLElement;
+    await fireEvent.click(chip);
+    // Advantage keeps the max: 15 + 5 = 20
+    expect(container.textContent).toContain('20');
+    expect(chip.classList.contains('panel-renderer__die-chip--adv')).toBe(true);
+  });
+
+  it('cancels advantageUp against a disadvantage fact to a normal default roll mode', async () => {
+    // SRD glossary: Advantage and Disadvantage on the same roll cancel each
+    // other. Prone (dis on your attacks) + Invisible (adv) co-occurring is
+    // the real case: both facts live, the default mode is normal.
+    const entry = createAdvantageEntry({ advantage: { fact: 'attack.str.disadvantage' } });
+    vi.spyOn(Math, 'random').mockReturnValue(0.8); // ONE normal roll: floor(0.8*20)+1 = 17
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry,
+        editable: true,
+        facts: { 'attack.str.advantage': 1, 'attack.str.disadvantage': 1 }
+      }
+    });
+    expect(container.querySelector('.panel-renderer__disadv-indicator')).toBeFalsy();
+    const chip = container.querySelector('.panel-renderer__die-chip') as HTMLElement;
+    await fireEvent.click(chip);
+    // Single d20 kept as-is: 17 + 5 = 22, no adv/dis chip styling
+    expect(container.textContent).toContain('22');
+    expect(chip.classList.contains('panel-renderer__die-chip--adv')).toBe(false);
+    expect(chip.classList.contains('panel-renderer__die-chip--disadv')).toBe(false);
+  });
+
+  it('cancels advantageUp against a disadvantage range band to a normal default roll mode', async () => {
+    // Cancellation is source-agnostic per the glossary: a long-range band's
+    // disadvantage cancels a rules-driven advantage exactly as a fact would.
+    const entry = createAdvantageEntry({
+      ranges: { array: [{ distance: 60, type: 'ranged', disadvantage: true }] }
+    });
+    vi.spyOn(Math, 'random').mockReturnValue(0.8); // ONE normal roll: 17
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: { 'attack.str.advantage': 1 } }
+    });
+    expect(container.querySelector('.panel-renderer__disadv-indicator')).toBeFalsy();
+    const chip = container.querySelector('.panel-renderer__die-chip') as HTMLElement;
+    await fireEvent.click(chip);
+    expect(container.textContent).toContain('22');
+    expect(chip.classList.contains('panel-renderer__die-chip--adv')).toBe(false);
+    expect(chip.classList.contains('panel-renderer__die-chip--disadv')).toBe(false);
+  });
+
+  it('keeps the default roll mode normal when advantageUp is present but unresolved', () => {
+    // Back-compat pin: a control authored with advantageUp whose fact is
+    // absent (the character is not invisible) must roll exactly as before.
+    const entry = createAdvantageEntry();
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: {} }
+    });
+    expect(container.querySelector('.panel-renderer__disadv-indicator')).toBeFalsy();
+    expect(container.textContent).toContain('d20');
   });
 });

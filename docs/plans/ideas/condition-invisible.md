@@ -81,14 +81,15 @@ Tests (RED first — yaml scenario asserts are the RED for rule changes):
 
 ### PR1 — roller: `advantageUp` + cancellation (UI-only)
 
-- [ ] RED: PanelDiceLine component tests fail — advantage default; dis-fact cancel → normal; dis-band cancel → normal; ▲ indicator
-- [ ] types.ts `advantageUp?: ValueSource` (documented beside the historical `advantage` = disadvantage-source); defaultRollMode 3-way; ▲/▼ indicator split (full + summary)
+- [x] RED: PanelDiceLine component tests fail — advantage default; dis-fact cancel → normal; dis-band cancel → normal; ▲ indicator
+- [x] types.ts `advantageUp?: ValueSource` (documented beside the historical `advantage` = disadvantage-source); defaultRollMode 3-way; ▲/▼ indicator split (full + summary)
 - [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod)
+  - PR1 executed: gates green, PR opened (orchestrator owns the tail: codex monitor, deploy-test, human merge)
 
 ### PR2 — weapon wiring + condition-invisible module (prone PR1 boilerplate)
 
 - [ ] RED: `condition-invisible-record` + `condition-invisible-rest-clears` fail (unknown group → skipped vs `EXPECTED_RUNNABLE`)
-- [ ] `WeaponDef.advantageFact` (required) + diceControl `advantageUp` + `weaponOffers` ui mirror; 6 weapon modules + attacks.ts unarmed (advantageFact + ui); greataxe's Cleave SECONDARY control (greataxe.ts `actionUiExtra.secondaryControl`) gains BOTH sources (`advantageUp` + the existing disadvantage fact — it has neither today; test a mastery-enabled Cleave roll)
+- [ ] `WeaponDef.advantageFact` (required) + diceControl `advantageUp` + `weaponOffers` ui mirror; 6 weapon modules + attacks.ts unarmed (advantageFact + ui); greataxe's Cleave SECONDARY control (greataxe.ts `actionUiExtra.secondaryControl`) gains `advantageUp` (the disadvantage fact is already wired there — landed with #447; only the advantage leg is missing; test a mastery-enabled Cleave roll)
 - [ ] `condition-invisible.ts`: record offer, keyed effect, notice; `registry.ts` + `lazy.ts`; yaml + detail + `make publish-details` (output gitignored — published, not committed); i18n both locales; terraform seed + `make validate`
 - [ ] GREEN: record + rest-clears + `invisible-plus-prone-cancels` facts leg
 - [ ] gates → PR → codex monitor → clean → `make deploy-test` → human inspects test env → human merges
@@ -97,7 +98,7 @@ Tests (RED first — yaml scenario asserts are the RED for rule changes):
 
 - [ ] RED: new scenario asserting `offerUi` on `roll-initiative` (`primaryControl.advantageUp` = `{ fact: 'initiative.advantage' }`) fails
 - [ ] initiative.ts primaryControl `advantageUp` (+ ui mirror); record scenario already writes `initiative.advantage` (PR2 effect — fact lands ahead of its reader, harmless)
-- [ ] Alert's `secondaryControl` (the proficiency-based d20, feat-alert) gets BOTH sources: `advantageUp: { fact: 'initiative.advantage' }` AND `advantage: { fact: 'initiative.disadvantage' }` (it bypasses condition-driven Disadvantage today too — fix both legs while here); test the Alert + Invisible combination
+- [ ] Alert's `secondaryControl` (the proficiency-based d20, feat-alert) gets `advantageUp: { fact: 'initiative.advantage' }` (the disadvantage leg is already wired there — landed with #448; no longer bypasses); test the Alert + Invisible combination
 - [ ] GREEN
 - [ ] gates → PR → codex monitor → clean → `make deploy-test` → human inspects test env → human merges
 

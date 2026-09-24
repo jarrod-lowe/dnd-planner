@@ -414,6 +414,57 @@ describe('PanelDiceLine - summary short form', () => {
     expect(labels[0].textContent).toContain('fiendUndeadLabel');
   });
 
+  // A to-hit d20 whose `advantageUp` fact source resolves truthy (e.g.
+  // Invisible's `attack.str.advantage`), so the line's DEFAULT roll mode is
+  // advantage — the ▲ counterpart of createDisadvantageEntry's ▼, and the
+  // summary-site half of the indicator split.
+  const createAdvantageEntry = (): AvailableRuleEntry => ({
+    rule: {
+      id: 'adv-attack',
+      description: 'Advantage Attack',
+      activities: [],
+      ui: {
+        section: 'action-attack',
+        name: 'rule.attacks.adv.name',
+        primaryControl: {
+          type: 'dice-line',
+          advantageUp: { fact: 'attack.str.advantage' },
+          dice: [{ sides: 20, bonus: { var: 'hitBonus' }, purpose: 'to-hit' }]
+        }
+      },
+      vars: { hitBonus: { default: { number: 5 } } }
+    } as Rule,
+    legal: true,
+    applicable: true,
+    diagnostics: []
+  });
+
+  it('shows the default-advantage indicator (▲) on an unrolled d20 in summary', () => {
+    const entry = createAdvantageEntry();
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: { 'attack.str.advantage': 1 }, summary: true }
+    });
+    const indicator = container.querySelector('.panel-renderer__disadv-indicator');
+    expect(indicator).not.toBeNull();
+    expect(indicator?.textContent).toBe('▲');
+    // Still nothing focusable — the indicator is a plain span, not a control.
+    expect(focusableCount(container)).toBe(0);
+  });
+
+  it("translates the advantage indicator's aria-label instead of reusing the disadvantage key", () => {
+    // Mirrors the disadvantage aria pin above: the i18n mock echoes the key
+    // verbatim, so this only passes if the ▲ leg calls $t with the ADVANTAGE
+    // key — a component that renders ▲ with the disadvantage label (or a
+    // hardcoded English literal) fails it.
+    const entry = createAdvantageEntry();
+    const { container } = render(PanelRenderer, {
+      props: { entry, editable: true, facts: { 'attack.str.advantage': 1 }, summary: true }
+    });
+    const indicator = container.querySelector('.panel-renderer__disadv-indicator');
+    expect(indicator).not.toBeNull();
+    expect(indicator?.getAttribute('aria-label')).toBe('play.choices.attack.advantage');
+  });
+
   it('keeps the default-disadvantage indicator alongside the rolled-mode styling once rolled', async () => {
     const entry = createDisadvantageEntry();
     vi.spyOn(Math, 'random')
