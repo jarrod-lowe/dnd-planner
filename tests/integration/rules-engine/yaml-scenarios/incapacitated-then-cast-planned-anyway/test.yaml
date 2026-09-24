@@ -1,0 +1,74 @@
+name: 'Incapacitated Then Cast Planned Anyway'
+description: >-
+  The REVERSE ordering is illegal-but-visible BY DESIGN: with the condition
+  already standing (the action-economy remaining derives clamp to 0), a
+  concentration cast planned anyway renders ILLEGAL — the shared no-action
+  diagnostic rides the row — but its apply still advertises the hold and
+  endTurn commits it: the character ends the turn incapacitated AND
+  concentrating. That is the engine's documented contract (illegal rows still
+  execute), the same class as a planned-anyway dash committing its boost
+  while halted. Deliberately NOT fixed by suppression or fact-reactive hold
+  logic — that would convert illegal into impossible — and the contradiction
+  stays visible: the standing notice already says Concentration is broken.
+ruleGroups:
+  - dnd-5e-2024/prepared-spells
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/concentration
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-bless
+  - dnd-5e-2024/condition-incapacitated
+steps:
+  - evaluate:
+  - addOffer:
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: bless
+            level: 1
+            nameKey: rule.spell-bless.offer-bless.name
+            preparedFact: spell.l1.bless.prepared
+            alwaysPreparedFact: spell.l1.bless.alwaysPrepared
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - cast-bless
+  # The condition lands FIRST — no hold is live, so the record's conditional
+  # break stays quiet — and every action pool clamps to 0 (Inactive).
+  - addOffer:
+      id: record-incapacitated
+      assert:
+        facts:
+          condition.incapacitated: 1
+          actions.remaining: 0
+  # The cast planned anyway: the row is ILLEGAL (the no-action diagnostic,
+  # attached per-instance by the apply's re-check) yet the hold is still
+  # advertised — the fold executes illegal rows by design.
+  - addOffer:
+      id: cast-bless
+      assert:
+        facts:
+          concentration.spent: 1
+          concentration.remaining: 0
+        offers:
+          illegal:
+            - cast-bless
+        planErrors:
+          - id: cast-bless
+            errors:
+              - rule.spell-bless.offer-bless.no_action
+  # Commit: both stand — the character is incapacitated AND concentrating.
+  - endTurn:
+      assert:
+        facts:
+          condition.incapacitated: 1
+          concentration.spent: 1
+        effects:
+          exists:
+            - effect-incapacitated
+            - effect-bless

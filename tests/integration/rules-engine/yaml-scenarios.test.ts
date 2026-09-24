@@ -524,6 +524,13 @@ const EXPECTED_RUNNABLE = [
   'condition-incapacitated-rest-clears',
   'dash-illegal-while-incapacitated',
   'extra-attack-followup-illegal-while-incapacitated',
+  // …PR2 — the record's conditional concentration break (No Concentration):
+  // eviction + marker clear while a hold is live, the reverse-order
+  // illegal-but-visible pin (the cast planned anyway still commits its hold),
+  // and the no-hold phantom-chip pin
+  'concentration-broken-on-record',
+  'incapacitated-then-cast-planned-anyway',
+  'record-incapacitated-no-hold-no-phantom',
   // PR3 — crawl (×2 spend while prone) + the prone movement restriction
   'move-crawl-while-prone',
   'walk-illegal-while-prone',
