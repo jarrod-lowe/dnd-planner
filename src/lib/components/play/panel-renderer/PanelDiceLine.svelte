@@ -64,8 +64,8 @@
      * line's range (or authored inline `control.label`) still shows, as
      * plain non-interactive text. Roll modifiers and options triggers are
      * dropped — their value is already folded into the shown numbers, and
-     * nothing in a collapsed row may be focusable. A d20 under default
-     * disadvantage (`defaultRollMode !== 'normal'`) still shows the `▼`
+     * nothing in a collapsed row may be focusable. A d20 under a non-normal
+     * default mode (`defaultRollMode !== 'normal'`) still shows the `▼`/`▲`
      * indicator here, exactly as the full render does — this is what lets
      * an UNROLLED die's state read as "taking adv/dis into account" per the
      * brief, not just a rolled one's chip styling.
@@ -203,9 +203,29 @@
     control.advantage ? !!resolveValueSource(control.advantage, facts, vars, selections) : false
   );
 
-  const defaultRollMode = $derived<RollMode>(
-    rulesDisadvantage || currentRange?.disadvantage ? 'disadvantage' : 'normal'
+  // The advantage counterpart of `rulesDisadvantage` — see `advantageUp` on
+  // DiceLineControl (the historical `advantage` field names the DISadvantage
+  // source; this one is the honest name).
+  const rulesAdvantage = $derived(
+    control.advantageUp ? !!resolveValueSource(control.advantageUp, facts, vars, selections) : false
   );
+
+  // The line's default roll mode, three-way. Advantage and disadvantage each
+  // have a rules-driven source (a fact) plus, on the disadvantage side, the
+  // selected range band's long-range flag. When BOTH directions are live they
+  // cancel to 'normal' — SRD glossary: "Advantage and Disadvantage on the same
+  // roll cancel each other", and the cancellation is source-agnostic (a
+  // rules-driven advantage fact cancels a range-band disadvantage exactly as
+  // it cancels a disadvantage fact; Prone + Invisible co-occurring is the real
+  // case). A manual per-die roll-mode choice still wins over this default —
+  // see the `effectiveRollMode` merge below.
+  const defaultRollMode = $derived.by<RollMode>(() => {
+    const disadvantage = rulesDisadvantage || !!currentRange?.disadvantage;
+    if (rulesAdvantage && disadvantage) return 'normal';
+    if (disadvantage) return 'disadvantage';
+    if (rulesAdvantage) return 'advantage';
+    return 'normal';
+  });
 
   const effectiveRollMode = $derived<RollMode>(
     defaultRollMode !== 'normal' && rollMode === 'normal' ? defaultRollMode : rollMode
@@ -809,9 +829,17 @@
       {:else if part.type === 'die'}
         {@const dieIsD20 = isD20(part.die!)}
         {#if defaultRollMode !== 'normal' && dieIsD20}
+          <!-- Direction split: ▲ names advantage, ▼ disadvantage — the shared
+               class stays (it is the "default roll mode indicator" hook every
+               test and consumer queries); the arrow and its translated
+               accessible name carry the direction. -->
           <span
             class="panel-renderer__disadv-indicator"
-            aria-label={$t('play.choices.attack.disadvantage')}>▼</span
+            aria-label={$t(
+              defaultRollMode === 'advantage'
+                ? 'play.choices.attack.advantage'
+                : 'play.choices.attack.disadvantage'
+            )}>{defaultRollMode === 'advantage' ? '▲' : '▼'}</span
           >
         {/if}
         {#if part.die!.label}
@@ -892,9 +920,17 @@
         {@const dieIsD20 = isD20(part.die!)}
         {@const dieHasOptions = hasOptions(part.die!)}
         {#if defaultRollMode !== 'normal' && dieIsD20}
+          <!-- Direction split: ▲ names advantage, ▼ disadvantage — the shared
+               class stays (it is the "default roll mode indicator" hook every
+               test and consumer queries); the arrow and its translated
+               accessible name carry the direction. -->
           <span
             class="panel-renderer__disadv-indicator"
-            aria-label={$t('play.choices.attack.disadvantage')}>▼</span
+            aria-label={$t(
+              defaultRollMode === 'advantage'
+                ? 'play.choices.attack.advantage'
+                : 'play.choices.attack.disadvantage'
+            )}>{defaultRollMode === 'advantage' ? '▲' : '▼'}</span
           >
         {/if}
         <div class="panel-renderer__chip-wrapper">

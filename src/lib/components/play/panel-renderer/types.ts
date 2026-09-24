@@ -146,7 +146,27 @@ export interface ControlBase {
 export interface DiceLineControl extends ControlBase {
   type: 'dice-line';
   ranges?: ValueSource;
+  /**
+   * HISTORICAL NAME: this is the rules-driven DISADVANTAGE source. A
+   * fact/var that resolves truthy while the roll is at disadvantage (e.g.
+   * Prone's `attack.str.disadvantage`), making the line's default roll mode
+   * 'disadvantage'. The name predates the advantage leg below and is kept
+   * for back-compat — renaming it would break every existing author
+   * (weapons, unarmed, initiative, skill checks).
+   */
   advantage?: ValueSource;
+  /**
+   * The rules-driven ADVANTAGE source — the honest-named counterpart of the
+   * historical `advantage` field above. A fact/var that resolves truthy
+   * while the roll is at advantage (e.g. Invisible's
+   * `attack.str.advantage`), making the line's default roll mode
+   * 'advantage'. When a disadvantage source is ALSO live (the `advantage`
+   * field above, or the selected range band's `disadvantage` flag) the two
+   * CANCEL and the default mode is 'normal' — SRD glossary: "Advantage and
+   * Disadvantage on the same roll cancel each other", source-agnostic. A
+   * manual per-die roll-mode choice still overrides this default.
+   */
+  advantageUp?: ValueSource;
   label?: string; // i18n key - inline text rendered like range text (e.g. "5ft")
   dice: DiceEntry[];
   /**
