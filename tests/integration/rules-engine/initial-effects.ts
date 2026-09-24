@@ -170,6 +170,11 @@ export const INITIAL_EFFECTS: Record<string, EffectInstance[]> = {
   'extra-attack-shove': [flag('extraAttacks.max')],
   'extra-attack-unarmed': [flag('extraAttacks.max')],
   'extra-attack-unarmed-overcommit': [flag('extraAttacks.max')],
+  // The extra-attack leg of Incapacitated's Inactive clamp (greataxe variant).
+  'extra-attack-followup-illegal-while-incapacitated': [
+    weaponEquipped('greataxe'),
+    flag('extraAttacks.max')
+  ],
 
   // === Smites (a granted slot; the free use / always-prepared come from the groups) ===
   'divine-smite-cap-high-slot': [slot(6)],

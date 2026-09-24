@@ -1,0 +1,61 @@
+name: 'Extra Attack follow-up illegal while Incapacitated'
+description: >
+  Attack-offer legality is `actions.remaining > 0 || attackAction.extraRemaining
+  > 0`, so the OR's second leg would keep Extra Attack follow-ups legal after
+  recording Incapacitated mid-Attack-action. The extraRemaining derive clamps
+  to 0 while condition.incapacitated is set (the conservative SRD "Inactive"
+  reading: the started action's remaining swings stop), so after the first
+  greataxe swing opens the free follow-up, recording Incapacitated kills it —
+  the follow-up is illegal and the Extra Attack reminder is gone with the
+  budget.
+
+ruleGroups:
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/attacks
+  - dnd-5e-2024/greataxe
+  - dnd-5e-2024/condition-incapacitated
+
+steps:
+  - evaluate:
+      assert:
+        facts:
+          actions.remaining: 1
+          attackAction.extraRemaining: 0
+        offers:
+          legal:
+            - greataxe-use-action
+
+  # First attack: spends the action, opens one free follow-up.
+  - addOffer:
+      id: greataxe-use-action
+      assert:
+        facts:
+          actions.remaining: 0
+          attackAction.extraRemaining: 1
+        offers:
+          legal:
+            - greataxe-use-action
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.attacks.extra-attack.annotation
+
+  # Recording Incapacitated mid-Attack-action clamps the follow-up budget (and
+  # the action pool) to 0: the second swing is illegal, and the reminder that
+  # advertised it is gone with the budget.
+  - addOffer:
+      id: record-incapacitated
+      assert:
+        facts:
+          condition.incapacitated: 1
+          actions.remaining: 0
+          attackAction.extraRemaining: 0
+        offers:
+          illegal:
+            - greataxe-use-action
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.attacks.extra-attack.annotation

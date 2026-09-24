@@ -1,0 +1,61 @@
+name: 'Condition Incapacitated - Rest Clears'
+description: >-
+  Any rest clears the Incapacitated condition: the keyed effect carries
+  untilShortRest, which a short rest satisfies directly and a long rest
+  includes. The condition fact, the derived initiative.disadvantage flag, and
+  the notice all go with it (umbrella default — SRD 5.2 gives no mechanical
+  end, so rest plus manual chip dismissal only).
+ruleGroups:
+  - dnd-5e-2024/condition-incapacitated
+  - dnd-5e-2024/core-events
+steps:
+  - addOffer:
+      id: record-incapacitated
+      assert:
+        facts:
+          condition.incapacitated: 1
+          initiative.disadvantage: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-incapacitated.notice
+  # A long rest (the explicit endTurn flag) clears it.
+  - endTurn:
+      longRest: true
+      assert:
+        facts:
+          condition.incapacitated: 0
+          initiative.disadvantage: 0
+        effects:
+          notExists:
+            - effect-incapacitated
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-incapacitated.notice
+  # ...and so does a recorded short rest: the rest flag effect restores its
+  # scoped effects within the same evaluation, so the facts and notice are
+  # already gone before the turn even ends.
+  - addOffer:
+      id: record-incapacitated
+      assert:
+        facts:
+          condition.incapacitated: 1
+  - addOffer:
+      id: record-short-rest
+      assert:
+        facts:
+          rest.short: 1
+          condition.incapacitated: 0
+          initiative.disadvantage: 0
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-incapacitated.notice
+  - endTurn:
+      assert:
+        facts:
+          condition.incapacitated: 0
+        effects:
+          notExists:
+            - effect-incapacitated
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-incapacitated.notice

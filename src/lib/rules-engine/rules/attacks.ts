@@ -94,8 +94,15 @@ const attacks: RuleModule = {
     },
     { fact: 'attack.unarmed.damageBonus', value: (f) => f.num('str.modifier') },
     {
+      // Incapacitated kills the follow-up budget with the action pool (SRD
+      // 5.2 "Inactive", read conservatively: a recorded-mid-Attack-action
+      // condition stops the started action's remaining swings — the OR legality
+      // leg below would otherwise keep them legal).
       fact: 'attackAction.extraRemaining',
-      value: (f) => f.num('attackAction.extraGranted') - f.num('attackAction.extraSpent')
+      value: (f) =>
+        f.num('condition.incapacitated') > 0
+          ? 0
+          : f.num('attackAction.extraGranted') - f.num('attackAction.extraSpent')
     },
     // Boolean "an attack was made this turn", derived from a summed counter so it
     // stays 0/1 no matter how many swings happen (flag, not a resource).
