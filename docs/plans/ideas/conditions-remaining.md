@@ -57,7 +57,7 @@ Rough total: ~10–12 PRs. Calibration: prone = 4 PRs incl. inventing the chassi
 
 Per-condition docs lift their detail bodies from these quotes (`docs/srd52.txt`, Rules Glossary). "Notice text only" = the prone precedent: NPC-side / out-of-engine effects stay notice text, never facts.
 
-Standing rule (all 14): every condition EFFECT carries `display: { name, detailKey: 'condition/<name>' }` — the offer's `ui.detailKey` only covers the plan row; the committed ActiveStateStrip chip needs the `EffectDisplay.detailKey` bridge extension defined in condition-incapacitated.md PR1.
+Standing rule (all 14): every condition EFFECT carries `display: { name, detailKey: 'condition/<name>' }` — the offer's `ui.detailKey` only covers the plan row; the committed ActiveStateStrip chip needs the `EffectDisplay.detailKey` bridge extension. **The bridge lands with the FIRST condition slice (wave 1 — Charmed's doc carries the PR item)**, so no wave executes before it exists; condition-incapacitated.md spells out the mechanics (type + engineBridge copy + chip component test).
 
 ### Charmed — XS (⅓ PR; batch with Deafened)
 

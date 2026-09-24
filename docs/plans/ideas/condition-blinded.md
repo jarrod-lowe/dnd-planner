@@ -36,7 +36,7 @@ Facts:
 
 Effect:
 
-- `{ id: 'effect-blinded', key: 'blinded', state: { 'condition.blinded': 1, 'attack.str.disadvantage': 1, 'attack.dex.disadvantage': 1 }, stateCombine: { 'attack.str.disadvantage': 'max', 'attack.dex.disadvantage': 'max' }, display: { name }, expiry: { kind: 'untilShortRest' } }`
+- `{ id: 'effect-blinded', key: 'blinded', state: { 'condition.blinded': 1, 'attack.str.disadvantage': 1, 'attack.dex.disadvantage': 1 }, stateCombine: { 'attack.str.disadvantage': 'max', 'attack.dex.disadvantage': 'max' }, display: { name, detailKey: 'condition/blinded' }, expiry: { kind: 'untilShortRest' } }` — effect `detailKey` rides the `EffectDisplay.detailKey` bridge (landed with the first condition slice, wave 1)
 
 Offer:
 

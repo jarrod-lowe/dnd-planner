@@ -63,6 +63,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 - `condition-unconscious-regain` (end-offer → unconscious 0, `condition.prone` STILL 1 + attack flags present — the key assert)
 - `condition-unconscious-rest-clears` (short AND long → all three facts cleared, notice gone — deviation pin)
 - `move-walk-illegal-while-unconscious`
+- `condition-unconscious-with-incapacitated` — both recorded → no combine-conflict throw, `condition.incapacitated` 1 (the max-combine overlap pin — paralyzed's scenario names the pattern)
 
 ## Execution rules
 

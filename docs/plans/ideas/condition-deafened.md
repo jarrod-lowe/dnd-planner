@@ -33,7 +33,7 @@ Facts:
 
 Effect:
 
-- `{ id: 'effect-deafened', key: 'deafened', state: { 'condition.deafened': 1 }, display: { name }, expiry: { kind: 'untilShortRest' } }` — no `stateCombine` (own fact only; prone's max-combine was for shared attack flags)
+- `{ id: 'effect-deafened', key: 'deafened', state: { 'condition.deafened': 1 }, display: { name, detailKey: 'condition/deafened' }, expiry: { kind: 'untilShortRest' } }` — no `stateCombine` (own fact only; prone's max-combine was for shared attack flags). Effect `detailKey` rides the `EffectDisplay.detailKey` bridge — landed with the FIRST condition slice (wave 1; Charmed's doc carries the PR item)
 
 Offer:
 

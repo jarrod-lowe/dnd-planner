@@ -63,6 +63,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 - `condition-paralyzed-record` (facts paralyzed 1 + incapacitated 1 + halted 1, notice exists)
 - `condition-paralyzed-breaks-concentration` (bless stack, the incapacitated doc's shape): hold live → record → hold evicted — the composition recorder invokes the break helper
 - `condition-paralyzed-initiative-disadvantage` (record → `initiative.disadvantage` 1 — the Surprised inheritance pin; siblings inherit identically)
+- `condition-paralyzed-with-incapacitated` — BOTH recorded (standalone + composed writers of `condition.incapacitated`) → evaluation succeeds, no combine-conflict throw, fact still 1 — the `stateCombine: 'max'` guard is only exercised by the overlap; siblings mirror this scenario
 - `move-walk-illegal-while-paralyzed` (halted: move offers illegal with the grappled-doc halted diagnostic; species-human + movement + this group — walk-illegal-while-prone shape)
 - `condition-paralyzed-rest-clears` (short AND long → both facts 0, notice gone)
 

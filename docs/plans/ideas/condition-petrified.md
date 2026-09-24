@@ -66,6 +66,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 - `condition-petrified-breaks-concentration` (bless stack, the incapacitated doc's shape): hold live → record → hold evicted — the composition recorder invokes the break helper
 - `move-walk-illegal-while-petrified` (halted: move offers illegal with the grappled-doc halted diagnostic; species-human + movement + this group — walk-illegal-while-prone shape)
 - `condition-petrified-rest-clears` (short AND long → both facts 0, notice gone)
+- `condition-petrified-with-incapacitated` — both recorded → no combine-conflict throw, `condition.incapacitated` 1 (the max-combine overlap pin — paralyzed's scenario names the pattern)
 
 ## Execution rules
 

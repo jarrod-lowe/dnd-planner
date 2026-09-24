@@ -34,7 +34,7 @@ Facts:
 
 Effect:
 
-- `{ id: 'effect-charmed', key: 'charmed', state: { 'condition.charmed': 1 }, display: { name }, expiry: { kind: 'untilShortRest' } }` — no `stateCombine` (own fact only; prone's max-combine was for shared attack flags)
+- `{ id: 'effect-charmed', key: 'charmed', state: { 'condition.charmed': 1 }, display: { name, detailKey: 'condition/charmed' }, expiry: { kind: 'untilShortRest' } }` — no `stateCombine` (own fact only; prone's max-combine was for shared attack flags). `detailKey` on the EFFECT display requires the `EffectDisplay.detailKey` bridge extension — THIS PR (wave 1, first condition slice) lands it: `EffectDisplay.detailKey?: string`, `effectInstanceToRule` (engineBridge.ts) copies it, chip component test (the offer's `ui.detailKey` covers only the plan row; the committed ActiveStateStrip chip is the standing rules access)
 
 Offer:
 
@@ -77,6 +77,7 @@ May ship batched with condition-deafened as ONE PR (umbrella waves the pair); do
 
 - [ ] RED: `condition-charmed-record` scenario fails — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
 - [ ] `condition-charmed.ts`: `record-charmed` offer, keyed charmed effect, notice annotate
+- [ ] **Bridge slice (first condition PR carries it):** `EffectDisplay.detailKey` + `effectInstanceToRule` copy (engineBridge.ts) + chip component test — the committed chip's rules access; every later condition effect rides it (umbrella standing rule)
 - [ ] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details` (output `static/details/` gitignored — published, not committed)
 - [ ] i18n keys (list above), both locales
 - [ ] GREEN: record + rest-clears scenarios; `EXPECTED_RUNNABLE`

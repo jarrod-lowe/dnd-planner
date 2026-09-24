@@ -58,6 +58,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 - `condition-stunned-record` (facts stunned 1 + incapacitated 1, notice exists; optional assert `move-walk` still LEGAL — pins the no-halted divergence)
 - `condition-stunned-breaks-concentration` (bless stack, the incapacitated doc's shape): hold live → record → hold evicted — the composition recorder invokes the break helper
 - `condition-stunned-rest-clears` (short AND long → both facts 0, notice gone)
+- `condition-stunned-with-incapacitated` — both recorded → no combine-conflict throw, `condition.incapacitated` 1 (the max-combine overlap pin — paralyzed's scenario names the pattern)
 
 ## Execution rules
 

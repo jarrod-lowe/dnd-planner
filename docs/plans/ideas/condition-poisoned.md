@@ -54,7 +54,8 @@ i18n — BOTH `src/lib/i18n/en/common.json` AND `src/lib/i18n/en-x-tlh/common.js
 
 Tests (RED first — registered in `EXPECTED_RUNNABLE`, tests/integration/rules-engine/yaml-scenarios.test.ts):
 
-- `condition-poisoned-record` (condition fact + attack flags + `initiative.disadvantage` + notice exists)
+- `condition-poisoned-record` (condition fact + attack flags + `initiative.disadvantage` + `check.disadvantage` + notice exists)
+- `condition-poisoned-record-check-wiring` — `offerUi` assert on `record-check`'s control (`advantage: { fact: 'check.disadvantage' }` — the yaml grammar CAN assert offerUi; invisible PR3 precedent), else a unit test mirroring Restrained's save-wiring pin. Without one, the core-events wiring is omittable green
 - `condition-poisoned-rest-clears` (short AND long → cleared, notice gone; co-load `core-events`)
 - `condition-poisoned-skill-flags` — co-load `leather-armor` untrained (its penalty derives 4 of the same skill flags `max`); record → attack flags + 2–3 representative skills asserted, NOT all 18: `skill.athletics.disadvantage` (armor-derived — the conflict case), `skill.stealth.disadvantage` (armor-derived), `skill.perception.disadvantage` (not). No combine-conflict throw.
 

@@ -54,7 +54,7 @@ i18n — BOTH `src/lib/i18n/en/common.json` AND `src/lib/i18n/en-x-tlh/common.js
 
 Tests (RED first — registered in `EXPECTED_RUNNABLE`, tests/integration/rules-engine/yaml-scenarios.test.ts):
 
-- `condition-frightened-record` (condition fact + attack flags + `initiative.disadvantage` + notice exists)
+- `condition-frightened-record` (condition fact + attack flags + `initiative.disadvantage` + `check.disadvantage` + notice exists; Poisoned's `record-check` wiring pin covers the shared control — no duplicate needed here)
 - `condition-frightened-rest-clears` (short AND long → cleared, notice gone; co-load `core-events`)
 - `condition-frightened-skill-flags` — Poisoned's shape: co-load `leather-armor` untrained; assert attack flags + 2–3 representative skills (`athletics`, `stealth` armor-derived; `perception` not), not all 18; no combine-conflict throw
 - optional green-immediate pin: `condition-frightened-with-poisoned` — both recorded → flags still 1 (the uniform-`max` dividend)
