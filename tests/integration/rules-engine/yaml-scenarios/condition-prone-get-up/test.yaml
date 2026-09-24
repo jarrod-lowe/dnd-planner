@@ -1,15 +1,16 @@
 name: 'Condition Prone - Get Up'
 description: >-
-  While prone, a Get Up offer (section move, hidden entirely when not prone —
-  a planned get-up row whose gate closed is skipped, so it cannot be
-  pre-planned before dropping) spends half your SPEED (floored, unaffected by
-  Dash, which boosts movement.total only) to right yourself. Its apply
-  advertises TWO effects: an EMPTY same-key 'prone' effect (the
-  concentration-broken idiom — newest-wins evicts the prone effect, clearing
-  condition.prone, both disadvantage flags, and the notice) plus a keyless
-  endOfTurn movement spend of half_speed (the move idiom). Committing the turn
-  keeps the eviction: the permanent clear evicts effect-prone from the
-  committed set too, and the endOfTurn spend ages out with the turn.
+  While prone, a Get Up offer (section move, ILLEGAL while standing — a
+  legality gate, not a structural one, so the player still sees why; a
+  standing planned-anyway row is pinned in
+  get-up-crawl-illegal-but-visible-while-standing) spends half your SPEED
+  (floored, unaffected by Dash, which boosts movement.total only) to right
+  yourself. Its apply advertises TWO effects: an EMPTY same-key 'prone' effect
+  (the concentration-broken idiom — newest-wins evicts the prone effect,
+  clearing condition.prone, both disadvantage flags, and the notice) plus a
+  keyless endOfTurn movement spend of half_speed (the move idiom). Committing
+  the turn keeps the eviction: the permanent clear evicts effect-prone from
+  the committed set too, and the endOfTurn spend ages out with the turn.
 ruleGroups:
   - species-human/species-human
   - dnd-5e-2024/movement
@@ -23,7 +24,7 @@ steps:
         offers:
           exists:
             - record-prone
-          notExists:
+          illegal:
             - get-up
   - addOffer:
       id: record-prone
@@ -53,9 +54,10 @@ steps:
         annotations:
           notExists:
             - rule.dnd-5e-2024.condition-prone.notice
-        # Prone is gone from the post-plan facts, so the offer's own gate closes.
+        # Prone is gone from the post-plan facts, so the offer is illegal
+        # (not prone) — visible with its diagnostic, not hidden.
         offers:
-          notExists:
+          illegal:
             - get-up
   - endTurn:
       assert:

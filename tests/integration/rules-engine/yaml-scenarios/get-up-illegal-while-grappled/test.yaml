@@ -1,0 +1,79 @@
+name: 'Get Up and Drop Prone illegal while Grappled'
+description: >-
+  SRD 5.2 Prone: "If your Speed is 0, you can't right yourself" and "Dropping
+  Prone … you can't do so if your Speed is 0" — the same Speed-0 clause the
+  halted idiom carries. A grappled character's speed FACT stays at its live
+  value (30, the species base kept for derived math like the Get Up
+  half_speed cost), so the speed > 0 leg alone would miss the grapple; both
+  prone gates ALSO read halted, REUSING their existing codes (cannot_get_up /
+  cannot_drop) — one SRD clause, one message. Grappled alone: Drop Prone
+  illegal (a planned-anyway row carries the reused code and still commits
+  prone). Grappled + prone: Get Up illegal AND crawl illegal (Speed 0 beats
+  prone's crawl allowance — crawl carries the halted gate from PR1; asserted
+  here, not re-wired). The control: un-grappled prone gets up legally.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-prone
+  - dnd-5e-2024/condition-grappled
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.grappled: 0
+          condition.prone: 0
+          character.movement.halted: 0
+        offers:
+          legal:
+            - drop-prone
+          illegal:
+            - get-up
+  # Grappled alone (standing): the speed fact stays 30 but halted is 1 —
+  # Drop Prone is illegal off the extended gate. Get Up is illegal twice over
+  # (standing — the not-prone clause — and halted — cannot_get_up).
+  - addOffer:
+      id: record-grappled
+      assert:
+        facts:
+          condition.grappled: 1
+          character.movement.speed: 30
+          character.movement.halted: 1
+        offers:
+          illegal:
+            - drop-prone
+            - get-up
+  # Planned anyway (legalWhen semantics): the row still commits prone and
+  # carries the REUSED cannot_drop from the apply re-check.
+  - addOffer:
+      id: drop-prone
+      assert:
+        facts:
+          condition.prone: 1
+          condition.grappled: 1
+        planErrors:
+          - id: drop-prone
+            index: 0
+            errors:
+              - rule.dnd-5e-2024.condition-prone.drop-prone-offer.cannot_drop
+        # Grappled + prone: cannot right yourself, cannot even crawl — no
+        # movement at all while halted (walk doubly illegal: prone + halted).
+        offers:
+          illegal:
+            - get-up
+            - move-crawl
+            - move-walk
+  # The no-regression control: un-grapple (still prone, nothing spent) and
+  # Get Up is legal again — the extended gate does not over-reach past the
+  # Speed-0 conditions.
+  - removeFromPlan:
+      id: record-grappled
+      assert:
+        facts:
+          condition.grappled: 0
+          condition.prone: 1
+          character.movement.halted: 0
+          character.movement.remaining: 30
+        offers:
+          legal:
+            - get-up
+            - move-crawl

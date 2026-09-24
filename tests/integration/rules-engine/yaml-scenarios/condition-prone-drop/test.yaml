@@ -4,10 +4,11 @@ description: >-
   condition without using an action or any of your Speed. A second free-section
   offer alongside the Knocked Prone recorder — the recorder models an enemy
   imposing the condition (legal at any Speed), Drop Prone is the voluntary
-  choice. Like Get Up it is structurally gated on the condition itself: it does
-  not exist while already Prone, and it commits the SAME keyed 'prone' effect
-  as the recorder, so the disadvantage flags, the notice, and rest-clearing
-  all behave identically.
+  choice. It is structurally gated on the condition itself: it does not exist
+  while already Prone (Get Up, its mirror, is a legality gate instead —
+  illegal while standing), and it commits the SAME keyed 'prone' effect as the
+  recorder, so the disadvantage flags, the notice, and rest-clearing all
+  behave identically.
 ruleGroups:
   - species-human/species-human
   - dnd-5e-2024/action-economy
@@ -24,7 +25,7 @@ steps:
             - drop-prone
           legal:
             - drop-prone
-          notExists:
+          illegal:
             - get-up
   - addOffer:
       id: drop-prone
@@ -47,7 +48,7 @@ steps:
           targets:
             - key: rule.dnd-5e-2024.condition-prone.notice
               targets: [notice]
-        # Already Prone — the offer's own gate closes (mirrors get-up's gate).
+        # Already Prone — drop's own gate closes (get-up, the mirror, opens).
         offers:
           notExists:
             - drop-prone

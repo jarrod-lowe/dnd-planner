@@ -10,17 +10,30 @@ const CG = 'rule.dnd-5e-2024.condition-grappled';
 
 /**
  * The keyed grappled effect the recorder commits: `key: 'grappled'` so repeat
- * records evict rather than stack. It writes ONLY `condition.grappled` —
+ * records evict rather than stack. It writes `condition.grappled` —
  * movement.ts's halted derive reads it (with Restrained/Paralyzed/Petrified/
  * Unconscious, the whole Speed-0 family) and masks remaining/effective_total
- * to 0 while gating every travel offer. The Attacks Affected disadvantage
- * flags join `state` in PR2; the single writer means no `stateCombine` is
- * needed (unlike the incapacitated fact the wave-5 children co-write).
+ * to 0 while gating every travel offer — plus the Attacks Affected STR/DEX
+ * attack-disadvantage flags the weapon and unarmed dice-lines already read
+ * (so the rollers default to 2d20-take-low with zero roller changes). The
+ * flags carry `stateCombine: 'max'` (the prone/blinded idiom): the armor
+ * modules derive the same facts with `combine: 'max'`, and the default `sum`
+ * on an effect write would conflict-throw for any armored character. The
+ * flags stay UNscoped — "against any target other than the grappler" is NPC
+ * identity, notice text (see the module notice).
  */
 const grappledEffect = (): EffectInstance => ({
   id: 'effect-grappled',
   key: 'grappled',
-  state: { 'condition.grappled': 1 },
+  state: {
+    'condition.grappled': 1,
+    'attack.str.disadvantage': 1,
+    'attack.dex.disadvantage': 1
+  },
+  stateCombine: {
+    'attack.str.disadvantage': 'max',
+    'attack.dex.disadvantage': 'max'
+  },
   display: { name: `${CG}.effect-grappled.name`, detailKey: 'condition/grappled' },
   expiry: { kind: 'untilShortRest' }
 });
@@ -39,8 +52,9 @@ const grappledEffect = (): EffectInstance => ({
  * module derives `halted` from the five Speed-0 condition facts and masks
  * `remaining`/`effective_total` (the display reads the mask; `speed`/`total`
  * stay live for math — a condition module cannot zero them without a
- * self-reading derive, the cycle trap), and every travel offer gates on it.
- * Attacks Affected is PR2 (effect-written flags); the grappler exception and
+ * self-reading derive, the cycle trap), and every travel offer plus dash
+ * ("can't increase") and the prone get-up/drop gates gate on it. The grappler
+ * exception (Disadvantage applies to every target but the grappler) and
  * Movable/drag are notice text (NPC identity is out of engine scope).
  *
  * Any rest clears the condition (umbrella default; `untilShortRest`, a long

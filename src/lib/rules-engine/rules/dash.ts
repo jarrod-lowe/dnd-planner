@@ -1,7 +1,10 @@
-import { defineRule, type ActionResult, type RuleModule } from '../builder';
+import { defineRule, type ActionResult, type Diagnostic, type RuleModule } from '../builder';
 
 const D = 'rule.dnd-5e-2024.dash';
 const NO_ACTION = `${D}.action-dash-offer.no_action`;
+// SRD 5.2 Grappled (and every Speed-0 condition — the movement module's
+// halted fact): "Your Speed is 0 and can't increase."
+const CANNOT_WHILE_HALTED = `${D}.action-dash-offer.cannot_while_halted`;
 
 /**
  * Dash — spend your action to add your speed to this turn's movement. The apply
@@ -9,7 +12,11 @@ const NO_ACTION = `${D}.action-dash-offer.no_action`;
  * endOfTurn effect adding that much to it, so `remaining = total − spent` picks up
  * the boost and it resets next turn. `character.movement.total` is a combine:sum
  * fact (species base + this), so the add composes with no second-writer conflict.
- * Foundational, so no meta.
+ * While halted (any Speed-0 condition) Dash is ILLEGAL — its whole job is
+ * increasing Speed — but a planned-anyway row still advertises the boost
+ * (illegal-but-visible): `total` genuinely rises for derived math while the
+ * halted mask keeps `remaining` at 0, and the diagnostic informs without
+ * withdrawing. Foundational, so no meta.
  */
 const dash: RuleModule = {
   id: 'dash',
@@ -27,10 +34,19 @@ const dash: RuleModule = {
         {
           condition: (f) => f.num('actions.remaining') > 0,
           diagnostics: [{ code: NO_ACTION, severity: 'error' }]
+        },
+        {
+          condition: (f) => f.num('character.movement.halted') === 0,
+          diagnostics: [{ code: CANNOT_WHILE_HALTED, severity: 'error' }]
         }
       ],
       apply: (f): ActionResult => {
         const speed = f.num('character.movement.total');
+        const diagnostics: Diagnostic[] = [];
+        if (f.num('actions.remaining') <= 0)
+          diagnostics.push({ code: NO_ACTION, severity: 'error' });
+        if (f.num('character.movement.halted') !== 0)
+          diagnostics.push({ code: CANNOT_WHILE_HALTED, severity: 'error' });
         return {
           advertise: [
             {
@@ -39,8 +55,7 @@ const dash: RuleModule = {
               expiry: { kind: 'endOfTurn' }
             }
           ],
-          diagnostics:
-            f.num('actions.remaining') > 0 ? [] : [{ code: NO_ACTION, severity: 'error' }]
+          diagnostics
         };
       }
     }
