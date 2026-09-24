@@ -1,0 +1,64 @@
+name: 'Condition Petrified - Record'
+description: >-
+  Recording being Petrified commits ONE keyed effect writing BOTH condition
+  facts — condition.petrified and condition.incapacitated DIRECTLY in its own
+  state (the wave-3 composition parent's contract: both facts die with the
+  effect; the child imports nothing from the parent, the shared fact name IS
+  the coupling). condition.incapacitated carries stateCombine max on the
+  effect (mandatory: effect-incapacitated writes it max, and sheet.ts throws
+  on conflicting combine modes when standalone Incapacitated co-stands — see
+  condition-petrified-with-incapacitated). movement.ts's halted derive
+  ALREADY reads condition.petrified (the five Speed-0 conditions), so halted,
+  the collapsed remaining/effective_total mask, and every halted gate come
+  FREE with zero movement.ts changes — while speed/total stay live for
+  derived math. The recorder models BEING PETRIFIED (imposed by an enemy
+  effect — a gorgon's breath, a flesh-to-stone spell), so it is free and
+  ungated (the prone "Knocked Prone" precedent), and any rest clears it
+  (untilShortRest; see condition-petrified-rest-clears). Turned-to-stone
+  flavour (weight ×10, cease aging), auto-fail STR/DEX saves, vs-you
+  Advantage, resist-all-damage, and the Poisoned immunity are notice text
+  (recording an immunity is not enforcing it — no auto-eviction of a
+  standing Poisoned effect; the umbrella's condition-immunities out-of-scope
+  covers the future mechanisation). The parent's notice fires too — the
+  composed fact reads 1 to its annotate as well.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-incapacitated
+  - dnd-5e-2024/condition-petrified
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.petrified: 0
+          condition.incapacitated: 0
+          character.movement.halted: 0
+          character.movement.remaining: 30
+        offers:
+          exists:
+            - record-petrified
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-petrified.notice
+            - rule.dnd-5e-2024.condition-incapacitated.notice
+  - addOffer:
+      id: record-petrified
+      assert:
+        facts:
+          condition.petrified: 1
+          condition.incapacitated: 1
+          character.movement.halted: 1
+          character.movement.remaining: 0
+          character.movement.effective_total: 0
+          # Math keeps the base: speed/total stay live for derived math (the
+          # Get Up half_speed cost, a later Dash boost) — only the display
+          # reads effective_total and only the gates read halted.
+          character.movement.speed: 30
+          character.movement.total: 30
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-petrified.notice
+            - rule.dnd-5e-2024.condition-incapacitated.notice
+          targets:
+            - key: rule.dnd-5e-2024.condition-petrified.notice
+              targets: [notice]

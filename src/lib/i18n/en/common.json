@@ -1079,6 +1079,36 @@
         "notice": "Restrained",
         "notice.body": "Your Speed is 0 and can't increase. Attack rolls against you have Advantage, your attack rolls have Disadvantage, and you have Disadvantage on Dexterity saving throws."
       },
+      "condition-paralyzed": {
+        "record-paralyzed": {
+          "name": "Paralyzed"
+        },
+        "effect-paralyzed": {
+          "name": "Paralyzed"
+        },
+        "notice": "Paralyzed",
+        "notice.body": "You are Incapacitated and your Speed is 0. You automatically fail STR and DEX saving throws. Attack rolls against you have Advantage, and any hit is a Critical Hit if the attacker is within 5 ft."
+      },
+      "condition-petrified": {
+        "record-petrified": {
+          "name": "Petrified"
+        },
+        "effect-petrified": {
+          "name": "Petrified"
+        },
+        "notice": "Petrified",
+        "notice.body": "You are turned to stone: Incapacitated, Speed 0, weight ×10. Attack rolls against you have Advantage. You automatically fail STR and DEX saving throws. You have Resistance to all damage and Immunity to the Poisoned condition."
+      },
+      "condition-stunned": {
+        "record-stunned": {
+          "name": "Stunned"
+        },
+        "effect-stunned": {
+          "name": "Stunned"
+        },
+        "notice": "Stunned",
+        "notice.body": "You are Incapacitated. You automatically fail STR and DEX saving throws. Attack rolls against you have Advantage."
+      },
       "grapple": {
         "grapple-action": {
           "name": "Grapple",
@@ -1997,7 +2027,10 @@
         "poisoned": "Poisoned",
         "incapacitated": "Incapacitated",
         "grappled": "Grappled",
-        "restrained": "Restrained"
+        "restrained": "Restrained",
+        "paralyzed": "Paralyzed",
+        "petrified": "Petrified",
+        "stunned": "Stunned"
       },
       "STAT": {
         "set": "Set",

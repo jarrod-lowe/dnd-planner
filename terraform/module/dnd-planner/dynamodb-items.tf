@@ -1103,6 +1103,126 @@ resource "aws_dynamodb_table_item" "char_condition_restrained_rulegroup_seed" {
   })
 }
 
+# Paralyzed condition rule group seed - assigns the condition recorder
+resource "aws_dynamodb_table_item" "char_condition_paralyzed_rulegroup_seed" {
+  table_name = aws_dynamodb_table.data.name
+  hash_key   = "PK"
+  range_key  = "SK"
+
+  item = jsonencode({
+    PK = {
+      S = "SEED#CHAR#$(characterId)"
+    }
+    SK = {
+      S = "RULEGROUP#condition-paralyzed"
+    }
+    gsiSeedPK = {
+      S = "SEED#CHAR"
+    }
+    type = {
+      S = "CHAR"
+    }
+    characterId = {
+      S = "$(characterId)"
+    }
+    ruleGroupId = {
+      S = "condition-paralyzed"
+    }
+    userId = {
+      S = "$(userId)"
+    }
+    enabled = {
+      BOOL = true
+    }
+    createdAt = {
+      S = "$(now)"
+    }
+    updatedAt = {
+      S = "$(now)"
+    }
+  })
+}
+
+# Petrified condition rule group seed - assigns the condition recorder
+resource "aws_dynamodb_table_item" "char_condition_petrified_rulegroup_seed" {
+  table_name = aws_dynamodb_table.data.name
+  hash_key   = "PK"
+  range_key  = "SK"
+
+  item = jsonencode({
+    PK = {
+      S = "SEED#CHAR#$(characterId)"
+    }
+    SK = {
+      S = "RULEGROUP#condition-petrified"
+    }
+    gsiSeedPK = {
+      S = "SEED#CHAR"
+    }
+    type = {
+      S = "CHAR"
+    }
+    characterId = {
+      S = "$(characterId)"
+    }
+    ruleGroupId = {
+      S = "condition-petrified"
+    }
+    userId = {
+      S = "$(userId)"
+    }
+    enabled = {
+      BOOL = true
+    }
+    createdAt = {
+      S = "$(now)"
+    }
+    updatedAt = {
+      S = "$(now)"
+    }
+  })
+}
+
+# Stunned condition rule group seed - assigns the condition recorder
+resource "aws_dynamodb_table_item" "char_condition_stunned_rulegroup_seed" {
+  table_name = aws_dynamodb_table.data.name
+  hash_key   = "PK"
+  range_key  = "SK"
+
+  item = jsonencode({
+    PK = {
+      S = "SEED#CHAR#$(characterId)"
+    }
+    SK = {
+      S = "RULEGROUP#condition-stunned"
+    }
+    gsiSeedPK = {
+      S = "SEED#CHAR"
+    }
+    type = {
+      S = "CHAR"
+    }
+    characterId = {
+      S = "$(characterId)"
+    }
+    ruleGroupId = {
+      S = "condition-stunned"
+    }
+    userId = {
+      S = "$(userId)"
+    }
+    enabled = {
+      BOOL = true
+    }
+    createdAt = {
+      S = "$(now)"
+    }
+    updatedAt = {
+      S = "$(now)"
+    }
+  })
+}
+
 # Species rule group seed - creates the species-specific rule group assignment
 resource "aws_dynamodb_table_item" "char_species_rulegroup_seed" {
   table_name = aws_dynamodb_table.data.name

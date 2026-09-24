@@ -37,9 +37,9 @@ Rough total: ~10–12 PRs. Calibration: prone = 4 PRs incl. inventing the chassi
 
 ### Wave 5 — composition batch (likely one PR after their docs)
 
-- [ ] [Paralyzed](condition-paralyzed.md) — execute
-- [ ] [Stunned](condition-stunned.md) — execute
-- [ ] [Petrified](condition-petrified.md) — execute
+- [x] [Paralyzed](condition-paralyzed.md) — executed with the trio in ONE PR (branch `condition-composition-trio`): keyed effect writes both condition facts, shared break helper, halted free-ride, inheritance + overlap pins
+- [x] [Stunned](condition-stunned.md) — same PR; the trio divergence pinned (no Speed 0 — walk stays legal)
+- [x] [Petrified](condition-petrified.md) — same PR; poison-immunity notice text only (future mechanisation noted in Out of scope below)
 
 ### Wave 6
 
@@ -241,6 +241,6 @@ Nothing like it exists — a counter, not a boolean:
 - damage Resistance/Immunity halving (damage recorder is free-entry)
 - death saves / 0 HP flow (Unconscious neighbour — separate idea)
 - Hide action (Invisible's usual source); flying + Prone → falling
-- condition immunities (glossary "Immunity")
+- condition immunities (glossary "Immunity") — future idea (user-directed 2026-09-25): mechanise Petrified's Poisoned immunity (recording Petrified evicts a standing Poisoned effect)
 - persisted effects from prior releases are not rewritten — re-record to heal
 - backfilling seeded groups to pre-existing characters (prone known limitation — recreate character or forward-assignment idea)

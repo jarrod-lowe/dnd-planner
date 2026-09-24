@@ -1,0 +1,61 @@
+name: 'Condition Stunned - Record'
+description: >-
+  Recording being Stunned commits ONE keyed effect writing BOTH condition
+  facts — condition.stunned and condition.incapacitated DIRECTLY in its own
+  state (the wave-3 composition parent's contract: both facts die with the
+  effect; the child imports nothing from the parent, the shared fact name IS
+  the coupling). condition.incapacitated carries stateCombine max on the
+  effect (mandatory: effect-incapacitated writes it max, and sheet.ts throws
+  on conflicting combine modes when standalone Incapacitated co-stands — see
+  condition-stunned-with-incapacitated). The recorder models BEING STUNNED
+  (imposed by an enemy effect — a stunning strike, a psionic blast), so it is
+  free and ungated (the prone "Knocked Prone" precedent), and any rest clears
+  it (untilShortRest; see condition-stunned-rest-clears). Auto-fail STR/DEX
+  saves and vs-you Advantage are notice text (NPC-side, the prone precedent).
+  THE TRIO DIVERGENCE PIN: SRD 5.2 Stunned has NO Speed 0 clause and sits
+  outside movement.ts's halted derive list (the five Speed-0 conditions), so
+  halted stays 0 and WALK REMAINS LEGAL while stunned — unlike Paralyzed and
+  Petrified. The parent's notice fires too — the composed fact reads 1 to its
+  annotate as well.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-incapacitated
+  - dnd-5e-2024/condition-stunned
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.stunned: 0
+          condition.incapacitated: 0
+          character.movement.halted: 0
+          character.movement.remaining: 30
+        offers:
+          exists:
+            - record-stunned
+          legal:
+            - move-walk
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-stunned.notice
+            - rule.dnd-5e-2024.condition-incapacitated.notice
+  - addOffer:
+      id: record-stunned
+      assert:
+        facts:
+          condition.stunned: 1
+          condition.incapacitated: 1
+          # The divergence: no Speed 0 — movement is untouched.
+          character.movement.halted: 0
+          character.movement.remaining: 30
+          character.movement.effective_total: 30
+        offers:
+          legal:
+            - move-walk
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-stunned.notice
+            - rule.dnd-5e-2024.condition-incapacitated.notice
+          targets:
+            - key: rule.dnd-5e-2024.condition-stunned.notice
+              targets: [notice]

@@ -1,0 +1,32 @@
+name: 'Condition Paralyzed - With Incapacitated'
+description: >-
+  The max-combine overlap pin (the composition guard — Petrified and Stunned
+  mirror this scenario). Standalone Incapacitated (effect-incapacitated,
+  stateCombine max) and composed Paralyzed (effect-paralyzed, which writes
+  condition.incapacitated in its own state) are the first two live writers of
+  the fact from DIFFERENT effects. Both carry stateCombine max, so the two
+  co-write safely — the fact reads 1 (a flag, not a stack) — where a default
+  sum on the child would make sheet.ts THROW on the conflicting combine modes
+  the moment a paralyzed character is also recorded Incapacitated. Both
+  condition facts stand on their own, and both notices fire.
+ruleGroups:
+  - dnd-5e-2024/condition-incapacitated
+  - dnd-5e-2024/condition-paralyzed
+steps:
+  - addOffer:
+      id: record-incapacitated
+      assert:
+        facts:
+          condition.incapacitated: 1
+          condition.paralyzed: 0
+  - addOffer:
+      id: record-paralyzed
+      assert:
+        facts:
+          condition.incapacitated: 1
+          condition.paralyzed: 1
+          initiative.disadvantage: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-incapacitated.notice
+            - rule.dnd-5e-2024.condition-paralyzed.notice

@@ -550,6 +550,31 @@ const EXPECTED_RUNNABLE = [
   // the condition-restrained-save unit test — yaml cannot assert controls)
   'condition-restrained-record',
   'condition-restrained-rest-clears',
+  // wave 5 — the composition trio (Paralyzed/Petrified/Stunned), ONE PR: each
+  // child's keyed effect writes its own condition fact PLUS
+  // condition.incapacitated directly (stateCombine max — the composition
+  // contract; the with-incapacitated scenarios pin the no-conflict overlap),
+  // each recorder invokes the shared concentrationBreakEffects helper (the
+  // breaks-concentration scenarios pin eviction + marker clear), and the
+  // parent's initiative.disadvantage derive inherits for free (paralyzed's
+  // scenario pins the family). Paralyzed/Petrified ride halted free (movement
+  // already lists their facts); Stunned is the divergence — no Speed 0, walk
+  // stays legal (pinned in its record scenario).
+  'condition-paralyzed-record',
+  'condition-paralyzed-breaks-concentration',
+  'condition-paralyzed-initiative-disadvantage',
+  'condition-paralyzed-with-incapacitated',
+  'move-walk-illegal-while-paralyzed',
+  'condition-paralyzed-rest-clears',
+  'condition-petrified-record',
+  'condition-petrified-breaks-concentration',
+  'condition-petrified-with-incapacitated',
+  'move-walk-illegal-while-petrified',
+  'condition-petrified-rest-clears',
+  'condition-stunned-record',
+  'condition-stunned-breaks-concentration',
+  'condition-stunned-with-incapacitated',
+  'condition-stunned-rest-clears',
   // PR3 — crawl (×2 spend while prone) + the prone movement restriction
   'move-crawl-while-prone',
   'walk-illegal-while-prone',

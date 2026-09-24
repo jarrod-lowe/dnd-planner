@@ -1,0 +1,112 @@
+name: 'Concentration Broken on Paralyzed Record'
+description: >-
+  SRD 5.2 Paralyzed includes Incapacitated, whose No Concentration clause
+  says your Concentration is broken. Writing condition.incapacitated does NOT
+  evict a held spell — the break is offer-side apply logic — so the
+  composition child's recorder invokes the SAME shared builder helper the
+  parent's does: while a hold is live, the record advertises the empty
+  same-key eviction (CONCENTRATION_SPELL_KEY) that replaces the holding spell
+  in-fold, undoably while planned and permanently once committed, plus the
+  damage-marker clear (a save owed against the now-dead hold is moot — the
+  recast precedent). The damage leg is mandatory: it pins the marker clear,
+  so an implementation that evicts the spell but skips the clear cannot pass
+  green. The incapacitated parent's concentration-broken-on-record scenario
+  is the shape this inherits by reference.
+ruleGroups:
+  - dnd-5e-2024/prepared-spells
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/proficiency
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - dnd-5e-2024/spellcasting
+  - dnd-5e-2024/concentration
+  - dnd-5e-2024/core-events
+  - class-paladin/class-paladin-level1
+  - spells/spell-bless
+  - dnd-5e-2024/condition-paralyzed
+steps:
+  - evaluate:
+  - addOffer:
+      id: set-prepared-spells
+      selections:
+        prepared:
+          - spellId: bless
+            level: 1
+            nameKey: rule.spell-bless.offer-bless.name
+            preparedFact: spell.l1.bless.prepared
+            alwaysPreparedFact: spell.l1.bless.alwaysPrepared
+  - evaluate:
+      assert:
+        facts:
+          concentration.remaining: 1
+        offers:
+          exists:
+            - cast-bless
+  # Cast Bless — the keyed hold takes the slot this turn (the fold).
+  - addOffer:
+      id: cast-bless
+      assert:
+        facts:
+          concentration.spent: 1
+          concentration.remaining: 0
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-bless
+  # Turn 2: 25 damage while holding — the marker trips (DC 12), the free
+  # concentration check is owed, and the recorder reminder interpolates the DC.
+  - addOffer:
+      id: record-damage
+      selections:
+        amount: 25
+      assert:
+        facts:
+          concentration.damage-taken: 1
+          concentration.last-damage: 25
+          concentration.dc: 12
+        offers:
+          exists:
+            - concentration-check
+        annotations:
+          exists:
+            - planner.concentration.annotation
+  # Record Paralyzed: the break fires (a hold is live). The eviction replaces
+  # the committed hold IN-FOLD — the slot frees while the record is still
+  # merely planned (remove the row and the spell folds back) — and the marker
+  # clear moots the owed save, so the check offer and its reminder go with it.
+  - addOffer:
+      id: record-paralyzed
+      assert:
+        facts:
+          condition.paralyzed: 1
+          condition.incapacitated: 1
+          concentration.spent: 0
+          concentration.remaining: 1
+          concentration.damage-taken: 0
+          concentration.last-damage: 0
+        offers:
+          notExists:
+            - concentration-check
+          exists:
+            - cast-bless
+        annotations:
+          notExists:
+            - planner.concentration.annotation
+          exists:
+            - rule.dnd-5e-2024.condition-paralyzed.notice
+  # Commit: the eviction merges permanently — Bless is gone for good, the
+  # "Concentration broken" chip (the reused display key) stands on the strip
+  # beside the condition, and the slot stays released.
+  - endTurn:
+      assert:
+        facts:
+          condition.paralyzed: 1
+          concentration.remaining: 1
+          concentration.damage-taken: 0
+        effects:
+          notExists:
+            - effect-bless
+          exists:
+            - effect-paralyzed
+            - concentration-broken-by-condition

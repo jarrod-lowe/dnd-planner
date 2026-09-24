@@ -1,0 +1,40 @@
+ruleGroups:
+  - id: condition-paralyzed
+    requires:
+      - movement
+      - condition-incapacitated
+    translations:
+      en:
+        name: Paralyzed
+        description: Rules while you have the Paralyzed condition; record it when an enemy effect paralyzes you
+        keywords:
+          - paralyzed
+          - paralyze
+          - paralysis
+          - frozen
+          - held
+          - condition
+      en-x-tlh:
+        name: vIHlaHbe'
+        description: vIHlaHbe' Dotlh; vIHlaHbe'moHlu'DI' yIghun
+        keywords:
+          - vIHlaHbe'
+          - Dotlh
+    detail:
+      key: condition/paralyzed
+      source: srd52
+      translations:
+        en:
+          meta: Condition
+          body: |
+            **Paralyzed [Condition].** While you have the Paralyzed condition, you experience the following effects.
+
+            **Incapacitated.** You have the Incapacitated condition.
+
+            **Speed 0.** Your Speed is 0 and can't increase.
+
+            **Saving Throws Affected.** You automatically fail Strength and Dexterity saving throws.
+
+            **Attacks Affected.** Attack rolls against you have Advantage.
+
+            **Automatic Critical Hits.** Any attack roll that hits you is a Critical Hit if the attacker is within 5 feet of you.
