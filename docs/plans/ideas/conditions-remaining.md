@@ -104,6 +104,7 @@ Modelled: same flags as Poisoned. Line-of-sight qualifier + can't-approach = not
 > **Surprised.** If you're Incapacitated when you roll Initiative, you have Disadvantage on the roll.
 
 Modelled:
+
 - action economy denial: `actions/bonusActions/reactions.remaining` are central derives (`max − spent`, action-economy.ts); effect-side spends zero them — dash-style offers already gate on `actions.remaining`. Design knot: spend size vs varying maxes (surge-type), or clamp in derive.
 - concentration broken on record: the empty-`key` eviction idiom (concentration-broken precedent).
 - `initiative.disadvantage` — fact exists (leather-armor writes it); initiative dice-line reads it.
@@ -118,6 +119,7 @@ Modelled:
 > **Movable.** The grappler can drag or carry you when it moves, but every foot of movement costs it 1 extra foot unless you are Tiny or two or more sizes smaller than it.
 
 Modelled:
+
 - Speed 0 + "can't increase": zero the derived movement (all move offers die on out-of-movement); **gate Dash** (it boosts `movement.total`, must not help). Reaches Prone's Get Up gate ("If your Speed is 0, you can't right yourself" reads `character.movement.speed` — splint-armor reduces `speed`+`total` −10; grapple-zero must land there too). Solve ONCE; reused by Restrained/Paralyzed/Petrified/Unconscious.
 - attack Disadvantage vs non-grappler: flag without the scoping (NPC identity) — notice text carries the exception.
 - Movable/drag = notice text. Escape check offer = out of scope initially. `grapple.ts` (grappling others) already exists — this is being grappled; keep fact namespaces distinct.
@@ -172,6 +174,7 @@ Modelled: smallest composition child.
 > **Attacks Affected.** Attack rolls against you have Disadvantage, and your attack rolls have Advantage. If a creature can somehow see you, you don't gain this benefit against that creature.
 
 Modelled:
+
 - **Rules-driven advantage doesn't exist**: dice-line `advantage: ValueSource` is boolean-disadvantage-only (PanelDiceLine resolves truthy → `'disadvantage' | 'normal'`; advantage is a per-die manual menu). Extend to advantage sources; wire `attack.{str,dex}.advantage` + `initiative.advantage`. One shared-roller change.
 - Concealed + vs-you Disadvantage + see-me exception = notice text.
 - Ending (attack made / V-spell cast — the Hide rule's stop conditions): expiry design — manual end / event-based; grill.
@@ -187,6 +190,7 @@ Modelled:
 > **Unaware.** You're unaware of your surroundings.
 
 Modelled: composition (incapacitated + prone + Speed-0) plus two knots:
+
 - **drop what you're holding**: hands/loadout mutation (hands spent→free, weapons unequipped) — the meaty bit; grill scope (maybe notice + manual unequip).
 - **"you remain Prone" on end**: the unconscious effect's state (incl. `condition.prone`) dies with its eviction — the end must advertise a FRESH prone effect (reuse `condition-prone`'s `proneEffect()` / keyed idiom).
 - 0 HP / death-save flow = out of scope (separate idea).
@@ -200,6 +204,7 @@ Modelled: composition (incapacitated + prone + Speed-0) plus two knots:
 > **Removing Exhaustion Levels.** Finishing a Long Rest removes 1 of your Exhaustion levels. When your Exhaustion level reaches 0, the condition ends.
 
 Nothing like it exists — a counter, not a boolean:
+
 - levels: record offer increments (apply reads folded `condition.exhaustion`, advertises keyed effect with level+1 — newest-wins replaces); needs a max-6 legality gate (die).
 - −2 × level on D20 Tests (to-hit, checks, saves): flat rider on the annotation-rider channel (`{ kind: 'flat', bonus }` — Bless +1d4 and Aura of Protection prove it reaches those dice). Initiative is a Dex check — grill in/out.
 - Speed −5 × level: contribution to `character.movement.speed`/`total` (both `combine: 'sum'`; splint-armor −10 precedent).

@@ -41,16 +41,19 @@ Facts: `condition.exhaustion` — level; written ONLY by the keyed effect's stat
 Derive: the two speed contributions above (splint-armor shape, dynamic value).
 
 Effects:
+
 - `effect-exhaustion`: `{ key: 'exhaustion', state: { 'condition.exhaustion': level }, display: { name, value: level }, expiry: permanent }` — chip shows the live level
 - level-0 clear: EMPTY same-`key` effect with display (newest-wins evicts; the get-up idiom), `expiry: permanent`
 
 Offers:
+
 - `record-exhaustion`: section `free`, `intents: { CONDITION: 'exhaustion' }`, no control, no legality gate (death decision above) — the record-prone shape; apply → keyed effect at prior+1
 - `remove-level` free offer ONLY if grilling flips the long-rest decision; apply → level−1 / empty eviction
 
 `onRest`: long + level > 0 → [keyed effect at level−1, or the empty eviction when level is 1].
 
 Annotate (all guarded `condition.exhaustion > 0`), four annotations:
+
 - notice: `targets: ['notice']`, key `.notice`, `source: .effect-exhaustion.name`, `body: .notice.body`, `values: { level, roll: −2 × level, speed: −5 × level }` (prone's `values: { cost }` shape); at level ≥ 6 the body key becomes `.notice.body-dead` (the death flag)
 - rider ×3 — label map verified from panel declarations; PanelDiceLine shows a modifier only where a die's `purpose === appliesTo`, so `dice.any` never leaks onto damage/healing dice:
   - to-hit: `targets: ['attack.any']`, `appliesTo: 'to-hit'` — every weapon panel + unarmed declare `attack.any`; companion panels use `.companion`-suffixed labels → unreachable (correct: the steed has no Exhaustion)
@@ -59,14 +62,16 @@ Annotate (all guarded `condition.exhaustion > 0`), four annotations:
   - one shared `rider.label` key; three annotation keys `.rider-to-hit`, `.rider-check`, `.rider-save`
 
 i18n — BOTH `src/lib/i18n/en/common.json` AND `src/lib/i18n/en-x-tlh/common.json` (tlh invented values, normal casing); keys listed only, values at execution:
-- `rule.dnd-5e-2024.condition-exhaustion.record-exhaustion.name` (+ `.description` only if carried — prone PR1 note: record-* offers carry name only)
+
+- `rule.dnd-5e-2024.condition-exhaustion.record-exhaustion.name` (+ `.description` only if carried — prone PR1 note: record-\* offers carry name only)
 - `.effect-exhaustion.name`, `.notice`, `.notice.body`, `.notice.body-dead`
 - `.rider` (chip label), `.rider-to-hit`, `.rider-check`, `.rider-save`
 - `.remove-level.name` (only if the offer variant wins)
 - `play.verbBuckets.CONDITION.exhaustion`
-Detail body en-only (tlh falls back). Never in the yaml.
+  Detail body en-only (tlh falls back). Never in the yaml.
 
 Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECTED_RUNNABLE`, tests/integration/rules-engine/yaml-scenarios.test.ts):
+
 - `condition-exhaustion-record` — level 1, notice exists + targets (PR1); PR2 extends with speed −5 on speed+total
 - `condition-exhaustion-death-notice` — record ×6 → level 6, dead body (PR1)
 - `condition-exhaustion-record-twice` — level 2, speed −10 + total −10 (PR2); PR3 adds rider-annotation exists

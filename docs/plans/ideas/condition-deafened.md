@@ -90,5 +90,5 @@ May ship batched with condition-charmed as ONE PR (umbrella waves the pair); doc
 
 ## Notes
 
-- record-* offers carry name only — no `.description` key (prone precedent)
+- record-\* offers carry name only — no `.description` key (prone precedent)
 - effect key `deafened` matches fact suffix — empty same-key effect eviction stays available if a future end offer appears

@@ -54,7 +54,7 @@ Notice (annotate while `condition.unconscious > 0`): `targets: ['notice']`, key 
 i18n — BOTH `src/lib/i18n/en/common.json` AND `src/lib/i18n/en-x-tlh/common.json` (tlh values invented at execution, normal casing); detail body en-only:
 
 - `play.verbBuckets.CONDITION.unconscious` (`play.verbs.CONDITION` exists)
-- `rule.dnd-5e-2024.condition-unconscious.record-unconscious.name` (record-* carries name only), `.effect-unconscious.name`, `.regain-consciousness.name/.description`, `.regain-consciousness.effect-cleared.name` (nameless effects render nothing), `.notice`, `.notice.body`
+- `rule.dnd-5e-2024.condition-unconscious.record-unconscious.name` (record-\* carries name only), `.effect-unconscious.name`, `.regain-consciousness.name/.description`, `.regain-consciousness.effect-cleared.name` (nameless effects render nothing), `.notice`, `.notice.body`
 
 Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECTED_RUNNABLE`, tests/integration/rules-engine/yaml-scenarios.test.ts):
 

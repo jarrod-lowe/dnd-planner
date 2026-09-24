@@ -8,7 +8,8 @@ docs/plans/ideas/condition-grappled.md (`character.movement.halted`: movement.ts
 zero speed-0 code here).
 
 Record offer → keyed effect (both condition facts) → notice carrying the SRD effects (incl. resist-all
-+ poison-immunity as notice text).
+
+- poison-immunity as notice text).
 
 ## Behaviour
 
