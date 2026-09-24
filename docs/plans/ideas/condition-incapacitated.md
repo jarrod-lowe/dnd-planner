@@ -20,8 +20,9 @@ Modelled: record offer (imposed — free, ungated) → keyed effect setting `con
 ## Decisions (defaults — re-grill before execution)
 
 - **Knot 1 — action denial.** (a) effect writes `actions/bonusActions/reactions.spent: <sentinel>` — sum-combine adds to this turn's endOfTurn spends, and the condition effect's expiry (`untilShortRest`, NOT endOfTurn) keeps the denial standing across turns. Crude: chips read max−(real+sentinel) = negative; breaks the day any max exceeds the sentinel (a future action-surge raising `actions.max` silently re-enables). (b) `action-economy.ts` derives read `condition.incapacitated` → each `remaining` derives 0 while set. **RECOMMEND (b)**: foundational module reading a condition fact — dataflow-clean (ordering derives from the read), zero sentinel, and every dash-style gate (`actions.remaining > 0`), weapon/spell `costApply`, and extra-attack's grant go illegal FOR FREE. Grill: free-section offers stay legal (rest recorders, HI use — correct: not actions); movement untouched (Incapacitated ≠ Speed 0).
+- **Follow-up attacks bypass the economy clamp (verified)**: attack offers' legality is `actions.remaining > 0 || attackAction.extraRemaining > 0` (attacks.ts unarmed, builder.ts weaponOffers, grapple/shove mirrors) — the OR's second leg keeps Extra Attack follow-ups legal after recording Incapacitated mid-Attack-action. Fix: the `attackAction.extraRemaining` derive (attacks.ts) clamps to 0 while `condition.incapacitated > 0` (the same read-the-fact clamp as the economy derives). SRD "Inactive" read conservatively (the started action's remaining swings stop); grill the permissive reading (finish the declared action). Scenario: first swing → record → follow-up illegal.
 - **Knot 2 — concentration break.** Record apply, WHEN `concentration.spent > 0` (live hold), advertises the empty same-`key` (`CONCENTRATION_SPELL_KEY`) eviction — the concentration-broken/get-up clear idiom: while merely planned it replaces the hold in-fold (undo restores the spell), `expiry: permanent` once committed. Also `concentrationDamageMarkerClear()` (the recast precedent — a damage save owed against the dead hold is moot). Display REUSES `planner.concentration.broken` (existing key, correct regardless of who broke it — no new i18n). Conditional so recording with nothing held shows no phantom "Concentration broken" chip. Grill: unconditional advertise (harmless key-wise, visible chip-wise)? **Extract the conditional eviction + marker clear to a builder helper** (`proneEffect()` extraction precedent — no rule imports another rule): the composition children's recorders invoke the SAME helper — recording Paralyzed/Petrified/Stunned/Unconscious breaks a live hold too (their SRD text includes Incapacitated; the fact alone is offer-inert).
-- **Surprised**: effect writes `initiative.disadvantage: 1` with `stateCombine: 'max'` — leather-armor derives that fact `combine: 'max'`, and a default-`sum` effect write conflict-throws for untrained-armor characters (the prone PR1 idiom). Initiative dice-line already reads it; zero roller changes.
+- **Surprised**: condition-incapacitated DERIVES `initiative.disadvantage` (`combine: 'max'`, value `condition.incapacitated > 0 ? 1 : 0`) — NOT an effect state write. Leather-armor derives the same fact `combine: 'max'` (modes agree). The derive makes the flag react to the COMPOSED fact: Paralyzed/Petrified/Stunned/Unconscious inherit Surprised for free (their effects write the fact, never the flag). Initiative dice-line already reads it; zero roller changes.
 - **Speechless**: notice text only. Verbal-component spell legality = out of scope (noted below).
 - **Composition contract (THIS DOC DEFINES IT) — TWO clauses.** (1) Fact: wave-5 children (Paralyzed/Petrified/Stunned) and Unconscious write `condition.incapacitated: 1` DIRECTLY in their own effect state (`stateCombine: 'max'` on that fact — multi-writer safe; `effect-incapacitated` writes it `max` too, and sheet.ts THROWS on conflicting combine modes, so no child may default it to sum), with NO cross-module import — the shared fact name IS the coupling. Readers gate `> 0`, never `=== 1`. A child's own eviction/clear removes its incapacitated contribution automatically (it lives in the child's effect state). (2) Concentration: a child's recorder invokes the shared break helper from Knot 2 — writing the fact does NOT evict a held spell (the break is offer-side apply logic, not fact-reactive). Without clause 2, recording Unconscious while concentrating leaves the spell live.
 - Record offer: section `free`, `intents: { CONDITION: 'incapacitated' }`, no control, no gate (enemies impose it); name-only (record-\* precedent). Repeat records newest-wins-replace — never stacks.
@@ -34,12 +35,14 @@ Module `src/lib/rules-engine/rules/condition-incapacitated.ts`, id `condition-in
 Facts:
 
 - `condition.incapacitated` — >0 while incapacitated; written ONLY by committed effect state (this effect now; wave-5 children later)
-- `initiative.disadvantage` — existing; effect writes 1
+- `initiative.disadvantage` — existing; condition-incapacitated derives 1 while the condition fact is set (covers composition children)
 - `action-economy.ts`: the three `*.remaining` derives gain `condition.incapacitated > 0 ? 0 : max − spent`
+- `attacks.ts`: the `attackAction.extraRemaining` derive gains the same clamp (follow-up attacks die with the action pool)
+- `condition-incapacitated.ts` derive: `initiative.disadvantage` (above)
 
 Effects:
 
-- incapacitated: `{ id: 'effect-incapacitated', key: 'incapacitated', state: { 'condition.incapacitated': 1, 'initiative.disadvantage': 1 }, stateCombine: { 'condition.incapacitated': 'max', 'initiative.disadvantage': 'max' }, display: { name }, expiry: { kind: 'untilShortRest' } }`
+- incapacitated: `{ id: 'effect-incapacitated', key: 'incapacitated', state: { 'condition.incapacitated': 1 }, stateCombine: { 'condition.incapacitated': 'max' }, display: { name }, expiry: { kind: 'untilShortRest' } }` — the initiative flag moved to a derive (Surprised decision) so composition children inherit it
 - concentration eviction (PR2, conditional in apply): `{ id: 'incapacitated-breaks-concentration', key: CONCENTRATION_SPELL_KEY, display: { name: 'planner.concentration.broken', section: 'other' }, expiry: { kind: 'permanent' } }` + `concentrationDamageMarkerClear()`
 
 Offers:
@@ -59,6 +62,7 @@ Tests (RED first — yaml scenario asserts are the RED for rule changes; registe
 
 - `condition-incapacitated-record` (groups: condition-incapacitated + action-economy): facts `condition.incapacitated: 1`, `initiative.disadvantage: 1`, `actions/bonusActions/reactions.remaining: 0` + notice exists, targets [notice]
 - `dash-illegal-while-incapacitated` (groups: + species-human/movement/dash): dash legal before, illegal after record
+- `extra-attack-followup-illegal-while-incapacitated` (groups: + a weapon + attacks): first swing legal, record, follow-up illegal — the `extraRemaining` clamp leg
 - `concentration-broken-on-record` (bless stack, bless-concentration-replacement shape): prepare+cast bless → `concentration.spent: 1`, endTurn (effect-bless committed), record → `concentration.spent: 0`, `concentration.remaining: 1`, effects notExists `effect-bless`
 - `condition-incapacitated-rest-clears` (condition-prone-rest-clears shape): short AND long → facts + notice gone
 
@@ -81,8 +85,8 @@ Tests (RED first — yaml scenario asserts are the RED for rule changes; registe
 ### PR1 — condition-incapacitated module + action-economy denial (+ initiative flag)
 
 - [ ] RED: `condition-incapacitated-record`, `dash-illegal-while-incapacitated` fail — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
-- [ ] `condition-incapacitated.ts`: record offer, keyed effect (both facts, both `stateCombine: 'max'`), notice annotate
-- [ ] `action-economy.ts`: three `remaining` derives clamp to 0 while `condition.incapacitated > 0`
+- [ ] `condition-incapacitated.ts`: record offer, keyed effect (condition fact, `max`), `initiative.disadvantage` derive, notice annotate
+- [ ] `action-economy.ts`: three `remaining` derives clamp to 0 while `condition.incapacitated > 0`; `attacks.ts`: `attackAction.extraRemaining` derive gains the same clamp
 - [ ] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details` (output `static/details/` gitignored — published, not committed)
 - [ ] i18n keys above, both locales
 - [ ] terraform seed `char_condition_incapacitated_rulegroup_seed` (dynamodb-items.tf); `make validate` passes

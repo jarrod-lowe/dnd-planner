@@ -32,6 +32,7 @@ Modelled: record + keyed composition effect + notice. Auto-fail saves / vs-you A
 - Auto-fail STR/DEX saves: notice text (umbrella default). Even if Restrained's save-disadvantage wiring landed: auto-fail ≠ disadvantage — its own future semantic, not this PR.
 - Vs-you Advantage + auto-crit within 5 ft: notice text (NPC-side; prone precedent — no NPC modelling).
 - Recorder `record-paralyzed`: free, ungated (imposed by an enemy effect — record-prone precedent); record-\* carries name only. Ending: umbrella default — `expiry: untilShortRest` (long includes short) + ActiveStateStrip chip dismissal; no end offer (SRD gives none — the source effect ends it).
+- Surprised INHERITS: `initiative.disadvantage` derives from `condition.incapacitated` (incapacitated doc's Surprised decision) — children write the fact, never the flag; nothing to add here. Scenario `condition-paralyzed-initiative-disadvantage` (paralyzed → flag 1) pins the inheritance.
 - `hold-person.ts` cross-ref: OUR spell imposing Paralyzed on OTHERS (`holdPerson.active` marker, its own notice) — no overlap with this self-condition tracking; no fact collision.
 - PR: one per condition OR one shared PR for the trio (near-identical) — executing agent's call; docs stay standalone.
 
@@ -61,6 +62,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 
 - `condition-paralyzed-record` (facts paralyzed 1 + incapacitated 1 + halted 1, notice exists)
 - `condition-paralyzed-breaks-concentration` (bless stack, the incapacitated doc's shape): hold live → record → hold evicted — the composition recorder invokes the break helper
+- `condition-paralyzed-initiative-disadvantage` (record → `initiative.disadvantage` 1 — the Surprised inheritance pin; siblings inherit identically)
 - `move-walk-illegal-while-paralyzed` (halted: move offers illegal with the grappled-doc halted diagnostic; species-human + movement + this group — walk-illegal-while-prone shape)
 - `condition-paralyzed-rest-clears` (short AND long → both facts 0, notice gone)
 

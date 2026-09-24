@@ -88,7 +88,7 @@ Tests (RED first — yaml scenario asserts are the RED for rule changes):
 ### PR2 — weapon wiring + condition-invisible module (prone PR1 boilerplate)
 
 - [ ] RED: `condition-invisible-record` + `condition-invisible-rest-clears` fail (unknown group → skipped vs `EXPECTED_RUNNABLE`)
-- [ ] `WeaponDef.advantageFact` (required) + diceControl `advantageUp` + `weaponOffers` ui mirror; 6 weapon modules + attacks.ts unarmed (advantageFact + ui)
+- [ ] `WeaponDef.advantageFact` (required) + diceControl `advantageUp` + `weaponOffers` ui mirror; 6 weapon modules + attacks.ts unarmed (advantageFact + ui); greataxe's Cleave SECONDARY control (greataxe.ts `actionUiExtra.secondaryControl`) gains BOTH sources (`advantageUp` + the existing disadvantage fact — it has neither today; test a mastery-enabled Cleave roll)
 - [ ] `condition-invisible.ts`: record offer, keyed effect, notice; `registry.ts` + `lazy.ts`; yaml + detail + `make publish-details` (output gitignored — published, not committed); i18n both locales; terraform seed + `make validate`
 - [ ] GREEN: record + rest-clears + `invisible-plus-prone-cancels` facts leg
 - [ ] gates → PR → codex monitor → merge

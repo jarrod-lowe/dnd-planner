@@ -97,7 +97,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 ### PR2 — attack flags + dash/get-up/drop-prone gates
 
 - [ ] RED: `dash-illegal-while-grappled`, `get-up-illegal-while-grappled` fail
-- [ ] effect state gains `attack.str/dex.disadvantage` (`stateCombine: 'max'`); record scenario extended with flag asserts
+- [ ] effect state gains `attack.str/dex.disadvantage` (`stateCombine: 'max'`); record scenario extended with flag asserts; greataxe's Cleave secondary control (greataxe.ts `actionUiExtra.secondaryControl`) gains the disadvantage source (no mode source today — WeaponDef wiring reaches primaries only; test a mastery-enabled Cleave)
 - [ ] dash.ts not-halted legality + apply re-check; condition-prone get-up + drop-prone gates read halted (reuse `cannot_get_up`/`cannot_drop`)
 - [ ] i18n `rule.dnd-5e-2024.dash.action-dash-offer.cannot_while_halted`, both locales
 - [ ] GREEN; gates → PR → codex monitor → merge; `make sync-rule-groups` + `make deploy-test`

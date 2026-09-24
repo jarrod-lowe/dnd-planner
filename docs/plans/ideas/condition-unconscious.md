@@ -113,3 +113,4 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 - Doubled `condition.prone` (live prone effect + unconscious effect) reads 2 — harmless, all reads are `> 0`
 - `when: false` skips planned instances — regain can't be pre-planned while awake (mirror of get-up)
 - Unconscious effect's missing attack flags are invisible in play: Incapacitated (fact-written) zeroes actions first
+- Surprised inherits via the incapacitated derive (`initiative.disadvantage` reads the composed fact) — nothing to write here; paralyzed's pin scenario covers the family

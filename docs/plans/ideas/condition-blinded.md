@@ -17,7 +17,7 @@ Modelled: prone-minus-movement — effect writes `attack.str.disadvantage` + `at
 
 ## Decisions (defaults — re-grill before execution)
 
-- Our-attack Disadvantage: **set mechanically**, exact prone idiom — effect writes `attack.str.disadvantage` + `attack.dex.disadvantage`, both `stateCombine: 'max'` (armor modules derive the same facts `combine: 'max'`; default `sum` on the effect write would conflict-throw for armored characters). Weapon/unarmed rollers default 2d20-take-low; per-die override stays. No spell-attack offers exist yet.
+- Our-attack Disadvantage: **set mechanically**, exact prone idiom — effect writes `attack.str.disadvantage` + `attack.dex.disadvantage`, both `stateCombine: 'max'` (armor modules derive the same facts `combine: 'max'`; default `sum` on the effect write would conflict-throw for armored characters). Weapon/unarmed rollers default 2d20-take-low; per-die override stays. No spell-attack offers exist yet. Custom secondary dice-lines: greataxe's Cleave control (greataxe.ts `actionUiExtra.secondaryControl`) carries NO disadvantage source today — the WeaponDef/diceControl wiring reaches primary controls only — add the source there too (test a mastery-enabled Cleave roll).
 - Can't-see auto-fail (sight-requiring checks): **notice text only** — skill offers are display-only (Deafened precedent); player applies the auto-fail.
 - Attacks vs you Advantage: **notice text only** — NPC side, never modelled (prone precedent).
 - Ending: umbrella default — `expiry: untilShortRest` (long includes short; prone deviation) + ActiveStateStrip chip dismissal. SRD gives no mechanical end.

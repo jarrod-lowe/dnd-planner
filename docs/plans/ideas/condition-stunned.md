@@ -94,4 +94,5 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 ## Notes
 
 - The one trio divergence lives here: no halted, no walk-illegal scenario — SRD Stunned moves normally. If a reviewer expects parity with Paralyzed/Petrified, point at the SRD quote above.
+- Surprised inherits via the incapacitated derive (`initiative.disadvantage` reads the composed fact) — nothing to write here; paralyzed's pin scenario covers the family.
 - `requires: []` is the default — if the loader demands one, mirror prone's `requires: [movement]` as loader mechanics only, never as a rules claim.

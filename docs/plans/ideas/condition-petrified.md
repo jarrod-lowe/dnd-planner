@@ -104,4 +104,5 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 ## Notes
 
 - Halted fact name + derive list pinned by condition-grappled.md — if that doc renamed anything, update before execution.
+- Surprised inherits via the incapacitated derive (`initiative.disadvantage` reads the composed fact) — nothing to write here; paralyzed's pin scenario covers the family.
 - Recording an immunity ≠ enforcing it — the no-eviction default mirrors the umbrella's global "condition immunities" out-of-scope.
