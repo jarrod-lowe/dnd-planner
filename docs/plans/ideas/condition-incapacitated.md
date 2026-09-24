@@ -45,6 +45,8 @@ Effects:
 - incapacitated: `{ id: 'effect-incapacitated', key: 'incapacitated', state: { 'condition.incapacitated': 1 }, stateCombine: { 'condition.incapacitated': 'max' }, display: { name }, expiry: { kind: 'untilShortRest' } }` — the initiative flag moved to a derive (Surprised decision) so composition children inherit it
 - concentration eviction (PR2, conditional in apply): `{ id: 'incapacitated-breaks-concentration', key: CONCENTRATION_SPELL_KEY, display: { name: 'planner.concentration.broken', section: 'other' }, expiry: { kind: 'permanent' } }` + `concentrationDamageMarkerClear()`
 
+**Effect-chip detail access (bridge extension, lands with PR1):** `EffectDisplay` has NO `detailKey` today and `effectInstanceToRule` (engineBridge.ts) copies only name/section/displayFact/value/subject — so the OFFER's `ui.detailKey` makes the PlanRow flippable but the ActiveStateStrip chip (the standing condition, post-End-Turn) cannot open the published rules. Extend the contract: `EffectDisplay.detailKey?: string`; the bridge copies it; EVERY condition effect carries `display: { name, detailKey: 'condition/<name>' }` (all 14 docs — umbrella notes it). Component test: the committed chip exposes the detail.
+
 Offers:
 
 - `record-incapacitated`: as Decisions, `detailKey: 'condition/incapacitated'` (the published SRD detail — PlanRow/ActiveStateStrip load rules only via `ui.detailKey`); apply advertises [effect] (+ eviction pair when a hold is live)
@@ -85,7 +87,8 @@ Tests (RED first — yaml scenario asserts are the RED for rule changes; registe
 ### PR1 — condition-incapacitated module + action-economy denial (+ initiative flag)
 
 - [ ] RED: `condition-incapacitated-record`, `dash-illegal-while-incapacitated` fail — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
-- [ ] `condition-incapacitated.ts`: record offer, keyed effect (condition fact, `max`), `initiative.disadvantage` derive, notice annotate
+- [ ] `condition-incapacitated.ts`: record offer, keyed effect (condition fact, `max`, `display.detailKey`), `initiative.disadvantage` derive, notice annotate
+- [ ] Bridge extension: `EffectDisplay.detailKey` + `effectInstanceToRule` copy + chip component test (Design note)
 - [ ] `action-economy.ts`: three `remaining` derives clamp to 0 while `condition.incapacitated > 0`; `attacks.ts`: `attackAction.extraRemaining` derive gains the same clamp
 - [ ] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details` (output `static/details/` gitignored — published, not committed)
 - [ ] i18n keys above, both locales

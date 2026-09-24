@@ -77,6 +77,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 - `condition-exhaustion-record-twice` — level 2, speed −10 + total −10 (PR2); PR3 adds rider-annotation exists
 - `condition-exhaustion-half-speed-shrinks` — level 2 + prone → get-up cost 10 (floor(20/2)) (PR2)
 - `condition-exhaustion-long-rest-removes-one` — level 2 → long rest → 1, persists past endTurn; SHORT rest removes nothing (PR3)
+- `condition-exhaustion-long-rest-clears-final-level` — level 1 → long rest → `condition.exhaustion` 0, notice + riders GONE, eviction chip renders (the empty-key branch — 2→1 never exercises it; an off-by-one could strand the condition green) (PR3)
 - `condition-exhaustion-rest-then-gain-edge` — level 2 → long rest → record → 3 (decrement swallowed, gain survives — the pinned direction; green-immediate pin) (PR3)
 - rider VALUE (−4 at level 2) + notice `values`: unit tests — the yaml grammar cannot assert annotation values (prone PR2 precedent, `condition-prone-notice.test.ts`)
 
@@ -116,7 +117,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 
 - [ ] RED: `condition-exhaustion-long-rest-removes-one` fails; `record-twice` gains rider-annotation asserts
 - [ ] rider ×3 annotate + rider-value unit test (−4 at level 2); playwright check that the chips render on a weapon panel, a skill, a save (first to-hit/check flat riders — see Notes)
-- [ ] `onRest` decrement + level-0 empty eviction; short-rest-removes-nothing + rest-then-gain-edge pins asserted
+- [ ] `onRest` decrement + level-0 empty eviction; short-rest-removes-nothing + rest-then-gain-edge + clears-final-level pins asserted
 - [ ] GREEN; gates → PR → codex monitor → merge
 
 ## Out of scope
