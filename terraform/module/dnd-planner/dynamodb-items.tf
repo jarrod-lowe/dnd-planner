@@ -1063,6 +1063,46 @@ resource "aws_dynamodb_table_item" "char_condition_grappled_rulegroup_seed" {
   })
 }
 
+# Restrained condition rule group seed - assigns the condition recorder
+resource "aws_dynamodb_table_item" "char_condition_restrained_rulegroup_seed" {
+  table_name = aws_dynamodb_table.data.name
+  hash_key   = "PK"
+  range_key  = "SK"
+
+  item = jsonencode({
+    PK = {
+      S = "SEED#CHAR#$(characterId)"
+    }
+    SK = {
+      S = "RULEGROUP#condition-restrained"
+    }
+    gsiSeedPK = {
+      S = "SEED#CHAR"
+    }
+    type = {
+      S = "CHAR"
+    }
+    characterId = {
+      S = "$(characterId)"
+    }
+    ruleGroupId = {
+      S = "condition-restrained"
+    }
+    userId = {
+      S = "$(userId)"
+    }
+    enabled = {
+      BOOL = true
+    }
+    createdAt = {
+      S = "$(now)"
+    }
+    updatedAt = {
+      S = "$(now)"
+    }
+  })
+}
+
 # Species rule group seed - creates the species-specific rule group assignment
 resource "aws_dynamodb_table_item" "char_species_rulegroup_seed" {
   table_name = aws_dynamodb_table.data.name

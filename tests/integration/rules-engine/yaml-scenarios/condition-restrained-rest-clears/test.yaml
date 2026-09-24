@@ -1,0 +1,79 @@
+name: 'Condition Restrained - Rest Clears'
+description: >-
+  Any rest clears the Restrained condition: the keyed effect carries
+  untilShortRest, which a short rest satisfies directly and a long rest
+  includes. The condition fact, the halted mask, the collapsed remaining and
+  effective_total, both attack flags, the DEX-save flag, and the notice all go
+  with it (umbrella default — the SRD's mechanical end is an escape by the
+  restraining effect, out of scope, so rest plus manual chip dismissal only).
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-restrained
+  - dnd-5e-2024/core-events
+steps:
+  - addOffer:
+      id: record-restrained
+      assert:
+        facts:
+          condition.restrained: 1
+          character.movement.halted: 1
+          character.movement.remaining: 0
+          character.movement.effective_total: 0
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+          save.dex.disadvantage: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-restrained.notice
+  # A long rest (the explicit endTurn flag) clears it.
+  - endTurn:
+      longRest: true
+      assert:
+        facts:
+          condition.restrained: 0
+          character.movement.halted: 0
+          character.movement.remaining: 30
+          character.movement.effective_total: 30
+          attack.str.disadvantage: 0
+          attack.dex.disadvantage: 0
+          save.dex.disadvantage: 0
+        effects:
+          notExists:
+            - effect-restrained
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-restrained.notice
+  # ...and so does a recorded short rest: the rest flag effect restores its
+  # scoped effects within the same evaluation, so the facts and notice are
+  # already gone before the turn even ends.
+  - addOffer:
+      id: record-restrained
+      assert:
+        facts:
+          condition.restrained: 1
+  - addOffer:
+      id: record-short-rest
+      assert:
+        facts:
+          rest.short: 1
+          condition.restrained: 0
+          character.movement.halted: 0
+          character.movement.remaining: 30
+          character.movement.effective_total: 30
+          attack.str.disadvantage: 0
+          attack.dex.disadvantage: 0
+          save.dex.disadvantage: 0
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-restrained.notice
+  - endTurn:
+      assert:
+        facts:
+          condition.restrained: 0
+        effects:
+          notExists:
+            - effect-restrained
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-restrained.notice

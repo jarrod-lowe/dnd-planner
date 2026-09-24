@@ -37,7 +37,13 @@ function saveOffer(a: string): Offer {
       annotationLabels: ['save.any', `save.${a}`, 'dice.any'],
       primaryControl: {
         type: 'dice-line',
-        dice: [{ sides: 20, bonus: { var: 'saveBonus' }, purpose: 'save' }]
+        dice: [{ sides: 20, bonus: { var: 'saveBonus' }, purpose: 'save' }],
+        // A save suffers disadvantage like any other roll (the record-check
+        // shape): the Restrained condition writes the DEX fact — the other
+        // five abilities have no writers yet (dead wiring until future
+        // derivers land). PanelDiceLine resolves a truthy source → default
+        // roll mode 'disadvantage'; a per-die manual override still wins.
+        advantage: { fact: `save.${a}.disadvantage` }
       },
       secondaryControl: {
         type: 'segmented',

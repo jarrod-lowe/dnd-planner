@@ -1,0 +1,64 @@
+name: 'Condition Restrained - Record'
+description: >-
+  Recording being Restrained commits a keyed effect writing condition.restrained
+  — the fact movement.ts's halted derive ALREADY reads (the five Speed-0
+  conditions, grappled's PR1 foundation), so halted, the collapsed
+  remaining/effective_total mask, and every halted gate (travel offers, dash
+  "can't increase", the prone get-up/drop Speed-0 gates) come FREE here with
+  zero movement.ts changes. Attacks Affected lands as the shared STR/DEX
+  attack-disadvantage flags (stateCombine max, the prone/blinded/grappled
+  idiom — armor co-writes them with max, the default sum would conflict-throw);
+  the vs-you Advantage stays notice text (prone precedent, no NPC modelling).
+  Saving Throws Affected lands as save.dex.disadvantage, a NEW fact with the
+  same max idiom (no other writer today; max keeps future armor-style derivers
+  conflict-free) — the fact the core-events save recorders' advantage source
+  reads (pinned in tests/unit/rules-engine/condition-restrained-save.test.ts;
+  the yaml grammar cannot assert control payloads). The recorder models BEING
+  RESTRAINED (imposed by an enemy effect — web, entangle, manacles), so it is
+  free and ungated (the prone "Knocked Prone" precedent), and any rest clears
+  it (untilShortRest; see condition-restrained-rest-clears).
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-restrained
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.restrained: 0
+          character.movement.halted: 0
+          character.movement.remaining: 30
+          character.movement.effective_total: 30
+          save.dex.disadvantage: 0
+        offers:
+          exists:
+            - record-restrained
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-restrained.notice
+  - addOffer:
+      id: record-restrained
+      assert:
+        facts:
+          condition.restrained: 1
+          character.movement.halted: 1
+          character.movement.remaining: 0
+          character.movement.effective_total: 0
+          # Attacks Affected: your attack rolls have Disadvantage (the
+          # vs-you Advantage half is notice text).
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+          # Saving Throws Affected: Disadvantage on Dexterity saving throws —
+          # the fact record-save-dex's advantage source resolves.
+          save.dex.disadvantage: 1
+          # Math keeps the base: speed/total stay live for derived math (the
+          # Get Up half_speed cost, a later Dash boost) — only the display
+          # reads effective_total and only the gates read halted.
+          character.movement.speed: 30
+          character.movement.total: 30
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-restrained.notice
+          targets:
+            - key: rule.dnd-5e-2024.condition-restrained.notice
+              targets: [notice]

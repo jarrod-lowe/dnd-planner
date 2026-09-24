@@ -1,0 +1,37 @@
+ruleGroups:
+  - id: condition-restrained
+    requires:
+      - movement
+    translations:
+      en:
+        name: Restrained
+        description: Rules while you have the Restrained condition; record it when an enemy effect restrains you
+        keywords:
+          - restrained
+          - restrain
+          - bound
+          - tied
+          - webbed
+          - netted
+          - ensnared
+          - condition
+      en-x-tlh:
+        name: ngorlu'
+        description: ngorlu'taHbogh Dotlh; ngorlu'DI' yIghun
+        keywords:
+          - ngorlu'
+          - Dotlh
+    detail:
+      key: condition/restrained
+      source: srd52
+      translations:
+        en:
+          meta: Condition
+          body: |
+            **Restrained [Condition].** While you have the Restrained condition, you experience the following effects.
+
+            **Speed 0.** Your Speed is 0 and can't increase.
+
+            **Attacks Affected.** Attack rolls against you have Advantage, and your attack rolls have Disadvantage.
+
+            **Saving Throws Affected.** You have Disadvantage on Dexterity saving throws.
