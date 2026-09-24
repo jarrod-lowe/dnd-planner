@@ -50,17 +50,39 @@ describe('derivePanels — top bar', () => {
   it('shows the modified movement total in the speed chip, not the remaining', () => {
     // Splint armor dropped the species' 30 to 20 and 10 feet are spent: the
     // chip is the modified total (the ledger's usedMax row carries avail/total).
-    const facts = { 'character.movement.total': 20, 'character.movement.remaining': 10 };
+    const facts = {
+      'character.movement.total': 20,
+      'character.movement.effective_total': 20,
+      'character.movement.remaining': 10
+    };
     const speed = deriveTopBarEntries(facts).find((e) => e.label === 'play.topBar.speed');
     expect(speed?.type).toBe('value');
     expect(resolveEntryValue(speed!, facts)).toBe('20');
   });
 
   it('surfaces the speed chip from the total fact alone (before anything is spent)', () => {
-    const facts = { 'character.movement.total': 30 };
+    const facts = {
+      'character.movement.total': 30,
+      'character.movement.effective_total': 30
+    };
     const speed = deriveTopBarEntries(facts).find((e) => e.label === 'play.topBar.speed');
     expect(speed).toBeDefined();
     expect(resolveEntryValue(speed!, facts)).toBe('30');
+  });
+
+  it('reads the speed chip from effective_total, so a halted character shows 0 (SRD Speed 0)', () => {
+    // Grappled (or any Speed-0 condition): total stays 30 for derived math,
+    // but the chip reads the halted mask — SRD "Your Speed is 0 and can't
+    // increase" must be what the player sees, not the live base.
+    const facts = {
+      'character.movement.total': 30,
+      'character.movement.effective_total': 0,
+      'character.movement.halted': 1
+    };
+    const speed = deriveTopBarEntries(facts).find((e) => e.label === 'play.topBar.speed');
+    expect(speed?.type).toBe('value');
+    expect(speed?.type === 'value' && speed.fact).toBe('character.movement.effective_total');
+    expect(resolveEntryValue(speed!, facts)).toBe('0');
   });
 });
 
@@ -188,6 +210,7 @@ describe('derivePanels — resources', () => {
       'reactions.max': 1,
       'reactions.spent': 0,
       'character.movement.total': 30,
+      'character.movement.effective_total': 30,
       'character.movement.remaining': 30
     };
     const entries = deriveResourceEntries(facts);
@@ -281,6 +304,26 @@ describe('derivePanels — resources', () => {
     const hp = deriveResourceEntries(facts).find((e) => e.label === 'play.stats.hp');
     expect(hp).toBeDefined();
     expect(resolveEntryValue(hp!, facts)).toBe('9/12');
+  });
+
+  it('reads the ledger movement row from effective_total, so a halted character renders 0/0', () => {
+    // The usedMax entry's total is the halted mask, not the live base: while
+    // grappled the row reads 0/0 (both display consumers read effective; the
+    // math-keeps-base speed/total stay live for the engine). Its zero-value
+    // visibility then follows the shared usedMax rule (hidden at total 0).
+    const halted = {
+      'character.movement.total': 30,
+      'character.movement.effective_total': 0,
+      'character.movement.halted': 1,
+      'character.movement.remaining': 0
+    };
+    const movement = deriveResourceEntries(halted).find((e) => e.label === 'play.stats.movement');
+    expect(movement?.type).toBe('usedMax');
+    expect(movement?.type === 'usedMax' && movement.total).toBe(
+      'character.movement.effective_total'
+    );
+    expect(resolveEntryValue(movement!, halted)).toBe('0/0');
+    expect(isEntryVisible(movement!, halted)).toBe(false);
   });
 
   it('picks the class hit die that is present (d10 for a paladin)', () => {

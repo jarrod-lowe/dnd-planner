@@ -111,6 +111,32 @@ const notProne: LegalWhen = {
 };
 const notProneRecheck: Recheck = { code: CANNOT_WHILE_PRONE, can: standing };
 
+// SRD 5.2 Grappled (and Restrained/Paralyzed/Petrified/Unconscious — every
+// "your Speed is 0" condition): Speed 0 halts ALL travel, crawl's prone
+// allowance included. Every travel offer carries this clause (and its apply
+// re-check), sharing one diagnostic code — the cannot_while_prone shape.
+const CANNOT_WHILE_HALTED = `${MV}.cannot_while_halted`;
+const unhalted = (f: FactReader): boolean => f.num('character.movement.halted') === 0;
+const notHalted: LegalWhen = {
+  condition: unhalted,
+  diagnostics: [{ code: CANNOT_WHILE_HALTED, severity: 'error' }]
+};
+const notHaltedRecheck: Recheck = { code: CANNOT_WHILE_HALTED, can: unhalted };
+
+// The Speed-0 conditions: any one of them halts movement (unset facts read 0,
+// so this is safe with those groups unloaded). Grappled is PR1 of the idiom;
+// the wave-5 children and Restrained just write their own condition.* fact
+// and halted picks them up here — no movement.ts change.
+const SPEED_ZERO_CONDITIONS = [
+  'condition.grappled',
+  'condition.restrained',
+  'condition.paralyzed',
+  'condition.petrified',
+  'condition.unconscious'
+];
+const halted = (f: FactReader): number =>
+  SPEED_ZERO_CONDITIONS.some((fact) => f.num(fact) > 0) ? 1 : 0;
+
 /**
  * Movement: walk / rough terrain / crawl / swim / fly, each consuming feet from
  * `character.movement.remaining` (= total − spent). The legacy engine copied total → remaining
@@ -120,14 +146,32 @@ const notProneRecheck: Recheck = { code: CANNOT_WHILE_PRONE, can: standing };
  * their slider defaults, and `half_speed` (floored) is the Get Up cost base.
  * While prone (SRD 5.2 Restricted Movement) every travel offer but CRAWL is
  * illegal — crawl itself exists only while prone (a structural gate, like Get Up).
+ * While HALTED (any Speed-0 condition, SRD 5.2 Grappled "Your Speed is 0 and
+ * can't increase") every travel offer INCLUDING crawl is illegal, and
+ * remaining/effective_total mask to 0 — `speed`/`total` deliberately stay live
+ * for derived math (a condition module cannot zero them without contributing a
+ * derive that reads its own output — the cycle trap), so display reads
+ * `effective_total` and the gates carry the semantics.
  * The base distances come from the species. Foundational, so no search meta.
  */
 const movement: RuleModule = {
   id: 'movement',
   derive: () => [
     {
+      fact: 'character.movement.halted',
+      value: halted
+    },
+    {
       fact: REMAINING,
-      value: (f) => f.num('character.movement.total') - f.num('character.movement.spent')
+      value: (f) =>
+        halted(f) ? 0 : f.num('character.movement.total') - f.num('character.movement.spent')
+    },
+    // The DISPLAY total: 0 while halted (the top-bar SPD chip and the ledger's
+    // movement row read this — SRD Speed 0 must be what the player sees),
+    // otherwise the live total the math uses.
+    {
+      fact: 'character.movement.effective_total',
+      value: (f) => (halted(f) ? 0 : f.num('character.movement.total'))
     },
     {
       fact: 'character.movement.half_total',
@@ -150,9 +194,13 @@ const movement: RuleModule = {
       defaultDistanceFact: REMAINING,
       maxDistanceFact: 'character.movement.total',
       mult: 1,
-      legalWhen: [ge(REMAINING, 5, `${MV}.action-move-walk-offer.out_of_movement`), notProne],
+      legalWhen: [
+        ge(REMAINING, 5, `${MV}.action-move-walk-offer.out_of_movement`),
+        notProne,
+        notHalted
+      ],
       outOfMovementCode: `${MV}.action-move-walk-offer.out_of_movement`,
-      cannot: [notProneRecheck]
+      cannot: [notProneRecheck, notHaltedRecheck]
     }),
     moveOffer({
       id: 'move-rough-terrain',
@@ -163,18 +211,22 @@ const movement: RuleModule = {
       mult: 2,
       legalWhen: [
         ge(REMAINING, 10, `${MV}.action-move-rough-terrain-offer.out_of_movement`),
-        notProne
+        notProne,
+        notHalted
       ],
       // The legacy planned-diagnostic reused the walk code here.
       outOfMovementCode: `${MV}.action-move-walk-offer.out_of_movement`,
-      cannot: [notProneRecheck]
+      cannot: [notProneRecheck, notHaltedRecheck]
     }),
     // SRD 5.2 Prone, Restricted Movement: crawling is the only travel while
     // prone — a structural gate (the Get Up idiom), so the offer does not
     // exist while standing. Crawling costs 1 extra foot per foot (difficult
     // terrain's ×3 stacking is out of scope), so it shares the rough-terrain
     // shape: slider feet traversed (half_remaining default, half_total max),
-    // ×2 spent, and the walk out-of-movement code.
+    // ×2 spent, and the walk out-of-movement code. Speed 0 beats the prone
+    // allowance (SRD 5.2 Grappled: no movement AT ALL), so crawl carries the
+    // halted legality gate + re-check like every other travel offer —
+    // prone+grappled cannot even crawl.
     moveOffer({
       id: 'move-crawl',
       nameKey: 'move-crawl',
@@ -184,8 +236,9 @@ const movement: RuleModule = {
       maxDistanceFact: 'character.movement.half_total',
       mult: 2,
       // 5 feet crawled × 2 (the rough-terrain threshold).
-      legalWhen: [ge(REMAINING, 10, `${MV}.action-move-walk-offer.out_of_movement`)],
-      outOfMovementCode: `${MV}.action-move-walk-offer.out_of_movement`
+      legalWhen: [ge(REMAINING, 10, `${MV}.action-move-walk-offer.out_of_movement`), notHalted],
+      outOfMovementCode: `${MV}.action-move-walk-offer.out_of_movement`,
+      cannot: [notHaltedRecheck]
     }),
     moveOffer({
       id: 'move-swim',
@@ -198,7 +251,8 @@ const movement: RuleModule = {
       legalWhen: [
         ge('character.movement.swim.can', 1, `${MV}.action-move-swim-offer.cannot_swim`),
         ge(REMAINING, 5, `${MV}.action-move-swim-offer.out_of_movement`),
-        notProne
+        notProne,
+        notHalted
       ],
       outOfMovementCode: `${MV}.action-move-swim-offer.out_of_movement`,
       cannot: [
@@ -206,7 +260,8 @@ const movement: RuleModule = {
           code: `${MV}.action-move-swim-offer.cannot_swim`,
           can: (f) => f.num('character.movement.swim.can') >= 1
         },
-        notProneRecheck
+        notProneRecheck,
+        notHaltedRecheck
       ]
     }),
     moveOffer({
@@ -220,7 +275,8 @@ const movement: RuleModule = {
       legalWhen: [
         ge('character.movement.swim.can', 1, `${MV}.action-move-swim-offer.cannot_swim`),
         ge(REMAINING, 10, `${MV}.action-move-swim-offer.out_of_movement`),
-        notProne
+        notProne,
+        notHalted
       ],
       outOfMovementCode: `${MV}.action-move-swim-offer.out_of_movement`,
       cannot: [
@@ -228,7 +284,8 @@ const movement: RuleModule = {
           code: `${MV}.action-move-swim-offer.cannot_swim`,
           can: (f) => f.num('character.movement.swim.can') >= 1
         },
-        notProneRecheck
+        notProneRecheck,
+        notHaltedRecheck
       ]
     }),
     moveOffer({
@@ -241,7 +298,8 @@ const movement: RuleModule = {
       legalWhen: [
         ge('character.movement.fly.can', 1, `${MV}.action-move-fly-offer.cannot_fly`),
         ge(REMAINING, 5, `${MV}.action-move-fly-offer.out_of_movement`),
-        notProne
+        notProne,
+        notHalted
       ],
       outOfMovementCode: `${MV}.action-move-fly-offer.out_of_movement`,
       cannot: [
@@ -249,7 +307,8 @@ const movement: RuleModule = {
           code: `${MV}.action-move-fly-offer.cannot_fly`,
           can: (f) => f.num('character.movement.fly.can') >= 1
         },
-        notProneRecheck
+        notProneRecheck,
+        notHaltedRecheck
       ]
     })
   ]

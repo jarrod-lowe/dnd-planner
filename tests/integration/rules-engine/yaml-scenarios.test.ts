@@ -531,6 +531,14 @@ const EXPECTED_RUNNABLE = [
   'concentration-broken-on-record',
   'incapacitated-then-cast-planned-anyway',
   'record-incapacitated-no-hold-no-phantom',
+  // condition-grappled (wave 4 PR1 — the Speed-0 "halted" FOUNDATION: the
+  // movement module derives halted from the five Speed-0 conditions and masks
+  // remaining/effective_total to 0 while speed/total stay live for math; all
+  // six move offers gate on it with the shared cannot_while_halted. The
+  // attack flags and the dash/get-up/drop gates are PR2)
+  'condition-grappled-record',
+  'condition-grappled-rest-clears',
+  'move-walk-illegal-while-grappled',
   // PR3 — crawl (×2 spend while prone) + the prone movement restriction
   'move-crawl-while-prone',
   'walk-illegal-while-prone',

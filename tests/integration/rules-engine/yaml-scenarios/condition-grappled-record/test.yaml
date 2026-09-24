@@ -1,0 +1,53 @@
+name: 'Condition Grappled - Record'
+description: >-
+  Recording being Grappled commits a keyed effect setting condition.grappled,
+  which movement.ts's new halted derive reads: any of the five Speed-0
+  conditions (grappled, restrained, paralyzed, petrified, unconscious) sets
+  character.movement.halted, and both remaining and the display-facing
+  effective_total collapse to 0 while it is live — while speed and total STAY
+  at their live values (the species base, armor penalty, and Dash boost still
+  feed derived math like the Get Up half_speed cost; a condition module cannot
+  zero them without reading its own output — the cycle trap, so the mask
+  carries the semantics instead). A NOTICE carries the condition's standing
+  effects (Attacks Affected and Movable have no engine-side mechanics this PR
+  — the attack flags join the effect state in PR2). The recorder models BEING
+  GRAPPLED (imposed by an enemy effect), so it is free and ungated (the prone
+  "Knocked Prone" precedent), and any rest clears it (untilShortRest; see
+  condition-grappled-rest-clears).
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-grappled
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.grappled: 0
+          character.movement.halted: 0
+          character.movement.remaining: 30
+          character.movement.effective_total: 30
+        offers:
+          exists:
+            - record-grappled
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-grappled.notice
+  - addOffer:
+      id: record-grappled
+      assert:
+        facts:
+          condition.grappled: 1
+          character.movement.halted: 1
+          character.movement.remaining: 0
+          character.movement.effective_total: 0
+          # Math keeps the base: speed/total stay live for derived math (the
+          # Get Up half_speed cost, a later Dash boost) — only the display
+          # reads effective_total and only the gates read halted.
+          character.movement.speed: 30
+          character.movement.total: 30
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-grappled.notice
+          targets:
+            - key: rule.dnd-5e-2024.condition-grappled.notice
+              targets: [notice]

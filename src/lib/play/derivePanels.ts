@@ -34,11 +34,14 @@ const TOP_BAR: { gate: string; entry: UiEntry }[] = [
   },
   { gate: 'ac.value', entry: { type: 'value', label: 'play.topBar.ac', fact: 'ac.value' } },
   {
-    // The modified total (species base + armor penalty, Dash boost — a
-    // combine:sum fact), not the remaining: the ledger's movement row already
-    // carries avail/total.
+    // The EFFECTIVE total: the live total (species base + armor penalty, Dash
+    // boost — a combine:sum fact) masked to 0 while halted (any Speed-0
+    // condition, e.g. Grappled — SRD "Your Speed is 0 and can't increase").
+    // The chip must show what the player can spend, not the math-keeps-base
+    // total; the ledger's movement row carries the same mask. Gated on the
+    // live total so the chip surfaces before anything is spent.
     gate: 'character.movement.total',
-    entry: { type: 'value', label: 'play.topBar.speed', fact: 'character.movement.total' }
+    entry: { type: 'value', label: 'play.topBar.speed', fact: 'character.movement.effective_total' }
   },
   {
     gate: 'concentration.max',
@@ -95,9 +98,12 @@ const RESOURCES: UiEntry[] = [
     ]
   },
   {
+    // The total is the EFFECTIVE (halted-masked) one: while a Speed-0
+    // condition is live the row reads 0/0 — honest, per the top-bar chip —
+    // and its zero-value visibility then follows the shared usedMax rule.
     type: 'usedMax',
     label: 'play.stats.movement',
-    total: 'character.movement.total',
+    total: 'character.movement.effective_total',
     remaining: 'character.movement.remaining'
   },
   { type: 'usedMax', label: 'play.stats.hands', total: 'hands.max', remaining: 'hands.remaining' },

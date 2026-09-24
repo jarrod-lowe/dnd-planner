@@ -1,0 +1,86 @@
+import {
+  defineRule,
+  type ActionResult,
+  type Annotation,
+  type EffectInstance,
+  type RuleModule
+} from '../builder';
+
+const CG = 'rule.dnd-5e-2024.condition-grappled';
+
+/**
+ * The keyed grappled effect the recorder commits: `key: 'grappled'` so repeat
+ * records evict rather than stack. It writes ONLY `condition.grappled` —
+ * movement.ts's halted derive reads it (with Restrained/Paralyzed/Petrified/
+ * Unconscious, the whole Speed-0 family) and masks remaining/effective_total
+ * to 0 while gating every travel offer. The Attacks Affected disadvantage
+ * flags join `state` in PR2; the single writer means no `stateCombine` is
+ * needed (unlike the incapacitated fact the wave-5 children co-write).
+ */
+const grappledEffect = (): EffectInstance => ({
+  id: 'effect-grappled',
+  key: 'grappled',
+  state: { 'condition.grappled': 1 },
+  display: { name: `${CG}.effect-grappled.name`, detailKey: 'condition/grappled' },
+  expiry: { kind: 'untilShortRest' }
+});
+
+/**
+ * Grappled — wave 4, the Speed-0 ("halted") FOUNDATION the Restrained and
+ * wave-5 conditions reuse. SRD 5.2: Speed 0 ("Your Speed is 0 and can't
+ * increase"), Attacks Affected (Disadvantage vs any target other than the
+ * grappler), Movable (the grappler drags/carries you at 1 extra foot per foot
+ * unless you are Tiny or two sizes smaller). One free-section RECORDER models
+ * BEING GRAPPLED (imposed by an enemy effect — `grapple.ts` is the other side,
+ * US grappling others via hands; distinct facts, no overlap), so it is free
+ * and ungated — the prone "Knocked Prone" precedent.
+ *
+ * Speed 0 is enforced where the movement facts live, not here: the movement
+ * module derives `halted` from the five Speed-0 condition facts and masks
+ * `remaining`/`effective_total` (the display reads the mask; `speed`/`total`
+ * stay live for math — a condition module cannot zero them without a
+ * self-reading derive, the cycle trap), and every travel offer gates on it.
+ * Attacks Affected is PR2 (effect-written flags); the grappler exception and
+ * Movable/drag are notice text (NPC identity is out of engine scope).
+ *
+ * Any rest clears the condition (umbrella default; `untilShortRest`, a long
+ * rest includes a short) plus manual ActiveStateStrip chip dismissal — the
+ * SRD's mechanical end is an escape check, out of scope initially.
+ *
+ * Foundational, so no search meta.
+ */
+const conditionGrappled: RuleModule = {
+  id: 'condition-grappled',
+  offer: () => [
+    {
+      id: 'record-grappled',
+      ui: {
+        section: 'free',
+        name: `${CG}.record-grappled.name`,
+        detailKey: 'condition/grappled',
+        intents: { CONDITION: 'grappled' },
+        actionCost: []
+      },
+      apply: (): ActionResult => ({
+        advertise: [grappledEffect()]
+      })
+    }
+  ],
+  // While grappled, a NOTICE carries the standing effects (SRD verbatim minus
+  // the engine-enforced Speed 0 — text only, nothing live to interpolate).
+  // 'notice' == NOTICE_TARGET; rule modules may import only the builder, so
+  // the reserved label is a literal here (see condition-prone / -poisoned).
+  annotate: (f): Annotation[] =>
+    f.num('condition.grappled') > 0
+      ? [
+          {
+            key: `${CG}.notice`,
+            targets: ['notice'],
+            source: `${CG}.effect-grappled.name`,
+            body: `${CG}.notice.body`
+          }
+        ]
+      : []
+};
+
+export default defineRule(conditionGrappled);

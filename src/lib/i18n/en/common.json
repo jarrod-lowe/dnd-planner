@@ -518,7 +518,8 @@
           "cannot_fly": "You cannot fly",
           "out_of_movement": "Out of movement"
         },
-        "cannot_while_prone": "You are prone — you can only crawl or Get Up"
+        "cannot_while_prone": "You are prone — you can only crawl or Get Up",
+        "cannot_while_halted": "Your Speed is 0 — you can't move"
       },
       "ability-scores": {
         "set-strength": {
@@ -1052,6 +1053,16 @@
         },
         "notice": "Incapacitated",
         "notice.body": "You can't take any action, Bonus Action, or Reaction; your Concentration is broken; you can't speak; and you have Disadvantage on Initiative rolls."
+      },
+      "condition-grappled": {
+        "record-grappled": {
+          "name": "Grappled"
+        },
+        "effect-grappled": {
+          "name": "Grappled"
+        },
+        "notice": "Grappled",
+        "notice.body": "Your Speed is 0 and can't increase. Disadvantage on attack rolls against any target other than the grappler. The grappler can drag or carry you when it moves, at 1 extra foot per foot unless you are Tiny or two or more sizes smaller."
       },
       "grapple": {
         "grapple-action": {
@@ -1969,7 +1980,8 @@
         "deafened": "Deafened",
         "blinded": "Blinded",
         "poisoned": "Poisoned",
-        "incapacitated": "Incapacitated"
+        "incapacitated": "Incapacitated",
+        "grappled": "Grappled"
       },
       "STAT": {
         "set": "Set",
