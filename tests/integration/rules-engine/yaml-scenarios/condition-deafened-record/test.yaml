@@ -1,0 +1,33 @@
+name: 'Condition Deafened - Record'
+description: >-
+  Recording being Deafened commits a keyed effect setting ONLY
+  condition.deafened — the sole SRD effect (auto-fail hearing ability checks)
+  is display-only in this engine (skill offers are display-only), so the
+  notice carries it as text and the effect writes no other facts. A NOTICE is
+  present while the fact is live. The recorder is free and ungated (enemies
+  impose it; the prone "Knocked Prone" precedent), and any rest clears it
+  (untilShortRest covers both rest kinds; see condition-deafened-rest-clears).
+ruleGroups:
+  - dnd-5e-2024/condition-deafened
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.deafened: 0
+        offers:
+          exists:
+            - record-deafened
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-deafened.notice
+  - addOffer:
+      id: record-deafened
+      assert:
+        facts:
+          condition.deafened: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-deafened.notice
+          targets:
+            - key: rule.dnd-5e-2024.condition-deafened.notice
+              targets: [notice]

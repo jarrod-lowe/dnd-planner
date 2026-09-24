@@ -498,6 +498,12 @@ const EXPECTED_RUNNABLE = [
   'get-up-illegal-low-movement',
   'get-up-illegal-speed-zero',
   'get-up-splint-armor-cost',
+  // condition-charmed / condition-deafened (wave 1 bookkeeping pair: keyed
+  // effect + notice; the NPC-side effects stay notice text)
+  'condition-charmed-record',
+  'condition-charmed-rest-clears',
+  'condition-deafened-record',
+  'condition-deafened-rest-clears',
   // PR3 — crawl (×2 spend while prone) + the prone movement restriction
   'move-crawl-while-prone',
   'walk-illegal-while-prone',

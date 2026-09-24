@@ -1,0 +1,33 @@
+name: 'Condition Charmed - Record'
+description: >-
+  Recording being Charmed commits a keyed effect setting ONLY condition.charmed
+  — both SRD effects (can't harm the charmer; the charmer's social Advantage)
+  are NPC-side, so the notice carries them as text and the effect writes no
+  other facts. A NOTICE is present while the fact is live. The recorder is
+  free and ungated (enemies impose it; the prone "Knocked Prone" precedent),
+  and any rest clears it (untilShortRest covers both rest kinds; see
+  condition-charmed-rest-clears).
+ruleGroups:
+  - dnd-5e-2024/condition-charmed
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.charmed: 0
+        offers:
+          exists:
+            - record-charmed
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-charmed.notice
+  - addOffer:
+      id: record-charmed
+      assert:
+        facts:
+          condition.charmed: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-charmed.notice
+          targets:
+            - key: rule.dnd-5e-2024.condition-charmed.notice
+              targets: [notice]

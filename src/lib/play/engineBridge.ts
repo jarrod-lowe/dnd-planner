@@ -52,7 +52,7 @@ function shouldHideFromStrip(effect: EffectInstance): boolean {
 /**
  * Convert a committed `EffectInstance` into the view effect `Rule` shape the
  * active-effects UI consumes. The effect's `display` metadata (name / section /
- * displayFact) maps onto the chip's `ui`; a synthesized concentration activity lets
+ * displayFact / detailKey) maps onto the chip's `ui`; a synthesized concentration activity lets
  * `effectUtils.getEffectKind` read `CONC`; build/economy effects (no `display`) are
  * flagged `ui.hidden`.
  */
@@ -80,6 +80,7 @@ export function effectInstanceToRule(effect: EffectInstance): Rule {
   if (effect.display?.displayFact) ui.displayFact = effect.display.displayFact;
   if (effect.display?.value !== undefined) ui.displayValue = effect.display.value;
   if (effect.display?.subject) ui.subject = effect.display.subject;
+  if (effect.display?.detailKey) ui.detailKey = effect.display.detailKey;
   if (shouldHideFromStrip(effect)) ui.hidden = true;
   return {
     id: effect.id,

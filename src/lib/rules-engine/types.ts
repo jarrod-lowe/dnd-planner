@@ -348,6 +348,12 @@ export interface EffectDisplay {
   hidden?: boolean;
   /** The companion the effect belongs to (e.g. 'steed') — drives the subject views. */
   subject?: string;
+  /**
+   * Rules-mode detail key (e.g. 'condition/charmed') — the standing chip's link
+   * to the detail text, mirroring an offer's `ui.detailKey` (which only covers
+   * the plan row). The bridge copies it onto the view effect's `ui`.
+   */
+  detailKey?: string;
 }
 
 // === ENGINE I/O (M1) ===

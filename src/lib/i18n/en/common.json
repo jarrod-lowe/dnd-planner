@@ -1003,6 +1003,26 @@
         "notice": "Prone",
         "notice.body": "Disadvantage on your attack rolls. Attack rolls against you have Advantage from within 5 feet, Disadvantage otherwise. You can only crawl, or spend {{cost}} ft to right yourself."
       },
+      "condition-charmed": {
+        "record-charmed": {
+          "name": "Charmed"
+        },
+        "effect-charmed": {
+          "name": "Charmed"
+        },
+        "notice": "Charmed",
+        "notice.body": "You can't attack the charmer or target the charmer with damaging abilities or magical effects. The charmer has Advantage on any ability check to interact with you socially."
+      },
+      "condition-deafened": {
+        "record-deafened": {
+          "name": "Deafened"
+        },
+        "effect-deafened": {
+          "name": "Deafened"
+        },
+        "notice": "Deafened",
+        "notice.body": "You can't hear and automatically fail any ability check that requires hearing."
+      },
       "grapple": {
         "grapple-action": {
           "name": "Grapple",
@@ -1914,7 +1934,9 @@
         "freeform": "Note"
       },
       "CONDITION": {
-        "prone": "Prone"
+        "prone": "Prone",
+        "charmed": "Charmed",
+        "deafened": "Deafened"
       },
       "STAT": {
         "set": "Set",

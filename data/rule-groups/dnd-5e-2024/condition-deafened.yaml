@@ -1,0 +1,32 @@
+ruleGroups:
+  - id: condition-deafened
+    requires: []
+    translations:
+      en:
+        name: Deafened
+        description: Rules while you have the Deafened condition; record it when you lose your hearing
+        keywords:
+          - deafened
+          - deaf
+          - condition
+          - hearing
+          - hear
+          - silence
+      en-x-tlh:
+        name: QoylaHbe'
+        description: QoylaHbe' Dotlh; QoymoHlu'DI' yIghun
+        keywords:
+          - Qoy
+          - QoylaHbe'
+          - QoymoH
+          - Dotlh
+    detail:
+      key: condition/deafened
+      source: srd52
+      translations:
+        en:
+          meta: Condition
+          body: |
+            **Deafened [Condition].** While you have the Deafened condition, you experience the following effect.
+
+            **Can't Hear.** You can't hear and automatically fail any ability check that requires hearing.

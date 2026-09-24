@@ -1,0 +1,32 @@
+ruleGroups:
+  - id: condition-charmed
+    requires: []
+    translations:
+      en:
+        name: Charmed
+        description: Rules while you have the Charmed condition; record it when an enemy charms you
+        keywords:
+          - charmed
+          - charm
+          - condition
+          - enemy
+          - social
+      en-x-tlh:
+        name: parmaq
+        description: parmaq Dotlh; parmoHlu'DI' yIghun
+        keywords:
+          - parmaq
+          - parmoH
+          - Dotlh
+    detail:
+      key: condition/charmed
+      source: srd52
+      translations:
+        en:
+          meta: Condition
+          body: |
+            **Charmed [Condition].** While you have the Charmed condition, you experience the following effects.
+
+            **Can't Harm the Charmer.** You can't attack the charmer or target the charmer with damaging abilities or magical effects.
+
+            **Social Advantage.** The charmer has Advantage on any ability check to interact with you socially.
