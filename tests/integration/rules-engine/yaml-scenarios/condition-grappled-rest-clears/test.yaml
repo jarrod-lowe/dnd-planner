@@ -1,0 +1,70 @@
+name: 'Condition Grappled - Rest Clears'
+description: >-
+  Any rest clears the Grappled condition: the keyed effect carries
+  untilShortRest, which a short rest satisfies directly and a long rest
+  includes. The condition fact, the halted mask, the collapsed remaining and
+  effective_total, and the notice all go with it (umbrella default — the
+  SRD's mechanical end is an escape check by the grappled creature, which is
+  out of scope, so rest plus manual chip dismissal only).
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-grappled
+  - dnd-5e-2024/core-events
+steps:
+  - addOffer:
+      id: record-grappled
+      assert:
+        facts:
+          condition.grappled: 1
+          character.movement.halted: 1
+          character.movement.remaining: 0
+          character.movement.effective_total: 0
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-grappled.notice
+  # A long rest (the explicit endTurn flag) clears it.
+  - endTurn:
+      longRest: true
+      assert:
+        facts:
+          condition.grappled: 0
+          character.movement.halted: 0
+          character.movement.remaining: 30
+          character.movement.effective_total: 30
+        effects:
+          notExists:
+            - effect-grappled
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-grappled.notice
+  # ...and so does a recorded short rest: the rest flag effect restores its
+  # scoped effects within the same evaluation, so the facts and notice are
+  # already gone before the turn even ends.
+  - addOffer:
+      id: record-grappled
+      assert:
+        facts:
+          condition.grappled: 1
+  - addOffer:
+      id: record-short-rest
+      assert:
+        facts:
+          rest.short: 1
+          condition.grappled: 0
+          character.movement.halted: 0
+          character.movement.remaining: 30
+          character.movement.effective_total: 30
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-grappled.notice
+  - endTurn:
+      assert:
+        facts:
+          condition.grappled: 0
+        effects:
+          notExists:
+            - effect-grappled
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-grappled.notice

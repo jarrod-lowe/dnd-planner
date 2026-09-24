@@ -84,20 +84,20 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 
 ### PR1 — halted idiom + condition-grappled module (record, effect, notice, rest clear, seeds)
 
-- [ ] RED: `condition-grappled-record` scenario fails — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
-- [ ] movement.ts: `character.movement.halted` derive (5 conditions); `remaining` 0-when-halted; not-halted legality + recheck on all 6 move offers, shared `cannot_while_halted`
-- [ ] `character.movement.effective_total` derive; derivePanels.ts — BOTH consumers swapped to it (top-bar SPD entry shows 0 while halted; the `usedMax` resource entry renders 0/0, not 0/30); unit test in tests/unit/play/derivePanels.test.ts pins BOTH entry facts = `effective_total`
-- [ ] `condition-grappled.ts`: `record-grappled` offer, keyed grappled effect (fact only — flags PR2), notice annotate
-- [ ] i18n both locales: `play.verbBuckets.CONDITION.grappled` + record/effect/notice keys + `movement.cannot_while_halted`
-- [ ] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details` (output gitignored — published, not committed)
-- [ ] GREEN: record + move-walk-illegal + rest-clears scenarios; `EXPECTED_RUNNABLE`
-- [ ] terraform seed `char_condition_grappled_rulegroup_seed` (dynamodb-items.tf); `make validate` passes
-- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod)
+- [x] RED: `condition-grappled-record` scenario fails — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE` (branch `condition-grappled-1`; the EXPECTED_RUNNABLE set mismatch + both derivePanels pins failed RED)
+- [x] movement.ts: `character.movement.halted` derive (5 conditions); `remaining` 0-when-halted; not-halted legality + recheck on all 6 move offers, shared `cannot_while_halted` (crawl's legality gate + recheck included — prone+grappled cannot even crawl)
+- [x] `character.movement.effective_total` derive; derivePanels.ts — BOTH consumers swapped to it (top-bar SPD entry shows 0 while halted; the `usedMax` resource entry renders 0/0, not 0/30 — and its zero-value visibility then HIDES the row per the shared usedMax rule); unit test in tests/unit/play/derivePanels.test.ts pins BOTH entry facts = `effective_total`
+- [x] `condition-grappled.ts`: `record-grappled` offer, keyed grappled effect (fact only — flags PR2; no stateCombine, single writer), notice annotate
+- [x] i18n both locales: `play.verbBuckets.CONDITION.grappled` + record/effect/notice keys + `movement.cannot_while_halted`
+- [x] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details` (output gitignored — published, not committed)
+- [x] GREEN: record + move-walk-illegal + rest-clears scenarios; `EXPECTED_RUNNABLE` (note: the planned-anyway walk carries `out_of_movement` BESIDE `cannot_while_halted` — the slider's distance default resolves from the pre-plan sheet (30) while the folded `remaining` is already masked to 0; both diagnostics are honest, asserted together)
+- [x] terraform seed `char_condition_grappled_rulegroup_seed` (dynamodb-items.tf); `make validate` passes
+- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod) — gates pass + PR open; the rest is post-PR lifecycle
 
 ### PR2 — attack flags + dash/get-up/drop-prone gates
 
 - [ ] RED: `dash-illegal-while-grappled`, `get-up-illegal-while-grappled` fail
-- [ ] effect state gains `attack.str/dex.disadvantage` (`stateCombine: 'max'`); record scenario extended with flag asserts; greataxe's Cleave secondary control (greataxe.ts `actionUiExtra.secondaryControl`) gains the disadvantage source (no mode source today — WeaponDef wiring reaches primaries only; test a mastery-enabled Cleave)
+- [ ] effect state gains `attack.str/dex.disadvantage` (`stateCombine: 'max'`); record scenario extended with flag asserts; ~~greataxe's Cleave secondary control (greataxe.ts `actionUiExtra.secondaryControl`) gains the disadvantage source (no mode source today — WeaponDef wiring reaches primaries only; test a mastery-enabled Cleave)~~ DONE via #447 (blinded wired the Cleave disadvantage source)
 - [ ] dash.ts not-halted legality + apply re-check; condition-prone get-up + drop-prone gates read halted (reuse `cannot_get_up`/`cannot_drop`)
 - [ ] i18n `rule.dnd-5e-2024.dash.action-dash-offer.cannot_while_halted`, both locales
 - [ ] GREEN; gates → PR → codex monitor → clean → `make deploy-test` → human inspects test env → human merges

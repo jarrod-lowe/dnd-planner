@@ -518,7 +518,8 @@
           "cannot_fly": "peng DaDolaHbe'",
           "out_of_movement": "Do tu'lu'be'"
         },
-        "cannot_while_prone": "bIpumtaH — yav Do ghap yIngheSqa' neH Daghu'laH"
+        "cannot_while_prone": "bIpumtaH — yav Do ghap yIngheSqa' neH Daghu'laH",
+        "cannot_while_halted": "Do'lIj chIm — bIvIHlaHbe'"
       },
       "ability-scores": {
         "set-strength": {
@@ -1052,6 +1053,16 @@
         },
         "notice": "laHtaHbe'",
         "notice.body": "ra' DangeHlaHbe' 'ej DIvI' ngor Qaw'pu'; DajatlhlaHbe' 'ej ngor DIvI' Hov SuqnIS."
+      },
+      "condition-grappled": {
+        "record-grappled": {
+          "name": "qop"
+        },
+        "effect-grappled": {
+          "name": "qop"
+        },
+        "notice": "qop",
+        "notice.body": "Do'lIj chIm 'ej DublaHbe'. qopwI' DIch latlh HIvchugh DIvI' ngor Daghu'nIS. qopwI' vIHDI' SoH qenglaH 'ej wa' qejvam wa' qejvam yInob, mongHom SoH pagh nIvbe'chugh."
       },
       "grapple": {
         "grapple-action": {
@@ -1969,7 +1980,8 @@
         "deafened": "QoylaHbe'",
         "blinded": "leghlaHbe'",
         "poisoned": "Dujlu'pu'",
-        "incapacitated": "laHtaHbe'"
+        "incapacitated": "laHtaHbe'",
+        "grappled": "qop"
       },
       "STAT": {
         "set": "Set",
