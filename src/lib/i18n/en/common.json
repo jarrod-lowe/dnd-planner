@@ -1069,6 +1069,16 @@
         "notice": "Grappled",
         "notice.body": "Your Speed is 0 and can't increase. Disadvantage on attack rolls against any target other than the grappler. The grappler can drag or carry you when it moves, at 1 extra foot per foot unless you are Tiny or two or more sizes smaller."
       },
+      "condition-restrained": {
+        "record-restrained": {
+          "name": "Restrained"
+        },
+        "effect-restrained": {
+          "name": "Restrained"
+        },
+        "notice": "Restrained",
+        "notice.body": "Your Speed is 0 and can't increase. Attack rolls against you have Advantage, your attack rolls have Disadvantage, and you have Disadvantage on Dexterity saving throws."
+      },
       "grapple": {
         "grapple-action": {
           "name": "Grapple",
@@ -1986,7 +1996,8 @@
         "blinded": "Blinded",
         "poisoned": "Poisoned",
         "incapacitated": "Incapacitated",
-        "grappled": "Grappled"
+        "grappled": "Grappled",
+        "restrained": "Restrained"
       },
       "STAT": {
         "set": "Set",

@@ -1069,6 +1069,16 @@
         "notice": "qop",
         "notice.body": "Do'lIj chIm 'ej DublaHbe'. qopwI' DIch latlh HIvchugh DIvI' ngor Daghu'nIS. qopwI' vIHDI' SoH qenglaH 'ej wa' qejvam wa' qejvam yInob, mongHom SoH pagh nIvbe'chugh."
       },
+      "condition-restrained": {
+        "record-restrained": {
+          "name": "ngorlu'"
+        },
+        "effect-restrained": {
+          "name": "ngorlu'"
+        },
+        "notice": "ngorlu'",
+        "notice.body": "Do'lIj chIm 'ej DublaHbe'. HIvlIj lughangelbogh nIv ghaH, bIHIvDI' qay' Daghu'nIS, 'ej nv toDmeH qay' Daghu'nIS."
+      },
       "grapple": {
         "grapple-action": {
           "name": "DIvI' qop",
@@ -1986,7 +1996,8 @@
         "blinded": "leghlaHbe'",
         "poisoned": "Dujlu'pu'",
         "incapacitated": "laHtaHbe'",
-        "grappled": "qop"
+        "grappled": "qop",
+        "restrained": "ngorlu'"
       },
       "STAT": {
         "set": "Set",

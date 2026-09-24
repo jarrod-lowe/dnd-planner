@@ -67,21 +67,23 @@ Tests (RED first; register each in `EXPECTED_RUNNABLE`):
 
 ## PRs
 
+> FOLDED: PR1 + PR2 shipped as ONE PR by decision (the fold PR2 itself anticipated). The separate `condition-restrained-dex-save-disadvantage` yaml scenario was dropped — the unit test `condition-restrained-save.test.ts` pins all 6 control payloads (the yaml grammar cannot assert controls); the record scenario asserts the fact.
+
 ### PR1 — condition-restrained module (record, effect, notice, rest clear, seeds)
 
-- [ ] RED: `condition-restrained-record` scenario fails — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
-- [ ] `condition-restrained.ts`: `record-restrained` offer, keyed effect (all 4 facts), notice annotate
-- [ ] i18n both locales: `play.verbBuckets.CONDITION.restrained` + record/effect/notice keys
-- [ ] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details`
-- [ ] GREEN: record + rest-clears scenarios; `EXPECTED_RUNNABLE`
-- [ ] terraform seed `char_condition_restrained_rulegroup_seed` (dynamodb-items.tf); `make validate` passes
+- [x] RED: `condition-restrained-record` scenario fails — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
+- [x] `condition-restrained.ts`: `record-restrained` offer, keyed effect (all 4 facts), notice annotate
+- [x] i18n both locales: `play.verbBuckets.CONDITION.restrained` + record/effect/notice keys
+- [x] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details`
+- [x] GREEN: record + rest-clears scenarios; `EXPECTED_RUNNABLE`
+- [x] terraform seed `char_condition_restrained_rulegroup_seed` (dynamodb-items.tf); `make validate` passes
 - [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod)
 
-### PR2 — core-events save-recorder advantage wiring (may fold into PR1 if review prefers)
+### PR2 — core-events save-recorder advantage wiring (folded into PR1 by decision)
 
-- [ ] RED: unit test `condition-restrained-save.test.ts` fails (save offers carry no `advantage` source); `condition-restrained-dex-save-disadvantage` yaml fails (fact unwired to any roller)
-- [ ] core-events.ts `saveOffer`: `advantage: { fact: `save.${a}.disadvantage` }` on the 6 dice-line controls
-- [ ] GREEN; playwright: restrained → record a DEX save → dice-line defaults to disadvantage (per-die manual override still wins)
+- [x] RED: unit test `condition-restrained-save.test.ts` fails (save offers carry no `advantage` source) — the yaml leg dropped (see the fold note above; the fact is asserted in the record scenario)
+- [x] core-events.ts `saveOffer`: `advantage: { fact: `save.${a}.disadvantage` }` on the 6 dice-line controls
+- [x] GREEN; playwright: restrained → record a DEX save → dice-line defaults to disadvantage (per-die manual override still wins) — dev-server leg, see notes
 - [ ] gates → PR → codex monitor → clean → `make deploy-test` → human inspects test env → human merges
 
 ## Out of scope

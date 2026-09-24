@@ -543,6 +543,13 @@ const EXPECTED_RUNNABLE = [
   'move-walk-illegal-while-grappled',
   'dash-illegal-while-grappled',
   'get-up-illegal-while-grappled',
+  // condition-restrained (wave 4, folded PR1+PR2 — the Speed-0 family member
+  // reusing grappled's halted foundation for free, PLUS the save-recorder
+  // wiring: the six core-events save offers gain disadvantage sources, and
+  // restrained writes the first one (save.dex.disadvantage; the roller pin is
+  // the condition-restrained-save unit test — yaml cannot assert controls)
+  'condition-restrained-record',
+  'condition-restrained-rest-clears',
   // PR3 — crawl (×2 spend while prone) + the prone movement restriction
   'move-crawl-while-prone',
   'walk-illegal-while-prone',
