@@ -23,8 +23,8 @@ Rough total: ~10–12 PRs. Calibration: prone = 4 PRs incl. inventing the chassi
 
 ### Wave 2 — disadvantage flags
 
-- [ ] [Poisoned](condition-poisoned.md) — execute
-- [ ] [Frightened](condition-frightened.md) — execute
+- [x] [Poisoned](condition-poisoned.md) — executed on branch `condition-poisoned` (module + record-check/Alert roller wiring + skill-flag stateCombine regression + blinded stacking pin + seed); PR pending at commit time
+- [ ] [Frightened](condition-frightened.md) — execute — **deferred**: its line-of-sight qualifier handling needs exploring first (standing disadvantage vs per-source; see its Decision defaults)
 
 ### Wave 3 — the enabler
 

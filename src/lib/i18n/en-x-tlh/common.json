@@ -1033,6 +1033,16 @@
         "notice": "leghlaHbe'",
         "notice.body": "bIleghlaHbe' 'ej leghmeH DIch ngor DIch Daghu'choHbe'. HIv Daghu'taHvIS DIvI' ngor. HIvlIj DIch Suq HIvchugh."
       },
+      "condition-poisoned": {
+        "record-poisoned": {
+          "name": "Dujlu'pu'"
+        },
+        "effect-poisoned": {
+          "name": "Dujlu'pu'"
+        },
+        "notice": "Dujlu'pu'",
+        "notice.body": "HIv Daghu'meH 'ej laH Daghu'meH DIvI' ngor bISuqnIS."
+      },
       "grapple": {
         "grapple-action": {
           "name": "DIvI' qop",
@@ -1947,7 +1957,8 @@
         "prone": "pum",
         "charmed": "parmaq",
         "deafened": "QoylaHbe'",
-        "blinded": "leghlaHbe'"
+        "blinded": "leghlaHbe'",
+        "poisoned": "Dujlu'pu'"
       },
       "STAT": {
         "set": "Set",

@@ -16,7 +16,7 @@ Modelled: attack flags + all 18 `skill.{skill}.disadvantage` facts (facts exist 
 
 ## Decisions (defaults — re-grill before execution)
 
-- Attack Disadvantage: prone idiom — effect writes `attack.str.disadvantage` + `attack.dex.disadvantage`, `stateCombine: 'max'`. Custom secondary dice-lines: greataxe's Cleave control (greataxe.ts `actionUiExtra.secondaryControl`) carries NO disadvantage source today (WeaponDef wiring reaches primaries only) — add it there too (test a mastery-enabled Cleave roll).
+- Attack Disadvantage: prone idiom — effect writes `attack.str.disadvantage` + `attack.dex.disadvantage`, `stateCombine: 'max'`. Custom secondary dice-lines: greataxe's Cleave control (greataxe.ts `actionUiExtra.secondaryControl`) carries NO disadvantage source today (WeaponDef wiring reaches primaries only) — ~~add it there too~~ **done via PR #447** (Cleave landed with the Blinded slice, pin in weapons.test.ts). The custom-secondary lesson still applies here: `roll-initiative`'s Alert secondaryControl needed its own wiring (see below).
 - Ability-check Disadvantage: **all 18 skill flags** + `initiative.disadvantage` + NEW `check.disadvantage`, mechanically — skill offers' dice-lines already read `skill.{skill}.disadvantage` (`advantage: { fact }`, skill-checks.ts) and `roll-initiative` already reads `initiative.disadvantage` (initiative.ts; leather-armor writes it) → those rollers default 2d20-take-low, zero roller changes. Initiative IS an ability check (SRD: "they make a Dexterity check"), so the ability-check disadvantage reaches it. The GENERIC ability check — `record-check` (core-events.ts, free section, `purpose: 'check'`) — has no advantage wiring today: its dice gains `advantage: { fact: 'check.disadvantage' }` (the Restrained save-wiring shape, one line) and the effect writes the fact.
 - `stateCombine: 'max'` on EVERY flag write, loop-built: 4 skills (acrobatics, athletics, sleight-of-hand, stealth) + the 2 attack facts + `initiative.disadvantage` are armor-derived `combine: 'max'` — default `sum` effect writes conflict-throw for armored characters (prone PR1 note); uniform `max` also keeps stacked conditions (Poisoned + Frightened both live) from summing flags to 2.
 - SKILLS list: **local const in the module** — modules import only from `builder` (confinement lint); skill-checks.ts and ability-scores.ts each keep a local copy already. Consolidation = out of scope.
@@ -77,14 +77,15 @@ Tests (RED first — registered in `EXPECTED_RUNNABLE`, tests/integration/rules-
 
 ### PR1 — condition-poisoned module (record, effect, notice, rest clear, seed)
 
-- [ ] RED: `condition-poisoned-record` scenario fails — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
-- [ ] `condition-poisoned.ts`: `record-poisoned` offer, keyed poisoned effect (22 facts, loop-built), notice annotate
-- [ ] core-events.ts `record-check` dice gains `advantage: { fact: 'check.disadvantage' }` (generic ability-check roller — the Restrained save-wiring shape)
-- [ ] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details` (output `static/details/` gitignored — published, not committed)
-- [ ] i18n keys both locales
-- [ ] GREEN: record + rest-clears + skill-flags scenarios; `EXPECTED_RUNNABLE`
-- [ ] terraform seed `char_condition_poisoned_rulegroup_seed` (terraform/module/dnd-planner/dynamodb-items.tf); `make validate` passes
-- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod)
+- [x] RED: `condition-poisoned-record` scenario fails — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
+- [x] `condition-poisoned.ts`: `record-poisoned` offer, keyed poisoned effect (22 flags, loop-built), notice annotate
+- [x] core-events.ts `record-check` dice gains `advantage: { fact: 'check.disadvantage' }` (generic ability-check roller — the Restrained save-wiring shape)
+- [x] initiative.ts `roll-initiative` Alert `secondaryControl` gains `advantage: { fact: 'initiative.disadvantage' }` (the Cleave secondary-control shape — execution-time addition; the doc's Decisions missed that the Alert roll is a custom secondary with no source)
+- [x] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details` (output `static/details/` gitignored — published, not committed)
+- [x] i18n keys both locales
+- [x] GREEN: record + rest-clears + skill-flags + with-blinded scenarios; `EXPECTED_RUNNABLE`. Wiring pinned as UNIT tests (tests/unit/rules-engine/condition-poisoned.test.ts, the #447 Cleave-pin shape — authored source + resolveValueSource), NOT yaml `offerUi`: its deep-equal asserts whole controls, so every wiring change breaks them (core-events-check-offered and alert-secondary-control-initiative both needed edits for the new `advantage` field). The doc's `condition-poisoned-record-check-wiring` yaml scenario was dropped for that reason; `condition-poisoned-with-blinded` replaces the frightened stacking pin (Frightened deferred).
+- [x] terraform seed `char_condition_poisoned_rulegroup_seed` (terraform/module/dnd-planner/dynamodb-items.tf); `make validate` passes
+- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod) — on branch `condition-poisoned`; PR pending at commit time
 
 May share PR1 with Frightened (same footprint — 18-flag sibling; conditions-remaining.md calibration). Docs stay standalone either way.
 

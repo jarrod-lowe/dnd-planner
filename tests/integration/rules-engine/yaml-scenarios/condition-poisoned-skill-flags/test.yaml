@@ -1,0 +1,50 @@
+name: 'Condition Poisoned - Skill Flags'
+description: >-
+  THE stateCombine regression test for the skill flags. The untrained-armor
+  modules derive 4 of the 18 skill-disadvantage facts the Poisoned effect
+  writes (combine: max on the derive side), so an unarmored-trained character
+  who is poisoned has TWO writers on those facts — and the attack flags and
+  initiative.disadvantage are double-written too (the condition-blinded-attack-
+  flags precedent). The effect's uniform stateCombine max makes every write
+  compete-take-max instead of conflict-throwing: flags read 1, not 2 and not
+  an engine error. Representative skills only, not all 18: athletics and
+  stealth (armor-derived — the conflict case) and perception (not
+  armor-derived, so the condition write stands alone).
+ruleGroups:
+  - dnd-5e-2024/leather-armor
+  - dnd-5e-2024/condition-poisoned
+initialFacts:
+  armor.light.proficient: 0
+steps:
+  # Don leather armor without Light-armor training: the untrained penalties
+  # derive the STR/DEX attack flags, initiative, and 4 skill flags at 1
+  # (combine: max on the armor side).
+  - addOffer:
+      id: don-leather-armor
+      assert:
+        facts:
+          armor.leather.equipped: 1
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+          initiative.disadvantage: 1
+          skill.athletics.disadvantage: 1
+          skill.stealth.disadvantage: 1
+  # Now be poisoned on top: a SECOND writer on the shared facts. No combine
+  # conflict — the effect writes with stateCombine max, so every flag stays 1
+  # (disadvantage is a flag, not a stack), the armor-untouched perception flag
+  # lands at 1 from the condition alone, and check.disadvantage arrives too.
+  - addOffer:
+      id: record-poisoned
+      assert:
+        facts:
+          condition.poisoned: 1
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+          initiative.disadvantage: 1
+          check.disadvantage: 1
+          skill.athletics.disadvantage: 1
+          skill.stealth.disadvantage: 1
+          skill.perception.disadvantage: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-poisoned.notice
