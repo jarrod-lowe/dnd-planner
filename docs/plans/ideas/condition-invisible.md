@@ -14,7 +14,7 @@ Be extremely concise. Sacrifice grammar for the sake of concision.
 > **Concealed.** You aren't affected by any effect that requires its target to be seen unless the effect's creator can somehow see you. Any equipment you are wearing or carrying is also concealed.
 > **Attacks Affected.** Attack rolls against you have Disadvantage, and your attack rolls have Advantage. If a creature can somehow see you, you don't gain this benefit against that creature.
 >
-> **Hide [Action]** (stop conditions) — You stop being hidden immediately after any of the following occurs: you make a sound louder than a whisper, an enemy finds you, you make an attack roll, or you cast a spell with a Verbal component.
+> **Hide [Action]** (stop conditions — HIDE's, not the condition's; source-specific, see Knot 3) — You stop being hidden immediately after any of the following occurs: you make a sound louder than a whisper, an enemy finds you, you make an attack roll, or you cast a spell with a Verbal component.
 >
 > **Disadvantage** — If you have Disadvantage on a D20 Test, roll two d20s and use the lower roll. A roll can't be affected by more than one Disadvantage, and Advantage and Disadvantage on the same roll cancel each other.
 
@@ -32,7 +32,7 @@ Code today (verified): PanelDiceLine.svelte:202-208 resolves `control.advantage`
 - Effect writes carry `stateCombine: 'max'` on the advantage facts (prone/armor idiom; no other contributor today — uniform, future-proof).
 - Initiative: NEW fact `initiative.advantage` (mirror of leather-armor's `initiative.disadvantage`); effect writes it; initiative.ts primaryControl gains `advantageUp`. "Surprise" is the SRD's name for this bullet.
 - Notice-only: Concealed (+ equipment), attacks-vs-you Disadvantage, see-me exception → notice body text.
-- Knot 3 ending: **umbrella default** — `expiry: untilShortRest` + manual ActiveStateStrip dismissal + notice carries Hide's stop conditions. REJECTED end-offer: the stops are event-based (sound/found/attack/V-spell) and SOURCE-dependent (spell-sourced invisibility may keep attacking) — a keyed end-offer cannot see the source.
+- Knot 3 ending: **umbrella default** — `expiry: untilShortRest` + manual ActiveStateStrip dismissal; the notice carries ONLY the condition's effects + "ends on any rest". Hide's stop conditions (sound/found/attack/V-spell) are NOT in the notice: they are HIDE's, not the Invisible condition's, and the recorder is source-blind — spell-sourced invisibility (Greater Invisibility attacks freely) would be misled by them. REJECTED end-offer: the stops are event-based and SOURCE-dependent — a keyed end-offer cannot see the source. Source-aware endings (a "from hiding?" toggle) = future idea, out of scope.
 - Recorder ungated (every source funnels here; the Hide action itself is out of scope).
 
 ## Design
@@ -49,7 +49,7 @@ Effect: `{ id: 'effect-invisible', key: 'invisible', state: { 'condition.invisib
 
 Offer: `record-invisible` — section `free`, `intents: { CONDITION: 'invisible' }`, no control, no gate, name only (record-\* precedent: no `.description` key).
 
-Notice (annotate while `condition.invisible > 0`): `targets: ['notice']`, key `.notice` (+ `.body`), `source` effect name. en body: "Advantage on your attack rolls and on Initiative. Attack rolls against you have Disadvantage (not against a creature that can somehow see you). You and your equipment are concealed from effects that require their target to be seen. Ends on any rest — or when you shout, are found, attack, or cast a Verbal spell."
+Notice (annotate while `condition.invisible > 0`): `targets: ['notice']`, key `.notice` (+ `.body`), `source` effect name. en body: "Advantage on your attack rolls and on Initiative. Attack rolls against you have Disadvantage (not against a creature that can somehow see you). You and your equipment are concealed from effects that require their target to be seen. Ends on any rest." — NO Hide stop-conditions text (source-blind recorder; spell-sourced invisibility ignores them — Knot 3).
 
 i18n — BOTH `src/lib/i18n/en/common.json` AND `src/lib/i18n/en-x-tlh/common.json` (tlh invented values, normal casing — execution-time, not listed here):
 
@@ -97,6 +97,7 @@ Tests (RED first — yaml scenario asserts are the RED for rule changes):
 
 - [ ] RED: new scenario asserting `offerUi` on `roll-initiative` (`primaryControl.advantageUp` = `{ fact: 'initiative.advantage' }`) fails
 - [ ] initiative.ts primaryControl `advantageUp` (+ ui mirror); record scenario already writes `initiative.advantage` (PR2 effect — fact lands ahead of its reader, harmless)
+- [ ] Alert's `secondaryControl` (the proficiency-based d20, feat-alert) gets BOTH sources: `advantageUp: { fact: 'initiative.advantage' }` AND `advantage: { fact: 'initiative.disadvantage' }` (it bypasses condition-driven Disadvantage today too — fix both legs while here); test the Alert + Invisible combination
 - [ ] GREEN
 - [ ] gates → PR → codex monitor → merge
 
