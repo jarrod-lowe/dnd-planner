@@ -40,7 +40,7 @@ Modelled: record + keyed composition effect + notice. Turned-to-stone / auto-fai
 
 ## Design
 
-Module `src/lib/rules-engine/rules/condition-petrified.ts`, id `condition-petrified`; register in `registry.ts` AND `lazy.ts`. YAML `data/rule-groups/dnd-5e-2024/condition-petrified.yaml`: translations, `requires: [movement]` (halted derive + walk-illegal legality), detail (SRD text, body en-only) → `make publish-details`. No search meta (chassis sibling).
+Module `src/lib/rules-engine/rules/condition-petrified.ts`, id `condition-petrified`; register in `registry.ts` AND `lazy.ts`. YAML `data/rule-groups/dnd-5e-2024/condition-petrified.yaml`: translations, `requires: [movement, condition-incapacitated]` (movement: halted derive + walk-illegal legality; the PARENT group self-heal-loads the Surprised derive + break helper — without it a petrified-only character keeps acting and rolls Initiative unflagged; action-economy/attacks clamps are baseline), detail (SRD text, body en-only) → `make publish-details`. No search meta (chassis sibling).
 
 Facts (both written ONLY by the committed effect, prone pattern): `condition.petrified` (movement.ts halted reads it) + `condition.incapacitated` (written directly — composition contract).
 

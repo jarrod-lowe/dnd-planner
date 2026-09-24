@@ -15,7 +15,7 @@ Be extremely concise. Sacrifice grammar for the sake of concision.
 > **Speechless.** You can't speak.
 > **Surprised.** If you're Incapacitated when you roll Initiative, you have Disadvantage on the roll.
 
-Modelled: record offer (imposed — free, ungated) → keyed effect setting `condition.incapacitated` + `initiative.disadvantage`; action-economy derives read the condition fact; apply breaks a live concentration hold. Speechless = notice text. Ending = umbrella default (prone deviation: any rest clears).
+Modelled: record offer (imposed — free, ungated) → keyed effect setting `condition.incapacitated`; the module DERIVES `initiative.disadvantage` from the fact; action-economy/attacks derives read the condition fact; apply breaks a live concentration hold. Speechless = notice text. Ending = umbrella default (prone deviation: any rest clears).
 
 ## Decisions (defaults — re-grill before execution)
 

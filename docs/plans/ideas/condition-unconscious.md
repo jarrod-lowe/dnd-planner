@@ -32,7 +32,7 @@ Modelled: composition child — effect writes unconscious + incapacitated + pron
   - Duplicate prone (record-prone while unconscious): keys `prone` + `unconscious` coexist; regain's fresh key-`prone` newest-wins REPLACES it — CORRECT, a condition doesn't stack with itself.
 - Recorder `record-unconscious`: free, ungated — imposed (sleep, knockout). Not HP-driven (death saves out of scope).
 - Auto-fail STR/DEX saves / vs-you Advantage / auto-crit-within-5-ft / Unaware / drop-held: notice text (decision defaults; NPC-side).
-- yaml `requires: [movement]` (mirror prone); grill adding `condition-incapacitated` once its group id exists.
+- yaml `requires: [movement, condition-incapacitated, condition-prone]` (movement: halted; incapacitated: the Surprised derive + break helper self-heal-load — without the parent a unconscious-only character keeps acting and rolls Initiative unflagged; prone: the surviving-Prone machinery — get-up offer, prone notice, the shared `proneEffect()`).
 
 ## Design
 

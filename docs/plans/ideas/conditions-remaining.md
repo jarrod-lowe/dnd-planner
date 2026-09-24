@@ -109,7 +109,7 @@ Modelled:
 - concentration broken on record: the empty-`key` eviction idiom (concentration-broken precedent).
 - `initiative.disadvantage` — fact exists (leather-armor writes it); initiative dice-line reads it.
 - Speechless (Verbal components) = notice text.
-- Sets `condition.incapacitated`; Paralyzed/Petrified/Stunned/Unconscious compose it (their effects write the fact too — the composition pattern to grill here). Composition has TWO clauses: the fact (max-combined, `> 0` reads) AND the concentration break — each child's recorder invokes the same break logic (writing the fact alone does not evict a held spell).
+- Sets `condition.incapacitated`; Paralyzed/Petrified/Stunned/Unconscious compose it (their effects write the fact too — the composition pattern to grill here). Composition has TWO clauses: the fact (max-combined, `> 0` reads) AND the concentration break — each child's recorder invokes the same break logic (writing the fact alone does not evict a held spell). Each child's yaml `requires` lists the parent group (self-heal-load of the Surprised derive + break helper); Unconscious also requires `condition-prone`.
 
 ### Grappled — M (lands the Speed-0 idiom)
 

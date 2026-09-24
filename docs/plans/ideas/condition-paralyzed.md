@@ -38,7 +38,7 @@ Modelled: record + keyed composition effect + notice. Auto-fail saves / vs-you A
 
 ## Design
 
-Module `src/lib/rules-engine/rules/condition-paralyzed.ts`, id `condition-paralyzed`; register in `registry.ts` AND `lazy.ts`. YAML `data/rule-groups/dnd-5e-2024/condition-paralyzed.yaml`: translations, `requires: [movement]` (halted derive + walk-illegal legality), detail (SRD text, body en-only) → `make publish-details`. No search meta (chassis sibling).
+Module `src/lib/rules-engine/rules/condition-paralyzed.ts`, id `condition-paralyzed`; register in `registry.ts` AND `lazy.ts`. YAML `data/rule-groups/dnd-5e-2024/condition-paralyzed.yaml`: translations, `requires: [movement, condition-incapacitated]` (movement: halted derive + walk-illegal legality; the PARENT group self-heal-loads the Surprised derive + break helper — without it a paralyzed-only character keeps acting and rolls Initiative unflagged; action-economy/attacks clamps are baseline), detail (SRD text, body en-only) → `make publish-details`. No search meta (chassis sibling).
 
 Facts (both written ONLY by the committed effect, prone pattern): `condition.paralyzed` (movement.ts halted reads it) + `condition.incapacitated` (written directly — composition contract).
 

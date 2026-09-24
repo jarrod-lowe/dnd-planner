@@ -33,7 +33,7 @@ Modelled: record + keyed composition effect + notice. Auto-fail saves / vs-you A
 
 ## Design
 
-Module `src/lib/rules-engine/rules/condition-stunned.ts`, id `condition-stunned`; register in `registry.ts` AND `lazy.ts`. YAML `data/rule-groups/dnd-5e-2024/condition-stunned.yaml`: translations, `requires: []` (nothing derived outside this module — grill at execution), detail (SRD text, body en-only) → `make publish-details`. No search meta (chassis sibling).
+Module `src/lib/rules-engine/rules/condition-stunned.ts`, id `condition-stunned`; register in `registry.ts` AND `lazy.ts`. YAML `data/rule-groups/dnd-5e-2024/condition-stunned.yaml`: translations, `requires: [condition-incapacitated]` (the PARENT group self-heal-loads the Surprised derive + break helper — without it a stunned-only character keeps acting and rolls Initiative unflagged; action-economy/attacks clamps are baseline; no movement dep — SRD Stunned has no Speed 0), detail (SRD text, body en-only) → `make publish-details`. No search meta (chassis sibling).
 
 Facts (both written ONLY by the committed effect, prone pattern): `condition.stunned` (nothing else reads it yet) + `condition.incapacitated` (written directly — composition contract).
 
@@ -95,4 +95,4 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 
 - The one trio divergence lives here: no halted, no walk-illegal scenario — SRD Stunned moves normally. If a reviewer expects parity with Paralyzed/Petrified, point at the SRD quote above.
 - Surprised inherits via the incapacitated derive (`initiative.disadvantage` reads the composed fact) — nothing to write here; paralyzed's pin scenario covers the family.
-- `requires: []` is the default — if the loader demands one, mirror prone's `requires: [movement]` as loader mechanics only, never as a rules claim.
+- `requires: [condition-incapacitated]` — the parent group is a real rules dep (Surprised derive + break helper), not loader mechanics; no movement dep (no Speed 0).
