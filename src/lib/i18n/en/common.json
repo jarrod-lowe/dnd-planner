@@ -1023,6 +1023,16 @@
         "notice": "Deafened",
         "notice.body": "You can't hear and automatically fail any ability check that requires hearing."
       },
+      "condition-blinded": {
+        "record-blinded": {
+          "name": "Blinded"
+        },
+        "effect-blinded": {
+          "name": "Blinded"
+        },
+        "notice": "Blinded",
+        "notice.body": "You can't see and automatically fail any ability check that requires sight. Your attack rolls have Disadvantage. Attack rolls against you have Advantage."
+      },
       "grapple": {
         "grapple-action": {
           "name": "Grapple",
@@ -1936,7 +1946,8 @@
       "CONDITION": {
         "prone": "Prone",
         "charmed": "Charmed",
-        "deafened": "Deafened"
+        "deafened": "Deafened",
+        "blinded": "Blinded"
       },
       "STAT": {
         "set": "Set",

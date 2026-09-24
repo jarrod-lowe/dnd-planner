@@ -17,9 +17,9 @@ Rough total: ~10–12 PRs. Calibration: prone = 4 PRs incl. inventing the chassi
 
 ### Wave 1 — pure bookkeeping
 
-- [x] [Charmed](condition-charmed.md) — executed, batched with Deafened on branch `condition-charmed-deafened` (modules + EffectDisplay.detailKey bridge + seeds + scenarios); awaiting review → deploy-test → merge
-- [x] [Deafened](condition-deafened.md) — same PR as Charmed
-- [ ] [Blinded](condition-blinded.md) — execute (attack-flag idiom back in use)
+- [x] [Charmed](condition-charmed.md) — executed, batched with Deafened on branch `condition-charmed-deafened` (modules + EffectDisplay.detailKey bridge + seeds + scenarios); merged as PR #446
+- [x] [Deafened](condition-deafened.md) — same PR as Charmed (#446)
+- [x] [Blinded](condition-blinded.md) — executed on branch `condition-blinded` (module + Cleave disadvantage wiring + stateCombine regression scenario + seed); PR pending at commit time
 
 ### Wave 2 — disadvantage flags
 

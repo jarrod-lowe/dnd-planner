@@ -504,6 +504,11 @@ const EXPECTED_RUNNABLE = [
   'condition-charmed-rest-clears',
   'condition-deafened-record',
   'condition-deafened-rest-clears',
+  // condition-blinded (wave 1: prone minus movement — the attack-disadvantage
+  // flags with stateCombine max, so armor and condition co-write them)
+  'condition-blinded-record',
+  'condition-blinded-rest-clears',
+  'condition-blinded-attack-flags',
   // PR3 — crawl (×2 spend while prone) + the prone movement restriction
   'move-crawl-while-prone',
   'walk-illegal-while-prone',

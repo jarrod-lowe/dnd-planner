@@ -1,0 +1,36 @@
+name: 'Condition Blinded - Record'
+description: >-
+  Recording being Blinded commits a keyed effect setting condition.blinded plus
+  the STR/DEX attack-roll disadvantage flags (the weapon and unarmed dice-lines
+  already read those facts, so the rollers default to disadvantage with zero
+  roller changes), and a NOTICE carries the condition's standing effects while
+  it is live. The recorder models BEING BLINDED (imposed by an enemy effect), so
+  it is free and ungated (the prone "Knocked Prone" precedent), and any rest
+  clears it (untilShortRest covers both rest kinds; see
+  condition-blinded-rest-clears).
+ruleGroups:
+  - dnd-5e-2024/condition-blinded
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.blinded: 0
+        offers:
+          exists:
+            - record-blinded
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-blinded.notice
+  - addOffer:
+      id: record-blinded
+      assert:
+        facts:
+          condition.blinded: 1
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-blinded.notice
+          targets:
+            - key: rule.dnd-5e-2024.condition-blinded.notice
+              targets: [notice]

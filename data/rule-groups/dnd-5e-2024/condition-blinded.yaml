@@ -1,0 +1,34 @@
+ruleGroups:
+  - id: condition-blinded
+    requires: []
+    translations:
+      en:
+        name: Blinded
+        description: Rules while you have the Blinded condition; record it when an enemy blinds you
+        keywords:
+          - blinded
+          - blind
+          - condition
+          - sight
+          - see
+          - darkness
+      en-x-tlh:
+        name: leghlaHbe'
+        description: leghlaHbe' Dotlh; So'moHlu'DI' yIghun
+        keywords:
+          - legh
+          - leghlaHbe'
+          - So'
+          - Dotlh
+    detail:
+      key: condition/blinded
+      source: srd52
+      translations:
+        en:
+          meta: Condition
+          body: |
+            **Blinded [Condition].** While you have the Blinded condition, you experience the following effects.
+
+            **Can't See.** You can't see and automatically fail any ability check that requires sight.
+
+            **Attacks Affected.** Attack rolls against you have Advantage, and your attack rolls have Disadvantage.

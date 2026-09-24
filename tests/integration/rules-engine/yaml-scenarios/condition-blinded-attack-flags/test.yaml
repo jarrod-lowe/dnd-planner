@@ -1,0 +1,36 @@
+name: 'Condition Blinded - Attack Flags'
+description: >-
+  THE stateCombine regression test. The untrained-armor modules derive the same
+  STR/DEX attack-disadvantage flags the Blinded effect writes (combine: max on
+  the derive side), so an armored character who is blinded has TWO writers on
+  each fact. The effect's stateCombine max (the prone idiom) makes the writes
+  compete-take-max instead of conflict-throwing: the flags read 1, not 2 and
+  not an engine error.
+ruleGroups:
+  - dnd-5e-2024/leather-armor
+  - dnd-5e-2024/condition-blinded
+initialFacts:
+  armor.light.proficient: 0
+steps:
+  # Don leather armor without Light-armor training: the untrained penalties
+  # derive both attack-disadvantage flags at 1 (combine: max on the armor side).
+  - addOffer:
+      id: don-leather-armor
+      assert:
+        facts:
+          armor.leather.equipped: 1
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+  # Now be blinded on top: a SECOND writer on each flag. No combine conflict —
+  # the effect writes with stateCombine max, so the fact stays 1 (disadvantage
+  # is a flag, not a stack), and the blinded fact lands alongside it.
+  - addOffer:
+      id: record-blinded
+      assert:
+        facts:
+          condition.blinded: 1
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-blinded.notice
