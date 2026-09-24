@@ -1,4 +1,5 @@
 import {
+  concentrationBreakEffects,
   defineRule,
   type ActionResult,
   type Annotation,
@@ -42,8 +43,9 @@ const incapacitatedEffect = (): EffectInstance => ({
  * `actions.remaining > 0` gate (dash, bless, weapon/spell costApply…) goes
  * illegal for free. Surprised is a DERIVE (below), not an effect write, so it
  * reacts to the composed fact and the wave-5 children inherit it. No
- * Concentration (the eviction on record while a hold is live) and Speechless
- * (notice text only) ride later work / the notice.
+ * Concentration is the record apply's conditional break (the shared builder
+ * helper below — eviction + marker clear, only while a hold is live);
+ * Speechless is notice text only.
  *
  * Any rest clears the condition (umbrella default; `untilShortRest`, a long
  * rest includes a short) plus manual ActiveStateStrip chip dismissal — SRD 5.2
@@ -63,8 +65,12 @@ const conditionIncapacitated: RuleModule = {
         intents: { CONDITION: 'incapacitated' },
         actionCost: []
       },
-      apply: (): ActionResult => ({
-        advertise: [incapacitatedEffect()]
+      apply: (f): ActionResult => ({
+        // No Concentration (SRD 5.2): while a hold is live the record also
+        // advertises the shared break — the conditional eviction + marker
+        // clear the wave-5 composition children's recorders invoke too (the
+        // helper returns [] with nothing held, so no phantom chip records).
+        advertise: [incapacitatedEffect(), ...concentrationBreakEffects(f)]
       })
     }
   ],

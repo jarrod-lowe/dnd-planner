@@ -44,7 +44,7 @@ Facts:
 Effects:
 
 - incapacitated: `{ id: 'effect-incapacitated', key: 'incapacitated', state: { 'condition.incapacitated': 1 }, stateCombine: { 'condition.incapacitated': 'max' }, display: { name, detailKey: 'condition/incapacitated' }, expiry: { kind: 'untilShortRest' } }` — the initiative flag moved to a derive (Surprised decision) so composition children inherit it
-- concentration eviction (PR2, conditional in apply): `{ id: 'incapacitated-breaks-concentration', key: CONCENTRATION_SPELL_KEY, display: { name: 'planner.concentration.broken', section: 'other' }, expiry: { kind: 'permanent' } }` + `concentrationDamageMarkerClear()`
+- concentration eviction (PR2, conditional in apply): `{ id: 'concentration-broken-by-condition', key: CONCENTRATION_SPELL_KEY, display: { name: 'planner.concentration.broken', section: 'other' }, expiry: { kind: 'permanent' } }` + `concentrationDamageMarkerClear()` — extracted to the builder helper `concentrationBreakEffects(f)` (caller-neutral id: the wave-5 children's recorders invoke the SAME helper, so their break scenarios assert one chip id)
 
 **Effect-chip detail access (bridge extension — mechanics; the PR itself rides the FIRST condition slice, wave 1, so no wave executes before it exists):** `EffectDisplay` has NO `detailKey` today and `effectInstanceToRule` (engineBridge.ts) copies only name/section/displayFact/value/subject — so the OFFER's `ui.detailKey` makes the PlanRow flippable but the ActiveStateStrip chip (the standing condition, post-End-Turn) cannot open the published rules. Extend the contract: `EffectDisplay.detailKey?: string`; the bridge copies it; EVERY condition effect carries `display: { name, detailKey: 'condition/<name>' }` (all 14 docs — umbrella standing rule). Component test: the committed chip exposes the detail.
 
@@ -96,14 +96,14 @@ Tests (RED first — yaml scenario asserts are the RED for rule changes; registe
 - [x] i18n keys above, both locales
 - [x] terraform seed `char_condition_incapacitated_rulegroup_seed` (dynamodb-items.tf); `make validate` passes
 - [x] GREEN: both scenarios + `condition-incapacitated-rest-clears` (green-immediate pin: expiry lands with the effect) + `EXPECTED_RUNNABLE`
-- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod) — on branch `condition-incapacitated-1`; gates green, PR pending at commit time
+- [x] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod) — merged as #449
 
 ### PR2 — concentration break on record
 
-- [ ] RED: `concentration-broken-on-record` fails
-- [ ] apply gains the conditional eviction + marker clear (Decisions Knot 2)
-- [ ] GREEN
-- [ ] gates → PR → codex monitor → clean → `make deploy-test` → human inspects test env → human merges
+- [x] RED: `concentration-broken-on-record` fails — right reason: step 6 asserts `concentration.spent: 0` after the record and got 1 (no eviction advertised); the two pins (`incapacitated-then-cast-planned-anyway`, `record-incapacitated-no-hold-no-phantom`) green-immediately pin the reverse-order illegal-but-visible contract and the phantom-chip leg
+- [x] apply gains the conditional eviction + marker clear (Decisions Knot 2) — extracted to builder helper `concentrationBreakEffects(f)` (empty vs live hold unit-tested directly; caller-neutral eviction id `concentration-broken-by-condition`)
+- [x] GREEN: all three scenarios + `EXPECTED_RUNNABLE`
+- [ ] gates → PR → codex monitor → clean → `make deploy-test` → human inspects test env → human merges — on branch `condition-incapacitated-2`; gates green, PR pending at commit time
 
 ## Out of scope
 

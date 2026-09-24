@@ -78,6 +78,46 @@ export const concentrationDamageMarkerClear = (): EffectInstance => ({
 });
 
 /**
+ * The concentration BREAK a condition's recorder advertises while a hold is
+ * live — the Incapacitated "No Concentration" clause (SRD 5.2), shared by
+ * every condition whose SRD text includes Incapacitated: the composition
+ * children (Paralyzed/Petrified/Stunned/Unconscious) invoke this same helper
+ * from their own recorders, because writing `condition.incapacitated` does
+ * NOT evict a held spell — the break is offer-side apply logic, not
+ * fact-reactive.
+ *
+ * Returns NOTHING when no hold is live (`concentration.spent` 0/unset): an
+ * unconditional eviction would commit a permanent "Concentration broken" chip
+ * recording with nothing held. With a hold live it returns the pair the
+ * failed concentration check and the replacement cast established:
+ *  - the empty same-`CONCENTRATION_SPELL_KEY` eviction — while merely
+ *    planned it REPLACES the hold in-fold (remove the record row and the
+ *    spell folds back), and `expiry: permanent` keeps it broken once
+ *    committed;
+ *  - `concentrationDamageMarkerClear()` — a damage save owed against the now
+ *    dead hold is moot (the recast precedent).
+ *
+ * The eviction's id is caller-neutral (every condition's break yields the
+ * same chip, so the children's scenarios assert one id) and its display
+ * REUSES `planner.concentration.broken` — it names the state, not the
+ * breaker, so it is correct regardless of who broke the hold. Lives in the
+ * builder (like the key and the clear) because rule modules may import only
+ * the builder.
+ */
+export const concentrationBreakEffects = (f: FactReader): EffectInstance[] =>
+  f.num('concentration.spent') > 0
+    ? [
+        {
+          id: 'concentration-broken-by-condition',
+          key: CONCENTRATION_SPELL_KEY,
+          display: { name: 'planner.concentration.broken', section: 'other' },
+          expiry: { kind: 'permanent' }
+        },
+        concentrationDamageMarkerClear()
+      ]
+    : [];
+
+/**
  * Current HP from a max and the NET current-HP modifier. Damage drives the
  * modifier negative and healing carries it back toward 0, so:
  *  - `min(0, …)` clamps a positive modifier — current never exceeds the max;

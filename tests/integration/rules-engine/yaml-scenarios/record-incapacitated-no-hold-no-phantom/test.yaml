@@ -1,0 +1,43 @@
+name: 'Record Incapacitated With No Hold — No Phantom Break'
+description: >-
+  The concentration break is CONDITIONAL: recording Incapacitated with no
+  live hold (concentration.spent 0) advertises no eviction and no marker
+  clear. Unconditional, the eviction would commit a permanent
+  "Concentration broken" chip on the active-effects strip recording with
+  nothing held — a phantom of an event that never happened.
+ruleGroups:
+  - dnd-5e-2024/concentration
+  - dnd-5e-2024/condition-incapacitated
+steps:
+  - evaluate:
+      assert:
+        facts:
+          concentration.spent: 0
+          concentration.remaining: 1
+          condition.incapacitated: 0
+        offers:
+          exists:
+            - record-incapacitated
+  # No hold is live, so the record carries only the condition effect.
+  - addOffer:
+      id: record-incapacitated
+      assert:
+        facts:
+          condition.incapacitated: 1
+          concentration.spent: 0
+          concentration.remaining: 1
+          concentration.damage-taken: 0
+  # Commit: the condition stands, the slot stays free, and NO break chip of
+  # any flavour (the check's eviction id or the condition's) entered the
+  # committed set.
+  - endTurn:
+      assert:
+        facts:
+          condition.incapacitated: 1
+          concentration.remaining: 1
+        effects:
+          exists:
+            - effect-incapacitated
+          notExists:
+            - concentration-broken
+            - concentration-broken-by-condition

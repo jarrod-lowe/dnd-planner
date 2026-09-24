@@ -28,7 +28,7 @@ Rough total: ~10–12 PRs. Calibration: prone = 4 PRs incl. inventing the chassi
 
 ### Wave 3 — the enabler
 
-- [ ] [Incapacitated](condition-incapacitated.md) — execute (action economy denial + concentration break; unlocks wave 5)
+- [x] [Incapacitated](condition-incapacitated.md) — executed (action economy denial + concentration break; unlocks wave 5): PR1 merged as #449; PR2 (the shared `concentrationBreakEffects` builder helper + conditional eviction/marker clear on record) on branch `condition-incapacitated-2`, PR pending at commit time
 
 ### Wave 4 — Speed-0 + save wiring
 
