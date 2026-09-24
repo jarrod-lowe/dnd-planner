@@ -23,5 +23,6 @@ Be extremely concise. Sacrifice grammar for the sake of concision.
    - determine whether the comment is valid
    - implement fixes
    - if unsure, discuss with the user
+   - you are not permitted to merge PRs
 9. Continue until there are no more reviews or failed pipelines
-10. **If any step proves unworkable, STOP** - a PR slice that cannot be built as planned, a review fix with no good answer, a pipeline that will not go green. Do not change tack or improvise a different approach; ask the user how to proceed before continuing. Applies to subagents too: report the blocker up rather than routing around it
+10. **If any step proves unworkable, STOP** and discuss the issue with the human
