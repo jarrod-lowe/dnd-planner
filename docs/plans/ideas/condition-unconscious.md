@@ -72,7 +72,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 - TDD inside each PR: RED (compiles, runs, no panic, fails) → GREEN → refactor; yaml scenario asserts are the RED for rule changes
 - Never commit to main; PR per slice; no attribution/co-author; never amend; signing: unsigned if 1Password locked, re-sign later (`rebase -f -S`), never block
 - Gates per slice: `make validate-rules-schema` (new rule-group YAML), `make check` (vitest skips type-check), `make test-unit` (yaml runner needs its build artifact — bare `pnpm test` fails ENOENT), `make format-check` before push; full `make test` before declaring done
-- Per rule-group change: `make publish-details`; `make sync-rule-groups` then `make deploy-test` (sync alone insufficient — CDN); terraform seed per new group (`dynamodb-items.tf`), `make validate`
+- Per rule-group change: `make publish-details`; `make deploy-test` (includes sync-rule-groups; deploy also invalidates the CDN); terraform seed per new group (`dynamodb-items.tf`), `make validate`
 - Playwright check on http://localhost:5173 (`pgrep -f vite.js` first)
 - After each push: monitor PR for codex comments (~15 min delayed); every comment gets fixed or a reasoned won't-fix reply; until reviews + pipelines clean; agent never merges
 - i18n: BOTH locales (`en` + `en-x-tlh` invented values, normal casing); `rule.*` keys in `common.json` never rule-group YAML; detail body en-only (tlh falls back); `play.verbBuckets.CONDITION.<name>` per condition
@@ -90,7 +90,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 - [ ] i18n keys, both locales
 - [ ] terraform seed `char_condition_unconscious_rulegroup_seed` (dynamodb-items.tf); `make validate` passes
 - [ ] GREEN: record + breaks-concentration + rest-clears + walk-illegal scenarios in `EXPECTED_RUNNABLE`
-- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → merge; `make sync-rule-groups` then `make deploy-test`
+- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod)
 
 ### PR2 — Regain Consciousness end-offer
 
@@ -98,7 +98,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 - [ ] extract `proneEffect()` to builder; regain offer (`when`/apply: empty-keyed clear + fresh prone)
 - [ ] i18n regain keys + effect-cleared display, both locales
 - [ ] GREEN: regain + green-immediate pin `condition-unconscious-regain-after-record-prone` (exactly one prone effect survives — newest-wins)
-- [ ] gates → PR → codex monitor → merge
+- [ ] gates → PR → codex monitor → clean → `make deploy-test` → human inspects test env → human merges
 
 ## Out of scope
 

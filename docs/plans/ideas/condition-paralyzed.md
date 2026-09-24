@@ -74,7 +74,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 - TDD inside each PR: RED (compiles, runs, no panic, fails) → GREEN → refactor; yaml scenario asserts are the RED for rule changes
 - Never commit to main; PR per slice; no attribution/co-author; never amend; signing: unsigned if 1Password locked, re-sign later (`rebase -f -S`), never block
 - Gates per slice: `make validate-rules-schema` (new rule-group YAML), `make check` (vitest skips type-check), `make test-unit` (yaml runner needs its build artifact — bare `pnpm test` fails ENOENT), `make format-check` before push; full `make test` before declaring done
-- Per rule-group change: `make publish-details`; `make sync-rule-groups` then `make deploy-test` (sync alone insufficient — CDN); terraform seed per new group (`dynamodb-items.tf`), `make validate`
+- Per rule-group change: `make publish-details`; `make deploy-test` (includes sync-rule-groups; deploy also invalidates the CDN); terraform seed per new group (`dynamodb-items.tf`), `make validate`
 - Playwright check on http://localhost:5173 (`pgrep -f vite.js` first)
 - After each push: monitor PR for codex comments (~15 min delayed); every comment gets fixed or a reasoned won't-fix reply; until reviews + pipelines clean; agent never merges
 - i18n: BOTH locales (`en` + `en-x-tlh` invented values, normal casing); `rule.*` keys in `common.json` never rule-group YAML; detail body en-only (tlh falls back); `play.verbBuckets.CONDITION.<name>` per condition
@@ -91,7 +91,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 - [ ] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details`
 - [ ] GREEN: record + walk-illegal + rest-clears scenarios; `EXPECTED_RUNNABLE`
 - [ ] terraform seed `char_condition_paralyzed_rulegroup_seed` (dynamodb-items.tf); `make validate`
-- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → merge; `make deploy-test` — executing agent never merges
+- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod)
 
 ## Out of scope
 
