@@ -73,7 +73,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 - TDD inside each PR: RED (compiles, runs, no panic, fails) → GREEN → refactor; yaml scenario asserts are the RED for rule changes
 - Never commit to main; PR per slice; no attribution/co-author; never amend; signing: unsigned if 1Password locked, re-sign later (`rebase -f -S`), never block
 - Gates per slice: `make validate-rules-schema` (new rule-group YAML), `make check` (vitest skips type-check), `make test-unit` (yaml runner needs its build artifact — bare `pnpm test` fails ENOENT), `make format-check` before push; full `make test` before declaring done
-- Per rule-group change: `make publish-details`; `make sync-rule-groups` then `make deploy-test` (sync alone insufficient — CDN); terraform seed per new group (`dynamodb-items.tf`), `make validate`
+- Per rule-group change: `make publish-details`; `make deploy-test` (includes sync-rule-groups; deploy also invalidates the CDN); terraform seed per new group (`dynamodb-items.tf`), `make validate`
 - Playwright check on http://localhost:5173 (`pgrep -f vite.js` first)
 - After each push: monitor PR for codex comments (~15 min delayed); every comment gets fixed or a reasoned won't-fix reply; until reviews + pipelines clean; agent never merges
 - i18n: BOTH locales (`en` + `en-x-tlh` invented values, normal casing); `rule.*` keys in `common.json` never rule-group YAML; detail body en-only (tlh falls back); `play.verbBuckets.CONDITION.<name>` per condition
@@ -92,7 +92,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 - [ ] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details` (output gitignored — published, not committed)
 - [ ] GREEN: record + move-walk-illegal + rest-clears scenarios; `EXPECTED_RUNNABLE`
 - [ ] terraform seed `char_condition_grappled_rulegroup_seed` (dynamodb-items.tf); `make validate` passes
-- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → merge; `make sync-rule-groups` + `make deploy-test`
+- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod)
 
 ### PR2 — attack flags + dash/get-up/drop-prone gates
 
@@ -100,7 +100,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 - [ ] effect state gains `attack.str/dex.disadvantage` (`stateCombine: 'max'`); record scenario extended with flag asserts; greataxe's Cleave secondary control (greataxe.ts `actionUiExtra.secondaryControl`) gains the disadvantage source (no mode source today — WeaponDef wiring reaches primaries only; test a mastery-enabled Cleave)
 - [ ] dash.ts not-halted legality + apply re-check; condition-prone get-up + drop-prone gates read halted (reuse `cannot_get_up`/`cannot_drop`)
 - [ ] i18n `rule.dnd-5e-2024.dash.action-dash-offer.cannot_while_halted`, both locales
-- [ ] GREEN; gates → PR → codex monitor → merge; `make sync-rule-groups` + `make deploy-test`
+- [ ] GREEN; gates → PR → codex monitor → clean → `make deploy-test` → human inspects test env → human merges
 
 ## Out of scope
 

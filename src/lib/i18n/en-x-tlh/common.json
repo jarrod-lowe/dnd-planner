@@ -1003,6 +1003,26 @@
         "notice": "pum",
         "notice.body": "HIv Daghu'taHvIS DIvI' ngor. vagh qejmeyDaq Sepbogh Doch SoH HIvchugh, DIch Suq; latlh DaqDaq DIvI' ngor. yIngheSqa'meH {{cost}} qejmey yInobta', pagh yIngheS."
       },
+      "condition-charmed": {
+        "record-charmed": {
+          "name": "parmaq"
+        },
+        "effect-charmed": {
+          "name": "parmaq"
+        },
+        "notice": "parmaq",
+        "notice.body": "parmoHwI' DaHIvlaHbe' 'ej Qaw'ghach HoS parmoHwI' DaSuDlaHbe'. SoHvo' jatlhchu'meH DIch parmoHwI' Suq."
+      },
+      "condition-deafened": {
+        "record-deafened": {
+          "name": "QoylaHbe'"
+        },
+        "effect-deafened": {
+          "name": "QoylaHbe'"
+        },
+        "notice": "QoylaHbe'",
+        "notice.body": "bIQoylaHbe' 'ej Qay'meH DIch ngor DIch Daghu'choHbe'."
+      },
       "grapple": {
         "grapple-action": {
           "name": "DIvI' qop",
@@ -1914,7 +1934,9 @@
         "freeform": "Note"
       },
       "CONDITION": {
-        "prone": "pum"
+        "prone": "pum",
+        "charmed": "parmaq",
+        "deafened": "QoylaHbe'"
       },
       "STAT": {
         "set": "Set",

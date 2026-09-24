@@ -1,0 +1,58 @@
+name: 'Condition Charmed - Rest Clears'
+description: >-
+  Any rest clears the Charmed condition: the keyed effect carries
+  untilShortRest, which a short rest satisfies directly and a long rest
+  includes. The fact and the notice go with the effect (umbrella default —
+  SRD 5.2 gives no mechanical end; charm-end triggers are per-spell, so rest
+  plus manual chip dismissal only).
+ruleGroups:
+  - dnd-5e-2024/condition-charmed
+  - dnd-5e-2024/core-events
+steps:
+  - addOffer:
+      id: record-charmed
+      assert:
+        facts:
+          condition.charmed: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-charmed.notice
+  # A long rest (the explicit endTurn flag) clears it.
+  - endTurn:
+      longRest: true
+      assert:
+        facts:
+          condition.charmed: 0
+        effects:
+          notExists:
+            - effect-charmed
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-charmed.notice
+  # ...and so does a recorded short rest: the rest flag effect restores its
+  # scoped effects within the same evaluation, so the fact and notice are
+  # already gone before the turn even ends.
+  - addOffer:
+      id: record-charmed
+      assert:
+        facts:
+          condition.charmed: 1
+  - addOffer:
+      id: record-short-rest
+      assert:
+        facts:
+          rest.short: 1
+          condition.charmed: 0
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-charmed.notice
+  - endTurn:
+      assert:
+        facts:
+          condition.charmed: 0
+        effects:
+          notExists:
+            - effect-charmed
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-charmed.notice

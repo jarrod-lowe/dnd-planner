@@ -48,6 +48,8 @@ vi.mock('$lib/play/effectUtils', () => ({
 }));
 
 import ActiveStateStrip from '$lib/components/play/ActiveStateStrip.svelte';
+import { effectInstanceToRule } from '$lib/play/engineBridge';
+import type { EffectInstance } from '$lib/rules-engine';
 import type { Rule } from '$lib/rules-view';
 import type { Facts } from '$lib/rules-view';
 
@@ -307,5 +309,36 @@ describe('ActiveStateStrip Rules mode', () => {
       source: 'srd52',
       body: [{ text: ['Rules text.'] }]
     }));
+  });
+
+  it('renders a flippable chip for a committed effect whose display carries detailKey', async () => {
+    // The standing-chip rules access for conditions: the committed
+    // EffectInstance carries display.detailKey (an offer's ui.detailKey covers
+    // only the plan row), and the bridge copies it onto the view Rule's ui so
+    // the ActiveStateStrip chip can flip to the detail pane.
+    const committed: EffectInstance = {
+      id: 'effect-charmed',
+      key: 'charmed',
+      state: { 'condition.charmed': 1 },
+      display: {
+        name: 'rule.dnd-5e-2024.condition-charmed.effect-charmed.name',
+        detailKey: 'condition/charmed'
+      },
+      expiry: { kind: 'untilShortRest' }
+    };
+    const effect = effectInstanceToRule(committed);
+    expect((effect.ui as Record<string, unknown>).detailKey).toBe('condition/charmed');
+
+    const { container } = render(ActiveStateStrip, {
+      props: {
+        effects: [effect],
+        facts: mockFacts,
+        committedEffectIds: ['effect-charmed']
+      }
+    });
+    const flipTarget = container.querySelector('.effect-chip__flip-target');
+    expect(flipTarget).toBeTruthy();
+    await fireEvent.click(flipTarget!);
+    expect(container.querySelector('.rules-shell')).toBeTruthy();
   });
 });

@@ -58,7 +58,7 @@ Tests (RED first; register each in `EXPECTED_RUNNABLE`):
 - TDD inside each PR: RED (compiles, runs, no panic, fails) → GREEN → refactor; yaml scenario asserts are the RED for rule changes
 - Never commit to main; PR per slice; no attribution/co-author; never amend; signing: unsigned if 1Password locked, re-sign later (`rebase -f -S`), never block
 - Gates per slice: `make validate-rules-schema` (new rule-group YAML), `make check` (vitest skips type-check), `make test-unit` (yaml runner needs its build artifact — bare `pnpm test` fails ENOENT), `make format-check` before push; full `make test` before declaring done
-- Per rule-group change: `make publish-details`; `make sync-rule-groups` then `make deploy-test` (sync alone insufficient — CDN); terraform seed per new group (`dynamodb-items.tf`), `make validate`
+- Per rule-group change: `make publish-details`; `make deploy-test` (includes sync-rule-groups; deploy also invalidates the CDN); terraform seed per new group (`dynamodb-items.tf`), `make validate`
 - Playwright check on http://localhost:5173 (`pgrep -f vite.js` first)
 - After each push: monitor PR for codex comments (~15 min delayed); every comment gets fixed or a reasoned won't-fix reply; until reviews + pipelines clean; agent never merges
 - i18n: BOTH locales (`en` + `en-x-tlh` invented values, normal casing); `rule.*` keys in `common.json` never rule-group YAML; detail body en-only (tlh falls back); `play.verbBuckets.CONDITION.<name>` per condition
@@ -75,14 +75,14 @@ Tests (RED first; register each in `EXPECTED_RUNNABLE`):
 - [ ] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details`
 - [ ] GREEN: record + rest-clears scenarios; `EXPECTED_RUNNABLE`
 - [ ] terraform seed `char_condition_restrained_rulegroup_seed` (dynamodb-items.tf); `make validate` passes
-- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → merge; `make sync-rule-groups` + `make deploy-test`
+- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod)
 
 ### PR2 — core-events save-recorder advantage wiring (may fold into PR1 if review prefers)
 
 - [ ] RED: unit test `condition-restrained-save.test.ts` fails (save offers carry no `advantage` source); `condition-restrained-dex-save-disadvantage` yaml fails (fact unwired to any roller)
 - [ ] core-events.ts `saveOffer`: `advantage: { fact: `save.${a}.disadvantage` }` on the 6 dice-line controls
 - [ ] GREEN; playwright: restrained → record a DEX save → dice-line defaults to disadvantage (per-die manual override still wins)
-- [ ] gates → PR → codex monitor → merge; `make deploy-test`
+- [ ] gates → PR → codex monitor → clean → `make deploy-test` → human inspects test env → human merges
 
 ## Out of scope
 

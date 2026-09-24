@@ -70,6 +70,8 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   grapple: () => import('./rules/grapple'),
   shove: () => import('./rules/shove'),
   'condition-prone': () => import('./rules/condition-prone'),
+  'condition-charmed': () => import('./rules/condition-charmed'),
+  'condition-deafened': () => import('./rules/condition-deafened'),
   'feat-alert': () => import('./rules/feat-alert'),
   'feat-sentinel': () => import('./rules/feat-sentinel'),
   'fighting-style-great-weapon': () => import('./rules/fighting-style-great-weapon'),

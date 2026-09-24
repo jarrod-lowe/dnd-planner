@@ -62,7 +62,7 @@ Tests (RED first — yaml scenario asserts are the RED for rule changes; registe
 - TDD inside each PR: RED (compiles, runs, no panic, fails) → GREEN → refactor; yaml scenario asserts are the RED for rule changes
 - Never commit to main; PR per slice; no attribution/co-author; never amend; signing: unsigned if 1Password locked, re-sign later (`rebase -f -S`), never block
 - Gates per slice: `make validate-rules-schema` (new rule-group YAML), `make check` (vitest skips type-check), `make test-unit` (yaml runner needs its build artifact — bare `pnpm test` fails ENOENT), `make format-check` before push; full `make test` before declaring done
-- Per rule-group change: `make publish-details`; `make sync-rule-groups` then `make deploy-test` (sync alone insufficient — CDN); terraform seed per new group (`dynamodb-items.tf`), `make validate`
+- Per rule-group change: `make publish-details`; `make deploy-test` (includes sync-rule-groups; deploy also invalidates the CDN); terraform seed per new group (`dynamodb-items.tf`), `make validate`
 - Playwright check on http://localhost:5173 (`pgrep -f vite.js` first)
 - After each push: monitor PR for codex comments (~15 min delayed); every comment gets fixed or a reasoned won't-fix reply; until reviews + pipelines clean; agent never merges
 - i18n: BOTH locales (`en` + `en-x-tlh` invented values, normal casing); `rule.*` keys in `common.json` never rule-group YAML; detail body en-only (tlh falls back); `play.verbBuckets.CONDITION.<name>` per condition
@@ -75,14 +75,14 @@ Tests (RED first — yaml scenario asserts are the RED for rule changes; registe
 
 May ship batched with condition-deafened as ONE PR (umbrella waves the pair); docs standalone.
 
-- [ ] RED: `condition-charmed-record` scenario fails — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
-- [ ] `condition-charmed.ts`: `record-charmed` offer, keyed charmed effect, notice annotate
-- [ ] **Bridge slice (first condition PR carries it):** `EffectDisplay.detailKey` + `effectInstanceToRule` copy (engineBridge.ts) + chip component test — the committed chip's rules access; every later condition effect rides it (umbrella standing rule)
-- [ ] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details` (output `static/details/` gitignored — published, not committed)
-- [ ] i18n keys (list above), both locales
-- [ ] GREEN: record + rest-clears scenarios; `EXPECTED_RUNNABLE`
-- [ ] terraform seed `char_condition_charmed_rulegroup_seed` (dynamodb-items.tf); `make validate` passes
-- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → merge (executing agent never merges) → `make sync-rule-groups` + `make deploy-test`
+- [x] RED: `condition-charmed-record` scenario fails — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
+- [x] `condition-charmed.ts`: `record-charmed` offer, keyed charmed effect, notice annotate
+- [x] **Bridge slice (first condition PR carries it):** `EffectDisplay.detailKey` + `effectInstanceToRule` copy (engineBridge.ts) + chip component test — the committed chip's rules access; every later condition effect rides it (umbrella standing rule)
+- [x] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details` (output `static/details/` gitignored — published, not committed)
+- [x] i18n keys (list above), both locales
+- [x] GREEN: record + rest-clears scenarios; `EXPECTED_RUNNABLE`
+- [x] terraform seed `char_condition_charmed_rulegroup_seed` (dynamodb-items.tf); `make validate` passes
+- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod) — batched with Deafened on branch `condition-charmed-deafened`; awaiting review
 
 ## Out of scope
 
