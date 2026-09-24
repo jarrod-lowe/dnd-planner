@@ -9,6 +9,7 @@ const SCIMITAR: WeaponDef = {
   damageDie: 6,
   damageType: 'slashing',
   disadvantageFact: 'attack.dex.disadvantage',
+  advantageFact: 'attack.dex.advantage',
   ranges: [{ distance: 5, type: 'melee' }],
   annotationLabels: ['attack.any', 'attack.melee', 'attack.weapon', 'dice.any']
 };

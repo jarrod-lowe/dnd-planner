@@ -12,6 +12,7 @@ const JAVELIN: WeaponDef = {
   damageDie: 6,
   damageType: 'piercing',
   disadvantageFact: 'attack.str.disadvantage',
+  advantageFact: 'attack.str.advantage',
   ranges: [
     { distance: 5, type: 'melee' },
     { distance: 30, type: 'thrown' },

@@ -6,7 +6,13 @@ description: >
   Also pins that feat-alert's annotations exist and that roll-initiative
   carries `dice.initiative` at the top-level `ui` (not nested inside a
   control, where it would never be matched) — the placement fix in
-  cd9429a4 that made these annotations reach a real panel.
+  cd9429a4 that made these annotations reach a real panel. Both controls
+  carry the advantage leg beside the disadvantage source: Invisible writes
+  initiative.advantage (SRD "Surprise"), so each dice-line declares
+  advantageUp beside its historical advantage (= the DISadvantage source).
+  The unit pin tests/unit/rules-engine/condition-invisible.test.ts resolves
+  the source against an invisible plan (yaml cannot assert control
+  resolution).
 
 ruleGroups:
   - dnd-5e-2024/action-economy
@@ -33,6 +39,17 @@ steps:
               annotationLabels:
                 - dice.any
                 - dice.initiative
+              primaryControl:
+                type: dice-line
+                dice:
+                  - sides: 20
+                    bonus:
+                      var: rollBonus
+                    purpose: check
+                advantage:
+                  fact: initiative.disadvantage
+                advantageUp:
+                  fact: initiative.advantage
               secondaryControl:
                 type: dice-line
                 enabled:
@@ -43,6 +60,8 @@ steps:
                 label: rule.dnd-5e-2024.feat-alert.initiative-proficiency.button
                 advantage:
                   fact: initiative.disadvantage
+                advantageUp:
+                  fact: initiative.advantage
                 dice:
                   - sides: 20
                     bonus:

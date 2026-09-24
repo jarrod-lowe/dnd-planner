@@ -1109,6 +1109,16 @@
         "notice": "Stunned",
         "notice.body": "You are Incapacitated. You automatically fail STR and DEX saving throws. Attack rolls against you have Advantage."
       },
+      "condition-invisible": {
+        "record-invisible": {
+          "name": "Invisible"
+        },
+        "effect-invisible": {
+          "name": "Invisible"
+        },
+        "notice": "Invisible",
+        "notice.body": "Advantage on your attack rolls and on Initiative. Attack rolls against you have Disadvantage (not against a creature that can somehow see you). You and your equipment are concealed from effects that require their target to be seen. Ends on any rest."
+      },
       "grapple": {
         "grapple-action": {
           "name": "Grapple",
@@ -2030,7 +2040,8 @@
         "restrained": "Restrained",
         "paralyzed": "Paralyzed",
         "petrified": "Petrified",
-        "stunned": "Stunned"
+        "stunned": "Stunned",
+        "invisible": "Invisible"
       },
       "STAT": {
         "set": "Set",

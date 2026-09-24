@@ -575,6 +575,14 @@ const EXPECTED_RUNNABLE = [
   'condition-stunned-breaks-concentration',
   'condition-stunned-with-incapacitated',
   'condition-stunned-rest-clears',
+  // wave 6 — Invisible: the recorder + keyed effect writing the rules-driven
+  // ADVANTAGE facts (attack str/dex + initiative) the dice-lines' advantageUp
+  // leg (PR1's roller) reads; the coexistence scenario pins the FACTS leg of
+  // SRD cancellation (the render cancel is PanelDiceLine's, pinned in PR1's
+  // component tests — yaml cannot assert render).
+  'condition-invisible-record',
+  'condition-invisible-rest-clears',
+  'invisible-plus-prone-cancels',
   // PR3 — crawl (×2 spend while prone) + the prone movement restriction
   'move-crawl-while-prone',
   'walk-illegal-while-prone',

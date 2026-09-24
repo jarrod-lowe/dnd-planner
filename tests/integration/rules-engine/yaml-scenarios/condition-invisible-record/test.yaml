@@ -1,0 +1,41 @@
+name: 'Condition Invisible - Record'
+description: >-
+  Recording being Invisible commits a keyed effect setting condition.invisible
+  plus the rules-driven ADVANTAGE facts (attack.str.advantage,
+  attack.dex.advantage, initiative.advantage — stateCombine max, the
+  prone/blinded flag idiom) the weapon, unarmed and initiative dice-lines read
+  via their advantageUp leg (PR1's roller), and a NOTICE carries the
+  condition's standing effects while it is live. The recorder models BEING
+  INVISIBLE (the source — Hide, a spell, an item — is out of scope), so it is
+  free and ungated (the prone "Knocked Prone" precedent), and any rest clears
+  it (untilShortRest covers both rest kinds; see
+  condition-invisible-rest-clears). Attacks against you having Disadvantage,
+  Concealed (+equipment) and the see-me exception are notice text only (NPC
+  side, out of engine scope).
+ruleGroups:
+  - dnd-5e-2024/condition-invisible
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.invisible: 0
+        offers:
+          exists:
+            - record-invisible
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-invisible.notice
+  - addOffer:
+      id: record-invisible
+      assert:
+        facts:
+          condition.invisible: 1
+          attack.str.advantage: 1
+          attack.dex.advantage: 1
+          initiative.advantage: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-invisible.notice
+          targets:
+            - key: rule.dnd-5e-2024.condition-invisible.notice
+              targets: [notice]

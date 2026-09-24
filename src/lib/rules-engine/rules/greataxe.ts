@@ -8,11 +8,13 @@ const masteryCondition = { fact: 'attack.greataxe.mastery', operator: 'equals', 
 
 /**
  * The STR attack-disadvantage flag the dice-lines read (prone, blinded,
- * untrained armor…). The builder's `diceControl` wires the PRIMARY control to
- * it via `def.disadvantageFact`; the Cleave secondary control is authored here
- * (not by the builder), so it names the same fact itself.
+ * untrained armor…) and its advantage mirror (Invisible). The builder's
+ * `diceControl` wires the PRIMARY control to them via `def.disadvantageFact`
+ * / `def.advantageFact`; the Cleave secondary control is authored here
+ * (not by the builder), so it names the same facts itself.
  */
 const STR_DISADVANTAGE = 'attack.str.disadvantage';
+const STR_ADVANTAGE = 'attack.str.advantage';
 
 /** The greataxe as data, including its Cleave (mastery) action-panel extras. */
 const GREATAXE: WeaponDef = {
@@ -21,6 +23,7 @@ const GREATAXE: WeaponDef = {
   damageDie: 12,
   damageType: 'slashing',
   disadvantageFact: STR_DISADVANTAGE,
+  advantageFact: STR_ADVANTAGE,
   ranges: [{ distance: 5, type: 'melee' }],
   annotationLabels: [
     'attack.any',
@@ -37,8 +40,10 @@ const GREATAXE: WeaponDef = {
       ranges: { var: 'ranges' },
       // A Cleave swing is still YOUR attack roll: while the disadvantage flag
       // is live (blinded, prone, untrained armor) the Cleave to-hit defaults
-      // to 2d20-take-low, exactly like the primary control above.
+      // to 2d20-take-low, and while the advantage flag is live (invisible) it
+      // defaults to 2d20-take-high — exactly like the primary control above.
       advantage: { fact: STR_DISADVANTAGE },
+      advantageUp: { fact: STR_ADVANTAGE },
       dice: [
         { sides: 20, bonus: { var: 'hitBonus' }, purpose: 'to-hit' },
         {

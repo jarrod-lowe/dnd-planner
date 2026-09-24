@@ -13,11 +13,14 @@ const UNARMED_LABELS = ['attack.any', 'attack.melee', 'attack.unarmed', 'dice.an
 
 // The dice panel both unarmed activations share (legacy authored it on each):
 // d20 + hit bonus to hit; flat 1 + STR damage — `damageDie` 0 renders the flat
-// bonus rather than a die.
+// bonus rather than a die. `advantage` is the historical name for the
+// DISadvantage source (prone, blinded, untrained armor); `advantageUp` beside
+// it is the honest-named ADVANTAGE source (Invisible) PR1's roller reads.
 const UNARMED_CONTROL = {
   type: 'dice-line',
   ranges: [{ distance: 5, type: 'melee' }],
   advantage: { fact: 'attack.str.disadvantage' },
+  advantageUp: { fact: 'attack.str.advantage' },
   dice: [
     { sides: 20, bonus: { var: 'hitBonus' }, purpose: 'to-hit' },
     {
@@ -125,6 +128,7 @@ const attacks: RuleModule = {
         intents: { ATTACK: 'brawl' },
         actionCost: ['action'],
         disadvantageFact: 'attack.str.disadvantage',
+        advantageFact: 'attack.str.advantage',
         annotationLabels: [...UNARMED_LABELS, 'attack.action'],
         primaryControl: UNARMED_CONTROL
       },
@@ -152,6 +156,7 @@ const attacks: RuleModule = {
         intents: { REACT: 'brawl' },
         actionCost: ['reaction'],
         disadvantageFact: 'attack.str.disadvantage',
+        advantageFact: 'attack.str.advantage',
         annotationLabels: [...UNARMED_LABELS, 'attack.reaction'],
         primaryControl: UNARMED_CONTROL
       },

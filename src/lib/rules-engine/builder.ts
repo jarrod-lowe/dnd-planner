@@ -227,6 +227,14 @@ export interface WeaponDef {
   damageType: string;
   /** The fact toggling disadvantage on the to-hit roll. */
   disadvantageFact: string;
+  /**
+   * The fact toggling ADVANTAGE on the to-hit roll (Invisible writes the
+   * STR/DEX flags). Parity with {@link WeaponDef.disadvantageFact}: the
+   * builder wires it into every dice-line's `advantageUp` leg (the
+   * honest-named counterpart of the historical `advantage` field, which
+   * remains the disadvantage source).
+   */
+  advantageFact: string;
   /** Reach/throw bands for the dice-line control. */
   ranges: WeaponRange[];
   /** Panel annotation labels shared by the weapon's attack profiles. */
@@ -375,6 +383,7 @@ function diceControl(def: WeaponDef): Record<string, unknown> {
     type: 'dice-line',
     ranges: { var: 'ranges' },
     advantage: { fact: def.disadvantageFact },
+    advantageUp: { fact: def.advantageFact },
     dice: [
       { sides: 20, bonus: { var: 'hitBonus' }, purpose: 'to-hit' },
       {
@@ -515,6 +524,7 @@ export function weaponOffers(def: WeaponDef): Offer[] {
       intents: { ATTACK: 'weapons' },
       actionCost: ['action'],
       disadvantageFact: def.disadvantageFact,
+      advantageFact: def.advantageFact,
       annotationLabels: [...def.annotationLabels, 'attack.action'],
       primaryControl: diceControl(def),
       ...def.actionUiExtra

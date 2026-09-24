@@ -17,6 +17,7 @@ const SPEAR: WeaponDef = {
   damageDie: 6,
   damageType: 'piercing',
   disadvantageFact: 'attack.str.disadvantage',
+  advantageFact: 'attack.str.advantage',
   // Versatile: the grip is part of the LOADOUT (a two-handed spear costs the
   // second hand up front), so there is one melee band whose die follows
   // `weapon.spear.twoHanded` — d6 one-handed, d8 two-handed — and the thrown bands
