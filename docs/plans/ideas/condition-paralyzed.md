@@ -48,7 +48,7 @@ Effects:
 
 Offers:
 
-- `record-paralyzed`: section `free`, `intents: { CONDITION: 'paralyzed' }`, no control, no gate
+- `record-paralyzed`: section `free`, `detailKey: 'condition/paralyzed'` (the published SRD detail), `intents: { CONDITION: 'paralyzed' }`, no control, no gate
 
 Notice (annotate while `condition.paralyzed > 0`): `targets: ['notice']`, key `rule.dnd-5e-2024.condition-paralyzed.notice` (+ `.body`), `source` effect name. No `values` (nothing interpolates).
 en body sketch: "You are Incapacitated and your Speed is 0. You automatically fail STR and DEX saving throws. Attack rolls against you have Advantage, and any hit is a Critical Hit if the attacker is within 5 ft."

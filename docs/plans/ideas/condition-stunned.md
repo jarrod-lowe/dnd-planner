@@ -43,7 +43,7 @@ Effects:
 
 Offers:
 
-- `record-stunned`: section `free`, `intents: { CONDITION: 'stunned' }`, no control, no gate
+- `record-stunned`: section `free`, `detailKey: 'condition/stunned'` (the published SRD detail), `intents: { CONDITION: 'stunned' }`, no control, no gate
 
 Notice (annotate while `condition.stunned > 0`): `targets: ['notice']`, key `rule.dnd-5e-2024.condition-stunned.notice` (+ `.body`), `source` effect name. No `values` (nothing interpolates).
 en body sketch: "You are Incapacitated. You automatically fail STR and DEX saving throws. Attack rolls against you have Advantage."

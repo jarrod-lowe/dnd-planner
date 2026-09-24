@@ -46,8 +46,8 @@ Effects:
 
 Offers:
 
-- `record-unconscious`: section `free`, `intents: { CONDITION: 'unconscious' }`, no control, no gate
-- `regain-consciousness`: section `free`, `when: condition.unconscious > 0`, apply advertises [clear, fresh prone]
+- `record-unconscious`: section `free`, `detailKey: 'condition/unconscious'` (the published SRD detail), `intents: { CONDITION: 'unconscious' }`, no control, no gate
+- `regain-consciousness`: section `free`, `detailKey: 'condition/unconscious'` (same detail), `when: condition.unconscious > 0`, apply advertises [clear, fresh prone]
 
 Notice (annotate while `condition.unconscious > 0`): `targets: ['notice']`, key `rule.dnd-5e-2024.condition-unconscious.notice` (+ `.body`), `source` effect name. Body: attack rolls vs you have Advantage; any hit within 5 ft is a Critical Hit; auto-fail STR/DEX saves; you drop what you're holding (Set Loadout to empty hands); unaware of surroundings.
 

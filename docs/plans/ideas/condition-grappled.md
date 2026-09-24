@@ -44,7 +44,7 @@ Effect: `{ id: 'effect-grappled', key: 'grappled', state: { 'condition.grappled'
 
 Offers:
 
-- `record-grappled`: section `free`, `intents: { CONDITION: 'grappled' }`, no control, no gate (imposed)
+- `record-grappled`: section `free`, `detailKey: 'condition/grappled'` (the published SRD detail), `intents: { CONDITION: 'grappled' }`, no control, no gate (imposed)
 - movement.ts: not-halted legality + recheck on all 6 move offers, one shared code
 - dash.ts: not-halted legality + apply re-check
 - condition-prone.ts: get-up + drop-prone gates read halted (extension, PR2)
@@ -60,7 +60,7 @@ i18n — keys ONLY (values at execution), BOTH `src/lib/i18n/en/common.json` AND
 
 Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECTED_RUNNABLE`, tests/integration/rules-engine/yaml-scenarios.test.ts):
 
-- `condition-grappled-record` — offer exists; after add: `condition.grappled` 1, `halted` 1, `remaining` 0, notice exists/targets notice (attack-flag asserts join in PR2)
+- `condition-grappled-record` — offer exists; after add: `condition.grappled` 1, `halted` 1, `remaining` 0, `effective_total` 0 (the display leg — without this assert both production edits could be skipped green), notice exists/targets notice (attack-flag asserts join in PR2); rest-clears restores `effective_total` to base
 - `move-walk-illegal-while-grappled` — walks/swim-costly/fly illegal; planned-anyway walk carries `cannot_while_halted`
 - `dash-illegal-while-grappled` (PR2) — dash illegal; planned-anyway: `total` boosted yet `remaining` stays 0 (mask pinned)
 - `get-up-illegal-while-grappled` (PR2) — grappled alone: drop-prone illegal; + prone: get-up AND crawl illegal
@@ -86,7 +86,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 
 - [ ] RED: `condition-grappled-record` scenario fails — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
 - [ ] movement.ts: `character.movement.halted` derive (5 conditions); `remaining` 0-when-halted; not-halted legality + recheck on all 6 move offers, shared `cannot_while_halted`
-- [ ] `character.movement.effective_total` derive; derivePanels.ts SPD chip entry reads it (shows 0 while halted)
+- [ ] `character.movement.effective_total` derive; derivePanels.ts SPD chip entry reads it (shows 0 while halted); unit test in tests/unit/play/derivePanels.test.ts pins the chip's entry fact = `effective_total`
 - [ ] `condition-grappled.ts`: `record-grappled` offer, keyed grappled effect (fact only — flags PR2), notice annotate
 - [ ] i18n both locales: `play.verbBuckets.CONDITION.grappled` + record/effect/notice keys + `movement.cannot_while_halted`
 - [ ] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details` (output gitignored — published, not committed)

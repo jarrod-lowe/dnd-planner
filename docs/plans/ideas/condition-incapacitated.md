@@ -47,7 +47,7 @@ Effects:
 
 Offers:
 
-- `record-incapacitated`: as Decisions; apply advertises [effect] (+ eviction pair when a hold is live)
+- `record-incapacitated`: as Decisions, `detailKey: 'condition/incapacitated'` (the published SRD detail — PlanRow/ActiveStateStrip load rules only via `ui.detailKey`); apply advertises [effect] (+ eviction pair when a hold is live)
 
 Notice (annotate while `condition.incapacitated > 0`): `targets: ['notice']`, key `rule.dnd-5e-2024.condition-incapacitated.notice` (+ `.body`), `source` effect name. Body carries all four effects (denial + concentration enforced; speechless + surprised-reminder player-side).
 

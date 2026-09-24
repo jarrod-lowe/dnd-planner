@@ -35,7 +35,7 @@ Effect: `{ id: 'effect-restrained', key: 'restrained', state: { 'condition.restr
 
 Offers:
 
-- `record-restrained`: section `free`, `intents: { CONDITION: 'restrained' }`, no control, no gate (imposed)
+- `record-restrained`: section `free`, `detailKey: 'condition/restrained'` (the published SRD detail), `intents: { CONDITION: 'restrained' }`, no control, no gate (imposed)
 - core-events.ts: `saveOffer` controls gain the `advantage` source (6 abilities)
 
 Notice (while `condition.restrained > 0`): `targets: ['notice']`, key `rule.dnd-5e-2024.condition-restrained.notice` (+ `.body`), `source` effect name, no `values`. en body: "Your Speed is 0 and can't increase. Attack rolls against you have Advantage, your attack rolls have Disadvantage, and you have Disadvantage on Dexterity saving throws."

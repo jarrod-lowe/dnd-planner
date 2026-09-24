@@ -47,7 +47,7 @@ Facts:
 
 Effect: `{ id: 'effect-invisible', key: 'invisible', state: { 'condition.invisible': 1, 'attack.str.advantage': 1, 'attack.dex.advantage': 1, 'initiative.advantage': 1 }, stateCombine: 'max' ×3, display: { name }, expiry: { kind: 'untilShortRest' } }`
 
-Offer: `record-invisible` — section `free`, `intents: { CONDITION: 'invisible' }`, no control, no gate, name only (record-\* precedent: no `.description` key).
+Offer: `record-invisible` — section `free`, `detailKey: 'condition/invisible'` (the published SRD detail), `intents: { CONDITION: 'invisible' }`, no control, no gate, name only (record-\* precedent: no `.description` key).
 
 Notice (annotate while `condition.invisible > 0`): `targets: ['notice']`, key `.notice` (+ `.body`), `source` effect name. en body: "Advantage on your attack rolls and on Initiative. Attack rolls against you have Disadvantage (not against a creature that can somehow see you). You and your equipment are concealed from effects that require their target to be seen. Ends on any rest." — NO Hide stop-conditions text (source-blind recorder; spell-sourced invisibility ignores them — Knot 3).
 

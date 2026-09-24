@@ -47,7 +47,7 @@ Effects:
 
 Offers:
 
-- `record-exhaustion`: section `free`, `intents: { CONDITION: 'exhaustion' }`, no control, no legality gate (death decision above) — the record-prone shape; apply → keyed effect at prior+1
+- `record-exhaustion`: section `free`, `detailKey: 'condition/exhaustion'` (the published SRD detail), `intents: { CONDITION: 'exhaustion' }`, no control, no legality gate (death decision above) — the record-prone shape; apply → keyed effect at prior+1
 - `remove-level` free offer ONLY if grilling flips the long-rest decision; apply → level−1 / empty eviction
 
 `onRest`: long + level > 0 → [keyed effect at level−1, or the empty eviction when level is 1].

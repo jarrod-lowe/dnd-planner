@@ -50,7 +50,7 @@ Effects:
 
 Offers:
 
-- `record-petrified`: section `free`, `intents: { CONDITION: 'petrified' }`, no control, no gate
+- `record-petrified`: section `free`, `detailKey: 'condition/petrified'` (the published SRD detail), `intents: { CONDITION: 'petrified' }`, no control, no gate
 
 Notice (annotate while `condition.petrified > 0`): `targets: ['notice']`, key `rule.dnd-5e-2024.condition-petrified.notice` (+ `.body`), `source` effect name. No `values` (nothing interpolates).
 en body sketch: "You are turned to stone: Incapacitated, Speed 0, weight ×10. Attack rolls against you have Advantage. You automatically fail STR and DEX saving throws. You have Resistance to all damage and Immunity to the Poisoned condition."
