@@ -43,7 +43,7 @@ Derive: the two speed contributions above (splint-armor shape, dynamic value).
 Effects:
 
 - `effect-exhaustion`: `{ key: 'exhaustion', state: { 'condition.exhaustion': level }, display: { name, detailKey: 'condition/exhaustion', value: level }, expiry: permanent }` — chip shows the live level
-- level-0 clear: EMPTY same-`key` effect with display (newest-wins evicts; the get-up idiom), `expiry: permanent`
+- level-0 clear: EMPTY same-`key` effect, `display: { name: '.long-rest-clear.name' }` — a DISTINCT ended label (the prone get-up `.effect-cleared.name` precedent; reusing `.effect-exhaustion.name` would read "Exhaustion" after the condition, riders, and notice are all gone), `expiry: permanent`
 
 Offers:
 
@@ -64,7 +64,7 @@ Annotate (all guarded `condition.exhaustion > 0`), four annotations:
 i18n — BOTH `src/lib/i18n/en/common.json` AND `src/lib/i18n/en-x-tlh/common.json` (tlh invented values, normal casing); keys listed only, values at execution:
 
 - `rule.dnd-5e-2024.condition-exhaustion.record-exhaustion.name` (+ `.description` only if carried — prone PR1 note: record-\* offers carry name only)
-- `.effect-exhaustion.name`, `.notice`, `.notice.body`, `.notice.body-dead`
+- `.effect-exhaustion.name`, `.notice`, `.notice.body`, `.notice.body-dead`, `.long-rest-clear.name` (the ended-condition chip label)
 - `.rider` (chip label), `.rider-to-hit`, `.rider-check`, `.rider-save`
 - `.remove-level.name` (only if the offer variant wins)
 - `play.verbBuckets.CONDITION.exhaustion`
@@ -77,7 +77,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 - `condition-exhaustion-record-twice` — level 2, speed −10 + total −10 (PR2); PR3 adds rider-annotation exists
 - `condition-exhaustion-half-speed-shrinks` — level 2 + prone → get-up cost 10 (floor(20/2)) (PR2)
 - `condition-exhaustion-long-rest-removes-one` — level 2 → long rest → 1, persists past endTurn; SHORT rest removes nothing (PR3)
-- `condition-exhaustion-long-rest-clears-final-level` — level 1 → long rest → `condition.exhaustion` 0, notice + riders GONE, eviction chip renders (the empty-key branch — 2→1 never exercises it; an off-by-one could strand the condition green) (PR3)
+- `condition-exhaustion-long-rest-clears-final-level` — level 1 → long rest → `condition.exhaustion` 0, notice + riders GONE, eviction chip renders with the ENDED label (`.long-rest-clear.name`), not "Exhaustion" (the empty-key branch — 2→1 never exercises it; an off-by-one could strand the condition green) (PR3)
 - `condition-exhaustion-rest-then-gain-edge` — level 2 → long rest → record → 3 (decrement swallowed, gain survives — the pinned direction; green-immediate pin) (PR3)
 - rider VALUE (−4 at level 2) + notice `values`: unit tests — the yaml grammar cannot assert annotation values (prone PR2 precedent, `condition-prone-notice.test.ts`)
 
