@@ -80,7 +80,7 @@ May ship batched with condition-charmed as ONE PR (umbrella waves the pair); doc
 - [x] i18n keys (list above), both locales
 - [x] GREEN: record + rest-clears scenarios; `EXPECTED_RUNNABLE`
 - [x] terraform seed `char_condition_deafened_rulegroup_seed` (dynamodb-items.tf); `make validate` passes
-- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod) — batched with Charmed on branch `condition-charmed-deafened`; awaiting review
+- [x] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod) — batched with Charmed on branch `condition-charmed-deafened`; merged as PR #446
 
 ## Out of scope
 

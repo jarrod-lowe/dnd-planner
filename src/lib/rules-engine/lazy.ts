@@ -72,6 +72,7 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   'condition-prone': () => import('./rules/condition-prone'),
   'condition-charmed': () => import('./rules/condition-charmed'),
   'condition-deafened': () => import('./rules/condition-deafened'),
+  'condition-blinded': () => import('./rules/condition-blinded'),
   'feat-alert': () => import('./rules/feat-alert'),
   'feat-sentinel': () => import('./rules/feat-sentinel'),
   'fighting-style-great-weapon': () => import('./rules/fighting-style-great-weapon'),

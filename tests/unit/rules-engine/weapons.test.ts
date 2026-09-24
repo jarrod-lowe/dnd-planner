@@ -11,6 +11,10 @@ import greataxe from '$lib/rules-engine/rules/greataxe';
 import javelin from '$lib/rules-engine/rules/javelin';
 import javelinMastery from '$lib/rules-engine/rules/javelin-mastery';
 import spear from '$lib/rules-engine/rules/spear';
+import greataxeMastery from '$lib/rules-engine/rules/greataxe-mastery';
+import conditionBlinded from '$lib/rules-engine/rules/condition-blinded';
+import { resolveValueSource } from '$lib/components/play/panel-renderer/resolveValueSource';
+import type { ValueSource } from '$lib/components/play/panel-renderer/types';
 
 /**
  * Weapons spike — the `weaponOffers` builder helper that replaces the legacy Python
@@ -260,5 +264,45 @@ describe('weapons — bands declare whether they are melee attacks', () => {
     const bands = bandsOf(evaluateOffers(ALL, facts).find((o) => o.id === 'greataxe-use-action'));
     expect(bands.length).toBeGreaterThan(0);
     expect(bands.every((r) => r.meleeAttack === true)).toBe(true);
+  });
+});
+
+/**
+ * The builder's `diceControl` wires every PRIMARY attack control to the
+ * weapon's disadvantage fact; the greataxe's Cleave secondary control is
+ * authored in the module (not by the builder), so it must name the same source
+ * itself. Without it a blinded/prone/untrained-armored Cleave rolled a flat
+ * d20 while the swing beside it rolled 2d20-take-low.
+ */
+describe('weapons — the Cleave secondary control carries the disadvantage source', () => {
+  it('reads the same STR flag the primary dice-line reads, so a blinded Cleave takes the low die', () => {
+    const MODS = [
+      actionEconomy,
+      attacks,
+      hands,
+      loadout,
+      greataxe,
+      greataxeMastery,
+      conditionBlinded
+    ];
+    // Hold the greataxe (mastery on, so the Cleave control exists) and be
+    // blinded: the effect's disadvantage flags are live in the plan.
+    const facts = evaluatePlan(MODS, {}, [
+      equip('i0', MODS, 'greataxe'),
+      ref('i1', 'record-blinded')
+    ]).facts;
+    expect(facts['condition.blinded']).toBe(1);
+    expect(facts['attack.str.disadvantage']).toBe(1);
+
+    const offer = evaluateOffers(MODS, facts).find((o) => o.id === 'greataxe-use-action');
+    const ui = offer?.ui as { secondaryControl?: { advantage?: ValueSource } } | undefined;
+    // Authored shape: the Cleave control declares the STR disadvantage fact,
+    // mirroring the builder's `advantage: { fact: def.disadvantageFact }`.
+    expect(ui?.secondaryControl?.advantage).toEqual({ fact: 'attack.str.disadvantage' });
+    // ...and resolved against the blinded plan it is truthy — the exact source
+    // PanelDiceLine's rulesDisadvantage reads, so the to-hit rolls 2d20-take-low.
+    // (vars are untyped on the offer; resolveValueSource takes the panel's VarDefs)
+    const vars = (offer?.vars ?? {}) as Parameters<typeof resolveValueSource>[2];
+    expect(resolveValueSource(ui?.secondaryControl?.advantage, facts, vars)).toBe(1);
   });
 });

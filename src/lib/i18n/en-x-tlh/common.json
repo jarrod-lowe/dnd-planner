@@ -1023,6 +1023,16 @@
         "notice": "QoylaHbe'",
         "notice.body": "bIQoylaHbe' 'ej Qay'meH DIch ngor DIch Daghu'choHbe'."
       },
+      "condition-blinded": {
+        "record-blinded": {
+          "name": "leghlaHbe'"
+        },
+        "effect-blinded": {
+          "name": "leghlaHbe'"
+        },
+        "notice": "leghlaHbe'",
+        "notice.body": "bIleghlaHbe' 'ej leghmeH DIch ngor DIch Daghu'choHbe'. HIv Daghu'taHvIS DIvI' ngor. HIvlIj DIch Suq HIvchugh."
+      },
       "grapple": {
         "grapple-action": {
           "name": "DIvI' qop",
@@ -1936,7 +1946,8 @@
       "CONDITION": {
         "prone": "pum",
         "charmed": "parmaq",
-        "deafened": "QoylaHbe'"
+        "deafened": "QoylaHbe'",
+        "blinded": "leghlaHbe'"
       },
       "STAT": {
         "set": "Set",

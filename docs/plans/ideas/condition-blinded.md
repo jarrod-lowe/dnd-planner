@@ -76,13 +76,13 @@ Tests (RED first — yaml scenario asserts are the RED; registered in `EXPECTED_
 
 ### PR1 — condition-blinded module (record, effect, notice, rest clear, seed)
 
-- [ ] RED: `condition-blinded-record` scenario fails — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
-- [ ] `condition-blinded.ts`: `record-blinded` offer, keyed blinded effect, notice annotate
-- [ ] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details` (output `static/details/` gitignored — published, not committed)
-- [ ] i18n keys both locales
-- [ ] GREEN: record + rest-clears + attack-flags scenarios; `EXPECTED_RUNNABLE`
-- [ ] terraform seed `char_condition_blinded_rulegroup_seed` (terraform/module/dnd-planner/dynamodb-items.tf); `make validate` passes
-- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod)
+- [x] RED: `condition-blinded-record` scenario fails — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
+- [x] `condition-blinded.ts`: `record-blinded` offer, keyed blinded effect, notice annotate
+- [x] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details` (output `static/details/` gitignored — published, not committed)
+- [x] i18n keys both locales
+- [x] GREEN: record + rest-clears + attack-flags scenarios; `EXPECTED_RUNNABLE`
+- [x] terraform seed `char_condition_blinded_rulegroup_seed` (terraform/module/dnd-planner/dynamodb-items.tf); `make validate` passes
+- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod) — on branch `condition-blinded`; awaiting review
 
 ## Out of scope
 

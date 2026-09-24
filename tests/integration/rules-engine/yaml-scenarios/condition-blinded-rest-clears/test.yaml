@@ -1,0 +1,64 @@
+name: 'Condition Blinded - Rest Clears'
+description: >-
+  Any rest clears the Blinded condition: the keyed effect carries
+  untilShortRest, which a short rest satisfies directly and a long rest
+  includes. The fact, the disadvantage flags, and the notice all go with the
+  effect (umbrella default — SRD 5.2 gives no mechanical end, so rest plus
+  manual chip dismissal only).
+ruleGroups:
+  - dnd-5e-2024/condition-blinded
+  - dnd-5e-2024/core-events
+steps:
+  - addOffer:
+      id: record-blinded
+      assert:
+        facts:
+          condition.blinded: 1
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-blinded.notice
+  # A long rest (the explicit endTurn flag) clears it.
+  - endTurn:
+      longRest: true
+      assert:
+        facts:
+          condition.blinded: 0
+          attack.str.disadvantage: 0
+          attack.dex.disadvantage: 0
+        effects:
+          notExists:
+            - effect-blinded
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-blinded.notice
+  # ...and so does a recorded short rest: the rest flag effect restores its
+  # scoped effects within the same evaluation, so the facts and notice are
+  # already gone before the turn even ends.
+  - addOffer:
+      id: record-blinded
+      assert:
+        facts:
+          condition.blinded: 1
+  - addOffer:
+      id: record-short-rest
+      assert:
+        facts:
+          rest.short: 1
+          condition.blinded: 0
+          attack.str.disadvantage: 0
+          attack.dex.disadvantage: 0
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-blinded.notice
+  - endTurn:
+      assert:
+        facts:
+          condition.blinded: 0
+        effects:
+          notExists:
+            - effect-blinded
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-blinded.notice
