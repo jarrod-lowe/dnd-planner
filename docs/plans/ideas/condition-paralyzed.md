@@ -27,7 +27,7 @@ Modelled: record + keyed composition effect + notice. Auto-fail saves / vs-you A
 
 ## Decisions (defaults — re-grill before execution)
 
-- Composition (incapacitated doc contract): ONE effect writes BOTH `condition.paralyzed: 1` AND `condition.incapacitated: 1` in its own state; both facts die with the effect. `condition.incapacitated` carries `stateCombine: 'max'` (0/1 flag; incapacitated's own module + sibling children also write it).
+- Composition (incapacitated doc contract): ONE effect writes BOTH `condition.paralyzed: 1` AND `condition.incapacitated: 1` in its own state; both facts die with the effect. `condition.incapacitated` carries `stateCombine: 'max'` — mandatory, not stylistic: `effect-incapacitated` writes it `max` and sheet.ts THROWS on conflicting combine modes when standalone Incapacitated co-stands (default-sum child effect = engine error). Recorder apply ALSO invokes the shared concentration-break helper (contract clause 2 — the fact alone is offer-inert and does not evict a held spell; SRD Paralyzed includes Incapacitated → "No Concentration").
 - Speed 0: not modelled here — `character.movement.halted` (grappled doc) derives from `condition.paralyzed`; movement.ts owns it. All move offers die on it; walk-illegal scenario pins.
 - Auto-fail STR/DEX saves: notice text (umbrella default). Even if Restrained's save-disadvantage wiring landed: auto-fail ≠ disadvantage — its own future semantic, not this PR.
 - Vs-you Advantage + auto-crit within 5 ft: notice text (NPC-side; prone precedent — no NPC modelling).
@@ -43,7 +43,7 @@ Facts (both written ONLY by the committed effect, prone pattern): `condition.par
 
 Effects:
 
-- paralyzed: `{ id: 'effect-paralyzed', key: 'paralyzed', state: { 'condition.paralyzed': 1, 'condition.incapacitated': 1 }, display: { name }, expiry: { kind: 'untilShortRest' } }`
+- paralyzed: `{ id: 'effect-paralyzed', key: 'paralyzed', state: { 'condition.paralyzed': 1, 'condition.incapacitated': 1 }, stateCombine: { 'condition.incapacitated': 'max' }, display: { name }, expiry: { kind: 'untilShortRest' } }`
 
 Offers:
 
@@ -60,6 +60,7 @@ i18n — BOTH `src/lib/i18n/en/common.json` AND `src/lib/i18n/en-x-tlh/common.js
 Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECTED_RUNNABLE`, tests/integration/rules-engine/yaml-scenarios.test.ts):
 
 - `condition-paralyzed-record` (facts paralyzed 1 + incapacitated 1 + halted 1, notice exists)
+- `condition-paralyzed-breaks-concentration` (bless stack, the incapacitated doc's shape): hold live → record → hold evicted — the composition recorder invokes the break helper
 - `move-walk-illegal-while-paralyzed` (halted: move offers illegal with the grappled-doc halted diagnostic; species-human + movement + this group — walk-illegal-while-prone shape)
 - `condition-paralyzed-rest-clears` (short AND long → both facts 0, notice gone)
 
@@ -69,7 +70,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 - Read `docs/RULE_GROUP_GUIDE.md` §1 checklist + §7 pitfalls before writing each module
 - TDD inside each PR: RED (compiles, runs, no panic, fails) → GREEN → refactor; yaml scenario asserts are the RED for rule changes
 - Never commit to main; PR per slice; no attribution/co-author; never amend; signing: unsigned if 1Password locked, re-sign later (`rebase -f -S`), never block
-- Gates per slice: `make check` (vitest skips type-check), `make test-unit` (yaml runner needs its build artifact — bare `pnpm test` fails ENOENT), `make format-check` before push
+- Gates per slice: `make validate-rules-schema` (new rule-group YAML), `make check` (vitest skips type-check), `make test-unit` (yaml runner needs its build artifact — bare `pnpm test` fails ENOENT), `make format-check` before push; full `make test` before declaring done
 - Per rule-group change: `make publish-details`; `make sync-rule-groups` then `make deploy-test` (sync alone insufficient — CDN); terraform seed per new group (`dynamodb-items.tf`), `make validate`
 - Playwright check on http://localhost:5173 (`pgrep -f vite.js` first)
 - After each push: monitor PR for codex comments (~15 min delayed); every comment gets fixed or a reasoned won't-fix reply; until reviews + pipelines clean; agent never merges

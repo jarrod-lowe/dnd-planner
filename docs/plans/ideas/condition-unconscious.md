@@ -21,7 +21,7 @@ Modelled: composition child — effect writes unconscious + incapacitated + pron
 
 ## Decisions (defaults — re-grill before execution)
 
-- Composition: ONE keyed effect writes `condition.unconscious: 1` + `condition.incapacitated: 1` + `condition.prone: 1`. Incapacitated's action-economy denial + concentration break react to the FACT (its doc's design); no nested/sub-effects.
+- Composition: ONE keyed effect writes `condition.unconscious: 1` + `condition.incapacitated: 1` + `condition.prone: 1`. Action-economy denial reacts to the FACT (its doc's derive clamp); the concentration break does NOT — it is offer-side apply logic, so `record-unconscious` invokes the shared break helper (incapacitated doc, Knot 2): recording while concentrating evicts the held spell (SRD Unconscious includes Incapacitated → "No Concentration"). No nested/sub-effects.
 - Speed 0: NOT written here — `character.movement.halted` (Grappled's idiom) reads `condition.unconscious` too; move offers + Get Up's speed gate die on it. PR1 extends the halted derive (no-op if Grappled already reads it).
 - Attack flags: unconscious effect writes NONE. Prone's disadvantage lives in the prone EFFECT, not the fact — moot while unconscious (Incapacitated denies attacks); restored by the fresh prone effect at end.
 - Knot 1 (drop held) — **(a) notice text + manual unequip (RECOMMEND)**: notice says drop held; player empties hands via existing set-loadout (free, atomic swap, house rule). Loadout is its own selection-driven system (key `loadout`); a condition effect mutating it is invasive. Rejected (b) mechanical empty-`loadout` eviction: one-way (dismissing the unconscious chip never restores the prior loadout); items are DROPPED, not stowed — the hands model has no "dropped" channel; loses player judgement (corded weapon?). Residual: weapon reads equipped until swapped — masked by Incapacitated action denial. Prior thinking: `docs/plans/ideas/loadout-change.md`.
@@ -40,7 +40,7 @@ Module `src/lib/rules-engine/rules/condition-unconscious.ts`, id `condition-unco
 
 Effects:
 
-- unconscious: `{ id: 'effect-unconscious', key: 'unconscious', state: { 'condition.unconscious': 1, 'condition.incapacitated': 1, 'condition.prone': 1 }, display, expiry: { kind: 'untilShortRest' } }` — no `stateCombine` (writes no armor-shared facts; doubling with a live prone effect is harmless — all gates read `> 0`)
+- unconscious: `{ id: 'effect-unconscious', key: 'unconscious', state: { 'condition.unconscious': 1, 'condition.incapacitated': 1, 'condition.prone': 1 }, stateCombine: { 'condition.incapacitated': 'max' }, display, expiry: { kind: 'untilShortRest' } }` — `condition.incapacitated` MUST be `max`: `effect-incapacitated` writes it `max` and sheet.ts THROWS on conflicting combine modes when standalone Incapacitated co-stands. `condition.prone` stays default-sum on BOTH its writers (prone effect + this) — same mode, no conflict; doubling reads 2, harmless (`> 0` gates)
 - regain clear: empty same-`key` 'unconscious' effect, `display`, `expiry: permanent` (get-up idiom)
 - fresh prone: `proneEffect()` extracted to the builder (`attackActionSpend` precedent — no rule imports another rule; condition-prone keeps using it)
 
@@ -59,6 +59,7 @@ i18n — BOTH `src/lib/i18n/en/common.json` AND `src/lib/i18n/en-x-tlh/common.js
 Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECTED_RUNNABLE`, tests/integration/rules-engine/yaml-scenarios.test.ts):
 
 - `condition-unconscious-record` (unconscious + incapacitated + prone facts = 1, halted, notice exists)
+- `condition-unconscious-breaks-concentration` (bless stack, the incapacitated doc's shape): cast bless → hold live → record → `concentration.spent` 0, `effect-bless` gone — composition recorder invokes the shared break helper
 - `condition-unconscious-regain` (end-offer → unconscious 0, `condition.prone` STILL 1 + attack flags present — the key assert)
 - `condition-unconscious-rest-clears` (short AND long → all three facts cleared, notice gone — deviation pin)
 - `move-walk-illegal-while-unconscious`
@@ -69,7 +70,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 - Read `docs/RULE_GROUP_GUIDE.md` §1 checklist + §7 pitfalls before writing each module
 - TDD inside each PR: RED (compiles, runs, no panic, fails) → GREEN → refactor; yaml scenario asserts are the RED for rule changes
 - Never commit to main; PR per slice; no attribution/co-author; never amend; signing: unsigned if 1Password locked, re-sign later (`rebase -f -S`), never block
-- Gates per slice: `make check` (vitest skips type-check), `make test-unit` (yaml runner needs its build artifact — bare `pnpm test` fails ENOENT), `make format-check` before push
+- Gates per slice: `make validate-rules-schema` (new rule-group YAML), `make check` (vitest skips type-check), `make test-unit` (yaml runner needs its build artifact — bare `pnpm test` fails ENOENT), `make format-check` before push; full `make test` before declaring done
 - Per rule-group change: `make publish-details`; `make sync-rule-groups` then `make deploy-test` (sync alone insufficient — CDN); terraform seed per new group (`dynamodb-items.tf`), `make validate`
 - Playwright check on http://localhost:5173 (`pgrep -f vite.js` first)
 - After each push: monitor PR for codex comments (~15 min delayed); every comment gets fixed or a reasoned won't-fix reply; until reviews + pipelines clean; agent never merges
@@ -82,12 +83,12 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 ### PR1 — condition-unconscious module (record, composition, notice, halted read, seeds)
 
 - [ ] RED: `condition-unconscious-record` scenario fails — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
-- [ ] `condition-unconscious.ts`: record offer, keyed effect (3 facts), notice annotate
+- [ ] `condition-unconscious.ts`: record offer (apply invokes the shared concentration-break helper), keyed effect (3 facts, incapacitated `max`), notice annotate
 - [ ] halted derive reads `condition.unconscious` (whichever module Grappled landed it in)
 - [ ] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details`
 - [ ] i18n keys, both locales
 - [ ] terraform seed `char_condition_unconscious_rulegroup_seed` (dynamodb-items.tf); `make validate` passes
-- [ ] GREEN: record + rest-clears + walk-illegal scenarios in `EXPECTED_RUNNABLE`
+- [ ] GREEN: record + breaks-concentration + rest-clears + walk-illegal scenarios in `EXPECTED_RUNNABLE`
 - [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → merge; `make sync-rule-groups` then `make deploy-test`
 
 ### PR2 — Regain Consciousness end-offer

@@ -30,7 +30,7 @@ Glossary "Condition": "A condition doesn't stack with itself; a recipient either
 - Prone's Get Up cost follows AUTOMATICALLY: `half_speed` floors `speed × 0.5`, and speed now carries the penalty — assert it, code nothing.
 - Long rest removes exactly 1: **`onRest` hook** (Channel Divinity precedent — rest expiry CLEARS whole effects, it cannot decrement). `kind === 'long' && level > 0` → advertise the keyed effect at level−1; level 1→0 = empty-`key` eviction (prone get-up idiom; fact reverts to 0). Alternatives rejected: (a) new rest-expiry decrement semantic — core engine change, heavy; (b) manual free offer "Long Rest: remove 1 Exhaustion level" — a second thing to remember, drifts from the player-recorded rest. The hook IS the long-rest flow, with no engine change. Short rest removes nothing. grill.
 - Effect expiry `permanent` — deliberate DEVIATION from the umbrella's condition-ending default (`untilShortRest`): a short rest must not clear Exhaustion. Manual strip dismissal clears ALL levels at once — accepted manual override. grill.
-- Same-turn rest+gain edge: `onRest` runs once, reads state as it stood AT the rest, and its effects append last (newest-wins) — rest-then-gain in one turn nets −1, swallowing the gain. Accepted imperfection (plan.ts documents the class; divinity's no-banking gate is the kin). Note in the module comment.
+- Same-turn rest+gain edge (plan.ts:168 — "a post-rest row cannot SEE the hook's own effects at its own step"; the splice lands hook effects AT the boundary, before later rows): rest-THEN-gain at level 2 → the recorder (planned after the rest) reads 2, advertises 3, and newest-wins keyed dedup keeps the LATER recorder effect → **the GAIN survives, the DECREMENT is swallowed** (level 3, not 1). Gain-then-rest is correct (the hook reads the post-gain boundary state; its effect splices after the recorder row and wins). Accepted imperfection (post-rest plans are the rare corner plan.ts documents); PIN the direction with a scenario; note in the module comment.
 
 ## Design
 
@@ -77,6 +77,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 - `condition-exhaustion-record-twice` — level 2, speed −10 + total −10 (PR2); PR3 adds rider-annotation exists
 - `condition-exhaustion-half-speed-shrinks` — level 2 + prone → get-up cost 10 (floor(20/2)) (PR2)
 - `condition-exhaustion-long-rest-removes-one` — level 2 → long rest → 1, persists past endTurn; SHORT rest removes nothing (PR3)
+- `condition-exhaustion-rest-then-gain-edge` — level 2 → long rest → record → 3 (decrement swallowed, gain survives — the pinned direction; green-immediate pin) (PR3)
 - rider VALUE (−4 at level 2) + notice `values`: unit tests — the yaml grammar cannot assert annotation values (prone PR2 precedent, `condition-prone-notice.test.ts`)
 
 ## Execution rules
@@ -85,7 +86,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 - Read `docs/RULE_GROUP_GUIDE.md` §1 checklist + §7 pitfalls before writing each module
 - TDD inside each PR: RED (compiles, runs, no panic, fails) → GREEN → refactor; yaml scenario asserts are the RED for rule changes
 - Never commit to main; PR per slice; no attribution/co-author; never amend; signing: unsigned if 1Password locked, re-sign later (`rebase -f -S`), never block
-- Gates per slice: `make check` (vitest skips type-check), `make test-unit` (yaml runner needs its build artifact — bare `pnpm test` fails ENOENT), `make format-check` before push
+- Gates per slice: `make validate-rules-schema` (new rule-group YAML), `make check` (vitest skips type-check), `make test-unit` (yaml runner needs its build artifact — bare `pnpm test` fails ENOENT), `make format-check` before push; full `make test` before declaring done
 - Per rule-group change: `make publish-details`; `make sync-rule-groups` then `make deploy-test` (sync alone insufficient — CDN); terraform seed per new group (`dynamodb-items.tf`), `make validate`
 - Playwright check on http://localhost:5173 (`pgrep -f vite.js` first)
 - After each push: monitor PR for codex comments (~15 min delayed); every comment gets fixed or a reasoned won't-fix reply; until reviews + pipelines clean; agent never merges
@@ -115,7 +116,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 
 - [ ] RED: `condition-exhaustion-long-rest-removes-one` fails; `record-twice` gains rider-annotation asserts
 - [ ] rider ×3 annotate + rider-value unit test (−4 at level 2); playwright check that the chips render on a weapon panel, a skill, a save (first to-hit/check flat riders — see Notes)
-- [ ] `onRest` decrement + level-0 empty eviction; short-rest-removes-nothing asserted
+- [ ] `onRest` decrement + level-0 empty eviction; short-rest-removes-nothing + rest-then-gain-edge pins asserted
 - [ ] GREEN; gates → PR → codex monitor → merge
 
 ## Out of scope

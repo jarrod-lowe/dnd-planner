@@ -85,7 +85,7 @@ Modelled: prone-minus-movement — effect writes `attack.str.disadvantage` + `at
 > **Poisoned [Condition]** — While you have the Poisoned condition, you experience the following effect.
 > **Ability Checks and Attacks Affected.** You have Disadvantage on attack rolls and ability checks.
 
-Modelled: attack flags + all 18 `skill.{skill}.disadvantage` facts (facts exist — leather-armor writes 4; loop like ability-scores). Most common condition in play — high value.
+Modelled: attack flags + all 18 `skill.{skill}.disadvantage` facts (facts exist — leather-armor writes 4; loop like ability-scores) + `initiative.disadvantage` (Initiative is a Dexterity ability check; the fact + roller read exist). Most common condition in play — high value.
 
 ### Frightened — S
 
@@ -93,7 +93,7 @@ Modelled: attack flags + all 18 `skill.{skill}.disadvantage` facts (facts exist 
 > **Ability Checks and Attacks Affected.** You have Disadvantage on ability checks and attack rolls while the source of fear is within line of sight.
 > **Can't Approach.** You can't willingly move closer to the source of fear.
 
-Modelled: same flags as Poisoned. Line-of-sight qualifier + can't-approach = notice text (player judgement; prone simplification precedent — see Decision defaults).
+Modelled: same flags as Poisoned (incl. `initiative.disadvantage` — ability checks cover Initiative). Line-of-sight qualifier + can't-approach = notice text (player judgement; prone simplification precedent — see Decision defaults).
 
 ### Incapacitated — M–L (the enabler)
 
@@ -109,7 +109,7 @@ Modelled:
 - concentration broken on record: the empty-`key` eviction idiom (concentration-broken precedent).
 - `initiative.disadvantage` — fact exists (leather-armor writes it); initiative dice-line reads it.
 - Speechless (Verbal components) = notice text.
-- Sets `condition.incapacitated`; Paralyzed/Petrified/Stunned/Unconscious compose it (their effects write the fact too — the composition pattern to grill here).
+- Sets `condition.incapacitated`; Paralyzed/Petrified/Stunned/Unconscious compose it (their effects write the fact too — the composition pattern to grill here). Composition has TWO clauses: the fact (max-combined, `> 0` reads) AND the concentration break — each child's recorder invokes the same break logic (writing the fact alone does not evict a held spell).
 
 ### Grappled — M (lands the Speed-0 idiom)
 
@@ -120,7 +120,7 @@ Modelled:
 
 Modelled:
 
-- Speed 0 + "can't increase": zero the derived movement (all move offers die on out-of-movement); **gate Dash** (it boosts `movement.total`, must not help). Reaches Prone's Get Up gate ("If your Speed is 0, you can't right yourself" reads `character.movement.speed` — splint-armor reduces `speed`+`total` −10; grapple-zero must land there too). Solve ONCE; reused by Restrained/Paralyzed/Petrified/Unconscious.
+- Speed 0 + "can't increase": the `character.movement.halted` fact (movement.ts derives it from the 5 Speed-0 conditions); `movement.remaining` derives 0; all move offers + **Dash** gated not-halted. Base `speed`/`total` stay live for `half_speed` math, but the top-bar SPD chip (derivePanels reads `movement.total`) must show 0 while halted — derive a halted-aware effective total for display. Solve ONCE; reused by Restrained/Paralyzed/Petrified/Unconscious.
 - attack Disadvantage vs non-grappler: flag without the scoping (NPC identity) — notice text carries the exception.
 - Movable/drag = notice text. Escape check offer = out of scope initially. `grapple.ts` (grappling others) already exists — this is being grappled; keep fact namespaces distinct.
 
@@ -225,7 +225,7 @@ Nothing like it exists — a counter, not a boolean:
 - Read `docs/RULE_GROUP_GUIDE.md` §1 checklist + §7 pitfalls before writing each module
 - TDD inside each PR: RED (compiles, runs, no panic, fails) → GREEN → refactor; yaml scenario asserts are the RED for rule changes
 - Never commit to main; PR per slice; no attribution/co-author; never amend; signing: unsigned if 1Password locked, re-sign later (`rebase -f -S`), never block
-- Gates per slice: `make check` (vitest skips type-check), `make test-unit` (yaml runner needs its build artifact — bare `pnpm test` fails ENOENT), `make format-check` before push
+- Gates per slice: `make validate-rules-schema` (new rule-group YAML), `make check` (vitest skips type-check), `make test-unit` (yaml runner needs its build artifact — bare `pnpm test` fails ENOENT), `make format-check` before push; full `make test` before declaring done
 - Per rule-group change: `make publish-details`; `make sync-rule-groups` then `make deploy-test` (sync alone insufficient — CDN); terraform seed per new group (`dynamodb-items.tf`), `make validate`
 - Playwright check on http://localhost:5173 (`pgrep -f vite.js` first)
 - After each push: monitor PR for codex comments (~15 min delayed); every comment gets fixed or a reasoned won't-fix reply; until reviews + pipelines clean; agent never merges

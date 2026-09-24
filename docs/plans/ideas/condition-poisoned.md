@@ -17,8 +17,8 @@ Modelled: attack flags + all 18 `skill.{skill}.disadvantage` facts (facts exist 
 ## Decisions (defaults — re-grill before execution)
 
 - Attack Disadvantage: prone idiom — effect writes `attack.str.disadvantage` + `attack.dex.disadvantage`, `stateCombine: 'max'`.
-- Ability-check Disadvantage: **all 18 skill flags**, mechanically — skill offers' dice-lines already read `skill.{skill}.disadvantage` (`advantage: { fact }`, skill-checks.ts) → rollers default 2d20-take-low, zero roller changes. Ability checks without a skill (raw STR check) = notice text (no offers exist for them).
-- `stateCombine: 'max'` on EVERY flag write, loop-built: 4 skills (acrobatics, athletics, sleight-of-hand, stealth) + the 2 attack facts are armor-derived `combine: 'max'` — default `sum` effect writes conflict-throw for armored characters (prone PR1 note); uniform `max` also keeps stacked conditions (Poisoned + Frightened both live) from summing flags to 2.
+- Ability-check Disadvantage: **all 18 skill flags** + `initiative.disadvantage`, mechanically — skill offers' dice-lines already read `skill.{skill}.disadvantage` (`advantage: { fact }`, skill-checks.ts) and `roll-initiative` already reads `initiative.disadvantage` (initiative.ts; leather-armor writes it) → rollers default 2d20-take-low, zero roller changes. Initiative IS an ability check (SRD: "they make a Dexterity check"), so the ability-check disadvantage reaches it. Ability checks without a skill (raw STR check) = notice text (no offers exist for them).
+- `stateCombine: 'max'` on EVERY flag write, loop-built: 4 skills (acrobatics, athletics, sleight-of-hand, stealth) + the 2 attack facts + `initiative.disadvantage` are armor-derived `combine: 'max'` — default `sum` effect writes conflict-throw for armored characters (prone PR1 note); uniform `max` also keeps stacked conditions (Poisoned + Frightened both live) from summing flags to 2.
 - SKILLS list: **local const in the module** — modules import only from `builder` (confinement lint); skill-checks.ts and ability-scores.ts each keep a local copy already. Consolidation = out of scope.
 - Ending: umbrella default — `expiry: untilShortRest` (prone deviation) + ActiveStateStrip chip dismissal. SRD gives no mechanical end.
 - Recorder `record-poisoned` ("Poisoned"): free, ungated, imposed by an enemy effect (knocked-prone shape).
@@ -32,11 +32,11 @@ Module `src/lib/rules-engine/rules/condition-poisoned.ts`, id `condition-poisone
 Facts:
 
 - `condition.poisoned` — 1 while poisoned; written ONLY by the committed effect
-- `attack.str.disadvantage`, `attack.dex.disadvantage`, `skill.{skill}.disadvantage` ×18 — flags
+- `attack.str.disadvantage`, `attack.dex.disadvantage`, `skill.{skill}.disadvantage` ×18, `initiative.disadvantage` — flags
 
 Effect (loop `SKILLS`, both maps built in one pass):
 
-- `{ id: 'effect-poisoned', key: 'poisoned', state: { 'condition.poisoned': 1, 'attack.str.disadvantage': 1, 'attack.dex.disadvantage': 1, …`skill.${s}.disadvantage`: 1 for each of 18 }, stateCombine: 'max' on all 20 flags, display: { name }, expiry: { kind: 'untilShortRest' } }`
+- `{ id: 'effect-poisoned', key: 'poisoned', state: { 'condition.poisoned': 1, 'attack.str.disadvantage': 1, 'attack.dex.disadvantage': 1, 'initiative.disadvantage': 1, …`skill.${s}.disadvantage`: 1 for each of 18 }, stateCombine: 'max' on all 21 flags, display: { name }, expiry: { kind: 'untilShortRest' } }`
 
 Offer:
 
@@ -54,7 +54,7 @@ i18n — BOTH `src/lib/i18n/en/common.json` AND `src/lib/i18n/en-x-tlh/common.js
 
 Tests (RED first — registered in `EXPECTED_RUNNABLE`, tests/integration/rules-engine/yaml-scenarios.test.ts):
 
-- `condition-poisoned-record` (condition fact + attack flags + notice exists)
+- `condition-poisoned-record` (condition fact + attack flags + `initiative.disadvantage` + notice exists)
 - `condition-poisoned-rest-clears` (short AND long → cleared, notice gone; co-load `core-events`)
 - `condition-poisoned-skill-flags` — co-load `leather-armor` untrained (its penalty derives 4 of the same skill flags `max`); record → attack flags + 2–3 representative skills asserted, NOT all 18: `skill.athletics.disadvantage` (armor-derived — the conflict case), `skill.stealth.disadvantage` (armor-derived), `skill.perception.disadvantage` (not). No combine-conflict throw.
 
@@ -64,7 +64,7 @@ Tests (RED first — registered in `EXPECTED_RUNNABLE`, tests/integration/rules-
 - Read `docs/RULE_GROUP_GUIDE.md` §1 checklist + §7 pitfalls before writing each module
 - TDD inside each PR: RED (compiles, runs, no panic, fails) → GREEN → refactor; yaml scenario asserts are the RED for rule changes
 - Never commit to main; PR per slice; no attribution/co-author; never amend; signing: unsigned if 1Password locked, re-sign later (`rebase -f -S`), never block
-- Gates per slice: `make check` (vitest skips type-check), `make test-unit` (yaml runner needs its build artifact — bare `pnpm test` fails ENOENT), `make format-check` before push
+- Gates per slice: `make validate-rules-schema` (new rule-group YAML), `make check` (vitest skips type-check), `make test-unit` (yaml runner needs its build artifact — bare `pnpm test` fails ENOENT), `make format-check` before push; full `make test` before declaring done
 - Per rule-group change: `make publish-details`; `make sync-rule-groups` then `make deploy-test` (sync alone insufficient — CDN); terraform seed per new group (`dynamodb-items.tf`), `make validate`
 - Playwright check on http://localhost:5173 (`pgrep -f vite.js` first)
 - After each push: monitor PR for codex comments (~15 min delayed); every comment gets fixed or a reasoned won't-fix reply; until reviews + pipelines clean; agent never merges
@@ -77,7 +77,7 @@ Tests (RED first — registered in `EXPECTED_RUNNABLE`, tests/integration/rules-
 ### PR1 — condition-poisoned module (record, effect, notice, rest clear, seed)
 
 - [ ] RED: `condition-poisoned-record` scenario fails — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
-- [ ] `condition-poisoned.ts`: `record-poisoned` offer, keyed poisoned effect (20 facts, loop-built), notice annotate
+- [ ] `condition-poisoned.ts`: `record-poisoned` offer, keyed poisoned effect (21 facts, loop-built), notice annotate
 - [ ] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details` (output `static/details/` gitignored — published, not committed)
 - [ ] i18n keys both locales
 - [ ] GREEN: record + rest-clears + skill-flags scenarios; `EXPECTED_RUNNABLE`
@@ -97,5 +97,5 @@ May share PR1 with Frightened (same footprint — 18-flag sibling; conditions-re
 ## Notes
 
 - `record-*` offers carry name only — no `.description` key (prone PR1 note)
-- 18-flag effect is the template for Frightened — extract nothing yet (two modules, two local loops; share only if a third appears)
+- 21-flag effect is the template for Frightened — extract nothing yet (two modules, two local loops; share only if a third appears)
 - Known limitation: seeded group self-heal needs character recreated or forward-assignment (prone precedent)
