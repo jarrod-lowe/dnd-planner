@@ -11,6 +11,7 @@ import {
 const CP = 'rule.dnd-5e-2024.condition-prone';
 const CANNOT_GET_UP = `${CP}.get-up-offer.cannot_get_up`;
 const OUT_OF_MOVEMENT = `${CP}.get-up-offer.out_of_movement`;
+const NOT_PRONE = `${CP}.get-up-offer.not_prone`;
 const CANNOT_DROP = `${CP}.drop-prone-offer.cannot_drop`;
 
 // SRD 5.2 Prone: "If your Speed is 0, you can't right yourself" / "Dropping
@@ -54,7 +55,8 @@ const proneEffect = (): EffectInstance => ({
  * by an enemy effect), so it is free and ungated — legal at any Speed. DROP
  * models the voluntary SRD "Dropping Prone" choice (on your turn, without an
  * action or any Speed), gated to the standing state — it does not exist while
- * already prone, mirroring how GET UP does not exist while standing. A NOTICE
+ * already prone, while its GET UP mirror is a legality gate (illegal while
+ * standing, visible with its diagnostic). A NOTICE
  * carries the condition's standing effects — attacks against you stay notice
  * text only (no NPC modelling).
  *
@@ -123,13 +125,15 @@ const conditionProne: RuleModule = {
       }
     },
     {
-      // Right yourself, ending the condition. Structural gate, not legality:
-      // the offer does not EXIST while standing, and a planned get-up row
-      // whose gate has closed is skipped — a drop-prone row EARLIER in the
-      // plan opens the gate (condition-prone-drop-then-get-up), but a bare
-      // get-up planned while standing never executes.
+      // Right yourself, ending the condition. Legality gate, not a structural
+      // one (illegal-but-visible, the engine's documented contract — found in
+      // test-env inspection): the offer is ILLEGAL while standing with its
+      // not_prone diagnostic, and a planned-anyway row still EXECUTES (the
+      // plan.ts contract) — its empty-key prone eviction commits as a no-op
+      // (no prone effect is held) beside the half-Speed spend, pinned in
+      // get-up-crawl-illegal-but-visible-while-standing. A drop-prone row
+      // EARLIER in the plan opens the gate (condition-prone-drop-then-get-up).
       id: 'get-up',
-      when: (f) => f.num('condition.prone') > 0,
       ui: {
         section: 'move',
         name: `${CP}.get-up.name`,
@@ -139,6 +143,12 @@ const conditionProne: RuleModule = {
         actionCost: ['move']
       },
       legalWhen: [
+        // Prone-only: righting yourself presupposes being prone (the crawl
+        // mirror of movement's notProne clause).
+        {
+          condition: (f) => f.num('condition.prone') > 0,
+          diagnostics: [{ code: NOT_PRONE, severity: 'error' }]
+        },
         // SRD 5.2 Prone: "If your Speed is 0, you can't right yourself."
         {
           condition: hasSpeed,
@@ -155,6 +165,8 @@ const conditionProne: RuleModule = {
         // Re-checked legality (the dash idiom) so a planned-anyway row
         // carries its own diagnostics from the fold.
         const diagnostics: Diagnostic[] = [];
+        if (f.num('condition.prone') === 0)
+          diagnostics.push({ code: NOT_PRONE, severity: 'error' });
         if (!hasSpeed(f)) diagnostics.push({ code: CANNOT_GET_UP, severity: 'error' });
         if (f.num('character.movement.remaining') < f.num('character.movement.half_speed'))
           diagnostics.push({ code: OUT_OF_MOVEMENT, severity: 'error' });

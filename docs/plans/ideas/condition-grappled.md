@@ -101,6 +101,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 - [x] dash.ts not-halted legality + apply re-check; condition-prone get-up + drop-prone gates read halted (reuse `cannot_get_up`/`cannot_drop` — one shared `hasSpeed` predicate: `speed > 0 ∧ halted = 0`); crawl NOT re-wired (already halted-gated in PR1 — asserted illegal in the get-up scenario, not touched)
 - [x] i18n `rule.dnd-5e-2024.dash.action-dash-offer.cannot_while_halted`, both locales
 - [ ] GREEN; gates → PR → codex monitor → clean → `make deploy-test` → human inspects test env → human merges — GREEN + gates pass + PR open (branch `condition-grappled-2`); the rest is post-PR lifecycle
+- [x] test-env inspection follow-up: crawl + get-up converted from structural `when` gates to legality gates — illegal-but-visible (the engine's documented contract), pinned by `get-up-crawl-illegal-but-visible-while-standing`
 
 ## Out of scope
 

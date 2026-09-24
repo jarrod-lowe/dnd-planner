@@ -242,4 +242,5 @@ Nothing like it exists — a counter, not a boolean:
 - death saves / 0 HP flow (Unconscious neighbour — separate idea)
 - Hide action (Invisible's usual source); flying + Prone → falling
 - condition immunities (glossary "Immunity")
+- persisted effects from prior releases are not rewritten — re-record to heal
 - backfilling seeded groups to pre-existing characters (prone known limitation — recreate character or forward-assignment idea)

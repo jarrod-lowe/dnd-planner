@@ -500,6 +500,9 @@
         "action-move-rough-terrain-offer": {
           "out_of_movement": "Out of movement"
         },
+        "action-move-crawl-offer": {
+          "only_while_prone": "You are not prone — you can't crawl"
+        },
         "move-swim": {
           "name": "Swim",
           "keywords": "movement move water",
@@ -996,6 +999,7 @@
           "name": "Got Up"
         },
         "get-up-offer": {
+          "not_prone": "You are not prone — you can't right yourself",
           "cannot_get_up": "Your Speed is 0 — you can't right yourself",
           "out_of_movement": "Not enough movement left"
         },

@@ -5,9 +5,10 @@ description: >-
   grappled — a legality gate, not a structural one, so the player still sees
   why (the shared cannot_while_halted diagnostic, which a planned-anyway row
   also carries from the apply re-check). Speed 0 also beats prone's crawl
-  allowance: crawl exists only while prone, but its legality gate carries the
-  same halted clause, so a prone+grappled character cannot even crawl (no
-  movement at all). Dismissing the condition restores walk.
+  allowance: crawl is only-while-prone (illegal while standing on that clause
+  alone), and its legality gate carries the same halted clause, so a
+  prone+grappled character cannot even crawl (no movement at all). Dismissing
+  the condition restores walk.
 ruleGroups:
   - species-human/species-human
   - dnd-5e-2024/movement
@@ -25,6 +26,7 @@ steps:
             - move-swim-costly
           notExists:
             - move-swim
+          illegal:
             - move-crawl
   - addOffer:
       id: record-grappled

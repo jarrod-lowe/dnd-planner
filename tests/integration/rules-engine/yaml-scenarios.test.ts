@@ -546,6 +546,10 @@ const EXPECTED_RUNNABLE = [
   // PR3 — crawl (×2 spend while prone) + the prone movement restriction
   'move-crawl-while-prone',
   'walk-illegal-while-prone',
+  // PR3 follow-up (test-env inspection) — crawl/get-up converted from
+  // structural `when` gates to legality gates: illegal-but-visible while
+  // standing, planned-anyway rows still execute
+  'get-up-crawl-illegal-but-visible-while-standing',
   // M3 — feat-alert (initiative-with-proficiency + annotations) and hit-die
   // (d10 pool from the class levels; remaining = total - spent)
   'alert-flag-set',

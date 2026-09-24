@@ -1,0 +1,81 @@
+name: 'Get Up and Crawl illegal-but-visible while standing'
+description: >-
+  The prone-only offers are LEGALITY gates, not structural ones (the engine's
+  illegal-but-visible contract — diagnostics + player override, never hiding,
+  found in test-env inspection): while STANDING both Get Up and Crawl EXIST
+  and are ILLEGAL with their own diagnostics. Planned anyway, both rows still
+  execute (the plan.ts contract — illegal rows apply): Get Up's empty-key
+  'prone' eviction commits as a no-op (no prone effect is held, so
+  condition.prone stays 0) beside its half-Speed spend, and Crawl commits its
+  movement spend per its mult — the walk-while-grappled shape. The
+  drop-then-get-up flow (a get-up planned AFTER a drop-prone row opens the
+  prone gate) is pinned separately in condition-prone-drop-then-get-up.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-prone
+steps:
+  # Standing: both prone-only offers are visible with their diagnostics.
+  - evaluate:
+      assert:
+        facts:
+          condition.prone: 0
+          character.movement.half_speed: 15
+        offers:
+          illegal:
+            - get-up
+            - move-crawl
+  # Get Up planned anyway: the row executes (illegal rows apply), spending
+  # half_speed — but the empty same-key 'prone' eviction is a no-op (no prone
+  # effect is held), so the character does not somehow become standing-er.
+  - addOffer:
+      id: get-up
+      assert:
+        facts:
+          condition.prone: 0
+          character.movement.spent: 15
+          character.movement.remaining: 15
+        planErrors:
+          - id: get-up
+            index: 0
+            errors:
+              - rule.dnd-5e-2024.condition-prone.get-up-offer.not_prone
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-prone.notice
+  # End Turn commits the turn: the eviction lands as the permanent empty
+  # 'prone-ended' effect (a fact no-op — prone stays 0) while the endOfTurn
+  # spend ages out and remaining resets.
+  - endTurn:
+      assert:
+        facts:
+          condition.prone: 0
+          character.movement.remaining: 30
+        effects:
+          exists:
+            - prone-ended
+  # Crawl planned anyway (fresh turn, standing): the row executes and commits
+  # its ×2 movement spend (10 ft crawled → 20 spent), carrying the
+  # only-while-prone diagnostic — the walk-while-grappled precedent shape.
+  - addOffer:
+      id: move-crawl
+      selections:
+        distance: 10
+      assert:
+        facts:
+          condition.prone: 0
+          character.movement.spent: 20
+          character.movement.remaining: 10
+        planErrors:
+          - id: move-crawl
+            index: 0
+            errors:
+              - rule.dnd-5e-2024.movement.action-move-crawl-offer.only_while_prone
+  - endTurn:
+      assert:
+        facts:
+          condition.prone: 0
+          character.movement.remaining: 30
+        effects:
+          notExists:
+            - effect-prone

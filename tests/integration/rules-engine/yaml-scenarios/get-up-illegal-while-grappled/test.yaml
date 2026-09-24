@@ -26,11 +26,11 @@ steps:
         offers:
           legal:
             - drop-prone
-          notExists:
+          illegal:
             - get-up
   # Grappled alone (standing): the speed fact stays 30 but halted is 1 —
-  # Drop Prone is illegal off the extended gate. Get Up still does not exist
-  # (standing — the structural gate is untouched by the grapple).
+  # Drop Prone is illegal off the extended gate. Get Up is illegal twice over
+  # (standing — the not-prone clause — and halted — cannot_get_up).
   - addOffer:
       id: record-grappled
       assert:
@@ -41,7 +41,6 @@ steps:
         offers:
           illegal:
             - drop-prone
-          notExists:
             - get-up
   # Planned anyway (legalWhen semantics): the row still commits prone and
   # carries the REUSED cannot_drop from the apply re-check.

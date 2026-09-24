@@ -111,6 +111,21 @@ const notProne: LegalWhen = {
 };
 const notProneRecheck: Recheck = { code: CANNOT_WHILE_PRONE, can: standing };
 
+// The crawl mirror of notProne: crawling is a prone-only movement (SRD 5.2
+// Restricted Movement), so the offer is illegal while STANDING — a legality
+// gate, not a structural one (illegal-but-visible, the engine's documented
+// contract: diagnostics + player override, never hiding). Found in test-env
+// inspection; the standing planned-anyway row still spends (it carries this
+// diagnostic from the apply re-check) — pinned in
+// get-up-crawl-illegal-but-visible-while-standing.
+const ONLY_WHILE_PRONE = `${MV}.action-move-crawl-offer.only_while_prone`;
+const prone = (f: FactReader): boolean => f.num('condition.prone') > 0;
+const onlyWhileProne: LegalWhen = {
+  condition: prone,
+  diagnostics: [{ code: ONLY_WHILE_PRONE, severity: 'error' }]
+};
+const onlyWhileProneRecheck: Recheck = { code: ONLY_WHILE_PRONE, can: prone };
+
 // SRD 5.2 Grappled (and Restrained/Paralyzed/Petrified/Unconscious — every
 // "your Speed is 0" condition): Speed 0 halts ALL travel, crawl's prone
 // allowance included. Every travel offer carries this clause (and its apply
@@ -145,7 +160,8 @@ const halted = (f: FactReader): number =>
  * crawling, and costly swimming spend ×2; `half_remaining`/`half_total` are derived for
  * their slider defaults, and `half_speed` (floored) is the Get Up cost base.
  * While prone (SRD 5.2 Restricted Movement) every travel offer but CRAWL is
- * illegal — crawl itself exists only while prone (a structural gate, like Get Up).
+ * illegal — crawl itself is illegal while standing (an only-while-prone
+ * legality gate, the notProne mirror; illegal-but-visible, like Get Up).
  * While HALTED (any Speed-0 condition, SRD 5.2 Grappled "Your Speed is 0 and
  * can't increase") every travel offer INCLUDING crawl is illegal, and
  * remaining/effective_total mask to 0 — `speed`/`total` deliberately stay live
@@ -219,26 +235,31 @@ const movement: RuleModule = {
       cannot: [notProneRecheck, notHaltedRecheck]
     }),
     // SRD 5.2 Prone, Restricted Movement: crawling is the only travel while
-    // prone — a structural gate (the Get Up idiom), so the offer does not
-    // exist while standing. Crawling costs 1 extra foot per foot (difficult
-    // terrain's ×3 stacking is out of scope), so it shares the rough-terrain
-    // shape: slider feet traversed (half_remaining default, half_total max),
-    // ×2 spent, and the walk out-of-movement code. Speed 0 beats the prone
-    // allowance (SRD 5.2 Grappled: no movement AT ALL), so crawl carries the
-    // halted legality gate + re-check like every other travel offer —
-    // prone+grappled cannot even crawl.
+    // prone — a legality gate (the notProne mirror), so the offer stays
+    // VISIBLE while standing with its only_while_prone diagnostic
+    // (illegal-but-visible, the engine's documented contract). Crawling costs
+    // 1 extra foot per foot (difficult terrain's ×3 stacking is out of
+    // scope), so it shares the rough-terrain shape: slider feet traversed
+    // (half_remaining default, half_total max), ×2 spent, and the walk
+    // out-of-movement code. Speed 0 beats the prone allowance (SRD 5.2
+    // Grappled: no movement AT ALL), so crawl carries the halted legality
+    // gate + re-check like every other travel offer — prone+grappled cannot
+    // even crawl.
     moveOffer({
       id: 'move-crawl',
       nameKey: 'move-crawl',
-      when: (f) => f.num('condition.prone') > 0,
       packBehind: 'move-walk',
       defaultDistanceFact: 'character.movement.half_remaining',
       maxDistanceFact: 'character.movement.half_total',
       mult: 2,
       // 5 feet crawled × 2 (the rough-terrain threshold).
-      legalWhen: [ge(REMAINING, 10, `${MV}.action-move-walk-offer.out_of_movement`), notHalted],
+      legalWhen: [
+        ge(REMAINING, 10, `${MV}.action-move-walk-offer.out_of_movement`),
+        onlyWhileProne,
+        notHalted
+      ],
       outOfMovementCode: `${MV}.action-move-walk-offer.out_of_movement`,
-      cannot: [notHaltedRecheck]
+      cannot: [onlyWhileProneRecheck, notHaltedRecheck]
     }),
     moveOffer({
       id: 'move-swim',
