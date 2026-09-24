@@ -1,0 +1,64 @@
+name: 'Dash illegal while Grappled'
+description: >-
+  SRD 5.2 Grappled, Speed 0: "Your Speed is 0 and can't increase" — so DASH,
+  whose whole job is increasing this turn's movement, goes illegal while
+  grappled: a legality gate beside the action gate (the same shape as the six
+  move offers from PR1), so the row stays visible with its why. Planned
+  anyway (illegal-but-visible — the engine's contract, diagnostics never
+  withdraw), the row STILL advertises its boost: movement.total picks up the
+  species speed (60) while the halted mask keeps remaining at 0 — the boost
+  is real for derived math and useless for travel. endTurn commits the row
+  and expires the endOfTurn boost (total back to 30) without ever
+  un-halting the untilShortRest condition.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/dash
+  - dnd-5e-2024/condition-grappled
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.grappled: 0
+          character.movement.halted: 0
+          character.movement.remaining: 30
+          actions.remaining: 1
+        offers:
+          legal:
+            - dash-action
+  - addOffer:
+      id: record-grappled
+      assert:
+        facts:
+          condition.grappled: 1
+          character.movement.halted: 1
+          character.movement.remaining: 0
+          # The action pool is untouched — only the Speed-0 clause closes.
+          actions.remaining: 1
+        offers:
+          illegal:
+            - dash-action
+  # Planned anyway: the boost is still advertised (total 60) yet the halted
+  # mask pins remaining at 0 — the row carries the halted diagnostic from the
+  # apply re-check, and only that one (the action is still on hand pre-row).
+  - addOffer:
+      id: dash-action
+      assert:
+        facts:
+          character.movement.total: 60
+          character.movement.remaining: 0
+        planErrors:
+          - id: dash-action
+            index: 0
+            errors:
+              - rule.dnd-5e-2024.dash.action-dash-offer.cannot_while_halted
+  # endTurn commits the row: the endOfTurn boost ages away (total 30) while
+  # the condition keeps remaining masked — "can't increase" held all turn.
+  - endTurn:
+      assert:
+        facts:
+          condition.grappled: 1
+          character.movement.halted: 1
+          character.movement.total: 30
+          character.movement.remaining: 0

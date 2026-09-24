@@ -905,7 +905,8 @@
           "description": "Do' DIvI' chel"
         },
         "action-dash-offer": {
-          "no_action": "DIvI' tu'lu'be'"
+          "no_action": "DIvI' tu'lu'be'",
+          "cannot_while_halted": "Do'lIj chIm — chel laHbe'"
         }
       },
       "simple-actions": {

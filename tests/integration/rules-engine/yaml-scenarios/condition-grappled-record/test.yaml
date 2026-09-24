@@ -9,8 +9,10 @@ description: >-
   feed derived math like the Get Up half_speed cost; a condition module cannot
   zero them without reading its own output — the cycle trap, so the mask
   carries the semantics instead). A NOTICE carries the condition's standing
-  effects (Attacks Affected and Movable have no engine-side mechanics this PR
-  — the attack flags join the effect state in PR2). The recorder models BEING
+  effects. Attacks Affected lands as the shared STR/DEX attack-disadvantage
+  flags the weapon and unarmed dice-lines already read (stateCombine max, the
+  prone/blinded idiom — the grappler exception is notice text, the flags stay
+  unscoped); Movable/drag stays notice text. The recorder models BEING
   GRAPPLED (imposed by an enemy effect), so it is free and ungated (the prone
   "Knocked Prone" precedent), and any rest clears it (untilShortRest; see
   condition-grappled-rest-clears).
@@ -40,6 +42,11 @@ steps:
           character.movement.halted: 1
           character.movement.remaining: 0
           character.movement.effective_total: 0
+          # Attacks Affected: Disadvantage on your attack rolls (vs any
+          # target other than the grappler — unscoped flags, the exception
+          # is notice text).
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
           # Math keeps the base: speed/total stay live for derived math (the
           # Get Up half_speed cost, a later Dash boost) — only the display
           # reads effective_total and only the gates read halted.

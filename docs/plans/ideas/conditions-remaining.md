@@ -32,7 +32,7 @@ Rough total: ~10–12 PRs. Calibration: prone = 4 PRs incl. inventing the chassi
 
 ### Wave 4 — Speed-0 + save wiring
 
-- [ ] [Grappled](condition-grappled.md) — execute (lands the Speed-0 idiom)
+- [x] [Grappled](condition-grappled.md) — executed (lands the Speed-0 idiom): PR1 (halted derives + all 6 move gates + module) merged as #451; PR2 (attack flags + dash/get-up/drop-prone halted gates) on branch `condition-grappled-2`, PR pending at commit time
 - [ ] [Restrained](condition-restrained.md) — execute (lands save-recorder advantage wiring)
 
 ### Wave 5 — composition batch (likely one PR after their docs)

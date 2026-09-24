@@ -905,7 +905,8 @@
           "description": "Gain extra movement equal to your Speed"
         },
         "action-dash-offer": {
-          "no_action": "No action available"
+          "no_action": "No action available",
+          "cannot_while_halted": "Your Speed is 0 — it can't increase"
         }
       },
       "simple-actions": {

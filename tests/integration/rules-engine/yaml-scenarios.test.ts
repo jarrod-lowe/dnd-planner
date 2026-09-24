@@ -534,11 +534,15 @@ const EXPECTED_RUNNABLE = [
   // condition-grappled (wave 4 PR1 — the Speed-0 "halted" FOUNDATION: the
   // movement module derives halted from the five Speed-0 conditions and masks
   // remaining/effective_total to 0 while speed/total stay live for math; all
-  // six move offers gate on it with the shared cannot_while_halted. The
-  // attack flags and the dash/get-up/drop gates are PR2)
+  // six move offers gate on it with the shared cannot_while_halted.
+  // PR2 — the Attacks Affected flags (stateCombine max) plus the dash
+  // "can't increase" gate and the prone get-up/drop Speed-0 gate extension
+  // (halted, reused codes; crawl already halted-gated, asserted not re-wired)
   'condition-grappled-record',
   'condition-grappled-rest-clears',
   'move-walk-illegal-while-grappled',
+  'dash-illegal-while-grappled',
+  'get-up-illegal-while-grappled',
   // PR3 — crawl (×2 spend while prone) + the prone movement restriction
   'move-crawl-while-prone',
   'walk-illegal-while-prone',
