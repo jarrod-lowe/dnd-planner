@@ -1,0 +1,66 @@
+name: 'Condition Stunned - Rest Clears'
+description: >-
+  Any rest clears the Stunned condition: the keyed effect carries
+  untilShortRest, which a short rest satisfies directly and a long rest
+  includes. BOTH composed facts — condition.stunned and the
+  condition.incapacitated the effect writes directly — die with the effect
+  (the composition contract), and the notices go with it (umbrella default —
+  SRD 5.2 gives no mechanical end, so rest plus manual chip dismissal only).
+  No movement asserts: Stunned imposes no Speed 0, so movement is untouched
+  throughout (the trio divergence — see condition-stunned-record).
+ruleGroups:
+  - dnd-5e-2024/condition-stunned
+  - dnd-5e-2024/core-events
+steps:
+  - addOffer:
+      id: record-stunned
+      assert:
+        facts:
+          condition.stunned: 1
+          condition.incapacitated: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-stunned.notice
+  # A long rest (the explicit endTurn flag) clears it.
+  - endTurn:
+      longRest: true
+      assert:
+        facts:
+          condition.stunned: 0
+          condition.incapacitated: 0
+        effects:
+          notExists:
+            - effect-stunned
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-stunned.notice
+  # ...and so does a recorded short rest: the rest flag effect restores its
+  # scoped effects within the same evaluation, so the facts and notice are
+  # already gone before the turn even ends.
+  - addOffer:
+      id: record-stunned
+      assert:
+        facts:
+          condition.stunned: 1
+          condition.incapacitated: 1
+  - addOffer:
+      id: record-short-rest
+      assert:
+        facts:
+          rest.short: 1
+          condition.stunned: 0
+          condition.incapacitated: 0
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-stunned.notice
+  - endTurn:
+      assert:
+        facts:
+          condition.stunned: 0
+          condition.incapacitated: 0
+        effects:
+          notExists:
+            - effect-stunned
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-stunned.notice

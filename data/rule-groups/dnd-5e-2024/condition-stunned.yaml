@@ -1,0 +1,34 @@
+ruleGroups:
+  - id: condition-stunned
+    requires:
+      - condition-incapacitated
+    translations:
+      en:
+        name: Stunned
+        description: Rules while you have the Stunned condition; record it when an enemy effect stuns you
+        keywords:
+          - stunned
+          - stun
+          - dazed
+          - reeling
+          - condition
+      en-x-tlh:
+        name: mISchoHpu'
+        description: mISchoHpu' Dotlh; mISchoHmoHlu'DI' yIghun
+        keywords:
+          - mISchoHpu'
+          - Dotlh
+    detail:
+      key: condition/stunned
+      source: srd52
+      translations:
+        en:
+          meta: Condition
+          body: |
+            **Stunned [Condition].** While you have the Stunned condition, you experience the following effects.
+
+            **Incapacitated.** You have the Incapacitated condition.
+
+            **Saving Throws Affected.** You automatically fail Strength and Dexterity saving throws.
+
+            **Attacks Affected.** Attack rolls against you have Advantage.

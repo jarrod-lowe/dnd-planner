@@ -1,0 +1,61 @@
+name: 'Condition Paralyzed - Record'
+description: >-
+  Recording being Paralyzed commits ONE keyed effect writing BOTH condition
+  facts — condition.paralyzed and condition.incapacitated DIRECTLY in its own
+  state (the wave-3 composition parent's contract: both facts die with the
+  effect; the child imports nothing from the parent, the shared fact name IS
+  the coupling). condition.incapacitated carries stateCombine max on the
+  effect (mandatory: effect-incapacitated writes it max, and sheet.ts throws
+  on conflicting combine modes when standalone Incapacitated co-stands — see
+  condition-paralyzed-with-incapacitated). movement.ts's halted derive
+  ALREADY reads condition.paralyzed (the five Speed-0 conditions), so halted,
+  the collapsed remaining/effective_total mask, and every halted gate come
+  FREE with zero movement.ts changes — while speed/total stay live for
+  derived math. The recorder models BEING PARALYZED (imposed by an enemy
+  effect — hold monster, a paralyzing toxin), so it is free and ungated (the
+  prone "Knocked Prone" precedent), and any rest clears it (untilShortRest;
+  see condition-paralyzed-rest-clears). Auto-fail STR/DEX saves, vs-you
+  Advantage, and the within-5-ft auto-crit are notice text (NPC-side, the
+  prone precedent). The parent's notice fires too — the composed fact reads
+  1 to its annotate as well.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-incapacitated
+  - dnd-5e-2024/condition-paralyzed
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.paralyzed: 0
+          condition.incapacitated: 0
+          character.movement.halted: 0
+          character.movement.remaining: 30
+        offers:
+          exists:
+            - record-paralyzed
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-paralyzed.notice
+            - rule.dnd-5e-2024.condition-incapacitated.notice
+  - addOffer:
+      id: record-paralyzed
+      assert:
+        facts:
+          condition.paralyzed: 1
+          condition.incapacitated: 1
+          character.movement.halted: 1
+          character.movement.remaining: 0
+          character.movement.effective_total: 0
+          # Math keeps the base: speed/total stay live for derived math (the
+          # Get Up half_speed cost, a later Dash boost) — only the display
+          # reads effective_total and only the gates read halted.
+          character.movement.speed: 30
+          character.movement.total: 30
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-paralyzed.notice
+            - rule.dnd-5e-2024.condition-incapacitated.notice
+          targets:
+            - key: rule.dnd-5e-2024.condition-paralyzed.notice
+              targets: [notice]

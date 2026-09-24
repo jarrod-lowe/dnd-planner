@@ -1,0 +1,78 @@
+name: 'Condition Paralyzed - Movement Halted'
+description: >-
+  SRD 5.2 Paralyzed, Speed 0: "Your Speed is 0 and can't increase", so every
+  travel offer (walk, rough terrain, crawl, both swims, fly) is ILLEGAL while
+  paralyzed — a legality gate, not a structural one, so the player still sees
+  why (the shared cannot_while_halted diagnostic, which a planned-anyway row
+  also carries from the apply re-check). movement.ts's halted derive ALREADY
+  lists condition.paralyzed (grappled's Speed-0 family), so this comes free
+  with zero movement.ts changes. Dismissing the condition restores walk.
+  (The move-walk-illegal-while-grappled scenario is the shape this mirrors.)
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-paralyzed
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.paralyzed: 0
+          character.movement.halted: 0
+        offers:
+          legal:
+            - move-walk
+            - move-rough-terrain
+            - move-swim-costly
+          notExists:
+            - move-swim
+          illegal:
+            - move-crawl
+  - addOffer:
+      id: record-paralyzed
+      assert:
+        facts:
+          condition.paralyzed: 1
+          condition.incapacitated: 1
+          character.movement.halted: 1
+          character.movement.remaining: 0
+        offers:
+          illegal:
+            - move-walk
+            - move-rough-terrain
+            - move-swim-costly
+            - move-fly
+  # Planned anyway: the row still executes (illegal-but-visible — the engine's
+  # contract) and carries the halted diagnostic from the apply re-check, with
+  # the out-of-movement diagnostic joining it honestly.
+  - addOffer:
+      id: move-walk
+      assert:
+        facts:
+          character.movement.remaining: 0
+        planErrors:
+          - id: move-walk
+            index: 0
+            errors:
+              - rule.dnd-5e-2024.movement.action-move-walk-offer.out_of_movement
+              - rule.dnd-5e-2024.movement.cannot_while_halted
+  # Un-plan the walk, then the record: the halted mask follows the condition
+  # fact through the projection — with neither row planned, remaining and the
+  # walk offer are restored. (The committed-effect dismissal path is pinned by
+  # condition-paralyzed-rest-clears.)
+  - removeFromPlan:
+      id: move-walk
+      assert:
+        facts:
+          condition.paralyzed: 1
+          character.movement.halted: 1
+  - removeFromPlan:
+      id: record-paralyzed
+      assert:
+        facts:
+          condition.paralyzed: 0
+          condition.incapacitated: 0
+          character.movement.halted: 0
+          character.movement.remaining: 30
+        offers:
+          legal:
+            - move-walk

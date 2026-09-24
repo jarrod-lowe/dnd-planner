@@ -1,0 +1,33 @@
+name: 'Condition Paralyzed - Initiative Disadvantage Inheritance'
+description: >-
+  The Surprised inheritance pin (the family pin — Petrified and Stunned
+  inherit identically, so their docs point here). The Incapacitated parent
+  DERIVES initiative.disadvantage from the condition.incapacitated FACT
+  (not from an effect write), so a composition child that writes the fact
+  directly in its own effect state inherits the Disadvantage for free with
+  zero child-side code. Recording Paralyzed therefore sets the flag even
+  though no Paralyzed module ever mentions it — the shared fact name IS the
+  coupling.
+ruleGroups:
+  - dnd-5e-2024/condition-incapacitated
+  - dnd-5e-2024/condition-paralyzed
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.paralyzed: 0
+          condition.incapacitated: 0
+          initiative.disadvantage: 0
+        offers:
+          exists:
+            - record-paralyzed
+  - addOffer:
+      id: record-paralyzed
+      assert:
+        facts:
+          condition.paralyzed: 1
+          condition.incapacitated: 1
+          initiative.disadvantage: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-paralyzed.notice

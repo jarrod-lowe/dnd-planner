@@ -1079,6 +1079,36 @@
         "notice": "ngorlu'",
         "notice.body": "Do'lIj chIm 'ej DublaHbe'. HIvlIj lughangelbogh nIv ghaH, bIHIvDI' qay' Daghu'nIS, 'ej nv toDmeH qay' Daghu'nIS."
       },
+      "condition-paralyzed": {
+        "record-paralyzed": {
+          "name": "vIHlaHbe'"
+        },
+        "effect-paralyzed": {
+          "name": "vIHlaHbe'"
+        },
+        "notice": "vIHlaHbe'",
+        "notice.body": "laHtaHbe' SoH 'ej Do'lIj chIm. STR 'ej DEX toDmey DaHeQlaHbe'. HIvlIj lughangelbogh nIv ghaH, 'ej wa' qejvam HIvchugh Qapchu' ghaH."
+      },
+      "condition-petrified": {
+        "record-petrified": {
+          "name": "naghchoHpu'"
+        },
+        "effect-petrified": {
+          "name": "naghchoHpu'"
+        },
+        "notice": "naghchoHpu'",
+        "notice.body": "nagh DaSoHchoHpu': laHtaHbe', Do'lIj chIm, 'ej wa'maHlogh yIwaH. HIvlIj lughangelbogh nIv ghaH. STR 'ej DEX toDmey DaHeQlaHbe'. Hoch qIj Dub Ha'DIbaH ghob 'ej Dujlu' Dotlh DaHeQbe'."
+      },
+      "condition-stunned": {
+        "record-stunned": {
+          "name": "mISchoHpu'"
+        },
+        "effect-stunned": {
+          "name": "mISchoHpu'"
+        },
+        "notice": "mISchoHpu'",
+        "notice.body": "laHtaHbe' SoH. STR 'ej DEX toDmey DaHeQlaHbe'. HIvlIj lughangelbogh nIv ghaH."
+      },
       "grapple": {
         "grapple-action": {
           "name": "DIvI' qop",
@@ -1997,7 +2027,10 @@
         "poisoned": "Dujlu'pu'",
         "incapacitated": "laHtaHbe'",
         "grappled": "qop",
-        "restrained": "ngorlu'"
+        "restrained": "ngorlu'",
+        "paralyzed": "vIHlaHbe'",
+        "petrified": "naghchoHpu'",
+        "stunned": "mISchoHpu'"
       },
       "STAT": {
         "set": "Set",

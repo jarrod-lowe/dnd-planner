@@ -1,0 +1,33 @@
+name: 'Condition Stunned - With Incapacitated'
+description: >-
+  The max-combine overlap pin (the composition guard — paralyzed's scenario
+  names the pattern this mirrors). Standalone Incapacitated
+  (effect-incapacitated, stateCombine max) and composed Stunned
+  (effect-stunned, which writes condition.incapacitated in its own state) are
+  two live writers of the fact from DIFFERENT effects. Both carry
+  stateCombine max, so the two co-write safely — the fact reads 1 (a flag,
+  not a stack) — where a default sum on the child would make sheet.ts THROW
+  on the conflicting combine modes the moment a stunned character is also
+  recorded Incapacitated. Both condition facts stand on their own, and both
+  notices fire.
+ruleGroups:
+  - dnd-5e-2024/condition-incapacitated
+  - dnd-5e-2024/condition-stunned
+steps:
+  - addOffer:
+      id: record-incapacitated
+      assert:
+        facts:
+          condition.incapacitated: 1
+          condition.stunned: 0
+  - addOffer:
+      id: record-stunned
+      assert:
+        facts:
+          condition.incapacitated: 1
+          condition.stunned: 1
+          initiative.disadvantage: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-incapacitated.notice
+            - rule.dnd-5e-2024.condition-stunned.notice

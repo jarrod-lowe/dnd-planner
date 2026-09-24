@@ -85,13 +85,13 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 
 ### PR1 — condition-paralyzed module (record, composition effect, notice, rest clear, seeds)
 
-- [ ] RED: `condition-paralyzed-record` scenario fails — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
-- [ ] `condition-paralyzed.ts`: `record-paralyzed` offer, keyed composition effect, notice annotate
-- [ ] i18n keys above, both locales
-- [ ] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details`
-- [ ] GREEN: record + walk-illegal + rest-clears scenarios; `EXPECTED_RUNNABLE`
-- [ ] terraform seed `char_condition_paralyzed_rulegroup_seed` (dynamodb-items.tf); `make validate`
-- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod)
+- [x] RED: `condition-paralyzed-record` scenario fails — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
+- [x] `condition-paralyzed.ts`: `record-paralyzed` offer, keyed composition effect, notice annotate
+- [x] i18n keys above, both locales
+- [x] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details`
+- [x] GREEN: record + walk-illegal + rest-clears scenarios; `EXPECTED_RUNNABLE`
+- [x] terraform seed `char_condition_paralyzed_rulegroup_seed` (dynamodb-items.tf); `make validate`
+- [x] gates (`make check`, `make test-unit`, `make format-check`) → PR — executed as ONE trio PR with Petrified + Stunned (branch `condition-composition-trio`); codex monitor / deploy-test / human merge follow orchestrator cadence
 
 ## Out of scope
 

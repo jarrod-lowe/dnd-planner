@@ -1,0 +1,74 @@
+name: 'Condition Paralyzed - Rest Clears'
+description: >-
+  Any rest clears the Paralyzed condition: the keyed effect carries
+  untilShortRest, which a short rest satisfies directly and a long rest
+  includes. BOTH composed facts — condition.paralyzed and the
+  condition.incapacitated the effect writes directly — die with the effect
+  (the composition contract), and the halted mask, the collapsed remaining
+  and effective_total, and the notices all go with it (umbrella default —
+  SRD 5.2 gives no mechanical end, so rest plus manual chip dismissal only).
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-paralyzed
+  - dnd-5e-2024/core-events
+steps:
+  - addOffer:
+      id: record-paralyzed
+      assert:
+        facts:
+          condition.paralyzed: 1
+          condition.incapacitated: 1
+          character.movement.halted: 1
+          character.movement.remaining: 0
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-paralyzed.notice
+  # A long rest (the explicit endTurn flag) clears it.
+  - endTurn:
+      longRest: true
+      assert:
+        facts:
+          condition.paralyzed: 0
+          condition.incapacitated: 0
+          character.movement.halted: 0
+          character.movement.remaining: 30
+          character.movement.effective_total: 30
+        effects:
+          notExists:
+            - effect-paralyzed
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-paralyzed.notice
+  # ...and so does a recorded short rest: the rest flag effect restores its
+  # scoped effects within the same evaluation, so the facts and notice are
+  # already gone before the turn even ends.
+  - addOffer:
+      id: record-paralyzed
+      assert:
+        facts:
+          condition.paralyzed: 1
+          condition.incapacitated: 1
+  - addOffer:
+      id: record-short-rest
+      assert:
+        facts:
+          rest.short: 1
+          condition.paralyzed: 0
+          condition.incapacitated: 0
+          character.movement.halted: 0
+          character.movement.remaining: 30
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-paralyzed.notice
+  - endTurn:
+      assert:
+        facts:
+          condition.paralyzed: 0
+          condition.incapacitated: 0
+        effects:
+          notExists:
+            - effect-paralyzed
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-paralyzed.notice

@@ -55,6 +55,9 @@ import conditionPoisoned from './rules/condition-poisoned';
 import conditionIncapacitated from './rules/condition-incapacitated';
 import conditionGrappled from './rules/condition-grappled';
 import conditionRestrained from './rules/condition-restrained';
+import conditionParalyzed from './rules/condition-paralyzed';
+import conditionPetrified from './rules/condition-petrified';
+import conditionStunned from './rules/condition-stunned';
 import featAlert from './rules/feat-alert';
 import featSentinel from './rules/feat-sentinel';
 import fightingStyleGreatWeapon from './rules/fighting-style-great-weapon';
@@ -154,6 +157,9 @@ const MODULES: RuleModule[] = [
   conditionIncapacitated,
   conditionGrappled,
   conditionRestrained,
+  conditionParalyzed,
+  conditionPetrified,
+  conditionStunned,
   featAlert,
   featSentinel,
   fightingStyleGreatWeapon,
