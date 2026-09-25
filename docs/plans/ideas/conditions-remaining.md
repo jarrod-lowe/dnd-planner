@@ -95,7 +95,7 @@ Modelled: attack flags + all 18 `skill.{skill}.disadvantage` facts (facts exist 
 > **Ability Checks and Attacks Affected.** You have Disadvantage on ability checks and attack rolls while the source of fear is within line of sight.
 > **Can't Approach.** You can't willingly move closer to the source of fear.
 
-Modelled: same flags as Poisoned (incl. `initiative.disadvantage` — ability checks cover Initiative). Line-of-sight qualifier + can't-approach = notice text (player judgement; prone simplification precedent — see Decision defaults).
+Modelled: same flag SET as Poisoned (incl. `initiative.disadvantage`), but as gated derives behind a LoS toggle — notice-button sub-state `frightened.sourceHidden` flips all 22 live (user-directed replan; see condition-frightened.md). Can't-approach = notice text.
 
 ### Incapacitated — M–L (the enabler)
 
