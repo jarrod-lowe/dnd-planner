@@ -1,0 +1,99 @@
+name: 'Condition Unconscious - Record'
+description: >-
+  Recording being Unconscious commits ONE keyed effect writing THREE condition
+  facts — condition.unconscious, condition.incapacitated AND condition.prone
+  DIRECTLY in its own state (the composition contract: all three facts die
+  with the effect; the child imports nothing from the parent or the prone
+  module, the shared fact names ARE the coupling). condition.incapacitated
+  carries stateCombine max on the effect (mandatory: effect-incapacitated
+  writes it max, and sheet.ts throws on conflicting combine modes when
+  standalone Incapacitated co-stands — see condition-unconscious-with-
+  incapacitated); condition.prone stays DEFAULT-SUM on both its writers (the
+  prone effect and this one) so they co-write safely. movement.ts's halted
+  derive ALREADY lists condition.unconscious (the five Speed-0 conditions),
+  so halted, the collapsed remaining/effective_total mask, and every halted
+  gate come FREE with zero movement.ts changes. The effect writes NO attack
+  flags — prone's disadvantage lives in the prone EFFECT, not the fact, and
+  Incapacitated zeroes actions first (moot while unconscious; restored by
+  the fresh prone at regain). The recorder models BEING UNCONSCIOUS (imposed
+  — sleep, knockout; death saves out of scope), so it is free and ungated
+  (the prone "Knocked Prone" precedent). Regain Consciousness is the
+  #453 illegal-but-visible pattern: ALWAYS visible (waking is external —
+  healing, shaken awake), ILLEGAL while awake with its not_unconscious
+  diagnostic. The parent's AND prone's notices fire too — the composed
+  facts read 1 to their annotates as well (prone's interpolates the live
+  Get Up cost).
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-incapacitated
+  - dnd-5e-2024/condition-prone
+  - dnd-5e-2024/condition-unconscious
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.unconscious: 0
+          condition.incapacitated: 0
+          condition.prone: 0
+          character.movement.halted: 0
+          character.movement.remaining: 30
+        offers:
+          exists:
+            - record-unconscious
+            - regain-consciousness
+          legal:
+            - record-unconscious
+          illegal:
+            - regain-consciousness
+        annotations:
+          # The drop-held row annotation is live PRE-record (the row is the
+          # guidance point, awake or not) and carries the remedy as its
+          # tap-to-plan action: one tap plans set-loadout (the loadout group
+          # need not be ASSIGNED here — annotate emits the link, the panel
+          # degrades it to plain text when the offer is not in the catalog).
+          exists:
+            - rule.dnd-5e-2024.condition-unconscious.annotation
+          addsToPlan:
+            - key: rule.dnd-5e-2024.condition-unconscious.annotation
+              adds: { offer: set-loadout }
+          notExists:
+            - rule.dnd-5e-2024.condition-unconscious.notice
+            - rule.dnd-5e-2024.condition-incapacitated.notice
+            - rule.dnd-5e-2024.condition-prone.notice
+  - addOffer:
+      id: record-unconscious
+      assert:
+        facts:
+          condition.unconscious: 1
+          condition.incapacitated: 1
+          condition.prone: 1
+          character.movement.halted: 1
+          character.movement.remaining: 0
+          character.movement.effective_total: 0
+          # Math keeps the base: speed/total stay live for derived math (the
+          # Get Up half_speed cost, a later Dash boost) — only the display
+          # reads effective_total and only the gates read halted.
+          character.movement.speed: 30
+          character.movement.total: 30
+          # No attack flags on the unconscious effect (the decision pin):
+          # Incapacitated (fact-written) zeroes actions first; the flags come
+          # back with the fresh prone effect at regain.
+          attack.str.disadvantage: 0
+          attack.dex.disadvantage: 0
+        offers:
+          legal:
+            - regain-consciousness
+          # Prone via the composed fact: get-up's prone-only gate PASSES, but
+          # its Speed gate dies on the halted mask (Speed 0 — you can't right
+          # yourself, the crawl mirror).
+          illegal:
+            - get-up
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-unconscious.notice
+            - rule.dnd-5e-2024.condition-incapacitated.notice
+            - rule.dnd-5e-2024.condition-prone.notice
+          targets:
+            - key: rule.dnd-5e-2024.condition-unconscious.notice
+              targets: [notice]

@@ -1,0 +1,62 @@
+name: 'Condition Unconscious - Regain While Awake (illegal-but-visible)'
+description: >-
+  The contract pin for the ungated end-offer (the #453 get-up mirror — the
+  deviation from the doc's `when` gate, decided at execution): while AWAKE
+  the offer is ILLEGAL with its not_unconscious diagnostic but STILL VISIBLE,
+  and a planned-anyway row still EXECUTES (the plan.ts contract — illegal
+  rows apply). The empty 'unconscious' eviction commits as a no-op (no
+  unconscious effect is held) but the FRESH keyed prone effect the apply
+  also advertises COMMITS — a planned-anyway regain while awake leaves you
+  Prone. The diagnostic warns; the engine never hides. (The get-up-while-
+  standing scenario is the shape this mirrors.)
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-incapacitated
+  - dnd-5e-2024/condition-prone
+  - dnd-5e-2024/condition-unconscious
+steps:
+  # Awake: the end-offer is visible with its diagnostic.
+  - evaluate:
+      assert:
+        facts:
+          condition.unconscious: 0
+          condition.prone: 0
+        offers:
+          illegal:
+            - regain-consciousness
+  # Planned anyway: the row executes. The empty same-key 'unconscious'
+  # eviction is a no-op (no unconscious effect is held), but the fresh prone
+  # effect folds — condition.prone 1, flags 1 — carrying the diagnostic.
+  - addOffer:
+      id: regain-consciousness
+      assert:
+        facts:
+          condition.unconscious: 0
+          condition.incapacitated: 0
+          condition.prone: 1
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+        planErrors:
+          - id: regain-consciousness
+            index: 0
+            errors:
+              - rule.dnd-5e-2024.condition-unconscious.regain-consciousness-offer.not_unconscious
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-prone.notice
+          notExists:
+            - rule.dnd-5e-2024.condition-unconscious.notice
+  # Commit: the eviction lands as the permanent empty 'unconscious-ended'
+  # effect (a fact no-op) while the fresh prone stands — the warned-about
+  # consequence, pinned.
+  - endTurn:
+      assert:
+        facts:
+          condition.unconscious: 0
+          condition.incapacitated: 0
+          condition.prone: 1
+        effects:
+          exists:
+            - unconscious-ended
+            - effect-prone

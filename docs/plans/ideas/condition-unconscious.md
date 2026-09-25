@@ -47,7 +47,7 @@ Effects:
 Offers:
 
 - `record-unconscious`: section `free`, `detailKey: 'condition/unconscious'` (the published SRD detail), `intents: { CONDITION: 'unconscious' }`, no control, no gate
-- `regain-consciousness`: section `free`, `detailKey: 'condition/unconscious'` (same detail), `when: condition.unconscious > 0`, apply advertises [clear, fresh prone]
+- `regain-consciousness`: section `free`, `detailKey: 'condition/unconscious'` (same detail), ~~`when: condition.unconscious > 0`~~ NO `when` (executed deviation — always visible + a not-unconscious legality clause, the #453 pattern), apply advertises [clear, fresh prone]
 
 Notice (annotate while `condition.unconscious > 0`): `targets: ['notice']`, key `rule.dnd-5e-2024.condition-unconscious.notice` (+ `.body`), `source` effect name. Body: attack rolls vs you have Advantage; any hit within 5 ft is a Critical Hit; auto-fail STR/DEX saves; you drop what you're holding (Set Loadout to empty hands); unaware of surroundings.
 
@@ -81,37 +81,41 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 
 ## PRs
 
+**Executed as ONE PR (PR1+PR2 folded, by decision — the Restrained/invisible-2 precedent).** Q4 deviation (decided after this doc): regain-consciousness has NO `when` gate — always visible + a not-unconscious legality clause (the #453 crawl/get-up illegal-but-visible pattern); the `when: condition.unconscious > 0` lines below are superseded.
+
 ### PR1 — condition-unconscious module (record, composition, notice, halted read, seeds)
 
-- [ ] RED: `condition-unconscious-record` scenario fails — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
-- [ ] `condition-unconscious.ts`: record offer (apply invokes the shared concentration-break helper), keyed effect (3 facts, incapacitated `max`), notice annotate
-- [ ] halted derive reads `condition.unconscious` (whichever module Grappled landed it in)
-- [ ] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details`
-- [ ] i18n keys, both locales
-- [ ] terraform seed `char_condition_unconscious_rulegroup_seed` (dynamodb-items.tf); `make validate` passes
-- [ ] GREEN: record + breaks-concentration + rest-clears + walk-illegal scenarios in `EXPECTED_RUNNABLE`
-- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod)
+- [x] RED: `condition-unconscious-record` scenario fails — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE` (all 8 scenarios skipped as `unported groups: condition-unconscious`)
+- [x] `condition-unconscious.ts`: record offer (apply invokes the shared concentration-break helper), keyed effect (3 facts, incapacitated `max`), notice annotate
+- [x] halted derive reads `condition.unconscious` (whichever module Grappled landed it in) — already live since #451, no movement.ts change
+- [x] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details`
+- [x] i18n keys, both locales
+- [x] terraform seed `char_condition_unconscious_rulegroup_seed` (dynamodb-items.tf); `make validate` passes
+- [x] GREEN: record + breaks-concentration + rest-clears + walk-illegal scenarios in `EXPECTED_RUNNABLE`
+- [x] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod)
 
 ### PR2 — Regain Consciousness end-offer
 
-- [ ] RED: `condition-unconscious-regain` scenario fails
-- [ ] extract `proneEffect()` to builder; regain offer (`when`/apply: empty-keyed clear + fresh prone)
-- [ ] i18n regain keys + effect-cleared display, both locales
-- [ ] GREEN: regain + green-immediate pin `condition-unconscious-regain-after-record-prone` (exactly one prone effect survives — newest-wins)
-- [ ] gates → PR → codex monitor → clean → `make deploy-test` → human inspects test env → human merges
+- [x] RED: `condition-unconscious-regain` scenario fails
+- [x] extract `proneEffect()` to builder; regain offer (apply: empty-keyed clear + fresh prone; NO `when` — the deviation above)
+- [x] i18n regain keys + effect-cleared display, both locales
+- [x] GREEN: regain + green-immediate pin `condition-unconscious-regain-after-record-prone` (exactly one prone effect survives — newest-wins) + `condition-unconscious-regain-while-awake` (illegal-but-visible, planned-anyway commits the fresh prone — the contract pin)
+- [x] gates → PR → codex monitor → clean → `make deploy-test` → human inspects test env → human merges
 
 ## Out of scope
 
 - 0 HP / death saves / stable-dying flow — separate future idea
-- mechanical drop of held items (knot 1 option b)
+- mechanical drop of held items (knot 1 option b) — future idea (user-directed 2026-09-25): auto-loadout to empty hands on record
 - vs-you Advantage / auto-crit / auto-fail STR/DEX saves enforcement (NPC-side, notice text)
 - strip-dismissal suppression (unless re-grilled into its own slice)
 - waking triggers (healing amounts, shaken awake) — player adjudicated
 
 ## Notes
 
+- Loadout annotation ON the record-unconscious row (user-directed 2026-09-25): the drop-held guidance ("You drop what you're holding — set your Loadout to empty hands") rides the recorder's `annotationLabels: ['condition.unconscious.record']` as an UNCONDITIONAL row annotation — the row is the pre-action guidance point, awake or not; the notice body is unchanged. Unit-pinned in `condition-unconscious-annotation.test.ts`
+- The annotation LINKS to Loadout (user-directed 2026-09-25): it carries `addsToPlan: { offer: 'set-loadout' }`, so a tap plans the Set Loadout row (the concentration idiom); it degrades to plain text when the loadout group isn't assigned — no `requires` change made
 - Strip dismissal of the unconscious chip leaves you NOT prone — known deviation, no suppression mechanism; Regain Consciousness is the blessed end
 - Doubled `condition.prone` (live prone effect + unconscious effect) reads 2 — harmless, all reads are `> 0`
-- `when: false` skips planned instances — regain can't be pre-planned while awake (mirror of get-up)
+- `when: false` skips planned instances — regain can't be pre-planned while awake (mirror of get-up) — SUPERSEDED (executed with no `when` gate: a planned-anyway regain while awake is ILLEGAL-but-visible and commits the fresh prone, pinned in `condition-unconscious-regain-while-awake`)
 - Unconscious effect's missing attack flags are invisible in play: Incapacitated (fact-written) zeroes actions first
 - Surprised inherits via the incapacitated derive (`initiative.disadvantage` reads the composed fact) — nothing to write here; paralyzed's pin scenario covers the family

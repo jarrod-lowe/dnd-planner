@@ -583,6 +583,23 @@ const EXPECTED_RUNNABLE = [
   'condition-invisible-record',
   'condition-invisible-rest-clears',
   'invisible-plus-prone-cancels',
+  // wave 7 — Unconscious (PR1+PR2 folded into ONE PR by decision): the last
+  // composition child — keyed effect writes condition.unconscious +
+  // condition.incapacitated + condition.prone (incapacitated max, prone
+  // default-sum on both writers), recorder invokes the shared break helper,
+  // halted free-ride (movement already lists the fact), and the Regain
+  // Consciousness end-offer — NO when gate (the #453 illegal-but-visible
+  // deviation, pinned awake): apply advertises the empty same-key
+  // 'unconscious' eviction + a FRESH proneEffect() so Prone survives the end
+  // per SRD ("you remain Prone") — newest-wins pins the duplicate-prone case
+  'condition-unconscious-record',
+  'condition-unconscious-breaks-concentration',
+  'condition-unconscious-regain',
+  'condition-unconscious-regain-while-awake',
+  'condition-unconscious-regain-after-record-prone',
+  'condition-unconscious-rest-clears',
+  'move-walk-illegal-while-unconscious',
+  'condition-unconscious-with-incapacitated',
   // PR3 — crawl (×2 spend while prone) + the prone movement restriction
   'move-crawl-while-prone',
   'walk-illegal-while-prone',

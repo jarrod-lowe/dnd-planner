@@ -47,7 +47,7 @@ Rough total: ~10–12 PRs. Calibration: prone = 4 PRs incl. inventing the chassi
 
 ### Wave 7
 
-- [ ] [Unconscious](condition-unconscious.md) — execute
+- [x] [Unconscious](condition-unconscious.md) — executed (PR1+PR2 folded into ONE PR by decision, branch `condition-unconscious`): keyed effect writes all three facts (unconscious + incapacitated max + prone default-sum), shared break helper, halted free-ride, Regain Consciousness end-offer with NO `when` gate (the #453 illegal-but-visible deviation) committing an empty-keyed eviction + a FRESH shared `proneEffect()` from the builder so Prone survives the end per SRD
 
 ### Wave 8
 
@@ -242,5 +242,6 @@ Nothing like it exists — a counter, not a boolean:
 - death saves / 0 HP flow (Unconscious neighbour — separate idea)
 - Hide action (Invisible's usual source); flying + Prone → falling
 - condition immunities (glossary "Immunity") — future idea (user-directed 2026-09-25): mechanise Petrified's Poisoned immunity (recording Petrified evicts a standing Poisoned effect)
+- mechanical drop of held items on Unconscious (auto-loadout → empty hands) — future idea (user-directed 2026-09-25)
 - persisted effects from prior releases are not rewritten — re-record to heal
 - backfilling seeded groups to pre-existing characters (prone known limitation — recreate character or forward-assignment idea)

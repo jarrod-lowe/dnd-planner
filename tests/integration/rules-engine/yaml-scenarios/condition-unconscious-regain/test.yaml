@@ -1,0 +1,75 @@
+name: 'Condition Unconscious - Regain Consciousness'
+description: >-
+  THE key assert of the condition (SRD 5.2 Inert: "When this condition ends,
+  you remain Prone"). Regain Consciousness is a free-section end-offer with
+  NO when gate (the #453 illegal-but-visible pattern — always visible, waking
+  is external) whose apply advertises TWO effects: the EMPTY same-key
+  'unconscious' eviction (the get-up idiom — newest-wins replaces the
+  condition IN-FOLD while merely planned, so remove the row and the
+  condition folds back) and a FRESH keyed prone effect (the shared
+  proneEffect() builder — condition.prone + the STR/DEX attack-disadvantage
+  flags) so Prone SURVIVES the eviction. All three unconscious-written facts
+  drop (unconscious, incapacitated, prone-from-this-effect) while the fresh
+  prone keeps condition.prone at 1 and RESTORES the attack flags the
+  unconscious effect deliberately omitted; halted clears with the fact (its
+  derive reads condition.unconscious), so remaining returns and a Get Up row
+  planned after works — regain-then-get-up in one plan.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-incapacitated
+  - dnd-5e-2024/condition-prone
+  - dnd-5e-2024/condition-unconscious
+steps:
+  - addOffer:
+      id: record-unconscious
+      assert:
+        facts:
+          condition.unconscious: 1
+          condition.incapacitated: 1
+          condition.prone: 1
+          character.movement.halted: 1
+          character.movement.remaining: 0
+  # Regain: the eviction applies while MERELY PLANNED — unconscious and
+  # incapacitated read 0 in-fold, the fresh prone keeps condition.prone at 1
+  # and brings back both attack flags, and speed returns with the halted
+  # mask (so get-up, right after, is legal at the projected facts).
+  - addOffer:
+      id: regain-consciousness
+      assert:
+        facts:
+          condition.unconscious: 0
+          condition.incapacitated: 0
+          condition.prone: 1
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+          character.movement.halted: 0
+          character.movement.remaining: 30
+        offers:
+          legal:
+            - get-up
+        planErrors:
+          - id: regain-consciousness
+            index: 0
+            errors: []
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-unconscious.notice
+            - rule.dnd-5e-2024.condition-incapacitated.notice
+          exists:
+            - rule.dnd-5e-2024.condition-prone.notice
+  # Commit: the eviction merges permanently (permanent empty effect, the
+  # get-up 'prone-ended' shape) and the FRESH prone effect stands — Prone
+  # survives the end of Unconscious exactly as SRD says.
+  - endTurn:
+      assert:
+        facts:
+          condition.unconscious: 0
+          condition.incapacitated: 0
+          condition.prone: 1
+        effects:
+          notExists:
+            - effect-unconscious
+          exists:
+            - unconscious-ended
+            - effect-prone

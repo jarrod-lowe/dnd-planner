@@ -1,0 +1,88 @@
+name: 'Condition Unconscious - Movement Halted'
+description: >-
+  SRD 5.2 Unconscious, Speed 0: "Your Speed is 0 and can't increase", so
+  every travel offer (walk, rough terrain, crawl — the prone allowance
+  included, both swims, fly) is ILLEGAL while unconscious — a legality gate,
+  not a structural one, so the player still sees why (the shared
+  cannot_while_halted diagnostic, which a planned-anyway row also carries
+  from the apply re-check — joined there by cannot_while_prone, since the
+  condition makes you Prone, and out_of_movement on the collapsed mask).
+  movement.ts's halted derive ALREADY lists condition.unconscious (the five
+  Speed-0 conditions), so this comes free with zero movement.ts changes.
+  Dismissing the condition restores walk. (The move-walk-illegal-while-
+  paralyzed scenario is the shape this mirrors.)
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-unconscious
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.unconscious: 0
+          character.movement.halted: 0
+        offers:
+          legal:
+            - move-walk
+            - move-rough-terrain
+            - move-swim-costly
+          notExists:
+            - move-swim
+          illegal:
+            - move-crawl
+  - addOffer:
+      id: record-unconscious
+      assert:
+        facts:
+          condition.unconscious: 1
+          condition.incapacitated: 1
+          condition.prone: 1
+          character.movement.halted: 1
+          character.movement.remaining: 0
+        offers:
+          illegal:
+            - move-walk
+            - move-rough-terrain
+            # Speed 0 beats the prone allowance: crawl is prone-legal but
+            # halted-illegal.
+            - move-crawl
+            - move-swim-costly
+            - move-fly
+  # Planned anyway: the row still executes (illegal-but-visible — the
+  # engine's contract) and carries all three diagnostics from the apply
+  # re-check: the halted clause, the prone clause (unconscious makes you
+  # Prone), and out_of_movement on the collapsed mask.
+  - addOffer:
+      id: move-walk
+      assert:
+        facts:
+          character.movement.remaining: 0
+        planErrors:
+          - id: move-walk
+            index: 0
+            errors:
+              - rule.dnd-5e-2024.movement.action-move-walk-offer.out_of_movement
+              - rule.dnd-5e-2024.movement.cannot_while_prone
+              - rule.dnd-5e-2024.movement.cannot_while_halted
+  # Un-plan the walk, then the record: the halted mask follows the condition
+  # fact through the projection — with neither row planned, remaining and
+  # the walk offer are restored. (The committed-effect dismissal path is
+  # pinned by condition-unconscious-rest-clears.)
+  - removeFromPlan:
+      id: move-walk
+      assert:
+        facts:
+          condition.unconscious: 1
+          character.movement.halted: 1
+  - removeFromPlan:
+      id: record-unconscious
+      assert:
+        facts:
+          condition.unconscious: 0
+          condition.incapacitated: 0
+          condition.prone: 0
+          character.movement.halted: 0
+          character.movement.remaining: 30
+        offers:
+          legal:
+            - move-walk
