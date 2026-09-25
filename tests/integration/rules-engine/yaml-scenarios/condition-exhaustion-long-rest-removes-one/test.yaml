@@ -1,0 +1,74 @@
+name: 'Condition Exhaustion - Long Rest Removes One'
+description: >-
+  SRD 5.2 Removing Exhaustion Levels: "Finishing a Long Rest removes 1 of
+  your Exhaustion levels" — the onRest hook (the Channel Divinity precedent;
+  rest EXPIRY can only clear whole effects, never decrement), reading the
+  PRE-rest state via the boundary re-derive and advertising the SAME keyed
+  effect one level lower, so newest-wins replaces the committed level-2
+  effect within the same evaluation the rest is recorded (Speed eases in the
+  projection, 20 → 25). A SHORT rest removes nothing (the effect is
+  permanent — a deliberate deviation from the umbrella's untilShortRest
+  condition default; SRD gives the removal to the Long Rest alone), and the
+  decremented level is itself permanent: it persists past the turn boundary.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/condition-exhaustion
+steps:
+  # Turn 1: two records the same turn land on level 2 (the folded-counter
+  # pin — see condition-exhaustion-record-twice), committed at the boundary.
+  - addOffer:
+      id: record-exhaustion
+  - addOffer:
+      id: record-exhaustion
+      assert:
+        facts:
+          condition.exhaustion: 2
+          character.movement.speed: 20
+  - endTurn:
+      assert:
+        facts:
+          condition.exhaustion: 2
+  # Turn 2: a SHORT rest removes nothing — the level and the Speed penalty
+  # both survive the rest flag and the boundary.
+  - addOffer:
+      id: record-short-rest
+      assert:
+        facts:
+          rest.short: 1
+          condition.exhaustion: 2
+          character.movement.speed: 20
+          character.movement.total: 20
+  - endTurn:
+      assert:
+        facts:
+          condition.exhaustion: 2
+          character.movement.speed: 20
+  # Turn 3: the LONG rest removes exactly ONE level (2 → 1; species 30 − 5 =
+  # Speed 25), visible in the same evaluation the rest is recorded.
+  - addOffer:
+      id: record-long-rest
+      assert:
+        facts:
+          rest.long: 1
+          condition.exhaustion: 1
+          character.movement.speed: 25
+          character.movement.total: 25
+          character.movement.remaining: 25
+        # The notice tracks the decremented level (its interpolated values
+        # are unit-pinned in condition-exhaustion-notice.test.ts).
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-exhaustion.notice
+  # The decremented level is permanent — it survives the boundary, and the
+  # committed set still holds exactly ONE keyed level effect (the newest, at
+  # the post-rest level).
+  - endTurn:
+      assert:
+        facts:
+          condition.exhaustion: 1
+          character.movement.speed: 25
+        effects:
+          exists:
+            - effect-exhaustion

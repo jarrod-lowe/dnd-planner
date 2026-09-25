@@ -6,7 +6,13 @@ description: >-
   the same keyed effect at prior+1 — two record rows the same turn land on
   level 2, not 1+1=2-stacked-effects (a stacking bug would sum 1+2=3) and
   not 1 (an identity bug would miss the increment). The Speed penalty
-  follows the level: −10 on BOTH speed and total at level 2.
+  follows the level: −10 on BOTH speed and total at level 2. PR3 adds the
+  three D20-test rider annotations (−2 × level on to-hit/check/save — the
+  values are unit-pinned in condition-exhaustion-riders.test.ts; yaml
+  asserts existence/targets): to-hit on attack.any (every weapon + unarmed),
+  check on dice.any (skills, record-check, Initiative — never a weapon's
+  damage die: PanelDiceLine's purpose filter keeps appliesTo to its own
+  dice), save on save.any (the 6 save recorders + concentration).
 ruleGroups:
   - species-human/species-human
   - dnd-5e-2024/movement
@@ -33,6 +39,16 @@ steps:
         offers:
           legal:
             - record-exhaustion
+        # PR3: the three D20-test riders stand at the folded level, each on
+        # exactly its own panel label set.
+        annotations:
+          targets:
+            - key: rule.dnd-5e-2024.condition-exhaustion.rider-to-hit
+              targets: [attack.any]
+            - key: rule.dnd-5e-2024.condition-exhaustion.rider-check
+              targets: [dice.any]
+            - key: rule.dnd-5e-2024.condition-exhaustion.rider-save
+              targets: [save.any]
   # Commit: endTurn's dedupeByKey keeps ONE same-key effect (the newest, at
   # level 2) — the committed level survives the boundary.
   - endTurn:

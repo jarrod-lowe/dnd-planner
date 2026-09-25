@@ -1152,7 +1152,14 @@
         },
         "notice": "ngoy'taH",
         "notice.body": "ngoy' Sab {{level}} — D20 naw' {{roll}}, Do {{speed}} qej. Qong naQ wa' Sab pol.",
-        "notice.body-dead": "ngoy' Sab {{level}} — bIHeghpu'. D20 naw' {{roll}}, Do {{speed}} qej."
+        "notice.body-dead": "ngoy' Sab {{level}} — bIHeghpu'. D20 naw' {{roll}}, Do {{speed}} qej.",
+        "rider": "ngoy'",
+        "rider-to-hit": "ngoy' — HIv",
+        "rider-check": "ngoy' — laH",
+        "rider-save": "ngoy' — toD",
+        "long-rest-clear": {
+          "name": "ngoy' teqlu'pu'"
+        }
       },
       "grapple": {
         "grapple-action": {

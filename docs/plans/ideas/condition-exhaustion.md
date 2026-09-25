@@ -121,10 +121,10 @@ FOLDED into PR1 (above) by decision — items executed there:
 
 ### PR3 — D20-test rider + long-rest decrement
 
-- [ ] RED: `condition-exhaustion-long-rest-removes-one` fails; `record-twice` gains rider-annotation asserts
-- [ ] rider ×3 annotate + rider-value unit test (−4 at level 2); playwright check that the chips render on a weapon panel, a skill, a save (first to-hit/check flat riders — see Notes)
-- [ ] `onRest` decrement + level-0 empty eviction; short-rest-removes-nothing + rest-then-gain-edge + clears-final-level pins asserted
-- [ ] GREEN; gates → PR → codex monitor → clean → `make deploy-test` → human inspects test env → human merges
+- [x] RED: `condition-exhaustion-long-rest-removes-one` fails (Step 5: fact `condition.exhaustion` expected 1, got 2 — no hook yet); `clears-final-level` + `record-twice` fail on the missing rider annotations (right reason); `rest-then-gain-edge` passes green-immediate BY DESIGN (the direction pin guards the hook's splice semantics — a plan.ts change that appended hook effects last would flip it to 1 and fail it)
+- [x] rider ×3 annotate + rider-value unit test (−4 at level 2, −2/−12 bounds, shared label + explicit defaultOn — `condition-exhaustion-riders.test.ts`); negative-chip render pin (−4, never +−4, folded into d20+1) in `PanelDiceLine-summary.test.ts` — the first negative-bonus rider test in the repo. Browser check backend-limited (auth); riders pinned at unit/scenario/component level
+- [x] `onRest` decrement + level-0 empty eviction (`exhaustionEnded()` — distinct `.long-rest-clear.name` label, unit-pinned NOT the Exhaustion name); short-rest-removes-nothing + rest-then-gain-edge + clears-final-level pins asserted; rest unit pins in `condition-exhaustion-rest.test.ts` (incl. the unset-fact reversion read as 0)
+- [x] GREEN; gates → PR → codex monitor → clean → `make deploy-test` → human inspects test env → human merges
 
 ## Out of scope
 

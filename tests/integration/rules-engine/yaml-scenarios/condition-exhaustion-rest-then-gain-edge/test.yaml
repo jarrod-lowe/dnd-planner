@@ -1,0 +1,49 @@
+name: 'Condition Exhaustion - Rest Then Gain Edge'
+description: >-
+  The pinned direction of the accepted post-rest-plan imperfection (plan.ts:
+  the hook's effects SPLICE at the rest boundary, so a row planned AFTER the
+  rest stays chronologically newer, and keyed dedupe is newest-wins): a
+  long rest THEN a record at level 2 → the recorder row cannot see the
+  hook's own effects at its step (the documented post-rest-row blindness),
+  reads the folded level 2, advertises 3, and newest-wins keeps the
+  RECORDER's effect over the hook's level-1 decrement — the GAIN survives,
+  the DECREMENT is swallowed (level 3, not 1). Gain-then-rest is correct
+  (the hook reads the post-gain boundary state; its effect splices after the
+  recorder row and wins). Pinned green-immediate so a future engine change
+  to per-effect rest ordering must update this scenario DELIBERATELY.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/condition-exhaustion
+steps:
+  # Turn 1: level 2, committed.
+  - addOffer:
+      id: record-exhaustion
+  - addOffer:
+      id: record-exhaustion
+      assert:
+        facts:
+          condition.exhaustion: 2
+  - endTurn:
+      assert:
+        facts:
+          condition.exhaustion: 2
+  # Turn 2: rest FIRST, then a record planned after it. The post-rest row is
+  # flagged after-rest (illegal-but-visible — it still executes, the plan.ts
+  # contract) and cannot see the hook's level-1 splice, so it reads 2 and
+  # advertises 3; keyed newest-wins keeps the later row.
+  - addOffer:
+      id: record-long-rest
+  - addOffer:
+      id: record-exhaustion
+      assert:
+        facts:
+          condition.exhaustion: 3
+          character.movement.speed: 15
+  # The gain — not the decrement — survives the boundary.
+  - endTurn:
+      assert:
+        facts:
+          condition.exhaustion: 3
+          character.movement.speed: 15

@@ -301,6 +301,37 @@ describe('PanelDiceLine - summary short form', () => {
     expect(container.textContent).toContain('d20+8');
   });
 
+  // The FIRST negative-bonus rider in the repo (Exhaustion's −2 × level on
+  // D20 Tests): `formatModifier` must render the minus itself ("-4"), never a
+  // double sign ("+-4" — the `value >= 0 ? '+' : ''` guard), the chip starts
+  // ON (aria-pressed, defaultOn), and the die's shown expression folds the
+  // penalty in (formatBonus: 5 − 4 = +1, rendered "d20+1" — the same fold the
+  // roll total performs). Aura of Protection's +bonus never exercised this.
+  it('renders a negative rider chip as -4, never +-4, and folds it into the shown bonus', () => {
+    const control: DiceLineControl = {
+      type: 'dice-line',
+      dice: [{ sides: 20, bonus: { number: 5 }, purpose: 'to-hit' }]
+    };
+    const modifiers = [
+      {
+        key: 'rule.dnd-5e-2024.condition-exhaustion.rider-to-hit',
+        label: 'rule.dnd-5e-2024.condition-exhaustion.rider',
+        appliesTo: 'to-hit' as const,
+        value: -4,
+        defaultOn: true
+      }
+    ];
+    const { container } = render(PanelDiceLine, {
+      props: { control, editable: true, facts: {}, vars: {}, modifiers, summary: false }
+    });
+    const chip = container.querySelector('.panel-renderer__modifier') as HTMLElement;
+    expect(chip, 'the toggleable modifier chip renders (expanded)').not.toBeNull();
+    expect(chip.getAttribute('aria-pressed')).toBe('true');
+    expect(chip.textContent).toContain('-4');
+    expect(chip.textContent).not.toContain('+-4');
+    expect(container.textContent, 'the folded expression subtracts the penalty').toContain('d20+1');
+  });
+
   it('carries advantage/disadvantage styling onto the summary chip', async () => {
     const entry = createDisadvantageEntry();
     vi.spyOn(Math, 'random')

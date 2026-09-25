@@ -51,7 +51,7 @@ Rough total: ~10–12 PRs. Calibration: prone = 4 PRs incl. inventing the chassi
 
 ### Wave 8
 
-- [ ] [Exhaustion](condition-exhaustion.md) — execute (counter machinery; settle 6-vs-10 first — see Decision defaults)
+- [x] [Exhaustion](condition-exhaustion.md) — executed in 2 PRs: PR1 (#459, merged) the counter chassis (keyed level effect, record offer with the no-L7 gate/clamp, notice with values + body-dead, −5 × level speed contributions, reads floored at 0); PR2/PR3 the D20-test riders ×3 (to-hit/check/save flat riders, the first to-hit/check flat riders in the repo) + the `onRest` long-rest decrement (exactly 1 per long rest, level-0 empty-key eviction with the distinct ended label; short rest removes nothing; rest-then-gain edge accepted and pinned) — tracker COMPLETE 2026-09-25: waves 1–8 done, 13 of the 14 conditions landed (Frightened alone remains, deferred by its own wave-2 decision — line-of-sight qualifier handling)
 
 ## Conditions (verbatim SRD + scope + effort)
 
@@ -234,6 +234,10 @@ Nothing like it exists — a counter, not a boolean:
 - i18n: BOTH locales (`en` + `en-x-tlh` invented values, normal casing); `rule.*` keys in `common.json` never rule-group YAML; detail body en-only (tlh falls back); `play.verbBuckets.CONDITION.<name>` per condition
 - **STOP and discuss if any step proves unworkable**
 - Tick items as done; add notes inline
+
+## Follow-ups (user-directed 2026-09-25)
+
+- Organise the CONDITION verb-bucket sub-levels differently — the 15 per-condition entries render as one flat list; regroup them.
 
 ## Out of scope (global)
 

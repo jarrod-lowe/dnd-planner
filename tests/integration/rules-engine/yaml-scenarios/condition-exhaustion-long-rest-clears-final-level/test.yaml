@@ -1,0 +1,68 @@
+name: 'Condition Exhaustion - Long Rest Clears Final Level'
+description: >-
+  Level 1 → long rest → level 0: the condition ENDS (SRD 5.2: "When your
+  Exhaustion level reaches 0, the condition ends"). The hook cannot advertise
+  the keyed effect at level 0 — that would leave an "Exhaustion" chip with a
+  0 value standing forever — so it advertises the EMPTY same-key eviction
+  (the get-up prone-ended idiom): newest-wins drops the level effect,
+  condition.exhaustion reverts to 0, Speed returns to 30, and the notice and
+  all three D20-test riders vanish with it. The eviction chip carries its
+  DISTINCT ended label (.long-rest-clear.name — pinned in
+  condition-exhaustion-rest.test.ts; yaml cannot assert display names), never
+  the Exhaustion name — the off-by-one guard: 2 → 1 never exercises this
+  branch, so a level-0 bug could otherwise strand the condition standing.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/core-events
+  - dnd-5e-2024/condition-exhaustion
+steps:
+  # Turn 1: level 1, with the notice and all three riders standing.
+  - addOffer:
+      id: record-exhaustion
+      assert:
+        facts:
+          condition.exhaustion: 1
+          character.movement.speed: 25
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-exhaustion.notice
+            - rule.dnd-5e-2024.condition-exhaustion.rider-to-hit
+            - rule.dnd-5e-2024.condition-exhaustion.rider-check
+            - rule.dnd-5e-2024.condition-exhaustion.rider-save
+  - endTurn:
+      assert:
+        facts:
+          condition.exhaustion: 1
+  # Turn 2: the long rest removes the LAST level — the eviction lands within
+  # the same evaluation the rest is recorded, and everything keyed to the
+  # level goes with it.
+  - addOffer:
+      id: record-long-rest
+      assert:
+        facts:
+          condition.exhaustion: 0
+          character.movement.speed: 30
+          character.movement.total: 30
+          character.movement.remaining: 30
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-exhaustion.notice
+            - rule.dnd-5e-2024.condition-exhaustion.rider-to-hit
+            - rule.dnd-5e-2024.condition-exhaustion.rider-check
+            - rule.dnd-5e-2024.condition-exhaustion.rider-save
+  # Commit: ONE keyed effect survives endTurn's dedupeByKey — the permanent
+  # eviction under its own ended id; the level effect is gone for good.
+  - endTurn:
+      assert:
+        facts:
+          condition.exhaustion: 0
+          character.movement.speed: 30
+        effects:
+          exists:
+            - exhaustion-ended
+          notExists:
+            - effect-exhaustion
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-exhaustion.notice
