@@ -1,0 +1,54 @@
+name: 'Condition Unconscious - Regain After Separately Recorded Prone'
+description: >-
+  The newest-wins pin for the FRESH prone effect (the green-immediate
+  duplicate-prone case): recording prone SEPARATELY while unconscious holds a
+  second key-'prone' writer beside the unconscious effect's own condition.prone
+  state — the facts SUM (2, harmless: every read is > 0). Regain's fresh
+  keyed prone effect NEWEST-WINS REPLACES the recorded one (a condition
+  doesn't stack with itself), so exactly ONE prone writer survives: after the
+  regain row, condition.prone reads 1 (not 2) with the attack flags standing.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-incapacitated
+  - dnd-5e-2024/condition-prone
+  - dnd-5e-2024/condition-unconscious
+steps:
+  - addOffer:
+      id: record-unconscious
+      assert:
+        facts:
+          condition.unconscious: 1
+          condition.prone: 1
+  # Separately record prone — a second key-'prone' effect beside the
+  # unconscious effect's own prone fact. The facts sum (harmless, > 0 reads).
+  - addOffer:
+      id: record-prone
+      assert:
+        facts:
+          condition.unconscious: 1
+          condition.prone: 2
+          attack.str.disadvantage: 1
+  # Regain: the fresh key-'prone' effect newest-wins replaces the recorded
+  # one AND the eviction kills the unconscious effect's own prone write —
+  # exactly ONE prone writer survives, so condition.prone reads 1, not 2.
+  - addOffer:
+      id: regain-consciousness
+      assert:
+        facts:
+          condition.unconscious: 0
+          condition.incapacitated: 0
+          condition.prone: 1
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+  - endTurn:
+      assert:
+        facts:
+          condition.unconscious: 0
+          condition.prone: 1
+        effects:
+          exists:
+            - effect-prone
+            - unconscious-ended
+          notExists:
+            - effect-unconscious

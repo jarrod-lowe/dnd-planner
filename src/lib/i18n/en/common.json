@@ -1119,6 +1119,26 @@
         "notice": "Invisible",
         "notice.body": "Advantage on your attack rolls and on Initiative. Attack rolls against you have Disadvantage (not against a creature that can somehow see you). You and your equipment are concealed from effects that require their target to be seen. Ends on any rest."
       },
+      "condition-unconscious": {
+        "record-unconscious": {
+          "name": "Knocked Unconscious"
+        },
+        "effect-unconscious": {
+          "name": "Unconscious"
+        },
+        "regain-consciousness": {
+          "name": "Regain Consciousness",
+          "description": "Wake up, ending the Unconscious condition — you remain Prone — free, no action"
+        },
+        "regain-consciousness.effect-cleared": {
+          "name": "Regained Consciousness"
+        },
+        "regain-consciousness-offer": {
+          "not_unconscious": "You are not unconscious — there is nothing to wake from"
+        },
+        "notice": "Unconscious",
+        "notice.body": "You are Incapacitated and Prone with Speed 0, and you drop what you're holding (Set Loadout to empty hands). Attack rolls against you have Advantage, and any hit from within 5 ft is a Critical Hit. You automatically fail STR and DEX saving throws and are unaware of your surroundings."
+      },
       "grapple": {
         "grapple-action": {
           "name": "Grapple",
@@ -2041,7 +2061,8 @@
         "paralyzed": "Paralyzed",
         "petrified": "Petrified",
         "stunned": "Stunned",
-        "invisible": "Invisible"
+        "invisible": "Invisible",
+        "unconscious": "Unconscious"
       },
       "STAT": {
         "set": "Set",

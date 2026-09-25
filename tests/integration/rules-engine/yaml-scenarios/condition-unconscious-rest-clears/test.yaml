@@ -1,0 +1,88 @@
+name: 'Condition Unconscious - Rest Clears'
+description: >-
+  Any rest clears the Unconscious condition — the umbrella deviation
+  (deliberate, inherited from Prone): the keyed effect carries
+  untilShortRest, which a short rest satisfies directly and a long rest
+  includes, so the WHOLE effect dies including its condition.prone write —
+  you do NOT remain Prone after a rest (aligned with Prone's own
+  rest-clears deviation; only the Regain Consciousness end-offer keeps Prone
+  standing, and it is the blessed end for that reason). All three composed
+  facts, the halted mask, the collapsed remaining/effective_total, and all
+  three notices go with it.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-incapacitated
+  - dnd-5e-2024/condition-prone
+  - dnd-5e-2024/condition-unconscious
+  - dnd-5e-2024/core-events
+steps:
+  - addOffer:
+      id: record-unconscious
+      assert:
+        facts:
+          condition.unconscious: 1
+          condition.incapacitated: 1
+          condition.prone: 1
+          character.movement.halted: 1
+          character.movement.remaining: 0
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-unconscious.notice
+  # A long rest (the explicit endTurn flag) clears it — the whole effect,
+  # prone write included (the deviation pin: prone does NOT survive a rest).
+  - endTurn:
+      longRest: true
+      assert:
+        facts:
+          condition.unconscious: 0
+          condition.incapacitated: 0
+          condition.prone: 0
+          character.movement.halted: 0
+          character.movement.remaining: 30
+          character.movement.effective_total: 30
+        effects:
+          notExists:
+            - effect-unconscious
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-unconscious.notice
+            - rule.dnd-5e-2024.condition-incapacitated.notice
+            - rule.dnd-5e-2024.condition-prone.notice
+  # ...and so does a recorded short rest: the rest flag effect restores its
+  # scoped effects within the same evaluation, so the facts and notices are
+  # already gone before the turn even ends.
+  - addOffer:
+      id: record-unconscious
+      assert:
+        facts:
+          condition.unconscious: 1
+          condition.incapacitated: 1
+          condition.prone: 1
+  - addOffer:
+      id: record-short-rest
+      assert:
+        facts:
+          rest.short: 1
+          condition.unconscious: 0
+          condition.incapacitated: 0
+          condition.prone: 0
+          character.movement.halted: 0
+          character.movement.remaining: 30
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-unconscious.notice
+            - rule.dnd-5e-2024.condition-incapacitated.notice
+            - rule.dnd-5e-2024.condition-prone.notice
+  - endTurn:
+      assert:
+        facts:
+          condition.unconscious: 0
+          condition.incapacitated: 0
+          condition.prone: 0
+        effects:
+          notExists:
+            - effect-unconscious
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-unconscious.notice

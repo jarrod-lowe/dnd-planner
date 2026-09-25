@@ -118,6 +118,40 @@ export const concentrationBreakEffects = (f: FactReader): EffectInstance[] =>
     : [];
 
 /**
+ * The keyed prone effect condition-prone's offers commit — and Unconscious's
+ * Regain Consciousness end-offer commits FRESH (SRD 5.2 Unconscious, Inert:
+ * "When this condition ends, you remain Prone" — the eviction that ends the
+ * condition kills its own `condition.prone` write, so a fresh key-'prone'
+ * writer must land beside it). `key: 'prone'` so a later clear (an empty
+ * same-key effect — Get Up, Regain Consciousness) newest-wins evicts it,
+ * holding `condition.prone` plus the STR/DEX attack-disadvantage flags the
+ * weapon and unarmed dice-lines already read (so the rollers default to
+ * 2d20-take-low with zero roller changes). The flags carry
+ * `stateCombine: 'max'` (the armor idiom): the armor modules derive the same
+ * facts with `combine: 'max'`, and the default `sum` on an effect write
+ * would conflict-throw for any armored character.
+ *
+ * Lives in the builder (like CONCENTRATION_SPELL_KEY) because rule modules
+ * may import only the builder — no rule imports another rule, so the prone
+ * chassis and the unconscious end-offer share this one factory.
+ */
+export const proneEffect = (): EffectInstance => ({
+  id: 'effect-prone',
+  key: 'prone',
+  state: {
+    'condition.prone': 1,
+    'attack.str.disadvantage': 1,
+    'attack.dex.disadvantage': 1
+  },
+  stateCombine: {
+    'attack.str.disadvantage': 'max',
+    'attack.dex.disadvantage': 'max'
+  },
+  display: { name: 'rule.dnd-5e-2024.condition-prone.effect-prone.name' },
+  expiry: { kind: 'untilShortRest' }
+});
+
+/**
  * Current HP from a max and the NET current-HP modifier. Damage drives the
  * modifier negative and healing carries it back toward 0, so:
  *  - `min(0, …)` clamps a positive modifier — current never exceeds the max;

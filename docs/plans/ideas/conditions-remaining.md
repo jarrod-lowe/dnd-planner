@@ -47,7 +47,7 @@ Rough total: ~10–12 PRs. Calibration: prone = 4 PRs incl. inventing the chassi
 
 ### Wave 7
 
-- [ ] [Unconscious](condition-unconscious.md) — execute
+- [x] [Unconscious](condition-unconscious.md) — executed (PR1+PR2 folded into ONE PR by decision, branch `condition-unconscious`): keyed effect writes all three facts (unconscious + incapacitated max + prone default-sum), shared break helper, halted free-ride, Regain Consciousness end-offer with NO `when` gate (the #453 illegal-but-visible deviation) committing an empty-keyed eviction + a FRESH shared `proneEffect()` from the builder so Prone survives the end per SRD
 
 ### Wave 8
 

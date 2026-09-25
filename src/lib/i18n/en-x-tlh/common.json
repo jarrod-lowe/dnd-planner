@@ -1119,6 +1119,26 @@
         "notice": "So'lu'pu'",
         "notice.body": "bIHIvmeH HIvlIj 'ej DujlIj nIv ghaH. SoH HIvmeH HIv nIvHa' ghaH (SoH leghlaHbogh SuvwI' lururbe'). SoH 'ej SepmeylIj So'lu'taH, leghlu'meH Qu'mey HuSmoH. Qong Hoch qaSchoHDI' rIn."
       },
+      "condition-unconscious": {
+        "record-unconscious": {
+          "name": "QongmoHlu'"
+        },
+        "effect-unconscious": {
+          "name": "QongtaH"
+        },
+        "regain-consciousness": {
+          "name": "yIvem",
+          "description": "Qong Dotlh yIrInqa' — bIpumtaH — chon pagh, ra' pagh"
+        },
+        "regain-consciousness.effect-cleared": {
+          "name": "vempu'"
+        },
+        "regain-consciousness-offer": {
+          "not_unconscious": "bIQongtaHbe' — bIvemlaHbe'"
+        },
+        "notice": "QongtaH",
+        "notice.body": "laHtaHbe' SoH 'ej bIpum 'ej Do'lIj chIm, 'ej ngeDlIj DaBaghmoH (Set Loadout). HIvlIj lughangelbogh nIv ghaH, 'ej wa' qejvam HIvchugh Qapchu' ghaH. STR 'ej DEX toDmey DaHeQlaHbe' 'ej Dat DaSovbe'."
+      },
       "grapple": {
         "grapple-action": {
           "name": "DIvI' qop",
@@ -2041,7 +2061,8 @@
         "paralyzed": "vIHlaHbe'",
         "petrified": "naghchoHpu'",
         "stunned": "mISchoHpu'",
-        "invisible": "So'lu'pu'"
+        "invisible": "So'lu'pu'",
+        "unconscious": "QongtaH"
       },
       "STAT": {
         "set": "Set",

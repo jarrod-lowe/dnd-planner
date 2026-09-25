@@ -1,9 +1,9 @@
 import {
   defineRule,
+  proneEffect,
   type ActionResult,
   type Annotation,
   type Diagnostic,
-  type EffectInstance,
   type FactReader,
   type RuleModule
 } from '../builder';
@@ -25,33 +25,11 @@ const hasSpeed = (f: FactReader): boolean =>
   f.num('character.movement.speed') > 0 && f.num('character.movement.halted') === 0;
 
 /**
- * The keyed prone effect both offers commit: `key: 'prone'` so a later get-up
- * clear (an empty same-key effect) evicts it, holding `condition.prone` plus
- * the STR/DEX attack-disadvantage flags the weapon and unarmed dice-lines
- * already read (so the rollers default to 2d20-take-low with zero roller
- * changes). The flags carry `stateCombine: 'max'` (the armor idiom): the armor
- * modules derive the same facts with `combine: 'max'`, and the default `sum`
- * on an effect write would conflict-throw for any armored character.
- */
-const proneEffect = (): EffectInstance => ({
-  id: 'effect-prone',
-  key: 'prone',
-  state: {
-    'condition.prone': 1,
-    'attack.str.disadvantage': 1,
-    'attack.dex.disadvantage': 1
-  },
-  stateCombine: {
-    'attack.str.disadvantage': 'max',
-    'attack.dex.disadvantage': 'max'
-  },
-  display: { name: `${CP}.effect-prone.name` },
-  expiry: { kind: 'untilShortRest' }
-});
-
-/**
  * Prone — the first D&D condition. Two free-section offers commit the SAME
- * keyed effect: RECORD ("Knocked Prone") models BEING KNOCKED PRONE (imposed
+ * keyed effect (the builder's shared `proneEffect()`, also committed FRESH
+ * by Unconscious's Regain Consciousness end-offer — SRD 5.2 Unconscious,
+ * Inert: "When this condition ends, you remain Prone"): RECORD ("Knocked
+ * Prone") models BEING KNOCKED PRONE (imposed
  * by an enemy effect), so it is free and ungated — legal at any Speed. DROP
  * models the voluntary SRD "Dropping Prone" choice (on your turn, without an
  * action or any Speed), gated to the standing state — it does not exist while
