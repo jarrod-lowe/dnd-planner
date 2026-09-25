@@ -45,7 +45,7 @@ Effects:
 
 - `effect-frightened`: `{ key: 'frightened', state: { 'condition.frightened': 1 }, dependents: ['frightened-source'], display: { name, detailKey: 'condition/frightened' }, expiry: { kind: 'untilShortRest' } }` — writes ONLY the condition fact; the flags live in the derives; `dependents` makes chip dismissal take the toggle too
 - toggle-on `frightened-source-hidden`: `{ key: 'frightened-source', state: { 'frightened.sourceHidden': 1 }, display: { name: '.effect-source-hidden.name', detailKey: 'condition/frightened' }, expiry: { kind: 'untilShortRest' } }` — the strip SHOWS the LoS state
-- reveal eviction `frightened-source-visible`: EMPTY same-`key` ('frightened-source'), `display: { name: '.source-back-in-sight.effect-cleared.name' }`, `expiry: permanent` (get-up idiom — nameless renders nothing)
+- reveal eviction `frightened-source-visible`: EMPTY same-`key` ('frightened-source'), `display: { name: '.source-back-in-sight.effect-cleared.name' }`, `expiry: { kind: 'untilShortRest' }` — NOT permanent: rest must clear it WITH the condition (a permanent ended-chip would outlive Frightened itself); the strip shows the ended chip until then
 
 Offers (all section `free`, `intents: { CONDITION: 'frightened' }`, `detailKey: 'condition/frightened'`, `actionCost: []`, no control):
 
@@ -84,7 +84,7 @@ Tests (RED first — registered in `EXPECTED_RUNNABLE`, tests/integration/rules-
 - `condition-frightened-record` — pre-record: both toggles visible + ILLEGAL (not_frightened — the illegal-but-visible pin); record → condition fact + representative flags 1 (attack.str/dex, `initiative.disadvantage`, `check.disadvantage`, athletics/stealth/perception) + notice exists/targets; out-of-sight now LEGAL, back-in-sight illegal
 - `condition-frightened-source-hidden` — toggle → `frightened.sourceHidden` 1, flags 0 (flags-off-is-OFF), notice STILL exists (can't-approach channel); legality flipped (back-in-sight legal, out-of-sight illegal)
 - `condition-frightened-source-back-in-sight` — toggle → toggle back → sourceHidden 0, flags 1 (the round-trip pin)
-- `condition-frightened-rest-clears` — record + hide → short AND long → condition 0 AND sourceHidden 0, notice gone (co-load `core-events`; both effects untilShortRest)
+- `condition-frightened-rest-clears` — record + hide → short AND long → condition 0 AND sourceHidden 0, notice gone; AND the reveal-path variant (record + hide + reveal + endTurn + rest): the eviction EFFECT is gone too (notExists — a fact reading 0 is not enough; the permanent-ended-chip leak), no stray chips
 - `condition-frightened-dismiss-clears-toggle` — STORE-LEVEL pin (tests/unit/lib/play/playStore.test.ts, the `removeEffect` dependents coverage): committed condition + committed hidden-toggle → dismiss the condition chip → the toggle effect is gone too (no orphan chip). NOT a yaml scenario — the runner's `removeEffect` filters by exact id and never follows `dependents`; a yaml version cannot pass
 - `condition-frightened-skill-flags` — co-load `leather-armor` untrained (Poisoned's shape): visible → shared flags 1, no conflict-throw (derive-vs-derive mode agreement); hidden → armor-written flags STILL 1 (attack.str/dex, initiative, athletics/stealth) while frightened-only flags go 0 (`check.disadvantage`, perception) — the honest residual
 - `condition-frightened-hidden-with-poisoned` — co-load `condition-poisoned`, both recorded, hide → flags still 1 (the max dividend; green-immediate pin)
@@ -113,6 +113,7 @@ Unit pins (the yaml grammar cannot assert annotation values/bodies):
 ### PR1 — NoticeStrip button support (UI-only; the #456 roller precedent — zero rule writers)
 
 - [ ] RED: `NoticeStrip.test.ts` — synthetic annotation with `addsToPlan: { offer }` renders the button, tap fires `onAddOfferToPlan(id, seed)`; degrades to plain text when the offer isn't in `addableOfferIds`, when the action is `'again'` (the rejected form), and when props are absent; existing text notices unchanged
+- [ ] RED: `PlayCharacterMode.test.ts` screen-level wiring regression — mount with an actionable notice + its matching available offer; assert the tap reaches `addOfferToPlan` (guards the prop forwarding + addable-set derivation; the component test alone stays green if the screen omits them)
 - [ ] NoticeStrip props (`onAddOfferToPlan`, `addableOfferIds`) + the button branch (the PanelRenderer:846-874 copy); PlayCharacterMode forwarding + the addable-set derivation
 - [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (human inspects the strip button in the test env; no rule-group change — no publish-details, no seed) → human merges
 
