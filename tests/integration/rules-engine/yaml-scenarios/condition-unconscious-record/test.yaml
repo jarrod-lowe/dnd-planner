@@ -47,6 +47,16 @@ steps:
           illegal:
             - regain-consciousness
         annotations:
+          # The drop-held row annotation is live PRE-record (the row is the
+          # guidance point, awake or not) and carries the remedy as its
+          # tap-to-plan action: one tap plans set-loadout (the loadout group
+          # need not be ASSIGNED here — annotate emits the link, the panel
+          # degrades it to plain text when the offer is not in the catalog).
+          exists:
+            - rule.dnd-5e-2024.condition-unconscious.annotation
+          addsToPlan:
+            - key: rule.dnd-5e-2024.condition-unconscious.annotation
+              adds: { offer: set-loadout }
           notExists:
             - rule.dnd-5e-2024.condition-unconscious.notice
             - rule.dnd-5e-2024.condition-incapacitated.notice

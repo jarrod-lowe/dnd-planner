@@ -57,7 +57,7 @@ const unconsciousEffect = (): EffectInstance => ({
  * Unconscious — wave 7, the last composition child (Incapacitated + Prone +
  * Speed 0). SRD 5.2: Inert (the composition above, plus "you drop whatever
  * you're holding" — a row annotation on the recorder + the notice sentence +
- * manual Set Loadout, no loadout mutation;
+ * a one-tap link that plans Set Loadout, no loadout mutation;
  * and "When this condition ends, you remain Prone"), Speed 0 (halted —
  * movement.ts owns it), Attacks Affected (vs-you Advantage), Saving Throws
  * Affected (auto-fail STR/DEX), Automatic Critical Hits (within 5 ft),
@@ -175,9 +175,21 @@ const conditionUnconscious: RuleModule = {
   // you're holding" is knot 1 option (a), guidance + manual Set Loadout, so
   // the advice is PRE-ACTION — it must be on the row the player is planning,
   // BEFORE the condition exists. Hence UNCONDITIONAL: the row is the guidance
-  // point whether or not the condition is live. Advisory text only — no
-  // addsToPlan, because the remedy (Set Loadout) is a whole selection-driven
-  // configuration, not a plan-shortcut the row could seed.
+  // point whether or not the condition is live. The reminder is ACTIONABLE
+  // (user-directed 2026-09-25): `addsToPlan` names the loadout module's
+  // set-loadout offer, so one tap PLANS the remedy exactly as picking it from
+  // the add-row picker would — and adding a row folds the others, so the fresh
+  // Set Loadout row is the one on show, the empty-hands configuration right
+  // under the thumb. NO seed, deliberately: the seed vocabulary can only copy
+  // what the SOURCE row (record-unconscious) holds, and nothing there
+  // describes a loadout — the offer's own control enumerates the character's
+  // configurations from its assigned modules. No mutation either: the record
+  // still writes no loadout facts; the tap hands the player the row, the
+  // player picks empty hands. The link degrades gracefully — the button only
+  // exists while set-loadout is in the post-plan addable catalog, so a
+  // character without the loadout group sees the same sentence as plain text
+  // (this module does NOT require the loadout group: the annotation is
+  // guidance first, a shortcut second).
   //
   // (2) While unconscious, a NOTICE carries the standing effects (SRD verbatim
   // minus the engine-enforced facts — Incapacitated/Prone/Speed 0 are
@@ -190,7 +202,8 @@ const conditionUnconscious: RuleModule = {
   annotate: (f): Annotation[] => [
     {
       key: `${CU}.annotation`,
-      targets: [RECORD_LABEL]
+      targets: [RECORD_LABEL],
+      addsToPlan: { offer: 'set-loadout' }
     },
     ...(f.num('condition.unconscious') > 0
       ? [

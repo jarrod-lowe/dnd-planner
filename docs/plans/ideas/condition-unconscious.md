@@ -113,6 +113,7 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 ## Notes
 
 - Loadout annotation ON the record-unconscious row (user-directed 2026-09-25): the drop-held guidance ("You drop what you're holding — set your Loadout to empty hands") rides the recorder's `annotationLabels: ['condition.unconscious.record']` as an UNCONDITIONAL row annotation — the row is the pre-action guidance point, awake or not; the notice body is unchanged. Unit-pinned in `condition-unconscious-annotation.test.ts`
+- The annotation LINKS to Loadout (user-directed 2026-09-25): it carries `addsToPlan: { offer: 'set-loadout' }`, so a tap plans the Set Loadout row (the concentration idiom); it degrades to plain text when the loadout group isn't assigned — no `requires` change made
 - Strip dismissal of the unconscious chip leaves you NOT prone — known deviation, no suppression mechanism; Regain Consciousness is the blessed end
 - Doubled `condition.prone` (live prone effect + unconscious effect) reads 2 — harmless, all reads are `> 0`
 - `when: false` skips planned instances — regain can't be pre-planned while awake (mirror of get-up) — SUPERSEDED (executed with no `when` gate: a planned-anyway regain while awake is ILLEGAL-but-visible and commits the fresh prone, pinned in `condition-unconscious-regain-while-awake`)

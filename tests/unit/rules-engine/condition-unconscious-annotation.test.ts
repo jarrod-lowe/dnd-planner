@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { evaluate, NOTICE_TARGET } from '$lib/rules-engine';
 import type { PlannedRef } from '$lib/rules-engine';
 import conditionUnconscious from '$lib/rules-engine/rules/condition-unconscious';
+import loadout from '$lib/rules-engine/rules/loadout';
 import enCommon from '$lib/i18n/en/common.json';
 import tlhCommon from '$lib/i18n/en-x-tlh/common.json';
 
@@ -64,6 +65,40 @@ describe('condition-unconscious annotate — drop-held reminder on the record ro
     expect(notice, 'notice unchanged while unconscious').toBeDefined();
     expect(notice!.targets).toEqual([NOTICE_TARGET]);
     expect(notice!.body).toBe(`${CU}.notice.body`);
+  });
+
+  it('carries a tap-to-plan action for the remedy — naming set-loadout, seeding nothing', () => {
+    // The reminder is a one-tap shortcut to the remedy (the concentration /
+    // divine-smite idiom): tapping it PLANS `set-loadout` exactly as picking it
+    // from the add-row picker would, and adding a row folds the others so the
+    // fresh Set Loadout row is the one on show — the player lands straight on
+    // the empty-hands configuration. NO seed, deliberately: the seed
+    // vocabulary can only copy what the SOURCE row (record-unconscious) holds,
+    // and nothing there describes a loadout — the offer's own loadout control
+    // enumerates the character's configurations from its assigned modules, so
+    // the tapped row has nothing to contribute. The link degrades gracefully:
+    // the button only exists while `set-loadout` is in the post-plan addable
+    // catalog (PanelRenderer's resolveAnnotationOffer), so a character without
+    // the loadout group assigned sees the same sentence as plain text.
+    const out = evaluate({
+      modules: [conditionUnconscious],
+      inputFacts: {},
+      planned: [record('c1')]
+    });
+    expect(out.annotations.find((a) => a.key === KEY)!.addsToPlan).toEqual({
+      offer: 'set-loadout'
+    });
+  });
+
+  it('names an offer the loadout module declares — the cross-module contract', () => {
+    // The offer lives in ANOTHER rule group: this module's registry guard
+    // (annotation-targets) checks the id exists across all groups, and this
+    // local pin keeps the contract readable from this test alone. Nothing
+    // here requires the loadout group to be ASSIGNED — annotate emits the
+    // link unconditionally and the panel degrades it to text when the offer
+    // is not in the character's catalog.
+    const setLoadout = loadout.offer!({ selections: {} }).find((o) => o.id === 'set-loadout');
+    expect(setLoadout, 'set-loadout offer exists in the loadout module').toBeDefined();
   });
 
   it("targets the label the record-unconscious panel's ui declares", () => {
