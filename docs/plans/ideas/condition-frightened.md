@@ -55,8 +55,8 @@ Offers (all section `free`, `intents: { CONDITION: 'frightened' }`, `detailKey: 
 
 Notice (annotate while `condition.frightened > 0`): `targets: ['notice']`, key `.notice`, `source` `.effect-frightened.name`; body + `addsToPlan` flip on state (the annotation-targets registry guard validates the offer ids — same-module here):
 
-- visible: `body: '.notice.body'`, `addsToPlan: { offer: 'source-out-of-sight' }`
-- hidden: `body: '.notice.body-hidden'`, `addsToPlan: { offer: 'source-back-in-sight' }`
+- visible: `body: '.notice.body'`, `addsToPlan: { offer: 'source-out-of-sight', labelKey: `${CF}.notice.action-hide` }`
+- hidden: `body: '.notice.body-hidden'`, `addsToPlan: { offer: 'source-back-in-sight', labelKey: `${CF}.notice.action-reveal` }`
 
 en bodies:
 
@@ -92,7 +92,7 @@ Tests (RED first — registered in `EXPECTED_RUNNABLE`, tests/integration/rules-
 
 Unit pins (the yaml grammar cannot assert annotation values/bodies):
 
-- `condition-frightened-notice.test.ts` — `addsToPlan` flips with state ({ offer: 'source-out-of-sight' } / { offer: 'source-back-in-sight' }); body key flips; notice gone at condition 0; both body templates in both locales; the named offers exist in the module
+- `condition-frightened-notice.test.ts` — `addsToPlan` flips with state ({ offer: 'source-out-of-sight', labelKey: …action-hide } / { offer: 'source-back-in-sight', labelKey: …action-reveal }); body key flips; notice gone at condition 0; both body templates + both label keys in both locales; the named offers exist in the module
 - `condition-frightened-derives.test.ts` — gating: 1 visible, 0 hidden on ALL 22 (zeroed, not merely absent), 0 un-frightened; combine 'max' mode agreement with Poisoned's stateCombine (the conflict-throw guard)
 
 ## Execution rules
