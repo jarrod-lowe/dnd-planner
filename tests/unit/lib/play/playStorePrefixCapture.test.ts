@@ -255,8 +255,12 @@ describe('playStore swapPlanItemRule captures from the plan prefix', () => {
     const first = playStore.state.plannedItems[0].instanceId;
     playStore.updateSelections(first, { distance: 35 }); // over-commit drag stays draggable
     vi.advanceTimersByTime(300);
-    // The planner projects over-commitment: final facts read negative.
-    expect(playStore.state.facts['character.movement.remaining']).toBe(-5);
+    // The planner projects over-commitment: the SPEND reads the raw 35, while
+    // remaining floors at 0 (the reads-floor decision, user-directed
+    // 2026-09-25 — every read that feeds a control/pool/cost clamps at 0;
+    // pinned alongside the negative raw facts in condition-exhaustion-speed-floor).
+    expect(playStore.state.facts['character.movement.spent']).toBe(35);
+    expect(playStore.state.facts['character.movement.remaining']).toBe(0);
 
     playStore.swapPlanItemRule(first, alternativeEntry(playStore, first, 'move-fly'));
 

@@ -152,6 +152,18 @@ const SPEED_ZERO_CONDITIONS = [
 const halted = (f: FactReader): number =>
   SPEED_ZERO_CONDITIONS.some((fact) => f.num(fact) > 0) ? 1 : 0;
 
+// The Speed floor at the READS (user-directed 2026-09-25): `speed`/`total`
+// are combine:sum facts, and their contributions stack honestly — splint's
+// −10 (low STR) plus Exhaustion's −5 × level can push the RAW facts negative.
+// They stay raw (preserving modifier stacking; the gates read them, e.g. Get
+// Up's speed > 0 clause), while every fact that feeds a control, pool, or
+// cost floors here (the effective_* layer precedent — the halted mask):
+// remaining, effective_total, the half_* derivations, and the move sliders'
+// maxDistance source. A raw-negative read would leak into the UI as a slider
+// max below its min 0, a Get Up cost below 0, and a Dash boost that
+// SUBTRACTS movement.
+const floored = (v: number): number => Math.max(0, v);
+
 /**
  * Movement: walk / rough terrain / crawl / swim / fly, each consuming feet from
  * `character.movement.remaining` (= total − spent). The legacy engine copied total → remaining
@@ -168,6 +180,12 @@ const halted = (f: FactReader): number =>
  * for derived math (a condition module cannot zero them without contributing a
  * derive that reads its own output — the cycle trap), so display reads
  * `effective_total` and the gates carry the semantics.
+ * NEGATIVE Speed floors at the reads, not the facts (user-directed 2026-09-25):
+ * splint (−10, low STR) + Exhaustion (−5 × level) stack the RAW speed/total
+ * below 0 and they stay raw (modifier stacking preserved; Get Up's speed > 0
+ * gate reads the live leg), while every read that feeds a control, pool, or
+ * cost — remaining, effective_total, the half_* facts, and the sliders'
+ * maxDistance source — floors at 0 (the halted-mask precedent; see `floored`).
  * The base distances come from the species. Foundational, so no search meta.
  */
 const movement: RuleModule = {
@@ -180,27 +198,32 @@ const movement: RuleModule = {
     {
       fact: REMAINING,
       value: (f) =>
-        halted(f) ? 0 : f.num('character.movement.total') - f.num('character.movement.spent')
+        halted(f)
+          ? 0
+          : floored(f.num('character.movement.total') - f.num('character.movement.spent'))
     },
     // The DISPLAY total: 0 while halted (the top-bar SPD chip and the ledger's
     // movement row read this — SRD Speed 0 must be what the player sees),
-    // otherwise the live total the math uses.
+    // otherwise the live total the math uses — floored at 0 (a raw-negative
+    // total must not render as a negative pool).
     {
       fact: 'character.movement.effective_total',
-      value: (f) => (halted(f) ? 0 : f.num('character.movement.total'))
+      value: (f) => (halted(f) ? 0 : floored(f.num('character.movement.total')))
     },
     {
       fact: 'character.movement.half_total',
-      value: (f) => f.num('character.movement.total') * 0.5
+      value: (f) => floored(f.num('character.movement.total')) * 0.5
     },
     // Half your SPEED, floored (SRD 5.2 Prone: "half your Speed (round down)"
     // to right yourself) — unlike half_total/half_remaining, which stay
     // unrounded slider defaults. The species contributes `speed`; Dash never
-    // touches it, so dashing does not raise the Get Up cost.
+    // touches it, so dashing does not raise the Get Up cost. The floor is
+    // before the halving so a raw-negative speed costs 0, not floor(−5/2) = −3.
     {
       fact: 'character.movement.half_speed',
-      value: (f) => Math.floor(f.num('character.movement.speed') * 0.5)
+      value: (f) => Math.floor(floored(f.num('character.movement.speed')) * 0.5)
     },
+    // Follows remaining's floor (never a negative slider default).
     { fact: 'character.movement.half_remaining', value: (f) => f.num(REMAINING) * 0.5 }
   ],
   offer: () => [
@@ -208,7 +231,7 @@ const movement: RuleModule = {
       id: 'move-walk',
       nameKey: 'move-walk',
       defaultDistanceFact: REMAINING,
-      maxDistanceFact: 'character.movement.total',
+      maxDistanceFact: 'character.movement.effective_total',
       mult: 1,
       legalWhen: [
         ge(REMAINING, 5, `${MV}.action-move-walk-offer.out_of_movement`),
@@ -267,7 +290,7 @@ const movement: RuleModule = {
       when: (f) => f.num('character.movement.swim.cost') === 1,
       packBehind: 'move-walk',
       defaultDistanceFact: REMAINING,
-      maxDistanceFact: 'character.movement.total',
+      maxDistanceFact: 'character.movement.effective_total',
       mult: 1,
       legalWhen: [
         ge('character.movement.swim.can', 1, `${MV}.action-move-swim-offer.cannot_swim`),
@@ -314,7 +337,7 @@ const movement: RuleModule = {
       nameKey: 'move-fly',
       packBehind: 'move-walk',
       defaultDistanceFact: REMAINING,
-      maxDistanceFact: 'character.movement.total',
+      maxDistanceFact: 'character.movement.effective_total',
       mult: 1,
       legalWhen: [
         ge('character.movement.fly.can', 1, `${MV}.action-move-fly-offer.cannot_fly`),

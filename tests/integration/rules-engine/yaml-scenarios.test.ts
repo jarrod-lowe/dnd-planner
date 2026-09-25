@@ -612,6 +612,11 @@ const EXPECTED_RUNNABLE = [
   'condition-exhaustion-record-twice',
   'condition-exhaustion-death-notice',
   'condition-exhaustion-half-speed-shrinks',
+  // The follow-up (codex + manual confirmation, user-directed 2026-09-25):
+  // raw speed/total stay raw when splint + exhaustion stack negative, every
+  // READ floors at 0 (remaining/effective_total/half_*, the walk slider's
+  // maxDistance source, Dash's boost amount)
+  'condition-exhaustion-speed-floor',
   // PR3 — crawl (×2 spend while prone) + the prone movement restriction
   'move-crawl-while-prone',
   'walk-illegal-while-prone',

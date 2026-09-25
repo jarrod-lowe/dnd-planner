@@ -50,9 +50,12 @@ const exhaustionEffect = (level: number): EffectInstance => ({
  * Get Up cost all see the reduced Speed with no movement.ts change. Reads
  * `condition.exhaustion` while writing the movement facts — a different fact,
  * so no derive cycle (splint reads `armor.splint.equipped` the same way).
- * Raw and unclamped by design (the splint precedent): at level 6 Speed
- * reaches 0 and every existing gate behaves; levels past 6 cannot occur (the
- * clamp below).
+ * Raw by design (the splint precedent): the contributions stack honestly even
+ * below 0, and every READ that feeds a control, pool, or cost floors at 0 in
+ * movement.ts (user-directed 2026-09-25, superseding this module's original
+ * unclamped-everywhere line — remaining/effective_total/half_*, the slider
+ * maxes, Dash's boost); at level 6 Speed reaches 0 and every existing gate
+ * behaves; levels past 6 cannot occur (the clamp below).
  */
 const speedPenalty = (fact: string): Contribution => ({
   fact,
