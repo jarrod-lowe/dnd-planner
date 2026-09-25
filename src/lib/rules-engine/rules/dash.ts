@@ -8,7 +8,8 @@ const CANNOT_WHILE_HALTED = `${D}.action-dash-offer.cannot_while_halted`;
 
 /**
  * Dash — spend your action to add your speed to this turn's movement. The apply
- * reads the current `character.movement.total` (the base speed) and advertises an
+ * reads the current `character.movement.total` (the base speed, floored at 0 — a
+ * raw-negative total must not subtract from the budget) and advertises an
  * endOfTurn effect adding that much to it, so `remaining = total − spent` picks up
  * the boost and it resets next turn. `character.movement.total` is a combine:sum
  * fact (species base + this), so the add composes with no second-writer conflict.
@@ -41,7 +42,12 @@ const dash: RuleModule = {
         }
       ],
       apply: (f): ActionResult => {
-        const speed = f.num('character.movement.total');
+        // The boost amount is floored at 0: `total` is a combine:sum fact that
+        // can read negative (splint −10 + Exhaustion −5 × level stacking — the
+        // reads-floor decision, see movement.ts), and a negative "extra
+        // movement" would SUBTRACT from the turn's budget. The raw fact itself
+        // is untouched — only the advertised amount clamps.
+        const speed = Math.max(0, f.num('character.movement.total'));
         const diagnostics: Diagnostic[] = [];
         if (f.num('actions.remaining') <= 0)
           diagnostics.push({ code: NO_ACTION, severity: 'error' });

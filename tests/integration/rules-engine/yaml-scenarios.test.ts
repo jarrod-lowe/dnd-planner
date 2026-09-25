@@ -600,6 +600,23 @@ const EXPECTED_RUNNABLE = [
   'condition-unconscious-rest-clears',
   'move-walk-illegal-while-unconscious',
   'condition-unconscious-with-incapacitated',
+  // wave 8, folded PR1+PR2 (riders + onRest are the NEXT PR) — Exhaustion,
+  // the last condition and the only COUNTER: ONE keyed effect whose state IS
+  // the level (dedupe newest-wins, so two same-turn records land on 2), a
+  // legality gate at level 6 (dead_at_max — illegal-but-visible; the doc's
+  // UNGATED decision superseded user-directed 2026-09-25) with the apply
+  // clamped to min(prior+1, 6) so no row manufactures a 7, and −5 × level
+  // sum contributions to speed+total (the splint shape; remaining,
+  // effective_total, half_speed and Get Up follow for free).
+  'condition-exhaustion-record',
+  'condition-exhaustion-record-twice',
+  'condition-exhaustion-death-notice',
+  'condition-exhaustion-half-speed-shrinks',
+  // The follow-up (codex + manual confirmation, user-directed 2026-09-25):
+  // raw speed/total stay raw when splint + exhaustion stack negative, every
+  // READ floors at 0 (remaining/effective_total/half_*, the walk slider's
+  // maxDistance source, Dash's boost amount)
+  'condition-exhaustion-speed-floor',
   // PR3 — crawl (×2 spend while prone) + the prone movement restriction
   'move-crawl-while-prone',
   'walk-illegal-while-prone',

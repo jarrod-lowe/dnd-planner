@@ -1,0 +1,42 @@
+name: 'Condition Exhaustion - Record Twice'
+description: >-
+  The in-fold increment pin: the plan fold re-derives the sheet before each
+  row (plan.ts), and the sheet folds AFTER keyed dedupe, so row 2's apply
+  reads the FOLDED prior level (row 1's effect, newest-wins) and advertises
+  the same keyed effect at prior+1 — two record rows the same turn land on
+  level 2, not 1+1=2-stacked-effects (a stacking bug would sum 1+2=3) and
+  not 1 (an identity bug would miss the increment). The Speed penalty
+  follows the level: −10 on BOTH speed and total at level 2.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-exhaustion
+steps:
+  - addOffer:
+      id: record-exhaustion
+      assert:
+        facts:
+          condition.exhaustion: 1
+          character.movement.speed: 25
+          character.movement.total: 25
+  - addOffer:
+      id: record-exhaustion
+      assert:
+        facts:
+          condition.exhaustion: 2
+          character.movement.speed: 20
+          character.movement.total: 20
+          character.movement.remaining: 20
+          character.movement.effective_total: 20
+        # Still legal below 6 — the death gate (see condition-exhaustion-
+        # death-notice) is level < 6, not level > 0.
+        offers:
+          legal:
+            - record-exhaustion
+  # Commit: endTurn's dedupeByKey keeps ONE same-key effect (the newest, at
+  # level 2) — the committed level survives the boundary.
+  - endTurn:
+      assert:
+        facts:
+          condition.exhaustion: 2
+          character.movement.speed: 20

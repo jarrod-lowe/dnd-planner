@@ -1,0 +1,64 @@
+name: 'Condition Exhaustion - Record'
+description: >-
+  Recording Exhaustion commits ONE keyed effect whose state IS the level
+  (condition.exhaustion 1) — the only COUNTER condition (SRD 5.2 glossary:
+  "The Exhaustion condition is an exception" to no-self-stacking), so the
+  effect carries key 'exhaustion' and dedupeByKey keeps exactly one copy
+  (newest-wins), making the summed fact the live level. The level drives a
+  −5 × level combine:sum contribution to BOTH character.movement.speed AND
+  character.movement.total (the splint-armor shape, reading a DIFFERENT fact
+  than it writes — no cycle), so remaining and effective_total (both derived
+  from total) and the floored half_speed all shrink for free: species 30
+  becomes 25 at level 1. A NOTICE carries the standing effects (D20 Tests
+  −2 × level, Speed −5 × level — the interpolated values are unit-pinned in
+  condition-exhaustion-notice.test.ts; the yaml grammar asserts
+  existence/targets only). Expiry is PERMANENT (deliberate deviation from the
+  umbrella's untilShortRest default — a short rest must not clear levels;
+  the onRest decrement is a later PR).
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-exhaustion
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.exhaustion: 0
+          character.movement.speed: 30
+          character.movement.total: 30
+          character.movement.remaining: 30
+        offers:
+          exists:
+            - record-exhaustion
+          legal:
+            - record-exhaustion
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-exhaustion.notice
+  - addOffer:
+      id: record-exhaustion
+      assert:
+        facts:
+          condition.exhaustion: 1
+          character.movement.speed: 25
+          character.movement.total: 25
+          character.movement.remaining: 25
+          character.movement.effective_total: 25
+          character.movement.half_speed: 12
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-exhaustion.notice
+          targets:
+            - key: rule.dnd-5e-2024.condition-exhaustion.notice
+              targets: [notice]
+  # Plain turn boundary (no rest): the keyed effect is permanent, so the
+  # level and the Speed penalty survive.
+  - endTurn:
+      assert:
+        facts:
+          condition.exhaustion: 1
+          character.movement.speed: 25
+          character.movement.total: 25
+        effects:
+          exists:
+            - effect-exhaustion

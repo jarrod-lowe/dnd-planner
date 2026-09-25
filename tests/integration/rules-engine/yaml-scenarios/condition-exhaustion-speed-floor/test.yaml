@@ -1,0 +1,122 @@
+name: 'Condition Exhaustion - Speed Floor'
+description: >-
+  The negative-Speed floor pin (user-directed 2026-09-25, superseding the
+  doc's raw/unclamped line): splint's −10 (STR below 15) and Exhaustion's
+  −5 × level are combine:sum contributions that stack HONESTLY, so at
+  level 5 the raw facts read −5 — and they STAY raw (preserving modifier
+  stacking; the gates read them, e.g. Get Up's speed > 0). Every READ that
+  feeds a control, pool, or cost clamps at 0 instead (the effective_* layer
+  precedent, the halted mask from grappled): remaining, effective_total,
+  half_speed, half_total, half_remaining, the walk slider's maxDistance
+  (now sourced from the clamped fact, never max < min), and Dash's boost
+  amount — a planned Dash at a negative total adds max(0, total) = 0, so it
+  can no longer SUBTRACT movement.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/ac
+  - dnd-5e-2024/splint-armor
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/dash
+  - dnd-5e-2024/condition-exhaustion
+steps:
+  # STR 12 (below 15) so splint's −10 applies; don the armor → 20 everywhere.
+  - addOffer:
+      id: set-strength
+      selections:
+        score: 12
+      assert:
+        facts:
+          str.value: 12
+  - addOffer:
+      id: don-splint-armor
+      assert:
+        facts:
+          armor.splint.equipped: 1
+          character.movement.speed: 20
+          character.movement.total: 20
+          character.movement.effective_total: 20
+          character.movement.remaining: 20
+  # Levels 1–3: still positive, the clamp is a no-op there.
+  - addOffer:
+      id: record-exhaustion
+      assert:
+        facts:
+          condition.exhaustion: 1
+          character.movement.speed: 15
+  - addOffer:
+      id: record-exhaustion
+  - addOffer:
+      id: record-exhaustion
+      assert:
+        facts:
+          condition.exhaustion: 3
+          character.movement.speed: 5
+          character.movement.remaining: 5
+  # Level 4: the raw facts reach EXACTLY 0 (30 − 10 − 20) — the clamp's
+  # no-op boundary, both sides read 0.
+  - addOffer:
+      id: record-exhaustion
+      assert:
+        facts:
+          condition.exhaustion: 4
+          character.movement.speed: 0
+          character.movement.total: 0
+          character.movement.effective_total: 0
+          character.movement.remaining: 0
+          character.movement.half_speed: 0
+          character.movement.half_total: 0
+  # Level 5: the raw facts go NEGATIVE and stay raw; every read floors at 0.
+  - addOffer:
+      id: record-exhaustion
+      assert:
+        facts:
+          condition.exhaustion: 5
+          # RAW — preserved (the stacking is honest; Get Up's speed > 0 gate
+          # reads this leg and correctly refuses).
+          character.movement.speed: -5
+          character.movement.total: -5
+          # READS — clamped at 0 (slider defaults/maxes, pools, Get Up cost).
+          character.movement.effective_total: 0
+          character.movement.remaining: 0
+          character.movement.half_speed: 0
+          character.movement.half_total: 0
+          character.movement.half_remaining: 0
+        offers:
+          # Nothing to spend: the out-of-movement gate reads remaining (0),
+          # not the raw total.
+          illegal:
+            - move-walk
+            - move-rough-terrain
+        offerVars:
+          # The walk slider's max must read the CLAMPED fact — a raw-total
+          # source makes max −5 against min 0, an invalid control.
+          - id: move-walk
+            vars:
+              maxDistance:
+                default:
+                  fact: character.movement.effective_total
+  # A planned Dash is legal (its gates are action + halted, not the total)
+  # but its boost is max(0, total) = 0 — the raw total neither rises nor
+  # FALLS (the pre-fix bug: the boost read −5 and subtracted movement).
+  - addOffer:
+      id: dash-action
+      assert:
+        facts:
+          actions.remaining: 0
+          character.movement.speed: -5
+          character.movement.total: -5
+          character.movement.effective_total: 0
+          character.movement.remaining: 0
+  # The boundary: the dash boost expires, the permanent exhaustion + armor
+  # effects persist — raw −5, every read 0.
+  - endTurn:
+      assert:
+        facts:
+          condition.exhaustion: 5
+          character.movement.speed: -5
+          character.movement.total: -5
+          character.movement.effective_total: 0
+          character.movement.remaining: 0
+          actions.remaining: 1

@@ -1,0 +1,87 @@
+name: 'Condition Exhaustion - Death Notice'
+description: >-
+  The no-level-7 pins (user-directed 2026-09-25, superseding the doc's
+  UNGATED decision): SRD 5.2 "You die if your Exhaustion level is 6", so at
+  level 6 the recorder flips ILLEGAL with its dead_at_max diagnostic (the
+  illegal-but-visible contract — the offer stays visible, a planned-anyway
+  row still executes) and the notice body flips to the body-dead key (the
+  flip is unit-pinned — the yaml grammar cannot see which body key). A
+  planned-anyway 7th row still EXECUTES but its apply clamps to
+  min(prior + 1, 6), so no row can manufacture a level 7: the level stays 6
+  and Speed stays 0 (species 30 − 5 × 6). Note Speed 0 does NOT halt
+  movement here — exhaustion is not one of movement's Speed-0 conditions;
+  the raw unclamped penalty is the splint precedent.
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-exhaustion
+steps:
+  # Record 6 times: level 6, Speed 30 − 30 = 0.
+  - addOffer:
+      id: record-exhaustion
+      assert:
+        facts:
+          condition.exhaustion: 1
+  - addOffer:
+      id: record-exhaustion
+      assert:
+        facts:
+          condition.exhaustion: 2
+  - addOffer:
+      id: record-exhaustion
+      assert:
+        facts:
+          condition.exhaustion: 3
+  - addOffer:
+      id: record-exhaustion
+      assert:
+        facts:
+          condition.exhaustion: 4
+  - addOffer:
+      id: record-exhaustion
+      assert:
+        facts:
+          condition.exhaustion: 5
+        offers:
+          legal:
+            - record-exhaustion
+  - addOffer:
+      id: record-exhaustion
+      assert:
+        facts:
+          condition.exhaustion: 6
+          character.movement.speed: 0
+          character.movement.total: 0
+          character.movement.remaining: 0
+          character.movement.effective_total: 0
+        # The death gate: level < 6 — at 6 the recorder is illegal-but-visible.
+        offers:
+          illegal:
+            - record-exhaustion
+        # The dead-body notice is still the same annotation key.
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-exhaustion.notice
+          targets:
+            - key: rule.dnd-5e-2024.condition-exhaustion.notice
+              targets: [notice]
+  # Planned anyway (the plan.ts contract — illegal rows still execute): the
+  # row carries the dead_at_max diagnostic from the apply re-check, and its
+  # advertised effect is CLAMPED to 6, so the level does not move.
+  - addOffer:
+      id: record-exhaustion
+      assert:
+        facts:
+          condition.exhaustion: 6
+          character.movement.speed: 0
+        planErrors:
+          - id: record-exhaustion
+            index: 6
+            errors:
+              - rule.dnd-5e-2024.condition-exhaustion.record-exhaustion-offer.dead_at_max
+  # Commit: still level 6 — exactly one keyed effect (the newest, clamped).
+  - endTurn:
+      assert:
+        facts:
+          condition.exhaustion: 6
+          character.movement.speed: 0

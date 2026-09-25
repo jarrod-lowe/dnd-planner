@@ -60,6 +60,7 @@ import conditionPetrified from './rules/condition-petrified';
 import conditionStunned from './rules/condition-stunned';
 import conditionInvisible from './rules/condition-invisible';
 import conditionUnconscious from './rules/condition-unconscious';
+import conditionExhaustion from './rules/condition-exhaustion';
 import featAlert from './rules/feat-alert';
 import featSentinel from './rules/feat-sentinel';
 import fightingStyleGreatWeapon from './rules/fighting-style-great-weapon';
@@ -164,6 +165,7 @@ const MODULES: RuleModule[] = [
   conditionStunned,
   conditionInvisible,
   conditionUnconscious,
+  conditionExhaustion,
   featAlert,
   featSentinel,
   fightingStyleGreatWeapon,
