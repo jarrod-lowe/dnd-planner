@@ -25,7 +25,7 @@ Modelled: keyed condition fact + a player-asserted `frightened.sourceHidden` tog
 - **The notice is the toggle's home**: ONE standing notice while `condition.frightened > 0`; `addsToPlan` flips with state (visible → `source-out-of-sight`, hidden → `source-back-in-sight`); body key flips (exhaustion's `.notice.body-dead` precedent). The toggles ALSO live in the add-row picker as ordinary free offers — the button is a shortcut, not the only path; it degrades to plain text when the offer isn't addable (PR1 chassis).
 - **Interaction — Poisoned + hidden → flags STILL 1**: Poisoned's effect writes 1, Frightened's derive contributes 0, max = 1 (the uniform-max dividend). Untrained armor likewise. Assert (yaml).
 - **Can't-willingly-approach: notice text only** — enforcing "closer to the source" needs source position (NPC side, no modelling); the LoS toggle changes nothing here (sight judgement, not movement verification). BOTH body copies carry the sentence.
-- Ending: umbrella default — BOTH effects `expiry: untilShortRest` (any rest clears condition + toggle together; assert) + ActiveStateStrip chip dismissal. Dismissing the condition chip while hidden strands an inert `sourceHidden` (derives gate on the condition; reveal or rest clears) — accepted.
+- Ending: umbrella default — BOTH effects `expiry: untilShortRest` (any rest clears condition + toggle together; assert) + ActiveStateStrip chip dismissal. The condition effect lists the toggle key in `dependents` — dismissing the Frightened chip removes the toggle too (no orphan chip); pinned.
 - Recorder `record-frightened` ("Frightened"): free, ungated, imposed by an enemy effect (knocked-prone shape).
 - `requires: []` — the derives read only their own module's facts; the flags are inert facts without reader groups (Poisoned precedent); nothing in movement reads Frightened.
 - Detail body: SRD verbatim (umbrella quote), en-only.
@@ -43,7 +43,7 @@ Derives (module `derive:`, armorTrainingPenalties shape; module-local SKILLS con
 
 Effects:
 
-- `effect-frightened`: `{ key: 'frightened', state: { 'condition.frightened': 1 }, display: { name, detailKey: 'condition/frightened' }, expiry: { kind: 'untilShortRest' } }` — writes ONLY the condition fact; the flags live in the derives
+- `effect-frightened`: `{ key: 'frightened', state: { 'condition.frightened': 1 }, dependents: ['frightened-source'], display: { name, detailKey: 'condition/frightened' }, expiry: { kind: 'untilShortRest' } }` — writes ONLY the condition fact; the flags live in the derives; `dependents` makes chip dismissal take the toggle too
 - toggle-on `frightened-source-hidden`: `{ key: 'frightened-source', state: { 'frightened.sourceHidden': 1 }, display: { name: '.effect-source-hidden.name', detailKey: 'condition/frightened' }, expiry: { kind: 'untilShortRest' } }` — the strip SHOWS the LoS state
 - reveal eviction `frightened-source-visible`: EMPTY same-`key` ('frightened-source'), `display: { name: '.source-back-in-sight.effect-cleared.name' }`, `expiry: permanent` (get-up idiom — nameless renders nothing)
 
@@ -85,6 +85,7 @@ Tests (RED first — registered in `EXPECTED_RUNNABLE`, tests/integration/rules-
 - `condition-frightened-source-hidden` — toggle → `frightened.sourceHidden` 1, flags 0 (flags-off-is-OFF), notice STILL exists (can't-approach channel); legality flipped (back-in-sight legal, out-of-sight illegal)
 - `condition-frightened-source-back-in-sight` — toggle → toggle back → sourceHidden 0, flags 1 (the round-trip pin)
 - `condition-frightened-rest-clears` — record + hide → short AND long → condition 0 AND sourceHidden 0, notice gone (co-load `core-events`; both effects untilShortRest)
+- `condition-frightened-dismiss-clears-toggle` — record + hide → dismiss the condition chip (removeEffect) → the toggle effect is gone too (`dependents` pin — no orphan chip)
 - `condition-frightened-skill-flags` — co-load `leather-armor` untrained (Poisoned's shape): visible → shared flags 1, no conflict-throw (derive-vs-derive mode agreement); hidden → armor-written flags STILL 1 (attack.str/dex, initiative, athletics/stealth) while frightened-only flags go 0 (`check.disadvantage`, perception) — the honest residual
 - `condition-frightened-hidden-with-poisoned` — co-load `condition-poisoned`, both recorded, hide → flags still 1 (the max dividend; green-immediate pin)
 
