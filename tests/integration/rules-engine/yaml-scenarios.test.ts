@@ -624,6 +624,19 @@ const EXPECTED_RUNNABLE = [
   // structural `when` gates to legality gates: illegal-but-visible while
   // standing, planned-anyway rows still execute
   'get-up-crawl-illegal-but-visible-while-standing',
+  // wave 8 PR3 (the exhaustion rider + rest PR) — the D20-test riders ×3
+  // (to-hit on attack.any, check on dice.any incl. Initiative, save on
+  // save.any; PanelDiceLine's purpose filter keeps each on its own dice, so
+  // dice.any never leaks a check rider onto a weapon's damage die — values
+  // unit-pinned in condition-exhaustion-riders.test.ts) and the onRest
+  // long-rest decrement: exactly one level per long rest (short removes
+  // nothing), the level-0 EMPTY-key eviction with its DISTINCT ended label
+  // (2→1 never exercises it), and the pinned rest-then-gain direction (the
+  // decrement is swallowed, the gain survives — plan.ts's splice-at-boundary
+  // + newest-wins, an accepted imperfection)
+  'condition-exhaustion-long-rest-removes-one',
+  'condition-exhaustion-long-rest-clears-final-level',
+  'condition-exhaustion-rest-then-gain-edge',
   // M3 — feat-alert (initiative-with-proficiency + annotations) and hit-die
   // (d10 pool from the class levels; remaining = total - spent)
   'alert-flag-set',

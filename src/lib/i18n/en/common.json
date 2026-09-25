@@ -1152,7 +1152,14 @@
         },
         "notice": "Exhaustion",
         "notice.body": "Exhaustion level {{level}} — D20 Tests {{roll}}, Speed {{speed}} ft. A Long Rest removes 1 level.",
-        "notice.body-dead": "Exhaustion level {{level}} — you are dead. D20 Tests {{roll}}, Speed {{speed}} ft."
+        "notice.body-dead": "Exhaustion level {{level}} — you are dead. D20 Tests {{roll}}, Speed {{speed}} ft.",
+        "rider": "Exhaustion",
+        "rider-to-hit": "Exhaustion — attack rolls",
+        "rider-check": "Exhaustion — ability checks",
+        "rider-save": "Exhaustion — saving throws",
+        "long-rest-clear": {
+          "name": "Exhaustion Removed"
+        }
       },
       "grapple": {
         "grapple-action": {
