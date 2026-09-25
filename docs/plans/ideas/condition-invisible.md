@@ -88,19 +88,22 @@ Tests (RED first — yaml scenario asserts are the RED for rule changes):
 
 ### PR2 — weapon wiring + condition-invisible module (prone PR1 boilerplate)
 
-- [ ] RED: `condition-invisible-record` + `condition-invisible-rest-clears` fail (unknown group → skipped vs `EXPECTED_RUNNABLE`)
-- [ ] `WeaponDef.advantageFact` (required) + diceControl `advantageUp` + `weaponOffers` ui mirror; 6 weapon modules + attacks.ts unarmed (advantageFact + ui); greataxe's Cleave SECONDARY control (greataxe.ts `actionUiExtra.secondaryControl`) gains `advantageUp` (the disadvantage fact is already wired there — landed with #447; only the advantage leg is missing; test a mastery-enabled Cleave roll)
-- [ ] `condition-invisible.ts`: record offer, keyed effect, notice; `registry.ts` + `lazy.ts`; yaml + detail + `make publish-details` (output gitignored — published, not committed); i18n both locales; terraform seed + `make validate`
-- [ ] GREEN: record + rest-clears + `invisible-plus-prone-cancels` facts leg
+- [x] RED: `condition-invisible-record` + `condition-invisible-rest-clears` fail (unknown group → skipped vs `EXPECTED_RUNNABLE`)
+- [x] `WeaponDef.advantageFact` (required) + diceControl `advantageUp` + `weaponOffers` ui mirror; 6 weapon modules + attacks.ts unarmed (advantageFact + ui); greataxe's Cleave SECONDARY control (greataxe.ts `actionUiExtra.secondaryControl`) gains `advantageUp` (the disadvantage fact is already wired there — landed with #447; only the advantage leg is missing; test a mastery-enabled Cleave roll)
+- [x] `condition-invisible.ts`: record offer, keyed effect, notice; `registry.ts` + `lazy.ts`; yaml + detail + `make publish-details` (output gitignored — published, not committed); i18n both locales; terraform seed + `make validate`
+- [x] GREEN: record + rest-clears + `invisible-plus-prone-cancels` facts leg
 - [ ] gates → PR → codex monitor → clean → `make deploy-test` → human inspects test env → human merges
+  - PR2 executed FOLDED WITH PR3 below (branch `condition-invisible-2`): gates green, PR opened (orchestrator owns the tail: codex monitor, deploy-test, human merge)
 
 ### PR3 — initiative advantage (Surprise)
 
-- [ ] RED: new scenario asserting `offerUi` on `roll-initiative` (`primaryControl.advantageUp` = `{ fact: 'initiative.advantage' }`) fails
-- [ ] initiative.ts primaryControl `advantageUp` (+ ui mirror); record scenario already writes `initiative.advantage` (PR2 effect — fact lands ahead of its reader, harmless)
-- [ ] Alert's `secondaryControl` (the proficiency-based d20, feat-alert) gets `advantageUp: { fact: 'initiative.advantage' }` (the disadvantage leg is already wired there — landed with #448; no longer bypasses); test the Alert + Invisible combination
-- [ ] GREEN
+- [x] RED: new scenario asserting `offerUi` on `roll-initiative` (`primaryControl.advantageUp` = `{ fact: 'initiative.advantage' }`) fails
+  - Folded into the PR2 branch (`condition-invisible-2`): the `alert-secondary-control-initiative` breaker scenario gained BOTH `advantageUp` legs (primary + Alert secondary), and unit pins landed in `condition-invisible.test.ts`
+- [x] initiative.ts primaryControl `advantageUp` (+ ui mirror); record scenario already writes `initiative.advantage` (PR2 effect — fact lands ahead of its reader, harmless)
+- [x] Alert's `secondaryControl` (the proficiency-based d20, feat-alert) gets `advantageUp: { fact: 'initiative.advantage' }` (the disadvantage leg is already wired there — landed with #448; no longer bypasses); test the Alert + Invisible combination
+- [x] GREEN
 - [ ] gates → PR → codex monitor → clean → `make deploy-test` → human inspects test env → human merges
+  - Folded into the PR2 branch (see above); orchestrator owns the tail
 
 ## Out of scope
 

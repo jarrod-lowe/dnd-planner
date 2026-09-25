@@ -10,6 +10,7 @@ const DAGGER: WeaponDef = {
   damageDie: 4,
   damageType: 'piercing',
   disadvantageFact: 'attack.str.disadvantage',
+  advantageFact: 'attack.str.advantage',
   ranges: [
     { distance: 5, type: 'melee' },
     { distance: 20, type: 'thrown' },

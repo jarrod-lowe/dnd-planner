@@ -1,0 +1,34 @@
+name: 'Invisible Plus Prone - Advantage And Disadvantage Coexist'
+description: >-
+  The facts leg of SRD cancellation. Prone writes the attack-DISadvantage
+  flags and Invisible the attack-ADVANTAGE flags — different facts, so both
+  conditions live side by side with attack.str.advantage AND
+  attack.str.disadvantage both at 1 (flags, not stacks; each condition fact
+  stands on its own). The RENDER decision — advantage and disadvantage on the
+  same roll cancelling to a normal d20 — is PanelDiceLine's three-way
+  defaultRollMode over these two control sources (PR1's component tests pin
+  it); yaml cannot assert render.
+ruleGroups:
+  - dnd-5e-2024/condition-prone
+  - dnd-5e-2024/condition-invisible
+steps:
+  - addOffer:
+      id: record-prone
+      assert:
+        facts:
+          condition.prone: 1
+          attack.str.disadvantage: 1
+          attack.str.advantage: 0
+  - addOffer:
+      id: record-invisible
+      assert:
+        facts:
+          condition.prone: 1
+          condition.invisible: 1
+          # The coexistence the cancellation feeds on: both directions live.
+          attack.str.disadvantage: 1
+          attack.str.advantage: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-prone.notice
+            - rule.dnd-5e-2024.condition-invisible.notice

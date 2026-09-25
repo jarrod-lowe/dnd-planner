@@ -11,8 +11,10 @@ import greataxe from '$lib/rules-engine/rules/greataxe';
 import javelin from '$lib/rules-engine/rules/javelin';
 import javelinMastery from '$lib/rules-engine/rules/javelin-mastery';
 import spear from '$lib/rules-engine/rules/spear';
+import scimitar from '$lib/rules-engine/rules/scimitar';
 import greataxeMastery from '$lib/rules-engine/rules/greataxe-mastery';
 import conditionBlinded from '$lib/rules-engine/rules/condition-blinded';
+import conditionInvisible from '$lib/rules-engine/rules/condition-invisible';
 import { resolveValueSource } from '$lib/components/play/panel-renderer/resolveValueSource';
 import type { ValueSource } from '$lib/components/play/panel-renderer/types';
 
@@ -304,5 +306,86 @@ describe('weapons — the Cleave secondary control carries the disadvantage sour
     // (vars are untyped on the offer; resolveValueSource takes the panel's VarDefs)
     const vars = (offer?.vars ?? {}) as Parameters<typeof resolveValueSource>[2];
     expect(resolveValueSource(ui?.secondaryControl?.advantage, facts, vars)).toBe(1);
+  });
+});
+
+/**
+ * The advantage counterpart of the two describes above: Invisible writes the
+ * STR/DEX attack-ADVANTAGE flags, and every weapon dice-line gains an
+ * `advantageUp` leg beside the historical `advantage` (which stays the
+ * DISADVANTAGE source). The builder's `diceControl` wires the PRIMARY controls
+ * from the new required `def.advantageFact`; pinned per ability — a STR
+ * weapon (dagger) and the DEX-flagged scimitar — resolved against an invisible
+ * plan the way PanelDiceLine's rulesAdvantage reads them.
+ */
+describe('weapons — the primary dice-lines carry the advantage source', () => {
+  it.each([
+    // [label, weapon module, equipped config, expected advantage fact]
+    ['dagger (STR)', dagger, 'dagger', 'attack.str.advantage'],
+    ['scimitar (DEX)', scimitar, 'scimitar', 'attack.dex.advantage']
+  ] as const)(
+    '%s declares and resolves advantageUp while invisible',
+    (_label, weapon, configId, advantageFact) => {
+      const MODS = [actionEconomy, attacks, hands, loadout, weapon, conditionInvisible];
+      // Hold the weapon and be invisible: the effect's advantage flag is live
+      // in the plan.
+      const facts = evaluatePlan(MODS, {}, [
+        equip('i0', MODS, configId),
+        ref('i1', 'record-invisible')
+      ]).facts;
+      expect(facts['condition.invisible']).toBe(1);
+      expect(facts[advantageFact]).toBe(1);
+
+      const offer = evaluateOffers(MODS, facts).find((o) => o.id === `${weapon.id}-use-action`);
+      const ui = offer?.ui as
+        | {
+            advantageFact?: string;
+            primaryControl?: { advantageUp?: ValueSource };
+          }
+        | undefined;
+      // Authored shape: the primary control declares the weapon's advantage
+      // fact (`advantageUp: { fact: def.advantageFact }`), and the offer's ui
+      // mirrors it beside the legacy disadvantageFact metadata.
+      expect(ui?.primaryControl?.advantageUp).toEqual({ fact: advantageFact });
+      expect(ui?.advantageFact).toBe(advantageFact);
+      // ...and resolved against the invisible plan it is truthy — the exact
+      // source PanelDiceLine's rulesAdvantage reads, so the to-hit defaults to
+      // 2d20-take-high.
+      const vars = (offer?.vars ?? {}) as Parameters<typeof resolveValueSource>[2];
+      expect(resolveValueSource(ui?.primaryControl?.advantageUp, facts, vars)).toBe(1);
+    }
+  );
+});
+
+describe('weapons — the Cleave secondary control carries the advantage source', () => {
+  it('reads the same STR flag the primary dice-line reads, so an invisible Cleave takes the high die', () => {
+    const MODS = [
+      actionEconomy,
+      attacks,
+      hands,
+      loadout,
+      greataxe,
+      greataxeMastery,
+      conditionInvisible
+    ];
+    // Hold the greataxe (mastery on, so the Cleave control exists) and be
+    // invisible: the effect's advantage flag is live in the plan.
+    const facts = evaluatePlan(MODS, {}, [
+      equip('i0', MODS, 'greataxe'),
+      ref('i1', 'record-invisible')
+    ]).facts;
+    expect(facts['condition.invisible']).toBe(1);
+    expect(facts['attack.str.advantage']).toBe(1);
+
+    const offer = evaluateOffers(MODS, facts).find((o) => o.id === 'greataxe-use-action');
+    const ui = offer?.ui as { secondaryControl?: { advantageUp?: ValueSource } } | undefined;
+    // Authored shape: the Cleave control declares the STR advantage fact,
+    // mirroring the builder's `advantageUp: { fact: def.advantageFact }`.
+    expect(ui?.secondaryControl?.advantageUp).toEqual({ fact: 'attack.str.advantage' });
+    // ...and resolved against the invisible plan it is truthy — the exact
+    // source PanelDiceLine's rulesAdvantage reads, so the to-hit rolls
+    // 2d20-take-high (the Cleave swing is still YOUR attack roll).
+    const vars = (offer?.vars ?? {}) as Parameters<typeof resolveValueSource>[2];
+    expect(resolveValueSource(ui?.secondaryControl?.advantageUp, facts, vars)).toBe(1);
   });
 });

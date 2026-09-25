@@ -43,7 +43,7 @@ Rough total: ~10–12 PRs. Calibration: prone = 4 PRs incl. inventing the chassi
 
 ### Wave 6
 
-- [ ] [Invisible](condition-invisible.md) — execute (lands rules-driven advantage wiring)
+- [x] [Invisible](condition-invisible.md) — executed (PR1 #456 the roller, then PR2+PR3 folded into ONE branch `condition-invisible-2`: WeaponDef.advantageFact + advantageUp on every dice-line incl. Cleave/Alert secondaries, recorder + keyed effect writing the attack/initiative advantage flags)
 
 ### Wave 7
 

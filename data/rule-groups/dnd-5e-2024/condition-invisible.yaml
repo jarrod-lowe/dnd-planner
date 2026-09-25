@@ -1,0 +1,33 @@
+ruleGroups:
+  - id: condition-invisible
+    translations:
+      en:
+        name: Invisible
+        description: Rules while you have the Invisible condition; record it when you turn invisible
+        keywords:
+          - invisible
+          - unseen
+          - hidden
+          - conceal
+          - condition
+      en-x-tlh:
+        name: So'lu'pu'
+        description: So'lu'pu' Dotlh; So'choHDI' yIghun
+        keywords:
+          - So'lu'pu'
+          - So'
+          - Dotlh
+    detail:
+      key: condition/invisible
+      source: srd52
+      translations:
+        en:
+          meta: Condition
+          body: |
+            **Invisible [Condition].** While you have the Invisible condition, you experience the following effects.
+
+            **Surprise.** If you're Invisible when you roll Initiative, you have Advantage on the roll.
+
+            **Concealed.** You aren't affected by any effect that requires its target to be seen unless the effect's creator can somehow see you. Any equipment you are wearing or carrying is also concealed.
+
+            **Attacks Affected.** Attack rolls against you have Disadvantage, and your attack rolls have Advantage. If a creature can somehow see you, you don't gain this benefit against that creature.

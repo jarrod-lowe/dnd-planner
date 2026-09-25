@@ -20,7 +20,11 @@ describe('unarmed strike offers — dice panel', () => {
       expect(offer.ui.primaryControl).toEqual({
         type: 'dice-line',
         ranges: [{ distance: 5, type: 'melee' }],
+        // The historical name — this is the DISadvantage source (Prone,
+        // Blinded, untrained armor). advantageUp beside it is the honest-named
+        // ADVANTAGE source (Invisible), which PR1's roller reads.
         advantage: { fact: 'attack.str.disadvantage' },
+        advantageUp: { fact: 'attack.str.advantage' },
         dice: [
           { sides: 20, bonus: { var: 'hitBonus' }, purpose: 'to-hit' },
           {
@@ -39,6 +43,9 @@ describe('unarmed strike offers — dice panel', () => {
       // The panel metadata legacy carried on both copies.
       expect(offer.ui.detailKey).toBe('attack/unarmed-strike');
       expect(offer.ui.disadvantageFact).toBe('attack.str.disadvantage');
+      // ...and its advantage mirror (panel-documentation parity with the
+      // weapon offers' ui.advantageFact).
+      expect(offer.ui.advantageFact).toBe('attack.str.advantage');
     });
   }
 });

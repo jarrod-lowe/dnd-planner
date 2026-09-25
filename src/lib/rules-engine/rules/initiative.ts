@@ -19,11 +19,15 @@ const initiative: RuleModule = {
         name: `${I}.roll-initiative.name`,
         description: `${I}.roll-initiative.description`,
         disadvantageFact: 'initiative.disadvantage',
+        advantageFact: 'initiative.advantage',
         annotationLabels: ['dice.any', 'dice.initiative'],
         primaryControl: {
           type: 'dice-line',
           dice: [{ sides: 20, bonus: { var: 'rollBonus' }, purpose: 'check' }],
-          advantage: { fact: 'initiative.disadvantage' }
+          advantage: { fact: 'initiative.disadvantage' },
+          // Invisible's Surprise: "If you're Invisible when you roll
+          // Initiative, you have Advantage on the roll."
+          advantageUp: { fact: 'initiative.advantage' }
         },
         secondaryControl: {
           type: 'dice-line',
@@ -32,9 +36,11 @@ const initiative: RuleModule = {
           dice: [{ sides: 20, bonus: { var: 'alertBonus' }, purpose: 'check' }],
           // The Alert roll is still an initiative roll: while the disadvantage
           // flag is live (Poisoned, untrained armor) it defaults to
-          // 2d20-take-low, exactly like the primary control above (the Cleave
-          // secondary-control shape).
-          advantage: { fact: 'initiative.disadvantage' }
+          // 2d20-take-low, and while the advantage flag is live (Invisible)
+          // 2d20-take-high — exactly like the primary control above (the
+          // Cleave secondary-control shape).
+          advantage: { fact: 'initiative.disadvantage' },
+          advantageUp: { fact: 'initiative.advantage' }
         },
         intents: { INSPECT: 'sense' },
         actionCost: []

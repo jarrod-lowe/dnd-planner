@@ -18,6 +18,7 @@ const SPEAR_PLUS1: WeaponDef = {
   damageDie: 6,
   damageType: 'piercing',
   disadvantageFact: 'attack.str.disadvantage',
+  advantageFact: 'attack.str.advantage',
   // Same Versatile/Thrown bands as the base spear (the grip lives in the loadout,
   // so the melee band's die follows `weapon.spear-plus1.twoHanded`); the +1
   // enhancement rides in the hit/damage derives below, not the dice sizes.

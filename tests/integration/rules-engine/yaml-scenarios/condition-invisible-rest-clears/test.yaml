@@ -1,0 +1,69 @@
+name: 'Condition Invisible - Rest Clears'
+description: >-
+  Any rest clears the Invisible condition: the keyed effect carries
+  untilShortRest, which a short rest satisfies directly and a long rest
+  includes. The condition fact, the three advantage flags and the notice all
+  go with it (umbrella default — the SRD's duration is per-source, and the
+  recorder is source-blind, so rest plus manual chip dismissal only; Hide's
+  stop conditions are the Hide action's, not the condition's, and spell-sourced
+  invisibility ignores them — see the module's Knot 3 note).
+ruleGroups:
+  - dnd-5e-2024/condition-invisible
+  - dnd-5e-2024/core-events
+steps:
+  - addOffer:
+      id: record-invisible
+      assert:
+        facts:
+          condition.invisible: 1
+          attack.str.advantage: 1
+          attack.dex.advantage: 1
+          initiative.advantage: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-invisible.notice
+  # A long rest (the explicit endTurn flag) clears it.
+  - endTurn:
+      longRest: true
+      assert:
+        facts:
+          condition.invisible: 0
+          attack.str.advantage: 0
+          attack.dex.advantage: 0
+          initiative.advantage: 0
+        effects:
+          notExists:
+            - effect-invisible
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-invisible.notice
+  # ...and so does a recorded short rest: the rest flag effect restores its
+  # scoped effects within the same evaluation, so the facts and notice are
+  # already gone before the turn even ends.
+  - addOffer:
+      id: record-invisible
+      assert:
+        facts:
+          condition.invisible: 1
+  - addOffer:
+      id: record-short-rest
+      assert:
+        facts:
+          rest.short: 1
+          condition.invisible: 0
+          attack.str.advantage: 0
+          attack.dex.advantage: 0
+          initiative.advantage: 0
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-invisible.notice
+  - endTurn:
+      assert:
+        facts:
+          condition.invisible: 0
+        effects:
+          notExists:
+            - effect-invisible
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-invisible.notice

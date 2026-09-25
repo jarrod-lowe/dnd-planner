@@ -1109,6 +1109,16 @@
         "notice": "mISchoHpu'",
         "notice.body": "laHtaHbe' SoH. STR 'ej DEX toDmey DaHeQlaHbe'. HIvlIj lughangelbogh nIv ghaH."
       },
+      "condition-invisible": {
+        "record-invisible": {
+          "name": "So'lu'pu'"
+        },
+        "effect-invisible": {
+          "name": "So'lu'pu'"
+        },
+        "notice": "So'lu'pu'",
+        "notice.body": "bIHIvmeH HIvlIj 'ej DujlIj nIv ghaH. SoH HIvmeH HIv nIvHa' ghaH (SoH leghlaHbogh SuvwI' lururbe'). SoH 'ej SepmeylIj So'lu'taH, leghlu'meH Qu'mey HuSmoH. Qong Hoch qaSchoHDI' rIn."
+      },
       "grapple": {
         "grapple-action": {
           "name": "DIvI' qop",
@@ -2030,7 +2040,8 @@
         "restrained": "ngorlu'",
         "paralyzed": "vIHlaHbe'",
         "petrified": "naghchoHpu'",
-        "stunned": "mISchoHpu'"
+        "stunned": "mISchoHpu'",
+        "invisible": "So'lu'pu'"
       },
       "STAT": {
         "set": "Set",
