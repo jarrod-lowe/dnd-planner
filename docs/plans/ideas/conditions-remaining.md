@@ -242,5 +242,6 @@ Nothing like it exists — a counter, not a boolean:
 - death saves / 0 HP flow (Unconscious neighbour — separate idea)
 - Hide action (Invisible's usual source); flying + Prone → falling
 - condition immunities (glossary "Immunity") — future idea (user-directed 2026-09-25): mechanise Petrified's Poisoned immunity (recording Petrified evicts a standing Poisoned effect)
+- mechanical drop of held items on Unconscious (auto-loadout → empty hands) — future idea (user-directed 2026-09-25)
 - persisted effects from prior releases are not rewritten — re-record to heal
 - backfilling seeded groups to pre-existing characters (prone known limitation — recreate character or forward-assignment idea)

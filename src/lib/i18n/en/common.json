@@ -1137,7 +1137,8 @@
           "not_unconscious": "You are not unconscious — there is nothing to wake from"
         },
         "notice": "Unconscious",
-        "notice.body": "You are Incapacitated and Prone with Speed 0, and you drop what you're holding (Set Loadout to empty hands). Attack rolls against you have Advantage, and any hit from within 5 ft is a Critical Hit. You automatically fail STR and DEX saving throws and are unaware of your surroundings."
+        "notice.body": "You are Incapacitated and Prone with Speed 0, and you drop what you're holding (Set Loadout to empty hands). Attack rolls against you have Advantage, and any hit from within 5 ft is a Critical Hit. You automatically fail STR and DEX saving throws and are unaware of your surroundings.",
+        "annotation": "You drop what you're holding — set your Loadout to empty hands"
       },
       "grapple": {
         "grapple-action": {

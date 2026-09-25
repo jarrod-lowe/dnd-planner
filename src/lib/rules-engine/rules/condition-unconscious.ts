@@ -13,6 +13,12 @@ const CU = 'rule.dnd-5e-2024.condition-unconscious';
 const NOT_UNCONSCIOUS = `${CU}.regain-consciousness-offer.not_unconscious`;
 
 /**
+ * The annotationLabel the record-unconscious panel declares — the drop-held
+ * reminder (annotate below) finds the row through it alone.
+ */
+const RECORD_LABEL = 'condition.unconscious.record';
+
+/**
  * The keyed unconscious effect the recorder commits: `key: 'unconscious'` so
  * a later Regain Consciousness clear (an empty same-key effect) evicts it
  * rather than stacking. It writes ALL THREE of its facts in its OWN state —
@@ -50,7 +56,8 @@ const unconsciousEffect = (): EffectInstance => ({
 /**
  * Unconscious — wave 7, the last composition child (Incapacitated + Prone +
  * Speed 0). SRD 5.2: Inert (the composition above, plus "you drop whatever
- * you're holding" — notice text + manual Set Loadout, no loadout mutation;
+ * you're holding" — a row annotation on the recorder + the notice sentence +
+ * manual Set Loadout, no loadout mutation;
  * and "When this condition ends, you remain Prone"), Speed 0 (halted —
  * movement.ts owns it), Attacks Affected (vs-you Advantage), Saving Throws
  * Affected (auto-fail STR/DEX), Automatic Critical Hits (within 5 ft),
@@ -92,6 +99,9 @@ const conditionUnconscious: RuleModule = {
         section: 'free',
         name: `${CU}.record-unconscious.name`,
         detailKey: 'condition/unconscious',
+        // The drop-held reminder's landing label (annotate below) — on `ui`,
+        // never inside a control (a nested array compiles and matches nothing).
+        annotationLabels: [RECORD_LABEL],
         intents: { CONDITION: 'unconscious' },
         actionCost: []
       },
@@ -159,7 +169,17 @@ const conditionUnconscious: RuleModule = {
       }
     }
   ],
-  // While unconscious, a NOTICE carries the standing effects (SRD verbatim
+  // Two channels, one sentence family. (1) The DROP-HELD reminder rides the
+  // record-unconscious row via its RECORD_LABEL (the concentration recorder
+  // idiom — `damage.any` on record-damage): SRD 5.2 Inert "you drop whatever
+  // you're holding" is knot 1 option (a), guidance + manual Set Loadout, so
+  // the advice is PRE-ACTION — it must be on the row the player is planning,
+  // BEFORE the condition exists. Hence UNCONDITIONAL: the row is the guidance
+  // point whether or not the condition is live. Advisory text only — no
+  // addsToPlan, because the remedy (Set Loadout) is a whole selection-driven
+  // configuration, not a plan-shortcut the row could seed.
+  //
+  // (2) While unconscious, a NOTICE carries the standing effects (SRD verbatim
   // minus the engine-enforced facts — Incapacitated/Prone/Speed 0 are
   // facts; vs-you Advantage, the within-5-ft auto-crit, auto-fail STR/DEX
   // saves, Unaware and the drop-held reminder are text only, nothing live
@@ -167,8 +187,12 @@ const conditionUnconscious: RuleModule = {
   // composed facts too). 'notice' == NOTICE_TARGET; rule modules may import
   // only the builder, so the reserved label is a literal here (see
   // condition-prone / -paralyzed).
-  annotate: (f): Annotation[] =>
-    f.num('condition.unconscious') > 0
+  annotate: (f): Annotation[] => [
+    {
+      key: `${CU}.annotation`,
+      targets: [RECORD_LABEL]
+    },
+    ...(f.num('condition.unconscious') > 0
       ? [
           {
             key: `${CU}.notice`,
@@ -177,7 +201,8 @@ const conditionUnconscious: RuleModule = {
             body: `${CU}.notice.body`
           }
         ]
-      : []
+      : [])
+  ]
 };
 
 export default defineRule(conditionUnconscious);
