@@ -23,7 +23,7 @@ Glossary "Condition": "A condition doesn't stack with itself; a recipient either
 ## Decisions (defaults — re-grill before execution)
 
 - Counter: keyed effect `key: 'exhaustion'`, `state: { 'condition.exhaustion': level }`. Key dedupe keeps ONE effect in force (newest-wins replaces), so the summed fact IS the level. `record-exhaustion` apply reads the FOLDED prior level `f.num('condition.exhaustion')` and advertises the keyed effect at level+1 — two rows same turn stack correctly (row 2's fold sees row 1).
-- Death at 6: record legal THROUGH 6 and past it — UNGATED (tracker philosophy: record what happened; we don't model death); the notice flags death at 6. Alternative: gate recording at 6 with a diagnostic. grill.
+- Death at 6: **GATED at 6 with a diagnostic** — user-directed 2026-09-25, SUPERSEDING this doc's original UNGATED decision: the recorder is illegal-but-visible at level ≥ 6 (`record-exhaustion-offer.dead_at_max`), a planned-anyway 7th row still executes (the plan.ts contract) but its apply clamps to `min(prior + 1, 6)`, so no plan can manufacture a level 7; the notice body flips to `.notice.body-dead` at 6 (death is text only — we still don't model it).
 - −2 × level: RIDER, not derive (Aura of Protection precedent — the ROLL is reduced; the modifier and the top bar stay untouched). Three annotations: `appliesTo` is single-purpose (`RollPurpose`), one per die kind, each `rider: { value: { kind: 'flat', bonus: −2 × level } }`, `defaultOn: true`. Channel limitation: the chip is toggleable (no locked variant exists) — a mandatory penalty the player can switch off; grill.
 - Initiative: **IN** — it is a D20 Test by being a Dexterity check (SRD wording: "When you make a D20 Test"). Costs nothing: the initiative d20's purpose is `'check'`, so the check rider reaches it (Alert's secondary roll too — also a D20 Test).
 - Speed −5 × level: `combine: 'sum'` contributions to BOTH `character.movement.speed` and `character.movement.total` (splint −10 precedent), `value: (f) => −5 × f.num('condition.exhaustion')`. No self-cycle: WRITES the movement facts, READS `condition.exhaustion` — a different fact (splint reads `armor.splint.equipped`, an effect-written fact, the same way); verified. Raw, unclamped (splint precedent; exhaustion 5 + splint → Speed −5 reads odd but every gate still behaves — Get Up's `speed > 0` holds). grill.
@@ -99,19 +99,25 @@ Tests (RED first — yaml scenario asserts are the RED; register each in `EXPECT
 
 ### PR1 — counter + record + notice (prone PR1 boilerplate)
 
-- [ ] RED: `condition-exhaustion-record` + `condition-exhaustion-death-notice` fail — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
-- [ ] i18n keys both locales incl. `play.verbBuckets.CONDITION.exhaustion` (verb + bucket exist since prone)
-- [ ] `condition-exhaustion.ts`: record offer, keyed level effect, notice annotate (rider + derive + onRest deferred to their PRs)
-- [ ] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details` (output `static/details/` gitignored — published, not committed)
-- [ ] GREEN: both scenarios in `EXPECTED_RUNNABLE`; notice-values unit test
-- [ ] terraform seed `char_condition_exhaustion_rulegroup_seed` (terraform/module/dnd-planner/dynamodb-items.tf); `make validate` passes
-- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod)
+FOLDED into ONE PR with PR2 by decision (the counter, the recorder, the
+notice, AND the speed contributions land together); riders + onRest stay in
+PR3 — the NEXT PR.
+
+- [x] RED: `condition-exhaustion-record` + `condition-exhaustion-death-notice` fail — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE` (all four scenarios skipped as `unported groups: condition-exhaustion`; the coverage assert listed exactly the four missing names)
+- [x] i18n keys both locales incl. `play.verbBuckets.CONDITION.exhaustion` (verb + bucket exist since prone)
+- [x] `condition-exhaustion.ts`: record offer (level < 6 legality clause + apply re-check + the min(prior+1, 6) clamp — the no-L7 outcome, see Decisions), keyed level effect, notice annotate (rider + onRest deferred to PR3)
+- [x] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details` (output `static/details/` gitignored — published, not committed)
+- [x] GREEN: both scenarios in `EXPECTED_RUNNABLE`; notice-values unit test (`condition-exhaustion-notice.test.ts` — values at levels 1/2/6, the body-dead flip, both body templates in both locales, and the ONE-keyed-effect endTurn pin)
+- [x] terraform seed `char_condition_exhaustion_rulegroup_seed` (terraform/module/dnd-planner/dynamodb-items.tf); `make validate` passes
+- [x] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod)
 
 ### PR2 — speed contributions
 
-- [ ] RED: `condition-exhaustion-record-twice` + `condition-exhaustion-half-speed-shrinks` fail; `record` gains the −5 asserts
-- [ ] derive: −5 × level on `character.movement.speed` + `character.movement.total`
-- [ ] GREEN; gates → PR → codex monitor → clean → `make deploy-test` → human inspects test env → human merges
+FOLDED into PR1 (above) by decision — items executed there:
+
+- [x] RED: `condition-exhaustion-record-twice` + `condition-exhaustion-half-speed-shrinks` fail; `record` gains the −5 asserts (speed 25 + total 25 + effective_total 25 + half_speed 12 at level 1)
+- [x] derive: −5 × level on `character.movement.speed` + `character.movement.total` (the splint-armor shape; `remaining`, `effective_total`, `half_speed`, Dash's boost, and Get Up follow for free — asserted, not coded)
+- [x] GREEN; gates → PR → codex monitor → clean → `make deploy-test` → human inspects test env → human merges
 
 ### PR3 — D20-test rider + long-rest decrement
 

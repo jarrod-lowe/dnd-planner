@@ -1303,6 +1303,46 @@ resource "aws_dynamodb_table_item" "char_condition_unconscious_rulegroup_seed" {
   })
 }
 
+# Exhaustion condition rule group seed - assigns the condition level recorder
+resource "aws_dynamodb_table_item" "char_condition_exhaustion_rulegroup_seed" {
+  table_name = aws_dynamodb_table.data.name
+  hash_key   = "PK"
+  range_key  = "SK"
+
+  item = jsonencode({
+    PK = {
+      S = "SEED#CHAR#$(characterId)"
+    }
+    SK = {
+      S = "RULEGROUP#condition-exhaustion"
+    }
+    gsiSeedPK = {
+      S = "SEED#CHAR"
+    }
+    type = {
+      S = "CHAR"
+    }
+    characterId = {
+      S = "$(characterId)"
+    }
+    ruleGroupId = {
+      S = "condition-exhaustion"
+    }
+    userId = {
+      S = "$(userId)"
+    }
+    enabled = {
+      BOOL = true
+    }
+    createdAt = {
+      S = "$(now)"
+    }
+    updatedAt = {
+      S = "$(now)"
+    }
+  })
+}
+
 # Species rule group seed - creates the species-specific rule group assignment
 resource "aws_dynamodb_table_item" "char_species_rulegroup_seed" {
   table_name = aws_dynamodb_table.data.name

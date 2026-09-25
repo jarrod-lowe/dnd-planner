@@ -1140,6 +1140,20 @@
         "notice.body": "You are Incapacitated and Prone with Speed 0, and you drop what you're holding (Set Loadout to empty hands). Attack rolls against you have Advantage, and any hit from within 5 ft is a Critical Hit. You automatically fail STR and DEX saving throws and are unaware of your surroundings.",
         "annotation": "You drop what you're holding — set your Loadout to empty hands"
       },
+      "condition-exhaustion": {
+        "record-exhaustion": {
+          "name": "Gain Exhaustion Level"
+        },
+        "effect-exhaustion": {
+          "name": "Exhaustion"
+        },
+        "record-exhaustion-offer": {
+          "dead_at_max": "You are dead at Exhaustion level 6 — no further level exists"
+        },
+        "notice": "Exhaustion",
+        "notice.body": "Exhaustion level {{level}} — D20 Tests {{roll}}, Speed {{speed}} ft. A Long Rest removes 1 level.",
+        "notice.body-dead": "Exhaustion level {{level}} — you are dead. D20 Tests {{roll}}, Speed {{speed}} ft."
+      },
       "grapple": {
         "grapple-action": {
           "name": "Grapple",
@@ -2063,7 +2077,8 @@
         "petrified": "Petrified",
         "stunned": "Stunned",
         "invisible": "Invisible",
-        "unconscious": "Unconscious"
+        "unconscious": "Unconscious",
+        "exhaustion": "Exhaustion"
       },
       "STAT": {
         "set": "Set",

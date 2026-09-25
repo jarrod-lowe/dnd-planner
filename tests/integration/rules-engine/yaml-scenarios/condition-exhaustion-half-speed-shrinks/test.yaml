@@ -1,0 +1,47 @@
+name: 'Condition Exhaustion - Half Speed Shrinks'
+description: >-
+  The prone interplay pin (assert, don't code): Get Up's cost is half your
+  SPEED floored (movement's half_speed derives from the species-contributed
+  speed), and the exhaustion penalty is a combine:sum contribution to that
+  same fact — so at level 2 the species 30 becomes 20 and righting yourself
+  costs 10, not 15 (the get-up-splint-armor-cost shape). Raw and unclamped
+  by design: at level 6 Speed reaches 0 and Get Up's own speed > 0 gate
+  takes over ("If your Speed is 0, you can't right yourself").
+ruleGroups:
+  - species-human/species-human
+  - dnd-5e-2024/movement
+  - dnd-5e-2024/condition-exhaustion
+  - dnd-5e-2024/condition-prone
+steps:
+  - addOffer:
+      id: record-exhaustion
+      assert:
+        facts:
+          condition.exhaustion: 1
+          character.movement.speed: 25
+          character.movement.half_speed: 12
+  - addOffer:
+      id: record-exhaustion
+      assert:
+        facts:
+          condition.exhaustion: 2
+          character.movement.speed: 20
+          character.movement.half_speed: 10
+  # Knocked prone: the exhaustion notice and the prone notice coexist.
+  - addOffer:
+      id: record-prone
+      assert:
+        facts:
+          condition.prone: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-exhaustion.notice
+            - rule.dnd-5e-2024.condition-prone.notice
+  # Get Up costs half the REDUCED Speed: 10 feet, leaving 10.
+  - addOffer:
+      id: get-up
+      assert:
+        facts:
+          character.movement.spent: 10
+          character.movement.remaining: 10
+          condition.prone: 0

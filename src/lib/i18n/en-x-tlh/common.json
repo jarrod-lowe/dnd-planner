@@ -1140,6 +1140,20 @@
         "notice.body": "laHtaHbe' SoH 'ej bIpum 'ej Do'lIj chIm, 'ej ngeDlIj DaBaghmoH (Set Loadout). HIvlIj lughangelbogh nIv ghaH, 'ej wa' qejvam HIvchugh Qapchu' ghaH. STR 'ej DEX toDmey DaHeQlaHbe' 'ej Dat DaSovbe'.",
         "annotation": "ngeDlIj DaBaghmoH — nIvlIj yIchon chIm"
       },
+      "condition-exhaustion": {
+        "record-exhaustion": {
+          "name": "ngoy' Sab chel"
+        },
+        "effect-exhaustion": {
+          "name": "ngoy'taH"
+        },
+        "record-exhaustion-offer": {
+          "dead_at_max": "ngoy' Sab jav DI' bIHegh — latlh Sab tu'lu'be'"
+        },
+        "notice": "ngoy'taH",
+        "notice.body": "ngoy' Sab {{level}} — D20 naw' {{roll}}, Do {{speed}} qej. Qong naQ wa' Sab pol.",
+        "notice.body-dead": "ngoy' Sab {{level}} — bIHeghpu'. D20 naw' {{roll}}, Do {{speed}} qej."
+      },
       "grapple": {
         "grapple-action": {
           "name": "DIvI' qop",
@@ -2063,7 +2077,8 @@
         "petrified": "naghchoHpu'",
         "stunned": "mISchoHpu'",
         "invisible": "So'lu'pu'",
-        "unconscious": "QongtaH"
+        "unconscious": "QongtaH",
+        "exhaustion": "ngoy'taH"
       },
       "STAT": {
         "set": "Set",
