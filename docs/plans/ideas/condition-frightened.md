@@ -1,6 +1,6 @@
 # Condition: Frightened
 
-Fifth condition on the prone chassis: Frightened. Same fact footprint as Poisoned (attack flags + 18 skill flags); the two divergences — line-of-sight qualifier, can't-approach — land as notice text (player judgement). See conditions-remaining.md.
+Wave-2's deferred straggler — the LAST of the 14 (waves 1–8 landed; the tracker held this one back over a single knot: the line-of-sight qualifier). New shape, **user-directed 2026-09-25**: a LoS TOGGLE the player taps ON THE NOTICE — keyed sub-state + gated derives + a strip button. SUPERSEDES this doc's old standing-flags GRILL POINT and the umbrella's standing-disadvantage default (conditions-remaining.md, Decision defaults). See conditions-remaining.md.
 
 ## Behaviour
 
@@ -13,16 +13,21 @@ Be extremely concise. Sacrifice grammar for the sake of concision.
 > **Ability Checks and Attacks Affected.** You have Disadvantage on ability checks and attack rolls while the source of fear is within line of sight.
 > **Can't Approach.** You can't willingly move closer to the source of fear.
 
-Modelled: same flags as Poisoned. Line-of-sight qualifier + can't-approach = notice text (player judgement; prone simplification precedent — see Decision defaults).
+Modelled: keyed condition fact + a player-asserted `frightened.sourceHidden` toggle (keyed effect + empty same-key eviction — the drop-prone/get-up idiom) + the 22 disadvantage flags as DERIVES gated on both (the armorTrainingPenalties shape). The LoS qualifier is MECHANISED — the SRD scopes the whole disadvantage clause to sight. Can't-approach stays notice text (no source position).
 
 ## Decisions (defaults — re-grill before execution)
 
-- **GRILL POINT — line of sight.** Default: **standing disadvantage** — flags always on while the condition is live; notice carries the qualifier; per-die override on the rollers covers the source-not-visible case. Alternative: a toggle ("source in line of sight?" legality/offer suppressing the flags) — rejected: new chassis (facts conditional on a player-asserted sub-state) for one condition, and the board has no source-position model to verify against. Prone simplification precedent: model the common case, surface the exception as text. Recommend standing.
-- Attack + ability-check Disadvantage: exactly Poisoned's writes — `attack.str/dex.disadvantage` + all 18 `skill.{skill}.disadvantage` + `initiative.disadvantage` (Initiative is a Dexterity ability check; `roll-initiative` reads the fact — leather-armor precedent) + `check.disadvantage` (the generic `record-check` roller in core-events gains `advantage: { fact }` — see Poisoned), `stateCombine: 'max'` on every flag (armor conflict-throw; stacked-with-Poisoned flag summing). Poisoned's Cleave note applies identically (greataxe's Cleave secondary control needs the source too).
-- Can't-willingly-approach: **notice text only** — enforcing "closer to the source" needs source position (NPC side, no modelling); player judgement.
-- Ending: umbrella default — `expiry: untilShortRest` (prone deviation; SRD ties duration to the fear source, which we don't model) + ActiveStateStrip chip dismissal.
+- **LoS: player-toggled sub-state, not standing flags** (user-directed 2026-09-25, SUPERSEDING this doc's standing-flags GRILL POINT + the umbrella's standing-disadvantage default). Two free offers flip `frightened.sourceHidden`; the standing notice carries the tap-to-toggle button (`addsToPlan` naming the applicable offer, conditional on state). Rejected: (a) **standing flags** (the old default): every die pays disadvantage while the source is hidden until a per-die override — backwards, the SRD sentence is sight-qualified and source-hidden is the common mid-fight state; (b) **settings chassis** (yaml `settings` select → EffectInstance): dead per the LoS exploration — settings are build-time choices, the wrong home for live per-battle combat state; (c) **per-die override as the primary**: burden on every roll, and the board has no source-position model to verify against anyway — the toggle is player judgement, one tap, both directions.
+- **Flags OFF means OFF**: source hidden → 0 on all 22 — NO disadvantage anywhere from Frightened. The qualifier scopes the entire disadvantage clause. Assert (yaml).
+- **Flags as DERIVES, not effect state** — effect `state` cannot be conditional on live facts (builder.ts's own armorTrainingPenalties comment); each flag derives `combine: 'max'`, `value: (f) => f.num('condition.frightened') > 0 && f.num('frightened.sourceHidden') === 0 ? 1 : 0`. Mode agreement: Poisoned effect-writes the same flags `stateCombine: 'max'`, armor derives them `combine: 'max'` — same mode, no conflict-throw (Blinded's regression family). Cycle guard: the derives read ONLY `condition.frightened` + `frightened.sourceHidden`, never their own outputs (splint reads `armor.splint.equipped`, an effect-written fact, the same way).
+- **Toggle key discipline**: toggle effect `key: 'frightened-source'` — DISTINCT from the condition's `'frightened'` (a same-key eviction would end the condition itself). Toggle-on writes `frightened.sourceHidden: 1`; reveal = EMPTY same-key eviction (get-up idiom).
+- **Toggles always-visible + legality-gated** (the #453 illegal-but-visible contract — condition-prone.ts's current get-up shape): no `when`; `legalWhen` diagnostics + apply re-check (the dash idiom). Planned-anyway rows execute harmlessly: toggle-on while un-frightened writes an inert fact (derives gate on the condition), reveal while visible is a no-op eviction.
+- **The notice is the toggle's home**: ONE standing notice while `condition.frightened > 0`; `addsToPlan` flips with state (visible → `source-out-of-sight`, hidden → `source-back-in-sight`); body key flips (exhaustion's `.notice.body-dead` precedent). The toggles ALSO live in the add-row picker as ordinary free offers — the button is a shortcut, not the only path; it degrades to plain text when the offer isn't addable (PR1 chassis).
+- **Interaction — Poisoned + hidden → flags STILL 1**: Poisoned's effect writes 1, Frightened's derive contributes 0, max = 1 (the uniform-max dividend). Untrained armor likewise. Assert (yaml).
+- **Can't-willingly-approach: notice text only** — enforcing "closer to the source" needs source position (NPC side, no modelling); the LoS toggle changes nothing here (sight judgement, not movement verification). BOTH body copies carry the sentence.
+- Ending: umbrella default — BOTH effects `expiry: untilShortRest` (any rest clears condition + toggle together; assert) + ActiveStateStrip chip dismissal. Dismissing the condition chip while hidden strands an inert `sourceHidden` (derives gate on the condition; reveal or rest clears) — accepted.
 - Recorder `record-frightened` ("Frightened"): free, ungated, imposed by an enemy effect (knocked-prone shape).
-- Group `requires: []`.
+- `requires: []` — the derives read only their own module's facts; the flags are inert facts without reader groups (Poisoned precedent); nothing in movement reads Frightened.
 - Detail body: SRD verbatim (umbrella quote), en-only.
 
 ## Design
@@ -31,33 +36,62 @@ Module `src/lib/rules-engine/rules/condition-frightened.ts`, id `condition-frigh
 
 Facts:
 
-- `condition.frightened` — 1 while frightened; written ONLY by the committed effect
-- `attack.str.disadvantage`, `attack.dex.disadvantage`, `skill.{skill}.disadvantage` ×18, `initiative.disadvantage`, `check.disadvantage` — flags
+- `condition.frightened` — 1 while frightened; written ONLY by the condition effect
+- `frightened.sourceHidden` — 1 while the player has marked the source out of sight; written ONLY by the toggle effect
 
-Effect (loop the module-local SKILLS const, Poisoned shape):
+Derives (module `derive:`, armorTrainingPenalties shape; module-local SKILLS const — copy Poisoned's 18, don't share): 22 contributions — `attack.str/dex.disadvantage`, `initiative.disadvantage`, `check.disadvantage`, `skill.{skill}.disadvantage` ×18 — each `{ fact, combine: 'max', value }` with the gated value above.
 
-- `{ id: 'effect-frightened', key: 'frightened', state: { 'condition.frightened': 1, 'attack.str.disadvantage': 1, 'attack.dex.disadvantage': 1, 'initiative.disadvantage': 1, 'check.disadvantage': 1, …`skill.${s}.disadvantage`: 1 ×18 }, stateCombine: 'max' on all 22 flags, display: { name, detailKey: 'condition/frightened' }, expiry: { kind: 'untilShortRest' } }`
+Effects:
 
-Offer:
+- `effect-frightened`: `{ key: 'frightened', state: { 'condition.frightened': 1 }, display: { name, detailKey: 'condition/frightened' }, expiry: { kind: 'untilShortRest' } }` — writes ONLY the condition fact; the flags live in the derives
+- toggle-on `frightened-source-hidden`: `{ key: 'frightened-source', state: { 'frightened.sourceHidden': 1 }, display: { name: '.effect-source-hidden.name', detailKey: 'condition/frightened' }, expiry: { kind: 'untilShortRest' } }` — the strip SHOWS the LoS state
+- reveal eviction `frightened-source-visible`: EMPTY same-`key` ('frightened-source'), `display: { name: '.source-back-in-sight.effect-cleared.name' }`, `expiry: permanent` (get-up idiom — nameless renders nothing)
 
-- `record-frightened`: section `free`, `intents: { CONDITION: 'frightened' }`, `detailKey: 'condition/frightened'`, no control, no gate, `actionCost: []`; apply advertises the effect
+Offers (all section `free`, `intents: { CONDITION: 'frightened' }`, `detailKey: 'condition/frightened'`, `actionCost: []`, no control):
 
-Notice (annotate while `condition.frightened > 0`): `targets: ['notice']`, key `rule.dnd-5e-2024.condition-frightened.notice` (+ `.body`), `source` effect name. No `values`.
-en body: "Disadvantage on attack rolls and ability checks while the source of fear is within line of sight (applied always while Frightened — override a die when it isn't). You can't willingly move closer to the source of fear."
+- `record-frightened`: no gate; apply advertises the condition effect
+- `source-out-of-sight`: no `when`; `legalWhen` [frightened > 0 && sourceHidden === 0 → diagnostics `.source-out-of-sight-offer.not_frightened` / `.already_hidden`]; apply re-checks, advertises toggle-on
+- `source-back-in-sight`: no `when`; `legalWhen` [sourceHidden > 0 → `.source-back-in-sight-offer.not_hidden`]; apply re-checks, advertises the eviction
+
+Notice (annotate while `condition.frightened > 0`): `targets: ['notice']`, key `.notice`, `source` `.effect-frightened.name`; body + `addsToPlan` flip on state (the annotation-targets registry guard validates the offer ids — same-module here):
+
+- visible: `body: '.notice.body'`, `addsToPlan: { offer: 'source-out-of-sight' }`
+- hidden: `body: '.notice.body-hidden'`, `addsToPlan: { offer: 'source-back-in-sight' }`
+
+en bodies:
+
+- `.notice.body`: "Disadvantage on attack rolls and ability checks while the source of fear is within line of sight. You can't willingly move closer to the source of fear."
+- `.notice.body-hidden`: "The source of fear is out of sight — no Disadvantage from Frightened. You still can't willingly move closer to the source of fear."
+
+NoticeStrip UI slice (PR1; the only frontend change):
+
+- NoticeStrip renders notices TEXT-only today (NoticeStrip.svelte:20-24/125-135 — no addsToPlan branch). Copy the PanelRenderer row-button pattern (PanelRenderer.svelte:846-874): resolve the notice's `addsToPlan` via an `addableOfferIds` membership test (the WHOLE test); button = `play.annotation.addToPlan` aria-label + decorative plus icon; tap → `onAddOfferToPlan(offerId, seed)` (PanelRenderer's prop names, reused). Absent props → DENY: a missing button, never a dead one.
+- `addsToPlan: 'again'` REJECTED in this path — it resolves against the panel row it renders on (`entry.rule.id`), and a notice has no row; render plain text. Unit-pinned.
+- PlayCharacterMode forwarding, one line each: derive `new Set(availableRules.map((e) => e.rule.id))` (the PlanStack.svelte:95 idiom) + pass it and `addOfferToPlan` (PlayCharacterMode.svelte:134) into `<NoticeStrip>` (:186).
+- No new i18n (reuses `play.annotation.addToPlan`, both locales exist).
 
 i18n — BOTH `src/lib/i18n/en/common.json` AND `src/lib/i18n/en-x-tlh/common.json` (tlh invented at execution, normal casing — do not invent now):
 
-- `rule.dnd-5e-2024.condition-frightened.record-frightened.name`
-- `rule.dnd-5e-2024.condition-frightened.effect-frightened.name`
-- `rule.dnd-5e-2024.condition-frightened.notice`, `.notice.body`
+- `rule.dnd-5e-2024.condition-frightened.record-frightened.name` (record-\* carries name only)
+- `.effect-frightened.name`, `.effect-source-hidden.name`, `.source-back-in-sight.effect-cleared.name`
+- `.source-out-of-sight.name/.description`, `.source-back-in-sight.name/.description`
+- `.source-out-of-sight-offer.not_frightened`, `.source-out-of-sight-offer.already_hidden`, `.source-back-in-sight-offer.not_hidden`
+- `.notice`, `.notice.body`, `.notice.body-hidden`
 - `play.verbBuckets.CONDITION.frightened`
 
 Tests (RED first — registered in `EXPECTED_RUNNABLE`, tests/integration/rules-engine/yaml-scenarios.test.ts):
 
-- `condition-frightened-record` (condition fact + attack flags + `initiative.disadvantage` + `check.disadvantage` + notice exists; Poisoned's `record-check` wiring pin covers the shared control — no duplicate needed here)
-- `condition-frightened-rest-clears` (short AND long → cleared, notice gone; co-load `core-events`)
-- `condition-frightened-skill-flags` — Poisoned's shape: co-load `leather-armor` untrained; assert attack flags + 2–3 representative skills (`athletics`, `stealth` armor-derived; `perception` not), not all 18; no combine-conflict throw
-- optional green-immediate pin: `condition-frightened-with-poisoned` — both recorded → flags still 1 (the uniform-`max` dividend)
+- `condition-frightened-record` — pre-record: both toggles visible + ILLEGAL (not_frightened — the illegal-but-visible pin); record → condition fact + representative flags 1 (attack.str/dex, `initiative.disadvantage`, `check.disadvantage`, athletics/stealth/perception) + notice exists/targets; out-of-sight now LEGAL, back-in-sight illegal
+- `condition-frightened-source-hidden` — toggle → `frightened.sourceHidden` 1, flags 0 (flags-off-is-OFF), notice STILL exists (can't-approach channel); legality flipped (back-in-sight legal, out-of-sight illegal)
+- `condition-frightened-source-back-in-sight` — toggle → toggle back → sourceHidden 0, flags 1 (the round-trip pin)
+- `condition-frightened-rest-clears` — record + hide → short AND long → condition 0 AND sourceHidden 0, notice gone (co-load `core-events`; both effects untilShortRest)
+- `condition-frightened-skill-flags` — co-load `leather-armor` untrained (Poisoned's shape): visible → shared flags 1, no conflict-throw (derive-vs-derive mode agreement); hidden → armor-written flags STILL 1 (attack.str/dex, initiative, athletics/stealth) while frightened-only flags go 0 (`check.disadvantage`, perception) — the honest residual
+- `condition-frightened-hidden-with-poisoned` — co-load `condition-poisoned`, both recorded, hide → flags still 1 (the max dividend; green-immediate pin)
+
+Unit pins (the yaml grammar cannot assert annotation values/bodies):
+
+- `condition-frightened-notice.test.ts` — `addsToPlan` flips with state ({ offer: 'source-out-of-sight' } / { offer: 'source-back-in-sight' }); body key flips; notice gone at condition 0; both body templates in both locales; the named offers exist in the module
+- `condition-frightened-derives.test.ts` — gating: 1 visible, 0 hidden on ALL 22 (zeroed, not merely absent), 0 un-frightened; combine 'max' mode agreement with Poisoned's stateCombine (the conflict-throw guard)
 
 ## Execution rules
 
@@ -75,28 +109,37 @@ Tests (RED first — registered in `EXPECTED_RUNNABLE`, tests/integration/rules-
 
 ## PRs
 
-### PR1 — condition-frightened module (record, effect, notice, rest clear, seed)
+### PR1 — NoticeStrip button support (UI-only; the #456 roller precedent — zero rule writers)
 
-- [ ] RED: `condition-frightened-record` scenario fails — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
-- [ ] `condition-frightened.ts`: `record-frightened` offer, keyed frightened effect (22 facts, loop-built), notice annotate
+- [ ] RED: `NoticeStrip.test.ts` — synthetic annotation with `addsToPlan: { offer }` renders the button, tap fires `onAddOfferToPlan(id, seed)`; degrades to plain text when the offer isn't in `addableOfferIds`, when the action is `'again'` (the rejected form), and when props are absent; existing text notices unchanged
+- [ ] NoticeStrip props (`onAddOfferToPlan`, `addableOfferIds`) + the button branch (the PanelRenderer:846-874 copy); PlayCharacterMode forwarding + the addable-set derivation
+- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (human inspects the strip button in the test env; no rule-group change — no publish-details, no seed) → human merges
+
+May FOLD into PR2 if PR1 proves trivial — one decision line at execution.
+
+### PR2 — condition-frightened module (record, derives, toggle, notice wiring, seed)
+
+- [ ] RED: scenarios fail — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
+- [ ] `condition-frightened.ts`: record offer, condition effect, 22 gated derives, both toggle offers (legality + re-check), notice annotate (flipping body + addsToPlan)
 - [ ] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details` (output `static/details/` gitignored — published, not committed)
 - [ ] i18n keys both locales
-- [ ] GREEN: record + rest-clears + skill-flags scenarios; `EXPECTED_RUNNABLE`
+- [ ] GREEN: all scenarios + the two unit pins
 - [ ] terraform seed `char_condition_frightened_rulegroup_seed` (terraform/module/dnd-planner/dynamodb-items.tf); `make validate` passes
 - [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod)
 
-May share PR1 with Poisoned (same footprint). Docs stay standalone either way.
-
 ## Out of scope
 
-- line-of-sight toggle / source-position modelling (standing disadvantage — Decision above)
-- can't-willingly-approach movement enforcement (no source position; notice text)
+- can't-approach movement enforcement (no source position; notice text — the toggle is sight judgement, not movement verification)
+- source IDENTITY (which creature frightened you — one undifferentiated toggle)
 - inflicting fear on others (fear spells — NPC state)
 - wisdom-save fear effects recording the condition automatically (future spell work)
 - backfilling seeded groups to pre-existing characters (prone known limitation)
 
 ## Notes
 
-- `record-*` offers carry name only — no `.description` key (prone PR1 note)
-- Same 22-flag loop as Poisoned — copy, don't share (module-local consts; share only if a third appears)
-- Known limitation: seeded group self-heal needs character recreated or forward-assignment (prone precedent)
+- LoS history: the umbrella deferred Frightened in wave 2 over exactly this (conditions-remaining.md — "standing disadvantage vs per-source"); standing flags were this doc's default, the settings chassis (yaml `settings` select → EffectInstance) was explored for the toggle and died (build-time choices, wrong home for live combat state); the notice-button toggle is the user-directed 2026-09-25 landing.
+- Wave-2's Poisoned landed the roller wiring these derives feed: `check.disadvantage` on record-check (core-events.ts:378), the skill/initiative/attack flag readers — ZERO roller work here.
+- Poisoned's Cleave note applies identically (greataxe's Cleave secondary reads the attack flags — sight-gated now, same facts).
+- Same 22-flag list as Poisoned — copy, don't share (module-local consts; share only if a third appears).
+- Stray `frightened.sourceHidden` after condition chip-dismissal while hidden: inert (derives gate on the condition); reveal or rest clears.
+- Known limitation: seeded group self-heal needs character recreated or forward-assignment (prone precedent).
