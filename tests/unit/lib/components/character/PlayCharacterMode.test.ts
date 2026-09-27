@@ -13,14 +13,21 @@ const mockFns = vi.hoisted(() => ({
   loadRuleGroups: vi.fn(),
   reset: vi.fn(),
   addToPlan: vi.fn(),
+  addOfferToPlan: vi.fn(),
   removeFromPlan: vi.fn(),
   movePlanItem: vi.fn()
 }));
 
 // Vitest hoists EVERY vi.mock call in the file, even one written inside a test,
 // so a second in-test playStore mock would hijack the whole file's store. One
-// registration with a mutable flag instead; the loading test flips it.
-const mockState = vi.hoisted(() => ({ isLoading: false }));
+// registration with a mutable flag instead; the loading test flips it. The
+// annotations/availableRules slots let a test swap the engine output's lists
+// (they default to the fixture below) without re-registering the mock.
+const mockState = vi.hoisted(() => ({
+  isLoading: false,
+  annotations: undefined as undefined | Array<Record<string, unknown>>,
+  availableRules: undefined as undefined | Array<Record<string, unknown>>
+}));
 
 // Mock $lib/i18n module
 vi.mock('$lib/i18n', () => ({
@@ -52,11 +59,11 @@ vi.mock('$lib/play/playStore.svelte', () => ({
             'character.movement.total': 30
           },
           collections: {},
-          availableRules: [],
+          availableRules: mockState.availableRules ?? [],
           // One notice-targeted annotation (must reach the notice strip) and
           // one panel-targeted (must NOT — proves PlayCharacterMode filters
           // through getNotices rather than passing the raw list).
-          annotations: [
+          annotations: mockState.annotations ?? [
             {
               key: 'rule.dnd-5e-2024.feat-sentinel.notice-disengage',
               targets: ['notice'],
@@ -95,6 +102,7 @@ vi.mock('$lib/play/playStore.svelte', () => ({
     loadRuleGroups: mockFns.loadRuleGroups,
     reset: mockFns.reset,
     addToPlan: mockFns.addToPlan,
+    addOfferToPlan: mockFns.addOfferToPlan,
     removeFromPlan: mockFns.removeFromPlan,
     movePlanItem: mockFns.movePlanItem
   }
@@ -155,6 +163,8 @@ describe('PlayCharacterMode', () => {
     document.body.appendChild(container);
     vi.clearAllMocks();
     mockState.isLoading = false;
+    mockState.annotations = undefined;
+    mockState.availableRules = undefined;
   });
 
   it('calls loadRuleGroups on mount with character ID', async () => {
@@ -224,6 +234,60 @@ describe('PlayCharacterMode', () => {
     expect(cells[0].querySelector('.notice-strip__label')?.textContent).toContain(
       'rule.dnd-5e-2024.feat-sentinel.notice-disengage'
     );
+  });
+
+  it('forwards an actionable notice tap to the store addOfferToPlan through the real screen', async () => {
+    // Screen-level regression for the wiring alone: an actionable notice AND
+    // its matching available offer, mounted through PlayCharacterMode. The
+    // component test stays green if the screen forgets to derive the addable
+    // set or forward the handler — this is the pin that catches it.
+    mockState.annotations = [
+      {
+        key: 'rule.dnd-5e-2024.condition-frightened.notice',
+        targets: ['notice'],
+        source: 'rule.dnd-5e-2024.condition-frightened.effect-frightened.name',
+        body: 'rule.dnd-5e-2024.condition-frightened.notice.body',
+        addsToPlan: {
+          offer: 'frightened-source-out-of-sight',
+          labelKey: 'rule.dnd-5e-2024.condition-frightened.notice.action-hide'
+        }
+      }
+    ];
+    mockState.availableRules = [
+      {
+        rule: { id: 'frightened-source-out-of-sight' },
+        legal: true,
+        applicable: true,
+        diagnostics: []
+      }
+    ];
+
+    mount(PlayCharacterMode, {
+      target: container,
+      props: {
+        character: mockCharacter,
+        email: 'test@example.com',
+        onLogout: vi.fn(),
+        onBack: vi.fn()
+      }
+    });
+    await tick();
+
+    // The button only exists because the screen derived the addable set from
+    // availableRules and forwarded both props into the strip.
+    const button = container.querySelector<HTMLButtonElement>(
+      'button.notice-strip__content--action'
+    );
+    expect(button, 'the actionable notice renders as a button').toBeTruthy();
+    expect(button!.getAttribute('aria-label')).toBe(
+      'rule.dnd-5e-2024.condition-frightened.notice.action-hide'
+    );
+
+    button!.click();
+    await tick();
+
+    expect(mockFns.addOfferToPlan).toHaveBeenCalledTimes(1);
+    expect(mockFns.addOfferToPlan).toHaveBeenCalledWith('frightened-source-out-of-sight');
   });
 
   it('shows loading state when isLoadingRuleGroups is true', async () => {
