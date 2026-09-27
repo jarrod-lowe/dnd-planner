@@ -2184,6 +2184,54 @@ describe('playStore', () => {
       expect(playStore.state.committed.map((e) => e.id)).toEqual(['effect-bless']);
     });
 
+    it('dismissing the Frightened chip removes a committed source-hidden toggle (dependents by key)', async () => {
+      const mockApiGet = vi.mocked(apiGet);
+      vi.mocked(apiPost).mockResolvedValue({ ok: true, status: 204 } as Response);
+
+      // The frightened condition effect (rules/condition-frightened.ts) names the
+      // toggle's KEY in dependents — and the toggle's id DIFFERS from its key, so
+      // this pins the dependent-keyed (not dependent-id) match: dismissing the
+      // condition chip must take the committed toggle with it, leaving no orphan
+      // LoS chip. (The yaml runner's removeEffect never follows dependents, so
+      // the orphan guard lives here — docs/plans/ideas/condition-frightened.md.)
+      const frightened = {
+        id: 'effect-frightened',
+        key: 'frightened',
+        dependents: ['frightened-source'],
+        state: { 'condition.frightened': 1 },
+        expiry: { kind: 'untilShortRest' as const }
+      };
+      const toggle = {
+        id: 'frightened-source-hidden',
+        key: 'frightened-source',
+        state: { 'frightened.sourceHidden': 1 },
+        expiry: { kind: 'untilShortRest' as const }
+      };
+      const unrelated = {
+        id: 'effect-bless',
+        key: 'bless',
+        expiry: { kind: 'permanent' as const }
+      };
+
+      mockApiGet
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ ruleGroups: [] }) } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ effects: JSON.stringify([frightened, toggle, unrelated]) })
+        } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      await playStore.loadRuleGroups('char-1');
+      expect(playStore.state.committed).toHaveLength(3);
+
+      playStore.removeEffect('effect-frightened');
+
+      // The condition and its dependent-KEYED toggle are gone; the unrelated
+      // effect stays.
+      expect(playStore.state.committed.map((e) => e.id)).toEqual(['effect-bless']);
+    });
+
     it('removes an effect by rule ID from state.effects', async () => {
       const mockApiGet = vi.mocked(apiGet);
       const mockApiPost = vi.mocked(apiPost);

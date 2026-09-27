@@ -637,6 +637,21 @@ const EXPECTED_RUNNABLE = [
   'condition-exhaustion-long-rest-removes-one',
   'condition-exhaustion-long-rest-clears-final-level',
   'condition-exhaustion-rest-then-gain-edge',
+  // condition-frightened (wave 2's deferred straggler — the LAST of the 14;
+  // replanned user-directed 2026-09-25 around the LoS knot): the 22 flags as
+  // GATED DERIVES (armorTrainingPenalties shape) reading condition.frightened
+  // AND the player-asserted frightened.sourceHidden toggle (keyed effect +
+  // empty same-key eviction, key 'frightened-source' DISTINCT from the
+  // condition's), both toggles illegal-but-visible (#453), and the notice
+  // carrying the tap-to-toggle button. The dismissal dependents pin is
+  // STORE-level (playStore.test.ts) — the yaml runner's removeEffect never
+  // follows dependents.
+  'condition-frightened-record',
+  'condition-frightened-source-hidden',
+  'condition-frightened-source-back-in-sight',
+  'condition-frightened-rest-clears',
+  'condition-frightened-skill-flags',
+  'condition-frightened-hidden-with-poisoned',
   // M3 — feat-alert (initiative-with-proficiency + annotations) and hit-die
   // (d10 pool from the class levels; remaining = total - spent)
   'alert-flag-set',

@@ -1,0 +1,56 @@
+name: 'Condition Frightened - Record'
+description: >-
+  Recording being Frightened commits a keyed effect writing ONLY the condition
+  fact — the 22 disadvantage flags live in DERIVES gated on the condition AND
+  the line-of-sight toggle (the armorTrainingPenalties shape; effect state
+  cannot be conditional on live facts). Visible (source in sight, the default):
+  the representative flags read 1 — STR/DEX attacks, initiative, the generic
+  check, athletics/stealth/perception skills — and a NOTICE carries the
+  standing effects. Pre-record, BOTH toggles are visible and ILLEGAL (the
+  #453 illegal-but-visible contract — no `when` gates, legality clauses only),
+  out-of-sight with not_frightened, back-in-sight with not_hidden; post-record
+  out-of-sight flips legal while back-in-sight stays illegal. The recorder
+  models BEING FRIGHTENED (imposed by an enemy effect), so it is free and
+  ungated (the knocked-prone precedent).
+ruleGroups:
+  - dnd-5e-2024/condition-frightened
+steps:
+  # Pre-record: both toggles exist, both illegal — the illegal-but-visible pin.
+  - evaluate:
+      assert:
+        facts:
+          condition.frightened: 0
+        offers:
+          exists:
+            - record-frightened
+            - source-out-of-sight
+            - source-back-in-sight
+          illegal:
+            - source-out-of-sight
+            - source-back-in-sight
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-frightened.notice
+  - addOffer:
+      id: record-frightened
+      assert:
+        facts:
+          condition.frightened: 1
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+          initiative.disadvantage: 1
+          check.disadvantage: 1
+          skill.athletics.disadvantage: 1
+          skill.stealth.disadvantage: 1
+          skill.perception.disadvantage: 1
+        offers:
+          legal:
+            - source-out-of-sight
+          illegal:
+            - source-back-in-sight
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-frightened.notice
+          targets:
+            - key: rule.dnd-5e-2024.condition-frightened.notice
+              targets: [notice]

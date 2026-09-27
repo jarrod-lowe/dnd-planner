@@ -1,0 +1,48 @@
+name: 'Condition Frightened - Source Hidden'
+description: >-
+  FLAGS OFF MEANS OFF (user-directed 2026-09-25): the SRD scopes the ENTIRE
+  disadvantage clause to "while the source of fear is within line of sight",
+  and source-hidden is the common mid-fight state — so toggling the source out
+  of sight zeroes the flags, not merely some of them. The toggle commits a
+  keyed effect (key 'frightened-source', DISTINCT from the condition's
+  'frightened' — a same-key eviction would end the condition itself) writing
+  frightened.sourceHidden, and the derives gate on BOTH facts. The notice
+  STILL stands (the can't-approach channel survives sight), its body flipping
+  to the hidden variant (pinned in condition-frightened-notice.test.ts — yaml
+  cannot assert bodies). Legality flips with the state: back-in-sight goes
+  legal, out-of-sight illegal (already_hidden).
+ruleGroups:
+  - dnd-5e-2024/condition-frightened
+steps:
+  - addOffer:
+      id: record-frightened
+      assert:
+        facts:
+          condition.frightened: 1
+          attack.str.disadvantage: 1
+  - addOffer:
+      id: source-out-of-sight
+      assert:
+        facts:
+          condition.frightened: 1
+          frightened.sourceHidden: 1
+          # Flags off is OFF — no Disadvantage anywhere from Frightened.
+          attack.str.disadvantage: 0
+          attack.dex.disadvantage: 0
+          initiative.disadvantage: 0
+          check.disadvantage: 0
+          skill.athletics.disadvantage: 0
+          skill.stealth.disadvantage: 0
+          skill.perception.disadvantage: 0
+        offers:
+          legal:
+            - source-back-in-sight
+          illegal:
+            - source-out-of-sight
+        # The notice stands on the can't-approach channel while hidden.
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-frightened.notice
+          targets:
+            - key: rule.dnd-5e-2024.condition-frightened.notice
+              targets: [notice]

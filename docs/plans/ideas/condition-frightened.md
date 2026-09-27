@@ -123,13 +123,15 @@ May FOLD into PR2 if PR1 proves trivial — one decision line at execution.
 
 ### PR2 — condition-frightened module (record, derives, toggle, notice wiring, seed)
 
-- [ ] RED: scenarios fail — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
-- [ ] `condition-frightened.ts`: record offer, condition effect, 22 gated derives, both toggle offers (legality + re-check), notice annotate (flipping body + addsToPlan)
-- [ ] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details` (output `static/details/` gitignored — published, not committed)
-- [ ] i18n keys both locales
-- [ ] GREEN: all scenarios + the two unit pins
-- [ ] terraform seed `char_condition_frightened_rulegroup_seed` (terraform/module/dnd-planner/dynamodb-items.tf); `make validate` passes
+- [x] RED: scenarios fail — right reason: unknown group → skipped vs `EXPECTED_RUNNABLE`
+  - PR2 note (2026-09-27): all 6 scenarios + EXPECTED_RUNNABLE entries + both unit pin files written first; `make test-unit` failed exactly three ways — the coverage mismatch (6 skipped as unported group) + the two unit files failing to resolve the not-yet-written module. Store-level dependents pin added to playStore.test.ts alongside (pins, not drivers).
+- [x] `condition-frightened.ts`: record offer, condition effect, 22 gated derives, both toggle offers (legality + re-check), notice annotate (flipping body + addsToPlan)
+- [x] register `registry.ts` + `lazy.ts`; yaml + detail; `make publish-details` (output `static/details/` gitignored — published, not committed)
+- [x] i18n keys both locales
+- [x] GREEN: all scenarios + the two unit pins
+- [x] terraform seed `char_condition_frightened_rulegroup_seed` (terraform/module/dnd-planner/dynamodb-items.tf); `make validate` passes
 - [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod)
+  - PR2 note (2026-09-27): all gates green incl. full `make test` (validate, security, schema, check, unit, e2e ×16, lint) + `make format`; PR opened from branch `condition-frightened-2`. Dev-server sanity: authenticated session live (TestCharacter), but the group is absent from the backend catalog until deploy — the notice button goes live at `make deploy-test` (orchestrator); zero console errors with the changed local bundle. Codex monitor → deploy-test → merge outstanding (orchestrator).
 
 ## Out of scope
 

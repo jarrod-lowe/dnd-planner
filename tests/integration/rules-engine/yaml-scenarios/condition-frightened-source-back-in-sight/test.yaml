@@ -1,0 +1,45 @@
+name: 'Condition Frightened - Source Back in Sight'
+description: >-
+  The round-trip pin: hide the source, then reveal it — the reveal is an EMPTY
+  same-key eviction (key 'frightened-source', the get-up idiom), so the hidden
+  toggle's state write dies within the plan fold, frightened.sourceHidden
+  reverts to 0, and the gated derives restore every flag to 1. Legality flips
+  back (out-of-sight legal, back-in-sight illegal with not_hidden). The
+  eviction effect's untilShortRest expiry (NOT permanent — a permanent
+  ended-chip would outlive Frightened itself) is pinned in
+  condition-frightened-rest-clears.
+ruleGroups:
+  - dnd-5e-2024/condition-frightened
+steps:
+  - addOffer:
+      id: record-frightened
+      assert:
+        facts:
+          condition.frightened: 1
+  - addOffer:
+      id: source-out-of-sight
+      assert:
+        facts:
+          frightened.sourceHidden: 1
+          attack.str.disadvantage: 0
+  - addOffer:
+      id: source-back-in-sight
+      assert:
+        facts:
+          condition.frightened: 1
+          frightened.sourceHidden: 0
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+          initiative.disadvantage: 1
+          check.disadvantage: 1
+          skill.athletics.disadvantage: 1
+          skill.stealth.disadvantage: 1
+          skill.perception.disadvantage: 1
+        offers:
+          legal:
+            - source-out-of-sight
+          illegal:
+            - source-back-in-sight
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-frightened.notice
