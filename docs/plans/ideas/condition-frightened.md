@@ -113,10 +113,11 @@ Unit pins (the yaml grammar cannot assert annotation values/bodies):
 
 ### PR1 — NoticeStrip button support (UI-only; the #456 roller precedent — zero rule writers)
 
-- [ ] RED: `NoticeStrip.test.ts` — synthetic annotation with `addsToPlan: { offer }` renders the button, tap fires `onAddOfferToPlan(id)`; aria-label uses `labelKey` when present, the generic `play.annotation.addToPlan` otherwise (BOTH asserted); degrades to plain text when the offer isn't in `addableOfferIds`, when the action is `'again'` or seeded (the rejected forms), and when props are absent; existing text notices unchanged
-- [ ] RED: `PlayCharacterMode.test.ts` screen-level wiring regression — mount with an actionable notice + its matching available offer; assert the tap reaches `addOfferToPlan` (guards the prop forwarding + addable-set derivation; the component test alone stays green if the screen omits them)
-- [ ] NoticeStrip props (`onAddOfferToPlan`, `addableOfferIds`) + the button branch (the PanelRenderer:846-874 copy); PlayCharacterMode forwarding + the addable-set derivation
+- [x] RED: `NoticeStrip.test.ts` — synthetic annotation with `addsToPlan: { offer }` renders the button, tap fires `onAddOfferToPlan(id)`; aria-label uses `labelKey` when present, the generic `play.annotation.addToPlan` otherwise (BOTH asserted); degrades to plain text when the offer isn't in `addableOfferIds`, when the action is `'again'` or seeded (the rejected forms), and when props are absent; existing text notices unchanged
+- [x] RED: `PlayCharacterMode.test.ts` screen-level wiring regression — mount with an actionable notice + its matching available offer; assert the tap reaches `addOfferToPlan` (guards the prop forwarding + addable-set derivation; the component test alone stays green if the screen omits them)
+- [x] NoticeStrip props (`onAddOfferToPlan`, `addableOfferIds`) + the button branch (the PanelRenderer:846-874 copy); PlayCharacterMode forwarding + the addable-set derivation
 - [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → codex monitor → clean → `make deploy-test` (human inspects the strip button in the test env; no rule-group change — no publish-details, no seed) → human merges
+  - PR1 note (2026-09-27): gates + full `make test` (incl. e2e) green, PR opened from branch `condition-frightened-1`; codex monitor → deploy-test → merge still outstanding (orchestrator). Also extended the `labelKey` field on BOTH mirrored `AnnotationAction` types (rules-engine + rules-view) — the strip's notices are engine-typed, so the rules-view copy alone could not carry it.
 
 May FOLD into PR2 if PR1 proves trivial — one decision line at execution.
 

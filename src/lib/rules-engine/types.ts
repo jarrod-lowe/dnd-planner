@@ -511,6 +511,14 @@ export type AnnotationAction =
        * binding: editing the source row afterwards does not follow.
        */
       seed?: Record<string, AnnotationSeedSource>;
+      /**
+       * Accessible name for the button this action renders where it is
+       * tappable, overriding the generic add-to-plan fallback. For a control
+       * that flips with state (a toggle), a state-specific label is what lets
+       * a screen reader announce which way the tap goes. Absent → the generic
+       * fallback.
+       */
+      labelKey?: string;
     }
   | 'again';
 

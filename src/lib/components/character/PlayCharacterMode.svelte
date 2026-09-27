@@ -65,6 +65,12 @@
   // filtered to the reserved notice target (everything no panel claims).
   const notices = $derived(getNotices(activeAnnotations));
 
+  // The ids a notice's shortcut button may offer to add — the PlanStack
+  // idiom: `availableRules` IS the post-plan addable catalog the store
+  // resolves a tap against, so gating on it means the button can never
+  // outlive the offer behind it.
+  const noticeAddableOfferIds = $derived(new Set(availableRules.map((e) => e.rule.id)));
+
   // Current effects: committed + this turn's advertised, deduped by id AND by
   // replacement key (mergeActiveEffects), so a planned key-replacement suppresses
   // the stale committed chip — mirroring the engine's key dedupe.
@@ -183,7 +189,11 @@
         onDismissEffect={handleRemoveEffect}
         onToggleHiddenEffects={() => (showHiddenEffects = !showHiddenEffects)}
       />
-      <NoticeStrip {notices} />
+      <NoticeStrip
+        {notices}
+        onAddOfferToPlan={addOfferToPlan}
+        addableOfferIds={noticeAddableOfferIds}
+      />
       <PlanStack
         items={playStore.state.plannedItems}
         entries={availableRules}
