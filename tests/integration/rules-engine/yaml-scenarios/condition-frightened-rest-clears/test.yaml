@@ -2,26 +2,20 @@ name: 'Condition Frightened - Rest Clears'
 description: >-
   Any rest clears the condition AND the toggle together (umbrella default):
   both effects carry untilShortRest, which a short rest satisfies directly and
-  a long rest includes. The reveal-path variant is the permanent-ended-chip
-  leak pin: the reveal eviction is untilShortRest, NOT permanent — a permanent
-  ended-chip would outlive Frightened itself — so the rest must remove the
-  eviction EFFECT too (notExists; a fact reading 0 is not enough) leaving no
-  stray chips.
+  a long rest includes. v2 seeds the committed pair directly (see
+  INITIAL_EFFECTS — the toggle is no longer offer-driven; the dice-line chip's
+  tap commits it through the store's follow-up channel): a long rest takes
+  BOTH committed effects at once, no stray chips, no notice.
 ruleGroups:
   - dnd-5e-2024/condition-frightened
   - dnd-5e-2024/core-events
 steps:
-  # Leg A: record + hide, then a long rest clears both effects at once.
-  - addOffer:
-      id: record-frightened
+  - evaluate:
       assert:
         facts:
           condition.frightened: 1
-  - addOffer:
-      id: source-out-of-sight
-      assert:
-        facts:
           frightened.sourceHidden: 1
+          attack.str.disadvantage: 0
   - endTurn:
       longRest: true
       assert:
@@ -30,58 +24,6 @@ steps:
           frightened.sourceHidden: 0
           attack.str.disadvantage: 0
           check.disadvantage: 0
-        effects:
-          notExists:
-            - effect-frightened
-            - frightened-source-hidden
-        annotations:
-          notExists:
-            - rule.dnd-5e-2024.condition-frightened.notice
-  # Leg B (the reveal path): record + hide + reveal, commit, then rest. The
-  # commit keeps the condition effect BESIDE the empty 'frightened-source'
-  # eviction chip (the strip shows the LoS state until the rest), and the rest
-  # must take BOTH — including the eviction effect itself.
-  - addOffer:
-      id: record-frightened
-      assert:
-        facts:
-          condition.frightened: 1
-  - addOffer:
-      id: source-out-of-sight
-      assert:
-        facts:
-          frightened.sourceHidden: 1
-  - addOffer:
-      id: source-back-in-sight
-      assert:
-        facts:
-          frightened.sourceHidden: 0
-          attack.str.disadvantage: 1
-  - endTurn:
-      assert:
-        facts:
-          condition.frightened: 1
-        effects:
-          exists:
-            - effect-frightened
-            - frightened-source-visible
-          notExists:
-            - frightened-source-hidden
-  - addOffer:
-      id: record-short-rest
-      assert:
-        facts:
-          rest.short: 1
-          condition.frightened: 0
-          frightened.sourceHidden: 0
-        annotations:
-          notExists:
-            - rule.dnd-5e-2024.condition-frightened.notice
-  - endTurn:
-      assert:
-        facts:
-          condition.frightened: 0
-          frightened.sourceHidden: 0
         effects:
           notExists:
             - effect-frightened

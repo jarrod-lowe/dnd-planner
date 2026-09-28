@@ -1171,29 +1171,14 @@
         "effect-source-hidden": {
           "name": "Fear Source Out of Sight"
         },
-        "source-out-of-sight": {
-          "name": "Fear Source Out of Sight",
-          "description": "Mark the source of fear out of sight — no Disadvantage from Frightened while it stays hidden; you still can't willingly move closer — free, no action"
-        },
-        "source-back-in-sight": {
-          "name": "Fear Source Back in Sight",
-          "description": "Mark the source of fear back in sight — Frightened's Disadvantage returns — free, no action"
-        },
         "source-back-in-sight.effect-cleared": {
           "name": "Fear Source Back in Sight"
         },
-        "source-out-of-sight-offer": {
-          "not_frightened": "You are not Frightened — there is no source of fear to hide",
-          "already_hidden": "The source of fear is already marked out of sight"
-        },
-        "source-back-in-sight-offer": {
-          "not_hidden": "The source of fear is not marked out of sight"
-        },
+        "fear-source-in-sight": "Fear source in sight",
+        "fear-source-out-of-sight": "Fear source out of sight",
         "notice": "Frightened",
         "notice.body": "Disadvantage on attack rolls and ability checks while the source of fear is within line of sight. You can't willingly move closer to the source of fear.",
-        "notice.body-hidden": "The source of fear is out of sight — no Disadvantage from Frightened. You still can't willingly move closer to the source of fear.",
-        "notice.action-hide": "Mark the source of fear out of sight",
-        "notice.action-reveal": "Mark the source of fear back in sight"
+        "notice.body-hidden": "The source of fear is out of sight — no Disadvantage from Frightened. You still can't willingly move closer to the source of fear."
       },
       "grapple": {
         "grapple-action": {

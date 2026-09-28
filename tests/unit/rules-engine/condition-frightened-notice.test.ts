@@ -1,35 +1,72 @@
 import { describe, it, expect } from 'vitest';
 import { evaluate, evaluateOffers, NOTICE_TARGET } from '$lib/rules-engine';
-import type { Facts, PlannedRef } from '$lib/rules-engine';
+import type { EffectInstance, Facts } from '$lib/rules-engine';
 import enCommon from '$lib/i18n/en/common.json';
 import tlhCommon from '$lib/i18n/en-x-tlh/common.json';
 import conditionFrightened from '$lib/rules-engine/rules/condition-frightened';
 
 /**
- * The Frightened notice's STATE FLIP (docs/plans/ideas/condition-frightened.md):
- * one standing notice while condition.frightened > 0 whose body key AND
- * addsToPlan action both flip on the line-of-sight toggle — the notice IS the
- * toggle's home, its button the tap target (the first notice-bearing
- * addsToPlan in the repo). The YAML grammar can assert existence/targets only,
- * so the bodies, the labelKeys and the offer ids are pinned here against the
- * module's annotate output, and the body templates + both button accessible
- * names are pinned present in BOTH locales (labelKey is the a11y contract: a
- * screen reader must announce WHICH WAY the control toggles).
+ * The Frightened LoS interaction, v2 (user-directed 2026-09-29, the walkthrough
+ * decision — "Reading 2: persistent global toggle, chip-styled, immediate"):
+ * ONE annotation while frightened carries BOTH the standing notice (text only)
+ * and a `toggle` — the persistent committed-state control the dice lines
+ * render as a chip. The toggle is authored here, pinned end to end: the two
+ * effects (the keyed hide + the empty same-key reveal eviction), the two state
+ * label keys (the SRD's phrase, so "source" is named), the governing flag
+ * facts (which dice lines render the chip), and the state-resolving fact. The
+ * old picker offers and the notice's addsToPlan button are GONE — the tap
+ * commits through the store's follow-up channel, not the plan.
  */
 const CF = 'rule.dnd-5e-2024.condition-frightened';
 const ALL = [conditionFrightened];
 const FACTS: Facts = {};
 
-const ref = (instanceId: string, ruleId: string): PlannedRef => ({ instanceId, ruleId });
+/** The 22 d20-test facts the SRD disadvantage touches (the module's own list). */
+const FLAG_FACTS = [
+  'attack.str.disadvantage',
+  'attack.dex.disadvantage',
+  'initiative.disadvantage',
+  'check.disadvantage',
+  'skill.acrobatics.disadvantage',
+  'skill.animal-handling.disadvantage',
+  'skill.arcana.disadvantage',
+  'skill.athletics.disadvantage',
+  'skill.deception.disadvantage',
+  'skill.history.disadvantage',
+  'skill.insight.disadvantage',
+  'skill.intimidation.disadvantage',
+  'skill.investigation.disadvantage',
+  'skill.medicine.disadvantage',
+  'skill.nature.disadvantage',
+  'skill.perception.disadvantage',
+  'skill.performance.disadvantage',
+  'skill.persuasion.disadvantage',
+  'skill.religion.disadvantage',
+  'skill.sleight-of-hand.disadvantage',
+  'skill.stealth.disadvantage',
+  'skill.survival.disadvantage'
+];
 
-const record = ref('c1', 'record-frightened');
-const hide = ref('c2', 'source-out-of-sight');
-const reveal = ref('c3', 'source-back-in-sight');
-
-const noticeOf = (planned: PlannedRef[]) => {
-  const out = evaluate({ modules: ALL, inputFacts: FACTS, planned });
+/** The one annotation the module emits while frightened (whatever the LoS state). */
+const annotationOf = (committed: EffectInstance[]) => {
+  const out = evaluate({ modules: ALL, inputFacts: FACTS, committed });
   return out.annotations.find((a) => a.key === `${CF}.notice`);
 };
+
+const conditionEffect = (): EffectInstance => ({
+  id: 'effect-frightened',
+  key: 'frightened',
+  dependents: ['frightened-source'],
+  state: { 'condition.frightened': 1 },
+  expiry: { kind: 'untilShortRest' }
+});
+
+const hiddenToggle = (): EffectInstance => ({
+  id: 'frightened-source-hidden',
+  key: 'frightened-source',
+  state: { 'frightened.sourceHidden': 1 },
+  expiry: { kind: 'untilShortRest' }
+});
 
 type GroupNode = Record<string, string | undefined>;
 type CategoryNode = Record<string, GroupNode>;
@@ -39,62 +76,81 @@ const node = (catalog: unknown, key: string): string | undefined =>
     'condition-frightened'
   ]?.[key];
 
-describe('condition-frightened annotate — the notice flips with the LoS toggle', () => {
-  it('visible: the standing body names the source-out-of-sight action', () => {
-    const notice = noticeOf([record])!;
+describe('condition-frightened annotate — the notice and its LoS toggle', () => {
+  it('visible: the standing notice body names the sight-scoped disadvantage', () => {
+    const notice = annotationOf([conditionEffect()])!;
     expect(notice, 'notice exists while frightened').toBeDefined();
-    expect(notice.targets).toEqual([NOTICE_TARGET]);
+    expect(notice.targets).toEqual([NOTICE_TARGET, 'dice.any']);
     expect(notice.source).toBe(`${CF}.effect-frightened.name`);
     expect(notice.body).toBe(`${CF}.notice.body`);
-    expect(notice.addsToPlan).toEqual({
-      offer: 'source-out-of-sight',
-      labelKey: `${CF}.notice.action-hide`
-    });
+    expect(notice.addsToPlan, 'no planned action — the tap commits, never plans').toBeUndefined();
   });
 
-  it('hidden: the body and the button flip to the reveal side', () => {
-    const notice = noticeOf([record, hide])!;
+  it('hidden: the body flips to the hidden variant; the notice still stands', () => {
+    const notice = annotationOf([conditionEffect(), hiddenToggle()])!;
     expect(notice, "the notice stands on the can't-approach channel").toBeDefined();
     expect(notice.body).toBe(`${CF}.notice.body-hidden`);
-    expect(notice.addsToPlan).toEqual({
-      offer: 'source-back-in-sight',
-      labelKey: `${CF}.notice.action-reveal`
-    });
-  });
-
-  it('revealed again: the round trip returns to the visible flip', () => {
-    const notice = noticeOf([record, hide, reveal])!;
-    expect(notice.body).toBe(`${CF}.notice.body`);
-    expect(notice.addsToPlan).toEqual({
-      offer: 'source-out-of-sight',
-      labelKey: `${CF}.notice.action-hide`
-    });
   });
 
   it('no notice while not frightened', () => {
-    expect(noticeOf([])).toBeUndefined();
-    expect(noticeOf([hide])).toBeUndefined();
+    expect(annotationOf([])).toBeUndefined();
+    expect(annotationOf([hiddenToggle()])).toBeUndefined();
   });
 
-  it('both body templates and both button accessible names exist — in both locales', () => {
+  describe('the toggle — authored data, both directions on one control', () => {
+    it('carries the two state labels, the state-resolving fact, and the governed flags', () => {
+      const toggle = annotationOf([conditionEffect()])!.toggle!;
+      expect(toggle).toBeDefined();
+      expect(toggle.offFact).toBe('frightened.sourceHidden');
+      expect(toggle.onLabelKey).toBe(`${CF}.fear-source-in-sight`);
+      expect(toggle.offLabelKey).toBe(`${CF}.fear-source-out-of-sight`);
+      expect([...toggle.governs].sort()).toEqual([...FLAG_FACTS].sort());
+      expect(toggle.governs).toHaveLength(22);
+    });
+
+    it('onEffect is the keyed hide; offEffect is the empty same-key reveal eviction', () => {
+      const toggle = annotationOf([conditionEffect()])!.toggle!;
+
+      // Tapping while in sight (on) commits the hide: key 'frightened-source',
+      // DISTINCT from the condition's 'frightened', writing sourceHidden 1.
+      expect(toggle.onEffect.id).toBe('frightened-source-hidden');
+      expect(toggle.onEffect.key).toBe('frightened-source');
+      expect(toggle.onEffect.state).toEqual({ 'frightened.sourceHidden': 1 });
+
+      // Tapping while hidden (off) commits the reveal: an EMPTY same-key effect
+      // — the keyed eviction, exactly as the store's follow-up channel commits it.
+      expect(toggle.offEffect.id).toBe('frightened-source-visible');
+      expect(toggle.offEffect.key).toBe('frightened-source');
+      expect(toggle.offEffect.state).toBeUndefined();
+    });
+
+    it('the authored toggle is the same data in both states (state lives in the facts)', () => {
+      const visible = annotationOf([conditionEffect()])!.toggle!;
+      const hidden = annotationOf([conditionEffect(), hiddenToggle()])!.toggle!;
+      expect(hidden).toEqual(visible);
+    });
+  });
+
+  it('both body templates and both chip labels exist — in both locales', () => {
     for (const catalog of [enCommon, tlhCommon]) {
       for (const key of ['notice.body', 'notice.body-hidden']) {
         const body = node(catalog, key);
         expect(body, `${key} template exists`).toBeDefined();
         expect(body?.length, `${key} is non-empty`).toBeGreaterThan(0);
       }
-      for (const key of ['notice.action-hide', 'notice.action-reveal']) {
+      for (const key of ['fear-source-in-sight', 'fear-source-out-of-sight']) {
         const label = node(catalog, key);
-        expect(label, `${key} accessible name exists`).toBeDefined();
+        expect(label, `${key} chip label exists`).toBeDefined();
         expect(label?.length, `${key} is non-empty`).toBeGreaterThan(0);
       }
     }
   });
 
-  it('the module declares all three offers the notice can name', () => {
+  it('the module offers only the recorder — the two picker toggles are gone', () => {
     const offers = evaluateOffers(ALL, FACTS).map((o) => o.id);
     expect(offers).toContain('record-frightened');
-    expect(offers).toContain('source-out-of-sight');
-    expect(offers).toContain('source-back-in-sight');
+    expect(offers).not.toContain('source-out-of-sight');
+    expect(offers).not.toContain('source-back-in-sight');
+    expect(offers).toHaveLength(1);
   });
 });

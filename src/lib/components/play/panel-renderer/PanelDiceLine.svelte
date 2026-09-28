@@ -43,8 +43,16 @@
   import DieChip from './DieChip.svelte';
   import { nextDiceLineId } from './diceLineId';
   import { formatUnitValue } from './unitLabel';
-  import type { CritMode, DiceEntry, RollModifier, RollResult, ValueSource } from './types';
+  import type {
+    CritMode,
+    DiceEntry,
+    DiceLineToggle,
+    RollModifier,
+    RollResult,
+    ValueSource
+  } from './types';
   import { t } from '$lib/i18n';
+  import type { EffectInstance } from '$lib/rules-engine';
 
   interface Props {
     control: DiceLineControl;
@@ -56,6 +64,18 @@
     onRoll?: (data: RollResult, dieIndex: number) => void;
     gwfActive?: boolean;
     modifiers?: RollModifier[];
+    /**
+     * Persistent COMMITTED-state toggles (the Frightened line-of-sight chip):
+     * the line renders one AFTER its dice when its rules-driven disadvantage
+     * source is one of a toggle's governed facts. The Aura modifier chip's
+     * look (same classes, aria-pressed, filled when on) with a DIFFERENT state
+     * model — `on` derives from the committed facts and a tap COMMITS an
+     * effect through `onToggle` (the follow-up channel), so nothing here keeps
+     * per-instance switch state. Resolved by PanelRenderer from annotations.
+     */
+    toggles?: DiceLineToggle[];
+    /** Commits a toggle chip's effect (the store's follow-up channel). */
+    onToggle?: (effect: EffectInstance) => void;
     /**
      * Collapsed-row short form: renders the dice as non-interactive chips
      * (`DieChip` with `editable={false}`) showing the rolled value or the
@@ -95,6 +115,8 @@
     onRoll,
     gwfActive = false,
     modifiers = [],
+    toggles = [],
+    onToggle,
     summary = false,
     criticalOption = true
   }: Props = $props();
@@ -208,6 +230,19 @@
   // source; this one is the honest name).
   const rulesAdvantage = $derived(
     control.advantageUp ? !!resolveValueSource(control.advantageUp, facts, vars, selections) : false
+  );
+
+  // This line's persistent state toggle (see the `toggles` prop): present when
+  // the line's rules-driven disadvantage SOURCE names a fact the toggle
+  // governs. Presence keys on the fact NAME the control reads — never its
+  // value — so the chip STAYS while the governed flags read 0 and the player
+  // can flip back; a line whose disadvantage comes only from a range band, a
+  // var, or an ungoverned fact (Prone's melee-only flags) never shows it.
+  const disadvantageFact = $derived(control.advantage?.fact);
+  const lineToggle = $derived(
+    disadvantageFact === undefined
+      ? undefined
+      : toggles.find((t) => t.governs.includes(disadvantageFact))
   );
 
   // The line's default roll mode, three-way. Advantage and disadvantage each
@@ -785,14 +820,14 @@
 
   const parts = $derived.by<
     {
-      type: 'label' | 'range' | 'die' | 'modifier';
+      type: 'label' | 'range' | 'die' | 'modifier' | 'toggle';
       die?: DiceEntry;
       dieIndex?: number;
       modifier?: RollModifier;
     }[]
   >(() => {
     const result: {
-      type: 'label' | 'range' | 'die' | 'modifier';
+      type: 'label' | 'range' | 'die' | 'modifier' | 'toggle';
       die?: DiceEntry;
       dieIndex?: number;
       modifier?: RollModifier;
@@ -808,6 +843,9 @@
     }
     for (const modifier of shownModifiers) {
       result.push({ type: 'modifier', modifier });
+    }
+    if (lineToggle) {
+      result.push({ type: 'toggle' });
     }
     return result;
   });
@@ -872,6 +910,16 @@
             >{$t(outcome.passed ? 'planner.record.passed' : 'planner.record.failed')}</span
           >
         {/if}
+      {:else if part.type === 'toggle'}
+        <!-- The persistent state toggle's display-only variant: the LoS state
+             is worth reading on a collapsed row, but nothing in a summary may
+             be focusable — a span with the same chip look, never a button
+             (the upcast pill's display-only precedent). -->
+        <span
+          class="panel-renderer__modifier panel-renderer__toggle"
+          class:panel-renderer__modifier--on={lineToggle!.on}
+          data-toggle-key={lineToggle!.key}>{$t(lineToggle!.labelKey)}</span
+        >
       {/if}
       <!-- 'modifier' parts are intentionally dropped: their value is already
            folded into the die's shown bonus (formatBonus), so a summary chip
@@ -914,6 +962,31 @@
           </button>
         {:else}
           <span class="panel-renderer__modifier" data-modifier-key={m.key}>{formatModifier(m)}</span
+          >
+        {/if}
+      {:else if part.type === 'toggle'}
+        <!-- The persistent state toggle (the Frightened LoS chip): the Aura
+             modifier chip's look — same classes, aria-pressed, filled when on
+             — but its state is COMMITTED fact, not a per-roll switch. The
+             label names the CURRENT state (the SRD's phrase), the tap commits
+             the effect that flips it, and the chip STAYS in either state so
+             the player can always flip back. -->
+        {#if editable && onToggle}
+          <button
+            class="panel-renderer__modifier panel-renderer__toggle"
+            class:panel-renderer__modifier--on={lineToggle!.on}
+            type="button"
+            aria-pressed={lineToggle!.on}
+            data-toggle-key={lineToggle!.key}
+            onclick={() => onToggle(lineToggle!.effect)}
+          >
+            {$t(lineToggle!.labelKey)}
+          </button>
+        {:else}
+          <span
+            class="panel-renderer__modifier panel-renderer__toggle"
+            class:panel-renderer__modifier--on={lineToggle!.on}
+            data-toggle-key={lineToggle!.key}>{$t(lineToggle!.labelKey)}</span
           >
         {/if}
       {:else}

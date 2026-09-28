@@ -6,16 +6,15 @@ description: >-
   cannot be conditional on live facts). Visible (source in sight, the default):
   the representative flags read 1 — STR/DEX attacks, initiative, the generic
   check, athletics/stealth/perception skills — and a NOTICE carries the
-  standing effects. Pre-record, BOTH toggles are visible and ILLEGAL (the
-  #453 illegal-but-visible contract — no `when` gates, legality clauses only),
-  out-of-sight with not_frightened, back-in-sight with not_hidden; post-record
-  out-of-sight flips legal while back-in-sight stays illegal. The recorder
-  models BEING FRIGHTENED (imposed by an enemy effect), so it is free and
-  ungated (the knocked-prone precedent).
+  standing effects. v2 (user-directed 2026-09-29): the toggle is NO LONGER an
+  offer — the dice-line chip's tap commits through the store's follow-up
+  channel — so this scenario asserts the recorder ALONE, with the two removed
+  picker offers pinned absent.
 ruleGroups:
   - dnd-5e-2024/condition-frightened
 steps:
-  # Pre-record: both toggles exist, both illegal — the illegal-but-visible pin.
+  # Pre-record: only the recorder exists (v2 deleted the two toggle offers);
+  # no notice while un-frightened.
   - evaluate:
       assert:
         facts:
@@ -23,9 +22,7 @@ steps:
         offers:
           exists:
             - record-frightened
-            - source-out-of-sight
-            - source-back-in-sight
-          illegal:
+          notExists:
             - source-out-of-sight
             - source-back-in-sight
         annotations:
@@ -43,14 +40,9 @@ steps:
           skill.athletics.disadvantage: 1
           skill.stealth.disadvantage: 1
           skill.perception.disadvantage: 1
-        offers:
-          legal:
-            - source-out-of-sight
-          illegal:
-            - source-back-in-sight
         annotations:
           exists:
             - rule.dnd-5e-2024.condition-frightened.notice
           targets:
             - key: rule.dnd-5e-2024.condition-frightened.notice
-              targets: [notice]
+              targets: [notice, dice.any]

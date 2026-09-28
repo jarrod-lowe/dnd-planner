@@ -71,6 +71,33 @@ const flag = (fact: string, value = 1): EffectInstance => ({
 });
 
 /**
+ * Frightened committed (the recorder's keyed condition effect, verbatim —
+ * including the `dependents` list that ties chip dismissal to the toggle).
+ */
+const frightenedCondition = (): EffectInstance => ({
+  id: 'effect-frightened',
+  key: 'frightened',
+  dependents: ['frightened-source'],
+  state: { 'condition.frightened': 1 },
+  expiry: { kind: 'untilShortRest' }
+});
+
+/** The dice-line chip's hide tap, as the store's follow-up channel commits it. */
+const frightenedSourceHidden = (): EffectInstance => ({
+  id: 'frightened-source-hidden',
+  key: 'frightened-source',
+  state: { 'frightened.sourceHidden': 1 },
+  expiry: { kind: 'untilShortRest' }
+});
+
+/** The reveal tap: the empty same-`key` eviction that restores the flags. */
+const frightenedSourceVisible = (): EffectInstance => ({
+  id: 'frightened-source-visible',
+  key: 'frightened-source',
+  expiry: { kind: 'untilShortRest' }
+});
+
+/**
  * Heroic Inspiration already granted — the keyed permanent effect `grant-hi`
  * advertises. The key matches so a planned `use-hi` (or a long-rest grant)
  * replaces/dedupes it rather than stacking.
@@ -241,5 +268,19 @@ export const INITIAL_EFFECTS: Record<string, EffectInstance[]> = {
   'find-steed-hp-modifier-no-stacking': [slot(2)],
   // The scenario's initialEffects grant a L2 slot AND equip the Spear +1; the
   // equip half was masked while the plan fold ignored `when` gates.
-  'attack-with-summoned-steed': [slot(2), weaponEquipped('spear-plus1')]
+  'attack-with-summoned-steed': [slot(2), weaponEquipped('spear-plus1')],
+
+  // === Frightened line-of-sight (v2) ===
+  // These are NOT legacy-fixture translations: the scenario corpus has no
+  // `initialEffects` block here. The yaml grammar drives the plan (addOffer)
+  // only, and v2 removed the toggle OFFERS — the chip's tap commits through
+  // the store's follow-up channel, which the harness has no step verb for. So
+  // these scenarios seed the COMMITTED sets that channel produces (the same
+  // literals playStore.test.ts pins addFollowupEffect writing) and assert the
+  // derives against them.
+  'condition-frightened-source-hidden': [frightenedCondition(), frightenedSourceHidden()],
+  'condition-frightened-source-back-in-sight': [frightenedCondition(), frightenedSourceVisible()],
+  'condition-frightened-rest-clears': [frightenedCondition(), frightenedSourceHidden()],
+  'condition-frightened-skill-flags': [frightenedCondition(), frightenedSourceHidden()],
+  'condition-frightened-hidden-with-poisoned': [frightenedCondition(), frightenedSourceHidden()]
 };

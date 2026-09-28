@@ -1,18 +1,14 @@
 import {
   defineRule,
-  type ActionResult,
   type Annotation,
+  type ActionResult,
   type Contribution,
-  type Diagnostic,
   type EffectInstance,
   type FactReader,
   type RuleModule
 } from '../builder';
 
 const CF = 'rule.dnd-5e-2024.condition-frightened';
-const NOT_FRIGHTENED = `${CF}.source-out-of-sight-offer.not_frightened`;
-const ALREADY_HIDDEN = `${CF}.source-out-of-sight-offer.already_hidden`;
-const NOT_HIDDEN = `${CF}.source-back-in-sight-offer.not_hidden`;
 
 /**
  * The 18 skills, in the established offer order. Module-local per the
@@ -91,12 +87,13 @@ const sourceHiddenEffect = (): EffectInstance => ({
 
 /**
  * The reveal: an EMPTY same-`key` effect (the get-up / regain-consciousness
- * idiom) — newest-wins evicts the hidden toggle while the row is still merely
- * planned, and endTurn merges the eviction permanently. Its display name is
- * the DISTINCT ended label; its expiry is untilShortRest, NOT permanent: a
- * permanent ended-chip would outlive Frightened itself, so the rest must take
- * the eviction WITH the condition (the strip shows the ended chip until then
- * — pinned in condition-frightened-rest-clears).
+ * idiom) — the dice-line chip's out-of-sight tap commits it directly (the
+ * store's follow-up channel, keyed replace-by-eviction), and any rest clears
+ * it together with the condition. Its display name is the DISTINCT ended
+ * label; its expiry is untilShortRest, NOT permanent: a permanent ended-chip
+ * would outlive Frightened itself, so the rest must take the eviction WITH
+ * the condition (the strip shows the ended chip until then — pinned in
+ * condition-frightened-source-back-in-sight).
  */
 const sourceVisibleEffect = (): EffectInstance => ({
   id: 'frightened-source-visible',
@@ -128,18 +125,24 @@ const flagDerives = (): Contribution[] =>
 /**
  * Frightened — wave 2's deferred straggler and the LAST of the 14 conditions;
  * held back over the line-of-sight qualifier, landed as a player-toggled
- * sub-state (user-directed 2026-09-25): SRD 5.2 scopes the ENTIRE disadvantage
- * clause to "while the source of fear is within line of sight", and
- * source-hidden is the common mid-fight state, so the flags DERIVE from a
- * player-asserted `frightened.sourceHidden` toggle instead of standing. One
- * free-section RECORDER models BEING FRIGHTENED (imposed by an enemy effect —
- * the knocked-prone precedent, free and ungated); TWO free toggle offers flip
- * the sub-state in both directions, legality-gated (the #453
- * illegal-but-visible contract — no `when`, `legalWhen` + apply re-check),
- * since the engine cannot see the table: the toggle is player judgement, one
- * tap, both directions. The NOTICE is the toggle's home — its button is the
- * shortcut (the offers also live in the add-row picker as ordinary free
- * actions). Can't-willingly-approach stays notice text (no source position to
+ * sub-state. SRD 5.2 scopes the ENTIRE disadvantage clause to "while the
+ * source of fear is within line of sight", and source-hidden is the common
+ * mid-fight state, so the flags DERIVE from a player-asserted
+ * `frightened.sourceHidden` toggle instead of standing. One free-section
+ * RECORDER models BEING FRIGHTENED (imposed by an enemy effect — the
+ * knocked-prone precedent, free and ungated).
+ *
+ * The toggle itself, v2 (user-directed 2026-09-29 — the walkthrough decision
+ * "Reading 2: persistent global toggle, chip-styled, immediate"): a PERSISTENT
+ * chip on the dice-lines whose disadvantage it scopes (weapon/skill/initiative/
+ * save/check rollers — the lines reading the gated flags), one tap, BOTH
+ * directions, committing IMMEDIATELY through the store's follow-up channel.
+ * The engine cannot see the table, so the toggle is player judgement expressed
+ * as a committed keyed effect — no planned choices, no picker offers (the v1
+ * illegal-but-visible toggle offers are deleted per the no-unused-code rule).
+ * The committed toggle effect carries its own strip chip (the live LoS
+ * display; dismissing it restores in-sight), and the NOTICE is standing text
+ * only. Can't-willingly-approach stays notice text (no source position to
  * verify against); any rest clears condition + toggle together.
  *
  * Foundational, so no search meta.
@@ -160,95 +163,34 @@ const conditionFrightened: RuleModule = {
       apply: (): ActionResult => ({
         advertise: [frightenedEffect()]
       })
-    },
-    {
-      // Mark the source out of sight. NO `when` gate (the #453
-      // illegal-but-visible contract): the offer is always visible, ILLEGAL
-      // while un-frightened or already hidden with its diagnostics, and a
-      // planned-anyway row still executes (the plan.ts contract) — while
-      // un-frightened it commits an inert toggle (the derives gate on the
-      // condition fact), while already hidden the keyed write replaces its
-      // own predecessor harmlessly.
-      id: 'source-out-of-sight',
-      ui: {
-        section: 'free',
-        name: `${CF}.source-out-of-sight.name`,
-        description: `${CF}.source-out-of-sight.description`,
-        detailKey: 'condition/frightened',
-        intents: { CONDITION: 'frightened' },
-        actionCost: []
-      },
-      legalWhen: [
-        {
-          condition: (f) => f.num('condition.frightened') > 0,
-          diagnostics: [{ code: NOT_FRIGHTENED, severity: 'error' }]
-        },
-        {
-          condition: (f) => f.num('frightened.sourceHidden') === 0,
-          diagnostics: [{ code: ALREADY_HIDDEN, severity: 'error' }]
-        }
-      ],
-      apply: (f): ActionResult => {
-        // Re-checked legality (the dash idiom) so a planned-anyway row
-        // carries its own diagnostics from the fold.
-        const diagnostics: Diagnostic[] = [];
-        if (f.num('condition.frightened') === 0)
-          diagnostics.push({ code: NOT_FRIGHTENED, severity: 'error' });
-        if (f.num('frightened.sourceHidden') > 0)
-          diagnostics.push({ code: ALREADY_HIDDEN, severity: 'error' });
-        return { advertise: [sourceHiddenEffect()], diagnostics };
-      }
-    },
-    {
-      // Mark the source back in sight — the reveal eviction. NO `when` gate
-      // either: ILLEGAL while the source is not marked hidden (not_hidden),
-      // and a planned-anyway row still executes as a no-op eviction (no
-      // toggle effect is held).
-      id: 'source-back-in-sight',
-      ui: {
-        section: 'free',
-        name: `${CF}.source-back-in-sight.name`,
-        description: `${CF}.source-back-in-sight.description`,
-        detailKey: 'condition/frightened',
-        intents: { CONDITION: 'frightened' },
-        actionCost: []
-      },
-      legalWhen: [
-        {
-          condition: (f) => f.num('frightened.sourceHidden') > 0,
-          diagnostics: [{ code: NOT_HIDDEN, severity: 'error' }]
-        }
-      ],
-      apply: (f): ActionResult => {
-        // Re-checked legality (the dash idiom) so a planned-anyway row
-        // carries its own diagnostics from the fold.
-        const diagnostics: Diagnostic[] = [];
-        if (f.num('frightened.sourceHidden') === 0)
-          diagnostics.push({ code: NOT_HIDDEN, severity: 'error' });
-        return { advertise: [sourceVisibleEffect()], diagnostics };
-      }
     }
   ],
-  // The notice IS the toggle's home: ONE standing notice while frightened,
-  // whose body AND addsToPlan action flip with the LoS state (exhaustion's
-  // body-dead flip precedent) — the strip button (PR1 chassis) is the
-  // one-tap shortcut, with a state-specific labelKey so a screen reader
-  // announces which way the tap goes. The offers also live in the add-row
-  // picker; the button degrades to plain text when its offer is not addable.
-  // 'notice' == NOTICE_TARGET; rule modules may import only the builder, so
-  // the reserved label is a literal here (see condition-prone / -poisoned).
+  // ONE annotation while frightened carries BOTH surfaces: the standing
+  // notice (text only — the strip's half) and the `toggle` the governed
+  // dice-lines render as the persistent LoS chip. 'dice.any' reaches every
+  // d20 roller (the annotation-targets guard pins that every dice panel
+  // carries it); the chip then narrows to the lines whose disadvantage source
+  // is one of the governed flags, so damage/healing lines and the steed's
+  // companion-labelled panels never show it. 'notice' == NOTICE_TARGET; rule
+  // modules may import only the builder, so the reserved label is a literal
+  // here (see condition-prone / -poisoned).
   annotate: (f): Annotation[] => {
     if (f.num('condition.frightened') <= 0) return [];
     const hidden = f.num('frightened.sourceHidden') > 0;
     return [
       {
         key: `${CF}.notice`,
-        targets: ['notice'],
+        targets: ['notice', 'dice.any'],
         source: `${CF}.effect-frightened.name`,
         body: hidden ? `${CF}.notice.body-hidden` : `${CF}.notice.body`,
-        addsToPlan: hidden
-          ? { offer: 'source-back-in-sight', labelKey: `${CF}.notice.action-reveal` }
-          : { offer: 'source-out-of-sight', labelKey: `${CF}.notice.action-hide` }
+        toggle: {
+          offFact: 'frightened.sourceHidden',
+          onLabelKey: `${CF}.fear-source-in-sight`,
+          offLabelKey: `${CF}.fear-source-out-of-sight`,
+          onEffect: sourceHiddenEffect(),
+          offEffect: sourceVisibleEffect(),
+          governs: [...FLAG_FACTS]
+        }
       }
     ];
   }

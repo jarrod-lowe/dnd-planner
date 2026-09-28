@@ -1,29 +1,21 @@
 name: 'Condition Frightened - Source Back in Sight'
 description: >-
-  The round-trip pin: hide the source, then reveal it — the reveal is an EMPTY
-  same-key eviction (key 'frightened-source', the get-up idiom), so the hidden
-  toggle's state write dies within the plan fold, frightened.sourceHidden
-  reverts to 0, and the gated derives restore every flag to 1. Legality flips
-  back (out-of-sight legal, back-in-sight illegal with not_hidden). The
-  eviction effect's untilShortRest expiry (NOT permanent — a permanent
-  ended-chip would outlive Frightened itself) is pinned in
-  condition-frightened-rest-clears.
+  The restore pin, v2 shape: the reveal tap commits an EMPTY same-key eviction
+  (key 'frightened-source', the get-up idiom) beside the still-committed
+  condition, the hidden toggle's state write dies in the sheet,
+  frightened.sourceHidden reverts to 0, and the gated derives restore every
+  flag to 1. Seeded as that committed pair (see INITIAL_EFFECTS — the yaml
+  grammar has no commit step); the hide-then-reveal DYNAMICS are pinned
+  store-level in playStore.test.ts (addFollowupEffect, both directions). The
+  scenario then carries the old rest-clears reveal-path leg: the eviction
+  effect's untilShortRest expiry (NOT permanent — a permanent ended-chip would
+  outlive Frightened itself) is cleared by the rest together with the
+  condition, leaving no stray chips.
 ruleGroups:
   - dnd-5e-2024/condition-frightened
+  - dnd-5e-2024/core-events
 steps:
-  - addOffer:
-      id: record-frightened
-      assert:
-        facts:
-          condition.frightened: 1
-  - addOffer:
-      id: source-out-of-sight
-      assert:
-        facts:
-          frightened.sourceHidden: 1
-          attack.str.disadvantage: 0
-  - addOffer:
-      id: source-back-in-sight
+  - evaluate:
       assert:
         facts:
           condition.frightened: 1
@@ -35,11 +27,50 @@ steps:
           skill.athletics.disadvantage: 1
           skill.stealth.disadvantage: 1
           skill.perception.disadvantage: 1
-        offers:
-          legal:
-            - source-out-of-sight
-          illegal:
-            - source-back-in-sight
+        effects:
+          exists:
+            - effect-frightened
+            - frightened-source-visible
+          notExists:
+            - frightened-source-hidden
         annotations:
           exists:
+            - rule.dnd-5e-2024.condition-frightened.notice
+  # The turn boundary keeps both committed effects (no rest yet): the strip
+  # shows the condition chip BESIDE the reveal's ended chip.
+  - endTurn:
+      assert:
+        facts:
+          condition.frightened: 1
+          frightened.sourceHidden: 0
+        effects:
+          exists:
+            - effect-frightened
+            - frightened-source-visible
+          notExists:
+            - frightened-source-hidden
+  # A short rest must clear BOTH — including the eviction EFFECT itself
+  # (notExists; a fact reading 0 is not enough), and the notice with them.
+  - addOffer:
+      id: record-short-rest
+      assert:
+        facts:
+          rest.short: 1
+          condition.frightened: 0
+          frightened.sourceHidden: 0
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-frightened.notice
+  - endTurn:
+      assert:
+        facts:
+          condition.frightened: 0
+          frightened.sourceHidden: 0
+        effects:
+          notExists:
+            - effect-frightened
+            - frightened-source-hidden
+            - frightened-source-visible
+        annotations:
+          notExists:
             - rule.dnd-5e-2024.condition-frightened.notice

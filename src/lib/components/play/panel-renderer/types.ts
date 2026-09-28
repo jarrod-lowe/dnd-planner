@@ -1,4 +1,5 @@
 import type { RollPurpose } from '$lib/rules-view';
+import type { EffectInstance } from '$lib/rules-engine';
 
 export type RollMode = 'normal' | 'advantage' | 'disadvantage';
 
@@ -33,6 +34,28 @@ export interface RollModifier {
   value: number;
   /** Whether the chip starts switched on. */
   defaultOn: boolean;
+}
+
+/**
+ * A persistent COMMITTED-state toggle resolved for the CURRENT state — what
+ * `PanelRenderer` hands a `PanelDiceLine` from an annotation's `toggle` (see
+ * `AnnotationToggle`): the on/off state read from the live facts, the label key
+ * for that state, and the effect a tap commits NOW. Unlike a
+ * {@link RollModifier} (ephemeral, folded into one roll), this chip's state
+ * derives from committed facts and its tap commits through the follow-up
+ * channel, so it never tracks per-instance switch state here.
+ */
+export interface DiceLineToggle {
+  /** The annotation key — the chip's identity (and the tests' hook). */
+  key: string;
+  /** Disadvantage facts this toggle scopes; a line reading one renders the chip. */
+  governs: string[];
+  /** Whether the ON state is in force (resolved from the toggle's `offFact`). */
+  on: boolean;
+  /** i18n key for the chip label in the current state. */
+  labelKey: string;
+  /** The effect a tap commits in the current state. */
+  effect: EffectInstance;
 }
 
 export interface RollResult {

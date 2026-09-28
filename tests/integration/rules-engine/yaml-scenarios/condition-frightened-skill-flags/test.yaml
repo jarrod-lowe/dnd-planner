@@ -1,61 +1,42 @@
 name: 'Condition Frightened - Skill Flags'
 description: >-
   THE derive-vs-derive mode regression for the gated flags (the poisoned
-  leather-armor shape). The untrained-armor derives write 7 of the 22 flag
-  facts Frightened derives (combine: max on BOTH sides), so a frightened
-  character in untrained leather has TWO derive writers on the shared facts —
-  no conflict-throw, flags read 1. The HONEST RESIDUAL: hiding the source
-  zeroes only Frightened's contribution, so the armor-written flags (STR/DEX
-  attacks, initiative, athletics, stealth) STILL read 1 while the
-  frightened-only flags (check.disadvantage, perception) go 0 — the
-  uniform-max dividend means hiding never erases another writer.
+  leather-armor shape), driven at the HIDDEN state (v2 — the committed toggle
+  is seeded via INITIAL_EFFECTS, the state the dice-line chip's hide tap
+  produces): the untrained-armor derives write 7 of the 22 flag facts
+  Frightened derives (combine: max on BOTH sides), so a frightened
+  (source-hidden) character in untrained leather has TWO derive writers on the
+  shared facts — no conflict-throw (contributions register whatever their
+  value). THE HONEST RESIDUAL: hiding the source zeroes only Frightened's
+  contribution, so the armor-written flags (STR/DEX attacks, initiative,
+  athletics, stealth) STILL read 1 while the frightened-only flags
+  (check.disadvantage, perception) go 0 — the uniform-max dividend means
+  hiding never erases another writer. The visible side (both writers live,
+  every flag 1) is pinned in condition-frightened-record and the derives unit
+  test.
 ruleGroups:
   - dnd-5e-2024/leather-armor
   - dnd-5e-2024/condition-frightened
 initialFacts:
   armor.light.proficient: 0
 steps:
-  # Don leather armor without Light-armor training: the untrained penalties
-  # derive the STR/DEX attack flags, initiative, and 4 skill flags at 1.
+  # Don leather armor without Light-armor training while frightened with the
+  # source hidden: the untrained penalties derive the STR/DEX attack flags,
+  # initiative, and 4 skill flags at 1 while Frightened's gated derives
+  # contribute 0 — max keeps the armor's 1, no conflict-throw.
   - addOffer:
       id: don-leather-armor
       assert:
         facts:
           armor.leather.equipped: 1
-          attack.str.disadvantage: 1
-          attack.dex.disadvantage: 1
-          initiative.disadvantage: 1
-          skill.athletics.disadvantage: 1
-          skill.stealth.disadvantage: 1
-  # Now be frightened on top (source in sight): a SECOND writer on the shared
-  # facts, both combine: max — no conflict-throw, every flag 1, and the
-  # frightened-only flags (check, perception) arrive too.
-  - addOffer:
-      id: record-frightened
-      assert:
-        facts:
           condition.frightened: 1
-          attack.str.disadvantage: 1
-          attack.dex.disadvantage: 1
-          initiative.disadvantage: 1
-          check.disadvantage: 1
-          skill.athletics.disadvantage: 1
-          skill.stealth.disadvantage: 1
-          skill.perception.disadvantage: 1
-        annotations:
-          exists:
-            - rule.dnd-5e-2024.condition-frightened.notice
-  # Hide the source: Frightened's contribution drops to 0, but the armor's 1
-  # still wins the max — the armor flags stay, the frightened-only flags fall.
-  - addOffer:
-      id: source-out-of-sight
-      assert:
-        facts:
           frightened.sourceHidden: 1
+          # The armor-written flags stay 1 — hiding never erases another writer.
           attack.str.disadvantage: 1
           attack.dex.disadvantage: 1
           initiative.disadvantage: 1
           skill.athletics.disadvantage: 1
           skill.stealth.disadvantage: 1
+          # The frightened-only flags fall to 0.
           check.disadvantage: 0
           skill.perception.disadvantage: 0

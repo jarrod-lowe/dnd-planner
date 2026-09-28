@@ -1171,29 +1171,14 @@
         "effect-source-hidden": {
           "name": "ghIjwI' So'lu'taH"
         },
-        "source-out-of-sight": {
-          "name": "ghIjwI' So' yIchuw'",
-          "description": "ghIjwI' So' yIchuw' — So'lu'taHvIS DI naw' tu'lu'be'; reH Sumqu'chugh neH yIghoSQo' — free, pagh"
-        },
-        "source-back-in-sight": {
-          "name": "ghIjwI' yIleghchoH",
-          "description": "ghIjwI' yIleghchoH — ghIjmo' DI naw' chaghHa' — free, pagh"
-        },
         "source-back-in-sight.effect-cleared": {
           "name": "ghIjwI' leghtaH"
         },
-        "source-out-of-sight-offer": {
-          "not_frightened": "bIghIjtaHbe' — So'lu'bogh ghIjwI' tu'lu'be'",
-          "already_hidden": "ghIjwI' So'lu'taH 'e' lutulu'be'"
-        },
-        "source-back-in-sight-offer": {
-          "not_hidden": "ghIjwI' So'lu'be' — chuw'lu'be'"
-        },
+        "fear-source-in-sight": "ghIjwI' DaleghtaH",
+        "fear-source-out-of-sight": "ghIjwI' So'lu'taH",
         "notice": "ghIjtaH",
         "notice.body": "ghIjwI' DaleghtaHvIS, DI naw' je HIv naw' je Daj. ghIjwI' Sumqu'chugh, neH yIghoSlaHbe'.",
-        "notice.body-hidden": "ghIjwI' So'lu'taH — ghIjmo' DI naw' tu'lu'be'. ghIjwI' Sumqu'chugh, neH yIghoSlaHbe' reH.",
-        "notice.action-hide": "ghIjwI' So' yIchuw'",
-        "notice.action-reveal": "ghIjwI' yIleghchoH"
+        "notice.body-hidden": "ghIjwI' So'lu'taH — ghIjmo' DI naw' tu'lu'be'. ghIjwI' Sumqu'chugh, neH yIghoSlaHbe' reH."
       },
       "grapple": {
         "grapple-action": {

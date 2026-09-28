@@ -19,24 +19,9 @@
 
   interface Props {
     notices: Annotation[];
-    /**
-     * Plans the offer an actionable notice names (`notice.addsToPlan`,
-     * resolved by `resolveNoticeOffer`) — PanelRenderer's prop name, reused.
-     * Absent → every notice stays read-only text.
-     */
-    onAddOfferToPlan?: (offerId: string) => void;
-    /**
-     * The offer ids currently addable — the post-plan catalog the store
-     * resolves a tap against. A notice is only actionable when the offer it
-     * advises is in here, so the button can never outlive the offer behind
-     * it. Absent means deny, not allow: a caller that forgets to wire it gets
-     * a missing button, which is visible, rather than a dead one, which is
-     * silent.
-     */
-    addableOfferIds?: Set<string>;
   }
 
-  let { notices, onAddOfferToPlan, addableOfferIds }: Props = $props();
+  let { notices }: Props = $props();
 
   // The count drives expansion until the player first touches the chevron:
   // zero notices keep the section collapsed, anything else shows it. The play
@@ -88,41 +73,6 @@
   function cellKey(notice: Annotation): string {
     return notice.id ?? notice.key;
   }
-
-  /**
-   * The offer a notice's tap should plan, or undefined when there is no
-   * addable offer behind it — in which case the notice renders as plain text
-   * rather than as a button that would do nothing. The PanelRenderer
-   * row-button contract (resolveAnnotationOffer), copied for the strip.
-   *
-   * Two authored forms are REJECTED on purpose, both degrading to text:
-   *  - `'again'` resolves against the panel row it renders on
-   *    (`entry.rule.id`); a notice has no row to resolve against;
-   *  - the seeded `{ offer, seed }` form needs the tapped row's instance id
-   *    to resolve its values; a notice cannot supply one, and a seed that
-   *    silently takes defaults is worse than no button.
-   */
-  function resolveNoticeOffer(
-    notice: Annotation
-  ): { offerId: string; labelKey?: string } | undefined {
-    const adds = notice.addsToPlan;
-    if (!adds || adds === 'again' || adds.seed) return undefined;
-    if (!onAddOfferToPlan || !addableOfferIds?.has(adds.offer)) return undefined;
-    return { offerId: adds.offer, labelKey: adds.labelKey };
-  }
-
-  /**
-   * The button's accessible name. `labelKey` (a state-specific key) says which
-   * way a flipping control goes — a screen reader must announce "hide the
-   * source", not a generic "add to plan", when the same notice toggles both
-   * ways. Absent → the generic fallback, naming the notice itself exactly as
-   * the row button does.
-   */
-  function noticeActionLabel(notice: Annotation, labelKey: string | undefined): string {
-    return labelKey
-      ? $t(labelKey)
-      : $t('play.annotation.addToPlan', { annotation: $t(notice.key, notice.values) });
-  }
 </script>
 
 <section class="notice-strip" aria-label={$t('play.notices.title')}>
@@ -168,12 +118,14 @@
       {:else}
         <ul class="notice-strip__grid">
           {#each notices as notice (cellKey(notice))}
-            {@const action = resolveNoticeOffer(notice)}
             <!-- Text left, roller right: the strip is squeezed for vertical
                  space (density is its whole design), so the chip rides beside
-                 the sentence instead of under it. -->
+                 the sentence instead of under it. The strip's notices are
+                 standing text — an annotation that carries a `toggle` (the
+                 Frightened LoS control) renders its CHIP on the governed
+                 dice-lines, never a button here. -->
             <li class="notice-strip__cell">
-              {#snippet text()}
+              <div class="notice-strip__content">
                 {#if notice.source}
                   <span class="notice-strip__source">{$t(notice.source)}</span>
                 {/if}
@@ -181,31 +133,7 @@
                 {#if notice.body}
                   <span class="notice-strip__body">{$t(notice.body, notice.values)}</span>
                 {/if}
-              {/snippet}
-              {#if action}
-                <!-- An actionable notice is a shortcut (the PanelRenderer
-                     row-button pattern): the text the player is already
-                     reading is the tap target, the plus icon is decorative,
-                     and the accessible name says what the tap does — which way
-                     the toggle flips when the notice supplies a labelKey. -->
-                <button
-                  type="button"
-                  class="notice-strip__content notice-strip__content--action"
-                  aria-label={noticeActionLabel(notice, action.labelKey)}
-                  onclick={() => onAddOfferToPlan?.(action.offerId)}
-                >
-                  {@render text()}
-                  <span class="notice-strip__add" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-                    </svg>
-                  </span>
-                </button>
-              {:else}
-                <div class="notice-strip__content">
-                  {@render text()}
-                </div>
-              {/if}
+              </div>
               {#if notice.roll}
                 {@const control = noticeRollControl(notice.roll)}
                 <!-- Ephemeral, freely re-rollable: no writeBack, no plan
@@ -367,67 +295,6 @@
     font-size: var(--font-size-xs);
     line-height: var(--line-height-md);
     color: var(--md-sys-color-on-surface-variant);
-  }
-
-  /* The actionable notice: the whole text block becomes the button. The
-     treatment mirrors the panel row's action chip — a primary-container
-     surface, the 2.75rem touch target every tappable control uses, primary on
-     hover, a visible focus ring — authored here from theme variables because
-     PanelRenderer's equivalents are Svelte-scoped and do not carry over. */
-  .notice-strip__content--action {
-    justify-content: center;
-    min-height: 2.75rem;
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border: 1px solid var(--md-sys-color-outline-variant);
-    border-radius: var(--radius-sm);
-    background: var(--md-sys-color-primary-container);
-    color: var(--md-sys-color-on-primary-container);
-    font-family: var(--font-body);
-    text-align: left;
-    cursor: pointer;
-    transition: background-color var(--transition-fast);
-  }
-
-  /* The chip surface replaces the cell's own text colours: every line of the
-     notice reads in the container's paired ink (the spans each carry a colour
-     of their own, which would clash on the container surface). */
-  .notice-strip__content--action .notice-strip__source,
-  .notice-strip__content--action .notice-strip__label,
-  .notice-strip__content--action .notice-strip__body {
-    color: var(--md-sys-color-on-primary-container);
-  }
-
-  .notice-strip__content--action:hover {
-    background: var(--md-sys-color-primary);
-    color: var(--md-sys-color-on-primary);
-  }
-
-  .notice-strip__content--action:hover .notice-strip__source,
-  .notice-strip__content--action:hover .notice-strip__label,
-  .notice-strip__content--action:hover .notice-strip__body {
-    color: var(--md-sys-color-on-primary);
-  }
-
-  .notice-strip__content--action:focus-visible {
-    outline: 2px solid var(--md-sys-color-primary);
-    outline-offset: 2px;
-  }
-
-  /* The decorative add affordance, riding the bottom-right corner of the
-     chip (the column's natural end). */
-  .notice-strip__add {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    align-self: flex-end;
-    width: 1rem;
-    height: 1rem;
-  }
-
-  .notice-strip__add svg {
-    width: 1rem;
-    height: 1rem;
   }
 
   /* The notice's roller (a PanelDiceLine): the cell's row centers it

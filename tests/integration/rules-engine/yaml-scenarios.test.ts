@@ -638,14 +638,17 @@ const EXPECTED_RUNNABLE = [
   'condition-exhaustion-long-rest-clears-final-level',
   'condition-exhaustion-rest-then-gain-edge',
   // condition-frightened (wave 2's deferred straggler — the LAST of the 14;
-  // replanned user-directed 2026-09-25 around the LoS knot): the 22 flags as
-  // GATED DERIVES (armorTrainingPenalties shape) reading condition.frightened
-  // AND the player-asserted frightened.sourceHidden toggle (keyed effect +
-  // empty same-key eviction, key 'frightened-source' DISTINCT from the
-  // condition's), both toggles illegal-but-visible (#453), and the notice
-  // carrying the tap-to-toggle button. The dismissal dependents pin is
-  // STORE-level (playStore.test.ts) — the yaml runner's removeEffect never
-  // follows dependents.
+  // v2 user-directed 2026-09-29, the walkthrough decision "persistent global
+  // toggle, chip-styled, immediate"): the 22 flags as GATED DERIVES
+  // (armorTrainingPenalties shape) reading condition.frightened AND the
+  // player-asserted frightened.sourceHidden toggle (a COMMITTED keyed effect
+  // + empty same-key eviction, key 'frightened-source' DISTINCT from the
+  // condition's — the dice-line chip's tap commits it through the store's
+  // follow-up channel, no picker offers). The yaml grammar has no commit
+  // step, so the toggle-state scenarios seed the committed sets via
+  // INITIAL_EFFECTS. The dismissal dependents pin and the tap-commit dynamics
+  // are STORE-level (playStore.test.ts) — the yaml runner's removeEffect
+  // never follows dependents.
   'condition-frightened-record',
   'condition-frightened-source-hidden',
   'condition-frightened-source-back-in-sight',

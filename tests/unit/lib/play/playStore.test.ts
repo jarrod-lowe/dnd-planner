@@ -67,12 +67,12 @@ vi.mock('svelte-sonner', () => ({
 }));
 
 import { apiGet, apiPost, apiDelete } from '$lib/api/client';
-import { loadModules } from '$lib/rules-engine';
+import { evaluate, loadModules } from '$lib/rules-engine';
 import { evaluateCharacter, hypotheticalOffers, factsBeforeRow } from '$lib/play/evaluateCharacter';
 import { locale } from '$lib/i18n';
 import { toast } from 'svelte-sonner';
 import type { Rule } from '$lib/rules-view';
-import type { EffectInstance, EngineOutput } from '$lib/rules-engine';
+import type { EffectInstance, EngineOutput, FactReader } from '$lib/rules-engine';
 import type { CharacterEvaluation } from '$lib/play/evaluateCharacter';
 
 /** A minimal, valid raw engine output for the adapter to consume. */
@@ -1724,6 +1724,75 @@ describe('playStore', () => {
       // re-tap must REPLACE — one committed entry, not two duplicates.
       const matching = playStore.state.committed.filter((e) => e.id === 'effect-javelin-slow');
       expect(matching).toHaveLength(1);
+    });
+
+    it('committing the Frightened LoS toggle flips the gated flags in both directions', async () => {
+      // v2 (user-directed 2026-09-29): the dice-line chip taps commit through
+      // THIS channel. Pull the AUTHORED effects from the module (the javelin
+      // follow-up idiom) so the authored keys/ids are what's under test: the
+      // record offer's apply advertises the condition effect, and the
+      // annotation carries both directions of the toggle.
+      const mod = (await import('$lib/rules-engine/rules/condition-frightened')).default;
+      const zero: FactReader = { num: () => 0, has: () => false };
+      const record = mod.offer!({ selections: {} }).find((o) => o.id === 'record-frightened')!;
+      const [conditionEffect] = record.apply!(zero, {}).advertise!;
+      expect(conditionEffect.id).toBe('effect-frightened');
+
+      const annotation = mod.annotate!({ num: () => 1, has: () => true }, []).find(
+        (a) => a.toggle !== undefined
+      )!;
+      const hide = annotation.toggle!.onEffect;
+      const reveal = annotation.toggle!.offEffect;
+      expect(hide.id).toBe('frightened-source-hidden');
+      expect(reveal.id).toBe('frightened-source-visible');
+
+      // The evaluation seam evaluates the REAL module over the committed set,
+      // so the asserts below see the derives' response to the committed
+      // toggle — the same response the seeded yaml scenarios pin.
+      vi.mocked(evaluateCharacter).mockImplementation((_modules, committed) => {
+        const out = evaluate({ modules: [mod], committed });
+        return playOut({ facts: out.facts, raw: out });
+      });
+
+      const mockApiGet = vi.mocked(apiGet);
+      vi.mocked(apiPost).mockResolvedValue({ ok: true } as Response);
+      mockApiGet
+        .mockResolvedValueOnce({ ok: true, json: async () => ({ ruleGroups: [] }) } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ effects: JSON.stringify([conditionEffect]) })
+        } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      await playStore.loadRuleGroups('char-1');
+      // Precondition: frightened with the source in sight — the flags stand.
+      expect(playStore.state.facts['condition.frightened']).toBe(1);
+      expect(playStore.state.facts['attack.str.disadvantage']).toBe(1);
+
+      // Tap the chip while in sight: the keyed hide REPLACES nothing (first
+      // commit), writes sourceHidden 1, and the gated derives all drop to 0.
+      playStore.addFollowupEffect(hide);
+      expect(playStore.state.committed.map((e) => e.id)).toEqual([
+        'effect-frightened',
+        'frightened-source-hidden'
+      ]);
+      expect(playStore.state.facts['frightened.sourceHidden']).toBe(1);
+      expect(playStore.state.facts['attack.str.disadvantage']).toBe(0);
+      expect(playStore.state.facts['check.disadvantage']).toBe(0);
+
+      // Tap again while hidden: the EMPTY same-key eviction REPLACES the hide
+      // (never stacks beside it) and the flags restore. With no writer left,
+      // sourceHidden reverts to UNSET — the engine's unset-reads-0, hence the
+      // ?? 0 (an effect-written fact is not a settled key the way the derived
+      // flags are).
+      playStore.addFollowupEffect(reveal);
+      expect(playStore.state.committed.map((e) => e.id)).toEqual([
+        'effect-frightened',
+        'frightened-source-visible'
+      ]);
+      expect(playStore.state.facts['frightened.sourceHidden'] ?? 0).toBe(0);
+      expect(playStore.state.facts['attack.str.disadvantage']).toBe(1);
     });
 
     it('a committed follow-up is evicted when its owning rule group is unassigned', async () => {

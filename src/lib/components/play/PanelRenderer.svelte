@@ -30,7 +30,8 @@
     TextInformation,
     CountdownInformation,
     RollResult,
-    RollModifier
+    RollModifier,
+    DiceLineToggle
   } from './panel-renderer/types';
 
   interface Props {
@@ -410,10 +411,11 @@
   // A valued rider is REPRESENTED by its dice-line toggle chip, so it must not
   // also appear as a static text chip or in the toast's rider list — it would
   // show twice, and the static copy would still read as present after the
-  // toggle is switched off. Everything downstream of the dice line uses this
-  // list rather than matchingAnnotations.
+  // toggle is switched off. A `toggle`-carrying annotation is represented by
+  // its persistent state chip the same way. Everything downstream of the dice
+  // line uses this list rather than matchingAnnotations.
   const informationalAnnotations = $derived(
-    matchingAnnotations.filter((ann) => ann.rider?.value === undefined)
+    matchingAnnotations.filter((ann) => ann.rider?.value === undefined && ann.toggle === undefined)
   );
 
   // Annotations whose rider carries a value become toggleable chips on the dice
@@ -433,6 +435,29 @@
         };
       })
       .filter((m): m is RollModifier => m !== undefined)
+  );
+
+  // Annotations carrying a `toggle` become the persistent state chips on this
+  // panel's dice lines (the Frightened LoS control). Resolved HERE, from the
+  // live `facts`, into the current-state form the dice line renders: the
+  // on/off state, the label naming it, and the effect a tap commits NOW. The
+  // line itself decides whether the chip is ITS to show (its disadvantage
+  // source must name a governed fact), so an over-broad target label costs
+  // nothing but a skipped chip.
+  const diceLineToggles = $derived<DiceLineToggle[]>(
+    matchingAnnotations
+      .filter((ann) => ann.toggle !== undefined)
+      .map((ann) => {
+        const t = ann.toggle!;
+        const on = (facts[t.offFact] ?? 0) === 0;
+        return {
+          key: ann.key,
+          governs: t.governs,
+          on,
+          labelKey: on ? t.onLabelKey : t.offLabelKey,
+          effect: on ? t.onEffect : t.offEffect
+        };
+      })
   );
 
   const visibleFollowups = $derived(
@@ -583,6 +608,8 @@
           onRoll={(result, dieIndex) => handleDiceRoll(result, dieIndex, `primary:die:${dieIndex}`)}
           {gwfActive}
           modifiers={rollModifiers}
+          toggles={diceLineToggles}
+          onToggle={onFollowup}
           {summary}
         />
       </div>
@@ -718,6 +745,8 @@
             handleDiceRoll(result, dieIndex, `secondary:die:${dieIndex}`)}
           {gwfActive}
           modifiers={rollModifiers}
+          toggles={diceLineToggles}
+          onToggle={onFollowup}
           {summary}
         />
       </div>

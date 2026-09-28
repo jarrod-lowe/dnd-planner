@@ -15,7 +15,8 @@ const mockFns = vi.hoisted(() => ({
   addToPlan: vi.fn(),
   addOfferToPlan: vi.fn(),
   removeFromPlan: vi.fn(),
-  movePlanItem: vi.fn()
+  movePlanItem: vi.fn(),
+  addFollowupEffect: vi.fn()
 }));
 
 // Vitest hoists EVERY vi.mock call in the file, even one written inside a test,
@@ -104,7 +105,8 @@ vi.mock('$lib/play/playStore.svelte', () => ({
     addToPlan: mockFns.addToPlan,
     addOfferToPlan: mockFns.addOfferToPlan,
     removeFromPlan: mockFns.removeFromPlan,
-    movePlanItem: mockFns.movePlanItem
+    movePlanItem: mockFns.movePlanItem,
+    addFollowupEffect: mockFns.addFollowupEffect
   }
 }));
 
@@ -143,6 +145,7 @@ vi.mock('$lib/play/companionStore.svelte', () => ({
 }));
 
 import PlayCharacterMode from '$lib/components/character/PlayCharacterMode.svelte';
+import PlanStack from '$lib/components/play/PlanStack.svelte';
 import type { Character } from '$lib/character/types';
 
 const mockCharacter: Character = {
@@ -236,29 +239,33 @@ describe('PlayCharacterMode', () => {
     );
   });
 
-  it('forwards an actionable notice tap to the store addOfferToPlan through the real screen', async () => {
-    // Screen-level regression for the wiring alone: an actionable notice AND
-    // its matching available offer, mounted through PlayCharacterMode. The
-    // component test stays green if the screen forgets to derive the addable
-    // set or forward the handler — this is the pin that catches it.
+  it('renders the Frightened LoS notice as standing text — the toggle commits, never plans', async () => {
+    // v2 (user-directed 2026-09-29): the annotation carries BOTH the notice
+    // target and the dice-line toggle. The strip's half is TEXT ONLY — the
+    // chip on the plan rows' dice lines is the control, so a button here would
+    // be a second, redundant tap target (and #462's notice path is deleted).
     mockState.annotations = [
       {
         key: 'rule.dnd-5e-2024.condition-frightened.notice',
-        targets: ['notice'],
+        targets: ['notice', 'dice.any'],
         source: 'rule.dnd-5e-2024.condition-frightened.effect-frightened.name',
         body: 'rule.dnd-5e-2024.condition-frightened.notice.body',
-        addsToPlan: {
-          offer: 'frightened-source-out-of-sight',
-          labelKey: 'rule.dnd-5e-2024.condition-frightened.notice.action-hide'
+        toggle: {
+          offFact: 'frightened.sourceHidden',
+          onLabelKey: 'rule.dnd-5e-2024.condition-frightened.fear-source-in-sight',
+          offLabelKey: 'rule.dnd-5e-2024.condition-frightened.fear-source-out-of-sight',
+          onEffect: {
+            id: 'frightened-source-hidden',
+            key: 'frightened-source',
+            expiry: { kind: 'untilShortRest' }
+          },
+          offEffect: {
+            id: 'frightened-source-visible',
+            key: 'frightened-source',
+            expiry: { kind: 'untilShortRest' }
+          },
+          governs: ['attack.str.disadvantage']
         }
-      }
-    ];
-    mockState.availableRules = [
-      {
-        rule: { id: 'frightened-source-out-of-sight' },
-        legal: true,
-        applicable: true,
-        diagnostics: []
       }
     ];
 
@@ -273,21 +280,52 @@ describe('PlayCharacterMode', () => {
     });
     await tick();
 
-    // The button only exists because the screen derived the addable set from
-    // availableRules and forwarded both props into the strip.
-    const button = container.querySelector<HTMLButtonElement>(
-      'button.notice-strip__content--action'
-    );
-    expect(button, 'the actionable notice renders as a button').toBeTruthy();
-    expect(button!.getAttribute('aria-label')).toBe(
-      'rule.dnd-5e-2024.condition-frightened.notice.action-hide'
-    );
+    // The notice reaches the strip as a cell…
+    const cells = container.querySelectorAll('.notice-strip__cell');
+    expect(cells).toHaveLength(1);
+    // …whose content block is a plain DIV: no button, no add affordance.
+    const content = cells[0].querySelector('.notice-strip__content');
+    expect(content).not.toBeNull();
+    expect(content!.tagName).toBe('DIV');
+    expect(cells[0].querySelector('button')).toBeNull();
+  });
 
-    button!.click();
+  it('forwards a dice-line toggle tap to the store addFollowupEffect through the real screen', async () => {
+    // Screen-level wiring pin for the chip's commit channel: PlayCharacterMode
+    // must hand PlanStack an onFollowup wired to the store's follow-up commit
+    // (the same channel the panel follow-up buttons ride). The component tests
+    // stay green if the screen forgets the forwarding — this is the pin that
+    // catches it.
+    const hideEffect = {
+      id: 'frightened-source-hidden',
+      key: 'frightened-source',
+      state: { 'frightened.sourceHidden': 1 },
+      expiry: { kind: 'untilShortRest' as const }
+    };
+
+    mount(PlayCharacterMode, {
+      target: container,
+      props: {
+        character: mockCharacter,
+        email: 'test@example.com',
+        onLogout: vi.fn(),
+        onBack: vi.fn()
+      }
+    });
     await tick();
 
-    expect(mockFns.addOfferToPlan).toHaveBeenCalledTimes(1);
-    expect(mockFns.addOfferToPlan).toHaveBeenCalledWith('frightened-source-out-of-sight');
+    // PlanStack is stubbed to a marker element in this file; its mock records
+    // the props the screen actually forwarded.
+    const calls = vi.mocked(PlanStack).mock.calls;
+    expect(calls.length).toBeGreaterThan(0);
+    const props = calls[calls.length - 1]![1] as {
+      onFollowup?: (effect: typeof hideEffect) => void;
+    };
+    expect(props?.onFollowup, 'the screen wires the follow-up channel').toBeInstanceOf(Function);
+
+    props!.onFollowup!(hideEffect);
+    expect(mockFns.addFollowupEffect).toHaveBeenCalledTimes(1);
+    expect(mockFns.addFollowupEffect).toHaveBeenCalledWith(hideEffect);
   });
 
   it('shows loading state when isLoadingRuleGroups is true', async () => {

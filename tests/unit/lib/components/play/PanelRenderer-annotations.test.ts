@@ -1,8 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import { render } from '@testing-library/svelte';
+import { describe, it, expect, vi } from 'vitest';
+import { render, fireEvent } from '@testing-library/svelte';
 import PanelRenderer from '$lib/components/play/PanelRenderer.svelte';
 import type { AvailableRuleEntry, Rule } from '$lib/rules-view';
 import type { Annotation } from '$lib/rules-view';
+import type { EffectInstance } from '$lib/rules-engine';
 
 const createEntryWithAnnotations = (): AvailableRuleEntry => ({
   rule: {
@@ -162,5 +163,163 @@ describe('PanelRenderer - annotations', () => {
     const annotationSpan = container.querySelector('.panel-renderer__annotation');
     expect(annotationSpan).toBeTruthy();
     expect(annotationSpan?.textContent).toContain('play.annotations.some-buff');
+  });
+});
+
+// --- the Frightened LoS toggle (v2: persistent global toggle, chip-styled, immediate) ---
+
+const CF = 'rule.dnd-5e-2024.condition-frightened';
+
+const hideEffect = (): EffectInstance => ({
+  id: 'frightened-source-hidden',
+  key: 'frightened-source',
+  state: { 'frightened.sourceHidden': 1 },
+  expiry: { kind: 'untilShortRest' }
+});
+
+const revealEffect = (): EffectInstance => ({
+  id: 'frightened-source-visible',
+  key: 'frightened-source',
+  expiry: { kind: 'untilShortRest' }
+});
+
+/** The annotation the module emits while frightened (both surfaces on one payload). */
+const frightenedToggleAnnotation = (): Annotation => ({
+  key: `${CF}.notice`,
+  targets: ['notice', 'dice.any'],
+  toggle: {
+    offFact: 'frightened.sourceHidden',
+    onLabelKey: `${CF}.fear-source-in-sight`,
+    offLabelKey: `${CF}.fear-source-out-of-sight`,
+    onEffect: hideEffect(),
+    offEffect: revealEffect(),
+    governs: ['attack.str.disadvantage', 'check.disadvantage']
+  }
+});
+
+/** A greataxe-shaped row: labels carry dice.any, its d20 reads a governed fact. */
+const createFrightenedEntry = (): AvailableRuleEntry => ({
+  rule: {
+    id: 'greataxe',
+    description: 'Greataxe',
+    activities: [],
+    ui: {
+      section: 'action-attack',
+      name: 'rule.attacks.greataxe.name',
+      annotationLabels: ['attack.any', 'attack.melee', 'attack.weapon', 'dice.any'],
+      primaryControl: {
+        type: 'dice-line',
+        dice: [
+          { sides: 20, bonus: { var: 'hitBonus' }, purpose: 'to-hit' },
+          { sides: { var: 'damageDie' }, bonus: { var: 'damageBonus' }, purpose: 'damage' }
+        ],
+        advantage: { fact: 'attack.str.disadvantage' }
+      }
+    },
+    vars: {
+      hitBonus: { default: { number: 5 } },
+      damageDie: { default: { number: 12 } },
+      damageBonus: { default: { number: 3 } }
+    }
+  } as Rule,
+  legal: true,
+  applicable: true,
+  diagnostics: []
+});
+
+describe('PanelRenderer - annotations - the toggle channel', () => {
+  it('resolves the toggle from the live facts and renders it as the dice-line chip', () => {
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: createFrightenedEntry(),
+        editable: true,
+        facts: { 'condition.frightened': 1 },
+        activeAnnotations: [frightenedToggleAnnotation()],
+        onFollowup: () => {}
+      }
+    });
+
+    const toggle = container.querySelector<HTMLButtonElement>('button.panel-renderer__toggle');
+    expect(toggle, 'the chip renders on the governed dice line').not.toBeNull();
+    // In sight (offFact reads 0): pressed, filled, "in sight" label.
+    expect(toggle!.getAttribute('aria-pressed')).toBe('true');
+    expect(toggle!.classList.contains('panel-renderer__modifier--on')).toBe(true);
+    expect(toggle!.textContent).toContain(`${CF}.fear-source-in-sight`);
+  });
+
+  it('hidden facts flip the resolved chip — and it does not render as a text annotation', () => {
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: createFrightenedEntry(),
+        editable: true,
+        facts: { 'condition.frightened': 1, 'frightened.sourceHidden': 1 },
+        activeAnnotations: [frightenedToggleAnnotation()],
+        onFollowup: () => {}
+      }
+    });
+
+    const toggle = container.querySelector<HTMLButtonElement>('button.panel-renderer__toggle')!;
+    expect(toggle).not.toBeNull();
+    expect(toggle.getAttribute('aria-pressed')).toBe('false');
+    expect(toggle.classList.contains('panel-renderer__modifier--on')).toBe(false);
+    expect(toggle.textContent).toContain(`${CF}.fear-source-out-of-sight`);
+
+    // The toggle-carrying annotation is REPRESENTED by its chip, exactly as a
+    // valued rider is — a second, static copy of the notice text on the panel
+    // would double up and outlive the flip.
+    expect(container.querySelector('.panel-renderer__annotations')).toBeNull();
+  });
+
+  it("a tap routes the CURRENT state's effect through the panel's follow-up handler", async () => {
+    const onFollowup = vi.fn();
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: createFrightenedEntry(),
+        editable: true,
+        facts: { 'condition.frightened': 1 },
+        activeAnnotations: [frightenedToggleAnnotation()],
+        onFollowup
+      }
+    });
+
+    await fireEvent.click(
+      container.querySelector<HTMLButtonElement>('button.panel-renderer__toggle')!
+    );
+    expect(onFollowup).toHaveBeenCalledTimes(1);
+    expect(onFollowup).toHaveBeenCalledWith(hideEffect());
+  });
+
+  it('a hidden tap routes the reveal eviction through the same channel', async () => {
+    const onFollowup = vi.fn();
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: createFrightenedEntry(),
+        editable: true,
+        facts: { 'condition.frightened': 1, 'frightened.sourceHidden': 1 },
+        activeAnnotations: [frightenedToggleAnnotation()],
+        onFollowup
+      }
+    });
+
+    await fireEvent.click(
+      container.querySelector<HTMLButtonElement>('button.panel-renderer__toggle')!
+    );
+    expect(onFollowup).toHaveBeenCalledWith(revealEffect());
+  });
+
+  it('no follow-up handler: the chip still shows the state, as a non-committing span', () => {
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: createFrightenedEntry(),
+        editable: true,
+        facts: { 'condition.frightened': 1 },
+        activeAnnotations: [frightenedToggleAnnotation()]
+      }
+    });
+
+    expect(container.querySelector('button.panel-renderer__toggle')).toBeNull();
+    const span = container.querySelector<HTMLElement>('span.panel-renderer__toggle');
+    expect(span).not.toBeNull();
+    expect(span!.textContent).toContain(`${CF}.fear-source-in-sight`);
   });
 });

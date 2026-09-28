@@ -431,6 +431,44 @@ export interface AnnotationRoll {
   unit?: string;
 }
 
+/**
+ * A persistent COMMITTED-state toggle an annotation renders as a state chip on
+ * the dice-lines it governs (Frightened's line-of-sight control). Distinct from
+ * a valued {@link AnnotationRider}, whose toggle is EPHEMERAL panel state folded
+ * into one roll: a tap here COMMITS a keyed {@link EffectInstance} immediately
+ * through the store's follow-up channel, so one tap holds for the rest of the
+ * fight — and the SAME control serves both directions, because the payload
+ * carries an effect for each side of the flip.
+ *
+ * State naming: ON is the state the governed disadvantage applies in (the fear
+ * source in sight); the fact named by {@link offFact} reads >0 in the OFF
+ * state (the source marked out of sight). The ON-state tap commits
+ * {@link onEffect} (takes the state to OFF); the OFF-state tap commits
+ * {@link offEffect} (back to ON — typically an EMPTY same-`key` eviction, the
+ * get-up idiom). Both label keys are i18n keys naming the CURRENT state, so
+ * the chip doubles as the state read-out; the view resolves which side applies
+ * from the live facts.
+ *
+ * {@link governs} names the disadvantage facts the toggle scopes: a dice-line
+ * whose rules-driven disadvantage source is one of them renders the chip —
+ * presence keys on the fact NAME the line reads, never its value, so the chip
+ * STAYS while the flags are 0 and the player can flip back.
+ */
+export interface AnnotationToggle {
+  /** The fact whose >0 means the OFF state is in force (the source is hidden). */
+  offFact: string;
+  /** i18n key for the chip label while ON (the disadvantage-applying state). */
+  onLabelKey: string;
+  /** i18n key for the chip label while OFF. */
+  offLabelKey: string;
+  /** Committed by a tap while ON: takes the state to OFF (the keyed hide). */
+  onEffect: EffectInstance;
+  /** Committed by a tap while OFF: takes the state back to ON (the eviction). */
+  offEffect: EffectInstance;
+  /** The disadvantage facts this toggle scopes; governed dice-lines render it. */
+  governs: string[];
+}
+
 /** Related-info annotation produced for action panels (view-contract shape). */
 export interface Annotation {
   key: string;
@@ -469,6 +507,14 @@ export interface Annotation {
    */
   roll?: AnnotationRoll;
   rider?: AnnotationRider;
+  /**
+   * A persistent committed-state toggle (see {@link AnnotationToggle}) rendered
+   * as a state chip on the governed dice-lines — the Frightened LoS control.
+   * A toggle-carrying annotation is REPRESENTED by its chip on a matched panel
+   * (never also as a static text annotation), and its tap commits an effect
+   * rather than planning an offer.
+   */
+  toggle?: AnnotationToggle;
   /**
    * What tapping this annotation plans. Most annotations are advisory
    * ("Heroic Inspiration available"); saying what the advice IS turns the
@@ -511,14 +557,6 @@ export type AnnotationAction =
        * binding: editing the source row afterwards does not follow.
        */
       seed?: Record<string, AnnotationSeedSource>;
-      /**
-       * Accessible name for the button this action renders where it is
-       * tappable, overriding the generic add-to-plan fallback. For a control
-       * that flips with state (a toggle), a state-specific label is what lets
-       * a screen reader announce which way the tap goes. Absent → the generic
-       * fallback.
-       */
-      labelKey?: string;
     }
   | 'again';
 

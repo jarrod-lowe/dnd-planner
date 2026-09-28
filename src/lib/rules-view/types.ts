@@ -282,11 +282,31 @@ export interface Annotation {
   /** Optional rider data for rendering as a modifier chip */
   rider?: AnnotationRider;
   /**
+   * A persistent committed-state toggle rendered as the state chip on the
+   * governed dice-lines (the Frightened LoS control). Mirrors the engine's
+   * `AnnotationToggle`.
+   */
+  toggle?: AnnotationToggle;
+  /**
    * What this annotation advises planning. Present → the panel renders the
    * annotation as a button that plans it, exactly as picking it from the
    * add-row picker would. Absent → read-only reminder text.
    */
   addsToPlan?: AnnotationAction;
+}
+
+/**
+ * A persistent committed-state toggle an annotation renders as a chip on the
+ * dice-lines it governs (the Frightened line-of-sight control). Mirrors the
+ * engine's `AnnotationToggle` — see that type's doc for the state naming.
+ */
+export interface AnnotationToggle {
+  offFact: string;
+  onLabelKey: string;
+  offLabelKey: string;
+  onEffect: import('$lib/rules-engine').EffectInstance;
+  offEffect: import('$lib/rules-engine').EffectInstance;
+  governs: string[];
 }
 
 /**
@@ -302,13 +322,6 @@ export type AnnotationAction =
        * default. A one-time copy, not a binding.
        */
       seed?: Record<string, AnnotationSeedSource>;
-      /**
-       * Accessible name for the button this action renders, overriding the
-       * generic `play.annotation.addToPlan` fallback — a state-specific label
-       * so a screen reader announces which way a state-flipping control goes.
-       * Absent → the generic fallback.
-       */
-      labelKey?: string;
     }
   | 'again';
 

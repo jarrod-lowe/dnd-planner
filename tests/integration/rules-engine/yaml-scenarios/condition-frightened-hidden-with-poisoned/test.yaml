@@ -3,7 +3,8 @@ description: >-
   The uniform-max dividend across an effect write and a derive: Poisoned
   effect-writes the flags with stateCombine max, Frightened derives them with
   combine max — mode agreement, no conflict-throw (the Blinded regression
-  family). Both recorded with the fear source hidden: Frightened's derive
+  family). v2 seeds the committed frightened+hidden pair directly (see
+  INITIAL_EFFECTS — the toggle is no longer offer-driven): Frightened's derive
   contributes 0, Poisoned's effect writes 1, max = 1 — hiding the fear source
   never erases ANOTHER condition's Disadvantage.
 ruleGroups:
@@ -15,26 +16,9 @@ steps:
       assert:
         facts:
           condition.poisoned: 1
-  - addOffer:
-      id: record-frightened
-      assert:
-        facts:
-          condition.poisoned: 1
-          condition.frightened: 1
-          attack.str.disadvantage: 1
-          check.disadvantage: 1
-        annotations:
-          exists:
-            - rule.dnd-5e-2024.condition-poisoned.notice
-            - rule.dnd-5e-2024.condition-frightened.notice
-  # Hide the fear source: flags STILL 1 — Poisoned alone carries them.
-  - addOffer:
-      id: source-out-of-sight
-      assert:
-        facts:
-          condition.poisoned: 1
           condition.frightened: 1
           frightened.sourceHidden: 1
+          # Flags STILL 1 — Poisoned alone carries them.
           attack.str.disadvantage: 1
           attack.dex.disadvantage: 1
           initiative.disadvantage: 1
@@ -42,3 +26,7 @@ steps:
           skill.athletics.disadvantage: 1
           skill.stealth.disadvantage: 1
           skill.perception.disadvantage: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-poisoned.notice
+            - rule.dnd-5e-2024.condition-frightened.notice
