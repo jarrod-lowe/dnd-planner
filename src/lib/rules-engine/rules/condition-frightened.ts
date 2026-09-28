@@ -75,11 +75,16 @@ const frightenedEffect = (): EffectInstance => ({
  * itself). Its state write is the whole model — `frightened.sourceHidden: 1`
  * while the player has marked the source out of sight — and its chip is the
  * strip's live LoS display. Any rest clears it together with the condition
- * (umbrella default).
+ * (umbrella default). `ruleGroupId` is AUTHORED (the javelin Slow follow-up
+ * idiom): the chip's tap commits through the store's follow-up channel, which
+ * bypasses the plan fold that would otherwise stamp the owning group —
+ * without it, unassigning condition-frightened strands a persisted
+ * sourceHidden and the next Frightened starts hidden.
  */
 const sourceHiddenEffect = (): EffectInstance => ({
   id: 'frightened-source-hidden',
   key: 'frightened-source',
+  ruleGroupId: 'condition-frightened',
   state: { 'frightened.sourceHidden': 1 },
   display: { name: `${CF}.effect-source-hidden.name`, detailKey: 'condition/frightened' },
   expiry: { kind: 'untilShortRest' }
@@ -93,11 +98,13 @@ const sourceHiddenEffect = (): EffectInstance => ({
  * label; its expiry is untilShortRest, NOT permanent: a permanent ended-chip
  * would outlive Frightened itself, so the rest must take the eviction WITH
  * the condition (the strip shows the ended chip until then — pinned in
- * condition-frightened-source-back-in-sight).
+ * condition-frightened-source-back-in-sight). Same AUTHORED `ruleGroupId` as
+ * the hide, for the same follow-up-channel reason.
  */
 const sourceVisibleEffect = (): EffectInstance => ({
   id: 'frightened-source-visible',
   key: 'frightened-source',
+  ruleGroupId: 'condition-frightened',
   display: { name: `${CF}.source-back-in-sight.effect-cleared.name` },
   expiry: { kind: 'untilShortRest' }
 });
@@ -136,7 +143,10 @@ const flagDerives = (): Contribution[] =>
  * "Reading 2: persistent global toggle, chip-styled, immediate"): a PERSISTENT
  * chip on the dice-lines whose disadvantage it scopes (weapon/skill/initiative/
  * save/check rollers — the lines reading the gated flags), one tap, BOTH
- * directions, committing IMMEDIATELY through the store's follow-up channel.
+ * directions, committing IMMEDIATELY through the store's follow-up channel —
+ * but only while the CONDITION effect is COMMITTED (the toggle's
+ * `committedKey`; a merely planned record row advertises the same facts, and
+ * a cancellable projection must not commit persistent LoS state).
  * The engine cannot see the table, so the toggle is player judgement expressed
  * as a committed keyed effect — no planned choices, no picker offers (the v1
  * illegal-but-visible toggle offers are deleted per the no-unused-code rule).
@@ -189,7 +199,13 @@ const conditionFrightened: RuleModule = {
           offLabelKey: `${CF}.fear-source-out-of-sight`,
           onEffect: sourceHiddenEffect(),
           offEffect: sourceVisibleEffect(),
-          governs: [...FLAG_FACTS]
+          governs: [...FLAG_FACTS],
+          // The chip exists only while the CONDITION is committed: a tap
+          // commits persistent LoS state, and a merely planned record row (the
+          // fold advertises the same facts this annotate reads) must not offer
+          // it — the player can still cancel the row and orphan the toggle.
+          // The view resolves the gate against the store's committed keys.
+          committedKey: 'frightened'
         }
       }
     ];

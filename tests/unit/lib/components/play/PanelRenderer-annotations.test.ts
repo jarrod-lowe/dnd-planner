@@ -193,9 +193,16 @@ const frightenedToggleAnnotation = (): Annotation => ({
     offLabelKey: `${CF}.fear-source-out-of-sight`,
     onEffect: hideEffect(),
     offEffect: revealEffect(),
-    governs: ['attack.str.disadvantage', 'check.disadvantage']
+    governs: ['attack.str.disadvantage', 'check.disadvantage'],
+    // The authored committed gate: the condition effect's key. A planned-only
+    // record row advertises the same facts, so this key — checked against the
+    // COMMITTED effect keys — is what keeps the chip off cancelled projections.
+    committedKey: 'frightened'
   }
 });
+
+/** The committed keys of a COMMITTED frightened condition (post-endTurn). */
+const frightenedCommitted = (): Set<string> => new Set(['frightened']);
 
 /** A greataxe-shaped row: labels carry dice.any, its d20 reads a governed fact. */
 const createFrightenedEntry = (): AvailableRuleEntry => ({
@@ -235,6 +242,7 @@ describe('PanelRenderer - annotations - the toggle channel', () => {
         editable: true,
         facts: { 'condition.frightened': 1 },
         activeAnnotations: [frightenedToggleAnnotation()],
+        committedEffectKeys: frightenedCommitted(),
         onFollowup: () => {}
       }
     });
@@ -254,6 +262,7 @@ describe('PanelRenderer - annotations - the toggle channel', () => {
         editable: true,
         facts: { 'condition.frightened': 1, 'frightened.sourceHidden': 1 },
         activeAnnotations: [frightenedToggleAnnotation()],
+        committedEffectKeys: frightenedCommitted(),
         onFollowup: () => {}
       }
     });
@@ -278,6 +287,7 @@ describe('PanelRenderer - annotations - the toggle channel', () => {
         editable: true,
         facts: { 'condition.frightened': 1 },
         activeAnnotations: [frightenedToggleAnnotation()],
+        committedEffectKeys: frightenedCommitted(),
         onFollowup
       }
     });
@@ -297,6 +307,7 @@ describe('PanelRenderer - annotations - the toggle channel', () => {
         editable: true,
         facts: { 'condition.frightened': 1, 'frightened.sourceHidden': 1 },
         activeAnnotations: [frightenedToggleAnnotation()],
+        committedEffectKeys: frightenedCommitted(),
         onFollowup
       }
     });
@@ -313,7 +324,8 @@ describe('PanelRenderer - annotations - the toggle channel', () => {
         entry: createFrightenedEntry(),
         editable: true,
         facts: { 'condition.frightened': 1 },
-        activeAnnotations: [frightenedToggleAnnotation()]
+        activeAnnotations: [frightenedToggleAnnotation()],
+        committedEffectKeys: frightenedCommitted()
       }
     });
 
@@ -321,5 +333,47 @@ describe('PanelRenderer - annotations - the toggle channel', () => {
     const span = container.querySelector<HTMLElement>('span.panel-renderer__toggle');
     expect(span).not.toBeNull();
     expect(span!.textContent).toContain(`${CF}.fear-source-in-sight`);
+  });
+
+  it('committed gate denied (a merely PLANNED condition): no chip, no text fallback', () => {
+    // The facts read exactly as committed — a planned record-frightened row
+    // advertises the same condition fact into the fold — but the keyed effect
+    // is not in the committed set, so the chip (whose tap would commit
+    // persistent state for a projection the player can still cancel) must not
+    // exist in ANY form.
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: createFrightenedEntry(),
+        editable: true,
+        facts: { 'condition.frightened': 1 },
+        activeAnnotations: [frightenedToggleAnnotation()],
+        committedEffectKeys: new Set<string>(),
+        onFollowup: () => {}
+      }
+    });
+
+    expect(container.querySelector('button.panel-renderer__toggle')).toBeNull();
+    expect(container.querySelector('span.panel-renderer__toggle')).toBeNull();
+    // Still chip-represented: the gated annotation must not fall back to a
+    // static text chip on the panel either (the representation rule holds in
+    // both gate states; the NOTICE strip's half is unaffected).
+    expect(container.querySelector('.panel-renderer__annotations')).toBeNull();
+  });
+
+  it('no committed-effect keys wired: a gated toggle is DENIED, not shown ungated', () => {
+    // A mount that does not know the committed set (a picker panel) must not
+    // get the chip by default — deny, like `addableOfferIds`, never allow.
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: createFrightenedEntry(),
+        editable: true,
+        facts: { 'condition.frightened': 1 },
+        activeAnnotations: [frightenedToggleAnnotation()],
+        onFollowup: () => {}
+      }
+    });
+
+    expect(container.querySelector('button.panel-renderer__toggle')).toBeNull();
+    expect(container.querySelector('span.panel-renderer__toggle')).toBeNull();
   });
 });

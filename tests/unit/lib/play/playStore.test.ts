@@ -1795,6 +1795,58 @@ describe('playStore', () => {
       expect(playStore.state.facts['attack.str.disadvantage']).toBe(1);
     });
 
+    it("the LoS chip's committed gate: planned-only leaves the condition key out of state.committed; endTurn brings it in", async () => {
+      // Bug pin (codex 4127417615): while record-frightened is only a PLANNED
+      // row its advertised effect feeds the fold — the facts and the toggle
+      // annotation look exactly like a committed condition — but the chip gates
+      // on the keyed effects in state.committed. This pins the store's half of
+      // that gate: the 'frightened' key is in the ADVERTISED list while
+      // planned, crosses into committed only at endTurn, and leaves committed
+      // again when the plan row is cancelled.
+      const mod = (await import('$lib/rules-engine/rules/condition-frightened')).default;
+
+      const committedKeys = () =>
+        new Set(playStore.state.committed.flatMap((e) => (e.key !== undefined ? [e.key] : [])));
+
+      vi.mocked(evaluateCharacter).mockImplementation((_modules, committed, refs) => {
+        const out = evaluate({ modules: [mod], committed, planned: refs });
+        return playOut({
+          facts: out.facts,
+          advertised: out.effects,
+          raw: out
+        });
+      });
+      vi.mocked(apiPost).mockResolvedValue({ ok: true } as Response);
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      playStore.addToPlan({ id: 'record-frightened', activities: [] });
+      vi.advanceTimersByTime(300);
+
+      // Planned-only: the condition fact stands in the projection… the toggle
+      // annotation is emitted (the fold feeds annotate)…
+      expect(playStore.state.facts['condition.frightened']).toBe(1);
+      expect(playStore.state.engineOutput?.annotations.some((a) => a.toggle)).toBe(true);
+      // …but the committed keys — what the chip gates on — do NOT contain the
+      // condition's key, and the advertised list does.
+      expect(committedKeys().has('frightened')).toBe(false);
+      expect(playStore.state.advertised.some((e) => e.key === 'frightened')).toBe(true);
+
+      // Cancelling the plan row leaves committed untouched (nothing to orphan).
+      playStore.removeFromPlan(playStore.state.plannedItems[0]!.instanceId);
+      vi.advanceTimersByTime(300);
+      expect(playStore.state.committed).toEqual([]);
+      expect(committedKeys().has('frightened')).toBe(false);
+
+      // Re-plan and commit: endTurn moves the keyed effect into committed, and
+      // the chip's gate opens.
+      playStore.addToPlan({ id: 'record-frightened', activities: [] });
+      vi.advanceTimersByTime(300);
+      playStore.endTurn();
+      expect(committedKeys().has('frightened')).toBe(true);
+      expect(playStore.state.facts['condition.frightened']).toBe(1);
+    });
+
     it('a committed follow-up is evicted when its owning rule group is unassigned', async () => {
       // The REAL javelin Slow follow-up effect, as the action panel commits it —
       // pulled from the module so the authored owner stamp is what's under test.
@@ -1826,6 +1878,42 @@ describe('playStore', () => {
       const promise = playStore.unassignRuleGroup?.('char-123', 'javelin');
 
       // Unassigning javelin must take its follow-up marker with it.
+      expect(playStore.state.committed).toEqual([]);
+
+      resolveDelete!({ ok: true, status: 204 });
+      await promise;
+    });
+
+    it('a committed Frightened LoS toggle is evicted when condition-frightened is unassigned', async () => {
+      // Bug pin (codex 4127417623): both LoS effects commit through
+      // addFollowupEffect — bypassing the plan fold that stamps `ruleGroupId` —
+      // so the AUTHORED effects must carry their owner or unassigning the group
+      // strands a persisted sourceHidden (and the next Frightened starts
+      // hidden). The reveal eviction is the same authored shape (pinned in
+      // condition-frightened-notice.test.ts); the hide is the one that writes
+      // state, so it carries the strip pin.
+      const mod = (await import('$lib/rules-engine/rules/condition-frightened')).default;
+      const annotation = mod.annotate!({ num: () => 1, has: () => true }, []).find(
+        (a) => a.toggle !== undefined
+      )!;
+      const hide = annotation.toggle!.onEffect;
+      expect(hide.id).toBe('frightened-source-hidden');
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+      vi.mocked(apiPost).mockResolvedValue({ ok: true } as Response);
+      playStore.addFollowupEffect(hide);
+      expect(playStore.state.committed.map((e) => e.id)).toEqual(['frightened-source-hidden']);
+
+      let resolveDelete: (value: unknown) => void;
+      vi.mocked(apiDelete).mockReturnValue(
+        new Promise((resolve) => {
+          resolveDelete = resolve as (value: unknown) => void;
+        })
+      );
+      const promise = playStore.unassignRuleGroup?.('char-123', 'condition-frightened');
+
+      // Unassigning the condition must take the committed LoS toggle with it.
       expect(playStore.state.committed).toEqual([]);
 
       resolveDelete!({ ok: true, status: 204 });

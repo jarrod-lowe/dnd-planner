@@ -94,6 +94,17 @@
   // stowed by a later row takes its own "attack again" button with it.
   const addableOfferIds = $derived(new Set(entries.map((e) => e.rule.id)));
 
+  // The `key`s of the COMMITTED effects — what a persistent toggle chip gates
+  // on (the Frightened LoS control's committedKey). Read from the store, like
+  // `modules` above: a merely planned row's advertised effect is NOT in here
+  // (it lives in the folded facts the rows render), so the chip — whose tap
+  // commits persistent state — exists only once End Turn has committed the
+  // condition it rides. Deny-by-default downstream: a mount without the set
+  // shows no gated chip.
+  const committedEffectKeys = $derived(
+    new Set(playStore.state.committed.flatMap((e) => (e.key !== undefined ? [e.key] : [])))
+  );
+
   // Group entries by verb for computing alternatives
   const verbGroups = $derived(groupChoicesByVerb(entries));
   const verbGroupMap = $derived(new Map(verbGroups.map((g) => [g.verb, g])));
@@ -185,6 +196,7 @@
           {onFollowup}
           {onAddOfferToPlan}
           {addableOfferIds}
+          {committedEffectKeys}
         />
       </div>
     {/each}

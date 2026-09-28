@@ -82,6 +82,17 @@
      * button, which is visible, rather than a dead one, which is silent.
      */
     addableOfferIds?: Set<string>;
+    /**
+     * The `key`s of the COMMITTED effects (the store's persisted set, threaded
+     * from the stack). A toggle whose `committedKey` names a key not in here —
+     * a condition that is merely PLANNED, its advertised effect folded into
+     * the very facts this panel renders — renders NO chip: the tap commits
+     * persistent state, and a projection the player can still cancel must not
+     * offer it. Absent means deny for gated toggles, the `addableOfferIds`
+     * convention (a mount that does not know the committed set — a picker —
+     * shows no chip rather than an ungated one).
+     */
+    committedEffectKeys?: Set<string>;
     onRoll?: (data: RollResult, dieIndex: number) => void;
     /**
      * Renders the collapsed-row short form: header, description, followups,
@@ -113,6 +124,7 @@
     onFollowup,
     onAddOfferToPlan,
     addableOfferIds,
+    committedEffectKeys,
     onRoll,
     summary = false
   }: Props = $props();
@@ -443,10 +455,17 @@
   // on/off state, the label naming it, and the effect a tap commits NOW. The
   // line itself decides whether the chip is ITS to show (its disadvantage
   // source must name a governed fact), so an over-broad target label costs
-  // nothing but a skipped chip.
+  // nothing but a skipped chip. A toggle declaring a `committedKey` the
+  // committed set lacks is DROPPED (a merely planned condition — see the
+  // prop): no chip in any form, and no text fallback either (the annotation
+  // stays chip-represented; its notice-strip half is unaffected).
   const diceLineToggles = $derived<DiceLineToggle[]>(
     matchingAnnotations
       .filter((ann) => ann.toggle !== undefined)
+      .filter((ann) => {
+        const ck = ann.toggle!.committedKey;
+        return ck === undefined || (committedEffectKeys?.has(ck) ?? false);
+      })
       .map((ann) => {
         const t = ann.toggle!;
         const on = (facts[t.offFact] ?? 0) === 0;

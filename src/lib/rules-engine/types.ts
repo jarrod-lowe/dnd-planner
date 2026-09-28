@@ -467,6 +467,17 @@ export interface AnnotationToggle {
   offEffect: EffectInstance;
   /** The disadvantage facts this toggle scopes; governed dice-lines render it. */
   governs: string[];
+  /**
+   * The effect `key` whose COMMITTED presence the chip gates on — the keyed
+   * condition a toggle rides (Frightened's `'frightened'`). A tap commits
+   * PERSISTENT state, so the chip must not exist for a condition that is only
+   * PLANNED: the plan fold advertises the same facts annotate reads, so the
+   * rule cannot tell the two states apart here — the VIEW can, against the
+   * store's committed effects (the chip's resolver receives their keys). A
+   * declared key that is not committed (or whose committed set is unknown —
+   * the prop is absent) DENIES the chip; absent field → no gate.
+   */
+  committedKey?: string;
 }
 
 /** Related-info annotation produced for action panels (view-contract shape). */

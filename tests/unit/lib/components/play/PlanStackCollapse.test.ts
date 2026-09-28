@@ -13,7 +13,7 @@ vi.mock('$lib/i18n', () => ({
 
 vi.mock('$lib/play/playStore.svelte', () => ({
   playStore: {
-    state: { modules: [] },
+    state: { modules: [], committed: [] },
     getAlternativeEntries: vi.fn(() => []),
     getPlannedEntry: vi.fn(() => undefined)
   }

@@ -29,8 +29,9 @@ vi.mock('$lib/i18n', () => ({
 
 vi.mock('$lib/play/playStore.svelte', () => ({
   playStore: {
-    // PlanStack hands the character's modules down to the loadout control.
-    state: { modules: [] },
+    // PlanStack hands the character's modules down to the loadout control, and
+    // gates persistent toggle chips on the committed effect keys.
+    state: { modules: [], committed: [] },
     getAlternativeEntries: vi.fn(() => []),
     getPlannedEntry: vi.fn(() => undefined)
   }

@@ -108,6 +108,16 @@ describe('condition-frightened annotate — the notice and its LoS toggle', () =
       expect(toggle.governs).toHaveLength(22);
     });
 
+    it('carries committedKey: the condition effect key the chip gates on', () => {
+      // The planned-vs-committed gate's authored data: a tap commits PERSISTENT
+      // state, so the chip must only exist while the keyed condition effect is
+      // COMMITTED — a merely planned record row advertises the same facts, and
+      // the view needs this key to tell the two apart (the engine's annotate
+      // cannot: its committed list folds the plan's advertised effects in).
+      const toggle = annotationOf([conditionEffect()])!.toggle!;
+      expect(toggle.committedKey).toBe('frightened');
+    });
+
     it('onEffect is the keyed hide; offEffect is the empty same-key reveal eviction', () => {
       const toggle = annotationOf([conditionEffect()])!.toggle!;
 
@@ -122,6 +132,15 @@ describe('condition-frightened annotate — the notice and its LoS toggle', () =
       expect(toggle.offEffect.id).toBe('frightened-source-visible');
       expect(toggle.offEffect.key).toBe('frightened-source');
       expect(toggle.offEffect.state).toBeUndefined();
+    });
+
+    it('both toggle effects stamp their owning rule group (the follow-up channel bypasses the plan fold)', () => {
+      // addFollowupEffect commits the authored effect VERBATIM — no plan fold to
+      // stamp `ruleGroupId` — so unassignRuleGroup could not strip a committed
+      // LoS toggle without the authored owner (the javelin Slow follow-up idiom).
+      const toggle = annotationOf([conditionEffect()])!.toggle!;
+      expect(toggle.onEffect.ruleGroupId).toBe('condition-frightened');
+      expect(toggle.offEffect.ruleGroupId).toBe('condition-frightened');
     });
 
     it('the authored toggle is the same data in both states (state lives in the facts)', () => {

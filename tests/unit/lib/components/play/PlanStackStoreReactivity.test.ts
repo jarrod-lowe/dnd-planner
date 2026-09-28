@@ -38,9 +38,31 @@ vi.mock('svelte-sonner', () => ({
 import { evaluateCharacter, hypotheticalOffers } from '$lib/play/evaluateCharacter';
 import { playStore } from '$lib/play/playStore.svelte';
 import PlanStackStoreHarness from './PlanStackStoreHarness.svelte';
+import { evaluate } from '$lib/rules-engine';
 import type { EngineOutput, PlannedRef } from '$lib/rules-engine';
 import type { Rule } from '$lib/rules-view';
 import type { CharacterEvaluation } from '$lib/play/evaluateCharacter';
+
+/**
+ * A greataxe-shaped view rule: a d20 to-hit dice-line reading the governed
+ * `attack.str.disadvantage` fact, carrying the `dice.any` annotation label the
+ * Frightened toggle annotation targets — the row the LoS chip renders on.
+ */
+const axeRule: Rule = {
+  id: 'test-axe',
+  activities: [],
+  ui: {
+    section: 'action-attack',
+    name: 'test-axe',
+    intents: { ATTACK: 'default' },
+    annotationLabels: ['attack.any', 'dice.any'],
+    primaryControl: {
+      type: 'dice-line',
+      dice: [{ sides: 20, bonus: { number: 5 }, purpose: 'to-hit' }],
+      advantage: { fact: 'attack.str.disadvantage' }
+    }
+  }
+};
 
 function rawOutput(): EngineOutput {
   return {
@@ -166,5 +188,92 @@ describe('PlanStack ↔ playStore reactivity (per-instance planned entries)', ()
     const rows = container.querySelectorAll('.plan-row');
     expect(rows.length).toBe(2);
     expect(container.querySelector('.warning-indicator--illegal')).toBeNull();
+  });
+});
+
+describe("PlanStack ↔ playStore — the Frightened LoS chip's committed gate", () => {
+  let container: HTMLElement;
+  let app: Record<string, unknown>;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.mocked(hypotheticalOffers).mockReturnValue(new Map());
+    container = document.createElement('div');
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    if (app) unmount(app);
+    container.remove();
+    vi.runAllTimers();
+    vi.useRealTimers();
+    playStore.reset();
+    vi.clearAllMocks();
+  });
+
+  it("stays off while the condition is merely PLANNED; appears on the next turn's rows once endTurn commits it", async () => {
+    // The bug pin (codex 4127417615): a planned record-frightened row's
+    // advertised effect feeds the fold, so the axe row's dice already read the
+    // disadvantage — but the chip's tap COMMITS persistent LoS state, and a
+    // projection the player can still cancel (removeFromPlan) must not offer
+    // it. The chip appears only once the condition effect is in the store's
+    // committed set — i.e. on rows planned AFTER End Turn.
+    const mod = (await import('$lib/rules-engine/rules/condition-frightened')).default;
+    vi.mocked(evaluateCharacter).mockImplementation((_modules, committed, refs) => {
+      // The REAL module over the store's committed set and plan refs, with a
+      // view entry per ref: the recorder row itself, and the axe row the chip
+      // renders on. The axe offer id is unknown to the module, so the fold
+      // skips it — its entry comes straight from this mapping.
+      const out = evaluate({ modules: [mod], committed, planned: refs });
+      return {
+        facts: out.facts,
+        availableRules: out.availableRules,
+        plannedEntries: refs.map((ref) => ({
+          instanceId: ref.instanceId,
+          rule:
+            ref.ruleId === 'record-frightened'
+              ? ({
+                  id: 'record-frightened',
+                  activities: [],
+                  ui: { section: 'free', name: 'record-frightened' }
+                } as Rule)
+              : axeRule,
+          legal: true,
+          applicable: true,
+          diagnostics: [],
+          advertisedEffects: []
+        })),
+        topBarEntries: [],
+        resourceEntries: [],
+        advertised: out.effects,
+        raw: out
+      };
+    });
+
+    playStore.reset();
+    app = mount(PlanStackStoreHarness, { target: container });
+    flushSync();
+
+    // Merely planned: the recorder + an axe row. The axe dice read the folded
+    // disadvantage (the projection is honest), the toggle annotation is
+    // emitted — but NO chip may exist, button or span.
+    playStore.addToPlan({ id: 'record-frightened', activities: [] });
+    playStore.addToPlan(axeRule);
+    vi.advanceTimersByTime(300);
+    flushSync();
+    expect(container.querySelectorAll('.plan-row')).toHaveLength(2);
+    expect(container.querySelector('.panel-renderer__disadv-indicator')).not.toBeNull();
+    expect(container.querySelector('.panel-renderer__toggle')).toBeNull();
+
+    // End Turn commits the condition; the plan clears. The next turn's axe row
+    // — planned against the COMMITTED condition — gets the chip.
+    playStore.endTurn();
+    flushSync();
+    playStore.addToPlan(axeRule);
+    vi.advanceTimersByTime(300);
+    flushSync();
+    const chip = container.querySelector<HTMLButtonElement>('button.panel-renderer__toggle');
+    expect(chip, 'the chip renders once the condition is committed').not.toBeNull();
+    expect(chip!.getAttribute('aria-pressed')).toBe('true');
   });
 });

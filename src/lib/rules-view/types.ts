@@ -307,6 +307,11 @@ export interface AnnotationToggle {
   onEffect: import('$lib/rules-engine').EffectInstance;
   offEffect: import('$lib/rules-engine').EffectInstance;
   governs: string[];
+  /**
+   * The effect `key` whose COMMITTED presence the chip gates on (the keyed
+   * condition a toggle rides). Absent → no gate. See the engine type's doc.
+   */
+  committedKey?: string;
 }
 
 /**

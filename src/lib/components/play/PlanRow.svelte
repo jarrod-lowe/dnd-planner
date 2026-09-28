@@ -53,6 +53,8 @@
     ) => void;
     /** The addable offer catalog an actionable annotation is gated on. */
     addableOfferIds?: Set<string>;
+    /** The committed effect keys a persistent toggle chip is gated on (see PanelRenderer). */
+    committedEffectKeys?: Set<string>;
   }
 
   let {
@@ -72,7 +74,8 @@
     onSwapAlternative,
     onFollowup,
     onAddOfferToPlan,
-    addableOfferIds
+    addableOfferIds,
+    committedEffectKeys
   }: Props = $props();
 
   let openTooltipAltId: string | null = $state(null);
@@ -458,6 +461,7 @@
         {onFollowup}
         onAddOfferToPlan={annotationAdder}
         {addableOfferIds}
+        {committedEffectKeys}
         summary={collapsed}
       />
     </div>
