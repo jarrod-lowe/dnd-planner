@@ -16,6 +16,7 @@ import {
   plannedEntryToViewEntry
 } from './engineBridge';
 import { deriveVerbFromRule } from './stepUtils';
+import { captureToggleSelections, getAnnotationLabels } from './annotations';
 import { locale, t } from '$lib/i18n';
 import { prefetchDetailsForEffects } from '$lib/details/rehydrate';
 import { get } from 'svelte/store';
@@ -116,6 +117,34 @@ function dismissLegacyKeylessConcentration(effects: EffectInstance[]): EffectIns
   return effects.filter((e) => e.key !== undefined || !holdsConcentration(e));
 }
 
+/**
+ * Slim, once at load, a committed Frightened effect persisted by the
+ * standing-flags build (#465): its `state` carried all 22 disadvantage flags,
+ * and the per-row LoS rework removed the module's flag writes — a legacy blob
+ * loaded verbatim would keep every flag at 1 while the chips and notice track
+ * the seed, so hiding the source could not lift the Disadvantage. Unlike the
+ * keyless-concentration dismissal the condition is PRESERVED (only the stale
+ * flag writes and their `stateCombine` entries go); `dependents` is added so
+ * chip dismissal still takes the seed. Idempotent: a slimmed or fresh effect
+ * passes through untouched, as does every other keyed effect.
+ */
+export function slimLegacyFrightenedDisadvantage(effects: EffectInstance[]): EffectInstance[] {
+  return effects.map((e) => {
+    if (e.key !== 'frightened' || !e.state) return e;
+    const hasLegacyFlags = Object.keys(e.state).some(
+      (fact) => fact.endsWith('.disadvantage') || fact.startsWith('skill.')
+    );
+    if (!hasLegacyFlags) return e;
+    const slimmed: EffectInstance = {
+      ...e,
+      state: { 'condition.frightened': e.state['condition.frightened'] ?? 1 },
+      dependents: e.dependents ?? ['frightened-source']
+    };
+    delete (slimmed as { stateCombine?: EffectInstance['stateCombine'] }).stateCombine;
+    return slimmed;
+  });
+}
+
 function performEvaluation(): void {
   // A direct evaluation supersedes any still-scheduled one.
   cancelScheduledEvaluation();
@@ -214,6 +243,42 @@ function performEvaluation(): void {
     topBarEntries: result.topBarEntries,
     resourceEntries: result.resourceEntries
   };
+
+  ensurePlannedToggleSelections();
+}
+
+/**
+ * Freeze the per-row sight value of planned rows that PREDATE the toggle's
+ * existence: a row added before record-frightened captured nothing (the
+ * annotation did not exist), and without this pass its chip would fall back
+ * to the live seed FOREVER — a later row's tap would move the earlier row,
+ * breaking the per-row guarantee. The first evaluation on which a toggle
+ * reaches a row initializes its selection from the current seed; later
+ * evaluations no-op (the value is set). The seed fallback then only serves
+ * the picker, which is its intended audience.
+ */
+function ensurePlannedToggleSelections(): void {
+  const annotations = state.engineOutput?.annotations ?? [];
+  const toggles = annotations.filter((a) => a.toggle !== undefined);
+  if (toggles.length === 0) return;
+
+  let changed = false;
+  const items = state.plannedItems.map((item) => {
+    const labels = getAnnotationLabels(item.rule.ui);
+    if (labels.length === 0) return item;
+    const captures = captureToggleSelections(labels, state.facts, toggles);
+    if (Object.keys(captures).length === 0) return item;
+    const selections = { ...(item.rule.selections ?? {}) };
+    for (const [fact, value] of Object.entries(captures)) {
+      if (selections[fact] !== undefined) continue; // already frozen
+      selections[fact] = value;
+      changed = true;
+    }
+    return changed ? { ...item, rule: { ...item.rule, selections } } : item;
+  });
+  if (changed) {
+    state = { ...state, plannedItems: items };
+  }
 }
 
 /**
@@ -371,7 +436,9 @@ async function loadRuleGroups(characterId: string): Promise<void> {
       if (effectsResponse?.ok) {
         const { effects: effectsJson } = await effectsResponse.json();
         if (effectsJson) {
-          const committed = dismissLegacyKeylessConcentration(parsePersistedEffects(effectsJson));
+          const committed = slimLegacyFrightenedDisadvantage(
+            dismissLegacyKeylessConcentration(parsePersistedEffects(effectsJson))
+          );
           const effects = committed.map(effectInstanceToRule);
           state = { ...state, committed, effects };
           prefetchDetailsForEffects(effects);
@@ -407,12 +474,27 @@ async function loadRuleGroups(characterId: string): Promise<void> {
  * the rule's own authored defaults rather than the add being blocked.
  */
 function captureSelections(rule: Rule, index: number): Record<string, unknown> {
+  // Flush BEFORE capturing (the addOfferToPlan precedent), for EVERY capture
+  // path — add and OR INSTEAD swap alike: the toggle capture reads
+  // `state.engineOutput.annotations`, and within the 300 ms debounce window
+  // those describe the PREVIOUS plan, so a row captured there would miss its
+  // sight value and fall back to the live seed, losing per-row stickiness.
+  // The prefix FACTS are synchronous; this makes the annotations equally
+  // current.
+  flushPendingEvaluation();
   try {
-    return resolveInitialSelections(
-      rule,
-      factsBeforeRow(state.modules, state.committed, buildPlannedRefs(), index),
-      state.modules
-    );
+    const prefixFacts = factsBeforeRow(state.modules, state.committed, buildPlannedRefs(), index);
+    return {
+      ...resolveInitialSelections(rule, prefixFacts, state.modules),
+      // Per-row toggle state (Frightened's line of sight): the row captures
+      // the seed's value at ADD time, so later seed changes never move a row
+      // already in the plan — the tap that moves the seed feeds forward only.
+      ...captureToggleSelections(
+        getAnnotationLabels(rule.ui),
+        prefixFacts,
+        state.engineOutput?.annotations ?? []
+      )
+    };
   } catch {
     return {};
   }
@@ -557,7 +639,67 @@ function clampSeed(rule: Rule, seed: Record<string, unknown>): Record<string, un
   return { ...seed, [control.var]: Math.min(value, max) };
 }
 
+/**
+ * The committed follow-up keys a discarded planned row orphans: for each of
+ * its advertised effects that is the LAST live holder of its key (no other
+ * committed effect, and no remaining planned row's advertisement, carries it),
+ * the `dependents` it owns are orphaned. The ownership check matters when two
+ * parents coexist — a committed condition beside a planned re-record — where
+ * removing the planned row must NOT drag the shared seed away while the other
+ * parent lives. Tiny lists by construction, so plain arrays over Sets.
+ */
+function orphanedDependentKeys(outgoing: EffectInstance[], remaining: PlannedItem[]): string[] {
+  const liveKeys: string[] = [];
+  for (const e of state.committed) {
+    if (e.key !== undefined && !liveKeys.includes(e.key)) liveKeys.push(e.key);
+  }
+  for (const item of remaining) {
+    for (const e of getPlannedEntry(item.instanceId)?.advertisedEffects ?? []) {
+      if (e.key !== undefined && !liveKeys.includes(e.key)) liveKeys.push(e.key);
+    }
+  }
+  const keys: string[] = [];
+  for (const e of outgoing) {
+    if (e.key !== undefined && liveKeys.includes(e.key)) continue; // another parent holds it
+    for (const key of e.dependents ?? []) {
+      if (!keys.includes(key)) keys.push(key);
+    }
+  }
+  return keys;
+}
+
+/**
+ * Evicts committed effects carrying any of `keys` from state and persists the
+ * result — AFTER the state assignment, so the POST serializes the filtered
+ * list, never the pre-eviction one. Returns true when something was dropped.
+ */
+function evictCommittedKeys(keys: string[], plannedItems: PlannedItem[]): boolean {
+  let committed = state.committed;
+  let dropped = false;
+  if (keys.length > 0) {
+    const before = committed.length;
+    committed = committed.filter((e) => e.key === undefined || !keys.includes(e.key));
+    dropped = committed.length !== before;
+  }
+  state = { ...state, plannedItems, committed, effects: committed.map(effectInstanceToRule) };
+  if (dropped) persistCommitted();
+  return dropped;
+}
+
 function removeFromPlan(instanceId: string): void {
+  // Flush first (also inside captureSelections, but this path may skip it) so
+  // the row's advertised effects (the per-evaluation map) cover it — a row
+  // removed inside the debounce window must still name its dependents.
+  flushPendingEvaluation();
+
+  // A removed planned row takes its committed FOLLOW-UPS along — but only the
+  // ones it solely owns (see orphanedDependentKeys): the Frightened condition
+  // owns the LoS sight seed the dice-line chip commits mid-turn, and leaving
+  // it behind would strand committed state a plan the player discarded never
+  // earned. The eviction mirrors chip dismissal (removeEffect's dependents
+  // pass), on the plan side — which is what lets the chip render for a merely
+  // PLANNED condition instead of gating on commitment.
+  const outgoing = getPlannedEntry(instanceId)?.advertisedEffects ?? [];
   const filtered = state.plannedItems.filter((item) => item.instanceId !== instanceId);
 
   // Re-index order values
@@ -566,10 +708,7 @@ function removeFromPlan(instanceId: string): void {
     order: index
   }));
 
-  state = {
-    ...state,
-    plannedItems: reindexed
-  };
+  evictCommittedKeys(orphanedDependentKeys(outgoing, reindexed), reindexed);
 
   scheduleEvaluation();
 }
@@ -627,6 +766,11 @@ function swapPlanItemRule(instanceId: string, entry: AvailableRuleEntry): void {
   const index = state.plannedItems.findIndex((i) => i.instanceId === instanceId);
   if (index === -1) return;
 
+  // The OUTGOING row's advertised effects, captured before the swap replaces
+  // it — the sole-parent cleanup below reads them (captureSelections flushes,
+  // so they are current even inside the debounce window).
+  const outgoing = getPlannedEntry(instanceId)?.advertisedEffects ?? [];
+
   // Resolve capture vars from the row's PREFIX facts — the state its OR
   // INSTEAD choice was made over (committed + earlier rows), never the
   // debounced display cache `state.facts`, which folds the OUTGOING row's
@@ -648,6 +792,17 @@ function swapPlanItemRule(instanceId: string, entry: AvailableRuleEntry): void {
     ...state,
     plannedItems: updated
   };
+
+  // An OR INSTEAD swap discards a parent exactly like a removal does: the
+  // follow-ups it solely owns (the LoS seed under a swapped-out recorder) are
+  // evicted so re-recording starts from the in-sight default.
+  evictCommittedKeys(
+    orphanedDependentKeys(
+      outgoing,
+      updated.filter((i) => i.instanceId !== instanceId)
+    ),
+    updated
+  );
 
   scheduleEvaluation();
 }
@@ -879,20 +1034,11 @@ async function unassignRuleGroup(characterId: string, ruleGroupId: string): Prom
       throw new Error(`Unassign failed: ${response.status}`);
     }
 
-    // Persist updated committed effects (settings-derived effects removed above)
-    if (state.currentCharacterId) {
-      apiPost(`/api/characters/${state.currentCharacterId}/effects`, {
-        effects: JSON.stringify(state.committed)
-      })
-        .then((res) => {
-          if (!res.ok) {
-            toast.error(get(t)('play.error.saveEffects'));
-          }
-        })
-        .catch(() => {
-          toast.error(get(t)('play.error.saveEffects'));
-        });
-    }
+    // Persist updated committed effects (the group's effects removed above) —
+    // through the serialized queue, never a direct POST: an unconditional
+    // write racing the queue's in-flight save could land LAST and restore the
+    // effects this unassignment just removed (the seed included).
+    persistCommitted();
   } catch (error) {
     console.error('[unassignRuleGroup] Error:', error);
     // Revert
@@ -927,19 +1073,46 @@ function getDependents(ruleGroupId: string): string[] {
   return dependents;
 }
 
+// Serialized + coalesced effect saves, scoped per character. Rapid commits
+// (LoS chip taps) must never interleave: the API's DynamoDB SET is
+// unconditional, so an earlier unawaited request landing LAST would persist
+// a stale list and a reload would restore the opposite state. Each call
+// records the LATEST snapshot under its OWN character id at call time — a
+// switch to another character mid-drain cannot misroute the pending save or
+// drop it (the outgoing character's final state still lands). One save in
+// flight; later calls for the same character overwrite their slot (coalesce
+// to the latest).
+const pendingEffectSaves: Record<string, string> = {};
+let effectSaveDraining = false;
+
 function persistCommitted(): void {
   if (!state.currentCharacterId) return;
-  apiPost(`/api/characters/${state.currentCharacterId}/effects`, {
-    effects: JSON.stringify(state.committed)
-  })
-    .then((response) => {
-      if (!response.ok) {
+  pendingEffectSaves[state.currentCharacterId] = JSON.stringify(state.committed);
+  if (effectSaveDraining) return;
+  effectSaveDraining = true;
+  void drainEffectSaves();
+}
+
+async function drainEffectSaves(): Promise<void> {
+  try {
+    while (Object.keys(pendingEffectSaves).length > 0) {
+      const characterId = Object.keys(pendingEffectSaves)[0];
+      const snapshot = pendingEffectSaves[characterId];
+      delete pendingEffectSaves[characterId];
+      try {
+        const response = await apiPost(`/api/characters/${characterId}/effects`, {
+          effects: snapshot
+        });
+        if (!response.ok) {
+          toast.error(get(t)('play.error.saveEffects'));
+        }
+      } catch {
         toast.error(get(t)('play.error.saveEffects'));
       }
-    })
-    .catch(() => {
-      toast.error(get(t)('play.error.saveEffects'));
-    });
+    }
+  } finally {
+    effectSaveDraining = false;
+  }
 }
 
 function removeEffect(effectId: string): void {

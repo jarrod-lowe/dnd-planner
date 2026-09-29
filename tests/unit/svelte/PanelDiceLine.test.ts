@@ -2,7 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import PanelDiceLine from '$lib/components/play/panel-renderer/PanelDiceLine.svelte';
-import type { DiceLineControl } from '$lib/components/play/panel-renderer/types';
+import type { DiceLineControl, DiceLineToggle } from '$lib/components/play/panel-renderer/types';
+import type { EffectInstance } from '$lib/rules-engine';
 
 // The i18n mock (tests/setup.ts) returns the key itself for unknown keys, so
 // menu labels surface as their `play.choices.attack.*` keys — handy for
@@ -267,5 +268,185 @@ describe('PanelDiceLine', () => {
     const [damageResult] = onRoll.mock.calls[0];
     expect(damageResult.total).toBe(damageResult.natural + 3);
     expect(damageResult.modifiers).toBeUndefined();
+  });
+});
+
+describe('PanelDiceLine — state-toggle chips (the Frightened line-of-sight shape)', () => {
+  // The i18n mock surfaces keys verbatim, so the pressed/unpressed labels are
+  // asserted as their distinct keys — the a11y contract (aria-pressed + two
+  // different accessible names) lives here.
+  const onEffect: EffectInstance = {
+    id: 'effect-frightened-source-hidden',
+    key: 'frightened-source',
+    state: { 'frightened.sourceHidden': 1 },
+    expiry: { kind: 'untilShortRest' }
+  };
+  const offEffect: EffectInstance = {
+    id: 'effect-frightened-source-visible',
+    key: 'frightened-source',
+    expiry: { kind: 'untilShortRest' }
+  };
+  const losToggle = (pressed: boolean): DiceLineToggle => ({
+    key: 'rule.demo.los',
+    fact: 'frightened.sourceHidden',
+    labelOn: 'rule.demo.los.in-sight',
+    labelOff: 'rule.demo.los.out-of-sight',
+    appliesTo: ['to-hit', 'check'],
+    pressed,
+    onEffect,
+    offEffect
+  });
+  const toggleChip = (c: HTMLElement) =>
+    c.querySelector('.panel-renderer__modifier[data-toggle-key="rule.demo.los"]');
+
+  it('renders a pressed button whose label and aria-pressed reflect the resolved state', () => {
+    const { container } = render(PanelDiceLine, {
+      props: { ...baseProps, toggles: [losToggle(true)], onToggleEffect: vi.fn() }
+    });
+    const chip = toggleChip(container);
+    expect(chip).toBeInstanceOf(HTMLButtonElement);
+    expect(chip?.getAttribute('aria-pressed')).toBe('true');
+    expect(chip?.textContent?.trim()).toBe('rule.demo.los.in-sight');
+  });
+
+  it('the unpressed state swaps BOTH the accessible name and aria-pressed', () => {
+    const { container } = render(PanelDiceLine, {
+      props: { ...baseProps, toggles: [losToggle(false)], onToggleEffect: vi.fn() }
+    });
+    const chip = toggleChip(container);
+    expect(chip?.getAttribute('aria-pressed')).toBe('false');
+    expect(chip?.textContent?.trim()).toBe('rule.demo.los.out-of-sight');
+  });
+
+  it('tapping writes the ROW selection and commits the seed effect — both directions', async () => {
+    const onToggleEffect = vi.fn();
+    const onSelectionChange = vi.fn();
+    const pressed = render(PanelDiceLine, {
+      props: { ...baseProps, toggles: [losToggle(true)], onToggleEffect, onSelectionChange }
+    });
+    await fireEvent.click(toggleChip(pressed.container)!);
+    expect(onToggleEffect).toHaveBeenCalledTimes(1);
+    expect(onToggleEffect).toHaveBeenCalledWith(offEffect);
+    // The ROW's own sight value flips (previous rows keep theirs — they hold
+    // their own selections; only this row's is written).
+    expect(onSelectionChange).toHaveBeenCalledTimes(1);
+    expect(onSelectionChange).toHaveBeenCalledWith({ 'frightened.sourceHidden': 1 });
+
+    onToggleEffect.mockClear();
+    onSelectionChange.mockClear();
+    const unpressed = render(PanelDiceLine, {
+      props: { ...baseProps, toggles: [losToggle(false)], onToggleEffect, onSelectionChange }
+    });
+    await fireEvent.click(toggleChip(unpressed.container)!);
+    expect(onToggleEffect).toHaveBeenCalledWith(onEffect);
+    expect(onSelectionChange).toHaveBeenCalledWith({ 'frightened.sourceHidden': 0 });
+  });
+
+  it('a pressed chip FORCES the disadvantage roll-mode (the per-row leg)', async () => {
+    // No disadvantage fact, no range flag — the chip alone defaults the d20
+    // to 2d20-take-low (Frightened's disadvantage lives per row, here).
+    const onRoll = vi.fn();
+    const { container } = render(PanelDiceLine, {
+      props: { ...baseProps, toggles: [losToggle(true)], onToggleEffect: vi.fn(), onRoll }
+    });
+    await fireEvent.click(main(container, 0)!);
+    expect(onRoll.mock.calls[0][0].mode).toBe('disadvantage');
+  });
+
+  it('an unpressed chip forces nothing; a disadvantage FACT still applies beside it', async () => {
+    // A control wired like the real attack lines: its disadvantage source is
+    // the shared flag fact.
+    const flaggedControl: DiceLineControl = {
+      type: 'dice-line',
+      advantage: { fact: 'attack.str.disadvantage' },
+      dice: [{ sides: 20, bonus: { number: 5 }, purpose: 'to-hit' }]
+    };
+
+    // Out of sight (unpressed): the roll is normal — no fact, no forcing.
+    const normalRoll = vi.fn();
+    const normal = render(PanelDiceLine, {
+      props: {
+        control: flaggedControl,
+        editable: true,
+        facts: {},
+        vars: {},
+        toggles: [losToggle(false)],
+        onToggleEffect: vi.fn(),
+        onRoll: normalRoll
+      }
+    });
+    await fireEvent.click(main(normal.container, 0)!);
+    expect(normalRoll.mock.calls[0][0].mode).toBe('normal');
+
+    // Poisoned shape: the shared flag is 1 while THIS row's source is out of
+    // sight — the flag's disadvantage stands (source-pure, never subtracted).
+    const poisonedRoll = vi.fn();
+    const poisoned = render(PanelDiceLine, {
+      props: {
+        control: flaggedControl,
+        editable: true,
+        facts: { 'attack.str.disadvantage': 1 },
+        vars: {},
+        toggles: [losToggle(false)],
+        onToggleEffect: vi.fn(),
+        onRoll: poisonedRoll
+      }
+    });
+    await fireEvent.click(main(poisoned.container, 0)!);
+    expect(poisonedRoll.mock.calls[0][0].mode).toBe('disadvantage');
+  });
+
+  it('renders an indication span (never a button) when not editable or no commit handler', () => {
+    const onToggleEffect = vi.fn();
+    const notEditable = render(PanelDiceLine, {
+      props: { ...baseProps, editable: false, toggles: [losToggle(true)], onToggleEffect }
+    });
+    expect(toggleChip(notEditable.container)).toBeInstanceOf(HTMLSpanElement);
+
+    const noHandler = render(PanelDiceLine, {
+      props: { ...baseProps, toggles: [losToggle(true)] }
+    });
+    expect(toggleChip(noHandler.container)).toBeInstanceOf(HTMLSpanElement);
+  });
+
+  it('renders nothing when no die purpose matches (saves never govern the LoS chip)', () => {
+    const saveOnly: DiceLineControl = {
+      type: 'dice-line',
+      dice: [{ sides: 20, bonus: { number: 0 }, purpose: 'save' }]
+    };
+    const { container } = render(PanelDiceLine, {
+      props: {
+        control: saveOnly,
+        editable: true,
+        facts: {},
+        vars: {},
+        toggles: [losToggle(true)],
+        onToggleEffect: vi.fn()
+      }
+    });
+    expect(toggleChip(container)).toBeNull();
+  });
+
+  it('clears a stale rolled total when a state toggle flips the roll mode', async () => {
+    const { container, rerender } = render(PanelDiceLine, {
+      props: { ...baseProps, toggles: [losToggle(true)], onToggleEffect: vi.fn() }
+    });
+    await fireEvent.click(main(container, 0)!);
+    await tick();
+    // A rolled chip shows its total, not the expression.
+    expect(main(container, 0)?.textContent?.trim()).not.toContain('d20');
+    // The sight flips (pressed → unpressed): the displayed result was made
+    // under a mode this line no longer defaults to, so it reverts to the
+    // expression — same invalidation a modifier toggle gets.
+    await rerender({ ...baseProps, toggles: [losToggle(false)], onToggleEffect: vi.fn() });
+    await tick();
+    expect(main(container, 0)?.textContent?.trim()).toBe('d20+5');
+  });
+
+  it('drops the chip in summary mode (nothing focusable in a collapsed row)', () => {
+    const { container } = render(PanelDiceLine, {
+      props: { ...baseProps, summary: true, toggles: [losToggle(true)], onToggleEffect: vi.fn() }
+    });
+    expect(toggleChip(container)).toBeNull();
   });
 });

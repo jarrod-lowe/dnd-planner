@@ -1,15 +1,12 @@
 name: 'Condition Frightened - Skill Flags'
 description: >-
-  THE stateCombine regression test for the skill flags, Poisoned's shape. The
-  untrained-armor modules derive 4 of the 18 skill-disadvantage facts the
-  Frightened effect writes (combine: max on the derive side), so an
-  unarmored-trained character who is frightened has TWO writers on those
-  facts — and the attack flags and initiative.disadvantage are double-written
-  too. The effect's uniform stateCombine max makes every write compete-take-max
-  instead of conflict-throwing: flags read 1, not 2 and not an engine error.
-  Representative skills only, not all 18 (see condition-frightened-record for
-  the full set): athletics and stealth (armor-derived — the conflict case) and
-  perception (not armor-derived, so the condition write stands alone).
+  The flags-exclusion regression under co-writers: the untrained-armor
+  derives write their facts and Frightened adds NOTHING to them (the per-row
+  model — the chip carries Frightened's disadvantage, so the shared max-combined
+  flags stay source-pure and per-row subtraction is never needed). Don leather
+  untrained, then record Frightened: the armor-derived flags stay 1 (armor's
+  own contribution), the armor-untouched perception flag stays 0 (nothing but
+  Frightened would have written it, and Frightened no longer does).
 ruleGroups:
   - dnd-5e-2024/leather-armor
   - dnd-5e-2024/condition-frightened
@@ -29,10 +26,10 @@ steps:
           initiative.disadvantage: 1
           skill.athletics.disadvantage: 1
           skill.stealth.disadvantage: 1
-  # Now be frightened on top: a SECOND writer on the shared facts. No combine
-  # conflict — the effect writes with stateCombine max, so every flag stays 1
-  # (disadvantage is a flag, not a stack), the armor-untouched perception flag
-  # lands at 1 from the condition alone, and check.disadvantage arrives too.
+  # Now be frightened on top: a second SOURCE on the shared facts — but the
+  # per-row model keeps Frightened out of them entirely. Armor flags stay 1
+  # (armor's alone), perception stays 0, and check.disadvantage never arrives
+  # (the chip supplies it per row instead).
   - addOffer:
       id: record-frightened
       assert:
@@ -41,10 +38,10 @@ steps:
           attack.str.disadvantage: 1
           attack.dex.disadvantage: 1
           initiative.disadvantage: 1
-          check.disadvantage: 1
+          check.disadvantage: 0
           skill.athletics.disadvantage: 1
           skill.stealth.disadvantage: 1
-          skill.perception.disadvantage: 1
+          skill.perception.disadvantage: 0
         annotations:
           exists:
             - rule.dnd-5e-2024.condition-frightened.notice

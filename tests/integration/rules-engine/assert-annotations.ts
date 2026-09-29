@@ -25,6 +25,9 @@ export interface AnnotationAssert {
   targets?: { key: string; targets: string[] }[];
   addsToPlan?: { key: string; adds: unknown }[];
   rolls?: { key: string; roll: unknown }[];
+  /** Named fields of a matched annotation's toggle (the rider style — effect
+   * instances stay unit-pinned, the yaml assert would break on every tweak). */
+  toggles?: { key: string; toggle: Record<string, unknown> }[];
 }
 
 export function assertAnnotations(
@@ -64,5 +67,13 @@ export function assertAnnotations(
     const found = actual.find((a) => a.key === key);
     expect(found, `${where}: annotation "${key}" exists`).toBeDefined();
     expect(found!.roll, `${where}: annotation "${key}".roll`).toEqual(roll);
+  }
+  for (const { key, toggle } of expected.toggles ?? []) {
+    const found = actual.find((a) => a.key === key);
+    expect(found, `${where}: annotation "${key}" exists`).toBeDefined();
+    expect(found!.toggle, `${where}: annotation "${key}" carries a toggle`).toBeDefined();
+    const actualToggle = found!.toggle as unknown as Record<string, unknown>;
+    for (const [field, value] of Object.entries(toggle))
+      expect(actualToggle[field], `${where}: annotation "${key}".toggle.${field}`).toEqual(value);
   }
 }

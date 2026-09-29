@@ -1,4 +1,5 @@
 import type { RollPurpose } from '$lib/rules-view';
+import type { EffectInstance } from '$lib/rules-engine';
 
 export type RollMode = 'normal' | 'advantage' | 'disadvantage';
 
@@ -33,6 +34,36 @@ export interface RollModifier {
   value: number;
   /** Whether the chip starts switched on. */
   defaultOn: boolean;
+}
+
+/**
+ * A state-toggle chip offered on a dice line — pressed/unpressed indication of
+ * a player-asserted standing state (Frightened's line-of-sight). The state is
+ * PER ROW: a row CAPTURES the fact's value at add time (the play store's
+ * capture pass), so `pressed` resolves from the row's own selection first and
+ * the live fact (the going-forward seed) only as the fallback a fresh row
+ * captures from. Tapping writes BOTH the row's selection (this row only —
+ * previous rows never move) and commits one of the two effects through the
+ * follow-up channel, which moves the seed future rows capture. A pressed chip
+ * also FORCES the disadvantage roll-mode: for facts the engine flags cannot
+ * carry per-row (a max-combined flag cannot be subtracted), the chip IS the
+ * per-row leg, and flag-carrying sources (Poisoned, armor) combine with it.
+ */
+export interface DiceLineToggle {
+  key: string;
+  /** The fact whose value the row carries (also the row's selection var). */
+  fact: string;
+  /** i18n keys for the pressed/unpressed accessible names (distinct). */
+  labelOn: string;
+  labelOff: string;
+  /** Which dice (by purpose) this chip renders on. */
+  appliesTo: DicePurpose[];
+  /** Row-resolved: `(selections[fact] ?? facts[fact] ?? 0) === onWhen`. */
+  pressed: boolean;
+  /** Committed when tapped while NOT pressed. */
+  onEffect: EffectInstance;
+  /** Committed when tapped while pressed. */
+  offEffect: EffectInstance;
 }
 
 export interface RollResult {

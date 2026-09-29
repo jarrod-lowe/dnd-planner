@@ -1,11 +1,10 @@
 name: 'Condition Frightened - With Poisoned'
 description: >-
-  The stacking pin (uniform-max dividend), Poisoned and Blinded's shape. Both
-  conditions write the SAME full flag set — the two overlapping wave-2
-  conditions. Both write with stateCombine max, so the flags read 1
-  (disadvantage is a flag, not a stack) instead of summing to 2 or
-  conflict-throwing, while each condition fact stands on its own and both
-  notices live side by side.
+  Source separation: Poisoned effect-writes the shared flags (stateCombine
+  max) and Frightened contributes none (the per-row chip model) — so with
+  both conditions live the flags read exactly Poisoned's 1, and each
+  condition fact stands on its own. The dice-line combines the legs per row:
+  Poisoned's flag keeps Disadvantage on regardless of the row's sight value.
 ruleGroups:
   - dnd-5e-2024/condition-poisoned
   - dnd-5e-2024/condition-frightened

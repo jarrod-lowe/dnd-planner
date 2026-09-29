@@ -43,7 +43,15 @@
   import DieChip from './DieChip.svelte';
   import { nextDiceLineId } from './diceLineId';
   import { formatUnitValue } from './unitLabel';
-  import type { CritMode, DiceEntry, RollModifier, RollResult, ValueSource } from './types';
+  import type {
+    CritMode,
+    DiceEntry,
+    DiceLineToggle,
+    RollModifier,
+    RollResult,
+    ValueSource
+  } from './types';
+  import type { EffectInstance } from '$lib/rules-engine';
   import { t } from '$lib/i18n';
 
   interface Props {
@@ -56,6 +64,17 @@
     onRoll?: (data: RollResult, dieIndex: number) => void;
     gwfActive?: boolean;
     modifiers?: RollModifier[];
+    /**
+     * State-toggle chips (Frightened's line-of-sight): pressed/unpressed
+     * indication of a player-asserted standing state. Unlike `modifiers`
+     * there is no per-component state — `pressed` arrives resolved from the
+     * live facts, and a tap hands one of the authored effects to
+     * `onToggleEffect` (the follow-up commit channel), whose synchronous
+     * re-evaluation flips every dice-line showing the toggle.
+     */
+    toggles?: DiceLineToggle[];
+    /** Commits a toggle's effect. Absent → the chip renders indication-only. */
+    onToggleEffect?: (effect: EffectInstance) => void;
     /**
      * Collapsed-row short form: renders the dice as non-interactive chips
      * (`DieChip` with `editable={false}`) showing the rolled value or the
@@ -95,6 +114,8 @@
     onRoll,
     gwfActive = false,
     modifiers = [],
+    toggles = [],
+    onToggleEffect,
     summary = false,
     criticalOption = true
   }: Props = $props();
@@ -145,6 +166,14 @@
   // otherwise a save bonus would appear on a weapon panel with nothing to modify.
   const shownModifiers = $derived(
     modifiers.filter((m) => control.dice.some((d) => d.purpose === m.appliesTo))
+  );
+
+  // Same purpose filter for state toggles: the LoS chip rides the to-hit/check
+  // dice it governs and never a save or damage die that shares the panel.
+  const shownToggles = $derived(
+    toggles.filter((t) =>
+      control.dice.some((d) => d.purpose !== undefined && t.appliesTo.includes(d.purpose))
+    )
   );
 
   const activeModifiersFor = (die: DiceEntry): RollModifier[] =>
@@ -210,17 +239,26 @@
     control.advantageUp ? !!resolveValueSource(control.advantageUp, facts, vars, selections) : false
   );
 
+  // A pressed state-toggle chip is a PER-ROW disadvantage leg (Frightened's
+  // line of sight): the engine flags cannot carry it per-row — a max-combined
+  // flag cannot be subtracted for one row — so the chip forces the roll-mode
+  // itself, exactly like a rules-driven flag. Other rows read their own
+  // captured state; flag-carrying sources (Poisoned, armor) combine with this
+  // leg through the ordinary OR below.
+  const losDisadvantage = $derived(shownToggles.some((t) => t.pressed));
+
   // The line's default roll mode, three-way. Advantage and disadvantage each
   // have a rules-driven source (a fact) plus, on the disadvantage side, the
-  // selected range band's long-range flag. When BOTH directions are live they
-  // cancel to 'normal' — SRD glossary: "Advantage and Disadvantage on the same
-  // roll cancel each other", and the cancellation is source-agnostic (a
-  // rules-driven advantage fact cancels a range-band disadvantage exactly as
-  // it cancels a disadvantage fact; Prone + Invisible co-occurring is the real
-  // case). A manual per-die roll-mode choice still wins over this default —
-  // see the `effectiveRollMode` merge below.
+  // selected range band's long-range flag and a pressed state-toggle chip.
+  // When BOTH directions are live they cancel to 'normal' — SRD glossary:
+  // "Advantage and Disadvantage on the same roll cancel each other", and the
+  // cancellation is source-agnostic (a rules-driven advantage fact cancels a
+  // range-band disadvantage exactly as it cancels a disadvantage fact; Prone +
+  // Invisible co-occurring is the real case). A manual per-die roll-mode
+  // choice still wins over this default — see the `effectiveRollMode` merge
+  // below.
   const defaultRollMode = $derived.by<RollMode>(() => {
-    const disadvantage = rulesDisadvantage || !!currentRange?.disadvantage;
+    const disadvantage = rulesDisadvantage || losDisadvantage || !!currentRange?.disadvantage;
     if (rulesAdvantage && disadvantage) return 'normal';
     if (disadvantage) return 'disadvantage';
     if (rulesAdvantage) return 'advantage';
@@ -246,6 +284,12 @@
       .map((m) => `${m.key}:${m.value}`)
       .join('|')
   );
+  // Which state toggles are pressed (Frightened's sight): a flip changes the
+  // line's default roll mode, so it invalidates displayed results exactly the
+  // way a modifier toggle does — the re-seed path below, where a recorded
+  // writeBack verdict stands (the roll-time contract) and an ephemeral
+  // result clears instead of lingering beside a mode it was not made under.
+  const toggleSignature = $derived(shownToggles.map((t) => `${t.key}:${t.pressed}`).join('|'));
   // A roll total is only meaningful for the dice AND modifiers that produced it;
   // clear stale results when either changes so a chip never shows a total that no
   // longer matches its current expression — with ONE carve-out. When ONLY the
@@ -278,6 +322,7 @@
   $effect(() => {
     void diceSignature;
     void modifierSignature;
+    void toggleSignature;
     if (!seededFromSelections) {
       seededFromSelections = true;
       lastDiceSignature = diceSignature;
@@ -785,17 +830,19 @@
 
   const parts = $derived.by<
     {
-      type: 'label' | 'range' | 'die' | 'modifier';
+      type: 'label' | 'range' | 'die' | 'modifier' | 'toggle';
       die?: DiceEntry;
       dieIndex?: number;
       modifier?: RollModifier;
+      toggle?: DiceLineToggle;
     }[]
   >(() => {
     const result: {
-      type: 'label' | 'range' | 'die' | 'modifier';
+      type: 'label' | 'range' | 'die' | 'modifier' | 'toggle';
       die?: DiceEntry;
       dieIndex?: number;
       modifier?: RollModifier;
+      toggle?: DiceLineToggle;
     }[] = [];
     if (control.label) {
       result.push({ type: 'label' });
@@ -808,6 +855,9 @@
     }
     for (const modifier of shownModifiers) {
       result.push({ type: 'modifier', modifier });
+    }
+    for (const toggle of shownToggles) {
+      result.push({ type: 'toggle', toggle });
     }
     return result;
   });
@@ -875,7 +925,9 @@
       {/if}
       <!-- 'modifier' parts are intentionally dropped: their value is already
            folded into the die's shown bonus (formatBonus), so a summary chip
-           for them would double up on information without adding any. -->
+           for them would double up on information without adding any.
+           'toggle' parts drop for the same nothing-focusable rule — the ▼/▲
+           default-roll-mode indicator already carries the state's effect. -->
     {/each}
   {:else}
     {#each parts as part, i (i)}
@@ -914,6 +966,36 @@
           </button>
         {:else}
           <span class="panel-renderer__modifier" data-modifier-key={m.key}>{formatModifier(m)}</span
+          >
+        {/if}
+      {:else if part.type === 'toggle'}
+        {@const tg = part.toggle!}
+        {@const on = tg.pressed}
+        <!-- A per-row state chip (Frightened's line of sight): the
+             modifier-chip look, but a tap writes TWO things — this row's own
+             selection (previous rows never move) and the keyed seed effect
+             through onToggleEffect (the going-forward value future rows
+             capture). The channel's facts are 0/1; `on` (fact = onWhen)
+             flips to the other value. -->
+        {#if editable && onToggleEffect}
+          <button
+            class="panel-renderer__modifier"
+            class:panel-renderer__modifier--on={on}
+            type="button"
+            aria-pressed={on}
+            data-toggle-key={tg.key}
+            onclick={() => {
+              onToggleEffect(on ? tg.offEffect : tg.onEffect);
+              onSelectionChange?.({ [tg.fact]: on ? 1 : 0 });
+            }}
+          >
+            {$t(on ? tg.labelOn : tg.labelOff)}
+          </button>
+        {:else}
+          <span
+            class="panel-renderer__modifier"
+            class:panel-renderer__modifier--on={on}
+            data-toggle-key={tg.key}>{$t(on ? tg.labelOn : tg.labelOff)}</span
           >
         {/if}
       {:else}

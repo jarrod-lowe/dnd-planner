@@ -415,6 +415,40 @@ export interface AnnotationRider {
 }
 
 /**
+ * A state toggle an annotation renders on the dice-lines it targets: a chip
+ * indicating whether a player-asserted standing state holds (Frightened's
+ * line-of-sight). Tapping commits one of the two authored effects — the UI
+ * picks which by the CURRENT fact value — through the follow-up commit
+ * channel (`addFollowupEffect`), so the state persists in the
+ * committed-effects list and the re-evaluation flips every governed panel
+ * at once. The chip's pressed state is derived from the fact, never
+ * component state: one tap is sticky for every later roll.
+ */
+export interface AnnotationToggle {
+  /** The fact carrying the state. */
+  fact: string;
+  /**
+   * The fact value that renders the chip PRESSED. `0` makes the UNSET fact
+   * the pressed state — the "defaults to on" idiom (an absent fact reads 0
+   * everywhere), so the fact only ever records the deviation from pressed.
+   */
+  onWhen: number;
+  /** Committed when tapped while NOT pressed — takes the fact to `onWhen`. */
+  onEffect: EffectInstance;
+  /** Committed when tapped while pressed (an empty same-`key` eviction, typically). */
+  offEffect: EffectInstance;
+  /** i18n key for the pressed state's accessible name. */
+  labelOn: string;
+  /** i18n key for the unpressed state's accessible name. Distinct from labelOn. */
+  labelOff: string;
+  /**
+   * Dice purposes this chip renders on — the rider `appliesTo` filter, so a
+   * `dice.any`-targeted toggle stays off save dice it never governed.
+   */
+  appliesTo: RollPurpose[];
+}
+
+/**
  * A roll the PLAYER makes on a notice's cadence — dice the notice exists to
  * remind them of (Searing Smite's per-turn burn). Dice ARE allowed here, unlike
  * the {@link Annotation.values} channel: a `roll` is rolled by the UI, never
@@ -469,6 +503,7 @@ export interface Annotation {
    */
   roll?: AnnotationRoll;
   rider?: AnnotationRider;
+  toggle?: AnnotationToggle;
   /**
    * What tapping this annotation plans. Most annotations are advisory
    * ("Heroic Inspiration available"); saying what the advice IS turns the

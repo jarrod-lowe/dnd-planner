@@ -30,7 +30,8 @@
     TextInformation,
     CountdownInformation,
     RollResult,
-    RollModifier
+    RollModifier,
+    DiceLineToggle
   } from './panel-renderer/types';
 
   interface Props {
@@ -410,10 +411,13 @@
   // A valued rider is REPRESENTED by its dice-line toggle chip, so it must not
   // also appear as a static text chip or in the toast's rider list — it would
   // show twice, and the static copy would still read as present after the
-  // toggle is switched off. Everything downstream of the dice line uses this
-  // list rather than matchingAnnotations.
+  // toggle is switched off. A state TOGGLE is represented by its chip the same
+  // way, doubly so because its annotation key has no locale entry (the labels
+  // live on the toggle) — the informational block would print the raw key.
+  // Everything downstream of the dice line uses this list rather than
+  // matchingAnnotations.
   const informationalAnnotations = $derived(
-    matchingAnnotations.filter((ann) => ann.rider?.value === undefined)
+    matchingAnnotations.filter((ann) => ann.rider?.value === undefined && ann.toggle === undefined)
   );
 
   // Annotations whose rider carries a value become toggleable chips on the dice
@@ -433,6 +437,34 @@
         };
       })
       .filter((m): m is RollModifier => m !== undefined)
+  );
+
+  // Annotations carrying a `toggle` become pressed/unpressed state chips on
+  // the dice line — the aura-chip look, but PER-ROW state instead of ephemeral
+  // modifier toggles: `pressed` reads the ROW's captured selection first (the
+  // play store captures the fact at add time), falling back to the live fact
+  // only where no capture exists (the picker, whose value is the seed the next
+  // added row will capture). A tap writes the row's selection (previous rows
+  // never move) and commits the keyed seed effect through onFollowup.
+  const diceToggles = $derived<DiceLineToggle[]>(
+    matchingAnnotations
+      .filter((ann) => ann.toggle !== undefined)
+      .map((ann) => {
+        const toggle = ann.toggle!;
+        return {
+          key: ann.key,
+          fact: toggle.fact,
+          labelOn: toggle.labelOn,
+          labelOff: toggle.labelOff,
+          appliesTo: toggle.appliesTo,
+          pressed:
+            ((selections?.[toggle.fact] as number | undefined) ??
+              (facts?.[toggle.fact] as number | undefined) ??
+              0) === toggle.onWhen,
+          onEffect: toggle.onEffect,
+          offEffect: toggle.offEffect
+        };
+      })
   );
 
   const visibleFollowups = $derived(
@@ -583,6 +615,8 @@
           onRoll={(result, dieIndex) => handleDiceRoll(result, dieIndex, `primary:die:${dieIndex}`)}
           {gwfActive}
           modifiers={rollModifiers}
+          toggles={diceToggles}
+          onToggleEffect={onFollowup}
           {summary}
         />
       </div>
@@ -718,6 +752,8 @@
             handleDiceRoll(result, dieIndex, `secondary:die:${dieIndex}`)}
           {gwfActive}
           modifiers={rollModifiers}
+          toggles={diceToggles}
+          onToggleEffect={onFollowup}
           {summary}
         />
       </div>

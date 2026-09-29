@@ -49,7 +49,7 @@ vi.mock('svelte-sonner', () => ({
   }
 }));
 
-import { apiGet, apiPost } from '$lib/api/client';
+import { apiGet, apiPost, apiDelete } from '$lib/api/client';
 import type { AvailableRuleEntry, Rule } from '$lib/rules-view';
 
 /**
@@ -385,5 +385,416 @@ describe('playStore addToPlan clamps an over-committed pool capture (lay-on-hand
       .map((e) => e.state?.['layOnHands.pool.spent'])
       .find((v): v is number => v !== undefined);
     expect(spend).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('playStore addToPlan captures the per-row toggle state', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.runAllTimers();
+    vi.useRealTimers();
+    vi.resetModules();
+  });
+
+  /**
+   * A character Frightened with the source already hidden, via the persisted
+   * effects blob (the committed seed the capture reads). The generic-check
+   * offer (dice.any labels) is the row that captures.
+   */
+  async function frightenedStore(): Promise<{ playStore: PlayStore }> {
+    vi.mocked(apiGet)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: ['condition-frightened', 'core-events'] })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          effects: JSON.stringify([
+            {
+              id: 'effect-frightened',
+              key: 'frightened',
+              state: { 'condition.frightened': 1 },
+              expiry: { kind: 'untilShortRest' }
+            },
+            {
+              id: 'effect-frightened-source-hidden',
+              key: 'frightened-source',
+              state: { 'frightened.sourceHidden': 1 },
+              expiry: { kind: 'untilShortRest' }
+            }
+          ])
+        })
+      } as Response);
+    vi.mocked(apiPost).mockResolvedValue({
+      ok: true,
+      json: async () => ({ ruleGroups: [] })
+    } as Response);
+
+    const { playStore } = await import('$lib/play/playStore.svelte');
+    playStore.reset();
+    await playStore.loadRuleGroups('char-1');
+    expect(playStore.state.facts['condition.frightened']).toBe(1);
+    return { playStore };
+  }
+
+  it('a check row added with the seed hidden captures sight=1 — its own value, not the live fallback', async () => {
+    const { playStore } = await frightenedStore();
+    const check = catalogRule(playStore, 'record-check');
+
+    playStore.addToPlan(check);
+
+    // The captured per-row state (the flush inside addToPlan makes the
+    // annotations current even inside the debounce window).
+    expect(playStore.state.plannedItems[0].rule.selections).toMatchObject({
+      'frightened.sourceHidden': 1
+    });
+  });
+
+  it('the captured value sticks: flipping the seed later never moves the row', async () => {
+    const { playStore } = await frightenedStore();
+    const check = catalogRule(playStore, 'record-check');
+    playStore.addToPlan(check);
+
+    // The chip's reveal tap commits the empty same-key eviction.
+    const annotations = playStore.state.engineOutput?.annotations ?? [];
+    const los = annotations.find((a) => a.key === 'rule.dnd-5e-2024.condition-frightened.los');
+    expect(los?.toggle).toBeDefined();
+    playStore.addFollowupEffect(los!.toggle!.onEffect);
+    expect(playStore.state.facts['frightened.sourceHidden'] ?? 0).toBe(0);
+
+    // The row keeps its captured hidden value.
+    expect(playStore.state.plannedItems[0].rule.selections).toMatchObject({
+      'frightened.sourceHidden': 1
+    });
+  });
+
+  it('the chip is live for a merely PLANNED recorder, and removing the row takes the committed seed along', async () => {
+    // No persisted effects: the condition exists only as a planned recorder.
+    vi.mocked(apiGet)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: ['condition-frightened', 'core-events'] })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ effects: null })
+      } as Response);
+    vi.mocked(apiPost).mockResolvedValue({
+      ok: true,
+      json: async () => ({ ruleGroups: [] })
+    } as Response);
+    const { playStore } = await import('$lib/play/playStore.svelte');
+    playStore.reset();
+    await playStore.loadRuleGroups('char-1');
+
+    // Record Frightened; let the evaluation settle so the chip (and the row's
+    // advertised dependents) are cached.
+    playStore.addToPlan(catalogRule(playStore, 'record-frightened'));
+    vi.runAllTimers();
+    const annotations = playStore.state.engineOutput?.annotations ?? [];
+    const los = annotations.find((a) => a.key === 'rule.dnd-5e-2024.condition-frightened.los');
+    // The chip renders for the planned condition — the recording turn's rows
+    // get their disadvantage immediately.
+    expect(los?.toggle).toBeDefined();
+
+    // A tap: the seed commits while the parent is still only planned.
+    playStore.addFollowupEffect(los!.toggle!.offEffect);
+    expect(playStore.state.facts['frightened.sourceHidden']).toBe(1);
+
+    // Removing the recorder row evicts the committed seed (its advertised
+    // dependents) — no orphaned sight state, no wrong default on re-record.
+    const instanceId = playStore.state.plannedItems[0].instanceId;
+    playStore.removeFromPlan(instanceId);
+    vi.runAllTimers();
+    expect(playStore.state.committed.some((e) => e.key === 'frightened-source')).toBe(false);
+    expect(playStore.state.facts['frightened.sourceHidden'] ?? 0).toBe(0);
+    expect(playStore.state.facts['condition.frightened'] ?? 0).toBe(0);
+    // Let the serialized save queue drain (the tap's save may still be in
+    // flight; the eviction's save queues behind it).
+    await vi.advanceTimersByTimeAsync(0);
+
+    // ...and the eviction is PERSISTED, not just local: the last /effects POST
+    // carries the filtered list (a pre-assignment persist would have
+    // serialized the orphan back).
+    const effectsPosts = vi
+      .mocked(apiPost)
+      .mock.calls.filter(([url]) => String(url).includes('/effects'));
+    const last = effectsPosts[effectsPosts.length - 1];
+    const body = last![1] as { effects: string };
+    const persisted = JSON.parse(body.effects) as { key?: string }[];
+    expect(persisted.some((e) => e.key === 'frightened-source')).toBe(false);
+  });
+
+  it('removing one of TWO live parents keeps the seed (ownership-aware cleanup)', async () => {
+    // The condition is COMMITTED (last turn) AND a fresh recorder is planned;
+    // a chip tap commits the seed. Removing the planned row must NOT drag the
+    // seed away while the committed parent lives.
+    vi.mocked(apiGet)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: ['condition-frightened', 'core-events'] })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          effects: JSON.stringify([
+            {
+              id: 'effect-frightened',
+              key: 'frightened',
+              state: { 'condition.frightened': 1 },
+              expiry: { kind: 'untilShortRest' }
+            }
+          ])
+        })
+      } as Response);
+    vi.mocked(apiPost).mockResolvedValue({
+      ok: true,
+      json: async () => ({ ruleGroups: [] })
+    } as Response);
+    const { playStore } = await import('$lib/play/playStore.svelte');
+    playStore.reset();
+    await playStore.loadRuleGroups('char-1');
+
+    playStore.addToPlan(catalogRule(playStore, 'record-frightened'));
+    vi.runAllTimers();
+    const los = (playStore.state.engineOutput?.annotations ?? []).find(
+      (a) => a.key === 'rule.dnd-5e-2024.condition-frightened.los'
+    );
+    playStore.addFollowupEffect(los!.toggle!.offEffect);
+    expect(playStore.state.facts['frightened.sourceHidden']).toBe(1);
+
+    playStore.removeFromPlan(playStore.state.plannedItems[0].instanceId);
+    vi.runAllTimers();
+    // The committed parent survives; so does its seed.
+    expect(playStore.state.committed.some((e) => e.key === 'frightened')).toBe(true);
+    expect(playStore.state.committed.some((e) => e.key === 'frightened-source')).toBe(true);
+    expect(playStore.state.facts['frightened.sourceHidden']).toBe(1);
+  });
+
+  it('an OR INSTEAD swap of the sole planned recorder evicts the seed too (and its capture flushes)', async () => {
+    vi.mocked(apiGet)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: ['condition-frightened', 'core-events'] })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ effects: null })
+      } as Response);
+    vi.mocked(apiPost).mockResolvedValue({
+      ok: true,
+      json: async () => ({ ruleGroups: [] })
+    } as Response);
+    const { playStore } = await import('$lib/play/playStore.svelte');
+    playStore.reset();
+    await playStore.loadRuleGroups('char-1');
+
+    playStore.addToPlan(catalogRule(playStore, 'record-frightened'));
+    vi.runAllTimers();
+    const los = (playStore.state.engineOutput?.annotations ?? []).find(
+      (a) => a.key === 'rule.dnd-5e-2024.condition-frightened.los'
+    );
+    playStore.addFollowupEffect(los!.toggle!.offEffect);
+    expect(playStore.state.committed.some((e) => e.key === 'frightened-source')).toBe(true);
+
+    // Swap the recorder row for a check via its OR INSTEAD catalog. NO timer
+    // advance first: the swap's capture must flush the pending evaluation
+    // (the stale-annotations race on this exact path).
+    const instanceId = playStore.state.plannedItems[0].instanceId;
+    const replacement = alternativeEntry(playStore, instanceId, 'record-check');
+    playStore.swapPlanItemRule(instanceId, replacement);
+    vi.runAllTimers();
+
+    expect(playStore.state.committed.some((e) => e.key === 'frightened-source')).toBe(false);
+    expect(playStore.state.facts['frightened.sourceHidden'] ?? 0).toBe(0);
+  });
+
+  it('rapid seed flips serialize: the LAST /effects POST carries the final state', async () => {
+    vi.mocked(apiGet)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: ['condition-frightened', 'core-events'] })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ effects: null })
+      } as Response);
+    vi.mocked(apiPost).mockResolvedValue({
+      ok: true,
+      json: async () => ({ ruleGroups: [] })
+    } as Response);
+    const { playStore } = await import('$lib/play/playStore.svelte');
+    playStore.reset();
+    await playStore.loadRuleGroups('char-1');
+
+    playStore.addToPlan(catalogRule(playStore, 'record-frightened'));
+    vi.runAllTimers();
+    const los = (playStore.state.engineOutput?.annotations ?? []).find(
+      (a) => a.key === 'rule.dnd-5e-2024.condition-frightened.los'
+    );
+
+    // Hide, then reveal, back-to-back — the second save queues while the
+    // first is in flight.
+    playStore.addFollowupEffect(los!.toggle!.offEffect);
+    playStore.addFollowupEffect(los!.toggle!.onEffect);
+    expect(playStore.state.facts['frightened.sourceHidden'] ?? 0).toBe(0);
+
+    await vi.advanceTimersByTimeAsync(0);
+
+    const effectsPosts = vi
+      .mocked(apiPost)
+      .mock.calls.filter(([url]) => String(url).includes('/effects'));
+    const last = effectsPosts[effectsPosts.length - 1];
+    const body = last![1] as { effects: string };
+    const persisted = JSON.parse(body.effects) as {
+      key?: string;
+      state?: Record<string, number>;
+    }[];
+    const seed = persisted.find((e) => e.key === 'frightened-source');
+    // The final state is visible: the reveal is the empty eviction, so the
+    // seed either carries no state or no seed at all.
+    expect(seed?.state?.['frightened.sourceHidden'] ?? 0).toBe(0);
+  });
+
+  it('a row planned BEFORE the recorder freezes its sight value when the toggle appears', async () => {
+    vi.mocked(apiGet)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: ['condition-frightened', 'core-events'] })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ effects: null })
+      } as Response);
+    vi.mocked(apiPost).mockResolvedValue({
+      ok: true,
+      json: async () => ({ ruleGroups: [] })
+    } as Response);
+    const { playStore } = await import('$lib/play/playStore.svelte');
+    playStore.reset();
+    await playStore.loadRuleGroups('char-1');
+
+    // The check row FIRST — no condition exists yet, so its add-time capture
+    // records nothing. Then the recorder, with no timer advance between.
+    playStore.addToPlan(catalogRule(playStore, 'record-check'));
+    playStore.addToPlan(catalogRule(playStore, 'record-frightened'));
+    vi.runAllTimers();
+
+    // The first evaluation on which the toggle reaches the pre-existing row
+    // freezes its selection: no live-seed fallback forever.
+    expect(playStore.state.plannedItems[0].rule.selections).toMatchObject({
+      'frightened.sourceHidden': 0
+    });
+
+    // ...and the frozen value never moves: a later tap changes the seed, not
+    // the earlier row.
+    const los = (playStore.state.engineOutput?.annotations ?? []).find(
+      (a) => a.key === 'rule.dnd-5e-2024.condition-frightened.los'
+    );
+    playStore.addFollowupEffect(los!.toggle!.offEffect);
+    expect(playStore.state.facts['frightened.sourceHidden']).toBe(1);
+    expect(playStore.state.plannedItems[0].rule.selections).toMatchObject({
+      'frightened.sourceHidden': 0
+    });
+  });
+
+  it('a queued save reaches its OWN character even if the character switches mid-drain', async () => {
+    vi.mocked(apiGet)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: ['condition-frightened', 'core-events'] })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ effects: null })
+      } as Response);
+    vi.mocked(apiPost).mockResolvedValue({
+      ok: true,
+      json: async () => ({ ruleGroups: [] })
+    } as Response);
+    const { playStore } = await import('$lib/play/playStore.svelte');
+    playStore.reset();
+    await playStore.loadRuleGroups('char-1');
+
+    playStore.addToPlan(catalogRule(playStore, 'record-frightened'));
+    vi.runAllTimers();
+    const los = (playStore.state.engineOutput?.annotations ?? []).find(
+      (a) => a.key === 'rule.dnd-5e-2024.condition-frightened.los'
+    );
+    // Tap, then leave the character BEFORE the save's microtask settles. The
+    // queued snapshot is scoped to char-1 at call time, so it must still land.
+    playStore.addFollowupEffect(los!.toggle!.offEffect);
+    playStore.reset();
+    await vi.advanceTimersByTimeAsync(0);
+
+    const charOnePosts = vi
+      .mocked(apiPost)
+      .mock.calls.filter(([url]) => String(url).includes('/characters/char-1/effects'));
+    expect(charOnePosts.length).toBeGreaterThan(0);
+    const last = charOnePosts[charOnePosts.length - 1];
+    const body = last![1] as { effects: string };
+    const persisted = JSON.parse(body.effects) as {
+      key?: string;
+      state?: Record<string, number>;
+    }[];
+    const seed = persisted.find((e) => e.key === 'frightened-source');
+    expect(seed?.state?.['frightened.sourceHidden']).toBe(1);
+  });
+
+  it('an unassignment routes its effects save through the queue (no interleaving write)', async () => {
+    vi.mocked(apiGet)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: ['condition-frightened', 'core-events'] })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ effects: null })
+      } as Response);
+    vi.mocked(apiDelete).mockResolvedValue({ ok: true } as Response);
+    // The FIRST /effects POST (the tap's save) defers until manual release;
+    // everything after resolves immediately.
+    let releaseFirst!: (value: Response) => void;
+    vi.mocked(apiPost).mockImplementation(((url: unknown) => {
+      if (String(url).includes('/effects')) {
+        return new Promise<Response>((resolve) => {
+          releaseFirst = resolve;
+        });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({ ruleGroups: [] }) } as Response);
+    }) as unknown as typeof apiPost);
+    const { playStore } = await import('$lib/play/playStore.svelte');
+    playStore.reset();
+    await playStore.loadRuleGroups('char-1');
+
+    playStore.addToPlan(catalogRule(playStore, 'record-frightened'));
+    vi.runAllTimers();
+    const los = (playStore.state.engineOutput?.annotations ?? []).find(
+      (a) => a.key === 'rule.dnd-5e-2024.condition-frightened.los'
+    );
+    playStore.addFollowupEffect(los!.toggle!.offEffect); // the tap's save is now in flight (deferred)
+    const effectsPosts = () =>
+      vi.mocked(apiPost).mock.calls.filter(([url]) => String(url).includes('/effects'));
+    expect(effectsPosts()).toHaveLength(1);
+
+    // Unassign the condition group WHILE that save is in flight. The removal's
+    // save must QUEUE, not write concurrently — a direct POST here could land
+    // after the in-flight snapshot and resurrect what the unassign removed.
+    await playStore.unassignRuleGroup('char-1', 'condition-frightened');
+    expect(effectsPosts()).toHaveLength(1); // still only the in-flight save
+
+    releaseFirst({ ok: true } as Response);
+    await vi.advanceTimersByTimeAsync(0);
+    // The queued post-unassignment save fires now, without the seed.
+    expect(effectsPosts()).toHaveLength(2);
+    const last = effectsPosts()[1];
+    const body = last![1] as { effects: string };
+    const persistedEffects = JSON.parse(body.effects) as { key?: string }[];
+    expect(persistedEffects.some((e) => e.key === 'frightened-source')).toBe(false);
   });
 });

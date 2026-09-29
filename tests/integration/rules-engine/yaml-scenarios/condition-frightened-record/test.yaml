@@ -1,18 +1,22 @@
 name: 'Condition Frightened - Record'
 description: >-
   Recording being Frightened commits a keyed effect setting condition.frightened
-  plus Poisoned's full flag set: the STR/DEX attack-disadvantage flags, the 18
-  skill flags, initiative.disadvantage and the generic check.disadvantage —
-  all 22 asserted here in full (typo guard for a cloned list), uniform
-  stateCombine max so armor and stacked conditions co-write them. Under the
-  assume-always-line-of-sight simplification (user-directed 2026-09-29) the
-  SRD's sight qualifier is satisfied by assumption, so the flags are STANDING
-  while the condition lives; mechanising the qualifier is a deferred follow-up.
-  A NOTICE carries the condition's standing effect — both SRD sentences,
-  disadvantage AND can't-approach — while it is live. The recorder models BEING
-  FRIGHTENED (imposed by an enemy effect), so it is free and ungated (the prone
-  "Knocked Prone" precedent), and any rest clears it (untilShortRest covers
-  both rest kinds; see condition-frightened-rest-clears).
+  and emits the LoS toggle annotation — the dice-line chip that carries the
+  condition's disadvantage PER ROW (the per-row model, user-directed
+  2026-09-29: each planned row captures its own sight value at add time;
+  tapping a chip changes that row and the going-forward seed, never previous
+  rows). Frightened deliberately contributes NONE of the 22 shared flags:
+  the chip forces the disadvantage roll-mode itself and other sources
+  (Poisoned, Blinded, untrained armor) keep the flags to themselves — the
+  full 22 asserted at 0 as the exclusion pin. The chip renders the moment
+  the condition is live (planned recorder included — the disadvantage shows
+  on the recording turn's own rows); the orphan case is cleaned store-side
+  (removeFromPlan evicts committed effects keyed by the removed row's
+  advertised dependents — unit-pinned, not assertible here). A NOTICE
+  carries the standing text while the condition is live; the recorder models
+  BEING FRIGHTENED (imposed by an enemy effect), so it is free and ungated,
+  and any rest clears it (untilShortRest; see
+  condition-frightened-rest-clears).
 ruleGroups:
   - dnd-5e-2024/condition-frightened
 steps:
@@ -26,36 +30,44 @@ steps:
         annotations:
           notExists:
             - rule.dnd-5e-2024.condition-frightened.notice
+            - rule.dnd-5e-2024.condition-frightened.los
   - addOffer:
       id: record-frightened
       assert:
         facts:
           condition.frightened: 1
-          attack.str.disadvantage: 1
-          attack.dex.disadvantage: 1
-          initiative.disadvantage: 1
-          check.disadvantage: 1
-          skill.acrobatics.disadvantage: 1
-          skill.animal-handling.disadvantage: 1
-          skill.arcana.disadvantage: 1
-          skill.athletics.disadvantage: 1
-          skill.deception.disadvantage: 1
-          skill.history.disadvantage: 1
-          skill.insight.disadvantage: 1
-          skill.intimidation.disadvantage: 1
-          skill.investigation.disadvantage: 1
-          skill.medicine.disadvantage: 1
-          skill.nature.disadvantage: 1
-          skill.perception.disadvantage: 1
-          skill.performance.disadvantage: 1
-          skill.persuasion.disadvantage: 1
-          skill.religion.disadvantage: 1
-          skill.sleight-of-hand.disadvantage: 1
-          skill.stealth.disadvantage: 1
-          skill.survival.disadvantage: 1
+          attack.str.disadvantage: 0
+          attack.dex.disadvantage: 0
+          initiative.disadvantage: 0
+          check.disadvantage: 0
+          skill.acrobatics.disadvantage: 0
+          skill.animal-handling.disadvantage: 0
+          skill.arcana.disadvantage: 0
+          skill.athletics.disadvantage: 0
+          skill.deception.disadvantage: 0
+          skill.history.disadvantage: 0
+          skill.insight.disadvantage: 0
+          skill.intimidation.disadvantage: 0
+          skill.investigation.disadvantage: 0
+          skill.medicine.disadvantage: 0
+          skill.nature.disadvantage: 0
+          skill.perception.disadvantage: 0
+          skill.performance.disadvantage: 0
+          skill.persuasion.disadvantage: 0
+          skill.religion.disadvantage: 0
+          skill.sleight-of-hand.disadvantage: 0
+          skill.stealth.disadvantage: 0
+          skill.survival.disadvantage: 0
         annotations:
           exists:
             - rule.dnd-5e-2024.condition-frightened.notice
+            - rule.dnd-5e-2024.condition-frightened.los
           targets:
-            - key: rule.dnd-5e-2024.condition-frightened.notice
-              targets: [notice]
+            - key: rule.dnd-5e-2024.condition-frightened.los
+              targets: [attack.any, dice.any]
+          toggles:
+            - key: rule.dnd-5e-2024.condition-frightened.los
+              toggle:
+                fact: frightened.sourceHidden
+                onWhen: 0
+                appliesTo: [to-hit, check]

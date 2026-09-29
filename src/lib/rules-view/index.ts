@@ -40,6 +40,7 @@ export type {
   IllegalWhenEntry,
   Annotation,
   AnnotationRider,
+  AnnotationToggle,
   AnnotationAction,
   AnnotationSeedSource,
   RiderValue,
