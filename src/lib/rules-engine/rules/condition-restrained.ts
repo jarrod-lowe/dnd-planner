@@ -70,7 +70,7 @@ const conditionRestrained: RuleModule = {
         section: 'free',
         name: `${CR}.record-restrained.name`,
         detailKey: 'condition/restrained',
-        intents: { CONDITION: 'restrained' },
+        intents: { CONDITION: 'held' },
         actionCost: []
       },
       apply: (): ActionResult => ({

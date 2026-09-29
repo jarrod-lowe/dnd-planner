@@ -1,11 +1,35 @@
 import type { AvailableRuleEntry, Verb } from '$lib/rules-view';
 import { deriveVerbFromRule } from './stepUtils';
-import { VERB_ORDER } from './verbConfig';
+import { SUB_BUCKET_ORDER, VERB_ORDER } from './verbConfig';
 
 export interface VerbGroup {
   verb: Verb;
   entries: AvailableRuleEntry[];
   subBuckets: Map<string, AvailableRuleEntry[]>;
+}
+
+/**
+ * Re-orders a verb's sub-buckets so a pinned taxonomy (SUB_BUCKET_ORDER) leads
+ * in its curated order and every unpinned bucket follows in first-encounter
+ * order. The display order contract: both the OR INSTEAD strip (PlanRow groups
+ * its alternatives by first encounter over `entries`) and the picker iterate
+ * what this function produces, so pinning the order here pins it everywhere.
+ */
+function orderBuckets(
+  verb: Verb,
+  buckets: Map<string, AvailableRuleEntry[]>
+): Map<string, AvailableRuleEntry[]> {
+  const pinned = SUB_BUCKET_ORDER[verb];
+  if (!pinned) return buckets;
+  const ordered = new Map<string, AvailableRuleEntry[]>();
+  for (const slug of pinned) {
+    const bucketEntries = buckets.get(slug);
+    if (bucketEntries) ordered.set(slug, bucketEntries);
+  }
+  for (const [slug, bucketEntries] of buckets) {
+    if (!ordered.has(slug)) ordered.set(slug, bucketEntries);
+  }
+  return ordered;
 }
 
 /**
@@ -46,11 +70,12 @@ export function groupChoicesByVerb(
   for (const verb of verbOrder) {
     const bucketMap = verbMap.get(verb);
     if (!bucketMap) continue;
+    const orderedBuckets = orderBuckets(verb, bucketMap);
     const allEntries: AvailableRuleEntry[] = [];
-    for (const bucketEntries of bucketMap.values()) {
+    for (const bucketEntries of orderedBuckets.values()) {
       allEntries.push(...bucketEntries);
     }
-    groups.push({ verb, entries: allEntries, subBuckets: bucketMap });
+    groups.push({ verb, entries: allEntries, subBuckets: orderedBuckets });
   }
 
   return groups;

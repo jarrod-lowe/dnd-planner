@@ -21,6 +21,17 @@ export const VERB_ORDER: Verb[] = [
   'EQUIP'
 ];
 
+/**
+ * Pinned sub-bucket display order for verbs whose buckets are a curated
+ * taxonomy rather than an open set — CONDITION's five functional buckets
+ * (tests/unit/play/condition-verb-buckets.test.ts). Verbs absent here (and
+ * buckets not named within a pinned verb) keep first-encounter order, which
+ * follows module registration.
+ */
+export const SUB_BUCKET_ORDER: Partial<Record<Verb, string[]>> = {
+  CONDITION: ['senses', 'held', 'helpless', 'compelled', 'weakened']
+};
+
 export const PLAN_VERBS: Verb[] = [
   'ATTACK',
   'AID',

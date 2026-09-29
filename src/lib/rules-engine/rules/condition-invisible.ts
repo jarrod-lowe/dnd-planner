@@ -72,7 +72,7 @@ const conditionInvisible: RuleModule = {
         section: 'free',
         name: `${CI}.record-invisible.name`,
         detailKey: 'condition/invisible',
-        intents: { CONDITION: 'invisible' },
+        intents: { CONDITION: 'senses' },
         actionCost: []
       },
       apply: (): ActionResult => ({

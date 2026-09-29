@@ -62,7 +62,7 @@ const conditionIncapacitated: RuleModule = {
         section: 'free',
         name: `${CI}.record-incapacitated.name`,
         detailKey: 'condition/incapacitated',
-        intents: { CONDITION: 'incapacitated' },
+        intents: { CONDITION: 'helpless' },
         actionCost: []
       },
       apply: (f): ActionResult => ({

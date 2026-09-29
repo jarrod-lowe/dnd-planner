@@ -2088,21 +2088,11 @@
         "freeform": "Note"
       },
       "CONDITION": {
-        "prone": "Prone",
-        "charmed": "Charmed",
-        "deafened": "Deafened",
-        "blinded": "Blinded",
-        "poisoned": "Poisoned",
-        "incapacitated": "Incapacitated",
-        "grappled": "Grappled",
-        "restrained": "Restrained",
-        "paralyzed": "Paralyzed",
-        "petrified": "Petrified",
-        "stunned": "Stunned",
-        "invisible": "Invisible",
-        "unconscious": "Unconscious",
-        "exhaustion": "Exhaustion",
-        "frightened": "Frightened"
+        "senses": "Senses",
+        "held": "Held",
+        "helpless": "Helpless",
+        "compelled": "Compelled",
+        "weakened": "Weakened"
       },
       "STAT": {
         "set": "Set",

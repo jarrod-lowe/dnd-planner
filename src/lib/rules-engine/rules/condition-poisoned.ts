@@ -104,7 +104,7 @@ const conditionPoisoned: RuleModule = {
         section: 'free',
         name: `${CP}.record-poisoned.name`,
         detailKey: 'condition/poisoned',
-        intents: { CONDITION: 'poisoned' },
+        intents: { CONDITION: 'weakened' },
         actionCost: []
       },
       apply: (): ActionResult => ({

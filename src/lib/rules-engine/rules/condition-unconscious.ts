@@ -102,7 +102,7 @@ const conditionUnconscious: RuleModule = {
         // The drop-held reminder's landing label (annotate below) — on `ui`,
         // never inside a control (a nested array compiles and matches nothing).
         annotationLabels: [RECORD_LABEL],
-        intents: { CONDITION: 'unconscious' },
+        intents: { CONDITION: 'helpless' },
         actionCost: []
       },
       apply: (f): ActionResult => ({
@@ -126,7 +126,7 @@ const conditionUnconscious: RuleModule = {
         name: `${CU}.regain-consciousness.name`,
         description: `${CU}.regain-consciousness.description`,
         detailKey: 'condition/unconscious',
-        intents: { CONDITION: 'unconscious' },
+        intents: { CONDITION: 'helpless' },
         actionCost: []
       },
       legalWhen: [

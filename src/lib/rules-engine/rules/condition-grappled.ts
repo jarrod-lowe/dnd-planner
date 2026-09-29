@@ -72,7 +72,7 @@ const conditionGrappled: RuleModule = {
         section: 'free',
         name: `${CG}.record-grappled.name`,
         detailKey: 'condition/grappled',
-        intents: { CONDITION: 'grappled' },
+        intents: { CONDITION: 'held' },
         actionCost: []
       },
       apply: (): ActionResult => ({

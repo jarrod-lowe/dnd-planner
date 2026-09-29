@@ -2088,21 +2088,11 @@
         "freeform": "Note"
       },
       "CONDITION": {
-        "prone": "pum",
-        "charmed": "parmaq",
-        "deafened": "QoylaHbe'",
-        "blinded": "leghlaHbe'",
-        "poisoned": "Dujlu'pu'",
-        "incapacitated": "laHtaHbe'",
-        "grappled": "qop",
-        "restrained": "ngorlu'",
-        "paralyzed": "vIHlaHbe'",
-        "petrified": "naghchoHpu'",
-        "stunned": "mISchoHpu'",
-        "invisible": "So'lu'pu'",
-        "unconscious": "QongtaH",
-        "exhaustion": "ngoy'taH",
-        "frightened": "ghIjlu'pu'"
+        "senses": "leghQoy",
+        "held": "qoplu'taH",
+        "helpless": "HublaHbe'",
+        "compelled": "yabSer",
+        "weakened": "HoSHa'"
       },
       "STAT": {
         "set": "Set",

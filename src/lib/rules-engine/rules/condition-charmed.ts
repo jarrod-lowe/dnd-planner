@@ -48,7 +48,7 @@ const conditionCharmed: RuleModule = {
         section: 'free',
         name: `${CC}.record-charmed.name`,
         detailKey: 'condition/charmed',
-        intents: { CONDITION: 'charmed' },
+        intents: { CONDITION: 'compelled' },
         actionCost: []
       },
       apply: (): ActionResult => ({
