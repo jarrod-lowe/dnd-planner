@@ -7,9 +7,11 @@ description: >-
   every Frightened state (the chip carries the disadvantage per row). The
   standing notice stays (can't-approach is sight-independent) and flips to its
   hidden body, and the LoS toggle annotation persists so chips render to flip
-  back. The attribution chip flips with the seed too: the hidden variant
-  replaces the in-sight one (can't-approach survives, the disadvantage does
-  not). Seeded as committed effects; the chip's tap path is unit-pinned.
+  back. The attribution chip PERSISTS unchanged: a single standing-qualified
+  sentence, never a seed-flipped variant — rows capture their own sight value
+  while the seed feeds forward, and a flipped key would contradict rows whose
+  capture differs from the seed (the per-row truth stays the LoS chip's job).
+  Seeded as committed effects; the chip's tap path is unit-pinned.
 ruleGroups:
   - dnd-5e-2024/condition-frightened
 initialEffects:
@@ -33,16 +35,16 @@ steps:
           exists:
             - rule.dnd-5e-2024.condition-frightened.notice
             - rule.dnd-5e-2024.condition-frightened.los
-            - rule.dnd-5e-2024.condition-frightened.disadvantage-hidden
-          notExists:
             - rule.dnd-5e-2024.condition-frightened.disadvantage
+          notExists:
+            - rule.dnd-5e-2024.condition-frightened.disadvantage-hidden
           targets:
             - key: rule.dnd-5e-2024.condition-frightened.los
               targets: [attack.any, dice.any]
-            - key: rule.dnd-5e-2024.condition-frightened.disadvantage-hidden
+            - key: rule.dnd-5e-2024.condition-frightened.disadvantage
               targets: [attack.any, check.any]
           riders:
-            - key: rule.dnd-5e-2024.condition-frightened.disadvantage-hidden
+            - key: rule.dnd-5e-2024.condition-frightened.disadvantage
               rider:
                 label: rule.dnd-5e-2024.condition-frightened.rider
                 type: modifier

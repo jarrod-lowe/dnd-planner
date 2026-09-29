@@ -110,28 +110,31 @@ pinsChip(
 );
 
 // Frightened's chip is bespoke: its disadvantage is PER ROW (the LoS toggle
-// carries it), so the chip explains the toggle rather than any shared flag —
-// and its key FLIPS with the sight seed (the notice-body-flip precedent).
+// carries it), so the chip states the condition's standing rule — a single
+// sight-QUALIFIED sentence, NOT a seed-flipped variant. A flip cannot be
+// per-row correct: rows capture their own sight value while the seed feeds
+// forward, and annotation text is computed from global facts only, so a
+// flipped key would contradict rows whose capture differs from the seed.
 describe('condition-frightened — disadvantage attribution chip', () => {
   const CF = 'rule.dnd-5e-2024.condition-frightened';
-  const keys = (inputFacts: Facts = {}) =>
-    evaluate({
-      modules: [conditionFrightened],
-      inputFacts,
-      planned: [record('record-frightened')]
-    }).annotations.map((a) => a.key);
 
-  it('in sight: names the disadvantage the LoS chip forces, on attacks and checks', () => {
+  it('names the disadvantage the LoS chip forces, on attacks and checks', () => {
     const ann = chipFrom(conditionFrightened, 'record-frightened', `${CF}.disadvantage`);
     expect(ann).toBeDefined();
     expect(ann!.targets).toEqual(['attack.any', 'check.any']);
     expect(ann!.rider).toEqual({ label: `${CF}.rider`, type: 'modifier' });
   });
 
-  it('out of sight: flips to the hidden variant, the in-sight key gone', () => {
-    const all = keys({ 'frightened.sourceHidden': 1 });
-    expect(all, 'hidden variant present').toContain(`${CF}.disadvantage-hidden`);
-    expect(all, 'in-sight variant replaced').not.toContain(`${CF}.disadvantage`);
+  it('the sentence is standing-qualified — the SAME chip in every sight state', () => {
+    const all = evaluate({
+      modules: [conditionFrightened],
+      inputFacts: { 'frightened.sourceHidden': 1 },
+      planned: [record('record-frightened')]
+    }).annotations.map((a) => a.key);
+    expect(all, 'the one qualified key, seed-independent').toContain(`${CF}.disadvantage`);
+    expect(all, 'no flipped variant to contradict a row capture').not.toContain(
+      `${CF}.disadvantage-hidden`
+    );
   });
 
   it('emits nothing while the condition is not live', () => {
@@ -214,7 +217,6 @@ describe('attribution chips — i18n contract', () => {
     ['condition-poisoned', 'disadvantage'],
     ['condition-incapacitated', 'disadvantage'],
     ['condition-frightened', 'disadvantage'],
-    ['condition-frightened', 'disadvantage-hidden'],
     ['condition-invisible', 'advantage'],
     ['armor-training', 'disadvantage']
   ];

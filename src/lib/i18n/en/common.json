@@ -1190,7 +1190,6 @@
         "notice.body": "You have Disadvantage on attack rolls and ability checks while the source of fear is within line of sight. You can't willingly move closer to the source of fear.",
         "notice.body-hidden": "The source of fear is out of sight — no Disadvantage from Frightened. You still can't willingly move closer to the source of fear.",
         "disadvantage": "Frightened: imposes disadvantage while the source of fear is in sight",
-        "disadvantage-hidden": "Frightened: the source of fear is out of sight — no disadvantage",
         "rider": "Frightened",
         "los.in-sight": "Source of fear in sight",
         "los.out-of-sight": "Source of fear out of sight",

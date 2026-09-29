@@ -141,15 +141,17 @@ const conditionFrightened: RuleModule = {
           },
           {
             // Attribution chip (the GWF valueless-rider idiom): explains what
-            // the LoS chip FORCES — no flags exist to explain it. Its key
-            // flips with the sight SEED (the notice-body-flip precedent): in
-            // sight names the disadvantage, out of sight says why it is gone.
+            // the LoS chip FORCES — no flags exist to explain it. ONE
+            // standing-QUALIFIED sentence, never a seed-flipped variant: rows
+            // capture their own sight value while the seed feeds forward, and
+            // annotation text sees only global facts, so a flipped key would
+            // contradict a row whose capture differs from the seed. The
+            // per-row truth stays the toggle's job (its pressed state reads
+            // the row's capture); the notice body DOES flip because the strip
+            // speaks about the condition going forward, not about any row.
             // check.any scopes the ability checks (never dice.any — saves are
-            // not disadvantaged); the per-row toggle above stays the carrier.
-            key:
-              f.num('frightened.sourceHidden') > 0
-                ? `${CF}.disadvantage-hidden`
-                : `${CF}.disadvantage`,
+            // not disadvantaged).
+            key: `${CF}.disadvantage`,
             targets: ['attack.any', 'check.any'],
             rider: { label: `${CF}.rider`, type: 'modifier' }
           }
