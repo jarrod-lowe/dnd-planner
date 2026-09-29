@@ -440,11 +440,12 @@
   );
 
   // Annotations carrying a `toggle` become pressed/unpressed state chips on
-  // the dice line — the aura-chip look, but committing a keyed effect on tap
-  // (through onFollowup) instead of flipping ephemeral modifier state. `pressed`
-  // resolves from the live facts HERE, once per evaluation: every dice-line
-  // rendering the same toggle reads the same value, and the synchronous
-  // re-evaluation a tap triggers flips them all together.
+  // the dice line — the aura-chip look, but PER-ROW state instead of ephemeral
+  // modifier toggles: `pressed` reads the ROW's captured selection first (the
+  // play store captures the fact at add time), falling back to the live fact
+  // only where no capture exists (the picker, whose value is the seed the next
+  // added row will capture). A tap writes the row's selection (previous rows
+  // never move) and commits the keyed seed effect through onFollowup.
   const diceToggles = $derived<DiceLineToggle[]>(
     matchingAnnotations
       .filter((ann) => ann.toggle !== undefined)
@@ -452,10 +453,14 @@
         const toggle = ann.toggle!;
         return {
           key: ann.key,
+          fact: toggle.fact,
           labelOn: toggle.labelOn,
           labelOff: toggle.labelOff,
           appliesTo: toggle.appliesTo,
-          pressed: ((facts?.[toggle.fact] as number | undefined) ?? 0) === toggle.onWhen,
+          pressed:
+            ((selections?.[toggle.fact] as number | undefined) ??
+              (facts?.[toggle.fact] as number | undefined) ??
+              0) === toggle.onWhen,
           onEffect: toggle.onEffect,
           offEffect: toggle.offEffect
         };

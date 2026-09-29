@@ -95,7 +95,7 @@ Modelled: attack flags + all 18 `skill.{skill}.disadvantage` facts (facts exist 
 > **Ability Checks and Attacks Affected.** You have Disadvantage on ability checks and attack rolls while the source of fear is within line of sight.
 > **Can't Approach.** You can't willingly move closer to the source of fear.
 
-Modelled: same flag SET as Poisoned (incl. `initiative.disadvantage`) as DERIVES gated on the keyed `frightened.sourceHidden` sub-state (unset = in sight = flags on) — the LoS chip on affected dice-lines commits/evicts it (user-directed 2026-09-29 follow-up; see condition-frightened.md). Can't-approach = notice text.
+Modelled: PER-ROW sight state (user-directed 2026-09-29 follow-up, reworked after hands-on): the dice-line chip's value is captured per planned row at add time from the keyed seed (`frightened.sourceHidden`, unset = in sight); a tap writes the row + the seed, previous rows never move. Frightened contributes NONE of the shared flags (a max flag cannot be subtracted per row) — the chip forces the disadvantage roll-mode itself; Poisoned/armor stay flag-carried. See condition-frightened.md.
 
 ### Incapacitated — M–L (the enabler)
 
@@ -219,7 +219,7 @@ Nothing like it exists — a counter, not a boolean:
 - Exhaustion cap: **SRD 6** (srd52.txt is canonical; note the PHB-2024 divergence in the doc).
 - Auto-fail saves: **notice text first**; mechanical flags only where save-mode wiring already landed (Restrained) — auto-fail ≠ disadvantage, own semantic.
 - Condition ending: prone deviation — effect `expiry: untilShortRest` (long rest includes short) + manual ActiveStateStrip chip dismissal. Per-condition end offers only where SRD gives a mechanical end (grapple escape → out of scope initially).
-- Frightened line-of-sight: **mechanised as a dice-line state chip** — keyed `frightened-source` committed effect (default on via unset fact; sticky across rolls; replace-by-key per flip), flags derive-gated on it (user-directed 2026-09-29; the earlier same-day standing-flags decision was the interim, the 2026-09-25 notice-button replan stays abandoned — see condition-frightened.md).
+- Frightened line-of-sight: **per-row dice-line chip** — each planned row captures its sight value at add time from the keyed `frightened-source` seed (unset = in sight = pressed default); taps write the row's selection and move the seed forward; Frightened stays OUT of the shared flags (the chip forces the roll-mode per row — max flags can't be subtracted) (user-directed 2026-09-29; the shared-read first cut was rejected as a global; the 2026-09-25 notice-button replan stays abandoned — see condition-frightened.md).
 
 ## Execution rules
 

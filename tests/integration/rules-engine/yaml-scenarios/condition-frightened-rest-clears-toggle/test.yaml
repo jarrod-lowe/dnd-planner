@@ -49,7 +49,7 @@ steps:
         facts:
           condition.frightened: 1
           frightened.sourceHidden: 0
-          attack.str.disadvantage: 1
+          attack.str.disadvantage: 0
   - endTurn:
       longRest: true
       assert:

@@ -288,6 +288,7 @@ describe('PanelDiceLine — state-toggle chips (the Frightened line-of-sight sha
   };
   const losToggle = (pressed: boolean): DiceLineToggle => ({
     key: 'rule.demo.los',
+    fact: 'frightened.sourceHidden',
     labelOn: 'rule.demo.los.in-sight',
     labelOff: 'rule.demo.los.out-of-sight',
     appliesTo: ['to-hit', 'check'],
@@ -317,21 +318,82 @@ describe('PanelDiceLine — state-toggle chips (the Frightened line-of-sight sha
     expect(chip?.textContent?.trim()).toBe('rule.demo.los.out-of-sight');
   });
 
-  it('tapping while pressed commits the offEffect; while not pressed, the onEffect', async () => {
+  it('tapping writes the ROW selection and commits the seed effect — both directions', async () => {
     const onToggleEffect = vi.fn();
+    const onSelectionChange = vi.fn();
     const pressed = render(PanelDiceLine, {
-      props: { ...baseProps, toggles: [losToggle(true)], onToggleEffect }
+      props: { ...baseProps, toggles: [losToggle(true)], onToggleEffect, onSelectionChange }
     });
     await fireEvent.click(toggleChip(pressed.container)!);
     expect(onToggleEffect).toHaveBeenCalledTimes(1);
     expect(onToggleEffect).toHaveBeenCalledWith(offEffect);
+    // The ROW's own sight value flips (previous rows keep theirs — they hold
+    // their own selections; only this row's is written).
+    expect(onSelectionChange).toHaveBeenCalledTimes(1);
+    expect(onSelectionChange).toHaveBeenCalledWith({ 'frightened.sourceHidden': 1 });
 
     onToggleEffect.mockClear();
+    onSelectionChange.mockClear();
     const unpressed = render(PanelDiceLine, {
-      props: { ...baseProps, toggles: [losToggle(false)], onToggleEffect }
+      props: { ...baseProps, toggles: [losToggle(false)], onToggleEffect, onSelectionChange }
     });
     await fireEvent.click(toggleChip(unpressed.container)!);
     expect(onToggleEffect).toHaveBeenCalledWith(onEffect);
+    expect(onSelectionChange).toHaveBeenCalledWith({ 'frightened.sourceHidden': 0 });
+  });
+
+  it('a pressed chip FORCES the disadvantage roll-mode (the per-row leg)', async () => {
+    // No disadvantage fact, no range flag — the chip alone defaults the d20
+    // to 2d20-take-low (Frightened's disadvantage lives per row, here).
+    const onRoll = vi.fn();
+    const { container } = render(PanelDiceLine, {
+      props: { ...baseProps, toggles: [losToggle(true)], onToggleEffect: vi.fn(), onRoll }
+    });
+    await fireEvent.click(main(container, 0)!);
+    expect(onRoll.mock.calls[0][0].mode).toBe('disadvantage');
+  });
+
+  it('an unpressed chip forces nothing; a disadvantage FACT still applies beside it', async () => {
+    // A control wired like the real attack lines: its disadvantage source is
+    // the shared flag fact.
+    const flaggedControl: DiceLineControl = {
+      type: 'dice-line',
+      advantage: { fact: 'attack.str.disadvantage' },
+      dice: [{ sides: 20, bonus: { number: 5 }, purpose: 'to-hit' }]
+    };
+
+    // Out of sight (unpressed): the roll is normal — no fact, no forcing.
+    const normalRoll = vi.fn();
+    const normal = render(PanelDiceLine, {
+      props: {
+        control: flaggedControl,
+        editable: true,
+        facts: {},
+        vars: {},
+        toggles: [losToggle(false)],
+        onToggleEffect: vi.fn(),
+        onRoll: normalRoll
+      }
+    });
+    await fireEvent.click(main(normal.container, 0)!);
+    expect(normalRoll.mock.calls[0][0].mode).toBe('normal');
+
+    // Poisoned shape: the shared flag is 1 while THIS row's source is out of
+    // sight — the flag's disadvantage stands (source-pure, never subtracted).
+    const poisonedRoll = vi.fn();
+    const poisoned = render(PanelDiceLine, {
+      props: {
+        control: flaggedControl,
+        editable: true,
+        facts: { 'attack.str.disadvantage': 1 },
+        vars: {},
+        toggles: [losToggle(false)],
+        onToggleEffect: vi.fn(),
+        onRoll: poisonedRoll
+      }
+    });
+    await fireEvent.click(main(poisoned.container, 0)!);
+    expect(poisonedRoll.mock.calls[0][0].mode).toBe('disadvantage');
   });
 
   it('renders an indication span (never a button) when not editable or no commit handler', () => {

@@ -16,6 +16,7 @@ import {
   plannedEntryToViewEntry
 } from './engineBridge';
 import { deriveVerbFromRule } from './stepUtils';
+import { captureToggleSelections, getAnnotationLabels } from './annotations';
 import { locale, t } from '$lib/i18n';
 import { prefetchDetailsForEffects } from '$lib/details/rehydrate';
 import { get } from 'svelte/store';
@@ -408,11 +409,18 @@ async function loadRuleGroups(characterId: string): Promise<void> {
  */
 function captureSelections(rule: Rule, index: number): Record<string, unknown> {
   try {
-    return resolveInitialSelections(
-      rule,
-      factsBeforeRow(state.modules, state.committed, buildPlannedRefs(), index),
-      state.modules
-    );
+    const prefixFacts = factsBeforeRow(state.modules, state.committed, buildPlannedRefs(), index);
+    return {
+      ...resolveInitialSelections(rule, prefixFacts, state.modules),
+      // Per-row toggle state (Frightened's line of sight): the row captures
+      // the seed's value at ADD time, so later seed changes never move a row
+      // already in the plan — the tap that moves the seed feeds forward only.
+      ...captureToggleSelections(
+        getAnnotationLabels(rule.ui),
+        prefixFacts,
+        state.engineOutput?.annotations ?? []
+      )
+    };
   } catch {
     return {};
   }

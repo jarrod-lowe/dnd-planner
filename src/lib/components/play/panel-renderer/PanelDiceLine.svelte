@@ -239,17 +239,26 @@
     control.advantageUp ? !!resolveValueSource(control.advantageUp, facts, vars, selections) : false
   );
 
+  // A pressed state-toggle chip is a PER-ROW disadvantage leg (Frightened's
+  // line of sight): the engine flags cannot carry it per-row — a max-combined
+  // flag cannot be subtracted for one row — so the chip forces the roll-mode
+  // itself, exactly like a rules-driven flag. Other rows read their own
+  // captured state; flag-carrying sources (Poisoned, armor) combine with this
+  // leg through the ordinary OR below.
+  const losDisadvantage = $derived(shownToggles.some((t) => t.pressed));
+
   // The line's default roll mode, three-way. Advantage and disadvantage each
   // have a rules-driven source (a fact) plus, on the disadvantage side, the
-  // selected range band's long-range flag. When BOTH directions are live they
-  // cancel to 'normal' — SRD glossary: "Advantage and Disadvantage on the same
-  // roll cancel each other", and the cancellation is source-agnostic (a
-  // rules-driven advantage fact cancels a range-band disadvantage exactly as
-  // it cancels a disadvantage fact; Prone + Invisible co-occurring is the real
-  // case). A manual per-die roll-mode choice still wins over this default —
-  // see the `effectiveRollMode` merge below.
+  // selected range band's long-range flag and a pressed state-toggle chip.
+  // When BOTH directions are live they cancel to 'normal' — SRD glossary:
+  // "Advantage and Disadvantage on the same roll cancel each other", and the
+  // cancellation is source-agnostic (a rules-driven advantage fact cancels a
+  // range-band disadvantage exactly as it cancels a disadvantage fact; Prone +
+  // Invisible co-occurring is the real case). A manual per-die roll-mode
+  // choice still wins over this default — see the `effectiveRollMode` merge
+  // below.
   const defaultRollMode = $derived.by<RollMode>(() => {
-    const disadvantage = rulesDisadvantage || !!currentRange?.disadvantage;
+    const disadvantage = rulesDisadvantage || losDisadvantage || !!currentRange?.disadvantage;
     if (rulesAdvantage && disadvantage) return 'normal';
     if (disadvantage) return 'disadvantage';
     if (rulesAdvantage) return 'advantage';
@@ -955,11 +964,12 @@
       {:else if part.type === 'toggle'}
         {@const tg = part.toggle!}
         {@const on = tg.pressed}
-        <!-- A state chip (Frightened's line of sight): the modifier-chip look,
-             but pressed state arrives from the facts and a tap commits one of
-             the authored effects (onToggleEffect) rather than flipping local
-             state — the committed effect is the state, so one tap sticks for
-             every later roll and every dice-line showing the toggle. -->
+        <!-- A per-row state chip (Frightened's line of sight): the
+             modifier-chip look, but a tap writes TWO things — this row's own
+             selection (previous rows never move) and the keyed seed effect
+             through onToggleEffect (the going-forward value future rows
+             capture). The channel's facts are 0/1; `on` (fact = onWhen)
+             flips to the other value. -->
         {#if editable && onToggleEffect}
           <button
             class="panel-renderer__modifier"
@@ -967,7 +977,10 @@
             type="button"
             aria-pressed={on}
             data-toggle-key={tg.key}
-            onclick={() => onToggleEffect(on ? tg.offEffect : tg.onEffect)}
+            onclick={() => {
+              onToggleEffect(on ? tg.offEffect : tg.onEffect);
+              onSelectionChange?.({ [tg.fact]: on ? 1 : 0 });
+            }}
           >
             {$t(on ? tg.labelOn : tg.labelOff)}
           </button>

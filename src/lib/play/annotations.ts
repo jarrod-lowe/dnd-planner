@@ -2,7 +2,8 @@ import type {
   Annotation,
   AnnotationAction,
   AnnotationRider,
-  AnnotationToggle
+  AnnotationToggle,
+  Facts
 } from '$lib/rules-view';
 
 export interface ActiveAnnotation {
@@ -41,4 +42,30 @@ export function getMatchingAnnotations(
     }
   }
   return result;
+}
+
+/**
+ * Captures the per-row state of every toggle annotation reaching a rule being
+ * added to the plan (Frightened's line of sight): the row takes the fact's
+ * CURRENT value — the going-forward seed — as its own selection, so later seed
+ * changes never move a row already in the plan. The capture-var idiom
+ * (resolveInitialSelections), generalized to the annotation channel: the
+ * toggle's `fact` doubles as the row's selection var.
+ */
+export function captureToggleSelections(
+  annotationLabels: string[],
+  facts: Facts,
+  activeAnnotations: Annotation[]
+): Record<string, number> {
+  if (annotationLabels.length === 0) return {};
+  const labels = new Set(annotationLabels);
+  const selections: Record<string, number> = {};
+  for (const annotation of activeAnnotations) {
+    const toggle = annotation.toggle;
+    if (!toggle) continue;
+    if (!annotation.targets.some((t) => labels.has(t))) continue;
+    const value = facts[toggle.fact];
+    selections[toggle.fact] = typeof value === 'number' ? value : 0;
+  }
+  return selections;
 }

@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { getAnnotationLabels, getMatchingAnnotations } from '$lib/play/annotations';
-import type { Annotation } from '$lib/rules-view';
+import {
+  getAnnotationLabels,
+  getMatchingAnnotations,
+  captureToggleSelections
+} from '$lib/play/annotations';
+import type { Annotation, AnnotationToggle } from '$lib/rules-view';
 
 describe('getAnnotationLabels', () => {
   it('returns empty array when ui is undefined', () => {
@@ -127,5 +131,47 @@ describe('getMatchingAnnotations', () => {
         extraAttack
       )
     ).toEqual([]);
+  });
+});
+
+describe('captureToggleSelections', () => {
+  const losToggle: AnnotationToggle = {
+    fact: 'frightened.sourceHidden',
+    onWhen: 0,
+    onEffect: { id: 'on', key: 'k', expiry: { kind: 'permanent' } },
+    offEffect: { id: 'off', key: 'k', expiry: { kind: 'permanent' } },
+    labelOn: 'rule.demo.los.in-sight',
+    labelOff: 'rule.demo.los.out-of-sight',
+    appliesTo: ['to-hit', 'check']
+  };
+  const annotations: Annotation[] = [
+    { key: 'rule.demo.los', targets: ['attack.any', 'dice.any'], toggle: losToggle },
+    { key: 'rule.demo.info', targets: ['dice.any'] }
+  ];
+
+  it('captures the fact value for a rule whose labels intersect the toggle targets', () => {
+    expect(
+      captureToggleSelections(['dice.any'], { 'frightened.sourceHidden': 1 }, annotations)
+    ).toEqual({ 'frightened.sourceHidden': 1 });
+    expect(captureToggleSelections(['attack.any', 'attack.weapon'], {}, annotations)).toEqual({
+      'frightened.sourceHidden': 0
+    });
+  });
+
+  it('skips rules whose labels do not reach the toggle, and never touches non-toggle annotations', () => {
+    expect(
+      captureToggleSelections(['save.any'], { 'frightened.sourceHidden': 1 }, annotations)
+    ).toEqual({});
+    expect(captureToggleSelections([], { 'frightened.sourceHidden': 1 }, annotations)).toEqual({});
+  });
+
+  it('non-numeric fact values capture as 0 (the channel is 0/1)', () => {
+    expect(
+      captureToggleSelections(
+        ['dice.any'],
+        { 'frightened.sourceHidden': 'x' as unknown as number },
+        annotations
+      )
+    ).toEqual({ 'frightened.sourceHidden': 0 });
   });
 });

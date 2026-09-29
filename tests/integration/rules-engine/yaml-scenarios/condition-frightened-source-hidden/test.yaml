@@ -1,14 +1,13 @@
 name: 'Condition Frightened - Source Hidden'
 description: >-
-  Flags-off-is-OFF: with the source of fear marked out of sight, ALL the
-  disadvantage derives gate to 0 — the SRD scopes the whole disadvantage
-  clause to "while the source of fear is within line of sight", and the
-  hidden sub-state asserts the qualifier is NOT satisfied. The standing
-  notice stays (can't-approach is sight-independent), and the LoS toggle
-  annotation persists so the player can flip back. The hidden state is
-  seeded as committed effects (the dice-line chip commits it mid-turn via
-  the follow-up channel — see the unit pins); representative flags here,
-  the full 22 in condition-frightened-record through the same derives.
+  The out-of-sight SEED: with the source of fear marked hidden, the keyed
+  frightened.sourceHidden fact reads 1 — the value newly added rows CAPTURE as
+  their per-row sight state (capture-at-add), and the value the dice-line
+  chip's tap writes through the follow-up channel. The shared flags stay 0 in
+  every Frightened state (the chip carries the disadvantage per row). The
+  standing notice stays (can't-approach is sight-independent) and flips to its
+  hidden body, and the LoS toggle annotation persists so chips render to flip
+  back. Seeded as committed effects; the chip's tap path is unit-pinned.
 ruleGroups:
   - dnd-5e-2024/condition-frightened
 initialEffects:

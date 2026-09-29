@@ -7,10 +7,13 @@ import conditionFrightened from '$lib/rules-engine/rules/condition-frightened';
 
 /**
  * Frightened line-of-sight — the unit pins the yaml grammar cannot express:
- * the keyed sub-state's effect shapes (what the dice-line chip commits through
- * the follow-up channel), the committed-array eviction round-trip (the yaml
- * harness has no mid-scenario commit step — INITIAL_EFFECTS only seeds
- * terminal states), and the annotation/i18n contract of the chip itself.
+ * the per-row model's engine contract (Frightened contributes NONE of the
+ * shared flags — the dice-line chip carries the disadvantage per row, so the
+ * flags stay source-pure for Poisoned/Blinded/armor), the keyed seed's effect
+ * shapes (what the chip commits through the follow-up channel), the
+ * committed-array eviction round-trip, and the annotation/i18n contract of
+ * the chip itself. The per-row capture and forcing live in the play-side
+ * tests (playStore capture, PanelDiceLine roll-mode).
  */
 
 const CF = 'rule.dnd-5e-2024.condition-frightened';
@@ -50,25 +53,33 @@ const losAnnotation = (committed: EffectInstance[]) => {
   return ann!;
 };
 
-describe('condition-frightened — the LoS derives gate on condition AND sight', () => {
-  it('committed condition, source in sight (unset fact): flags on', () => {
-    const out = evaluate({ modules: M, committed: [conditionEffect()] });
-    expect(out.facts['condition.frightened']).toBe(1);
-    for (const flag of FLAGS) expect(out.facts[flag]).toBe(1);
+describe('condition-frightened — the shared flags stay source-pure (per-row model)', () => {
+  it('contributes NONE of the flags in ANY state: recorded, hidden, or hidden alone', () => {
+    for (const committed of [
+      [conditionEffect()],
+      [conditionEffect(), hiddenEffect()],
+      [hiddenEffect()]
+    ]) {
+      const out = evaluate({ modules: M, committed });
+      for (const flag of FLAGS) expect(out.facts[flag] ?? 0, JSON.stringify(committed)).toBe(0);
+    }
   });
+});
 
-  it('committed condition + hidden source: every flag 0 (flags-off-is-OFF)', () => {
-    const out = evaluate({ modules: M, committed: [conditionEffect(), hiddenEffect()] });
-    expect(out.facts['frightened.sourceHidden']).toBe(1);
-    for (const flag of FLAGS) expect(out.facts[flag] ?? 0).toBe(0);
+describe('condition-frightened — the recorder advertises only the condition fact', () => {
+  it('the advertised effect carries dependents but no flag writes (no derives exist)', () => {
+    const planned: PlannedRef[] = [{ instanceId: 'i0', ruleId: 'record-frightened' }];
+    const out = evaluate({ modules: M, planned });
+    const effect = out.effects.find((e) => e.id.split('#').includes('effect-frightened'));
+    expect(effect).toBeDefined();
+    expect(effect!.state).toEqual({ 'condition.frightened': 1 });
+    // Chip dismissal of the Frightened condition takes the sight seed along.
+    expect(effect!.dependents).toEqual(['frightened-source']);
   });
+});
 
-  it('hidden source without the condition: flags stay 0 (the gate needs both)', () => {
-    const out = evaluate({ modules: M, committed: [hiddenEffect()] });
-    for (const flag of FLAGS) expect(out.facts[flag] ?? 0).toBe(0);
-  });
-
-  it('the empty same-key reveal evicts the hidden effect: flags return (round-trip)', () => {
+describe('condition-frightened — the sight seed flips through the keyed effects', () => {
+  it('the empty same-key reveal evicts the hidden seed (round-trip)', () => {
     // The committed array's LATEST keyed effect wins — the direction
     // addFollowupEffect's replace-by-key produces on every chip tap.
     const out = evaluate({
@@ -76,19 +87,34 @@ describe('condition-frightened — the LoS derives gate on condition AND sight',
       committed: [conditionEffect(), hiddenEffect(), visibleEffect()]
     });
     expect(out.facts['frightened.sourceHidden'] ?? 0).toBe(0);
-    for (const flag of FLAGS) expect(out.facts[flag]).toBe(1);
   });
-});
 
-describe('condition-frightened — the recorder advertises only the condition fact', () => {
-  it('the advertised effect carries dependents but no flag writes (flags are derives)', () => {
-    const planned: PlannedRef[] = [{ instanceId: 'i0', ruleId: 'record-frightened' }];
-    const out = evaluate({ modules: M, planned });
-    const effect = out.effects.find((e) => e.id.split('#').includes('effect-frightened'));
-    expect(effect).toBeDefined();
-    expect(effect!.state).toEqual({ 'condition.frightened': 1 });
-    // Chip dismissal of the Frightened condition takes the toggle along.
-    expect(effect!.dependents).toEqual(['frightened-source']);
+  it('the chip mapping actually FLIPS the seed: committing the chip choice per pressed state changes the fact', () => {
+    const toggle = losAnnotation([conditionEffect()]).toggle!;
+    // What PanelDiceLine commits: pressed ? offEffect : onEffect.
+    const chipCommits = (pressed: boolean) => (pressed ? toggle.offEffect : toggle.onEffect);
+
+    // In sight (unset fact = onWhen → pressed): the tap's commit flips to hidden.
+    const afterHide = evaluate({ modules: M, committed: [conditionEffect(), chipCommits(true)] });
+    expect(afterHide.facts['frightened.sourceHidden']).toBe(1);
+
+    // Hidden (fact 1 → not pressed): the tap's commit flips back to visible.
+    const afterReveal = evaluate({
+      modules: M,
+      committed: [conditionEffect(), hiddenEffect(), chipCommits(false)]
+    });
+    expect(afterReveal.facts['frightened.sourceHidden'] ?? 0).toBe(0);
+  });
+
+  it('the notice body flips with the seed; the notice itself stays (can’t-approach survives)', () => {
+    const visible = evaluate({ modules: M, committed: [conditionEffect()] }).annotations;
+    const hidden = evaluate({
+      modules: M,
+      committed: [conditionEffect(), hiddenEffect()]
+    }).annotations;
+    const noticeOf = (anns: typeof visible) => anns.find((a) => a.key === `${CF}.notice`)!;
+    expect(noticeOf(visible).body).toBe(`${CF}.notice.body`);
+    expect(noticeOf(hidden).body).toBe(`${CF}.notice.body-hidden`);
   });
 });
 
@@ -116,39 +142,9 @@ describe('condition-frightened — the toggle annotation contract (the chip)', (
     expect(toggle.offEffect.ruleGroupId).toBe('condition-frightened');
   });
 
-  it('the chip mapping actually FLIPS: committing the chip choice per pressed state changes the fact', () => {
-    const toggle = losAnnotation([conditionEffect()]).toggle!;
-    // What PanelDiceLine commits: pressed ? offEffect : onEffect.
-    const chipCommits = (pressed: boolean) => (pressed ? toggle.offEffect : toggle.onEffect);
-
-    // In sight (unset fact = onWhen → pressed): the tap's commit flips to hidden.
-    const afterHide = evaluate({ modules: M, committed: [conditionEffect(), chipCommits(true)] });
-    expect(afterHide.facts['frightened.sourceHidden']).toBe(1);
-    expect(afterHide.facts['check.disadvantage'] ?? 0).toBe(0);
-
-    // Hidden (fact 1 → not pressed): the tap's commit flips back to visible.
-    const afterReveal = evaluate({
-      modules: M,
-      committed: [conditionEffect(), hiddenEffect(), chipCommits(false)]
-    });
-    expect(afterReveal.facts['frightened.sourceHidden'] ?? 0).toBe(0);
-    expect(afterReveal.facts['check.disadvantage']).toBe(1);
-  });
-
   it('the toggle annotation disappears with the condition (no chip to flip when un-frightened)', () => {
     const out = evaluate({ modules: M, committed: [] });
     expect(out.annotations.some((a) => a.key === `${CF}.los`)).toBe(false);
-  });
-
-  it('the notice body flips with sight; the notice itself stays (can’t-approach survives)', () => {
-    const visible = evaluate({ modules: M, committed: [conditionEffect()] }).annotations;
-    const hidden = evaluate({
-      modules: M,
-      committed: [conditionEffect(), hiddenEffect()]
-    }).annotations;
-    const noticeOf = (anns: typeof visible) => anns.find((a) => a.key === `${CF}.notice`)!;
-    expect(noticeOf(visible).body).toBe(`${CF}.notice.body`);
-    expect(noticeOf(hidden).body).toBe(`${CF}.notice.body-hidden`);
   });
 });
 

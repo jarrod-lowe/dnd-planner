@@ -2,9 +2,10 @@ name: 'Condition Frightened - Rest Clears'
 description: >-
   Any rest clears the Frightened condition: the keyed effect carries
   untilShortRest, which a short rest satisfies directly and a long rest
-  includes. The fact, all the disadvantage flags, and the notice all go with
-  the effect (umbrella default — SRD 5.2 gives no mechanical end, so rest plus
-  manual chip dismissal only).
+  includes. The fact and the notice go with the effect, and the per-row model
+  means no shared flags were ever written (the dice-line chip carries the
+  disadvantage per row — asserted 0 before AND after) (umbrella default —
+  SRD 5.2 gives no mechanical end, so rest plus manual chip dismissal only).
 ruleGroups:
   - dnd-5e-2024/condition-frightened
   - dnd-5e-2024/core-events
@@ -14,11 +15,12 @@ steps:
       assert:
         facts:
           condition.frightened: 1
-          attack.str.disadvantage: 1
-          check.disadvantage: 1
+          attack.str.disadvantage: 0
+          check.disadvantage: 0
         annotations:
           exists:
             - rule.dnd-5e-2024.condition-frightened.notice
+            - rule.dnd-5e-2024.condition-frightened.los
   # A long rest (the explicit endTurn flag) clears it.
   - endTurn:
       longRest: true
