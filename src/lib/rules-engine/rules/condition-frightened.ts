@@ -174,8 +174,12 @@ const conditionFrightened: RuleModule = {
             toggle: {
               fact: 'frightened.sourceHidden',
               onWhen: 0,
-              onEffect: sourceHiddenEffect(),
-              offEffect: sourceVisibleEffect(),
+              // Direction contract: onEffect takes the fact TO onWhen (the
+              // REVEAL — an in-sight chip is the pressed state), offEffect
+              // takes it away (the HIDE). Inverted in review — pinned in
+              // condition-frightened-los.test.ts.
+              onEffect: sourceVisibleEffect(),
+              offEffect: sourceHiddenEffect(),
               labelOn: `${CF}.los.in-sight`,
               labelOff: `${CF}.los.out-of-sight`,
               appliesTo: ['to-hit', 'check']

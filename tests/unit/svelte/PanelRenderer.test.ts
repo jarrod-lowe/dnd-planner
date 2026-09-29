@@ -115,6 +115,43 @@ describe('PanelRenderer roll toast', () => {
     await rollDie(container);
     expect(lastToastModifiers()).toEqual(['rule.demo.info']);
   });
+
+  it('renders a toggle annotation ONLY as its chip, never also as informational text', async () => {
+    vi.mocked(toast.custom).mockClear();
+    // The Frightened LoS shape: no rider at all, just the toggle. Rendering it
+    // in the informational block would print the raw annotation key (the chip
+    // labels live on the toggle, not the annotation) — the double-render the
+    // codex review caught.
+    const losAnnotations: Annotation[] = [
+      {
+        key: 'rule.demo.los',
+        targets: ['save.any'],
+        toggle: {
+          fact: 'frightened.sourceHidden',
+          onWhen: 0,
+          onEffect: { id: 'on', key: 'k', expiry: { kind: 'permanent' } },
+          offEffect: { id: 'off', key: 'k', expiry: { kind: 'permanent' } },
+          labelOn: 'rule.demo.los.in-sight',
+          labelOff: 'rule.demo.los.out-of-sight',
+          appliesTo: ['save']
+        }
+      }
+    ];
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: saveEntry,
+        editable: true,
+        activeAnnotations: losAnnotations,
+        onFollowup: vi.fn()
+      }
+    });
+    // The chip renders (save purpose matches)…
+    expect(
+      container.querySelector('.panel-renderer__modifier[data-toggle-key="rule.demo.los"]')
+    ).toBeInstanceOf(HTMLButtonElement);
+    // …and the informational note block does NOT.
+    expect(container.querySelector('.panel-renderer__annotations')).toBeNull();
+  });
 });
 
 describe('PanelRenderer actionable annotations', () => {

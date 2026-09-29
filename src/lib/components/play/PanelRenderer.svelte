@@ -411,10 +411,13 @@
   // A valued rider is REPRESENTED by its dice-line toggle chip, so it must not
   // also appear as a static text chip or in the toast's rider list — it would
   // show twice, and the static copy would still read as present after the
-  // toggle is switched off. Everything downstream of the dice line uses this
-  // list rather than matchingAnnotations.
+  // toggle is switched off. A state TOGGLE is represented by its chip the same
+  // way, doubly so because its annotation key has no locale entry (the labels
+  // live on the toggle) — the informational block would print the raw key.
+  // Everything downstream of the dice line uses this list rather than
+  // matchingAnnotations.
   const informationalAnnotations = $derived(
-    matchingAnnotations.filter((ann) => ann.rider?.value === undefined)
+    matchingAnnotations.filter((ann) => ann.rider?.value === undefined && ann.toggle === undefined)
   );
 
   // Annotations whose rider carries a value become toggleable chips on the dice

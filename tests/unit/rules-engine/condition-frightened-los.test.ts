@@ -99,18 +99,40 @@ describe('condition-frightened — the toggle annotation contract (the chip)', (
     expect(toggle.onWhen).toBe(0);
     expect(toggle.appliesTo).toEqual(['to-hit', 'check']);
 
-    // What a tap commits — both carry the DISTINCT key (never 'frightened',
-    // which would evict the condition itself) and the authored group stamp
-    // (the follow-up channel bypasses the fold's stamping).
-    expect(toggle.onEffect.id).toBe('effect-frightened-source-hidden');
+    // The direction contract (inverted once in review — pinned hard now):
+    // onEffect takes the fact TO onWhen (the REVEAL — empty, display-less),
+    // offEffect takes it away (the HIDE — writes the fact). Both carry the
+    // DISTINCT key 'frightened-source' (never 'frightened', which would evict
+    // the condition itself) and the authored group stamp (the follow-up
+    // channel bypasses the fold's stamping).
+    expect(toggle.onEffect.id).toBe('effect-frightened-source-visible');
     expect(toggle.onEffect.key).toBe('frightened-source');
-    expect(toggle.onEffect.state).toEqual({ 'frightened.sourceHidden': 1 });
+    expect(toggle.onEffect.state).toBeUndefined();
+    expect(toggle.onEffect.display).toBeUndefined();
     expect(toggle.onEffect.ruleGroupId).toBe('condition-frightened');
-    expect(toggle.offEffect.id).toBe('effect-frightened-source-visible');
+    expect(toggle.offEffect.id).toBe('effect-frightened-source-hidden');
     expect(toggle.offEffect.key).toBe('frightened-source');
-    expect(toggle.offEffect.state).toBeUndefined();
-    expect(toggle.offEffect.display).toBeUndefined();
+    expect(toggle.offEffect.state).toEqual({ 'frightened.sourceHidden': 1 });
     expect(toggle.offEffect.ruleGroupId).toBe('condition-frightened');
+  });
+
+  it('the chip mapping actually FLIPS: committing the chip choice per pressed state changes the fact', () => {
+    const toggle = losAnnotation([conditionEffect()]).toggle!;
+    // What PanelDiceLine commits: pressed ? offEffect : onEffect.
+    const chipCommits = (pressed: boolean) => (pressed ? toggle.offEffect : toggle.onEffect);
+
+    // In sight (unset fact = onWhen → pressed): the tap's commit flips to hidden.
+    const afterHide = evaluate({ modules: M, committed: [conditionEffect(), chipCommits(true)] });
+    expect(afterHide.facts['frightened.sourceHidden']).toBe(1);
+    expect(afterHide.facts['check.disadvantage'] ?? 0).toBe(0);
+
+    // Hidden (fact 1 → not pressed): the tap's commit flips back to visible.
+    const afterReveal = evaluate({
+      modules: M,
+      committed: [conditionEffect(), hiddenEffect(), chipCommits(false)]
+    });
+    expect(afterReveal.facts['frightened.sourceHidden'] ?? 0).toBe(0);
+    expect(afterReveal.facts['check.disadvantage']).toBe(1);
   });
 
   it('the toggle annotation disappears with the condition (no chip to flip when un-frightened)', () => {
