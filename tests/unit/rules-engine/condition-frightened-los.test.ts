@@ -146,6 +146,17 @@ describe('condition-frightened — the toggle annotation contract (the chip)', (
     const out = evaluate({ modules: M, committed: [] });
     expect(out.annotations.some((a) => a.key === `${CF}.los`)).toBe(false);
   });
+
+  it('the toggle carries parentKey frightened — the VIEW strips the chip until the condition commits', () => {
+    // A planned recorder folds condition.frightened into the facts, and the
+    // engine's annotate pass folds planned and committed by design — so the
+    // engine cannot gate the chip itself. The parentKey is the view-side
+    // contract (stripUncommittedToggleAnnotations): a tap persists a seed
+    // immediately, and a merely-planned recorder removed before End Turn
+    // would strand it.
+    const toggle = losAnnotation([conditionEffect()]).toggle!;
+    expect(toggle.parentKey).toBe('frightened');
+  });
 });
 
 describe('condition-frightened — the LoS i18n contract', () => {

@@ -6,13 +6,16 @@ description: >-
   2026-09-29: each planned row captures its own sight value at add time;
   tapping a chip changes that row and the going-forward seed, never previous
   rows). Frightened deliberately contributes NONE of the 22 shared flags:
-  a max-combined flag cannot be subtracted per row, so the chip forces the
-  disadvantage roll-mode itself and other sources (Poisoned, Blinded,
-  untrained armor) keep the flags to themselves — assert the full 22 at 0 as
-  the exclusion pin. A NOTICE carries the condition's standing text while it
-  is live; the recorder models BEING FRIGHTENED (imposed by an enemy effect),
-  so it is free and ungated (the prone "Knocked Prone" precedent), and any
-  rest clears it (untilShortRest; see condition-frightened-rest-clears).
+  the chip forces the disadvantage roll-mode itself and other sources
+  (Poisoned, Blinded, untrained armor) keep the flags to themselves — the
+  full 22 asserted at 0 as the exclusion pin. The annotation carries
+  parentKey 'frightened': the VIEW strips the chip until the condition is
+  COMMITTED (a tap persists a seed immediately; a merely-planned recorder
+  removed before End Turn would strand it) — that gate is view-side and
+  unit-pinned, not assertible here. A NOTICE carries the standing text while
+  the condition is live; the recorder models BEING FRIGHTENED (imposed by an
+  enemy effect), so it is free and ungated, and any rest clears it
+  (untilShortRest; see condition-frightened-rest-clears).
 ruleGroups:
   - dnd-5e-2024/condition-frightened
 steps:
@@ -66,4 +69,5 @@ steps:
               toggle:
                 fact: frightened.sourceHidden
                 onWhen: 0
+                parentKey: frightened
                 appliesTo: [to-hit, check]

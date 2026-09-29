@@ -20,7 +20,6 @@ steps:
         annotations:
           exists:
             - rule.dnd-5e-2024.condition-frightened.notice
-            - rule.dnd-5e-2024.condition-frightened.los
   # A long rest (the explicit endTurn flag) clears it.
   - endTurn:
       longRest: true

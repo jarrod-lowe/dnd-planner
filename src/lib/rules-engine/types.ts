@@ -446,6 +446,14 @@ export interface AnnotationToggle {
    * `dice.any`-targeted toggle stays off save dice it never governed.
    */
   appliesTo: RollPurpose[];
+  /**
+   * The keyed effect that must be COMMITTED before the chip renders. A tap
+   * persists state immediately (the follow-up channel), so a merely-PLANNED
+   * parent removed before End Turn would strand it — the view strips the
+   * chip until the parent commits (the engine's annotate pass folds planned
+   * and committed by design and cannot tell them apart).
+   */
+  parentKey?: string;
 }
 
 /**

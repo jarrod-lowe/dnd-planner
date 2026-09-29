@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   getAnnotationLabels,
   getMatchingAnnotations,
-  captureToggleSelections
+  captureToggleSelections,
+  stripUncommittedToggleAnnotations
 } from '$lib/play/annotations';
 import type { Annotation, AnnotationToggle } from '$lib/rules-view';
 
@@ -173,5 +174,41 @@ describe('captureToggleSelections', () => {
         annotations
       )
     ).toEqual({ 'frightened.sourceHidden': 0 });
+  });
+});
+
+describe('stripUncommittedToggleAnnotations', () => {
+  const chip = (parentKey?: string): Annotation => ({
+    key: 'rule.demo.los',
+    targets: ['dice.any'],
+    toggle: {
+      fact: 'frightened.sourceHidden',
+      onWhen: 0,
+      parentKey,
+      onEffect: { id: 'on', key: 'k', expiry: { kind: 'permanent' } },
+      offEffect: { id: 'off', key: 'k', expiry: { kind: 'permanent' } },
+      labelOn: 'rule.demo.los.in-sight',
+      labelOff: 'rule.demo.los.out-of-sight',
+      appliesTo: ['to-hit', 'check']
+    }
+  });
+  const notice: Annotation = { key: 'rule.demo.notice', targets: ['notice'] };
+
+  it('keeps a parented chip only when the parent key is COMMITTED (the planned-recorder orphan guard)', () => {
+    const anns = [notice, chip('frightened')];
+    // Committed parent: the chip renders.
+    expect(stripUncommittedToggleAnnotations(anns, new Set(['frightened']))).toEqual([
+      notice,
+      chip('frightened')
+    ]);
+    // Merely planned (no committed 'frightened' effect): the chip is stripped,
+    // everything else untouched.
+    expect(stripUncommittedToggleAnnotations(anns, new Set(['poisoned']))).toEqual([notice]);
+  });
+
+  it('passes parentless toggles and non-toggle annotations through untouched', () => {
+    const free = chip(undefined);
+    const anns = [notice, free];
+    expect(stripUncommittedToggleAnnotations(anns, new Set())).toEqual([notice, free]);
   });
 });

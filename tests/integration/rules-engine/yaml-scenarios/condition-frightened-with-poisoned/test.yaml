@@ -29,4 +29,4 @@ steps:
         annotations:
           exists:
             - rule.dnd-5e-2024.condition-poisoned.notice
-            - rule.dnd-5e-2024.condition-frightened.los
+            - rule.dnd-5e-2024.condition-frightened.notice

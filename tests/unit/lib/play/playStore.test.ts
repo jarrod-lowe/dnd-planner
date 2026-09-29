@@ -2949,3 +2949,55 @@ describe('playStore', () => {
     });
   });
 });
+
+describe('slimLegacyFrightenedDisadvantage (the #465 standing-flags blob)', () => {
+  it('slims a legacy frightened effect: flags and stateCombine go, the condition and dependents stay', async () => {
+    const { slimLegacyFrightenedDisadvantage } = await import('$lib/play/playStore.svelte');
+    const legacy: EffectInstance = {
+      id: 'effect-frightened',
+      key: 'frightened',
+      state: {
+        'condition.frightened': 1,
+        'attack.str.disadvantage': 1,
+        'check.disadvantage': 1,
+        'skill.stealth.disadvantage': 1
+      },
+      stateCombine: { 'attack.str.disadvantage': 'max', 'check.disadvantage': 'max' },
+      expiry: { kind: 'untilShortRest' }
+    };
+    const [slimmed] = slimLegacyFrightenedDisadvantage([legacy]);
+    expect(slimmed.state).toEqual({ 'condition.frightened': 1 });
+    expect(slimmed.stateCombine).toBeUndefined();
+    expect(slimmed.dependents).toEqual(['frightened-source']);
+    expect(slimmed.key).toBe('frightened');
+    expect(slimmed.expiry).toEqual({ kind: 'untilShortRest' });
+  });
+
+  it('passes fresh and unrelated effects through untouched (idempotent)', async () => {
+    const { slimLegacyFrightenedDisadvantage } = await import('$lib/play/playStore.svelte');
+    const fresh: EffectInstance = {
+      id: 'effect-frightened',
+      key: 'frightened',
+      state: { 'condition.frightened': 1 },
+      dependents: ['frightened-source'],
+      expiry: { kind: 'untilShortRest' }
+    };
+    const poisoned: EffectInstance = {
+      id: 'effect-poisoned',
+      key: 'poisoned',
+      state: { 'condition.poisoned': 1, 'check.disadvantage': 1 },
+      expiry: { kind: 'untilShortRest' }
+    };
+    const seed: EffectInstance = {
+      id: 'effect-frightened-source-hidden',
+      key: 'frightened-source',
+      state: { 'frightened.sourceHidden': 1 },
+      expiry: { kind: 'untilShortRest' }
+    };
+    expect(slimLegacyFrightenedDisadvantage([fresh, poisoned, seed])).toEqual([
+      fresh,
+      poisoned,
+      seed
+    ]);
+  });
+});

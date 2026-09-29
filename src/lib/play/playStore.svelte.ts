@@ -16,7 +16,11 @@ import {
   plannedEntryToViewEntry
 } from './engineBridge';
 import { deriveVerbFromRule } from './stepUtils';
-import { captureToggleSelections, getAnnotationLabels } from './annotations';
+import {
+  captureToggleSelections,
+  getAnnotationLabels,
+  stripUncommittedToggleAnnotations
+} from './annotations';
 import { locale, t } from '$lib/i18n';
 import { prefetchDetailsForEffects } from '$lib/details/rehydrate';
 import { get } from 'svelte/store';
@@ -117,6 +121,34 @@ function dismissLegacyKeylessConcentration(effects: EffectInstance[]): EffectIns
   return effects.filter((e) => e.key !== undefined || !holdsConcentration(e));
 }
 
+/**
+ * Slim, once at load, a committed Frightened effect persisted by the
+ * standing-flags build (#465): its `state` carried all 22 disadvantage flags,
+ * and the per-row LoS rework removed the module's flag writes — a legacy blob
+ * loaded verbatim would keep every flag at 1 while the chips and notice track
+ * the seed, so hiding the source could not lift the Disadvantage. Unlike the
+ * keyless-concentration dismissal the condition is PRESERVED (only the stale
+ * flag writes and their `stateCombine` entries go); `dependents` is added so
+ * chip dismissal still takes the seed. Idempotent: a slimmed or fresh effect
+ * passes through untouched, as does every other keyed effect.
+ */
+export function slimLegacyFrightenedDisadvantage(effects: EffectInstance[]): EffectInstance[] {
+  return effects.map((e) => {
+    if (e.key !== 'frightened' || !e.state) return e;
+    const hasLegacyFlags = Object.keys(e.state).some(
+      (fact) => fact.endsWith('.disadvantage') || fact.startsWith('skill.')
+    );
+    if (!hasLegacyFlags) return e;
+    const slimmed: EffectInstance = {
+      ...e,
+      state: { 'condition.frightened': e.state['condition.frightened'] ?? 1 },
+      dependents: e.dependents ?? ['frightened-source']
+    };
+    delete (slimmed as { stateCombine?: EffectInstance['stateCombine'] }).stateCombine;
+    return slimmed;
+  });
+}
+
 function performEvaluation(): void {
   // A direct evaluation supersedes any still-scheduled one.
   cancelScheduledEvaluation();
@@ -199,6 +231,13 @@ function performEvaluation(): void {
   _lastAdvertised = result.advertised;
 
   const viewOutput = adaptEngineOutput(result.raw);
+  // Toggle chips whose parent effect is only PLANNED never reach the UI: a
+  // tap persists state immediately, and removing the plan row before End Turn
+  // would strand it (see stripUncommittedToggleAnnotations).
+  viewOutput.annotations = stripUncommittedToggleAnnotations(
+    viewOutput.annotations,
+    new Set(state.committed.filter((e) => e.key !== undefined).map((e) => e.key!))
+  );
   state = {
     ...state,
     engineOutput: viewOutput,
@@ -372,7 +411,9 @@ async function loadRuleGroups(characterId: string): Promise<void> {
       if (effectsResponse?.ok) {
         const { effects: effectsJson } = await effectsResponse.json();
         if (effectsJson) {
-          const committed = dismissLegacyKeylessConcentration(parsePersistedEffects(effectsJson));
+          const committed = slimLegacyFrightenedDisadvantage(
+            dismissLegacyKeylessConcentration(parsePersistedEffects(effectsJson))
+          );
           const effects = committed.map(effectInstanceToRule);
           state = { ...state, committed, effects };
           prefetchDetailsForEffects(effects);

@@ -100,10 +100,16 @@ const conditionFrightened: RuleModule = {
   // which stays text: the board has no source-position model to enforce
   // "closer" against). The body FLIPS with the sight SEED (the exhaustion
   // body-dead precedent): hidden means new rows open with no Frightened
-  // disadvantage, but can't-approach survives sight. The second annotation is
-  // the LoS TOGGLE — the dice-line chip; see AnnotationToggle. 'notice' ==
-  // NOTICE_TARGET; rule modules may import only the builder, so the reserved
-  // label is a literal here (see condition-prone / condition-blinded).
+  // disadvantage, but can't-approach survives sight. The LoS TOGGLE — the
+  // dice-line chip; see AnnotationToggle — carries `parentKey: 'frightened'`:
+  // a tap persists a seed effect immediately (the follow-up channel), and a
+  // merely-PLANNED recorder row removed before End Turn would strand it (the
+  // `dependents` cleanup runs on committed-parent dismissal only), so the
+  // VIEW strips the chip until the parent is committed — the engine's
+  // annotate pass folds planned and committed by design and cannot tell them
+  // apart. 'notice' == NOTICE_TARGET; rule modules may import only the
+  // builder, so the reserved label is a literal here (see condition-prone /
+  // condition-blinded).
   annotate: (f): Annotation[] =>
     f.num('condition.frightened') > 0
       ? [
@@ -122,6 +128,7 @@ const conditionFrightened: RuleModule = {
             toggle: {
               fact: 'frightened.sourceHidden',
               onWhen: 0,
+              parentKey: 'frightened',
               // Direction contract: onEffect takes the fact TO onWhen (the
               // REVEAL — an in-sight chip is the pressed state), offEffect
               // takes it away (the HIDE). Pinned in

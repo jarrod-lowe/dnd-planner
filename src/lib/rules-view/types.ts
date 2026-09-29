@@ -288,6 +288,8 @@ export interface AnnotationToggle {
   labelOff: string;
   /** Dice purposes this chip renders on — keeps a `dice.any` toggle off saves. */
   appliesTo: RollPurpose[];
+  /** The keyed effect that must be COMMITTED before the chip renders (view-enforced). */
+  parentKey?: string;
 }
 
 /**
