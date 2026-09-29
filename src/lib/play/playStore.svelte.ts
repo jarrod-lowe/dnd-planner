@@ -438,6 +438,14 @@ async function loadRuleGroups(characterId: string): Promise<void> {
  * the rule's own authored defaults rather than the add being blocked.
  */
 function captureSelections(rule: Rule, index: number): Record<string, unknown> {
+  // Flush BEFORE capturing (the addOfferToPlan precedent), for EVERY capture
+  // path — add and OR INSTEAD swap alike: the toggle capture reads
+  // `state.engineOutput.annotations`, and within the 300 ms debounce window
+  // those describe the PREVIOUS plan, so a row captured there would miss its
+  // sight value and fall back to the live seed, losing per-row stickiness.
+  // The prefix FACTS are synchronous; this makes the annotations equally
+  // current.
+  flushPendingEvaluation();
   try {
     const prefixFacts = factsBeforeRow(state.modules, state.committed, buildPlannedRefs(), index);
     return {
@@ -458,13 +466,6 @@ function captureSelections(rule: Rule, index: number): Record<string, unknown> {
 
 function addToPlan(rule: Rule, seed?: Record<string, unknown>): void {
   const instanceId = generateInstanceId();
-  // Flush BEFORE capturing (the addOfferToPlan precedent): the toggle capture
-  // reads `state.engineOutput.annotations`, and within the 300 ms debounce
-  // window those describe the PREVIOUS plan — a row added right after
-  // planning the Frightened recorder would capture no sight value and fall
-  // back to the live seed, losing its per-row stickiness. The prefix FACTS
-  // are synchronous; this makes the annotations equally current.
-  flushPendingEvaluation();
   // Resolve capture vars from the row's PREFIX facts (committed + earlier
   // rows — never the debounced display cache `state.facts`).
   const initialSelections = captureSelections(rule, state.plannedItems.length);
@@ -602,31 +603,67 @@ function clampSeed(rule: Rule, seed: Record<string, unknown>): Record<string, un
   return { ...seed, [control.var]: Math.min(value, max) };
 }
 
+/**
+ * The committed follow-up keys a discarded planned row orphans: for each of
+ * its advertised effects that is the LAST live holder of its key (no other
+ * committed effect, and no remaining planned row's advertisement, carries it),
+ * the `dependents` it owns are orphaned. The ownership check matters when two
+ * parents coexist — a committed condition beside a planned re-record — where
+ * removing the planned row must NOT drag the shared seed away while the other
+ * parent lives. Tiny lists by construction, so plain arrays over Sets.
+ */
+function orphanedDependentKeys(outgoing: EffectInstance[], remaining: PlannedItem[]): string[] {
+  const liveKeys: string[] = [];
+  for (const e of state.committed) {
+    if (e.key !== undefined && !liveKeys.includes(e.key)) liveKeys.push(e.key);
+  }
+  for (const item of remaining) {
+    for (const e of getPlannedEntry(item.instanceId)?.advertisedEffects ?? []) {
+      if (e.key !== undefined && !liveKeys.includes(e.key)) liveKeys.push(e.key);
+    }
+  }
+  const keys: string[] = [];
+  for (const e of outgoing) {
+    if (e.key !== undefined && liveKeys.includes(e.key)) continue; // another parent holds it
+    for (const key of e.dependents ?? []) {
+      if (!keys.includes(key)) keys.push(key);
+    }
+  }
+  return keys;
+}
+
+/**
+ * Evicts committed effects carrying any of `keys` from state and persists the
+ * result — AFTER the state assignment, so the POST serializes the filtered
+ * list, never the pre-eviction one. Returns true when something was dropped.
+ */
+function evictCommittedKeys(keys: string[], plannedItems: PlannedItem[]): boolean {
+  let committed = state.committed;
+  let dropped = false;
+  if (keys.length > 0) {
+    const before = committed.length;
+    committed = committed.filter((e) => e.key === undefined || !keys.includes(e.key));
+    dropped = committed.length !== before;
+  }
+  state = { ...state, plannedItems, committed, effects: committed.map(effectInstanceToRule) };
+  if (dropped) persistCommitted();
+  return dropped;
+}
+
 function removeFromPlan(instanceId: string): void {
-  // Flush first so the row's advertised effects (the per-evaluation map) cover
-  // it — a row removed inside the debounce window must still name its
-  // dependents for the cleanup below.
+  // Flush first (also inside captureSelections, but this path may skip it) so
+  // the row's advertised effects (the per-evaluation map) cover it — a row
+  // removed inside the debounce window must still name its dependents.
   flushPendingEvaluation();
 
-  // A removed planned row takes its committed FOLLOW-UPS along: its advertised
-  // effects name the dependent keys they own (the Frightened condition owns
-  // the LoS sight seed the dice-line chip commits mid-turn), and leaving those
-  // behind would strand committed state a plan the player discarded never
+  // A removed planned row takes its committed FOLLOW-UPS along — but only the
+  // ones it solely owns (see orphanedDependentKeys): the Frightened condition
+  // owns the LoS sight seed the dice-line chip commits mid-turn, and leaving
+  // it behind would strand committed state a plan the player discarded never
   // earned. The eviction mirrors chip dismissal (removeEffect's dependents
   // pass), on the plan side — which is what lets the chip render for a merely
   // PLANNED condition instead of gating on commitment.
-  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- function-local scratch, read once below
-  const dependentKeys = new Set<string>();
-  for (const effect of getPlannedEntry(instanceId)?.advertisedEffects ?? []) {
-    for (const key of effect.dependents ?? []) dependentKeys.add(key);
-  }
-  let committed = state.committed;
-  if (dependentKeys.size > 0) {
-    const before = committed.length;
-    committed = committed.filter((e) => e.key === undefined || !dependentKeys.has(e.key));
-    if (committed.length !== before) persistCommitted();
-  }
-
+  const outgoing = getPlannedEntry(instanceId)?.advertisedEffects ?? [];
   const filtered = state.plannedItems.filter((item) => item.instanceId !== instanceId);
 
   // Re-index order values
@@ -635,12 +672,7 @@ function removeFromPlan(instanceId: string): void {
     order: index
   }));
 
-  state = {
-    ...state,
-    plannedItems: reindexed,
-    committed,
-    effects: committed.map(effectInstanceToRule)
-  };
+  evictCommittedKeys(orphanedDependentKeys(outgoing, reindexed), reindexed);
 
   scheduleEvaluation();
 }
@@ -698,6 +730,11 @@ function swapPlanItemRule(instanceId: string, entry: AvailableRuleEntry): void {
   const index = state.plannedItems.findIndex((i) => i.instanceId === instanceId);
   if (index === -1) return;
 
+  // The OUTGOING row's advertised effects, captured before the swap replaces
+  // it — the sole-parent cleanup below reads them (captureSelections flushes,
+  // so they are current even inside the debounce window).
+  const outgoing = getPlannedEntry(instanceId)?.advertisedEffects ?? [];
+
   // Resolve capture vars from the row's PREFIX facts — the state its OR
   // INSTEAD choice was made over (committed + earlier rows), never the
   // debounced display cache `state.facts`, which folds the OUTGOING row's
@@ -719,6 +756,17 @@ function swapPlanItemRule(instanceId: string, entry: AvailableRuleEntry): void {
     ...state,
     plannedItems: updated
   };
+
+  // An OR INSTEAD swap discards a parent exactly like a removal does: the
+  // follow-ups it solely owns (the LoS seed under a swapped-out recorder) are
+  // evicted so re-recording starts from the in-sight default.
+  evictCommittedKeys(
+    orphanedDependentKeys(
+      outgoing,
+      updated.filter((i) => i.instanceId !== instanceId)
+    ),
+    updated
+  );
 
   scheduleEvaluation();
 }
@@ -998,19 +1046,42 @@ function getDependents(ruleGroupId: string): string[] {
   return dependents;
 }
 
+// Serialized + coalesced effect saves. Rapid commits (LoS chip taps) must
+// never interleave: the API's DynamoDB SET is unconditional, so an earlier
+// unawaited request landing LAST would persist a stale list and a reload
+// would restore the opposite state. One save in flight at a time; further
+// persistCommitted calls coalesce into a single queued save that always
+// snapshots the LATEST committed state when it starts.
+let effectSaveInFlight = false;
+let effectSaveQueued = false;
+
 function persistCommitted(): void {
   if (!state.currentCharacterId) return;
-  apiPost(`/api/characters/${state.currentCharacterId}/effects`, {
-    effects: JSON.stringify(state.committed)
-  })
-    .then((response) => {
+  effectSaveQueued = true;
+  if (effectSaveInFlight) return;
+  void drainEffectSaves();
+}
+
+async function drainEffectSaves(): Promise<void> {
+  while (effectSaveQueued) {
+    effectSaveQueued = false;
+    if (!state.currentCharacterId) return;
+    effectSaveInFlight = true;
+    const characterId = state.currentCharacterId;
+    const snapshot = JSON.stringify(state.committed);
+    try {
+      const response = await apiPost(`/api/characters/${characterId}/effects`, {
+        effects: snapshot
+      });
       if (!response.ok) {
         toast.error(get(t)('play.error.saveEffects'));
       }
-    })
-    .catch(() => {
+    } catch {
       toast.error(get(t)('play.error.saveEffects'));
-    });
+    } finally {
+      effectSaveInFlight = false;
+    }
+  }
 }
 
 function removeEffect(effectId: string): void {
