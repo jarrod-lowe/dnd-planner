@@ -469,6 +469,13 @@ function captureSelections(rule: Rule, index: number): Record<string, unknown> {
 
 function addToPlan(rule: Rule, seed?: Record<string, unknown>): void {
   const instanceId = generateInstanceId();
+  // Flush BEFORE capturing (the addOfferToPlan precedent): the toggle capture
+  // reads `state.engineOutput.annotations`, and within the 300 ms debounce
+  // window those describe the PREVIOUS plan — a row added right after
+  // planning the Frightened recorder would capture no sight value and fall
+  // back to the live seed, losing its per-row stickiness. The prefix FACTS
+  // are synchronous; this makes the annotations equally current.
+  flushPendingEvaluation();
   // Resolve capture vars from the row's PREFIX facts (committed + earlier
   // rows — never the debounced display cache `state.facts`).
   const initialSelections = captureSelections(rule, state.plannedItems.length);

@@ -387,3 +387,89 @@ describe('playStore addToPlan clamps an over-committed pool capture (lay-on-hand
     expect(spend).toBeGreaterThanOrEqual(1);
   });
 });
+
+describe('playStore addToPlan captures the per-row toggle state', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.runAllTimers();
+    vi.useRealTimers();
+    vi.resetModules();
+  });
+
+  /**
+   * A character Frightened with the source already hidden, via the persisted
+   * effects blob (the committed seed the capture reads). The generic-check
+   * offer (dice.any labels) is the row that captures.
+   */
+  async function frightenedStore(): Promise<{ playStore: PlayStore }> {
+    vi.mocked(apiGet)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: ['condition-frightened', 'core-events'] })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          effects: JSON.stringify([
+            {
+              id: 'effect-frightened',
+              key: 'frightened',
+              state: { 'condition.frightened': 1 },
+              expiry: { kind: 'untilShortRest' }
+            },
+            {
+              id: 'effect-frightened-source-hidden',
+              key: 'frightened-source',
+              state: { 'frightened.sourceHidden': 1 },
+              expiry: { kind: 'untilShortRest' }
+            }
+          ])
+        })
+      } as Response);
+    vi.mocked(apiPost).mockResolvedValue({
+      ok: true,
+      json: async () => ({ ruleGroups: [] })
+    } as Response);
+
+    const { playStore } = await import('$lib/play/playStore.svelte');
+    playStore.reset();
+    await playStore.loadRuleGroups('char-1');
+    expect(playStore.state.facts['condition.frightened']).toBe(1);
+    return { playStore };
+  }
+
+  it('a check row added with the seed hidden captures sight=1 — its own value, not the live fallback', async () => {
+    const { playStore } = await frightenedStore();
+    const check = catalogRule(playStore, 'record-check');
+
+    playStore.addToPlan(check);
+
+    // The captured per-row state (the flush inside addToPlan makes the
+    // annotations current even inside the debounce window).
+    expect(playStore.state.plannedItems[0].rule.selections).toMatchObject({
+      'frightened.sourceHidden': 1
+    });
+  });
+
+  it('the captured value sticks: flipping the seed later never moves the row', async () => {
+    const { playStore } = await frightenedStore();
+    const check = catalogRule(playStore, 'record-check');
+    playStore.addToPlan(check);
+
+    // The chip's reveal tap commits the empty same-key eviction.
+    const annotations = playStore.state.engineOutput?.annotations ?? [];
+    const los = annotations.find((a) => a.key === 'rule.dnd-5e-2024.condition-frightened.los');
+    expect(los?.toggle).toBeDefined();
+    playStore.addFollowupEffect(los!.toggle!.onEffect);
+    expect(playStore.state.facts['frightened.sourceHidden'] ?? 0).toBe(0);
+
+    // The row keeps its captured hidden value.
+    expect(playStore.state.plannedItems[0].rule.selections).toMatchObject({
+      'frightened.sourceHidden': 1
+    });
+  });
+});

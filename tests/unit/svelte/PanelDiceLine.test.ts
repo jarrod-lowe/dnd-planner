@@ -427,6 +427,22 @@ describe('PanelDiceLine — state-toggle chips (the Frightened line-of-sight sha
     expect(toggleChip(container)).toBeNull();
   });
 
+  it('clears a stale rolled total when a state toggle flips the roll mode', async () => {
+    const { container, rerender } = render(PanelDiceLine, {
+      props: { ...baseProps, toggles: [losToggle(true)], onToggleEffect: vi.fn() }
+    });
+    await fireEvent.click(main(container, 0)!);
+    await tick();
+    // A rolled chip shows its total, not the expression.
+    expect(main(container, 0)?.textContent?.trim()).not.toContain('d20');
+    // The sight flips (pressed → unpressed): the displayed result was made
+    // under a mode this line no longer defaults to, so it reverts to the
+    // expression — same invalidation a modifier toggle gets.
+    await rerender({ ...baseProps, toggles: [losToggle(false)], onToggleEffect: vi.fn() });
+    await tick();
+    expect(main(container, 0)?.textContent?.trim()).toBe('d20+5');
+  });
+
   it('drops the chip in summary mode (nothing focusable in a collapsed row)', () => {
     const { container } = render(PanelDiceLine, {
       props: { ...baseProps, summary: true, toggles: [losToggle(true)], onToggleEffect: vi.fn() }

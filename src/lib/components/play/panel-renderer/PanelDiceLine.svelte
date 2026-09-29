@@ -284,6 +284,12 @@
       .map((m) => `${m.key}:${m.value}`)
       .join('|')
   );
+  // Which state toggles are pressed (Frightened's sight): a flip changes the
+  // line's default roll mode, so it invalidates displayed results exactly the
+  // way a modifier toggle does — the re-seed path below, where a recorded
+  // writeBack verdict stands (the roll-time contract) and an ephemeral
+  // result clears instead of lingering beside a mode it was not made under.
+  const toggleSignature = $derived(shownToggles.map((t) => `${t.key}:${t.pressed}`).join('|'));
   // A roll total is only meaningful for the dice AND modifiers that produced it;
   // clear stale results when either changes so a chip never shows a total that no
   // longer matches its current expression — with ONE carve-out. When ONLY the
@@ -316,6 +322,7 @@
   $effect(() => {
     void diceSignature;
     void modifierSignature;
+    void toggleSignature;
     if (!seededFromSelections) {
       seededFromSelections = true;
       lastDiceSignature = diceSignature;
