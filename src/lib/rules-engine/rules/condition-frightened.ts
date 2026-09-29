@@ -151,14 +151,17 @@ const conditionFrightened: RuleModule = {
             // the row's capture); the notice body DOES flip because the strip
             // speaks about the condition going forward, not about any row.
             // check.any scopes the ability checks (never dice.any — saves are
-            // not disadvantaged).
+            // not disadvantaged); dice.initiative joins it because the
+            // initiative panel carries no check label, yet the LoS TOGGLE
+            // reaches it through dice.any (its die is purpose 'check'), so
+            // Frightened disadvantages Initiative like any other Dex check.
             key: `${CF}.disadvantage`,
             targets: ['attack.any'],
             rider: { label: `${CF}.rider`, type: 'modifier', appliesTo: 'to-hit' }
           },
           {
             key: `${CF}.disadvantage-checks`,
-            targets: ['check.any'],
+            targets: ['check.any', 'dice.initiative'],
             rider: { label: `${CF}.rider`, type: 'modifier', appliesTo: 'check' }
           }
         ]

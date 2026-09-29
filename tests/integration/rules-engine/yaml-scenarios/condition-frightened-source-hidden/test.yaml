@@ -45,7 +45,7 @@ steps:
             - key: rule.dnd-5e-2024.condition-frightened.disadvantage
               targets: [attack.any]
             - key: rule.dnd-5e-2024.condition-frightened.disadvantage-checks
-              targets: [check.any]
+              targets: [check.any, dice.initiative]
           riders:
             - key: rule.dnd-5e-2024.condition-frightened.disadvantage
               rider:

@@ -156,7 +156,10 @@ describe('condition-frightened — disadvantage attribution chips', () => {
   it('names the disadvantage the LoS chip forces: attacks and checks, one chip each', () => {
     for (const [chipKey, targets, appliesTo] of [
       ['disadvantage', ['attack.any'], 'to-hit'],
-      ['disadvantage-checks', ['check.any'], 'check']
+      // dice.initiative joins check.any because the initiative panel carries
+      // no check label — yet the LoS TOGGLE reaches it through dice.any and
+      // its purpose-'check' die, so Frightened disadvantages Initiative too.
+      ['disadvantage-checks', ['check.any', 'dice.initiative'], 'check']
     ] as const) {
       const ann = chipFrom(conditionFrightened, 'record-frightened', `${CF}.${chipKey}`);
       expect(ann, `${chipKey} exists`).toBeDefined();
