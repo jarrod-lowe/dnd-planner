@@ -250,9 +250,13 @@ chip, and a toggle has nowhere to put the add affordance.
 
 A rider with NO `value` is purely informational (`AnnotationRider.value`'s
 documented contract): it renders as a text chip on every matched panel AND its
-`label` rides the roll toast/roll-log modifier list. That is the attribution
-idiom — naming WHY a roll mode changed (the conditions' "imposes disadvantage"
-chips are the reference implementations; GWF was first):
+`label` rides the roll toast/roll-log modifier list — scoped to the rolled
+die's purpose by `appliesTo` (a weapon panel matches `attack.any` as a PANEL
+label, so without it an attack attribution would ride the damage toast too).
+That is the attribution idiom — naming WHY a roll mode changed (the
+conditions' "imposes disadvantage" chips are the reference implementations;
+GWF was first). `appliesTo` is single-purpose, so a multi-surface source emits
+ONE CHIP PER D20 TEST KIND (the Exhaustion precedent):
 
 ```ts
 annotate: (f) =>
@@ -261,17 +265,22 @@ annotate: (f) =>
         // … the notice …
         {
           key: `${CP}.disadvantage`, // the chip sentence, i18n
-          targets: ['attack.any', 'check.any', 'dice.initiative'],
+          targets: ['attack.any'],
           // No `value` — never a modifier chip.
-          rider: { label: `${CP}.rider`, type: 'modifier' } // short toast label
+          rider: { label: `${CP}.rider`, type: 'modifier', appliesTo: 'to-hit' }
+        },
+        {
+          key: `${CP}.disadvantage-checks`,
+          targets: ['check.any', 'dice.initiative'], // Initiative is a Dex check
+          rider: { label: `${CP}.rider`, type: 'modifier', appliesTo: 'check' }
         }
       ]
     : [];
 ```
 
-A valueless rider has **no `appliesTo` purpose filter** — the scope IS the
-`targets` list, so scope with the specific roller labels and never `dice.any`
-(it reaches every dice panel, including saves the source does not touch):
+The PANEL scope is the `targets` list (a valueless rider has no purpose filter
+there) — scope with the specific roller labels and never `dice.any` (it
+reaches every dice panel, including saves the source does not touch):
 
 | Roll surface                   | Labels                             |
 | ------------------------------ | ---------------------------------- |

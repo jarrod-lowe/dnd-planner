@@ -2,9 +2,11 @@ import { describe, it, expect } from 'vitest';
 import {
   getAnnotationLabels,
   getMatchingAnnotations,
-  captureToggleSelections
+  captureToggleSelections,
+  riderToastLabels
 } from '$lib/play/annotations';
 import type { Annotation, AnnotationToggle } from '$lib/rules-view';
+import type { ActiveAnnotation } from '$lib/play/annotations';
 
 describe('getAnnotationLabels', () => {
   it('returns empty array when ui is undefined', () => {
@@ -173,5 +175,64 @@ describe('captureToggleSelections', () => {
         annotations
       )
     ).toEqual({ 'frightened.sourceHidden': 0 });
+  });
+});
+
+describe('riderToastLabels', () => {
+  it('rides a valueless rider only on the die purposes its appliesTo governs', () => {
+    const poisoned: ActiveAnnotation = {
+      key: 'rule.dnd-5e-2024.condition-poisoned.disadvantage',
+      rider: {
+        label: 'rule.dnd-5e-2024.condition-poisoned.rider',
+        type: 'modifier',
+        appliesTo: 'to-hit'
+      }
+    };
+    expect(riderToastLabels([poisoned], 'to-hit')).toEqual([
+      'rule.dnd-5e-2024.condition-poisoned.rider'
+    ]);
+    // The weapon panel carries attack.any as a PANEL label, so the annotation
+    // matches its damage die too — the purpose filter is what keeps the
+    // damage toast free of an attack-roll attribution.
+    expect(riderToastLabels([poisoned], 'damage')).toEqual([]);
+  });
+
+  it('a rider with no appliesTo rides every purpose (the GWF idiom predates the field)', () => {
+    const gwf: ActiveAnnotation = {
+      key: 'rule.dnd-5e-2024.fighting-style-great-weapon.annotation',
+      rider: { label: 'rule.dnd-5e-2024.fighting-style-great-weapon.rider', type: 'modifier' }
+    };
+    expect(riderToastLabels([gwf], 'damage')).toEqual([
+      'rule.dnd-5e-2024.fighting-style-great-weapon.rider'
+    ]);
+    expect(riderToastLabels([gwf], 'to-hit')).toEqual([
+      'rule.dnd-5e-2024.fighting-style-great-weapon.rider'
+    ]);
+  });
+
+  it('never collects valued riders (their toast line is the modifier itself) or toggles', () => {
+    const valued: ActiveAnnotation = {
+      key: 'rule.dnd-5e-2024.condition-exhaustion.rider-to-hit',
+      rider: {
+        label: 'rule.dnd-5e-2024.condition-exhaustion.rider',
+        type: 'modifier',
+        value: { kind: 'flat', bonus: -2 },
+        appliesTo: 'to-hit'
+      }
+    };
+    const losToggle: Annotation = {
+      key: 'rule.dnd-5e-2024.condition-frightened.los',
+      targets: ['attack.any'],
+      toggle: {
+        fact: 'frightened.sourceHidden',
+        onWhen: 0,
+        onEffect: { id: 'on', key: 'k', expiry: { kind: 'permanent' } },
+        offEffect: { id: 'off', key: 'k', expiry: { kind: 'permanent' } },
+        labelOn: 'rule.demo.los.in-sight',
+        labelOff: 'rule.demo.los.out-of-sight',
+        appliesTo: ['to-hit', 'check']
+      }
+    };
+    expect(riderToastLabels([valued, losToggle], 'to-hit')).toEqual([]);
   });
 });

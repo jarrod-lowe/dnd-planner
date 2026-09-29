@@ -194,10 +194,12 @@ const conditionProne: RuleModule = {
             // chip on the matched panels plus the toast label; the flags
             // themselves are unchanged. attack.any reaches every weapon and
             // unarmed panel; Unconscious (which writes condition.prone)
-            // inherits the chip — accurate, it IS prone.
+            // inherits the chip — accurate, it IS prone. appliesTo scopes the
+            // toast label to the to-hit die (attack.any is a PANEL label, so
+            // without it the label would ride the damage toast too).
             key: `${CP}.disadvantage`,
             targets: ['attack.any'],
-            rider: { label: `${CP}.rider`, type: 'modifier' }
+            rider: { label: `${CP}.rider`, type: 'modifier', appliesTo: 'to-hit' }
           }
         ]
       : []

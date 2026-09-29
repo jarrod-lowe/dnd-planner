@@ -36,7 +36,10 @@ vi.mock('$lib/details/index', () => ({
 
 // One informational-rider annotation, so PlanRow's own mod-chip row has
 // something to show when expanded (and to hide when collapsed).
-vi.mock('$lib/play/annotations', () => ({
+vi.mock('$lib/play/annotations', async (importOriginal) => ({
+  // Only the matcher is stubbed; the pure helpers (riderToastLabels, …) stay
+  // real so handleDiceRoll's toast path keeps working under this mock.
+  ...(await importOriginal<typeof import('$lib/play/annotations')>()),
   getMatchingAnnotations: vi.fn(() => [
     { key: 'test.annotation', rider: { label: 'test.annotation.label' } }
   ])

@@ -15,7 +15,7 @@
     spellPrepareIsEmpty
   } from './panel-renderer/PanelSpellPrepare.svelte';
   import { evaluateCondition } from '$lib/play/panelCondition';
-  import { getMatchingAnnotations } from '$lib/play/annotations';
+  import { getMatchingAnnotations, riderToastLabels } from '$lib/play/annotations';
   import type {
     AvailableRuleEntry,
     Facts,
@@ -547,15 +547,12 @@
   function handleDiceRoll(result: RollResult, dieIndex: number, dieKey: string) {
     onRoll?.(result, dieIndex);
 
-    // Valueless riders ride the toast as bare labels; the toast's assembly
-    // (roll type, advantage/disadvantage, these labels, valued modifiers) is
-    // shared with every other roller parent via `showDiceRollToast`.
-    const riderLabels: string[] = [];
-    for (const ann of informationalAnnotations) {
-      if (ann.rider?.type === 'dice' || ann.rider?.type === 'modifier') {
-        riderLabels.push(ann.rider.label);
-      }
-    }
+    // Valueless riders ride the toast as bare labels — scoped to THIS die's
+    // purpose by `rider.appliesTo`, so an attack-roll attribution never rides
+    // the weapon panel's damage toast. The toast's assembly (roll type,
+    // advantage/disadvantage, these labels, valued modifiers) is shared with
+    // every other roller parent via `showDiceRollToast`.
+    const riderLabels = riderToastLabels(informationalAnnotations, result.purpose);
 
     showDiceRollToast(displayName, result, riderLabels, `${instanceId ?? entry.rule.id}:${dieKey}`);
   }

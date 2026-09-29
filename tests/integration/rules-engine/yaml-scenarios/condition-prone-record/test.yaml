@@ -46,3 +46,4 @@ steps:
               rider:
                 label: rule.dnd-5e-2024.condition-prone.rider
                 type: modifier
+                appliesTo: to-hit

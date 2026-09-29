@@ -452,7 +452,8 @@
     "dnd-5e-2024": {
       "action-economy": {},
       "armor-training": {
-        "disadvantage": "tuQ ngoy'be': HIv Daghu'meH, chuwI' Daghu'meH, 'ej yIqIm, Suv, nich, So' Daghu'meH DIvI' ngor",
+        "disadvantage": "tuQ ngoy'be': HIv Daghu'meH DIvI' ngor",
+        "disadvantage-checks": "tuQ ngoy'be': chuwI' 'ej yIqIm, Suv, nich, So' Daghu'meH DIvI' ngor",
         "rider": "tuQ ngoy'be'"
       },
       "build-lock": {
@@ -1056,7 +1057,8 @@
         },
         "notice": "Dujlu'pu'",
         "notice.body": "HIv Daghu'meH 'ej laH Daghu'meH DIvI' ngor bISuqnIS.",
-        "disadvantage": "Dujlu'pu': HIv Daghu'meH 'ej laH Daghu'meH DIvI' ngor",
+        "disadvantage": "Dujlu'pu': HIv Daghu'meH DIvI' ngor",
+        "disadvantage-checks": "Dujlu'pu': laH Daghu'meH DIvI' ngor",
         "rider": "Dujlu'pu'"
       },
       "condition-incapacitated": {
@@ -1092,7 +1094,8 @@
         },
         "notice": "ngorlu'",
         "notice.body": "Do'lIj chIm 'ej DublaHbe'. HIvlIj lughangelbogh nIv ghaH, bIHIvDI' qay' Daghu'nIS, 'ej nv toDmeH qay' Daghu'nIS.",
-        "disadvantage": "ngorlu': HIv Daghu'taHvIS 'ej nv toDmeH DIvI' ngor",
+        "disadvantage": "ngorlu': HIv Daghu'taHvIS DIvI' ngor",
+        "disadvantage-save": "ngorlu': nv toDmeH DIvI' ngor",
         "rider": "ngorlu'"
       },
       "condition-paralyzed": {
@@ -1134,7 +1137,8 @@
         },
         "notice": "So'lu'pu'",
         "notice.body": "bIHIvmeH HIvlIj 'ej DujlIj nIv ghaH. SoH HIvmeH HIv nIvHa' ghaH (SoH leghlaHbogh SuvwI' lururbe'). SoH 'ej SepmeylIj So'lu'taH, leghlu'meH Qu'mey HuSmoH. Qong Hoch qaSchoHDI' rIn.",
-        "advantage": "So'lu'pu': HIv Daghu'meH 'ej chuwI' Daghu'meH nIv DalSuq",
+        "advantage": "So'lu'pu': HIv Daghu'meH nIv DalSuq",
+        "advantage-initiative": "So'lu'pu': chuwI' Daghu'meH nIv DalSuq",
         "rider": "So'lu'pu'"
       },
       "condition-unconscious": {
@@ -1189,7 +1193,8 @@
         "notice": "ghIjlu'pu'",
         "notice.body": "ghIjmeH Doch DaleghtaHvIS, HIv Daghu'meH 'ej laH Daghu'meH DIvI' ngor bISuqnIS. ghIjmeH Doch DaSumHa'choHmoHlaHbe'.",
         "notice.body-hidden": "ghIjmeH Doch DaSo'taH — DIvI' ngor tu'lu'be'. ghIjmeH Doch DaSumHa'choHmoHlaHbe' je.",
-        "disadvantage": "ghIjlu'pu': ghIjmeH Doch DaleghtaHvIS DIvI' ngor",
+        "disadvantage": "ghIjlu'pu': ghIjmeH Doch DaleghtaHvIS HIv Daghu'meH DIvI' ngor",
+        "disadvantage-checks": "ghIjlu'pu': ghIjmeH Doch DaleghtaHvIS laH Daghu'meH DIvI' ngor",
         "rider": "ghIjlu'pu'",
         "los.in-sight": "ghIjmeH Doch leghlu'taH",
         "los.out-of-sight": "ghIjmeH Doch leghlu'be'",

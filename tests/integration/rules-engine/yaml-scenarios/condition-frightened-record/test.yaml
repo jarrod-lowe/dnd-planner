@@ -69,16 +69,25 @@ steps:
             - rule.dnd-5e-2024.condition-frightened.notice
             - rule.dnd-5e-2024.condition-frightened.los
             - rule.dnd-5e-2024.condition-frightened.disadvantage
+            - rule.dnd-5e-2024.condition-frightened.disadvantage-checks
           targets:
             - key: rule.dnd-5e-2024.condition-frightened.los
               targets: [attack.any, dice.any]
             - key: rule.dnd-5e-2024.condition-frightened.disadvantage
-              targets: [attack.any, check.any]
+              targets: [attack.any]
+            - key: rule.dnd-5e-2024.condition-frightened.disadvantage-checks
+              targets: [check.any]
           riders:
             - key: rule.dnd-5e-2024.condition-frightened.disadvantage
               rider:
                 label: rule.dnd-5e-2024.condition-frightened.rider
                 type: modifier
+                appliesTo: to-hit
+            - key: rule.dnd-5e-2024.condition-frightened.disadvantage-checks
+              rider:
+                label: rule.dnd-5e-2024.condition-frightened.rider
+                type: modifier
+                appliesTo: check
           toggles:
             - key: rule.dnd-5e-2024.condition-frightened.los
               toggle:

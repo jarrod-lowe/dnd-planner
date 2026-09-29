@@ -43,11 +43,13 @@ steps:
         annotations:
           exists:
             - rule.dnd-5e-2024.armor-training.disadvantage
+            - rule.dnd-5e-2024.armor-training.disadvantage-checks
           targets:
             - key: rule.dnd-5e-2024.armor-training.disadvantage
+              targets: [attack.any]
+            - key: rule.dnd-5e-2024.armor-training.disadvantage-checks
               targets:
                 [
-                  attack.any,
                   dice.initiative,
                   check.acrobatics,
                   check.athletics,
@@ -59,3 +61,9 @@ steps:
               rider:
                 label: rule.dnd-5e-2024.armor-training.rider
                 type: modifier
+                appliesTo: to-hit
+            - key: rule.dnd-5e-2024.armor-training.disadvantage-checks
+              rider:
+                label: rule.dnd-5e-2024.armor-training.rider
+                type: modifier
+                appliesTo: check

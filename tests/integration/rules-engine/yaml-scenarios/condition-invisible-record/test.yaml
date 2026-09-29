@@ -40,13 +40,22 @@ steps:
           exists:
             - rule.dnd-5e-2024.condition-invisible.notice
             - rule.dnd-5e-2024.condition-invisible.advantage
+            - rule.dnd-5e-2024.condition-invisible.advantage-initiative
           targets:
             - key: rule.dnd-5e-2024.condition-invisible.notice
               targets: [notice]
             - key: rule.dnd-5e-2024.condition-invisible.advantage
-              targets: [attack.any, dice.initiative]
+              targets: [attack.any]
+            - key: rule.dnd-5e-2024.condition-invisible.advantage-initiative
+              targets: [dice.initiative]
           riders:
             - key: rule.dnd-5e-2024.condition-invisible.advantage
               rider:
                 label: rule.dnd-5e-2024.condition-invisible.rider
                 type: modifier
+                appliesTo: to-hit
+            - key: rule.dnd-5e-2024.condition-invisible.advantage-initiative
+              rider:
+                label: rule.dnd-5e-2024.condition-invisible.rider
+                type: modifier
+                appliesTo: check

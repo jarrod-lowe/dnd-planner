@@ -64,13 +64,22 @@ steps:
           exists:
             - rule.dnd-5e-2024.condition-restrained.notice
             - rule.dnd-5e-2024.condition-restrained.disadvantage
+            - rule.dnd-5e-2024.condition-restrained.disadvantage-save
           targets:
             - key: rule.dnd-5e-2024.condition-restrained.notice
               targets: [notice]
             - key: rule.dnd-5e-2024.condition-restrained.disadvantage
-              targets: [attack.any, save.dex]
+              targets: [attack.any]
+            - key: rule.dnd-5e-2024.condition-restrained.disadvantage-save
+              targets: [save.dex]
           riders:
             - key: rule.dnd-5e-2024.condition-restrained.disadvantage
               rider:
                 label: rule.dnd-5e-2024.condition-restrained.rider
                 type: modifier
+                appliesTo: to-hit
+            - key: rule.dnd-5e-2024.condition-restrained.disadvantage-save
+              rider:
+                label: rule.dnd-5e-2024.condition-restrained.rider
+                type: modifier
+                appliesTo: save

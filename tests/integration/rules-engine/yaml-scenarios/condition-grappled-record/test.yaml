@@ -70,3 +70,4 @@ steps:
               rider:
                 label: rule.dnd-5e-2024.condition-grappled.rider
                 type: modifier
+                appliesTo: to-hit

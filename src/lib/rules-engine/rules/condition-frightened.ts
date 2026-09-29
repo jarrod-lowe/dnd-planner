@@ -140,9 +140,10 @@ const conditionFrightened: RuleModule = {
             }
           },
           {
-            // Attribution chip (the GWF valueless-rider idiom): explains what
+            // Attribution chips (the GWF valueless-rider idiom): explains what
             // the LoS chip FORCES — no flags exist to explain it. ONE
-            // standing-QUALIFIED sentence, never a seed-flipped variant: rows
+            // standing-QUALIFIED sentence per D20 Test kind (the Exhaustion
+            // one-per-kind precedent), never a seed-flipped variant: rows
             // capture their own sight value while the seed feeds forward, and
             // annotation text sees only global facts, so a flipped key would
             // contradict a row whose capture differs from the seed. The
@@ -152,8 +153,13 @@ const conditionFrightened: RuleModule = {
             // check.any scopes the ability checks (never dice.any — saves are
             // not disadvantaged).
             key: `${CF}.disadvantage`,
-            targets: ['attack.any', 'check.any'],
-            rider: { label: `${CF}.rider`, type: 'modifier' }
+            targets: ['attack.any'],
+            rider: { label: `${CF}.rider`, type: 'modifier', appliesTo: 'to-hit' }
+          },
+          {
+            key: `${CF}.disadvantage-checks`,
+            targets: ['check.any'],
+            rider: { label: `${CF}.rider`, type: 'modifier', appliesTo: 'check' }
           }
         ]
       : []

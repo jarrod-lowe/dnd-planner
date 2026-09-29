@@ -3,7 +3,8 @@ import type {
   AnnotationAction,
   AnnotationRider,
   AnnotationToggle,
-  Facts
+  Facts,
+  RollPurpose
 } from '$lib/rules-view';
 
 export interface ActiveAnnotation {
@@ -68,4 +69,33 @@ export function captureToggleSelections(
     selections[toggle.fact] = typeof value === 'number' ? value : 0;
   }
   return selections;
+}
+
+/**
+ * The valueless-rider labels that ride a roll's toast/log entry — the toast
+ * half of the attribution idiom. A panel matches annotations by LABEL, and a
+ * weapon panel carries `attack.any` as a panel-level label, so an
+ * attack-roll attribution reaches the panel's damage die too; `rider.appliesTo`
+ * is what scopes the label to the die purposes the source actually governs
+ * (the chip itself still renders on every matched panel). A rider with no
+ * `appliesTo` rides every purpose — the GWF idiom predates the field, and
+ * "any die on this panel" is exactly what some riders mean. Valued riders
+ * never collect here: their toast line is the modifier chip itself
+ * (`result.modifiers`), and a second bare label would double them. A roll
+ * with no purpose (the field is optional on RollResult) can confirm no
+ * governance, so only purpose-less riders ride it.
+ */
+export function riderToastLabels(
+  annotations: ActiveAnnotation[],
+  purpose: RollPurpose | undefined
+): string[] {
+  const labels: string[] = [];
+  for (const annotation of annotations) {
+    const rider = annotation.rider;
+    if (!rider || (rider.type !== 'dice' && rider.type !== 'modifier')) continue;
+    if (rider.value !== undefined) continue;
+    if (rider.appliesTo !== undefined && rider.appliesTo !== purpose) continue;
+    labels.push(rider.label);
+  }
+  return labels;
 }

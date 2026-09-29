@@ -85,10 +85,11 @@ const conditionBlinded: RuleModule = {
             // Attribution chip (the GWF valueless-rider idiom): names WHY the
             // attack dice-lines default to 2d20-take-low. No `value` → a text
             // chip on the matched panels plus the toast label; the flags
-            // themselves are unchanged.
+            // themselves are unchanged. appliesTo keeps the toast label off
+            // the weapon panel's damage die.
             key: `${CB}.disadvantage`,
             targets: ['attack.any'],
-            rider: { label: `${CB}.rider`, type: 'modifier' }
+            rider: { label: `${CB}.rider`, type: 'modifier', appliesTo: 'to-hit' }
           }
         ]
       : []
