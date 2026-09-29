@@ -7,7 +7,10 @@ description: >-
   it is live. The recorder models BEING BLINDED (imposed by an enemy effect), so
   it is free and ungated (the prone "Knocked Prone" precedent), and any rest
   clears it (untilShortRest covers both rest kinds; see
-  condition-blinded-rest-clears).
+  condition-blinded-rest-clears). An attribution chip (a valueless rider, the
+  GWF idiom) names WHY the attack dice-lines default to 2d20-take-low: it
+  targets attack.any so every weapon and unarmed panel carries the
+  explanation, and its label rides the roll toast.
 ruleGroups:
   - dnd-5e-2024/condition-blinded
 steps:
@@ -21,6 +24,7 @@ steps:
         annotations:
           notExists:
             - rule.dnd-5e-2024.condition-blinded.notice
+            - rule.dnd-5e-2024.condition-blinded.disadvantage
   - addOffer:
       id: record-blinded
       assert:
@@ -31,6 +35,14 @@ steps:
         annotations:
           exists:
             - rule.dnd-5e-2024.condition-blinded.notice
+            - rule.dnd-5e-2024.condition-blinded.disadvantage
           targets:
             - key: rule.dnd-5e-2024.condition-blinded.notice
               targets: [notice]
+            - key: rule.dnd-5e-2024.condition-blinded.disadvantage
+              targets: [attack.any]
+          riders:
+            - key: rule.dnd-5e-2024.condition-blinded.disadvantage
+              rider:
+                label: rule.dnd-5e-2024.condition-blinded.rider
+                type: modifier

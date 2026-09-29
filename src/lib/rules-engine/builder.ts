@@ -1,5 +1,6 @@
 import type {
   ActionResult,
+  Annotation,
   Contribution,
   Diagnostic,
   EffectInstance,
@@ -670,6 +671,44 @@ export function armorTrainingPenalties(armorId: string, proficiencyFact: string)
     value: (f: FactReader) =>
       f.num(`armor.${armorId}.equipped`) === 1 && f.num(proficiencyFact) !== 1 ? 1 : 0
   }));
+}
+
+/** i18n namespace for the shared untrained-armor attribution chip. */
+const ARMOR_TRAINING = 'rule.dnd-5e-2024.armor-training';
+
+/**
+ * The attribution chip for armor worn without its training: while the given
+ * armor is equipped and the proficiency fact is unset, a VALUELESS rider (the
+ * GWF idiom — no `value`, so a text chip on the matched panels plus the toast
+ * label) names WHY those dice-lines default to 2d20-take-low. The targets are
+ * exactly the panels the penalty facts above govern — the generic record-check
+ * reads no armor fact, so it gets no chip. Shared by every armor module under
+ * one namespace (the `proneEffect` builder-hosted-keys precedent); body armors
+ * share the `armor:body` effect key, so only one can be live and the chip can
+ * never double-render. Splint's unconditional proficient-worn Stealth
+ * disadvantage is a separate source, deliberately not chipped here.
+ */
+export function armorTrainingPenaltyAnnotation(
+  f: FactReader,
+  armorId: string,
+  proficiencyFact: string
+): Annotation[] {
+  return f.num(`armor.${armorId}.equipped`) === 1 && f.num(proficiencyFact) !== 1
+    ? [
+        {
+          key: `${ARMOR_TRAINING}.disadvantage`,
+          targets: [
+            'attack.any',
+            'dice.initiative',
+            'check.acrobatics',
+            'check.athletics',
+            'check.sleight-of-hand',
+            'check.stealth'
+          ],
+          rider: { label: `${ARMOR_TRAINING}.rider`, type: 'modifier' }
+        }
+      ]
+    : [];
 }
 
 /**

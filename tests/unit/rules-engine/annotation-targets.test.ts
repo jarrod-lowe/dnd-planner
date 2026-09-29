@@ -145,4 +145,26 @@ describe('annotation targets', () => {
       'dice.any.companion'
     ]);
   });
+
+  /**
+   * The check rollers mirror the save recorders (`check.any` broad,
+   * `check.<skill>` specific, `dice.any` because the panel rolls a d20):
+   * valueless attribution riders have NO appliesTo purpose filter, so a chip
+   * aimed at checks through `dice.any` would leak onto saves and weapons —
+   * the broad check label is what scopes Poisoned/Frightened/untrained-armor
+   * chips to check panels, and the per-skill labels scope armor's four.
+   */
+  it('the skill rollers and the generic check roller carry check labels', () => {
+    const skills = getModule('skill-checks');
+    expect(skills, 'skill-checks module is registered').toBeDefined();
+    const acrobatics = offersOf(skills!).find((o) => o.id === 'roll-skill-acrobatics');
+    expect(acrobatics, 'roll-skill-acrobatics offer exists').toBeDefined();
+    expect(labelsOf(acrobatics!)).toEqual(['check.any', 'check.acrobatics', 'dice.any']);
+
+    const core = getModule('core-events');
+    expect(core, 'core-events module is registered').toBeDefined();
+    const check = offersOf(core!).find((o) => o.id === 'record-check');
+    expect(check, 'record-check offer exists').toBeDefined();
+    expect(labelsOf(check!)).toEqual(['check.any', 'dice.any']);
+  });
 });

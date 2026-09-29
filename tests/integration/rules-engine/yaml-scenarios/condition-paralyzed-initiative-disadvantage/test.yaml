@@ -7,7 +7,9 @@ description: >-
   directly in its own effect state inherits the Disadvantage for free with
   zero child-side code. Recording Paralyzed therefore sets the flag even
   though no Paralyzed module ever mentions it — the shared fact name IS the
-  coupling.
+  coupling. The same inheritance carries Incapacitated's attribution chip: its
+  annotate gates on the fact, so a paralyzed character's Roll Initiative panel
+  names Incapacitated as the reason.
 ruleGroups:
   - dnd-5e-2024/condition-incapacitated
   - dnd-5e-2024/condition-paralyzed
@@ -31,3 +33,4 @@ steps:
         annotations:
           exists:
             - rule.dnd-5e-2024.condition-paralyzed.notice
+            - rule.dnd-5e-2024.condition-incapacitated.disadvantage

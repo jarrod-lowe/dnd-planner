@@ -30,7 +30,11 @@ function rollOffer(skill: string): Offer {
       section: 'free',
       name: `play.stats.skills.${skill}`,
       disadvantageFact: `skill.${skill}.disadvantage`,
-      annotationLabels: ['dice.any'],
+      // The save-recorder label scheme (save.any + save.<ability>): the broad
+      // check label scopes check-wide attribution chips (Poisoned, Frightened),
+      // the per-skill one scopes the untrained-armor four, and dice.any keeps
+      // the any-die riders (Heroic Inspiration, Exhaustion's check rider).
+      annotationLabels: ['check.any', `check.${skill}`, 'dice.any'],
       primaryControl: {
         type: 'dice-line',
         dice: [{ sides: 20, bonus: { var: 'rollBonus' }, purpose: 'check' }],

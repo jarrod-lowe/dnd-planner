@@ -138,6 +138,20 @@ const conditionFrightened: RuleModule = {
               labelOff: `${CF}.los.out-of-sight`,
               appliesTo: ['to-hit', 'check']
             }
+          },
+          {
+            // Attribution chip (the GWF valueless-rider idiom): explains what
+            // the LoS chip FORCES — no flags exist to explain it. Its key
+            // flips with the sight SEED (the notice-body-flip precedent): in
+            // sight names the disadvantage, out of sight says why it is gone.
+            // check.any scopes the ability checks (never dice.any — saves are
+            // not disadvantaged); the per-row toggle above stays the carrier.
+            key:
+              f.num('frightened.sourceHidden') > 0
+                ? `${CF}.disadvantage-hidden`
+                : `${CF}.disadvantage`,
+            targets: ['attack.any', 'check.any'],
+            rider: { label: `${CF}.rider`, type: 'modifier' }
           }
         ]
       : []

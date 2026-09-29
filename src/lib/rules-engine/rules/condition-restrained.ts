@@ -91,6 +91,16 @@ const conditionRestrained: RuleModule = {
             targets: ['notice'],
             source: `${CR}.effect-restrained.name`,
             body: `${CR}.notice.body`
+          },
+          {
+            // Attribution chip (the GWF valueless-rider idiom): names WHY the
+            // affected dice-lines default to 2d20-take-low. No `value` → a
+            // text chip on the matched panels plus the toast label; the flags
+            // themselves are unchanged. attack.any reaches every weapon and
+            // unarmed panel, save.dex exactly the DEX save recorder.
+            key: `${CR}.disadvantage`,
+            targets: ['attack.any', 'save.dex'],
+            rider: { label: `${CR}.rider`, type: 'modifier' }
           }
         ]
       : []

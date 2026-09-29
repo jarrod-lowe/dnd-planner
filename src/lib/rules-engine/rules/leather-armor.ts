@@ -1,5 +1,6 @@
 import {
   armorTrainingPenalties,
+  armorTrainingPenaltyAnnotation,
   defineRule,
   type ActionResult,
   type Diagnostic,
@@ -20,6 +21,9 @@ const BUILD_LOCKED = 'rule.dnd-5e-2024.build-lock.locked';
 const leatherArmor: RuleModule = {
   id: 'leather-armor',
   derive: () => armorTrainingPenalties('leather', 'armor.light.proficient'),
+  // The untrained-armor attribution chip (the builder helper — the shared
+  // `armor-training` namespace, since the penalty facts are shared too).
+  annotate: (f) => armorTrainingPenaltyAnnotation(f, 'leather', 'armor.light.proficient'),
   offer: () => [
     {
       id: 'don-leather-armor',

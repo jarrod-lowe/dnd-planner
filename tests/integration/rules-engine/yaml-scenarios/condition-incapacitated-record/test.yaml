@@ -11,6 +11,10 @@ description: >-
   models BEING INCAPACITATED (imposed by an enemy effect), so it is free and
   ungated (the prone "Knocked Prone" precedent), and any rest clears it
   (untilShortRest covers both rest kinds; see condition-incapacitated-rest-clears).
+  An attribution chip (a valueless rider, the GWF idiom) names WHY Roll
+  Initiative defaults to 2d20-take-low: dice.initiative targets exactly that
+  panel, and the wave-5 composition children (paralyzed/petrified/stunned/
+  unconscious) inherit it through the fact they max-combine into.
 ruleGroups:
   - dnd-5e-2024/condition-incapacitated
   - dnd-5e-2024/action-economy
@@ -29,6 +33,7 @@ steps:
         annotations:
           notExists:
             - rule.dnd-5e-2024.condition-incapacitated.notice
+            - rule.dnd-5e-2024.condition-incapacitated.disadvantage
   - addOffer:
       id: record-incapacitated
       assert:
@@ -41,6 +46,14 @@ steps:
         annotations:
           exists:
             - rule.dnd-5e-2024.condition-incapacitated.notice
+            - rule.dnd-5e-2024.condition-incapacitated.disadvantage
           targets:
             - key: rule.dnd-5e-2024.condition-incapacitated.notice
               targets: [notice]
+            - key: rule.dnd-5e-2024.condition-incapacitated.disadvantage
+              targets: [dice.initiative]
+          riders:
+            - key: rule.dnd-5e-2024.condition-incapacitated.disadvantage
+              rider:
+                label: rule.dnd-5e-2024.condition-incapacitated.rider
+                type: modifier

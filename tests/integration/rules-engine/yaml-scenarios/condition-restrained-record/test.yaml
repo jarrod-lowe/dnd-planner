@@ -16,7 +16,10 @@ description: >-
   the yaml grammar cannot assert control payloads). The recorder models BEING
   RESTRAINED (imposed by an enemy effect — web, entangle, manacles), so it is
   free and ungated (the prone "Knocked Prone" precedent), and any rest clears
-  it (untilShortRest; see condition-restrained-rest-clears).
+  it (untilShortRest; see condition-restrained-rest-clears). An attribution
+  chip (a valueless rider, the GWF idiom) names WHY the affected dice-lines
+  default to 2d20-take-low: attack.any reaches every weapon and unarmed
+  panel, save.dex exactly the DEX save recorder.
 ruleGroups:
   - species-human/species-human
   - dnd-5e-2024/movement
@@ -36,6 +39,7 @@ steps:
         annotations:
           notExists:
             - rule.dnd-5e-2024.condition-restrained.notice
+            - rule.dnd-5e-2024.condition-restrained.disadvantage
   - addOffer:
       id: record-restrained
       assert:
@@ -59,6 +63,14 @@ steps:
         annotations:
           exists:
             - rule.dnd-5e-2024.condition-restrained.notice
+            - rule.dnd-5e-2024.condition-restrained.disadvantage
           targets:
             - key: rule.dnd-5e-2024.condition-restrained.notice
               targets: [notice]
+            - key: rule.dnd-5e-2024.condition-restrained.disadvantage
+              targets: [attack.any, save.dex]
+          riders:
+            - key: rule.dnd-5e-2024.condition-restrained.disadvantage
+              rider:
+                label: rule.dnd-5e-2024.condition-restrained.rider
+                type: modifier

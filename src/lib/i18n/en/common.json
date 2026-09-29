@@ -451,6 +451,10 @@
     },
     "dnd-5e-2024": {
       "action-economy": {},
+      "armor-training": {
+        "disadvantage": "Untrained armor: imposes disadvantage on attack rolls, Initiative, and Acrobatics, Athletics, Sleight of Hand, and Stealth checks",
+        "rider": "Untrained armor"
+      },
       "build-lock": {
         "lock": {
           "name": "Lock",
@@ -1007,7 +1011,9 @@
           "cannot_drop": "Your Speed is 0 — you can't drop prone"
         },
         "notice": "Prone",
-        "notice.body": "Disadvantage on your attack rolls. Attack rolls against you have Advantage from within 5 feet, Disadvantage otherwise. You can only crawl, or spend {{cost}} ft to right yourself."
+        "notice.body": "Disadvantage on your attack rolls. Attack rolls against you have Advantage from within 5 feet, Disadvantage otherwise. You can only crawl, or spend {{cost}} ft to right yourself.",
+        "disadvantage": "Prone: imposes disadvantage on your attack rolls",
+        "rider": "Prone"
       },
       "condition-charmed": {
         "record-charmed": {
@@ -1037,7 +1043,9 @@
           "name": "Blinded"
         },
         "notice": "Blinded",
-        "notice.body": "You can't see and automatically fail any ability check that requires sight. Your attack rolls have Disadvantage. Attack rolls against you have Advantage."
+        "notice.body": "You can't see and automatically fail any ability check that requires sight. Your attack rolls have Disadvantage. Attack rolls against you have Advantage.",
+        "disadvantage": "Blinded: imposes disadvantage on your attack rolls",
+        "rider": "Blinded"
       },
       "condition-poisoned": {
         "record-poisoned": {
@@ -1047,7 +1055,9 @@
           "name": "Poisoned"
         },
         "notice": "Poisoned",
-        "notice.body": "You have Disadvantage on attack rolls and ability checks."
+        "notice.body": "You have Disadvantage on attack rolls and ability checks.",
+        "disadvantage": "Poisoned: imposes disadvantage on attack rolls and ability checks",
+        "rider": "Poisoned"
       },
       "condition-incapacitated": {
         "record-incapacitated": {
@@ -1057,7 +1067,9 @@
           "name": "Incapacitated"
         },
         "notice": "Incapacitated",
-        "notice.body": "You can't take any action, Bonus Action, or Reaction; your Concentration is broken; you can't speak; and you have Disadvantage on Initiative rolls."
+        "notice.body": "You can't take any action, Bonus Action, or Reaction; your Concentration is broken; you can't speak; and you have Disadvantage on Initiative rolls.",
+        "disadvantage": "Incapacitated: imposes disadvantage on Initiative rolls",
+        "rider": "Incapacitated"
       },
       "condition-grappled": {
         "record-grappled": {
@@ -1067,7 +1079,9 @@
           "name": "Grappled"
         },
         "notice": "Grappled",
-        "notice.body": "Your Speed is 0 and can't increase. Disadvantage on attack rolls against any target other than the grappler. The grappler can drag or carry you when it moves, at 1 extra foot per foot unless you are Tiny or two or more sizes smaller."
+        "notice.body": "Your Speed is 0 and can't increase. Disadvantage on attack rolls against any target other than the grappler. The grappler can drag or carry you when it moves, at 1 extra foot per foot unless you are Tiny or two or more sizes smaller.",
+        "disadvantage": "Grappled: imposes disadvantage on your attack rolls",
+        "rider": "Grappled"
       },
       "condition-restrained": {
         "record-restrained": {
@@ -1077,7 +1091,9 @@
           "name": "Restrained"
         },
         "notice": "Restrained",
-        "notice.body": "Your Speed is 0 and can't increase. Attack rolls against you have Advantage, your attack rolls have Disadvantage, and you have Disadvantage on Dexterity saving throws."
+        "notice.body": "Your Speed is 0 and can't increase. Attack rolls against you have Advantage, your attack rolls have Disadvantage, and you have Disadvantage on Dexterity saving throws.",
+        "disadvantage": "Restrained: imposes disadvantage on your attack rolls and Dexterity saving throws",
+        "rider": "Restrained"
       },
       "condition-paralyzed": {
         "record-paralyzed": {
@@ -1117,7 +1133,9 @@
           "name": "Invisible"
         },
         "notice": "Invisible",
-        "notice.body": "Advantage on your attack rolls and on Initiative. Attack rolls against you have Disadvantage (not against a creature that can somehow see you). You and your equipment are concealed from effects that require their target to be seen. Ends on any rest."
+        "notice.body": "Advantage on your attack rolls and on Initiative. Attack rolls against you have Disadvantage (not against a creature that can somehow see you). You and your equipment are concealed from effects that require their target to be seen. Ends on any rest.",
+        "advantage": "Invisible: grants advantage on your attack rolls and Initiative",
+        "rider": "Invisible"
       },
       "condition-unconscious": {
         "record-unconscious": {
@@ -1171,6 +1189,9 @@
         "notice": "Frightened",
         "notice.body": "You have Disadvantage on attack rolls and ability checks while the source of fear is within line of sight. You can't willingly move closer to the source of fear.",
         "notice.body-hidden": "The source of fear is out of sight — no Disadvantage from Frightened. You still can't willingly move closer to the source of fear.",
+        "disadvantage": "Frightened: imposes disadvantage while the source of fear is in sight",
+        "disadvantage-hidden": "Frightened: the source of fear is out of sight — no disadvantage",
+        "rider": "Frightened",
         "los.in-sight": "Source of fear in sight",
         "los.out-of-sight": "Source of fear out of sight",
         "effect-source-hidden": {

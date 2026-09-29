@@ -98,6 +98,18 @@ const conditionIncapacitated: RuleModule = {
             targets: ['notice'],
             source: `${CI}.effect-incapacitated.name`,
             body: `${CI}.notice.body`
+          },
+          {
+            // Attribution chip (the GWF valueless-rider idiom): names WHY Roll
+            // Initiative defaults to 2d20-take-low — the derive below carries
+            // the flag, this names it. No `value` → a text chip on the
+            // matched panel plus the toast label. The wave-5 composition
+            // children (paralyzed/petrified/stunned/unconscious) max-combine
+            // into condition.incapacitated and inherit the chip — accurate,
+            // they ARE incapacitated.
+            key: `${CI}.disadvantage`,
+            targets: ['dice.initiative'],
+            rider: { label: `${CI}.rider`, type: 'modifier' }
           }
         ]
       : []

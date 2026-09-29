@@ -93,6 +93,17 @@ const conditionInvisible: RuleModule = {
             targets: ['notice'],
             source: `${CI}.effect-invisible.name`,
             body: `${CI}.notice.body`
+          },
+          {
+            // Attribution chip, the ADVANTAGE polarity (the GWF valueless-rider
+            // idiom): names WHY the dice-lines default to 2d20-take-high via
+            // their advantageUp leg. No `value` → a text chip on the matched
+            // panels plus the toast label; the flags themselves are unchanged.
+            // attack.any (weapons + unarmed) and dice.initiative — exactly the
+            // two tests the effect raises.
+            key: `${CI}.advantage`,
+            targets: ['attack.any', 'dice.initiative'],
+            rider: { label: `${CI}.rider`, type: 'modifier' }
           }
         ]
       : []

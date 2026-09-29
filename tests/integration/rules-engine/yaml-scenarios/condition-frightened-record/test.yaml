@@ -16,7 +16,10 @@ description: >-
   carries the standing text while the condition is live; the recorder models
   BEING FRIGHTENED (imposed by an enemy effect), so it is free and ungated,
   and any rest clears it (untilShortRest; see
-  condition-frightened-rest-clears).
+  condition-frightened-rest-clears). An attribution chip (a valueless rider,
+  the GWF idiom) explains what the LoS chip FORCES: its key flips with the
+  sight seed (the notice-body-flip precedent), targeting attack.any and
+  check.any — attacks and ability checks, the SRD's two disadvantaged tests.
 ruleGroups:
   - dnd-5e-2024/condition-frightened
 steps:
@@ -31,6 +34,7 @@ steps:
           notExists:
             - rule.dnd-5e-2024.condition-frightened.notice
             - rule.dnd-5e-2024.condition-frightened.los
+            - rule.dnd-5e-2024.condition-frightened.disadvantage
   - addOffer:
       id: record-frightened
       assert:
@@ -62,9 +66,17 @@ steps:
           exists:
             - rule.dnd-5e-2024.condition-frightened.notice
             - rule.dnd-5e-2024.condition-frightened.los
+            - rule.dnd-5e-2024.condition-frightened.disadvantage
           targets:
             - key: rule.dnd-5e-2024.condition-frightened.los
               targets: [attack.any, dice.any]
+            - key: rule.dnd-5e-2024.condition-frightened.disadvantage
+              targets: [attack.any, check.any]
+          riders:
+            - key: rule.dnd-5e-2024.condition-frightened.disadvantage
+              rider:
+                label: rule.dnd-5e-2024.condition-frightened.rider
+                type: modifier
           toggles:
             - key: rule.dnd-5e-2024.condition-frightened.los
               toggle:

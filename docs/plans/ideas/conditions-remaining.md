@@ -239,6 +239,18 @@ Nothing like it exists — a counter, not a boolean:
 
 - Organise the CONDITION verb-bucket sub-levels differently — the 15 per-condition entries render as one flat list; regroup them.
 
+## Attribution chips (landed 2026-09-29)
+
+Every advantage/disadvantage source now ships an attribution chip — a
+valueless-rider annotation naming why the dice-lines default to 2d20-take-low
+("Poisoned: imposes disadvantage on attack rolls and ability checks") plus the
+short label riding the roll toast. All conditions, Invisible (advantage), and
+untrained armor (the shared builder `armorTrainingPenaltyAnnotation`).
+Authoring idiom and the roller-label map (`check.any`/`check.<skill>` join
+`save.any`/`save.<ability>`): RULE_GROUP_GUIDE.md "attribution chips". Not yet
+chipped: splint's unconditional proficient-worn Stealth disadvantage (a
+separate source — its own chip would target `check.stealth`).
+
 ## Out of scope (global)
 
 - NPC-side enforcement: attacks vs us (Advantage/auto-crit from within 5 ft), charmer/grappler identity scoping, drag costs — notice text only (prone precedent)

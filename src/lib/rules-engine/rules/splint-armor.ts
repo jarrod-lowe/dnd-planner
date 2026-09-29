@@ -1,5 +1,6 @@
 import {
   armorTrainingPenalties,
+  armorTrainingPenaltyAnnotation,
   defineRule,
   type ActionResult,
   type Contribution,
@@ -48,6 +49,10 @@ const splintArmor: RuleModule = {
     speedPenalty('character.movement.total'),
     stealthPenalty
   ],
+  // The untrained-armor attribution chip (the builder helper — the shared
+  // `armor-training` namespace). The unconditional Stealth disadvantage below
+  // is a separate, proficient-worn source and stays un-chipped.
+  annotate: (f) => armorTrainingPenaltyAnnotation(f, 'splint', 'armor.heavy.proficient'),
   offer: () => [
     {
       id: 'don-splint-armor',
