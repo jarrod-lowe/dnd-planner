@@ -1,0 +1,26 @@
+name: 'Condition Frightened - Hidden With Poisoned'
+description: >-
+  The uniform-max dividend under the LoS gate: Poisoned effect-writes the
+  shared flags at 1 (stateCombine max) while the hidden Frightened derives
+  contribute 0 — max of (1, 0) is 1, so the flags stay on with the source
+  out of sight. The sight qualifier scopes only FRIGHTENED's disadvantage,
+  never another condition's.
+ruleGroups:
+  - dnd-5e-2024/condition-poisoned
+  - dnd-5e-2024/condition-frightened
+initialEffects:
+  # Real committed translations in tests/integration/rules-engine/initial-effects.ts.
+  - id: effect-frightened
+  - id: effect-frightened-source-hidden
+steps:
+  - addOffer:
+      id: record-poisoned
+      assert:
+        facts:
+          condition.poisoned: 1
+          condition.frightened: 1
+          frightened.sourceHidden: 1
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+          initiative.disadvantage: 1
+          check.disadvantage: 1

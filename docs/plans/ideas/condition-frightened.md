@@ -1,6 +1,6 @@
 # Condition: Frightened
 
-The LAST of the 14 — wave-2's deferred straggler. History: deferred over the line-of-sight qualifier; replanned 2026-09-25 around a LoS notice-button toggle (#461/#462) which was ABANDONED (#462 reverted in #464, #463 closed superseded). **User-directed 2026-09-29: assume the source of fear is always within line of sight** — the qualifier is satisfied by assumption, the flags are STANDING, and mechanising LoS is a deferred follow-up PR. Poisoned's exact chassis. See conditions-remaining.md.
+The LAST of the 14 — wave-2's deferred straggler. History: deferred over the line-of-sight qualifier; replanned 2026-09-25 around a LoS notice-button toggle (#461/#462) which was ABANDONED (#462 reverted in #464, #463 closed superseded). **User-directed 2026-09-29: assume the source of fear is always within line of sight** — landed as PR1/#465 (standing flags). **Follow-up (user-directed 2026-09-29, later same day): mechanise LoS as an Aura-of-Protection-style chip on the choice** — default on, sticky across rolls, state flows through the committed-effects plan cycle (never a global). PR2 below. See conditions-remaining.md.
 
 ## Behaviour
 
@@ -13,11 +13,11 @@ Be extremely concise. Sacrifice grammar for the sake of concision.
 > **Ability Checks and Attacks Affected.** You have Disadvantage on ability checks and attack rolls while the source of fear is within line of sight.
 > **Can't Approach.** You can't willingly move closer to the source of fear.
 
-Modelled: Poisoned's full flag set as STANDING flags (22, uniform `stateCombine: 'max'`) under the always-LoS assumption; can't-approach = notice text (no source-position model).
+Modelled: Poisoned's full flag SET (22, all `combine: 'max'`) — PR1 effect-wrote them standing; PR2 moved them to DERIVES gated `condition.frightened > 0 && frightened.sourceHidden === 0` (unset = in sight = flags on, the free default). Can't-approach = notice text (no source-position model).
 
 ## Decisions (defaults — re-grill before execution)
 
-- **LoS: assumed always (user-directed 2026-09-29)** — standing flags, no toggles, no derives, no UI work. SUPERSEDES both the 2026-09-25 notice-button toggle replan (abandoned: #462 reverted, #463 closed) and the pre-replan per-die-override idea. Notice/detail copy KEEPS the SRD-verbatim sight qualifier — text ahead of mechanics; the deferred LoS PR makes behavior catch up.
+- **LoS: assumed always (user-directed 2026-09-29)** — standing flags, no toggles, no derives, no UI work. SUPERSEDES both the 2026-09-25 notice-button toggle replan (abandoned: #462 reverted, #463 closed) and the pre-replan per-die-override idea. Notice/detail copy KEEPS the SRD-verbatim sight qualifier — text ahead of mechanics; the deferred LoS PR makes behavior catch up. **Follow-up landed the same day (PR2): dice-line chip.**
 - Flag set + `stateCombine: 'max'` loop: EXACTLY Poisoned's (22 flags — attack.str/dex, `initiative.disadvantage`, `check.disadvantage`, 18 skills); local `SKILLS` const (confinement rule; share only if a third appears). Zero roller work — every fact already has readers (Poisoned's PR wired them, incl. Cleave/Alert secondaries).
 - Can't-willingly-approach: notice text only — enforcing "closer to the source" needs source position (NPC side, no modelling).
 - Ending: umbrella default — `expiry: untilShortRest` (any rest) + ActiveStateStrip chip dismissal; SRD gives no mechanical end → no end offer.
@@ -83,16 +83,27 @@ Tests (RED first — registered in `EXPECTED_RUNNABLE`, tests/integration/rules-
 - [x] i18n keys both locales
 - [x] GREEN: all 4 scenarios + `EXPECTED_RUNNABLE`
 - [x] terraform seed `char_condition_frightened_rulegroup_seed` (terraform/module/dnd-planner/dynamodb-items.tf); `make validate` passes
-- [ ] gates (`make check`, `make test-unit`, `make format-check`) → PR → close #463 (superseded) → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod) — on branch `condition-frightened`
+- [x] gates (`make check`, `make test-unit`, `make format-check`) → PR → close #463 (superseded) → codex monitor → clean → `make deploy-test` (includes sync-rule-groups) → human inspects test env → human merges (merge deploys prod) — on branch `condition-frightened`; merged as #465, all checks + manual pass
+
+### PR2 — line of sight (user-directed: Aura-of-Protection-style chip on the choice, default on, sticky, flows through the plan — never a global; one folded PR because an engine-only slice has no hands-on testable surface)
+
+- [x] RED: 4 scenarios (`source-hidden`, `source-revealed`, `hidden-with-poisoned`, `rest-clears-toggle`) seeded via INITIAL_EFFECTS (the yaml harness has no mid-scenario commit step); `toggles` assert grammar added to assert-annotations.ts (rider style — effect instances stay unit-pinned)
+- [x] engine: effect slims to `condition.frightened` + `dependents: ['frightened-source']`; 22 gated derives; keyed `frightened-source` toggle effects (hide writes the fact; reveal = empty display-less same-key eviction; both `ruleGroupId`-authored — the follow-up channel bypasses the fold's stamping, javelin precedent; both untilShortRest)
+- [x] `AnnotationToggle` channel (engine + view types + `ActiveAnnotation` pick) — `onWhen: 0` makes the UNSET fact pressed (defaults-to-on free); `appliesTo: ['to-hit', 'check']` keeps the chip off saves
+- [x] UI: PanelRenderer resolves `pressed` from live facts, passes `toggles` + `onToggleEffect={onFollowup}`; PanelDiceLine renders the chip in the modifier slot (`aria-pressed`, two distinct labels, reuses `.panel-renderer__modifier` styles; span indication when not editable; dropped in summary)
+- [x] tap → `addFollowupEffect` (synchronous re-eval, replace-by-key — N flips per turn never accumulate); notice body flips with sight (`.notice.body-hidden`)
+- [x] i18n both locales (`.los.in-sight`, `.los.out-of-sight`, `.effect-source-hidden.name`, `.notice.body-hidden`)
+- [x] unit pins: `condition-frightened-los.test.ts` (gating trio, committed-array eviction round-trip, effect shapes, annotation contract, i18n distinct labels) + PanelDiceLine chip tests (pressed/unpressed names, aria, both commit directions, span variants, save-line absence, summary drop)
+- [ ] gates → PR → codex monitor → clean → `make deploy-test` → human inspects test env → human merges — on branch `frightened-los`
 
 ## Out of scope
 
-- **LoS qualifier mechanisation** — the deferred follow-up (user-directed 2026-09-29); when it lands, the standing flags become conditional on sight state
 - can't-approach movement enforcement (no source position; notice text)
 - source IDENTITY (which creature frightened you — one undifferentiated condition)
 - inflicting fear on others (fear spells — NPC state)
 - wisdom-save fear effects recording the condition automatically (future spell work)
 - backfilling seeded groups to pre-existing characters (prone known limitation)
+- the LoS chip on notice-strip dice-lines (NoticeStrip mounts no toggles; the notice body flip is the awareness channel)
 
 ## Notes
 

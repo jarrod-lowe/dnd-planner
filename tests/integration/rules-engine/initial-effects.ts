@@ -95,6 +95,32 @@ const slot = (level: number, total = 1, remaining = total): EffectInstance => {
   return { id: `slot-l${level}`, state, expiry: permanent };
 };
 
+/**
+ * Frightened already active — the committed condition effect `record-frightened`
+ * lands at end of turn, plus (for the line-of-sight scenarios) the keyed
+ * source-toggle states the dice-line chip commits mid-turn. `untilShortRest`
+ * throughout so the rest-clears scenarios exercise the real expiry.
+ */
+const untilShortRest = { kind: 'untilShortRest' } as const;
+const frightenedActive = (): EffectInstance => ({
+  id: 'effect-frightened',
+  key: 'frightened',
+  state: { 'condition.frightened': 1 },
+  expiry: untilShortRest
+});
+const frightenedSourceHidden = (): EffectInstance => ({
+  id: 'effect-frightened-source-hidden',
+  key: 'frightened-source',
+  state: { 'frightened.sourceHidden': 1 },
+  expiry: untilShortRest
+});
+/** The reveal: the empty same-key eviction (display-less in the module). */
+const frightenedSourceVisible = (): EffectInstance => ({
+  id: 'effect-frightened-source-visible',
+  key: 'frightened-source',
+  expiry: untilShortRest
+});
+
 export const INITIAL_EFFECTS: Record<string, EffectInstance[]> = {
   // === Armor / shield ===
   'leather-armor-already-equipped': [leatherEquipped()],
@@ -112,6 +138,16 @@ export const INITIAL_EFFECTS: Record<string, EffectInstance[]> = {
   'attack-spear-plus1': [weaponEquipped('spear-plus1')],
   'greataxe-cleave-mastery': [weaponEquipped('greataxe')],
   'javelin-slow-mastery': [weaponEquipped('javelin')],
+
+  // === Frightened line-of-sight (condition + keyed source-toggle states) ===
+  'condition-frightened-source-hidden': [frightenedActive(), frightenedSourceHidden()],
+  'condition-frightened-source-revealed': [
+    frightenedActive(),
+    frightenedSourceHidden(),
+    frightenedSourceVisible()
+  ],
+  'condition-frightened-hidden-with-poisoned': [frightenedActive(), frightenedSourceHidden()],
+  'condition-frightened-rest-clears-toggle': [frightenedActive(), frightenedSourceHidden()],
   'spear-versatile-damage-die': [weaponEquipped('spear')],
   'weapon-donned-attacks-visible': [weaponEquipped('dagger')],
   'fighting-style-great-weapon-annotations': [weaponEquipped('greataxe')],

@@ -1,0 +1,28 @@
+name: 'Condition Frightened - Source Revealed'
+description: >-
+  The round-trip terminal state: hide the source, then reveal it — the empty
+  same-`key` ('frightened-source') eviction REPLACES the hidden effect, the
+  fact reverts to unset (in sight), and every derive returns. Newest committed
+  effect wins the key, so the seeded array order [condition, hidden, reveal]
+  folds to "visible". The reveal's own contribution is nothing (no state) —
+  exactly the get-up eviction idiom, display-less here.
+ruleGroups:
+  - dnd-5e-2024/condition-frightened
+initialEffects:
+  # Real committed translations in tests/integration/rules-engine/initial-effects.ts.
+  - id: effect-frightened
+  - id: effect-frightened-source-hidden
+  - id: effect-frightened-source-visible
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.frightened: 1
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+          initiative.disadvantage: 1
+          check.disadvantage: 1
+          skill.perception.disadvantage: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-frightened.los

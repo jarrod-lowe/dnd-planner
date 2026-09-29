@@ -30,7 +30,8 @@
     TextInformation,
     CountdownInformation,
     RollResult,
-    RollModifier
+    RollModifier,
+    DiceLineToggle
   } from './panel-renderer/types';
 
   interface Props {
@@ -435,6 +436,29 @@
       .filter((m): m is RollModifier => m !== undefined)
   );
 
+  // Annotations carrying a `toggle` become pressed/unpressed state chips on
+  // the dice line — the aura-chip look, but committing a keyed effect on tap
+  // (through onFollowup) instead of flipping ephemeral modifier state. `pressed`
+  // resolves from the live facts HERE, once per evaluation: every dice-line
+  // rendering the same toggle reads the same value, and the synchronous
+  // re-evaluation a tap triggers flips them all together.
+  const diceToggles = $derived<DiceLineToggle[]>(
+    matchingAnnotations
+      .filter((ann) => ann.toggle !== undefined)
+      .map((ann) => {
+        const toggle = ann.toggle!;
+        return {
+          key: ann.key,
+          labelOn: toggle.labelOn,
+          labelOff: toggle.labelOff,
+          appliesTo: toggle.appliesTo,
+          pressed: ((facts?.[toggle.fact] as number | undefined) ?? 0) === toggle.onWhen,
+          onEffect: toggle.onEffect,
+          offEffect: toggle.offEffect
+        };
+      })
+  );
+
   const visibleFollowups = $derived(
     editable && onFollowup
       ? (descriptor.followups ?? []).filter(
@@ -583,6 +607,8 @@
           onRoll={(result, dieIndex) => handleDiceRoll(result, dieIndex, `primary:die:${dieIndex}`)}
           {gwfActive}
           modifiers={rollModifiers}
+          toggles={diceToggles}
+          onToggleEffect={onFollowup}
           {summary}
         />
       </div>
@@ -718,6 +744,8 @@
             handleDiceRoll(result, dieIndex, `secondary:die:${dieIndex}`)}
           {gwfActive}
           modifiers={rollModifiers}
+          toggles={diceToggles}
+          onToggleEffect={onFollowup}
           {summary}
         />
       </div>

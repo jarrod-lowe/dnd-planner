@@ -1,0 +1,62 @@
+name: 'Condition Frightened - Rest Clears Toggle'
+description: >-
+  Any rest clears the keyed source-toggle TOGETHER with the condition: both
+  carry untilShortRest, so a hidden source cannot survive the rest that ends
+  the Frightened condition itself (a stray hidden fact would otherwise
+  resurface as out-of-sight on the next recording). Both the recorded short
+  rest and the explicit long-rest endTurn variant.
+ruleGroups:
+  - dnd-5e-2024/condition-frightened
+  - dnd-5e-2024/core-events
+initialEffects:
+  # Real committed translations in tests/integration/rules-engine/initial-effects.ts.
+  - id: effect-frightened
+  - id: effect-frightened-source-hidden
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.frightened: 1
+          frightened.sourceHidden: 1
+  # A recorded short rest clears both within the same evaluation.
+  - addOffer:
+      id: record-short-rest
+      assert:
+        facts:
+          rest.short: 1
+          condition.frightened: 0
+          frightened.sourceHidden: 0
+          attack.str.disadvantage: 0
+          check.disadvantage: 0
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-frightened.notice
+            - rule.dnd-5e-2024.condition-frightened.los
+  - endTurn:
+      assert:
+        facts:
+          condition.frightened: 0
+          frightened.sourceHidden: 0
+        effects:
+          notExists:
+            - effect-frightened
+            - effect-frightened-source-hidden
+  # ...and the long-rest endTurn variant: record the condition fresh (planned
+  # effect folds in), then a long rest clears it too.
+  - addOffer:
+      id: record-frightened
+      assert:
+        facts:
+          condition.frightened: 1
+          frightened.sourceHidden: 0
+          attack.str.disadvantage: 1
+  - endTurn:
+      longRest: true
+      assert:
+        facts:
+          condition.frightened: 0
+          frightened.sourceHidden: 0
+        effects:
+          notExists:
+            - effect-frightened
+            - effect-frightened-source-hidden

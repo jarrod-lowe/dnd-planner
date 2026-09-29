@@ -524,6 +524,15 @@ const EXPECTED_RUNNABLE = [
   'condition-frightened-rest-clears',
   'condition-frightened-skill-flags',
   'condition-frightened-with-poisoned',
+  // …PR2 — the LoS follow-up: the 22 flags become derives gated on the keyed
+  // frightened.sourceHidden sub-state (unset = in sight = the free default),
+  // committed/evicted mid-turn by the dice-line toggle chip through the
+  // follow-up channel (INITIAL_EFFECTS seeds the terminal states here; the
+  // commit path itself is unit-pinned)
+  'condition-frightened-source-hidden',
+  'condition-frightened-source-revealed',
+  'condition-frightened-hidden-with-poisoned',
+  'condition-frightened-rest-clears-toggle',
   // condition-incapacitated (wave 3 enabler: the economy remaining derives +
   // extraRemaining read the condition fact — Inactive — and the module derives
   // initiative.disadvantage from it — Surprised; dash goes illegal off the

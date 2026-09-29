@@ -1,0 +1,43 @@
+name: 'Condition Frightened - Source Hidden'
+description: >-
+  Flags-off-is-OFF: with the source of fear marked out of sight, ALL the
+  disadvantage derives gate to 0 — the SRD scopes the whole disadvantage
+  clause to "while the source of fear is within line of sight", and the
+  hidden sub-state asserts the qualifier is NOT satisfied. The standing
+  notice stays (can't-approach is sight-independent), and the LoS toggle
+  annotation persists so the player can flip back. The hidden state is
+  seeded as committed effects (the dice-line chip commits it mid-turn via
+  the follow-up channel — see the unit pins); representative flags here,
+  the full 22 in condition-frightened-record through the same derives.
+ruleGroups:
+  - dnd-5e-2024/condition-frightened
+initialEffects:
+  # Real committed translations in tests/integration/rules-engine/initial-effects.ts.
+  - id: effect-frightened
+  - id: effect-frightened-source-hidden
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.frightened: 1
+          frightened.sourceHidden: 1
+          attack.str.disadvantage: 0
+          attack.dex.disadvantage: 0
+          initiative.disadvantage: 0
+          check.disadvantage: 0
+          skill.athletics.disadvantage: 0
+          skill.stealth.disadvantage: 0
+          skill.perception.disadvantage: 0
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-frightened.notice
+            - rule.dnd-5e-2024.condition-frightened.los
+          targets:
+            - key: rule.dnd-5e-2024.condition-frightened.los
+              targets: [attack.any, dice.any]
+          toggles:
+            - key: rule.dnd-5e-2024.condition-frightened.los
+              toggle:
+                fact: frightened.sourceHidden
+                onWhen: 0
+                appliesTo: [to-hit, check]

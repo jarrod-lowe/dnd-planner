@@ -268,6 +268,29 @@ export interface AnnotationRider {
 }
 
 /**
+ * A state toggle an annotation renders on the dice-lines it targets: a chip
+ * indicating whether a player-asserted standing state holds (Frightened's
+ * line-of-sight). Mirrors the engine's `AnnotationToggle`. Tapping commits
+ * one of the two authored effects through the follow-up commit channel.
+ */
+export interface AnnotationToggle {
+  /** The fact carrying the state. */
+  fact: string;
+  /** The fact value that renders the chip PRESSED (`0` = unset defaults pressed). */
+  onWhen: number;
+  /** Committed when tapped while NOT pressed. */
+  onEffect: import('$lib/rules-engine').EffectInstance;
+  /** Committed when tapped while pressed. */
+  offEffect: import('$lib/rules-engine').EffectInstance;
+  /** i18n key for the pressed state's accessible name. */
+  labelOn: string;
+  /** i18n key for the unpressed state's accessible name. Distinct from labelOn. */
+  labelOff: string;
+  /** Dice purposes this chip renders on — keeps a `dice.any` toggle off saves. */
+  appliesTo: RollPurpose[];
+}
+
+/**
  * An annotation produced by the rules engine for display on action panels.
  */
 export interface Annotation {
@@ -281,6 +304,8 @@ export interface Annotation {
   values?: Record<string, string | number>;
   /** Optional rider data for rendering as a modifier chip */
   rider?: AnnotationRider;
+  /** Optional state-toggle data rendered as a pressed/unpressed chip */
+  toggle?: AnnotationToggle;
   /**
    * What this annotation advises planning. Present → the panel renders the
    * annotation as a button that plans it, exactly as picking it from the

@@ -1,4 +1,5 @@
 import type { RollPurpose } from '$lib/rules-view';
+import type { EffectInstance } from '$lib/rules-engine';
 
 export type RollMode = 'normal' | 'advantage' | 'disadvantage';
 
@@ -33,6 +34,31 @@ export interface RollModifier {
   value: number;
   /** Whether the chip starts switched on. */
   defaultOn: boolean;
+}
+
+/**
+ * A state-toggle chip offered on a dice line — pressed/unpressed indication of
+ * a player-asserted standing state (Frightened's line-of-sight). Derived by
+ * PanelRenderer from annotations carrying a `toggle`; `pressed` is resolved
+ * from the LIVE facts there, so every dice-line showing the same toggle reads
+ * the same state and a tap (which commits one of the two effects through the
+ * follow-up channel and re-evaluates synchronously) flips them all at once.
+ * Unlike {@link RollModifier} there is NO per-component toggle state — the
+ * committed effect is the state, which is what makes it sticky.
+ */
+export interface DiceLineToggle {
+  key: string;
+  /** i18n keys for the pressed/unpressed accessible names (distinct). */
+  labelOn: string;
+  labelOff: string;
+  /** Which dice (by purpose) this chip renders on. */
+  appliesTo: DicePurpose[];
+  /** Resolved from the live facts: `(facts[fact] ?? 0) === onWhen`. */
+  pressed: boolean;
+  /** Committed when tapped while NOT pressed. */
+  onEffect: EffectInstance;
+  /** Committed when tapped while pressed. */
+  offEffect: EffectInstance;
 }
 
 export interface RollResult {

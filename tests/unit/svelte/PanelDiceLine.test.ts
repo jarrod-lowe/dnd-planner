@@ -2,7 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import PanelDiceLine from '$lib/components/play/panel-renderer/PanelDiceLine.svelte';
-import type { DiceLineControl } from '$lib/components/play/panel-renderer/types';
+import type { DiceLineControl, DiceLineToggle } from '$lib/components/play/panel-renderer/types';
+import type { EffectInstance } from '$lib/rules-engine';
 
 // The i18n mock (tests/setup.ts) returns the key itself for unknown keys, so
 // menu labels surface as their `play.choices.attack.*` keys — handy for
@@ -267,5 +268,107 @@ describe('PanelDiceLine', () => {
     const [damageResult] = onRoll.mock.calls[0];
     expect(damageResult.total).toBe(damageResult.natural + 3);
     expect(damageResult.modifiers).toBeUndefined();
+  });
+});
+
+describe('PanelDiceLine — state-toggle chips (the Frightened line-of-sight shape)', () => {
+  // The i18n mock surfaces keys verbatim, so the pressed/unpressed labels are
+  // asserted as their distinct keys — the a11y contract (aria-pressed + two
+  // different accessible names) lives here.
+  const onEffect: EffectInstance = {
+    id: 'effect-frightened-source-hidden',
+    key: 'frightened-source',
+    state: { 'frightened.sourceHidden': 1 },
+    expiry: { kind: 'untilShortRest' }
+  };
+  const offEffect: EffectInstance = {
+    id: 'effect-frightened-source-visible',
+    key: 'frightened-source',
+    expiry: { kind: 'untilShortRest' }
+  };
+  const losToggle = (pressed: boolean): DiceLineToggle => ({
+    key: 'rule.demo.los',
+    labelOn: 'rule.demo.los.in-sight',
+    labelOff: 'rule.demo.los.out-of-sight',
+    appliesTo: ['to-hit', 'check'],
+    pressed,
+    onEffect,
+    offEffect
+  });
+  const toggleChip = (c: HTMLElement) =>
+    c.querySelector('.panel-renderer__modifier[data-toggle-key="rule.demo.los"]');
+
+  it('renders a pressed button whose label and aria-pressed reflect the resolved state', () => {
+    const { container } = render(PanelDiceLine, {
+      props: { ...baseProps, toggles: [losToggle(true)], onToggleEffect: vi.fn() }
+    });
+    const chip = toggleChip(container);
+    expect(chip).toBeInstanceOf(HTMLButtonElement);
+    expect(chip?.getAttribute('aria-pressed')).toBe('true');
+    expect(chip?.textContent?.trim()).toBe('rule.demo.los.in-sight');
+  });
+
+  it('the unpressed state swaps BOTH the accessible name and aria-pressed', () => {
+    const { container } = render(PanelDiceLine, {
+      props: { ...baseProps, toggles: [losToggle(false)], onToggleEffect: vi.fn() }
+    });
+    const chip = toggleChip(container);
+    expect(chip?.getAttribute('aria-pressed')).toBe('false');
+    expect(chip?.textContent?.trim()).toBe('rule.demo.los.out-of-sight');
+  });
+
+  it('tapping while pressed commits the offEffect; while not pressed, the onEffect', async () => {
+    const onToggleEffect = vi.fn();
+    const pressed = render(PanelDiceLine, {
+      props: { ...baseProps, toggles: [losToggle(true)], onToggleEffect }
+    });
+    await fireEvent.click(toggleChip(pressed.container)!);
+    expect(onToggleEffect).toHaveBeenCalledTimes(1);
+    expect(onToggleEffect).toHaveBeenCalledWith(offEffect);
+
+    onToggleEffect.mockClear();
+    const unpressed = render(PanelDiceLine, {
+      props: { ...baseProps, toggles: [losToggle(false)], onToggleEffect }
+    });
+    await fireEvent.click(toggleChip(unpressed.container)!);
+    expect(onToggleEffect).toHaveBeenCalledWith(onEffect);
+  });
+
+  it('renders an indication span (never a button) when not editable or no commit handler', () => {
+    const onToggleEffect = vi.fn();
+    const notEditable = render(PanelDiceLine, {
+      props: { ...baseProps, editable: false, toggles: [losToggle(true)], onToggleEffect }
+    });
+    expect(toggleChip(notEditable.container)).toBeInstanceOf(HTMLSpanElement);
+
+    const noHandler = render(PanelDiceLine, {
+      props: { ...baseProps, toggles: [losToggle(true)] }
+    });
+    expect(toggleChip(noHandler.container)).toBeInstanceOf(HTMLSpanElement);
+  });
+
+  it('renders nothing when no die purpose matches (saves never govern the LoS chip)', () => {
+    const saveOnly: DiceLineControl = {
+      type: 'dice-line',
+      dice: [{ sides: 20, bonus: { number: 0 }, purpose: 'save' }]
+    };
+    const { container } = render(PanelDiceLine, {
+      props: {
+        control: saveOnly,
+        editable: true,
+        facts: {},
+        vars: {},
+        toggles: [losToggle(true)],
+        onToggleEffect: vi.fn()
+      }
+    });
+    expect(toggleChip(container)).toBeNull();
+  });
+
+  it('drops the chip in summary mode (nothing focusable in a collapsed row)', () => {
+    const { container } = render(PanelDiceLine, {
+      props: { ...baseProps, summary: true, toggles: [losToggle(true)], onToggleEffect: vi.fn() }
+    });
+    expect(toggleChip(container)).toBeNull();
   });
 });
