@@ -302,13 +302,6 @@ export type AnnotationAction =
        * default. A one-time copy, not a binding.
        */
       seed?: Record<string, AnnotationSeedSource>;
-      /**
-       * Accessible name for the button this action renders, overriding the
-       * generic `play.annotation.addToPlan` fallback — a state-specific label
-       * so a screen reader announces which way a state-flipping control goes.
-       * Absent → the generic fallback.
-       */
-      labelKey?: string;
     }
   | 'again';
 

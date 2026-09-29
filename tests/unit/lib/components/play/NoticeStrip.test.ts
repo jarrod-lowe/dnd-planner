@@ -10,7 +10,6 @@ import { join } from 'node:path';
 // template here — the count badge and a notice body with a DC.
 const translations: Record<string, string> = {
   'play.notices.count': '×{{count}}',
-  'play.annotation.addToPlan': 'Add to plan: {{annotation}}',
   'rule.spells.searing-smite.notice-burning.body':
     "At the start of each burning target's turn: roll its fire dice, then it makes a DC {{dc}} CON save to end the spell."
 };
@@ -95,30 +94,6 @@ const SEARING_BURNING_SLOT_2: Annotation = {
   roll: { sides: 6, count: 2, purpose: 'damage', damageType: 'fire' }
 };
 
-// An actionable notice — the shape the Frightened condition authors: a
-// standing reminder whose advice is a one-tap shortcut to planning a named
-// offer, with a state-specific accessible name so the button announces which
-// way the tap flips the toggle.
-const HIDE_OFFER_ID = 'frightened-source-out-of-sight';
-
-const FRIGHTENED_VISIBLE: Annotation = {
-  key: 'rule.dnd-5e-2024.condition-frightened.notice',
-  targets: ['notice'],
-  source: 'rule.dnd-5e-2024.condition-frightened.effect-frightened.name',
-  body: 'rule.dnd-5e-2024.condition-frightened.notice.body',
-  addsToPlan: {
-    offer: HIDE_OFFER_ID,
-    labelKey: 'rule.dnd-5e-2024.condition-frightened.notice.action-hide'
-  }
-};
-
-// The same notice without a labelKey: the generic add-to-plan fallback must
-// name the notice itself.
-const FRIGHTENED_UNLABELLED: Annotation = {
-  ...FRIGHTENED_VISIBLE,
-  addsToPlan: { offer: HIDE_OFFER_ID }
-};
-
 /** The header disclosure — the only control in the strip. */
 function disclosure(container: HTMLElement): HTMLButtonElement | null {
   return container.querySelector<HTMLButtonElement>('.notice-strip__disclosure');
@@ -146,11 +121,6 @@ function cells(container: HTMLElement): HTMLElement[] {
 
 function stripText(container: HTMLElement): string {
   return container.querySelector('.notice-strip')?.textContent ?? '';
-}
-
-/** The strip's tap-to-plan button — the notice's content block as a button. */
-function actionButton(container: HTMLElement): HTMLButtonElement | null {
-  return container.querySelector<HTMLButtonElement>('button.notice-strip__content--action');
 }
 
 describe('NoticeStrip', () => {
@@ -675,203 +645,5 @@ describe('NoticeStrip', () => {
     } finally {
       random.mockRestore();
     }
-  });
-
-  describe('addsToPlan', () => {
-    it('renders an actionable notice as a button that plans its offer when tapped', () => {
-      const onAddOfferToPlan = vi.fn();
-      mount(NoticeStrip, {
-        target: container,
-        props: {
-          notices: [FRIGHTENED_VISIBLE],
-          onAddOfferToPlan,
-          addableOfferIds: new Set([HIDE_OFFER_ID])
-        }
-      });
-      flushSync();
-
-      // The notice's whole text block is the button — the PanelRenderer
-      // row-button pattern: the text the player reads is the tap target.
-      const button = actionButton(container);
-      expect(button).not.toBeNull();
-      expect(button!.tagName).toBe('BUTTON');
-      expect(button!.getAttribute('type')).toBe('button');
-
-      // The add affordance is decorative — the aria-label carries the name.
-      const add = button!.querySelector('.notice-strip__add');
-      expect(add).not.toBeNull();
-      expect(add!.getAttribute('aria-hidden')).toBe('true');
-
-      button!.click();
-      flushSync();
-      expect(onAddOfferToPlan).toHaveBeenCalledTimes(1);
-      expect(onAddOfferToPlan).toHaveBeenCalledWith(HIDE_OFFER_ID);
-    });
-
-    it('uses the action labelKey as the button accessible name when present', () => {
-      mount(NoticeStrip, {
-        target: container,
-        props: {
-          notices: [FRIGHTENED_VISIBLE],
-          onAddOfferToPlan: vi.fn(),
-          addableOfferIds: new Set([HIDE_OFFER_ID])
-        }
-      });
-
-      // The mock falls back to the raw key — a state-specific key here proves
-      // the label came from `labelKey` through $t, not from a hardcoded string.
-      expect(actionButton(container)?.getAttribute('aria-label')).toBe(
-        'rule.dnd-5e-2024.condition-frightened.notice.action-hide'
-      );
-    });
-
-    it('falls back to the generic add-to-plan label naming the notice otherwise', () => {
-      mount(NoticeStrip, {
-        target: container,
-        props: {
-          notices: [FRIGHTENED_UNLABELLED],
-          onAddOfferToPlan: vi.fn(),
-          addableOfferIds: new Set([HIDE_OFFER_ID])
-        }
-      });
-
-      // The generic fallback names WHAT gets planned: the notice's own label
-      // folded into play.annotation.addToPlan, exactly as the row button does.
-      expect(actionButton(container)?.getAttribute('aria-label')).toBe(
-        'Add to plan: rule.dnd-5e-2024.condition-frightened.notice'
-      );
-    });
-
-    it('degrades to plain text when the offer is not in the addable catalog', () => {
-      mount(NoticeStrip, {
-        target: container,
-        props: {
-          notices: [FRIGHTENED_VISIBLE],
-          onAddOfferToPlan: vi.fn(),
-          // The toggle's gate has closed (or it never existed): the catalog
-          // the store resolves a tap against does not hold the offer.
-          addableOfferIds: new Set(['some-other-offer'])
-        }
-      });
-
-      // No button, no add affordance — the notice keeps its text rendering.
-      expect(actionButton(container)).toBeNull();
-      const cell = cells(container)[0];
-      expect(cell.querySelector('.notice-strip__add')).toBeNull();
-      const content = cell.querySelector('.notice-strip__content');
-      expect(content).not.toBeNull();
-      expect(content!.tagName).toBe('DIV');
-      expect(content!.querySelector('.notice-strip__label')?.textContent).toContain(
-        'rule.dnd-5e-2024.condition-frightened.notice'
-      );
-    });
-
-    it("degrades to plain text for the rejected action forms — 'again' and seeded", () => {
-      // 'again' resolves against the panel row it renders on; a notice has no
-      // row. The seeded form needs the tapped row's instance id to resolve its
-      // values; a notice cannot supply one, and a seed silently taking
-      // defaults is worse than no button. Both degrade to text.
-      const again: Annotation = {
-        ...FRIGHTENED_VISIBLE,
-        id: 'notice-again',
-        addsToPlan: 'again'
-      };
-      const seeded: Annotation = {
-        ...FRIGHTENED_VISIBLE,
-        id: 'notice-seeded',
-        addsToPlan: { offer: HIDE_OFFER_ID, seed: { amount: 'amount' } }
-      };
-      mount(NoticeStrip, {
-        target: container,
-        props: {
-          notices: [again, seeded],
-          onAddOfferToPlan: vi.fn(),
-          addableOfferIds: new Set([HIDE_OFFER_ID])
-        }
-      });
-
-      expect(actionButton(container)).toBeNull();
-      const rendered = cells(container);
-      expect(rendered).toHaveLength(2);
-      for (const cell of rendered) {
-        expect(cell.querySelector('button')).toBeNull();
-        expect(cell.querySelector('.notice-strip__content')?.tagName).toBe('DIV');
-      }
-    });
-
-    it('renders no button when the wiring props are absent — deny, never a dead button', () => {
-      // No props at all (the pre-PR1 call shape — every existing mount).
-      mount(NoticeStrip, { target: container, props: { notices: [FRIGHTENED_VISIBLE] } });
-      expect(actionButton(container)).toBeNull();
-      container.remove();
-      container = document.createElement('div');
-      document.body.appendChild(container);
-
-      // A caller that wires only one of the two props still gets no button:
-      // without the catalog the tap may resolve against nothing, without the
-      // handler it does nothing — a missing button beats a dead one.
-      mount(NoticeStrip, {
-        target: container,
-        props: {
-          notices: [FRIGHTENED_VISIBLE],
-          addableOfferIds: new Set([HIDE_OFFER_ID])
-        }
-      });
-      expect(actionButton(container)).toBeNull();
-      container.remove();
-      container = document.createElement('div');
-      document.body.appendChild(container);
-
-      mount(NoticeStrip, {
-        target: container,
-        props: { notices: [FRIGHTENED_VISIBLE], onAddOfferToPlan: vi.fn() }
-      });
-      expect(actionButton(container)).toBeNull();
-    });
-
-    it('leaves plain text notices unchanged beside an actionable one', () => {
-      mount(NoticeStrip, {
-        target: container,
-        props: {
-          notices: [SENTINEL_DISENGAGE, FRIGHTENED_VISIBLE],
-          onAddOfferToPlan: vi.fn(),
-          addableOfferIds: new Set([HIDE_OFFER_ID])
-        }
-      });
-
-      const rendered = cells(container);
-      expect(rendered).toHaveLength(2);
-      // The plain notice keeps its DIV content block, exactly as before.
-      expect(rendered[0].querySelector('.notice-strip__content')?.tagName).toBe('DIV');
-      expect(rendered[0].querySelector('button')).toBeNull();
-      // The actionable one is the strip's only button.
-      expect(actionButton(container)).not.toBeNull();
-      expect(actionButton(container)!.closest('.notice-strip__cell')).toBe(rendered[1]);
-    });
-
-    it('styles the action button from theme variables with the row button treatment', () => {
-      // jsdom applies no cascade: the CSS Law (theme variables only, no new
-      // colours) and the row-button parity (touch target, hover, focus) are
-      // pinned against the component's own stylesheet, DieChip-style.
-      const css = styleBlock(noticeStripSource);
-      const actionRules = css.match(/\.notice-strip__content--action[^{]*\{[^}]*\}/g) ?? [];
-      expect(actionRules.length).toBeGreaterThanOrEqual(3);
-
-      const base = actionRules.find((rule) => rule.startsWith('.notice-strip__content--action {'));
-      expect(base).toBeDefined();
-      // The shared 2.75rem touch target every tappable control uses.
-      expect(base).toMatch(/min-height:\s*2\.75rem/);
-      // Theme surfaces, not new colours: the row button's primary-container
-      // chip and its paired ink.
-      expect(base).toMatch(/background:\s*var\(--md-sys-color-primary-container\)/);
-      expect(base).toMatch(/color:\s*var\(--md-sys-color-on-primary-container\)/);
-      // Interactive states a button owes: hover and a visible focus ring.
-      expect(actionRules.some((rule) => rule.includes(':hover'))).toBe(true);
-      expect(actionRules.some((rule) => rule.includes(':focus-visible'))).toBe(true);
-      // Theme variables only — no raw colour literals anywhere in the rules.
-      for (const rule of actionRules) {
-        expect(rule).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
-      }
-    });
   });
 });
