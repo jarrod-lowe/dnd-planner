@@ -1161,6 +1161,16 @@
           "name": "ngoy' teqlu'pu'"
         }
       },
+      "condition-frightened": {
+        "record-frightened": {
+          "name": "ghIjlu'pu'"
+        },
+        "effect-frightened": {
+          "name": "ghIjlu'pu'"
+        },
+        "notice": "ghIjlu'pu'",
+        "notice.body": "ghIjmeH Doch DaleghtaHvIS, HIv Daghu'meH 'ej laH Daghu'meH DIvI' ngor bISuqnIS. ghIjmeH Doch DaSumHa'choHmoHlaHbe'."
+      },
       "grapple": {
         "grapple-action": {
           "name": "DIvI' qop",
@@ -2085,7 +2095,8 @@
         "stunned": "mISchoHpu'",
         "invisible": "So'lu'pu'",
         "unconscious": "QongtaH",
-        "exhaustion": "ngoy'taH"
+        "exhaustion": "ngoy'taH",
+        "frightened": "ghIjlu'pu'"
       },
       "STAT": {
         "set": "Set",

@@ -1,0 +1,61 @@
+name: 'Condition Frightened - Record'
+description: >-
+  Recording being Frightened commits a keyed effect setting condition.frightened
+  plus Poisoned's full flag set: the STR/DEX attack-disadvantage flags, the 18
+  skill flags, initiative.disadvantage and the generic check.disadvantage —
+  all 22 asserted here in full (typo guard for a cloned list), uniform
+  stateCombine max so armor and stacked conditions co-write them. Under the
+  assume-always-line-of-sight simplification (user-directed 2026-09-29) the
+  SRD's sight qualifier is satisfied by assumption, so the flags are STANDING
+  while the condition lives; mechanising the qualifier is a deferred follow-up.
+  A NOTICE carries the condition's standing effect — both SRD sentences,
+  disadvantage AND can't-approach — while it is live. The recorder models BEING
+  FRIGHTENED (imposed by an enemy effect), so it is free and ungated (the prone
+  "Knocked Prone" precedent), and any rest clears it (untilShortRest covers
+  both rest kinds; see condition-frightened-rest-clears).
+ruleGroups:
+  - dnd-5e-2024/condition-frightened
+steps:
+  - evaluate:
+      assert:
+        facts:
+          condition.frightened: 0
+        offers:
+          exists:
+            - record-frightened
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.condition-frightened.notice
+  - addOffer:
+      id: record-frightened
+      assert:
+        facts:
+          condition.frightened: 1
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+          initiative.disadvantage: 1
+          check.disadvantage: 1
+          skill.acrobatics.disadvantage: 1
+          skill.animal-handling.disadvantage: 1
+          skill.arcana.disadvantage: 1
+          skill.athletics.disadvantage: 1
+          skill.deception.disadvantage: 1
+          skill.history.disadvantage: 1
+          skill.insight.disadvantage: 1
+          skill.intimidation.disadvantage: 1
+          skill.investigation.disadvantage: 1
+          skill.medicine.disadvantage: 1
+          skill.nature.disadvantage: 1
+          skill.perception.disadvantage: 1
+          skill.performance.disadvantage: 1
+          skill.persuasion.disadvantage: 1
+          skill.religion.disadvantage: 1
+          skill.sleight-of-hand.disadvantage: 1
+          skill.stealth.disadvantage: 1
+          skill.survival.disadvantage: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-frightened.notice
+          targets:
+            - key: rule.dnd-5e-2024.condition-frightened.notice
+              targets: [notice]

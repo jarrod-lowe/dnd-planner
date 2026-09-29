@@ -1161,6 +1161,16 @@
           "name": "Exhaustion Removed"
         }
       },
+      "condition-frightened": {
+        "record-frightened": {
+          "name": "Frightened"
+        },
+        "effect-frightened": {
+          "name": "Frightened"
+        },
+        "notice": "Frightened",
+        "notice.body": "You have Disadvantage on attack rolls and ability checks while the source of fear is within line of sight. You can't willingly move closer to the source of fear."
+      },
       "grapple": {
         "grapple-action": {
           "name": "Grapple",
@@ -2085,7 +2095,8 @@
         "stunned": "Stunned",
         "invisible": "Invisible",
         "unconscious": "Unconscious",
-        "exhaustion": "Exhaustion"
+        "exhaustion": "Exhaustion",
+        "frightened": "Frightened"
       },
       "STAT": {
         "set": "Set",

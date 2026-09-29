@@ -24,7 +24,7 @@ Rough total: ~10–12 PRs. Calibration: prone = 4 PRs incl. inventing the chassi
 ### Wave 2 — disadvantage flags
 
 - [x] [Poisoned](condition-poisoned.md) — executed on branch `condition-poisoned` (module + record-check/Alert roller wiring + skill-flag stateCombine regression + blinded stacking pin + seed); PR pending at commit time
-- [ ] [Frightened](condition-frightened.md) — execute — **replanned 2026-09-25** (user-directed): LoS notice-button toggle (keyed `frightened.sourceHidden` sub-state + gated derives + `addsToPlan` strip button, `dependents` orphan-guard); PR1 NoticeStrip button support, PR2 the module
+- [ ] [Frightened](condition-frightened.md) — executed on branch `condition-frightened` (module + 4 scenarios + seed; standing flags under the assume-always-LoS decision — **user-directed 2026-09-29**, superseding the abandoned 2026-09-25 toggle replan; LoS handling deferred to a follow-up PR); PR pending at commit time
 
 ### Wave 3 — the enabler
 
@@ -95,7 +95,7 @@ Modelled: attack flags + all 18 `skill.{skill}.disadvantage` facts (facts exist 
 > **Ability Checks and Attacks Affected.** You have Disadvantage on ability checks and attack rolls while the source of fear is within line of sight.
 > **Can't Approach.** You can't willingly move closer to the source of fear.
 
-Modelled: same flag SET as Poisoned (incl. `initiative.disadvantage`), but as gated derives behind a LoS toggle — notice-button sub-state `frightened.sourceHidden` flips all 22 live (user-directed replan; see condition-frightened.md). Can't-approach = notice text.
+Modelled: same flag SET as Poisoned (incl. `initiative.disadvantage`) as STANDING flags — assume-always-line-of-sight (user-directed 2026-09-29, superseding the abandoned 2026-09-25 toggle replan; see condition-frightened.md). Can't-approach = notice text.
 
 ### Incapacitated — M–L (the enabler)
 
@@ -219,7 +219,7 @@ Nothing like it exists — a counter, not a boolean:
 - Exhaustion cap: **SRD 6** (srd52.txt is canonical; note the PHB-2024 divergence in the doc).
 - Auto-fail saves: **notice text first**; mechanical flags only where save-mode wiring already landed (Restrained) — auto-fail ≠ disadvantage, own semantic.
 - Condition ending: prone deviation — effect `expiry: untilShortRest` (long rest includes short) + manual ActiveStateStrip chip dismissal. Per-condition end offers only where SRD gives a mechanical end (grapple escape → out of scope initially).
-- Frightened line-of-sight: **notice-button LoS toggle** (user-directed 2026-09-25 — supersedes standing disadvantage; see condition-frightened.md).
+- Frightened line-of-sight: **assumed always** — standing flags (user-directed 2026-09-29, superseding the abandoned 2026-09-25 toggle replan; LoS mechanisation deferred — see condition-frightened.md).
 
 ## Execution rules
 
