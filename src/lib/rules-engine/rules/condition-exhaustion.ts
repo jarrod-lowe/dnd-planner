@@ -125,7 +125,7 @@ const conditionExhaustion: RuleModule = {
         section: 'free',
         name: `${CE}.record-exhaustion.name`,
         detailKey: 'condition/exhaustion',
-        intents: { CONDITION: 'exhaustion' },
+        intents: { CONDITION: 'weakened' },
         actionCost: []
       },
       legalWhen: [

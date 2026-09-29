@@ -69,7 +69,7 @@ const conditionStunned: RuleModule = {
         section: 'free',
         name: `${CS}.record-stunned.name`,
         detailKey: 'condition/stunned',
-        intents: { CONDITION: 'stunned' },
+        intents: { CONDITION: 'helpless' },
         actionCost: []
       },
       apply: (f): ActionResult => ({

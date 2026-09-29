@@ -71,7 +71,7 @@ const conditionPetrified: RuleModule = {
         section: 'free',
         name: `${CPE}.record-petrified.name`,
         detailKey: 'condition/petrified',
-        intents: { CONDITION: 'petrified' },
+        intents: { CONDITION: 'helpless' },
         actionCost: []
       },
       apply: (f): ActionResult => ({

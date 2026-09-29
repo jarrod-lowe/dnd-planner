@@ -59,7 +59,7 @@ const conditionBlinded: RuleModule = {
         section: 'free',
         name: `${CB}.record-blinded.name`,
         detailKey: 'condition/blinded',
-        intents: { CONDITION: 'blinded' },
+        intents: { CONDITION: 'senses' },
         actionCost: []
       },
       apply: (): ActionResult => ({

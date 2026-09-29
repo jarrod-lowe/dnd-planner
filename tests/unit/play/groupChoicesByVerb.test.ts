@@ -135,6 +135,63 @@ describe('groupChoicesByVerb', () => {
     expect(groups).toHaveLength(1);
     expect(groups[0].verb).toBe('AID');
   });
+
+  // The CONDITION buckets are a curated taxonomy (five functional buckets,
+  // condition-verb-buckets.test.ts), so their display order is pinned — the
+  // OR INSTEAD strip and the picker both iterate `entries`/`subBuckets` in the
+  // order this function produces, and first-encounter order would follow
+  // module registration (alphabetical) instead of the curated severity order.
+  it('orders pinned-verb sub-buckets by the taxonomy, not first encounter', () => {
+    const entries = [
+      makeEntry('record-poisoned', { intents: { CONDITION: 'weakened' } }),
+      makeEntry('record-charmed', { intents: { CONDITION: 'compelled' } }),
+      makeEntry('record-unconscious', { intents: { CONDITION: 'helpless' } }),
+      makeEntry('record-prone', { intents: { CONDITION: 'held' } }),
+      makeEntry('record-blinded', { intents: { CONDITION: 'senses' } })
+    ];
+
+    const groups = groupChoicesByVerb(entries);
+
+    expect(groups).toHaveLength(1);
+    expect([...groups[0].subBuckets.keys()]).toEqual([
+      'senses',
+      'held',
+      'helpless',
+      'compelled',
+      'weakened'
+    ]);
+    // entries are bucket-major, so the OR INSTEAD strip (which groups by
+    // first encounter over this list) reproduces the same order.
+    expect(groups[0].entries.map((e) => e.rule.id)).toEqual([
+      'record-blinded',
+      'record-prone',
+      'record-unconscious',
+      'record-charmed',
+      'record-poisoned'
+    ]);
+  });
+
+  it('keeps first-encounter order for verbs with no pinned taxonomy', () => {
+    const entries = [
+      makeEntry('bless', { intents: { ATTACK: 'spells' } }),
+      makeEntry('greataxe', { intents: { ATTACK: 'weapons' } })
+    ];
+
+    const groups = groupChoicesByVerb(entries);
+
+    expect([...groups[0].subBuckets.keys()]).toEqual(['spells', 'weapons']);
+  });
+
+  it('keeps unpinned buckets after pinned ones within a pinned verb', () => {
+    const entries = [
+      makeEntry('custom-condition', { intents: { CONDITION: 'custom' } }),
+      makeEntry('record-blinded', { intents: { CONDITION: 'senses' } })
+    ];
+
+    const groups = groupChoicesByVerb(entries);
+
+    expect([...groups[0].subBuckets.keys()]).toEqual(['senses', 'custom']);
+  });
 });
 
 describe('findDefaultEntryForVerb', () => {

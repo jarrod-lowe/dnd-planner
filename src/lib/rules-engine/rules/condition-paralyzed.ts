@@ -68,7 +68,7 @@ const conditionParalyzed: RuleModule = {
         section: 'free',
         name: `${CPL}.record-paralyzed.name`,
         detailKey: 'condition/paralyzed',
-        intents: { CONDITION: 'paralyzed' },
+        intents: { CONDITION: 'helpless' },
         actionCost: []
       },
       apply: (f): ActionResult => ({

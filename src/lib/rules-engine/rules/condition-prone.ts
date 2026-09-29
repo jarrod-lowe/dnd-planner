@@ -61,7 +61,7 @@ const conditionProne: RuleModule = {
         section: 'free',
         name: `${CP}.record-prone.name`,
         detailKey: 'condition/prone',
-        intents: { CONDITION: 'prone' },
+        intents: { CONDITION: 'held' },
         actionCost: []
       },
       apply: (): ActionResult => ({
@@ -81,7 +81,7 @@ const conditionProne: RuleModule = {
         name: `${CP}.drop-prone.name`,
         description: `${CP}.drop-prone.description`,
         detailKey: 'condition/prone',
-        intents: { CONDITION: 'prone' },
+        intents: { CONDITION: 'held' },
         actionCost: []
       },
       // SRD 5.2 Dropping Prone: "you can't do so if your Speed is 0."

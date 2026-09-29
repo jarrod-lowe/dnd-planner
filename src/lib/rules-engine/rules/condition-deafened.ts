@@ -47,7 +47,7 @@ const conditionDeafened: RuleModule = {
         section: 'free',
         name: `${CD}.record-deafened.name`,
         detailKey: 'condition/deafened',
-        intents: { CONDITION: 'deafened' },
+        intents: { CONDITION: 'senses' },
         actionCost: []
       },
       apply: (): ActionResult => ({

@@ -81,7 +81,7 @@ const conditionFrightened: RuleModule = {
         section: 'free',
         name: `${CF}.record-frightened.name`,
         detailKey: 'condition/frightened',
-        intents: { CONDITION: 'frightened' },
+        intents: { CONDITION: 'compelled' },
         actionCost: []
       },
       apply: (): ActionResult => ({
