@@ -8,14 +8,15 @@ description: >-
   rows). Frightened deliberately contributes NONE of the 22 shared flags:
   the chip forces the disadvantage roll-mode itself and other sources
   (Poisoned, Blinded, untrained armor) keep the flags to themselves — the
-  full 22 asserted at 0 as the exclusion pin. The annotation carries
-  parentKey 'frightened': the VIEW strips the chip until the condition is
-  COMMITTED (a tap persists a seed immediately; a merely-planned recorder
-  removed before End Turn would strand it) — that gate is view-side and
-  unit-pinned, not assertible here. A NOTICE carries the standing text while
-  the condition is live; the recorder models BEING FRIGHTENED (imposed by an
-  enemy effect), so it is free and ungated, and any rest clears it
-  (untilShortRest; see condition-frightened-rest-clears).
+  full 22 asserted at 0 as the exclusion pin. The chip renders the moment
+  the condition is live (planned recorder included — the disadvantage shows
+  on the recording turn's own rows); the orphan case is cleaned store-side
+  (removeFromPlan evicts committed effects keyed by the removed row's
+  advertised dependents — unit-pinned, not assertible here). A NOTICE
+  carries the standing text while the condition is live; the recorder models
+  BEING FRIGHTENED (imposed by an enemy effect), so it is free and ungated,
+  and any rest clears it (untilShortRest; see
+  condition-frightened-rest-clears).
 ruleGroups:
   - dnd-5e-2024/condition-frightened
 steps:
@@ -69,5 +70,4 @@ steps:
               toggle:
                 fact: frightened.sourceHidden
                 onWhen: 0
-                parentKey: frightened
                 appliesTo: [to-hit, check]

@@ -16,11 +16,7 @@ import {
   plannedEntryToViewEntry
 } from './engineBridge';
 import { deriveVerbFromRule } from './stepUtils';
-import {
-  captureToggleSelections,
-  getAnnotationLabels,
-  stripUncommittedToggleAnnotations
-} from './annotations';
+import { captureToggleSelections, getAnnotationLabels } from './annotations';
 import { locale, t } from '$lib/i18n';
 import { prefetchDetailsForEffects } from '$lib/details/rehydrate';
 import { get } from 'svelte/store';
@@ -231,13 +227,6 @@ function performEvaluation(): void {
   _lastAdvertised = result.advertised;
 
   const viewOutput = adaptEngineOutput(result.raw);
-  // Toggle chips whose parent effect is only PLANNED never reach the UI: a
-  // tap persists state immediately, and removing the plan row before End Turn
-  // would strand it (see stripUncommittedToggleAnnotations).
-  viewOutput.annotations = stripUncommittedToggleAnnotations(
-    viewOutput.annotations,
-    new Set(state.committed.filter((e) => e.key !== undefined).map((e) => e.key!))
-  );
   state = {
     ...state,
     engineOutput: viewOutput,
@@ -614,6 +603,29 @@ function clampSeed(rule: Rule, seed: Record<string, unknown>): Record<string, un
 }
 
 function removeFromPlan(instanceId: string): void {
+  // Flush first so the row's advertised effects (the per-evaluation map) cover
+  // it — a row removed inside the debounce window must still name its
+  // dependents for the cleanup below.
+  flushPendingEvaluation();
+
+  // A removed planned row takes its committed FOLLOW-UPS along: its advertised
+  // effects name the dependent keys they own (the Frightened condition owns
+  // the LoS sight seed the dice-line chip commits mid-turn), and leaving those
+  // behind would strand committed state a plan the player discarded never
+  // earned. The eviction mirrors chip dismissal (removeEffect's dependents
+  // pass), on the plan side — which is what lets the chip render for a merely
+  // PLANNED condition instead of gating on commitment.
+  const dependentKeys = new Set<string>();
+  for (const effect of getPlannedEntry(instanceId)?.advertisedEffects ?? []) {
+    for (const key of effect.dependents ?? []) dependentKeys.add(key);
+  }
+  let committed = state.committed;
+  if (dependentKeys.size > 0) {
+    const before = committed.length;
+    committed = committed.filter((e) => e.key === undefined || !dependentKeys.has(e.key));
+    if (committed.length !== before) persistCommitted();
+  }
+
   const filtered = state.plannedItems.filter((item) => item.instanceId !== instanceId);
 
   // Re-index order values
@@ -624,7 +636,9 @@ function removeFromPlan(instanceId: string): void {
 
   state = {
     ...state,
-    plannedItems: reindexed
+    plannedItems: reindexed,
+    committed,
+    effects: committed.map(effectInstanceToRule)
   };
 
   scheduleEvaluation();

@@ -101,15 +101,15 @@ const conditionFrightened: RuleModule = {
   // "closer" against). The body FLIPS with the sight SEED (the exhaustion
   // body-dead precedent): hidden means new rows open with no Frightened
   // disadvantage, but can't-approach survives sight. The LoS TOGGLE — the
-  // dice-line chip; see AnnotationToggle — carries `parentKey: 'frightened'`:
-  // a tap persists a seed effect immediately (the follow-up channel), and a
-  // merely-PLANNED recorder row removed before End Turn would strand it (the
-  // `dependents` cleanup runs on committed-parent dismissal only), so the
-  // VIEW strips the chip until the parent is committed — the engine's
-  // annotate pass folds planned and committed by design and cannot tell them
-  // apart. 'notice' == NOTICE_TARGET; rule modules may import only the
-  // builder, so the reserved label is a literal here (see condition-prone /
-  // condition-blinded).
+  // dice-line chip; see AnnotationToggle — renders the moment the condition
+  // is live (planned OR committed), so recording Frightened shows the
+  // disadvantage on this very turn's rows: a tap persists the seed
+  // immediately (the follow-up channel), and the orphan case — the recorder
+  // row removed before End Turn — is cleaned by the store's removeFromPlan,
+  // which evicts committed effects keyed by a removed row's advertised
+  // `dependents` (this effect names 'frightened-source'). 'notice' ==
+  // NOTICE_TARGET; rule modules may import only the builder, so the reserved
+  // label is a literal here (see condition-prone / condition-blinded).
   annotate: (f): Annotation[] =>
     f.num('condition.frightened') > 0
       ? [
@@ -128,7 +128,6 @@ const conditionFrightened: RuleModule = {
             toggle: {
               fact: 'frightened.sourceHidden',
               onWhen: 0,
-              parentKey: 'frightened',
               // Direction contract: onEffect takes the fact TO onWhen (the
               // REVEAL — an in-sight chip is the pressed state), offEffect
               // takes it away (the HIDE). Pinned in

@@ -147,15 +147,16 @@ describe('condition-frightened — the toggle annotation contract (the chip)', (
     expect(out.annotations.some((a) => a.key === `${CF}.los`)).toBe(false);
   });
 
-  it('the toggle carries parentKey frightened — the VIEW strips the chip until the condition commits', () => {
-    // A planned recorder folds condition.frightened into the facts, and the
-    // engine's annotate pass folds planned and committed by design — so the
-    // engine cannot gate the chip itself. The parentKey is the view-side
-    // contract (stripUncommittedToggleAnnotations): a tap persists a seed
-    // immediately, and a merely-planned recorder removed before End Turn
-    // would strand it.
-    const toggle = losAnnotation([conditionEffect()]).toggle!;
-    expect(toggle.parentKey).toBe('frightened');
+  it('the chip renders the moment the condition is LIVE — a merely planned recorder included', () => {
+    // Recording Frightened must show the disadvantage on THIS turn's rows, so
+    // the annotation cannot wait for End Turn. The orphan case (the recorder
+    // row removed before commit, stranding a seed the chip persisted) is
+    // cleaned by the store's removeFromPlan, which evicts committed effects
+    // keyed by the removed row's advertised dependents.
+    const planned: PlannedRef[] = [{ instanceId: 'i0', ruleId: 'record-frightened' }];
+    const out = evaluate({ modules: M, planned });
+    expect(out.facts['condition.frightened']).toBe(1);
+    expect(out.annotations.some((a) => a.key === `${CF}.los`)).toBe(true);
   });
 });
 

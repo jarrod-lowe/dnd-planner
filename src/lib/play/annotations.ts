@@ -45,25 +45,6 @@ export function getMatchingAnnotations(
 }
 
 /**
- * Strips toggle annotations whose `parentKey` names no COMMITTED effect: a
- * chip tap persists state immediately (the follow-up channel), so a chip
- * reaching the UI off a merely-PLANNED parent would strand that state when
- * the plan row is removed before End Turn — the `dependents` cleanup only
- * runs on committed-parent dismissal. Applied at the store seam, where the
- * committed list is known; the engine's annotate pass folds planned and
- * committed by design and cannot tell them apart. Toggle annotations without
- * a `parentKey` (nothing to strand) pass through untouched.
- */
-export function stripUncommittedToggleAnnotations(
-  annotations: Annotation[],
-  committedKeys: Set<string>
-): Annotation[] {
-  return annotations.filter(
-    (ann) => !ann.toggle?.parentKey || committedKeys.has(ann.toggle.parentKey)
-  );
-}
-
-/**
  * Captures the per-row state of every toggle annotation reaching a rule being
  * added to the plan (Frightened's line of sight): the row takes the fact's
  * CURRENT value — the going-forward seed — as its own selection, so later seed

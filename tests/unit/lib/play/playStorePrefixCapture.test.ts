@@ -472,4 +472,46 @@ describe('playStore addToPlan captures the per-row toggle state', () => {
       'frightened.sourceHidden': 1
     });
   });
+
+  it('the chip is live for a merely PLANNED recorder, and removing the row takes the committed seed along', async () => {
+    // No persisted effects: the condition exists only as a planned recorder.
+    vi.mocked(apiGet)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: ['condition-frightened', 'core-events'] })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ effects: null })
+      } as Response);
+    vi.mocked(apiPost).mockResolvedValue({
+      ok: true,
+      json: async () => ({ ruleGroups: [] })
+    } as Response);
+    const { playStore } = await import('$lib/play/playStore.svelte');
+    playStore.reset();
+    await playStore.loadRuleGroups('char-1');
+
+    // Record Frightened; let the evaluation settle so the chip (and the row's
+    // advertised dependents) are cached.
+    playStore.addToPlan(catalogRule(playStore, 'record-frightened'));
+    vi.runAllTimers();
+    const annotations = playStore.state.engineOutput?.annotations ?? [];
+    const los = annotations.find((a) => a.key === 'rule.dnd-5e-2024.condition-frightened.los');
+    // The chip renders for the planned condition — the recording turn's rows
+    // get their disadvantage immediately.
+    expect(los?.toggle).toBeDefined();
+
+    // A tap: the seed commits while the parent is still only planned.
+    playStore.addFollowupEffect(los!.toggle!.offEffect);
+    expect(playStore.state.facts['frightened.sourceHidden']).toBe(1);
+
+    // Removing the recorder row evicts the committed seed (its advertised
+    // dependents) — no orphaned sight state, no wrong default on re-record.
+    playStore.removeFromPlan(playStore.state.plannedItems[0].instanceId);
+    vi.runAllTimers();
+    expect(playStore.state.committed.some((e) => e.key === 'frightened-source')).toBe(false);
+    expect(playStore.state.facts['frightened.sourceHidden'] ?? 0).toBe(0);
+    expect(playStore.state.facts['condition.frightened'] ?? 0).toBe(0);
+  });
 });
