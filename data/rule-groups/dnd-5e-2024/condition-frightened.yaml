@@ -1,0 +1,34 @@
+ruleGroups:
+  - id: condition-frightened
+    requires: []
+    translations:
+      en:
+        name: Frightened
+        description: Rules while you have the Frightened condition; record it when an enemy frightens you
+        keywords:
+          - frightened
+          - fright
+          - fear
+          - condition
+          - scared
+          - terrified
+          - panicked
+      en-x-tlh:
+        name: ghIjlu'pu'
+        description: ghIjlu'pu' Dotlh; ghIjmoHlu'DI' yIghun
+        keywords:
+          - ghIj
+          - ghIjlu'pu'
+          - Dotlh
+    detail:
+      key: condition/frightened
+      source: srd52
+      translations:
+        en:
+          meta: Condition
+          body: |
+            **Frightened [Condition].** While you have the Frightened condition, you experience the following effects.
+
+            **Ability Checks and Attacks Affected.** You have Disadvantage on ability checks and attack rolls while the source of fear is within line of sight.
+
+            **Can't Approach.** You can't willingly move closer to the source of fear.

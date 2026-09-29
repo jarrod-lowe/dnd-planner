@@ -516,6 +516,14 @@ const EXPECTED_RUNNABLE = [
   'condition-poisoned-rest-clears',
   'condition-poisoned-skill-flags',
   'condition-poisoned-with-blinded',
+  // condition-frightened (wave 2 straggler, the last of the 14: Poisoned's
+  // flag set as STANDING flags under the assume-always-line-of-sight
+  // simplification — user-directed 2026-09-29; mechanising the SRD's sight
+  // qualifier is a deferred follow-up)
+  'condition-frightened-record',
+  'condition-frightened-rest-clears',
+  'condition-frightened-skill-flags',
+  'condition-frightened-with-poisoned',
   // condition-incapacitated (wave 3 enabler: the economy remaining derives +
   // extraRemaining read the condition fact — Inactive — and the module derives
   // initiative.disadvantage from it — Surprised; dash goes illegal off the

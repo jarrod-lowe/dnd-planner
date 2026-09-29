@@ -83,6 +83,7 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   'condition-invisible': () => import('./rules/condition-invisible'),
   'condition-unconscious': () => import('./rules/condition-unconscious'),
   'condition-exhaustion': () => import('./rules/condition-exhaustion'),
+  'condition-frightened': () => import('./rules/condition-frightened'),
   'feat-alert': () => import('./rules/feat-alert'),
   'feat-sentinel': () => import('./rules/feat-sentinel'),
   'fighting-style-great-weapon': () => import('./rules/fighting-style-great-weapon'),

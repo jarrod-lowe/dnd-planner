@@ -1,0 +1,33 @@
+name: 'Condition Frightened - With Poisoned'
+description: >-
+  The stacking pin (uniform-max dividend), Poisoned and Blinded's shape. Both
+  conditions write the SAME full flag set — the two overlapping wave-2
+  conditions. Both write with stateCombine max, so the flags read 1
+  (disadvantage is a flag, not a stack) instead of summing to 2 or
+  conflict-throwing, while each condition fact stands on its own and both
+  notices live side by side.
+ruleGroups:
+  - dnd-5e-2024/condition-poisoned
+  - dnd-5e-2024/condition-frightened
+steps:
+  - addOffer:
+      id: record-poisoned
+      assert:
+        facts:
+          condition.poisoned: 1
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+  - addOffer:
+      id: record-frightened
+      assert:
+        facts:
+          condition.poisoned: 1
+          condition.frightened: 1
+          attack.str.disadvantage: 1
+          attack.dex.disadvantage: 1
+          initiative.disadvantage: 1
+          check.disadvantage: 1
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.condition-poisoned.notice
+            - rule.dnd-5e-2024.condition-frightened.notice
