@@ -49,7 +49,7 @@ vi.mock('svelte-sonner', () => ({
   }
 }));
 
-import { apiGet, apiPost } from '$lib/api/client';
+import { apiGet, apiPost, apiDelete } from '$lib/api/client';
 import type { AvailableRuleEntry, Rule } from '$lib/rules-view';
 
 /**
@@ -744,5 +744,57 @@ describe('playStore addToPlan captures the per-row toggle state', () => {
     }[];
     const seed = persisted.find((e) => e.key === 'frightened-source');
     expect(seed?.state?.['frightened.sourceHidden']).toBe(1);
+  });
+
+  it('an unassignment routes its effects save through the queue (no interleaving write)', async () => {
+    vi.mocked(apiGet)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: ['condition-frightened', 'core-events'] })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ effects: null })
+      } as Response);
+    vi.mocked(apiDelete).mockResolvedValue({ ok: true } as Response);
+    // The FIRST /effects POST (the tap's save) defers until manual release;
+    // everything after resolves immediately.
+    let releaseFirst!: (value: Response) => void;
+    vi.mocked(apiPost).mockImplementation(((url: unknown) => {
+      if (String(url).includes('/effects')) {
+        return new Promise<Response>((resolve) => {
+          releaseFirst = resolve;
+        });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({ ruleGroups: [] }) } as Response);
+    }) as unknown as typeof apiPost);
+    const { playStore } = await import('$lib/play/playStore.svelte');
+    playStore.reset();
+    await playStore.loadRuleGroups('char-1');
+
+    playStore.addToPlan(catalogRule(playStore, 'record-frightened'));
+    vi.runAllTimers();
+    const los = (playStore.state.engineOutput?.annotations ?? []).find(
+      (a) => a.key === 'rule.dnd-5e-2024.condition-frightened.los'
+    );
+    playStore.addFollowupEffect(los!.toggle!.offEffect); // the tap's save is now in flight (deferred)
+    const effectsPosts = () =>
+      vi.mocked(apiPost).mock.calls.filter(([url]) => String(url).includes('/effects'));
+    expect(effectsPosts()).toHaveLength(1);
+
+    // Unassign the condition group WHILE that save is in flight. The removal's
+    // save must QUEUE, not write concurrently — a direct POST here could land
+    // after the in-flight snapshot and resurrect what the unassign removed.
+    await playStore.unassignRuleGroup('char-1', 'condition-frightened');
+    expect(effectsPosts()).toHaveLength(1); // still only the in-flight save
+
+    releaseFirst({ ok: true } as Response);
+    await vi.advanceTimersByTimeAsync(0);
+    // The queued post-unassignment save fires now, without the seed.
+    expect(effectsPosts()).toHaveLength(2);
+    const last = effectsPosts()[1];
+    const body = last![1] as { effects: string };
+    const persistedEffects = JSON.parse(body.effects) as { key?: string }[];
+    expect(persistedEffects.some((e) => e.key === 'frightened-source')).toBe(false);
   });
 });

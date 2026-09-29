@@ -1034,20 +1034,11 @@ async function unassignRuleGroup(characterId: string, ruleGroupId: string): Prom
       throw new Error(`Unassign failed: ${response.status}`);
     }
 
-    // Persist updated committed effects (settings-derived effects removed above)
-    if (state.currentCharacterId) {
-      apiPost(`/api/characters/${state.currentCharacterId}/effects`, {
-        effects: JSON.stringify(state.committed)
-      })
-        .then((res) => {
-          if (!res.ok) {
-            toast.error(get(t)('play.error.saveEffects'));
-          }
-        })
-        .catch(() => {
-          toast.error(get(t)('play.error.saveEffects'));
-        });
-    }
+    // Persist updated committed effects (the group's effects removed above) —
+    // through the serialized queue, never a direct POST: an unconditional
+    // write racing the queue's in-flight save could land LAST and restore the
+    // effects this unassignment just removed (the seed included).
+    persistCommitted();
   } catch (error) {
     console.error('[unassignRuleGroup] Error:', error);
     // Revert
